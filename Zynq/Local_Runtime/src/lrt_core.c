@@ -283,13 +283,11 @@ void  OS_MemInit (void)
     OSMemFreeList   = &OSMemTbl[0];                       /* Point to beginning of free list           */
 #endif
     OSMemTbl[0].MemBaseAddr = (void* )XPAR_MB_SHARED_BRAM_CTRL_0_S_AXI_BASEADDR;
-    OSMemTbl[0].DataBaseAddr = (void* )(XPAR_MB_SHARED_BRAM_CTRL_0_S_AXI_BASEADDR + SH_MEM_DATA_OFFSET);
-    OSMemTbl[0].OSMemBlkSize = (XPAR_MB_SHARED_BRAM_CTRL_0_S_AXI_HIGHADDR - XPAR_MB_SHARED_BRAM_CTRL_0_S_AXI_BASEADDR) - SH_MEM_DATA_OFFSET;
+    OSMemTbl[0].DataBaseAddr = (INT32U* )(XPAR_MB_SHARED_BRAM_CTRL_0_S_AXI_BASEADDR) + SH_MEM_DATA_OFFSET;
+    OSMemTbl[0].OSMemBlkSize = XPAR_MB_SHARED_BRAM_CTRL_0_S_AXI_HIGHADDR - (INT32U)OSMemTbl[0].DataBaseAddr;
 
-    *((INT32U*)OSMemTbl[0].MemBaseAddr + SH_MEM_RD_IX_OFFSET) = 0;
     *((INT32U*)OSMemTbl[0].MemBaseAddr + SH_MEM_WR_IX_OFFSET) = 0;
-//    OSMemTbl[0].wr_ix = 0;
-//    OSMemTbl[0].rd_ix = 0;
+    *((INT32U*)OSMemTbl[0].MemBaseAddr + SH_MEM_RD_IX_OFFSET) = 0;
 }
 
 

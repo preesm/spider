@@ -170,9 +170,9 @@
 *                           Shared memory offsets
 *********************************************************************************************************
 */
-#define SH_MEM_WR_IX_OFFSET		0
-#define SH_MEM_RD_IX_OFFSET		4
-#define SH_MEM_DATA_OFFSET		8
+#define SH_MEM_WR_IX_OFFSET		0		// Offsets in number of 32-bits words.
+#define SH_MEM_RD_IX_OFFSET		1
+#define SH_MEM_DATA_OFFSET		2
 
 
 
@@ -228,8 +228,8 @@ typedef struct os_mem {                   /* MEMORY CONTROL BLOCK               
 //#if OS_MEM_NAME_EN > 0u
 //    INT8U  *OSMemName;                    /* Memory partition name                                     */
 //#endif
-    INT32U	wr_ix;						  // Write index.
-    INT32U	rd_ix;						  // Read index.
+//    INT32U	wr_ix;						  // Write index.
+//    INT32U	rd_ix;						  // Read index.
 } OS_MEM;
 //#endif
 

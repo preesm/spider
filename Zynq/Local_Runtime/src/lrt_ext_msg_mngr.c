@@ -302,7 +302,7 @@ void  write_sh_mem(OS_MEM* sh_mem, INT32U size, INT8U* buffer, INT8U *perr)
 	rd_ix = *((INT32U*)(sh_mem->MemBaseAddr) + SH_MEM_RD_IX_OFFSET);
 
 
-	if(rd_ix <= sh_mem->wr_ix)			// If true, rd_ix reached the end of the memory and restarted from the beginning.
+	if(rd_ix <= wr_ix)			// If true, rd_ix reached the end of the memory and restarted from the beginning.
 										// Or the FIFO is empty.
 		rd_ix += sh_mem->OSMemBlkSize;	// Place rd_ix to the right of wr_ix as in an unbounded memory.
 
@@ -315,7 +315,7 @@ void  write_sh_mem(OS_MEM* sh_mem, INT32U size, INT8U* buffer, INT8U *perr)
 			((INT8U*)(sh_mem->DataBaseAddr))[(wr_ix + i) % sh_mem->OSMemBlkSize] = buffer[i];
 
 		// Move the WriteIndex.
-		sh_mem->wr_ix = (sh_mem->wr_ix + size) % sh_mem->OSMemBlkSize;
+		wr_ix = (wr_ix + size) % sh_mem->OSMemBlkSize;
 
 		// Update WriteIndex on shared memory
 		*((INT32U*)(sh_mem->MemBaseAddr) + SH_MEM_WR_IX_OFFSET) = wr_ix;

@@ -252,16 +252,27 @@ OS_MEM* get_sh_mem_hndl(INT32U index)
 
 void  read_sh_mem(OS_MEM* sh_mem, INT32U size, INT8U* buffer, INT8U *perr)
 {
-	INT32U	i, wr_ix = sh_mem->wr_ix;
+	INT32U	i, wr_ix, rd_ix;
 
-	if(wr_ix < sh_mem->rd_ix)			// If true, wr_ix reached the end of the memory and restarted from the beginning.
+	// Get indices from the shared memory.
+	wr_ix = *((INT32U*)sh_mem->MemBaseAddr + SH_MEM_WR_IX_OFFSET);
+	rd_ix = *((INT32U*)(sh_mem->MemBaseAddr) + SH_MEM_RD_IX_OFFSET);
+
+	if(wr_ix < rd_ix)					// If true, wr_ix reached the end of the memory and restarted from the beginning.
 		wr_ix += sh_mem->OSMemBlkSize;	// Place wr_ix to the right of rd_ix as in an unbounded memory.
 
-	if((sh_mem->rd_ix + size) <= wr_ix)	// Reader is allowed to read until ReadIndex == WriteIndex, i.e. until FIFO is empty.
+	if((rd_ix + size) <= wr_ix)			// Reader is allowed to read until ReadIndex == WriteIndex, i.e. until FIFO is empty.
 	{
+		// Read the data.
 		for(i=0; i<size; i++)
-			buffer[i] = ((INT8U*)(sh_mem->MemBaseAddr))[(sh_mem->rd_ix + i) % sh_mem->OSMemBlkSize];
-		sh_mem->rd_ix = (sh_mem->rd_ix + size) % sh_mem->OSMemBlkSize;
+			buffer[i] = ((INT8U*)(sh_mem->DataBaseAddr))[(rd_ix + i) % sh_mem->OSMemBlkSize];
+
+		// Move the ReadIndex.
+		rd_ix = (rd_ix + size) % sh_mem->OSMemBlkSize;
+
+		// Update ReadIndex on shared memory
+		*((INT32U*)(sh_mem->MemBaseAddr) + SH_MEM_RD_IX_OFFSET) = rd_ix;
+
 		*perr = OS_ERR_NONE;
 	}
 	else
@@ -284,19 +295,31 @@ void  read_sh_mem(OS_MEM* sh_mem, INT32U size, INT8U* buffer, INT8U *perr)
 
 void  write_sh_mem(OS_MEM* sh_mem, INT32U size, INT8U* buffer, INT8U *perr)
 {
-	INT32U i, rd_ix = sh_mem->rd_ix;
+	INT32U	i, wr_ix, rd_ix;
+
+	// Get indices from the shared memory.
+	wr_ix = *((INT32U*)sh_mem->MemBaseAddr + SH_MEM_WR_IX_OFFSET);
+	rd_ix = *((INT32U*)(sh_mem->MemBaseAddr) + SH_MEM_RD_IX_OFFSET);
+
 
 	if(rd_ix <= sh_mem->wr_ix)			// If true, rd_ix reached the end of the memory and restarted from the beginning.
 										// Or the FIFO is empty.
 		rd_ix += sh_mem->OSMemBlkSize;	// Place rd_ix to the right of wr_ix as in an unbounded memory.
 
-	if((sh_mem->wr_ix + size) < rd_ix)	/* Writer is allowed to write until WriteIndex == ReadIndex - 1
+	if((wr_ix + size) < rd_ix)			/* Writer is allowed to write until WriteIndex == ReadIndex - 1
 										 * cause WriteIndex == ReadIndex means that the FIFO is empty.
 										 */
 	{
+		// Write the data.
 		for(i=0; i<size; i++)
-			((INT8U*)(sh_mem->MemBaseAddr))[(sh_mem->wr_ix + i) % sh_mem->OSMemBlkSize] = buffer[i];
+			((INT8U*)(sh_mem->DataBaseAddr))[(wr_ix + i) % sh_mem->OSMemBlkSize] = buffer[i];
+
+		// Move the WriteIndex.
 		sh_mem->wr_ix = (sh_mem->wr_ix + size) % sh_mem->OSMemBlkSize;
+
+		// Update WriteIndex on shared memory
+		*((INT32U*)(sh_mem->MemBaseAddr) + SH_MEM_WR_IX_OFFSET) = wr_ix;
+
 		*perr = OS_ERR_NONE;
 	}
 	else

@@ -165,7 +165,17 @@
 
 
 
-#define SH_MEM_DATA_OFFSET		8		/* Shared memory partition controller */
+/*
+*********************************************************************************************************
+*                           Shared memory offsets
+*********************************************************************************************************
+*/
+#define SH_MEM_WR_IX_OFFSET		0
+#define SH_MEM_RD_IX_OFFSET		4
+#define SH_MEM_DATA_OFFSET		8
+
+
+
 
 
 
@@ -209,7 +219,8 @@ typedef  INT16U   OS_PRIO;
 //#if (OS_MEM_EN > 0u) && (OS_MAX_MEM_PART > 0u)
 typedef struct os_mem {                   /* MEMORY CONTROL BLOCK                                      */
 //    void   *OSMemAddr;                    /* Pointer to beginning of memory partition                  */
-    INT32U	MemBaseAddr;
+    void	*MemBaseAddr;				  // Pointer to the shared memory base address.
+    void	*DataBaseAddr;				  // Pointer to the data base address.
 //    void   *OSMemFreeList;                /* Pointer to list of free memory blocks                     */
     INT32U  OSMemBlkSize;                 /* Size (in bytes) of each block of memory                   */
 //    INT32U  OSMemNBlks;                   /* Total number of blocks in this partition                  */

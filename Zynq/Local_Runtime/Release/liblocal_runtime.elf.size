@@ -1,0 +1,5 @@
+   text	   data	    bss	    dec	    hex	filename
+   1228	      0	      0	   1228	    4cc	lrt_core.o (ex liblocal_runtime.elf)
+    524	      0	      0	    524	    20c	lrt_debug.o (ex liblocal_runtime.elf)
+    284	      0	    524	    808	    328	lrt_ext_msg_mngr.o (ex liblocal_runtime.elf)
+   1072	      0	      0	   1072	    430	lrt_task_mngr.o (ex liblocal_runtime.elf)

@@ -1,0 +1,10 @@
+elfcheck
+Xilinx EDK 14.2 Build EDK_P.28xd
+Copyright (c) 1995-2012 Xilinx, Inc.  All rights reserved.
+
+Command Line: elfcheck -hw
+C:/work/Xilinx/projects/software/hw_platform/system.xml -pe microblaze_0
+local_runtime.elf 
+
+ELF file	: local_runtime.elf
+elfcheck passed.

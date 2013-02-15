@@ -9,7 +9,6 @@
 
 #include "lrt_definitions.h"
 #include "lrt_cfg.h"
-#include "lrt_cpu_cfg.h"
 //#ifdef OS_DEBUG_EN > 0
 //	#include <stdio.h>
 //#endif

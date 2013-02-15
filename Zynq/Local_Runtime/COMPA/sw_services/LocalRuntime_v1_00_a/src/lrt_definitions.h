@@ -132,8 +132,8 @@
 //#define OS_ERR_TMR_STOPPED            142u
 //#define OS_ERR_TMR_NO_CALLBACK        143u
 
-#define OS_ERR_SH_MEM_NO_ENOUGH_ESPACE	144u
-#define OS_ERR_SH_MEM_NO_ENOUGH_DATA	145u
+#define OS_ERR_FIFO_NO_ENOUGH_ESPACE	144u
+#define OS_ERR_FIFO_NO_ENOUGH_DATA		145u
 
 
 
@@ -167,12 +167,12 @@
 
 /*
 *********************************************************************************************************
-*                           Shared memory offsets
+*                           FIFO offsets
 *********************************************************************************************************
 */
-#define SH_MEM_WR_IX_OFFSET		0		// Offsets in number of 32-bits words.
-#define SH_MEM_RD_IX_OFFSET		1
-#define SH_MEM_DATA_OFFSET		2
+#define FIFO_WR_IX_OFFSET		0		// Offsets in number of 32-bits words.
+#define FIFO_RD_IX_OFFSET		4
+#define FIFO_DATA_OFFSET		8
 
 
 
@@ -217,20 +217,20 @@ typedef  INT16U   OS_PRIO;
 
 
 //#if (OS_MEM_EN > 0u) && (OS_MAX_MEM_PART > 0u)
-typedef struct os_mem {                   /* MEMORY CONTROL BLOCK                                      */
+typedef struct lrt_fifo_hndle{			// FIFO handle block
 //    void   *OSMemAddr;                    /* Pointer to beginning of memory partition                  */
-    void	*MemBaseAddr;				  // Pointer to the shared memory base address.
-    void	*DataBaseAddr;				  // Pointer to the data base address.
+    void	*FifoBaseAddr;				// FIFO's base address.
+    void	*DataBaseAddr;				// Data's base address.
 //    void   *OSMemFreeList;                /* Pointer to list of free memory blocks                     */
-    INT32U  OSMemBlkSize;                 /* Size (in bytes) of each block of memory                   */
+    INT32U  Size;                 		// FIFO's depth.
 //    INT32U  OSMemNBlks;                   /* Total number of blocks in this partition                  */
 //    INT32U  OSMemNFree;                   /* Number of memory blocks remaining in this partition       */
 //#if OS_MEM_NAME_EN > 0u
 //    INT8U  *OSMemName;                    /* Memory partition name                                     */
 //#endif
-//    INT32U	wr_ix;						  // Write index.
-//    INT32U	rd_ix;						  // Read index.
-} OS_MEM;
+    INT32U	*wr_ix;						// Write index.
+    INT32U	*rd_ix;						// Read index.
+} LRT_FIFO_HNDLE;
 //#endif
 
 
@@ -374,8 +374,11 @@ extern OS_TCB          	*OSTCBPrioTbl[OS_LOWEST_PRIO + 1u];    		// Table of poi
 extern OS_TCB          	OSTCBTbl[OS_MAX_TASKS + OS_N_SYS_TASKS];	// Table of TCBs
 
 
-extern OS_MEM            OSMemTbl[OS_MAX_MEM_PART];					/* Storage for memory partition manager            */
+// Tables of FIFOs.
+extern LRT_FIFO_HNDLE   InputFIFOs[OS_NB_IN_FIFO];					// Table of input FIFO handles.
+extern LRT_FIFO_HNDLE   OutputFIFOs[OS_NB_OUT_FIFO];				// Table of output FIFO handles.
 
+// Table of functions.
 extern FUNCTION_TYPE 	functions_tbl[];							// Table of local functions.
 
 //extern

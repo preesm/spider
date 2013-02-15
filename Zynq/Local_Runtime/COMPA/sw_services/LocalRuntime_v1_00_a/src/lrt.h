@@ -14,13 +14,14 @@
 
 /**************** At lrt_core.c file ************************
  * Function : init_lrt
- * Params   :
- * Return   :
+ *
  * Descrip  : Does all the initializations and starts waiting for external messages.
  * 			This is called by the application's main program. The execution should never
  * 			come back to the application.
  *
+ * Params   : control_addr is the base address of the control mechanism (mailbox or shared memory).
+ * Return   :
  */
-extern void init_lrt();
+extern void init_lrt(INT32U control_addr);
 
 #endif

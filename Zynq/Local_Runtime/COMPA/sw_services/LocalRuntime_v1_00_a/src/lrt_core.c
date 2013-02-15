@@ -251,44 +251,47 @@ void  OS_InitTCBList (void)
 *********************************************************************************************************
 */
 
-void  OS_MemInit (void)
-{
-#if OS_MAX_MEM_PART == 1u
-    OS_MemClr((INT8U *)&OSMemTbl[0], sizeof(OSMemTbl));   /* Clear the memory partition table          */
-//    OSMemFreeList               = (OS_MEM *)&OSMemTbl[0]; /* Point to beginning of free list           */
-#if OS_MEM_NAME_EN > 0u
-    OSMemFreeList->OSMemName    = (INT8U *)"?";           /* Unknown name                              */
-#endif
-#endif
-
-#if OS_MAX_MEM_PART >= 2u
-    OS_MEM  *pmem;
-    INT16U   i;
-
-
-    OS_MemClr((INT8U *)&OSMemTbl[0], sizeof(OSMemTbl));   /* Clear the memory partition table          */
-    for (i = 0u; i < (OS_MAX_MEM_PART - 1u); i++) {       /* Init. list of free memory partitions      */
-        pmem                = &OSMemTbl[i];               /* Point to memory control block (MCB)       */
-        pmem->OSMemFreeList = (void *)&OSMemTbl[i + 1u];  /* Chain list of free partitions             */
-#if OS_MEM_NAME_EN > 0u
-        pmem->OSMemName  = (INT8U *)(void *)"?";
-#endif
-    }
-    pmem                = &OSMemTbl[i];
-    pmem->OSMemFreeList = (void *)0;                      /* Initialize last node                      */
-#if OS_MEM_NAME_EN > 0u
-    pmem->OSMemName = (INT8U *)(void *)"?";
-#endif
-
-    OSMemFreeList   = &OSMemTbl[0];                       /* Point to beginning of free list           */
-#endif
-    OSMemTbl[0].MemBaseAddr = (void* )XPAR_MB_SHARED_BRAM_CTRL_0_S_AXI_BASEADDR;
-    OSMemTbl[0].DataBaseAddr = (INT32U* )(XPAR_MB_SHARED_BRAM_CTRL_0_S_AXI_BASEADDR) + SH_MEM_DATA_OFFSET;
-    OSMemTbl[0].OSMemBlkSize = XPAR_MB_SHARED_BRAM_CTRL_0_S_AXI_HIGHADDR - (INT32U)OSMemTbl[0].DataBaseAddr;
-
-    *((INT32U*)OSMemTbl[0].MemBaseAddr + SH_MEM_WR_IX_OFFSET) = 0;
-    *((INT32U*)OSMemTbl[0].MemBaseAddr + SH_MEM_RD_IX_OFFSET) = 0;
-}
+//static void  OS_MemInit (INT32U sh_mem_base_addr, INT32U size)
+//{
+////#if OS_MAX_MEM_PART == 1u
+////    OS_MemClr((INT8U *)&OSMemTbl[0], sizeof(OSMemTbl));   /* Clear the memory partition table          */
+////    OSMemFreeList               = (OS_MEM *)&OSMemTbl[0]; /* Point to beginning of free list           */
+//#if OS_MEM_NAME_EN > 0u
+//    OSMemFreeList->OSMemName    = (INT8U *)"?";           /* Unknown name                              */
+//#endif
+////#endif
+//
+//#if OS_MAX_MEM_PART >= 2u
+//    OS_MEM  *pmem;
+//    INT16U   i;
+//
+//
+//    OS_MemClr((INT8U *)&OSMemTbl[0], sizeof(OSMemTbl));   /* Clear the memory partition table          */
+//    for (i = 0u; i < (OS_MAX_MEM_PART - 1u); i++) {       /* Init. list of free memory partitions      */
+//        pmem                = &OSMemTbl[i];               /* Point to memory control block (MCB)       */
+//        pmem->OSMemFreeList = (void *)&OSMemTbl[i + 1u];  /* Chain list of free partitions             */
+//#if OS_MEM_NAME_EN > 0u
+//        pmem->OSMemName  = (INT8U *)(void *)"?";
+//#endif
+//    }
+//    pmem                = &OSMemTbl[i];
+//    pmem->OSMemFreeList = (void *)0;                      /* Initialize last node                      */
+//#if OS_MEM_NAME_EN > 0u
+//    pmem->OSMemName = (INT8U *)(void *)"?";
+//#endif
+//
+//    OSMemFreeList   = &OSMemTbl[0];                       /* Point to beginning of free list           */
+//#endif
+////    OSMemTbl[0].MemBaseAddr = (void* )sh_mem_base_addr;
+////    OSMemTbl[0].DataBaseAddr = (INT32U* )(sh_mem_base_addr) + SH_MEM_DATA_OFFSET;
+////    OSMemTbl[0].DataBaseAddr = (void*)sh_mem_base_addr + SH_MEM_DATA_OFFSET;
+////    OSMemTbl[0].OSMemBlkSize = size;
+//
+////#if XPAR_CPU_ID == 1
+////    *((INT32U*)(OSMemTbl[0].MemBaseAddr + SH_MEM_WR_IX_OFFSET)) = 0;
+////    *((INT32U*)(OSMemTbl[0].MemBaseAddr + SH_MEM_RD_IX_OFFSET)) = 0;
+////#endif
+//}
 
 
 
@@ -308,7 +311,7 @@ void  OS_MemInit (void)
 * Returns    : none
 *********************************************************************************************************
 */
-void  OSInit (void)
+void  OSInit ()
 {
 //    OSInitHookBegin();                                           /* Call port specific initialization code   */
 
@@ -318,6 +321,9 @@ void  OSInit (void)
 
     OS_InitTCBList();                                            /* Initialize the free list of OS_TCBs      */
 
+//    OS_MemInit(sh_mem_base_addr, sh_mem_size);					 /* Initialize the memory manager            */
+
+
 //    OS_InitEventList();                                          /* Initialize the free list of OS_EVENTs    */
 
 #if (OS_FLAG_EN > 0u) && (OS_MAX_FLAGS > 0u)
@@ -325,9 +331,9 @@ void  OSInit (void)
 #endif
 
 //#if (OS_MEM_EN > 0u) && (OS_MAX_MEM_PART > 0u)
-#if (OS_MAX_MEM_PART > 0u)
-    OS_MemInit();                                                /* Initialize the memory manager            */
-#endif
+//#if (OS_MAX_MEM_PART > 0u)
+//    OS_MemInit(sh_mem_base_addr, sh_mem_size);     				/* Initialize the memory manager            */
+//#endif
 
 #if (OS_Q_EN > 0u) && (OS_MAX_QS > 0u)
     OS_QInit();                                                  /* Initialize the message queue structures  */
@@ -357,7 +363,7 @@ void  OSInit (void)
 
 
 
-void init_lrt()
+void init_lrt(INT32U control_addr)
 {
 #if OS_DEBUG_EN > 0
 	print("Initializing local runtime ");
@@ -367,8 +373,8 @@ void init_lrt()
 
     OSInit();
 
-    while(true)
-    	wait_for_ext_msg();
+//    while(true)
+    	wait_for_ext_msg(control_addr);
 }
 
 

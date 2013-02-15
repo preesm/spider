@@ -88,13 +88,11 @@ INT8U  OSTaskCreateExt (FUNCTION_TYPE,
 /* ************** At lrt_ext_msg_mngr.c file****************
  *
  * Function : wait_for_ext_msg
- * Params   :
-			  addr (optional) is a memory address in case a shared memory is used instead of a FIFO.
- * Descrip  : This is the function of the idle task. It waits for a external message is placed into
-* 			the FIFO or memory address.
+ * Params   : addr is the base address of the shared memory or mailbox.
+ * Descrip  : It waits for an external message.
 */
-//extern void  wait_for_ext_msg(INT32U addr);
-extern void  wait_for_ext_msg();
+extern void  wait_for_ext_msg(INT32U addr);
+
 
 
 
@@ -143,6 +141,34 @@ extern void  wait_for_ext_msg();
 
 
 
+
+
+
+
+/*
+*********************************************************************************************************
+*                                              create_fifo_hndl
+*
+* Description: Creates a handle for a FIFO.
+*
+* Arguments  : addr is the base address of the FIFO.
+* 			   size is the size of the FIFO in bytes.
+* 			   dir is the direction of the FIFO (0 - input, 1 - output).
+*
+* Returns    : a pointer to a FIFO handle.
+*
+*********************************************************************************************************
+*/
+extern LRT_FIFO_HNDLE* create_fifo_hndl(INT32U addr, INT32U size, INT8U dir);
+
+
+
+
+
+
+
+
+
 /*$PAGE*/
 /*
 *********************************************************************************************************
@@ -158,7 +184,7 @@ extern void  wait_for_ext_msg();
 *
 *********************************************************************************************************
 */
-OS_MEM* get_sh_mem_hndl(INT32U i);
+//LRT_FIFO_HNDLE* get_sh_mem_hndl(INT32U i);
 
 
 
@@ -171,19 +197,20 @@ OS_MEM* get_sh_mem_hndl(INT32U i);
 /*$PAGE*/
 /*
 *********************************************************************************************************
-*                                              read_sh_mem
+*                                              read_input_fifo
 *
-* Description: Reads data (tokens) from a circular buffer on a shared memory.
+* Description: Reads data (tokens) from an input FIFO.
 *
-* Arguments  : sh_mem is a pointer to the structure that stores the shared memory's informations.
+* Arguments  : in_fifo_hndl is a pointer to the input FIFO's handle.
 * 			   size is the amount of data to be read in bytes.
-* 			   buffer is a pointer to a data block that will contain the read data.
-*
-* Returns    : perr will contain the error code : OS_ERR_NONE or OS_ERR_SH_MEM_NO_ENOUGH_DATA
+* 			   buffer is a pointer to a data block that will store the read data.
+*			   perr will contain the error code : OS_ERR_NONE or OS_ERR_FIFO_NO_ENOUGH_DATA
 *
 *********************************************************************************************************
 */
-extern void  read_sh_mem(OS_MEM* sh_mem, INT32U size, INT8U* buffer, INT8U *perr);
+extern void  read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr);
+
+
 
 
 
@@ -194,19 +221,51 @@ extern void  read_sh_mem(OS_MEM* sh_mem, INT32U size, INT8U* buffer, INT8U *perr
 /*$PAGE*/
 /*
 *********************************************************************************************************
-*                                              write_sh_mem
+*                                              write_output_fifo
 *
-* Description: Writes data (tokens) into a circular buffer on a shared memory.
+* Description: Writes data (tokens) into an output FIFO.
 *
-* Arguments  : sh_mem is a pointer to the structure that stores the shared memory's informations.
+* Arguments  : out_fifo_hndl is a pointer to output FIFO's handle.
 * 			   size is the amount of data to be written in bytes.
 * 			   buffer is a pointer to the data block to be copied.
+* 			   perr will contain the error code : OS_ERR_NONE or OS_ERR_FIFO_NO_ENOUGH_ESPACE.
 *
-* Returns    : perr will contain the error code : OS_ERR_NONE or OS_ERR_SH_MEM_NO_ENOUGH_ESPACE
+* Returns    :
 *
 *********************************************************************************************************
 */
-extern void  write_sh_mem(OS_MEM* sh_mem, INT32U size, INT8U* buffer, INT8U *perr);
+extern void  write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr);
+
+
+
+
+
+
+
+
+
+
+
+/*$PAGE*/
+/*
+*********************************************************************************************************
+*                                              blocking_read_input_fifo
+*
+* Description: Reads data (tokens) from an input FIFO. Blocks until there is enough data.
+*
+* Arguments  : in_fifo_hndl is a pointer to the input FIFO's handle.
+* 			   size is the amount of data to be read in bytes.
+* 			   buffer is a pointer to a data block that will store the read data.
+* 			   perr will contain the error code : OS_ERR_NONE.
+*
+* Returns    :
+*
+*********************************************************************************************************
+*/
+extern void  blocking_read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr);
+
+
+
 
 
 

@@ -5,9 +5,13 @@
  *      Author: yoliva
  */
 
-#include "xuartlite_l.h"
+#include "xparameters.h"
+#ifndef _XPARAMETERS_PS_H_
 #include "xgpio_l.h"
-
+#else
+#include "xgpiops_hw.h"
+#define	XGpio_WriteReg	XGpioPs_WriteReg
+#endif
 
 #define XUartChanged_IsTransmitFull(BaseAddress)			 \
 	((Xil_In32((BaseAddress) + 0x2C) & 	\

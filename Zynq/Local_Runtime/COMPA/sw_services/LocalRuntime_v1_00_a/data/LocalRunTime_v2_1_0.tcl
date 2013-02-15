@@ -44,8 +44,12 @@ proc fill_cfg_file {conffile lib_handle} {
 	puts $conffile "#define NB_LOCAL_FUNCTIONS $value"
 	set value [xget_value $lib_handle "PARAMETER" "OS_DEBUG_EN"]
 	puts $conffile "#define OS_DEBUG_EN $value"
-	set value [xget_value $lib_handle "PARAMETER" "OS_MAX_MEM_PART"]
-	puts $conffile "#define OS_MAX_MEM_PART $value"
+	set value [xget_value $lib_handle "PARAMETER" "CONTROL_COMM"]
+	puts $conffile "#define CONTROL_COMM $value"
+	set value [xget_value $lib_handle "PARAMETER" "OS_NB_IN_FIFO"]
+	puts $conffile "#define OS_NB_IN_FIFO $value"
+	set value [xget_value $lib_handle "PARAMETER" "OS_NB_OUT_FIFO"]
+	puts $conffile "#define OS_NB_OUT_FIFO $value"
 	puts $conffile "#endif"
 }
 

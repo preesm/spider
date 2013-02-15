@@ -13,7 +13,7 @@ INCLUDES=-I./. -I${INCLUDEDIR}
 
 LIBSOURCES=lrt_core.c lrt_debug.c lrt_ext_msg_mngr.c lrt_task_mngr.c
 LIBOBJS=$(LIBSOURCES:%.c=%.o)
-INCLUDEFILES= lrt_cpu_cfg.h lrt_definitions.h lrt_prototypes.h lrt.h lrt_cfg.h
+INCLUDEFILES= lrt_definitions.h lrt_prototypes.h lrt.h lrt_cfg.h
 #INCLUDEFILES=lrt.h
 
 libs:

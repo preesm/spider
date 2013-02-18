@@ -21,16 +21,6 @@
  */
 
 
-#define DOMAIN			0
-#define SIZE			8
-#define PERF_MON		0
-
-#define FIFO_SIZE		4096
-#define FIFO_IN_ADDR	XPAR_BRAM_0_BASEADDR
-#define FIFO_OUT_ADDR	XPAR_BRAM_0_BASEADDR
-#define FIFO_IN_DIR		0
-#define FIFO_OUT_DIR	1
-
 #include "platform.h"
 #include "xparameters.h"
 #include "lrt_prototypes.h"
@@ -48,6 +38,16 @@
 //#include "xintc_l.h"
 
 
+
+#define DOMAIN			0
+#define SIZE			8
+#define PERF_MON		0
+
+#define FIFO_SIZE		4096
+#define FIFO_IN_ADDR	XPAR_BRAM_0_BASEADDR
+#define FIFO_OUT_ADDR	XPAR_BRAM_0_BASEADDR
+#define FIFO_IN_DIR		0
+#define FIFO_OUT_DIR	1
 
 
 

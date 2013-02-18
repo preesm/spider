@@ -15,6 +15,9 @@
 //--- Global variables ----//
 static EXT_MSG_STRUCT 	ext_msg;							// To store an external message.
 static INT32U 			tasks_stack[OS_DEFAULT_STACK_SIZE];	// Stack pour the tasks. Currently we need only one zone.
+#if CONTROL_COMM == 1
+LRT_FIFO_HNDLE 			*cntrl_fifo;						// Pointer to an input FIFO for control messages.
+#endif
 
 LRT_FIFO_HNDLE  		InputFIFOs[OS_NB_IN_FIFO];			// Table of input FIFO handles.
 LRT_FIFO_HNDLE  		OutputFIFOs[OS_NB_OUT_FIFO];		// Table of output FIFO handles.
@@ -135,23 +138,23 @@ static void local_rt_call()
 */
 void  wait_for_ext_msg(INT32U control_addr)
 {
-
+#if CONTROL_COMM == 0	// Reads from a mailbox.
 	INT32U *ptr = (INT32U*)&ext_msg;
 	INT8U nb_reads = sizeof(EXT_MSG_STRUCT)/4;		// Number of 32bits words to read to get a complete msg.
 
-#if CONTROL_COMM == 0	// Reads from a mailbox.
 	while(nb_reads > 0)
 	{
 		nb_reads--;
 		*ptr++ = blocking_fifo_read(control_addr);
 	}
-#else					// Reads from a memory location.
-	while(nb_reads > 0)
-	{
-		nb_reads--;
-		*ptr++ = *(INT32U*)control_addr;
-		control_addr = (INT32U)((INT32U*)control_addr + 1);
-	}
+#else					// Reads from a FIFO.
+	blocking_read_input_fifo(cntrl_fifo, sizeof(EXT_MSG_STRUCT), (INT8U*)&ext_msg, (INT8U*)0);
+//	while(nb_reads > 0)
+//	{
+//		nb_reads--;
+//		*ptr++ = *(INT32U*)control_addr;
+//		control_addr = (INT32U)((INT32U*)control_addr + 1);
+//	}
 #endif
 
 
@@ -420,6 +423,59 @@ void  blocking_read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U*
 
 			// Update the read index.
 			*rd_ix = (*rd_ix + size) % in_fifo_hndl->Size;
+
+			*perr = OS_ERR_NONE;
+
+			return;
+		}
+	}
+}
+
+
+
+
+
+
+/*
+*********************************************************************************************************
+*                                              blocking_write_output_fifo
+*
+* Description: Writes data (tokens) to an output FIFO. Blocks until there is enough space.
+*
+* Arguments  : out_fifo_hndl is a pointer to the output FIFO's handle.
+* 			   size is the amount of data to be written in bytes.
+* 			   buffer is a pointer to a data block containing the data.
+* 			   perr will contain the error code : OS_ERR_NONE.
+*
+* Returns    :
+*
+*********************************************************************************************************
+*/
+void  blocking_write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr)
+{
+	INT32U	i, *wr_ix, *rd_ix, temp_rd_ix;
+
+	// Get indices from the handle.
+	wr_ix = out_fifo_hndl->wr_ix;
+	rd_ix = out_fifo_hndl->rd_ix;
+
+	while(TRUE)
+	{
+		temp_rd_ix = *rd_ix;
+		if(*rd_ix <= *wr_ix)							// If true, rd_ix reached the end of the memory and restarted from the beginning.
+														// Or the FIFO is empty.
+			temp_rd_ix = *rd_ix + out_fifo_hndl->Size;	// Place rd_ix to the right of wr_ix as in an unbounded memory.
+
+		if((*wr_ix + size) < temp_rd_ix)				/* Writer is allowed to write until wr_ix == rd_ix - 1
+											 	 	 	 * cause wr_ix == rd_ix means that the FIFO is empty.
+											 	 	 	 */
+		{
+			// Write the data.
+			for(i=0; i<size; i++)
+				((INT8U*)(out_fifo_hndl->DataBaseAddr))[(*wr_ix + i) % out_fifo_hndl->Size] = buffer[i];
+
+			// Update write index.
+			*wr_ix = (*wr_ix + size) % out_fifo_hndl->Size;
 
 			*perr = OS_ERR_NONE;
 

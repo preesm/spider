@@ -373,7 +373,15 @@ void init_lrt(INT32U control_addr)
 
     OSInit();
 
-//    while(true)
+#if CONTROL_COMM == 1
+#define FIFO_CTRL_SIZE	1024
+#define FIFO_CTRL_ADDR	XPAR_BRAM_0_BASEADDR + 0x3c00
+#define FIFO_CTRL_DIR	1
+
+	cntrl_fifo = create_fifo_hndl(FIFO_CTRL_ADDR, FIFO_CTRL_SIZE, FIFO_CTRL_DIR);
+
+#endif
+    while(true)
     	wait_for_ext_msg(control_addr);
 }
 

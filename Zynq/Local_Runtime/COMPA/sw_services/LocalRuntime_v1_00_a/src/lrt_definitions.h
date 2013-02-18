@@ -230,6 +230,7 @@ typedef struct lrt_fifo_hndle{			// FIFO handle block
 //#endif
     INT32U	*wr_ix;						// Write index.
     INT32U	*rd_ix;						// Read index.
+    void	*next_hndl;					// Pointer to the next LRT_FIFO_HNDLE object.
 } LRT_FIFO_HNDLE;
 //#endif
 
@@ -377,6 +378,13 @@ extern OS_TCB          	OSTCBTbl[OS_MAX_TASKS + OS_N_SYS_TASKS];	// Table of TCB
 // Tables of FIFOs.
 extern LRT_FIFO_HNDLE   InputFIFOs[OS_NB_IN_FIFO];					// Table of input FIFO handles.
 extern LRT_FIFO_HNDLE   OutputFIFOs[OS_NB_OUT_FIFO];				// Table of output FIFO handles.
+
+
+#if CONTROL_COMM == 1
+extern LRT_FIFO_HNDLE 	*cntrl_fifo;								// Pointer to an input FIFO for control messages.
+#endif
+
+
 
 // Table of functions.
 extern FUNCTION_TYPE 	functions_tbl[];							// Table of local functions.

@@ -276,6 +276,31 @@ extern void  blocking_read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size,
 
 
 
+
+/*
+*********************************************************************************************************
+*                                              blocking_write_output_fifo
+*
+* Description: Writes data (tokens) to an output FIFO. Blocks until there is enough space.
+*
+* Arguments  : out_fifo_hndl is a pointer to the output FIFO's handle.
+* 			   size is the amount of data to be written in bytes.
+* 			   buffer is a pointer to a data block containing the data.
+* 			   perr will contain the error code : OS_ERR_NONE.
+*
+* Returns    :
+*
+*********************************************************************************************************
+*/
+extern void  blocking_write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr);
+
+
+
+
+
+
+
+
 /* ************** At lrt_debug.c file****************
  *
  */

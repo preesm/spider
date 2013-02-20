@@ -6,6 +6,7 @@
  */
 
 #include <xil_io.h>
+#include <string.h>
 #include "lrt_prototypes.h"
 #include "xparameters.h"
 #include "xmbox_hw.h"
@@ -265,11 +266,18 @@ LRT_FIFO_HNDLE* create_fifo_hndl(INT32U addr, INT32U size, INT8U dir)
 	fifo_hndl->rd_ix = (INT32U*)(addr + FIFO_RD_IX_OFFSET);
 	fifo_hndl->wr_ix = (INT32U*)(addr + FIFO_WR_IX_OFFSET);
 	// Set indices' values to 0 if it is an output FIFO.
-	*fifo_hndl->rd_ix &= (0xFFFFFFFE | ~dir);
-	*fifo_hndl->wr_ix &= (0xFFFFFFFE | ~dir);
+	if(dir == 1)
+	{
+		*fifo_hndl->rd_ix = 0;
+		*fifo_hndl->wr_ix = 0;
+	}
+//	*fifo_hndl->rd_ix &= (0xFFFFFFFE | ~dir);
+//	*fifo_hndl->wr_ix &= (0xFFFFFFFE | ~dir);
 
 	return fifo_hndl;
 }
+
+
 
 
 
@@ -293,26 +301,31 @@ LRT_FIFO_HNDLE* create_fifo_hndl(INT32U addr, INT32U size, INT8U dir)
 */
 void  read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr)
 {
-	INT32U	i, wr_ix, rd_ix;
+	INT32U *wr_ix, *rd_ix, temp_wr_ix;
 
 	// Get indices from the handle.
-	wr_ix = *in_fifo_hndl->wr_ix;
-	rd_ix = *in_fifo_hndl->rd_ix;
+	wr_ix = in_fifo_hndl->wr_ix;
+	rd_ix = in_fifo_hndl->rd_ix;
 
-	if(wr_ix < rd_ix)					// If true, wr_ix reached the end of the memory and restarted from the beginning.
-		wr_ix += in_fifo_hndl->Size;	// Place wr_ix to the right of rd_ix as in an unbounded memory.
+	temp_wr_ix = *wr_ix;
+	if(*wr_ix < *rd_ix)								// If true, wr_ix reached the end of the memory and restarted from the beginning.
+		temp_wr_ix = *wr_ix + in_fifo_hndl->Size;	// Place wr_ix to the right of rd_ix as in an unbounded memory.
 
-	if((rd_ix + size) <= wr_ix)			// Reader is allowed to read until rd_ix == wr_ix, i.e. until FIFO is empty.
+	if(((*rd_ix) + size) <= temp_wr_ix)				// Reader is allowed to read until rd_ix == wr_ix, i.e. until FIFO is empty.
 	{
 		// Read the data.
-		for(i=0; i<size; i++)
-			buffer[i] = ((INT8U*)(in_fifo_hndl->DataBaseAddr))[(rd_ix + i) % in_fifo_hndl->Size];
+//			for(i=0; i<size/4; i++)
+//				buffer[i] = ((INT8U*)(in_fifo_hndl->DataBaseAddr))[(*rd_ix + i) % in_fifo_hndl->Size];
 
-		// Move the temporary read index.
-		rd_ix = (rd_ix + size) % in_fifo_hndl->Size;
+		if(*rd_ix + size > in_fifo_hndl->Size){
+			memcpy(buffer, in_fifo_hndl->DataBaseAddr + *rd_ix, (in_fifo_hndl->Size - *rd_ix) * sizeof(INT8U));
+			memcpy(buffer + in_fifo_hndl->Size - *rd_ix, in_fifo_hndl->DataBaseAddr, (size - in_fifo_hndl->Size + *rd_ix) * sizeof(INT8U));
+		}else{
+			memcpy(buffer, in_fifo_hndl->DataBaseAddr + *rd_ix, size * sizeof(INT8U));
+		}
 
-		// Update the real read index's value.
-		*in_fifo_hndl->rd_ix = rd_ix;
+		// Update the read index.
+		*rd_ix = (*rd_ix + size) % in_fifo_hndl->Size;
 
 		*perr = OS_ERR_NONE;
 	}
@@ -347,30 +360,38 @@ void  read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U* buffer, 
 */
 void  write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr)
 {
-	INT32U	i, wr_ix, rd_ix;
+	INT32U	*wr_ix, *rd_ix, temp_rd_ix;
 
 	// Get indices from the handle.
-	wr_ix = *out_fifo_hndl->wr_ix;
-	rd_ix = *out_fifo_hndl->rd_ix;
+	wr_ix = out_fifo_hndl->wr_ix;
+	rd_ix = out_fifo_hndl->rd_ix;
 
+	temp_rd_ix = *rd_ix;
+	if(*rd_ix <= *wr_ix)							// If true, rd_ix reached the end of the memory and restarted from the beginning.
+													// Or the FIFO is empty.
+		temp_rd_ix = *rd_ix + out_fifo_hndl->Size;	// Place rd_ix to the right of wr_ix as in an unbounded memory.
 
-	if(rd_ix <= wr_ix)					// If true, rd_ix reached the end of the memory and restarted from the beginning.
-										// Or the FIFO is empty.
-		rd_ix += out_fifo_hndl->Size;	// Place rd_ix to the right of wr_ix as in an unbounded memory.
-
-	if((wr_ix + size) < rd_ix)			/* Writer is allowed to write until wr_ix == rd_ix - 1
-										 * cause wr_ix == rd_ix means that the FIFO is empty.
-										 */
+	if((*wr_ix + size) < temp_rd_ix)				/* Writer is allowed to write until wr_ix == rd_ix - 1
+										 	 	 	 * cause wr_ix == rd_ix means that the FIFO is empty.
+										 	 	 	 */
 	{
 		// Write the data.
-		for(i=0; i<size; i++)
-			((INT8U*)(out_fifo_hndl->DataBaseAddr))[(wr_ix + i) % out_fifo_hndl->Size] = buffer[i];
+//			for(i=0; i<size/4; i++)
+//				((INT32U*)(out_fifo_hndl->DataBaseAddr))[(*wr_ix + i) % out_fifo_hndl->Size] = ((INT32U*)buffer)[i];
 
-		// Move the temporary write index.
-		wr_ix = (wr_ix + size) % out_fifo_hndl->Size;
+//			memcpy(out_fifo_hndl->DataBaseAddr+*wr_ix, buffer, size);
+		if(*wr_ix + size > out_fifo_hndl->Size)
+		{
+			memcpy(out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, (out_fifo_hndl->Size - *wr_ix)*sizeof(INT8U));
+			memcpy(out_fifo_hndl->DataBaseAddr, buffer + out_fifo_hndl->Size - *wr_ix, (size - out_fifo_hndl->Size + *wr_ix) * sizeof(INT8U));
+		}
+		else
+		{
+			memcpy(out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, size * sizeof(INT8U));
+		}
 
-		// Update the real write index's value.
-		*out_fifo_hndl->wr_ix = wr_ix;
+		// Update write index.
+		*wr_ix = (*wr_ix + size) % out_fifo_hndl->Size;
 
 		*perr = OS_ERR_NONE;
 	}
@@ -403,7 +424,7 @@ void  write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT8U* buffe
 */
 void  blocking_read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr)
 {
-	INT32U	i, *wr_ix, *rd_ix, temp_wr_ix;
+	INT32U	*wr_ix, *rd_ix, temp_wr_ix;
 
 	// Get indices from the handle.
 	wr_ix = in_fifo_hndl->wr_ix;
@@ -418,8 +439,15 @@ void  blocking_read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U*
 		if(((*rd_ix) + size) <= temp_wr_ix)				// Reader is allowed to read until rd_ix == wr_ix, i.e. until FIFO is empty.
 		{
 			// Read the data.
-			for(i=0; i<size; i++)
-				buffer[i] = ((INT8U*)(in_fifo_hndl->DataBaseAddr))[(*rd_ix + i) % in_fifo_hndl->Size];
+//			for(i=0; i<size/4; i++)
+//				buffer[i] = ((INT8U*)(in_fifo_hndl->DataBaseAddr))[(*rd_ix + i) % in_fifo_hndl->Size];
+
+			if(*rd_ix + size > in_fifo_hndl->Size){
+				memcpy(buffer, in_fifo_hndl->DataBaseAddr + *rd_ix, (in_fifo_hndl->Size - *rd_ix) * sizeof(INT8U));
+				memcpy(buffer + in_fifo_hndl->Size - *rd_ix, in_fifo_hndl->DataBaseAddr, (size - in_fifo_hndl->Size + *rd_ix) * sizeof(INT8U));
+			}else{
+				memcpy(buffer, in_fifo_hndl->DataBaseAddr + *rd_ix, size * sizeof(INT8U));
+			}
 
 			// Update the read index.
 			*rd_ix = (*rd_ix + size) % in_fifo_hndl->Size;
@@ -430,6 +458,9 @@ void  blocking_read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U*
 		}
 	}
 }
+
+
+
 
 
 
@@ -453,7 +484,7 @@ void  blocking_read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U*
 */
 void  blocking_write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr)
 {
-	INT32U	i, *wr_ix, *rd_ix, temp_rd_ix;
+	INT32U	*wr_ix, *rd_ix, temp_rd_ix;
 
 	// Get indices from the handle.
 	wr_ix = out_fifo_hndl->wr_ix;
@@ -471,8 +502,19 @@ void  blocking_write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT
 											 	 	 	 */
 		{
 			// Write the data.
-			for(i=0; i<size; i++)
-				((INT8U*)(out_fifo_hndl->DataBaseAddr))[(*wr_ix + i) % out_fifo_hndl->Size] = buffer[i];
+//			for(i=0; i<size/4; i++)
+//				((INT32U*)(out_fifo_hndl->DataBaseAddr))[(*wr_ix + i) % out_fifo_hndl->Size] = ((INT32U*)buffer)[i];
+
+//			memcpy(out_fifo_hndl->DataBaseAddr+*wr_ix, buffer, size);
+			if(*wr_ix + size > out_fifo_hndl->Size)
+			{
+				memcpy(out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, (out_fifo_hndl->Size - *wr_ix)*sizeof(INT8U));
+				memcpy(out_fifo_hndl->DataBaseAddr, buffer + out_fifo_hndl->Size - *wr_ix, (size - out_fifo_hndl->Size + *wr_ix) * sizeof(INT8U));
+			}
+			else
+			{
+				memcpy(out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, size * sizeof(INT8U));
+			}
 
 			// Update write index.
 			*wr_ix = (*wr_ix + size) % out_fifo_hndl->Size;

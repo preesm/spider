@@ -24,11 +24,15 @@
 #include "platform.h"
 #include "xparameters.h"
 #include "lrt_prototypes.h"
-//#include "lrt_cpu_cfg.h"
 #include "xuartlite_l.h"
-//#include "xmbox_hw.h"
 #include "xgpio_l.h"
 #include "lrt.h"
+
+
+#define DOMAIN			0
+#define SIZE			512
+#define PERF_MON		1
+
 
 #if PERF_MON == 1
 #include "xaxipmon_hw.h"
@@ -39,11 +43,7 @@
 
 
 
-#define DOMAIN			0
-#define SIZE			8
-#define PERF_MON		0
-
-#define FIFO_SIZE		4096
+#define FIFO_SIZE		1024
 #define FIFO_IN_ADDR	XPAR_BRAM_0_BASEADDR
 #define FIFO_OUT_ADDR	XPAR_BRAM_0_BASEADDR
 #define FIFO_IN_DIR		0
@@ -56,8 +56,12 @@ void test1()
 {
 	print("Hello from test1\n\r");
 
-	INT8U buffer_in[] = {1, 2, 3, 4, 5, 6, 7, 8};
 	INT8U error;
+	INT8U buffer_in[SIZE];
+	INT32U i;
+
+	for(i=0;i<SIZE;i++)
+		buffer_in[i] = i+1;
 
 
 	LRT_FIFO_HNDLE *out_fifo = create_fifo_hndl(FIFO_OUT_ADDR, FIFO_SIZE, FIFO_OUT_DIR);
@@ -67,7 +71,7 @@ void test1()
 	XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
 #endif
 
-	write_output_fifo(out_fifo, SIZE, buffer_in, &error);
+	blocking_write_output_fifo(out_fifo, SIZE, buffer_in, &error);
 
 #if PERF_MON == 1
 	INT32U nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
@@ -75,7 +79,6 @@ void test1()
 	putnum(nb_cycles);
 	print("\n\r");
 #endif
-
 //		XGpio_WriteReg(XPAR_LEDS_4BITS_BASEADDR, XGPIO_DATA_OFFSET, 0xFF);
 }
 
@@ -86,7 +89,8 @@ void test2()
 	print("Hello from test2\n\r");
 
 	INT8U buffer_out[SIZE];
-	INT8U i, error;
+	INT8U error;
+	INT32U i;
 
 
 	LRT_FIFO_HNDLE *in_fifo = create_fifo_hndl(FIFO_IN_ADDR, FIFO_SIZE, FIFO_IN_DIR);
@@ -140,7 +144,7 @@ int main()
     functions_tbl[1] = test2;
 
 //	init_lrt(DOMAIN,XPAR_CPU_ID,0,0,0);
-    init_lrt(XPAR_MBOX_0_BASEADDR);
+    init_lrt(XPAR_MAILBOX_0_IF_1_BASEADDR);
 
     cleanup_platform();
 

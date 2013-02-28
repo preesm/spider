@@ -50,6 +50,8 @@ proc fill_cfg_file {conffile lib_handle} {
 	puts $conffile "#define OS_NB_IN_FIFO $value"
 	set value [xget_value $lib_handle "PARAMETER" "OS_NB_OUT_FIFO"]
 	puts $conffile "#define OS_NB_OUT_FIFO $value"
+	set value [xget_value $lib_handle "PARAMETER" "OS_NB_FIFO"]
+	puts $conffile "#define OS_NB_FIFO $value"
 	puts $conffile "#endif"
 }
 

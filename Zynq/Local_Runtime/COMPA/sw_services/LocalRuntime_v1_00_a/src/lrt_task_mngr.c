@@ -9,6 +9,7 @@
 
 #include "lrt_definitions.h"
 #include "lrt_cfg.h"
+#include "lrt_prototypes.h"
 //#ifdef OS_DEBUG_EN > 0
 //	#include <stdio.h>
 //#endif
@@ -315,7 +316,6 @@ INT8U  OS_TCBInit (INT8U    prio,
 
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                     CREATE A TASK (Extended Version)
@@ -363,6 +363,10 @@ INT8U  OS_TCBInit (INT8U    prio,
 *                        OS_STK is set to INT32U, 'stk_size' contains the number of 32-bit entries
 *                        available on the stack.
 *
+*              fifo_in 	 is the identifier of the input FIFO.
+*
+*              fifo_out  is the identifier of the input FIFO.
+*
 *              pext      is a pointer to a user supplied memory location which is used as a TCB extension.
 *                        For example, this user memory can hold the contents of floating-point registers
 *                        during a context switch, the time each task takes to execute, the number of times
@@ -385,18 +389,20 @@ INT8U  OS_TCBInit (INT8U    prio,
 *              OS_ERR_TASK_CREATE_ISR  if you tried to create a task from an ISR.
 *********************************************************************************************************
 */
-/*$PAGE*/
-INT8U  OSTaskCreateExt (void   (*task)(void *p_arg),
+
+INT8U  OSTaskCreateExt (FUNCTION_TYPE task,
                         void    *p_arg,
                         OS_STK  *ptos,
                         INT8U    prio,
                         INT16U   id,
                         OS_STK  *pbos,
                         INT32U   stk_size,
+                        INT16U	fifo_in,
+                        INT16U	fifo_out,
                         void    *pext,
                         INT16U   opt)
 {
-    OS_STK    *psp;
+//    OS_STK    *psp;
     INT8U      err;
 //#if OS_CRITICAL_METHOD == 3u                 /* Allocate storage for CPU status register               */
 //    OS_CPU_SR  cpu_sr = 0u;
@@ -423,12 +429,14 @@ INT8U  OSTaskCreateExt (void   (*task)(void *p_arg),
 //        OS_TaskStkClr(pbos, stk_size, opt);                    /* Clear the task stack (if needed)     */
 //#endif
 
-        psp = OSTaskStkInit(task, p_arg, ptos, opt);           /* Initialize the task's stack          */
-        err = OS_TCBInit(prio, psp, pbos, id, stk_size, pext, opt);
+//        psp = OSTaskStkInit(task, p_arg, ptos, opt);           /* Initialize the task's stack          */
+        err = OS_TCBInit(prio, ptos, pbos, id, stk_size, pext, opt);
 
 //        err = OS_TCBInit(prio, ptos, pbos, id, stk_size, pext, opt);
         if (err == OS_ERR_NONE) {
         	OSTCBPrioTbl[prio]->task_func = (FUNCTION_TYPE)task;
+        	OSTCBPrioTbl[prio]->fifo_in  = get_fifo_hndl(fifo_in, &err);
+        	OSTCBPrioTbl[prio]->fifo_out = get_fifo_hndl(fifo_out, &err);
 //            if (OSRunning == OS_TRUE) {                        /* Find HPT if multitasking has started */
 //                OS_Sched();
 //            }
@@ -442,6 +450,85 @@ INT8U  OSTaskCreateExt (void   (*task)(void *p_arg),
 //    OS_EXIT_CRITICAL();
     return (OS_ERR_PRIO_EXIST);
 }
+
+
+
+
+
+
+
+
+
+
+
+/*
+*********************************************************************************************************
+*                                            QUERY A TASK
+*
+* Description: This function is called to obtain a copy of the desired task's TCB.
+*
+* Arguments  : id         is the id. of the task to obtain information from.
+*
+*              p_task_data  is a pointer to where the desired task's OS_TCB will be stored.
+*
+* Returns    : OS_ERR_NONE            if the requested task is suspended
+*              OS_ERR_PRIO_INVALID    if the priority you specify is higher that the maximum allowed
+*                                     (i.e. > OS_LOWEST_PRIO) or, you have not specified OS_PRIO_SELF.
+*              OS_ERR_PRIO            if the desired task has not been created
+*              OS_ERR_TASK_NOT_EXIST  if the task is assigned to a Mutex PIP
+*              OS_ERR_PDATA_NULL      if 'p_task_data' is a NULL pointer
+*********************************************************************************************************
+*/
+
+INT8U  OSTaskQuery (INT8U prio, OS_TCB  *p_task_data)
+{
+    OS_TCB    *ptcb;
+#if OS_CRITICAL_METHOD == 3u                     /* Allocate storage for CPU status register           */
+    OS_CPU_SR  cpu_sr = 0u;
+#endif
+
+
+
+#if OS_ARG_CHK_EN > 0u
+    if (prio > OS_LOWEST_PRIO) {                 /* Task priority valid ?                              */
+        if (prio != OS_PRIO_SELF) {
+            return (OS_ERR_PRIO_INVALID);
+        }
+    }
+    if (p_task_data == (OS_TCB *)0) {            /* Validate 'p_task_data'                             */
+        return (OS_ERR_PDATA_NULL);
+    }
+#endif
+
+    if (prio == OS_PRIO_SELF) {                  /* See if suspend SELF                                */
+        prio = OSTCBCur->OSTCBPrio;
+    }
+    ptcb = OSTCBPrioTbl[prio];
+    if (ptcb == (OS_TCB *)0) {                   /* Task to query must exist                           */
+//        OS_EXIT_CRITICAL();
+        return (OS_ERR_PRIO);
+    }
+    if (ptcb == OS_TCB_RESERVED) {               /* Task to query must not be assigned to a Mutex      */
+//        OS_EXIT_CRITICAL();
+        return (OS_ERR_TASK_NOT_EXIST);
+    }
+                                                 /* Copy TCB into user storage area                    */
+    OS_MemCopy((INT8U *)p_task_data, (INT8U *)ptcb, sizeof(OS_TCB));
+//    OS_EXIT_CRITICAL();
+    return (OS_ERR_NONE);
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

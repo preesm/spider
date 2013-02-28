@@ -67,7 +67,7 @@
 //#define OS_ERR_Q_EMPTY                 31u
 //
 #define OS_ERR_PRIO_EXIST              40u
-//#define OS_ERR_PRIO                    41u
+#define OS_ERR_PRIO                    41u
 //#define OS_ERR_PRIO_INVALID            42u
 //
 //#define OS_ERR_SCHED_LOCKED            50u
@@ -80,7 +80,7 @@
 //#define OS_ERR_TASK_DEL_ISR            64u
 //#define OS_ERR_TASK_NAME_TOO_LONG      65u
 #define OS_ERR_TASK_NO_MORE_TCB        66u
-//#define OS_ERR_TASK_NOT_EXIST          67u
+#define OS_ERR_TASK_NOT_EXIST          67u
 //#define OS_ERR_TASK_NOT_SUSPENDED      68u
 //#define OS_ERR_TASK_OPT                69u
 //#define OS_ERR_TASK_RESUME_PRIO        70u
@@ -134,7 +134,8 @@
 
 #define OS_ERR_FIFO_NO_ENOUGH_ESPACE	144u
 #define OS_ERR_FIFO_NO_ENOUGH_DATA		145u
-
+#define OS_ERR_FIFO_INVALID_ID			146u
+#define OS_ERR_FIFO_NOT_INITIALIZED		147u
 
 
 
@@ -157,9 +158,9 @@
 *                           GLOBAL RUNTIME MESSAGE TYPES
 *********************************************************************************************************
 */
-#define MSG_CREATE_ACTION		1
-#define MSG_CREATE_SH_MEM		2
-#define MSG_START_TASK			3
+#define MSG_CREATE_TASK			1
+#define MSG_CREATE_FIFO			2
+#define MSG_START_SCHED			3
 
 
 
@@ -167,7 +168,7 @@
 
 /*
 *********************************************************************************************************
-*                           FIFO offsets
+*                           FIFO's
 *********************************************************************************************************
 */
 #define FIFO_WR_IX_OFFSET		0		// Offsets in number of 32-bits words.
@@ -175,8 +176,15 @@
 #define FIFO_DATA_OFFSET		8
 
 
+#define FIFO_SIZE		1024
+#define FIFO_IN_ADDR	XPAR_BRAM_0_BASEADDR
+#define FIFO_OUT_ADDR	XPAR_BRAM_0_BASEADDR
+#define FIFO_IN_DIR		0
+#define FIFO_OUT_DIR	1
 
-
+//************************ Status codes
+#define FIFO_STAT_INIT		1
+#define FIFO_STAT_USED		2
 
 
 
@@ -219,17 +227,19 @@ typedef  INT16U   OS_PRIO;
 //#if (OS_MEM_EN > 0u) && (OS_MAX_MEM_PART > 0u)
 typedef struct lrt_fifo_hndle{			// FIFO handle block
 //    void   *OSMemAddr;                    /* Pointer to beginning of memory partition                  */
-    void	*FifoBaseAddr;				// FIFO's base address.
-    void	*DataBaseAddr;				// Data's base address.
+    INT32U	FifoBaseAddr;				// FIFO's base address.
+    INT32U	DataBaseAddr;				// Data's base address.
 //    void   *OSMemFreeList;                /* Pointer to list of free memory blocks                     */
     INT32U  Size;                 		// FIFO's depth.
+    INT8U	Direction;					// Input : 1 , Output : 0.
+    INT8U	Status;						// One of the defined FIFO states.
 //    INT32U  OSMemNBlks;                   /* Total number of blocks in this partition                  */
 //    INT32U  OSMemNFree;                   /* Number of memory blocks remaining in this partition       */
 //#if OS_MEM_NAME_EN > 0u
 //    INT8U  *OSMemName;                    /* Memory partition name                                     */
 //#endif
-    INT32U	*wr_ix;						// Write index.
-    INT32U	*rd_ix;						// Read index.
+    INT32U	wr_ix;						// Write index.
+    INT32U	rd_ix;						// Read index.
     void	*next_hndl;					// Pointer to the next LRT_FIFO_HNDLE object.
 } LRT_FIFO_HNDLE;
 //#endif
@@ -243,12 +253,17 @@ typedef enum {none, start_task, create_action, get_action} EXT_MSG_TYPE;	// Type
 
 typedef void (*FUNCTION_TYPE)(void);										// Function of a task.
 
-typedef struct ext_msg_struct												// External message's structure
+typedef struct lrt_msg														// Message's structure
 {
-	INT32U 		msg_type;
-	INT32U		task_id;
-	INT32U		function_id;
-}EXT_MSG_STRUCT;
+	unsigned int 	msg_type;
+	unsigned int 	task_id;
+	//	FUNCTION_TYPE	funct_addr;
+	unsigned int	function_id;
+	unsigned int 	fifo_id;
+	unsigned int 	fifo_in;			// Input FIFO's id.
+	unsigned int 	fifo_out;			// Output FIFO's id.
+	unsigned char 	direction;			// Input : 0, Output : 1.
+}LRT_MSG;
 
 //typedef struct create_msg_data
 //{
@@ -270,10 +285,13 @@ typedef struct ext_msg_struct												// External message's structure
 *                                          MISCELLANEOUS
 *********************************************************************************************************
 */
-#define OS_RDY_TBL_SIZE   ((OS_LOWEST_PRIO) / 8u + 1u)	// Size of ready table.
-#define print				zynq_print					// Wrapper for print. Implemented at lrt_debug.c
-#define putnum				zynq_putnum					// Wrapper for putnum. Implemented at lrt_debug.c
+#define OS_PRIO_SELF      	0xFFu              				// Indicate SELF priority
+#define OS_RDY_TBL_SIZE   	((OS_LOWEST_PRIO) / 8u + 1u)	// Size of ready table.
 
+
+#define print				zynq_print						// Wrapper for print. Implemented at lrt_debug.c
+#define putnum				zynq_putnum						// Wrapper for putnum. Implemented at lrt_debug.c
+#define putnum_dec			zynq_putnum_dec					// Wrapper for putnum in decimal.
 
 
 /*$PAGE*/
@@ -347,6 +365,8 @@ typedef struct os_tcb {
 #endif
 
     FUNCTION_TYPE	task_func;				/* The function that is executed by the task.				*/
+    LRT_FIFO_HNDLE*	fifo_in;				// Pointer to the input FIFO.
+    LRT_FIFO_HNDLE*	fifo_out;				// Pointer to the output FIFO.
 } OS_TCB;
 
 

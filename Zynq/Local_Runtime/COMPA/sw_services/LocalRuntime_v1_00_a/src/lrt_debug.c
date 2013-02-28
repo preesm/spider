@@ -61,3 +61,21 @@ void zynq_putnum(unsigned int num)
   *ptr = (char) 0;
   zynq_print (buf);
 }
+
+void zynq_putnum_dec(unsigned int n)
+{
+	char  buf[9] = "000000000";
+	char  *ptr;
+	int digit;
+
+	ptr = &buf[8];
+//	*ptr = (char) 0;
+	*ptr = (char)'\0';
+	do
+	{
+	    digit = n % 10;
+	    *ptr-- = (char)('0' + digit);
+	    n /= 10;
+	}while(n > 0);
+	zynq_print (++ptr);
+}

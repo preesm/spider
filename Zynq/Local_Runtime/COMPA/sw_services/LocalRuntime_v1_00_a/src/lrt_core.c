@@ -105,6 +105,42 @@ void  OS_MemClr (INT8U  *pdest, INT16U  size)
 }
 
 
+
+/*
+*********************************************************************************************************
+*                                        COPY A BLOCK OF MEMORY
+*
+* Description: This function is called by other uC/OS-II services to copy a block of memory from one
+*              location to another.
+*
+* Arguments  : pdest    is a pointer to the 'destination' memory block
+*
+*              psrc     is a pointer to the 'source'      memory block
+*
+*              size     is the number of bytes to copy.
+*
+* Returns    : none
+*
+* Notes      : 1) This function is INTERNAL to uC/OS-II and your application should not call it.  There is
+*                 no provision to handle overlapping memory copy.  However, that's not a problem since this
+*                 is not a situation that will happen.
+*              2) Note that we can only copy up to 64K bytes of RAM
+*              3) The copy is done one byte at a time since this will work on any processor irrespective
+*                 of the alignment of the source and destination.
+*********************************************************************************************************
+*/
+
+void  OS_MemCopy (INT8U  *pdest, INT8U  *psrc, INT16U  size)
+{
+    while (size > 0u) {
+        *pdest++ = *psrc++;
+        size--;
+    }
+}
+
+
+
+
 /*$PAGE*/
 /*
 *********************************************************************************************************
@@ -491,6 +527,7 @@ void OS_Sched()
 	//            OSCtxSwCtr++;                          /* Increment context switch counter             */
 	//            OS_TASK_SW();                          /* Perform a context switch                     */
 	//        }
+			OSTCBCur = OSTCBHighRdy;
 			OSStartHighRdy();
 		}
 }

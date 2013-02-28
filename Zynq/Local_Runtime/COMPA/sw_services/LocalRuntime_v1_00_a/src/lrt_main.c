@@ -32,6 +32,7 @@
 #define DOMAIN			0
 #define SIZE			512
 #define PERF_MON		1
+#define PRINT_VALUES	0
 
 
 #if PERF_MON == 1
@@ -43,15 +44,6 @@
 
 
 
-#define FIFO_SIZE		1024
-#define FIFO_IN_ADDR	XPAR_BRAM_0_BASEADDR
-#define FIFO_OUT_ADDR	XPAR_BRAM_0_BASEADDR
-#define FIFO_IN_DIR		0
-#define FIFO_OUT_DIR	1
-
-
-
-
 void test1()
 {
 	print("Hello from test1\n\r");
@@ -60,26 +52,32 @@ void test1()
 	INT8U buffer_in[SIZE];
 	INT32U i;
 
-	for(i=0;i<SIZE;i++)
-		buffer_in[i] = i+1;
+	OS_TCB tcb;
+	error = OSTaskQuery(OS_PRIO_SELF, &tcb);
+
+	if(error == OS_ERR_NONE)
+	{
+		for(i=0;i<SIZE;i++)
+			buffer_in[i] = i+1;
 
 
-	LRT_FIFO_HNDLE *out_fifo = create_fifo_hndl(FIFO_OUT_ADDR, FIFO_SIZE, FIFO_OUT_DIR);
+	//	LRT_FIFO_HNDLE *out_fifo = create_fifo_hndl(FIFO_OUT_ADDR, FIFO_SIZE, FIFO_OUT_DIR);
 
-#if PERF_MON == 1
-	XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_RESET_MASK);
-	XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
-#endif
+	#if PERF_MON == 1
+		XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_RESET_MASK);
+		XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
+	#endif
 
-	blocking_write_output_fifo(out_fifo, SIZE, buffer_in, &error);
+		blocking_write_output_fifo(tcb.fifo_out, SIZE, buffer_in, &error);
 
-#if PERF_MON == 1
-	INT32U nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
-	print("number of cycles for writing: ");
-	putnum(nb_cycles);
-	print("\n\r");
-#endif
-//		XGpio_WriteReg(XPAR_LEDS_4BITS_BASEADDR, XGPIO_DATA_OFFSET, 0xFF);
+	#if PERF_MON == 1
+		INT32U nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
+		print("number of cycles for writing: ");
+		putnum(nb_cycles);
+		print("\n\r");
+	#endif
+	//		XGpio_WriteReg(XPAR_LEDS_4BITS_BASEADDR, XGPIO_DATA_OFFSET, 0xFF);
+	}
 }
 
 
@@ -92,39 +90,106 @@ void test2()
 	INT8U error;
 	INT32U i;
 
-
-	LRT_FIFO_HNDLE *in_fifo = create_fifo_hndl(FIFO_IN_ADDR, FIFO_SIZE, FIFO_IN_DIR);
-
-#if PERF_MON == 1
-	XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_RESET_MASK);
-	XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
-#endif
-
-	blocking_read_input_fifo(in_fifo, SIZE, buffer_out, &error);
-
-#if PERF_MON == 1
-	INT32U nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
-	print("number of cycles for reading: ");
-	putnum(nb_cycles);
-	print("\n\r");
-#endif
+	OS_TCB tcb;
+	error = OSTaskQuery(OS_PRIO_SELF, &tcb);
 
 	if(error == OS_ERR_NONE)
 	{
-		print("Read values :\n\r");
-		for(i=0;i<SIZE;i++)
+	#if PERF_MON == 1
+		XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_RESET_MASK);
+		XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
+	#endif
+
+		blocking_read_input_fifo(tcb.fifo_in, SIZE, buffer_out, &error);
+
+	#if PERF_MON == 1
+		INT32U nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
+		print("number of cycles for reading: ");
+		putnum(nb_cycles);
+		print("\n\r");
+	#endif
+
+		if(error == OS_ERR_NONE)
 		{
-			putnum(buffer_out[i]);
+			print("Read values :\n\r");
+			for(i=0;i<SIZE;i++)
+			{
+				putnum(buffer_out[i]);
+				print("\n\r");
+			}
+		}
+		else
+		{
+			print("Error :");
+			putnum(error);
 			print("\n\r");
 		}
+	//		XGpio_WriteReg(XPAR_LEDS_4BITS_BASEADDR, XGPIO_DATA_OFFSET, 0xFF);
+
 	}
-	else
+}
+
+
+
+
+
+
+
+void test3()
+{
+	print("Hello from test3\n\r");
+
+	INT8U error;
+	INT8U buffer_in[SIZE];
+	INT8U buffer_out[SIZE];
+	INT32U size, i;
+
+	OS_TCB tcb;
+	error = OSTaskQuery(OS_PRIO_SELF, &tcb);
+
+	if(error == OS_ERR_NONE)
 	{
-		print("Error :");
-		putnum(error);
-		print("\n\r");
+
+	#if PERF_MON == 1
+		print("bytes,cycles\n");
+		INT32U nb_cycles;
+	#endif
+		for(size=32;size<SIZE+1;size+=32)
+		{
+			for(i=0;i<size;i++)
+				buffer_in[i] = i+1;
+
+		#if PERF_MON == 1
+			XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_RESET_MASK);
+			XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
+		#endif
+
+			blocking_write_output_fifo(tcb.fifo_out, size, buffer_in, &error);
+
+			blocking_read_input_fifo(tcb.fifo_out, size, buffer_out, &error);
+
+		#if PERF_MON == 1
+			nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
+			putnum_dec(size); print(","); putnum_dec(nb_cycles); print("\n");
+		#endif
+
+			if(error == OS_ERR_NONE)
+			{
+		#if PRINT_VALUES == 1
+				print("Read values: \n");
+				INT32U i;
+				for(i=0;i<SIZE;i++)
+				{
+					putnum(buffer_out[i]); print("\n");
+				}
+		#endif
+			}
+			else
+			{
+				print("Error: "); putnum(error); print("\n");
+			}
+		}
 	}
-//		XGpio_WriteReg(XPAR_LEDS_4BITS_BASEADDR, XGPIO_DATA_OFFSET, 0xFF);
 }
 
 
@@ -142,6 +207,7 @@ int main()
 
     functions_tbl[0] = test1;
     functions_tbl[1] = test2;
+    functions_tbl[2] = test3;
 
 //	init_lrt(DOMAIN,XPAR_CPU_ID,0,0,0);
     init_lrt(XPAR_MAILBOX_0_IF_1_BASEADDR);

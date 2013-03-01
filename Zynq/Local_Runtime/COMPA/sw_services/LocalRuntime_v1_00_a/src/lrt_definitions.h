@@ -162,7 +162,7 @@
 #define MSG_CREATE_FIFO			2
 #define MSG_START_SCHED			3
 #define MSG_STOP_TASK			4
-
+#define MSG_CLEAR_FIFO			5
 
 
 

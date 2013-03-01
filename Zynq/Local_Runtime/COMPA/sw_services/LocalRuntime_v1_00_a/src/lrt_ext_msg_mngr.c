@@ -5,7 +5,7 @@
  *      Author: yoliva
  */
 
-#include <xil_io.h>
+//#include <xil_io.h>
 //#include <string.h>
 #include "lrt_prototypes.h"
 #include "xparameters.h"
@@ -127,6 +127,10 @@ static void local_rt_call()
 			OSTaskDel(ext_msg.task_id);
 			break;
 
+		case MSG_CLEAR_FIFO:
+			clear_fifo(ext_msg.fifo_id, &error);
+			break;
+
 		default:
 			break;
 	}
@@ -151,7 +155,7 @@ void  wait_for_ext_msg()
 #if CONTROL_COMM == 0	// Reads from a mailbox.
 	INT32U *ptr = (INT32U*)&ext_msg;
 
-	// nb_reads stores the messgae's size in number of 32bits words.
+	// nb_reads stores the message's size in number of 32bits words.
 	INT32U nb_reads = sizeof(LRT_MSG)/4;
 
 	while(nb_reads > 0)
@@ -187,7 +191,7 @@ void  wait_for_ext_msg()
 *********************************************************************************************************
 *                                              get_ext_msg
 *
-* Description: Checks the mailbox for a new message.
+* Description: Checks the mailbox for new messages.
 *
 * Arguments  :
 *
@@ -198,15 +202,11 @@ void  wait_for_ext_msg()
 void  get_ext_msg()
 {
 	// Returns if the mailbox is empty.
-	if(XMbox_IsEmptyHw(control_addr))
-	{
-		return;
-	}
-	else
+	while(!XMbox_IsEmptyHw(control_addr))
 	{
 		INT32U *ptr = (INT32U*)&ext_msg;
 
-		// nb_reads stores the messgae's size in number of 32bits words.
+		// nb_reads stores the message's size in number of 32bits words.
 		INT32U nb_reads = sizeof(LRT_MSG)/4;
 
 		while(nb_reads > 0)
@@ -271,6 +271,39 @@ LRT_FIFO_HNDLE* create_fifo_hndl(INT16U id, INT32U size, INT8U dir, INT8U* perr)
 	}
 }
 
+
+
+
+
+
+
+
+
+/*
+*********************************************************************************************************
+*                                              clear_fifo
+*
+* Description: Clears the contents of a FIFO by reinitializing its indices .
+*
+* Arguments  : id is the index of the FIFO.
+* 			   perr will contain one of these error codes : OS_ERROR_NONE, OS_ERR_FIFO_INVALID_ID.
+*
+* Returns    :
+*
+*********************************************************************************************************
+*/
+void clear_fifo(INT16U id, INT8U* perr)
+{
+	INT8U error;
+	LRT_FIFO_HNDLE* fifo_hndl = get_fifo_hndl(id, &error);
+
+	if(error == OS_ERR_NONE)
+	{
+		*((INT32U*)(fifo_hndl->rd_ix)) = 0;
+		*((INT32U*)(fifo_hndl->wr_ix)) = 0;
+	}
+	*perr = error;
+}
 
 
 

@@ -68,13 +68,18 @@ void test1()
 		XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
 	#endif
 
-		blocking_write_output_fifo(tcb.fifo_out, SIZE, buffer_in, &error);
+//		blocking_write_output_fifo(tcb.fifo_out, SIZE, buffer_in, &error);
+		write_output_fifo(tcb.fifo_out, SIZE, buffer_in, &error);
 
 	#if PERF_MON == 1
 		INT32U nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
 		print("cycles for writing,");putnum_dec(nb_cycles);print("\n");
 	#endif
 	//		XGpio_WriteReg(XPAR_LEDS_4BITS_BASEADDR, XGPIO_DATA_OFFSET, 0xFF);
+		if(error != OS_ERR_NONE)
+		{
+			print("Error: "); putnum_dec(error); print("\n");
+		}
 	}
 }
 
@@ -97,7 +102,8 @@ void test2()
 		XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
 	#endif
 
-		blocking_read_input_fifo(tcb.fifo_in, SIZE, buffer_out, &error);
+//		blocking_read_input_fifo(tcb.fifo_in, SIZE, buffer_out, &error);
+		read_input_fifo(tcb.fifo_in, SIZE, buffer_out, &error);
 
 	#if PERF_MON == 1
 		INT32U nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);

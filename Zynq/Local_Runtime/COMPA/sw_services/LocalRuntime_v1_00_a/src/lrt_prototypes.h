@@ -195,18 +195,61 @@ extern INT8U  OSTaskQuery (INT8U id, OS_TCB  *p_task_data);
 
 
 
+/*
+*********************************************************************************************************
+*                                            DELETE A TASK
+*
+* Description: This function allows you to delete a task from the list of available tasks...
+*
+* Arguments  : id    is the identifier of the task to delete.
+*
+* Returns    : OS_ERR_NONE             if the call is successful
+*              OS_ERR_TASK_NOT_EXIST   if the task you want to delete does not exist.
+*
+*********************************************************************************************************
+*/
+
+extern INT8U  OSTaskDel (INT8U id);
+
+
+
+
+
+
+
+
 
 
 
 /* ************** At lrt_ext_msg_mngr.c file****************
  *
  * Function : wait_for_ext_msg
- * Params   : addr is the base address of the shared memory or mailbox.
+ * Params   :
  * Descrip  : It waits for an external message.
 */
-extern void  wait_for_ext_msg(INT32U addr);
+extern void  wait_for_ext_msg();
 
 
+
+
+
+
+
+
+
+/*
+*********************************************************************************************************
+*                                              get_ext_msg
+*
+* Description: Checks the mailbox for a new message.
+*
+* Arguments  :
+*
+* Returns    : none
+*
+*********************************************************************************************************
+*/
+extern void  get_ext_msg();
 
 
 

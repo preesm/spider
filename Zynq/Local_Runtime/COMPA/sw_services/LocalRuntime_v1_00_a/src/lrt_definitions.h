@@ -161,6 +161,7 @@
 #define MSG_CREATE_TASK			1
 #define MSG_CREATE_FIFO			2
 #define MSG_START_SCHED			3
+#define MSG_STOP_TASK			4
 
 
 
@@ -388,6 +389,7 @@ extern INT8U            OSPrioCur;                					/* Priority of current ta
 extern INT8U            OSPrioHighRdy;            					/* Priority of highest priority task               	*/
 
 extern OS_TCB			*OSTCBCur;                        			/* Pointer to currently running TCB         		*/
+extern OS_TCB          	*OSTCBFirst;								// Pointer to first created TCB.
 extern OS_TCB          	*OSTCBFreeList;                   			/* Pointer to list of free TCBs             		*/
 extern OS_TCB          	*OSTCBHighRdy;                    			/* Pointer to highest priority TCB R-to-R   		*/
 extern OS_TCB          	*OSTCBList;                       			// Pointer to doubly linked list of TCBs
@@ -409,6 +411,7 @@ extern LRT_FIFO_HNDLE 	*cntrl_fifo;								// Pointer to an input FIFO for contr
 // Table of functions.
 extern FUNCTION_TYPE 	functions_tbl[];							// Table of local functions.
 
-//extern
+// Miscellaneous.
+extern INT32U			control_addr;								// Address for receiving external messages.
 
 #endif /* RT_DEFINITIONS_H_ */

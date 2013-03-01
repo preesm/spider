@@ -24,4 +24,6 @@
 #define OS_NB_IN_FIFO			1
 #define OS_NB_OUT_FIFO			1
 #define OS_NB_FIFO				2
+#define SCHED_POLICY_RR			1
+#define SCHED_POLICY_FP			0
 #endif

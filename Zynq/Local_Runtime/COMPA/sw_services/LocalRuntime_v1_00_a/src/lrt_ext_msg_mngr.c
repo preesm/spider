@@ -20,6 +20,8 @@ static INT32U 			tasks_stack[OS_DEFAULT_STACK_SIZE];	// Stack pour the tasks. Cu
 LRT_FIFO_HNDLE 			*cntrl_fifo;						// Pointer to an input FIFO for control messages.
 #endif
 
+INT32U					control_addr;						// Address for receiving external messages.
+
 //LRT_FIFO_HNDLE  		InputFIFOs[OS_NB_IN_FIFO];			// Table of input FIFO handles.
 //LRT_FIFO_HNDLE  		OutputFIFOs[OS_NB_OUT_FIFO];		// Table of output FIFO handles.
 LRT_FIFO_HNDLE  		FIFO_tbl[OS_NB_FIFO];				// Table of FIFO handles.
@@ -30,17 +32,17 @@ LRT_FIFO_HNDLE  		FIFO_tbl[OS_NB_FIFO];				// Table of FIFO handles.
 FUNCTION_TYPE functions_tbl[NB_LOCAL_FUNCTIONS];
 
 /**********************************************************************************************************
-*                                              blocking_fifo_write
-* Description: Writes a 32 bits block into the FIFO. Blocks if FIFO is full.
+*                                              blocking_mb_write
+* Description: Writes a 32 bits block into the mailbox. Blocks if the mailbox is full.
 *
 * Arguments  :
 * 			   data - data to be copied.
 *
 * Returns    : none
 **********************************************************************************************************/
-void blocking_fifo_write(INT32U mb_base_addr, INT32U data)
+void blocking_mb_write(INT32U mb_base_addr, INT32U data)
 {
-	// Wait until there is space in the FIFO
+	// Wait until there is space in the mailbox.
 	while(XMbox_IsFullHw(mb_base_addr));
 
 	XMbox_WriteMBox(mb_base_addr, data);
@@ -49,16 +51,16 @@ void blocking_fifo_write(INT32U mb_base_addr, INT32U data)
 
 
 /**********************************************************************************************************
-*                                              blocking_fifo_read
-* Description: Reads a 32 bits block from the FIFO. Blocks if FIFO is empty.
+*                                              blocking_mb_read
+* Description: Reads a 32 bits block from the mailbox. Blocks if the mailbox is empty.
 *
 * Arguments  : none
 *
 * Returns    : the read data.
 **********************************************************************************************************/
-INT32U blocking_fifo_read(INT32U mb_base_addr)
+INT32U blocking_mb_read(INT32U mb_base_addr)
 {
-	// Wait until there is some data in the FIFO
+	// Wait until there is some data in the mailbox.
 	while(XMbox_IsEmptyHw(mb_base_addr));
 
 	return XMbox_ReadMBox(mb_base_addr);
@@ -70,8 +72,7 @@ INT32U blocking_fifo_read(INT32U mb_base_addr)
 *********************************************************************************************************
 *                                              local_rt_call
 *
-* Description: This is the function that decodes an external message. The idea is to separated the message
-* 			decoding from the way the message is received (polling or interrupt).
+* Description: Decodes an external message.
 *
 * Arguments  : none
 *
@@ -122,6 +123,10 @@ static void local_rt_call()
 			OS_Sched();
 			break;
 
+		case MSG_STOP_TASK:
+			OSTaskDel(ext_msg.task_id);
+			break;
+
 		default:
 			break;
 	}
@@ -133,15 +138,15 @@ static void local_rt_call()
 *********************************************************************************************************
 *                                              wait_for_ext_msg
 *
-* Description: This is the function waits for a external message is placed into	the mailbox or memory address.
+* Description: Waits for an external message is placed into the mailbox.
 *
-* Arguments  : addr is the base address of the shared memory or mailbox.
+* Arguments  : addr is the base address of the mailbox.
 *
 * Returns    : none
 *
 *********************************************************************************************************
 */
-void  wait_for_ext_msg(INT32U control_addr)
+void  wait_for_ext_msg()
 {
 #if CONTROL_COMM == 0	// Reads from a mailbox.
 	INT32U *ptr = (INT32U*)&ext_msg;
@@ -152,7 +157,7 @@ void  wait_for_ext_msg(INT32U control_addr)
 	while(nb_reads > 0)
 	{
 		nb_reads--;
-		*ptr++ = blocking_fifo_read(control_addr);
+		*ptr++ = blocking_mb_read(control_addr);
 	}
 #else					// Reads from a FIFO.
 	blocking_read_input_fifo(cntrl_fifo, sizeof(EXT_MSG_STRUCT), (INT8U*)&ext_msg, (INT8U*)0);
@@ -178,13 +183,11 @@ void  wait_for_ext_msg(INT32U control_addr)
 
 
 
-
-/*$PAGE*/
 /*
 *********************************************************************************************************
-*                                              read_fsl_fifo (work in progress!!)
+*                                              get_ext_msg
 *
-* Description: It reads data from the FSL fifo.
+* Description: Checks the mailbox for a new message.
 *
 * Arguments  :
 *
@@ -192,50 +195,31 @@ void  wait_for_ext_msg(INT32U control_addr)
 *
 *********************************************************************************************************
 */
-void  read_fsl_fifo()
+void  get_ext_msg()
 {
-//	INT32U data;
-//
-//	getfsl(data, 0);
-//
-//#if OS_DEBUG_EN > 0
-//	print("Local Runtime 1 has read");
-//	putnum(data);
-//	print("from FSL\n\r");
-//#endif
+	// Returns if the mailbox is empty.
+	if(XMbox_IsEmptyHw(control_addr))
+	{
+		return;
+	}
+	else
+	{
+		INT32U *ptr = (INT32U*)&ext_msg;
 
+		// nb_reads stores the messgae's size in number of 32bits words.
+		INT32U nb_reads = sizeof(LRT_MSG)/4;
+
+		while(nb_reads > 0)
+		{
+			nb_reads--;
+			*ptr++ = blocking_mb_read(control_addr);
+		}
+	#if OS_DEBUG_EN > 0
+		print("Local Runtime have got a message\n\r");
+	#endif
+		local_rt_call();
+	}
 }
-
-
-
-
-/*$PAGE*/
-/*
-*********************************************************************************************************
-*                                              write_fsl_fifo (work in progress!!)
-*
-* Description: It writes data into the FSL fifo.
-*
-* Arguments  :
-*
-* Returns    : none
-*
-*********************************************************************************************************
-*/
-void  write_fsl_fifo(INT32U data)
-{
-//	putfsl(data, 0);
-//
-//#if OS_DEBUG_EN > 0
-//	print("Local Runtime 0 has put data into FSL\n\r");
-//#endif
-}
-
-
-
-
-
-
 
 
 
@@ -588,5 +572,70 @@ void  blocking_write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT
 		}
 	}
 }
+
+
+
+
+
+
+
+
+
+
+/*$PAGE*/
+/*
+*********************************************************************************************************
+*                                              read_fsl_fifo (work in progress!!)
+*
+* Description: It reads data from the FSL fifo.
+*
+* Arguments  :
+*
+* Returns    : none
+*
+*********************************************************************************************************
+*/
+void  read_fsl_fifo()
+{
+//	INT32U data;
+//
+//	getfsl(data, 0);
+//
+//#if OS_DEBUG_EN > 0
+//	print("Local Runtime 1 has read");
+//	putnum(data);
+//	print("from FSL\n\r");
+//#endif
+
+}
+
+
+
+
+/*$PAGE*/
+/*
+*********************************************************************************************************
+*                                              write_fsl_fifo (work in progress!!)
+*
+* Description: It writes data into the FSL fifo.
+*
+* Arguments  :
+*
+* Returns    : none
+*
+*********************************************************************************************************
+*/
+void  write_fsl_fifo(INT32U data)
+{
+//	putfsl(data, 0);
+//
+//#if OS_DEBUG_EN > 0
+//	print("Local Runtime 0 has put data into FSL\n\r");
+//#endif
+}
+
+
+
+
 
 

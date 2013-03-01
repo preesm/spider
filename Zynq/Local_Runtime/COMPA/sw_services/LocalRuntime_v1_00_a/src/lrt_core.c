@@ -39,10 +39,11 @@ INT8U           OSPrioHighRdy;            					// Priority of highest priority t
 INT8U	        OSRdyGrp;                        			// Ready list group
 INT8U			OSRdyTbl[OS_RDY_TBL_SIZE];       			// Table of tasks which are ready to run
 
-OS_TCB          *OSTCBCur;                        			// Pointer to currently running TCB
+OS_TCB          *OSTCBCur;                        			// Pointer to currently scheduled TCB.
+OS_TCB          *OSTCBFirst;								// Pointer to first created TCB.
 OS_TCB          *OSTCBFreeList;                   			// Pointer to list of free TCBs
 OS_TCB          *OSTCBHighRdy;                    			// Pointer to highest priority TCB R-to-R
-OS_TCB          *OSTCBList;                       			// Pointer to doubly linked list of TCBs
+OS_TCB          *OSTCBList;                       			// Pointer to doubly linked list of TCBs for the created tasks.
 OS_TCB          *OSTCBPrioTbl[OS_LOWEST_PRIO + 1u];    		// Table of pointers to created TCBs
 OS_TCB          OSTCBTbl[OS_MAX_TASKS + OS_N_SYS_TASKS];	// Table of TCBs
 
@@ -399,7 +400,7 @@ void  OSInit ()
 
 
 
-void init_lrt(INT32U control_addr)
+void init_lrt(INT32U ctrl_addr)
 {
 #if OS_DEBUG_EN > 0
 	print("Initializing local runtime ");
@@ -408,6 +409,7 @@ void init_lrt(INT32U control_addr)
 #endif
 
     OSInit();
+    control_addr = ctrl_addr;
 
 #if CONTROL_COMM == 1
 #define FIFO_CTRL_SIZE	1024
@@ -418,7 +420,7 @@ void init_lrt(INT32U control_addr)
 
 #endif
     while(true)
-    	wait_for_ext_msg(control_addr);
+    	wait_for_ext_msg();
 }
 
 
@@ -450,13 +452,14 @@ void init_lrt(INT32U control_addr)
 
 void  OS_SchedNew (void)
 {
-#if OS_LOWEST_PRIO <= 63u                        /* See if we support up to 64 tasks                   */
+#if SCHED_POLICY_FP == 1
+	#if OS_LOWEST_PRIO <= 63u                        /* See if we support up to 64 tasks                   */
     INT8U   y;
 
 
     y             = OSUnMapTbl[OSRdyGrp];
     OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]);
-#else                                            /* We support up to 256 tasks                         */
+	#else                                            /* We support up to 256 tasks                         */
     INT8U     y;
     OS_PRIO  *ptbl;
 
@@ -472,6 +475,7 @@ void  OS_SchedNew (void)
     } else {
         OSPrioHighRdy = (INT8U)((y << 4u) + OSUnMapTbl[(OS_PRIO)(*ptbl >> 8u) & 0xFFu] + 8u);
     }
+	#endif
 #endif
 }
 
@@ -494,19 +498,17 @@ void  OS_SchedNew (void)
 *********************************************************************************************************
 */
 
-void OSStartHighRdy()
+void OSStartCur()
 {
 //	if (check_fifos)
 //	{
-//	read_inputs
-	OSTCBHighRdy->task_func();
-//	write_outputs
+		//if(check_firing_rules)
+
+		// Executes the actor's code.
+		OSTCBCur->task_func();
+
 //	}
-	// Remove task from ready list as its execution ended.
-    OSRdyTbl[OSTCBHighRdy->OSTCBY] &= (OS_PRIO)~OSTCBHighRdy->OSTCBBitX;
-    if (OSRdyTbl[OSTCBHighRdy->OSTCBY] == 0u) {                 /* Make task not ready                         */
-        OSRdyGrp           &= (OS_PRIO)~OSTCBHighRdy->OSTCBBitY;
-    }
+
 }
 
 
@@ -518,18 +520,44 @@ void OSStartHighRdy()
  */
 void OS_Sched()
 {
+
+#if SCHED_POLICY_FP == 1
 	while(true)
 		if (OSLockNesting == 0u) {                     		/* ... scheduler is not locked                  */
-			OS_SchedNew();
+			OS_SchedNew();									// Executes the scheduling algorithm.
 			OSTCBHighRdy = OSTCBPrioTbl[OSPrioHighRdy];
 			if(OSTCBHighRdy == (OS_TCB*)0) return;			// Returns if no more ready tasks.
+			OSTCBCur = OSTCBHighRdy;
+			OSStartCur();
+
+			// Remove task from ready list.
+			// OSRdyTbl[OSTCBHighRdy->OSTCBY] &= (OS_PRIO)~OSTCBHighRdy->OSTCBBitX;
+			// if (OSRdyTbl[OSTCBHighRdy->OSTCBY] == 0u) {                 /* Make task not ready                         */
+			//		OSRdyGrp           &= (OS_PRIO)~OSTCBHighRdy->OSTCBBitY;
+
+
+
 	//        if (OSPrioHighRdy != OSPrioCur) {          /* No Ctx Sw if current task is highest rdy     */
 	//            OSCtxSwCtr++;                          /* Increment context switch counter             */
 	//            OS_TASK_SW();                          /* Perform a context switch                     */
 	//        }
-			OSTCBCur = OSTCBHighRdy;
-			OSStartHighRdy();
 		}
+#endif
+#if SCHED_POLICY_RR == 1
+	while(true)
+	{
+		if(OSTCBCur)
+		{
+			OSStartCur();
+			if(OSTCBCur->OSTCBPrev != (OS_TCB *)0)
+				OSTCBCur = OSTCBCur->OSTCBPrev;
+			else
+				OSTCBCur = OSTCBFirst;
+		}
+		// Verify the mailbox for new messages.
+		get_ext_msg();
+	}
+#endif
 }
 
 

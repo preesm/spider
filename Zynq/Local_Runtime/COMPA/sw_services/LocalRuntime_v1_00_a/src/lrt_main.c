@@ -31,8 +31,8 @@
 
 #define DOMAIN			0
 #define SIZE			512
-#define PERF_MON		1
-#define PRINT_VALUES	0
+#define PERF_MON		0
+#define PRINT_VALUES	1
 
 
 #if PERF_MON == 1
@@ -46,7 +46,7 @@
 
 void test1()
 {
-	print("Hello from test1\n\r");
+	print("Hello from test1\n");
 
 	INT8U error;
 	INT8U buffer_in[SIZE];
@@ -72,9 +72,7 @@ void test1()
 
 	#if PERF_MON == 1
 		INT32U nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
-		print("number of cycles for writing: ");
-		putnum(nb_cycles);
-		print("\n\r");
+		print("cycles for writing,");putnum_dec(nb_cycles);print("\n");
 	#endif
 	//		XGpio_WriteReg(XPAR_LEDS_4BITS_BASEADDR, XGPIO_DATA_OFFSET, 0xFF);
 	}
@@ -88,7 +86,6 @@ void test2()
 
 	INT8U buffer_out[SIZE];
 	INT8U error;
-	INT32U i;
 
 	OS_TCB tcb;
 	error = OSTaskQuery(OS_PRIO_SELF, &tcb);
@@ -104,27 +101,24 @@ void test2()
 
 	#if PERF_MON == 1
 		INT32U nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
-		print("number of cycles for reading: ");
-		putnum(nb_cycles);
-		print("\n\r");
+		print("cycles for reading,");putnum_dec(nb_cycles);print("\n");
 	#endif
 
 		if(error == OS_ERR_NONE)
 		{
-			print("Read values :\n\r");
+	#if PRINT_VALUES == 1
+			print("Read values: \n");
+			INT32U i;
 			for(i=0;i<SIZE;i++)
 			{
-				putnum(buffer_out[i]);
-				print("\n\r");
+				putnum_dec(buffer_out[i]); print("\n");
 			}
+	#endif
 		}
 		else
 		{
-			print("Error :");
-			putnum(error);
-			print("\n\r");
+			print("Error: "); putnum_dec(error); print("\n");
 		}
-	//		XGpio_WriteReg(XPAR_LEDS_4BITS_BASEADDR, XGPIO_DATA_OFFSET, 0xFF);
 
 	}
 }

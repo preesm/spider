@@ -298,7 +298,13 @@ INT8U  OS_TCBInit (INT8U    prio,
         OSTCBPrioTbl[prio] = ptcb;
         ptcb->OSTCBNext    = OSTCBList;                    /* Link into TCB chain                      */
         ptcb->OSTCBPrev    = (OS_TCB *)0;
-        if (OSTCBList != (OS_TCB *)0) {
+        if (OSTCBList == (OS_TCB *)0)
+        {
+        	OSTCBFirst 	= ptcb;
+        	OSTCBCur	= ptcb;
+        }
+        else
+        {
             OSTCBList->OSTCBPrev = ptcb;
         }
         OSTCBList               = ptcb;
@@ -522,6 +528,98 @@ INT8U  OSTaskQuery (INT8U prio, OS_TCB  *p_task_data)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+*********************************************************************************************************
+*                                            DELETE A TASK
+*
+* Description: This function allows you to delete a task from the list of available tasks...
+*
+* Arguments  : id    is the identifier of the task to delete.
+*
+* Returns    : OS_ERR_NONE             if the call is successful
+*              OS_ERR_TASK_NOT_EXIST   if the task you want to delete does not exist.
+*
+*********************************************************************************************************
+*/
+
+//#if OS_TASK_DEL_EN > 0u
+INT8U  OSTaskDel (INT8U id)
+{
+    OS_TCB       *ptcb;
+
+//    if (prio == OS_PRIO_SELF) {                         /* See if requesting to delete self            */
+//        prio = OSTCBCur->OSTCBPrio;                     /* Set priority to delete to current           */
+//    }
+
+    ptcb = OSTCBPrioTbl[id];
+    if (ptcb == (OS_TCB *)0) {                          /* Task to delete must exist                   */
+        return (OS_ERR_TASK_NOT_EXIST);
+    }
+    OSTCBPrioTbl[id] = (OS_TCB *)0;                   /* Clear old priority entry                    */
+
+
+
+//    OSRdyTbl[ptcb->OSTCBY] &= (OS_PRIO)~ptcb->OSTCBBitX;
+//    if (OSRdyTbl[ptcb->OSTCBY] == 0u) {                 /* Make task not ready                         */
+//        OSRdyGrp           &= (OS_PRIO)~ptcb->OSTCBBitY;
+//    }
+
+
+//    ptcb->OSTCBDly      = 0u;                           /* Prevent OSTimeTick() from updating          */
+//    ptcb->OSTCBStat     = OS_STAT_RDY;                  /* Prevent task from being resumed             */
+//    ptcb->OSTCBStatPend = OS_STAT_PEND_OK;
+//    if (OSLockNesting < 255u) {                         /* Make sure we don't context switch           */
+//        OSLockNesting++;
+//    }
+    if((ptcb->OSTCBPrev == (OS_TCB *)0) && (ptcb->OSTCBNext == (OS_TCB *)0))	// Removing the sole TCB.
+    {
+    	OSTCBList 	= (OS_TCB *)0;
+    	OSTCBFirst 	= (OS_TCB *)0;
+    	OSTCBCur 	= (OS_TCB *)0;
+
+    }
+    else if (ptcb->OSTCBNext == (OS_TCB *)0)									// Removing the first created TCB.
+    {
+    	ptcb->OSTCBPrev->OSTCBNext = (OS_TCB *)0;
+    	OSTCBFirst = ptcb->OSTCBPrev;											// The previous TCB becomes the first TCB.
+    	if(OSTCBCur == ptcb)													// If removing the current TCB.
+    		OSTCBCur = ptcb->OSTCBPrev;											// The previous TCB becomes the current TCB.
+    }
+    else if (ptcb->OSTCBPrev == (OS_TCB *)0)									// Removing the last created TCB.
+    {
+    	ptcb->OSTCBNext->OSTCBPrev = (OS_TCB *)0;
+    	OSTCBList = ptcb->OSTCBNext;											// The next TCB becomes the last TCB.
+    	if(OSTCBCur == ptcb)													// If removing the current TCB.
+    		OSTCBCur = OSTCBFirst;												// The first TCB becomes the current TCB.
+    }
+    else 																		// Removing a TCB from the middle of the list.
+    {
+        ptcb->OSTCBPrev->OSTCBNext = ptcb->OSTCBNext;
+        ptcb->OSTCBNext->OSTCBPrev = ptcb->OSTCBPrev;
+        if(OSTCBCur == ptcb)													// If removing the current TCB.
+			OSTCBCur = ptcb->OSTCBPrev;											// The previous TCB becomes the current TCB.
+    }
+
+    ptcb->OSTCBNext     = OSTCBFreeList;                /* Return TCB to free TCB list                 */
+    OSTCBFreeList       = ptcb;
+    return (OS_ERR_NONE);
+}
+//#endif
 
 
 

@@ -33,7 +33,7 @@
 
 #define NB_LRT						1
 
-#define INITIATOR					XPAR_MAILBOX_2_BASEADDR
+#define INITIATOR					XPAR_MAILBOX_0_BASEADDR
 #define CONSUMER_1					XPAR_MAILBOX_0_BASEADDR
 #define CONSUMER_2					XPAR_MAILBOX_1_BASEADDR
 
@@ -69,7 +69,7 @@ int main()
     // Create task 1 on initiator lrt
     lrt_msg.msg_type = MSG_CREATE_TASK;
     lrt_msg.task_id = 1;
-    lrt_msg.function_id = 2;
+    lrt_msg.function_id = 0;
     lrt_msg.fifo_in = 0;
     lrt_msg.fifo_out = 0;
 
@@ -103,16 +103,34 @@ int main()
 #endif
 #else
    	// Create task 2 on initiator lrt
-//   	msg_block.msg_type = MSG_CREATE_ACTION;
-//   	msg_block.task_id = 2;
-//   	msg_block.function_id = 1;
-//   	send_ext_msg(INITIATOR, &msg_block, 0);
+    lrt_msg.msg_type = MSG_CREATE_TASK;
+    lrt_msg.task_id = 2;
+    lrt_msg.function_id = 1;
+    lrt_msg.fifo_in = 0;
+    lrt_msg.fifo_out = 0;
+
+    send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
 #endif
 
 
    	// Start scheduling on initiator lrt
    	lrt_msg.msg_type = MSG_START_SCHED;
    	send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
+
+
+
+
+   	int counter = 1000000000;
+
+   	while(counter--);
+   	// Stop task 2 on initiator lrt
+    lrt_msg.msg_type = MSG_STOP_TASK;
+    lrt_msg.task_id = 2;
+
+   	send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
+
+
+
 
     cleanup_platform();
 

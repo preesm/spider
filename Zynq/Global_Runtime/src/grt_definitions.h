@@ -16,6 +16,7 @@
 #define MSG_CREATE_TASK			1
 #define MSG_CREATE_FIFO			2
 #define MSG_START_SCHED			3
+#define MSG_STOP_TASK			4
 
 
 /**************** FIFO's******************************/

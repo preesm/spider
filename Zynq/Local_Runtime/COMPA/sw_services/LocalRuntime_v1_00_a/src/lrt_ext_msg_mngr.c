@@ -107,8 +107,10 @@ static void local_rt_call()
 					ext_msg.task_id,							// task's id.
 					tasks_stack,								// the bottom of the stack (lower address).
 					OS_DEFAULT_STACK_SIZE,						// the size of the stack.
-					ext_msg.fifo_in,							// Input FIFO's id.
-					ext_msg.fifo_out,							// Output FIFO's id.
+					ext_msg.nb_fifo_in,							// Number of input FIFOs.
+					ext_msg.nb_fifo_out,						// Number of output FIFOs.
+					(INT16U*)ext_msg.fifo_in,					// Array of input FIFO ids.
+					(INT16U*)ext_msg.fifo_out,					// Array of output FIFO ids.
 					(void*)0,									// a pointer to a structure with more data.
 					0);											// other options.
 

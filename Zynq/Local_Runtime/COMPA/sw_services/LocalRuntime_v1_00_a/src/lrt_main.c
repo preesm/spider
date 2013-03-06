@@ -30,9 +30,10 @@
 
 
 #define DOMAIN			0
-#define SIZE			512
-#define PERF_MON		0
-#define PRINT_VALUES	1
+#define SIZE			16383
+//#define SIZE			512
+#define PERF_MON		1
+#define PRINT_VALUES	0
 
 
 #if PERF_MON == 1
@@ -42,15 +43,15 @@
 
 //#include "xintc_l.h"
 
-
+static INT8U buffer_in[SIZE];
 
 void test1()
 {
 	print("Hello from test1\n");
 
 	INT8U error;
-	INT8U buffer_in[SIZE];
 	INT32U i;
+//	INT16U buffer_in[SIZE];
 
 	OS_TCB tcb;
 	error = OSTaskQuery(OS_PRIO_SELF, &tcb);
@@ -61,15 +62,13 @@ void test1()
 			buffer_in[i] = i+1;
 
 
-	//	LRT_FIFO_HNDLE *out_fifo = create_fifo_hndl(FIFO_OUT_ADDR, FIFO_SIZE, FIFO_OUT_DIR);
-
 	#if PERF_MON == 1
 		XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_RESET_MASK);
 		XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
 	#endif
 
-//		blocking_write_output_fifo(tcb.fifo_out, SIZE, buffer_in, &error);
-		write_output_fifo(tcb.fifo_out, SIZE, buffer_in, &error);
+		blocking_write_output_fifo(tcb.fifo_in[0], SIZE, (INT8U*)buffer_in, &error);
+//		write_output_fifo(tcb.fifo_out, SIZE, buffer_in, &error);
 
 	#if PERF_MON == 1
 		INT32U nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
@@ -103,7 +102,7 @@ void test2()
 	#endif
 
 //		blocking_read_input_fifo(tcb.fifo_in, SIZE, buffer_out, &error);
-		read_input_fifo(tcb.fifo_in, SIZE, buffer_out, &error);
+		read_input_fifo(tcb.fifo_in[0], SIZE, buffer_out, &error);
 
 	#if PERF_MON == 1
 		INT32U nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
@@ -128,7 +127,6 @@ void test2()
 
 	}
 }
-
 
 
 
@@ -164,9 +162,9 @@ void test3()
 			XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
 		#endif
 
-			blocking_write_output_fifo(tcb.fifo_out, size, buffer_in, &error);
+			write_output_fifo(tcb.fifo_out[0], size, buffer_in, &error);
 
-			blocking_read_input_fifo(tcb.fifo_out, size, buffer_out, &error);
+			read_input_fifo(tcb.fifo_out[0], size, buffer_out, &error);
 
 		#if PERF_MON == 1
 			nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
@@ -180,13 +178,13 @@ void test3()
 				INT32U i;
 				for(i=0;i<SIZE;i++)
 				{
-					putnum(buffer_out[i]); print("\n");
+					putnum_dec(buffer_out[i]); print("\n");
 				}
 		#endif
 			}
 			else
 			{
-				print("Error: "); putnum(error); print("\n");
+				print("Error: "); putnum_dec(error); print("\n");
 			}
 		}
 	}

@@ -403,8 +403,10 @@ INT8U  OSTaskCreateExt (FUNCTION_TYPE task,
                         INT16U   id,
                         OS_STK  *pbos,
                         INT32U   stk_size,
-                        INT16U	fifo_in,
-                        INT16U	fifo_out,
+                        INT16U	nb_fifo_in,
+                        INT16U	nb_fifo_out,
+                        INT16U	*fifo_in,
+                        INT16U	*fifo_out,
                         void    *pext,
                         INT16U   opt)
 {
@@ -441,8 +443,21 @@ INT8U  OSTaskCreateExt (FUNCTION_TYPE task,
 //        err = OS_TCBInit(prio, ptos, pbos, id, stk_size, pext, opt);
         if (err == OS_ERR_NONE) {
         	OSTCBPrioTbl[prio]->task_func = (FUNCTION_TYPE)task;
-        	OSTCBPrioTbl[prio]->fifo_in  = get_fifo_hndl(fifo_in, &err);
-        	OSTCBPrioTbl[prio]->fifo_out = get_fifo_hndl(fifo_out, &err);
+
+        	if(nb_fifo_in)
+        	{
+            	INT16U i;
+            	for(i=0;i<nb_fifo_in;i++)
+            		OSTCBPrioTbl[prio]->fifo_in[i] = get_fifo_hndl(fifo_in[i], &err);
+        	}
+
+        	if(nb_fifo_out)
+        	{
+            	INT16U j;
+            	for(j=0;j<nb_fifo_in;j++)
+            		OSTCBPrioTbl[prio]->fifo_out[j] = get_fifo_hndl(fifo_in[j], &err);
+        	}
+
 //            if (OSRunning == OS_TRUE) {                        /* Find HPT if multitasking has started */
 //                OS_Sched();
 //            }

@@ -147,8 +147,10 @@ extern INT8U  OSTaskCreateExt (FUNCTION_TYPE task,
                         INT16U		  id,
                         OS_STK*		  pbos,
                         INT32U		  stk_size,
-                        INT16U		  fifo_in,
-                        INT16U		  fifo_out,
+                        INT16U		  nb_fifo_in,
+                        INT16U		  nb_fifo_out,
+                        INT16U*		  fifo_in,
+                        INT16U*		  fifo_out,
                         void*		  pext,
                         INT16U		  opt);
 

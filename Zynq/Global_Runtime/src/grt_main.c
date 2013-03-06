@@ -57,23 +57,46 @@ int main()
 
     LRT_MSG lrt_msg;
 
-    // Create FIFO 1 on initiator lrt
+    // Create FIFO 0 on initiator lrt
     lrt_msg.msg_type = MSG_CREATE_FIFO;
     lrt_msg.fifo_id = 0;
-    lrt_msg.direction = FIFO_OUT_DIR;
+    lrt_msg.direction = FIFO_IN_DIR;
 
     send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
 
-
+//    // Create FIFO 1 on initiator lrt
+//    lrt_msg.msg_type = MSG_CREATE_FIFO;
+//    lrt_msg.fifo_id = 1;
+//    lrt_msg.direction = FIFO_IN_DIR;
+//
+//    send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
+//
+//    // Create FIFO 2 on initiator lrt
+//    lrt_msg.msg_type = MSG_CREATE_FIFO;
+//    lrt_msg.fifo_id = 2;
+//    lrt_msg.direction = FIFO_OUT_DIR;
+//
+//    send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
+//
+//    // Create FIFO 3 on initiator lrt
+//    lrt_msg.msg_type = MSG_CREATE_FIFO;
+//    lrt_msg.fifo_id = 3;
+//    lrt_msg.direction = FIFO_OUT_DIR;
+//
+//    send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
 
     // Create task 1 on initiator lrt
     lrt_msg.msg_type = MSG_CREATE_TASK;
     lrt_msg.task_id = 1;
     lrt_msg.function_id = 0;
-    lrt_msg.fifo_in = 0;
-    lrt_msg.fifo_out = 0;
+    lrt_msg.nb_fifo_in = 1;
+    lrt_msg.nb_fifo_out = 0;
+    lrt_msg.fifo_in[0] = 0;
+//    lrt_msg.fifo_in[1] = 1;
+//    lrt_msg.fifo_out[0] = 2;
+//    lrt_msg.fifo_out[1] = 3;
 
-   	send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
+   	send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG) + lrt_msg.nb_fifo_in + lrt_msg.nb_fifo_out);
 
 #if NB_LRT > 1
     // Create task 1 on lrt 0
@@ -103,13 +126,13 @@ int main()
 #endif
 #else
    	// Create task 2 on initiator lrt
-    lrt_msg.msg_type = MSG_CREATE_TASK;
-    lrt_msg.task_id = 2;
-    lrt_msg.function_id = 1;
-    lrt_msg.fifo_in = 0;
-    lrt_msg.fifo_out = 0;
-
-    send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
+//    lrt_msg.msg_type = MSG_CREATE_TASK;
+//    lrt_msg.task_id = 2;
+//    lrt_msg.function_id = 1;
+//    lrt_msg.fifo_in = 0;
+//    lrt_msg.fifo_out = 0;
+//
+//    send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
 #endif
 
 
@@ -120,15 +143,23 @@ int main()
 
 
 
-   	int counter = 1000000000;
+//   	int counter = 1000000000;
+//
+//   	while(counter--);
 
-   	while(counter--);
-   	// Stop task 2 on initiator lrt
-    lrt_msg.msg_type = MSG_STOP_TASK;
-    lrt_msg.task_id = 2;
 
-   	send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
+   	// Stop task 1 on initiator lrt
+//    lrt_msg.msg_type = MSG_STOP_TASK;
+//    lrt_msg.task_id = 1;
+//
+//   	send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
 
+
+    // Clear FIFO 0 on initiator lrt
+//    lrt_msg.msg_type = MSG_CLEAR_FIFO;
+//    lrt_msg.fifo_id = 0;
+//
+//    send_ext_msg(INITIATOR, &lrt_msg, sizeof(LRT_MSG));
 
 
 

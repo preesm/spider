@@ -89,7 +89,7 @@ void flush_mailboxes(u32 mb_base_addr)
 */
 void  send_ext_msg(u32 addr, void* msg, u16 size)
 {
-	u16 nb_writes = size/4;		// Number of words to write to send a complete msg.
+	u16 nb_writes = size/4;		// Number of words to write a complete msg.
 	// Writes into the mailbox.
 	while(nb_writes > 0)
 	{

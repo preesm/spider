@@ -17,11 +17,13 @@
 #define MSG_CREATE_FIFO			2
 #define MSG_START_SCHED			3
 #define MSG_STOP_TASK			4
+#define MSG_CLEAR_FIFO			5
 
 
 /**************** FIFO's******************************/
 #define FIFO_IN_DIR		0
 #define FIFO_OUT_DIR	1
+#define MAX_NB_FIFO		2
 
 
 /**************** Data types ******************/
@@ -61,9 +63,11 @@ typedef struct lrt_msg					// Structure for any kind of message.
 	//	FUNCTION_TYPE	funct_addr;
 	unsigned int	function_id;
 	unsigned int 	fifo_id;
-	unsigned int 	fifo_in;			// Input FIFO's id.
-	unsigned int 	fifo_out;			// Output FIFO's id.
-	unsigned char 	direction;			// Input : 0, Output : 1.
+	unsigned int 	direction;				// Input : 0, Output : 1.
+	unsigned int 	nb_fifo_in;				// Number of input FIFOs.
+	unsigned int 	nb_fifo_out;			// Number of output FIFOs.
+	unsigned int 	fifo_in[MAX_NB_FIFO];	// Array of input FIFO ids.
+	unsigned int 	fifo_out[MAX_NB_FIFO];	// Array of output FIFO ids.
 }LRT_MSG;
 
 

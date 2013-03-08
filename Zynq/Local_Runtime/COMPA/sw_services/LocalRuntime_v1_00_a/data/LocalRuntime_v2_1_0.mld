@@ -20,6 +20,8 @@ BEGIN LIBRARY LocalRuntime
 	PARAM NAME = OS_NB_IN_FIFO, DESC = "Maximum number of input FIFOs", TYPE = int, DEFAULT = 1
 	PARAM NAME = OS_NB_OUT_FIFO, DESC = "Maximum number of output FIFOs", TYPE = int, DEFAULT = 1
 	PARAM NAME = OS_NB_FIFO, DESC = "Maximum number of FIFOs", TYPE = int, DEFAULT = 2
+	PARAM NAME = SCHED_POLICY_RR, DESC = "Round Robin scheduling policy", TYPE = int, DEFAULT = 1
+	PARAM NAME = SCHED_POLICY_FP, DESC = "Fixed Priority scheduling policy", TYPE = int, DEFAULT = 0
 	    
 #   BEGIN INTERFACE localRT
 #		PROPERTY HEADER="lrt.h" ;

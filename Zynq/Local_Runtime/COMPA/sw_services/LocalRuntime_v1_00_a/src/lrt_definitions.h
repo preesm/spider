@@ -177,12 +177,12 @@
 #define FIFO_DATA_OFFSET		8
 
 
-#define FIFO_SIZE		16384
+#define FIFO_SIZE		30*1024
 #define FIFO_IN_ADDR	XPAR_BRAM_0_BASEADDR
 #define FIFO_OUT_ADDR	XPAR_BRAM_0_BASEADDR
 #define FIFO_IN_DIR		0
 #define FIFO_OUT_DIR	1
-#define MAX_NB_FIFO		2
+#define MAX_NB_FIFO		4
 
 //************************ Status codes
 #define FIFO_STAT_INIT		1
@@ -257,16 +257,16 @@ typedef void (*FUNCTION_TYPE)(void);										// Function of a task.
 
 typedef struct lrt_msg														// Message's structure
 {
-	unsigned int 	msg_type;
-	unsigned int 	task_id;
+	INT32U	msg_type;
+	INT32U 	task_id;
 	//	FUNCTION_TYPE	funct_addr;
-	unsigned int	function_id;
-	unsigned int 	fifo_id;
-	unsigned int 	direction;				// Input : 0, Output : 1.
-	unsigned int 	nb_fifo_in;				// Number of input FIFOs.
-	unsigned int 	nb_fifo_out;			// Number of output FIFOs.
-	unsigned int 	fifo_in[MAX_NB_FIFO];	// Array of input FIFO ids.
-	unsigned int 	fifo_out[MAX_NB_FIFO];	// Array of output FIFO ids.
+	INT32U	function_id;
+	INT32U 	fifo_id;
+	INT32U 	direction;				// Input : 0, Output : 1.
+	INT32U 	nb_fifo_in;				// Number of input FIFOs.
+	INT32U 	nb_fifo_out;			// Number of output FIFOs.
+	INT32U 	fifo_in[MAX_NB_FIFO];	// Array of input FIFO ids.
+	INT32U 	fifo_out[MAX_NB_FIFO];	// Array of output FIFO ids.
 }LRT_MSG;
 
 //typedef struct create_msg_data

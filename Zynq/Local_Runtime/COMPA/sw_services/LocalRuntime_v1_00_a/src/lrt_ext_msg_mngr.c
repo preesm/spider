@@ -6,7 +6,7 @@
  */
 
 //#include <xil_io.h>
-//#include <string.h>
+#include <string.h>
 #include "lrt_prototypes.h"
 #include "xparameters.h"
 #include "xmbox_hw.h"
@@ -109,8 +109,8 @@ static void local_rt_call()
 					OS_DEFAULT_STACK_SIZE,						// the size of the stack.
 					ext_msg.nb_fifo_in,							// Number of input FIFOs.
 					ext_msg.nb_fifo_out,						// Number of output FIFOs.
-					(INT16U*)ext_msg.fifo_in,					// Array of input FIFO ids.
-					(INT16U*)ext_msg.fifo_out,					// Array of output FIFO ids.
+					(INT32U*)ext_msg.fifo_in,					// Array of input FIFO ids.
+					(INT32U*)ext_msg.fifo_out,					// Array of output FIFO ids.
 					(void*)0,									// a pointer to a structure with more data.
 					0);											// other options.
 
@@ -248,7 +248,7 @@ void  get_ext_msg()
 LRT_FIFO_HNDLE* create_fifo_hndl(INT16U id, INT32U size, INT8U dir, INT8U* perr)
 {
 	static INT32U sh_mem_pointer = XPAR_BRAM_0_BASEADDR; // Current position in the FIFO shared memory.
-	if(id >= OS_NB_FIFO - 1)
+	if(id >= OS_NB_FIFO )
 	{
 		*perr = OS_ERR_FIFO_INVALID_ID;
 		return (LRT_FIFO_HNDLE*)0;
@@ -328,7 +328,7 @@ void clear_fifo(INT16U id, INT8U* perr)
 */
 LRT_FIFO_HNDLE* get_fifo_hndl(INT16U fifo_id, INT8U* perr)
 {
-	if(fifo_id >= OS_NB_FIFO - 1)
+	if(fifo_id >= OS_NB_FIFO)
 	{
 		*perr = OS_ERR_FIFO_INVALID_ID;
 		return (LRT_FIFO_HNDLE*)0;
@@ -370,11 +370,11 @@ LRT_FIFO_HNDLE* get_fifo_hndl(INT16U fifo_id, INT8U* perr)
 */
 void  read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr)
 {
-	INT32U *wr_ix, *rd_ix, temp_wr_ix;
+	volatile INT32U *wr_ix, *rd_ix, temp_wr_ix;
 
 	// Get indices from the handle.
-	wr_ix = (INT32U*)in_fifo_hndl->wr_ix;
-	rd_ix = (INT32U*)in_fifo_hndl->rd_ix;
+	wr_ix = (volatile INT32U*)in_fifo_hndl->wr_ix;
+	rd_ix = (volatile INT32U*)in_fifo_hndl->rd_ix;
 
 	temp_wr_ix = *wr_ix;
 	if(*wr_ix < *rd_ix)								// If true, wr_ix reached the end of the memory and restarted from the beginning.
@@ -387,13 +387,13 @@ void  read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U* buffer, 
 //				buffer[i] = ((INT8U*)(in_fifo_hndl->DataBaseAddr))[(*rd_ix + i) % in_fifo_hndl->Size];
 
 		if(*rd_ix + size > in_fifo_hndl->Size){
-//			memcpy(buffer, (INT32U*)in_fifo_hndl->DataBaseAddr + *rd_ix, (in_fifo_hndl->Size - *rd_ix) * sizeof(INT8U));
-			OS_MemCopy(buffer, (INT8U*)in_fifo_hndl->DataBaseAddr + *rd_ix, (in_fifo_hndl->Size - *rd_ix) * sizeof(INT8U));
-//			memcpy(buffer + in_fifo_hndl->Size - *rd_ix, (INT32U*)in_fifo_hndl->DataBaseAddr, (size - in_fifo_hndl->Size + *rd_ix) * sizeof(INT8U));
-			OS_MemCopy(buffer + in_fifo_hndl->Size - *rd_ix, (INT8U*)in_fifo_hndl->DataBaseAddr, (size - in_fifo_hndl->Size + *rd_ix) * sizeof(INT8U));
+			memcpy(buffer, in_fifo_hndl->DataBaseAddr + *rd_ix, (in_fifo_hndl->Size - *rd_ix) * sizeof(INT8U));
+//			OS_MemCopy(buffer, (INT8U*)in_fifo_hndl->DataBaseAddr + *rd_ix, (in_fifo_hndl->Size - *rd_ix) * sizeof(INT8U));
+			memcpy(buffer + in_fifo_hndl->Size - *rd_ix, in_fifo_hndl->DataBaseAddr, (size - in_fifo_hndl->Size + *rd_ix) * sizeof(INT8U));
+//			OS_MemCopy(buffer + in_fifo_hndl->Size - *rd_ix, (INT8U*)in_fifo_hndl->DataBaseAddr, (size - in_fifo_hndl->Size + *rd_ix) * sizeof(INT8U));
 		}else{
-//			memcpy(buffer, (INT32U*)in_fifo_hndl->DataBaseAddr + *rd_ix, size * sizeof(INT8U));
-			OS_MemCopy(buffer, (INT8U*)in_fifo_hndl->DataBaseAddr + *rd_ix, size * sizeof(INT8U));
+			memcpy(buffer, in_fifo_hndl->DataBaseAddr + *rd_ix, size * sizeof(INT8U));
+//			OS_MemCopy(buffer, (INT8U*)in_fifo_hndl->DataBaseAddr + *rd_ix, size * sizeof(INT8U));
 		}
 
 		// Update the read index.
@@ -432,11 +432,11 @@ void  read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U* buffer, 
 */
 void  write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr)
 {
-	INT32U	*wr_ix, *rd_ix, temp_rd_ix;
+	volatile INT32U	*wr_ix, *rd_ix, temp_rd_ix;
 
 	// Get indices from the handle.
-	wr_ix = (INT32U*)out_fifo_hndl->wr_ix;
-	rd_ix = (INT32U*)out_fifo_hndl->rd_ix;
+	wr_ix = (volatile INT32U*)out_fifo_hndl->wr_ix;
+	rd_ix = (volatile INT32U*)out_fifo_hndl->rd_ix;
 
 	temp_rd_ix = *rd_ix;
 	if(*rd_ix <= *wr_ix)							// If true, rd_ix reached the end of the memory and restarted from the beginning.
@@ -454,15 +454,15 @@ void  write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT8U* buffe
 //			memcpy(out_fifo_hndl->DataBaseAddr+*wr_ix, buffer, size);
 		if(*wr_ix + size > out_fifo_hndl->Size)
 		{
-//			memcpy((INT32U*)out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, (out_fifo_hndl->Size - *wr_ix)*sizeof(INT8U));
-//			memcpy((INT32U*)out_fifo_hndl->DataBaseAddr, buffer + out_fifo_hndl->Size - *wr_ix, (size - out_fifo_hndl->Size + *wr_ix) * sizeof(INT8U));
-			OS_MemCopy((INT8U*)out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, (out_fifo_hndl->Size - *wr_ix)*sizeof(INT8U));
-			OS_MemCopy((INT8U*)out_fifo_hndl->DataBaseAddr, buffer + out_fifo_hndl->Size - *wr_ix, (size - out_fifo_hndl->Size + *wr_ix) * sizeof(INT8U));
+			memcpy(out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, (out_fifo_hndl->Size - *wr_ix)*sizeof(INT8U));
+			memcpy(out_fifo_hndl->DataBaseAddr, buffer + out_fifo_hndl->Size - *wr_ix, (size - out_fifo_hndl->Size + *wr_ix) * sizeof(INT8U));
+//			OS_MemCopy((INT8U*)out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, (out_fifo_hndl->Size - *wr_ix)*sizeof(INT8U));
+//			OS_MemCopy((INT8U*)out_fifo_hndl->DataBaseAddr, buffer + out_fifo_hndl->Size - *wr_ix, (size - out_fifo_hndl->Size + *wr_ix) * sizeof(INT8U));
 		}
 		else
 		{
-//			memcpy((INT32U*)out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, size * sizeof(INT8U));
-			OS_MemCopy((INT8U*)out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, size * sizeof(INT8U));
+			memcpy(out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, size * sizeof(INT8U));
+//			OS_MemCopy((INT8U*)out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, size * sizeof(INT8U));
 		}
 
 		// Update write index.
@@ -499,12 +499,12 @@ void  write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT8U* buffe
 */
 void  blocking_read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr)
 {
-	INT32U	*wr_ix, *rd_ix, temp_wr_ix;
+	volatile INT32U	*wr_ix, *rd_ix, temp_wr_ix;
 //	INT32U i;
 
 	// Get indices from the handle.
-	wr_ix = (INT32U*)in_fifo_hndl->wr_ix;
-	rd_ix = (INT32U*)in_fifo_hndl->rd_ix;
+	wr_ix = (volatile INT32U*)in_fifo_hndl->wr_ix;
+	rd_ix = (volatile INT32U*)in_fifo_hndl->rd_ix;
 
 	while(TRUE)
 	{
@@ -519,13 +519,13 @@ void  blocking_read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U*
 //				buffer[i] = ((INT8U*)(in_fifo_hndl->DataBaseAddr))[(*rd_ix + i) % in_fifo_hndl->Size];
 
 			if(*rd_ix + size > in_fifo_hndl->Size){
-//				memcpy(buffer, (INT32U*)in_fifo_hndl->DataBaseAddr + *rd_ix, (in_fifo_hndl->Size - *rd_ix) * sizeof(INT8U));
-				OS_MemCopy(buffer, (INT8U*)in_fifo_hndl->DataBaseAddr + *rd_ix, (in_fifo_hndl->Size - *rd_ix) * sizeof(INT8U));
-//				memcpy(buffer + in_fifo_hndl->Size - *rd_ix, (INT32U*)in_fifo_hndl->DataBaseAddr, (size - in_fifo_hndl->Size + *rd_ix) * sizeof(INT8U));
-				OS_MemCopy(buffer + in_fifo_hndl->Size - *rd_ix, (INT8U*)in_fifo_hndl->DataBaseAddr, (size - in_fifo_hndl->Size + *rd_ix) * sizeof(INT8U));
+				memcpy(buffer, in_fifo_hndl->DataBaseAddr + *rd_ix, (in_fifo_hndl->Size - *rd_ix) * sizeof(INT8U));
+//				OS_MemCopy(buffer, (INT8U*)in_fifo_hndl->DataBaseAddr + *rd_ix, (in_fifo_hndl->Size - *rd_ix) * sizeof(INT8U));
+				memcpy(buffer + in_fifo_hndl->Size - *rd_ix, in_fifo_hndl->DataBaseAddr, (size - in_fifo_hndl->Size + *rd_ix) * sizeof(INT8U));
+//				OS_MemCopy(buffer + in_fifo_hndl->Size - *rd_ix, (INT8U*)in_fifo_hndl->DataBaseAddr, (size - in_fifo_hndl->Size + *rd_ix) * sizeof(INT8U));
 			}else{
-//				memcpy(buffer, (INT32U*)in_fifo_hndl->DataBaseAddr + *rd_ix, size * sizeof(INT8U));
-				OS_MemCopy(buffer, (INT8U*)in_fifo_hndl->DataBaseAddr + *rd_ix, size * sizeof(INT8U));
+				memcpy(buffer, in_fifo_hndl->DataBaseAddr + *rd_ix, size * sizeof(INT8U));
+//				OS_MemCopy(buffer, (INT8U*)in_fifo_hndl->DataBaseAddr + *rd_ix, size * sizeof(INT8U));
 			}
 
 			// Update the read index.
@@ -563,12 +563,12 @@ void  blocking_read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U*
 */
 void  blocking_write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT8U* buffer, INT8U *perr)
 {
-	INT32U	*wr_ix, *rd_ix, temp_rd_ix;
+	volatile INT32U	*wr_ix, *rd_ix, temp_rd_ix;
 //	INT32U i;
 
 	// Get indices from the handle.
-	wr_ix = (INT32U*)out_fifo_hndl->wr_ix;
-	rd_ix = (INT32U*)out_fifo_hndl->rd_ix;
+	wr_ix = (volatile INT32U*)out_fifo_hndl->wr_ix;
+	rd_ix = (volatile INT32U*)out_fifo_hndl->rd_ix;
 
 	while(TRUE)
 	{
@@ -587,15 +587,15 @@ void  blocking_write_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size, INT
 
 			if(*wr_ix + size > out_fifo_hndl->Size)
 			{
-//				memcpy((INT32U*)out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, (out_fifo_hndl->Size - *wr_ix)*sizeof(INT8U));
-				OS_MemCopy((INT8U*)out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, (out_fifo_hndl->Size - *wr_ix)*sizeof(INT8U));
-//				memcpy((INT32U*)out_fifo_hndl->DataBaseAddr, buffer + out_fifo_hndl->Size - *wr_ix, (size - out_fifo_hndl->Size + *wr_ix) * sizeof(INT8U));
-				OS_MemCopy((INT8U*)out_fifo_hndl->DataBaseAddr, buffer + out_fifo_hndl->Size - *wr_ix, (size - out_fifo_hndl->Size + *wr_ix) * sizeof(INT8U));
+				memcpy(out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, (out_fifo_hndl->Size - *wr_ix)*sizeof(INT8U));
+//				OS_MemCopy((INT8U*)out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, (out_fifo_hndl->Size - *wr_ix)*sizeof(INT8U));
+				memcpy(out_fifo_hndl->DataBaseAddr, buffer + out_fifo_hndl->Size - *wr_ix, (size - out_fifo_hndl->Size + *wr_ix) * sizeof(INT8U));
+//				OS_MemCopy((INT8U*)out_fifo_hndl->DataBaseAddr, buffer + out_fifo_hndl->Size - *wr_ix, (size - out_fifo_hndl->Size + *wr_ix) * sizeof(INT8U));
 			}
 			else
 			{
-//				memcpy((INT8U*)(out_fifo_hndl->DataBaseAddr + *wr_ix), buffer, size * sizeof(INT8U));
-				OS_MemCopy((INT8U*)out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, size * sizeof(INT8U));
+				memcpy((out_fifo_hndl->DataBaseAddr + *wr_ix), buffer, size * sizeof(INT8U));
+//				OS_MemCopy((INT8U*)out_fifo_hndl->DataBaseAddr + *wr_ix, buffer, size * sizeof(INT8U));
 			}
 
 			// Update write index.

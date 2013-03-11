@@ -117,7 +117,7 @@ static void local_rt_call()
 			break;
 
 		case MSG_CREATE_FIFO:
-			create_fifo_hndl(ext_msg.fifo_id, FIFO_SIZE, FIFO_IN_DIR, &error);
+			create_fifo_hndl(ext_msg.fifo_id, ext_msg.fifo_size, ext_msg.fifo_direction, &error);
 			break;
 
 		case MSG_START_SCHED:

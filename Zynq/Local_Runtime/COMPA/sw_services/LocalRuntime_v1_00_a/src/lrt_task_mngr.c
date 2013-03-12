@@ -228,19 +228,19 @@ INT8U  OS_TCBInit (INT8U    prio,
         ptcb->OSTCBStatPend      = OS_STAT_PEND_OK;        /* Clear pend status                        */
         ptcb->OSTCBDly           = 0u;                     /* Task is not delayed                      */
 
-#if OS_TASK_CREATE_EXT_EN > 0u
-        ptcb->OSTCBExtPtr        = pext;                   /* Store pointer to TCB extension           */
-        ptcb->OSTCBStkSize       = stk_size;               /* Store stack size                         */
-        ptcb->OSTCBStkBottom     = pbos;                   /* Store pointer to bottom of stack         */
-        ptcb->OSTCBOpt           = opt;                    /* Store task options                       */
+//#if OS_TASK_CREATE_EXT_EN > 0u
+        pext        = pext;                   /* Store pointer to TCB extension           */
+//        ptcb->OSTCBStkSize       = stk_size;               /* Store stack size                         */
+//        ptcb->OSTCBStkBottom     = pbos;                   /* Store pointer to bottom of stack         */
+//        ptcb->OSTCBOpt           = opt;                    /* Store task options                       */
         ptcb->OSTCBId            = id;                     /* Store task ID                            */
-#else
-        pext                     = pext;                   /* Prevent compiler warning if not used     */
-        stk_size                 = stk_size;
-        pbos                     = pbos;
-        opt                      = opt;
-        id                       = id;
-#endif
+//#else
+//        pext                     = pext;                   /* Prevent compiler warning if not used     */
+//        stk_size                 = stk_size;
+//        pbos                     = pbos;
+//        opt                      = opt;
+//        id                       = id;
+//#endif
 
 #if OS_TASK_DEL_EN > 0u
         ptcb->OSTCBDelReq        = OS_ERR_NONE;
@@ -369,14 +369,17 @@ INT8U  OS_TCBInit (INT8U    prio,
 *                        OS_STK is set to INT32U, 'stk_size' contains the number of 32-bit entries
 *                        available on the stack.
 *
-*              fifo_in 	 is the identifier of the input FIFO.
+*			   nb_fifo_in 	is the number of elements in the fifo_in array.
 *
-*              fifo_out  is the identifier of the input FIFO.
+*			   nb_fifo_out 	is the number of elements in the fifo_out array.
 *
-*              pext      is a pointer to a user supplied memory location which is used as a TCB extension.
-*                        For example, this user memory can hold the contents of floating-point registers
-*                        during a context switch, the time each task takes to execute, the number of times
-*                        the task has been switched-in, etc.
+*              fifo_in 	 is the array of identifiers of the input FIFOs.
+*
+*              fifo_out  is the array of identifiers of the input FIFOs.
+*
+* 			   nb_args	 is the number of elements of the args array.
+*
+*              args      is the array of arguments to be passed to the function.
 *
 *              opt       contains additional information (or options) about the behavior of the task.  The
 *                        LOWER 8-bits are reserved by uC/OS-II while the upper 8 bits can be application
@@ -407,8 +410,9 @@ INT8U  OSTaskCreateExt (FUNCTION_TYPE task,
                         INT16U	nb_fifo_out,
                         INT32U	*fifo_in,
                         INT32U	*fifo_out,
-                        void    *pext,
-                        INT16U   opt)
+                        INT32U	nb_args,
+                        INT32U  *args,
+                        INT16U  opt)
 {
 //    OS_STK    *psp;
     INT8U      err;
@@ -438,24 +442,31 @@ INT8U  OSTaskCreateExt (FUNCTION_TYPE task,
 //#endif
 
 //        psp = OSTaskStkInit(task, p_arg, ptos, opt);           /* Initialize the task's stack          */
-        err = OS_TCBInit(prio, ptos, pbos, id, stk_size, pext, opt);
+        err = OS_TCBInit(prio, ptos, pbos, id, stk_size, args, opt);
 
-//        err = OS_TCBInit(prio, ptos, pbos, id, stk_size, pext, opt);
         if (err == OS_ERR_NONE) {
         	OSTCBPrioTbl[prio]->task_func = (FUNCTION_TYPE)task;
 
+        	INT16U i;
+        	// Fill in the array of input FIFOs.
         	if(nb_fifo_in)
         	{
-            	INT16U i;
             	for(i=0;i<nb_fifo_in;i++)
             		OSTCBPrioTbl[prio]->fifo_in[i] = get_fifo_hndl(fifo_in[i], &err);
         	}
 
+        	// Fill in the array of output FIFOs.
         	if(nb_fifo_out)
         	{
-            	INT16U j;
-            	for(j=0;j<nb_fifo_in;j++)
-            		OSTCBPrioTbl[prio]->fifo_out[j] = get_fifo_hndl(fifo_out[j], &err);
+            	for(i=0;i<nb_fifo_in;i++)
+            		OSTCBPrioTbl[prio]->fifo_out[i] = get_fifo_hndl(fifo_out[i], &err);
+        	}
+
+        	// Fill in the array of arguments.
+        	if(nb_args)
+        	{
+            	for(i=0;i<nb_fifo_in;i++)
+            		OSTCBPrioTbl[prio]->args[i] = args[i];
         	}
 
 //            if (OSRunning == OS_TRUE) {                        /* Find HPT if multitasking has started */

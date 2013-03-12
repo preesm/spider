@@ -183,6 +183,7 @@
 #define FIFO_IN_DIR		0
 #define FIFO_OUT_DIR	1
 #define MAX_NB_FIFO		4
+#define MAX_NB_ARGS		8
 
 //************************ Status codes
 #define FIFO_STAT_INIT		1
@@ -259,14 +260,16 @@ typedef struct lrt_msg														// Message's structure
 {
 	INT32U	msg_type;
 	INT32U 	task_id;
-	//	FUNCTION_TYPE	funct_addr;
 	INT32U	function_id;
-	INT32U 	fifo_id;
-	INT32U 	direction;				// Input : 0, Output : 1.
-	INT32U 	nb_fifo_in;				// Number of input FIFOs.
-	INT32U 	nb_fifo_out;			// Number of output FIFOs.
-	INT32U 	fifo_in[MAX_NB_FIFO];	// Array of input FIFO ids.
-	INT32U 	fifo_out[MAX_NB_FIFO];	// Array of output FIFO ids.
+	INT32U	nb_args;				// Number of arguments to be passed to the function.
+	INT32U	args[MAX_NB_ARGS];		// Array of arguments to be passed to the function.
+	INT32U	fifo_id;
+	INT32U	fifo_size;
+	INT32U	fifo_direction;			// Input : 0, Output : 1.
+	INT32U	nb_fifo_in;				// Number of input FIFOs.
+	INT32U	nb_fifo_out;			// Number of output FIFOs.
+	INT32U	fifo_in[MAX_NB_FIFO];	// Array of input FIFO ids.
+	INT32U	fifo_out[MAX_NB_FIFO];	// Array of output FIFO ids.
 }LRT_MSG;
 
 //typedef struct create_msg_data
@@ -308,13 +311,11 @@ typedef struct lrt_msg														// Message's structure
 typedef struct os_tcb {
     OS_STK          *OSTCBStkPtr;           /* Pointer to current top of stack                         */
 
-#if OS_TASK_CREATE_EXT_EN > 0u
-    void            *OSTCBExtPtr;           /* Pointer to user definable data for TCB extension        */
-    OS_STK          *OSTCBStkBottom;        /* Pointer to bottom of stack                              */
-    INT32U           OSTCBStkSize;          /* Size of task stack (in number of stack elements)        */
-    INT16U           OSTCBOpt;              /* Task options as passed by OSTaskCreateExt()             */
+
+//    OS_STK          *OSTCBStkBottom;        /* Pointer to bottom of stack                              */
+//    INT32U           OSTCBStkSize;          /* Size of task stack (in number of stack elements)        */
+//    INT16U           OSTCBOpt;              /* Task options as passed by OSTaskCreateExt()             */
     INT16U           OSTCBId;               /* Task ID (0..65535)                                      */
-#endif
 
     struct os_tcb   *OSTCBNext;             /* Pointer to next     TCB in the TCB list                 */
     struct os_tcb   *OSTCBPrev;             /* Pointer to previous TCB in the TCB list                 */
@@ -369,6 +370,7 @@ typedef struct os_tcb {
 #endif
 
     FUNCTION_TYPE	task_func;				/* The function that is executed by the task.				*/
+    INT32U          args[MAX_NB_ARGS];		// Array of arguments to be passed to the function.
     LRT_FIFO_HNDLE*	fifo_in[MAX_NB_FIFO];	// Pointer to the list of input FIFOs.
     LRT_FIFO_HNDLE*	fifo_out[MAX_NB_FIFO];	// Pointer to the list of output FIFOs.
 } OS_TCB;

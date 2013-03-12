@@ -111,7 +111,8 @@ static void local_rt_call()
 					ext_msg.nb_fifo_out,						// Number of output FIFOs.
 					(INT32U*)ext_msg.fifo_in,					// Array of input FIFO ids.
 					(INT32U*)ext_msg.fifo_out,					// Array of output FIFO ids.
-					(void*)0,									// a pointer to a structure with more data.
+					ext_msg.nb_args,							// Number of elements in the args array.
+					(void *)ext_msg.args,						// Array of arguments to be passed to the function.
 					0);											// other options.
 
 			break;

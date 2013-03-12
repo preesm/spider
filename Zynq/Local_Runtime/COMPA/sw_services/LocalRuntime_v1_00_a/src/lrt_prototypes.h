@@ -66,7 +66,6 @@ extern void OS_Sched();
 
 
 
-
 /*
 *********************************************************************************************************
 *                                     CREATE A TASK (Extended Version)
@@ -114,14 +113,17 @@ extern void OS_Sched();
 *                        OS_STK is set to INT32U, 'stk_size' contains the number of 32-bit entries
 *                        available on the stack.
 *
-*              fifo_in 	 is the input FIFO's id.
+*			   nb_fifo_in 	is the number of elements in the fifo_in array.
 *
-*              fifo_out  is the output FIFO's id.
+*			   nb_fifo_out 	is the number of elements in the fifo_out array.
 *
-*              pext      is a pointer to a user supplied memory location which is used as a TCB extension.
-*                        For example, this user memory can hold the contents of floating-point registers
-*                        during a context switch, the time each task takes to execute, the number of times
-*                        the task has been switched-in, etc.
+*              fifo_in 	 is the array of identifiers of the input FIFOs.
+*
+*              fifo_out  is the array of identifiers of the input FIFOs.
+*
+* 			   nb_args	 is the number of elements of the args array.
+*
+*              args      is the array of arguments to be passed to the function.
 *
 *              opt       contains additional information (or options) about the behavior of the task.  The
 *                        LOWER 8-bits are reserved by uC/OS-II while the upper 8 bits can be application
@@ -140,19 +142,21 @@ extern void OS_Sched();
 *              OS_ERR_TASK_CREATE_ISR  if you tried to create a task from an ISR.
 *********************************************************************************************************
 */
+
 extern INT8U  OSTaskCreateExt (FUNCTION_TYPE task,
-                        void*		  p_arg,
-                        OS_STK*		  ptos,
-                        INT8U		  prio,
-                        INT16U		  id,
-                        OS_STK*		  pbos,
-                        INT32U		  stk_size,
-                        INT16U		  nb_fifo_in,
-                        INT16U		  nb_fifo_out,
-                        INT32U*		  fifo_in,
-                        INT32U*		  fifo_out,
-                        void*		  pext,
-                        INT16U		  opt);
+								void    *p_arg,
+								OS_STK  *ptos,
+								INT8U    prio,
+								INT16U   id,
+								OS_STK  *pbos,
+								INT32U   stk_size,
+								INT16U	nb_fifo_in,
+								INT16U	nb_fifo_out,
+								INT32U	*fifo_in,
+								INT32U	*fifo_out,
+								INT32U	nb_args,
+								INT32U  *args,
+								INT16U  opt);
 
 
 

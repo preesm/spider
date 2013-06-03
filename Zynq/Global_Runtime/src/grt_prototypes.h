@@ -69,5 +69,21 @@ extern void flush_mailboxes(u32 mb_base_addr);
 *
 *********************************************************************************************************
 */
-extern void  send_ext_msg(u32 addr, void* msg, u16 size);
+extern void  send_ext_msg(u32 addr, u32 msg_type, void* msg);
+
+
+/*
+*********************************************************************************************************
+*                                              wait_ext_msg
+*
+* Description: Waits for a message from a local runtime through the corresponding mailbox.
+*
+* Arguments  :	addr is the base address of the targeted mailbox.
+* 				msg	is the message to be read.
+*
+* Returns    : none
+*
+*********************************************************************************************************
+*/
+extern void  wait_ext_msg(INT32U addr, void* msg);
 #endif

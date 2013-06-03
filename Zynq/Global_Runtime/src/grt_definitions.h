@@ -18,62 +18,149 @@
 #define MSG_START_SCHED			3
 #define MSG_STOP_TASK			4
 #define MSG_CLEAR_FIFO			5
+#define MSG_CURR_VERTEX_ID		6
 
 
 /**************** FIFO's******************************/
 #define FIFO_IN_DIR		0
 #define FIFO_OUT_DIR	1
-#define MAX_NB_FIFO		2
+#define MAX_NB_FIFO		4
 
+/**************** TASK's******************************/
+#define MAX_NB_ARGS		8
+
+
+/**************** Actor machine's*********************/
+#define AM_STATE_MAX_CONDITIONS	10
+#define AM_MAX_NB_VERTICES		10
+#define AM_MAX_NB_EDGES			10
+#define AM_MAX_NB_CONDITIONS	10
+#define AM_MAX_NB_SUCCESSORS	5
+
+// AM_CONDITION_TYPE
+#define cond_check_out_fifo		0
+#define cond_check_in_fifo		1
+
+// AM_VERTEX_TYPES
+#define vertex_state			0
+#define vertex_exec 			1
+#define vertex_wait				2
+#define vertex_test				3
+
+
+/**************** MISCELLANEOUS ************************/
+#define false				0
+#define true				1
 
 /**************** Data types ******************/
+typedef unsigned int 		INT32U;
 
-//typedef enum {create_action = 1, create_sh_mem = 2, start_task = 3} EXT_MSG_TYPE;
+typedef int					INT32S;
 
-//typedef void (*FUNCTION_TYPE)(void);
+typedef unsigned char		INT8U;
 
-typedef struct create_task_msg			// Structure of a create task message.
+typedef char				INT8S;
+
+typedef unsigned char		BOOLEAN;
+
+
+typedef void (*FUNCTION_TYPE)(void);						// Function of a task/vertex.
+
+
+typedef struct am_edge_struct	// Structure of an actor machine's edge.
 {
-	unsigned int	msg_size;
-	unsigned int 	msg_type;
-	unsigned int 	task_id;
-	//	FUNCTION_TYPE	funct_addr;
-	unsigned int	function_id;
-}CREATE_TASK_STRUCT;
+	INT32U	am_edge_src;			// Id. of the source vertex.
+	INT32U	am_edge_sink;			// Id. of the sink vertex.
+}AM_EDGE_STRUCT;
 
-typedef struct create_fifo_msg			// Structure of a create FIFO message.
+
+typedef unsigned char 		AM_CONDITION_TYPE;				// Type of AM conditions.
+
+
+typedef struct am_actor_cond_struct		//
 {
-	unsigned int	msg_size;
-	unsigned int 	msg_type;
-	unsigned int 	fifo_id;
-	unsigned char 	direction;			// Input : 0, Output : 1.
-}CREATE_FIFO_STRUCT;
+	INT32U				id;
+	AM_CONDITION_TYPE	type;
+	INT32U				data_size;
+	INT32U				fifo_id;
+}AM_ACTOR_COND_STRUCT;
 
-typedef struct start_sched_msg			// Structure of a start scheduling message.
+
+typedef struct am_vertex_cond_struct		//
 {
-	unsigned int	msg_size;
-	unsigned int 	msg_type;
-}START_SCHED_MSG;
+	INT32U				ix;					// Index in the actor's array of conditions.
+	BOOLEAN				value;
+}AM_VERTEX_COND_STRUCT;
 
 
-typedef struct lrt_msg					// Structure for any kind of message.
+typedef unsigned char 		AM_VERTEX_TYPE;
+
+
+typedef struct am_vertex_struct	// Structure of an actor machine's vertex.
 {
-	unsigned int 	msg_type;
-	unsigned int 	task_id;
-	//	FUNCTION_TYPE	funct_addr;
-	unsigned int	function_id;
-	unsigned int 	fifo_id;
-	unsigned int 	direction;				// Input : 0, Output : 1.
-	unsigned int 	nb_fifo_in;				// Number of input FIFOs.
-	unsigned int 	nb_fifo_out;			// Number of output FIFOs.
-	unsigned int 	fifo_in[MAX_NB_FIFO];	// Array of input FIFO ids.
-	unsigned int 	fifo_out[MAX_NB_FIFO];	// Array of output FIFO ids.
+	AM_VERTEX_TYPE			type;									// Type of vertex.
+	INT32U					id;										// Id. of the vertex.
+	INT32U					successor_ix[AM_MAX_NB_SUCCESSORS];		// Indices of the vertex' successors.
+	INT8U					nb_conditions;							// Number of conditions(State vertex).
+	AM_VERTEX_COND_STRUCT	conditions[AM_STATE_MAX_CONDITIONS];	// Conditions of a state(State vertex).
+	INT32U					cond_ix;								// Index, of the condition to be tested(Test vertex), in the actor's array of conditions.
+	INT32U					action_funct_ix;						// Index of the vertex's action function.
+	FUNCTION_TYPE			funct_ptr;								// Pointer to the vertex's function.
+}AM_VERTEX_STRUCT;
+
+
+typedef struct msg_create_task_struct 	// Structure of a create task message.
+{
+	INT32U 					task_id;
+	INT32U					function_id;
+	INT32U					fifo_direction;							// Input : 0, Output : 1.
+	INT32U					nb_fifo_in;								// Number of input FIFOs.
+	INT32U					nb_fifo_out;							// Number of output FIFOs.
+	INT32U					fifo_in_id[MAX_NB_FIFO];				// Array of input FIFO ids.
+	INT32U					fifo_out_id[MAX_NB_FIFO];				// Array of output FIFO ids.
+	INT32U					start_vextex_ix;						// Index of the starting vertex.
+	INT32U					nb_am_vertices;							// Number of vertices in the AM.
+	AM_VERTEX_STRUCT		am_vertices[AM_MAX_NB_VERTICES];		// Array of AM's vertices.
+	INT32U					nb_am_conditions;						// Number of conditions in the AM.
+	AM_ACTOR_COND_STRUCT	am_conditions[AM_MAX_NB_CONDITIONS];	// Array of the AM's conditions.
+}MSG_CREATE_TASK_STRUCT;
+
+
+typedef struct msg_create_fifo_struct	// Structure of a create FIFO message.
+{
+	INT32U 	id;
+	INT32U	size;
+	INT32U	mem_block;				// Memory block where the FIFO will be created.
+	INT32U	block_ix;				// Index of each FIFO in a single memory block.
+	INT32U	direction;				// Input : 0, Output : 1.
+	BOOLEAN init;					// If true, the FIFO's indices are cleared, if false they are updated from the FIFO's registers.
+}MSG_CREATE_FIFO_STRUCT;
+
+
+typedef struct lrt_msg														// Message's structure
+{
+	INT32U	msg_type;
+	INT32U 	task_id;
+	INT32U	function_id;
+	INT32U	nb_args;				// Number of arguments to be passed to the function.
+	INT32U	args[MAX_NB_ARGS];		// Array of arguments to be passed to the function.
+	INT32U	fifo_id;
+	INT32U	fifo_size;
+	INT32U	fifo_direction;			// Input : 0, Output : 1.
+	INT32U	nb_fifo_in;				// Number of input FIFOs.
+	INT32U	nb_fifo_out;			// Number of output FIFOs.
+	INT32U	fifo_in[MAX_NB_FIFO];	// Array of input FIFO ids.
+	INT32U	fifo_out[MAX_NB_FIFO];	// Array of output FIFO ids.
 }LRT_MSG;
 
 
 
-
-
+/*$PAGE*/
+/*
+*********************************************************************************************************
+*                                            EXTERN DECLARATIONS
+*********************************************************************************************************
+*/
 extern void print(char*);
 
 

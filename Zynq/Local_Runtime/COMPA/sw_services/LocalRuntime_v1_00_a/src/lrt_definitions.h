@@ -10,6 +10,7 @@
 
 #include "lrt_cfg.h"
 //#include "mtapi/mtapi.h"
+#include "xmbox.h"
 
 //extern void print();
 //extern void putnum();
@@ -163,8 +164,16 @@
 #define MSG_START_SCHED			3
 #define MSG_STOP_TASK			4
 #define MSG_CLEAR_FIFO			5
+#define MSG_CURR_VERTEX_ID		6
 
 
+
+/*
+*********************************************************************************************************
+*                           TASK's
+*********************************************************************************************************
+*/
+#define MAX_NB_ARGS		8
 
 
 /*
@@ -183,11 +192,53 @@
 #define FIFO_IN_DIR		0
 #define FIFO_OUT_DIR	1
 #define MAX_NB_FIFO		4
-#define MAX_NB_ARGS		8
+
 
 //************************ Status codes
 #define FIFO_STAT_INIT		1
 #define FIFO_STAT_USED		2
+#define FIFO_STAT_FULL		3
+#define FIFO_STAT_EMPTY		4
+
+/*
+*********************************************************************************************************
+*                           Actor machine's
+*********************************************************************************************************
+*/
+#define AM_STATE_MAX_CONDITIONS	10
+#define AM_MAX_NB_VERTICES		10
+#define AM_MAX_NB_EDGES			10
+#define AM_MAX_NB_CONDITIONS	10
+#define AM_MAX_NB_SUCCESSORS	5
+
+// AM_CONDITION_TYPE
+#define cond_check_out_fifo		0
+#define cond_check_in_fifo		1
+
+// AM_VERTEX_TYPES
+#define vertex_state			0
+#define vertex_exec 			1
+#define vertex_wait				2
+#define vertex_test				3
+
+
+
+/*
+*********************************************************************************************************
+*                                          MISCELLANEOUS
+*********************************************************************************************************
+*/
+#define false				0
+#define true				1
+
+#define OS_PRIO_SELF      	0xFFu              				// Indicate SELF priority
+#define OS_RDY_TBL_SIZE   	((OS_LOWEST_PRIO) / 8u + 1u)	// Size of ready table.
+
+
+#define print				zynq_print						// Wrapper for print. Implemented at lrt_debug.c
+#define putnum				zynq_putnum						// Wrapper for putnum. Implemented at lrt_debug.c
+#define putnum_dec			zynq_putnum_dec					// Wrapper for putnum in decimal.
+
 
 
 
@@ -199,7 +250,7 @@
 *********************************************************************************************************
 */
 
-typedef enum {false, true} 		 BOOLEAN;
+typedef unsigned  char	 		 BOOLEAN;
 typedef unsigned  char           INT8U;        /* Unsigned  8 bit quantity                           */
 typedef signed    char           INT8S;        /* Signed    8 bit quantity                           */
 typedef unsigned  short          INT16U;       /* Unsigned 16 bit quantity                           */
@@ -217,44 +268,89 @@ typedef  INT8U    OS_PRIO;
 typedef  INT16U   OS_PRIO;
 #endif
 
-//#if     OS_VERSION < 280
-//typedef unsigned  short OS_FLAGS;        /* Data type for event flag bits (8, 16 or 32 bits)             */
-//#endif
+
+typedef void (*FUNCTION_TYPE)(void);										// Function of a task/vertex.
 
 
+typedef BOOLEAN (*TEST_FUNCTION_TYPE)(INT32U);									// Test condition function type.
 
 
+typedef struct am_edge_struct	// Structure of an actor machine's edge.
+{
+	INT32U	am_edge_src;			// Id. of the source vertex.
+	INT32U	am_edge_sink;			// Id. of the sink vertex.
+}AM_EDGE_STRUCT;
 
 
-
-//#if (OS_MEM_EN > 0u) && (OS_MAX_MEM_PART > 0u)
-typedef struct lrt_fifo_hndle{			// FIFO handle block
-//    void   *OSMemAddr;                    /* Pointer to beginning of memory partition                  */
-    INT32U	FifoBaseAddr;				// FIFO's base address.
-    INT32U	DataBaseAddr;				// Data's base address.
-//    void   *OSMemFreeList;                /* Pointer to list of free memory blocks                     */
-    INT32U  Size;                 		// FIFO's depth.
-    INT8U	Direction;					// Input : 1 , Output : 0.
-    INT8U	Status;						// One of the defined FIFO states.
-//    INT32U  OSMemNBlks;                   /* Total number of blocks in this partition                  */
-//    INT32U  OSMemNFree;                   /* Number of memory blocks remaining in this partition       */
-//#if OS_MEM_NAME_EN > 0u
-//    INT8U  *OSMemName;                    /* Memory partition name                                     */
-//#endif
-    INT32U	wr_ix;						// Write index.
-    INT32U	rd_ix;						// Read index.
-    void	*next_hndl;					// Pointer to the next LRT_FIFO_HNDLE object.
-} LRT_FIFO_HNDLE;
-//#endif
+typedef unsigned  char			AM_CONDITION_TYPE;			// Type of AM conditions.
 
 
+typedef struct am_actor_cond_struct		//
+{
+	INT32U				id;
+	AM_CONDITION_TYPE	type;
+	INT32U				data_size;
+	INT32U				fifo_id;
+}AM_ACTOR_COND_STRUCT;
 
 
+typedef struct am_vertex_cond_struct		//
+{
+	INT32U				ix;					// Index in the actor's array of conditions.
+	BOOLEAN				value;
+}AM_VERTEX_COND_STRUCT;
 
 
-typedef enum {none, start_task, create_action, get_action} EXT_MSG_TYPE;	// Type of messages from the Global Runtime
+typedef unsigned  char			AM_VERTEX_TYPE;
 
-typedef void (*FUNCTION_TYPE)(void);										// Function of a task.
+
+typedef struct am_vertex_struct	// Structure of an actor machine's vertex.
+{
+	AM_VERTEX_TYPE			type;									// Type of vertex.
+	INT32U					id;										// Id. of the vertex.
+	INT32U					successor_ix[AM_MAX_NB_SUCCESSORS];		// Indices of the vertex' successors.
+	INT8U					nb_conditions;							// Number of conditions(State vertex).
+	AM_VERTEX_COND_STRUCT	conditions[AM_STATE_MAX_CONDITIONS];	// Conditions of a state(State vertex).
+	INT32U					cond_ix;								// Index, of the condition to be tested(Test vertex), in the actor's array of conditions.
+	INT32U					action_funct_ix;						// Index of the vertex's action function.
+	FUNCTION_TYPE			funct_ptr;								// Pointer to the vertex's function.
+}AM_VERTEX_STRUCT;
+
+
+typedef struct msg_create_task_struct 	// Structure of a create task message.
+{
+	INT32U 					task_id;
+	INT32U					function_id;
+	INT32U					fifo_direction;							// Input : 0, Output : 1.
+	INT32U					nb_fifo_in;								// Number of input FIFOs.
+	INT32U					nb_fifo_out;							// Number of output FIFOs.
+	INT32U					fifo_in_id[MAX_NB_FIFO];				// Array of input FIFO ids.
+	INT32U					fifo_out_id[MAX_NB_FIFO];				// Array of output FIFO ids.
+	INT32U					start_vextex_ix;						// Index of the starting vertex.
+	INT32U					nb_am_vertices;							// Number of vertices in the AM.
+	AM_VERTEX_STRUCT		am_vertices[AM_MAX_NB_VERTICES];		// Array of AM's vertices.
+	INT32U					nb_am_conditions;						// Number of conditions in the AM.
+	AM_ACTOR_COND_STRUCT	am_conditions[AM_MAX_NB_CONDITIONS];	// Array of the AM's conditions.
+}MSG_CREATE_TASK_STRUCT;
+
+
+typedef struct msg_create_fifo_struct	// Structure of a create FIFO message.
+{
+	INT32U 	id;
+	INT32U	size;
+	INT32U	mem_block;				// Memory block where the FIFO will be created.
+	INT32U	block_ix;				// Index of each FIFO in a single memory block.
+	INT32U	direction;				// Input : 0, Output : 1.
+	BOOLEAN init;					// If true, the FIFO's indices are cleared, if false they are updated from the FIFO's registers.
+}MSG_CREATE_FIFO_STRUCT;
+
+
+typedef struct generic_msg_struct
+{
+	INT32U msg_type;
+	void*  msg_type_struct;
+}GENERIC_MSG_STRUC;
+
 
 typedef struct lrt_msg														// Message's structure
 {
@@ -272,33 +368,24 @@ typedef struct lrt_msg														// Message's structure
 	INT32U	fifo_out[MAX_NB_FIFO];	// Array of output FIFO ids.
 }LRT_MSG;
 
-//typedef struct create_msg_data
-//{
-//	INT32U funct_id;
-//}CREATE_MSG_DATA;
 
-
-
-
-
-
-
-
-
-
-/*$PAGE*/
-/*
-*********************************************************************************************************
-*                                          MISCELLANEOUS
-*********************************************************************************************************
-*/
-#define OS_PRIO_SELF      	0xFFu              				// Indicate SELF priority
-#define OS_RDY_TBL_SIZE   	((OS_LOWEST_PRIO) / 8u + 1u)	// Size of ready table.
-
-
-#define print				zynq_print						// Wrapper for print. Implemented at lrt_debug.c
-#define putnum				zynq_putnum						// Wrapper for putnum. Implemented at lrt_debug.c
-#define putnum_dec			zynq_putnum_dec					// Wrapper for putnum in decimal.
+typedef struct lrt_fifo_hndle{			// FIFO handle block
+//    void   *OSMemAddr;                    /* Pointer to beginning of memory partition                  */
+    INT32U	FifoBaseAddr;				// FIFO's base address.
+    INT32U	DataBaseAddr;				// Data's base address.
+//    void   *OSMemFreeList;                /* Pointer to list of free memory blocks                     */
+    INT32U  Size;                 		// FIFO's depth.
+    INT8U	Direction;					// Input : 1 , Output : 0.
+    INT8U	Status;						// One of the defined FIFO states.
+//    INT32U  OSMemNBlks;                   /* Total number of blocks in this partition                  */
+//    INT32U  OSMemNFree;                   /* Number of memory blocks remaining in this partition       */
+//#if OS_MEM_NAME_EN > 0u
+//    INT8U  *OSMemName;                    /* Memory partition name                                     */
+//#endif
+    INT32U	wr_ix;						// Write index.
+    INT32U	rd_ix;						// Read index.
+    void	*next_hndl;					// Pointer to the next LRT_FIFO_HNDLE object.
+} LRT_FIFO_HNDLE;
 
 
 /*$PAGE*/
@@ -310,10 +397,8 @@ typedef struct lrt_msg														// Message's structure
 
 typedef struct os_tcb {
     OS_STK          *OSTCBStkPtr;           /* Pointer to current top of stack                         */
-
-
-//    OS_STK          *OSTCBStkBottom;        /* Pointer to bottom of stack                              */
-//    INT32U           OSTCBStkSize;          /* Size of task stack (in number of stack elements)        */
+    OS_STK          *OSTCBStkBottom;        /* Pointer to bottom of stack                              */
+    INT32U           OSTCBStkSize;          /* Size of task stack (in number of stack elements)        */
 //    INT16U           OSTCBOpt;              /* Task options as passed by OSTaskCreateExt()             */
     INT16U           OSTCBId;               /* Task ID (0..65535)                                      */
 
@@ -369,10 +454,15 @@ typedef struct os_tcb {
     INT32U           OSTCBRegTbl[OS_TASK_REG_TBL_SIZE];
 #endif
 
-    FUNCTION_TYPE	task_func;				/* The function that is executed by the task.				*/
-    INT32U          args[MAX_NB_ARGS];		// Array of arguments to be passed to the function.
-    LRT_FIFO_HNDLE*	fifo_in[MAX_NB_FIFO];	// Pointer to the list of input FIFOs.
-    LRT_FIFO_HNDLE*	fifo_out[MAX_NB_FIFO];	// Pointer to the list of output FIFOs.
+    FUNCTION_TYPE		task_func;							// The function that is executed by the task.
+    INT32U          	args[MAX_NB_ARGS];					// Array of arguments to be passed to the function.
+    LRT_FIFO_HNDLE		*fifo_in[MAX_NB_FIFO];				// Pointer to the list of input FIFOs.
+    LRT_FIFO_HNDLE		*fifo_out[MAX_NB_FIFO];				// Pointer to the list of output FIFOs.
+
+	AM_VERTEX_STRUCT		am_vertices[AM_MAX_NB_VERTICES];		// Table of vertices of the actor machine.
+	AM_ACTOR_COND_STRUCT	am_conditions[AM_MAX_NB_CONDITIONS];	// Table of conditions of the actor machine.
+
+	AM_VERTEX_STRUCT	*current_vertex;					// Active vertex.
 } OS_TCB;
 
 
@@ -380,12 +470,11 @@ typedef struct os_tcb {
 /*$PAGE*/
 /*
 *********************************************************************************************************
-*                                            GLOBAL VARIABLES
+*                                            EXTERN DECLARATIONS
 *********************************************************************************************************
 */
 
-extern BOOLEAN          OSRunning;                       			/* Flag indicating that kernel is running   		*/
-extern INT8U            OSLockNesting;            					/* Multitasking lock nesting level                 	*/
+// OS's global variables.
 
 extern INT8U	        OSRdyGrp;                        			// Ready list group
 extern INT8U			OSRdyTbl[OS_RDY_TBL_SIZE];       			// Table of tasks which are ready to run
@@ -412,11 +501,28 @@ extern LRT_FIFO_HNDLE 	*cntrl_fifo;								// Pointer to an input FIFO for contr
 #endif
 
 
+// AM's functions.
+extern void am_funct_test();
+
+
+extern void am_funct_exec();
+
+
+extern void am_funct_wait();
+
+
+extern void am_funct_move();
+
 
 // Table of functions.
-extern FUNCTION_TYPE 	functions_tbl[];							// Table of local functions.
+extern FUNCTION_TYPE 		functions_tbl[];						// Table of local functions.
+
+
+//extern TEST_FUNCTION_TYPE	test_functions_tbl[];					// Table of test condition functions.
 
 // Miscellaneous.
+extern BOOLEAN			sched_locked;								// Flag indicating whether scheduling is enabled.
+extern BOOLEAN          lrt_running;                       			/* Flag indicating that kernel is running   		*/
 extern INT32U			control_addr;								// Address for receiving external messages.
 
 #endif /* RT_DEFINITIONS_H_ */

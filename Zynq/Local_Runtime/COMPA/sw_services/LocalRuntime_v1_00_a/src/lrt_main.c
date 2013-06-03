@@ -30,9 +30,9 @@
 
 
 #define DOMAIN			0
-#define SIZE			16383
+#define SIZE			63
 //#define SIZE			512
-#define PERF_MON		1
+#define PERF_MON		0
 #define PRINT_VALUES	0
 
 
@@ -45,9 +45,10 @@
 
 static INT8U buffer_in[SIZE];
 
-void test1()
+
+void action1()
 {
-	print("Hello from test1\n");
+	print("Hello from action 1 \n");
 
 	INT8U error;
 	INT32U i;
@@ -67,8 +68,8 @@ void test1()
 		XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
 	#endif
 
-		blocking_write_output_fifo(tcb.fifo_in[0], SIZE, (INT8U*)buffer_in, &error);
-//		write_output_fifo(tcb.fifo_out, SIZE, buffer_in, &error);
+//		blocking_write_output_fifo(tcb.fifo_out[0], SIZE, (INT8U*)buffer_in, &error);
+		write_output_fifo(tcb.fifo_out[0], SIZE, buffer_in, &error);
 
 	#if PERF_MON == 1
 		INT32U nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
@@ -84,9 +85,9 @@ void test1()
 
 
 
-void test2()
+void action3()
 {
-	print("Hello from test2\n\r");
+	print("Hello from action 3 \n");
 
 	INT8U buffer_out[SIZE];
 	INT8U error;
@@ -101,7 +102,7 @@ void test2()
 		XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
 	#endif
 
-//		blocking_read_input_fifo(tcb.fifo_in, SIZE, buffer_out, &error);
+//		blocking_read_input_fifo(tcb.fifo_in[0], SIZE, buffer_out, &error);
 		read_input_fifo(tcb.fifo_in[0], SIZE, buffer_out, &error);
 
 	#if PERF_MON == 1
@@ -133,14 +134,12 @@ void test2()
 
 
 
-void test3()
+void action2()
 {
-	print("Hello from test3\n\r");
+	print("Hello from action 2 \n");
 
 	INT8U error;
 	INT8U buffer_in[SIZE];
-	INT8U buffer_out[SIZE];
-	INT32U size, i;
 
 	OS_TCB tcb;
 	error = OSTaskQuery(OS_PRIO_SELF, &tcb);
@@ -152,40 +151,35 @@ void test3()
 		print("bytes,cycles\n");
 		INT32U nb_cycles;
 	#endif
-		for(size=32;size<SIZE+1;size+=32)
+
+	#if PERF_MON == 1
+		XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_RESET_MASK);
+		XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
+	#endif
+
+		read_input_fifo(tcb.fifo_in[0], SIZE, buffer_in, &error);
+
+		write_output_fifo(tcb.fifo_out[0], SIZE, buffer_in, &error);
+
+	#if PERF_MON == 1
+		nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
+		putnum_dec(size); print(","); putnum_dec(nb_cycles); print("\n");
+	#endif
+
+		if(error == OS_ERR_NONE)
 		{
-			for(i=0;i<size;i++)
-				buffer_in[i] = i+1;
-
-		#if PERF_MON == 1
-			XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_RESET_MASK);
-			XAxiPmon_WriteReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_CTL_OFFSET, XAPM_CR_GCC_ENABLE_MASK);
-		#endif
-
-			write_output_fifo(tcb.fifo_out[0], size, buffer_in, &error);
-
-			read_input_fifo(tcb.fifo_out[0], size, buffer_out, &error);
-
-		#if PERF_MON == 1
-			nb_cycles = XAxiPmon_ReadReg(XPAR_AXI_PERF_MON_0_BASEADDR, XAPM_GCC_LOW_OFFSET);
-			putnum_dec(size); print(","); putnum_dec(nb_cycles); print("\n");
-		#endif
-
-			if(error == OS_ERR_NONE)
+	#if PRINT_VALUES == 1
+			print("Read values: \n");
+			INT32U i;
+			for(i=0;i<SIZE;i++)
 			{
-		#if PRINT_VALUES == 1
-				print("Read values: \n");
-				INT32U i;
-				for(i=0;i<SIZE;i++)
-				{
-					putnum_dec(buffer_out[i]); print("\n");
-				}
-		#endif
+				putnum_dec(buffer_out[i]); print("\n");
 			}
-			else
-			{
-				print("Error: "); putnum_dec(error); print("\n");
-			}
+	#endif
+		}
+		else
+		{
+			print("Error: "); putnum_dec(error); print("\n");
 		}
 	}
 }
@@ -203,12 +197,12 @@ int main()
 	 */
 //	XIntc_EnableIntr(XPAR_INTC_0_BASEADDR, XIN_INT_MASTER_ENABLE_MASK);
 
-    functions_tbl[0] = test1;
-    functions_tbl[1] = test2;
-    functions_tbl[2] = test3;
+    functions_tbl[0] = action1;
+    functions_tbl[1] = action2;
+    functions_tbl[2] = action3;
 
 //	init_lrt(DOMAIN,XPAR_CPU_ID,0,0,0);
-    init_lrt(XPAR_MAILBOX_0_IF_1_BASEADDR);
+    init_lrt(XPAR_MAILBOX_0_IF_1_DEVICE_ID, XPAR_MAILBOX_0_IF_1_BASEADDR);
 
     cleanup_platform();
 

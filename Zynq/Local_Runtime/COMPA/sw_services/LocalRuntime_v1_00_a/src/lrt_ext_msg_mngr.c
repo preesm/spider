@@ -9,7 +9,6 @@
 #include <string.h>
 #include "lrt_prototypes.h"
 #include "xparameters.h"
-#include "xmbox_hw.h"
 //#include "xgpio_l.h"
 
 
@@ -22,6 +21,7 @@ LRT_FIFO_HNDLE 			*cntrl_fifo;						// Pointer to an input FIFO for control mess
 
 INT32U					control_addr;						// Address for receiving external messages.
 
+
 //LRT_FIFO_HNDLE  		InputFIFOs[OS_NB_IN_FIFO];			// Table of input FIFO handles.
 //LRT_FIFO_HNDLE  		OutputFIFOs[OS_NB_OUT_FIFO];		// Table of output FIFO handles.
 LRT_FIFO_HNDLE  		FIFO_tbl[OS_NB_FIFO];				// Table of FIFO handles.
@@ -30,6 +30,27 @@ LRT_FIFO_HNDLE  		FIFO_tbl[OS_NB_FIFO];				// Table of FIFO handles.
 
 //extern mtapi_task_id_t action_cntr;					// Action's counter.
 FUNCTION_TYPE functions_tbl[NB_LOCAL_FUNCTIONS];
+
+
+
+
+
+
+/**********************************************************************************************************
+*                                              mb_write
+* Description: Writes a 32 bits block into the mailbox if not full.
+*
+* Arguments  :
+* 			   data - data to be copied.
+*
+* Returns    : none
+**********************************************************************************************************/
+void mb_write(INT32U mb_base_addr, INT32U data)
+{
+	if(!XMbox_IsFullHw(mb_base_addr))
+		XMbox_WriteMBox(mb_base_addr, data);
+}
+
 
 /**********************************************************************************************************
 *                                              blocking_mb_write
@@ -49,6 +70,41 @@ void blocking_mb_write(INT32U mb_base_addr, INT32U data)
 }
 
 
+/**********************************************************************************************************
+*                                              blocking_mb_block_write
+* Description: Writes a block of data into a mailbox. Blocks if it is full.
+*
+* Arguments  : mb_base_addr is the base address of the mailbox.
+* 			   BufferPtr is the source buffer.
+* 			   RequestedBytes is the size of the block to be written.
+* Returns    : none
+**********************************************************************************************************/
+void blocking_mb_block_write(INT32U mb_base_addr, INT32U* SrcBufferPtr, INT32U RequestedBytes)
+{
+	INT32U	NumBytes = 0;
+	do {
+		blocking_mb_write(mb_base_addr, *SrcBufferPtr++);
+		NumBytes += 4;
+	} while (NumBytes < RequestedBytes);
+}
+
+
+/**********************************************************************************************************
+*                                              mb_read
+* Description: Reads a 32 bits block from the mailbox if not empty.
+*
+* Arguments  : none
+*
+* Returns    : the read data or zero if the mb is empty.
+**********************************************************************************************************/
+INT32U mb_read(INT32U mb_base_addr)
+{
+	if(!XMbox_IsEmptyHw(mb_base_addr))
+		return XMbox_ReadMBox(mb_base_addr);
+	else
+		return 0;
+}
+
 
 /**********************************************************************************************************
 *                                              blocking_mb_read
@@ -67,83 +123,70 @@ INT32U blocking_mb_read(INT32U mb_base_addr)
 }
 
 
-/*$PAGE*/
+/**********************************************************************************************************
+*                                              blocking_mb_block_read
+* Description: Reads requested bytes from the mailbox into the buffer pointed to by the provided pointer.
+* 			The number of bytes must be a multiple of 4 (bytes).
+*
+* Arguments  : mb_base_addr is the mailbox's base address.
+* 			   BufferPtr is the destination buffer.
+* 			   RequestedBytes is the size of the block to be read.
+*
+* Returns    :
+**********************************************************************************************************/
+void blocking_mb_block_read(INT32U mb_base_addr, INT32U *BufferPtr, INT32U RequestedBytes)
+{
+	INT32U	NumBytes = 0;
+	do {
+		/*
+		 * Read the Mailbox until empty or the length
+		 * requested is satisfied
+		 */
+		*BufferPtr++ = blocking_mb_read(mb_base_addr);
+		NumBytes += 4;
+	} while (NumBytes != RequestedBytes);
+}
+
+
+
+
 /*
 *********************************************************************************************************
-*                                              local_rt_call
+*                                              send_ext_msg
 *
-* Description: Decodes an external message.
+* Description: Sends a message to a local runtime through the corresponding mailbox.
 *
-* Arguments  : none
+* Arguments  :	addr is the base address of the targeted mailbox.
+* 				msg_type is the message type.
+* 				msg	is the message to be sent.
 *
 * Returns    : none
 *
 *********************************************************************************************************
 */
-
-static void local_rt_call()
+void  send_ext_msg(INT32U addr, INT32U msg_type, void* msg)
 {
-//	ext_msg.task_id = 1;
-//	ext_msg.funct_addr = test;
-//	ext_msg.msg_type = create_action;
-	INT8U error;
+	INT32U	msg_size = 0;
 
-    switch (ext_msg.msg_type)
-    {
-		case MSG_CREATE_TASK:
-//			mtapi_task_create(ext_msg.funct_addr);
-//			mtapi_task_start(ext_msg.funct_addr);// just for test.
-//			mtapi_action_create(ext_msg.action_cntr,
-//					ext_msg.funct_addr,
-//					MCA_NULL,
-//					0,
-//					&action_attributes,
-//					&status);
-//			action_cntr++;
-			OSTaskCreateExt(functions_tbl[ext_msg.function_id],	// the task's function.
-					(void*)0,									// parameters for the task's function.
-					&tasks_stack[OS_DEFAULT_STACK_SIZE],		// the top of the stack (highest address).
-					ext_msg.task_id,							// task's priority.
-					ext_msg.task_id,							// task's id.
-					tasks_stack,								// the bottom of the stack (lower address).
-					OS_DEFAULT_STACK_SIZE,						// the size of the stack.
-					ext_msg.nb_fifo_in,							// Number of input FIFOs.
-					ext_msg.nb_fifo_out,						// Number of output FIFOs.
-					(INT32U*)ext_msg.fifo_in,					// Array of input FIFO ids.
-					(INT32U*)ext_msg.fifo_out,					// Array of output FIFO ids.
-					ext_msg.nb_args,							// Number of elements in the args array.
-					(void *)ext_msg.args,						// Array of arguments to be passed to the function.
-					0);											// other options.
+	// Sending the type of message as the first data word.
+	blocking_mb_write(addr, msg_type);
 
-			break;
-
-		case MSG_CREATE_FIFO:
-			create_fifo_hndl(ext_msg.fifo_id, ext_msg.fifo_size, ext_msg.fifo_direction, &error);
-			break;
-
-		case MSG_START_SCHED:
-			OSRunning = true;
-			OS_Sched();
-			break;
-
-		case MSG_STOP_TASK:
-			OSTaskDel(ext_msg.task_id);
-			break;
-
-		case MSG_CLEAR_FIFO:
-			clear_fifo(ext_msg.fifo_id, &error);
-			break;
-
+	// Determining the size of the rest of data.
+	switch (msg_type) {
+		case MSG_CURR_VERTEX_ID:
+			msg_size = sizeof(INT32U);
 		default:
 			break;
 	}
+
+	// Sending the rest of data.
+	if(msg_size > 0) blocking_mb_block_write(addr, msg, msg_size);
 }
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
-*                                              wait_for_ext_msg
+*                                              wait_for_ext_typed_msg
 *
 * Description: Waits for an external message is placed into the mailbox.
 *
@@ -153,19 +196,54 @@ static void local_rt_call()
 *
 *********************************************************************************************************
 */
-void  wait_for_ext_msg()
+void  wait_ext_msg()
 {
 #if CONTROL_COMM == 0	// Reads from a mailbox.
-	INT32U *ptr = (INT32U*)&ext_msg;
 
-	// nb_reads stores the message's size in number of 32bits words.
-	INT32U nb_reads = sizeof(LRT_MSG)/4;
+	INT8U	err;
+	INT32U 	msg_type;
 
-	while(nb_reads > 0)
+	MSG_CREATE_TASK_STRUCT msg_create_task;
+	MSG_CREATE_FIFO_STRUCT msg_create_fifo;
+	INT32U				   msg_stop_task, curr_vertex_id;
+
+	msg_type = mb_read(control_addr);	// Reads the first incoming word i.e. the message type.
+
+	switch(msg_type)
 	{
-		nb_reads--;
-		*ptr++ = blocking_mb_read(control_addr);
+	// TODO: Pass to LrtTaskCreate a pointer to the msg_create_task object instead of all these arguments.
+	case MSG_CREATE_TASK:
+		blocking_mb_block_read(control_addr, (INT32U*)&msg_create_task, sizeof(MSG_CREATE_TASK_STRUCT));
+		LrtTaskCreate(&tasks_stack[OS_DEFAULT_STACK_SIZE - 1],	// the top of the stack (highest address).
+					  tasks_stack,								// the bottom of the stack (lower address).
+					  OS_DEFAULT_STACK_SIZE,					// the size of the stack.
+					  &msg_create_task);
+		break;
+
+	case MSG_STOP_TASK:
+		blocking_mb_block_read(control_addr, &msg_stop_task, sizeof(INT32U));
+//		err = OSTaskDel(msg_stop_task, &curr_vertex_id);
+		curr_vertex_id = 1;
+		send_ext_msg(control_addr, MSG_CURR_VERTEX_ID, &curr_vertex_id);
+		if(!OSTCBCur) lrt_running = false;
+		break;
+
+	case MSG_CREATE_FIFO:
+		blocking_mb_block_read(control_addr, (INT32U*)&msg_create_fifo, sizeof(MSG_CREATE_FIFO_STRUCT));
+		create_fifo_hndl(&msg_create_fifo, &err);
+		break;
+
+	case MSG_CLEAR_FIFO:
+		break;
+
+	case MSG_START_SCHED:
+		lrt_running = true;
+		break;
+
+	default:
+		break;
 	}
+
 #else					// Reads from a FIFO.
 	blocking_read_input_fifo(cntrl_fifo, sizeof(EXT_MSG_STRUCT), (INT8U*)&ext_msg, (INT8U*)0);
 //	while(nb_reads > 0)
@@ -178,51 +256,51 @@ void  wait_for_ext_msg()
 
 
 #if OS_DEBUG_EN > 0
-	print("Local Runtime have got a message\n\r");
+//	print("Local Runtime have got a message\n\r");
 #endif
-	local_rt_call();
 
+	if(lrt_running) OSStartCur();
 }
 
 
 
 
 
-
-
-/*
-*********************************************************************************************************
-*                                              get_ext_msg
-*
-* Description: Checks the mailbox for new messages.
-*
-* Arguments  :
-*
-* Returns    : none
-*
-*********************************************************************************************************
-*/
-void  get_ext_msg()
-{
-	// Returns if the mailbox is empty.
-	while(!XMbox_IsEmptyHw(control_addr))
-	{
-		INT32U *ptr = (INT32U*)&ext_msg;
-
-		// nb_reads stores the message's size in number of 32bits words.
-		INT32U nb_reads = sizeof(LRT_MSG)/4;
-
-		while(nb_reads > 0)
-		{
-			nb_reads--;
-			*ptr++ = blocking_mb_read(control_addr);
-		}
-	#if OS_DEBUG_EN > 0
-		print("Local Runtime have got a message\n\r");
-	#endif
-		local_rt_call();
-	}
-}
+//
+//
+///*
+//*********************************************************************************************************
+//*                                              get_ext_msg
+//*
+//* Description: Checks the mailbox for new messages.
+//*
+//* Arguments  :
+//*
+//* Returns    : none
+//*
+//*********************************************************************************************************
+//*/
+//void  get_ext_msg()
+//{
+//	// Returns if the mailbox is empty.
+//	while(!XMbox_IsEmptyHw(control_addr))
+//	{
+//		INT32U *ptr = (INT32U*)&ext_msg;
+//
+//		// nb_reads stores the message's size in number of 32bits words.
+//		INT32U nb_reads = sizeof(LRT_MSG)/4;
+//
+//		while(nb_reads > 0)
+//		{
+//			nb_reads--;
+//			*ptr++ = blocking_mb_read(control_addr);
+//		}
+//	#if OS_DEBUG_EN > 0
+//		print("Local Runtime have got a message\n\r");
+//	#endif
+//		local_rt_call();
+//	}
+//}
 
 
 
@@ -246,29 +324,32 @@ void  get_ext_msg()
 *
 *********************************************************************************************************
 */
-LRT_FIFO_HNDLE* create_fifo_hndl(INT16U id, INT32U size, INT8U dir, INT8U* perr)
+//LRT_FIFO_HNDLE* create_fifo_hndl(INT16U id, INT32U size, INT8U dir, INT8U* perr)
+LRT_FIFO_HNDLE* create_fifo_hndl(MSG_CREATE_FIFO_STRUCT *msg_create_fifo, INT8U* perr)
 {
-	static INT32U sh_mem_pointer = XPAR_BRAM_0_BASEADDR; // Current position in the FIFO shared memory.
-	if(id >= OS_NB_FIFO )
+	if(msg_create_fifo->id >= OS_NB_FIFO )
 	{
 		*perr = OS_ERR_FIFO_INVALID_ID;
 		return (LRT_FIFO_HNDLE*)0;
 	}
 	else
 	{
-		LRT_FIFO_HNDLE* fifo_hndl = &FIFO_tbl[id];
+		LRT_FIFO_HNDLE* fifo_hndl = &FIFO_tbl[msg_create_fifo->id];
 
-		fifo_hndl->FifoBaseAddr = sh_mem_pointer;
-		fifo_hndl->DataBaseAddr = sh_mem_pointer + FIFO_DATA_OFFSET;
-		fifo_hndl->Size = size;
-		fifo_hndl->Direction = dir;
+		// Determining the FIFO's base address. TODO: Authorize different size FIFOs.
+		fifo_hndl->FifoBaseAddr = msg_create_fifo->mem_block + msg_create_fifo->block_ix * (msg_create_fifo->size + FIFO_DATA_OFFSET);
+		fifo_hndl->DataBaseAddr = fifo_hndl->FifoBaseAddr + FIFO_DATA_OFFSET;
+		fifo_hndl->Size = msg_create_fifo->size;
+		fifo_hndl->Direction = msg_create_fifo->direction;
 		fifo_hndl->Status = FIFO_STAT_INIT;
-		fifo_hndl->rd_ix = sh_mem_pointer + FIFO_RD_IX_OFFSET;
-		fifo_hndl->wr_ix = sh_mem_pointer + FIFO_WR_IX_OFFSET;
-		*((INT32U*)(fifo_hndl->rd_ix)) = 0;
-		*((INT32U*)(fifo_hndl->wr_ix)) = 0;
+		fifo_hndl->rd_ix = fifo_hndl->FifoBaseAddr + FIFO_RD_IX_OFFSET;
+		fifo_hndl->wr_ix = fifo_hndl->FifoBaseAddr + FIFO_WR_IX_OFFSET;
+		if(msg_create_fifo->init)
+		{
+			*((INT32U*)(fifo_hndl->rd_ix)) = 0;
+			*((INT32U*)(fifo_hndl->wr_ix)) = 0;
+		}
 
-		sh_mem_pointer = fifo_hndl->DataBaseAddr + size;
 		*perr = OS_ERR_NONE;
 		return fifo_hndl;
 	}
@@ -304,6 +385,7 @@ void clear_fifo(INT16U id, INT8U* perr)
 	{
 		*((INT32U*)(fifo_hndl->rd_ix)) = 0;
 		*((INT32U*)(fifo_hndl->wr_ix)) = 0;
+//		fifo_hndl->Status = FIFO_STAT_EMPTY;
 	}
 	*perr = error;
 }
@@ -349,6 +431,37 @@ LRT_FIFO_HNDLE* get_fifo_hndl(INT16U fifo_id, INT8U* perr)
 		}
 
 	}
+}
+
+
+
+
+/*
+*********************************************************************************************************
+*                                              check_input_fifo
+*
+* Description: Checks whether a data block can be read from an input FIFO.
+*
+* Arguments  : in_fifo_hndl is a pointer to the input FIFO's handle.
+* 			   size is the amount of data to be read in bytes.
+*
+* Returns	 : true if there is enough data.
+*
+*********************************************************************************************************
+*/
+BOOLEAN  check_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size)
+{
+	volatile INT32U *wr_ix, *rd_ix, temp_wr_ix;
+
+	// Get indices from the handle.
+	wr_ix = (volatile INT32U*)in_fifo_hndl->wr_ix;
+	rd_ix = (volatile INT32U*)in_fifo_hndl->rd_ix;
+
+	temp_wr_ix = *wr_ix;
+	if(*wr_ix < *rd_ix)								// If true, wr_ix reached the end of the memory and restarted from the beginning.
+		temp_wr_ix = *wr_ix + in_fifo_hndl->Size;	// Place wr_ix to the right of rd_ix as in an unbounded memory.
+
+	return (((*rd_ix) + size) <= temp_wr_ix);		// Reader is allowed to read until rd_ix == wr_ix, i.e. until FIFO is empty.
 }
 
 
@@ -400,6 +513,9 @@ void  read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U* buffer, 
 		// Update the read index.
 		*rd_ix = (*rd_ix + size) % in_fifo_hndl->Size;
 
+		// Updating IFFO' state.
+//		if (*rd_ix == *wr_ix) in_fifo_hndl->Status = FIFO_STAT_EMPTY;
+
 		*perr = OS_ERR_NONE;
 	}
 	else
@@ -410,9 +526,36 @@ void  read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U* buffer, 
 
 
 
+/*
+*********************************************************************************************************
+*                                              check_output_fifo
+*
+* Description: Checks whether a data block can be written into an output FIFO.
+*
+* Arguments  : out_fifo_hndl is a pointer to output FIFO's handle.
+* 			   size is the amount of data to be written in bytes.
+*
+* Returns    : true if there is enough space in the FIFO.
+*
+*********************************************************************************************************
+*/
+BOOLEAN  check_output_fifo(LRT_FIFO_HNDLE* out_fifo_hndl, INT32U size)
+{
+	volatile INT32U	*wr_ix, *rd_ix, temp_rd_ix;
 
+	// Get indices from the handle.
+	wr_ix = (volatile INT32U*)out_fifo_hndl->wr_ix;
+	rd_ix = (volatile INT32U*)out_fifo_hndl->rd_ix;
 
+	temp_rd_ix = *rd_ix;
+	if(*rd_ix <= *wr_ix)							// If true, rd_ix reached the end of the memory and restarted from the beginning.
+													// Or the FIFO is empty.
+		temp_rd_ix = *rd_ix + out_fifo_hndl->Size;	// Place rd_ix to the right of wr_ix as in an unbounded memory.
 
+	return((*wr_ix + size) < temp_rd_ix);			/* Writer is allowed to write until wr_ix == rd_ix - 1
+										 	 	 	 * cause wr_ix == rd_ix means that the FIFO is empty.
+										 	 	 	 */
+}
 
 
 
@@ -531,6 +674,9 @@ void  blocking_read_input_fifo(LRT_FIFO_HNDLE* in_fifo_hndl, INT32U size, INT8U*
 
 			// Update the read index.
 			*rd_ix = (*rd_ix + size) % in_fifo_hndl->Size;
+
+			// Updating IFFO' state.
+//			if (*rd_ix == *wr_ix) in_fifo_hndl->Status = FIFO_STAT_EMPTY;
 
 			*perr = OS_ERR_NONE;
 

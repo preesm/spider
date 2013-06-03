@@ -5,6 +5,7 @@
  *      Author: yoliva
  */
 
+#include <stdlib.h>
 #include "lrt_definitions.h"
 #include "lrt_cfg.h"
 #include "xparameters.h"
@@ -30,8 +31,6 @@
 *                                         GLOBAL VARIABLES
 *********************************************************************************************************
 */
-BOOLEAN 		OSRunning;                      			/* Flag indicating that kernel is running   */
-INT8U  			OSLockNesting;								/* Multitasking lock nesting level          */
 
 INT8U           OSPrioCur;                					// Priority of current task
 INT8U           OSPrioHighRdy;            					// Priority of highest priority task
@@ -75,6 +74,10 @@ INT8U  const  OSUnMapTbl[256] = {
     4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u  /* 0xF0 to 0xFF                   */
 };
 
+
+
+BOOLEAN			sched_locked;								// Flag indicating whether scheduling is enabled.
+BOOLEAN         lrt_running;                       			/* Flag indicating that kernel is running   		*/
 
 /*$PAGE*/
 /*
@@ -138,54 +141,6 @@ void  OS_MemCopy (INT8U  *pdest, INT8U  *psrc, INT16U  size)
         size--;
     }
 }
-
-
-
-
-/*$PAGE*/
-/*
-*********************************************************************************************************
-*                                             INITIALIZATION
-*                                    INITIALIZE MISCELLANEOUS VARIABLES
-*
-* Description: This function is called by OSInit() to initialize miscellaneous variables.
-*
-* Arguments  : none
-*
-* Returns    : none
-*********************************************************************************************************
-*/
-
-static  void  OS_InitMisc (void)
-{
-#if OS_TIME_GET_SET_EN > 0u
-    OSTime                    = 0uL;                       /* Clear the 32-bit system clock            */
-#endif
-
-//    OSIntNesting              = 0u;                        /* Clear the interrupt nesting counter      */
-    OSLockNesting             = 0u;                        /* Clear the scheduling lock counter        */
-
-//    OSTaskCtr                 = 0u;                        /* Clear the number of tasks                */
-
-    OSRunning                 = false;                  /* Indicate that multitasking not started   */
-
-//    OSCtxSwCtr                = 0u;                        /* Clear the context switch counter         */
-//    OSIdleCtr                 = 0uL;                       /* Clear the 32-bit idle counter            */
-
-#if OS_TASK_STAT_EN > 0u
-    OSIdleCtrRun              = 0uL;
-    OSIdleCtrMax              = 0uL;
-    OSStatRdy                 = OS_FALSE;                  /* Statistic task is not ready              */
-#endif
-
-#ifdef OS_SAFETY_CRITICAL_IEC61508
-    OSSafetyCriticalStartFlag = OS_FALSE;                  /* Still allow creation of objects          */
-#endif
-}
-
-
-
-
 
 
 
@@ -350,18 +305,12 @@ void  OS_InitTCBList (void)
 */
 void  OSInit ()
 {
-//    OSInitHookBegin();                                           /* Call port specific initialization code   */
-
-    OS_InitMisc();                                               /* Initialize miscellaneous variables       */
 
     OS_InitRdyList();                                            /* Initialize the Ready List                */
 
     OS_InitTCBList();                                            /* Initialize the free list of OS_TCBs      */
 
 //    OS_MemInit(sh_mem_base_addr, sh_mem_size);					 /* Initialize the memory manager            */
-
-
-//    OS_InitEventList();                                          /* Initialize the free list of OS_EVENTs    */
 
 #if (OS_FLAG_EN > 0u) && (OS_MAX_FLAGS > 0u)
     OS_FlagInit();                                               /* Initialize the event flag structures     */
@@ -400,7 +349,7 @@ void  OSInit ()
 
 
 
-void init_lrt(INT32U ctrl_addr)
+void init_lrt(INT32U ctrl_id, INT32U ctrl_addr)
 {
 #if OS_DEBUG_EN > 0
 	print("Initializing local runtime ");
@@ -409,7 +358,11 @@ void init_lrt(INT32U ctrl_addr)
 #endif
 
     OSInit();
+    sched_locked = false;
+    lrt_running = false;
     control_addr = ctrl_addr;
+
+//    test_functions_tbl[0] = test_funct_out_fifo;
 
 #if CONTROL_COMM == 1
 #define FIFO_CTRL_SIZE	1024
@@ -420,7 +373,7 @@ void init_lrt(INT32U ctrl_addr)
 
 #endif
     while(true)
-    	wait_for_ext_msg();
+    	wait_ext_msg();
 }
 
 
@@ -491,24 +444,17 @@ void  OS_SchedNew (void)
 /*$PAGE*/
 /*
 *********************************************************************************************************
-*                                            OSStartHighRdy()
+*                                            OSStartCur
 *
-* Description: Starts the highest priority task that is available to run.  OSStartHighRdy() MUST:
+* Description: Starts the task pointed by the OSTCBCur.
 *
 *********************************************************************************************************
 */
 
 void OSStartCur()
 {
-//	if (check_fifos)
-//	{
-		//if(check_firing_rules)
-
-		// Executes the actor's code.
-		OSTCBCur->task_func();
-
-//	}
-
+	// Executes the vertex's code.
+	OSTCBCur->current_vertex->funct_ptr();
 }
 
 
@@ -558,6 +504,102 @@ void OS_Sched()
 		get_ext_msg();
 	}
 #endif
+
+#if ACTOR_MACHINE == 1
+	if(OSTCBCur->OSTCBPrev != (OS_TCB *)0)
+		OSTCBCur = OSTCBCur->OSTCBPrev;
+//	else
+//		OSTCBCur = OSTCBFirst;
+#endif
 }
 
 
+
+/*
+ * The function test_condition returns true if the am_condition can be verified.
+ **/
+BOOLEAN test_condition(AM_ACTOR_COND_STRUCT *actor_cond)
+{
+	INT8U			err;
+	LRT_FIFO_HNDLE	*fifo_hndl;
+
+	switch (actor_cond->type) {
+		case cond_check_out_fifo:
+			fifo_hndl = get_fifo_hndl(actor_cond->fifo_id, &err);
+			if (err == OS_ERR_NONE) return check_output_fifo(fifo_hndl, actor_cond->data_size);
+			break;
+		case cond_check_in_fifo:
+			fifo_hndl = get_fifo_hndl(actor_cond->fifo_id, &err);
+			if (err == OS_ERR_NONE) return check_input_fifo(fifo_hndl, actor_cond->data_size);
+			break;
+		default:
+			break;
+	}
+	return false;
+}
+
+
+void am_funct_test()
+{
+	AM_VERTEX_STRUCT *vertex_ptr = OSTCBCur->current_vertex;
+
+#if OS_DEBUG_EN
+	print("Vertex : "); putnum(vertex_ptr->id); print(" test condition : "); putnum(OSTCBCur->am_conditions[vertex_ptr->cond_ix].id);print("\n");
+#endif
+
+	if(test_condition(&OSTCBCur->am_conditions[vertex_ptr->cond_ix]))
+		OSTCBCur->current_vertex = &(OSTCBCur->am_vertices[vertex_ptr->successor_ix[0]]);
+	else
+		OSTCBCur->current_vertex = &(OSTCBCur->am_vertices[vertex_ptr->successor_ix[1]]);
+
+}
+
+
+void am_funct_exec()
+{
+	AM_VERTEX_STRUCT *vertex_ptr = OSTCBCur->current_vertex;
+
+#if OS_DEBUG_EN
+	print("Vertex : "); putnum(vertex_ptr->id); print(" executing action : ");
+#endif
+
+	functions_tbl[vertex_ptr->action_funct_ix]();
+	OSTCBCur->current_vertex = &(OSTCBCur->am_vertices[vertex_ptr->successor_ix[0]]);
+}
+
+
+void am_funct_move()
+{
+#if OS_DEBUG_EN
+	AM_VERTEX_STRUCT *vertex_ptr = OSTCBCur->current_vertex;
+	print("Vertex : "); putnum(vertex_ptr->id); print(" state :");
+	INT8U i;
+	for(i=0;i<vertex_ptr->nb_conditions;i++)
+	{
+		print(" "); putnum_dec(vertex_ptr->conditions[i].value);
+	}
+	print("\n");
+#endif
+
+	OSTCBCur->current_vertex = &(OSTCBCur->am_vertices[OSTCBCur->current_vertex->successor_ix[0]]);
+
+}
+
+
+void am_funct_wait()
+{
+#if OS_DEBUG_EN
+	AM_VERTEX_STRUCT *vertex_ptr = OSTCBCur->current_vertex;
+	print("Vertex : "); putnum(vertex_ptr->id); print(" wait.");print("\n");
+#endif
+
+	OSTCBCur->current_vertex = &(OSTCBCur->am_vertices[OSTCBCur->current_vertex->successor_ix[0]]);
+
+	if (!sched_locked)
+	{
+//		OS_TCB	*old_OSTCBCur = OSTCBCur;
+		OS_Sched();								// Calling the scheduler if enabled.
+//		if(old_OSTCBCur != OSTCBCur) return;	// Returns if a different task has been scheduled.
+	}
+//	while(true);
+}

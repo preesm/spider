@@ -10,6 +10,7 @@
 #include "lrt_definitions.h"
 #include "lrt_cfg.h"
 #include "lrt_prototypes.h"
+#include "string.h"
 //#ifdef OS_DEBUG_EN > 0
 //	#include <stdio.h>
 //#endif
@@ -209,38 +210,22 @@ INT8U  OS_TCBInit (INT8U    prio,
                    INT16U   opt)
 {
     OS_TCB    *ptcb;
-#if OS_CRITICAL_METHOD == 3u                               /* Allocate storage for CPU status register */
-    OS_CPU_SR  cpu_sr = 0u;
-#endif
-#if OS_TASK_REG_TBL_SIZE > 0u
-    INT8U      i;
-#endif
 
-
-//    OS_ENTER_CRITICAL();
-    ptcb = OSTCBFreeList;                                  /* Get a free TCB from the free TCB list    */
+    ptcb = OSTCBFreeList;                                  	/* Get a free TCB from the free TCB list    */
     if (ptcb != (OS_TCB *)0) {
-        OSTCBFreeList            = ptcb->OSTCBNext;        /* Update pointer to free TCB list          */
-//        OS_EXIT_CRITICAL();
-        ptcb->OSTCBStkPtr        = ptos;                   /* Load Stack pointer in TCB                */
-        ptcb->OSTCBPrio          = prio;                   /* Load task priority into TCB              */
-        ptcb->OSTCBStat          = OS_STAT_RDY;            /* Task is ready to run                     */
-        ptcb->OSTCBStatPend      = OS_STAT_PEND_OK;        /* Clear pend status                        */
-        ptcb->OSTCBDly           = 0u;                     /* Task is not delayed                      */
+        OSTCBFreeList           = ptcb->OSTCBNext;        	/* Update pointer to free TCB list          */
+        ptcb->OSTCBStkPtr       = ptos;                   	/* Load Stack pointer in TCB                */
+        ptcb->OSTCBPrio         = prio;                   	/* Load task priority into TCB              */
+        ptcb->OSTCBStat         = OS_STAT_RDY;            	/* Task is ready to run                     */
+        ptcb->OSTCBStatPend     = OS_STAT_PEND_OK;        	/* Clear pend status                        */
+        ptcb->OSTCBDly          = 0u;                     	/* Task is not delayed                      */
 
-//#if OS_TASK_CREATE_EXT_EN > 0u
-        pext        = pext;                   /* Store pointer to TCB extension           */
-//        ptcb->OSTCBStkSize       = stk_size;               /* Store stack size                         */
-//        ptcb->OSTCBStkBottom     = pbos;                   /* Store pointer to bottom of stack         */
-//        ptcb->OSTCBOpt           = opt;                    /* Store task options                       */
-        ptcb->OSTCBId            = id;                     /* Store task ID                            */
-//#else
-//        pext                     = pext;                   /* Prevent compiler warning if not used     */
-//        stk_size                 = stk_size;
-//        pbos                     = pbos;
-//        opt                      = opt;
-//        id                       = id;
-//#endif
+
+        pext        			= pext;                   	/* Store pointer to TCB extension           */
+        ptcb->OSTCBStkSize      = stk_size;               	/* Store stack size                         */
+        ptcb->OSTCBStkBottom    = pbos;                   	/* Store pointer to bottom of stack         */
+//        ptcb->OSTCBOpt        	= opt;                    /* Store task options                       */
+        ptcb->OSTCBId            = id;                     	/* Store task ID                            */
 
 #if OS_TASK_DEL_EN > 0u
         ptcb->OSTCBDelReq        = OS_ERR_NONE;
@@ -491,6 +476,152 @@ INT8U  OSTaskCreateExt (FUNCTION_TYPE task,
 
 
 
+/*
+*********************************************************************************************************
+*                                     CREATE A LRT's TASK
+*
+* Description: Creates a Lrt's task.
+*
+* Arguments  : ptos      is a pointer to the task's top of stack.  If the configuration constant
+*                        OS_STK_GROWTH is set to 1, the stack is assumed to grow downward (i.e. from high
+*                        memory to low memory).  'ptos' will thus point to the highest (valid) memory
+*                        location of the stack.  If OS_STK_GROWTH is set to 0, 'ptos' will point to the
+*                        lowest memory location of the stack and the stack will grow with increasing
+*                        memory locations.  'ptos' MUST point to a valid 'free' data item.
+*
+*              prio      is the task's priority.  A unique priority MUST be assigned to each task and the
+*                        lower the number, the higher the priority.
+*
+*              id        is the task's ID (0..65535)
+*
+*              pbos      is a pointer to the task's bottom of stack.  If the configuration constant
+*                        OS_STK_GROWTH is set to 1, the stack is assumed to grow downward (i.e. from high
+*                        memory to low memory).  'pbos' will thus point to the LOWEST (valid) memory
+*                        location of the stack.  If OS_STK_GROWTH is set to 0, 'pbos' will point to the
+*                        HIGHEST memory location of the stack and the stack will grow with increasing
+*                        memory locations.  'pbos' MUST point to a valid 'free' data item.
+*
+*              stk_size  is the size of the stack in number of elements.  If OS_STK is set to INT8U,
+*                        'stk_size' corresponds to the number of bytes available.  If OS_STK is set to
+*                        INT16U, 'stk_size' contains the number of 16-bit entries available.  Finally, if
+*                        OS_STK is set to INT32U, 'stk_size' contains the number of 32-bit entries
+*                        available on the stack.
+*
+*			   nb_fifo_in 		is the number of elements in the fifo_in array.
+*
+*			   nb_fifo_out 		is the number of elements in the fifo_out array.
+*
+*              fifo_in 	 		is the array of identifiers of the input FIFOs.
+*
+*              fifo_out  		is the array of identifiers of the input FIFOs.
+
+* 			   nb_am_vertices	is the number of vertices in the actor machine.
+*
+*              am_vertices		is the array of actor machine's vertices.
+
+* 			   nb_am_conditions	is the number of vertices in the actor machine.
+*
+*              am_conditions	is the array of actor machine's vertices.
+*
+*              opt       contains additional information (or options) about the behavior of the task.  The
+*                        LOWER 8-bits are reserved by uC/OS-II while the upper 8 bits can be application
+*                        specific.  See OS_TASK_OPT_??? in uCOS-II.H.  Current choices are:
+*
+*                        OS_TASK_OPT_STK_CHK      Stack checking to be allowed for the task
+*                        OS_TASK_OPT_STK_CLR      Clear the stack when the task is created
+*                        OS_TASK_OPT_SAVE_FP      If the CPU has floating-point registers, save them
+*                                                 during a context switch.
+
+*
+* Returns    : OS_ERR_NONE             if the function was successful.
+*              OS_PRIO_EXIT            if the task priority already exist
+*                                      (each task MUST have a unique priority).
+*              OS_ERR_PRIO_INVALID     if the priority you specify is higher that the maximum allowed
+*                                      (i.e. > OS_LOWEST_PRIO)
+*              OS_ERR_TASK_CREATE_ISR  if you tried to create a task from an ISR.
+*********************************************************************************************************
+*/
+//INT8U  LrtTaskCreate 	(OS_STK  				*ptos,
+//                        INT8U    				prio,
+//                        INT16U   				id,
+//                        OS_STK  				*pbos,
+//                        INT32U  				stk_size,
+//                        INT16U					nb_fifo_in,
+//                        INT16U					nb_fifo_out,
+//                        INT32U					*fifo_in,
+//                        INT32U					*fifo_out,
+//                        INT32U					nb_am_vertices,
+//                        AM_VERTEX_STRUCT		*am_vertices,
+//                        INT32U					nb_am_conditions,
+//                        AM_ACTOR_COND_STRUCT	*am_conditions,
+//                        INT16U  				opt)
+INT8U  LrtTaskCreate 	(OS_STK  				*ptos,
+						OS_STK  				*pbos,
+						INT32U  				stk_size,
+						MSG_CREATE_TASK_STRUCT	*msg_create_task)
+{
+	INT8U	prio = msg_create_task->task_id;
+
+    if (OSTCBPrioTbl[prio] == (OS_TCB *)0) { /* Make sure task doesn't already exist at this priority  */
+        OSTCBPrioTbl[prio] = OS_TCB_RESERVED;/* Reserve the priority to prevent others from doing ...  */
+                                             /* ... the same thing until task is created.              */
+        INT8U err = OS_TCBInit(prio, ptos, pbos, msg_create_task->task_id, stk_size, 0, 0);
+
+        if (err == OS_ERR_NONE) {
+
+        	INT16U i;
+        	// Filling in the array of input FIFOs.
+           	for(i=0;i<msg_create_task->nb_fifo_in;i++)
+            		OSTCBPrioTbl[prio]->fifo_in[i] = get_fifo_hndl(msg_create_task->fifo_in_id[i], &err);
+
+
+        	// Filling in the array of output FIFOs.
+           	for(i=0;i<msg_create_task->nb_fifo_out;i++)
+           		OSTCBPrioTbl[prio]->fifo_out[i] = get_fifo_hndl(msg_create_task->fifo_out_id[i], &err);
+
+        	// Filling in the actor machine.
+        	// Copying vertices.
+        	AM_VERTEX_STRUCT	*am_vertex_ptr;
+        	for(i=0;i<msg_create_task->nb_am_vertices;i++)
+        	{
+        		am_vertex_ptr = &(OSTCBPrioTbl[prio]->am_vertices[i]);
+        		memcpy(am_vertex_ptr, &msg_create_task->am_vertices[i], sizeof(AM_VERTEX_STRUCT));
+        		switch (am_vertex_ptr->type) {
+					case vertex_state:
+						am_vertex_ptr->funct_ptr = am_funct_move;
+						break;
+					case vertex_exec:
+						am_vertex_ptr->funct_ptr = am_funct_exec;
+						break;
+					case vertex_test:
+						am_vertex_ptr->funct_ptr = am_funct_test;
+						break;
+					case vertex_wait:
+						am_vertex_ptr->funct_ptr = am_funct_wait;
+						break;
+					default:
+						break;
+				}
+        	}
+        	// Copying conditions.
+        	memcpy(OSTCBPrioTbl[prio]->am_conditions, msg_create_task->am_conditions, msg_create_task->nb_am_conditions * sizeof(AM_ACTOR_COND_STRUCT));
+
+
+        	// Setting the starting vertex.
+        	OSTCBPrioTbl[prio]->current_vertex = &(OSTCBPrioTbl[prio]->am_vertices[msg_create_task->start_vextex_ix]);
+
+        } else {
+            OSTCBPrioTbl[prio] = (OS_TCB *)0;                  /* Make this priority avail. to others  */
+        }
+        return (err);
+    }
+    return (OS_ERR_PRIO_EXIST);
+}
+
+
+
+
+
 
 
 /*
@@ -576,6 +707,7 @@ INT8U  OSTaskQuery (INT8U prio, OS_TCB  *p_task_data)
 * Description: This function allows you to delete a task from the list of available tasks...
 *
 * Arguments  : id    is the identifier of the task to delete.
+* 			   curr_vertex_id is will contain the id. of the current vertex of the deleted task.
 *
 * Returns    : OS_ERR_NONE             if the call is successful
 *              OS_ERR_TASK_NOT_EXIST   if the task you want to delete does not exist.
@@ -584,7 +716,7 @@ INT8U  OSTaskQuery (INT8U prio, OS_TCB  *p_task_data)
 */
 
 //#if OS_TASK_DEL_EN > 0u
-INT8U  OSTaskDel (INT8U id)
+INT8U  OSTaskDel (INT8U id, INT32U *curr_vertex_id)
 {
     OS_TCB       *ptcb;
 
@@ -643,6 +775,8 @@ INT8U  OSTaskDel (INT8U id)
 
     ptcb->OSTCBNext     = OSTCBFreeList;                /* Return TCB to free TCB list                 */
     OSTCBFreeList       = ptcb;
+    *curr_vertex_id		= ptcb->current_vertex->id;
+
     return (OS_ERR_NONE);
 }
 //#endif

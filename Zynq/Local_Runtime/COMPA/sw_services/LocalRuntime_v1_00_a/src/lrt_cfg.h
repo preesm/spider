@@ -14,16 +14,18 @@
 
 #ifndef OS_CFG_H
 #define OS_CFG_H
-#define OS_N_SYS_TASKS 			0
-#define OS_DEFAULT_STACK_SIZE 	64
-#define OS_LOWEST_PRIO 			5
-#define OS_MAX_TASKS 			5
-#define NB_LOCAL_FUNCTIONS 		3
-#define OS_DEBUG_EN 			1
-#define CONTROL_COMM			0
-#define OS_NB_IN_FIFO			1
-#define OS_NB_OUT_FIFO			1
-#define OS_NB_FIFO				2
-#define SCHED_POLICY_RR			1
-#define SCHED_POLICY_FP			0
+#define OS_N_SYS_TASKS 				0
+#define OS_DEFAULT_STACK_SIZE 		64
+#define OS_LOWEST_PRIO 				5
+#define OS_MAX_TASKS 				5
+#define NB_LOCAL_FUNCTIONS 			3
+#define NB_TEST_CONDITION_FUNCTIONS	3
+#define OS_DEBUG_EN 				1
+#define CONTROL_COMM				0
+#define OS_NB_IN_FIFO				5
+#define OS_NB_OUT_FIFO				5
+#define OS_NB_FIFO					10
+#define SCHED_POLICY_RR				0
+#define SCHED_POLICY_FP				0
+#define ACTOR_MACHINE				1
 #endif

@@ -56,11 +56,8 @@ proc fill_cfg_file {conffile lib_handle} {
 }
 
 proc generate {lib_handle} {
-	puts "Local Runtime generate ..."
-#	set conffile [open_include_file1 "lrt_cfg.h"]
+	puts "Local Runtime generate ..."	
+#	set conffile [open_include_file2 "lrt_cfg.h"]
 #	fill_cfg_file $conffile $lib_handle
-	
-	set conffile [open_include_file2 "lrt_cfg.h"]
-	fill_cfg_file $conffile $lib_handle
-	close $conffile
+#	close $conffile
 }

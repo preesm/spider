@@ -19,9 +19,10 @@
  * 			This is called by the application's main program. The execution should never
  * 			come back to the application.
  *
- * Params   : control_addr is the base address of the control mechanism (mailbox or shared memory).
+ * Params   : control_is is the unique identifier of the control mechanism (mailbox).
+ * 			  control_addr is the base address of the control mechanism (mailbox or shared memory).
  * Return   :
  */
-extern void init_lrt(INT32U control_addr);
+extern void init_lrt(INT32U control_id, INT32U control_addr);
 
 #endif

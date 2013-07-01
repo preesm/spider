@@ -27,7 +27,7 @@ parallel applications.
  */
 class CSDAGTransformer {
 
-	private :
+	protected :
 
 		// Data needed to duplicate a vertex
 		/**

@@ -24,7 +24,7 @@ parallel applications.
  */
 class CSDAGGraph{
 
-	private :
+	protected :
 		/**
 		 number of CSDAG vertices
 		*/

@@ -42,7 +42,7 @@ CSDAGEdge::~CSDAGEdge()
  Resolving a pattern from a vertex parameters. A CSDAG edge has patterns of production/consumption.
  A SRDAG edge has a unique value of production=consumption. The resolution generates an integer
  pattern from the source and sink parameters and the pattern. The source and sink parameters
- are solvedimmediately before the pattern is resolved because they can influence the way it is solved.
+ are solved immediately before the pattern is resolved because they can influence the way it is solved.
  
  @param pattern: the input expression
  @param vertex: the vertex which parameters must be solved to determine the output pattern

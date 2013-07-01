@@ -37,7 +37,7 @@ class CSDAGEdge {
 		*/
 		abstract_syntax_elt production[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 		/**
-		 ecpression defining the token consumption of the edge sink (in abstract_syntax_elt)
+		 expression defining the token consumption of the edge sink (in abstract_syntax_elt)
 		*/
 		abstract_syntax_elt consumption[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 		/**

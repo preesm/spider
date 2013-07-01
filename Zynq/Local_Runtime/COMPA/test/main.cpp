@@ -14,7 +14,16 @@
 //==============================================================================
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
+
+
+typedef struct ratio_nb{
+	int numerator;
+	int denominator;
+	int cocient;
+	int rest;
+}RATIO_NB;
 
 //==============================================================================
 void VectorPrint(int nDim, double* pfVect)
@@ -152,32 +161,38 @@ int AllIntegerEchelonMethod(int nb_rows, int nb_cols, int *matrix, int *last_piv
 	int upper_left, upper_right, lower_right, lower_left;
 
 	for (int i = 0; i < nb_rows; i++) {
+
+		// Getting previous pivot.
+		if (i > 0) prev_pivot = matrix[(i - 1)*nb_cols + (i - 1)];
+
 		// Getting current pivot.
 		curr_pivot = matrix[i*nb_cols + i];
 
-		// If the pivot is 0, a nonzero pivot within lower rows of the same column needs to be found.
 		if (curr_pivot == 0){
 			// If the current row has all 0's to the left and a nonzero to the right means no solution or inconsistency.
+			// Verifying there is at least one nonzero value to the left.
 			int temp_j = i;
-			//Verifying there is at least one nonzero value to the left.
 			do {
 				temp_j++;
 				if (matrix[i * nb_cols + temp_j] != 0) break;
-			} while (temp_j < nb_cols - 1);
+			} while (temp_j < nb_cols - 2);
 
 			if(temp_j == nb_cols - 1)
 			{
-				if (matrix[i * nb_cols + nb_cols - 1] != 0)	// All values to the left are 0's. i.e. no solution.
-					return 1;
-				else										// The entire row is null, stop the algorithm.
-				{
-					*last_pivot = prev_pivot;
-					*last_row = i - 1;
-					return 0;
-				}
+				// The entire row is null.
+				// Ending the algorithm assuming that this is the last row.
+				*last_pivot = prev_pivot;
+				*last_row = i - 1;
+				return 0;
 			}
+			else
+				// All values to the left are 0's. i.e. no solution.
+				return 1;
 
-			// Looking for a nonzero value.
+
+
+
+			// Looking for a nonzero value within the column.
 			int temp_i = i;
 			do{
 				temp_i++;
@@ -189,9 +204,6 @@ int AllIntegerEchelonMethod(int nb_rows, int nb_cols, int *matrix, int *last_piv
 
 			curr_pivot = matrix[i*nb_cols + i];
 		}
-
-		// Getting previous pivot.
-		if (i > 0) prev_pivot = matrix[(i - 1)*nb_cols + (i - 1)];
 
 		// Updating pivots from already reduced columns.
 		for (int temp_i = i - 1; temp_i >= 0; temp_i--)
@@ -232,13 +244,34 @@ int AllIntegerEchelonMethod(int nb_rows, int nb_cols, int *matrix, int *last_piv
 		}
 	}
 
-	*last_pivot = prev_pivot;
+	*last_pivot = curr_pivot;
 	*last_row = nb_rows - 1;
 	return 0;
 }
 
+int greatest_common_divisor(int a, int b){
+    // Euclidean algorithm to compute the greatest common divisor.
+    int t;
+    while (b != 0){
+        t = b;
+        b = a % b;
+        a = t;
+    }
+    return a;
+}
 
+int lcm(int a, int b)
+{
+	// Uses the Euclidean algorithm to compute the least common multiple.
+	return (a * b / greatest_common_divisor(a, b));
+}
 
+int least_common_multiple(RATIO_NB* rational_vector, int matrix_last_row){
+	int result = rational_vector[0].denominator;
+	for (int i = 1; i <= matrix_last_row; i++)
+		result = lcm(result, rational_vector[i].denominator);
+	return result;
+}
 
 //==============================================================================
 // testing of function
@@ -264,7 +297,7 @@ int main(int nArgs, char** pArgs)
   double fSolution[MATRIX_DIMENSION];
   int res;
   int last_pivot, last_row;
-  int coeff, rest;
+  int matrix_elem, gcd, lcm;
 
   res = LinearEquationsSolving(nDim, fMatr, fVec, fSolution); // !!!
 
@@ -288,6 +321,8 @@ int main(int nArgs, char** pArgs)
 	0, 2, 0, -4, 0,
 	0, 0, 2, -4, 0
   };
+  RATIO_NB rational_vector[NB_ROWS];
+  int results[NB_ROWS];
 
   MatrixPrintMxN(NB_ROWS, NB_COLS, matrix);
 
@@ -300,37 +335,53 @@ int main(int nArgs, char** pArgs)
   }
   else
   {
+	  /* At this point, the matrix should contain only one column with nonzero elements.
+	   * It will be divided by "last_pivot" to obtain the values of each variable.
+	   * As the results must be integer values, a vector of rational numbers (rational_vector) is used .
+	   * Then the greatest common divisor (GCD) is computed to reduce the fraction.
+	   * Afterwards, the least common multiplier (LCM) is computed for the denominators of all fractions.
+	   * The final results are stored in the "results" vector.
+	   */
 	  MatrixPrintMxN(last_row + 1, NB_COLS, matrix);
 	  for (int i = 0; i <= last_row; i++) {
-		  coeff = matrix[i * NB_COLS + NB_COLS - 2];
-		  if(coeff >= last_pivot)
-		  {
-			  rest = coeff % last_pivot;
-			  if(rest > 0)
-		  }
+		  matrix_elem = abs(matrix[i * NB_COLS + NB_COLS - 2]);
+		  if(matrix_elem >= last_pivot)
+			  gcd = greatest_common_divisor(matrix_elem, last_pivot);
+		  else
+			  gcd = greatest_common_divisor(last_pivot, matrix_elem);
 
-	}
+		  rational_vector[i].numerator = matrix_elem / gcd;
+		  rational_vector[i].denominator = last_pivot / gcd;
+	  }
+
+	  lcm = least_common_multiple(rational_vector, last_row);
+
+	  for (int i = 0; i <= last_row; i++) {
+		  results[i] = lcm * rational_vector[i].numerator/rational_vector[i].denominator;
+	  }
+	  results[NB_ROWS - 1] = lcm;
+	  MatrixPrintMxN(NB_ROWS, 1, results);
   }
 
 
-  int matrix_3x3[MATRIX_DIMENSION_3*MATRIX_DIMENSION] =
-  {
-	2, -6, 4, 1,
-	4, -10, 10, 3,
-	1, -2, 3, 2
-  };
-
-  MatrixPrintMxN(MATRIX_DIMENSION_3, MATRIX_DIMENSION, matrix_3x3);
-
-  res = AllIntegerEchelonMethod(MATRIX_DIMENSION_3, MATRIX_DIMENSION, matrix_3x3, &last_pivot, &last_row);
-
-  if(res)
-  {
-	printf("No solution!\n");
-	MatrixPrintMxN(3, 4, matrix);
-  }
-  else
-	  MatrixPrintMxN(last_row + 1, MATRIX_DIMENSION - 1, matrix_3x3);
+//  int matrix_3x3[MATRIX_DIMENSION_3*MATRIX_DIMENSION] =
+//  {
+//	2, -6, 4, 1,
+//	4, -10, 10, 3,
+//	1, -2, 3, 2
+//  };
+//
+//  MatrixPrintMxN(MATRIX_DIMENSION_3, MATRIX_DIMENSION, matrix_3x3);
+//
+//  res = AllIntegerEchelonMethod(MATRIX_DIMENSION_3, MATRIX_DIMENSION, matrix_3x3, &last_pivot, &last_row);
+//
+//  if(res)
+//  {
+//	printf("No solution!\n");
+//	MatrixPrintMxN(3, 4, matrix);
+//  }
+//  else
+//	  MatrixPrintMxN(last_row + 1, MATRIX_DIMENSION - 1, matrix_3x3);
 
   return 0;
 }

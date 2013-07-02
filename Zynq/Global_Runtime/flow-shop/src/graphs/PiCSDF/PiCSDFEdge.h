@@ -13,51 +13,76 @@
 class PiCSDFEdge : public CSDAGEdge{
 	private:
 		/**
-		 Expression defining the initial tokens (in abstract_syntax_elt)
+		 Expression defining the delay (in abstract_syntax_elt)
 		*/
-		abstract_syntax_elt initial_tokens[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
+		abstract_syntax_elt delay[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
+
+		// Production and consumption after pattern resolution.
+		int productionInt; int consumtionInt;
 
 	public:
 
 
 		/**
-		 initial_tokens getter.
+		 delay getter.
 
-		 @return initial_tokens
+		 @return delay
 		*/
-		abstract_syntax_elt* getInitialTokens();
+		abstract_syntax_elt* getDelay();
 
 		/**
-		 initial_tokens setter
+		 delay setter
 
-		 @param expression defining the initial tokens
+		 @param expression defining the delay
 		*/
-		void setInitialTokens(const char* initial_tokens);
+		void setDelay(const char* delay);
 
+		// Getter/setter for productionInt/consumptionInt.
+		int getProductionInt();
+
+		void setProductionInt(const int prod);
+
+		int getConsumptionInt();
+
+		void setConsumptionInt(const int cons);
 };
 
 
 /**
- initial_tokens getter
+ delay getter
 
- @return initial_tokens expression
+ @return delay expression
 */
-inline abstract_syntax_elt* PiCSDFEdge::getInitialTokens()
-{
-	return(this->initial_tokens);
+inline abstract_syntax_elt* PiCSDFEdge::getDelay(){
+	return(this->delay);
 }
 
 /**
- initial_tokens setter. Careful! Not made to set it more than once!
+ delay setter. Careful! Not made to set it more than once!
 
- @param initial_tokens: expression defining the initial tokens (in char)
- @return initial_tokens after resolving the expression
+ @param delay: expression defining the initial tokens (in char)
+ @return delay after resolving the expression
 */
-inline void PiCSDFEdge::setInitialTokens(const char* initial_tokens)
-{
+inline void PiCSDFEdge::setDelay(const char* delay){
 	// Parsing the expression
-	globalParser.parse(initial_tokens,this->initial_tokens);
+	globalParser.parse(delay, this->delay);
 }
 
 
+// Getter/setter for productionInt/consumptionInt.
+inline int PiCSDFEdge::getProductionInt(){
+	return this->productionInt;
+}
+
+inline void PiCSDFEdge::setProductionInt(const int prod){
+	this->productionInt = prod;
+}
+
+inline int PiCSDFEdge::getConsumptionInt(){
+	return this->consumtionInt;
+}
+
+inline void PiCSDFEdge::setConsumptionInt(const int cons){
+	this->consumtionInt = cons;
+}
 #endif /* PICSDFEDGE_H_ */

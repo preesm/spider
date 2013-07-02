@@ -18,7 +18,7 @@
  @param initial_tokens: number of initial tokens.
  @return the created edge
 */
-PiCSDFEdge* PiCSDFGraph::addEdge(CSDAGVertex* source, const char* production, CSDAGVertex* sink, const char* consumption, const char* initial_tokens){
+PiCSDFEdge* PiCSDFGraph::addEdge(CSDAGVertex* source, const char* production, CSDAGVertex* sink, const char* consumption, const char* delay){
 	PiCSDFEdge* edge = NULL;
 	if(nbEdges < MAX_CSDAG_EDGES){
 		edge = &edges[nbEdges];
@@ -27,7 +27,7 @@ PiCSDFEdge* PiCSDFGraph::addEdge(CSDAGVertex* source, const char* production, CS
 		edge->setProduction(production);
 		edge->setSink(sink);
 		edge->setConsumption(consumption);
-		edge->setInitialTokens(initial_tokens);
+		edge->setDelay(delay);
 		nbEdges++;
 	}
 	else{

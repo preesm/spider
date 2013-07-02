@@ -26,10 +26,10 @@ class PiCSDFGraph : public CSDAGGraph{
 		 @param production: number of tokens (chars) produced by the source
 		 @param sink: The sink vertex of the edge
 		 @param consumption: number of tokens (chars) consumed by the sink
-		 @param initial_tokens: number of initial tokens.
+		 @param delay: number of initial tokens.
 		 @return the created edge
 		*/
-		PiCSDFEdge* addEdge(CSDAGVertex* source, const char* production, CSDAGVertex* sink, const char* consumption, const char* initial_tokens);
+		PiCSDFEdge* addEdge(CSDAGVertex* source, const char* production, CSDAGVertex* sink, const char* consumption, const char* delay);
 
 
 		/**

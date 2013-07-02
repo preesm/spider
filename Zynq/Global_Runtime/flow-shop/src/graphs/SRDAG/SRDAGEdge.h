@@ -27,7 +27,7 @@ parallel applications.
  */
 class SRDAGEdge {
 
-	private :
+	protected :
 		/**
 		 token rate (solved and not depending on an expression). 
 		 tokenRate = -1 means that the edge only represents a precedence

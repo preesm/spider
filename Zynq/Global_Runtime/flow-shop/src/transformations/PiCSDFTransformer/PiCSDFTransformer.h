@@ -17,6 +17,7 @@ class PiCSDFTransformer : public CSDAGTransformer{
 		 Table of input DAG edges of an PiCSDF vertex.
 		*/
 		PiCSDFEdge* input_edges[MAX_CSDAG_INPUT_EDGES];
+
 	public:
 		/**
 		 Transforms a PiCSDF graph in SrSDF
@@ -26,7 +27,7 @@ class PiCSDFTransformer : public CSDAGTransformer{
 		*/
 		void transform(PiCSDFGraph* input, SRDAGGraph* output, Architecture* archi);
 
-		void linkvertices(PiCSDFGraph* inputGraph, CSDAGVertex* sinkVertex);
+//		void linkvertices(PiCSDFGraph* inputGraph, CSDAGVertex* sinkVertex);
 
 
 };

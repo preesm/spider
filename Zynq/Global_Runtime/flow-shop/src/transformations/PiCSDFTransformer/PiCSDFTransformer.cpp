@@ -18,53 +18,100 @@ void PiCSDFTransformer::transform(PiCSDFGraph* inputGraph, SRDAGGraph* outputGra
 	int nb_rows = inputGraph->getNbEdges();
 	int nb_cols = inputGraph->getNbVertices();
 
+	PiCSDFEdge *edge;
+
+	int prod, cons;
+
 	// Filling the topology matrix. See Max's thesis chapter 3.
 	for(int i = 0; i < nb_rows; i++)
 	{
-		PiCSDFEdge *edge = inputGraph->getEdge(i);
+		edge = inputGraph->getEdge(i);
 		int sourceVertexIndex = inputGraph->getVertexIndex(edge->getSource());
 		int sinkVertexIndex = inputGraph->getVertexIndex(edge->getSink());
 
 		// Resolving the production/consumption expressions.
-		globalParser.interpret(edge->getProduction(), &topo_matrix[i * nb_cols + sourceVertexIndex]);
-		globalParser.interpret(edge->getConsumption(), &topo_matrix[i * nb_cols + sinkVertexIndex]);
+		globalParser.interpret(edge->getProduction(), &prod);
+		globalParser.interpret(edge->getConsumption(), &cons);
+
+		topo_matrix[i * nb_cols + sourceVertexIndex] = prod;
+		topo_matrix[i * nb_cols + sinkVertexIndex] = cons;
+
+		edge->setProductionInt(prod);
+		edge->setConsumptionInt(cons);
 	}
 
 	// Computing the null space (BRV) of the matrix.
 	if(nullspace(nb_rows, nb_cols, topo_matrix, brv) == 0)
 	{
+
 		for (int j = 0; j < nb_cols; j++) {
+			// Setting the number of repetitions of the current CSDAG Vertex.
+			inputGraph->getVertex(j)->setRepetitionNb(brv[j]);
+
+			// Creating the vertices of the SRDAG output graph for each CSDAG vertex.
 			addVertices(inputGraph, inputGraph->getVertex(j), brv[j], outputGraph);
 		}
+
+		// Creating the edges of the SRDAG output graph.
+		for(int i = 0; i < nb_rows; i++){
+			edge = inputGraph->getEdge(i);
+			createEdges(inputGraph, inputGraph->getVertexIndex(edge->getSource()), i,
+						inputGraph->getVertexIndex(edge->getSink()), outputGraph);
+		}
 	}
-
-
-//	for(i=0;i<input->getNbEdges();i++){
-//		PiCSDFEdge *edge = input->getEdge(i);
-//		int sourceVertexIndex = input->getVertexIndex(edge->getSource());
-//		int sinkVertexIndex = input->getVertexIndex(edge->getSink());
-//		if((brv[sourceVertexIndex] != 0) &&
-//		   (brv[sinkVertexIndex] != 0)){
-//			// Retrieving the different repetitions of source in the correct order
-//			output->getVerticesFromCSDAGReference(input->getVertex(sourceVertexIndex),sourceRepetitions);
-//			// The sink repetitions are already in the array sinkRepetitions
+}
 //
-//			int initial_tokens = edge->getInitialTokens();
+//void PiCSDFTransformer::linkvertices(PiCSDFGraph* inputGraph, CSDAGVertex* sinkVertex, PiCSDFGraph* inputGraph, SRDAGGraph* outputGraph)
+//{
+//	for (int i = 0; i < inputGraph->getNbEdges(); i++) {
+//		PiCSDFEdge *edge = outputGraph->getEdge(i);
 //
-//			//
-//			int* sourcePattern = resolvedInputEdgesPatterns[0][i];
-//			int sourcePatternSize = brv[sourceVertexIndex];
-//			int* sinkPattern = resolvedInputEdgesPatterns[1][i];
-//			int sinkPatternSize = brv[sinkVertexIndex];
+//		int nbDelays = edge->getDelay();
+//
+//		int nbSourceRepetitions = edge->getSource()->getRepetitionNb();
+//		int nbTargetRepetitions = edge->getSink()->getRepetitionNb();
+//
+//		// Total number of token exchanged (produced and consumed) for an edge.
+//		int totalNbTokens = edge->getProductionInt() * nbSourceRepetitions;
+//
+//		// Absolute target is the targeted consumed token among the total number of consumed/produced tokens.
+//		int absoluteTarget = nbDelays;
+//		int absoluteSource = 0;
+//
+//		// totProd is updated to store the number of token consumed by the
+//		// targets that are "satisfied" by the added edges.
+//		int totProd = 0;
+//
+//		// Iterating until all consumptions are "satisfied".
+//		while (totProd < (edge->getProductionInt() * nbSourceRepetitions)) {
+//			// Index of the source vertex's instance (among all the replicas).
+//			int sourceIndex = (absoluteSource / edge->getProductionInt())% nbSourceRepetitions;
+//
+//			// Index of the target vertex's instance to be connected.
+//			int targetIndex = (absoluteTarget / edge->getConsumptionInt())% nbTargetRepetitions;
+//
+//			// Number of token already produced/consumed through the underlying connection (source->target).
+//			int sourceProd = absoluteSource % edge->getProductionInt();
+//			int targetCons = absoluteTarget % edge->getConsumptionInt();
+//
+//			// Production and consumption rate on the underlying connection.
+//			int rest =((edge->getConsumptionInt() - sourceProd) > (edge->getConsumptionInt() - targetCons))?
+//					(edge->getConsumptionInt() - targetCons):(edge->getConsumptionInt() - sourceProd); // Minimum.
+//
+//			/*
+//			 * iterationDiff represents the number of iteration separating the current couple (source->target).
+//			 * If it is > 0, the corresponding edge must have delays (with delay = prod = cons).
+//			 * With the previous example:
+//			 * 		A_1 will target B_(1+targetIndex%3) = B_0 (with a delay of 1)
+//			 * 		A_2 will target B_(2+targetIndex%3) = B_1 (with a delay of 1)
+//			 * Warning, this integer division is not factorable.
+//			 */
+//			int iterationDiff = absoluteTarget / totalNbTokens - absoluteSource / totalNbTokens;
 //		}
 //	}
-}
-
-void PiCSDFTransformer::linkvertices(PiCSDFGraph* inputGraph, CSDAGVertex* sinkVertex)
-{
-	// Getting sinkVertex input edges
-	this->nb_input_edges = inputGraph->getInputEdges(sinkVertex,input_edges);
-}
+//	// Getting sinkVertex input edges
+//	this->nb_input_edges = inputGraph->getInputEdges(sinkVertex,input_edges);
+//}
 
 
 

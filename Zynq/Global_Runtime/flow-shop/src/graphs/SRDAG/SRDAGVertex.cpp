@@ -25,6 +25,7 @@ SRDAGVertex::SRDAGVertex(){
 	nbInputEdges=0;
 	nbOutputEdges=0;
 	slaveIndex=-1;
+	type = 0; // Normal type by default.
 }
 
 /**

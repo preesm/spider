@@ -100,7 +100,7 @@ class CSDAGTransformer {
 		 
 		 @return the repetition of the current vertex
 		*/
-		void addVertices(CSDAGGraph* inputGraph, CSDAGVertex* sinkVertex, int brval, SRDAGGraph* outputGraph);
+		virtual void addVertices(CSDAGGraph* inputGraph, CSDAGVertex* sinkVertex, int brval, SRDAGGraph* outputGraph);
 
 		/**
 		 Creates the SRDAG edges corresponding to one CSDAG edge of the input graph. They are not added yet

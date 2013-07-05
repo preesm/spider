@@ -221,7 +221,7 @@ void CSDAGTransformer::createEdges(CSDAGGraph* inputGraph, int sourceVertexIndex
 		while(1){
 			int tokenRate = (remainingSourceTokens>remainingSinkTokens)?remainingSinkTokens:remainingSourceTokens; //min
 
-			SRDAGEdge* newEdge = outputGraph->addEdge(sourceRepetitions[hSourceIndex],tokenRate,sinkRepetitions[hSinkIndex]);
+			outputGraph->addEdge(sourceRepetitions[hSourceIndex],tokenRate,sinkRepetitions[hSinkIndex]);
 			remainingSourceTokens -= tokenRate;
 			remainingSinkTokens -= tokenRate;
 			if(remainingSourceTokens == 0){

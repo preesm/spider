@@ -19,6 +19,13 @@ class PiCSDFTransformer : public CSDAGTransformer{
 		PiCSDFEdge* input_edges[MAX_CSDAG_INPUT_EDGES];
 
 	public:
+
+		/**
+		 * Adds "nb_repetitions" SRDAGVertex vertices for the "csdag_vertex" vertex to the output SRDAG graph.
+		 */
+		void addVertices(PiCSDFGraph* inputGraph, CSDAGVertex* csdag_vertex, int nb_repetitions, SRDAGGraph* outputGraph);
+
+
 		/**
 		 Transforms a PiCSDF graph in SrSDF
 
@@ -27,7 +34,8 @@ class PiCSDFTransformer : public CSDAGTransformer{
 		*/
 		void transform(PiCSDFGraph* input, SRDAGGraph* output, Architecture* archi);
 
-//		void linkvertices(PiCSDFGraph* inputGraph, CSDAGVertex* sinkVertex);
+
+		void linkvertices(PiCSDFGraph* inputGraph, SRDAGGraph* outputGraph);
 
 
 };

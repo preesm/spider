@@ -59,7 +59,20 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, char displayNames){
 		for (int i=0 ; i<graph->getNbVertices() ; i++)
 		{
 			SRDAGVertex* vertex = graph->getVertex(i);
-			sprintf(name,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+			switch (vertex->getType()) {
+				case 0: // Normal vertex.
+					sprintf(name,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+					break;
+				case 1: // Explode vertex.
+					sprintf(name,"%s_%d_%s_%d","Exp", vertex->getExpImpId(), vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+					break;
+				case 2: // Implode vertex.
+					sprintf(name,"%s_%d_%s_%d","Imp", vertex->getExpImpId(), vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+					break;
+				default:
+					break;
+			}
+
 			if(displayNames){
 				fprintf (pFile, "\t%s [label=\"%s\"];\n",name,name);
 			}
@@ -71,8 +84,34 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, char displayNames){
 		for (int i=0 ; i<graph->getNbEdges() ; i++)
 		{
 			SRDAGEdge* edge = graph->getEdge(i);
-			sprintf(name,"%s_%d",edge->getSource()->getCsDagReference()->getName(),edge->getSource()->getReferenceIndex());
-			sprintf(name2,"%s_%d",edge->getSink()->getCsDagReference()->getName(),edge->getSink()->getReferenceIndex());
+
+			switch (edge->getSource()->getType()) {
+				case 0: // Normal vertex.
+					sprintf(name,"%s_%d",edge->getSource()->getCsDagReference()->getName(),edge->getSource()->getReferenceIndex());
+					break;
+				case 1: // Explode vertex.
+					sprintf(name,"%s_%d_%s_%d","Exp", edge->getSource()->getExpImpId(), edge->getSource()->getCsDagReference()->getName(),edge->getSource()->getReferenceIndex());
+					break;
+				case 2: // Implode vertex.
+					sprintf(name,"%s_%d_%s_%d","Imp", edge->getSource()->getExpImpId(), edge->getSource()->getCsDagReference()->getName(),edge->getSource()->getReferenceIndex());
+					break;
+				default:
+					break;
+			}
+
+			switch (edge->getSink()->getType()) {
+				case 0: // Normal vertex.
+					sprintf(name2,"%s_%d",edge->getSink()->getCsDagReference()->getName(),edge->getSink()->getReferenceIndex());
+					break;
+				case 1: // Explode vertex.
+					sprintf(name2,"%s_%d_%s_%d","Exp", edge->getSink()->getExpImpId(), edge->getSink()->getCsDagReference()->getName(),edge->getSink()->getReferenceIndex());
+					break;
+				case 2: // Implode vertex.
+					sprintf(name2,"%s_%d_%s_%d","Imp", edge->getSink()->getExpImpId(), edge->getSink()->getCsDagReference()->getName(),edge->getSink()->getReferenceIndex());
+					break;
+				default:
+					break;
+			}
 			fprintf (pFile, "\t%s->%s [label=\"%d\"];\n",
 				name,name2,
 				edge->getTokenRate());
@@ -136,6 +175,66 @@ void DotWriter::write(CSDAGGraph* graph, const char* path, char displayNames){
 		}
 		fprintf (pFile, "}\n");
 		
+		fclose (pFile);
+	}else{
+		printf("Cannot open %s\n", path);
+	}
+}
+
+
+
+
+
+/**
+ Writes a PiCSDFGraph in a file
+
+ @param graph: written graph
+ @param path: output file path
+*/
+void DotWriter::write(PiCSDFGraph* graph, const char* path, char displayNames){
+	FILE * pFile;
+
+	//char directory[_MAX_PATH];
+	//getcwd(directory, sizeof(directory));
+
+	pFile = fopen (path,"w");
+	if(pFile != NULL){
+		// Writing header
+		fprintf (pFile, "digraph csdag {\n");
+		fprintf (pFile, "node [color=\"#433D63\"];\n");
+		fprintf (pFile, "edge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
+		//fprintf (pFile, "rankdir=LR;\n");
+		for (int i=0 ; i<graph->getNbVertices() ; i++)
+		{
+			CSDAGVertex* vertex = graph->getVertex(i);
+			if(displayNames){
+				fprintf (pFile, "\t%s [label=\"%s\"];\n",vertex->getName(),vertex->getName());
+			}
+			else{
+				fprintf (pFile, "\t%s [label=\"\"];\n",vertex->getName());
+			}
+		}
+
+		//int labelDistance = 3;
+		for (int i=0 ; i<graph->getNbEdges() ; i++)
+		{
+			char shortenedPExpr[EXPR_LEN_MAX];
+			char shortenedCExpr[EXPR_LEN_MAX];
+			PiCSDFEdge* edge = graph->getEdge(i);
+
+			globalParser.prettyPrint(edge->getProduction(),shortenedPExpr);
+			globalParser.prettyPrint(edge->getConsumption(),shortenedCExpr);
+
+			/*fprintf (pFile, "\t%s->%s [taillabel=\"%s\" headlabel=\"%s\" labeldistance=%d labelangle=50];\n",
+				edge->getSource()->getName(),edge->getSink()->getName(),
+				shortenedPExpr,shortenedCExpr,labelDistance);*/
+			fprintf (pFile, "\t%s->%s [taillabel=\"%s\" headlabel=\"%s\"];\n",
+				edge->getSource()->getName(),edge->getSink()->getName(),
+				shortenedPExpr,shortenedCExpr);
+			//labelDistance = 3 + labelDistance%(3*4); // Oscillating the label distance to keep visibility
+		}
+		fprintf (pFile, "}\n");
+
 		fclose (pFile);
 	}else{
 		printf("Cannot open %s\n", path);

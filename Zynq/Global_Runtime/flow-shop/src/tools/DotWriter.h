@@ -18,7 +18,8 @@ parallel applications.
 #include "../graphs/SRDAG/SRDAGGraph.h"
 #include "../graphs/SRDAG/SRDAGVertex.h"
 #include "../graphs/SRDAG/SRDAGEdge.h"
-
+#include "../graphs/PiCSDF/PiCSDFGraph.h"
+#include "../graphs/PiCSDF/PiCSDFEdge.h"
 
 /**
  * Writes a dot file from a graph of a given type
@@ -57,6 +58,15 @@ class DotWriter {
 		 @param path: output file path
 		*/
 		void write(CSDAGGraph* graph, const char* path, char displayNames);
+
+
+		/**
+		 Writes a PiCSDFGraph in a file
+
+		 @param graph: written graph
+		 @param path: output file path
+		*/
+		void write(PiCSDFGraph* graph, const char* path, char displayNames);
 };
 
 #endif

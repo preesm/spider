@@ -17,8 +17,8 @@ class PiCSDFEdge : public CSDAGEdge{
 		*/
 		abstract_syntax_elt delay[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 
-		// Production and consumption after pattern resolution.
-		int productionInt; int consumtionInt;
+		// Production, consumption and delay after pattern resolution.
+		int productionInt; int consumtionInt; int delayInt;
 
 	public:
 
@@ -37,7 +37,7 @@ class PiCSDFEdge : public CSDAGEdge{
 		*/
 		void setDelay(const char* delay);
 
-		// Getter/setter for productionInt/consumptionInt.
+		// Getter/setter for productionInt/consumptionInt/delayInt.
 		int getProductionInt();
 
 		void setProductionInt(const int prod);
@@ -45,6 +45,10 @@ class PiCSDFEdge : public CSDAGEdge{
 		int getConsumptionInt();
 
 		void setConsumptionInt(const int cons);
+
+		int getDelayInt();
+
+		void setDelayInt(const int delay);
 };
 
 
@@ -84,5 +88,13 @@ inline int PiCSDFEdge::getConsumptionInt(){
 
 inline void PiCSDFEdge::setConsumptionInt(const int cons){
 	this->consumtionInt = cons;
+}
+
+inline int PiCSDFEdge::getDelayInt(){
+	return this->delayInt;
+}
+
+inline void PiCSDFEdge::setDelayInt(const int delay){
+	this->delayInt = delay;
 }
 #endif /* PICSDFEDGE_H_ */

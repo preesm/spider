@@ -43,6 +43,9 @@ class SRDAGEdge {
 		*/
 		SRDAGVertex* sink;
 
+		// Delay or number of initial tokens.
+		int delay;
+
 	public : 
 		/**
 		 Constructor
@@ -95,6 +98,18 @@ class SRDAGEdge {
 		 @param vertex: the sink
 		*/
 		void setSink(SRDAGVertex* vertex);
+
+		/**
+		 delay getter.
+
+		 @return delay
+		*/
+		int getDelay();
+
+		/**
+		 delay setter
+		*/
+		void setDelay(const int delay);
 
 		// Public for performance sake
 
@@ -171,6 +186,20 @@ inline
 void SRDAGEdge::setTokenRate(int rate)
 {
 	this->tokenRate = rate;
+}
+
+/**
+ delay getter.
+ */
+inline int SRDAGEdge::getDelay(){
+	return(this->delay);
+}
+
+/**
+ delay setter.
+ */
+inline void SRDAGEdge::setDelay(const int delay){
+	this->delay = delay;
 }
 
 #endif

@@ -68,9 +68,11 @@ void swap_rows(int row1, int row2, int nb_cols, int* matrix){
  * 				0 - other way.
  */
 int AllIntegerEchelonMethod(int nb_rows, int nb_cols, int *matrix, int *last_pivot, int* last_row){
-	int curr_pivot, prev_pivot = 1;
+	int curr_pivot = 0;
+	int prev_pivot = 1;
 	int upper_left, upper_right, lower_right, lower_left;
 
+	// TODO: Handle eventual errors.
 	for (int i = 0; i < nb_rows; i++) {
 
 		// Getting previous pivot.

@@ -70,6 +70,13 @@ class SRDAGVertex {
 		 For graph traversal
 		*/
 		bool visited;
+
+		// Indicates the type of vertex normal (0), explode (1) or implode (2). Normal (0) by default.
+		int type;
+
+		// Distinguishes among several explode/implode vertices.
+		int expImpId;
+
 	public : 
 		/**
 		 Constructor
@@ -189,6 +196,18 @@ class SRDAGVertex {
 
 		int getNbInputEdge();
 		int getNbOutputEdge();
+
+		/*
+		 * Getter and setter for the type.
+		 */
+		int getType();
+		void setType(int type);
+
+		/*
+		 * Getter and setter for the expImpId.
+		 */
+		int getExpImpId();
+		void setExpImpId(int id);
 };
 
 
@@ -364,4 +383,23 @@ int SRDAGVertex::getNbOutputEdge(){
 	return nbOutputEdges;
 }
 
+inline
+int SRDAGVertex::getType(){
+	return type;
+}
+
+inline
+void SRDAGVertex::setType(int type){
+	this->type = type;
+}
+
+inline
+int SRDAGVertex::getExpImpId(){
+	return expImpId;
+}
+
+inline
+void SRDAGVertex::setExpImpId(int id){
+	this->expImpId = id;
+}
 #endif

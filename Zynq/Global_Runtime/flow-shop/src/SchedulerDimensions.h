@@ -42,6 +42,11 @@ parallel applications.
 #define MAX_SRDAG_INPUT_EDGES 32
 #define MAX_SRDAG_OUTPUT_EDGES 100
 
+
+// PICSDF
+#define MAX_PISDF_CONFIG_PORTS		512
+
+
 // DAG
 #define MAX_DAG_VERTEX_REPETITION 100 // The maximum number of repetitions for one vertex
 

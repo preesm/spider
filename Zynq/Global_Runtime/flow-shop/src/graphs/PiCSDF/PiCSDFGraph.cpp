@@ -37,3 +37,52 @@ PiCSDFEdge* PiCSDFGraph::addEdge(CSDAGVertex* source, const char* production, CS
 	return edge;
 }
 
+
+/**
+ Adding a configuration port to the graph
+
+ @param vertex: pointer to the vertex connected to the port.
+ 	 	param:	pointer to the parameter connected to the port.
+ 	 	dir:	port direction. 0:input, 1:output.
+
+ @return the new configuration port.
+*/
+PiCSDFConfigPort* PiCSDFGraph::addConfigPort(CSDAGVertex* vertex, PiCSDFParameter* param, int dir){
+	PiCSDFConfigPort* configPort = NULL;
+	if(nbConfigPorts < MAX_PISDF_CONFIG_PORTS){
+		configPort = &configPorts[nbConfigPorts];
+		configPort->vertex = vertex;
+		configPort->parameter = param;
+		configPort->direction = dir;
+		nbConfigPorts++;
+	}
+	else{
+		//TODO handle the error.
+//		exitWithCode(1000);
+	}
+	return configPort;
+}
+
+
+
+/**
+ Adding a parameter to the graph
+
+ @param expression: //expression defining the parameter's value.
+
+ @return the new parameter.
+*/
+PiCSDFParameter* PiCSDFGraph::addParameter(const char* expression){
+	PiCSDFParameter* parameter = NULL;
+	if(nbParameters < MAX_PISDF_CONFIG_PORTS){
+		parameter = &parameters[nbParameters];
+		// Parsing the expression
+		globalParser.parse(expression, parameter->expression);
+		nbParameters++;
+	}
+	else{
+		//TODO handle the error.
+//		exitWithCode(1000);
+	}
+	return parameter;
+}

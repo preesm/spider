@@ -11,13 +11,46 @@
 #include "../CSDAG/CSDAGGraph.h"
 #include "PiCSDFEdge.h"
 
+
+/*
+ * This data types may become classes later.
+ */
+// Parameter
+typedef struct PiCSDFParameter{
+//	char 	name[MAX_VERTEX_NAME_SIZE];
+	abstract_syntax_elt expression[REVERSE_POLISH_STACK_MAX_ELEMENTS+1]; //expression defining the parameter's value.
+}PiCSDFParameter;
+
+
+// ConfigPort
+typedef struct PiCSDFConfigPort{
+	CSDAGVertex* 		vertex;
+	PiCSDFParameter* 	parameter;
+	int 				direction; // 0:input, 1:output.
+}PiCSDFConfigPort;
+
+
 class PiCSDFGraph : public CSDAGGraph{
 	private:
 		/**
 		 table of PiCSDF edges
 		*/
 		PiCSDFEdge edges[MAX_CSDAG_EDGES];
+
+		/*
+		 * Table of configuration ports.
+		 */
+		PiCSDFConfigPort configPorts[MAX_PISDF_CONFIG_PORTS];
+		int nbConfigPorts;
+
+		/*
+		 * Table of parameters.
+		 */
+		PiCSDFParameter parameters[MAX_PISDF_CONFIG_PORTS];
+		int nbParameters;
+
 	public:
+		PiCSDFGraph():CSDAGGraph(){nbConfigPorts = 0; nbParameters = 0;};
 
 		/**
 		 Adding an edge to the graph. Vertices and edges must be added in topological order.
@@ -51,6 +84,26 @@ class PiCSDFGraph : public CSDAGGraph{
 		int getInputEdges(CSDAGVertex* vertex, PiCSDFEdge** output);
 
 
+		/**
+		 Adding a configuration port to the graph
+
+		 @param vertex: pointer to the vertex connected to the port.
+		 	 	param:	pointer to the parameter connected to the port.
+		 	 	dir:	port direction. 0:input, 1:output.
+
+		 @return the new configuration port.
+		*/
+		PiCSDFConfigPort* addConfigPort(CSDAGVertex* vertex, PiCSDFParameter* param, int dir);
+
+
+		/**
+		 Adding a parameter to the graph
+
+		 @param expression: //expression defining the parameter's value.
+
+		 @return the new parameter.
+		*/
+		PiCSDFParameter* addParameter(const char* expression);
 };
 
 
@@ -85,5 +138,9 @@ inline int PiCSDFGraph::getInputEdges(CSDAGVertex* vertex, PiCSDFEdge** output){
 	}
 	return nbEdges;
 }
+
+
+
+
 
 #endif /* PICSDFGRAPH_H_ */

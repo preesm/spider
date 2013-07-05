@@ -12,6 +12,7 @@
 
 #include "transformations/PiCSDFTransformer/PiCSDFTransformer.h"
 
+#include "applicationGraphs/DPCM.h"
 
 #define NB_EDGES					4
 #define NB_VERTICES					4
@@ -51,7 +52,8 @@ int main(int nArgs, char** pArgs)
 	PiCSDFGraph inputGraph;
 
 //	create_graph_1(&inputGraph);
-	create_graph_2(&inputGraph);
+//	create_graph_2(&inputGraph);
+	createPiCSDF_DPCM_1(&inputGraph);
 
 	// Printing the PiSDF graph.
 #if PRINT_GRAPH
@@ -59,12 +61,12 @@ int main(int nArgs, char** pArgs)
 #endif
 
 	// Transforming PiSDF to SrDAG if schedulable.
-	SRDAGGraph outputGraph;
-	trans.transform(&inputGraph, &outputGraph, (Architecture*)0);
+//	SRDAGGraph outputGraph;
+//	trans.transform(&inputGraph, &outputGraph, (Architecture*)0);
 
 
 	// Printing the SrDAG graph.
 #if PRINT_GRAPH
-	dotWriter.write((SRDAGGraph*)&outputGraph, SRDAG_FILE_PATH, 1);
+//	dotWriter.write((SRDAGGraph*)&outputGraph, SRDAG_FILE_PATH, 1);
 #endif
 }

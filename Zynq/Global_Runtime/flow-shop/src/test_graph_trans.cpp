@@ -61,12 +61,12 @@ int main(int nArgs, char** pArgs)
 #endif
 
 	// Transforming PiSDF to SrDAG if schedulable.
-//	SRDAGGraph outputGraph;
-//	trans.transform(&inputGraph, &outputGraph, (Architecture*)0);
+	SRDAGGraph outputGraph;
+	trans.transform(&inputGraph, &outputGraph, (Architecture*)0);
 
 
 	// Printing the SrDAG graph.
 #if PRINT_GRAPH
-//	dotWriter.write((SRDAGGraph*)&outputGraph, SRDAG_FILE_PATH, 1);
+	dotWriter.write((SRDAGGraph*)&outputGraph, SRDAG_FILE_PATH, 1);
 #endif
 }

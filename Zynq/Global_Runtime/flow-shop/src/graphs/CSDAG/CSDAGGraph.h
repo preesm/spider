@@ -106,7 +106,7 @@ class CSDAGGraph{
 		 
 		 @return number of vertices
 		*/
-		int getNbVertices();
+		virtual int getNbVertices();
 
 		/**
 		 Gets the edge at the given index

@@ -32,16 +32,29 @@ typedef struct PiCSDFConfigPort{
 
 class PiCSDFGraph : public CSDAGGraph{
 	private:
+
+		/*
+		 * Table of configuration actors.
+		 */
+		CSDAGVertex configVertices[MAX_PISDF_CONFIG_VERTICES];
+		int nbConfigVertices;
+
 		/**
 		 table of PiCSDF edges
 		*/
 		PiCSDFEdge edges[MAX_CSDAG_EDGES];
 
 		/*
-		 * Table of configuration ports.
+		 * Table of configuration input ports.
 		 */
-		PiCSDFConfigPort configPorts[MAX_PISDF_CONFIG_PORTS];
-		int nbConfigPorts;
+		PiCSDFConfigPort configInPorts[MAX_PISDF_CONFIG_PORTS];
+		int nbConfigInPorts;
+
+		/*
+		 * Table of configuration output ports.
+		 */
+		PiCSDFConfigPort configOutPorts[MAX_PISDF_CONFIG_PORTS];
+		int nbConfigOutPorts;
 
 		/*
 		 * Table of parameters.
@@ -50,7 +63,10 @@ class PiCSDFGraph : public CSDAGGraph{
 		int nbParameters;
 
 	public:
-		PiCSDFGraph():CSDAGGraph(){nbConfigPorts = 0; nbParameters = 0;};
+		PiCSDFGraph():CSDAGGraph(){nbConfigVertices	= 0;
+								   nbConfigInPorts	= 0;
+								   nbConfigOutPorts	= 0;
+								   nbParameters		= 0;};
 
 		/**
 		 Adding an edge to the graph. Vertices and edges must be added in topological order.
@@ -82,6 +98,15 @@ class PiCSDFGraph : public CSDAGGraph{
 		 @return the number of input edges
 		*/
 		int getInputEdges(CSDAGVertex* vertex, PiCSDFEdge** output);
+
+
+		/**
+		 Adding a configuration vertex to the graph.
+
+		 @param vertexName: the name of the new vertex
+		 @return the new vertex
+		*/
+		CSDAGVertex* addConfigVertex(const char* vertexName);
 
 
 		/**

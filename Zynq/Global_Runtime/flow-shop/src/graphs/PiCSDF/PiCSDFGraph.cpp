@@ -37,6 +37,28 @@ PiCSDFEdge* PiCSDFGraph::addEdge(CSDAGVertex* source, const char* production, CS
 	return edge;
 }
 
+/**
+ Adding a configuration vertex to the graph.
+
+ @param vertexName: the name of the new vertex
+ @return the new vertex
+*/
+CSDAGVertex* PiCSDFGraph::addConfigVertex(const char* vertexName){
+	CSDAGVertex* vertex = NULL;
+	if(nbConfigVertices < MAX_PISDF_CONFIG_VERTICES){
+		vertex = &configVertices[nbConfigVertices];
+		vertex->setBase(this);
+		vertex->setName(vertexName);
+		nbConfigVertices++;
+	}
+	else{
+		// Adding a vertex while the graph is already full
+		exitWithCode(1000);
+	}
+	return vertex;
+}
+
+
 
 /**
  Adding a configuration port to the graph
@@ -49,17 +71,23 @@ PiCSDFEdge* PiCSDFGraph::addEdge(CSDAGVertex* source, const char* production, CS
 */
 PiCSDFConfigPort* PiCSDFGraph::addConfigPort(CSDAGVertex* vertex, PiCSDFParameter* param, int dir){
 	PiCSDFConfigPort* configPort = NULL;
-	if(nbConfigPorts < MAX_PISDF_CONFIG_PORTS){
-		configPort = &configPorts[nbConfigPorts];
-		configPort->vertex = vertex;
-		configPort->parameter = param;
-		configPort->direction = dir;
-		nbConfigPorts++;
+	if(dir == 0) // Input port.
+	{
+		if(nbConfigInPorts < MAX_PISDF_CONFIG_PORTS); //TODO handle the error. exitWithCode()
+		configPort = &configInPorts[nbConfigInPorts];
+		nbConfigInPorts++;
 	}
-	else{
-		//TODO handle the error.
-//		exitWithCode(1000);
+	else // Output port.
+	{
+		if(nbConfigOutPorts < MAX_PISDF_CONFIG_PORTS); //TODO handle the error. exitWithCode()
+		configPort = &configOutPorts[nbConfigOutPorts];
+		nbConfigOutPorts++;
 	}
+
+	configPort->vertex = vertex;
+	configPort->parameter = param;
+	configPort->direction = dir;
+
 	return configPort;
 }
 
@@ -86,3 +114,8 @@ PiCSDFParameter* PiCSDFGraph::addParameter(const char* expression){
 	}
 	return parameter;
 }
+
+
+/**
+ * Getting the number of vertices.
+ */

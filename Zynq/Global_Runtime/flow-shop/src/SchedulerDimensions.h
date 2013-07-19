@@ -45,6 +45,7 @@ parallel applications.
 
 // PICSDF
 #define MAX_PISDF_CONFIG_PORTS		512
+#define MAX_PISDF_CONFIG_VERTICES	32
 
 
 // DAG

@@ -22,10 +22,10 @@ void createPiCSDF_DPCM_1(PiCSDFGraph* graph){
 	CSDAGVertex *vertexSetB = graph->addConfigVertex("SetB");
 
 	// Variables.
-	globalParser.addVariable("H", 3);
+//	globalParser.addVariable("H", 3);
 	globalParser.addVariable("W", 4);
 	globalParser.addVariable("N", 1);
-	globalParser.addVariable("B", 1);
+//	globalParser.addVariable("B", 1);
 
 	// Parameters.
 	PiCSDFParameter* paramH = graph->addParameter("H");

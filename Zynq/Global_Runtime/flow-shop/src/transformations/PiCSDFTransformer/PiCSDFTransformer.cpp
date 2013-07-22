@@ -37,9 +37,7 @@ void PiCSDFTransformer::transform(PiCSDFGraph* inputGraph, SRDAGGraph* outputGra
 	memset(topo_matrix, 0, sizeof(topo_matrix));
 
 	int nb_rows = inputGraph->getNbEdges();
-	// nb_cols considers the null column (number vertices + 1).
-	// TODO: It may be improved by another algorithm to compute the null space.
-	int nb_cols = inputGraph->getNbVertices() + 1;
+	int nb_cols = inputGraph->getNbVertices();
 
 	// Filling the topology matrix. See Max's thesis chapter 3.
 	for(int i = 0; i < nb_rows; i++)
@@ -62,11 +60,10 @@ void PiCSDFTransformer::transform(PiCSDFGraph* inputGraph, SRDAGGraph* outputGra
 	}
 
 	// Computing the null space (BRV) of the matrix.
+	// TODO: It may be improved by another algorithm to compute the null space.
 	if(nullspace(nb_rows, nb_cols, topo_matrix, brv) == 0)
 	{
-		// Iterating over nb_cols - 1 columns to discard the rightmost column (null column).
-		// TODO: ...may be improved.
-		for (int j = 0; j < nb_cols - 1; j++) {
+		for (int j = 0; j < nb_cols; j++) {
 			// Setting the number of repetitions of the current CSDAG Vertex.
 			inputGraph->getVertex(j)->setRepetitionNb(brv[j]);
 

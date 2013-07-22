@@ -224,7 +224,7 @@ int nullspace(int nb_rows, int nb_cols, int* matrix, int *results){
 	RATIO_NB rational_vector[MAX_NB_ROWS];
 
 	for (int i = 0; i <= last_row; i++) {
-	  matrix_elem = abs(matrix[i * nb_cols + nb_cols - 2]);
+	  matrix_elem = abs(matrix[i * nb_cols + nb_cols - 1]);
 	  if(matrix_elem >= last_pivot)
 		  gcd = greatest_common_divisor(matrix_elem, last_pivot);
 	  else
@@ -239,6 +239,6 @@ int nullspace(int nb_rows, int nb_cols, int* matrix, int *results){
 	for (int i = 0; i <= last_row; i++) {
 	  results[i] = lcm * rational_vector[i].numerator/rational_vector[i].denominator;
 	}
-	results[nb_cols - 2] = lcm;
+	results[nb_cols - 1] = lcm;
 	return 0;
 }

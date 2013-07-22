@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define MAX_NB_ROWS		3
+#define MAX_NB_ROWS		32
 
 typedef struct ratio_nb{
 	int numerator;

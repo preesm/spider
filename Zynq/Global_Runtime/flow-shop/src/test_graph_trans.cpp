@@ -55,6 +55,9 @@ int main(int nArgs, char** pArgs)
 //	create_graph_2(&inputGraph);
 	createPiCSDF_DPCM_1(&inputGraph);
 
+	// Executing the configuration actors.
+	resolvePiCSDFParams(&inputGraph);
+
 	// Printing the PiSDF graph.
 #if PRINT_GRAPH
 	dotWriter.write((PiCSDFGraph*)&inputGraph, CSDAG_FILE_PATH, 1);

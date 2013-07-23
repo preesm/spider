@@ -58,6 +58,12 @@ CSDAGVertex* PiCSDFGraph::addConfigVertex(const char* vertexName){
 	return vertex;
 }
 
+/**
+ * Get number of configuration vertices.
+ */
+int PiCSDFGraph::getNbConfigVertices(){
+	return nbConfigVertices;
+}
 
 
 /**
@@ -91,6 +97,29 @@ PiCSDFConfigPort* PiCSDFGraph::addConfigPort(CSDAGVertex* vertex, PiCSDFParamete
 	return configPort;
 }
 
+
+/*
+ * Getting a configuration input port.
+ */
+PiCSDFConfigPort* PiCSDFGraph::getConfigInPort(int index){
+	return &configInPorts[index];
+}
+
+
+/*
+ * Getting a configuration output port.
+ */
+PiCSDFConfigPort* PiCSDFGraph::getConfigOutPort(int index){
+	return &configOutPorts[index];
+}
+
+
+/**
+ * Get number of configuration input ports.
+ */
+int PiCSDFGraph::getNbConfigInPorts(){
+	return nbConfigInPorts;
+}
 
 
 /**

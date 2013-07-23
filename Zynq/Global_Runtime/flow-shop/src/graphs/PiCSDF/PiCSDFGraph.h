@@ -110,6 +110,12 @@ class PiCSDFGraph : public CSDAGGraph{
 
 
 		/**
+		 * Get number of configuration vertices.
+		 */
+		int getNbConfigVertices();
+
+
+		/**
 		 Adding a configuration port to the graph
 
 		 @param vertex: pointer to the vertex connected to the port.
@@ -119,6 +125,24 @@ class PiCSDFGraph : public CSDAGGraph{
 		 @return the new configuration port.
 		*/
 		PiCSDFConfigPort* addConfigPort(CSDAGVertex* vertex, PiCSDFParameter* param, int dir);
+
+
+		/*
+		 * Get a configuration input port
+		 */
+		PiCSDFConfigPort* getConfigInPort(int index);
+
+
+		/*
+		 * Get a configuration output port
+		 */
+		PiCSDFConfigPort* getConfigOutPort(int index);
+
+
+		/**
+		 * Get number of configuration input ports.
+		 */
+		int getNbConfigInPorts();
 
 
 		/**

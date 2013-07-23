@@ -12,4 +12,6 @@
 
 void createPiCSDF_DPCM_1(PiCSDFGraph* graph);
 
+void resolvePiCSDFParams(PiCSDFGraph* graph);
+
 #endif /* DPCM_H_ */

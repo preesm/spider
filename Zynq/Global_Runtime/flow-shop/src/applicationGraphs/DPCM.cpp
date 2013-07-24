@@ -11,7 +11,7 @@
 
 #define H_VALUE	3
 #define W_VALUE	4
-#define B_VALUE	4
+#define B_VALUE	1
 #define N_VALUE	1
 
 
@@ -30,9 +30,9 @@ void createPiCSDF_DPCM_1(PiCSDFGraph* graph){
 	CSDAGVertex *vertexSetN = graph->addConfigVertex("SetN");
 
 	// Variables.
-	globalParser.addVariable("H", 4);
-	globalParser.addVariable("W", 3);
-	globalParser.addVariable("B", 4);
+	globalParser.addVariable("H", 1);
+	globalParser.addVariable("W", 1);
+	globalParser.addVariable("B", 1);
 	globalParser.addVariable("N", 1);
 
 	// Parameters.
@@ -85,14 +85,14 @@ int executeConfigActorDPCM(CSDAGVertex* vertex){
 
 
 void resolvePiCSDFParams(PiCSDFGraph* graph){
-	for (int i = 0; i < graph->getNbConfigInPorts(); i++) {
-		// Getting the input port.
-		PiCSDFConfigPort *inPort = graph->getConfigInPort(i);
+	for (int i = 0; i < graph->getNbConfigOutPorts(); i++) {
+		// Getting the output port.
+		PiCSDFConfigPort *outPort = graph->getConfigOutPort(i);
 
 		// Retrieving the value from the actor's execution.
-		int value = executeConfigActorDPCM(inPort->vertex);
+		int value = executeConfigActorDPCM(outPort->vertex);
 
 		// Updating the corresponding parameter' value.
-		((variable*)(inPort->parameter->expression[0].elt_union.var))->value = value;
+		((variable*)(outPort->parameter->expression[0].elt_union.var))->value = value;
 	}
 }

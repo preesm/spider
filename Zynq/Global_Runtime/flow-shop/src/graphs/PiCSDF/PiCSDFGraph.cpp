@@ -123,6 +123,14 @@ int PiCSDFGraph::getNbConfigInPorts(){
 
 
 /**
+ * Get number of configuration input ports.
+ */
+int PiCSDFGraph::getNbConfigOutPorts(){
+	return nbConfigOutPorts;
+}
+
+
+/**
  Adding a parameter to the graph
 
  @param expression: //expression defining the parameter's value.

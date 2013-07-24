@@ -140,9 +140,17 @@ class PiCSDFGraph : public CSDAGGraph{
 
 
 		/**
-		 * Get number of configuration input ports.
+		 * Getter of the number of configuration input ports.
 		 */
 		int getNbConfigInPorts();
+
+
+
+		/**
+		 * Getter of the number of configuration output ports.
+		 */
+		int getNbConfigOutPorts();
+
 
 
 		/**

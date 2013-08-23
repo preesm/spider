@@ -207,6 +207,10 @@ int least_common_multiple(RATIO_NB* rational_vector, int nb_elements){
  * 				1 if no solution or singular matrix.
  */
 int nullspace(int nb_rows, int nb_cols, int* matrix, int *results){
+
+	int last_pivot, last_row;
+	int res = AllIntegerEchelonMethod(nb_rows, nb_cols, matrix, &last_pivot, &last_row);
+
 	/* At this point, the matrix should contain only one column with nonzero elements.
 	* It will be divided by "last_pivot" to obtain the values of each variable.
 	* As the results must be integer values, a vector of rational numbers (rational_vector) is used .
@@ -214,8 +218,6 @@ int nullspace(int nb_rows, int nb_cols, int* matrix, int *results){
 	* Afterwards, the least common multiplier (LCM) is computed for the denominators of all fractions.
 	* The final results are stored in the "results" vector.
 	*/
-	int last_pivot, last_row;
-	int res = AllIntegerEchelonMethod(nb_rows, nb_cols, matrix, &last_pivot, &last_row);
 
 	if(res) return 1;
 

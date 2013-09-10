@@ -90,7 +90,7 @@ int AllIntegerEchelonMethod(int nb_rows, int nb_cols, int *matrix, int *last_piv
 				if (matrix[i * nb_cols + temp_j] != 0) break;
 			} while (temp_j < nb_cols - 2);
 
-			if(temp_j == nb_cols - 1)
+			if(temp_j == nb_cols)
 			{
 				// The entire row is null.
 				// Ending the algorithm assuming that this is the last row.

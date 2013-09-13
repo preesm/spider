@@ -30,7 +30,7 @@ inline void mainLoop(){
 	switchMonitor(Default);
 	if (lrt_running && getSw()){
 #ifdef ARM
-		zynq_puts("vertex ");zynq_putdec(OSTCBCur->current_vertexID);zynq_puts("\n");
+//		zynq_puts("vertex ");zynq_putdec(OSTCBCur->current_vertexID);zynq_puts("\n");
 #endif
 
 		if(OSTCBCur->current_vertexID == OSTCBCur->nbVertices-1){

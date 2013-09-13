@@ -47,42 +47,32 @@ void readYUVInit(){
 void readYUV() {
 	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
 
-	zynq_puts("Read\n");
-	zynq_puts("action : ");zynq_puthex(&action);zynq_puts("\n");
 	if(action->nb_param != 3 || action->nb_fifo_in != 0 || action->nb_fifo_out != 3){
 		printf("Read: Error in parameters or fifos count\n");
 		printf("param = %d (3), in = %d (0), out = %d (3)\n", action->nb_param, action->nb_fifo_in, action->nb_fifo_out);
 		exit(1);
 	}
-	zynq_puts("Param read\n");
+
 	int width  = action->param_value[0];
 	int height = action->param_value[1];
 	int color = action->param_value[2];
 	int imageSize = width*height;
-	zynq_puts("ok\n");
 
-	zynq_puts("Alloc\n");
 	unsigned char *y = OSAllocWorkingMemory(imageSize);
 	unsigned char *u = OSAllocWorkingMemory(imageSize/4);
 	unsigned char *v = OSAllocWorkingMemory(imageSize/4);
-	zynq_puts("ok\n");
 
 //	while(full == 0) usleep(0);
 
 	switchMonitor(Action + action->functionID);
-	zynq_puts("readArgs\n");
 	readYUVArgs(y, u, v, width, height, color);
-	zynq_puts("ok\n");
 
 	switchMonitor(DataTransfert);
-	zynq_puts("send\n");
 	write_output_fifo(action->fifo_out_id[0], imageSize, y);
 	write_output_fifo(action->fifo_out_id[1], color*imageSize/4, u);
 	write_output_fifo(action->fifo_out_id[2], color*imageSize/4, v);
-	zynq_puts("ok\n");
 
 	OSFreeWorkingMemory();
-	zynq_puts("ok\n");
 //	full = 0;
 }
 

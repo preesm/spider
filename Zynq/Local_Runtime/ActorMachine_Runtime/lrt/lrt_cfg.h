@@ -32,7 +32,7 @@
 //#define AM_STATE_MAX_CONDITIONS	2
 //#define AM_MAX_NB_EDGES			100
 
-#ifdef ARM
+#if defined ARM || defined DESKTOP
 #define AM_MAX_NB_VERTICES		300
 #define AM_MAX_NB_ACTIONS		60
 #define AM_MAX_NB_CONDITIONS	60
@@ -45,7 +45,7 @@
 #define AM_MAX_NB_SUCCESSORS	2
 #define OS_NB_FIFO		150
 
-#ifdef ARM
+#if defined ARM || defined DESKTOP
 #define MAX_NB_ARGS		OS_NB_FIFO
 #define MAX_NB_FIFO		OS_NB_FIFO
 #define WORKING_MEMORY_SIZE 720*400*3

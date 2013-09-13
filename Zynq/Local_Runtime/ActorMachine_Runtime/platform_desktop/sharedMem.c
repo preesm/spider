@@ -27,7 +27,7 @@ static void addOSShMem(UINT32 base, UINT32 length, const char* filename) {
 	if (nbOSShMem < OS_MAX_SH_MEM) {
 		OSShMemTbl[nbOSShMem].file = open(filename, O_RDWR);
 		if (OSShMemTbl[nbOSShMem].file == -1) {
-			perror("open");
+			perror("open mem");
 			abort();
 		}
 		OSShMemTbl[nbOSShMem].base = base;

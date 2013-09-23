@@ -36,7 +36,7 @@
 #define WIDTH  720
 #define HEIGHT 400
 #define NBFRAMES 813
-#define VIDEOFILE "/home/jheulot/dev/bigbuckbunny.yuv"
+#define VIDEOFILE "C:\\work\\COMPA\\bigbuckbunny.yuv"
 
 
 static UINT8 bufferExplode[MAX_EXPLODE];

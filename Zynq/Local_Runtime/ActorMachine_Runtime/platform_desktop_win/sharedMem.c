@@ -75,7 +75,7 @@ UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
 				&& OSShMemTbl[i].base <= address + size
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
-			fopen(OSShMemTbl[i].file_name, "wb");
+			fopen(OSShMemTbl[i].file_name, "rb+");
 			fseek(OSShMemTbl[i].file, address-OSShMemTbl[i].base, SEEK_SET);
 			res = fwrite(data, size, 1, OSShMemTbl[i].file);
 			fclose(OSShMemTbl[i].file);

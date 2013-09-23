@@ -13,9 +13,11 @@
 #include <SDL/SDL_error.h>
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_video.h>
-#include <sys/time.h>
+#include <time.h>
 #include <lrt.h>
 #include <lrt_prototypes.h>
+
+#define TFF_FILE_PATH	"C:\\work\\COMPA\\arial.ttf"
 
 /**
 * Structure representing one display
@@ -73,7 +75,7 @@ void displayYUVInit (int xsize, int ysize){
     memset(display.overlay->pixels[2], 0, display.overlay->pitches[2]);
 
 	TTF_Init();
-	font = TTF_OpenFont("/home/jheulot/dev/arial.ttf", 30);
+	font = TTF_OpenFont(TFF_FILE_PATH, 30);
 	if(font == NULL) printf("error loading arial.ttf: %s\n",TTF_GetError());
 	printf("TTF: ok!\n");
 }
@@ -117,7 +119,7 @@ void displayYUVargs(unsigned char* y, unsigned char* u, unsigned char* v, int wi
 	char text[3];
 	int i,j;
 
-    static struct timeval start, end;
+    static time_t start, end;
 	long fps, seconds, useconds;
 
     int imageSize = width*height;
@@ -139,12 +141,15 @@ void displayYUVargs(unsigned char* y, unsigned char* u, unsigned char* v, int wi
     }
 
 
-	gettimeofday(&end, NULL);
-	seconds  = end.tv_sec  - start.tv_sec;
-	useconds = end.tv_usec - start.tv_usec;
-	fps = 1000/(((seconds) * 1000 + useconds/1000.0) + 0.5);
-	start.tv_sec = end.tv_sec;
-	start.tv_usec = end.tv_usec;
+	time(&end);
+	seconds = difftime(end, start);
+//	seconds  = end.tv_sec  - start.tv_sec;
+//	useconds = end.tv_usec - start.tv_usec;
+	fps = 1000/(((seconds) * 1000) + 0.5);
+//	fps = 1000/(((seconds) * 1000 + useconds/1000.0) + 0.5);
+//	start.tv_sec = end.tv_sec;
+//	start.tv_usec = end.tv_usec;
+	start = end;
 
     sprintf(text, "%ld", fps);
 	textSurface = TTF_RenderText_Solid(font, text, foregroundColor);

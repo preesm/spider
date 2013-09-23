@@ -174,12 +174,13 @@ int printMenu(){
 			"\tSRDAG Edges (Fifo) number: %d\n"
 			"\tMemory Usage: %d bytes (%.1f Mbytes)\n"
 			"\tEstim. Perf:  %d cycles (%d fps)\n"
-			"\tComp time:    %d cycles (%d ms)\n"
+//			"\tComp time:    %d cycles (%d ms)\n"
 			"\tRunning Cores:    %d\n\n",
 			execStat.nbSRDAGVertices, execStat.nbSRDAGEdges,
 			execStat.memAllocated, execStat.memAllocated/1024.0/1024,
 			execStat.listMakespan, 100000000/execStat.listMakespan,
-			computationTime, computationTime, execStat.nbRunningCore);
+//			computationTime, computationTime,
+			execStat.nbRunningCore);
 //	for(int i=0; i<nbActSlaves; i++){
 //		printw( "Core %d"
 //				"\tActor Machine (%d vertices, %d actions, %d conditions)\n"

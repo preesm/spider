@@ -50,10 +50,10 @@ void createTestCom(CSDAGGraph* graph, Architecture* archi){
 void createZynqArchi(Architecture* archi, int nbSlaves){
 	static char tempStr[11];
 	// Architecture Zynq
-	archi->addSlave(0, "ARM", 0.710, 331, 0.1331, 338);
+	archi->addSlave(0, "ARM", 0.410, 331, 0.4331, 338);
 	for(int i=1; i<nbSlaves; i++){
 		sprintf(tempStr,"uBlaze%02d",i);
-		archi->addSlave(1, tempStr, 0.1267, 435, 0.1252, 430);
+		archi->addSlave(1, tempStr, 0.9267, 435, 0.9252, 430);
 	}
 }
 
@@ -65,7 +65,7 @@ void createSobel(CSDAGGraph* graph, Architecture* archi){
 	vCapture->addParam("Color");
 	vCapture->setFunctionIndex(1);
 
-	vCapture->addTiming(0,"967378-Color*195151");
+	vCapture->addTiming(0,"139305-Color*10191");
 	vCapture->addAllConstraints(1, 1);
 
 	/* SPLIT Actor */
@@ -75,7 +75,7 @@ void createSobel(CSDAGGraph* graph, Architecture* archi){
 	vSplit->addParam("nbSlices");
 	vSplit->setFunctionIndex(2);
 
-	vSplit->addTiming(0,"186673-nbSlices*2524");
+	vSplit->addTiming(0,"190392-nbSlices*2551");
 	vSplit->addAllConstraints(1, 1);
 
 	/* SOBEL Actor */
@@ -85,8 +85,8 @@ void createSobel(CSDAGGraph* graph, Architecture* archi){
 	vSobel->addParam("nbSlices");
 	vSobel->setFunctionIndex(3);
 
-	vSobel->addTiming(0,"525/100*Width*Height/nbSlices");
-	vSobel->addTiming(1,"4321/150*Width*Height/nbSlices");
+	vSobel->addTiming(0,"417/100*Width*Height/nbSlices");
+	vSobel->addTiming(1,"4321/100*Width*Height/nbSlices");
 	vSobel->addAllConstraints(1, archi->getNbSlaves());
 
 	/* MERGE Actor */
@@ -96,7 +96,7 @@ void createSobel(CSDAGGraph* graph, Architecture* archi){
 	vMerge->addParam("nbSlices");
 	vMerge->setFunctionIndex(4);
 
-	vMerge->addTiming(0,"88825-nbSlices*382");
+	vMerge->addTiming(0,"92350-nbSlices*355");
 	vMerge->addAllConstraints(1, 1);
 
 	/* DISPLAYYUV Actor */
@@ -106,7 +106,7 @@ void createSobel(CSDAGGraph* graph, Architecture* archi){
 	vDisplay->addParam("Color");
 	vDisplay->setFunctionIndex(5);
 
-	vDisplay->addTiming(0,"885025-Color*91741");
+	vDisplay->addTiming(0,"1097840-Color*36523");
 	vDisplay->addAllConstraints(1,1);
 
 	// Edges

@@ -16,6 +16,7 @@ parallel applications.
  */
 #include "DotWriter.h"
 #include <cstdio>
+#include <string.h>
 
 //#include <direct.h> // for getcwd
 
@@ -204,6 +205,35 @@ void DotWriter::write(PiCSDFGraph* graph, const char* path, char displayNames){
 		fprintf (pFile, "node [color=\"#433D63\"];\n");
 		fprintf (pFile, "edge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
 		//fprintf (pFile, "rankdir=LR;\n");
+
+		// Drawing parameters.
+		for (int i=0 ; i<graph->getNbParameters(); i++)
+		{
+			PiCSDFParameter* param = graph->getParameter(i);
+			if(displayNames){
+				fprintf (pFile, "\t%s [label=\"%s\" shape=house];\n",param->name,param->name);
+			}
+			else{
+				fprintf (pFile, "\t%s [label=\"\" shape=house];\n",param->name);
+			}
+
+			// Drawing lines parameter -> input ports.
+			for (int j = 0; j < graph->getNbConfigOutPorts(); j++) {
+				PiCSDFConfigPort* out_port = graph->getConfigOutPort(j);
+				if (strcmp(out_port->parameter->name, param->name) == 0) {
+					fprintf(pFile, "\t%s->%s [style=dotted];\n", out_port->vertex->getName(), param->name);
+				}
+			}
+
+			// Drawing lines parameter -> input ports.
+			for (int j = 0; j < graph->getNbConfigInPorts(); j++) {
+				PiCSDFConfigPort* in_port = graph->getConfigInPort(j);
+				if (strcmp(in_port->parameter->name, param->name) == 0) {
+					fprintf(pFile, "\t%s->%s [style=dotted];\n", param->name, in_port->vertex->getName());
+				}
+			}
+		}
+
 		for (int i=0 ; i<graph->getNbVertices() ; i++)
 		{
 			CSDAGVertex* vertex = graph->getVertex(i);

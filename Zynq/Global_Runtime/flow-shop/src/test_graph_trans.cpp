@@ -13,6 +13,7 @@
 #include "transformations/PiCSDFTransformer/PiCSDFTransformer.h"
 
 #include "applicationGraphs/DPCM.h"
+#include "applicationGraphs/mpeg_part2.h"
 
 #define NB_EDGES					4
 #define NB_VERTICES					4
@@ -53,10 +54,11 @@ int main(int nArgs, char** pArgs)
 
 //	create_graph_1(&inputGraph);
 //	create_graph_2(&inputGraph);
-	createPiCSDF_DPCM_1(&inputGraph);
+//	createPiCSDF_DPCM_1(&inputGraph);
+	create_PiSDF_mpeg_part2(&inputGraph);
 
 	// Executing the configuration actors.
-	resolvePiCSDFParams(&inputGraph);
+//	resolvePiCSDFParams(&inputGraph);
 
 	// Printing the PiSDF graph.
 #if PRINT_GRAPH

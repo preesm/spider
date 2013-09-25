@@ -17,7 +17,7 @@
  */
 // Parameter
 typedef struct PiCSDFParameter{
-//	char 	name[MAX_VERTEX_NAME_SIZE];
+	char 	name[MAX_VERTEX_NAME_SIZE];
 	abstract_syntax_elt expression[REVERSE_POLISH_STACK_MAX_ELEMENTS+1]; //expression defining the parameter's value.
 }PiCSDFParameter;
 
@@ -115,6 +115,11 @@ class PiCSDFGraph : public CSDAGGraph{
 		int getNbConfigVertices();
 
 
+		/*
+		 * Get a configuration vertex
+		 */
+		CSDAGVertex* getConfigVertex(const int index);
+
 		/**
 		 Adding a configuration port to the graph
 
@@ -160,7 +165,11 @@ class PiCSDFGraph : public CSDAGGraph{
 
 		 @return the new parameter.
 		*/
-		PiCSDFParameter* addParameter(const char* expression);
+		PiCSDFParameter* addParameter(const char* name, const char* expression);
+
+		int getNbParameters();
+
+		PiCSDFParameter* getParameter(const int index);
 };
 
 
@@ -197,7 +206,27 @@ inline int PiCSDFGraph::getInputEdges(CSDAGVertex* vertex, PiCSDFEdge** output){
 }
 
 
+/**
+ Gets the configuration vertex at the given index.
+*/
+inline CSDAGVertex* PiCSDFGraph::getConfigVertex(const int index){
+	return &configVertices[index];
+}
 
 
+/**
+ Gets the number of parameters.
+*/
+inline int PiCSDFGraph::getNbParameters(){
+	return nbParameters;
+}
+
+
+/**
+ Gets the parameter at the given index.
+*/
+inline PiCSDFParameter* PiCSDFGraph::getParameter(const int index){
+	return &parameters[index];
+}
 
 #endif /* PICSDFGRAPH_H_ */

@@ -5,6 +5,7 @@
  *      Author: yoliva
  */
 
+#include <string.h>
 #include "PiCSDFGraph.h"
 
 
@@ -137,10 +138,11 @@ int PiCSDFGraph::getNbConfigOutPorts(){
 
  @return the new parameter.
 */
-PiCSDFParameter* PiCSDFGraph::addParameter(const char* expression){
+PiCSDFParameter* PiCSDFGraph::addParameter(const char* name, const char* expression){
 	PiCSDFParameter* parameter = NULL;
 	if(nbParameters < MAX_PISDF_CONFIG_PORTS){
 		parameter = &parameters[nbParameters];
+		strcpy(parameter->name, name);
 		// Parsing the expression
 		globalParser.parse(expression, parameter->expression);
 		nbParameters++;

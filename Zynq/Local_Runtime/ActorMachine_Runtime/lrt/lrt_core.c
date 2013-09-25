@@ -42,7 +42,7 @@ inline void mainLoop(){
 	}
 }
 
-/* Initialize and Launche the Runtime */
+/* Initialize and Launch the Runtime */
 void init_lrt() {
 	OSTCBCur = (OS_TCB *) 0;
 	memset(OSTCBTbl, 0, sizeof(OSTCBTbl)); /* Clear all the TCBs */

@@ -36,10 +36,10 @@ void createPiCSDF_DPCM_1(PiCSDFGraph* graph){
 	globalParser.addVariable("N", 1);
 
 	// Parameters.
-	PiCSDFParameter* paramH = graph->addParameter("H");
-	PiCSDFParameter* paramW = graph->addParameter("W");
-	PiCSDFParameter* paramB = graph->addParameter("B");
-	PiCSDFParameter* paramN = graph->addParameter("N");
+	PiCSDFParameter* paramH = graph->addParameter("H", "H");
+	PiCSDFParameter* paramW = graph->addParameter("W", "W");
+	PiCSDFParameter* paramB = graph->addParameter("B", "B");
+	PiCSDFParameter* paramN = graph->addParameter("N", "N");
 
 	// Configuration input ports.
 	graph->addConfigPort(vertexRead, paramH, 0);

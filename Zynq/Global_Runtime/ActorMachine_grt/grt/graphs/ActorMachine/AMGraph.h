@@ -29,8 +29,11 @@ private:
 
 public:
 	AMGraph();
-	AMGraph(SRDAGVertex* vertex);
-	AMGraph(Schedule* schedule, int slave);
+//	AMGraph(SRDAGVertex* vertex);
+//	AMGraph(Schedule* schedule, int slave);
+
+	void generate(Schedule* schedule, int slave);
+	void generate(SRDAGVertex* vertex);
 
 	int getNbConds(){return nbConds;}
 	int getNbVertices(){return nbVertices;}

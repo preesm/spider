@@ -22,7 +22,7 @@ AMGraph::AMGraph(){
 	nbConds = nbVertices = nbActions = 0;
 }
 
-AMGraph::AMGraph(SRDAGVertex* srDagVertex) {
+void AMGraph::generate(SRDAGVertex* srDagVertex) {
 	SRDAGEdge* edge;
 	SRDAGGraph* graph = srDagVertex->getBase();
 	CondValue condValues[AM_GRAPH_MAX_COND];
@@ -90,7 +90,7 @@ AMGraph::AMGraph(SRDAGVertex* srDagVertex) {
 
 }
 
-AMGraph::AMGraph(Schedule* schedule, int slave) {
+void AMGraph::generate(Schedule* schedule, int slave) {
 	if(schedule->getNbVertex(slave) == 0){
 		nbVertices = 1;
 		nbConds = 0;

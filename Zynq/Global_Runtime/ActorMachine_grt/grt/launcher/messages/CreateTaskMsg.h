@@ -28,8 +28,7 @@ private:
 
 	/* Actor Machine */
 	INT32 initStateAM;
-	AMGraph AM;
-
+//	AMGraph* AM;
 public:
 	CreateTaskMsg():taskID(0),functID(0),nbFifoIn(0),nbFifoOut(0),initStateAM(0){};
 	CreateTaskMsg(SRDAGGraph* graph, SRDAGVertex* vertex);

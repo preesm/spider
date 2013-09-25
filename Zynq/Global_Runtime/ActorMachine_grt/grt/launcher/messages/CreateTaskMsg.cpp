@@ -8,6 +8,8 @@
 #include "CreateTaskMsg.h"
 #include <hwQueues.h>
 
+static AMGraph AM;
+
 CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, Schedule* schedule, int slave) {
 	taskID = 0;
 	functID = 0; // unused
@@ -16,7 +18,7 @@ CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, Schedule* schedule, int slave) {
 
 	/* Actor Machine */
 	initStateAM = 0;
-	AM = AMGraph(schedule, slave);
+	AM.generate(schedule, slave);
 }
 
 CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, SRDAGVertex* vertex) {
@@ -33,7 +35,7 @@ CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, SRDAGVertex* vertex) {
 
 	/* Actor Machine */
 	initStateAM = 0;
-	AM = AMGraph(vertex);
+	AM.generate(vertex);
 }
 
 void CreateTaskMsg::send(int LRTID){

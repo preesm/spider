@@ -61,8 +61,8 @@ typedef enum{
 *                           FIFO's
 *********************************************************************************************************
 */
-#define FIFO_WR_IX_OFFSET		0		// Offsets in number of 32-bits words.
-#define FIFO_RD_IX_OFFSET		4
+#define FIFO_RD_IX_OFFSET		0		// Offsets in number of 32-bits words.
+#define FIFO_WR_IX_OFFSET		4
 #define FIFO_DATA_OFFSET		8
 
 //************************ Status codes

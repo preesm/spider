@@ -41,10 +41,11 @@ void send_ext_msg(UINT32 addr, UINT32 msg_type, void* msg) {
 void wait_ext_msg() {
 	UINT32 msg_type;
 
-	/* Reads the first incoming word i.e. the message type. */
+	/* Popping the first incoming word i.e. the message type. */
 	if (OS_CtrlQPop_nonBlocking(&msg_type, sizeof(UINT32)) == sizeof(UINT32)) {
 		switch (msg_type) {
 		case MSG_CREATE_TASK:
+			// TODO: Reuse a previous TCB...
 			LrtTaskCreate();
 			OS_CtrlQPush(&msg_type, sizeof(UINT32));
 			break;

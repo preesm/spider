@@ -35,7 +35,7 @@
 //short   InvDCT_f [128];
 
 static UINT8 data[829440];
-void action_decode_bloc_intra()
+void action_decode_intra_block()
 {
 	/*!
 	   intra-block processing.

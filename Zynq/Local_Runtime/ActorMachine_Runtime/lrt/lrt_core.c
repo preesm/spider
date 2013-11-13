@@ -34,8 +34,8 @@ inline void mainLoop(){
 #endif
 
 		if(OSTCBCur->current_vertexID == OSTCBCur->nbVertices-1){
-			printResult();
-			resetMonitor();
+//			printResult();
+//			resetMonitor();
 		}
 
 		OSStartCur();
@@ -64,12 +64,13 @@ void OSStartCur() {
 	// Executes the vertex's code.
 
 	MonitorAction Act = switchMonitor(AMManagement);
-	am_funct[OSTCBCur->am_vertices[OSTCBCur->current_vertexID].type]();
+	OSTCBCur->task_func();
+//	am_funct[OSTCBCur->am_vertices[OSTCBCur->current_vertexID].type]();
 
 	if(OSTCBCur->stop && (OSTCBCur->stopState == -1 || OSTCBCur->stopState == OSTCBCur->current_vertexID)){
-		int temp = OSTCBCur->current_vertexID;
+//		int temp = OSTCBCur->current_vertexID;
 		LrtTaskDeleteCur();
-		OS_CtrlQPush(&temp, sizeof(int));
+//		OS_CtrlQPush(&temp, sizeof(int));
 	}
 	switchMonitor(Act);
 }

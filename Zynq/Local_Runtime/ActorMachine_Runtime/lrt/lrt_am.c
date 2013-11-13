@@ -17,7 +17,7 @@ void am_funct_exec();
 void am_funct_wait();
 void am_funct_move();
 
-/* Function table coresponding to each AM vertex types */
+/* Function table corresponding to each AM vertex types */
 void (*am_funct[5]) (void) = {
 		NULL,
 		&am_funct_wait,
@@ -58,7 +58,7 @@ void am_funct_test(){
 void am_funct_exec(){
 	AM_VERTEX_STRUCT *vertex_ptr = &OSTCBCur->am_vertices[OSTCBCur->current_vertexID];
 
-	/* Execute the correspoding Action */
+	/* Execute the corresponding Action */
 	functions_tbl[OSTCBCur->am_actions[vertex_ptr->actionID].functionID]();
 
 	/* Step to the next vertex of AM graph */
@@ -81,3 +81,21 @@ void am_funct_wait(){
 	OSSched();
 	switchMonitor(Act);
 }
+
+
+/*
+ * This is the function of a task that contains an Actor Machine.
+ */
+void amTaskStart() {
+	MonitorAction Act = switchMonitor(AMManagement);
+	// Calling the function of the current AM vertex.
+	am_funct[OSTCBCur->am_vertices[OSTCBCur->current_vertexID].type]();
+
+//	if(OSTCBCur->stop && (OSTCBCur->stopState == -1 || OSTCBCur->stopState == OSTCBCur->current_vertexID)){
+//		int temp = OSTCBCur->current_vertexID;
+//		LrtTaskDeleteCur();
+//		OS_CtrlQPush(&temp, sizeof(int));
+//	}
+	switchMonitor(Act);
+}
+

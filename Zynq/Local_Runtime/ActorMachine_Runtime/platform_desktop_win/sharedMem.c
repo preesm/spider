@@ -17,7 +17,7 @@
 typedef struct OS_SHMEM {
 	UINT32 	base;
 	UINT32 	length;
-	FILE*	file;
+//	FILE*	file;
 	char	file_name[50];
 } OS_SHMEM;
 
@@ -28,12 +28,12 @@ static void addOSShMem(UINT32 base, UINT32 length, const char* filename) {
 	if (nbOSShMem < OS_MAX_SH_MEM) {
 		sprintf(OSShMemTbl[nbOSShMem].file_name, "C:\\work\\COMPA\\shMem");
 
-		OSShMemTbl[nbOSShMem].file = fopen(OSShMemTbl[nbOSShMem].file_name, "wb");
-		if (OSShMemTbl[nbOSShMem].file == (FILE*)0) {
+		FILE* pFile = fopen(OSShMemTbl[nbOSShMem].file_name, "wb+");
+		if (pFile == (FILE*)0) {
 			perror("");
 			exit(1);
 		}
-		fclose(OSShMemTbl[nbOSShMem].file);
+		fclose(pFile);
 		OSShMemTbl[nbOSShMem].base 	 = base;
 		OSShMemTbl[nbOSShMem].length = length;
 		nbOSShMem++;
@@ -57,10 +57,10 @@ UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
 				&& OSShMemTbl[i].base <= address + size
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
-			fopen(OSShMemTbl[i].file_name, "rb");
-			fseek(OSShMemTbl[i].file, address-OSShMemTbl[i].base, SEEK_SET);
-			res = fread(data, size, 1, OSShMemTbl[i].file);
-			fclose(OSShMemTbl[i].file);
+			FILE* pFile = fopen(OSShMemTbl[i].file_name, "rb+");
+			fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
+			res = fread(data, size, 1, pFile);
+			fclose(pFile);
 			return res;
 		}
 	}
@@ -75,10 +75,10 @@ UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
 				&& OSShMemTbl[i].base <= address + size
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
-			fopen(OSShMemTbl[i].file_name, "rb+");
-			fseek(OSShMemTbl[i].file, address-OSShMemTbl[i].base, SEEK_SET);
-			res = fwrite(data, size, 1, OSShMemTbl[i].file);
-			fclose(OSShMemTbl[i].file);
+			FILE* pFile = fopen(OSShMemTbl[i].file_name, "rb+");
+			fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
+			res = fwrite(data, size, 1, pFile);
+			fclose(pFile);
 		}
 	}
 	return res;

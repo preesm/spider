@@ -1,27 +1,72 @@
-/*
- * TaskMsg.cpp
- *
- *  Created on: Jun 26, 2013
- *      Author: jheulot
- */
+
+/********************************************************************************
+ * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet			*
+ * 										*
+ * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr			*
+ * 										*
+ * This software is a computer program whose purpose is to execute		*
+ * parallel applications.							*
+ * 										*
+ * This software is governed by the CeCILL-C license under French law and	*
+ * abiding by the rules of distribution of free software.  You can  use, 	*
+ * modify and/ or redistribute the software under the terms of the CeCILL-C	*
+ * license as circulated by CEA, CNRS and INRIA at the following URL		*
+ * "http://www.cecill.info". 							*
+ * 										*
+ * As a counterpart to the access to the source code and  rights to copy,	*
+ * modify and redistribute granted by the license, users are provided only	*
+ * with a limited warranty  and the software's author,  the holder of the	*
+ * economic rights,  and the successive licensors  have only  limited		*
+ * liability. 									*
+ * 										*
+ * In this respect, the user's attention is drawn to the risks associated	*
+ * with loading,  using,  modifying and/or developing or reproducing the	*
+ * software by the user in light of its specific status of free software,	*
+ * that may mean  that it is complicated to manipulate,  and  that  also	*
+ * therefore means  that it is reserved for developers  and  experienced	*
+ * professionals having in-depth computer knowledge. Users are therefore	*
+ * encouraged to load and test the software's suitability as regards their	*
+ * requirements in conditions enabling the security of their systems and/or 	*
+ * data to be ensured and,  more generally, to use and operate it in the 	*
+ * same conditions as regards security. 					*
+ * 										*
+ * The fact that you are presently reading this means that you have had		*
+ * knowledge of the CeCILL-C license and that you accept its terms.		*
+ ********************************************************************************/
 
 #include "CreateTaskMsg.h"
 #include <hwQueues.h>
 
-static AMGraph AM;
+//static AMGraph AM;
 
-CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, Schedule* schedule, int slave) {
+CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, Schedule* schedule, int slave, AMGraph* am) {
 	taskID = 0;
-	functID = 0; // unused
+	functID = 0; // In case of it is a simple task without AM.
 	nbFifoIn = 0;
 	nbFifoOut = 0;
+	this->am = am;
 
 	/* Actor Machine */
 	initStateAM = 0;
-	AM.generate(schedule, slave);
+	am->generate(schedule, slave);
 }
 
-CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, SRDAGVertex* vertex) {
+CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, BaseSchedule* schedule, int slave, AMGraph* am, INT32 stopAfterComplet){
+	taskID = 0;
+	functID = 0; // In case of it is a simple task without AM.
+	nbFifoIn = 0;
+	nbFifoOut = 0;
+	this->stopAfterComplet = stopAfterComplet;
+	this->am = am;
+
+	/* Actor Machine */
+	initStateAM = 0;
+
+	am->generate(graph, schedule, slave);
+}
+
+CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, SRDAGVertex* vertex, AMGraph* am) {
 	taskID = graph->getVertexIndex(vertex);
 	functID = vertex->getCsDagReference()->getFunctionIndex();
 
@@ -35,7 +80,30 @@ CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, SRDAGVertex* vertex) {
 
 	/* Actor Machine */
 	initStateAM = 0;
-	AM.generate(vertex);
+	this->am = am;
+	am->generate(vertex);
+}
+
+
+CreateTaskMsg::CreateTaskMsg(PiSDFConfigVertex* vertex, AMGraph* am, INT32 stopAfterComplet) {
+	taskID = vertex->getId();
+	functID = vertex->getFunction_index();
+	this->stopAfterComplet = stopAfterComplet;
+	this->am = am;
+
+//	nbFifoIn = vertex->getNbInputEdges();
+//	for(INT32 i=0; i<nbFifoIn; i++)
+//		FifosInID[i] = ((PiSDFEdge*)(vertex->getInputEdge(i)))->getId();
+
+
+
+//	nbFifoOut = vertex->getNbOutputEdges();
+//	for(INT32 i=0; i<nbFifoOut; i++)
+//		FifosOutID[i] = ((PiSDFEdge*)(vertex->getOutputEdge(i)))->getId();
+
+	/* Actor Machine */
+	initStateAM = 0;
+//	TODO:am->generate(vertex);
 }
 
 void CreateTaskMsg::send(int LRTID){
@@ -45,22 +113,22 @@ void CreateTaskMsg::send(int LRTID){
 	msg[k++] = MSG_CREATE_TASK;
 	msg[k++] = taskID;
 
-	msg[k++] = AM.getNbVertices();
-	msg[k++] = AM.getNbConds();
-	msg[k++] = AM.getNbActions();
+	msg[k++] = am->getNbVertices();
+	msg[k++] = am->getNbConds();
+	msg[k++] = am->getNbActions();
 	msg[k++] = initStateAM;
 
 	/* Send vertices */
-	for(i=0; i<AM.getNbVertices(); i++){
-		msg[k++] = AM.getVertex(i)->getType();
-		msg[k++] = AM.getVertex(i)->getSucID(0);
-		msg[k++] = AM.getVertex(i)->getSucID(1);
-		switch(AM.getVertex(i)->getType()){
+	for(i=0; i<am->getNbVertices(); i++){
+		msg[k++] = am->getVertex(i)->getType();
+		msg[k++] = am->getVertex(i)->getSucID(0);
+		msg[k++] = am->getVertex(i)->getSucID(1);
+		switch(am->getVertex(i)->getType()){
 		case EXEC:
-			msg[k++] = AM.getVertex(i)->getAction();
+			msg[k++] = am->getVertex(i)->getAction();
 			break;
 		case TEST:
-			msg[k++] = AM.getVertex(i)->getCondID();
+			msg[k++] = am->getVertex(i)->getCondID();
 			break;
 		case WAIT:
 		case STATE:
@@ -73,15 +141,15 @@ void CreateTaskMsg::send(int LRTID){
 	}
 
 	/* Send Conditions */
-	for(i=0; i<AM.getNbConds(); i++){
-		msg[k++] = AM.getCond(i)->type;
-		msg[k++] = AM.getCond(i)->fifo.id;
-		msg[k++] = AM.getCond(i)->fifo.size;
+	for(i=0; i<am->getNbConds(); i++){
+		msg[k++] = am->getCond(i)->type;
+		msg[k++] = am->getCond(i)->fifo.id;
+		msg[k++] = am->getCond(i)->fifo.size;
 	}
 
 	// new
-	for(i=0; i<AM.getNbActions(); i++){
-		AMAction* action = AM.getAction(i);
+	for(i=0; i<am->getNbActions(); i++){
+		AMAction* action = am->getAction(i);
 		msg[k++] = action->getFunctionId();
 		msg[k++] = action->getNbFifoIn();
 		msg[k++] = action->getNbFifoOut();
@@ -100,12 +168,12 @@ void CreateTaskMsg::send(int LRTID){
 	OS_CtrlQPush(LRTID, msg, k*sizeof(UINT32));
 }
 
-AMGraph* CreateTaskMsg::getAm(){
-	return &AM;
-}
+//AMGraph* CreateTaskMsg::getAm(){
+//	return &AM;
+//}
 
 void CreateTaskMsg::toDot(const char* path){
-	AM.toDot(path);
+	am->toDot(path);
 }
 
 int CreateTaskMsg::prepare(int* data, int offset){
@@ -114,22 +182,22 @@ int CreateTaskMsg::prepare(int* data, int offset){
 	data[offset + k++] = MSG_CREATE_TASK;
 	data[offset + k++] = taskID;
 
-	data[offset + k++] = AM.getNbVertices();
-	data[offset + k++] = AM.getNbConds();
-	data[offset + k++] = AM.getNbActions();
+	data[offset + k++] = am->getNbVertices();
+	data[offset + k++] = am->getNbConds();
+	data[offset + k++] = am->getNbActions();
 	data[offset + k++] = initStateAM;
 
 	/* Send vertices */
-	for(i=0; i<AM.getNbVertices(); i++){
-		data[offset + k++] = AM.getVertex(i)->getType();
-		data[offset + k++] = AM.getVertex(i)->getSucID(0);
-		data[offset + k++] = AM.getVertex(i)->getSucID(1);
-		switch(AM.getVertex(i)->getType()){
+	for(i=0; i<am->getNbVertices(); i++){
+		data[offset + k++] = am->getVertex(i)->getType();
+		data[offset + k++] = am->getVertex(i)->getSucID(0);
+		data[offset + k++] = am->getVertex(i)->getSucID(1);
+		switch(am->getVertex(i)->getType()){
 		case EXEC:
-			data[offset + k++] = AM.getVertex(i)->getAction();
+			data[offset + k++] = am->getVertex(i)->getAction();
 			break;
 		case TEST:
-			data[offset + k++] = AM.getVertex(i)->getCondID();
+			data[offset + k++] = am->getVertex(i)->getCondID();
 			break;
 		case WAIT:
 		case STATE:
@@ -142,15 +210,15 @@ int CreateTaskMsg::prepare(int* data, int offset){
 	}
 
 	/* Send Conditions */
-	for(i=0; i<AM.getNbConds(); i++){
-		data[offset + k++] = AM.getCond(i)->type;
-		data[offset + k++] = AM.getCond(i)->fifo.id;
-		data[offset + k++] = AM.getCond(i)->fifo.size;
+	for(i=0; i<am->getNbConds(); i++){
+		data[offset + k++] = am->getCond(i)->type;
+		data[offset + k++] = am->getCond(i)->fifo.id;
+		data[offset + k++] = am->getCond(i)->fifo.size;
 	}
 
 	/* Send Actions */
-	for(i=0; i<AM.getNbActions(); i++){
-		AMAction* action = AM.getAction(i);
+	for(i=0; i<am->getNbActions(); i++){
+		AMAction* action = am->getAction(i);
 		data[offset + k++] = action->getFunctionId();
 		data[offset + k++] = action->getNbFifoIn();
 		data[offset + k++] = action->getNbFifoOut();
@@ -171,25 +239,29 @@ int CreateTaskMsg::prepare(int* data, int offset){
 
 void CreateTaskMsg::prepare(int slave, launcher* launch){
 	launch->addUINT32ToSend(slave, MSG_CREATE_TASK);
-	launch->addUINT32ToSend(slave, taskID);
+//	launch->addUINT32ToSend(slave, taskID);
 
-	launch->addUINT32ToSend(slave, AM.getNbVertices());
-	launch->addUINT32ToSend(slave, AM.getNbConds());
-	launch->addUINT32ToSend(slave, AM.getNbActions());
-	launch->addUINT32ToSend(slave, initStateAM);
+	launch->addUINT32ToSend(slave, am->getNbVertices());
+	launch->addUINT32ToSend(slave, am->getNbConds());
+	launch->addUINT32ToSend(slave, am->getNbActions());
+
+
+	launch->addUINT32ToSend(slave, functID);
+	launch->addUINT32ToSend(slave, stopAfterComplet);		// Whether the task is stopped after completion.
+	launch->addUINT32ToSend(slave, initStateAM);			// Initial state of the AM.
 
 	/* Send vertices */
-	for(int i=0; i<AM.getNbVertices(); i++){
-		launch->addUINT32ToSend(slave, AM.getVertex(i)->getType());
-		launch->addUINT32ToSend(slave, AM.getVertex(i)->getSucID(0));
-		launch->addUINT32ToSend(slave, AM.getVertex(i)->getSucID(1));
+	for(int i=0; i<am->getNbVertices(); i++){
+		launch->addUINT32ToSend(slave, am->getVertex(i)->getType());
+		launch->addUINT32ToSend(slave, am->getVertex(i)->getSucID(0));
+		launch->addUINT32ToSend(slave, am->getVertex(i)->getSucID(1));
 
-		switch(AM.getVertex(i)->getType()){
+		switch(am->getVertex(i)->getType()){
 		case EXEC:
-			launch->addUINT32ToSend(slave, AM.getVertex(i)->getAction());
+			launch->addUINT32ToSend(slave, am->getVertex(i)->getAction());
 			break;
 		case TEST:
-			launch->addUINT32ToSend(slave, AM.getVertex(i)->getCondID());
+			launch->addUINT32ToSend(slave, am->getVertex(i)->getCondID());
 			break;
 		case WAIT:
 		case STATE:
@@ -202,15 +274,15 @@ void CreateTaskMsg::prepare(int slave, launcher* launch){
 	}
 
 	/* Send Conditions */
-	for(int i=0; i<AM.getNbConds(); i++){
-		launch->addUINT32ToSend(slave, AM.getCond(i)->type);
-		launch->addUINT32ToSend(slave, AM.getCond(i)->fifo.id);
-		launch->addUINT32ToSend(slave, AM.getCond(i)->fifo.size);
+	for(int i=0; i<am->getNbConds(); i++){
+		launch->addUINT32ToSend(slave, am->getCond(i)->type);
+		launch->addUINT32ToSend(slave, am->getCond(i)->fifo.id);
+		launch->addUINT32ToSend(slave, am->getCond(i)->fifo.size);
 	}
 
 	/* Send Actions */
-	for(int i=0; i<AM.getNbActions(); i++){
-		AMAction* action = AM.getAction(i);
+	for(int i=0; i<am->getNbActions(); i++){
+		AMAction* action = am->getAction(i);
 		launch->addUINT32ToSend(slave, action->getFunctionId());
 		launch->addUINT32ToSend(slave, action->getNbFifoIn());
 		launch->addUINT32ToSend(slave, action->getNbFifoOut());

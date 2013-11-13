@@ -40,7 +40,7 @@ class CSDAGEdge {
 		int productionPatternNb;
 
 		/**
-		 ecpression defining the token consumption of the edge sink (in abstract_syntax_elt)
+		 expression defining the token consumption of the edge sink (in abstract_syntax_elt)
 		*/
 		abstract_syntax_elt consumption[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 		int consumptionValues[MAX_CSDAG_VERTEX_REPETITION];
@@ -133,10 +133,45 @@ class CSDAGEdge {
 		*/
 		void setSink(CSDAGVertex* sink);
 		
+
 		/**
 		 Resolving the production and consumption patterns
 		*/
 		void resolveProdCons();
+
+		/**
+		 Resolving the source pattern
+		 
+		 @param intPattern: the solved pattern
+
+		 @return the returned pattern size
+		*/
+		unsigned short resolveSourcePattern(int* intPattern);
+		
+		/**
+		 Resolving the sink pattern
+		 
+		 @param intPattern: the solved pattern
+
+		 @return the returned pattern size
+		*/
+		unsigned short resolveSinkPattern(int* intPattern);
+
+		/**
+		 Resolving a pattern from a vertex parameters. A CSDAG edge has patterns of production/consumption.
+		 A SRDAG edge has a unique value of production=consumption. The resolution generates an integer
+		 pattern from the source and sink parameters and the pattern. The source and sink parameters
+		 are solvedimmediately before the pattern is resolved because they can influence the way it is solved.
+		 
+		 @param pattern: the input expression
+		 @param vertex: the vertex which parameters must be solved to determine the output pattern
+		 @param intPattern: the solved pattern
+		 @param setVertexParameters: 1 if we need to set the parameters of the instances of vertex
+
+		 @return the returned pattern size
+		*/
+		unsigned short resolvePattern(const abstract_syntax_elt* expression, CSDAGVertex* vertex, int* intPattern, char setVertexParameters);
+
 };
 
 /**
@@ -153,7 +188,8 @@ inline void CSDAGEdge::setBase(CSDAGGraph* base){
 
  @return production expression
 */
-inline abstract_syntax_elt* CSDAGEdge::getProduction(){
+inline abstract_syntax_elt* CSDAGEdge::getProduction()
+{
 	return(this->production);
 }
 
@@ -182,7 +218,8 @@ inline int CSDAGEdge::getResolvedProductionNb(){
 inline void CSDAGEdge::setProduction(const char* prod){
 	
 	// Parsing the expression
-	productionPatternNb = globalParser.parsePattern(prod,this->production);
+//	productionPatternNb = globalParser.parsePattern(prod,this->production);
+	globalParser.parse(prod,this->production);
 }
 
 /**
@@ -190,7 +227,8 @@ inline void CSDAGEdge::setProduction(const char* prod){
 
  @return consumption expression
 */
-inline abstract_syntax_elt* CSDAGEdge::getConsumption(){
+inline abstract_syntax_elt* CSDAGEdge::getConsumption()
+{
 	return(this->consumption);
 }
 
@@ -219,7 +257,8 @@ inline int CSDAGEdge::getResolvedConsumptionNb(){
 inline void CSDAGEdge::setConsumption(const char* cons)
 {
 	// Parsing the expression
-	consumptionPatternNb = globalParser.parsePattern(cons,this->consumption);
+//	consumptionPatternNb = globalParser.parsePattern(cons,this->consumption);
+	globalParser.parse(cons,this->consumption);
 }
 
 
@@ -250,6 +289,28 @@ inline CSDAGVertex* CSDAGEdge::getSink(){
 */
 inline void CSDAGEdge::setSink(CSDAGVertex* sink){
 	this->sink = sink;
+}
+		
+/**
+ Resolving the source pattern from source vertex parameters and production pattern
+ 
+ @param intPattern: the solved pattern
+
+ @return the returned pattern size
+*/
+inline unsigned short CSDAGEdge::resolveSourcePattern(int* intPattern){
+	return resolvePattern(production, source,intPattern, 0);
+}
+
+/**
+ Resolving the sink pattern from sink vertex parameters and consumption pattern
+ 
+ @param intPattern: the solved pattern
+
+ @return the returned pattern size
+*/
+inline unsigned short CSDAGEdge::resolveSinkPattern(int* intPattern){
+	return resolvePattern(consumption, sink,intPattern, 1);
 }
 
 #endif

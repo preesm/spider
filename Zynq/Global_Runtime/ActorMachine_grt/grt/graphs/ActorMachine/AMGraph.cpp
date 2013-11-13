@@ -1,9 +1,39 @@
-/*
- * AMGraph.cpp
- *
- *  Created on: Jun 17, 2013
- *      Author: jheulot
- */
+
+/********************************************************************************
+ * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet			*
+ * 										*
+ * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr			*
+ * 										*
+ * This software is a computer program whose purpose is to execute		*
+ * parallel applications.							*
+ * 										*
+ * This software is governed by the CeCILL-C license under French law and	*
+ * abiding by the rules of distribution of free software.  You can  use, 	*
+ * modify and/ or redistribute the software under the terms of the CeCILL-C	*
+ * license as circulated by CEA, CNRS and INRIA at the following URL		*
+ * "http://www.cecill.info". 							*
+ * 										*
+ * As a counterpart to the access to the source code and  rights to copy,	*
+ * modify and redistribute granted by the license, users are provided only	*
+ * with a limited warranty  and the software's author,  the holder of the	*
+ * economic rights,  and the successive licensors  have only  limited		*
+ * liability. 									*
+ * 										*
+ * In this respect, the user's attention is drawn to the risks associated	*
+ * with loading,  using,  modifying and/or developing or reproducing the	*
+ * software by the user in light of its specific status of free software,	*
+ * that may mean  that it is complicated to manipulate,  and  that  also	*
+ * therefore means  that it is reserved for developers  and  experienced	*
+ * professionals having in-depth computer knowledge. Users are therefore	*
+ * encouraged to load and test the software's suitability as regards their	*
+ * requirements in conditions enabling the security of their systems and/or 	*
+ * data to be ensured and,  more generally, to use and operate it in the 	*
+ * same conditions as regards security. 					*
+ * 										*
+ * The fact that you are presently reading this means that you have had		*
+ * knowledge of the CeCILL-C license and that you accept its terms.		*
+ ********************************************************************************/
 
 #include "AMGraph.h"
 #include "AMCond.h"
@@ -13,7 +43,7 @@
 #include "../SRDAG/SRDAGVertex.h"
 #include "../SRDAG/SRDAGGraph.h"
 #include "../CSDAG/CSDAGVertex.h"
-#include "../Schedule/Schedule.h"
+#include <scheduling/Schedule/Schedule.h>
 
 #include <cstring>
 #include <cstdio>
@@ -90,7 +120,8 @@ void AMGraph::generate(SRDAGVertex* srDagVertex) {
 
 }
 
-void AMGraph::generate(Schedule* schedule, int slave) {
+
+void AMGraph::generate(Schedule* schedule, UINT32 slave) {
 	if(schedule->getNbVertex(slave) == 0){
 		nbVertices = 1;
 		nbConds = 0;
@@ -105,8 +136,7 @@ void AMGraph::generate(Schedule* schedule, int slave) {
 	CondValue condValues[AM_GRAPH_MAX_COND];
 	nbConds = nbVertices = nbActions = 0;
 
-	/* Creating Output FIFO Conditions */
-
+	/* Resetting conditions */
 	for(int i=0; i<AM_GRAPH_MAX_COND; i++){
 		condValues[i] = COND_X;
 	}
@@ -155,6 +185,7 @@ void AMGraph::generate(Schedule* schedule, int slave) {
 			}
 		}
 
+		/* Creating Output FIFO Conditions */
 		for(int i=0; i<srvertex->getNbOutputEdge(); i++){
 			edge = srvertex->getOutputEdge(i);
 			if(!schedule->isPresent(slave, edge->getSink())){
@@ -240,6 +271,158 @@ void AMGraph::generate(Schedule* schedule, int slave) {
 	}
 }
 
+void AMGraph::generate(SRDAGGraph* graph, BaseSchedule* schedule, UINT32 slave) {
+	if(schedule->getNbVertices(slave) == 0){
+		nbVertices = 1;
+		nbConds = 0;
+		vertices[0] = AMVertex(0, STATE, NULL, 0);
+		vertices[0].addSuc(1);
+		vertices[1] = AMVertex(1, WAIT);
+		vertices[1].addSuc(0);
+		return;
+	}
+
+//	SRDAGGraph* graph = schedule->getVertex(0,0)->getBase();
+	CondValue condValues[AM_GRAPH_MAX_COND];
+	nbConds = nbVertices = nbActions = 0;
+
+	/* Resetting conditions */
+	for(int i=0; i<AM_GRAPH_MAX_COND; i++){
+		condValues[i] = COND_X;
+	}
+
+	/* Creating Graph */
+	vertices[0] = AMVertex(0, STATE, condValues, nbConds);// Init State
+	nbVertices++;
+
+	for(UINT32 j=0; j<schedule->getNbVertices(slave); j++){
+		SRDAGVertex* srvertex = (SRDAGVertex*)(schedule->getVertex(slave, j));
+		SRDAGEdge* edge;
+
+		/* Creating Input FIFO Conditions */
+		for(int i=0; i<srvertex->getNbInputEdge(); i++){
+			edge = srvertex->getInputEdge(i);
+			SRDAGVertex* srcVertex = edge->getSource();
+			if(!schedule->isPresent(slave, srcVertex->getScheduleIndex(), srcVertex)){
+				conds[nbConds] = AMCond(FIFO_IN, graph->getEdgeIndex(edge), edge->getTokenRate());
+
+				vertices[nbVertices] = AMVertex(nbVertices, TEST, nbConds);  /* Test */
+				vertices[nbVertices-1].addSuc(nbVertices); /* Previous State -> Test */
+
+				condValues[nbConds]=COND_false;
+				vertices[nbVertices+1] = AMVertex(nbVertices+1, STATE, condValues, nbConds+1); /* State false */
+				vertices[nbVertices].addSuc(nbVertices+1);  /* Test -> State false */
+				vertices[nbVertices+2] = AMVertex(nbVertices+2, WAIT); /* Wait */
+				vertices[nbVertices+1].addSuc(nbVertices+2);/* State false -> Wait */
+				vertices[nbVertices+2].addSuc(nbVertices-1);/* Wait -> Previous State */
+
+				condValues[nbConds]=COND_TRUE;
+				vertices[nbVertices+3] = AMVertex(nbVertices+3, STATE, condValues, nbConds+1); /* State TRUE */
+				vertices[nbVertices].addSuc(nbVertices+3); /* Test -> State TRUE */
+
+				nbVertices+=4;
+				nbConds++;
+
+				if(nbConds>=AM_GRAPH_MAX_COND){
+					printf("AMGraph: nbConds > AM_GRAPH_MAX_COND\n");
+					abort();
+				}
+
+
+				if(nbVertices>=AM_GRAPH_MAX_VERTEX){
+					printf("AMGraph: nbVertices > AM_GRAPH_MAX_VERTEX\n");
+					abort();
+				}
+			}
+		}
+
+		/* Creating Output FIFO Conditions */
+		for(int i=0; i<srvertex->getNbOutputEdge(); i++){
+			edge = srvertex->getOutputEdge(i);
+			SRDAGVertex* snkVertex = edge->getSink();
+			if(!schedule->isPresent(slave, snkVertex->getScheduleIndex(), snkVertex)){
+				conds[nbConds] = AMCond(FIFO_OUT, graph->getEdgeIndex(edge), edge->getTokenRate());
+
+				vertices[nbVertices] = AMVertex(nbVertices, TEST, nbConds);  /* Test */
+				vertices[nbVertices-1].addSuc(nbVertices); /* Previous State -> Test */
+
+				condValues[nbConds]=COND_false;
+				vertices[nbVertices+1] = AMVertex(nbVertices+1, STATE, condValues, nbConds+1); /* State false */
+				vertices[nbVertices].addSuc(nbVertices+1);  /* Test -> State false */
+				vertices[nbVertices+2] = AMVertex(nbVertices+2, WAIT); /* Wait */
+				vertices[nbVertices+1].addSuc(nbVertices+2);/* State false -> Wait */
+				vertices[nbVertices+2].addSuc(nbVertices-1);/* Wait -> Previous State */
+
+				condValues[nbConds]=COND_TRUE;
+				vertices[nbVertices+3] = AMVertex(nbVertices+3, STATE, condValues, nbConds+1); /* State TRUE */
+				vertices[nbVertices].addSuc(nbVertices+3); /* Test -> State TRUE */
+
+				nbVertices+=4;
+				nbConds++;
+
+
+				if(nbConds>=AM_GRAPH_MAX_COND){
+					printf("AMGraph: nbConds > AM_GRAPH_MAX_COND\n");
+					abort();
+				}
+
+
+				if(nbVertices>=AM_GRAPH_MAX_VERTEX){
+					printf("AMGraph: nbVertices > AM_GRAPH_MAX_VERTEX\n");
+					abort();
+				}
+			}
+		}
+
+		AMAction* action = &actions[nbActions];
+		char name[50];
+		sprintf(name, "%s_%d", srvertex->getReference()->getName(), srvertex->getReferenceIndex());
+		action->setName(name);
+		action->setFunctionId(srvertex->getReference()->getFunction_index());
+		for(int i=0; i<srvertex->getNbInputEdge(); i++)
+			action->addFifoIn(srvertex->getBase()->getEdgeIndex(srvertex->getInputEdge(i)));
+		for(int i=0; i<srvertex->getNbOutputEdge(); i++)
+			action->addFifoOut(srvertex->getBase()->getEdgeIndex(srvertex->getOutputEdge(i)));
+		if(action->getFunctionId() == 0){
+			/* Explode-Implode */
+			for(int i=0; i<srvertex->getNbInputEdge(); i++)
+				action->addArg(srvertex->getInputEdge(i)->getTokenRate());
+			for(int i=0; i<srvertex->getNbOutputEdge(); i++)
+				action->addArg(srvertex->getOutputEdge(i)->getTokenRate());
+		}else{
+			for(UINT64 i=0; i<srvertex->getReference()->getNbParameters(); i++){
+				action->addArg(srvertex->getReference()->getParameter(i)->getValue());
+			}
+		}
+
+		vertices[nbVertices] = AMVertex(nbVertices, EXEC, nbActions); /* Execution State */
+		vertices[nbVertices-1].addSuc(nbVertices); /* Previous State -> Exec */
+
+		for(int i=0; i<nbConds-1; i++)
+			condValues[i] = COND_X;
+		vertices[nbVertices+1] = AMVertex(nbVertices+1, STATE, condValues, nbConds); /* Post-Exec State */
+		vertices[nbVertices].addSuc(nbVertices+1); /* Exec -> Post-Exec State */
+
+		nbVertices+=2;
+		nbActions++;
+
+		if(nbVertices>=AM_GRAPH_MAX_VERTEX){
+			printf("AMGraph: nbVertices > AM_GRAPH_MAX_VERTEX\n");
+			abort();
+		}
+
+		if(nbActions>=AM_GRAPH_MAX_ACTIONS){
+			printf("AMGraph: nbActions >= AM_GRAPH_MAX_ACTIONS\n");
+			abort();
+		}
+	}
+	vertices[nbVertices-1].addSuc(0); /* Exec -> Init State */
+
+	for(int i=0; i<nbVertices; i++){
+		vertices[i].setNbConds(nbConds);
+	}
+}
+
 static char types[5][15]={"","doublecircle","ellipse","diamond","box"};
 
 void AMGraph::toDot(const char* filename){
@@ -270,7 +453,13 @@ void AMGraph::toDot(const char* filename){
 				break;
 			case TEST:
 				cond = &conds[vertex->getCondID()];
-				fprintf (pFile, "\t%d [label=\"%d\\nF-%d\\n%s %dB\",shape=%s];\n",vertex->getId(),vertex->getId(),cond->fifo.id,(cond->type == FIFO_OUT)?("push"):("pop"),cond->fifo.size,types[vertex->getType()]);
+				fprintf (pFile, "\t%d [label=\"%d\\nF-%d\\n%s %dB\",shape=%s];\n",
+						vertex->getId(),
+						vertex->getId(),
+						cond->fifo.id,
+						(cond->type == FIFO_OUT)?("push"):("pop"),
+						cond->fifo.size,
+						types[vertex->getType()]);
 				break;
 			case EXEC:
 				action = &(actions[vertex->getAction()]);

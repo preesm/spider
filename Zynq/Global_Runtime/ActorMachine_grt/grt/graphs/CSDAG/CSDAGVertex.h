@@ -70,11 +70,13 @@ class CSDAGVertex {
 		 Pointers on the parameter patterns stored in the graph. One pattern for each parameter
 		*/
 		abstract_syntax_elt params[MAX_PARAM][REVERSE_POLISH_STACK_MAX_ELEMENTS];
+		abstract_syntax_elt* paramPatterns[MAX_PARAM];
 
 		/**
 		 Integer solved parameters. Retrieved while solving the edges
 		*/
 		int paramValues[MAX_PARAM];
+		int paramsValues[MAX_CSDAG_VERTEX_REPETITION][MAX_PARAM];
 
 		/**
 		 Number of repetitions of the vertex in the current SRDAG.
@@ -102,21 +104,21 @@ class CSDAGVertex {
 
 		 @param base: the base
 		*/
-		void setBase(CSDAGGraph* graph){this->base = graph;};
+		void setBase(CSDAGGraph* graph);
 
 		/**
 		 Setting the vertex name
 
 		 @param name: the name
 		*/
-		void setName(const char* name){strcpy(this->name,name);};
+		void setName(const char* name);
 
 		/**
 		 Getting the vertex name
 
 		 @param name: the name
 		*/
-		char* getName(){return name;};
+		char* getName();
 
 		/**
 		 Setting the function index: the function index references the C function
@@ -125,7 +127,7 @@ class CSDAGVertex {
 
 		 @param index: the function index
 		*/
-		void setFunctionIndex(int index){functionIndex = index;};
+		void setFunctionIndex(int index);
 
 		/**
 		 Getting the function index: the function index references the C function
@@ -134,14 +136,14 @@ class CSDAGVertex {
 
 		 @return: the function index
 		*/
-		int getFunctionIndex(){return functionIndex;};
+		int getFunctionIndex();
 
 		/**
 		 Getting the number of parameters stored for the current vertex
 
 		 @return the number of parameters
 		*/
-		int getParamNb(){return paramNb;};
+		int getParamNb();
 
 		/**
 		 Getting the pattern corresponding to the parameter with given index
@@ -149,7 +151,7 @@ class CSDAGVertex {
 		 @param index: the parameter index
 		 @return an abstract_syntax_elt pattern in reverse polish notation
 		*/
-		//abstract_syntax_elt* getParamPattern(int index){return paramPatterns[index];};
+		abstract_syntax_elt* getParamPattern(int index);
 
 		/**
 		 Getting the integer timing corresponding to a slave type
@@ -157,7 +159,7 @@ class CSDAGVertex {
 		 @param slaveTypeIndex: the slave type index
 		 @return a timing
 		*/
-		int getIntTiming(int slaveTypeIndex){return intTimings[slaveTypeIndex];};
+		int getIntTiming(int slaveTypeIndex);
 
 		/**
 		 Getting the value of a parameter considering a repetition index of the csDag vertex.
@@ -166,16 +168,17 @@ class CSDAGVertex {
 		 @param paramIndex: the parameter index
 		 @return the parameter value
 		*/
+		int getParamValue(int srDagRepetitionIndex, int paramIndex);
 		int getParamValue(int paramIndex){return paramValues[paramIndex];}
 
 		/**
-		 Getting the constraint correxponding to a given slaven: 
+		 Getting the constraint corresponding to a given slave :
 		 1 if the vertex can be executed on the slave. 0 otherwise.
 
 		 @param slaveIndex: the index of slave
 		 @return the constraint
 		*/
-		char getConstraint(int slaveIndex){return constraints[slaveIndex];};
+		char getConstraint(int slaveIndex);
 
 		/**
 		 Setting the value of a parameter considering a repetition index of the csDag vertex.
@@ -226,6 +229,7 @@ class CSDAGVertex {
 		 @param pattern added pattern
 		*/
 		void addParam(const char* param);
+		void addParamPattern(const char* pattern);
 
 		/**
 		 Setting the instantaneous repetition number of the 
@@ -233,7 +237,7 @@ class CSDAGVertex {
 
 		 @param repNum: the repetition number
 		*/
-		void setRepetitionNb(int repetitions){repetitionNb = repetitions;};
+		void setRepetitionNb(int repetitions);
 
 		/**
 		 Getting the instantaneous repetition number of the 
@@ -241,22 +245,29 @@ class CSDAGVertex {
 
 		 @return the repetition number
 		*/
-		int getRepetitionNb(){return repetitionNb;};
-
+		int getRepetitionNb();
 		void addInputEdge(CSDAGEdge* edge);
 		int getNbInputEdge();
 		CSDAGEdge* getInputEdge(int id);
 };
 
+
+/**
+ Setting the base, i.e. the graph in which current vertex is included
+
+ @param base: the base
+*/
+inline
+void CSDAGVertex::setBase(CSDAGGraph* graph){
+	this->base = graph;
+}
 inline
 void CSDAGVertex::addInputEdge(CSDAGEdge* edge){
 	if(nbInputEdges > MAX_CSDAG_INPUT_EDGES){
 		exitWithCode(-1);
 	}
 	inputEdges[nbInputEdges++] = edge;
-}
-
-inline
+}inline
 int CSDAGVertex::getNbInputEdge(){
 	return nbInputEdges;
 }
@@ -264,6 +275,140 @@ int CSDAGVertex::getNbInputEdge(){
 inline
 CSDAGEdge* CSDAGVertex::getInputEdge(int id){
 	return inputEdges[id];
+}
+
+/**
+ Setting the vertex name
+
+ @param name: the name
+*/
+inline
+void CSDAGVertex::setName(const char* name){
+	strcpy(this->name,name);
+}
+
+/**
+ Getting the vertex name
+
+ @param name: the name
+*/
+inline
+char* CSDAGVertex::getName(){
+	return name;
+}
+
+/**
+ Setting the function index: the function index references the C function
+ corresponding to the current vertex. This function is retrieved in a global
+ table using the index
+
+ @param index: the function index
+*/
+inline
+void CSDAGVertex::setFunctionIndex(int index){
+	functionIndex = index;
+}
+
+/**
+ Getting the function index: the function index references the C function
+ corresponding to the current vertex. This function is retrieved in a global
+ table using the index
+
+ @return: the function index
+*/
+inline
+int CSDAGVertex::getFunctionIndex(){
+	return functionIndex;
+}
+
+/**
+ Getting the number of parameters stored for the current vertex
+
+ @return the number of parameters
+*/
+inline
+int CSDAGVertex::getParamNb(){
+	return paramNb;
+}
+
+/**
+ Getting the pattern corresponding to the parameter with given index
+
+ @param index: the parameter index
+ @return an abstract_syntax_elt pattern in reverse polish notation
+*/
+inline
+abstract_syntax_elt* CSDAGVertex::getParamPattern(int index){
+	return paramPatterns[index];
+}
+
+/**
+ Getting the integer timing corresponding to a slave type
+
+ @param slaveTypeIndex: the slave type index
+ @return a timing
+*/
+inline
+int CSDAGVertex::getIntTiming(int slaveTypeIndex){
+	return intTimings[slaveTypeIndex];
+}
+
+/**
+ Getting the value of a parameter considering a repetition index of the csDag vertex.
+
+ @param srDagRepetitionIndex: the index of the SRDAG vertex among the CSDAG vertex repetitions
+ @param paramIndex: the parameter index
+ @return the parameter value
+*/
+inline
+int CSDAGVertex::getParamValue(int srDagRepetitionIndex, int paramIndex){
+	return paramsValues[srDagRepetitionIndex][paramIndex];
+}
+
+/**
+ Setting the value of a parameter considering a repetition index of the csDag vertex.
+
+ @param srDagRepetitionIndex: the index of the SRDAG vertex among the CSDAG vertex repetitions
+ @param paramIndex: the parameter index
+ @param value: the parameter value
+*/
+inline
+void CSDAGVertex::setParamValue(int srDagRepetitionIndex, int paramIndex, int value){
+	paramsValues[srDagRepetitionIndex][paramIndex] = value;
+}
+
+/**
+ Getting the constraint correxponding to a given slave: 
+ 1 if the vertex can be executed on the slave. 0 otherwise.
+
+ @param slaveIndex: the index of slave
+ @return the constraint
+*/
+inline
+char CSDAGVertex::getConstraint(int slaveIndex){
+	return constraints[slaveIndex];
+}
+
+/**
+ Setting the instantaneous repetition number of the 
+ CSDAG vertex in the SRDAG graph.
+
+ @param repNum: the repetition number
+*/
+inline
+void CSDAGVertex::setRepetitionNb(int repetitions){
+	repetitionNb = repetitions;
+}
+
+/**
+ Getting the instantaneous repetition number of the 
+ CSDAG vertex in the SRDAG graph.
+
+ @return the repetition number
+*/
+inline
+int CSDAGVertex::getRepetitionNb(){
+	return repetitionNb;
 }
 
 #endif

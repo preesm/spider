@@ -1,18 +1,45 @@
-/*********************************************************
-Copyright or ï¿½ or Copr. IETR/INSA: Maxime Pelcat
 
-Contact mpelcat for more information:
-mpelcat@insa-rennes.fr
+/********************************************************************************
+ * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet			*
+ * 										*
+ * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr			*
+ * 										*
+ * This software is a computer program whose purpose is to execute		*
+ * parallel applications.							*
+ * 										*
+ * This software is governed by the CeCILL-C license under French law and	*
+ * abiding by the rules of distribution of free software.  You can  use, 	*
+ * modify and/ or redistribute the software under the terms of the CeCILL-C	*
+ * license as circulated by CEA, CNRS and INRIA at the following URL		*
+ * "http://www.cecill.info". 							*
+ * 										*
+ * As a counterpart to the access to the source code and  rights to copy,	*
+ * modify and redistribute granted by the license, users are provided only	*
+ * with a limited warranty  and the software's author,  the holder of the	*
+ * economic rights,  and the successive licensors  have only  limited		*
+ * liability. 									*
+ * 										*
+ * In this respect, the user's attention is drawn to the risks associated	*
+ * with loading,  using,  modifying and/or developing or reproducing the	*
+ * software by the user in light of its specific status of free software,	*
+ * that may mean  that it is complicated to manipulate,  and  that  also	*
+ * therefore means  that it is reserved for developers  and  experienced	*
+ * professionals having in-depth computer knowledge. Users are therefore	*
+ * encouraged to load and test the software's suitability as regards their	*
+ * requirements in conditions enabling the security of their systems and/or 	*
+ * data to be ensured and,  more generally, to use and operate it in the 	*
+ * same conditions as regards security. 					*
+ * 										*
+ * The fact that you are presently reading this means that you have had		*
+ * knowledge of the CeCILL-C license and that you accept its terms.		*
+ ********************************************************************************/
 
-This software is a computer program whose purpose is to execute
-parallel applications.
-
- *********************************************************/
- 
 #ifndef SRDAG_VERTEX
 #define SRDAG_VERTEX
 
-class CSDAGVertex;
+class DAGVertex;
+//class CSDAGVertex;
 class SRDAGGraph;
 class SRDAGEdge;
 #include <cstring>
@@ -20,6 +47,7 @@ class SRDAGEdge;
 #include "../../SchedulerDimensions.h"
 #include "../../tools/SchedulingError.h"
 #include "../CSDAG/CSDAGVertex.h"
+#include "../Base/BaseVertex.h"
 
 /**
  * A vertex in a SRDAG graph
@@ -46,6 +74,11 @@ class SRDAGVertex {
 		CSDAGVertex* csDagReference;
 
 		/**
+		 The reference PiSDF vertex (if generated from a PiSDF)
+		*/
+		BaseVertex* Reference;
+
+		/**
 		 The vertex top level
 		*/
 		int tLevel;
@@ -66,10 +99,21 @@ class SRDAGVertex {
 		int nbInputEdges;
 		int nbOutputEdges;
 
+		// The index of the vertex in a schedule. -1 if the vertex have not been scheduled.
+		int scheduleIndex;
+
 		/**
 		 For graph traversal
 		*/
 		bool visited;
+
+		// Indicates the type of vertex normal (0), explode (1) or implode (2). Normal (0) by default.
+		int type;
+
+		// Distinguishes among several explode/implode vertices.
+		int expImpId;
+
+		UINT32 id;
 	public : 
 		/**
 		 Constructor
@@ -145,6 +189,18 @@ class SRDAGVertex {
 
 		void setGlobalIndex(int index);
 
+
+	    int getScheduleIndex() const
+	    {
+	        return scheduleIndex;
+	    }
+
+	    void setScheduleIndex(int scheduleIndex)
+	    {
+	        this->scheduleIndex = scheduleIndex;
+	    }
+
+
 		/**
 		 Getting the 'visited' status of the vertex
 
@@ -196,6 +252,39 @@ class SRDAGVertex {
 
 		int getNbInputEdge();
 		int getNbOutputEdge();
+
+		/*
+		 * Getter and setter for the type.
+		 */
+		int getType();
+		void setType(int type);
+
+		/*
+		 * Getter and setter for the expImpId.
+		 */
+		int getExpImpId();
+		void setExpImpId(int id);
+
+	    BaseVertex *getReference() const
+	    {
+	        return Reference;
+	    }
+
+	    void setReference(BaseVertex *Reference)
+	    {
+	        this->Reference = Reference;
+	    }
+
+
+	    UINT32 getId() const
+	    {
+	        return id;
+	    }
+
+	    void setId(UINT32 id)
+	    {
+	        this->id = id;
+	    }
 };
 
 
@@ -381,4 +470,23 @@ int SRDAGVertex::getNbOutputEdge(){
 	return nbOutputEdges;
 }
 
+inline
+int SRDAGVertex::getType(){
+	return type;
+}
+
+inline
+void SRDAGVertex::setType(int type){
+	this->type = type;
+}
+
+inline
+int SRDAGVertex::getExpImpId(){
+	return expImpId;
+}
+
+inline
+void SRDAGVertex::setExpImpId(int id){
+	this->expImpId = id;
+}
 #endif

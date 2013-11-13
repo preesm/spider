@@ -54,7 +54,7 @@ class XParser
 		*/
         int parse(const char expr[]);
 
-		void addVariable(const char* name, int value);
+		variable* addVariable(const char* name, int value);
 
 		/**
 		 Singleton constructor

@@ -31,7 +31,7 @@ CSDAGGraph::CSDAGGraph()
 	nbEdges = 0;
 	memset(edges,'\0',MAX_CSDAG_EDGES*sizeof(CSDAGEdge));
 
-//	patternsTableSize = 0;
+	patternsTableSize = 0;
 }
 
 /**

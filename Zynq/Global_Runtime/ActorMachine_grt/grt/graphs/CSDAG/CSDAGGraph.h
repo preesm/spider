@@ -24,7 +24,7 @@ parallel applications.
  */
 class CSDAGGraph{
 
-	private :
+	protected :
 		/**
 		 number of CSDAG vertices
 		*/
@@ -51,8 +51,8 @@ class CSDAGGraph{
 		 table of all the edges production and consumption patterns and vertices parameter patterns in the graph. 
 		 Allocated precisely because the pattern size can vary much (up to hundreds of abstract_syntax_elt).
 		*/
-//		abstract_syntax_elt patternsTable[MAX_CSDAG_PATTERN_TABLE_SIZE];
-//		int patternsTableSize; // Table size in abstract_syntax_elt
+		abstract_syntax_elt patternsTable[MAX_CSDAG_PATTERN_TABLE_SIZE];
+		int patternsTableSize; // Table size in abstract_syntax_elt
 
 		/**
 		 Constructor
@@ -108,7 +108,7 @@ class CSDAGGraph{
 		 
 		 @return number of vertices
 		*/
-		int getNbVertices();
+		virtual int getNbVertices();
 
 		/**
 		 Gets the edge at the given index

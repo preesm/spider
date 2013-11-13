@@ -389,10 +389,11 @@ int XParser::parse(const char new_expr[])
 }
 
 /**
- * Adding explicitely a variable to the parser
+ * Adding explicitly a variable to the parser
  */
-void XParser::addVariable(const char* name, int value){
+variable* XParser::addVariable(const char* name, int value){
 	user_var.add(name, value);
+	return user_var.getVariable(name);
 }
 
 /**

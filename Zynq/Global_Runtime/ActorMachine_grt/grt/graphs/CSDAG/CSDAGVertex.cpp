@@ -119,4 +119,33 @@ void CSDAGVertex::addParam(const char* param){
 }
 
 
+/**
+ Adds a pattern of parameter assignment or values in the form {712,titi=tutu,tata}
+ where tutu and tata must be previously evaluated variables
+
+ @param pattern added pattern
+*/
+void CSDAGVertex::addParamPattern(const char* pattern){
+	
+	if(paramNb > MAX_PARAM){
+		// Adding a parameter in a full table
+		exitWithCode(1040);
+	}
+
+	// Allocating the pattern in the base graph
+	this->paramPatterns[paramNb] = (abstract_syntax_elt *)(&base->patternsTable[base->patternsTableSize]);
+
+	// Parsing the pattern
+	int patternSize = globalParser.parsePattern(pattern,this->paramPatterns[paramNb]);
+
+	base->patternsTableSize += patternSize;
+
+	if(base->patternsTableSize > MAX_CSDAG_PATTERN_TABLE_SIZE){
+		// Adding a parameter pattern in a full table
+		exitWithCode(1039);
+	}
+	paramNb++;
+}
+
+
 

@@ -1,14 +1,40 @@
-/*********************************************************
-Copyright or ï¿½ or Copr. IETR/INSA: Maxime Pelcat
 
-Contact mpelcat for more information:
-mpelcat@insa-rennes.fr
+/********************************************************************************
+ * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet			*
+ * 										*
+ * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr			*
+ * 										*
+ * This software is a computer program whose purpose is to execute		*
+ * parallel applications.							*
+ * 										*
+ * This software is governed by the CeCILL-C license under French law and	*
+ * abiding by the rules of distribution of free software.  You can  use, 	*
+ * modify and/ or redistribute the software under the terms of the CeCILL-C	*
+ * license as circulated by CEA, CNRS and INRIA at the following URL		*
+ * "http://www.cecill.info". 							*
+ * 										*
+ * As a counterpart to the access to the source code and  rights to copy,	*
+ * modify and redistribute granted by the license, users are provided only	*
+ * with a limited warranty  and the software's author,  the holder of the	*
+ * economic rights,  and the successive licensors  have only  limited		*
+ * liability. 									*
+ * 										*
+ * In this respect, the user's attention is drawn to the risks associated	*
+ * with loading,  using,  modifying and/or developing or reproducing the	*
+ * software by the user in light of its specific status of free software,	*
+ * that may mean  that it is complicated to manipulate,  and  that  also	*
+ * therefore means  that it is reserved for developers  and  experienced	*
+ * professionals having in-depth computer knowledge. Users are therefore	*
+ * encouraged to load and test the software's suitability as regards their	*
+ * requirements in conditions enabling the security of their systems and/or 	*
+ * data to be ensured and,  more generally, to use and operate it in the 	*
+ * same conditions as regards security. 					*
+ * 										*
+ * The fact that you are presently reading this means that you have had		*
+ * knowledge of the CeCILL-C license and that you accept its terms.		*
+ ********************************************************************************/
 
-This software is a computer program whose purpose is to execute
-parallel applications.
-
- *********************************************************/
- 
 /**
  * Writes a schedule file from a SRDAG graph
  * 
@@ -203,6 +229,54 @@ void ScheduleWriter::write(Schedule* schedule, SRDAGGraph* hGraph, Architecture*
 		printf("Cannot open %s\n", path);
 	}
 }
+
+
+void ScheduleWriter::write(BaseSchedule* schedule, SRDAGGraph* dag, Architecture* archi, const char* path){
+//	// Getting sure that the timings expressions are resolved
+//	csGraph->resolveTimings(archi);
+	FILE * pFile;
+
+	pFile = fopen (path,"w");
+	char name[MAX_VERTEX_NAME_SIZE];
+	if(pFile != NULL){
+		// Writing header
+		fprintf (pFile, "<data>\n");
+
+		// Exporting for gantt display
+		for(int slave=0; slave<archi->getNbSlaves(); slave++){
+			for (UINT32 i=0 ; i<schedule->getNbVertices(slave); i++){
+				SRDAGVertex* vertex = (SRDAGVertex*)(schedule->getVertex(slave, i));
+//				int vertexID = dag->getVertexIndex(vertex);
+
+	//			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
+				sprintf(name,"%s_%d", vertex->getReference()->getName(), vertex->getId());
+				fprintf (pFile, "\t<event\n");
+				fprintf (pFile, "\t\tstart=\"%d\"\n", schedule->getVertexStartTime(vertex->getScheduleIndex(), vertex));
+				fprintf (pFile, "\t\tend=\"%d\"\n",	schedule->getVertexEndTime(vertex->getScheduleIndex(), vertex));
+				fprintf (pFile, "\t\ttitle=\"%s\"\n", name);
+				fprintf (pFile, "\t\tmapping=\"%s\"\n", archi->getSlaveName(slave));
+//				fprintf (pFile, "\t\tcolor=\"%s\"\n",regenerateColor(vertex->getReferenceIndex()));
+				fprintf (pFile, "\t\t>%s.</event>\n", name);
+			}
+
+//			for (int i=0 ; i<schedule->getNbComs(slave); i++){
+//				sprintf(name,"com_%d",i);
+//				fprintf (pFile, "\t<event\n");
+//				fprintf (pFile, "\t\tstart=\"%d\"\n",	schedule->getComStartTime(slave, i) );
+//				fprintf (pFile, "\t\tend=\"%d\"\n",		schedule->getComEndTime(slave, i) );
+//				fprintf (pFile, "\t\ttitle=\"%s\"\n",name);
+//				fprintf (pFile, "\t\tmapping=\"%s_com\"\n",archi->getSlaveName(slave));
+//				fprintf (pFile, "\t\tcolor=\"%s\"\n",regenerateColor(i));
+//				fprintf (pFile, "\t\t>%s.</event>\n",name);
+//			}
+		}
+		fprintf (pFile, "</data>\n");
+		fclose (pFile);
+	}else{
+		printf("Cannot open %s\n", path);
+	}
+}
+
 
 /**
  Exports the speedups to display them with matlab. 

@@ -51,54 +51,102 @@ static UINT8 nb_graphs = 0;
 void create_PiSDF_dec_VOP(PiSDFGraph* graph, BaseVertex* parentVertex){
 	/*** Decoder_VOP subgraph ***/
 
-	// Parameters.
-	PiSDFParameter* paramVOPType = parentVertex->getParameter(0);
+	// Interface vertices.
+	PiSDFIfVertex *vertexInVOL = (PiSDFIfVertex*)graph->addVertex("InputVOL", input_vertex);
+	vertexInVOL->setDirection(0);
+	vertexInVOL->setParentVertex(parentVertex);
+	vertexInVOL->setParentEdgeIndex(0);
+//	vertexInVOL->setFunction_index(2);
+	graph->setRootVertex(vertexInVOL);
+
+	PiSDFIfVertex *vertexInVOP = (PiSDFIfVertex*)graph->addVertex("InputVOP", input_vertex);
+	vertexInVOP->setDirection(0);
+	vertexInVOP->setParentVertex(parentVertex);
+	vertexInVOP->setParentEdgeIndex(1);
+//	vertexIn->setFunction_index(3);
+
+	PiSDFIfVertex *vertexInPos = (PiSDFIfVertex*)graph->addVertex("InputPos", input_vertex);
+	vertexInPos->setDirection(0);
+	vertexInPos->setParentVertex(parentVertex);
+	vertexInPos->setParentEdgeIndex(2);
+//	vertexInPos->setFunction_index(4);
 
 
-	// Vertices
-	PiSDFIfVertex *vertexIn = (PiSDFIfVertex*)graph->addVertex("Input", input_vertex);
-	vertexIn->setDirection(0);
-	vertexIn->setParentVertex(parentVertex);
-	vertexIn->setFunction_index(3);
-
-	graph->setRootVertex(vertexIn);
+	PiSDFIfVertex *vertexOutYUV = (PiSDFIfVertex*)graph->addVertex("OutputYUV", output_vertex);
+	vertexOutYUV->setDirection(1);
+	vertexOutYUV->setParentVertex(parentVertex);
+//	vertexInPos->setParentEdgeIndex(2);
+//	vertexOutYUV->setFunction_index(7);
 
 
-	BaseVertex *vertexSwitch = graph->addVertex("Switch", switch_vertex);
-	vertexSwitch->addParameter(paramVOPType);
-	vertexSwitch->setFunction_index(4);
+	// Configuration vertices.
+	PiSDFParameter* paramVOPType = graph->addParameter("VOPType");
+	PiSDFConfigVertex* vertexSetVOPType = (PiSDFConfigVertex*)graph->addVertex("SetVOPType", config_vertex);
+	vertexSetVOPType->addRelatedParam(paramVOPType);
+//	vertexSetVOPType->setFunction_index();
 
+
+	// Switch, Select & Broad vertices.
+	BaseVertex* vertexSwitch_0 = graph->addVertex("Switch_0", switch_vertex);
+	vertexSwitch_0->addParameter(paramVOPType);
+//	vertexSwitch_0->setFunction_index();
+	BaseVertex* vertexSwitch_1 = graph->addVertex("Switch_1", switch_vertex);
+	vertexSwitch_1->addParameter(paramVOPType);
+//	vertexSwitch_1->setFunction_index();
+	BaseVertex* vertexSwitch_2 = graph->addVertex("Switch_2", switch_vertex);
+	vertexSwitch_2->addParameter(paramVOPType);
+//	vertexSwitch_2->setFunction_index();
+	BaseVertex* vertexSelect_0 = graph->addVertex("Select_0", select_vertex);
+	vertexSelect_0->addParameter(paramVOPType);
+//	vertexSelect_0->setFunction_index();
+	BaseVertex* vertexBroad_0 = graph->addVertex("Broad_0", broad_vertex);
+
+
+	// PiSDF Vertices.
 	PiSDFVertex *vertexDecVOPI = (PiSDFVertex *)graph->addVertex("DecVOP_I", pisdf_vertex);
 	vertexDecVOPI->setFunction_index(5);
 	PiSDFVertex *vertexDecVOPP = (PiSDFVertex *)graph->addVertex("DecVOP_P", pisdf_vertex);
-	PiSDFVertex *vertexDecVOPB = (PiSDFVertex *)graph->addVertex("DecVOP_B", pisdf_vertex);
-	PiSDFVertex *vertexDecSkip = (PiSDFVertex *)graph->addVertex("DecSkip", pisdf_vertex);
-
-	BaseVertex *vertexSelect = graph->addVertex("Select", select_vertex);
-	vertexSelect->addParameter(paramVOPType);
-	vertexSelect->setFunction_index(6);
-
-	PiSDFIfVertex *vertexOut = (PiSDFIfVertex*)graph->addVertex("Output", output_vertex);
-	vertexOut->setDirection(1);
-	vertexOut->setParentVertex(parentVertex);
-	vertexOut->setFunction_index(7);
+	vertexDecVOPP->setFunction_index(5);
 
 
 	// Edges.
-	graph->addEdge(vertexIn, "1", vertexSwitch, "1", "0");
+	graph->addEdge(vertexInVOL, "1", vertexSwitch_1, "1", "0");
 
-	graph->addEdge(vertexSwitch, "(4-VOPType)/4", vertexDecVOPI, "1", "0");
-	graph->addEdge(vertexSwitch, "VOPType%2", vertexDecVOPP, "1", "0");
-	graph->addEdge(vertexSwitch, "(VOPType/2)%2", vertexDecVOPB, "1", "0");
-	graph->addEdge(vertexSwitch, "VOPType/4", vertexDecSkip, "1", "0");
+	graph->addEdge(vertexInVOP, "1", vertexSetVOPType, "1", "0");
 
-	graph->addEdge(vertexDecVOPI, "1", vertexSelect, "(4-VOPType)/4", "0");
-	graph->addEdge(vertexDecVOPP, "1", vertexSelect, "VOPType%2", "0");
-	graph->addEdge(vertexDecVOPB, "1", vertexSelect, "(VOPType/2)%2", "0");
-	graph->addEdge(vertexDecSkip, "1", vertexSelect, "VOPType/4", "0");
+	graph->addEdge(vertexInVOP, "1", vertexSwitch_0, "1", "0");
 
-	graph->addEdge(vertexSelect, "1", vertexOut, "1", "0");
+	graph->addEdge(vertexInPos, "1", vertexSwitch_2, "1", "0");
 
+	graph->addEdge(vertexSwitch_0, "1 - VOPType", vertexDecVOPI, "1", "0");
+	graph->addEdge(vertexSwitch_0, "VOPType", vertexDecVOPP, "1", "0");
+
+	graph->addEdge(vertexSwitch_1, "1 - VOPType", vertexDecVOPI, "1", "0");
+	graph->addEdge(vertexSwitch_1, "VOPType", vertexDecVOPP, "1", "0");
+
+	graph->addEdge(vertexSwitch_2, "1 - VOPType", vertexDecVOPI, "1", "0");
+	graph->addEdge(vertexSwitch_2, "VOPType", vertexDecVOPP, "1", "0");
+
+	graph->addEdge(vertexDecVOPI, "1", vertexSelect_0, "1 - VOPType", "0");
+
+	graph->addEdge(vertexDecVOPP, "1", vertexSelect_0, "1 - VOPType", "0");
+
+	graph->addEdge(vertexSelect_0, "1", vertexBroad_0, "1", "0");
+
+	graph->addEdge(vertexBroad_0, "1", vertexDecVOPP, "1", "1");
+	graph->addEdge(vertexBroad_0, "1", vertexOutYUV, "1", "0");
+
+
+
+//	graph->addEdge(vertexSwitch, "(4-VOPType)/4", vertexDecVOPI, "1", "0");
+//	graph->addEdge(vertexSwitch, "VOPType%2", vertexDecVOPP, "1", "0");
+//	graph->addEdge(vertexSwitch, "(VOPType/2)%2", vertexDecVOPB, "1", "0");
+//	graph->addEdge(vertexSwitch, "VOPType/4", vertexDecSkip, "1", "0");
+
+//	graph->addEdge(vertexDecVOPI, "1", vertexSelect, "(4-VOPType)/4", "0");
+//	graph->addEdge(vertexDecVOPP, "1", vertexSelect, "VOPType%2", "0");
+//	graph->addEdge(vertexDecVOPB, "1", vertexSelect, "(VOPType/2)%2", "0");
+//	graph->addEdge(vertexDecSkip, "1", vertexSelect, "VOPType/4", "0");
 	/*** End of Decoder_VOP subgraph ***/
 }
 

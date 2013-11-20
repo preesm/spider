@@ -255,7 +255,7 @@ void ScheduleWriter::write(BaseSchedule* schedule, SRDAGGraph* dag, Architecture
 				fprintf (pFile, "\t\tend=\"%d\"\n",	schedule->getVertexEndTime(vertex->getScheduleIndex(), vertex));
 				fprintf (pFile, "\t\ttitle=\"%s\"\n", name);
 				fprintf (pFile, "\t\tmapping=\"%s\"\n", archi->getSlaveName(slave));
-//				fprintf (pFile, "\t\tcolor=\"%s\"\n",regenerateColor(vertex->getReferenceIndex()));
+				fprintf (pFile, "\t\tcolor=\"%s\"\n",regenerateColor(vertex->getId()));
 				fprintf (pFile, "\t\t>%s.</event>\n", name);
 			}
 

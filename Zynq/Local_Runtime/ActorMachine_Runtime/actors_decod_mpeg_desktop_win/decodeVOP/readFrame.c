@@ -35,6 +35,7 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "decoderTypes.h"
@@ -42,44 +43,19 @@
 #include <lrt_prototypes.h>
 #include <hwQueues.h>
 
-static uchar VOPCounter = 0;
-
-static REVERSE_EVENT init_vlc_tables_P_PC_decod1_DCT3D_P[4096];
-static REVERSE_EVENT init_vlc_tables_I_PC_decod1_DCT3D_I[4096];
-
+static long filePosition;
 static FILE* pFile = NULL;
 static uchar buffer[BUFFER_SIZE];
+static uchar VOPCounter = 0;
 
-static struct_VOLsimple VideoObjectLayer_VOLsimple;
-static long filePosition;
-static readVOPOutData inData;
-
-static uchar stock_mb_type_P[1620];
-static vector save_mv[1620];
-static int pos_fin_vlc;
-static int keyframes[2] = {0};
-
-static decodeVOPOutData outData;
-
-static UINT32 IVOPCounter = 0;
-static UINT32 PVOPCounter = 0;
-
-void decodeVOP(){
-	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
-
-	// Initializations...
-	if(VOPCounter == 0){
+void readFrame(){
+	// Reading file position (once per complete decoding process).
+	if(VOPCounter == 0){ // Indicates that the decoding process just begins.
 		VOPCounter++;
-		init_vlc_tables_P(init_vlc_tables_P_PC_decod1_DCT3D_P);
-		init_vlc_tables_I(init_vlc_tables_I_PC_decod1_DCT3D_I);
-
-		// Receiving data from input ports.
-		read_input_fifo(action->fifo_in_id[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
-		read_input_fifo(action->fifo_in_id[1], sizeof(long), (UINT8*)&filePosition);
+		// Receiving data.
+		AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+		read_input_fifo(action->fifo_in_id[0], sizeof(long), (UINT8*)&filePosition); // Initial file position after the VOL.
 	}
-
-	// Receiving data from read VOP action.
-	read_input_fifo(action->fifo_in_id[2], sizeof(decodeVOPInData), (UINT8*)&inData);
 
 	// Opening video file.
 	pFile = fopen(M4V_FILE_PATH, "rb");
@@ -106,47 +82,5 @@ void decodeVOP(){
 	// Closing video file.
 	fclose(pFile);
 
-	/* switch VOP coding type */
-	switch (inData.VideoObjectPlane_vop_coding_type) {
-
-	  case 0 : {
-		  IVOPCounter++;
-		decode_I_frame(
-				&buffer[4],
-				&VideoObjectLayer_VOLsimple,
-				inData.VideoObjectPlane_pos,
-				&inData.VideoObjectPlane_VOP,
-				init_vlc_tables_I_PC_decod1_DCT3D_I,
-				&pos_fin_vlc,
-				&outData.frame_address,
-				outData.mem_Y_last_buf,
-				outData.mem_U_last_buf,
-				outData.mem_V_last_buf,
-				keyframes);
-
-		break; }
-
-	  case 1 : {
-		  PVOPCounter++;
-		decode_P_frame(
-				&buffer[4],
-				&VideoObjectLayer_VOLsimple,
-				inData.VideoObjectPlane_pos,
-				&inData.VideoObjectPlane_VOP,
-				init_vlc_tables_I_PC_decod1_DCT3D_I,
-				init_vlc_tables_P_PC_decod1_DCT3D_P,
-				stock_mb_type_P,
-				&pos_fin_vlc,
-				&outData.frame_address,
-				outData.mem_Y_last_buf,
-				outData.mem_U_last_buf,
-				outData.mem_V_last_buf,
-				keyframes,
-				save_mv);
-
-		break; }
-	}
-
 	// Sending data.
-	write_output_fifo(action->fifo_out_id[0], sizeof(decodeVOPOutData), (UINT8*)&outData);
 }

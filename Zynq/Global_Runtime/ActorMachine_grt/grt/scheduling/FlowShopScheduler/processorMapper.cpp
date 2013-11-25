@@ -15,7 +15,7 @@ to a set of slave processors.
 #include <algorithm>
 
 #include "processorMapper.h"
-#include "../../tools/Timer.h"
+#include <Timer.h>
 
 //#define AUTOMATIC_MAPPING
 //#define PRINTOUT_MAPPING

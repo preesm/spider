@@ -17,7 +17,7 @@ parallel applications.
  */
 #include "JobTransformer.h"
 #include "../../tools/SchedulingError.h"
-#include "../../tools/Timer.h"
+#include <Timer.h>
 #include <cstdio>
 #include <cstdlib>
 

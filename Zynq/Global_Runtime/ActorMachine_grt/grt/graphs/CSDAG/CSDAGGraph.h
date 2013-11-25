@@ -60,11 +60,6 @@ class CSDAGGraph{
 		CSDAGGraph();
 
 		/**
-		 Destructor
-		*/
-		~CSDAGGraph();
-
-		/**
 		 Adding a vertex to the graph. Vertices and edges must be added in topological order.
 		 There is no initial token on edges
 		 
@@ -108,7 +103,7 @@ class CSDAGGraph{
 		 
 		 @return number of vertices
 		*/
-		virtual int getNbVertices();
+		int getNbVertices();
 
 		/**
 		 Gets the edge at the given index

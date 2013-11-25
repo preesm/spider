@@ -34,12 +34,6 @@ CSDAGGraph::CSDAGGraph()
 	patternsTableSize = 0;
 }
 
-/**
- Destructor
-*/
-CSDAGGraph::~CSDAGGraph()
-{
-}
 
 /**
  Adding a vertex to the graph

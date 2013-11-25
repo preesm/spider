@@ -159,55 +159,55 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, char displayNames){
  @param graph: written graph
  @param path: output file path
 */
-//void DotWriter::write(CSDAGGraph* graph, const char* path, char displayNames){
-//	FILE * pFile;
-//
-//	//char directory[_MAX_PATH];
-//	//getcwd(directory, sizeof(directory));
-//
-//	pFile = fopen (path,"w");
-//	if(pFile != NULL){
-//		// Writing header
-//		fprintf (pFile, "digraph csdag {\n");
-//		fprintf (pFile, "node [color=\"#433D63\"];\n");
-//		fprintf (pFile, "edge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
-//		//fprintf (pFile, "rankdir=LR;\n");
-//		for (int i=0 ; i<graph->getNbVertices() ; i++)
-//		{
-//			CSDAGVertex* vertex = graph->getVertex(i);
-//			if(displayNames){
-//				fprintf (pFile, "\t%s [label=\"%s\"];\n",vertex->getName(),vertex->getName());
-//			}
-//			else{
-//				fprintf (pFile, "\t%s [label=\"\"];\n",vertex->getName());
-//			}
-//		}
-//
-//		//int labelDistance = 3;
-//		for (int i=0 ; i<graph->getNbEdges() ; i++)
-//		{
-//			char shortenedPExpr[EXPR_LEN_MAX];
-//			char shortenedCExpr[EXPR_LEN_MAX];
-//			CSDAGEdge* edge = graph->getEdge(i);
-//
-//			globalParser.prettyPrint(edge->getProduction(),shortenedPExpr);
-//			globalParser.prettyPrint(edge->getConsumption(),shortenedCExpr);
-//
-//			/*fprintf (pFile, "\t%s->%s [taillabel=\"%s\" headlabel=\"%s\" labeldistance=%d labelangle=50];\n",
-//				edge->getSource()->getName(),edge->getSink()->getName(),
-//				shortenedPExpr,shortenedCExpr,labelDistance);*/
-//			fprintf (pFile, "\t%s->%s [taillabel=\"%s\" headlabel=\"%s\"];\n",
-//				edge->getSource()->getName(),edge->getSink()->getName(),
-//				shortenedPExpr,shortenedCExpr);
-//			//labelDistance = 3 + labelDistance%(3*4); // Oscillating the label distance to keep visibility
-//		}
-//		fprintf (pFile, "}\n");
-//
-//		fclose (pFile);
-//	}else{
-//		printf("Cannot open %s\n", path);
-//	}
-//}
+void DotWriter::write(CSDAGGraph* graph, const char* path, char displayNames){
+	FILE * pFile;
+
+	//char directory[_MAX_PATH];
+	//getcwd(directory, sizeof(directory));
+
+	pFile = fopen (path,"w");
+	if(pFile != NULL){
+		// Writing header
+		fprintf (pFile, "digraph csdag {\n");
+		fprintf (pFile, "node [color=\"#433D63\"];\n");
+		fprintf (pFile, "edge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
+		//fprintf (pFile, "rankdir=LR;\n");
+		for (int i=0 ; i<graph->getNbVertices() ; i++)
+		{
+			CSDAGVertex* vertex = graph->getVertex(i);
+			if(displayNames){
+				fprintf (pFile, "\t%s [label=\"%s\"];\n",vertex->getName(),vertex->getName());
+			}
+			else{
+				fprintf (pFile, "\t%s [label=\"\"];\n",vertex->getName());
+			}
+		}
+
+		//int labelDistance = 3;
+		for (int i=0 ; i<graph->getNbEdges() ; i++)
+		{
+			char shortenedPExpr[EXPR_LEN_MAX];
+			char shortenedCExpr[EXPR_LEN_MAX];
+			CSDAGEdge* edge = graph->getEdge(i);
+
+			globalParser.prettyPrint(edge->getProduction(),shortenedPExpr);
+			globalParser.prettyPrint(edge->getConsumption(),shortenedCExpr);
+
+			/*fprintf (pFile, "\t%s->%s [taillabel=\"%s\" headlabel=\"%s\" labeldistance=%d labelangle=50];\n",
+				edge->getSource()->getName(),edge->getSink()->getName(),
+				shortenedPExpr,shortenedCExpr,labelDistance);*/
+			fprintf (pFile, "\t%s->%s [taillabel=\"%s\" headlabel=\"%s\"];\n",
+				edge->getSource()->getName(),edge->getSink()->getName(),
+				shortenedPExpr,shortenedCExpr);
+			//labelDistance = 3 + labelDistance%(3*4); // Oscillating the label distance to keep visibility
+		}
+		fprintf (pFile, "}\n");
+
+		fclose (pFile);
+	}else{
+		printf("Cannot open %s\n", path);
+	}
+}
 
 
 static void draw_vertex(BaseVertex* vertex, char displayNames, FILE* pFile, bool drawParameters = true){

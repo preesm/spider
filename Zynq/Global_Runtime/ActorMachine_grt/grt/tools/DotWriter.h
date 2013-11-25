@@ -38,14 +38,14 @@
 #ifndef DOT_WRITER
 #define DOT_WRITER
 
-//#include "../graphs/CSDAG/CSDAGGraph.h"
-//#include "../graphs/CSDAG/CSDAGVertex.h"
-//#include "../graphs/CSDAG/CSDAGEdge.h"
+#include "../graphs/CSDAG/CSDAGGraph.h"
+#include "../graphs/CSDAG/CSDAGVertex.h"
+#include "../graphs/CSDAG/CSDAGEdge.h"
 #include "../graphs/SRDAG/SRDAGGraph.h"
 #include "../graphs/SRDAG/SRDAGVertex.h"
 #include "../graphs/SRDAG/SRDAGEdge.h"
-//#include "../graphs/PiCSDF/PiCSDFGraph.h"
-//#include "../graphs/PiCSDF/PiCSDFEdge.h"
+#include "../graphs/PiCSDF/PiCSDFGraph.h"
+#include "../graphs/PiCSDF/PiCSDFEdge.h"
 #include "../graphs/PiSDF/PiSDFGraph.h"
 #include "../graphs/SDF/SDFGraph.h"
 
@@ -85,7 +85,7 @@ class DotWriter {
 		 @param graph: written graph
 		 @param path: output file path
 		*/
-//		void write(CSDAGGraph* graph, const char* path, char displayNames);
+		void write(CSDAGGraph* graph, const char* path, char displayNames);
 
 
 		/**

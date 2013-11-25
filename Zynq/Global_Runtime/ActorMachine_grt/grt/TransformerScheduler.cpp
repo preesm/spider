@@ -12,7 +12,7 @@ parallel applications.
 #include "TransformerScheduler.h"
 #include "scheduling/FlowShopScheduler/FlowShopScheduler.h"
 #include "scheduling/ListScheduler/ListScheduler.h"
-#include "tools/Timer.h"
+#include <Timer.h>
 #include "tools/DotWriter.h"
 /**
  * Class handling the whole graph transformation and scheduling

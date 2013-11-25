@@ -46,7 +46,7 @@ PiCSDFEdge* PiCSDFGraph::addEdge(CSDAGVertex* source, const char* production, CS
 */
 CSDAGVertex* PiCSDFGraph::addConfigVertex(const char* vertexName){
 	CSDAGVertex* vertex = NULL;
-	if(nbConfigVertices < MAX_PISDF_CONFIG_VERTICES){
+	if(nbConfigVertices < MAX_NB_PiSDF_CONFIG_VERTICES){
 		vertex = &configVertices[nbConfigVertices];
 		vertex->setBase(this);
 		vertex->setName(vertexName);
@@ -80,13 +80,13 @@ PiCSDFConfigPort* PiCSDFGraph::addConfigPort(CSDAGVertex* vertex, PiCSDFParamete
 	PiCSDFConfigPort* configPort = NULL;
 	if(dir == 0) // Input port.
 	{
-		if(nbConfigInPorts < MAX_PISDF_CONFIG_PORTS); //TODO handle the error. exitWithCode()
+		if(nbConfigInPorts < MAX_NB_PiSDF_INPUT_VERTICES); //TODO handle the error. exitWithCode()
 		configPort = &configInPorts[nbConfigInPorts];
 		nbConfigInPorts++;
 	}
 	else // Output port.
 	{
-		if(nbConfigOutPorts < MAX_PISDF_CONFIG_PORTS); //TODO handle the error. exitWithCode()
+		if(nbConfigOutPorts < MAX_NB_PiSDF_OUTPUT_VERTICES); //TODO handle the error. exitWithCode()
 		configPort = &configOutPorts[nbConfigOutPorts];
 		nbConfigOutPorts++;
 	}
@@ -140,7 +140,7 @@ int PiCSDFGraph::getNbConfigOutPorts(){
 */
 PiCSDFParameter* PiCSDFGraph::addParameter(const char* name, const char* expression){
 	PiCSDFParameter* parameter = NULL;
-	if(nbParameters < MAX_PISDF_CONFIG_PORTS){
+	if(nbParameters < MAX_NB_PiSDF_PARAMS){
 		parameter = &parameters[nbParameters];
 		strcpy(parameter->name, name);
 		// Parsing the expression

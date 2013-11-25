@@ -206,7 +206,7 @@ class SRDAGGraph {
 		int getMaxTime();
 		int getCriticalPath();
 
-		CSDAGVertex* getExplodeVertex();
+//		CSDAGVertex* getExplodeVertex();
 
 };
 

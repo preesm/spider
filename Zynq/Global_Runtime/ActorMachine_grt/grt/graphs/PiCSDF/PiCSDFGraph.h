@@ -36,7 +36,7 @@ class PiCSDFGraph : public CSDAGGraph{
 		/*
 		 * Table of configuration actors.
 		 */
-		CSDAGVertex configVertices[MAX_PISDF_CONFIG_VERTICES];
+		CSDAGVertex configVertices[MAX_NB_PiSDF_CONFIG_VERTICES];
 		int nbConfigVertices;
 
 		/**
@@ -47,19 +47,19 @@ class PiCSDFGraph : public CSDAGGraph{
 		/*
 		 * Table of configuration input ports.
 		 */
-		PiCSDFConfigPort configInPorts[MAX_PISDF_CONFIG_PORTS];
+		PiCSDFConfigPort configInPorts[MAX_NB_PiSDF_INPUT_VERTICES];
 		int nbConfigInPorts;
 
 		/*
 		 * Table of configuration output ports.
 		 */
-		PiCSDFConfigPort configOutPorts[MAX_PISDF_CONFIG_PORTS];
+		PiCSDFConfigPort configOutPorts[MAX_NB_PiSDF_OUTPUT_VERTICES];
 		int nbConfigOutPorts;
 
 		/*
 		 * Table of parameters.
 		 */
-		PiCSDFParameter parameters[MAX_PISDF_CONFIG_PORTS];
+		PiCSDFParameter parameters[MAX_NB_PiSDF_PARAMS];
 		int nbParameters;
 
 	public:

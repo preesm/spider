@@ -20,7 +20,6 @@
 #include "scheduling/ListScheduler/ListScheduler.h"
 #include "transformations/JobTransformer/JobTransformer.h"
 #include "transformations/CSDAGTransformer/CSDAGTransformer.h"
-#include "tools/Timer.h"
 #include "tools/DotWriter.h"
 #include "tools/ScheduleWriter.h"
 #include "tools/ScheduleChecker.h"
@@ -32,6 +31,7 @@
 #include "ExecutionStat.h"
 
 #include <hwQueues.h>
+#include <Timer.h>
 
 #include "launcher/launcher.h"
 

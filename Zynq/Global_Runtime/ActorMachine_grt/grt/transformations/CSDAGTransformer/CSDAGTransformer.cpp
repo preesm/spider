@@ -47,7 +47,7 @@ CSDAGTransformer::~CSDAGTransformer()
 */
 void CSDAGTransformer::transform(CSDAGGraph* input, SRDAGGraph* output, Architecture* archi){
 
-	CSDAGExplodeVertex = output->getExplodeVertex();
+//	CSDAGExplodeVertex = output->getExplodeVertex();
 	CSDAGExplodeVertex->setName("Explode");
 	CSDAGExplodeVertex->setFunctionIndex(0);
 	CSDAGExplodeVertex->addTiming(0,"1");

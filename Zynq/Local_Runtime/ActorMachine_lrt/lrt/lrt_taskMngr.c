@@ -43,7 +43,8 @@ void LrtAMCreate(OS_TCB *new_tcb){
 
 
 	// Popping vertices.
-	UINT8 i,j;
+	UINT8 i;
+	UINT8 j;
 	AM_VERTEX_STRUCT	*am_vertex_ptr;
 	for(i=0; i < new_tcb->nbVertices; i++){
 		am_vertex_ptr = &(new_tcb->am_vertices[i]);

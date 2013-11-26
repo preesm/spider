@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(AM_LRT)
 
-set (APP_MPEG4 "" CACHE BOOL "")
+set (APP_MPEG4 "ON" CACHE BOOL "")
 set (APP_SOBEL "" CACHE BOOL "")
 
 if(APP_MPEG4 AND APP_SOBEL)

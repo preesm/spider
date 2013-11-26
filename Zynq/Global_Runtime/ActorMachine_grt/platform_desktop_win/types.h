@@ -41,16 +41,16 @@
 #define TRUE 			1
 #define FALSE 			0
 
-typedef __UINT8_TYPE__ 	BOOLEAN;
+typedef unsigned char 	BOOLEAN;
 
-typedef __INT8_TYPE__	INT8;
-typedef __INT16_TYPE__	INT16;
-typedef __INT32_TYPE__ 	INT32;
-typedef __INT64_TYPE__ 	INT64;
+typedef signed char		INT8;
+typedef short int		INT16;
+typedef int			 	INT32;
+typedef long long int 	INT64;
 
-typedef __UINT8_TYPE__ 	UINT8;
-typedef __UINT16_TYPE__	UINT16;
-typedef __UINT32_TYPE__	UINT32;
-typedef __UINT64_TYPE__	UINT64;
+typedef unsigned char 			UINT8;
+typedef unsigned short  		UINT16;
+typedef unsigned int			UINT32;
+typedef long long unsigned int	UINT64;
 
 #endif /* TYPES_H_ */

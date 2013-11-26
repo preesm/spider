@@ -38,11 +38,7 @@
 #include <iostream>
 #include <fstream>
 
-#ifndef DESKTOP
-#include <ncurses/ncurses.h>
-#else
-#include <ncurses.h>
-#endif
+//#include <ncurses.h>
 
 #define CSDAG_FILE_PATH 			"csdag.gv"
 #define STRUCTURE_FILE_PATH 		"srDag.gv"

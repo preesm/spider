@@ -221,7 +221,7 @@ void PiSDFGraph::setExecutableVertices(BaseVertex* vertex)
 					for (UINT32 i = 0; i < vertex->getNbOutputEdges(); i++) {
 						PiSDFEdge* edge = vertex->getOutputEdge(i);
 						BaseVertex* sinkVertex = edge->getSink();
-						if(not sinkVertex->getVisited())
+						if(! sinkVertex->getVisited())
 							setExecutableVertices(edge->getSink());
 					}
 				}
@@ -240,7 +240,7 @@ void PiSDFGraph::setExecutableVertices(BaseVertex* vertex)
 			// Discarding edges with zero production.
 			if(edge->getProductionInt() > 0)
 				// Adding the vertex if not visited yet.
-				if (not sinkVertex->getVisited())
+				if (! sinkVertex->getVisited())
 					setExecutableVertices(edge->getSink());
 		}
 
@@ -281,7 +281,7 @@ void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSD
 						PiSDFEdge* edge = startVertex->getOutputEdge(i);
 						BaseVertex* sinkVertex = edge->getSink();
 						// Discarding edges with zero production and vertices already visited.
-						if((edge->getProductionInt() > 0) && (not sinkVertex->getVisited()))
+						if((edge->getProductionInt() > 0) && (! sinkVertex->getVisited()))
 								copyExecutableVertices(edge->getSink(), outSDF);
 					}
 				}
@@ -302,7 +302,7 @@ void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSD
 			PiSDFEdge* edge = startVertex->getOutputEdge(i);
 			BaseVertex* sinkVertex = edge->getSink();
 			// Discarding edges with zero production and vertices already visited.
-			if((edge->getProductionInt() > 0) && (not sinkVertex->getVisited()))
+			if((edge->getProductionInt() > 0) && (! sinkVertex->getVisited()))
 					copyExecutableVertices(edge->getSink(), outSDF);
 		}
 

@@ -96,7 +96,7 @@ public:
 	bool getExecutable(){
 		// Checking if all parameters have been resolved.
 		for (UINT32 i = 0; i < this->nbParameters; i++) {
-			if(not this->parameters[i]->getResolved()) return false;
+			if(! this->parameters[i]->getResolved()) return false;
 		}
 
 		for (UINT32 i = 0; i < this->nbInputEdges; i++){

@@ -6,11 +6,17 @@ find_package(Curses)
 
 if(CURSES_FOUND)
 else()
-#    set (NCURSES_INCLUDE_DIR "" CACHE PATH "")
-#    set (NCURSES_LIB_DIR "" CACHE PATH "")
-#    include_directories(${NCURSES_INCLUDE_DIR})
-#    link_directories(${NCURSES_LIB_DIR})
+    set (NCURSES_INCLUDE_DIR "" CACHE PATH "")
+    set (NCURSES_LIB_DIR "" CACHE PATH "")
+    include_directories(${NCURSES_INCLUDE_DIR})
+    link_directories(${NCURSES_LIB_DIR})
 endif()
+
+if(MSVC)
+    add_definitions(-DMSVC)
+    message(STATUS ${CMAKE_SYSTEM})
+endif()
+
 
 
     

@@ -38,7 +38,11 @@
 #include <iostream>
 #include <fstream>
 
-//#include <ncurses.h>
+#ifdef MSVC
+	#include <curses.h>
+#else
+	#include <ncurses.h>
+#endif
 
 #define CSDAG_FILE_PATH 			"csdag.gv"
 #define STRUCTURE_FILE_PATH 		"srDag.gv"

@@ -44,15 +44,15 @@ REVERSE_EVENT init_vlc_tables_I_PC_decod1_DCT3D_I[4096];
 
 int keyframes[2] = {0};
 
-decodeVOPInDataStruct inputData;
-decodeVOPOutDataStruct outputData;
+decodeVOPInData inputData;
+decodeVOPOutData outputData;
 
 void decode_I_frame(const unsigned char *data,const struct_VOLsimple *VOLsimple,const int position,struct_VOP *VOP,REVERSE_EVENT *DCT3D_I,int *pos_fin_vlc,int *address,unsigned char *Lum,unsigned char *Cb,unsigned char *Cr,int *keyframes);
 
 void decodeVOP_I(){
 	// Getting input data.
 	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
-	read_input_fifo(action->fifo_in_id[0], sizeof(decodeVOPInDataStruct), (UINT8*)&inputData);
+	read_input_fifo(action->fifo_in_id[0], sizeof(decodeVOPInData), (UINT8*)&inputData);
 
 
 
@@ -68,22 +68,22 @@ void decodeVOP_I(){
 	int frame_pos_fin_vlc;
 //	int frame_address;
 
-	decode_I_frame(
-			inputData.readm4v_double_buffering_buffer_out,
-			&inputData.VideoObjectLayer_VOLsimple,
-			inputData.VideoObjectPlane_pos,
-			&inputData.VideoObjectPlane_VOP,
-			init_vlc_tables_I_PC_decod1_DCT3D_I,
-			&frame_pos_fin_vlc,
-			&outputData.address_pic,
-			outputData.mem_Y_last_buf,
-			outputData.mem_U_last_buf,
-			outputData.mem_V_last_buf,
-			keyframes);
+//	decode_I_frame(
+//			inputData.readm4v_double_buffering_buffer_out,
+//			&inputData.VideoObjectPlane_Layer_VOLsimple,
+//			inputData.VideoObjectPlane_pos,
+//			&inputData.VideoObjectPlane_VOP,
+//			init_vlc_tables_I_PC_decod1_DCT3D_I,
+//			&frame_pos_fin_vlc,
+//			&outputData.frame_address,
+//			outputData.mem_Y_last_buf,
+//			outputData.mem_U_last_buf,
+//			outputData.mem_V_last_buf,
+//			keyframes);
 
 //	Display_CondI4_o = Choix_I_P_haut_niveau_decode_I_frame_address;
 //	Choix_I_P_haut_niveau_CondO5_o = Choix_I_P_haut_niveau_decode_I_frame_pos_fin_vlc;
 
 	// Sending output data.
-	write_output_fifo(action->fifo_out_id[0], sizeof(decodeVOPOutDataStruct), (UINT8*)&outputData);
+	write_output_fifo(action->fifo_out_id[0], sizeof(decodeVOPOutData), (UINT8*)&outputData);
 }

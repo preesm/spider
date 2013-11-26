@@ -36,24 +36,24 @@
  ****************************************************************************/
 
 void decodeVOP_P(){
-	  Choix_I_P_haut_niveau_CondO6_o = 1 ;
-
-	decode_P_frame(
-			readm4v_double_buffering_buffer_out,
-			&VideoObjectLayer_VOLsimple,
-			VideoObjectPlane_pos,
-			&VideoObjectPlane_VOP,
-			init_vlc_tables_I_PC_decod1_DCT3D_I,
-			init_vlc_tables_P_PC_decod1_DCT3D_P,
-			Choix_I_P_haut_niveau_decode_P_frame_stock_mb_type_P,
-			&Choix_I_P_haut_niveau_decode_P_frame_pos_fin_vlc,
-			&Choix_I_P_haut_niveau_decode_P_frame_address,
-			mem_Y_last_buf,
-			mem_U_last_buf,
-			mem_V_last_buf,
-			Choix_I_P_haut_niveau_CondO4_o,
-			Choix_I_P_haut_niveau_CondI5_o);
-
-	Display_CondI4_o = Choix_I_P_haut_niveau_decode_P_frame_address;
-	Choix_I_P_haut_niveau_CondO5_o = Choix_I_P_haut_niveau_decode_P_frame_pos_fin_vlc;
+//	  Choix_I_P_haut_niveau_CondO6_o = 1 ;
+//
+//	decode_P_frame(
+//			readm4v_double_buffering_buffer_out,
+//			&VideoObjectLayer_VOLsimple,
+//			VideoObjectPlane_pos,
+//			&VideoObjectPlane_VOP,
+//			init_vlc_tables_I_PC_decod1_DCT3D_I,
+//			init_vlc_tables_P_PC_decod1_DCT3D_P,
+//			Choix_I_P_haut_niveau_decode_P_frame_stock_mb_type_P,
+//			&Choix_I_P_haut_niveau_decode_P_frame_pos_fin_vlc,
+//			&Choix_I_P_haut_niveau_decode_P_frame_address,
+//			mem_Y_last_buf,
+//			mem_U_last_buf,
+//			mem_V_last_buf,
+//			Choix_I_P_haut_niveau_CondO4_o,
+//			Choix_I_P_haut_niveau_CondI5_o);
+//
+//	Display_CondI4_o = Choix_I_P_haut_niveau_decode_P_frame_address;
+//	Choix_I_P_haut_niveau_CondO5_o = Choix_I_P_haut_niveau_decode_P_frame_pos_fin_vlc;
 }

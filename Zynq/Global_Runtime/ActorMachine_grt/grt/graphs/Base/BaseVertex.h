@@ -40,7 +40,7 @@
 
 #include <cstring>
 #include <types.h>
-#include <SchedulerDimensions.h>
+#include <grt_definitions.h>
 #include <tools/SchedulingError.h>
 #include "../PiSDF/PiSDFParameter.h"
 #include "../PiSDF/PiSDFEdge.h"

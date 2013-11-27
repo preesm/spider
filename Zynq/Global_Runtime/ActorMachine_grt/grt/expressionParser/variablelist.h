@@ -21,7 +21,7 @@ parallel applications.
 
 using namespace std;
 
-#include "../SchedulerDimensions.h"
+#include <grt_definitions.h>
 
 void toupperStr(char upper[], const char str[]);
 

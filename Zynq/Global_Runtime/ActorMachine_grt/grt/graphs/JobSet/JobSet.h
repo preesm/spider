@@ -3,7 +3,7 @@
 
 #include "../SRDAG/SRDAGVertex.h"
 #include "../SRDAG/SRDAGEdge.h"
-#include "../../SchedulerDimensions.h"
+#include <grt_definitions.h>
 #include "../../tools/SchedulingError.h"
 
 #include "Job.h"

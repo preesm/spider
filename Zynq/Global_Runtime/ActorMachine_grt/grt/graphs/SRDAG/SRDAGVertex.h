@@ -44,7 +44,7 @@ class SRDAGGraph;
 class SRDAGEdge;
 #include <cstring>
 
-#include "../../SchedulerDimensions.h"
+#include <grt_definitions.h>
 #include "../../tools/SchedulingError.h"
 #include "../CSDAG/CSDAGVertex.h"
 #include "../Base/BaseVertex.h"

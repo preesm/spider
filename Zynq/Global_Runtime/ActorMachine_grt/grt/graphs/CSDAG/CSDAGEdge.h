@@ -12,8 +12,8 @@ parallel applications.
 #ifndef CSDAG_EDGE
 #define CSDAG_EDGE
 
-#include "../../SchedulerDimensions.h"
-#include "../../expressionParser/XParser.h"
+#include <grt_definitions.h>
+#include <expressionParser/XParser.h>
 #include <cstdio>
 #include <cstring>
 #include <cctype>

@@ -14,9 +14,10 @@ parallel applications.
 
 // declarations
 
+#include <grt_definitions.h>
 #include "variablelist.h"
 #include "ReversePolishNotationGenerator.h"
-#include "../SchedulerDimensions.h"
+
 /**
  Expression parser
 

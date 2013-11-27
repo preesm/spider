@@ -37,7 +37,7 @@
 #ifndef PISDFGRAPH_H_
 #define PISDFGRAPH_H_
 
-#include <SchedulerDimensions.h>
+#include <grt_definitions.h>
 #include "PiSDFEdge.h"
 #include "PiSDFParameter.h"
 #include "PiSDFVertex.h"

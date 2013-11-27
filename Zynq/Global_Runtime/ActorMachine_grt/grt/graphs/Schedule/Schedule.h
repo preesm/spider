@@ -10,7 +10,7 @@
 
 #include "../SRDAG/SRDAGVertex.h"
 #include "../SRDAG/SRDAGGraph.h"
-#include "../../SchedulerDimensions.h"
+#include <grt_definitions.h>
 #include <string.h>
 
 typedef struct communication{

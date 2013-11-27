@@ -38,7 +38,7 @@
 #ifndef SDFGRAPH_H_
 #define SDFGRAPH_H_
 
-#include <SchedulerDimensions.h>
+#include <grt_definitions.h>
 #include "../Base/BaseEdge.h"
 #include "../Base/BaseVertex.h"
 

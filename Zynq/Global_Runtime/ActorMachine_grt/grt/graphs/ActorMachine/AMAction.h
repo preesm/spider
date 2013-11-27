@@ -41,7 +41,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
-#include "../../SchedulerDimensions.h"
+#include <grt_definitions.h>
 
 
 class AMAction {

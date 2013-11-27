@@ -16,8 +16,8 @@ class CSDAGGraph;
 class CSDAGEdge;
 #include <cstring>
 
+#include <grt_definitions.h>
 #include "../../scheduling/architecture/Architecture.h"
-#include "../../SchedulerDimensions.h"
 #include "../../expressionParser/XParser.h"
 
 /**

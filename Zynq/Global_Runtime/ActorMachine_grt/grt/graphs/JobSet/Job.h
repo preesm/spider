@@ -10,7 +10,7 @@ parallel applications.
 #ifndef JOB_H
 #define JOB_H
 
-#include "../../SchedulerDimensions.h"
+#include <grt_definitions.h>
 #include "Operation.h"
 
 /**

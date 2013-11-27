@@ -38,7 +38,7 @@
 #ifndef CONFIGVERTEX_H_
 #define CONFIGVERTEX_H_
 
-#include <SchedulerDimensions.h>
+#include <grt_definitions.h>
 #include "../../expressionParser/variablelist.h"
 #include "../Base/BaseVertex.h"
 

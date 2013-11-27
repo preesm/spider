@@ -39,7 +39,7 @@
 #define AMVERTEX_H_
 
 #include "AMCond.h"
-#include "../../SchedulerDimensions.h"
+#include <grt_definitions.h>
 
 #include <cstdio>
 #include <cstdlib>

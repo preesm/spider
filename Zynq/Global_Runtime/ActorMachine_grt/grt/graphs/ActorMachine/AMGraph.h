@@ -45,7 +45,7 @@
 #include "../SRDAG/SRDAGVertex.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Schedule/BaseSchedule.h>
-#include "../../SchedulerDimensions.h"
+#include <grt_definitions.h>
 
 class AMGraph {
 private:

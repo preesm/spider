@@ -43,7 +43,7 @@
 #include "SRDAGEdge.h"
 #include "../Base/BaseVertex.h"
 
-#include "../../SchedulerDimensions.h"
+#include <grt_definitions.h>
 #include "../../tools/SchedulingError.h"
 
 /**

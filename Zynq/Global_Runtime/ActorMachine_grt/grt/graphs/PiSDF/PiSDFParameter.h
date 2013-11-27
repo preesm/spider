@@ -38,7 +38,7 @@
 #ifndef PARAMETER_H_
 #define PARAMETER_H_
 
-#include <SchedulerDimensions.h>
+#include <grt_definitions.h>
 #include <expressionParser/ReversePolishNotationGenerator.h>
 #include <types.h>
 

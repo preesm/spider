@@ -12,7 +12,7 @@ parallel applications.
 #ifndef ABSTRACT_SYNTAX_TREE
 #define ABSTRACT_SYNTAX_TREE
 
-#include "../SchedulerDimensions.h"
+#include <grt_definitions.h>
 #include "variablelist.h"
 
 /**

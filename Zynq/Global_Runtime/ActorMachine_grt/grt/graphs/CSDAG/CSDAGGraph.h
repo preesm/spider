@@ -15,7 +15,7 @@ parallel applications.
 #include "CSDAGVertex.h"
 #include "CSDAGEdge.h"
 
-#include "../../SchedulerDimensions.h"
+#include <grt_definitions.h>
 
 /**
  * A CSDAG graph

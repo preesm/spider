@@ -43,7 +43,7 @@
 #include <cstring>
 
 #include <types.h>
-#include "../SchedulerDimensions.h"
+#include <grt_definitions.h>
 
 #define FIFO_HEADER_SIZE 	8
 #define MEM_INIT_POS		0
@@ -63,8 +63,8 @@ private:
 	int last;
 	char file_path[FILE_PATH_LENGTH];
 
-	int fifoAddr[MAX_NB_FIFO];
-	int fifoSize[MAX_NB_FIFO];
+	int fifoAddr[MAX_NB_HW_FIFO];
+	int fifoSize[MAX_NB_HW_FIFO];
 	int fifoNb;
 
 public:

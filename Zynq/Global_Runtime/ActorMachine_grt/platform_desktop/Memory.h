@@ -63,8 +63,8 @@ private:
 	int last;
 	char file_path[FILE_PATH_LENGTH];
 
-	int fifoAddr[MAX_NB_FIFO];
-	int fifoSize[MAX_NB_FIFO];
+	int fifoAddr[MAX_NB_HW_FIFO];
+	int fifoSize[MAX_NB_HW_FIFO];
 	int fifoNb;
 
 public:

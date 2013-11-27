@@ -50,16 +50,22 @@ static int Zero_PC_decod1_out = 0;
 
 void displayVOP()
 {
+	int XDIM;
+	int YDIM;
+	uchar *Y;
+	uchar *U;
+	uchar *V;
+
 	// Receiving data.
 	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
 	read_input_fifo(action->fifo_in_id[0], sizeof(imgDimensionsData), (UINT8*)&inPortData); // From input port.
 	read_input_fifo(action->fifo_in_id[1], sizeof(decodeVOPOutData), (UINT8*)&inDecodeData); // From decode VOP action.
 
-	int XDIM = ((int *) Display_Extract_Image_Y_o)[0] = inPortData.VideoObjectLayer_xsize_o;
-	int YDIM = ((int *) Display_Extract_Image_Y_o)[1] = inPortData.VideoObjectLayer_ysize_o;
-	uchar *Y = Display_Extract_Image_Y_o + 8;
-	uchar *U = Y + (XDIM + 32) * YDIM;
-	uchar *V = U + (XDIM + 32) * YDIM/4;
+	XDIM = ((int *) Display_Extract_Image_Y_o)[0] = inPortData.VideoObjectLayer_xsize_o;
+	YDIM = ((int *) Display_Extract_Image_Y_o)[1] = inPortData.VideoObjectLayer_ysize_o;
+	Y = Display_Extract_Image_Y_o + 8;
+	U = Y + (XDIM + 32) * YDIM;
+	V = U + (XDIM + 32) * YDIM/4;
 	extract_picture(
 		   XDIM, YDIM,
 		   16, Zero_PC_decod1_out,

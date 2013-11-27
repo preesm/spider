@@ -57,11 +57,14 @@ readVOPOutData outData;
 
 void readVOP()
 {
+	AM_ACTOR_ACTION_STRUCT* action;
+	uint nbBytesRead;
+
 	// Reading VOL info (once per complete decoding process).
 	if(VOPCounter == 0){ // Indicates that the decoding process just begins.
 		VOPCounter++;
 		// Receiving data.
-		AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+		action = OSCurActionQuery();
 		read_input_fifo(action->fifo_in_id[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
 		read_input_fifo(action->fifo_in_id[1], sizeof(long), (UINT8*)&filePosition); // Initial file position after the VOL.
 		read_input_fifo(action->fifo_in_id[2], sizeof(uchar) * 5, (UINT8*)VideoObjectLayer_vop_complexity);
@@ -79,7 +82,7 @@ void readVOP()
 	fseek(pFile, filePosition, SEEK_SET);
 
 	// Reading Video Object Plane.
-	uint nbBytesRead = 0;
+	nbBytesRead = 0;
 	readUpToNextStartCode(pFile, buffer, &nbBytesRead);
 
 	if(feof(pFile))
@@ -105,6 +108,6 @@ void readVOP()
 
 
 	// Sending data.
-	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+	action = OSCurActionQuery();
 	write_output_fifo(action->fifo_out_id[0], sizeof(readVOPOutData), (UINT8*)&outData);
 }

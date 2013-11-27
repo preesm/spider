@@ -20,12 +20,12 @@
  * It assumes that the initial position in the file is just after the previous start code.
  */
 void readUpToNextStartCode(FILE* pFile, uchar* buffer, uint* nbBytesRead){
-	// Reading immediate start code.
-	fread(buffer, sizeof(int), 1, pFile);
-	uint bufferPosition = sizeof(int);
-
 	uchar prefixChance = 0;
 	uchar prefixDetected = 0;
+
+	// Reading immediate start code.
+	uint bufferPosition = sizeof(int);
+	fread(buffer, sizeof(int), 1, pFile);
 
 	do{
 		uchar* data = &buffer[bufferPosition];

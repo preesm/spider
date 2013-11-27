@@ -18,8 +18,8 @@ typedef enum{
 } MailboxType;
 
 typedef enum{
-	INPUT=0,
-	OUTPUT=1
+	FIFO_DIR_INPUT=0,
+	FIFO_DIR_OUTPUT=1
 } FifoDir;
 
 //static HANDLE OS_QGRT[2] = {INVALID_HANDLE_VALUE};
@@ -34,7 +34,7 @@ void OS_QInit(){
 
 	// Creating input pipes.
 	sprintf(tempStr, "%sCtrl_Grtto%d", PIPE_BASE_NAME, cpuId);
-	OS_QGRT[CTRL][INPUT] = CreateNamedPipe(
+	OS_QGRT[CTRL][FIFO_DIR_INPUT] = CreateNamedPipe(
 										tempStr,
 										PIPE_ACCESS_DUPLEX,
 										PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
@@ -43,12 +43,12 @@ void OS_QInit(){
 										BUFFER_SIZE,
 										0,
 										NULL);
-	if (OS_QGRT[CTRL][INPUT] == INVALID_HANDLE_VALUE) {
+	if (OS_QGRT[CTRL][FIFO_DIR_INPUT] == INVALID_HANDLE_VALUE) {
 		printf("CreateNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 
 	sprintf(tempStr, "%sInfo_Grtto%d",PIPE_BASE_NAME, cpuId);
-	OS_QGRT[INFO][INPUT] = CreateNamedPipe(
+	OS_QGRT[INFO][FIFO_DIR_INPUT] = CreateNamedPipe(
 										tempStr,
 										PIPE_ACCESS_DUPLEX,
 										PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
@@ -57,22 +57,22 @@ void OS_QInit(){
 										BUFFER_SIZE,
 										0,
 										NULL);
-	if (OS_QGRT[INFO][INPUT] == INVALID_HANDLE_VALUE) {
+	if (OS_QGRT[INFO][FIFO_DIR_INPUT] == INVALID_HANDLE_VALUE) {
 		printf("CreateNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 
 	// Waiting for client to connect.
-	if(!ConnectNamedPipe(OS_QGRT[CTRL][INPUT], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
+	if(!ConnectNamedPipe(OS_QGRT[CTRL][FIFO_DIR_INPUT], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
 		printf("ConnectNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
-	if(!ConnectNamedPipe(OS_QGRT[INFO][INPUT], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
+	if(!ConnectNamedPipe(OS_QGRT[INFO][FIFO_DIR_INPUT], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
 		printf("ConnectNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 
 
 	// Connecting to output pipes.
 	sprintf(tempStr, "%sCtrl_%dtoGrt", PIPE_BASE_NAME, cpuId);
-	OS_QGRT[CTRL][OUTPUT] = CreateFile(
+	OS_QGRT[CTRL][FIFO_DIR_OUTPUT] = CreateFile(
 								tempStr,   		// pipe name
 								GENERIC_WRITE,	// write access
 								0,              // no sharing
@@ -80,12 +80,12 @@ void OS_QInit(){
 								OPEN_EXISTING,  // opens existing pipe
 								0,              // default attributes
 								NULL);          // no template file
-	if (OS_QGRT[CTRL][OUTPUT] == INVALID_HANDLE_VALUE) {
+	if (OS_QGRT[CTRL][FIFO_DIR_OUTPUT] == INVALID_HANDLE_VALUE) {
 		printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 
 	sprintf(tempStr, "%sInfo_%dtoGrt",PIPE_BASE_NAME, cpuId);
-	OS_QGRT[INFO][OUTPUT] = CreateFile(
+	OS_QGRT[INFO][FIFO_DIR_OUTPUT] = CreateFile(
 								tempStr,   		// pipe name
 								GENERIC_WRITE,	// write access
 								0,              // no sharing
@@ -93,7 +93,7 @@ void OS_QInit(){
 								OPEN_EXISTING,  // opens existing pipe
 								0,              // default attributes
 								NULL);          // no template file
-	if (OS_QGRT[INFO][OUTPUT] == INVALID_HANDLE_VALUE) {
+	if (OS_QGRT[INFO][FIFO_DIR_OUTPUT] == INVALID_HANDLE_VALUE) {
 		printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 }
@@ -106,7 +106,7 @@ UINT32 OS_CtrlQPush(void* data, int size){
     BOOL fSuccess = FALSE;
     int nb_bytes_written;
     fSuccess = WriteFile(
-    				OS_QGRT[CTRL][OUTPUT],		// pipe handle
+    				OS_QGRT[CTRL][FIFO_DIR_OUTPUT],		// pipe handle
     				data,		             	// message
     				size,		             	// message length
     				(PDWORD)&nb_bytes_written,	// bytes written
@@ -121,7 +121,7 @@ UINT32 OS_CtrlQPush(void* data, int size){
 
 UINT32 OS_CtrlQPop(void* data, int size){
 	int nb_bytes_read;
-	ReadFile(OS_QGRT[CTRL][INPUT],
+	ReadFile(OS_QGRT[CTRL][FIFO_DIR_INPUT],
 				   data,
 				   size,
 				   (PDWORD)&nb_bytes_read,
@@ -142,10 +142,12 @@ void OS_CtrlQPush_UINT32(UINT32 value){
 }
 
 UINT32 OS_CtrlQPop_nonBlocking(void* data, int size){
+	int nb_bytes_read;
+
 	// Changing the pipe to non-blocking mode.
 	DWORD mode = PIPE_NOWAIT;
 	BOOL fSuccess = SetNamedPipeHandleState(
-										OS_QGRT[CTRL][INPUT],   // pipe handle
+										OS_QGRT[CTRL][FIFO_DIR_INPUT],   // pipe handle
 										&mode, 		 			// new pipe mode
 										NULL,     				// don't set maximum bytes
 										NULL);    				// don't set maximum time
@@ -153,12 +155,12 @@ UINT32 OS_CtrlQPop_nonBlocking(void* data, int size){
     	printf("SetNamedPipeHandleState failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 
-	int nb_bytes_read = OS_CtrlQPop(data, size);
+	nb_bytes_read = OS_CtrlQPop(data, size);
 
 	// Resetting the pipe to blocking mode.
 	mode = PIPE_WAIT;
 	fSuccess = SetNamedPipeHandleState(
-								OS_QGRT[CTRL][INPUT],   // pipe handle
+								OS_QGRT[CTRL][FIFO_DIR_INPUT],   // pipe handle
 								&mode, 		 			// new pipe mode
 								NULL,     				// don't set maximum bytes
 								NULL);    				// don't set maximum time
@@ -177,7 +179,7 @@ UINT32 OS_InfoQPush(void* data, int size){
     BOOL fSuccess = FALSE;
     int nb_bytes_written;
     fSuccess = WriteFile(
-    				OS_QGRT[INFO][OUTPUT],		// pipe handle
+    				OS_QGRT[INFO][FIFO_DIR_OUTPUT],		// pipe handle
     				data,		             	// message
     				size,		             	// message length
     				(PDWORD)&nb_bytes_written,	// bytes written
@@ -192,7 +194,7 @@ UINT32 OS_InfoQPush(void* data, int size){
 
 UINT32 OS_InfoQPop(void* data, int size){
 	int nb_bytes_read;
-	ReadFile(OS_QGRT[INFO][INPUT],
+	ReadFile(OS_QGRT[INFO][FIFO_DIR_INPUT],
 				   data,
 				   size,
 				   (PDWORD)&nb_bytes_read,
@@ -213,10 +215,11 @@ void OS_InfoQPush_UINT32(UINT32 value){
 }
 
 UINT32 OS_InfoQPop_nonBlocking(void* data, int size){
+	int nb_bytes_read;
 	// Changing the pipe to non-blocking mode.
 	DWORD mode = PIPE_NOWAIT;
 	BOOL fSuccess = SetNamedPipeHandleState(
-										OS_QGRT[INFO][INPUT],   // pipe handle
+										OS_QGRT[INFO][FIFO_DIR_INPUT],   // pipe handle
 										&mode, 		 			// new pipe mode
 										NULL,     				// don't set maximum bytes
 										NULL);    				// don't set maximum time
@@ -224,12 +227,12 @@ UINT32 OS_InfoQPop_nonBlocking(void* data, int size){
     	printf("SetNamedPipeHandleState failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 
-	int nb_bytes_read = OS_CtrlQPop(data, size);
+	nb_bytes_read = OS_CtrlQPop(data, size);
 
 	// Resetting the pipe to blocking mode.
 	mode = PIPE_WAIT;
 	fSuccess = SetNamedPipeHandleState(
-								OS_QGRT[INFO][INPUT],   // pipe handle
+								OS_QGRT[INFO][FIFO_DIR_INPUT],   // pipe handle
 								&mode, 		 			// new pipe mode
 								NULL,     				// don't set maximum bytes
 								NULL);    				// don't set maximum time

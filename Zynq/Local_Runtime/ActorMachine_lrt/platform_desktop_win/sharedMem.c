@@ -25,10 +25,11 @@ static OS_SHMEM OSShMemTbl[OS_MAX_SH_MEM];
 static int nbOSShMem = 0;
 
 static void addOSShMem(UINT32 base, UINT32 length, const char* filename) {
+	FILE *pFile;
 	if (nbOSShMem < OS_MAX_SH_MEM) {
 		sprintf(OSShMemTbl[nbOSShMem].file_name, "C:\\work\\COMPA\\shMem");
 
-		FILE* pFile = fopen(OSShMemTbl[nbOSShMem].file_name, "wb+");
+		pFile = fopen(OSShMemTbl[nbOSShMem].file_name, "wb+");
 		if (pFile == (FILE*)0) {
 			perror("");
 			exit(1);

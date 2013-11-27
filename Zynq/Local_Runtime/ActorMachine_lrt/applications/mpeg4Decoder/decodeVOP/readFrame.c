@@ -48,11 +48,14 @@ static uchar buffer[BUFFER_SIZE];
 static uchar VOPCounter = 0;
 
 void readFrame(){
+	AM_ACTOR_ACTION_STRUCT* action;
+	uint nbBytesRead;
+
 	// Reading file position (once per complete decoding process).
 	if(VOPCounter == 0){ // Indicates that the decoding process just begins.
 		VOPCounter++;
 		// Receiving data.
-		AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+		action = OSCurActionQuery();
 		read_input_fifo(action->fifo_in_id[0], sizeof(long), (UINT8*)&filePosition); // Initial file position after the VOL.
 	}
 
@@ -68,7 +71,7 @@ void readFrame(){
 	fseek(pFile, filePosition, SEEK_SET);
 
 	// Reading Video Object Plane (the same as in readVOP action).
-	uint nbBytesRead = 0;
+	nbBytesRead = 0;
 	readUpToNextStartCode(pFile, buffer, &nbBytesRead);
 
 	if(feof(pFile))

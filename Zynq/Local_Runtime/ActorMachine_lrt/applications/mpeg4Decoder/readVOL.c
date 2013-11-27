@@ -48,7 +48,11 @@ static int VideoObjectLayer_pos_o;
 static imgDimensionsData outData;
 
 void readVOL(){
+	uint nbBytesRead;
 	FILE* pFile = NULL;
+	long filePosition;
+	AM_ACTOR_ACTION_STRUCT* action;
+
 	pFile = fopen(M4V_FILE_PATH, "rb");
 	if (pFile == NULL)
 	{
@@ -56,7 +60,7 @@ void readVOL(){
 	  exit(-1);
 	}
 
-	uint nbBytesRead = 0;
+	nbBytesRead = 0;
 
 	// Reading Visual Object (I don't know why but there is no VOS).
 	readUpToNextStartCode(pFile, buffer, &nbBytesRead);
@@ -74,13 +78,13 @@ void readVOL(){
 			&outData.VideoObjectLayer_ysize_o);
 
 	// Reading file's current position.
-	long filePosition = ftell(pFile);
+	filePosition = ftell(pFile);
 
 	// Closing video file.
 	fclose(pFile);
 
 	/* Sending data */
-	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+	action = OSCurActionQuery();
 	write_output_fifo(action->fifo_out_id[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
 	write_output_fifo(action->fifo_out_id[1], sizeof(uchar) * 5, (UINT8*)VideoObjectLayer_vop_complexity);
 	write_output_fifo(action->fifo_out_id[2], sizeof(long), (UINT8*)&filePosition);

@@ -23,7 +23,7 @@ OS_TCB *OSTCBCur;               /* Pointer to currently scheduled TCB. 		*/
 OS_TCB OSTCBTbl[OS_MAX_TASKS];	/* Table of TCBs							*/
 BOOLEAN lrt_running; 			/* Flag indicating that kernel is running   */
 
-inline void mainLoop(){
+void mainLoop(){
 	switchMonitor(CtrlFifoHandling);
 	wait_ext_msg();
 

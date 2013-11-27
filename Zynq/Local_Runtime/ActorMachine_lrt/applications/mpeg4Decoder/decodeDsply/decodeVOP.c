@@ -65,6 +65,7 @@ static UINT32 PVOPCounter = 0;
 
 void decodeVOP(){
 	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+	uint nbBytesRead;
 
 	// Initializations...
 	if(VOPCounter == 0){
@@ -92,7 +93,7 @@ void decodeVOP(){
 	fseek(pFile, filePosition, SEEK_SET);
 
 	// Reading Video Object Plane (the same as in readVOP action).
-	uint nbBytesRead = 0;
+	nbBytesRead = 0;
 	readUpToNextStartCode(pFile, buffer, &nbBytesRead);
 
 	if(feof(pFile))

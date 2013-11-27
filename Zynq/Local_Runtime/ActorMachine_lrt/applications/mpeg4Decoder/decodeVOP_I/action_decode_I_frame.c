@@ -87,19 +87,6 @@ void action_decode_I_frame ()
 {
 	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
 
-	//--- Reading inputs.
-	read_input_fifo(action->fifo_in_id[0], sizeof(data), (UINT8*)data);
-	read_input_fifo(action->fifo_in_id[1], sizeof(struct_VOLsimple), (UINT8*)&VOLsimple);
-	read_input_fifo(action->fifo_in_id[2], sizeof(int), (UINT8*)&pos_i);
-	read_input_fifo(action->fifo_in_id[3], sizeof(struct_VOP), (UINT8*)&VOP);
-	read_input_fifo(action->fifo_in_id[4], sizeof(REVERSE_EVENT), (UINT8*)&DCT3D_I);
-	read_input_fifo(action->fifo_in_id[5], sizeof(UINT8), (UINT8*)&Lum);
-	read_input_fifo(action->fifo_in_id[6], sizeof(UINT8), (UINT8*)&Cb);
-	read_input_fifo(action->fifo_in_id[7], sizeof(UINT8), (UINT8*)&Cr);
-	read_input_fifo(action->fifo_in_id[8], sizeof(keyframes), (UINT8*)&keyframes);
-	//---
-
-
     int             i, j, k ;
     int             MB_courant = 0 ;
     int             MB_number ;
@@ -131,6 +118,19 @@ void action_decode_I_frame ()
     int             width ;
     const int       edge_size2 = EDGE_SIZE >> 1 ;
     const int       stride = VOLsimple.video_object_layer_width + 2 * EDGE_SIZE ;
+
+		//--- Reading inputs.
+	read_input_fifo(action->fifo_in_id[0], sizeof(data), (UINT8*)data);
+	read_input_fifo(action->fifo_in_id[1], sizeof(struct_VOLsimple), (UINT8*)&VOLsimple);
+	read_input_fifo(action->fifo_in_id[2], sizeof(int), (UINT8*)&pos_i);
+	read_input_fifo(action->fifo_in_id[3], sizeof(struct_VOP), (UINT8*)&VOP);
+	read_input_fifo(action->fifo_in_id[4], sizeof(REVERSE_EVENT), (UINT8*)&DCT3D_I);
+	read_input_fifo(action->fifo_in_id[5], sizeof(UINT8), (UINT8*)&Lum);
+	read_input_fifo(action->fifo_in_id[6], sizeof(UINT8), (UINT8*)&Cb);
+	read_input_fifo(action->fifo_in_id[7], sizeof(UINT8), (UINT8*)&Cr);
+	read_input_fifo(action->fifo_in_id[8], sizeof(keyframes), (UINT8*)&keyframes);
+	//---
+
 
     //DCpred_buffA
     DCpred_buffA [0] = StockBlockLum_BuffA ;

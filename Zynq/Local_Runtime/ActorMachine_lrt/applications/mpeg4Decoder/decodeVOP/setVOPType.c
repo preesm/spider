@@ -45,11 +45,13 @@
 static readVOPOutData inData;
 
 void setVOPType(){
-	// Reading inputs (VOPPos, VOPType, VOP).
 	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+	UINT32 VOPType;
+
+	// Reading inputs (VOPPos, VOPType, VOP).
 	read_input_fifo(action->fifo_in_id[0], sizeof(readVOPOutData), (UINT8*)&inData);
 
-	UINT32 VOPType = inData.VideoObjectPlane_vop_coding_type;
+	VOPType = inData.VideoObjectPlane_vop_coding_type;
 
 	// Sending parameter's value to Global Runtime.
 	OS_InfoQPush_UINT32(VOPType);

@@ -73,11 +73,12 @@ void am_funct_move(){
 
 /* Function corresponding to the Wait vertex of a AM Graph */
 void am_funct_wait(){
+	MonitorAction Act;
 	/* Step to the next vertex of AM graph */
 	OSTCBCur->current_vertexID = OSTCBCur->am_vertices[OSTCBCur->current_vertexID].successor_ix[0];
 
 	/* Re-schedule between each AM Graph */
-	MonitorAction Act = switchMonitor(Scheduling);
+	Act = switchMonitor(Scheduling);
 	OSSched();
 	switchMonitor(Act);
 }

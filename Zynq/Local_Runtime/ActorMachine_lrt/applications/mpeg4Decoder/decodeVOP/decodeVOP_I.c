@@ -50,8 +50,10 @@ decodeVOPOutData outputData;
 void decode_I_frame(const unsigned char *data,const struct_VOLsimple *VOLsimple,const int position,struct_VOP *VOP,REVERSE_EVENT *DCT3D_I,int *pos_fin_vlc,int *address,unsigned char *Lum,unsigned char *Cb,unsigned char *Cr,int *keyframes);
 
 void decodeVOP_I(){
-	// Getting input data.
+	int frame_pos_fin_vlc;
 	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+
+	// Getting input data.
 	read_input_fifo(action->fifo_in_id[0], sizeof(decodeVOPInData), (UINT8*)&inputData);
 
 
@@ -65,7 +67,6 @@ void decodeVOP_I(){
 //		Choix_I_P_haut_niveau_CondO6_o = 1 ;
 //	}
 
-	int frame_pos_fin_vlc;
 //	int frame_address;
 
 //	decode_I_frame(

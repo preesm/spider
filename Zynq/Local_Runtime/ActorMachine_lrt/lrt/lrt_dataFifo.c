@@ -27,11 +27,12 @@ static LRT_FIFO_HNDLE FIFO_tbl[OS_NB_FIFO]; /* Table of FIFO handles */
 /* Initialize the FIFO from a CREATE_FIFO_STRUCT */
 UINT8 create_fifo(){
 	UINT8 id = OS_CtrlQPop_UINT32();
+	LRT_FIFO_HNDLE* fifo_hndl;
 	if (id >= OS_NB_FIFO) {
 		exitWithCode(1000);
 	}
 
-	LRT_FIFO_HNDLE* fifo_hndl = &FIFO_tbl[id];
+	fifo_hndl = &FIFO_tbl[id];
 	fifo_hndl->Size 	= OS_CtrlQPop_UINT32();
 	fifo_hndl->address 	= OS_CtrlQPop_UINT32();
 	fifo_hndl->Status 	= FIFO_STAT_INIT;
@@ -45,11 +46,12 @@ UINT8 create_fifo(){
 }
 
 UINT8 create_fifo_args(UINT8 id, UINT32 size, UINT32 address){
+	LRT_FIFO_HNDLE* fifo_hndl;
 	if (id >= OS_NB_FIFO) {
 		exitWithCode(1000);
 	}
 
-	LRT_FIFO_HNDLE* fifo_hndl = &FIFO_tbl[id];
+	fifo_hndl = &FIFO_tbl[id];
 	fifo_hndl->Size = size;
 	fifo_hndl->address = address;
 	fifo_hndl->Status = FIFO_STAT_INIT;
@@ -78,12 +80,13 @@ UINT8 create_fifo_args(UINT8 id, UINT32 size, UINT32 address){
  *
  *********************************************************************************************************
  */
-static inline LRT_FIFO_HNDLE* get_fifo_hndl(UINT8 fifo_id) {
+LRT_FIFO_HNDLE* get_fifo_hndl(UINT8 fifo_id) {
+	LRT_FIFO_HNDLE* fifo_hndl;
 	if (fifo_id >= OS_NB_FIFO) {
 		exitWithCode(1001);
 	}
 
-	LRT_FIFO_HNDLE* fifo_hndl = &FIFO_tbl[fifo_id];
+	fifo_hndl = &FIFO_tbl[fifo_id];
 
 	if (fifo_hndl->Status != FIFO_STAT_INIT) {
 		exitWithCode(1002);

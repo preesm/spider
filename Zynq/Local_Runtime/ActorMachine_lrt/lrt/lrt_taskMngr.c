@@ -32,6 +32,12 @@ extern void amTaskStart();
  * Creates an Actor Machine.
  */
 void LrtAMCreate(OS_TCB *new_tcb){
+	UINT8 i;
+	UINT8 j;
+	AM_VERTEX_STRUCT		*am_vertex_ptr;
+	AM_ACTOR_COND_STRUCT	*am_cond_ptr;
+	AM_ACTOR_ACTION_STRUCT	*am_action_ptr;
+
 	if(new_tcb->nbVertices > AM_MAX_NB_VERTICES)
 		exitWithCode(1004);
 	if(new_tcb->nbConds > AM_MAX_NB_CONDITIONS)
@@ -43,9 +49,6 @@ void LrtAMCreate(OS_TCB *new_tcb){
 
 
 	// Popping vertices.
-	UINT8 i;
-	UINT8 j;
-	AM_VERTEX_STRUCT	*am_vertex_ptr;
 	for(i=0; i < new_tcb->nbVertices; i++){
 		am_vertex_ptr = &(new_tcb->am_vertices[i]);
 		am_vertex_ptr->type 			= OS_CtrlQPop_UINT32();
@@ -55,7 +58,6 @@ void LrtAMCreate(OS_TCB *new_tcb){
 	}
 
 	// Popping conditions.
-	AM_ACTOR_COND_STRUCT	*am_cond_ptr;
 	for (i = 0; i < new_tcb->nbConds; i++) {
 		am_cond_ptr = &(new_tcb->am_conditions[i]);
 		am_cond_ptr->type 		= OS_CtrlQPop_UINT32();
@@ -64,7 +66,6 @@ void LrtAMCreate(OS_TCB *new_tcb){
 	}
 
 	// Popping actions.
-	AM_ACTOR_ACTION_STRUCT	*am_action_ptr;
 	for (i = 0; i < new_tcb->nbActions; i++) {
 		am_action_ptr = &(new_tcb->am_actions[i]);
 		am_action_ptr->functionID	= OS_CtrlQPop_UINT32();
@@ -107,12 +108,14 @@ void LrtAMCreate(OS_TCB *new_tcb){
 void  LrtTaskCreate (){
 	// Popping second incoming word, the task Id.
 //	UINT8 id = OS_CtrlQPop_UINT32();
+	OS_TCB *new_tcb;
+	UINT32 taskFunctId;
 
 	if(OSTaskIndex >= OS_MAX_TASKS){
 		zynq_puts("Create Task ");zynq_putdec(OSTaskIndex);zynq_puts("\n");
 		exitWithCode(1003);
 	}
-	OS_TCB *new_tcb = &OSTCBTbl[OSTaskIndex];
+	new_tcb = &OSTCBTbl[OSTaskIndex];
 
 	if (new_tcb->OSTCBState == OS_STAT_UNINITIALIZED) { /* Make sure task doesn't already exist at this id  */
 		new_tcb->OSTCBState = OS_STAT_READY;/* Reserve the priority to prevent others from doing ...  */
@@ -135,7 +138,7 @@ void  LrtTaskCreate (){
 		new_tcb->nbActions	 = OS_CtrlQPop_UINT32();
 
 		// Popping the task function id.
-		UINT32 taskFunctId = OS_CtrlQPop_UINT32();
+		taskFunctId = OS_CtrlQPop_UINT32();
 
 		// Popping whether the task is stopped after completion.
 		new_tcb->stop = OS_CtrlQPop_UINT32();
@@ -229,11 +232,12 @@ void OSWorkingMemoryInit(){
 }
 
 void* OSAllocWorkingMemory(int size){
+	void* mem;
 	if(freeWorkingMemoryPtr-workingMemory+size > WORKING_MEMORY_SIZE){
 		zynq_puts("Asked ");zynq_putdec(size);zynq_puts(" bytes, but ");zynq_putdec(WORKING_MEMORY_SIZE-(int)freeWorkingMemoryPtr+(int)workingMemory);zynq_puts(" bytes available\n");
 		exitWithCode(1015);
 	}
-	void* mem = freeWorkingMemoryPtr;
+	mem = freeWorkingMemoryPtr;
 	freeWorkingMemoryPtr += size;
 	return mem;
 }

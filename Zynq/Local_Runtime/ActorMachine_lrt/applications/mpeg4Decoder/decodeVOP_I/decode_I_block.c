@@ -57,7 +57,7 @@ void action_decode_intra_block()
 
 	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
 
-	//--- Reading inputs.
+
 	int 				k, MB_pos, pos_i;
 //	UINT8*				data;
 	REVERSE_EVENT		DCT3D_I;
@@ -65,6 +65,15 @@ void action_decode_intra_block()
 	short				Blk_A, Blk_B, Blk_C;
 	struct_VOP			VOP;
 
+	short   			iDCT_data [64];
+	short   			InvDCT_f[128], DCpred_QFpred[7], DCpred_F00pred, DCpred_QPpred;
+	int     			DCpred_prediction_direction, InverseACDCpred_dc_scaler;
+	int 				pos_fin_vlc;
+
+	short InverseQuant_Blk_X;
+    UINT8 block_sat_X;
+
+	//--- Reading inputs.
 	read_input_fifo(action->fifo_in_id[0], sizeof(int), (UINT8*)&k);
 	read_input_fifo(action->fifo_in_id[1], sizeof(int), (UINT8*)&MB_pos);
 	read_input_fifo(action->fifo_in_id[2], sizeof(int), (UINT8*)&pos_i);
@@ -77,10 +86,6 @@ void action_decode_intra_block()
 	read_input_fifo(action->fifo_in_id[9], sizeof(struct_VOP), (UINT8*)&VOP);
 	//---
 
-	short   			iDCT_data [64];
-	short   			InvDCT_f[128], DCpred_QFpred[7], DCpred_F00pred, DCpred_QPpred;
-	int     			DCpred_prediction_direction, InverseACDCpred_dc_scaler;
-	int 				pos_fin_vlc;
 
 	VLCinverseI(
 		5 - k, 		MB_pos, 		pos_i, 				data, 			&DCT3D_I,
@@ -91,16 +96,13 @@ void action_decode_intra_block()
     	k, 	InvDCT_f, 						DCpred_QFpred, 	DCpred_F00pred, 	DCpred_QPpred,
     	&VOP,DCpred_prediction_direction,	iDCT_data, 		&InverseACDCpred_dc_scaler);
 
-    short InverseQuant_Blk_X;
     InverseQuantI(
     	iDCT_data, 	&VOP, 	InverseACDCpred_dc_scaler, &VOLsimple, InvDCT_f,
     	&InverseQuant_Blk_X);
 
     InverseDCT_optim(InvDCT_f);
 
-    UINT8	block_sat_X;
     block_sat(InvDCT_f, &block_sat_X);
-
 
     //--- Writing outputs.
     write_output_fifo(action->fifo_out_id[0], sizeof(int), (UINT8*)&pos_fin_vlc);

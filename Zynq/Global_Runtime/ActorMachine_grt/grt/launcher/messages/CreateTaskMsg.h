@@ -46,7 +46,7 @@
 #include "../../graphs/PiSDF/PiSDFConfigVertex.h"
 #include "../../graphs/ActorMachine/AMGraph.h"
 #include <scheduling/Schedule/Schedule.h>
-#include "../../SchedulerDimensions.h"
+#include <grt_definitions.h>
 #include "../launcher.h"
 
 class CreateTaskMsg: public LRTMsg {

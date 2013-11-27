@@ -37,6 +37,7 @@
 
 #include "StopTaskMsg.h"
 #include <hwQueues.h>
+#include <grt_definitions.h>
 
 StopTaskMsg::StopTaskMsg(INT32 _TaskID, INT32 _VectorID): TaskID(_TaskID), VectorID(_VectorID) {
 }

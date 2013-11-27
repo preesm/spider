@@ -38,7 +38,7 @@
 #ifndef ARCHITECTURE
 #define ARCHITECTURE
 
-#include "../../SchedulerDimensions.h"
+#include <grt_definitions.h>
 #include "../../tools/SchedulingError.h"
 
 typedef enum{

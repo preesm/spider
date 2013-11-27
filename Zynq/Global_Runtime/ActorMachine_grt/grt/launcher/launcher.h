@@ -44,7 +44,7 @@
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Schedule/BaseSchedule.h>
 #include <scheduling/architecture/Architecture.h>
-#include "../ExecutionStat.h"
+#include <tools/ExecutionStat.h>
 
 #include <types.h>
 

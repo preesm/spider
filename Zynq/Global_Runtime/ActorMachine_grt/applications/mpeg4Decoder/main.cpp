@@ -47,9 +47,6 @@
 
 
 //ExecutionStat testAM();
-void testCom();
-void sobel(int nbSlaves);
-int mpeg4_main(int argc, char* argv[]);
 
 int main(int argc, char* argv[]){
 	if(argc < 2){
@@ -58,51 +55,10 @@ int main(int argc, char* argv[]){
 	}
 	int N = atoi(argv[1]);
 
-//	std::ofstream outFile;
-//	outFile.open("out.csv",  ios_base::trunc);
-
-//	testAM();
-
-//	testCom(N);
-
-//	testCom();
-
 	printf("Starting with %d slaves max\n",N);
-
-//	sobel(N);
 
 	mpeg4_part2_main(N);
 
-//	for(int i=1; i<256; i++){
-////	int i = 110;{
-//		ExecutionStat s = testLTE(i);
-//
-//		cout << i << ":\tSpeedup\t\tThroughput\tExecTime" << endl
-//			<< "  Flow: " << (double)s.t1Latency/s.flowMakespan << "\t\t " << (double)s.t1Latency/s.flowThroughput
-//						  << "\t " << s.getFlowExecutionTime() << "\t( " << s.getFlowExecutionTime()/667000.0 << "ms )" << endl
-//			<< "  List: " << (double)s.t1Latency/s.listMakespan << "\t\t " << (double)s.t1Latency/s.listThroughput
-//						  << "\t " << s.getListExecutionTime() << "\t( " << s.getListExecutionTime()/667000.0 << "ms )" << endl;
-//
-//		outFile << i << ","
-//				<< s.flowScheduleTime	<< ","
-//				<< s.listScheduleTime	<< ","
-//				<< s.srDAGTransfTime	<< ","
-//				<< s.jobTransfTime		<< ","
-//				<< s.flowMappingTime	<< ","
-//				<< s.flowMakespan		<< ","
-//				<< s.listMakespan		<< ","
-//				<< s.flowThroughput		<< ","
-//				<< s.listThroughput		<< ","
-//				<< s.criticalPath		<< ","
-//				<< s.t1Latency;
-//		for(unsigned int j=0; j<s.nbFunction; j++){
-//			outFile << "," << s.nbSlavesFunction[j];
-//		}
-//		outFile << endl;
-//	}
-//	outFile.close();
-
-	//testSDF3(N);
 	while(1);
 	return 0;
 }

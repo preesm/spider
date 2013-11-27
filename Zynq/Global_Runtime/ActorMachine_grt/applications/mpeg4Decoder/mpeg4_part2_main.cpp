@@ -50,7 +50,7 @@
 #define PRINT_GRAPH			1
 #define PiSDF_FILE_PATH		"pisdf.gv"
 #define SUB_SDF_FILE_PATH	"subSdf.gv"
-#define SRDAG_FILE_PATH		"srDag"
+#define SRDAG_FILE_PATH		"srDag.gv"
 
 
 

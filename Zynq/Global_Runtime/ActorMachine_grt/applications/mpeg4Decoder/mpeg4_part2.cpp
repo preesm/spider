@@ -37,7 +37,7 @@
 
 #include <string.h>
 #include "mpeg4_part2.h"
-#include "../graphs/PiSDF/PiSDFVertex.h"
+#include <graphs/PiSDF/PiSDFVertex.h>
 
 #define H_VALUE	3
 #define W_VALUE	4

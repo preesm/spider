@@ -38,7 +38,7 @@
 #ifndef MPEG_PART2_H_
 #define MPEG_PART2_H_
 
-#include "../graphs/PiSDF/PiSDFGraph.h"
+#include <graphs/PiSDF/PiSDFGraph.h>
 
 void create_PiSDF_mpeg_part2(PiSDFGraph* graph);
 

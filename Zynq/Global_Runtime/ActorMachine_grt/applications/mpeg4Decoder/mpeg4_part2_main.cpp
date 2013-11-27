@@ -35,12 +35,12 @@
  * knowledge of the CeCILL-C license and that you accept its terms.		*
  ********************************************************************************/
 
-#include <applicationGraphs/mpeg4_part2.h>
+#include "mpeg4_part2.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Scenario/Scenario.h>
 #include <scheduling/ListScheduler/ListScheduler.h>
 #include <transformations/PiSDFTransformer/PiSDFTransformer.h>
-#include <ExecutionStat.h>
+#include <tools/ExecutionStat.h>
 #include "launcher/launcher.h"
 #include <tools/DotWriter.h>
 #include <tools/ScheduleWriter.h>

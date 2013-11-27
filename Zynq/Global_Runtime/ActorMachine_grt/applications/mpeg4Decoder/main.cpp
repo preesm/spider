@@ -43,7 +43,7 @@
 
 #include "hwQueues.h"
 
-#include "mainFunctions/mpeg4_part2_main.h"
+#include "mpeg4_part2_main.h"
 
 
 //ExecutionStat testAM();

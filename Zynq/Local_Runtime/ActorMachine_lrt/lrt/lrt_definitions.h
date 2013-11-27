@@ -9,7 +9,25 @@
 #define RT_DEFINITIONS_H_
 
 #include "lrt_cfg.h"
-#include <types.h>
+
+
+/*
+ * Data types.
+ */
+#define TRUE 			1
+#define FALSE 			0
+
+typedef unsigned char 	BOOLEAN;
+
+typedef char			INT8;
+typedef short			INT16;
+typedef int			 	INT32;
+typedef long long	 	INT64;
+
+typedef unsigned char 	UINT8;
+typedef unsigned short	UINT16;
+typedef unsigned int	UINT32;
+typedef long long unsigned	UINT64;
 
 /*
 *********************************************************************************************************

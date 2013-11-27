@@ -35,6 +35,11 @@ else()
     file(GLOB_RECURSE platform_source_files platform_arm/*)
 endif()
 
+# Setting compiler' flags.
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "-O0 -g3")        ## Optimize and max. debug
+endif()
+
 # Compiling and linking.
 add_executable(AM_GRT ${app_source_files} ${grt_source_files} ${platform_source_files})
 target_link_libraries(AM_GRT)

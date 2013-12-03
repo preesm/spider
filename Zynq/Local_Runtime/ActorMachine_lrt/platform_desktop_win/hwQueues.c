@@ -1,9 +1,39 @@
-/*
- * HWQueues.c
- *
- *  Created on: Jun 12, 2013
- *      Author: jheulot
- */
+
+/****************************************************************************
+ * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet				*
+ * 																			*
+ * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr					*
+ * 																			*
+ * This software is a computer program whose purpose is to execute			*
+ * parallel applications.													*
+ * 																			*
+ * This software is governed by the CeCILL-C license under French law and	*
+ * abiding by the rules of distribution of free software.  You can  use, 	*
+ * modify and/ or redistribute the software under the terms of the CeCILL-C	*
+ * license as circulated by CEA, CNRS and INRIA at the following URL		*
+ * "http://www.cecill.info". 												*
+ * 																			*
+ * As a counterpart to the access to the source code and  rights to copy,	*
+ * modify and redistribute granted by the license, users are provided only	*
+ * with a limited warranty  and the software's author,  the holder of the	*
+ * economic rights,  and the successive licensors  have only  limited		*
+ * liability. 																*
+ * 																			*
+ * In this respect, the user's attention is drawn to the risks associated	*
+ * with loading,  using,  modifying and/or developing or reproducing the	*
+ * software by the user in light of its specific status of free software,	*
+ * that may mean  that it is complicated to manipulate,  and  that  also	*
+ * therefore means  that it is reserved for developers  and  experienced	*
+ * professionals having in-depth computer knowledge. Users are therefore	*
+ * encouraged to load and test the software's suitability as regards their	*
+ * requirements in conditions enabling the security of their systems and/or *
+ * data to be ensured and,  more generally, to use and operate it in the 	*
+ * same conditions as regards security. 									*
+ * 																			*
+ * The fact that you are presently reading this means that you have had		*
+ * knowledge of the CeCILL-C license and that you accept its terms.			*
+ ****************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,29 +42,19 @@
 #include "types.h"
 #include "hwQueues.h"
 
-typedef enum{
-	CTRL=0,
-	INFO=1
-} MailboxType;
-
-typedef enum{
-	FIFO_DIR_INPUT=0,
-	FIFO_DIR_OUTPUT=1
-} FifoDir;
-
-//static HANDLE OS_QGRT[2] = {INVALID_HANDLE_VALUE};
-static HANDLE OS_QGRT[2][2] = {{INVALID_HANDLE_VALUE},{INVALID_HANDLE_VALUE}};
-int cpuId;
-
 #define PIPE_BASE_NAME 	"\\\\.\\pipe\\"
 #define BUFFER_SIZE		512
 
-void OS_QInit(){
+//static HANDLE RTQueue[2] = {INVALID_HANDLE_VALUE};
+static HANDLE RTQueue[nbQueueTypes][2] = {{INVALID_HANDLE_VALUE},{INVALID_HANDLE_VALUE}};
+int cpuId;
+
+void RTQueuesInit(){
 	char tempStr[50];
 
 	// Creating input pipes.
 	sprintf(tempStr, "%sCtrl_Grtto%d", PIPE_BASE_NAME, cpuId);
-	OS_QGRT[CTRL][FIFO_DIR_INPUT] = CreateNamedPipe(
+	RTQueue[RTCtrlQueue][RTInputQueue] = CreateNamedPipe(
 										tempStr,
 										PIPE_ACCESS_DUPLEX,
 										PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
@@ -43,12 +63,12 @@ void OS_QInit(){
 										BUFFER_SIZE,
 										0,
 										NULL);
-	if (OS_QGRT[CTRL][FIFO_DIR_INPUT] == INVALID_HANDLE_VALUE) {
+	if (RTQueue[RTCtrlQueue][RTInputQueue] == INVALID_HANDLE_VALUE) {
 		printf("CreateNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 
 	sprintf(tempStr, "%sInfo_Grtto%d",PIPE_BASE_NAME, cpuId);
-	OS_QGRT[INFO][FIFO_DIR_INPUT] = CreateNamedPipe(
+	RTQueue[RTInfoQueue][RTInputQueue] = CreateNamedPipe(
 										tempStr,
 										PIPE_ACCESS_DUPLEX,
 										PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
@@ -57,22 +77,39 @@ void OS_QInit(){
 										BUFFER_SIZE,
 										0,
 										NULL);
-	if (OS_QGRT[INFO][FIFO_DIR_INPUT] == INVALID_HANDLE_VALUE) {
+	if (RTQueue[RTInfoQueue][RTInputQueue] == INVALID_HANDLE_VALUE) {
+		printf("CreateNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+	}
+
+	sprintf(tempStr, "%sJob_Grtto%d",PIPE_BASE_NAME, cpuId);
+	RTQueue[RTJobQueue][RTInputQueue] = CreateNamedPipe(
+										tempStr,
+										PIPE_ACCESS_DUPLEX,
+										PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+										2,
+										0,
+										BUFFER_SIZE,
+										0,
+										NULL);
+	if (RTQueue[RTJobQueue][RTInputQueue] == INVALID_HANDLE_VALUE) {
 		printf("CreateNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 
 	// Waiting for client to connect.
-	if(!ConnectNamedPipe(OS_QGRT[CTRL][FIFO_DIR_INPUT], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
+	if(!ConnectNamedPipe(RTQueue[RTCtrlQueue][RTInputQueue], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
 		printf("ConnectNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
-	if(!ConnectNamedPipe(OS_QGRT[INFO][FIFO_DIR_INPUT], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
+	if(!ConnectNamedPipe(RTQueue[RTInfoQueue][RTInputQueue], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
+		printf("ConnectNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+	}
+	if(!ConnectNamedPipe(RTQueue[RTJobQueue][RTInputQueue], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
 		printf("ConnectNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 
 
 	// Connecting to output pipes.
 	sprintf(tempStr, "%sCtrl_%dtoGrt", PIPE_BASE_NAME, cpuId);
-	OS_QGRT[CTRL][FIFO_DIR_OUTPUT] = CreateFile(
+	RTQueue[RTCtrlQueue][RTOutputQueue] = CreateFile(
 								tempStr,   		// pipe name
 								GENERIC_WRITE,	// write access
 								0,              // no sharing
@@ -80,12 +117,12 @@ void OS_QInit(){
 								OPEN_EXISTING,  // opens existing pipe
 								0,              // default attributes
 								NULL);          // no template file
-	if (OS_QGRT[CTRL][FIFO_DIR_OUTPUT] == INVALID_HANDLE_VALUE) {
+	if (RTQueue[RTCtrlQueue][RTOutputQueue] == INVALID_HANDLE_VALUE) {
 		printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 
 	sprintf(tempStr, "%sInfo_%dtoGrt",PIPE_BASE_NAME, cpuId);
-	OS_QGRT[INFO][FIFO_DIR_OUTPUT] = CreateFile(
+	RTQueue[RTInfoQueue][RTOutputQueue] = CreateFile(
 								tempStr,   		// pipe name
 								GENERIC_WRITE,	// write access
 								0,              // no sharing
@@ -93,20 +130,30 @@ void OS_QInit(){
 								OPEN_EXISTING,  // opens existing pipe
 								0,              // default attributes
 								NULL);          // no template file
-	if (OS_QGRT[INFO][FIFO_DIR_OUTPUT] == INVALID_HANDLE_VALUE) {
+	if (RTQueue[RTInfoQueue][RTOutputQueue] == INVALID_HANDLE_VALUE) {
+		printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+	}
+
+	sprintf(tempStr, "%sJob_%dtoGrt",PIPE_BASE_NAME, cpuId);
+	RTQueue[RTJobQueue][RTOutputQueue] = CreateFile(
+								tempStr,   		// pipe name
+								GENERIC_WRITE,	// write access
+								0,              // no sharing
+								NULL,           // default security attributes
+								OPEN_EXISTING,  // opens existing pipe
+								0,              // default attributes
+								NULL);          // no template file
+	if (RTQueue[RTJobQueue][RTOutputQueue] == INVALID_HANDLE_VALUE) {
 		printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 }
 
-/*******************/
-/* Control Mailbox */
-/*******************/
 
-UINT32 OS_CtrlQPush(void* data, int size){
+UINT32 RTQueuePush(RTQueueType queueType, void* data, int size){
     BOOL fSuccess = FALSE;
     int nb_bytes_written;
     fSuccess = WriteFile(
-    				OS_QGRT[CTRL][FIFO_DIR_OUTPUT],		// pipe handle
+    				RTQueue[queueType][RTOutputQueue],		// pipe handle
     				data,		             	// message
     				size,		             	// message length
     				(PDWORD)&nb_bytes_written,	// bytes written
@@ -119,9 +166,14 @@ UINT32 OS_CtrlQPush(void* data, int size){
 	return nb_bytes_written;
 }
 
-UINT32 OS_CtrlQPop(void* data, int size){
+UINT32 RTQueuePush_UINT32(RTQueueType queueType, UINT32 value){
+	UINT32 val = value;
+	return RTQueuePush(queueType, &val, sizeof(UINT32));
+}
+
+UINT32 RTQueuePop(RTQueueType queueType, void* data, int size){
 	int nb_bytes_read;
-	ReadFile(OS_QGRT[CTRL][FIFO_DIR_INPUT],
+	ReadFile(RTQueue[queueType][RTInputQueue],
 				   data,
 				   size,
 				   (PDWORD)&nb_bytes_read,
@@ -130,24 +182,19 @@ UINT32 OS_CtrlQPop(void* data, int size){
 	return nb_bytes_read;
 }
 
-UINT32 OS_CtrlQPop_UINT32(){
+UINT32 RTQueuePop_UINT32(RTQueueType queueType){
 	UINT32 value;
-	OS_CtrlQPop(&value, sizeof(UINT32));
+	RTQueuePop(queueType, &value, sizeof(UINT32));
 	return value;
 }
 
-void OS_CtrlQPush_UINT32(UINT32 value){
-	UINT32 val = value;
-	OS_CtrlQPush(&val, sizeof(UINT32));
-}
-
-UINT32 OS_CtrlQPop_nonBlocking(void* data, int size){
+UINT32 RTQueueNonBlockingPop(RTQueueType queueType, void* data, int size){
 	int nb_bytes_read;
 
 	// Changing the pipe to non-blocking mode.
 	DWORD mode = PIPE_NOWAIT;
 	BOOL fSuccess = SetNamedPipeHandleState(
-										OS_QGRT[CTRL][FIFO_DIR_INPUT],   // pipe handle
+										RTQueue[queueType][RTInputQueue],   // pipe handle
 										&mode, 		 			// new pipe mode
 										NULL,     				// don't set maximum bytes
 										NULL);    				// don't set maximum time
@@ -155,84 +202,12 @@ UINT32 OS_CtrlQPop_nonBlocking(void* data, int size){
     	printf("SetNamedPipeHandleState failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
 
-	nb_bytes_read = OS_CtrlQPop(data, size);
+	nb_bytes_read = RTQueuePop(queueType, data, size);
 
 	// Resetting the pipe to blocking mode.
 	mode = PIPE_WAIT;
 	fSuccess = SetNamedPipeHandleState(
-								OS_QGRT[CTRL][FIFO_DIR_INPUT],   // pipe handle
-								&mode, 		 			// new pipe mode
-								NULL,     				// don't set maximum bytes
-								NULL);    				// don't set maximum time
-	if(!fSuccess){
-    	printf("SetNamedPipeHandleState failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
-	}
-
-	return nb_bytes_read;
-}
-
-/****************/
-/* Info Mailbox */
-/****************/
-
-UINT32 OS_InfoQPush(void* data, int size){
-    BOOL fSuccess = FALSE;
-    int nb_bytes_written;
-    fSuccess = WriteFile(
-    				OS_QGRT[INFO][FIFO_DIR_OUTPUT],		// pipe handle
-    				data,		             	// message
-    				size,		             	// message length
-    				(PDWORD)&nb_bytes_written,	// bytes written
-    				NULL);                 		// not overlapped
-
-    if (!fSuccess){
-    	printf("WriteFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
-    }
-
-	return nb_bytes_written;
-}
-
-UINT32 OS_InfoQPop(void* data, int size){
-	int nb_bytes_read;
-	ReadFile(OS_QGRT[INFO][FIFO_DIR_INPUT],
-				   data,
-				   size,
-				   (PDWORD)&nb_bytes_read,
-				   NULL);
-
-	return nb_bytes_read;
-}
-
-UINT32 OS_InfoQPop_UINT32(){
-	UINT32 value;
-	OS_InfoQPop(&value, sizeof(UINT32));
-	return value;
-}
-
-void OS_InfoQPush_UINT32(UINT32 value){
-	UINT32 val = value;
-	OS_InfoQPush(&val, sizeof(UINT32));
-}
-
-UINT32 OS_InfoQPop_nonBlocking(void* data, int size){
-	int nb_bytes_read;
-	// Changing the pipe to non-blocking mode.
-	DWORD mode = PIPE_NOWAIT;
-	BOOL fSuccess = SetNamedPipeHandleState(
-										OS_QGRT[INFO][FIFO_DIR_INPUT],   // pipe handle
-										&mode, 		 			// new pipe mode
-										NULL,     				// don't set maximum bytes
-										NULL);    				// don't set maximum time
-	if(!fSuccess){
-    	printf("SetNamedPipeHandleState failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
-	}
-
-	nb_bytes_read = OS_CtrlQPop(data, size);
-
-	// Resetting the pipe to blocking mode.
-	mode = PIPE_WAIT;
-	fSuccess = SetNamedPipeHandleState(
-								OS_QGRT[INFO][FIFO_DIR_INPUT],   // pipe handle
+								RTQueue[queueType][RTInputQueue],   // pipe handle
 								&mode, 		 			// new pipe mode
 								NULL,     				// don't set maximum bytes
 								NULL);    				// don't set maximum time

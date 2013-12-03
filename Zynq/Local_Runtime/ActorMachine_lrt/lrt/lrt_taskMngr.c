@@ -1,23 +1,60 @@
-/*
- * lrt_taskMngr.c
- *
- *  Created on: Jul 25, 2013
- *      Author: yoliva jheulot
- */
 
-#include "lrt_definitions.h"
+/****************************************************************************
+ * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet				*
+ * 																			*
+ * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr					*
+ * 																			*
+ * This software is a computer program whose purpose is to execute			*
+ * parallel applications.													*
+ * 																			*
+ * This software is governed by the CeCILL-C license under French law and	*
+ * abiding by the rules of distribution of free software.  You can  use, 	*
+ * modify and/ or redistribute the software under the terms of the CeCILL-C	*
+ * license as circulated by CEA, CNRS and INRIA at the following URL		*
+ * "http://www.cecill.info". 												*
+ * 																			*
+ * As a counterpart to the access to the source code and  rights to copy,	*
+ * modify and redistribute granted by the license, users are provided only	*
+ * with a limited warranty  and the software's author,  the holder of the	*
+ * economic rights,  and the successive licensors  have only  limited		*
+ * liability. 																*
+ * 																			*
+ * In this respect, the user's attention is drawn to the risks associated	*
+ * with loading,  using,  modifying and/or developing or reproducing the	*
+ * software by the user in light of its specific status of free software,	*
+ * that may mean  that it is complicated to manipulate,  and  that  also	*
+ * therefore means  that it is reserved for developers  and  experienced	*
+ * professionals having in-depth computer knowledge. Users are therefore	*
+ * encouraged to load and test the software's suitability as regards their	*
+ * requirements in conditions enabling the security of their systems and/or *
+ * data to be ensured and,  more generally, to use and operate it in the 	*
+ * same conditions as regards security. 									*
+ * 																			*
+ * The fact that you are presently reading this means that you have had		*
+ * knowledge of the CeCILL-C license and that you accept its terms.			*
+ ****************************************************************************/
+
 #include "lrt_cfg.h"
-#include "lrt_prototypes.h"
 #include "string.h"
 #include <hwQueues.h>
 #include <print.h>
 #include <platform.h>
+#include "lrt_taskMngr.h"
+#include "lrt_debug.h"
+#include "lrt_amMngr.h"
+#include "lrt_actorMngr.h"
+
 
 /*
 *********************************************************************************************************
 *                                         GLOBAL DECLARATIONS
 *********************************************************************************************************
 */
+
+/* GLOBAL VARIABLES */
+FUNCTION_TYPE functions_tbl[NB_LOCAL_FUNCTIONS]; /* Table of Action Fcts */
+
 
 static UINT8 OSTaskCtr = 0;                     			// Tasks' counter.
 static UINT8 OSTaskIndex = 0;                     			// Tasks' index.
@@ -28,73 +65,6 @@ static UINT8* freeWorkingMemoryPtr;
 
 extern void amTaskStart();
 
-/*
- * Creates an Actor Machine.
- */
-void LrtAMCreate(OS_TCB *new_tcb){
-	UINT8 i;
-	UINT8 j;
-	AM_VERTEX_STRUCT		*am_vertex_ptr;
-	AM_ACTOR_COND_STRUCT	*am_cond_ptr;
-	AM_ACTOR_ACTION_STRUCT	*am_action_ptr;
-
-	if(new_tcb->nbVertices > AM_MAX_NB_VERTICES)
-		exitWithCode(1004);
-	if(new_tcb->nbConds > AM_MAX_NB_CONDITIONS)
-		exitWithCode(1005);
-	if(new_tcb->nbActions > AM_MAX_NB_ACTIONS)
-		exitWithCode(1006);
-	if(new_tcb->current_vertexID > new_tcb->nbVertices)
-		exitWithCode(1007);
-
-
-	// Popping vertices.
-	for(i=0; i < new_tcb->nbVertices; i++){
-		am_vertex_ptr = &(new_tcb->am_vertices[i]);
-		am_vertex_ptr->type 			= OS_CtrlQPop_UINT32();
-		am_vertex_ptr->successor_ix[0] 	= OS_CtrlQPop_UINT32();
-		am_vertex_ptr->successor_ix[1] 	= OS_CtrlQPop_UINT32();
-		am_vertex_ptr->actionID 		= OS_CtrlQPop_UINT32();
-	}
-
-	// Popping conditions.
-	for (i = 0; i < new_tcb->nbConds; i++) {
-		am_cond_ptr = &(new_tcb->am_conditions[i]);
-		am_cond_ptr->type 		= OS_CtrlQPop_UINT32();
-		am_cond_ptr->fifo.id	= OS_CtrlQPop_UINT32();
-		am_cond_ptr->fifo.size 	= OS_CtrlQPop_UINT32();
-	}
-
-	// Popping actions.
-	for (i = 0; i < new_tcb->nbActions; i++) {
-		am_action_ptr = &(new_tcb->am_actions[i]);
-		am_action_ptr->functionID	= OS_CtrlQPop_UINT32();
-		am_action_ptr->nb_fifo_in 	= OS_CtrlQPop_UINT32();
-		am_action_ptr->nb_fifo_out	= OS_CtrlQPop_UINT32();
-		am_action_ptr->nb_param		= OS_CtrlQPop_UINT32();
-
-		// todo verify non null function
-		if(am_action_ptr->functionID > NB_LOCAL_FUNCTIONS)
-			exitWithCode(1008);
-		if(am_action_ptr->nb_fifo_in > MAX_NB_FIFO)
-			exitWithCode(1009);
-		if(am_action_ptr->nb_fifo_out > MAX_NB_FIFO)
-			exitWithCode(1010);
-		if(am_action_ptr->nb_param > MAX_NB_ARGS)
-			exitWithCode(1011);
-
-		for (j = 0; j < am_action_ptr->nb_fifo_in; j++) {
-			am_action_ptr->fifo_in_id[j] = OS_CtrlQPop_UINT32();
-		}
-		for (j = 0; j < am_action_ptr->nb_fifo_out; j++) {
-			am_action_ptr->fifo_out_id[j] = OS_CtrlQPop_UINT32();
-		}
-		for (j = 0; j < am_action_ptr->nb_param; j++) {
-			am_action_ptr->param_value[j] = OS_CtrlQPop_UINT32();
-		}
-	}
-
-}
 
 /*
 *********************************************************************************************************
@@ -107,15 +77,17 @@ void LrtAMCreate(OS_TCB *new_tcb){
 
 void  LrtTaskCreate (){
 	// Popping second incoming word, the task Id.
-//	UINT8 id = OS_CtrlQPop_UINT32();
+//	UINT8 id = RTQueuePop_UINT32(RTCtrlQueue);
 	OS_TCB *new_tcb;
 	UINT32 taskFunctId;
+	LRTActor* newActor;
 
 	if(OSTaskIndex >= OS_MAX_TASKS){
 		zynq_puts("Create Task ");zynq_putdec(OSTaskIndex);zynq_puts("\n");
 		exitWithCode(1003);
 	}
 	new_tcb = &OSTCBTbl[OSTaskIndex];
+	newActor = &LRTActorTbl[OSTaskIndex];
 
 	if (new_tcb->OSTCBState == OS_STAT_UNINITIALIZED) { /* Make sure task doesn't already exist at this id  */
 		new_tcb->OSTCBState = OS_STAT_READY;/* Reserve the priority to prevent others from doing ...  */
@@ -127,41 +99,43 @@ void  LrtTaskCreate (){
 		if(OSTCBCur == (OS_TCB*)0){
 			/* If no running Task */
 			OSTCBCur = new_tcb;
-			new_tcb->OSTCBNext = new_tcb;
-		}else{
-			new_tcb->OSTCBNext = OSTCBCur;
+//			new_tcb->OSTCBNext = new_tcb;
+//		}else{
+//			new_tcb->OSTCBNext = OSTCBCur;
 		}
-
-		// Popping the actor machine's info.
-		new_tcb->nbVertices = OS_CtrlQPop_UINT32();
-		new_tcb->nbConds 	 = OS_CtrlQPop_UINT32();
-		new_tcb->nbActions	 = OS_CtrlQPop_UINT32();
 
 		// Popping the task function id.
-		taskFunctId = OS_CtrlQPop_UINT32();
+		taskFunctId = RTQueuePop_UINT32(RTCtrlQueue);
 
 		// Popping whether the task is stopped after completion.
-		new_tcb->stop = OS_CtrlQPop_UINT32();
+//		new_tcb->stop = RTQueuePop_UINT32(RTCtrlQueue);
 
-		// Popping the starting vertex of the AM.
-		new_tcb->current_vertexID 	= OS_CtrlQPop_UINT32();
+		// Popping the AM flag.
+		new_tcb->isAM = RTQueuePop_UINT32(RTCtrlQueue);
 
+		if(new_tcb->isAM){
+			// Popping the actor machine's info.
+			new_tcb->am.nbVertices 	= RTQueuePop_UINT32(RTCtrlQueue);
+			new_tcb->am.nbConds 	= RTQueuePop_UINT32(RTCtrlQueue);
+			new_tcb->am.nbActions	= RTQueuePop_UINT32(RTCtrlQueue);
 
-		// Filling in the actor machine if needed.
-		if(new_tcb->nbVertices > 0) // The task contains an AM.
-		{
+			// Popping the starting vertex of the AM.
+			new_tcb->am.currVertexId = RTQueuePop_UINT32(RTCtrlQueue);
 			new_tcb->task_func = amTaskStart; // An AM task's function is predefined.
+			new_tcb->stop = FALSE;
 			// Creating the AM.
-			LrtAMCreate(new_tcb);
+			AMCreate(&(new_tcb->am));
 		}
-		else// The task has no AM.
+		else
 		{
+			new_tcb->actor = newActor;
 			new_tcb->task_func = functions_tbl[taskFunctId];
+			new_tcb->stop = TRUE;
+			createActor(new_tcb->actor);
 		}
 
-		// Popping
 	    zynq_puts("Create Task ID"); zynq_putdec(new_tcb->OSTCBId);
-	    zynq_puts(" @");  zynq_putdec(new_tcb->current_vertexID);
+	    zynq_puts(" @");  zynq_putdec(new_tcb->am.currVertexId);
 	    zynq_puts("\n");
 
 #if defined ARM || defined DESKTOP
@@ -176,7 +150,7 @@ void  LrtTaskCreate (){
 
 
 AM_ACTOR_ACTION_STRUCT* OSCurActionQuery(){
-	return &OSTCBCur->am_actions[OSTCBCur->am_vertices[OSTCBCur->current_vertexID].actionID];
+	return &OSTCBCur->am.am_actions[OSTCBCur->am.am_vertices[OSTCBCur->am.currVertexId].actionID];
 }
 
 
@@ -198,17 +172,24 @@ AM_ACTOR_ACTION_STRUCT* OSCurActionQuery(){
 void  LrtTaskDeleteCur(){
 	UINT8	id = OSTCBCur->OSTCBId;
     OS_TCB    *del_tcb = &OSTCBTbl[id];
+
     if (del_tcb->OSTCBState == OS_STAT_READY) { /* Make sure task doesn't already exist at this id  */
     	del_tcb->OSTCBState = OS_STAT_UNINITIALIZED;/* Reserve the priority to prevent others from doing ...  */
 
     	/* Update current running Task List */
-		if(del_tcb->OSTCBNext == del_tcb){
+//		if(del_tcb->OSTCBNext == del_tcb){
+//			OSTCBCur = (OS_TCB*)0;
+//			lrt_running = FALSE;
+//		}else{
+//			OSTCBCur = del_tcb->OSTCBNext;
+//		}
+
+    	if (OSTCBCur->OSTCBId < OSTaskIndex)
+    		OSTCBCur = &OSTCBTbl[id + 1];
+    	else{
 			OSTCBCur = (OS_TCB*)0;
 			lrt_running = FALSE;
-		}else{
-			OSTCBCur = del_tcb->OSTCBNext;
-		}
-
+    	}
 		/* Decrement the tasks counter */
 		OSTaskCtr--;
     }else
@@ -216,11 +197,11 @@ void  LrtTaskDeleteCur(){
 }
 
 void  OSTaskDel (){
-	UINT8 taskId   = OS_CtrlQPop_UINT32();
-	UINT8 vectorId = OS_CtrlQPop_UINT32();
+	UINT8 taskId   = RTQueuePop_UINT32(RTCtrlQueue);
+	UINT8 vectorId = RTQueuePop_UINT32(RTCtrlQueue);
     OS_TCB       *ptcb = &OSTCBTbl[taskId];
     ptcb->stop = TRUE;
-    ptcb->stopState = vectorId;
+    ptcb->am.stopVertexId = vectorId;
     zynq_puts("Stop Task ID"); zynq_putdec(taskId);
     zynq_puts(" at Vector ID");  zynq_putdec(vectorId);
     zynq_puts("\n");

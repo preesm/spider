@@ -38,9 +38,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include <lrt_prototypes.h>
 #include <hwQueues.h>
 
-void decodeDsply(){
+void decodeDsply(UINT32 inputFIFOIds[],
+		 UINT32 inputFIFOAddrs[],
+		 UINT32 outputFIFOIds[],
+		 UINT32 outputFIFOAddrs[]){
 
 }

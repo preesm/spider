@@ -38,8 +38,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include <lrt_prototypes.h>
-#include <hwQueues.h>
+#include "lrt_1W1RfifoMngr.h"
+#include "lrt_core.h"
+#include "hwQueues.h"
+#include "lrt_taskMngr.h"
 
 static uchar VOPCounter = 0;
 
@@ -63,8 +65,13 @@ static decodeVOPOutData outData;
 static UINT32 IVOPCounter = 0;
 static UINT32 PVOPCounter = 0;
 
-void decodeVOP(){
-	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+void decodeVOP(UINT32 inputFIFOIds[],
+		 UINT32 inputFIFOAddrs[],
+		 UINT32 outputFIFOIds[],
+		 UINT32 outputFIFOAddrs[]){
+//	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+//	OS_TCB* tcb;
+//	tcb = getCurrTask();
 	uint nbBytesRead;
 
 	// Initializations...
@@ -74,12 +81,12 @@ void decodeVOP(){
 		init_vlc_tables_I(init_vlc_tables_I_PC_decod1_DCT3D_I);
 
 		// Receiving data from input ports.
-		read_input_fifo(action->fifo_in_id[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
-		read_input_fifo(action->fifo_in_id[1], sizeof(long), (UINT8*)&filePosition);
+		readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
+		readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(long), (UINT8*)&filePosition);
 	}
 
 	// Receiving data from read VOP action.
-	read_input_fifo(action->fifo_in_id[2], sizeof(decodeVOPInData), (UINT8*)&inData);
+	readFifo(inputFIFOIds[2], inputFIFOAddrs[2], sizeof(decodeVOPInData), (UINT8*)&inData);
 
 	// Opening video file.
 	pFile = fopen(M4V_FILE_PATH, "rb");
@@ -148,5 +155,5 @@ void decodeVOP(){
 	}
 
 	// Sending data.
-	write_output_fifo(action->fifo_out_id[0], sizeof(decodeVOPOutData), (UINT8*)&outData);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&outData);
 }

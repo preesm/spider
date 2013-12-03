@@ -10,7 +10,8 @@
 #include <sharedMem.h>
 #include <hwQueues.h>
 #include <platform.h>
-#include <lrt_prototypes.h>
+#include <lrt_core.h>
+#include <lrt_taskMngr.h>
 
 #include "definitions.h"
 #include "top_AM_actions.h"
@@ -33,9 +34,15 @@ int main(int argc, char **argv) {
 	functions_tbl[7] = decodeVOP;
 	functions_tbl[8] = displayVOP;
 
+//	UINT32 data = 1;
+//	FILE* pFile = fopen(SH_MEM_FILE_PATH, "rb+");
+//	fseek(pFile, 0, SEEK_SET);
+//	fwrite(&data, 8, 1, pFile);
+//	fclose(pFile);
+
 	Init_SDL(16, 720, 576);
 
-	init_lrt();
+	LRTInit();
 //
 //	char	data_in[10];
 //	char 	data_out[10];

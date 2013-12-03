@@ -34,10 +34,11 @@
  * The fact that you are presently reading this means that you have had		*
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
-#include <lrt_prototypes.h>
+#include <lrt_fifoMngr.h>
 #include <mpeg.h>
 #include "definitions.h"
-//static int firstframe = 0;
+#include "lrt_definitions.h"
+#include "lrt_taskMngr.h"
 
 
 REVERSE_EVENT init_vlc_tables_I_PC_decod1_DCT3D_I[4096];

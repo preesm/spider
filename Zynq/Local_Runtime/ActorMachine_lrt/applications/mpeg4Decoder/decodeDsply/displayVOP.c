@@ -38,8 +38,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include <lrt_prototypes.h>
-#include <hwQueues.h>
+#include "lrt_1W1RfifoMngr.h"
+#include "lrt_core.h"
+#include "hwQueues.h"
+#include "lrt_taskMngr.h"
 
 
 static imgDimensionsData inPortData;
@@ -48,18 +50,24 @@ static decodeVOPOutData inDecodeData;
 static image_type Display_Extract_Image_Y_o[685832];
 static int Zero_PC_decod1_out = 0;
 
-void displayVOP()
+void displayVOP(UINT32 inputFIFOIds[],
+		 UINT32 inputFIFOAddrs[],
+		 UINT32 outputFIFOIds[],
+		 UINT32 outputFIFOAddrs[])
 {
 	int XDIM;
 	int YDIM;
 	uchar *Y;
 	uchar *U;
 	uchar *V;
+//	OS_TCB* tcb;
 
 	// Receiving data.
-	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
-	read_input_fifo(action->fifo_in_id[0], sizeof(imgDimensionsData), (UINT8*)&inPortData); // From input port.
-	read_input_fifo(action->fifo_in_id[1], sizeof(decodeVOPOutData), (UINT8*)&inDecodeData); // From decode VOP action.
+//	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+
+//	tcb = getCurrTask();
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(imgDimensionsData), (UINT8*)&inPortData); // From input port.
+	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&inDecodeData); // From decode VOP action.
 
 	XDIM = ((int *) Display_Extract_Image_Y_o)[0] = inPortData.VideoObjectLayer_xsize_o;
 	YDIM = ((int *) Display_Extract_Image_Y_o)[1] = inPortData.VideoObjectLayer_ysize_o;

@@ -38,19 +38,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include <lrt_prototypes.h>
-#include <hwQueues.h>
+#include "lrt_1W1RfifoMngr.h"
+#include "hwQueues.h"
+#include "lrt_core.h"
+#include "lrt_taskMngr.h"
 
 static long filePosition;
 
-void inputPosition(){
+void inputPosition(UINT32 inputFIFOIds[],
+		 UINT32 inputFIFOAddrs[],
+		 UINT32 outputFIFOIds[],
+		 UINT32 outputFIFOAddrs[]){
 	// Receiving data.
-	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
-	read_input_fifo(action->fifo_in_id[0], sizeof(long), (UINT8*)&filePosition);
+//	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+//	OS_TCB* tcb;
+//	tcb = getCurrTask();
+
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(long), (UINT8*)&filePosition);
 
 
 	// Sending data to read VOP action.
-	write_output_fifo(action->fifo_out_id[0], sizeof(long), (UINT8*)&filePosition);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(long), (UINT8*)&filePosition);
 	// Sending data to decode VOP action.
-	write_output_fifo(action->fifo_out_id[1], sizeof(long), (UINT8*)&filePosition);
+	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(long), (UINT8*)&filePosition);
 }

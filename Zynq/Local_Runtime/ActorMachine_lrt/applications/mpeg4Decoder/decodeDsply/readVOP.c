@@ -39,8 +39,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include <lrt_prototypes.h>
-#include <hwQueues.h>
+#include "lrt_1W1RfifoMngr.h"
+#include "lrt_core.h"
+#include "lrt_taskMngr.h"
+#include "hwQueues.h"
 
 
 static uchar VOPCounter = 0;
@@ -55,19 +57,24 @@ static long filePosition;
 readVOPOutData outData;
 
 
-void readVOP()
+void readVOP(UINT32 inputFIFOIds[],
+		 UINT32 inputFIFOAddrs[],
+		 UINT32 outputFIFOIds[],
+		 UINT32 outputFIFOAddrs[])
 {
-	AM_ACTOR_ACTION_STRUCT* action;
+//	AM_ACTOR_ACTION_STRUCT* action;
+//	OS_TCB* tcb;
+//	tcb = getCurrTask();
 	uint nbBytesRead;
 
 	// Reading VOL info (once per complete decoding process).
 	if(VOPCounter == 0){ // Indicates that the decoding process just begins.
 		VOPCounter++;
 		// Receiving data.
-		action = OSCurActionQuery();
-		read_input_fifo(action->fifo_in_id[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
-		read_input_fifo(action->fifo_in_id[1], sizeof(long), (UINT8*)&filePosition); // Initial file position after the VOL.
-		read_input_fifo(action->fifo_in_id[2], sizeof(uchar) * 5, (UINT8*)VideoObjectLayer_vop_complexity);
+//		action = OSCurActionQuery();
+		readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
+		readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(long), (UINT8*)&filePosition); // Initial file position after the VOL.
+		readFifo(inputFIFOIds[2], inputFIFOAddrs[2], sizeof(uchar) * 5, (UINT8*)VideoObjectLayer_vop_complexity);
 	}
 
 	// Opening video file.
@@ -108,6 +115,6 @@ void readVOP()
 
 
 	// Sending data.
-	action = OSCurActionQuery();
-	write_output_fifo(action->fifo_out_id[0], sizeof(readVOPOutData), (UINT8*)&outData);
+//	action = OSCurActionQuery();
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(readVOPOutData), (UINT8*)&outData);
 }

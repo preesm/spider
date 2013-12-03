@@ -39,8 +39,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include <lrt_prototypes.h>
+#include <lrt_fifoMngr.h>
 #include <hwQueues.h>
+#include "lrt_taskMngr.h"
 
 static readVOPOutData inData;
 
@@ -54,5 +55,5 @@ void setVOPType(){
 	VOPType = inData.VideoObjectPlane_vop_coding_type;
 
 	// Sending parameter's value to Global Runtime.
-	OS_InfoQPush_UINT32(VOPType);
+	RTQueuePush_UINT32(RTInfoQueue, VOPType);
 }

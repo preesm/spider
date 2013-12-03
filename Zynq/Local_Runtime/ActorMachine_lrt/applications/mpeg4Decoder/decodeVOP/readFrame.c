@@ -39,7 +39,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include <lrt_prototypes.h>
+#include <lrt_taskMngr.h>
+#include <lrt_fifoMngr.h>
 #include <hwQueues.h>
 
 static long filePosition;

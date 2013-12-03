@@ -38,8 +38,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include <lrt_prototypes.h>
+#include <lrt_1W1RfifoMngr.h>
 #include <hwQueues.h>
+#include <lrt_core.h>
+#include <lrt_taskMngr.h>
 
 static uchar buffer[BUFFER_SIZE];
 static struct_VOLsimple VideoObjectLayer_VOLsimple;
@@ -47,11 +49,15 @@ static uchar VideoObjectLayer_vop_complexity[5];
 static int VideoObjectLayer_pos_o;
 static imgDimensionsData outData;
 
-void readVOL(){
+void readVOL(UINT32 inputFIFOIds[],
+			 UINT32 inputFIFOAddrs[],
+			 UINT32 outputFIFOIds[],
+			 UINT32 outputFIFOAddrs[]){
 	uint nbBytesRead;
 	FILE* pFile = NULL;
 	long filePosition;
-	AM_ACTOR_ACTION_STRUCT* action;
+//	OS_TCB* tcb;
+//	AM_ACTOR_ACTION_STRUCT* action;
 
 	pFile = fopen(M4V_FILE_PATH, "rb");
 	if (pFile == NULL)
@@ -84,9 +90,10 @@ void readVOL(){
 	fclose(pFile);
 
 	/* Sending data */
-	action = OSCurActionQuery();
-	write_output_fifo(action->fifo_out_id[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
-	write_output_fifo(action->fifo_out_id[1], sizeof(uchar) * 5, (UINT8*)VideoObjectLayer_vop_complexity);
-	write_output_fifo(action->fifo_out_id[2], sizeof(long), (UINT8*)&filePosition);
-	write_output_fifo(action->fifo_out_id[3], sizeof(imgDimensionsData), (UINT8*)&outData);
+//	tcb = getCurrTask();
+//	action = OSCurActionQuery();
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
+	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(uchar) * 5, (UINT8*)VideoObjectLayer_vop_complexity);
+	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], sizeof(long), (UINT8*)&filePosition);
+	writeFifo(outputFIFOIds[3], outputFIFOAddrs[3], sizeof(imgDimensionsData), (UINT8*)&outData);
 }

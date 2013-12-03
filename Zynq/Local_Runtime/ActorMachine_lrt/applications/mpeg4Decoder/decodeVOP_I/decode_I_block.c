@@ -30,6 +30,8 @@
    **************************************************************************/
 
 #include "decode_I_block.h"
+#include "lrt_fifoMngr.h"
+#include "lrt_taskMngr.h"
 
 //short   iDCT_data [64];
 //short   InvDCT_f [128];

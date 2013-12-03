@@ -38,17 +38,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include <lrt_prototypes.h>
-#include <hwQueues.h>
+#include "lrt_1W1RfifoMngr.h"
+#include "hwQueues.h"
+#include "lrt_core.h"
+#include "lrt_taskMngr.h"
 
 static imgDimensionsData inData;
 
-void inputImgDimensions(){
+void inputImgDimensions(UINT32 inputFIFOIds[],
+		 UINT32 inputFIFOAddrs[],
+		 UINT32 outputFIFOIds[],
+		 UINT32 outputFIFOAddrs[]){
 	// Receiving data.
-	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
-	read_input_fifo(action->fifo_in_id[0], sizeof(imgDimensionsData), (UINT8*)&inData);
+//	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+//	OS_TCB* tcb;
+//	tcb = getCurrTask();
+
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(imgDimensionsData), (UINT8*)&inData);
 
 
 	// Sending data to display VOP action.
-	write_output_fifo(action->fifo_out_id[0], sizeof(imgDimensionsData), (UINT8*)&inData);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(imgDimensionsData), (UINT8*)&inData);
 }

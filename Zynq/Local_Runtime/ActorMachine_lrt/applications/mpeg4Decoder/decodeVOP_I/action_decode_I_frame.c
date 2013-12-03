@@ -29,7 +29,8 @@
    *
    **************************************************************************/
 #include "mpeg.h"
-#include <lrt_prototypes.h>
+#include <lrt_fifoMngr.h>
+#include <lrt_taskMngr.h>
 
 void    StockBlocksLum_init (const struct_VOLsimple *RESTRICT VOLsimple, short *RESTRICT BuffX3, short *RESTRICT BuffX4) ;
 void    VideoPacketHeaderI (const unsigned char *RESTRICT data, const int pos_i

@@ -39,16 +39,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include <lrt_prototypes.h>
+#include <lrt_taskMngr.h>
+#include "lrt_1W1RfifoMngr.h"
 #include <hwQueues.h>
 
 static readVOPOutData inData;
 
-void switchVOPType(){
+void switchVOPType(
+		  UINT32 inputFIFOIds[],
+		  UINT32 inputFIFOAddrs[],
+		  UINT32 outputFIFOIds[],
+		  UINT32 outputFIFOAddrs[]){
 	// Reading inputs (VOPPos, VOPType, VOP).
-	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
-	read_input_fifo(action->fifo_in_id[0], sizeof(readVOPOutData), (UINT8*)&inData);
+//	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+//	read_input_fifo(action->fifo_in_id[0], sizeof(readVOPOutData), (UINT8*)&inData);
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], inputsizeof(readVOPOutData), (UINT8*)&inData);
 
 	// Sending data to selected frame-type decoder.
-	write_output_fifo(action->fifo_out_id[0], sizeof(readVOPOutData), (UINT8*)&inData);
+//	write_output_fifo(action->fifo_out_id[0], sizeof(readVOPOutData), (UINT8*)&inData);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(readVOPOutData), (UINT8*)&inData);
 }

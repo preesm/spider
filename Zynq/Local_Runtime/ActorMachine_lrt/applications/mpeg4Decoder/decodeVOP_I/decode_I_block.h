@@ -1,5 +1,4 @@
 #include <mpeg.h>
-#include <lrt_prototypes.h>
 
 void    VLCinverseI (const int N, const int posMB, const int pos_i, const unsigned char *RESTRICT data
     , const REVERSE_EVENT *RESTRICT DCT3D_I, const short *RESTRICT BlkA, const short *RESTRICT BlkB

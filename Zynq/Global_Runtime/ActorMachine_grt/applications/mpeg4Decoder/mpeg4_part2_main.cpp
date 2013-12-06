@@ -49,7 +49,8 @@
 
 #define PRINT_GRAPH			1
 #define PiSDF_FILE_PATH		"pisdf.gv"
-#define SUB_SDF_FILE_PATH	"subSdf.gv"
+#define SUB_SDF_FILE_0_PATH	"subSdf_0.gv"
+#define SUB_SDF_FILE_1_PATH	"subSdf_1.gv"
 #define SRDAG_FILE_PATH		"srDag.gv"
 
 
@@ -106,15 +107,18 @@ void mpeg4_part2_main(int nbSlaves)
 
 	// TODO: Skip the loop if there is no configuration actor.
 //	while(true){
-//	// Updating the list of executable vertices (i.e. configuration vertices).
+	// Updating the list of executable vertices (i.e. configuration vertices).
 //	piSDF.resetExecutableVertices();
 //	piSDF.setExecutableVertices();
-//
-//#if PRINT_GRAPH
-//	// Printing the executable subSDF graph. Only independent configuration vertices at present.
-//	dotWriter.write(piSDF.getExecutableVertices(), piSDF.getNbExecutableVertices(), SUB_SDF_FILE_PATH, 1);
-//#endif
-//
+
+	SDFGraph sdf1;
+	piSDF.getSDFGraph(&sdf1);
+
+#if PRINT_GRAPH
+	// Printing the SDF sub-graph.
+	dotWriter.write(&sdf1, SUB_SDF_FILE_0_PATH, 1);
+#endif
+
 //	// Scheduling the configuration vertices.
 
 //	schedule.reset();
@@ -146,12 +150,13 @@ void mpeg4_part2_main(int nbSlaves)
 //	}
 
 	// Locating executable sub-graph (parameters have been resolved).
-	SDFGraph sdf;
-	piSDF.getSDFGraph(piSDF.getRootVertex(), &sdf);
+	SDFGraph sdf2;
+	piSDF.resetVisitedVertices();
+	piSDF.getSDFGraph(&sdf2);
 
 #if PRINT_GRAPH
 	// Printing the SDF sub-graph.
-	dotWriter.write(&sdf, SUB_SDF_FILE_PATH, 1);
+	dotWriter.write(&sdf2, SUB_SDF_FILE_1_PATH, 1);
 #endif
 
 
@@ -161,7 +166,7 @@ void mpeg4_part2_main(int nbSlaves)
 //	CSDAGTransformer csDAGTransformer;
 //	csDAGTransformer.transform(&csDag, &dag, (Architecture*)0);
 
-	transformer.transform(&sdf, &dag);
+	transformer.transform(&sdf2, &dag);
 
 
 	// Printing the DAG.

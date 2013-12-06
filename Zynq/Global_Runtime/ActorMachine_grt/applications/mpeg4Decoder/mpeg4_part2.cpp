@@ -213,7 +213,7 @@ void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 
 
 
-//	// Subgraphs
+	// Subgraphs
 //	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS - 1) exitWithCode(1054);
 //	PiSDFGraph *decod_vop_subGraph = &graphs[nb_graphs]; nb_graphs++;
 //	create_PiSDF_dec_VOP(decod_vop_subGraph, vertex_decod_vop);
@@ -245,7 +245,6 @@ void create_PiSDF_dec_top(PiSDFGraph* graph){
 	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS - 1) exitWithCode(1054);
 	PiSDFGraph *decod_dsply_subGraph = &graphs[nb_graphs]; nb_graphs++;
 	create_PiSDF_decode_dsply(decod_dsply_subGraph, vertex_decode_dsply);
-
 	vertex_decode_dsply->setSubGraph(decod_dsply_subGraph);
 }
 

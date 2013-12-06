@@ -102,7 +102,7 @@ public:
 
 	int alloc(int sectionSize){
 		int start;
-		sectionSize += FIFO_HEADER_SIZE+1;
+//		sectionSize += FIFO_HEADER_SIZE+1;
 		if(last+sectionSize >= size){
 			printf("Can't allocate, not enough shared memory\n");
 			return -1;

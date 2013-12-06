@@ -44,36 +44,65 @@
 #include "../../graphs/SRDAG/SRDAGEdge.h"
 #include "../../graphs/PiSDF/PiSDFEdge.h"
 #include "../../graphs/PiSDF/PiSDFConfigVertex.h"
-#include "../../graphs/ActorMachine/AMGraph.h"
+#include "../ActorMachine/AMGraph.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <grt_definitions.h>
 #include "../launcher.h"
+#include "../SingleActor/LRTActor.h"
+
+extern AMGraph AMGraphTbl[MAX_NB_AM];
+extern UINT32 nbAM;
+extern LRTActor LRTActorTbl[MAX_SRDAG_VERTICES];
+extern UINT32 nbLRTActors;
 
 class CreateTaskMsg: public LRTMsg {
 private:
-	INT32 taskID;
-	INT32 functID;
-	INT32 stopAfterComplet;
-	INT32 nbFifoIn;
-	INT32 nbFifoOut;
-	INT32 FifosInID[MAX_NB_FIFO];
-	INT32 FifosOutID[MAX_NB_FIFO];
+	UINT32 taskID;
+	UINT32 functID;
+	UINT32 isAM;
+//	INT32 stopAfterComplet;
+//	INT32 nbFifoIn;
+//	INT32 nbFifoOut;
+//	INT32 FifosInID[MAX_NB_FIFO];
+//	INT32 FifosOutID[MAX_NB_FIFO];
+
+	union{
+		AMGraph* 	am;
+		LRTActor* 	lrtActor;
+	}actor;
 
 	/* Actor Machine */
-	INT32 initStateAM;
-	AMGraph* am;
+//	INT32 initStateAM;
+//	AMGraph* am;
 public:
-	CreateTaskMsg(AMGraph* am):taskID(0),functID(0),stopAfterComplet(0),nbFifoIn(0),nbFifoOut(0),initStateAM(0){this->am = am;};
+	CreateTaskMsg(){
+		taskID = 0;
+		functID = 0;
+		isAM = 0;
+	}
 	CreateTaskMsg(SRDAGGraph* graph, SRDAGVertex* vertex, AMGraph* am);
 	CreateTaskMsg(SRDAGGraph* graph, Schedule* schedule, int slave, AMGraph* am);
-	CreateTaskMsg(SRDAGGraph* graph, BaseSchedule* schedule, int slave, AMGraph* am, INT32 stopAfterComplet = 0);
+	CreateTaskMsg(SRDAGGraph* graph, BaseSchedule* schedule, int slave, launcher*);
+	CreateTaskMsg(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher*);
 	CreateTaskMsg(PiSDFConfigVertex* vertex, AMGraph* am, INT32 stopAfterComplet = 0);
+
+	AMGraph* getAM(){return actor.am;}
+	LRTActor* getLRTActor(){return actor.lrtActor;}
 
 	void send(int LRTID);
 	int prepare(int* data, int offset);
 	void prepare(int slave, launcher* launch);
 	void toDot(const char* path);
 //	AMGraph* getAm();
+    UINT32 getIsAM() const
+    {
+        return isAM;
+    }
+
+    void setIsAM(UINT32 isAM)
+    {
+        this->isAM = isAM;
+    }
 };
 
 #endif /* TASKMSG_H_ */

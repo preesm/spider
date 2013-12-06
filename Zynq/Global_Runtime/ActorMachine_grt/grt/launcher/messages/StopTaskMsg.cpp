@@ -43,17 +43,17 @@ StopTaskMsg::StopTaskMsg(INT32 _TaskID, INT32 _VectorID): TaskID(_TaskID), Vecto
 }
 
 void StopTaskMsg::send(int LRTID){
-	OS_CtrlQPushInt(LRTID, MSG_STOP_TASK);
-	OS_CtrlQPushInt(LRTID, TaskID);
-	OS_CtrlQPushInt(LRTID, VectorID);
+	RTQueuePush_UINT32(LRTID, RTCtrlQueue, MSG_STOP_TASK);
+	RTQueuePush_UINT32(LRTID, RTCtrlQueue, TaskID);
+	RTQueuePush_UINT32(LRTID, RTCtrlQueue, VectorID);
 
-	OS_CtrlQPopInt(LRTID);
+	RTQueuePop_UINT32(LRTID, RTCtrlQueue);
 }
 
 void StopTaskMsg::sendWOCheck(int LRTID){
-	OS_CtrlQPushInt(LRTID, MSG_STOP_TASK);
-	OS_CtrlQPushInt(LRTID, TaskID);
-	OS_CtrlQPushInt(LRTID, VectorID);
+	RTQueuePush_UINT32(LRTID, RTCtrlQueue, MSG_STOP_TASK);
+	RTQueuePush_UINT32(LRTID, RTCtrlQueue, TaskID);
+	RTQueuePush_UINT32(LRTID, RTCtrlQueue, VectorID);
 }
 
 int StopTaskMsg::prepare(int* data, int offset){

@@ -44,11 +44,11 @@
 
 class ClearFifoMsg: public LRTMsg {
 private:
-	INT32 fifoID;
+	UINT32 fifoID;
 
 public:
 	ClearFifoMsg():fifoID(0){};
-	ClearFifoMsg(INT32 fifoID);
+	ClearFifoMsg(UINT32 fifoID);
 
 	void send(int LRTID);
 	int prepare(int* data, int offset);

@@ -42,7 +42,7 @@ StartMsg::StartMsg() {
 }
 
 void StartMsg::send(int LRTID){
-	OS_CtrlQPushInt(LRTID, MSG_START_SCHED);
+	RTQueuePush_UINT32(LRTID, RTCtrlQueue, MSG_START_SCHED);
 }
 
 int StartMsg::prepare(int* data, int offset){

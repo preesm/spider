@@ -38,49 +38,63 @@
 #include "CreateTaskMsg.h"
 #include <hwQueues.h>
 
-//static AMGraph AM;
+AMGraph AMGraphTbl[MAX_NB_AM];
+UINT32 nbAM 		= 0;
+LRTActor LRTActorTbl[MAX_SRDAG_VERTICES];
+UINT32 nbLRTActors 	= 0;
+
 
 CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, Schedule* schedule, int slave, AMGraph* am) {
 	taskID = 0;
 	functID = 0; // In case of it is a simple task without AM.
-	nbFifoIn = 0;
-	nbFifoOut = 0;
-	this->am = am;
+//	nbFifoIn = 0;
+//	nbFifoOut = 0;
+//	this->am = am;
 
 	/* Actor Machine */
-	initStateAM = 0;
-	am->generate(schedule, slave);
+//	initStateAM = 0;
+//	am->generate(schedule, slave);
 }
 
-CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, BaseSchedule* schedule, int slave, AMGraph* am, INT32 stopAfterComplet){
-	taskID = 0;
-	functID = 0; // In case of it is a simple task without AM.
-	nbFifoIn = 0;
-	nbFifoOut = 0;
-	this->stopAfterComplet = stopAfterComplet;
-	this->am = am;
+CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, BaseSchedule* schedule, int slave, launcher* curLaunch){
+//	taskID = 0;
+	functID = 0;
 
 	/* Actor Machine */
-	initStateAM = 0;
+//	initStateAM = 0;
 
-	am->generate(graph, schedule, slave);
+	if(nbAM == MAX_NB_AM) exitWithCode(1058);
+	this->actor.am = &AMGraphTbl[nbAM++];
+	this->actor.am->generate(graph, schedule, slave, curLaunch);
+
+
+}
+
+CreateTaskMsg::CreateTaskMsg(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch){
+//	taskID = 0;
+	functID = srvertex->getReference()->getFunction_index();
+
+	if(nbLRTActors == MAX_NB_VERTICES) exitWithCode(1059);
+	LRTActorTbl[nbLRTActors] = LRTActor(graph, srvertex, curLaunch);
+	this->actor.lrtActor = &LRTActorTbl[nbLRTActors];
+	nbLRTActors++;
 }
 
 CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, SRDAGVertex* vertex, AMGraph* am) {
 	taskID = graph->getVertexIndex(vertex);
 	functID = vertex->getCsDagReference()->getFunctionIndex();
 
-	nbFifoIn = vertex->getNbInputEdge();
-	for(int i=0; i<nbFifoIn; i++)
-		FifosInID[i] = graph->getEdgeIndex(vertex->getInputEdge(i));
-
-	nbFifoOut = vertex->getNbOutputEdge();
-	for(int i=0; i<nbFifoOut; i++)
-		FifosOutID[i] = graph->getEdgeIndex(vertex->getOutputEdge(i));
+//	nbFifoIn = vertex->getNbInputEdge();
+//	for(int i=0; i<nbFifoIn; i++)
+//		FifosInID[i] = graph->getEdgeIndex(vertex->getInputEdge(i));
+//
+//	nbFifoOut = vertex->getNbOutputEdge();
+//	for(int i=0; i<nbFifoOut; i++)
+//		FifosOutID[i] = graph->getEdgeIndex(vertex->getOutputEdge(i));
 
 	/* Actor Machine */
-	initStateAM = 0;
-	this->am = am;
+//	initStateAM = 0;
+//	this->am = am;
 	am->generate(vertex);
 }
 
@@ -88,8 +102,8 @@ CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, SRDAGVertex* vertex, AMGraph* am
 CreateTaskMsg::CreateTaskMsg(PiSDFConfigVertex* vertex, AMGraph* am, INT32 stopAfterComplet) {
 	taskID = vertex->getId();
 	functID = vertex->getFunction_index();
-	this->stopAfterComplet = stopAfterComplet;
-	this->am = am;
+//	this->stopAfterComplet = stopAfterComplet;
+//	this->am = am;
 
 //	nbFifoIn = vertex->getNbInputEdges();
 //	for(INT32 i=0; i<nbFifoIn; i++)
@@ -102,7 +116,7 @@ CreateTaskMsg::CreateTaskMsg(PiSDFConfigVertex* vertex, AMGraph* am, INT32 stopA
 //		FifosOutID[i] = ((PiSDFEdge*)(vertex->getOutputEdge(i)))->getId();
 
 	/* Actor Machine */
-	initStateAM = 0;
+//	initStateAM = 0;
 //	TODO:am->generate(vertex);
 }
 
@@ -113,59 +127,59 @@ void CreateTaskMsg::send(int LRTID){
 	msg[k++] = MSG_CREATE_TASK;
 	msg[k++] = taskID;
 
-	msg[k++] = am->getNbVertices();
-	msg[k++] = am->getNbConds();
-	msg[k++] = am->getNbActions();
-	msg[k++] = initStateAM;
+//	msg[k++] = am->getNbVertices();
+//	msg[k++] = am->getNbConds();
+//	msg[k++] = am->getNbActions();
+//	msg[k++] = initStateAM;
 
 	/* Send vertices */
-	for(i=0; i<am->getNbVertices(); i++){
-		msg[k++] = am->getVertex(i)->getType();
-		msg[k++] = am->getVertex(i)->getSucID(0);
-		msg[k++] = am->getVertex(i)->getSucID(1);
-		switch(am->getVertex(i)->getType()){
-		case EXEC:
-			msg[k++] = am->getVertex(i)->getAction();
-			break;
-		case TEST:
-			msg[k++] = am->getVertex(i)->getCondID();
-			break;
-		case WAIT:
-		case STATE:
-			msg[k++] = 0;
-			break;
-		default:
-			//todo error
-			break;
-		}
-	}
-
-	/* Send Conditions */
-	for(i=0; i<am->getNbConds(); i++){
-		msg[k++] = am->getCond(i)->type;
-		msg[k++] = am->getCond(i)->fifo.id;
-		msg[k++] = am->getCond(i)->fifo.size;
-	}
-
-	// new
-	for(i=0; i<am->getNbActions(); i++){
-		AMAction* action = am->getAction(i);
-		msg[k++] = action->getFunctionId();
-		msg[k++] = action->getNbFifoIn();
-		msg[k++] = action->getNbFifoOut();
-		msg[k++] = action->getNbArgs();
-
-		for(int j=0; j<action->getNbFifoIn(); j++)
-			msg[k++] = action->getFifoIn(j);
-		for(int j=0; j<action->getNbFifoOut(); j++)
-			msg[k++] = action->getFifoOut(j);
-		for(int j=0; j<action->getNbArgs(); j++)
-			msg[k++] = action->getArg(j);
-	}
-
-
-
-	OS_CtrlQPush(LRTID, msg, k*sizeof(UINT32));
+//	for(i=0; i<am->getNbVertices(); i++){
+//		msg[k++] = am->getVertex(i)->getType();
+//		msg[k++] = am->getVertex(i)->getSucID(0);
+//		msg[k++] = am->getVertex(i)->getSucID(1);
+//		switch(am->getVertex(i)->getType()){
+//		case EXEC:
+//			msg[k++] = am->getVertex(i)->getAction();
+//			break;
+//		case TEST:
+//			msg[k++] = am->getVertex(i)->getCondID();
+//			break;
+//		case WAIT:
+//		case STATE:
+//			msg[k++] = 0;
+//			break;
+//		default:
+//			//todo error
+//			break;
+//		}
+//	}
+//
+//	/* Send Conditions */
+//	for(i=0; i<am->getNbConds(); i++){
+//		msg[k++] = am->getCond(i)->type;
+//		msg[k++] = am->getCond(i)->fifo.id;
+//		msg[k++] = am->getCond(i)->fifo.size;
+//	}
+//
+//	// new
+//	for(i=0; i<am->getNbActions(); i++){
+//		AMAction* action = am->getAction(i);
+//		msg[k++] = action->getFunctionId();
+//		msg[k++] = action->getNbFifoIn();
+//		msg[k++] = action->getNbFifoOut();
+//		msg[k++] = action->getNbArgs();
+//
+//		for(int j=0; j<action->getNbFifoIn(); j++)
+//			msg[k++] = action->getFifoIn(j);
+//		for(int j=0; j<action->getNbFifoOut(); j++)
+//			msg[k++] = action->getFifoOut(j);
+//		for(int j=0; j<action->getNbArgs(); j++)
+//			msg[k++] = action->getArg(j);
+//	}
+//
+//
+//
+//	RTQueuePush(LRTID, RTCtrlQueue, msg, k*sizeof(UINT32));
 }
 
 //AMGraph* CreateTaskMsg::getAm(){
@@ -173,7 +187,8 @@ void CreateTaskMsg::send(int LRTID){
 //}
 
 void CreateTaskMsg::toDot(const char* path){
-	am->toDot(path);
+	if(isAM)
+		actor.am->toDot(path);
 }
 
 int CreateTaskMsg::prepare(int* data, int offset){
@@ -182,119 +197,74 @@ int CreateTaskMsg::prepare(int* data, int offset){
 	data[offset + k++] = MSG_CREATE_TASK;
 	data[offset + k++] = taskID;
 
-	data[offset + k++] = am->getNbVertices();
-	data[offset + k++] = am->getNbConds();
-	data[offset + k++] = am->getNbActions();
-	data[offset + k++] = initStateAM;
+//	data[offset + k++] = am->getNbVertices();
+//	data[offset + k++] = am->getNbConds();
+//	data[offset + k++] = am->getNbActions();
+//	data[offset + k++] = initStateAM;
 
 	/* Send vertices */
-	for(i=0; i<am->getNbVertices(); i++){
-		data[offset + k++] = am->getVertex(i)->getType();
-		data[offset + k++] = am->getVertex(i)->getSucID(0);
-		data[offset + k++] = am->getVertex(i)->getSucID(1);
-		switch(am->getVertex(i)->getType()){
-		case EXEC:
-			data[offset + k++] = am->getVertex(i)->getAction();
-			break;
-		case TEST:
-			data[offset + k++] = am->getVertex(i)->getCondID();
-			break;
-		case WAIT:
-		case STATE:
-			data[offset + k++] = 0;
-			break;
-		default:
-			//todo error
-			break;
-		}
-	}
-
-	/* Send Conditions */
-	for(i=0; i<am->getNbConds(); i++){
-		data[offset + k++] = am->getCond(i)->type;
-		data[offset + k++] = am->getCond(i)->fifo.id;
-		data[offset + k++] = am->getCond(i)->fifo.size;
-	}
-
-	/* Send Actions */
-	for(i=0; i<am->getNbActions(); i++){
-		AMAction* action = am->getAction(i);
-		data[offset + k++] = action->getFunctionId();
-		data[offset + k++] = action->getNbFifoIn();
-		data[offset + k++] = action->getNbFifoOut();
-		data[offset + k++] = action->getNbArgs();
-
-		for(int j=0; j<action->getNbFifoIn(); j++)
-			data[offset + k++] = action->getFifoIn(j);
-		for(int j=0; j<action->getNbFifoOut(); j++)
-			data[offset + k++] = action->getFifoOut(j);
-		for(int j=0; j<action->getNbArgs(); j++)
-			data[offset + k++] = action->getArg(j);
-	}
+//	for(i=0; i<am->getNbVertices(); i++){
+//		data[offset + k++] = am->getVertex(i)->getType();
+//		data[offset + k++] = am->getVertex(i)->getSucID(0);
+//		data[offset + k++] = am->getVertex(i)->getSucID(1);
+//		switch(am->getVertex(i)->getType()){
+//		case EXEC:
+//			data[offset + k++] = am->getVertex(i)->getAction();
+//			break;
+//		case TEST:
+//			data[offset + k++] = am->getVertex(i)->getCondID();
+//			break;
+//		case WAIT:
+//		case STATE:
+//			data[offset + k++] = 0;
+//			break;
+//		default:
+//			//todo error
+//			break;
+//		}
+//	}
+//
+//	/* Send Conditions */
+//	for(i=0; i<am->getNbConds(); i++){
+//		data[offset + k++] = am->getCond(i)->type;
+//		data[offset + k++] = am->getCond(i)->fifo.id;
+//		data[offset + k++] = am->getCond(i)->fifo.size;
+//	}
+//
+//	/* Send Actions */
+//	for(i=0; i<am->getNbActions(); i++){
+//		AMAction* action = am->getAction(i);
+//		data[offset + k++] = action->getFunctionId();
+//		data[offset + k++] = action->getNbFifoIn();
+//		data[offset + k++] = action->getNbFifoOut();
+//		data[offset + k++] = action->getNbArgs();
+//
+//		for(int j=0; j<action->getNbFifoIn(); j++)
+//			data[offset + k++] = action->getFifoIn(j);
+//		for(int j=0; j<action->getNbFifoOut(); j++)
+//			data[offset + k++] = action->getFifoOut(j);
+//		for(int j=0; j<action->getNbArgs(); j++)
+//			data[offset + k++] = action->getArg(j);
+//	}
 
 
 
 	return k;
 }
 
+
 void CreateTaskMsg::prepare(int slave, launcher* launch){
 	launch->addUINT32ToSend(slave, MSG_CREATE_TASK);
 //	launch->addUINT32ToSend(slave, taskID);
+	launch->addUINT32ToSend(slave, this->functID);			// Function's id of the task.
+//	launch->addUINT32ToSend(slave, stopAfterComplet);		// Whether the task is stopped after completion.
+	launch->addUINT32ToSend(slave, this->isAM);
 
-	launch->addUINT32ToSend(slave, am->getNbVertices());
-	launch->addUINT32ToSend(slave, am->getNbConds());
-	launch->addUINT32ToSend(slave, am->getNbActions());
+//	if(this->isAM == FALSE)
+//		this->actor.lrtActor->prepare(slave, launch);
+//	else
+		// this->actor.am->generate();
 
 
-	launch->addUINT32ToSend(slave, functID);
-	launch->addUINT32ToSend(slave, stopAfterComplet);		// Whether the task is stopped after completion.
-	launch->addUINT32ToSend(slave, initStateAM);			// Initial state of the AM.
-
-	/* Send vertices */
-	for(int i=0; i<am->getNbVertices(); i++){
-		launch->addUINT32ToSend(slave, am->getVertex(i)->getType());
-		launch->addUINT32ToSend(slave, am->getVertex(i)->getSucID(0));
-		launch->addUINT32ToSend(slave, am->getVertex(i)->getSucID(1));
-
-		switch(am->getVertex(i)->getType()){
-		case EXEC:
-			launch->addUINT32ToSend(slave, am->getVertex(i)->getAction());
-			break;
-		case TEST:
-			launch->addUINT32ToSend(slave, am->getVertex(i)->getCondID());
-			break;
-		case WAIT:
-		case STATE:
-			launch->addUINT32ToSend(slave, 0);
-			break;
-		default:
-			//todo error
-			break;
-		}
-	}
-
-	/* Send Conditions */
-	for(int i=0; i<am->getNbConds(); i++){
-		launch->addUINT32ToSend(slave, am->getCond(i)->type);
-		launch->addUINT32ToSend(slave, am->getCond(i)->fifo.id);
-		launch->addUINT32ToSend(slave, am->getCond(i)->fifo.size);
-	}
-
-	/* Send Actions */
-	for(int i=0; i<am->getNbActions(); i++){
-		AMAction* action = am->getAction(i);
-		launch->addUINT32ToSend(slave, action->getFunctionId());
-		launch->addUINT32ToSend(slave, action->getNbFifoIn());
-		launch->addUINT32ToSend(slave, action->getNbFifoOut());
-		launch->addUINT32ToSend(slave, action->getNbArgs());
-
-		for(int j=0; j<action->getNbFifoIn(); j++)
-			launch->addUINT32ToSend(slave, action->getFifoIn(j));
-		for(int j=0; j<action->getNbFifoOut(); j++)
-			launch->addUINT32ToSend(slave, action->getFifoOut(j));
-		for(int j=0; j<action->getNbArgs(); j++)
-			launch->addUINT32ToSend(slave, action->getArg(j));
-	}
-
-	launch->addUINT32ToReceive(slave, MSG_CREATE_TASK);
+//	launch->addUINT32ToReceive(slave, MSG_CREATE_TASK);
 }

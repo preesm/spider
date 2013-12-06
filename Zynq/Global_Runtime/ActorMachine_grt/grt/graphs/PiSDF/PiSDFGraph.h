@@ -63,6 +63,7 @@ class PiSDFGraph {
 	PiSDFParameter 	parameters[MAX_NB_PiSDF_PARAMS];
 //	variable* 	parameters[MAX_NB_PiSDF_PARAMS];
 
+	BaseVertex*			vertices[MAX_NB_VERTICES];
 	PiSDFVertex 		pisdf_vertices[MAX_NB_PiSDF_VERTICES];
 	PiSDFConfigVertex 	config_vertices[MAX_NB_PiSDF_CONFIG_VERTICES];
 	BaseVertex 			join_vertices[MAX_NB_PiSDF_JOIN_VERTICES];
@@ -77,7 +78,9 @@ class PiSDFGraph {
 	static BaseVertex* ExecutableVertices[MAX_NB_VERTICES]; // Vertices which do not depend on unresolved parameters.
 	static UINT32 nbExecutableVertices;
 
-	bool execComplete;		// True when the output vertex can be executed.
+	UINT32 nbExecOutputVertices; // Counts the number of executable output vertices.
+								 // nbExecOutputVertices = nb_output_vertices means the graph can be completely executed.
+	bool execComplete;			 // True when the graph can be completely executed.
 public:
 	PiSDFGraph();
 	virtual ~PiSDFGraph();
@@ -127,8 +130,13 @@ public:
 	void linkExecutableVertices(SDFGraph *outSDF);
 
 
-	void getSDFGraph(BaseVertex* startVertex, SDFGraph* outSDF);
+	void getSDFGraph(SDFGraph* outSDF);
 
+	/*
+	 * Resets the visited vertices (the "visited" field is set to false),
+	 * so that the "getSDFGraph" algorithm can re-examine the entire graph.
+	 */
+	void resetVisitedVertices();
 
 	/*
 	 * Auto-generated getters and setters.

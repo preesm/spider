@@ -98,6 +98,10 @@
 // DAG
 #define MAX_DAG_VERTEX_REPETITION 100 // The maximum number of repetitions for one vertex
 
+// Launcher
+#define MAX_CTRL_DATA 	2000
+#define MAX_JOB_DATA 	2000
+
 // XParser
 #define VARIABLE_NAME_LEN_MAX 30
 #define MAX_VARIABLE_NUMBER 300
@@ -140,7 +144,7 @@
 /**************** FIFO's******************************/
 #define FIFO_IN_DIR		0
 #define FIFO_OUT_DIR	1
-#define MAX_NB_FIFO		4
+#define MAX_NB_FIFO		100
 
 /**************** TASK's******************************/
 #define MAX_NB_ARGS		8
@@ -268,8 +272,6 @@ typedef struct lrt_msg														// Message's structure
 	UINT32	fifo_in[MAX_NB_FIFO];	// Array of input FIFO ids.
 	UINT32	fifo_out[MAX_NB_FIFO];	// Array of output FIFO ids.
 }LRT_MSG;
-
-
 
 /*$PAGE*/
 /*

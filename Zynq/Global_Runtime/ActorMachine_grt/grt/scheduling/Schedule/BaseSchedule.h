@@ -83,6 +83,9 @@ public:
 		return index;
     }
 
+	SchedType* getSchedule(UINT32 slave_id, UINT32 vertexId){
+		return &schedules[slave_id][vertexId];
+	}
 
 	bool isPresent(const UINT32 slaveId, const UINT32 vertexIx, const void* vertex){
 		return (schedules[slaveId][vertexIx].vertex == vertex);

@@ -73,3 +73,107 @@ void BaseVertex::addParameter(PiSDFParameter* param)
 	}
 	parameters[nbParameters++] = param;
 }
+
+//
+//bool BaseVertex::getExecutable(){
+//	// Checking if all parameters have been resolved.
+//	for (UINT32 i = 0; i < this->nbParameters; i++) {
+//		if(! this->parameters[i]->getResolved()) return false;
+//	}
+//
+//	for (UINT32 i = 0; i < this->nbInputEdges; i++){
+//		PiSDFEdge* edge = this->inputEdges[i];
+//		// Updating integer consumption value.
+//		int value;
+//		globalParser.interpret(edge->getConsumption(), &value);
+//		edge->setConsumtionInt(value);
+//
+//		// Updating integer delay value.
+//		globalParser.interpret(edge->getDelay(), &value);
+//		edge->setDelayInt(value);
+//
+//		/*
+//		 * Checking if input edges have enough initial tokens (delays),
+//		 * and consumption is not zero, so that the vertex can be executed.
+//		 */
+//		if((edge->getConsumptionInt() < edge->getDelayInt()) || (edge->getConsumptionInt() == 0))
+//			return false;
+//		else if (this->getType() == select_vertex) // For "select" vertices, only one valid edge is enough.
+//			break;
+//	}
+//
+//	for (UINT32 i = 0; i < this->nbOutputEdges; i++){
+//		PiSDFEdge* edge = this->outputEdges[i];
+//		// Updating integer production value.
+//		int value;
+//		globalParser.interpret(edge->getProduction(), &value);
+//		edge->setProductionInt(value);
+//	}
+//
+//	return true;
+//}
+
+
+
+
+void BaseVertex::checkForExecution(){
+	executable = false;
+	visited = true;
+
+	// Checking if all parameters have been resolved.
+	for (UINT32 i = 0; i < this->nbParameters; i++)
+		if(! this->parameters[i]->getResolved()) return;
+
+	// Resolving parameter depending expressions.
+	for (UINT32 i = 0; i < this->nbInputEdges; i++){
+		PiSDFEdge* edge = this->inputEdges[i];
+		// Updating integer consumption value.
+		int value;
+		globalParser.interpret(edge->getConsumption(), &value);
+		edge->setConsumtionInt(value);
+
+		// Updating integer delay value.
+		globalParser.interpret(edge->getDelay(), &value);
+		edge->setDelayInt(value);
+
+		/*
+		 * Checking if input edges have enough initial tokens (delays),
+		 * and consumption is not zero, so that the vertex can be executed.
+		 */
+		if((edge->getConsumptionInt() < edge->getDelayInt()) || (edge->getConsumptionInt() == 0))
+			return;
+		else if (this->getType() == select_vertex) // For "select" vertices, only one valid edge is enough.
+			break;
+	}
+	for (UINT32 i = 0; i < this->nbOutputEdges; i++){
+		PiSDFEdge* edge = this->outputEdges[i];
+		// Updating integer production value.
+		int value;
+		globalParser.interpret(edge->getProduction(), &value);
+		edge->setProductionInt(value);
+	}
+
+
+	// Checking if all inputs can be executed.
+	for (UINT32 i = 0; i < this->nbInputEdges; i++) {
+		BaseVertex* input = inputEdges[i]->getSource();
+		// Call this function on each predecessor.
+		if(!input->getVisited()) input->checkForExecution();
+
+		if(!input->getExecutable()) return;
+	}
+
+//	// Treating hierarchical vertices.
+//	if(type == pisdf_vertex)
+//	{
+//		PiSDFGraph* subGraph = ((PiSDFVertex*)this)->getSubGraph();
+//		if(subGraph != (PiSDFGraph*)0)
+//			for (UINT32 i = 0; i < subGraph->getnb; i++) {
+//
+//			}
+//	}
+//	else{
+//	}
+
+	executable = true; //The vertex can be executed.
+}

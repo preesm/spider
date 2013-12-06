@@ -149,7 +149,7 @@ BaseVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEXT_TYPE type)
 	vertex->setName(vertexName);
 	vertex->setType(type);
 	//		vertex->setBase(this);
-	nb_vertices++;
+	vertices[nb_vertices++] = vertex;
 	return vertex;
 }
 
@@ -261,9 +261,10 @@ void PiSDFGraph::setExecutableVertices()
 
 void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSDF)
 {
+	startVertex->checkForExecution();
 	if(startVertex->getExecutable())
 	{
-		// Checking if the vertex contains a sub graph.
+		// Checking if the startVertex contains a sub graph.
 		if(startVertex->getType() == pisdf_vertex)
 		{
 			PiSDFGraph* subGraph = ((PiSDFVertex*)startVertex)->getSubGraph();
@@ -271,8 +272,9 @@ void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSD
 			{
 				/***  Only hierarchical vertices ***/
 
-				// Calling this function for the sub graph.
-				subGraph->getExecutableVertices(outSDF);
+				// Checking the sub graph.
+				subGraph->getSDFGraph(outSDF);
+//				subGraph->copyExecutableVertices(subGraph->getRootVertex(), outSDF);
 				if(subGraph->getExecComplete()) // The sub graph can be executed completely,
 				{								// so the parent's successors can be examined.
 					// Checking successors of the current parent vertex.
@@ -292,9 +294,12 @@ void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSD
 
 		/***  Only non hierarchical vertices ***/
 
+
+//		if(startVertex->getVisited()) return; // If the first vertex was already visited, the graph was already visited.
+
 		// Adding vertex to the SDF graph.
 		outSDF->addVertex(startVertex);
-		startVertex->setVisited(true);
+//		startVertex->setVisited(true);
 
 		// Checking successors.
 		for (UINT32 i = 0; i < startVertex->getNbOutputEdges(); i++)
@@ -303,23 +308,16 @@ void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSD
 			BaseVertex* sinkVertex = edge->getSink();
 			// Discarding edges with zero production and vertices already visited.
 			if((edge->getProductionInt() > 0) && (! sinkVertex->getVisited()))
-					copyExecutableVertices(edge->getSink(), outSDF);
+					copyExecutableVertices(sinkVertex, outSDF);
 		}
 
-		if(startVertex->getType() == output_vertex)
-			this->setExecComplete(true); // It is a sub graph and can be executed completely,
-										 // so the parent's successors can be examined.
-	}
-}
-
-void PiSDFGraph::getExecutableVertices(SDFGraph *outSDF){
-	if(nb_input_vertices > 0){
-		for (UINT32 i = 0; i < nb_input_vertices; i++) {
-			copyExecutableVertices(&input_vertices[i], outSDF);
+		if(startVertex->getType() == output_vertex){
+			nbExecOutputVertices++;
+			if (nbExecOutputVertices == nb_output_vertices)
+				this->setExecComplete(true); // It is a sub graph and can be executed completely,
+											 // so the parent's successors can be examined.
 		}
 	}
-	else
-		copyExecutableVertices(rootVertex, outSDF);
 }
 
 
@@ -368,10 +366,58 @@ void PiSDFGraph::linkExecutableVertices(SDFGraph *outSDF){
 	}
 }
 
-void PiSDFGraph::getSDFGraph(BaseVertex* startVertex, SDFGraph *outSDF)
+void PiSDFGraph::getSDFGraph(SDFGraph *outSDF)
 {
-	getExecutableVertices(outSDF);
-	linkExecutableVertices(outSDF);
+//	if(nb_input_vertices > 0){
+//		for (UINT32 i = 0; i < nb_input_vertices; i++) {
+//			copyExecutableVertices(&input_vertices[i], outSDF);
+//		}
+//	}
+//	else
+//		copyExecutableVertices(rootVertex, outSDF);
+//
+//	// Looking for a starting vertex, i.e. one that has not been visited yet.
+//	BaseVertex* startVertex = NULL;
+//	UINT32 i = 0;
+//	do {
+//		startVertex = vertices[i];
+//		i++;
+//	} while ((startVertex->getVisited())&&(i < nb_vertices));
+
+//	if(startVertex!= NULL){
+//		copyExecutableVertices(startVertex, outSDF);
+//		linkExecutableVertices(outSDF);
+//	}
+//	else
+//		exitWithCode(1061);
+
+	for (UINT32 i = 0; i < nb_vertices; i++) {
+		if(!vertices[i]->getVisited())
+			copyExecutableVertices(vertices[i], outSDF);
+	}
+	if(outSDF->getNbVertices() > 0) linkExecutableVertices(outSDF);
 }
 
+void PiSDFGraph::resetVisitedVertices(){
+	for (UINT32 i = 0; i < nb_edges; i++) {
+		BaseVertex* vertex;
+		// Setting to "visited = false" the source vertex and eventually its sub-graph.
+		vertex = edges[i].getSource();
+		vertex->setVisited(false);
+		if (vertex->getType() == pisdf_vertex){
+			PiSDFGraph* subGraph = ((PiSDFVertex*)(vertex))->getSubGraph();
+			if(subGraph != (PiSDFGraph*)0)
+				subGraph->resetVisitedVertices();
+		}
 
+
+		// Setting to "visited = false" the sink vertex and eventually its sub-graph.
+		vertex = edges[i].getSink();
+		vertex->setVisited(false);
+		if (vertex->getType() == pisdf_vertex){
+			PiSDFGraph* subGraph = ((PiSDFVertex*)(vertex))->getSubGraph();
+			if(subGraph != (PiSDFGraph*)0)
+				subGraph->resetVisitedVertices();
+		}
+	}
+}

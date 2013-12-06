@@ -50,12 +50,10 @@
 
 
 
-static AMGraph AMGraphTbl[MAX_NB_AM];
-static UINT8 nbAM = 0;
-
 launcher::launcher(int nbSlaves): sharedMem(Memory(0x10000000, 0x10000000)){
+	nbFIFOs = 0;
 	launchedSlaveNb=0;
-	OS_QInit(nbSlaves);
+	RTQueuesInit(nbSlaves);
 };
 
 void launcher::initFifos(SRDAGGraph* graph, int nbSlaves){
@@ -78,28 +76,28 @@ void launcher::initFifos(SRDAGGraph* graph, int nbSlaves){
 }
 
 void launcher::initTasks(SRDAGGraph* graph){
-	if(nbAM == MAX_NB_AM) exitWithCode(1058);
-	AMGraph* am = &AMGraphTbl[nbAM++];
-	for(int i=0; i<graph->getNbVertices(); i++){
-		CreateTaskMsg msg = CreateTaskMsg(graph, graph->getVertex(i), am);
-		char name[20];
-		sprintf(name, "%s_%d.gv", graph->getVertex(i)->getCsDagReference()->getName(), i);
-		msg.toDot(name);
-		msg.send(graph->getVertex(i)->getSlaveIndex());
-	}
+//	if(nbAM == MAX_NB_AM) exitWithCode(1058);
+//	AMGraph* am = &AMGraphTbl[nbAM++];
+//	for(int i=0; i<graph->getNbVertices(); i++){
+//		CreateTaskMsg msg = CreateTaskMsg(graph, graph->getVertex(i), am);
+//		char name[20];
+//		sprintf(name, "%s_%d.gv", graph->getVertex(i)->getCsDagReference()->getName(), i);
+//		msg.toDot(name);
+//		msg.send(graph->getVertex(i)->getSlaveIndex());
+//	}
 
 }
 
 void launcher::initTasks(SRDAGGraph* graph, Schedule* schedule, int nbSlaves){
-	if(nbAM == MAX_NB_AM) exitWithCode(1058);
-	AMGraph* am = &AMGraphTbl[nbAM++];
-	for(int i=0; i<nbSlaves; i++){
-		CreateTaskMsg msg = CreateTaskMsg(graph, schedule, i, am);
-		char name[20];
-		sprintf(name, "Slave%d.gv", i);
-		msg.toDot(name);
-		msg.send(i);
-	}
+//	if(nbAM == MAX_NB_AM) exitWithCode(1058);
+//	AMGraph* am = &AMGraphTbl[nbAM++];
+//	for(int i=0; i<nbSlaves; i++){
+//		CreateTaskMsg msg = CreateTaskMsg(graph, schedule, i, am);
+//		char name[20];
+//		sprintf(name, "Slave%d.gv", i);
+//		msg.toDot(name);
+//		msg.send(i);
+//	}
 }
 
 void launcher::stopTasks(SRDAGGraph* graph, Schedule* schedule, int nbSlaves){
@@ -118,18 +116,40 @@ void launcher::start(int nbSlaves){
 void launcher::launch(int nbSlaves){
 	UINT32 data[MAX_CTRL_DATA];
 	launchedSlaveNb = nbSlaves;
+
+	// Sending FIFO flushing and task creation messages.
 	for(int i=0; i<nbSlaves; i++){
-		OS_CtrlQPush(i, dataToSend[i], dataToSendCnt[i]*sizeof(UINT32));
-		OS_CtrlQPop(i, &data, dataToReceiveCnt[i]*sizeof(UINT32));
-		for(int j=0; (UINT32)j< dataToReceiveCnt[i]; j++){
-			if(dataToReceive[i][j] != data[j]){
-				printf("Unattended ack message from Slave %d (%d instead of %d)\n", i, data[j], dataToReceive[i][j]);
-				abort();
-			}
+		RTQueuePush(i, RTCtrlQueue, dataToSend[i], dataToSendCnt[i]*sizeof(UINT32));
+	}
+
+	// Waiting for acknowledge from LRT 0.
+	RTQueuePop(0, RTCtrlQueue, &data, dataToReceiveCnt[0]*sizeof(UINT32));
+	for(int j=0; (UINT32)j< dataToReceiveCnt[0]; j++)
+		if(dataToReceive[0][j] != data[j]){
+			printf("Unattended ack message from Slave %d (%d instead of %d)\n", 0, data[j], dataToReceive[0][j]);
+			abort();
 		}
+
+	// Starting executions.
+	for(int i=0; i<nbSlaves; i++){
+		StartMsg().send(i);
 	}
 }
 
+//void launcher::launchJobs(UINT16 nbSlaves){
+//	UINT32 data[MAX_JOB_DATA];
+////	launchedSlaveNb = nbSlaves;
+//	for(UINT16 i=0; i<nbSlaves; i++){
+//		RTQueuePush(i, RTJobQueue, jobDataToSend[i], jobDataToSendCnt[i]*sizeof(UINT32));
+////		RTQueuePop(i, RTCtrlQueue, &data, dataToReceiveCnt[i]*sizeof(UINT32));
+////		for(int j=0; (UINT32)j< dataToReceiveCnt[i]; j++){
+////			if(dataToReceive[i][j] != data[j]){
+////				printf("Unattended ack message from Slave %d (%d instead of %d)\n", i, data[j], dataToReceive[i][j]);
+////				abort();
+////			}
+////		}
+//	}
+//}
 
 void launcher::prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedule, ExecutionStat* execStat){
 	CreateFifoMsg msg_createFifo;
@@ -157,6 +177,9 @@ void launcher::prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedul
 //		dataToSendCnt[j] += msg_clearFifo.prepare(dataToSend[j], dataToSendCnt[j]);
 		msg_clearFifo.prepare(0, this);
 	}
+
+	// An acknowledge message (i.e. MSG_CLEAR_FIFO) from LRT 0 must be received.
+	addUINT32ToReceive(0, MSG_CLEAR_FIFO);
 
 	/* Creating Tasks */
 	for(int i=0; i<archi->getNbActiveSlaves(); i++){
@@ -196,66 +219,102 @@ void launcher::prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedul
 
 
 void launcher::prepare(SRDAGGraph* graph, Architecture *archi, BaseSchedule* schedule, ExecutionStat* execStat){
-	CreateFifoMsg msg_createFifo;
-	ClearFifoMsg msg_clearFifo;
-//	CreateTaskMsg msg_createTask;
+//	CreateFifoMsg msg_createFifo;
+//	ClearFifoMsg msg_clearFifo;
+	CreateTaskMsg msg_createTask;
+	bool isAM = false; // TODO: ..this comes as a parameter or within the graph...??
 
 	flushDataToSend();
 	flushDataToReceive();
 
 	/* Creating fifos */
 	for(int i=0; i<graph->getNbEdges(); i++){
-//		msg_createFifo = CreateFifoMsg(graph, graph->getEdge(i), &sharedMem);
-		msg_createFifo = CreateFifoMsg(graph, graph->getEdge(i), DEFAULT_FIFO_SIZE, &sharedMem);
-		for(int j=0; j<archi->getNbActiveSlaves(); j++)
-			msg_createFifo.prepare(j,this);
-//			dataToSendCnt[j] += msg_createFifo.prepare(dataToSend[j], dataToSendCnt[j]);
+		SRDAGEdge* edge =graph->getEdge(i);
+		int nbTokens =  edge->getTokenRate();
+		addFIFO(graph->getEdgeIndex(edge), nbTokens * DEFAULT_FIFO_SIZE, sharedMem.alloc(nbTokens * DEFAULT_FIFO_SIZE));
 	}
-	execStat->memAllocated = sharedMem.getTotalAllocated();
-	execStat->fifoNb = graph->getNbEdges();
+
+//	for(int i=0; i<graph->getNbEdges(); i++){
+////		msg_createFifo = CreateFifoMsg(graph, graph->getEdge(i), &sharedMem);
+//		msg_createFifo = CreateFifoMsg(graph, graph->getEdge(i), DEFAULT_FIFO_SIZE, &sharedMem);
+//		for(int j=0; j<archi->getNbActiveSlaves(); j++)
+//			msg_createFifo.prepare(j,this);
+////			dataToSendCnt[j] += msg_createFifo.prepare(dataToSend[j], dataToSendCnt[j]);
+//	}
+//	execStat->memAllocated = sharedMem.getTotalAllocated();
+//	execStat->fifoNb = graph->getNbEdges();
 
 	/* Clearing fifos */
-	for(int i=0; i<graph->getNbEdges(); i++){
-		msg_clearFifo = ClearFifoMsg(i);
-//		int j = i%archi->getNbActiveSlaves();
-//		dataToSendCnt[j] += msg_clearFifo.prepare(dataToSend[j], dataToSendCnt[j]);
-		msg_clearFifo.prepare(0, this);
-	}
+	ClearFifoMsg(-1).prepare(0, this);
+//	for(int i=0; i<graph->getNbEdges(); i++){
+//		msg_clearFifo = ClearFifoMsg(i);
+////		int j = i%archi->getNbActiveSlaves();
+////		dataToSendCnt[j] += msg_clearFifo.prepare(dataToSend[j], dataToSendCnt[j]);
+//		msg_clearFifo.prepare(0, this);
+//	}
+
+	// Setting the type of acknowledge message that should be received from LRT 0.
+	addUINT32ToReceive(0, MSG_CLEAR_FIFO);
 
 	/* Creating Tasks */
 	for(int i=0; i<archi->getNbActiveSlaves(); i++){
-		if(nbAM == MAX_NB_AM) exitWithCode(1058);
-		AMGraph* am = &AMGraphTbl[nbAM++];
-		CreateTaskMsg msg_createTask = CreateTaskMsg(graph, schedule, i, am);
-		char name[20];
-		sprintf(name, "Slave%d.gv", i);
-		msg_createTask.toDot(name);
-		execStat->nbAMVertices[i]	= am->getNbVertices();
-		execStat->nbAMConds[i]		= am->getNbConds();
-		execStat->nbAMActions[i]	= am->getNbActions();
+		if(isAM){
+			// Creating an actor machine.
+			msg_createTask = CreateTaskMsg(graph, schedule, i, this);
+			msg_createTask.setIsAM(1);
+
+			// Writing AM into .dot file.
+			char name[20];
+			sprintf(name, "Slave%d.gv", i);
+			msg_createTask.toDot(name);
+
+			// Copying task and AM data into the chunk of data that will be sent.
+			msg_createTask.prepare(i, this);
+			msg_createTask.getAM()->prepare(i, this);
+		}
+		else
+		{
+			// Creating single actors.
+			for (UINT32 j = 0; j < schedule->getNbVertices(i); j++) {
+				msg_createTask = CreateTaskMsg(graph, (SRDAGVertex*)(schedule->getSchedule(i, j)->vertex), this);
+				msg_createTask.setIsAM(0);
+
+				// Copying task and actor data into the chunk of data that will be sent
+				msg_createTask.prepare(i, this);
+				msg_createTask.getLRTActor()->prepare(i, this);
+			}
+		}
+
+
+//		execStat->nbAMVertices[i]	= am->getNbVertices();
+//		execStat->nbAMConds[i]		= am->getNbConds();
+//		execStat->nbAMActions[i]	= am->getNbActions();
 //		dataToSendCnt[i] += msg_createTask.prepare(dataToSend[i], dataToSendCnt[i]);
-		msg_createTask.prepare(i, this);
+
+//		if(true){
+//			this->addUINT32ToSend(i, true);	// An AM is present.
+//		}
 	}
 
 	/* Launch schedule */
-	for(int j=0; j<archi->getNbActiveSlaves(); j++)
-//		dataToSendCnt[j] += StartMsg().prepare(dataToSend[j], dataToSendCnt[j]);
-		 StartMsg().prepare(j, this);
-
-	for(int j=0; j<archi->getNbActiveSlaves(); j++){
-		execStat->msgLength[j] = dataToSendCnt[j]*4;
-		if(dataToSendCnt[j]>MAX_CTRL_DATA){
-			printf("dataToSendCnt>MAX_CTRL_DATA\n");
-			abort();
-		}
-	}
-
-	execStat->listMakespan = 0;
-	for(int j=0; j<archi->getNbActiveSlaves(); j++){
-		execStat->listMakespan = std::max(execStat->listMakespan, schedule->getReadyTime(j));
-	}
-
-	sharedMem.exportMem("mem.csv");
+//	for(int j=0; j<archi->getNbActiveSlaves(); j++)
+////		dataToSendCnt[j] += StartMsg().prepare(dataToSend[j], dataToSendCnt[j]);
+//		 StartMsg().prepare(j, this);
+//
+//	for(int j=0; j<archi->getNbActiveSlaves(); j++){
+//		execStat->msgLength[j] = dataToSendCnt[j]*4;
+//		if(dataToSendCnt[j]>MAX_CTRL_DATA){
+//			printf("dataToSendCnt>MAX_CTRL_DATA\n");
+//			abort();
+//		}
+//	}
+//
+//	execStat->listMakespan = 0;
+//	for(int j=0; j<archi->getNbActiveSlaves(); j++){
+//		execStat->listMakespan = std::max(execStat->listMakespan, schedule->getReadyTime(j));
+//	}
+//
+//	sharedMem.exportMem("mem.csv");
 }
 
 
@@ -408,9 +467,19 @@ void launcher::addDataToReceive(int slave, void* data, int size){
 	dataToReceiveCnt[slave] += size;
 }
 
-void launcher::addUINT32ToSend(int slave, UINT32 val){
-	dataToSend[slave][dataToSendCnt[slave]] = val;
-	dataToSendCnt[slave]++;
+void launcher::addUINT32ToSend(int slave, UINT32 val, RTQueueType queue){
+	switch (queue) {
+		case RTCtrlQueue:
+			dataToSend[slave][dataToSendCnt[slave]] = val;
+			dataToSendCnt[slave]++;
+			break;
+		case RTJobQueue:
+			jobDataToSend[slave][jobDataToSendCnt[slave]] = val;
+			jobDataToSendCnt[slave]++;
+			break;
+		default:
+			break;
+	}
 }
 void launcher::addUINT32ToReceive(int slave, UINT32 val){
 	dataToReceive[slave][dataToReceiveCnt[slave]] = val;

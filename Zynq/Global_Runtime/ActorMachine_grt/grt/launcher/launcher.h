@@ -45,18 +45,32 @@
 #include <scheduling/Schedule/BaseSchedule.h>
 #include <scheduling/architecture/Architecture.h>
 #include <tools/ExecutionStat.h>
-
+#include <hwQueues.h>
 #include <types.h>
 
-#define MAX_CTRL_DATA 2000
+typedef struct {
+	UINT32 id;
+	UINT32 size;
+	UINT32 addr;
+}LauncherFIFO;
+
 
 class launcher {
 private:
+
+	UINT32 nbFIFOs;
+	LauncherFIFO fifos[MAX_NB_FIFO];
+
 	Memory sharedMem;
 	UINT32 dataToSend[MAX_SLAVES][MAX_CTRL_DATA];
 	UINT32 dataToSendCnt[MAX_SLAVES];
 	UINT32 dataToReceive[MAX_SLAVES][MAX_CTRL_DATA];
 	UINT32 dataToReceiveCnt[MAX_SLAVES];
+
+	UINT32 jobDataToSend[MAX_SLAVES][MAX_JOB_DATA];
+	UINT32 jobDataToSendCnt[MAX_SLAVES];
+	UINT32 jobDataToReceive[MAX_SLAVES][MAX_JOB_DATA];
+	UINT32 jobDataToReceiveCnt[MAX_SLAVES];
 
 	int launchedSlaveNb;
 
@@ -70,6 +84,28 @@ public:
 	launcher(int nbSlaves);
 
 	void launch(SRDAGGraph* graph, Architecture *archi);
+
+	//
+	LauncherFIFO* addFIFO(UINT32 id, UINT32 size, UINT32 addr){
+		if (nbFIFOs >= MAX_NB_FIFO) exitWithCode(1060);
+		LauncherFIFO* fifo = &fifos[nbFIFOs++];
+		fifo->id = id;
+		fifo->size = size;
+		fifo->addr = addr;
+		return fifo;
+	}
+
+	UINT32 getNbFIFOs(){
+		return nbFIFOs;
+	}
+
+	LauncherFIFO* getFIFO(UINT32 id){
+		for (UINT32 i = 0; i < nbFIFOs; i++) {
+			if (fifos[i].id == id)
+				return &fifos[i];
+		}
+		return 0;
+	}
 
 	// Prepares the execution of a SRDAG or a group of actors (e.g. the configuration actors of a PiSDF).
 	void prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedule, ExecutionStat* execStat);
@@ -99,6 +135,7 @@ public:
 
 
 	void launch(int nbSlaves);
+//	void launchJobs(UINT16 nbSlaves);
 	void stop();
 	void stopWOCheck();
 
@@ -110,7 +147,7 @@ public:
 	void addDataToSend(int slave, void* data, int size);
 	void addDataToReceive(int slave, void* data, int size);
 
-	void addUINT32ToSend(int slave, UINT32 val);
+	void addUINT32ToSend(int slave, UINT32 val, RTQueueType queue = RTCtrlQueue);
 	void addUINT32ToReceive(int slave, UINT32 val);
 
 	void flushDataToSend();

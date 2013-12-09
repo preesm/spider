@@ -116,7 +116,7 @@ void BaseVertex::addParameter(PiSDFParameter* param)
 
 
 
-void BaseVertex::checkForExecution(){
+void BaseVertex::checkForExecution(SDFGraph* outSDF){
 	executable = false;
 	visited = true;
 
@@ -158,8 +158,11 @@ void BaseVertex::checkForExecution(){
 	for (UINT32 i = 0; i < this->nbInputEdges; i++) {
 		BaseVertex* input = inputEdges[i]->getSource();
 		// Call this function on each predecessor.
-		if(!input->getVisited()) input->checkForExecution();
-
+		if(!input->getVisited()){
+			visited = false;
+			return;
+//			input->checkForExecution(outSDF);
+		}
 		if(!input->getExecutable()) return;
 	}
 
@@ -174,6 +177,5 @@ void BaseVertex::checkForExecution(){
 //	}
 //	else{
 //	}
-
 	executable = true; //The vertex can be executed.
 }

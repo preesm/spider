@@ -44,7 +44,7 @@
 #include <tools/SchedulingError.h>
 #include "../PiSDF/PiSDFParameter.h"
 #include "../PiSDF/PiSDFEdge.h"
-
+#include "graphs/SDF/SDFGraph.h"
 
 typedef enum {
 	pisdf_vertex,
@@ -94,19 +94,16 @@ public:
 		return outputEdges[index];
 	}
 
-	bool getExecutable(){
-		return executable;
-	}
 
 	/*
-	 * Set the executable field to true if the vertex is ready, that is :
+	 * Adds the vertex to the outSDF graph if it is ready to execute, that is :
 	 * 1. The parameters on which the vertex depends are solved.
 	 * 2. The source vertices on its inputs can be executable.
 	 * 3. The consumption is not 0 nor exceeds the initial tokens (delay).
 	 * Note that for hierarchical vertices, the function is call for each vertex
 	 * of the sub-graph.
 	 */
-	void checkForExecution();
+	void checkForExecution(SDFGraph* outSDF);
 
 
 	/*
@@ -169,6 +166,11 @@ public:
     }
 
 
+	bool getExecutable() const
+	{
+		return executable;
+	}
+
 
 
     void setId(UINT32 id)
@@ -207,6 +209,10 @@ public:
         this->tempId = tempId;
     }
 
+    void setExecutable(bool executable)
+    {
+    	this->executable = executable;
+    }
 //    void setNbParameters(UINT8 nbParameters)
 //    {
 //        this->nbParameters = nbParameters;

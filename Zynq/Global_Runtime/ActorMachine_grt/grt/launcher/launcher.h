@@ -110,7 +110,7 @@ public:
 	// Prepares the execution of a SRDAG or a group of actors (e.g. the configuration actors of a PiSDF).
 	void prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedule, ExecutionStat* execStat);
 
-	void prepare(SRDAGGraph* graph, Architecture *archi, BaseSchedule* schedule, ExecutionStat* execStat);
+	void prepare(SRDAGGraph* graph, Architecture *archi, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat);
 	/*
 	 * Prepares the execution of configuration vertices. Note that the outputs will be written directly
 	 * on the GlobalRT's queues and not on the shared memory.

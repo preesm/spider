@@ -40,7 +40,10 @@
 
 #include <grt_definitions.h>
 #include "../Base/BaseEdge.h"
-#include "../Base/BaseVertex.h"
+#include "tools/SchedulingError.h"
+//#include "../Base/BaseVertex.h"
+
+class BaseVertex;
 
 class SDFGraph {
 	BaseVertex* vertices[MAX_NB_VERTICES];

@@ -218,11 +218,10 @@ void launcher::prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedul
 }
 
 
-void launcher::prepare(SRDAGGraph* graph, Architecture *archi, BaseSchedule* schedule, ExecutionStat* execStat){
+void launcher::prepare(SRDAGGraph* graph, Architecture *archi, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat){
 //	CreateFifoMsg msg_createFifo;
 //	ClearFifoMsg msg_clearFifo;
 	CreateTaskMsg msg_createTask;
-	bool isAM = false; // TODO: ..this comes as a parameter or within the graph...??
 
 	flushDataToSend();
 	flushDataToReceive();

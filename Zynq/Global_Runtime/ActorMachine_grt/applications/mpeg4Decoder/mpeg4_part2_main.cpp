@@ -114,16 +114,18 @@ void mpeg4_part2_main(int nbSlaves)
 	SDFGraph sdf1;
 	piSDF.getSDFGraph(&sdf1);
 
+	// Linking the executable vertices.
+	if(sdf1.getNbVertices() > 0) piSDF.linkExecutableVertices(&sdf1);
+
 #if PRINT_GRAPH
 	// Printing the SDF sub-graph.
 	dotWriter.write(&sdf1, SUB_SDF_FILE_0_PATH, 1);
 #endif
 
-//	// Scheduling the configuration vertices.
-
+//	// Scheduling the executable vertices.
 //	schedule.reset();
 //	listScheduler.schedule(piSDF.getExecutableVertices(), piSDF.getNbExecutableVertices(), &schedule);
-////	schedWriter.write(&schedule, &srDag, &arch, "test.xml");
+//	schedWriter.write(&schedule, &srDag, &arch, "test.xml");
 ////	scheduleChecker.checkSchedule(&srDag, &schedule, &arch);
 //
 //	ExecutionStat execStat;
@@ -149,15 +151,16 @@ void mpeg4_part2_main(int nbSlaves)
 //			&arch);
 //	}
 
-	// Locating executable sub-graph (parameters have been resolved).
-	SDFGraph sdf2;
-	piSDF.resetVisitedVertices();
-	piSDF.getSDFGraph(&sdf2);
-
-#if PRINT_GRAPH
-	// Printing the SDF sub-graph.
-	dotWriter.write(&sdf2, SUB_SDF_FILE_1_PATH, 1);
-#endif
+//	// Locating executable sub-graph (parameters have been resolved).
+//	SDFGraph sdf2;
+//	piSDF.resetVisitedVertices();
+//	piSDF.getSDFGraph(&sdf2);
+//
+//
+//#if PRINT_GRAPH
+//	// Printing the SDF sub-graph.
+//	dotWriter.write(&sdf2, SUB_SDF_FILE_1_PATH, 1);
+//#endif
 
 
 	// Flattening subSDF graph and transforming it into DAG.
@@ -166,7 +169,7 @@ void mpeg4_part2_main(int nbSlaves)
 //	CSDAGTransformer csDAGTransformer;
 //	csDAGTransformer.transform(&csDag, &dag, (Architecture*)0);
 
-	transformer.transform(&sdf2, &dag);
+	transformer.transform(&sdf1, &dag);
 
 
 	// Printing the DAG.
@@ -193,6 +196,6 @@ void mpeg4_part2_main(int nbSlaves)
 
 	// Preparing and launching execution.
 	launch.reset();
-	launch.prepare(&dag, &arch, &schedule, &execStat);
+	launch.prepare(&dag, &arch, &schedule, false, &execStat);
 	launch.launch(nbSlaves);
 }

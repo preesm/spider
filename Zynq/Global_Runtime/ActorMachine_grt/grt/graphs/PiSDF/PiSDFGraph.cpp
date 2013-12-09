@@ -261,7 +261,7 @@ void PiSDFGraph::setExecutableVertices()
 
 void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSDF)
 {
-	startVertex->checkForExecution();
+	startVertex->checkForExecution(outSDF);
 	if(startVertex->getExecutable())
 	{
 		// Checking if the startVertex contains a sub graph.
@@ -277,6 +277,7 @@ void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSD
 //				subGraph->copyExecutableVertices(subGraph->getRootVertex(), outSDF);
 				if(subGraph->getExecComplete()) // The sub graph can be executed completely,
 				{								// so the parent's successors can be examined.
+					startVertex->setExecutable(true);
 					// Checking successors of the current parent vertex.
 					for (UINT32 i = 0; i < startVertex->getNbOutputEdges(); i++)
 					{
@@ -287,6 +288,9 @@ void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSD
 								copyExecutableVertices(edge->getSink(), outSDF);
 					}
 				}
+				else
+					startVertex->setExecutable(false);
+
 				startVertex->setVisited(true); // So that subsequent incoming edges ignore this vertex.
 				return; // So that the parent vertex is not included in the list.
 			}
@@ -368,13 +372,14 @@ void PiSDFGraph::linkExecutableVertices(SDFGraph *outSDF){
 
 void PiSDFGraph::getSDFGraph(SDFGraph *outSDF)
 {
-//	if(nb_input_vertices > 0){
-//		for (UINT32 i = 0; i < nb_input_vertices; i++) {
-//			copyExecutableVertices(&input_vertices[i], outSDF);
-//		}
-//	}
-//	else
-//		copyExecutableVertices(rootVertex, outSDF);
+	if(nb_input_vertices > 0){
+		for (UINT32 i = 0; i < nb_input_vertices; i++) {
+			if(!input_vertices[i].getExecutable())
+				copyExecutableVertices(&input_vertices[i], outSDF);
+		}
+	}
+	else
+		copyExecutableVertices(rootVertex, outSDF);
 //
 //	// Looking for a starting vertex, i.e. one that has not been visited yet.
 //	BaseVertex* startVertex = NULL;
@@ -391,11 +396,17 @@ void PiSDFGraph::getSDFGraph(SDFGraph *outSDF)
 //	else
 //		exitWithCode(1061);
 
-	for (UINT32 i = 0; i < nb_vertices; i++) {
-		if(!vertices[i]->getVisited())
-			copyExecutableVertices(vertices[i], outSDF);
-	}
-	if(outSDF->getNbVertices() > 0) linkExecutableVertices(outSDF);
+//	for (UINT32 i = 0; i < nb_vertices; i++) {
+//		if(!vertices[i]->getVisited())
+//			copyExecutableVertices(vertices[i], outSDF);
+//	}
+
+
+//	// Checking the configuration vertices.
+//	for (UINT32 i = 0; i < nb_config_vertices; i++) {
+//		copyExecutableVertices(&input_vertices[i], outSDF);
+//	}
+
 }
 
 void PiSDFGraph::resetVisitedVertices(){

@@ -57,6 +57,12 @@ typedef enum {
 	select_vertex
 }VERTEXT_TYPE;
 
+typedef enum{
+	undefined = -1,
+	impossible = 0,
+	possible = 1
+}EXE_FLAG;
+
 class BaseVertex {
 	UINT32 id;
 	char name[MAX_VERTEX_NAME_SIZE];
@@ -71,8 +77,8 @@ class BaseVertex {
 
 	UINT32 nbRepetition; // Stores the number of replicas in a Sr graph.
 
-	bool visited; // Useful for graph browsing.
-	bool executable; // Says whether the vertex can be executed.
+//	bool visited; // Useful for graph browsing.
+	EXE_FLAG executable; // Says whether the vertex can be executed.
 	UINT32 tempId; // Used while creating a topology matrix.
 public:
 	BaseVertex();
@@ -155,10 +161,10 @@ public:
     	return nbRepetition;
 	}
 
-    bool getVisited() const
-    {
-        return visited;
-    }
+//    bool getVisited() const
+//    {
+//        return visited;
+//    }
 
     UINT32 getTempId() const
     {
@@ -166,7 +172,7 @@ public:
     }
 
 
-	bool getExecutable() const
+	EXE_FLAG getExecutable() const
 	{
 		return executable;
 	}
@@ -198,10 +204,10 @@ public:
         this->nbRepetition = nbRepetition;
     }
 
-    void setVisited(bool visited)
-    {
-        this->visited = visited;
-    }
+//    void setVisited(bool visited)
+//    {
+//        this->visited = visited;
+//    }
 
 
     void setTempId(UINT32 tempId)
@@ -209,7 +215,7 @@ public:
         this->tempId = tempId;
     }
 
-    void setExecutable(bool executable)
+    void setExecutable(EXE_FLAG executable)
     {
     	this->executable = executable;
     }

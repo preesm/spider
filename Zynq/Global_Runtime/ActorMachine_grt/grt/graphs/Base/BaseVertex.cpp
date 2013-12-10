@@ -40,7 +40,8 @@
 BaseVertex::BaseVertex() {
 	id = nbInputEdges = nbOutputEdges = 0;
 	nbRepetition = 0;
-	visited = false;
+//	visited = false;
+	executable = undefined;
 }
 
 BaseVertex::~BaseVertex() {
@@ -115,11 +116,10 @@ void BaseVertex::addParameter(PiSDFParameter* param)
 
 
 
-
+/*
+ * If the function executes until the end, it marks the vertex as it can be executed.
+ */
 void BaseVertex::checkForExecution(SDFGraph* outSDF){
-	executable = false;
-	visited = true;
-
 	// Checking if all parameters have been resolved.
 	for (UINT32 i = 0; i < this->nbParameters; i++)
 		if(! this->parameters[i]->getResolved()) return;
@@ -144,6 +144,17 @@ void BaseVertex::checkForExecution(SDFGraph* outSDF){
 			return;
 		else if (this->getType() == select_vertex) // For "select" vertices, only one valid edge is enough.
 			break;
+		else{
+			// Checking if all inputs can be executed.
+			BaseVertex* input = inputEdges[i]->getSource();
+			// Call this function on each predecessor.
+			if(input->getExecutable() != possible){ // Exists if at least one predecessor has not been marked yet.
+//				visited = false;
+				return;
+	//			input->checkForExecution(outSDF);
+			}
+//			if(!input->getExecutable()) return; // Exists if at least one predecessor can't be executed yet.
+		}
 	}
 	for (UINT32 i = 0; i < this->nbOutputEdges; i++){
 		PiSDFEdge* edge = this->outputEdges[i];
@@ -154,17 +165,17 @@ void BaseVertex::checkForExecution(SDFGraph* outSDF){
 	}
 
 
-	// Checking if all inputs can be executed.
-	for (UINT32 i = 0; i < this->nbInputEdges; i++) {
-		BaseVertex* input = inputEdges[i]->getSource();
-		// Call this function on each predecessor.
-		if(!input->getVisited()){
-			visited = false;
-			return;
-//			input->checkForExecution(outSDF);
-		}
-		if(!input->getExecutable()) return;
-	}
+//	// Checking if all inputs can be executed.
+//	for (UINT32 i = 0; i < this->nbInputEdges; i++) {
+//		BaseVertex* input = inputEdges[i]->getSource();
+//		// Call this function on each predecessor.
+//		if(!input->getVisited()){ // Exists if at least one predecessor has not been visited yet.
+//			visited = false;
+//			return;
+////			input->checkForExecution(outSDF);
+//		}
+//		if(!input->getExecutable()) return; // Exists if at least one predecessor can't be executed yet.
+//	}
 
 //	// Treating hierarchical vertices.
 //	if(type == pisdf_vertex)
@@ -177,5 +188,5 @@ void BaseVertex::checkForExecution(SDFGraph* outSDF){
 //	}
 //	else{
 //	}
-	executable = true; //The vertex can be executed.
+	executable = possible; //The vertex can be executed.
 }

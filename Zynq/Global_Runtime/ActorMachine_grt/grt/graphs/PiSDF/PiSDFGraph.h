@@ -59,6 +59,8 @@ class PiSDFGraph {
 	UINT32 nb_switch_vertices;
 	UINT32 nb_select_vertices;
 
+	static UINT32 glbNbConfigVertices;
+
 	PiSDFEdge 		edges[MAX_NB_PiSDF_EDGES];
 	PiSDFParameter 	parameters[MAX_NB_PiSDF_PARAMS];
 //	variable* 	parameters[MAX_NB_PiSDF_PARAMS];
@@ -75,15 +77,16 @@ class PiSDFGraph {
 
 
 	BaseVertex* rootVertex; // Must be set while creating the graph.
-	static BaseVertex* ExecutableVertices[MAX_NB_VERTICES]; // Vertices which do not depend on unresolved parameters.
-	static UINT32 nbExecutableVertices;
+//	static BaseVertex* ExecutableVertices[MAX_NB_VERTICES]; // Vertices which do not depend on unresolved parameters.
+//	static UINT32 nbExecutableVertices;
 
-	UINT32 nbExecOutputVertices; // Counts the number of executable output vertices.
-								 // nbExecOutputVertices = nb_output_vertices means the graph can be completely executed.
-	bool execComplete;			 // True when the graph can be completely executed.
+	UINT32 nbExecVertices; 			// Counts the number of executable vertices.
+	UINT32 nbDiscardVertices; 		// Counts the number of discarded vertices
+									// e.g. a classic vertex with 0 production on an input edge.
+						   // nbExecVertices = nb_vertices means the graph can be completely executed.
+//	bool execComplete;	   // True when the graph can be completely executed.
 public:
 	PiSDFGraph();
-	virtual ~PiSDFGraph();
 
 	PiSDFEdge* 	addEdge(BaseVertex* source, const char* production, BaseVertex* sink, const char* consumption, const char* delay);
 
@@ -91,17 +94,17 @@ public:
 
 	PiSDFParameter*	addParameter(const char* name);
 
-	BaseVertex *getExecutableVertex(UINT32 index)
-	{
-		return ExecutableVertices[index];
-	}
+//	BaseVertex *getExecutableVertex(UINT32 index)
+//	{
+//		return ExecutableVertices[index];
+//	}
 
-	// Resets the list of executable vertices.
-	void resetExecutableVertices()
-	{
-		memset(ExecutableVertices, 0, MAX_NB_VERTICES);
-		nbExecutableVertices = 0;
-	}
+//	 Resets the list of executable vertices.
+//	void resetExecutableVertices()
+//	{
+//		memset(ExecutableVertices, 0, MAX_NB_VERTICES);
+//		nbExecutableVertices = 0;
+//	}
 
 	/*
 	 * Update the list of executables vertices, i.e. those which do not depend on unresolved parameters.
@@ -109,10 +112,10 @@ public:
 	 * Note that the list is a static member so it must be reset before calling this method.
 	 * TODO: Careful, it assumes there is only one root vertex!!!
 	 */
-	void setExecutableVertices(BaseVertex* vertex);
+//	void setExecutableVertices(BaseVertex* vertex);
 
 	// With no parameters, it just looks on the configuration vertices.
-	void setExecutableVertices();
+//	void setExecutableVertices();
 
 	// Copies vertices that can be executed to the outSDF graph.
 	void copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSDF);
@@ -123,7 +126,7 @@ public:
 	 * the search starts from the root vertex. In such case, it exits with an error
 	 * if no root vertex has been defined.
 	 */
-	void getExecutableVertices(SDFGraph *outSDF);
+//	void getExecutableVertices(SDFGraph *outSDF);
 
 
 	// Links executable vertices that have been copied to outSDF.
@@ -136,7 +139,10 @@ public:
 	 * Resets the visited vertices (the "visited" field is set to false),
 	 * so that the "getSDFGraph" algorithm can re-examine the entire graph.
 	 */
-	void resetVisitedVertices();
+	void clearAfterVisit();
+
+
+
 
 	/*
 	 * Auto-generated getters and setters.
@@ -232,15 +238,15 @@ public:
         return rootVertex;
     }
 
-    UINT32 getNbExecutableVertices() const
-	{
-		return PiSDFGraph::nbExecutableVertices;
-	}
-
-	BaseVertex** getExecutableVertices()
-	{
-		return ExecutableVertices;
-	}
+//    UINT32 getNbExecutableVertices() const
+//	{
+//		return PiSDFGraph::nbExecutableVertices;
+//	}
+//
+//	BaseVertex** getExecutableVertices()
+//	{
+//		return ExecutableVertices;
+//	}
 
     UINT32 getNb_select_vertices() const
     {
@@ -262,15 +268,33 @@ public:
         return &switch_vertices[index];
     }
 
-    bool getExecComplete() const
+//    bool getExecComplete() const
+//    {
+//        return execComplete;
+//    }
+
+
+    UINT32 getGlbNbConfigVertices() const
     {
-        return execComplete;
+    	return glbNbConfigVertices;
     }
 
-    void setExecComplete(bool execComplete)
+
+    UINT32 getNbExecVertices() const
     {
-        this->execComplete = execComplete;
+    	return nbExecVertices;
     }
+
+
+    UINT32 getNbDiscardVertices() const
+    {
+    	return nbDiscardVertices;
+    }
+
+//    void setExecComplete(bool execComplete)
+//    {
+//        this->execComplete = execComplete;
+//    }
 
     void setNb_select_vertices(UINT32 nb_select_vertices)
     {
@@ -370,10 +394,10 @@ public:
         this->rootVertex = rootVertex;
     }
 
-    void setNbExecutableVertices(UINT32 nbExecutableVertices)
-    {
-        this->nbExecutableVertices = nbExecutableVertices;
-    }
+//    void setNbExecutableVertices(UINT32 nbExecutableVertices)
+//    {
+//        this->nbExecutableVertices = nbExecutableVertices;
+//    }
 
 };
 

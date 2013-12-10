@@ -50,11 +50,11 @@ PiSDFGraph::PiSDFGraph() {
 	nb_output_vertices = 0;
 
 	rootVertex = NULL;
+
+	nbExecVertices = 0;
+	nbDiscardVertices = 0;
 }
 
-PiSDFGraph::~PiSDFGraph() {
-	// TODO Auto-generated destructor stub
-}
 
 BaseVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEXT_TYPE type)
 {
@@ -75,6 +75,7 @@ BaseVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEXT_TYPE type)
 			if(nb_config_vertices < MAX_NB_PiSDF_CONFIG_VERTICES){
 				vertex = (BaseVertex*)&config_vertices[nb_config_vertices];
 				nb_config_vertices++;
+				glbNbConfigVertices++;
 			}
 			else{
 				// Adding a vertex while the graph is already full
@@ -205,64 +206,64 @@ PiSDFParameter* PiSDFGraph::addParameter(const char *name)
 }
 
 
-void PiSDFGraph::setExecutableVertices(BaseVertex* vertex)
-{
-	if(vertex->getExecutable())
-	{
-		// Calling this function for the child graph, if necessary.
-		if(vertex->getType() == pisdf_vertex){
-			PiSDFGraph* subGraph = ((PiSDFVertex*)vertex)->getSubGraph();
-			if(subGraph != (PiSDFGraph*)0)
-			{
-				subGraph->setExecutableVertices(subGraph->getRootVertex());
-				if(subGraph->getExecComplete()) // The sub graph can be executed completely.
-				{
-					// Checking successors of the current parent vertex.
-					for (UINT32 i = 0; i < vertex->getNbOutputEdges(); i++) {
-						PiSDFEdge* edge = vertex->getOutputEdge(i);
-						BaseVertex* sinkVertex = edge->getSink();
-						if(! sinkVertex->getVisited())
-							setExecutableVertices(edge->getSink());
-					}
-				}
-				return; // So that the parent vertex is not included in the list.
-			}
-		}
-		// Adding vertex to the list of executable vertices.
-		ExecutableVertices[nbExecutableVertices++] = vertex;
-		vertex->setVisited(true);
+//void PiSDFGraph::setExecutableVertices(BaseVertex* vertex)
+//{
+//	if(vertex->getExecutable())
+//	{
+//		// Calling this function for the child graph, if necessary.
+//		if(vertex->getType() == pisdf_vertex){
+//			PiSDFGraph* subGraph = ((PiSDFVertex*)vertex)->getSubGraph();
+//			if(subGraph != (PiSDFGraph*)0)
+//			{
+//				subGraph->setExecutableVertices(subGraph->getRootVertex());
+//				if(subGraph->getExecComplete()) // The sub graph can be executed completely.
+//				{
+//					// Checking successors of the current parent vertex.
+//					for (UINT32 i = 0; i < vertex->getNbOutputEdges(); i++) {
+//						PiSDFEdge* edge = vertex->getOutputEdge(i);
+//						BaseVertex* sinkVertex = edge->getSink();
+//						if(! sinkVertex->getVisited())
+//							setExecutableVertices(edge->getSink());
+//					}
+//				}
+//				return; // So that the parent vertex is not included in the list.
+//			}
+//		}
+//		// Adding vertex to the list of executable vertices.
+//		ExecutableVertices[nbExecutableVertices++] = vertex;
+//		vertex->setVisited(true);
+//
+//		// Checking successors.
+//		for (UINT32 i = 0; i < vertex->getNbOutputEdges(); i++) {
+//			PiSDFEdge* edge = vertex->getOutputEdge(i);
+//			BaseVertex* sinkVertex = edge->getSink();
+//
+//			// Discarding edges with zero production.
+//			if(edge->getProductionInt() > 0)
+//				// Adding the vertex if not visited yet.
+//				if (! sinkVertex->getVisited())
+//					setExecutableVertices(edge->getSink());
+//		}
+//
+//		if(vertex->getType() == output_vertex)
+//			this->setExecComplete(true); // It is a sub graph and can be executed completely.
+//	}
+//}
 
-		// Checking successors.
-		for (UINT32 i = 0; i < vertex->getNbOutputEdges(); i++) {
-			PiSDFEdge* edge = vertex->getOutputEdge(i);
-			BaseVertex* sinkVertex = edge->getSink();
-
-			// Discarding edges with zero production.
-			if(edge->getProductionInt() > 0)
-				// Adding the vertex if not visited yet.
-				if (! sinkVertex->getVisited())
-					setExecutableVertices(edge->getSink());
-		}
-
-		if(vertex->getType() == output_vertex)
-			this->setExecComplete(true); // It is a sub graph and can be executed completely.
-	}
-}
-
-void PiSDFGraph::setExecutableVertices()
-{
-	for (UINT32 i = 0; i < this->getNb_config_vertices(); i++) {
-		PiSDFConfigVertex* vertex = &this->config_vertices[i];
-		if(vertex->getExecutable())
-			// Adding vertex to the list of executable vertices.
-			ExecutableVertices[nbExecutableVertices++] = vertex;
-	}
-}
+//void PiSDFGraph::setExecutableVertices()
+//{
+//	for (UINT32 i = 0; i < this->getNb_config_vertices(); i++) {
+//		PiSDFConfigVertex* vertex = &this->config_vertices[i];
+//		if(vertex->getExecutable())
+//			// Adding vertex to the list of executable vertices.
+//			ExecutableVertices[nbExecutableVertices++] = vertex;
+//	}
+//}
 
 void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSDF)
 {
 	startVertex->checkForExecution(outSDF);
-	if(startVertex->getExecutable())
+	if(startVertex->getExecutable() == possible)
 	{
 		// Checking if the startVertex contains a sub graph.
 		if(startVertex->getType() == pisdf_vertex)
@@ -275,24 +276,28 @@ void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSD
 				// Checking the sub graph.
 				subGraph->getSDFGraph(outSDF);
 //				subGraph->copyExecutableVertices(subGraph->getRootVertex(), outSDF);
-				if(subGraph->getExecComplete()) // The sub graph can be executed completely,
+
+				if(subGraph->getNbExecVertices() == (subGraph->getNb_vertices() - subGraph->getNbDiscardVertices()))
+//				if(subGraph->getExecComplete()) // The sub graph can be executed completely,
 				{								// so the parent's successors can be examined.
-					startVertex->setExecutable(true);
+//					startVertex->setExecutable(possible);
 					// Checking successors of the current parent vertex.
 					for (UINT32 i = 0; i < startVertex->getNbOutputEdges(); i++)
 					{
 						PiSDFEdge* edge = startVertex->getOutputEdge(i);
 						BaseVertex* sinkVertex = edge->getSink();
 						// Discarding edges with zero production and vertices already visited.
-						if((edge->getProductionInt() > 0) && (! sinkVertex->getVisited()))
+						if((edge->getProductionInt() > 0) && (sinkVertex->getExecutable() == undefined))
 								copyExecutableVertices(edge->getSink(), outSDF);
 					}
 				}
 				else
-					startVertex->setExecutable(false);
+					// Making that the hierarchical vertex is examined during the next iteration.
+					startVertex->setExecutable(undefined);
 
-				startVertex->setVisited(true); // So that subsequent incoming edges ignore this vertex.
-				return; // So that the parent vertex is not included in the list.
+
+//				startVertex->setVisited(true); // So that subsequent incoming edges ignore this vertex.
+				return; // So that the hierarchical vertex is not included.
 			}
 		}
 
@@ -303,6 +308,8 @@ void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSD
 
 		// Adding vertex to the SDF graph.
 		outSDF->addVertex(startVertex);
+		if(startVertex->getType()== config_vertex)
+			outSDF->addConfigVertex(startVertex);
 //		startVertex->setVisited(true);
 
 		// Checking successors.
@@ -310,17 +317,20 @@ void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSD
 		{
 			PiSDFEdge* edge = startVertex->getOutputEdge(i);
 			BaseVertex* sinkVertex = edge->getSink();
-			// Discarding edges with zero production and vertices already visited.
-			if((edge->getProductionInt() > 0) && (! sinkVertex->getVisited()))
+			// Discarding edges with zero production and vertices already marked as executable.
+			if(edge->getProductionInt() > 0){
+				if(sinkVertex->getExecutable() == undefined)
 					copyExecutableVertices(sinkVertex, outSDF);
-		}
+			}
+			else{
+				if(sinkVertex->getExecutable() != impossible){
+					sinkVertex->setExecutable(impossible);
+					nbDiscardVertices++;
+				}
+			}
 
-		if(startVertex->getType() == output_vertex){
-			nbExecOutputVertices++;
-			if (nbExecOutputVertices == nb_output_vertices)
-				this->setExecComplete(true); // It is a sub graph and can be executed completely,
-											 // so the parent's successors can be examined.
 		}
+		nbExecVertices++;
 	}
 }
 
@@ -346,7 +356,7 @@ void PiSDFGraph::linkExecutableVertices(SDFGraph *outSDF){
 			for (UINT32 j = 0; j < vertex->getNbInputEdges(); j++)
 			{
 				PiSDFEdge* originalEdge = vertex->getInputEdge(j);
-				if (originalEdge->getConsumptionInt() > 0)
+				if ((originalEdge->getConsumptionInt() > 0) && (outSDF->checkEdge(vertex->getInputEdge(j))))
 					outSDF->addEdge(originalEdge->getSource(), originalEdge->getProductionInt(),
 									vertex, originalEdge->getConsumptionInt());
 			}
@@ -372,63 +382,65 @@ void PiSDFGraph::linkExecutableVertices(SDFGraph *outSDF){
 
 void PiSDFGraph::getSDFGraph(SDFGraph *outSDF)
 {
-	if(nb_input_vertices > 0){
-		for (UINT32 i = 0; i < nb_input_vertices; i++) {
-			if(!input_vertices[i].getExecutable())
-				copyExecutableVertices(&input_vertices[i], outSDF);
-		}
-	}
-	else
-		copyExecutableVertices(rootVertex, outSDF);
+//	if(nb_input_vertices > 0){ // Hierarchy is being treated.
+//		for (UINT32 i = 0; i < nb_input_vertices; i++) {
+//			if(!input_vertices[i].getVisited())
+//				copyExecutableVertices(&input_vertices[i], outSDF);
+//		}
+//	}
+//	else{
+//		// Looking for a starting vertex, i.e. one that has not been marked as executable yet.
+//		BaseVertex* startVertex = NULL;
+//		UINT32 i = 0;
+//		do {
+//			startVertex = vertices[i];
+//			i++;
+//		} while ((startVertex->getExecutable())&&(i < nb_vertices));
 //
-//	// Looking for a starting vertex, i.e. one that has not been visited yet.
-//	BaseVertex* startVertex = NULL;
-//	UINT32 i = 0;
-//	do {
-//		startVertex = vertices[i];
-//		i++;
-//	} while ((startVertex->getVisited())&&(i < nb_vertices));
-
-//	if(startVertex!= NULL){
-//		copyExecutableVertices(startVertex, outSDF);
-//		linkExecutableVertices(outSDF);
-//	}
-//	else
-//		exitWithCode(1061);
-
-//	for (UINT32 i = 0; i < nb_vertices; i++) {
-//		if(!vertices[i]->getVisited())
-//			copyExecutableVertices(vertices[i], outSDF);
+//		if(startVertex != NULL)
+//			copyExecutableVertices(startVertex, outSDF);
+//		else
+//			exitWithCode(1061);
 //	}
 
-
-//	// Checking the configuration vertices.
-//	for (UINT32 i = 0; i < nb_config_vertices; i++) {
-//		copyExecutableVertices(&input_vertices[i], outSDF);
-//	}
+	for (UINT32 i = 0; i < nb_vertices; i++) {
+		if(vertices[i]->getExecutable() == undefined)
+			copyExecutableVertices(vertices[i], outSDF);
+	}
 
 }
 
-void PiSDFGraph::resetVisitedVertices(){
+void PiSDFGraph::clearAfterVisit(){
+	// Clearing vertices (member "executable" = "undefined").
 	for (UINT32 i = 0; i < nb_edges; i++) {
 		BaseVertex* vertex;
-		// Setting to "visited = false" the source vertex and eventually its sub-graph.
 		vertex = edges[i].getSource();
-		vertex->setVisited(false);
+		vertex->setExecutable(undefined);
 		if (vertex->getType() == pisdf_vertex){
 			PiSDFGraph* subGraph = ((PiSDFVertex*)(vertex))->getSubGraph();
 			if(subGraph != (PiSDFGraph*)0)
-				subGraph->resetVisitedVertices();
+				subGraph->clearAfterVisit();
 		}
 
-
-		// Setting to "visited = false" the sink vertex and eventually its sub-graph.
 		vertex = edges[i].getSink();
-		vertex->setVisited(false);
+		vertex->setExecutable(undefined);
 		if (vertex->getType() == pisdf_vertex){
 			PiSDFGraph* subGraph = ((PiSDFVertex*)(vertex))->getSubGraph();
 			if(subGraph != (PiSDFGraph*)0)
-				subGraph->resetVisitedVertices();
+				subGraph->clearAfterVisit();
 		}
 	}
+
+	// Clearing parameters. (member "solved" = false)
+	for (UINT32 i = 0; i < nb_config_vertices; i++) {
+		PiSDFConfigVertex* vertex = &config_vertices[i];
+		for (UINT32 j = 0; j < vertex->getNbRelatedParams(); j++) {
+			PiSDFParameter* param = vertex->getRelatedParam(j);
+			param->setResolved(false);
+		}
+	}
+
+	// Clearing other members..
+	nbExecVertices = 0;
+	nbDiscardVertices = 0;
 }

@@ -455,6 +455,7 @@ void PiSDFTransformer::transform(SDFGraph *sdf, SRDAGGraph *srGraph)
 	}
 
 	// Filling the topology matrix(nbEdges x nbVertices). See Maxime Pelcat's thesis section 3.2.1
+	memset(topo_matrix, 0, sizeof(topo_matrix));
 	for(UINT32 i = 0; i < nbEdges; i++){
 		BaseEdge* edge = sdf->getEdge(i);
 		topo_matrix[i * nbVertices + edge->getSource()->getTempId()] = edge->getProductionInt();

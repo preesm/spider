@@ -115,7 +115,7 @@ static void exitWithCode(int exitCode){
 	// 1058: Too many actor machines.
 	// 1059: Too many actors.
 	// 1060: Too many FIFOs.
-	// 1061: Graph already visited.
+	// 1061: Graph already executed.
 
 	printf("\nExiting with code %d\n", exitCode);
 	exit(exitCode);

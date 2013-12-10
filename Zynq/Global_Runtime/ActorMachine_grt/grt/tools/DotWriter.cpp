@@ -408,6 +408,7 @@ void DotWriter::write(BaseVertex **schedulableVertices, UINT32 nbSchedulabeVerti
 	}
 }
 
+
 void DotWriter::write(SDFGraph *sdf, const char *path, char displayNames)
 {
 	FILE * pFile;
@@ -424,11 +425,12 @@ void DotWriter::write(SDFGraph *sdf, const char *path, char displayNames)
 
 		for (UINT32 j = 0; j < sdf->getNbEdges(); j++) {
 			BaseEdge* edge = sdf->getEdge(j);
-			fprintf (pFile, "\t%s->%s [taillabel=\"%d\" headlabel=\"%d\"];\n",
-					edge->getSource()->getName(),
-					edge->getSink()->getName(),
-					edge->getProductionInt(),
-					edge->getConsumptionInt());
+			if(sdf->checkEdge(edge))
+				fprintf (pFile, "\t%s->%s [taillabel=\"%d\" headlabel=\"%d\"];\n",
+						edge->getSource()->getName(),
+						edge->getSink()->getName(),
+						edge->getProductionInt(),
+						edge->getConsumptionInt());
 		}
 
 		fprintf (pFile, "}\n");

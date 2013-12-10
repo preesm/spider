@@ -49,14 +49,13 @@
 
 #define PRINT_GRAPH			1
 #define PiSDF_FILE_PATH		"pisdf.gv"
-#define SUB_SDF_FILE_0_PATH	"subSdf_0.gv"
-#define SUB_SDF_FILE_1_PATH	"subSdf_1.gv"
+#define SUB_SDF_FILE_0_PATH	"subSdf.gv"
 #define SRDAG_FILE_PATH		"srDag.gv"
 
 
-
-UINT32 PiSDFGraph::nbExecutableVertices = 0;
-BaseVertex* PiSDFGraph::ExecutableVertices[MAX_NB_VERTICES] = {NULL};
+UINT32 PiSDFGraph::glbNbConfigVertices = 0;
+//UINT32 PiSDFGraph::nbExecutableVertices = 0;
+//BaseVertex* PiSDFGraph::ExecutableVertices[MAX_NB_VERTICES] = {NULL};
 
 void createArch(Architecture* arch, int nbSlaves){
 	static char tempStr[11];
@@ -100,102 +99,75 @@ void mpeg4_part2_main(int nbSlaves)
 	BaseSchedule	schedule;
 	schedule.setNbActiveSlaves(arch.getNbActiveSlaves());
 
-	 // Creating the launcher.
-//	launcher launch(nbSlaves);
+
+	PiSDFTransformer transformer;
 
 	ExecutionStat execStat;
-
-	// TODO: Skip the loop if there is no configuration actor.
-//	while(true){
-	// Updating the list of executable vertices (i.e. configuration vertices).
-//	piSDF.resetExecutableVertices();
-//	piSDF.setExecutableVertices();
-
 	SDFGraph sdf1;
-	piSDF.getSDFGraph(&sdf1);
+	UINT32 prevNbConfigVertices;
 
-	// Linking the executable vertices.
-	if(sdf1.getNbVertices() > 0) piSDF.linkExecutableVertices(&sdf1);
+	while(true){
+		bool init = true;
+		do{
+			prevNbConfigVertices = sdf1.getNbConfigVertices();
 
-#if PRINT_GRAPH
-	// Printing the SDF sub-graph.
-	dotWriter.write(&sdf1, SUB_SDF_FILE_0_PATH, 1);
-#endif
+			// Getting executable vertices.
+			sdf1.reset(); // Clears the graph.
+			piSDF.getSDFGraph(&sdf1);
 
-//	// Scheduling the executable vertices.
-//	schedule.reset();
-//	listScheduler.schedule(piSDF.getExecutableVertices(), piSDF.getNbExecutableVertices(), &schedule);
-//	schedWriter.write(&schedule, &srDag, &arch, "test.xml");
-////	scheduleChecker.checkSchedule(&srDag, &schedule, &arch);
-//
-//	ExecutionStat execStat;
-//
-//	// Preparing the execution of configuration vertices.
-//	launch.reset();
-//	launch.prepareConfigExec(
-//			piSDF.getExecutableVertices(),
-//			piSDF.getNbExecutableVertices(),
-//			&arch,
-//			&schedule,
-//			&execStat);
-//
-//
-//	// Launching the execution of configuration vertices.
-//	launch.launch(nbSlaves);
-//
-//	// Resolving parameters.
-//	launch.resolvePiSDFParameters(
-//			piSDF.getExecutableVertices(),
-//			piSDF.getNbExecutableVertices(),
-//			&schedule,
-//			&arch);
-//	}
+			// Linking the executable vertices.
+			if(sdf1.getNbVertices() > 0) piSDF.linkExecutableVertices(&sdf1);
 
-//	// Locating executable sub-graph (parameters have been resolved).
-//	SDFGraph sdf2;
-//	piSDF.resetVisitedVertices();
-//	piSDF.getSDFGraph(&sdf2);
-//
-//
-//#if PRINT_GRAPH
-//	// Printing the SDF sub-graph.
-//	dotWriter.write(&sdf2, SUB_SDF_FILE_1_PATH, 1);
-//#endif
+		#if PRINT_GRAPH
+			// Printing the SDF sub-graph.
+			dotWriter.write(&sdf1, SUB_SDF_FILE_0_PATH, 1);
+		#endif
 
+			// Flattening subSDF graph and transforming it into DAG.
+			SRDAGGraph dag;
+			transformer.transform(&sdf1, &dag);
 
-	// Flattening subSDF graph and transforming it into DAG.
-	SRDAGGraph dag;
-	PiSDFTransformer transformer;
-//	CSDAGTransformer csDAGTransformer;
-//	csDAGTransformer.transform(&csDag, &dag, (Architecture*)0);
+			// Printing the DAG.
+		#if PRINT_GRAPH
+			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FILE_PATH, 1);
+		#endif
 
-	transformer.transform(&sdf1, &dag);
+			// Scheduling the DAG.
+			schedule.reset();
+			listScheduler.schedule(&dag, &schedule, &arch);
+			schedWriter.write(&schedule, &dag, &arch, "test.xml");
 
+		//	 // Creating the launcher.
+		//	launcher launch(nbSlaves);
+		//
+		//	// Preparing and launching execution.
+		//	launch.reset();
+		//	launch.prepare(&dag, &arch, &schedule, false, &execStat);
+		//	launch.launch(nbSlaves);
 
-	// Printing the DAG.
-#if PRINT_GRAPH
-	dotWriter.write((SRDAGGraph*)&dag, SRDAG_FILE_PATH, 1);
-#endif
+			// Resolving parameters.
+			for (UINT32 i = 0; i < sdf1.getNbConfigVertices(); i++) {
+				PiSDFConfigVertex* configVertex = (PiSDFConfigVertex*)(sdf1.getConfigVertex(i));
+		//		UINT32 slaveId;
+				for (UINT32 j = 0; j < configVertex->getNbRelatedParams(); j++) {
+					PiSDFParameter* param = configVertex->getRelatedParam(j);
+					if (!param->getResolved()){
+		//				if(schedule.findSlaveId(configVertex->getId(), configVertex, &slaveId)){
+		//					UINT64 value = RTQueuePop_UINT32(slaveId, RTCtrlQueue);
+							UINT64 value;
+							if(init)
+								value = 0;
+							else
+								value = 1;
 
+							configVertex->getRelatedParam(j)->setValue(value);
+		//				}
+					}
+				}
+			}
+			init = false;
+		}while(prevNbConfigVertices < piSDF.getGlbNbConfigVertices());
 
-	// Scheduling the DAG.
-	schedule.reset();
-	listScheduler.schedule(&dag, &schedule, &arch);
-
-	schedWriter.write(&schedule, &dag, &arch, "test.xml");
-//	scheduleChecker.checkSchedule(&dag, &schedule, &arch);
-//
-	// Creating the execution stats.
-
-//	execStat.nbSRDAGVertices = srDag.getNbVertices();
-//	execStat.nbSRDAGEdges = srDag.getNbEdges();
-//	execStat.nbFunction = csDag.getNbVertices()+1;
-
-	 // Creating the launcher.
-	launcher launch(nbSlaves);
-
-	// Preparing and launching execution.
-	launch.reset();
-	launch.prepare(&dag, &arch, &schedule, false, &execStat);
-	launch.launch(nbSlaves);
+		piSDF.clearAfterVisit();
+	}
 }

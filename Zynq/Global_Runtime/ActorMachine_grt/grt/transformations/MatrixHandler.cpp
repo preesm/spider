@@ -230,7 +230,8 @@ int least_common_multiple(RATIO_NB* rational_vector, int nb_elements){
  */
 int nullspace(int nb_rows, int nb_cols, int* matrix, int *results){
 
-	int last_pivot, last_row;
+	int last_pivot = 0;
+	int last_row = 0;
 	int res = AllIntegerEchelonMethod(nb_rows, nb_cols, matrix, &last_pivot, &last_row);
 
 	/* At this point, the matrix should contain only one column with nonzero elements.

@@ -41,17 +41,28 @@
 #include <grt_definitions.h>
 #include "../Base/BaseEdge.h"
 #include "tools/SchedulingError.h"
-//#include "../Base/BaseVertex.h"
 
 class BaseVertex;
 
 class SDFGraph {
 	BaseVertex* vertices[MAX_NB_VERTICES];
 	BaseEdge	edges[MAX_NB_EDGES];
+	BaseVertex* configVertices[MAX_NB_PiSDF_CONFIG_VERTICES];
 	UINT32 		nbVertices;
 	UINT32		nbEdges;
+	UINT32		nbConfigVertices;
 public:
-	SDFGraph():nbVertices(0), nbEdges(0){};
+	SDFGraph():nbVertices(0), nbEdges(0), nbConfigVertices(0){};
+
+	void reset(){
+		memset(vertices, 0, sizeof(BaseVertex*)*nbVertices);
+		memset(edges, 0, sizeof(BaseEdge*)*nbEdges);
+		memset(configVertices, 0, sizeof(BaseVertex*)*nbConfigVertices);
+
+		nbVertices = 0;
+		nbEdges = 0;
+		nbConfigVertices = 0;
+	}
 
 	void addVertex(BaseVertex* originalVertex);
 
@@ -66,6 +77,33 @@ public:
 	{
 		return &edges[index];
 	}
+
+	void addConfigVertex(BaseVertex* configVertex){
+		configVertices[nbConfigVertices++] = configVertex;
+	}
+
+	BaseVertex* getConfigVertex(UINT32 index){
+		return configVertices[index];
+	}
+
+
+	bool checkEdge(BaseEdge* edge){
+		BaseVertex* vertex;
+		UINT32 index = 0;
+		bool sourceOk = false;
+		bool sinkOk = false;
+
+		while(index < nbVertices && (!sourceOk || !sinkOk))
+		{
+			vertex = vertices[index];
+			if (vertex == edge->getSource()) sourceOk = true;
+			if (vertex == edge->getSink())	sinkOk = true;
+
+			index++;
+		}
+		return (sourceOk && sinkOk);
+	}
+
 
 
 	/*
@@ -91,6 +129,15 @@ public:
         this->nbEdges = nbEdges;
     }
 
+    UINT32 getNbConfigVertices() const
+    {
+    	return nbConfigVertices;
+    }
+
+    void setNbConfigVertices(UINT32 nbConfigVertices)
+    {
+    	this->nbConfigVertices = nbConfigVertices;
+    }
 };
 
 inline void SDFGraph::addVertex(BaseVertex* originalVertex){

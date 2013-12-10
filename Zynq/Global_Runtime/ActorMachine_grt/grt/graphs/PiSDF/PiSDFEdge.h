@@ -46,26 +46,57 @@
 class BaseVertex;
 
 class PiSDFEdge: public BaseEdge {
-	UINT32 id;
-	BaseVertex *source;
-	BaseVertex *sink;
+//	UINT32 id;
+//	BaseVertex *source;
+//	BaseVertex *sink;
 
 	// Expression defining the token production, consumption and delay (in abstract_syntax_elt)
 	abstract_syntax_elt production[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 	abstract_syntax_elt consumption[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 	abstract_syntax_elt delay[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 
-	// Production, consumption and delay after pattern resolution.
-	UINT32 productionInt;
-	UINT32 consumptionInt;
-	UINT32 delayInt;
-
-	UINT32 tempId; // Used while creating a topology matrix.
+//	// Production, consumption and delay after pattern resolution.
+//	UINT32 productionInt;
+//	UINT32 consumptionInt;
+//	UINT32 delayInt;
+//
+//	UINT32 tempId; // Used while creating a topology matrix.
 public:
-	PiSDFEdge() {
-		consumptionInt = productionInt = delayInt = 0;
+	PiSDFEdge():BaseEdge(){
+//		consumptionInt = productionInt = delayInt = 0;
 	}
 
+    abstract_syntax_elt* getProduction()
+    {
+        return production;
+    }
+
+    abstract_syntax_elt* getConsumption()
+    {
+        return consumption;
+    }
+
+    abstract_syntax_elt* getDelay()
+    {
+        return delay;
+    }
+
+    void setProduction(const char* production)
+    {
+    	globalParser.parse(production, this->production);
+    }
+
+    void setConsumption(const char* consumption)
+    {
+    	globalParser.parse(consumption, this->consumption);
+    }
+
+    void setDelay(const char* delay)
+    {
+    	globalParser.parse(delay, this->delay);
+    }
+
+/*
 
 	// Auto-generated setters and getters.
     UINT32 getId() const
@@ -78,19 +109,9 @@ public:
         this->id = id;
     }
 
-    abstract_syntax_elt* getConsumption()
-    {
-        return consumption;
-    }
-
     UINT32 getConsumptionInt() const
     {
         return consumptionInt;
-    }
-
-    abstract_syntax_elt* getDelay()
-    {
-        return delay;
     }
 
     UINT32 getDelayInt() const
@@ -98,25 +119,21 @@ public:
         return delayInt;
     }
 
-    abstract_syntax_elt* getProduction()
-    {
-        return production;
-    }
 
     UINT32 getProductionInt() const
     {
         return productionInt;
     }
 
-    BaseVertex *getSink() const
-    {
-        return sink;
-    }
-
-    BaseVertex *getSource() const
-    {
-        return source;
-    }
+//    BaseVertex *getSink() const
+//    {
+//        return sink;
+//    }
+//
+//    BaseVertex *getSource() const
+//    {
+//        return source;
+//    }
 
     UINT32 getTempId() const
     {
@@ -127,29 +144,14 @@ public:
 
 
 
-    void setConsumption(const char* consumption)
-    {
-    	globalParser.parse(consumption, this->consumption);
-    }
-
     void setConsumtionInt(UINT32 consumtionInt)
     {
         this->consumptionInt = consumtionInt;
     }
 
-    void setDelay(const char* delay)
-    {
-    	globalParser.parse(delay, this->delay);
-    }
-
     void setDelayInt(UINT32 delayInt)
     {
         this->delayInt = delayInt;
-    }
-
-    void setProduction(const char* production)
-    {
-    	globalParser.parse(production, this->production);
     }
 
     void setProductionInt(UINT32 productionInt)
@@ -171,7 +173,7 @@ public:
     {
         this->tempId = tempId;
     }
-
+*/
 };
 
 #endif /* PISDFEDGE_H_ */

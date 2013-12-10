@@ -62,13 +62,13 @@ void create_PiSDF_dec_VOP(PiSDFGraph* graph, BaseVertex* parentVertex){
 	PiSDFIfVertex *vertexInVOP = (PiSDFIfVertex*)graph->addVertex("InputVOP_L2", input_vertex);
 	vertexInVOP->setDirection(0);
 	vertexInVOP->setParentVertex(parentVertex);
-	vertexInVOP->setParentEdgeIndex(1);
+	vertexInVOP->setParentEdgeIndex(2);
 //	vertexIn->setFunction_index(3);
 
 	PiSDFIfVertex *vertexInPos = (PiSDFIfVertex*)graph->addVertex("InputPos_L2", input_vertex);
 	vertexInPos->setDirection(0);
 	vertexInPos->setParentVertex(parentVertex);
-	vertexInPos->setParentEdgeIndex(2);
+	vertexInPos->setParentEdgeIndex(1);
 //	vertexInPos->setFunction_index(4);
 
 
@@ -213,7 +213,7 @@ void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 
 
 
-//	// Subgraphs
+	// Subgraphs
 //	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS - 1) exitWithCode(1054);
 //	PiSDFGraph *decod_vop_subGraph = &graphs[nb_graphs]; nb_graphs++;
 //	create_PiSDF_dec_VOP(decod_vop_subGraph, vertex_decod_vop);

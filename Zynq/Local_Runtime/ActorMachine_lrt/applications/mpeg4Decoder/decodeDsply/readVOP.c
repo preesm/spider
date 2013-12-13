@@ -50,34 +50,39 @@ static FILE* pFile = NULL;
 static uchar buffer[BUFFER_SIZE];
 static struct_VOLsimple VideoObjectLayer_VOLsimple;
 static uchar VideoObjectLayer_vop_complexity[5];
-static long filePosition;
+static int VOLEndPos;
 
 
-//readVOPInData inData;
+readVOPStateInData stInData;
 readVOPOutData outData;
 
 
 void readVOP(UINT32 inputFIFOIds[],
 		 UINT32 inputFIFOAddrs[],
 		 UINT32 outputFIFOIds[],
-		 UINT32 outputFIFOAddrs[])
+		 UINT32 outputFIFOAddrs[],
+		 UINT32 params)
 {
 //	AM_ACTOR_ACTION_STRUCT* action;
 //	OS_TCB* tcb;
 //	tcb = getCurrTask();
 	uint nbBytesRead;
 
-	// Reading VOL info (once per complete decoding process).
-	if(VOPCounter == 0){ // Indicates that the decoding process just begins.
-		VOPCounter++;
-		// Receiving data.
-//		action = OSCurActionQuery();
-		readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
-		readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(long), (UINT8*)&filePosition); // Initial file position after the VOL.
-		readFifo(inputFIFOIds[2], inputFIFOAddrs[2], sizeof(uchar) * 5, (UINT8*)VideoObjectLayer_vop_complexity);
+	// Reading VOL info.
+	//		action = OSCurActionQuery();
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
+	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(long), (UINT8*)&VOLEndPos);
+	readFifo(inputFIFOIds[2], inputFIFOAddrs[2], sizeof(uchar) * 5, (UINT8*)VideoObjectLayer_vop_complexity);
+	readFifo(inputFIFOIds[3], inputFIFOAddrs[3], sizeof(readVOPStateInData), (UINT8*)&stInData);
+
+	if(stInData.VOPCntr == 0){
+		stInData.VOPStartPos = VOLEndPos;
+		stInData.VOPCntr++;
 	}
 
-	// Opening video file.
+
+
+	/* Opening video file.*/
 	pFile = fopen(M4V_FILE_PATH, "rb");
 	if (pFile == NULL)
 	{
@@ -86,7 +91,7 @@ void readVOP(UINT32 inputFIFOIds[],
 	}
 
 	// Repositioning file's position.
-	fseek(pFile, filePosition, SEEK_SET);
+	fseek(pFile, stInData.VOPStartPos, SEEK_SET);
 
 	// Reading Video Object Plane.
 	nbBytesRead = 0;
@@ -94,13 +99,15 @@ void readVOP(UINT32 inputFIFOIds[],
 
 	if(feof(pFile))
 		// Indicating a restarting of the decoding process.
-		VOPCounter = 0;
+		stInData.VOPCntr = 0;
 	else
 		// Storing the file's position for the next iteration.
-		filePosition = ftell(pFile);
+		stInData.VOPStartPos = ftell(pFile);
 
-	// Closing video file.
+	/* Closing video file.*/
 	fclose(pFile);
+
+
 
 
 	// Reading the VOP from the buffer.
@@ -116,5 +123,7 @@ void readVOP(UINT32 inputFIFOIds[],
 
 	// Sending data.
 //	action = OSCurActionQuery();
-	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(readVOPOutData), (UINT8*)&outData);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(readVOPStateInData), (UINT8*)&stInData);
+	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(readVOPOutData), (UINT8*)&outData);
+	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], BUFFER_SIZE, (UINT8*)&buffer);
 }

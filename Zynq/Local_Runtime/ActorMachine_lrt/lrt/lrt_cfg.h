@@ -73,8 +73,8 @@
 #define MAX_NB_FIFO		OS_NB_FIFO
 #define WORKING_MEMORY_SIZE 720*400*3
 #else
-#define MAX_NB_ARGS		50
-#define MAX_NB_FIFO		100
+#define MAX_NB_FIFO			100
+#define MAX_NB_PARAMETERS	10
 #define WORKING_MEMORY_SIZE 720*(400/8)
 #endif
 

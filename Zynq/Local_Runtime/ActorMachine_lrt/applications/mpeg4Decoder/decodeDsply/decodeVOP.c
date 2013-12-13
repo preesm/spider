@@ -43,7 +43,7 @@
 #include "hwQueues.h"
 #include "lrt_taskMngr.h"
 
-static uchar VOPCounter = 0;
+//static uchar VOPCounter = 0;
 
 static REVERSE_EVENT init_vlc_tables_P_PC_decod1_DCT3D_P[4096];
 static REVERSE_EVENT init_vlc_tables_I_PC_decod1_DCT3D_I[4096];
@@ -52,7 +52,7 @@ static FILE* pFile = NULL;
 static uchar buffer[BUFFER_SIZE];
 
 static struct_VOLsimple VideoObjectLayer_VOLsimple;
-static long filePosition;
+static long filePosition = 28;
 static readVOPOutData inData;
 
 static uchar stock_mb_type_P[1620];
@@ -61,6 +61,7 @@ static int pos_fin_vlc;
 static int keyframes[2] = {0};
 
 static decodeVOPOutData outData;
+decodeVOPOutData stInData;
 
 static UINT32 IVOPCounter = 0;
 static UINT32 PVOPCounter = 0;
@@ -75,43 +76,43 @@ void decodeVOP(UINT32 inputFIFOIds[],
 	uint nbBytesRead;
 
 	// Initializations...
-	if(VOPCounter == 0){
-		VOPCounter++;
-		init_vlc_tables_P(init_vlc_tables_P_PC_decod1_DCT3D_P);
-		init_vlc_tables_I(init_vlc_tables_I_PC_decod1_DCT3D_I);
+	init_vlc_tables_P(init_vlc_tables_P_PC_decod1_DCT3D_P);
+	init_vlc_tables_I(init_vlc_tables_I_PC_decod1_DCT3D_I);
 
-		// Receiving data from input ports.
-		readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
-		readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(long), (UINT8*)&filePosition);
-	}
+	// Receiving data.
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
+	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(decodeVOPInData), (UINT8*)&inData);
+	readFifo(inputFIFOIds[2], inputFIFOAddrs[2], BUFFER_SIZE, (UINT8*)&buffer);
+	readFifo(inputFIFOIds[3], inputFIFOAddrs[3], sizeof(decodeVOPOutData), (UINT8*)&stInData);
 
-	// Receiving data from read VOP action.
-	readFifo(inputFIFOIds[2], inputFIFOAddrs[2], sizeof(decodeVOPInData), (UINT8*)&inData);
 
-	// Opening video file.
-	pFile = fopen(M4V_FILE_PATH, "rb");
-	if (pFile == NULL)
-	{
-	  printf("Cannot open m4v_file file '%s' \n", M4V_FILE_PATH);
-	  exit(-1);
-	}
 
-	// Repositioning file's position.
-	fseek(pFile, filePosition, SEEK_SET);
+//	// Opening video file.
+//	pFile = fopen(M4V_FILE_PATH, "rb");
+//	if (pFile == NULL)
+//	{
+//	  printf("Cannot open m4v_file file '%s' \n", M4V_FILE_PATH);
+//	  exit(-1);
+//	}
+//
+//	// Repositioning file's position.
+//	fseek(pFile, filePosition, SEEK_SET);
+//
+//	// Reading Video Object Plane (the same as in readVOP action).
+//	nbBytesRead = 0;
+//	readUpToNextStartCode(pFile, buffer, &nbBytesRead);
+//
+//	if(feof(pFile))
+//		// Indicating a restarting of the decoding process.
+//		filePosition = 28;
+//	else
+//		// Storing the file's position for the next iteration.
+//		filePosition = ftell(pFile);
+//
+//	// Closing video file.
+//	fclose(pFile);
 
-	// Reading Video Object Plane (the same as in readVOP action).
-	nbBytesRead = 0;
-	readUpToNextStartCode(pFile, buffer, &nbBytesRead);
 
-	if(feof(pFile))
-		// Indicating a restarting of the decoding process.
-		VOPCounter = 0;
-	else
-		// Storing the file's position for the next iteration.
-		filePosition = ftell(pFile);
-
-	// Closing video file.
-	fclose(pFile);
 
 	/* switch VOP coding type */
 	switch (inData.VideoObjectPlane_vop_coding_type) {
@@ -119,7 +120,7 @@ void decodeVOP(UINT32 inputFIFOIds[],
 	  case 0 : {
 		  IVOPCounter++;
 		decode_I_frame(
-				&buffer[4],
+				&buffer[4], // Skipping the start code.
 				&VideoObjectLayer_VOLsimple,
 				inData.VideoObjectPlane_pos,
 				&inData.VideoObjectPlane_VOP,
@@ -136,7 +137,7 @@ void decodeVOP(UINT32 inputFIFOIds[],
 	  case 1 : {
 		  PVOPCounter++;
 		decode_P_frame(
-				&buffer[4],
+				&buffer[4], // Skipping the start code.
 				&VideoObjectLayer_VOLsimple,
 				inData.VideoObjectPlane_pos,
 				&inData.VideoObjectPlane_VOP,
@@ -156,4 +157,5 @@ void decodeVOP(UINT32 inputFIFOIds[],
 
 	// Sending data.
 	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&outData);
+	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&outData);
 }

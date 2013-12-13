@@ -51,6 +51,7 @@
 #define dpb_type 	unsigned char
 
 #define M4V_FILE_PATH		"C:\\work\\COMPA\\decodeur_mp4\\Sequences\\SIMPLE\\P-VOP\\jvc011.m4v"
+#define HIERARCHY_LEVEL	2
 
 // Frame dimensions assuming 4:2:0 sampling.
 #define X_DIM			1786
@@ -79,6 +80,16 @@ typedef struct imgDimensionsData{
 	int VideoObjectLayer_ysize_o;
 }imgDimensionsData;
 
+
+typedef struct readVOLInData{
+	struct_VOLsimple 	VideoObjectLayer_VOLsimple;
+	uchar 				VideoObjectLayer_vop_complexity[5];
+	int 				VOLPosition;
+	imgDimensionsData	ImgDim;
+	uchar				StartCodeCntr;
+}readVOLInData;
+
+
 //
 //typedef struct readVOLOutData{
 //	long filePosition;
@@ -87,7 +98,10 @@ typedef struct imgDimensionsData{
 //}readVOLOutData;
 
 
-//typedef readVOLOutData readVOPInData;
+typedef struct readVOPStateInData{
+	uchar	VOPCntr;
+	int 	VOPStartPos;
+}readVOPStateInData;
 
 
 typedef struct readVOPOutData{

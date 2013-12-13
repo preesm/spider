@@ -101,14 +101,15 @@ void LRTStartCurrTask() {
 
 	MonitorAction Act = switchMonitor(AMManagement);
 	if(OSTCBCur->isAM){
-		OSTCBCur->task_func(0, 0, 0, 0); // Fifos are not required whe calling the AM default function.
+		OSTCBCur->task_func(0, 0, 0, 0, 0); // Fifos are not required whe calling the AM default function.
 	}
 	else{
 		verifyActorCond(OSTCBCur->actor);
 		OSTCBCur->task_func(OSTCBCur->actor->inputFifoId,
 							OSTCBCur->actor->inputFifoDataOff,
 							OSTCBCur->actor->outputFifoId,
-							OSTCBCur->actor->outputFifoDataOff);
+							OSTCBCur->actor->outputFifoDataOff,
+							OSTCBCur->actor->params);
 	}
 
 

@@ -56,8 +56,8 @@
 FUNCTION_TYPE functions_tbl[NB_LOCAL_FUNCTIONS]; /* Table of Action Fcts */
 
 
-static UINT8 OSTaskCtr = 0;                     			// Tasks' counter.
-static UINT8 OSTaskIndex = 0;                     			// Tasks' index.
+UINT8 OSTaskCntr = 0;                     			// Tasks' counter.
+UINT8 OSTaskIndex = 0;                     			// Tasks' index.
 
 //static UINT8* workingMemory;
 static UINT8 workingMemory[WORKING_MEMORY_SIZE];
@@ -82,20 +82,26 @@ void  LrtTaskCreate (){
 	UINT32 taskFunctId;
 	LRTActor* newActor;
 
-	if(OSTaskIndex >= OS_MAX_TASKS){
+	if(OSTaskCntr >= OS_MAX_TASKS){
 		zynq_puts("Create Task ");zynq_putdec(OSTaskIndex);zynq_puts("\n");
 		exitWithCode(1003);
 	}
+
+	// Finding an unused TCB.
 	new_tcb = &OSTCBTbl[OSTaskIndex];
 	newActor = &LRTActorTbl[OSTaskIndex];
 
-	if (new_tcb->OSTCBState == OS_STAT_UNINITIALIZED) { /* Make sure task doesn't already exist at this id  */
-		new_tcb->OSTCBState = OS_STAT_READY;/* Reserve the priority to prevent others from doing ...  */
+//	if (new_tcb->OSTCBState == OS_STAT_UNINITIALIZED) { /* Make sure task doesn't already exist at this id  */
+//		new_tcb->OSTCBState = OS_STAT_READY;/* Reserve the priority to prevent others from doing ...  */
 
 		/* Store task ID */
-		new_tcb->OSTCBId = OSTaskIndex++; OSTaskCtr++;
+		new_tcb->OSTCBId = OSTaskIndex++;
+		if(OSTaskIndex == (OS_MAX_TASKS)) OSTaskIndex = 0;
 
-		/* Update current running Task List */
+		// Incrementing the task counter.
+		OSTaskCntr++;
+
+		// Set the current TCB pointer if it is not already done.
 		if(OSTCBCur == (OS_TCB*)0){
 			/* If no running Task */
 			OSTCBCur = new_tcb;
@@ -104,6 +110,11 @@ void  LrtTaskCreate (){
 //			new_tcb->OSTCBNext = OSTCBCur;
 		}
 
+
+
+		/*
+		 * Getting data from the control queue.
+		 */
 		// Popping the task function id.
 		taskFunctId = RTQueuePop_UINT32(RTCtrlQueue);
 
@@ -144,8 +155,8 @@ void  LrtTaskCreate (){
 		s[3] = cpuId + '0';
 		dotWriter(new_tcb, s);
 #endif
-	}else
-		exitWithCode(1012);
+//	}else
+//		exitWithCode(1012);
 }
 
 
@@ -171,10 +182,10 @@ AM_ACTOR_ACTION_STRUCT* OSCurActionQuery(){
 
 void  LrtTaskDeleteCur(){
 	UINT8	id = OSTCBCur->OSTCBId;
-    OS_TCB    *del_tcb = &OSTCBTbl[id];
+//    OS_TCB    *del_tcb = &OSTCBTbl[id];
 
-    if (del_tcb->OSTCBState == OS_STAT_READY) { /* Make sure task doesn't already exist at this id  */
-    	del_tcb->OSTCBState = OS_STAT_UNINITIALIZED;/* Reserve the priority to prevent others from doing ...  */
+//    if (del_tcb->OSTCBState == OS_STAT_READY) { /* Make sure task doesn't already exist at this id  */
+//    	del_tcb->OSTCBState = OS_STAT_UNINITIALIZED;/* Reserve the priority to prevent others from doing ...  */
 
     	/* Update current running Task List */
 //		if(del_tcb->OSTCBNext == del_tcb){
@@ -183,17 +194,23 @@ void  LrtTaskDeleteCur(){
 //		}else{
 //			OSTCBCur = del_tcb->OSTCBNext;
 //		}
+	/* Decrement the tasks counter */
+	OSTaskCntr--;
 
-    	if (OSTCBCur->OSTCBId < OSTaskIndex)
-    		OSTCBCur = &OSTCBTbl[id + 1];
-    	else{
-			OSTCBCur = (OS_TCB*)0;
-			lrt_running = FALSE;
-    	}
-		/* Decrement the tasks counter */
-		OSTaskCtr--;
-    }else
-    	exitWithCode(1013);
+    if(OSTaskCntr > 0){
+    	id++;
+    	if (id < OS_MAX_TASKS )
+    		OSTCBCur = &OSTCBTbl[id];
+    	else
+    		OSTCBCur = &OSTCBTbl[0];
+    }
+	else{
+		OSTCBCur = (OS_TCB*)0;
+		lrt_running = FALSE;
+    }
+
+//    }else
+//    	exitWithCode(1013);
 }
 
 void  OSTaskDel (){

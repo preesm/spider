@@ -35,25 +35,24 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include <lrt_fifoMngr.h>
+#include <lrt_1W1RfifoMngr.h>
 #include <hwQueues.h>
-#include "lrt_taskMngr.h"
+#include <lrt_core.h>
+#include <lrt_taskMngr.h>
 
-static readVOPOutData inData;
+static readVOPOutData VOPData;
 
-void setVOPType(){
-	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
-	UINT32 VOPType;
+void setVOPType(UINT32 inputFIFOIds[],
+		 UINT32 inputFIFOAddrs[],
+		 UINT32 outputFIFOIds[],
+		 UINT32 outputFIFOAddrs[],
+		 UINT32 params){
 
-	// Reading inputs (VOPPos, VOPType, VOP).
-	read_input_fifo(action->fifo_in_id[0], sizeof(readVOPOutData), (UINT8*)&inData);
-
-	VOPType = inData.VideoObjectPlane_vop_coding_type;
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(readVOPOutData), (UINT8*)&VOPData);
 
 	// Sending parameter's value to Global Runtime.
-	RTQueuePush_UINT32(RTInfoQueue, VOPType);
+	RTQueuePush_UINT32(RTInfoQueue, VOPData.VideoObjectPlane_vop_coding_type);
 }

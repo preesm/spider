@@ -44,10 +44,12 @@
 #include <lrt_taskMngr.h>
 
 static uchar buffer[BUFFER_SIZE];
-static struct_VOLsimple VideoObjectLayer_VOLsimple;
-static uchar VideoObjectLayer_vop_complexity[5];
-static int VideoObjectLayer_pos_o;
-static imgDimensionsData outData;
+//static struct_VOLsimple VideoObjectLayer_VOLsimple;
+//static uchar VideoObjectLayer_vop_complexity[5];
+//static int VideoObjectLayer_pos_o;
+//static imgDimensionsData outData;
+
+static readVOLInData inData;
 
 void readVOL(UINT32 inputFIFOIds[],
 			 UINT32 inputFIFOAddrs[],
@@ -55,45 +57,51 @@ void readVOL(UINT32 inputFIFOIds[],
 			 UINT32 outputFIFOAddrs[]){
 	uint nbBytesRead;
 	FILE* pFile = NULL;
-	long filePosition;
+//	long filePosition;
 //	OS_TCB* tcb;
 //	AM_ACTOR_ACTION_STRUCT* action;
 
-	pFile = fopen(M4V_FILE_PATH, "rb");
-	if (pFile == NULL)
-	{
-	  printf("Cannot open m4v_file file '%s' \n", M4V_FILE_PATH);
-	  exit(-1);
+	readFifo(inputFIFOIds[0],inputFIFOAddrs[0], sizeof(readVOLInData), (UINT8*)&inData);
+
+	if(inData.StartCodeCntr == 0){
+		pFile = fopen(M4V_FILE_PATH, "rb");
+		if (pFile == NULL)
+		{
+		  printf("Cannot open m4v_file file '%s' \n", M4V_FILE_PATH);
+		  exit(-1);
+		}
+
+		nbBytesRead = 0;
+
+		// Reading Visual Object (I don't know why but there is no VOS).
+		readUpToNextStartCode(pFile, buffer, &nbBytesRead);
+
+		// Reading Visual Object Layer.
+		readUpToNextStartCode(pFile, buffer, &nbBytesRead);
+		VideoObjectLayer(
+				BUFFER_START_POSITION,
+				nbBytesRead,
+				buffer,
+				&inData.VideoObjectLayer_VOLsimple,
+				inData.VideoObjectLayer_vop_complexity,
+				&inData.VOLPosition,
+				&inData.ImgDim.VideoObjectLayer_xsize_o,
+				&inData.ImgDim.VideoObjectLayer_ysize_o);
+
+		// Reading file's current position.
+		inData.VOLPosition = ftell(pFile);
+
+		// Closing video file.
+		fclose(pFile);
+		inData.StartCodeCntr++;
 	}
-
-	nbBytesRead = 0;
-
-	// Reading Visual Object (I don't know why but there is no VOS).
-	readUpToNextStartCode(pFile, buffer, &nbBytesRead);
-
-	// Reading Visual Object Layer.
-	readUpToNextStartCode(pFile, buffer, &nbBytesRead);
-	VideoObjectLayer(
-			BUFFER_START_POSITION,
-			nbBytesRead,
-			buffer,
-			&VideoObjectLayer_VOLsimple,
-			VideoObjectLayer_vop_complexity,
-			&VideoObjectLayer_pos_o,
-			&outData.VideoObjectLayer_xsize_o,
-			&outData.VideoObjectLayer_ysize_o);
-
-	// Reading file's current position.
-	filePosition = ftell(pFile);
-
-	// Closing video file.
-	fclose(pFile);
 
 	/* Sending data */
 //	tcb = getCurrTask();
 //	action = OSCurActionQuery();
-	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
-	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(uchar) * 5, (UINT8*)VideoObjectLayer_vop_complexity);
-	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], sizeof(long), (UINT8*)&filePosition);
-	writeFifo(outputFIFOIds[3], outputFIFOAddrs[3], sizeof(imgDimensionsData), (UINT8*)&outData);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(readVOLInData), (UINT8*)&inData);
+	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(struct_VOLsimple), (UINT8*)&inData.VideoObjectLayer_VOLsimple);
+	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], sizeof(uchar) * 5, (UINT8*)(inData.VideoObjectLayer_vop_complexity));
+	writeFifo(outputFIFOIds[3], outputFIFOAddrs[3], sizeof(long), (UINT8*)&inData.VOLPosition);
+	writeFifo(outputFIFOIds[4], outputFIFOAddrs[4], sizeof(imgDimensionsData), (UINT8*)&inData.ImgDim);
 }

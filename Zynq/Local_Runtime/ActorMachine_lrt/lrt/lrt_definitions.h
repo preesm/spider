@@ -119,7 +119,8 @@ typedef enum os_stat{
 typedef void (*FUNCTION_TYPE)(UINT32 inputFIFOIds[],
 							  UINT32 inputFIFOAddrs[],
 							  UINT32 outputFIFOIds[],
-							  UINT32 outputFIFOAddrs[]);// Function of a task/vertex.
+							  UINT32 outputFIFOAddrs[],
+							  UINT32 params[]);// Function of a task/vertex.
 
 /*
 *********************************************************************************************************
@@ -213,7 +214,7 @@ typedef struct {
 	UINT32	outputFifoIds[MAX_NB_FIFO];
 	UINT32 	inputFifoDataOffs[MAX_NB_FIFO];
 	UINT32 	outputFifoDataOffs[MAX_NB_FIFO];
-	UINT32	param_value[MAX_NB_ARGS];
+	UINT32	params[MAX_NB_PARAMETERS];
 
 }AM_ACTOR_ACTION_STRUCT;
 
@@ -253,12 +254,14 @@ typedef struct actorMachine{
 typedef struct lrtActor{
 	UINT32	nbInputFifos;
 	UINT32	nbOutputFifos;
+	UINT32	nbParams;
 	UINT32	inputFifoId[MAX_NB_FIFO];
 	UINT32	outputFifoId[MAX_NB_FIFO];
 	UINT32	readDataSize[MAX_NB_FIFO];
 	UINT32	writeDataSize[MAX_NB_FIFO];
 	UINT32 	inputFifoDataOff[MAX_NB_FIFO];
 	UINT32 	outputFifoDataOff[MAX_NB_FIFO];
+	UINT32	params[MAX_NB_PARAMETERS];
 }LRTActor;
 
 

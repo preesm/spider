@@ -24,15 +24,31 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
+	// Top L0.
 	functions_tbl[0] = readVOL;
 //	functions_tbl[1] = decodeDsply;
-	functions_tbl[2] = inputVOL;
+	// Level L1.
+	functions_tbl[2] = inputVOL_L1;
 	functions_tbl[3] = inputComplexity;
-	functions_tbl[4] = inputPosition;
+	functions_tbl[4] = inputVOLPos;
 	functions_tbl[5] = inputImgDimensions;
 	functions_tbl[6] = readVOP;
-	functions_tbl[7] = decodeVOP;
-	functions_tbl[8] = displayVOP;
+	functions_tbl[7] = displayVOP;
+#if HIERARCHY_LEVEL > 1
+	functions_tbl[8] = inputVOL_L2;
+	functions_tbl[9] = inputVOPData_L2;
+	functions_tbl[10] = inputFrmData_L2;
+	functions_tbl[11] = inputPrevImg_L2;
+	functions_tbl[12] = setVOPType;
+	functions_tbl[13] = switch_0;
+	functions_tbl[14] = switch_1;
+	functions_tbl[15] = decodeVOP_I;
+	functions_tbl[16] = decodeVOP_P;
+	functions_tbl[18] = select_0;
+	functions_tbl[19] = outputImg;
+#else
+	functions_tbl[8] = decodeVOP;
+#endif
 
 //	UINT32 data = 1;
 //	FILE* pFile = fopen(SH_MEM_FILE_PATH, "rb+");

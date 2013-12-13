@@ -34,31 +34,40 @@
  * The fact that you are presently reading this means that you have had		*
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
-#include <lrt_fifoMngr.h>
-#include <mpeg.h>
-#include "definitions.h"
-#include "lrt_definitions.h"
-#include "lrt_taskMngr.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include "definitions.h"
+#include <lrt_1W1RfifoMngr.h>
+#include <hwQueues.h>
+#include <lrt_core.h>
+#include <lrt_taskMngr.h>
 
 REVERSE_EVENT init_vlc_tables_I_PC_decod1_DCT3D_I[4096];
 
-int keyframes[2] = {0};
+//int keyframes[2] = {0};
 
-decodeVOPInData inputData;
-decodeVOPOutData outputData;
 
-void decode_I_frame(const unsigned char *data,const struct_VOLsimple *VOLsimple,const int position,struct_VOP *VOP,REVERSE_EVENT *DCT3D_I,int *pos_fin_vlc,int *address,unsigned char *Lum,unsigned char *Cb,unsigned char *Cr,int *keyframes);
 
-void decodeVOP_I(){
+static readVOPOutData VOPData;
+static struct_VOLsimple VideoObjectLayer_VOLsimple;
+static uchar buffer[BUFFER_SIZE];
+
+static decodeVOPOutData outputData;
+
+
+//void decode_I_frame(const unsigned char *data,const struct_VOLsimple *VOLsimple,const int position,struct_VOP *VOP,REVERSE_EVENT *DCT3D_I,int *pos_fin_vlc,int *address,unsigned char *Lum,unsigned char *Cb,unsigned char *Cr,int *keyframes);
+
+void decodeVOP_I(UINT32 inputFIFOIds[],
+		 UINT32 inputFIFOAddrs[],
+		 UINT32 outputFIFOIds[],
+		 UINT32 outputFIFOAddrs[],
+		 UINT32 params[]){
 	int frame_pos_fin_vlc;
-	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
 
-	// Getting input data.
-	read_input_fifo(action->fifo_in_id[0], sizeof(decodeVOPInData), (UINT8*)&inputData);
-
-
-
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(readVOPOutData), (UINT8*)&VOPData);
+	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
+	readFifo(inputFIFOIds[2], inputFIFOAddrs[2], BUFFER_SIZE, (UINT8*)&buffer);
 
 //	if(firstframe==0){
 //		firstframe++;
@@ -87,5 +96,5 @@ void decodeVOP_I(){
 //	Choix_I_P_haut_niveau_CondO5_o = Choix_I_P_haut_niveau_decode_I_frame_pos_fin_vlc;
 
 	// Sending output data.
-	write_output_fifo(action->fifo_out_id[0], sizeof(decodeVOPOutData), (UINT8*)&outputData);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&outputData);
 }

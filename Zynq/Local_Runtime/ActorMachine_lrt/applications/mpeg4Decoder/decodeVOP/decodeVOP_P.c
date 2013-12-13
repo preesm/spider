@@ -35,25 +35,67 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-void decodeVOP_P(){
-//	  Choix_I_P_haut_niveau_CondO6_o = 1 ;
-//
+#include <stdio.h>
+#include <stdlib.h>
+#include "definitions.h"
+#include <lrt_1W1RfifoMngr.h>
+#include <hwQueues.h>
+#include <lrt_core.h>
+#include <lrt_taskMngr.h>
+
+
+REVERSE_EVENT init_vlc_tables_I_PC_decod1_DCT3D_I[4096];
+
+//int keyframes[2] = {0};
+
+
+
+static readVOPOutData VOPData;
+static struct_VOLsimple VideoObjectLayer_VOLsimple;
+static uchar buffer[BUFFER_SIZE];
+
+static decodeVOPOutData img;
+
+
+//void decode_I_frame(const unsigned char *data,const struct_VOLsimple *VOLsimple,const int position,struct_VOP *VOP,REVERSE_EVENT *DCT3D_I,int *pos_fin_vlc,int *address,unsigned char *Lum,unsigned char *Cb,unsigned char *Cr,int *keyframes);
+
+void decodeVOP_P(UINT32 inputFIFOIds[],
+		 UINT32 inputFIFOAddrs[],
+		 UINT32 outputFIFOIds[],
+		 UINT32 outputFIFOAddrs[],
+		 UINT32 params[]){
+	int frame_pos_fin_vlc;
+
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(readVOPOutData), (UINT8*)&VOPData);
+	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
+	readFifo(inputFIFOIds[2], inputFIFOAddrs[2], BUFFER_SIZE, (UINT8*)&buffer);
+
+//	if(firstframe==0){
+//		firstframe++;
+//		Choix_I_P_haut_niveau_CondO6_o = 0 ;
+//	}
+//	else{
+//		Choix_I_P_haut_niveau_CondO6_o = 1 ;
+//	}
+
+//	int frame_address;
+
 //	decode_P_frame(
-//			readm4v_double_buffering_buffer_out,
-//			&VideoObjectLayer_VOLsimple,
-//			VideoObjectPlane_pos,
-//			&VideoObjectPlane_VOP,
+//			inputData.readm4v_double_buffering_buffer_out,
+//			&inputData.VideoObjectPlane_Layer_VOLsimple,
+//			inputData.VideoObjectPlane_pos,
+//			&inputData.VideoObjectPlane_VOP,
 //			init_vlc_tables_I_PC_decod1_DCT3D_I,
-//			init_vlc_tables_P_PC_decod1_DCT3D_P,
-//			Choix_I_P_haut_niveau_decode_P_frame_stock_mb_type_P,
-//			&Choix_I_P_haut_niveau_decode_P_frame_pos_fin_vlc,
-//			&Choix_I_P_haut_niveau_decode_P_frame_address,
-//			mem_Y_last_buf,
-//			mem_U_last_buf,
-//			mem_V_last_buf,
-//			Choix_I_P_haut_niveau_CondO4_o,
-//			Choix_I_P_haut_niveau_CondI5_o);
-//
-//	Display_CondI4_o = Choix_I_P_haut_niveau_decode_P_frame_address;
-//	Choix_I_P_haut_niveau_CondO5_o = Choix_I_P_haut_niveau_decode_P_frame_pos_fin_vlc;
+//			&frame_pos_fin_vlc,
+//			&outputData.frame_address,
+//			outputData.mem_Y_last_buf,
+//			outputData.mem_U_last_buf,
+//			outputData.mem_V_last_buf,
+//			keyframes);
+
+//	Display_CondI4_o = Choix_I_P_haut_niveau_decode_I_frame_address;
+//	Choix_I_P_haut_niveau_CondO5_o = Choix_I_P_haut_niveau_decode_I_frame_pos_fin_vlc;
+
+	// Sending output data.
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&img);
 }

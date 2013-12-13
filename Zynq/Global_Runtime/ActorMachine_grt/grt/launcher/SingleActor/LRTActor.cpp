@@ -38,8 +38,10 @@
 #include "Memory.h"
 
 LRTActor::LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch){
+	this->ActionID = srvertex->getReference()->getFunction_index();
 	this->nbInputFifos = srvertex->getNbInputEdge();
 	this->nbOutputFifos = srvertex->getNbOutputEdge();
+	this->nbParams = srvertex->getReference()->getNbParameters();
 
 	for(UINT32 i=0; i<this->nbInputFifos; i++){
 		SRDAGEdge* edge = srvertex->getInputEdge(i);
@@ -56,32 +58,31 @@ LRTActor::LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch
 //		this->writeDataSize[i] = edge->getTokenRate() * DEFAULT_FIFO_SIZE; // TODO: the size should come within the edge.
 //		this->outputFifoAddr[i] = mem->alloc(this->writeDataSize[i]);
 	}
+
+	for(UINT32 i=0; i<this->nbParams; i++){
+		this->params[i] = srvertex->getReference()->getParameter(i)->getValue();
+	}
 }
 
 
 void LRTActor::prepare(int slave, launcher* launch){
-//	launch->addUINT32ToSend(slave, MSG_CREATE_JOB);
-//	launch->addUINT32ToSend(slave, this->functID);
+	launch->addUINT32ToSend(slave, MSG_CREATE_TASK);
+	launch->addUINT32ToSend(slave, this->ActionID);
+	launch->addUINT32ToSend(slave, 0); // Not an actor machine.
 	launch->addUINT32ToSend(slave, this->nbInputFifos);
 	launch->addUINT32ToSend(slave, this->nbOutputFifos);
 	for (UINT32 i = 0; i < this->nbInputFifos; i++) {
 		launch->addUINT32ToSend(slave, this->inFIFOs[i]->id);
 		launch->addUINT32ToSend(slave, this->inFIFOs[i]->addr);
 		// TODO: see if the FIFO' size is required.
-//		launch->addUINT32ToSend(slave, this->inputFifoId[i]);
-//		launch->addUINT32ToSend(slave, this->inputFifoAddr[i]);
-
 	}
 	for (UINT32 i = 0; i < this->nbOutputFifos; i++) {
 		launch->addUINT32ToSend(slave, this->outFIFOs[i]->id);
 		launch->addUINT32ToSend(slave, this->outFIFOs[i]->addr);
 		// TODO: see if the FIFO' size is required.
-//		launch->addUINT32ToSend(slave, this->outputFifoId[i]);
-//		launch->addUINT32ToSend(slave, this->outputFifoAddr[i]);
 	}
-	// TODO:
-//	for(int j=0; j<action->getNbArgs(); j++)
-//		launch->addUINT32ToSend(slave, action->getArg(j));
+	for(UINT32 i = 0; i < this->nbParams; i++)
+		launch->addUINT32ToSend(slave, this->params[i]);
 
 //	launch->addUINT32ToReceive(slave, MSG_CREATE_TASK);
 }

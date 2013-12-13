@@ -148,12 +148,13 @@ void BaseVertex::checkForExecution(SDFGraph* outSDF){
 			// Checking if all inputs can be executed.
 			BaseVertex* input = inputEdges[i]->getSource();
 			// Call this function on each predecessor.
-			if(input->getExecutable() != possible){ // Exists if at least one predecessor has not been marked yet.
-//				visited = false;
+			if((input != this) && (input->getExecutable() != possible))
+			{// Exits if at least one predecessor has not been marked as possible.
+	//				visited = false;
 				return;
-	//			input->checkForExecution(outSDF);
+		//			input->checkForExecution(outSDF);
 			}
-//			if(!input->getExecutable()) return; // Exists if at least one predecessor can't be executed yet.
+//			if(!input->getExecutable()) return; // Exits if at least one predecessor can't be executed yet.
 		}
 	}
 	for (UINT32 i = 0; i < this->nbOutputEdges; i++){

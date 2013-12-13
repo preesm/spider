@@ -38,10 +38,10 @@
 #include "CreateTaskMsg.h"
 #include <hwQueues.h>
 
-AMGraph AMGraphTbl[MAX_NB_AM];
-UINT32 nbAM 		= 0;
-LRTActor LRTActorTbl[MAX_SRDAG_VERTICES];
-UINT32 nbLRTActors 	= 0;
+//AMGraph AMGraphTbl[MAX_NB_AM];
+//UINT32 nbAM 		= 0;
+//LRTActor LRTActorTbl[MAX_SRDAG_VERTICES];
+//UINT32 nbLRTActors 	= 0;
 
 
 CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, Schedule* schedule, int slave, AMGraph* am) {
@@ -63,21 +63,20 @@ CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, BaseSchedule* schedule, int slav
 	/* Actor Machine */
 //	initStateAM = 0;
 
-	if(nbAM == MAX_NB_AM) exitWithCode(1058);
-	this->actor.am = &AMGraphTbl[nbAM++];
-	this->actor.am->generate(graph, schedule, slave, curLaunch);
+//	this->actor.am = &AMGraphTbl[nbAM++];
+//	this->actor.am->generate(graph, schedule, slave, curLaunch);
 
 
 }
 
 CreateTaskMsg::CreateTaskMsg(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch){
 //	taskID = 0;
-	functID = srvertex->getReference()->getFunction_index();
-
-	if(nbLRTActors == MAX_NB_VERTICES) exitWithCode(1059);
-	LRTActorTbl[nbLRTActors] = LRTActor(graph, srvertex, curLaunch);
-	this->actor.lrtActor = &LRTActorTbl[nbLRTActors];
-	nbLRTActors++;
+//	functID = srvertex->getReference()->getFunction_index();
+//
+//	if(nbLRTActors == MAX_NB_VERTICES) exitWithCode(1059);
+//	LRTActorTbl[nbLRTActors] = LRTActor(graph, srvertex, curLaunch);
+//	this->actor.lrtActor = &LRTActorTbl[nbLRTActors];
+//	nbLRTActors++;
 }
 
 CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, SRDAGVertex* vertex, AMGraph* am) {

@@ -43,10 +43,13 @@
 
 class LRTActor {
 private:
+	UINT32 ActionID;
 	UINT32 nbInputFifos;
 	UINT32 nbOutputFifos;
+	UINT32 nbParams;
 	LauncherFIFO* inFIFOs[MAX_NB_FIFO];
 	LauncherFIFO* outFIFOs[MAX_NB_FIFO];
+	UINT32 params[MAX_NB_ARGS];
 //	UINT32 inputFifoId[MAX_NB_FIFO];
 //	UINT32 outputFifoId[MAX_NB_FIFO];
 //	UINT32 inputFifoAddr[MAX_NB_FIFO];

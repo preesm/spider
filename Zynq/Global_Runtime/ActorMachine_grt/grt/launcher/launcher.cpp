@@ -50,11 +50,21 @@
 
 
 
-launcher::launcher(int nbSlaves): sharedMem(Memory(0x10000000, 0x10000000)){
+launcher::launcher(): sharedMem(Memory(0x10000000, 0x10000000)){
 	nbFIFOs = 0;
 	launchedSlaveNb=0;
-	RTQueuesInit(nbSlaves);
 };
+
+void launcher::init(int nbSlaves){
+	RTQueuesInit(nbSlaves);
+	flushDataToSend();
+	flushDataToReceive();
+}
+
+void launcher::clear(){
+	flushDataToSend();
+	flushDataToReceive();
+}
 
 void launcher::initFifos(SRDAGGraph* graph, int nbSlaves){
 	CreateFifoMsg msg_create;
@@ -113,7 +123,8 @@ void launcher::start(int nbSlaves){
 		StartMsg().send(j);
 }
 
-void launcher::launch(int nbSlaves){
+
+void launcher::launchWaitAck(int nbSlaves){
 	UINT32 data[MAX_CTRL_DATA];
 	launchedSlaveNb = nbSlaves;
 
@@ -129,6 +140,22 @@ void launcher::launch(int nbSlaves){
 			printf("Unattended ack message from Slave %d (%d instead of %d)\n", 0, data[j], dataToReceive[0][j]);
 			abort();
 		}
+
+	// Starting executions.
+	for(int i=0; i<nbSlaves; i++){
+		StartMsg().send(i);
+	}
+
+}
+
+void launcher::launch(int nbSlaves){
+	UINT32 data[MAX_CTRL_DATA];
+	launchedSlaveNb = nbSlaves;
+
+	// Sending FIFO flushing and task creation messages.
+	for(int i=0; i<nbSlaves; i++){
+		RTQueuePush(i, RTCtrlQueue, dataToSend[i], dataToSendCnt[i]*sizeof(UINT32));
+	}
 
 	// Starting executions.
 	for(int i=0; i<nbSlaves; i++){
@@ -182,19 +209,19 @@ void launcher::prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedul
 	addUINT32ToReceive(0, MSG_CLEAR_FIFO);
 
 	/* Creating Tasks */
-	for(int i=0; i<archi->getNbActiveSlaves(); i++){
-		if(nbAM == MAX_NB_AM) exitWithCode(1058);
-		AMGraph* am = &AMGraphTbl[nbAM++];
-		CreateTaskMsg msg_createTask = CreateTaskMsg(graph, schedule, i, am);
-		char name[20];
-		sprintf(name, "Slave%d.gv", i);
-		msg_createTask.toDot(name);
-		execStat->nbAMVertices[i]	= am->getNbVertices();
-		execStat->nbAMConds[i]		= am->getNbConds();
-		execStat->nbAMActions[i]	= am->getNbActions();
-//		dataToSendCnt[i] += msg_createTask.prepare(dataToSend[i], dataToSendCnt[i]);
-//		msg_createTask.prepare(i, this);
-	}
+//	for(int i=0; i<archi->getNbActiveSlaves(); i++){
+//		if(nbAM == MAX_NB_AM) exitWithCode(1058);
+//		AMGraph* am = &AMGraphTbl[nbAM++];
+//		CreateTaskMsg msg_createTask = CreateTaskMsg(graph, schedule, i, am);
+//		char name[20];
+//		sprintf(name, "Slave%d.gv", i);
+//		msg_createTask.toDot(name);
+//		execStat->nbAMVertices[i]	= am->getNbVertices();
+//		execStat->nbAMConds[i]		= am->getNbConds();
+//		execStat->nbAMActions[i]	= am->getNbActions();
+////		dataToSendCnt[i] += msg_createTask.prepare(dataToSend[i], dataToSendCnt[i]);
+////		msg_createTask.prepare(i, this);
+//	}
 
 	/* Launch schedule */
 	for(int j=0; j<archi->getNbActiveSlaves(); j++)
@@ -217,15 +244,7 @@ void launcher::prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedul
 	sharedMem.exportMem("mem.csv");
 }
 
-
-void launcher::prepare(SRDAGGraph* graph, Architecture *archi, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat){
-//	CreateFifoMsg msg_createFifo;
-//	ClearFifoMsg msg_clearFifo;
-	CreateTaskMsg msg_createTask;
-
-	flushDataToSend();
-	flushDataToReceive();
-
+void launcher::prepareFIFOsInfo(SRDAGGraph* graph){
 	/* Creating fifos */
 	for(int i=0; i<graph->getNbEdges(); i++){
 		SRDAGEdge* edge =graph->getEdge(i);
@@ -255,6 +274,13 @@ void launcher::prepare(SRDAGGraph* graph, Architecture *archi, BaseSchedule* sch
 	// Setting the type of acknowledge message that should be received from LRT 0.
 	addUINT32ToReceive(0, MSG_CLEAR_FIFO);
 
+}
+
+void launcher::prepareTasksInfo(SRDAGGraph* graph, Architecture *archi, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat){
+//	CreateFifoMsg msg_createFifo;
+//	ClearFifoMsg msg_clearFifo;
+	CreateTaskMsg msg_createTask;
+
 	/* Creating Tasks */
 	for(int i=0; i<archi->getNbActiveSlaves(); i++){
 		if(isAM){
@@ -275,12 +301,15 @@ void launcher::prepare(SRDAGGraph* graph, Architecture *archi, BaseSchedule* sch
 		{
 			// Creating single actors.
 			for (UINT32 j = 0; j < schedule->getNbVertices(i); j++) {
-				msg_createTask = CreateTaskMsg(graph, (SRDAGVertex*)(schedule->getSchedule(i, j)->vertex), this);
-				msg_createTask.setIsAM(0);
+//				msg_createTask = CreateTaskMsg(graph, (SRDAGVertex*)(schedule->getSchedule(i, j)->vertex), this);
+//				msg_createTask.setIsAM(0);
+//
+//				// Copying task and actor data into the chunk of data that will be sent
+//				msg_createTask.prepare(i, this);
+//				msg_createTask.getLRTActor()->prepare(i, this);
 
-				// Copying task and actor data into the chunk of data that will be sent
-				msg_createTask.prepare(i, this);
-				msg_createTask.getLRTActor()->prepare(i, this);
+				LRTActor actor = LRTActor(graph, (SRDAGVertex*)(schedule->getSchedule(i, j)->vertex), this);
+				actor.prepare(i, this);
 			}
 		}
 
@@ -378,25 +407,25 @@ void launcher::prepareConfigExec(
 
 	/* Creating single tasks (not Actor Machines) */
 		// TODO: Creating tasks on selected slaves.
-		for(int i=0; i<archi->getNbActiveSlaves(); i++){
-			if(nbAM == MAX_NB_AM) exitWithCode(1058);
-			AMGraph* am = &AMGraphTbl[nbAM++];
-			CreateTaskMsg msg_createTask = CreateTaskMsg(vertex, am, 1);
-		//		char name[20];
-		//		sprintf(name, "Slave%d.gv", j);
-		//		msg_createTask.toDot(name);
-		//		execStat->nbAMVertices[i]	= msg_createTask.getAm()->getNbVertices();
-		//		execStat->nbAMConds[i]		= msg_createTask.getAm()->getNbConds();
-		//		execStat->nbAMActions[i]	= msg_createTask.getAm()->getNbActions();
-		//		dataToSendCnt[i] += msg_createTask.prepare(dataToSend[i], dataToSendCnt[i]);
-			msg_createTask.prepare(i, this);
-
-			// Creating start message.
-			StartMsg().prepare(i, this);
-
-//			// Creating stop message for the actor executes only once.
-//			StopTaskMsg().prepare(i, this);
-		}
+//		for(int i=0; i<archi->getNbActiveSlaves(); i++){
+//			if(nbAM == MAX_NB_AM) exitWithCode(1058);
+//			AMGraph* am = &AMGraphTbl[nbAM++];
+//			CreateTaskMsg msg_createTask = CreateTaskMsg(vertex, am, 1);
+//		//		char name[20];
+//		//		sprintf(name, "Slave%d.gv", j);
+//		//		msg_createTask.toDot(name);
+//		//		execStat->nbAMVertices[i]	= msg_createTask.getAm()->getNbVertices();
+//		//		execStat->nbAMConds[i]		= msg_createTask.getAm()->getNbConds();
+//		//		execStat->nbAMActions[i]	= msg_createTask.getAm()->getNbActions();
+//		//		dataToSendCnt[i] += msg_createTask.prepare(dataToSend[i], dataToSendCnt[i]);
+//			msg_createTask.prepare(i, this);
+//
+//			// Creating start message.
+//			StartMsg().prepare(i, this);
+//
+////			// Creating stop message for the actor executes only once.
+////			StopTaskMsg().prepare(i, this);
+//		}
 	}
 }
 

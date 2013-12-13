@@ -50,10 +50,10 @@
 #include "../launcher.h"
 #include "../SingleActor/LRTActor.h"
 
-extern AMGraph AMGraphTbl[MAX_NB_AM];
-extern UINT32 nbAM;
-extern LRTActor LRTActorTbl[MAX_SRDAG_VERTICES];
-extern UINT32 nbLRTActors;
+//extern AMGraph AMGraphTbl[MAX_NB_AM];
+//extern UINT32 nbAM;
+//extern LRTActor LRTActorTbl[MAX_SRDAG_VERTICES];
+//extern UINT32 nbLRTActors;
 
 class CreateTaskMsg: public LRTMsg {
 private:

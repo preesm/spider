@@ -318,13 +318,15 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 	UINT32 precVertexEndTime;
 	for(int i=0; i<vertex->getNbInputEdge(); i++){
 		SRDAGVertex* precVertex = vertex->getInputEdge(i)->getSource();
-		if(precVertex->getScheduleIndex() != -1)
-			precVertexEndTime = schedule->getVertexEndTime(precVertex->getScheduleIndex(), precVertex);
-		else
-			// Scheduling the precedent vertex.
-			precVertexEndTime = this->schedule(schedule, arch, precVertex);
+		if(precVertex != vertex){
+			if(precVertex->getScheduleIndex() != -1)
+				precVertexEndTime = schedule->getVertexEndTime(precVertex->getScheduleIndex(), precVertex);
+			else
+				// Scheduling the precedent vertex.
+				precVertexEndTime = this->schedule(schedule, arch, precVertex);
 
-		minimumStartTime = std::max(minimumStartTime, precVertexEndTime);
+			minimumStartTime = std::max(minimumStartTime, precVertexEndTime);
+		}
 	}
 
 	UINT32 bestSlave;

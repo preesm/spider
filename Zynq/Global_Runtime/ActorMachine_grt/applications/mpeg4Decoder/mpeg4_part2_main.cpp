@@ -51,6 +51,7 @@
 #define PiSDF_FILE_PATH		"pisdf.gv"
 #define SUB_SDF_FILE_0_PATH	"subSdf.gv"
 #define SRDAG_FILE_PATH		"srDag.gv"
+#define EXEC				1
 
 
 UINT32 PiSDFGraph::glbNbConfigVertices = 0;
@@ -105,8 +106,14 @@ void mpeg4_part2_main(int nbSlaves)
 	ExecutionStat execStat;
 	SDFGraph sdf1;
 	UINT32 prevNbConfigVertices;
+	launcher launch;
+	bool initFIFOs = true;
 
-	while(true){
+#if EXEC == 1
+	launch.init(nbSlaves);
+#endif
+	bool isAM = false;
+	do{
 		bool init = true;
 		do{
 			prevNbConfigVertices = sdf1.getNbConfigVertices();
@@ -137,13 +144,29 @@ void mpeg4_part2_main(int nbSlaves)
 			listScheduler.schedule(&dag, &schedule, &arch);
 			schedWriter.write(&schedule, &dag, &arch, "test.xml");
 
-		//	 // Creating the launcher.
-		//	launcher launch(nbSlaves);
-		//
-		//	// Preparing and launching execution.
-		//	launch.reset();
-		//	launch.prepare(&dag, &arch, &schedule, false, &execStat);
-		//	launch.launch(nbSlaves);
+			if(initFIFOs){
+				// Preparing FIFOs information.
+				launch.prepareFIFOsInfo(&dag);
+#if EXEC == 0
+				initFIFOs = false;
+#endif
+			}
+
+			// Preparing tasks informations
+			launch.prepareTasksInfo(&dag, &arch, &schedule, isAM, &execStat);
+
+#if EXEC == 1
+			// Launching execution.
+			if(initFIFOs){
+				launch.launchWaitAck(nbSlaves);
+				initFIFOs = false;
+			}
+			else{
+				launch.launch(nbSlaves);
+			}
+
+			// Clearing the launcher.
+			launch.clear();
 
 			// Resolving parameters.
 			for (UINT32 i = 0; i < sdf1.getNbConfigVertices(); i++) {
@@ -165,9 +188,10 @@ void mpeg4_part2_main(int nbSlaves)
 					}
 				}
 			}
+#endif
 			init = false;
 		}while(prevNbConfigVertices < piSDF.getGlbNbConfigVertices());
 
 		piSDF.clearAfterVisit();
-	}
+	}while(!isAM);
 }

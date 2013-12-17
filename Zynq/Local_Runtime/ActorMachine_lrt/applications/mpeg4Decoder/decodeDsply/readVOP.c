@@ -45,7 +45,7 @@
 #include "hwQueues.h"
 
 
-static uchar VOPCounter = 0;
+//static uchar VOPCounter = 0;
 static FILE* pFile = NULL;
 static uchar buffer[BUFFER_SIZE];
 static struct_VOLsimple VideoObjectLayer_VOLsimple;

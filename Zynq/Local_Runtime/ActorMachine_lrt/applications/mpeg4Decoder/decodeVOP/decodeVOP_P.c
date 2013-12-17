@@ -64,7 +64,7 @@ void decodeVOP_P(UINT32 inputFIFOIds[],
 		 UINT32 outputFIFOIds[],
 		 UINT32 outputFIFOAddrs[],
 		 UINT32 params[]){
-	int frame_pos_fin_vlc;
+//	int frame_pos_fin_vlc;
 
 	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(readVOPOutData), (UINT8*)&VOPData);
 	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);

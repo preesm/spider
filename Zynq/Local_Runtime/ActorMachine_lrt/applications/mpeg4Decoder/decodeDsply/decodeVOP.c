@@ -48,11 +48,11 @@
 static REVERSE_EVENT init_vlc_tables_P_PC_decod1_DCT3D_P[4096];
 static REVERSE_EVENT init_vlc_tables_I_PC_decod1_DCT3D_I[4096];
 
-static FILE* pFile = NULL;
+//static FILE* pFile = NULL;
 static uchar buffer[BUFFER_SIZE];
 
 static struct_VOLsimple VideoObjectLayer_VOLsimple;
-static long filePosition = 28;
+//static long filePosition = 28;
 static readVOPOutData inData;
 
 static uchar stock_mb_type_P[1620];
@@ -73,7 +73,7 @@ void decodeVOP(UINT32 inputFIFOIds[],
 //	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
 //	OS_TCB* tcb;
 //	tcb = getCurrTask();
-	uint nbBytesRead;
+//	uint nbBytesRead;
 
 	// Initializations...
 	init_vlc_tables_P(init_vlc_tables_P_PC_decod1_DCT3D_P);

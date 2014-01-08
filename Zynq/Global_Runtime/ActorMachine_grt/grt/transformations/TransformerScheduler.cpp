@@ -67,7 +67,7 @@ int transformAndSchedule(CSDAGGraph* csDag, Architecture* archi){
 	jobTransformer.transform(&srDag, &jobSet, archi);
 	timer.printAndReset("jobs Transf.");
 
-	dotWriter.write(&srDag, STRUCTURE_FILE_PATH, 1);
+	dotWriter.write(&srDag, STRUCTURE_FILE_PATH, 1, 1);
 
 	timer.resetAndStart();
 	flowShopScheduler.schedule(csDag, &jobSet);

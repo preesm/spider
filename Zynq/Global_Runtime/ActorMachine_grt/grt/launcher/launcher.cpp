@@ -249,7 +249,7 @@ void launcher::prepareFIFOsInfo(SRDAGGraph* graph){
 	for(int i=0; i<graph->getNbEdges(); i++){
 		SRDAGEdge* edge =graph->getEdge(i);
 		int nbTokens =  edge->getTokenRate();
-		addFIFO(graph->getEdgeIndex(edge), nbTokens * DEFAULT_FIFO_SIZE, sharedMem.alloc(nbTokens * DEFAULT_FIFO_SIZE));
+		addFIFO(i, nbTokens * DEFAULT_FIFO_SIZE, sharedMem.alloc(nbTokens * DEFAULT_FIFO_SIZE));
 	}
 
 //	for(int i=0; i<graph->getNbEdges(); i++){
@@ -299,6 +299,18 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, Architecture *archi, BaseSche
 		}
 		else
 		{
+#if PRINT_ACTOR_IN_DOT_FILE == 1
+			char name[20];
+			sprintf(name, "Slave%d.gv", i);
+			FILE * pFile = fopen (name,"w");
+			if(pFile != NULL){
+				// Writing header
+				fprintf (pFile, "digraph Actors {\n");
+				fprintf (pFile, "node [color=Black];\n");
+				fprintf (pFile, "edge [color=Black];\n");
+//				fprintf (pFile, "rankdir=LR;\n");
+			}
+#endif
 			// Creating single actors.
 			for (UINT32 j = 0; j < schedule->getNbVertices(i); j++) {
 //				msg_createTask = CreateTaskMsg(graph, (SRDAGVertex*)(schedule->getSchedule(i, j)->vertex), this);
@@ -310,9 +322,18 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, Architecture *archi, BaseSche
 
 				LRTActor actor = LRTActor(graph, (SRDAGVertex*)(schedule->getSchedule(i, j)->vertex), this);
 				actor.prepare(i, this);
-			}
-		}
 
+#if PRINT_ACTOR_IN_DOT_FILE == 1
+				SRDAGVertex* vertex = (SRDAGVertex*)(schedule->getSchedule(i, j)->vertex);
+				sprintf(name, "%s_%d", vertex->getReference()->getName(), vertex->getReferenceIndex());
+				actor.toDot(pFile, name, j);
+#endif
+			}
+#if PRINT_ACTOR_IN_DOT_FILE == 1
+			fprintf (pFile, "}\n");
+			fclose (pFile);
+#endif
+		}
 
 //		execStat->nbAMVertices[i]	= am->getNbVertices();
 //		execStat->nbAMConds[i]		= am->getNbConds();

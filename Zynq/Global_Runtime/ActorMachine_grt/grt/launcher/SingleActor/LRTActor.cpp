@@ -37,6 +37,8 @@
 #include "LRTActor.h"
 #include "Memory.h"
 
+
+
 LRTActor::LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch){
 	this->ActionID = srvertex->getReference()->getFunction_index();
 	this->nbInputFifos = srvertex->getNbInputEdge();
@@ -85,4 +87,19 @@ void LRTActor::prepare(int slave, launcher* launch){
 		launch->addUINT32ToSend(slave, this->params[i]);
 
 //	launch->addUINT32ToReceive(slave, MSG_CREATE_TASK);
+}
+
+
+void LRTActor::toDot(FILE* pFile, char* vertexName, UINT32 vertexId){
+	fprintf (pFile, "\t%d [label=\"%s\\nFunction F%d\\n", vertexId, vertexName, this->ActionID);
+	for (UINT32 i = 0; i < this->nbInputFifos; i++)
+		fprintf (pFile, "Fin  %d\\n", this->inFIFOs[i]->id);
+
+	for (UINT32 i = 0; i < this->nbOutputFifos; i++)
+		fprintf (pFile, "Fout %d\\n", this->outFIFOs[i]->id);
+
+	for(UINT32 i = 0; i < this->nbParams; i++)
+		fprintf (pFile, "Param %d\\n", this->params[i]);
+
+	fprintf (pFile, "\",shape=box];\n");
 }

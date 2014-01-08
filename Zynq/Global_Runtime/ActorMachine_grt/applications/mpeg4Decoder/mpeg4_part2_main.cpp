@@ -47,11 +47,12 @@
 #include <tools/ScheduleChecker.h>
 
 
-#define PRINT_GRAPH			1
-#define PiSDF_FILE_PATH		"pisdf.gv"
-#define SUB_SDF_FILE_0_PATH	"subSdf.gv"
-#define SRDAG_FILE_PATH		"srDag.gv"
-#define EXEC				1
+#define PRINT_GRAPH				1
+#define PiSDF_FILE_PATH			"pisdf.gv"
+#define SUB_SDF_FILE_0_PATH		"subSdf.gv"
+#define SRDAG_FILE_PATH			"srDag.gv"
+#define SRDAG_FIFO_ID_FILE_PATH	"srDagFifoId.gv"
+#define EXEC					0
 
 
 UINT32 PiSDFGraph::glbNbConfigVertices = 0;
@@ -136,7 +137,8 @@ void mpeg4_part2_main(int nbSlaves)
 
 			// Printing the DAG.
 		#if PRINT_GRAPH
-			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FILE_PATH, 1);
+			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FILE_PATH, 1, 1);
+			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
 		#endif
 
 			// Scheduling the DAG.

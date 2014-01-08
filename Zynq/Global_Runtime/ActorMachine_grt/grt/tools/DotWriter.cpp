@@ -68,7 +68,7 @@ DotWriter::~DotWriter()
  @param path: output file path
  @param displayName: 1 if the graph should display the vertices names
 */
-void DotWriter::write(SRDAGGraph* graph, const char* path, char displayNames){
+void DotWriter::write(SRDAGGraph* graph, const char* path, BOOLEAN displayNames, BOOLEAN displayRates){
 	FILE * pFile;
 	//char directory[_MAX_PATH];
 	//getcwd(directory, sizeof(directory));
@@ -140,9 +140,10 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, char displayNames){
 				default:
 					break;
 			}
-			fprintf (pFile, "\t%s->%s [label=\"%d\"];\n",
-				name,name2,
-				edge->getTokenRate());
+			if(displayRates)
+				fprintf (pFile, "\t%s->%s [label=\"%d\"];\n", name, name2, edge->getTokenRate());
+			else
+				fprintf (pFile, "\t%s->%s [label=\"%d\"];\n", name, name2, i);
 		}
 		fprintf (pFile, "}\n");
 
@@ -264,6 +265,7 @@ void DotWriter::write(PiSDFGraph* graph, const char* path, char displayNames){
 		for (UINT32 i=0 ; i < graph->getNb_config_vertices(); i++)
 		{
 			PiSDFConfigVertex* vertex = graph->getConfig_vertex(i);
+//			draw_vertex(vertex, displayNames, pFile);
 			if(displayNames){
 				fprintf (pFile, "\t%s [label=\"%s\"];\n",vertex->getName(),vertex->getName());
 			}
@@ -285,7 +287,19 @@ void DotWriter::write(PiSDFGraph* graph, const char* path, char displayNames){
 
 		// Drawing PiSDF vertices.
 		for (UINT32 i = 0; i < graph->getNb_pisdf_vertices(); i++) {
-			draw_vertex(graph->getPiSDFVertex(i), displayNames, pFile);
+			PiSDFVertex *vertex = graph->getPiSDFVertex(i);
+			draw_vertex(vertex, displayNames, pFile);
+			if(vertex->getSubGraph() != NULL){
+				char fileName[30];
+				char suffix[30];
+				char *pch;
+				strcpy (fileName, path);
+				sprintf(suffix, "_%s.gv", vertex->getName());
+				pch = strstr(fileName, ".");
+//				fileName =
+				strcpy (pch, suffix);
+				write(vertex->getSubGraph(), fileName, displayNames);
+			}
 		}
 
 		// Drawing Input vertices.
@@ -440,7 +454,3 @@ void DotWriter::write(SDFGraph *sdf, const char *path, char displayNames)
 		printf("Cannot open %s\n", path);
 	}
 }
-
-
-
-

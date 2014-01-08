@@ -478,7 +478,7 @@ void PiSDFTransformer::transform(SDFGraph *sdf, SRDAGGraph *srGraph)
 			addVertices(vertex, brv[j], srGraph);
 		}
 
-		// Connecting the vertices of the SrDAG ouput graph.
+		// Connecting the vertices of the SrDAG output graph.
 		linkvertices(sdf, srGraph);
 	}
 }

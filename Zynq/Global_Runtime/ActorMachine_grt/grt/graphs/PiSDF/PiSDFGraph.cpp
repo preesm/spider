@@ -260,6 +260,8 @@ PiSDFParameter* PiSDFGraph::addParameter(const char *name)
 //	}
 //}
 
+
+
 void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSDF)
 {
 	startVertex->checkForExecution(outSDF);
@@ -335,48 +337,78 @@ void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSD
 }
 
 
+/*
+ * TODO: Try to link the vertices at the same time they are selected as
+ * 		executable within 'copyExecutableVertices'.
+ */
 void PiSDFGraph::linkExecutableVertices(SDFGraph *outSDF){
-	for (UINT32 i = 0; i < outSDF->getNbVertices(); i++)
+	UINT32 nbVertices = outSDF->getNbVertices();
+	for (UINT32 i = 0; i < nbVertices; i++)
 	{
 		BaseVertex* vertex = outSDF->getVertex(i);
-
-		if(vertex->getType() == input_vertex)
+		// Excluding interface vertices.
+		if((vertex->getType() != input_vertex)&&(vertex->getType() != output_vertex))
 		{
-			// Getting incoming edge from parent.
-			UINT16 parentEdgeIndex = ((PiSDFIfVertex*)vertex)->getParentEdgeIndex();
-			PiSDFEdge* originalEdge = ((PiSDFIfVertex*)vertex)->getParentVertex()->getInputEdge(parentEdgeIndex);
-			if (originalEdge->getConsumptionInt() > 0)
-				outSDF->addEdge(originalEdge->getSource(),
-								originalEdge->getProductionInt(),
-								vertex,
-								originalEdge->getConsumptionInt());
+			UINT32 nbInputEdges = vertex->getNbInputEdges();
+			// Examining input edges.
+			for (UINT32 j = 0; j < nbInputEdges; j++)
+			{
+				PiSDFEdge* inputEdge = vertex->getInputEdge(j);
+				BaseVertex *sourceVertex = inputEdge->getSource();
+				if(sourceVertex->getType() == input_vertex)
+				{
+					// Getting incoming edge, i.e. from parent's predecessor vertex to input vertex.
+					UINT16 parentEdgeIndex = ((PiSDFIfVertex*)sourceVertex)->getParentEdgeIndex();
+					PiSDFEdge* parentEdge = ((PiSDFIfVertex*)sourceVertex)->getParentVertex()->getInputEdge(parentEdgeIndex);
+
+					// Bypassing the input vertex by adding an edge between the parent's predecessor and the current vertex.
+					if (parentEdge->getConsumptionInt() > 0)
+						outSDF->addEdge(parentEdge->getSource(),
+										parentEdge->getProductionInt(),
+										vertex,
+										parentEdge->getConsumptionInt());
+				}
+				else
+				{
+					/*
+					 * Checking if the input edge is valid, i.e. the consumption > 0 and if its source vertex is executable.
+					 * 'checkEdge' verifies if source and sink vertices are executables while only the source needs to be verified.
+					 * TODO: Verification wont be required of the linking is done within 'copyExecutableVertices'.
+					 */
+					if ((inputEdge->getConsumptionInt() > 0) && (outSDF->checkEdge(inputEdge)))
+					{
+						outSDF->addEdge(inputEdge->getSource(), inputEdge->getProductionInt(),
+										vertex, inputEdge->getConsumptionInt());
+					}
+				}
+
+			}
+		}
+		else if(vertex->getType() == output_vertex)
+		{
+			PiSDFEdge* inputEdge = vertex->getInputEdge(0); // There is only one input.
+			/*
+			 * Checking if the input edge is valid, i.e. the consumption > 0 and if its source vertex is executable.
+			 * 'checkEdge' verifies if source and sink vertices are executables while only the source needs to be verified.
+			 * TODO: Verification wont be required of the linking is done within 'copyExecutableVertices'.
+			 */
+			if ((inputEdge->getConsumptionInt() > 0) && (outSDF->checkEdge(inputEdge)))
+			{
+				// Getting outgoing edge, i.e. from output vertex to parent's successor vertex.
+				UINT16 parentEdgeIndex = ((PiSDFIfVertex*)vertex)->getParentEdgeIndex();
+				PiSDFEdge* parentEdge = ((PiSDFIfVertex*)vertex)->getParentVertex()->getOutputEdge(parentEdgeIndex);
+
+				// Bypassing the output vertex by adding an edge between the current vertex' predecessor and the parent's successor.
+				outSDF->addEdge(inputEdge->getSource(), inputEdge->getProductionInt(),
+								parentEdge->getSink(), parentEdge->getConsumptionInt());
+			}
+
+			// Removing output vertices from 'outSDF'.
+			outSDF->removeVertex(i);
 		}
 		else
-		{
-			for (UINT32 j = 0; j < vertex->getNbInputEdges(); j++)
-			{
-				PiSDFEdge* originalEdge = vertex->getInputEdge(j);
-				if ((originalEdge->getConsumptionInt() > 0) && (outSDF->checkEdge(vertex->getInputEdge(j))))
-					outSDF->addEdge(originalEdge->getSource(), originalEdge->getProductionInt(),
-									vertex, originalEdge->getConsumptionInt());
-			}
-
-			if(vertex->getType() == output_vertex)
-			{
-				// Getting sinks from parent.
-				for (UINT32 j = 0; j < ((PiSDFIfVertex*)vertex)->getParentVertex()->getNbOutputEdges(); j++)
-				{
-					PiSDFEdge* originalEdge = ((PiSDFIfVertex*)vertex)->getParentVertex()->getOutputEdge(j);
-					if (originalEdge->getProductionInt() > 0)
-						outSDF->addEdge(vertex, originalEdge->getProductionInt(),
-										originalEdge->getSink(), originalEdge->getConsumptionInt());
-				}
-				// Ignoring the next vertex that must be the parent's successor.
-				// Which is already treated as a sink for the output vertex.
-				// TODO: ...i'm not sure of this..
-				i++;
-			}
-		}
+			// Removing input vertex from 'outSDF'.
+			outSDF->removeVertex(i);
 	}
 }
 

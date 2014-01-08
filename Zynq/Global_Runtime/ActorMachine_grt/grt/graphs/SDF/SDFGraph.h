@@ -71,6 +71,12 @@ public:
 		return vertices[index];
 	}
 
+	void removeVertex(UINT32 index)
+	{
+		vertices[index] = 0;
+		nbVertices--;
+	}
+
 	BaseEdge* addEdge(BaseVertex* source, UINT32 production, BaseVertex* sink, UINT32 consumption);
 
 	BaseEdge* getEdge(UINT32 index)
@@ -87,6 +93,9 @@ public:
 	}
 
 
+	/*
+	 * Returns true if both the source and the sink vertices of 'edge' are present in 'vertices'.
+	 */
 	bool checkEdge(BaseEdge* edge){
 		BaseVertex* vertex;
 		UINT32 index = 0;

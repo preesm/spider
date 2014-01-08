@@ -129,8 +129,8 @@
 
 
 
-#define DEBUG_EN	1
-
+#define DEBUG_EN				1
+#define PRINT_ACTOR_IN_DOT_FILE	1
 
 /**************** Message types ******************/
 #define MSG_CREATE_TASK			1

@@ -60,6 +60,7 @@ public:
 	LRTActor(){};
 	LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher*);
 	void prepare(int slave, launcher* launch);
+	void toDot(FILE* pFile, char* vertexName, UINT32 vertexId);
 };
 
 #endif /* LRTACTOR_H_ */

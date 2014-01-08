@@ -44,7 +44,7 @@
 //#define B_VALUE	1
 //#define N_VALUE	1
 
-#define HIERARCHY_LEVEL 2
+#define HIERARCHY_LEVEL 1
 
 static PiSDFGraph graphs[MAX_NB_PiSDF_SUB_GRAPHS];
 static UINT8 nb_graphs = 0;
@@ -164,7 +164,7 @@ void create_PiSDF_dec_VOP(PiSDFGraph* graph, BaseVertex* parentVertex){
 
 void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 
-	// Input vertices.
+	// Interface vertices.
 	PiSDFIfVertex *vertexInVOL = (PiSDFIfVertex*)graph->addVertex("InputVOL_L1", input_vertex);
 	vertexInVOL->setDirection(0);
 	vertexInVOL->setParentVertex(parentVertex);
@@ -189,15 +189,27 @@ void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 	vertexInImgDim->setParentEdgeIndex(3);
 	vertexInImgDim->setFunction_index(5);
 
-	// Vertices.
-	PiSDFVertex *vertex_read_vop = (PiSDFVertex *)graph->addVertex("ReadVOP", pisdf_vertex);
+
+	// Parameters.
+	PiSDFParameter *paramVOPType = graph->addParameter("VOPType");
+	PiSDFParameter *paramNbMb = graph->addParameter("NbMb");
+
+
+	// Broadcast vertices.
+	PiSDFVertex *vertexBroadVOL = (PiSDFVertex*)graph->addVertex("BroadVOL", broad_vertex);
+	vertexBroadVOL->setFunction_index(5);
+
+
+	// Configuration vertices
+	PiSDFConfigVertex *vertex_read_vop = (PiSDFConfigVertex *)graph->addVertex("ReadVOP", config_vertex);
 //	vertex_read_vop->addConstraint(0, 1);
 //	vertex_read_vop->addTiming(1, "100");
 	vertex_read_vop->setFunction_index(6);
+	vertex_read_vop->addRelatedParam(paramVOPType);
+	vertex_read_vop->addRelatedParam(paramNbMb);
 
-	graph->setRootVertex(vertex_read_vop);
 
-
+	// Others..
 	PiSDFVertex *vertex_display_vop = (PiSDFVertex*)graph->addVertex("DisplayVOP", pisdf_vertex);
 //	vertex_display_vop->addConstraint(0, 1);
 //	vertex_display_vop->addTiming(1, "100");
@@ -208,18 +220,22 @@ void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 //	vertex_decod_vop->addConstraint(0, 1);
 //	vertex_decod_vop->addTiming(1, "100");
 	vertex_decod_vop->setFunction_index(8);
+	vertex_decod_vop->addParameter(paramVOPType);
+	vertex_decod_vop->addParameter(paramNbMb);
 
 
 
 	// Edges.
-	graph->addEdge(vertexInVOL, "1", vertex_read_vop, "1", "0"); // VOL
-	graph->addEdge(vertexInVOL, "1", vertex_decod_vop, "1", "0"); // VOL
-
-	graph->addEdge(vertexInPosVOL, "1", vertex_read_vop, "1", "0"); // VOLPos
+	graph->addEdge(vertexInVOL, "1", vertexBroadVOL, "1", "0"); // VOL
 
 	graph->addEdge(vertexInVOLCompl, "1", vertex_read_vop, "1", "0");
 
+	graph->addEdge(vertexInPosVOL, "1", vertex_read_vop, "1", "0"); // VOLPos
+
 	graph->addEdge(vertexInImgDim, "1", vertex_display_vop, "1", "0");
+
+	graph->addEdge(vertexBroadVOL, "1", vertex_read_vop, "1", "0"); // VOL
+	graph->addEdge(vertexBroadVOL, "1", vertex_decod_vop, "1", "0"); // VOL
 
 	graph->addEdge(vertex_read_vop, "1", vertex_decod_vop, "1", "0"); // VOP data.
 	graph->addEdge(vertex_read_vop, "1", vertex_decod_vop, "1", "0"); // frame data.
@@ -228,6 +244,9 @@ void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 	graph->addEdge(vertex_decod_vop, "1", vertex_display_vop, "1", "0"); // image.
 	graph->addEdge(vertex_decod_vop, "1", vertex_decod_vop, "1", "1"); // cycles the image for decoding the next frame.
 
+
+	// Setting root vertex.
+	graph->setRootVertex(vertex_read_vop);
 
 
 #if HIERARCHY_LEVEL > 1

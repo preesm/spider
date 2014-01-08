@@ -49,6 +49,7 @@ void inputVOL_L1();
 void inputComplexity();
 void inputVOLPos();
 void inputImgDimensions();
+void broadVOL();
 void readVOP();
 void decodeVOP();
 void displayVOP();

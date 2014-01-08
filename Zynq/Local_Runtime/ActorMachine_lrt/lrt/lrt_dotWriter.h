@@ -35,15 +35,8 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "definitions.h"
-#include <hwQueues.h>
+#ifndef LRT_DOTWRITER_H_
+#define LRT_DOTWRITER_H_
 
-void decodeDsply(UINT32 inputFIFOIds[],
-		 UINT32 inputFIFOAddrs[],
-		 UINT32 outputFIFOIds[],
-		 UINT32 outputFIFOAddrs[],
-		 UINT32 params[]){
-
-}
+void dotWriter(OS_TCB* graph, const char* path);
+#endif /* LRT_DOTWRITER_H_ */

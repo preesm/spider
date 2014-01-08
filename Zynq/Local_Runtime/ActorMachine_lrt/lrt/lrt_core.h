@@ -35,15 +35,14 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "definitions.h"
-#include <hwQueues.h>
+#ifndef LRT_CORE_H_
+#define LRT_CORE_H_
 
-void decodeDsply(UINT32 inputFIFOIds[],
-		 UINT32 inputFIFOAddrs[],
-		 UINT32 outputFIFOIds[],
-		 UINT32 outputFIFOAddrs[],
-		 UINT32 params[]){
+#include "lrt_definitions.h"
 
-}
+void LRTInit();
+void LRTStartCurrTask();
+void LRTSched();
+void LRTIncomingJobIRQRoutine();
+OS_TCB* getCurrTask();
+#endif /* LRT_CORE_H_ */

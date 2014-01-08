@@ -35,15 +35,8 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "definitions.h"
-#include <hwQueues.h>
+#ifndef LRT_DEBUG_H_
+#define LRT_DEBUG_H_
 
-void decodeDsply(UINT32 inputFIFOIds[],
-		 UINT32 inputFIFOAddrs[],
-		 UINT32 outputFIFOIds[],
-		 UINT32 outputFIFOAddrs[],
-		 UINT32 params[]){
-
-}
+void exitWithCode(int exitCode);
+#endif /* LRT_DEBUG_H_ */

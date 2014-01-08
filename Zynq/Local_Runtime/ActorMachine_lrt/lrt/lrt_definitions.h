@@ -88,6 +88,10 @@
 #define putnum				zynq_putnum						// Wrapper for putnum. Implemented at lrt_debug.c
 #define putnum_dec			zynq_putnum_dec					// Wrapper for putnum in decimal.
 
+
+#define PRINT_ACTOR_IN_DOT_FILE		1
+
+
 /*
  * Data types.
  */
@@ -276,6 +280,7 @@ typedef struct os_tcb {
     UINT16			OSTCBId;
     UINT8           OSTCBState;
     struct os_tcb   *OSTCBNext;
+    UINT32			functionId;
     FUNCTION_TYPE	task_func;
     BOOLEAN			isAM;
 	BOOLEAN 		stop;		// Whether the task must stop running.

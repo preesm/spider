@@ -35,15 +35,11 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "definitions.h"
-#include <hwQueues.h>
+#ifndef LRT_MSGMNGR_H_
+#define LRT_MSGMNGR_H_
 
-void decodeDsply(UINT32 inputFIFOIds[],
-		 UINT32 inputFIFOAddrs[],
-		 UINT32 outputFIFOIds[],
-		 UINT32 outputFIFOAddrs[],
-		 UINT32 params[]){
+#include "lrt_definitions.h"
 
-}
+void send_ext_msg(UINT32 addr, UINT32 msg_type, void* msg);
+void wait_ext_msg();
+#endif /* LRT_MSGMNGR_H_ */

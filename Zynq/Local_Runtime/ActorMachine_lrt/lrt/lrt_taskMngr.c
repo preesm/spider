@@ -36,7 +36,7 @@
  ****************************************************************************/
 
 #include "lrt_cfg.h"
-#include "string.h"
+#include "stdio.h"
 #include <hwQueues.h>
 #include <print.h>
 #include <platform.h>
@@ -79,7 +79,7 @@ void  LrtTaskCreate (){
 	// Popping second incoming word, the task Id.
 //	UINT8 id = RTQueuePop_UINT32(RTCtrlQueue);
 	OS_TCB *new_tcb;
-	UINT32 taskFunctId;
+//	UINT32 taskFunctId;
 	LRTActor* newActor;
 
 	if(OSTaskCntr >= OS_MAX_TASKS){
@@ -116,7 +116,7 @@ void  LrtTaskCreate (){
 		 * Getting data from the control queue.
 		 */
 		// Popping the task function id.
-		taskFunctId = RTQueuePop_UINT32(RTCtrlQueue);
+		new_tcb->functionId = RTQueuePop_UINT32(RTCtrlQueue);
 
 		// Popping whether the task is stopped after completion.
 //		new_tcb->stop = RTQueuePop_UINT32(RTCtrlQueue);
@@ -140,7 +140,7 @@ void  LrtTaskCreate (){
 		else
 		{
 			new_tcb->actor = newActor;
-			new_tcb->task_func = functions_tbl[taskFunctId];
+			new_tcb->task_func = functions_tbl[new_tcb->functionId];
 			new_tcb->stop = TRUE;
 			createActor(new_tcb->actor);
 		}
@@ -222,6 +222,49 @@ void  OSTaskDel (){
     zynq_puts("Stop Task ID"); zynq_putdec(taskId);
     zynq_puts(" at Vector ID");  zynq_putdec(vectorId);
     zynq_puts("\n");
+}
+
+
+void PrintTasksIntoDot(){
+	char name[20];
+	FILE *pFile;
+	UINT32 i, j, k;
+	OS_TCB *tcb;
+	LRTActor *actor;
+
+	sprintf(name, "Slave%d.gv", cpuId);
+	pFile = fopen (name,"w");
+	if(pFile != NULL){
+		// Writing header
+		fprintf (pFile, "digraph Actors {\n");
+		fprintf (pFile, "node [color=Black];\n");
+		fprintf (pFile, "edge [color=Black];\n");
+//				fprintf (pFile, "rankdir=LR;\n");
+
+		j = 0;
+		k = 0;
+		while(j < OSTaskCntr && k < OS_MAX_TASKS) {
+			tcb = &OSTCBTbl[k];
+			k++;
+			if(tcb != (OS_TCB*)0){
+				j++;
+				fprintf (pFile, "\t%d [label=\"Function F%d\\n", j, tcb->functionId);
+				actor = tcb->actor;
+				for (i = 0; i < actor->nbInputFifos; i++)
+					fprintf (pFile, "Fin  %d\\n", actor->inputFifoId[i]);
+
+				for (i = 0; i < actor->nbOutputFifos; i++)
+					fprintf (pFile, "Fout %d\\n", actor->outputFifoId[i]);
+
+				for(i = 0; i < actor->nbParams; i++)
+					fprintf (pFile, "Param %d\\n", actor->params[i]);
+
+				fprintf (pFile, "\",shape=box];\n");
+			}
+		}
+	}
+	fprintf (pFile, "}\n");
+	fclose (pFile);
 }
 
 

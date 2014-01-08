@@ -54,12 +54,11 @@ static readVOLInData inData;
 void readVOL(UINT32 inputFIFOIds[],
 			 UINT32 inputFIFOAddrs[],
 			 UINT32 outputFIFOIds[],
-			 UINT32 outputFIFOAddrs[]){
+			 UINT32 outputFIFOAddrs[],
+			 UINT32 params[])
+{
 	uint nbBytesRead;
 	FILE* pFile = NULL;
-//	long filePosition;
-//	OS_TCB* tcb;
-//	AM_ACTOR_ACTION_STRUCT* action;
 
 	readFifo(inputFIFOIds[0],inputFIFOAddrs[0], sizeof(readVOLInData), (UINT8*)&inData);
 
@@ -97,8 +96,6 @@ void readVOL(UINT32 inputFIFOIds[],
 	}
 
 	/* Sending data */
-//	tcb = getCurrTask();
-//	action = OSCurActionQuery();
 	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(readVOLInData), (UINT8*)&inData);
 	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(struct_VOLsimple), (UINT8*)&inData.VideoObjectLayer_VOLsimple);
 	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], sizeof(uchar) * 5, (UINT8*)(inData.VideoObjectLayer_vop_complexity));

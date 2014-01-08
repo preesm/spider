@@ -38,9 +38,9 @@
 #ifndef OS_CFG_H
 #define OS_CFG_H
 
-#define OS_LOWEST_PRIO 				10
-#define OS_MAX_TASKS 				10
-#define NB_LOCAL_FUNCTIONS 			10
+#define OS_LOWEST_PRIO 				15
+#define OS_MAX_TASKS 				15
+#define NB_LOCAL_FUNCTIONS 			15
 #define OS_DEBUG_EN 				1
 #define CONTROL_COMM				0
 

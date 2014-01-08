@@ -9,12 +9,15 @@
 #include <stdlib.h>
 #include <sharedMem.h>
 #include <hwQueues.h>
+#include <lrt_1W1RfifoMngr.h>
 #include <platform.h>
 #include <lrt_core.h>
 #include <lrt_taskMngr.h>
 
 #include "definitions.h"
 #include "top_AM_actions.h"
+
+#define STANDALONE_APP		1
 
 int main(int argc, char **argv) {
 	if(argc > 1)
@@ -28,10 +31,10 @@ int main(int argc, char **argv) {
 	functions_tbl[0] = readVOL;
 //	functions_tbl[1] = decodeDsply;
 	// Level L1.
-	functions_tbl[2] = inputVOL_L1;
-	functions_tbl[3] = inputComplexity;
-	functions_tbl[4] = inputVOLPos;
-	functions_tbl[5] = inputImgDimensions;
+//	functions_tbl[2] = inputVOL_L1;
+//	functions_tbl[3] = inputComplexity;
+//	functions_tbl[4] = inputVOLPos;
+	functions_tbl[5] = broadVOL;
 	functions_tbl[6] = readVOP;
 	functions_tbl[7] = displayVOP;
 #if HIERARCHY_LEVEL > 1
@@ -58,7 +61,14 @@ int main(int argc, char **argv) {
 
 	Init_SDL(16, 720, 576);
 
+#if STANDALONE_APP == 0
 	LRTInit();
+#else
+	OS_ShMemInit();
+	flushFIFO(-1);	// Clear all FIFOs.
+
+
+#endif
 //
 //	char	data_in[10];
 //	char 	data_out[10];

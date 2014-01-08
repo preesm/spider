@@ -35,15 +35,21 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "definitions.h"
-#include <hwQueues.h>
+#ifndef LRT_TASKMNGR_H_
+#define LRT_TASKMNGR_H_
 
-void decodeDsply(UINT32 inputFIFOIds[],
-		 UINT32 inputFIFOAddrs[],
-		 UINT32 outputFIFOIds[],
-		 UINT32 outputFIFOAddrs[],
-		 UINT32 params[]){
+#include "lrt_definitions.h"
 
-}
+//extern FUNCTION_TYPE functions_tbl[NB_LOCAL_FUNCTIONS]; /* Table of Action Fcts */
+
+void LrtTaskCreate();
+UINT8 OSTaskQuery(UINT8 id, OS_TCB *p_task_data);
+OS_TCB* OSCurTaskQuery();
+AM_ACTOR_ACTION_STRUCT* OSCurActionQuery();
+void LrtTaskDeleteCur();
+void OSTaskDel();
+void PrintTasksIntoDot();
+void OSWorkingMemoryInit();
+void* OSAllocWorkingMemory(int size);
+void OSFreeWorkingMemory();
+#endif /* LRT_TASKMNGR_H_ */

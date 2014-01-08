@@ -35,15 +35,81 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "definitions.h"
+#include <string.h>
+
+#include <types.h>
 #include <hwQueues.h>
+#include <platform.h>
+#include <print.h>
+#include "lrt_taskMngr.h"
+#include "lrt_1W1RfifoMngr.h"
+#include "lrt_msgMngr.h"
+#include "lrt_core.h"
 
-void decodeDsply(UINT32 inputFIFOIds[],
-		 UINT32 inputFIFOAddrs[],
-		 UINT32 outputFIFOIds[],
-		 UINT32 outputFIFOAddrs[],
-		 UINT32 params[]){
 
+/* Send a Message to the Global Runtime */
+void send_ext_msg(UINT32 addr, UINT32 msg_type, void* msg) {
+	UINT32 msg_size = 0;
+
+	// Sending the type of message as the first data word.
+	RTQueuePush(RTCtrlQueue, &msg_type, sizeof(UINT32));
+
+	// Determining the size of the rest of data.
+	switch (msg_type) {
+	case MSG_CURR_VERTEX_ID:
+		msg_size = sizeof(UINT32);
+		break;
+	default:
+		break;
+	}
+
+	// Sending the rest of data.
+	if (msg_size > 0)
+		RTQueuePush(RTCtrlQueue, msg, msg_size);
 }
+
+/* Waits for an external message from the Global Runtime and execute the current task */
+void wait_ext_msg() {
+	UINT32 msg_type;
+	UINT32 fifoID;
+
+	/* Popping the first incoming word i.e. the message type. */
+	if (RTQueueNonBlockingPop(RTCtrlQueue, &msg_type, sizeof(UINT32)) == sizeof(UINT32)) {
+		switch (msg_type) {
+		case MSG_CREATE_TASK:
+			// TODO: Reuse a previous TCB...
+			LrtTaskCreate();
+//			RTQueuePush(RTCtrlQueue, &msg_type, sizeof(UINT32));
+			break;
+
+		case MSG_STOP_TASK:
+			OSTaskDel();
+			break;
+
+		case MSG_CREATE_FIFO:
+//			create_fifo();
+//			OS_CtrlQPush(&msg_type, sizeof(UINT32));
+			break;
+
+		case MSG_CLEAR_FIFO:
+			fifoID = RTQueuePop_UINT32(RTCtrlQueue);
+			flushFIFO(fifoID);
+			RTQueuePush_UINT32(RTCtrlQueue, msg_type);
+			break;
+
+		case MSG_START_SCHED:
+#if PRINT_ACTOR_IN_DOT_FILE == 1
+			PrintTasksIntoDot();
+#endif
+			lrt_running = TRUE;
+			zynq_puts("Start Schedule\n");
+//			OS_CtrlQPush(&msg_type, sizeof(UINT32));
+			break;
+
+		default:
+			zynq_puts("Bad msg Received\n");
+			break;
+		}
+	}
+}
+

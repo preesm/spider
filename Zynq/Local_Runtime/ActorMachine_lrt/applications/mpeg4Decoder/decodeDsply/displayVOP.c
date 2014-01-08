@@ -44,8 +44,8 @@
 #include "lrt_taskMngr.h"
 
 
-static imgDimensionsData inPortData;
-static decodeVOPOutData inDecodeData;
+static imgDimensionsData ImgDim;
+static decodeVOPOutData Img;
 
 static image_type Display_Extract_Image_Y_o[685832];
 static int Zero_PC_decod1_out = 0;
@@ -53,31 +53,27 @@ static int Zero_PC_decod1_out = 0;
 void displayVOP(UINT32 inputFIFOIds[],
 		 UINT32 inputFIFOAddrs[],
 		 UINT32 outputFIFOIds[],
-		 UINT32 outputFIFOAddrs[])
+		 UINT32 outputFIFOAddrs[],
+		 UINT32 params[])
 {
 	int XDIM;
 	int YDIM;
 	uchar *Y;
 	uchar *U;
 	uchar *V;
-//	OS_TCB* tcb;
 
-	// Receiving data.
-//	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(imgDimensionsData), (UINT8*)&ImgDim); // From input port.
+	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&Img); // From decode VOP.
 
-//	tcb = getCurrTask();
-	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(imgDimensionsData), (UINT8*)&inPortData); // From input port.
-	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&inDecodeData); // From decode VOP action.
-
-	XDIM = ((int *) Display_Extract_Image_Y_o)[0] = inPortData.VideoObjectLayer_xsize_o;
-	YDIM = ((int *) Display_Extract_Image_Y_o)[1] = inPortData.VideoObjectLayer_ysize_o;
+	XDIM = ((int *) Display_Extract_Image_Y_o)[0] = ImgDim.VideoObjectLayer_xsize_o;
+	YDIM = ((int *) Display_Extract_Image_Y_o)[1] = ImgDim.VideoObjectLayer_ysize_o;
 	Y = Display_Extract_Image_Y_o + 8;
 	U = Y + (XDIM + 32) * YDIM;
 	V = U + (XDIM + 32) * YDIM/4;
 	extract_picture(
 		   XDIM, YDIM,
 		   16, Zero_PC_decod1_out,
-		   inDecodeData.mem_Y_last_buf, inDecodeData.mem_U_last_buf, inDecodeData.mem_V_last_buf, inDecodeData.frame_address,
+		   Img.mem_Y_last_buf, Img.mem_U_last_buf, Img.mem_V_last_buf, Img.frame_address,
 		   Y, U, V);
 	SDL_Display(16, XDIM, YDIM, Y, U, V);
 }

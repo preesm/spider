@@ -47,32 +47,29 @@
 
 //static uchar VOPCounter = 0;
 static FILE* pFile = NULL;
-static uchar buffer[BUFFER_SIZE];
-static struct_VOLsimple VideoObjectLayer_VOLsimple;
-static uchar VideoObjectLayer_vop_complexity[5];
+static uchar FrmData[BUFFER_SIZE];
+static struct_VOLsimple VOL;
+static uchar complexity[5];
 static int VOLEndPos;
 
 
 readVOPStateInData stInData;
-readVOPOutData outData;
+readVOPOutData VOP;
 
 
 void readVOP(UINT32 inputFIFOIds[],
 		 UINT32 inputFIFOAddrs[],
 		 UINT32 outputFIFOIds[],
 		 UINT32 outputFIFOAddrs[],
-		 UINT32 params)
+		 UINT32 params[])
 {
-//	AM_ACTOR_ACTION_STRUCT* action;
-//	OS_TCB* tcb;
-//	tcb = getCurrTask();
 	uint nbBytesRead;
+	UINT32	NbMb;	// Number of Macroblocks.
 
 	// Reading VOL info.
-	//		action = OSCurActionQuery();
-	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VOL);
 	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(long), (UINT8*)&VOLEndPos);
-	readFifo(inputFIFOIds[2], inputFIFOAddrs[2], sizeof(uchar) * 5, (UINT8*)VideoObjectLayer_vop_complexity);
+	readFifo(inputFIFOIds[2], inputFIFOAddrs[2], sizeof(uchar) * 5, (UINT8*)complexity);
 	readFifo(inputFIFOIds[3], inputFIFOAddrs[3], sizeof(readVOPStateInData), (UINT8*)&stInData);
 
 	if(stInData.VOPCntr == 0){
@@ -95,7 +92,7 @@ void readVOP(UINT32 inputFIFOIds[],
 
 	// Reading Video Object Plane.
 	nbBytesRead = 0;
-	readUpToNextStartCode(pFile, buffer, &nbBytesRead);
+	readUpToNextStartCode(pFile, FrmData, &nbBytesRead);
 
 	if(feof(pFile))
 		// Indicating a restarting of the decoding process.
@@ -110,20 +107,23 @@ void readVOP(UINT32 inputFIFOIds[],
 
 
 
-	// Reading the VOP from the buffer.
+	// Reading the VOP from the FrmData.
 	VideoObjectPlaneI(
 			BUFFER_START_POSITION,
-			&buffer[4],						// Skipping the start code.
-			&VideoObjectLayer_VOLsimple,
-			VideoObjectLayer_vop_complexity,
-			&outData.VideoObjectPlane_pos,
-			&outData.VideoObjectPlane_VOP,
-			&outData.VideoObjectPlane_vop_coding_type);
+			&FrmData[4],						// Skipping the start code.
+			&VOL,
+			complexity,
+			&VOP.VideoObjectPlane_pos,
+			&VOP.VideoObjectPlane_VOP,
+			&VOP.VideoObjectPlane_vop_coding_type);
 
+	// Sending parameters' values to Global Runtime.
+	NbMb = (VOL.video_object_layer_height * VOL.video_object_layer_width)/256;
+	RTQueuePush_UINT32(RTInfoQueue, VOP.VideoObjectPlane_vop_coding_type);
+	RTQueuePush_UINT32(RTInfoQueue, NbMb);
 
 	// Sending data.
-//	action = OSCurActionQuery();
 	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(readVOPStateInData), (UINT8*)&stInData);
-	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(readVOPOutData), (UINT8*)&outData);
-	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], BUFFER_SIZE, (UINT8*)&buffer);
+	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(readVOPOutData), (UINT8*)&VOP);
+	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], BUFFER_SIZE, (UINT8*)&FrmData);
 }

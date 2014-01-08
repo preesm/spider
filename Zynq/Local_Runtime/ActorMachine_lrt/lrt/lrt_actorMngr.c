@@ -35,15 +35,40 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "definitions.h"
+#include "lrt_fifoMngr.h"
 #include <hwQueues.h>
+#include "lrt_actorMngr.h"
 
-void decodeDsply(UINT32 inputFIFOIds[],
-		 UINT32 inputFIFOAddrs[],
-		 UINT32 outputFIFOIds[],
-		 UINT32 outputFIFOAddrs[],
-		 UINT32 params[]){
 
+void createActor(LRTActor* actor){
+	UINT32 i;
+	actor->nbInputFifos = RTQueuePop_UINT32(RTCtrlQueue);
+	actor->nbOutputFifos = RTQueuePop_UINT32(RTCtrlQueue);
+	for (i = 0; i < actor->nbInputFifos; i++) {
+		actor->inputFifoId[i] = RTQueuePop_UINT32(RTCtrlQueue);
+		actor->inputFifoDataOff[i] = RTQueuePop_UINT32(RTCtrlQueue);
+		// TODO: get the FIFO' size
+	}
+	for (i = 0; i < actor->nbOutputFifos; i++) {
+		actor->outputFifoId[i] = RTQueuePop_UINT32(RTCtrlQueue);
+		actor->outputFifoDataOff[i] = RTQueuePop_UINT32(RTCtrlQueue);
+		// TODO: get the FIFO' size
+	}
+	for ( i = 0; i < actor->nbParams; i++) {
+		actor->params[i] = RTQueuePop_UINT32(RTCtrlQueue);
+	}
+}
+
+
+void verifyActorCond(LRTActor* actor){
+//	UINT32 i;
+//	// Checking input FIFOs.
+//	for (i = 0; i < actor->nbInputFifos; i++) {
+//		while(!check_input_fifo(actor->inputFifoId[i], actor->readDataSize[i]));
+//	}
+//
+//	// Checking output FIFOs.
+//	for (i = 0; i < actor->nbOutputFifos; i++) {
+//		while(!check_output_fifo(actor->outputFifoId[i], actor->writeDataSize[i]));
+//	}
 }

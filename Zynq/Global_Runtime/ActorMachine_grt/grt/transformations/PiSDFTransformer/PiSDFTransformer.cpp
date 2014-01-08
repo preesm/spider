@@ -449,10 +449,17 @@ void PiSDFTransformer::transform(SDFGraph *sdf, SRDAGGraph *srGraph)
 	UINT32 nbEdges = sdf->getNbEdges();
 
 	// Setting temporal Ids to be used as index of the topology matrix.
-	for(UINT32 i = 0; i < nbVertices; i++){
-		BaseVertex* vertex = sdf->getVertex(i);
-		vertex->setTempId(i);
+	UINT32 index = 0;
+	UINT32 cntr = 0;
+	while(cntr < nbVertices){
+		BaseVertex* vertex = sdf->getVertex(index);
+		if(vertex != NULL){
+			vertex->setTempId(cntr);
+			cntr++;
+		}
+		index++;
 	}
+
 
 	// Filling the topology matrix(nbEdges x nbVertices). See Maxime Pelcat's thesis section 3.2.1
 	memset(topo_matrix, 0, sizeof(topo_matrix));
@@ -470,12 +477,18 @@ void PiSDFTransformer::transform(SDFGraph *sdf, SRDAGGraph *srGraph)
 	if(nullspace(nbEdges, nbVertices, (int*)topo_matrix, brv) == 0)
 	{
 		// Setting the number of repetitions for each vertex.
-		for (UINT32 j = 0; j < nbVertices; j++) {
-			BaseVertex* vertex = sdf->getVertex(j);
-			vertex->setNbRepetition(brv[j]);
+		index = 0;
+		cntr = 0;
+		while(cntr < nbVertices){
+			BaseVertex* vertex = sdf->getVertex(index);
+			if(vertex != NULL){
+				vertex->setNbRepetition(brv[cntr]);
+				// Creating the new vertices.
+				addVertices(vertex, brv[cntr], srGraph);
 
-			// Creating the new vertices.
-			addVertices(vertex, brv[j], srGraph);
+				cntr++;
+			}
+			index++;
 		}
 
 		// Connecting the vertices of the SrDAG output graph.

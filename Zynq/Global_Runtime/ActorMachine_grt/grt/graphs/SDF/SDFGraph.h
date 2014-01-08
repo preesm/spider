@@ -99,15 +99,19 @@ public:
 	bool checkEdge(BaseEdge* edge){
 		BaseVertex* vertex;
 		UINT32 index = 0;
+		UINT32 cntr = 0;
 		bool sourceOk = false;
 		bool sinkOk = false;
 
-		while(index < nbVertices && (!sourceOk || !sinkOk))
+		while(cntr < nbVertices && (!sourceOk || !sinkOk))
 		{
 			vertex = vertices[index];
-			if (vertex == edge->getSource()) sourceOk = true;
-			if (vertex == edge->getSink())	sinkOk = true;
+			if(vertex != NULL){
+				if (vertex == edge->getSource()) sourceOk = true;
+				if (vertex == edge->getSink())	sinkOk = true;
 
+				cntr++;
+			}
 			index++;
 		}
 		return (sourceOk && sinkOk);

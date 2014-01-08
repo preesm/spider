@@ -40,7 +40,7 @@
 
 #include "LRTMsg.h"
 #include <types.h>
-#include "../Memory.h"
+#include <Memory.h>
 #include "../launcher.h"
 #include "../../graphs/SRDAG/SRDAGGraph.h"
 #include "../../graphs/SRDAG/SRDAGEdge.h"

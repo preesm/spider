@@ -381,7 +381,6 @@ void PiSDFGraph::linkExecutableVertices(SDFGraph *outSDF){
 										vertex, inputEdge->getConsumptionInt());
 					}
 				}
-
 			}
 		}
 		else if(vertex->getType() == output_vertex)

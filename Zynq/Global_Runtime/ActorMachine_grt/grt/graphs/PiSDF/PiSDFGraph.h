@@ -117,8 +117,15 @@ public:
 	// With no parameters, it just looks on the configuration vertices.
 //	void setExecutableVertices();
 
+
+	/*
+	 * Marks the vertices that can be executed.
+	 */
+	void markExecVertices(BaseVertex* startVertex, SDFGraph *outSDF);
+
+
 	// Copies vertices that can be executed to the outSDF graph.
-	void copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSDF);
+//	void copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSDF);
 
 	/*
 	 * Runs through the graph to get executable vertices. If there are input vertices,
@@ -130,10 +137,13 @@ public:
 
 
 	// Links executable vertices that have been copied to outSDF.
-	void linkExecutableVertices(SDFGraph *outSDF);
+//	void linkExecutableVertices(SDFGraph *outSDF);
 
+	void connectExecVertices(SDFGraph *outSDF);
 
-	void getSDFGraph(SDFGraph* outSDF);
+	void updateResolvedParams(SDFGraph *outSDF);
+
+	void copyExecVertices(SDFGraph* outSDF);
 
 	/*
 	 * Resets the visited vertices (the "visited" field is set to false),
@@ -185,6 +195,16 @@ public:
     PiSDFIfVertex* getInput_vertex(UINT64 index)
     {
         return &input_vertices[index];
+    }
+
+    PiSDFIfVertex* getInputVertex(PiSDFEdge *parentEdge)
+    {
+    	for(UINT32 i = 0; i < nb_input_vertices; i++)
+    	{
+    		if(input_vertices[i].getParentEdge() == parentEdge)
+    			return &input_vertices[i];
+    	}
+    	return NULL;
     }
 
 	UINT32 getNb_join_vertices() const

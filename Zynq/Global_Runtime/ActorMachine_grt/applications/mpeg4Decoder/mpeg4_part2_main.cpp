@@ -121,11 +121,16 @@ void mpeg4_part2_main(int nbSlaves)
 
 			// Getting executable vertices.
 			sdf1.reset(); // Clears the graph.
-			piSDF.getSDFGraph(&sdf1);
+			piSDF.copyExecVertices(&sdf1);
 
-			// Linking the executable vertices.
-			if(sdf1.getNbVertices() > 0) piSDF.linkExecutableVertices(&sdf1);
+			if(sdf1.getNbVertices() > 0)
+			{
+				// Updating resolved parameters.
+				piSDF.updateResolvedParams(&sdf1);
 
+				// Linking the executable vertices.
+				piSDF.connectExecVertices(&sdf1);
+			}
 		#if PRINT_GRAPH
 			// Printing the SDF sub-graph.
 			dotWriter.write(&sdf1, SUB_SDF_FILE_0_PATH, 1);

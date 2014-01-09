@@ -115,16 +115,35 @@ void BaseVertex::addParameter(PiSDFParameter* param)
 //}
 
 
+void BaseVertex::checkForExecution(){
+	// Checking if all parameters have been resolved.
+	for (UINT32 i = 0; i < this->nbParameters; i++)
+		if(! this->parameters[i]->getResolved()) return;
+
+	for (UINT32 i = 0; i < this->nbInputEdges; i++)
+	{
+		// Checking if all predecessors can be executed.
+		BaseVertex* predVertex = inputEdges[i]->getSource();
+		// Call this function on each predecessor.
+		if((predVertex != this) && (predVertex->getType() != input_vertex))
+			if(predVertex->getExecutable() != possible) // Exits if at least one predecessor has not been marked as possible.
+				return;
+	}
+
+	executable = possible; //The vertex can be executed.
+}
+
+
 
 /*
- * If the function executes until the end, it marks the vertex as it can be executed.
+ * If the function executes until the end, it marks the vertex as executable.
  */
 void BaseVertex::checkForExecution(SDFGraph* outSDF){
 	// Checking if all parameters have been resolved.
 	for (UINT32 i = 0; i < this->nbParameters; i++)
 		if(! this->parameters[i]->getResolved()) return;
 
-	// Resolving parameter depending expressions.
+	// Resolving parameter-depending expressions.
 	for (UINT32 i = 0; i < this->nbInputEdges; i++){
 		PiSDFEdge* edge = this->inputEdges[i];
 		// Updating integer consumption value.
@@ -136,27 +155,23 @@ void BaseVertex::checkForExecution(SDFGraph* outSDF){
 		globalParser.interpret(edge->getDelay(), &value);
 		edge->setDelayInt(value);
 
-		/*
-		 * Checking if input edges have enough initial tokens (delays),
-		 * and consumption is not zero, so that the vertex can be executed.
-		 */
-		if((edge->getConsumptionInt() < edge->getDelayInt()) || (edge->getConsumptionInt() == 0))
-			return;
-		else if (this->getType() == select_vertex) // For "select" vertices, only one valid edge is enough.
+		// Checking if input edges have enough initial tokens (delays).
+		// TODO: check (edge->getConsumptionInt() > 0)) and (edge->getConsumptionInt() < edge->getDelayInt())
+
+		if ((this->getType() == select_vertex)&&(this->getType() == switch_vertex)){
+			// TODO: Special treatment for "select" and "switch" vertices...
 			break;
+		}
 		else{
-			// Checking if all inputs can be executed.
-			BaseVertex* input = inputEdges[i]->getSource();
+			// Checking if all predecessors can be executed.
+			BaseVertex* predVertex = inputEdges[i]->getSource();
 			// Call this function on each predecessor.
-			if((input != this) && (input->getExecutable() != possible))
-			{// Exits if at least one predecessor has not been marked as possible.
-	//				visited = false;
-				return;
-		//			input->checkForExecution(outSDF);
-			}
-//			if(!input->getExecutable()) return; // Exits if at least one predecessor can't be executed yet.
+			if((predVertex != this) && (predVertex->getType() != input_vertex))
+				if(predVertex->getExecutable() != possible) // Exits if at least one predecessor has not been marked as possible.
+					return;
 		}
 	}
+
 	for (UINT32 i = 0; i < this->nbOutputEdges; i++){
 		PiSDFEdge* edge = this->outputEdges[i];
 		// Updating integer production value.

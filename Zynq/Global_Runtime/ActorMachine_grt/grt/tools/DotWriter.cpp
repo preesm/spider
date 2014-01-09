@@ -439,12 +439,11 @@ void DotWriter::write(SDFGraph *sdf, const char *path, char displayNames)
 
 		for (UINT32 j = 0; j < sdf->getNbEdges(); j++) {
 			BaseEdge* edge = sdf->getEdge(j);
-			if(sdf->checkEdge(edge))
-				fprintf (pFile, "\t%s->%s [taillabel=\"%d\" headlabel=\"%d\"];\n",
-						edge->getSource()->getName(),
-						edge->getSink()->getName(),
-						edge->getProductionInt(),
-						edge->getConsumptionInt());
+			fprintf (pFile, "\t%s->%s [taillabel=\"%d\" headlabel=\"%d\"];\n",
+					edge->getSource()->getName(),
+					edge->getSink()->getName(),
+					edge->getProductionInt(),
+					edge->getConsumptionInt());
 		}
 
 		fprintf (pFile, "}\n");

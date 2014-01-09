@@ -100,15 +100,12 @@ public:
 		return outputEdges[index];
 	}
 
-
 	/*
-	 * Adds the vertex to the outSDF graph if it is ready to execute, that is :
-	 * 1. The parameters on which the vertex depends are solved.
-	 * 2. The source vertices on its inputs can be executable.
-	 * 3. The consumption is not 0 nor exceeds the initial tokens (delay).
-	 * Note that for hierarchical vertices, the function is call for each vertex
-	 * of the sub-graph.
+	 * Marks a vertex as executable, i.e. all its parameters have been solved and
+	 * all its predecessors are executable.
 	 */
+	void checkForExecution();
+
 	void checkForExecution(SDFGraph* outSDF);
 
 

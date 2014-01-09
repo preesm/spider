@@ -75,6 +75,10 @@ public:
         this->parentEdgeIndex = parentEdgeIndex;
     }
 
+    PiSDFEdge* getParentEdge() const
+    {
+    	return this->parentVertex->getInputEdge(parentEdgeIndex);
+    }
 };
 
 #endif /* PISDFIFVERTEX_H_ */

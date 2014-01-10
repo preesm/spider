@@ -99,6 +99,7 @@ public:
 	 Transforms a SDF graph into a Sr graph.
 	*/
 	void transform(SDFGraph *sdf, SRDAGGraph *srGraph);
+
 };
 
 #endif /* PISDFTRANSFORMER_H_ */

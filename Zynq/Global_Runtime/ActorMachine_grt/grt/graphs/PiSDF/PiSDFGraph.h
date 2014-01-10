@@ -78,7 +78,10 @@ class PiSDFGraph {
 
 	BaseVertex* rootVertex; // Must be set while creating the graph.
 //	static BaseVertex* ExecutableVertices[MAX_NB_VERTICES]; // Vertices which do not depend on unresolved parameters.
-//	static UINT32 nbExecutableVertices;
+	static PiSDFEdge* requiredEdges[MAX_NB_EDGES]; // Edges required for an execution.
+	static UINT32 glbNbRequiredEdges;
+	static UINT32 glbNbExecConfigVertices;
+	static UINT32 glbNbExecVertices;
 
 	UINT32 nbExecVertices; 			// Counts the number of executable vertices.
 	UINT32 nbDiscardVertices; 		// Counts the number of discarded vertices
@@ -121,7 +124,7 @@ public:
 	/*
 	 * Marks the vertices that can be executed.
 	 */
-	void markExecVertices(BaseVertex* startVertex, SDFGraph *outSDF);
+	void copyRequiredEdges(BaseVertex* startVertex);
 
 
 	// Copies vertices that can be executed to the outSDF graph.
@@ -141,9 +144,13 @@ public:
 
 	void connectExecVertices(SDFGraph *outSDF);
 
-	void updateResolvedParams(SDFGraph *outSDF);
+	void evaluateExpressions();
 
-	void copyExecVertices(SDFGraph* outSDF);
+	void createSubGraph(SDFGraph* outSDF);
+
+	void findRequiredEdges();
+
+	void clearIntraIteration();
 
 	/*
 	 * Resets the visited vertices (the "visited" field is set to false),
@@ -300,6 +307,12 @@ public:
     }
 
 
+    UINT32 getGlbNbExecConfigVertices() const
+    {
+    	return glbNbExecConfigVertices;
+    }
+
+
     UINT32 getNbExecVertices() const
     {
     	return nbExecVertices;
@@ -310,6 +323,19 @@ public:
     {
     	return nbDiscardVertices;
     }
+
+
+    UINT32 getGlbNbExecVertices() const
+    {
+    	return glbNbExecVertices;
+    }
+
+
+    UINT32 getGlbNbRequiredEdges() const
+    {
+    	return glbNbRequiredEdges;
+    }
+
 
 //    void setExecComplete(bool execComplete)
 //    {

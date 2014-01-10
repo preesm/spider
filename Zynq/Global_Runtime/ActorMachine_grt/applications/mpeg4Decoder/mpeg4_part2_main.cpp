@@ -56,8 +56,12 @@
 
 
 UINT32 PiSDFGraph::glbNbConfigVertices = 0;
-//UINT32 PiSDFGraph::nbExecutableVertices = 0;
+UINT32 PiSDFGraph::glbNbExecConfigVertices = 0;
+UINT32 PiSDFGraph::glbNbExecVertices = 0;
 //BaseVertex* PiSDFGraph::ExecutableVertices[MAX_NB_VERTICES] = {NULL};
+PiSDFEdge* PiSDFGraph::requiredEdges[MAX_NB_EDGES] = {NULL};
+UINT32 PiSDFGraph::glbNbRequiredEdges = 0;
+
 
 void createArch(Architecture* arch, int nbSlaves){
 	static char tempStr[11];
@@ -119,18 +123,24 @@ void mpeg4_part2_main(int nbSlaves)
 		do{
 			prevNbConfigVertices = sdf1.getNbConfigVertices();
 
-			// Getting executable vertices.
+			// Finding executable vertices.
 			sdf1.reset(); // Clears the graph.
-			piSDF.copyExecVertices(&sdf1);
+			piSDF.findRequiredEdges();
 
-			if(sdf1.getNbVertices() > 0)
+			if(piSDF.getGlbNbRequiredEdges() > 0)
 			{
 				// Updating resolved parameters.
-				piSDF.updateResolvedParams(&sdf1);
+				piSDF.evaluateExpressions();
+
+				// Creating a new subgraph with required edges and vertices.
+				piSDF.createSubGraph(&sdf1);
 
 				// Linking the executable vertices.
-				piSDF.connectExecVertices(&sdf1);
+//				piSDF.connectExecVertices(&sdf1);
 			}
+			else
+				exitWithCode(1062);
+
 		#if PRINT_GRAPH
 			// Printing the SDF sub-graph.
 			dotWriter.write(&sdf1, SUB_SDF_FILE_0_PATH, 1);
@@ -159,7 +169,7 @@ void mpeg4_part2_main(int nbSlaves)
 #endif
 			}
 
-			// Preparing tasks informations
+			// Preparing tasks' informations
 			launch.prepareTasksInfo(&dag, &arch, &schedule, isAM, &execStat);
 
 #if EXEC == 1
@@ -174,29 +184,36 @@ void mpeg4_part2_main(int nbSlaves)
 
 			// Clearing the launcher.
 			launch.clear();
+#endif
 
 			// Resolving parameters.
 			for (UINT32 i = 0; i < sdf1.getNbConfigVertices(); i++) {
 				PiSDFConfigVertex* configVertex = (PiSDFConfigVertex*)(sdf1.getConfigVertex(i));
-		//		UINT32 slaveId;
 				for (UINT32 j = 0; j < configVertex->getNbRelatedParams(); j++) {
 					PiSDFParameter* param = configVertex->getRelatedParam(j);
 					if (!param->getResolved()){
-		//				if(schedule.findSlaveId(configVertex->getId(), configVertex, &slaveId)){
-		//					UINT64 value = RTQueuePop_UINT32(slaveId, RTCtrlQueue);
-							UINT64 value;
-							if(init)
-								value = 0;
-							else
-								value = 1;
-
+#if EXEC == 1
+						if(schedule.findSlaveId(configVertex->getId(), configVertex, &slaveId)){
+							UINT64 value = RTQueuePop_UINT32(slaveId, RTCtrlQueue);
 							configVertex->getRelatedParam(j)->setValue(value);
-		//				}
+						}
+#else
+						UINT64 value;
+						if(init)
+							value = 0;
+						else
+							value = 1;
+
+						configVertex->getRelatedParam(j)->setValue(value);
+#endif
 					}
 				}
 			}
-#endif
 			init = false;
+
+			// Clearing intra-iteration variables, e.g. required edges.
+			piSDF.clearIntraIteration();
+
 		}while(prevNbConfigVertices < piSDF.getGlbNbConfigVertices());
 
 		piSDF.clearAfterVisit();

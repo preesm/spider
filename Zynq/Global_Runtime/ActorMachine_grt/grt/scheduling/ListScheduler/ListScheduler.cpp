@@ -318,7 +318,7 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 	UINT32 precVertexEndTime;
 	for(int i=0; i<vertex->getNbInputEdge(); i++){
 		SRDAGVertex* precVertex = vertex->getInputEdge(i)->getSource();
-		if(precVertex != vertex){
+		if((precVertex != vertex) && (!precVertex->getReference()->getScheduled())){
 			if(precVertex->getScheduleIndex() != -1)
 				precVertexEndTime = schedule->getVertexEndTime(precVertex->getScheduleIndex(), precVertex);
 			else
@@ -326,6 +326,7 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 				precVertexEndTime = this->schedule(schedule, arch, precVertex);
 
 			minimumStartTime = std::max(minimumStartTime, precVertexEndTime);
+			vertex->getReference()->setScheduled(true);
 		}
 	}
 
@@ -372,8 +373,11 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 	// Scheduling the vertices.
 	for(int i=0; i<nbVertices; i++){
 		SRDAGVertex* vertex = dag->getVertex(i);
-		if(vertex->getScheduleIndex() == -1)
+		if((vertex->getScheduleIndex() == -1) &&
+		   (vertex->getReference()->getExecutable() == possible))
+		{
 			this->schedule(schedule, arch, vertex);
+		}
 	}
 }
 

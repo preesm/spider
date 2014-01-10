@@ -55,6 +55,8 @@ class PiSDFEdge: public BaseEdge {
 	abstract_syntax_elt consumption[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 	abstract_syntax_elt delay[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 
+	BOOLEAN required;	// When true, the edge is required in the execution.
+
 //	// Production, consumption and delay after pattern resolution.
 //	UINT32 productionInt;
 //	UINT32 consumptionInt;
@@ -81,6 +83,11 @@ public:
         return delay;
     }
 
+    BOOLEAN getRequired() const
+    {
+        return required;
+    }
+
     void setProduction(const char* production)
     {
     	globalParser.parse(production, this->production);
@@ -94,6 +101,11 @@ public:
     void setDelay(const char* delay)
     {
     	globalParser.parse(delay, this->delay);
+    }
+
+    void setRequired(BOOLEAN required)
+    {
+        this->required = required;
     }
 
 /*

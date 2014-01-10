@@ -40,9 +40,11 @@
 
 #include <grt_definitions.h>
 #include "../Base/BaseEdge.h"
+#include "../PiSDF/PiSDFVertex.h"
 #include "tools/SchedulingError.h"
 
-class BaseVertex;
+
+//class BaseVertex;
 
 class SDFGraph {
 	BaseVertex* vertices[MAX_NB_VERTICES];
@@ -69,6 +71,14 @@ public:
 	BaseVertex* getVertex(UINT32 index)
 	{
 		return vertices[index];
+	}
+
+	INT32 getVertexIndex(BaseVertex* vertex)
+	{
+		for (UINT32 i = 0; i < nbVertices; i++){
+			if(vertices[i] == vertex) return i;
+		}
+		return -1;
 	}
 
 	void removeVertex(UINT32 index)
@@ -159,6 +169,9 @@ inline void SDFGraph::addVertex(BaseVertex* originalVertex){
 		exitWithCode(1000);
 	}
 	vertices[nbVertices++] = originalVertex;
+
+	if(((PiSDFVertex*)originalVertex)->getType() == config_vertex)
+		configVertices[nbConfigVertices++] = originalVertex;
 }
 
 inline BaseEdge* SDFGraph::addEdge(BaseVertex* source, UINT32 production, BaseVertex* sink, UINT32 consumption)

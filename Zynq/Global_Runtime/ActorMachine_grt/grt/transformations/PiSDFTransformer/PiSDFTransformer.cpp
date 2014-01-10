@@ -443,6 +443,7 @@ void PiSDFTransformer::transform(BaseVertex **vertices, UINT32 nbVertices, SRDAG
 	}
 }
 
+
 void PiSDFTransformer::transform(SDFGraph *sdf, SRDAGGraph *srGraph)
 {
 	UINT32 nbVertices = sdf->getNbVertices();
@@ -495,6 +496,5 @@ void PiSDFTransformer::transform(SDFGraph *sdf, SRDAGGraph *srGraph)
 		linkvertices(sdf, srGraph);
 	}
 }
-
 
 

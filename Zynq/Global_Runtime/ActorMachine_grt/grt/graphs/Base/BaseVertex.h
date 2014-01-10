@@ -44,7 +44,7 @@
 #include <tools/SchedulingError.h>
 #include "../PiSDF/PiSDFParameter.h"
 #include "../PiSDF/PiSDFEdge.h"
-#include "graphs/SDF/SDFGraph.h"
+//#include "graphs/SDF/SDFGraph.h"
 
 typedef enum {
 	pisdf_vertex,
@@ -77,8 +77,8 @@ class BaseVertex {
 
 	UINT32 nbRepetition; // Stores the number of replicas in a Sr graph.
 
-//	bool visited; // Useful for graph browsing.
 	EXE_FLAG executable; // Says whether the vertex can be executed.
+	bool scheduled; 	 // Says whether the vertex has been already scheduled within the current iteration.
 	UINT32 tempId; // Used while creating a topology matrix.
 public:
 	BaseVertex();
@@ -106,7 +106,7 @@ public:
 	 */
 	void checkForExecution();
 
-	void checkForExecution(SDFGraph* outSDF);
+//	void checkForExecution(SDFGraph* outSDF);
 
 
 	/*
@@ -175,6 +175,11 @@ public:
 	}
 
 
+    bool getScheduled() const
+    {
+        return scheduled;
+    }
+
 
     void setId(UINT32 id)
     {
@@ -212,10 +217,19 @@ public:
         this->tempId = tempId;
     }
 
+
     void setExecutable(EXE_FLAG executable)
     {
     	this->executable = executable;
     }
+
+
+    void setScheduled(bool scheduled)
+    {
+        this->scheduled = scheduled;
+    }
+
+
 //    void setNbParameters(UINT8 nbParameters)
 //    {
 //        this->nbParameters = nbParameters;

@@ -338,7 +338,7 @@ PiSDFParameter* PiSDFGraph::addParameter(const char *name)
 
 
 
-void PiSDFGraph::markExecVertices(BaseVertex* startVertex, SDFGraph *outSDF)
+void PiSDFGraph::copyRequiredEdges(BaseVertex* startVertex)
 {
 	startVertex->checkForExecution();
 	if(startVertex->getExecutable() == possible)
@@ -352,7 +352,7 @@ void PiSDFGraph::markExecVertices(BaseVertex* startVertex, SDFGraph *outSDF)
 				/***  Only hierarchical vertices ***/
 
 				// Checking the sub graph.
-				subGraph->copyExecVertices(outSDF);
+				subGraph->findRequiredEdges();
 //				subGraph->copyExecutableVertices(subGraph->getRootVertex(), outSDF);
 
 				if(subGraph->getNbExecVertices() == (subGraph->getNb_vertices() - subGraph->getNbDiscardVertices())) // The sub graph can be executed completely.
@@ -364,7 +364,7 @@ void PiSDFGraph::markExecVertices(BaseVertex* startVertex, SDFGraph *outSDF)
 						BaseVertex* sinkVertex = edge->getSink();
 						// Discarding edges with zero production and vertices already visited.
 						if((edge->getProductionInt() > 0) && (sinkVertex->getExecutable() == undefined))
-							markExecVertices(edge->getSink(), outSDF);
+							copyRequiredEdges(edge->getSink());
 					}
 				}
 				else
@@ -379,50 +379,42 @@ void PiSDFGraph::markExecVertices(BaseVertex* startVertex, SDFGraph *outSDF)
 
 		/***  Only non hierarchical vertices ***/
 
-//
-//		/*** Adding vertex's edges to the SDF graph. ***/
-//
-//		for (UINT32 i = 0; i < startVertex->getNbOutputEdges(); i++){
-//			PiSDFEdge* edge = startVertex->getOutputEdge(i);
-//			BaseVertex* sinkVertex = edge->getSink();
-//
-//			// Bypassing hierarchical vertices.
-//			if(sinkVertex->getType() == pisdf_vertex)
-//			{
-//				PiSDFGraph* subGraph = ((PiSDFVertex*)sinkVertex)->getSubGraph();
-//				if(subGraph != (PiSDFGraph*)0)
-//				{
-//					sinkVertex = subGraph->getInputVertex(edge)->getOutputEdge(0)->getSink();
-//				}
-//				outSDF->addEdge(startVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
-//			}
-//			else if(sinkVertex->getType() == output_vertex)
-//			{
-//				// Bypassing output vertices.
-//				PiSDFEdge* parentEdge = ((PiSDFIfVertex*)sinkVertex)->getParentEdge();
-//				// Adding the edge with the parent vertex as sink.
-//				outSDF->addEdge(startVertex, edge->getProductionInt(), parentEdge->getSink(), parentEdge->getConsumptionInt());
-//			}
-//			else
-//				outSDF->addEdge(startVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
-//		}
+		for (UINT32 i = 0; i < startVertex->getNbInputEdges(); i++)
+		{
+			/*
+			 * Adding input edges to the table of required edges, except cycles and those whose source is an input vertex.
+			 * Cycles are marked within 'markExecVertices()' together with output edges.
+			 * Edges with an input vertex as source, are treated within the parent level.
+			 */
+			PiSDFEdge* edge = startVertex->getInputEdge(i);
+			if((edge->getSource() != startVertex)&&(edge->getSource()->getType() != input_vertex))
+				if(!edge->getRequired()){// Avoids that the edge be included more than once.
+					requiredEdges[glbNbRequiredEdges++] = edge;
+					edge->setRequired(true);
+				}
+		}
 
-		// Adding the vertex.
-		outSDF->addVertex(startVertex);
-		if(startVertex->getType()== config_vertex)
-			outSDF->addConfigVertex(startVertex);
-
-
-		// Checking successors.
 		for (UINT32 i = 0; i < startVertex->getNbOutputEdges(); i++)
 		{
+			// Adding output edges to the table of required edges.
 			PiSDFEdge* edge = startVertex->getOutputEdge(i);
+			if(!edge->getRequired()){// Avoids that the edge be included more than once.
+				requiredEdges[glbNbRequiredEdges++] = edge;
+				edge->setRequired(true);
+			}
+
+			// Checking successors for execution.
 			BaseVertex* sinkVertex = edge->getSink();
-			// Discarding edges already marked as executable.
-			if((sinkVertex->getExecutable() == undefined)&&(sinkVertex->getType()!= output_vertex))
-				markExecVertices(sinkVertex, outSDF);
+			if((sinkVertex->getExecutable() == undefined)&&(sinkVertex->getType()!= output_vertex))// Discards successors already marked as executable.
+				copyRequiredEdges(sinkVertex);
 		}
+
 		nbExecVertices++;
+
+
+		if(startVertex->getType()== config_vertex)
+			glbNbExecConfigVertices++;
+		glbNbExecVertices++;
 	}
 }
 
@@ -528,79 +520,127 @@ void PiSDFGraph::connectExecVertices(SDFGraph *outSDF)
 			else if(sinkVertex->getType() == output_vertex)
 			{
 				PiSDFEdge* parentEdge = ((PiSDFIfVertex*)sinkVertex)->getParentEdge();
+				sinkVertex = parentEdge->getSink();
 				// Adding the edge with the parent vertex as sink.
-				outSDF->addEdge(execVertex, edge->getProductionInt(), parentEdge->getSink(), parentEdge->getConsumptionInt());
+				outSDF->addEdge(execVertex, edge->getProductionInt(), sinkVertex, parentEdge->getConsumptionInt());
 			}
 			// Connecting common vertices.
 			else
 				outSDF->addEdge(execVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
+
+			/*
+			 * Adding the sink vertex if it's not already present. Even if the sink vertex isn't executable,
+			 * it is needed to build the topological matrix.
+			 */
+			if(outSDF->getVertexIndex(sinkVertex) == -1)
+				outSDF->addVertex(sinkVertex);
 		}
 	}
 }
 
-void PiSDFGraph::updateResolvedParams(SDFGraph *outSDF)
+
+/*
+ * Evaluates expressions related to edges that have been marked as 'required'.
+ * Note that such edges' sources are always executable or executed vertices.
+ */
+void PiSDFGraph::evaluateExpressions()
 {
-	// Evaluating production/delay expression of output edges for executable vertices.
-	for (UINT32 i = 0; i < outSDF->getNbVertices(); i++) {
-		BaseVertex* execVertex = outSDF->getVertex(i);
+	// Evaluating production/consumption/delay expressions of required edges.
+	for (UINT32 i = 0; i < glbNbRequiredEdges; i++){
+		PiSDFEdge* edge = requiredEdges[i];
 
-		for (UINT32 i = 0; i < execVertex->getNbOutputEdges(); i++){
-			PiSDFEdge* edge = execVertex->getOutputEdge(i);
-			BaseVertex* sinkVertex = edge->getSink();
+		BaseVertex* sourceVertex = edge->getSource();
+		BaseVertex* sinkVertex = edge->getSink();
 
-			int value;
+		int value;
 
-			// Updating production's integer value.
-			globalParser.interpret(edge->getProduction(), &value);
-			edge->setProductionInt(value);
+		// Updating production's integer value.
+		globalParser.interpret(edge->getProduction(), &value);
+		edge->setProductionInt(value);
 
-			// Assigning consumption = production if the sink vertex depends on unresolved parameters.
-			for (UINT32 i = 0; i < sinkVertex->getNbParameters(); i++){
-				if(! sinkVertex->getParameter(i)->getResolved())
-				{
-					edge->setConsumtionInt(value);
-					break;
-				}
+		// Updating consumption's integer value.
+		globalParser.interpret(edge->getConsumption(), &value);
+		// Checking for unresolved parameters.
+		for (UINT32 i = 0; i < sinkVertex->getNbParameters(); i++){
+			if(! sinkVertex->getParameter(i)->getResolved())
+			{// At least one parameters is unresolved.
+				// Assigning production's value to the production.
+				value = edge->getProductionInt();
+				break;
 			}
-
-			// Updating delay's integer value.
-			globalParser.interpret(edge->getDelay(), &value);
-			edge->setDelayInt(value);
 		}
+		edge->setConsumtionInt(value);
+
+		// Updating delay's integer value.
+		globalParser.interpret(edge->getDelay(), &value);
+		edge->setDelayInt(value);
 	}
 }
 
 
-void PiSDFGraph::copyExecVertices(SDFGraph *outSDF)
+void PiSDFGraph::createSubGraph(SDFGraph *outSDF)
 {
-//	if(nb_input_vertices > 0){ // Hierarchy is being treated.
-//		for (UINT32 i = 0; i < nb_input_vertices; i++) {
-//			if(!input_vertices[i].getVisited())
-//				copyExecutableVertices(&input_vertices[i], outSDF);
-//		}
-//	}
-//	else{
-//		// Looking for a starting vertex, i.e. one that has not been marked as executable yet.
-//		BaseVertex* startVertex = NULL;
-//		UINT32 i = 0;
-//		do {
-//			startVertex = vertices[i];
-//			i++;
-//		} while ((startVertex->getExecutable())&&(i < nb_vertices));
-//
-//		if(startVertex != NULL)
-//			copyExecutableVertices(startVertex, outSDF);
-//		else
-//			exitWithCode(1061);
-//	}
+	for (UINT32 i = 0; i < glbNbRequiredEdges; i++) {
+		PiSDFEdge* edge = requiredEdges[i];
 
+
+		BaseVertex* sourceVertex = edge->getSource();
+		BaseVertex* sinkVertex = edge->getSink();
+
+		/*** Adding edge to the new graph. ***/
+		// Bypassing hierarchical vertices.
+		if(sinkVertex->getType() == pisdf_vertex)
+		{
+			PiSDFGraph* subGraph = ((PiSDFVertex*)sinkVertex)->getSubGraph();
+			if(subGraph != (PiSDFGraph*)0)
+			{
+				sinkVertex = subGraph->getInputVertex(edge)->getOutputEdge(0)->getSink();
+			}
+			outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
+		}
+		else if(sinkVertex->getType() == output_vertex)
+		{
+			// Bypassing output vertices.
+			PiSDFEdge* parentEdge = ((PiSDFIfVertex*)sinkVertex)->getParentEdge();
+			sinkVertex = parentEdge->getSink();
+			// Adding the edge with the parent's successor vertex as sink.
+			outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, parentEdge->getConsumptionInt());
+		}
+		else
+			outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
+
+
+
+		// Adding vertices if not already done.
+		if(outSDF->getVertexIndex(sourceVertex) == -1)
+			outSDF->addVertex(sourceVertex);
+
+		if(outSDF->getVertexIndex(sinkVertex) == -1)
+			outSDF->addVertex(sinkVertex);
+	}
+}
+
+
+void PiSDFGraph::findRequiredEdges()
+{
 	for (UINT32 i = 0; i < nb_vertices; i++) {
 		if((vertices[i]->getType() != input_vertex) && (vertices[i]->getType() != output_vertex))
 			if(vertices[i]->getExecutable() == undefined)
 	//			copyExecutableVertices(vertices[i], outSDF);
-				markExecVertices(vertices[i], outSDF);
+				copyRequiredEdges(vertices[i]);
 	}
 }
+
+
+void PiSDFGraph::clearIntraIteration(){
+	// Clearing table of required edges.
+	for (UINT32 i = 0; i < glbNbRequiredEdges; i++) {
+		requiredEdges[i]->setRequired(false);
+		requiredEdges[i] = NULL;
+	}
+	glbNbRequiredEdges = 0;
+}
+
 
 void PiSDFGraph::clearAfterVisit(){
 	// Clearing vertices (member "executable" = "undefined").

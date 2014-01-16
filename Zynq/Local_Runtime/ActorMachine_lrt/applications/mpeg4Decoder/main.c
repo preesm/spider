@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
 //	functions_tbl[2] = inputVOL_L1;
 //	functions_tbl[3] = inputComplexity;
 //	functions_tbl[4] = inputVOLPos;
-	functions_tbl[5] = broadVOL;
+//	functions_tbl[5] = broadVOL;
 	functions_tbl[6] = readVOP;
 	functions_tbl[7] = displayVOP;
 #if HIERARCHY_LEVEL > 1

@@ -47,8 +47,9 @@ find_package(SDL)
 if(SDL_FOUND)
 else()
     set (SDL_LIB_DIR "" CACHE PATH "")
-    link_directories(${SDL_LIB_DIR})
 endif()
+
+link_directories(${SDL_LIB_DIR})
 
 add_executable(LRT ${app_source_files} ${lrt_source_files} ${platform_source_files})
 target_link_libraries(LRT SDL)

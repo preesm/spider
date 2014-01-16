@@ -63,7 +63,7 @@
 //} MBOX;
 
 static LRT_FIFO_HNDLE RTQueue[nbQueueTypes][2];
-//int cpuId;
+int cpuId;
 
 void RTQueuesInit(){
 	create_swfifo(&(RTQueue[RTCtrlQueue][RTInputQueue]), FIFOLength, 0x0a000000);

@@ -86,171 +86,171 @@ static int 				keyframes[2];
 
 void action_decode_I_frame ()
 {
-	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
-
-    int             i, j, k ;
-    int             MB_courant = 0 ;
-    int             MB_number ;
-    int             pos_X [1];
-    int             tab_pos_X [4];
-    struct_VOP      new_VOP [1];
-    int             VideoPacketHeader_pos [1];
-    int             MacroblockI_pos [1];
-    int             VideoPacketHeader_resync_marker [1];
-    short           StockBlockLum_BuffA [16];
-    short           StockBlockLum_BuffB [16];
-    short           StockBlockLum_BuffC [16];
-    short           StockBlockLum_BuffD [16];
-    short           StockBlockLum_BuffE [16];
-    short           StockBlocksCr_BuffA [16];
-    short           StockBlocksCr_BuffB [16];
-    short           StockBlocksCr_BuffC [16];
-    short           StockBlocksCb_BuffA [16];
-    short           StockBlocksCb_BuffB [16];
-    short           StockBlocksCb_BuffC [16];
-    int             VLCinverseXi_pos [1];
-    int             VLCinverseXi_pos_prec [1];
-    short           InverseQuant_BlkXn [6 * 16];
-    unsigned char   block_8x8 [64];
-    short    *DCpred_buffA [6];
-    short    *DCpred_buffB [6];
-    short    *DCpred_buffC [6];
-    unsigned char    *display [6];
-    int             width ;
-    const int       edge_size2 = EDGE_SIZE >> 1 ;
-    const int       stride = VOLsimple.video_object_layer_width + 2 * EDGE_SIZE ;
-
-		//--- Reading inputs.
-	read_input_fifo(action->fifo_in_id[0], sizeof(data), (UINT8*)data);
-	read_input_fifo(action->fifo_in_id[1], sizeof(struct_VOLsimple), (UINT8*)&VOLsimple);
-	read_input_fifo(action->fifo_in_id[2], sizeof(int), (UINT8*)&pos_i);
-	read_input_fifo(action->fifo_in_id[3], sizeof(struct_VOP), (UINT8*)&VOP);
-	read_input_fifo(action->fifo_in_id[4], sizeof(REVERSE_EVENT), (UINT8*)&DCT3D_I);
-	read_input_fifo(action->fifo_in_id[5], sizeof(UINT8), (UINT8*)&Lum);
-	read_input_fifo(action->fifo_in_id[6], sizeof(UINT8), (UINT8*)&Cb);
-	read_input_fifo(action->fifo_in_id[7], sizeof(UINT8), (UINT8*)&Cr);
-	read_input_fifo(action->fifo_in_id[8], sizeof(keyframes), (UINT8*)&keyframes);
-	//---
-
-
-    //DCpred_buffA
-    DCpred_buffA [0] = StockBlockLum_BuffA ;
-    DCpred_buffA [1] = InverseQuant_BlkXn ;
-    DCpred_buffA [2] = (StockBlockLum_BuffE);
-    DCpred_buffA [3] = (InverseQuant_BlkXn + 2 * 16);
-    DCpred_buffA [4] = (StockBlocksCb_BuffA);
-    DCpred_buffA [5] = (StockBlocksCr_BuffA);
-    //DCpred_buffB
-    DCpred_buffB [0] = StockBlockLum_BuffB ;
-    DCpred_buffB [1] = StockBlockLum_BuffC ;
-    DCpred_buffB [2] = (StockBlockLum_BuffA);
-    DCpred_buffB [3] = (InverseQuant_BlkXn);
-    DCpred_buffB [4] = (StockBlocksCb_BuffB);
-    DCpred_buffB [5] = (StockBlocksCr_BuffB);
-    //DCpred_buffC
-    DCpred_buffC [0] = StockBlockLum_BuffC ;
-    DCpred_buffC [1] = StockBlockLum_BuffD ;
-    DCpred_buffC [2] = (InverseQuant_BlkXn);
-    DCpred_buffC [3] = (InverseQuant_BlkXn + 1 * 16);
-    DCpred_buffC [4] = (StockBlocksCb_BuffC);
-    DCpred_buffC [5] = (StockBlocksCr_BuffC);
-    //tab_pos_X
-    tab_pos_X [0] = 0 ;
-    tab_pos_X [1] = 8 ;
-    tab_pos_X [2] = 8 * stride ;
-    tab_pos_X [3] = 8 * stride + 8 ;
-    //display
-    if (keyframes[0]==0){
-        address = stride * (VOLsimple.video_object_layer_height + 2 * EDGE_SIZE) ;
-        display [0] = Lum ;
-        display [1] = Lum ;
-        display [2] = Lum ;
-        display [3] = Lum ;
-        display [4] = Cb ;
-        display [5] = Cr ;
-        keyframes[0] =1;
-        keyframes[1] =0;
-    }
-    else
-    {
-        address = stride * (VOLsimple.video_object_layer_height + 2 * EDGE_SIZE) ;
-        display [0] = Lum + address;
-        display [1] = Lum + address;
-        display [2] = Lum + address;
-        display [3] = Lum + address;
-        display [4] = Cb + address / 4;
-        display [5] = Cr + address / 4;
-        keyframes[0]=0;
-        keyframes[1]=1;
-        address = 0;
-    }
-
-    pos_o = pos_i ;
-    StockBlocksLum_init(&VOLsimple, InverseQuant_BlkXn + 2 * 16, InverseQuant_BlkXn + 3 * 16);
-    for ( MB_courant = 0 ; 
-        MB_courant < VOLsimple.video_object_layer_width * VOLsimple.video_object_layer_height / 256 ;
-        MB_courant++ ) {
-			if ( MB_courant == 342)
-				MB_courant += 0;
-            VideoPacketHeaderI(data, pos_o, &VOLsimple, &VOP, &MB_courant, new_VOP, VideoPacketHeader_pos
-                , VideoPacketHeader_resync_marker, &MB_number);
-            MB_courant = MB_number ;
-            i = MB_courant % (VOLsimple.video_object_layer_width / 16);
-            j = MB_courant / (VOLsimple.video_object_layer_width / 16);
-            Param_MB_I(VideoPacketHeader_pos [0], data, new_VOP, &VOP, MacroblockI_pos);
-            StockBlocksLum(i, VideoPacketHeader_resync_marker [0], InverseQuant_BlkXn + 1 * 16, InverseQuant_BlkXn + 2 * 16
-                , InverseQuant_BlkXn + 3 * 16, &VOLsimple, StockBlockLum_BuffA, StockBlockLum_BuffB, StockBlockLum_BuffC
-                , StockBlockLum_BuffD, StockBlockLum_BuffE);
-            StockBlocksCb(MB_courant, InverseQuant_BlkXn + 4 * 16, &VOLsimple, VideoPacketHeader_resync_marker [0]
-            , StockBlocksCb_BuffA, StockBlocksCb_BuffB, StockBlocksCb_BuffC);
-            StockBlocksCr(MB_courant, InverseQuant_BlkXn + 5 * 16, &VOLsimple, VideoPacketHeader_resync_marker [0]
-            , StockBlocksCr_BuffA, StockBlocksCr_BuffB, StockBlocksCr_BuffC);
-            VLCinverseXi_pos_prec [0] = MacroblockI_pos [0];
-            width = VOLsimple.video_object_layer_width ;
-            pos_X [0] = ((i + j * stride) << 4) + EDGE_SIZE + EDGE_SIZE * stride ;
-
-            for ( k = 0 ; k < 4 ; k++ ) {
-#ifdef CALL_RT
-            	call_global_rt(decode_bloc_intra_rt, k, data, VOP, VLCinverseXi_pos_prec [0], DCT3D_I, VOLsimple, MB_courant
-                    , DCpred_buffA [k], DCpred_buffB [k], DCpred_buffC [k]
-                , InverseQuant_BlkXn + k * 16, block_8x8, VLCinverseXi_pos);
-#else
-                decode_bloc_intra(k, data, &VOP, VLCinverseXi_pos_prec [0], DCT3D_I, &VOLsimple, MB_courant
-                    , DCpred_buffA [k], DCpred_buffB [k], DCpred_buffC [k]
-                , InverseQuant_BlkXn + k * 16, block_8x8, VLCinverseXi_pos);
-#endif
-                Stock_block_in_pict(width + 2 * EDGE_SIZE, pos_X [0] + tab_pos_X [k], block_8x8
-                    , display [0]);
-                VLCinverseXi_pos_prec [0] = VLCinverseXi_pos [0];
-            }
-            width = VOLsimple.video_object_layer_width >> 1 ;
-            pos_X [0] = ((i + j * (stride >> 1)) << 3) + edge_size2 + edge_size2 * (stride >> 1);
-            for ( k = 4 ; k < 6 ; k++ ) {
-#ifdef CALL_RT
-            	call_global_rt(decode_bloc_intra_rt, k, data, VOP, VLCinverseXi_pos_prec [0], DCT3D_I, VOLsimple, MB_courant
-                    , DCpred_buffA [k], DCpred_buffB [k], DCpred_buffC [k]
-                , InverseQuant_BlkXn + k * 16, block_8x8, VLCinverseXi_pos);
-#else
-                decode_bloc_intra(k, data, &VOP, VLCinverseXi_pos_prec [0], DCT3D_I, &VOLsimple, MB_courant
-                    , DCpred_buffA [k], DCpred_buffB [k], DCpred_buffC [k]
-                , InverseQuant_BlkXn + k * 16, block_8x8, VLCinverseXi_pos);
-#endif
-                Stock_block_in_pict(width + 2 * edge_size2, pos_X [0], block_8x8, display [k]);
-                VLCinverseXi_pos_prec [0] = VLCinverseXi_pos [0];
-            }
-
-            pos_o = VLCinverseXi_pos [0];
-    }
-    image_setedges( (display [0]),  (display [4]),  (display [5])
-    	,  (display [0]),  (display [4]),  (display [5]), VOLsimple.video_object_layer_width + 2 * EDGE_SIZE
-        , VOLsimple.video_object_layer_height);
-
-    //--- Writing outputs.
-    write_output_fifo(action->fifo_out_id[0], sizeof(int), (UINT8*)&pos_o);
-    write_output_fifo(action->fifo_out_id[1], sizeof(int), (UINT8*)&address);
-    write_output_fifo(action->fifo_out_id[2], sizeof(UINT8), (UINT8*)&Lum);
-    write_output_fifo(action->fifo_out_id[3], sizeof(UINT8), (UINT8*)&Cb);
-    write_output_fifo(action->fifo_out_id[4], sizeof(UINT8), (UINT8*)&Cr);
-    write_output_fifo(action->fifo_out_id[5], sizeof(int), (UINT8*)&keyframes);
-    //---
+//	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
+//
+//    int             i, j, k ;
+//    int             MB_courant = 0 ;
+//    int             MB_number ;
+//    int             pos_X [1];
+//    int             tab_pos_X [4];
+//    struct_VOP      new_VOP [1];
+//    int             VideoPacketHeader_pos [1];
+//    int             MacroblockI_pos [1];
+//    int             VideoPacketHeader_resync_marker [1];
+//    short           StockBlockLum_BuffA [16];
+//    short           StockBlockLum_BuffB [16];
+//    short           StockBlockLum_BuffC [16];
+//    short           StockBlockLum_BuffD [16];
+//    short           StockBlockLum_BuffE [16];
+//    short           StockBlocksCr_BuffA [16];
+//    short           StockBlocksCr_BuffB [16];
+//    short           StockBlocksCr_BuffC [16];
+//    short           StockBlocksCb_BuffA [16];
+//    short           StockBlocksCb_BuffB [16];
+//    short           StockBlocksCb_BuffC [16];
+//    int             VLCinverseXi_pos [1];
+//    int             VLCinverseXi_pos_prec [1];
+//    short           InverseQuant_BlkXn [6 * 16];
+//    unsigned char   block_8x8 [64];
+//    short    *DCpred_buffA [6];
+//    short    *DCpred_buffB [6];
+//    short    *DCpred_buffC [6];
+//    unsigned char    *display [6];
+//    int             width ;
+//    const int       edge_size2 = EDGE_SIZE >> 1 ;
+//    const int       stride = VOLsimple.video_object_layer_width + 2 * EDGE_SIZE ;
+//
+//		//--- Reading inputs.
+//	read_input_fifo(action->fifo_in_id[0], sizeof(data), (UINT8*)data);
+//	read_input_fifo(action->fifo_in_id[1], sizeof(struct_VOLsimple), (UINT8*)&VOLsimple);
+//	read_input_fifo(action->fifo_in_id[2], sizeof(int), (UINT8*)&pos_i);
+//	read_input_fifo(action->fifo_in_id[3], sizeof(struct_VOP), (UINT8*)&VOP);
+//	read_input_fifo(action->fifo_in_id[4], sizeof(REVERSE_EVENT), (UINT8*)&DCT3D_I);
+//	read_input_fifo(action->fifo_in_id[5], sizeof(UINT8), (UINT8*)&Lum);
+//	read_input_fifo(action->fifo_in_id[6], sizeof(UINT8), (UINT8*)&Cb);
+//	read_input_fifo(action->fifo_in_id[7], sizeof(UINT8), (UINT8*)&Cr);
+//	read_input_fifo(action->fifo_in_id[8], sizeof(keyframes), (UINT8*)&keyframes);
+//	//---
+//
+//
+//    //DCpred_buffA
+//    DCpred_buffA [0] = StockBlockLum_BuffA ;
+//    DCpred_buffA [1] = InverseQuant_BlkXn ;
+//    DCpred_buffA [2] = (StockBlockLum_BuffE);
+//    DCpred_buffA [3] = (InverseQuant_BlkXn + 2 * 16);
+//    DCpred_buffA [4] = (StockBlocksCb_BuffA);
+//    DCpred_buffA [5] = (StockBlocksCr_BuffA);
+//    //DCpred_buffB
+//    DCpred_buffB [0] = StockBlockLum_BuffB ;
+//    DCpred_buffB [1] = StockBlockLum_BuffC ;
+//    DCpred_buffB [2] = (StockBlockLum_BuffA);
+//    DCpred_buffB [3] = (InverseQuant_BlkXn);
+//    DCpred_buffB [4] = (StockBlocksCb_BuffB);
+//    DCpred_buffB [5] = (StockBlocksCr_BuffB);
+//    //DCpred_buffC
+//    DCpred_buffC [0] = StockBlockLum_BuffC ;
+//    DCpred_buffC [1] = StockBlockLum_BuffD ;
+//    DCpred_buffC [2] = (InverseQuant_BlkXn);
+//    DCpred_buffC [3] = (InverseQuant_BlkXn + 1 * 16);
+//    DCpred_buffC [4] = (StockBlocksCb_BuffC);
+//    DCpred_buffC [5] = (StockBlocksCr_BuffC);
+//    //tab_pos_X
+//    tab_pos_X [0] = 0 ;
+//    tab_pos_X [1] = 8 ;
+//    tab_pos_X [2] = 8 * stride ;
+//    tab_pos_X [3] = 8 * stride + 8 ;
+//    //display
+//    if (keyframes[0]==0){
+//        address = stride * (VOLsimple.video_object_layer_height + 2 * EDGE_SIZE) ;
+//        display [0] = Lum ;
+//        display [1] = Lum ;
+//        display [2] = Lum ;
+//        display [3] = Lum ;
+//        display [4] = Cb ;
+//        display [5] = Cr ;
+//        keyframes[0] =1;
+//        keyframes[1] =0;
+//    }
+//    else
+//    {
+//        address = stride * (VOLsimple.video_object_layer_height + 2 * EDGE_SIZE) ;
+//        display [0] = Lum + address;
+//        display [1] = Lum + address;
+//        display [2] = Lum + address;
+//        display [3] = Lum + address;
+//        display [4] = Cb + address / 4;
+//        display [5] = Cr + address / 4;
+//        keyframes[0]=0;
+//        keyframes[1]=1;
+//        address = 0;
+//    }
+//
+//    pos_o = pos_i ;
+//    StockBlocksLum_init(&VOLsimple, InverseQuant_BlkXn + 2 * 16, InverseQuant_BlkXn + 3 * 16);
+//    for ( MB_courant = 0 ;
+//        MB_courant < VOLsimple.video_object_layer_width * VOLsimple.video_object_layer_height / 256 ;
+//        MB_courant++ ) {
+//			if ( MB_courant == 342)
+//				MB_courant += 0;
+//            VideoPacketHeaderI(data, pos_o, &VOLsimple, &VOP, &MB_courant, new_VOP, VideoPacketHeader_pos
+//                , VideoPacketHeader_resync_marker, &MB_number);
+//            MB_courant = MB_number ;
+//            i = MB_courant % (VOLsimple.video_object_layer_width / 16);
+//            j = MB_courant / (VOLsimple.video_object_layer_width / 16);
+//            Param_MB_I(VideoPacketHeader_pos [0], data, new_VOP, &VOP, MacroblockI_pos);
+//            StockBlocksLum(i, VideoPacketHeader_resync_marker [0], InverseQuant_BlkXn + 1 * 16, InverseQuant_BlkXn + 2 * 16
+//                , InverseQuant_BlkXn + 3 * 16, &VOLsimple, StockBlockLum_BuffA, StockBlockLum_BuffB, StockBlockLum_BuffC
+//                , StockBlockLum_BuffD, StockBlockLum_BuffE);
+//            StockBlocksCb(MB_courant, InverseQuant_BlkXn + 4 * 16, &VOLsimple, VideoPacketHeader_resync_marker [0]
+//            , StockBlocksCb_BuffA, StockBlocksCb_BuffB, StockBlocksCb_BuffC);
+//            StockBlocksCr(MB_courant, InverseQuant_BlkXn + 5 * 16, &VOLsimple, VideoPacketHeader_resync_marker [0]
+//            , StockBlocksCr_BuffA, StockBlocksCr_BuffB, StockBlocksCr_BuffC);
+//            VLCinverseXi_pos_prec [0] = MacroblockI_pos [0];
+//            width = VOLsimple.video_object_layer_width ;
+//            pos_X [0] = ((i + j * stride) << 4) + EDGE_SIZE + EDGE_SIZE * stride ;
+//
+//            for ( k = 0 ; k < 4 ; k++ ) {
+//#ifdef CALL_RT
+//            	call_global_rt(decode_bloc_intra_rt, k, data, VOP, VLCinverseXi_pos_prec [0], DCT3D_I, VOLsimple, MB_courant
+//                    , DCpred_buffA [k], DCpred_buffB [k], DCpred_buffC [k]
+//                , InverseQuant_BlkXn + k * 16, block_8x8, VLCinverseXi_pos);
+//#else
+//                decode_bloc_intra(k, data, &VOP, VLCinverseXi_pos_prec [0], DCT3D_I, &VOLsimple, MB_courant
+//                    , DCpred_buffA [k], DCpred_buffB [k], DCpred_buffC [k]
+//                , InverseQuant_BlkXn + k * 16, block_8x8, VLCinverseXi_pos);
+//#endif
+//                Stock_block_in_pict(width + 2 * EDGE_SIZE, pos_X [0] + tab_pos_X [k], block_8x8
+//                    , display [0]);
+//                VLCinverseXi_pos_prec [0] = VLCinverseXi_pos [0];
+//            }
+//            width = VOLsimple.video_object_layer_width >> 1 ;
+//            pos_X [0] = ((i + j * (stride >> 1)) << 3) + edge_size2 + edge_size2 * (stride >> 1);
+//            for ( k = 4 ; k < 6 ; k++ ) {
+//#ifdef CALL_RT
+//            	call_global_rt(decode_bloc_intra_rt, k, data, VOP, VLCinverseXi_pos_prec [0], DCT3D_I, VOLsimple, MB_courant
+//                    , DCpred_buffA [k], DCpred_buffB [k], DCpred_buffC [k]
+//                , InverseQuant_BlkXn + k * 16, block_8x8, VLCinverseXi_pos);
+//#else
+//                decode_bloc_intra(k, data, &VOP, VLCinverseXi_pos_prec [0], DCT3D_I, &VOLsimple, MB_courant
+//                    , DCpred_buffA [k], DCpred_buffB [k], DCpred_buffC [k]
+//                , InverseQuant_BlkXn + k * 16, block_8x8, VLCinverseXi_pos);
+//#endif
+//                Stock_block_in_pict(width + 2 * edge_size2, pos_X [0], block_8x8, display [k]);
+//                VLCinverseXi_pos_prec [0] = VLCinverseXi_pos [0];
+//            }
+//
+//            pos_o = VLCinverseXi_pos [0];
+//    }
+//    image_setedges( (display [0]),  (display [4]),  (display [5])
+//    	,  (display [0]),  (display [4]),  (display [5]), VOLsimple.video_object_layer_width + 2 * EDGE_SIZE
+//        , VOLsimple.video_object_layer_height);
+//
+//    //--- Writing outputs.
+//    write_output_fifo(action->fifo_out_id[0], sizeof(int), (UINT8*)&pos_o);
+//    write_output_fifo(action->fifo_out_id[1], sizeof(int), (UINT8*)&address);
+//    write_output_fifo(action->fifo_out_id[2], sizeof(UINT8), (UINT8*)&Lum);
+//    write_output_fifo(action->fifo_out_id[3], sizeof(UINT8), (UINT8*)&Cb);
+//    write_output_fifo(action->fifo_out_id[4], sizeof(UINT8), (UINT8*)&Cr);
+//    write_output_fifo(action->fifo_out_id[5], sizeof(int), (UINT8*)&keyframes);
+//    //---
 }

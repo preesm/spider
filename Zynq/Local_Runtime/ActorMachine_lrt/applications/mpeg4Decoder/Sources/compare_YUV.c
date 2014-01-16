@@ -32,7 +32,7 @@
 #ifndef POCKET_PC
 #include <stdio.h>
 #ifndef ARM
-#include <conio.h>
+//#include <conio.h>
 #endif
 
 #define uchar unsigned char
@@ -53,7 +53,8 @@ void compare_YUV ( const int xpic, const int ypic, const uchar *Y1, const uchar 
         }
         if ( error != 0 ) {
             printf("diff Lum %d \n", error);
-            _getch();
+            getchar();
+//            _getch();
         }
     }
     {
@@ -69,7 +70,8 @@ void compare_YUV ( const int xpic, const int ypic, const uchar *Y1, const uchar 
         }
         if ( error != 0 ) {
             printf("diff Cb %d \n", error);
-            _getch();
+            getchar();
+//            _getch();
         }
     }
     {
@@ -85,7 +87,8 @@ void compare_YUV ( const int xpic, const int ypic, const uchar *Y1, const uchar 
         }
         if ( error != 0 ) {
             printf("diff Cr %d \n", error);
-            _getch();
+            getchar();
+//            _getch();
         }
     }
 }

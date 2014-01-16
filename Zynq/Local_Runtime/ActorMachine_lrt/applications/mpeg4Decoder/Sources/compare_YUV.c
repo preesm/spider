@@ -1,6 +1,6 @@
 /*****************************************************************************
    *
-   *  MPEG4DSP developped in IETR image lab
+   *  MPEG4DSP developed in IETR image lab
    *
    *
    *

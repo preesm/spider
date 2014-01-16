@@ -97,10 +97,10 @@
  */
 typedef unsigned char 	BOOLEAN;
 
-typedef char			INT8;
-typedef short			INT16;
-typedef int			 	INT32;
-typedef long long	 	INT64;
+typedef char			INT8_S;
+typedef short			INT16_S;
+typedef int			 	INT32_S;
+typedef long long	 	INT64_S;
 
 typedef unsigned char 	UINT8;
 typedef unsigned short	UINT16;
@@ -203,8 +203,8 @@ typedef struct {		//
 	union{
 		/* FIFO Condition specific attributes */
 		struct {
-			INT8 	id;
-			INT32 size;
+			INT8_S 	id;
+			INT32_S size;
 		} fifo;
 	};
 }AM_ACTOR_COND_STRUCT;

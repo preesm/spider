@@ -52,6 +52,7 @@
 #define SUB_SDF_FILE_0_PATH		"subSdf.gv"
 #define SRDAG_FILE_PATH			"srDag.gv"
 #define SRDAG_FIFO_ID_FILE_PATH	"srDagFifoId.gv"
+#define IS_AM 					0
 #define EXEC					0
 
 
@@ -73,8 +74,15 @@ void createArch(Architecture* arch, int nbSlaves){
 	}
 }
 
-void mpeg4_part2_main(int nbSlaves)
-{
+int main(int argc, char* argv[]){
+	if(argc < 2){
+		printf("Usage: %s nbSlaves\n", argv[0]);
+		return 0;
+	}
+	int nbSlaves = atoi(argv[1]);
+
+	printf("Starting with %d slaves max\n", nbSlaves);
+
 	// Creating the architecture
 	Architecture arch;
 	createArch(&arch, nbSlaves);
@@ -117,7 +125,6 @@ void mpeg4_part2_main(int nbSlaves)
 #if EXEC == 1
 	launch.init(nbSlaves);
 #endif
-	bool isAM = false;
 	do{
 		bool init = true;
 		do{
@@ -170,7 +177,7 @@ void mpeg4_part2_main(int nbSlaves)
 			}
 
 			// Preparing tasks' informations
-			launch.prepareTasksInfo(&dag, &arch, &schedule, isAM, &execStat);
+			launch.prepareTasksInfo(&dag, &arch, &schedule, IS_AM, &execStat);
 
 #if EXEC == 1
 			// Launching execution.
@@ -217,5 +224,5 @@ void mpeg4_part2_main(int nbSlaves)
 		}while(prevNbConfigVertices < piSDF.getGlbNbConfigVertices());
 
 		piSDF.clearAfterVisit();
-	}while(!isAM);
+	}while(!IS_AM);
 }

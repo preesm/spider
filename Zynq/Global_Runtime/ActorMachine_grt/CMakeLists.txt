@@ -13,7 +13,7 @@ endif()
 
 # Getting the application' sources.
 if(APP_MPEG4)    
-    #include_directories(applications/mpeg4Decoder)
+    include_directories(applications/mpeg4Decoder)
     file(GLOB_RECURSE app_source_files applications/mpeg4Decoder/*)
 endif()
 
@@ -47,5 +47,5 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 # Compiling and linking.
-add_executable(GRT ${app_source_files} ${grt_source_files} ${platform_source_files})
+add_executable(GRT applications/main.cpp ${app_source_files} ${grt_source_files} ${platform_source_files})
 target_link_libraries(GRT)

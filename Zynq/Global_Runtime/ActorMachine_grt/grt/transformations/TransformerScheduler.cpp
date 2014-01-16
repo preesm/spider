@@ -59,25 +59,25 @@ int transformAndSchedule(CSDAGGraph* csDag, Architecture* archi){
 	*/
 	//dotWriter.write(csDag, CSDAG_FILE_PATH, 1);
 
-	timer.resetAndStart();
-	csDag->resolveTimings(archi);
-	csDAGTransformer.transform(csDag, &srDag, archi);
-	timer.printAndReset("srDAG Transf.");
-
-	jobTransformer.transform(&srDag, &jobSet, archi);
-	timer.printAndReset("jobs Transf.");
-
-	dotWriter.write(&srDag, STRUCTURE_FILE_PATH, 1, 1);
-
-	timer.resetAndStart();
-	flowShopScheduler.schedule(csDag, &jobSet);
-	timer.printAndReset("Flow Sched.");
-	schedWriter.write(csDag, &srDag, archi, GANTT_FLOW_FILE_PATH);
-
-	timer.resetAndStart();
-	listScheduler.schedule(csDag, &srDag);
-	schedWriter.write(csDag, &srDag, archi, GANTT_LIST_FILE_PATH);
-	timer.printAndReset("List Sched.");
+//	timer.resetAndStart();
+//	csDag->resolveTimings(archi);
+//	csDAGTransformer.transform(csDag, &srDag, archi);
+//	timer.printAndReset("srDAG Transf.");
+//
+//	jobTransformer.transform(&srDag, &jobSet, archi);
+//	timer.printAndReset("jobs Transf.");
+//
+//	dotWriter.write(&srDag, STRUCTURE_FILE_PATH, 1, 1);
+//
+//	timer.resetAndStart();
+//	flowShopScheduler.schedule(csDag, &jobSet);
+//	timer.printAndReset("Flow Sched.");
+//	schedWriter.write(csDag, &srDag, archi, GANTT_FLOW_FILE_PATH);
+//
+//	timer.resetAndStart();
+//	listScheduler.schedule(csDag, &srDag);
+//	schedWriter.write(csDag, &srDag, archi, GANTT_LIST_FILE_PATH);
+//	timer.printAndReset("List Sched.");
 
 	return 0;
 }

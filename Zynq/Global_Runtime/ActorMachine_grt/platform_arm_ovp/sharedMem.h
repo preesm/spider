@@ -35,75 +35,32 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
+#ifndef SHAREDMEM_H_
+#define SHAREDMEM_H_
 
 #include "types.h"
-#include "hwQueues.h"
-#include "swfifoMngr.h"
+//#include "lrt_definitions.h"
 
-#define FIFOLength			512
+#define SH_MEM_BASE_ADDR			0x10000000
+#define SH_MEM_HDR_REGION_SIZE		MAX_NB_FIFOs * FIFO_MUTEX_SIZE
+#define SH_MEM_DATA_REGION_SIZE		0x10000000
+#define SH_MEM_SIZE					SH_MEM_HDR_REGION_SIZE + SH_MEM_DATA_REGION_SIZE
+//#define SH_MEM_FILE_PATH			"../shMem"
 
-//#define WRITE_REG_OFFSET	0x00	/**< Mbox write register */
-//#define READ_REG_OFFSET		0x08	/**< Mbox read register */
-//#define STATUS_REG_OFFSET	0x10	/**< Mbox status reg  */
-//#define STATUS_FIFO_EMPTY	0x00000001 /**< Receive FIFO is Empty */
-//#define STATUS_FIFO_FULL	0x00000002 /**< Send FIFO is Full */
-//
-//typedef struct MBox {
-//	UINT32 	base;
-////	UINT32 	dataBase;
-//	UINT32 	length;
-////	UINT32	WrDataReg;
-////	UINT32	RdDataReg;
-////	UINT32	StatusReg;
-////	FILE*	file;
-////	char	file_name[50];
-//} MBOX;
-
-static LRT_FIFO_HNDLE RTQueue[nbQueueTypes][2];
-//int cpuId;
-
-void RTQueuesInit(){
-	create_fifo_args(RTQueue[RTCtrlQueue][RTInputQueue], FIFOLength, 0x0a000000);
-//	RTQueue[RTInfoQueue][RTInputQueue] =
-//	RTQueue[RTJobQueue][RTInputQueue] =
-//
-	create_fifo_args(RTQueue[RTCtrlQueue][RTOutputQueue], FIFOLength, 0x0a000300);
-//	RTQueue[RTInfoQueue][RTOutputQueue] =
-//	RTQueue[RTJobQueue][RTOutputQueue] =
-}
+typedef struct OS_SHMEM {
+	UINT32 	base;
+//	UINT32 	dataBase;
+	UINT32 	length;
+//	FILE*	file;
+//	char	file_name[50];
+} OS_SHMEM;
 
 
-UINT32 RTQueuePush(RTQueueType queueType, void* data, int size){
-	write_output_fifo(&RTQueue[queueType][RTOutputQueue], size, data);
-	return size;
-}
+void addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename);
 
+void OS_ShMemInit();
 
-UINT32 RTQueuePush_UINT32(RTQueueType queueType, UINT32 value){
-	return RTQueuePush(queueType, &value, 4);
-}
+UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size);
+UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size);
 
-
-UINT32 RTQueuePop(RTQueueType queueType, void* data, int size){
-	read_input_fifo(RTQueue[queueType][RTInputQueue], size, data);
-	return size;
-}
-
-
-UINT32 RTQueuePop_UINT32(RTQueueType queueType){
-	UINT32 data;
-	return RTQueuePop(queueType, &data, 4);
-}
-
-
-UINT32 RTQueueNonBlockingPop(RTQueueType queueType, void* data, int size){
-	if(check_input_fifo(RTQueue[queueType][RTInputQueue], size)){
-		read_input_fifo(RTQueue[queueType][RTInputQueue], size, data);
-		return size;
-	}
-	else
-		return 0;
-}
+#endif /* SHAREDMEM_H_ */

@@ -35,29 +35,65 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#ifndef HWQUEUES_H_
-#define HWQUEUES_H_
+#include <stdio.h>
+#include <stdlib.h>
+#include "sharedMem.h"
 
-#include "types.h"
+static OS_SHMEM OSShMemTbl[1];
+static int nbOSShMem = 0;
 
-typedef enum{
-	RTCtrlQueue,
-	RTInfoQueue,
-	RTJobQueue,
-	nbQueueTypes
-} RTQueueType;
+//void addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename) {
+//
+//}
 
-typedef enum{
-	RTInputQueue,
-	RTOutputQueue
-} RTQueueDir;
+void OS_ShMemInit() {
+//	printf("Opening shMem...\n");
+//	addOSShMem(SH_MEM_BASE_ADDR, SH_MEM_BASE_ADDR + SH_MEM_DATA_REGION_SIZE, SH_MEM_SIZE, SH_MEM_FILE_PATH);
+}
 
-void RTQueuesInit(UINT32 nbSlaves);
 
-UINT32 RTQueuePush(UINT8 slaveId, RTQueueType queueType, void* data, int size);
-UINT32 RTQueuePush_UINT32(UINT8 slaveId, RTQueueType queueType, UINT32 value);
-UINT32 RTQueuePop(UINT8 slaveId, RTQueueType queueType, void* data, int size);
-UINT32 RTQueuePop_UINT32(UINT8 slaveId, RTQueueType queueType);
-UINT32 RTQueueNonBlockingPop(UINT8 slaveId, RTQueueType queueType, void* data, int size);
+UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
+	int NumBytes;
+	int i;
+	UINT32* ptr = (UINT32*)data;
 
-#endif /* HWQUEUES_H_ */
+	for (i = 0; i < nbOSShMem && NumBytes == 0; i++) {
+		if (OSShMemTbl[i].base <= address
+				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
+				&& OSShMemTbl[i].base <= address + size
+				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
+
+			do {
+				*ptr = *((UINT32*)address);
+				ptr++;
+				NumBytes += 4;
+			} while (NumBytes != size);
+
+			return NumBytes;
+		}
+	}
+	printf("Memory not found 0x%x\n", address);
+	return NumBytes;
+}
+
+
+UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
+	int NumBytes;
+	int i;
+	UINT32* ptr = (UINT32*)data;
+
+	for (i = 0; i < nbOSShMem && NumBytes == 0; i++) {
+		if (OSShMemTbl[i].base <= address
+				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
+				&& OSShMemTbl[i].base <= address + size
+				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
+
+			do {
+				*((UINT32*)address) = *ptr;
+				ptr++;
+				NumBytes += 4;
+			} while (NumBytes != size);
+		}
+	}
+	return NumBytes;
+}

@@ -39,11 +39,11 @@
 
 #include <types.h>
 #include <hwQueues.h>
-#include <platform.h>
-//#include <sharedMem.h>
+//#include <platform.h>
+#include <sharedMem.h>
 
 #include <hwQueues.h>
-#include <print.h>
+//#include <print.h>
 
 #include "swfifoMngr.h"
 //#include "lrt_debug.h"
@@ -77,7 +77,7 @@
 //	return OS_ERR_NONE;
 //}
 
-UINT8 create_fifo_args(LRT_FIFO_HNDLE* fifo_hndl, UINT32 size, UINT32 address){
+UINT8 create_swfifo(LRT_FIFO_HNDLE* fifo_hndl, UINT32 size, UINT32 address){
 	fifo_hndl->Size = size;
 	fifo_hndl->address = address;
 	fifo_hndl->Status = FIFO_STAT_INIT;
@@ -115,28 +115,26 @@ UINT8 create_fifo_args(LRT_FIFO_HNDLE* fifo_hndl, UINT32 size, UINT32 address){
 //
 //	return fifo_hndl;
 //}
-
-/* Flush the contents of a FIFO */
-void flush_fifo() {
-	UINT8 fifo_id = RTQueuePop_UINT32(RTCtrlQueue);
-	LRT_FIFO_HNDLE* fifo_hndl = get_fifo_hndl(fifo_id);
-	UINT32 tmp = 0;
-
-	OS_ShMemWrite(RD_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
-	OS_ShMemWrite(WR_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
-
-//	zynq_puts("Clear Fifo ID"); zynq_putdec(fifo_id); zynq_puts("\n");
-}
-
-void flush_fifo_args(UINT8 fifo_id) {
-	LRT_FIFO_HNDLE* fifo_hndl = get_fifo_hndl(fifo_id);
-	UINT32 tmp = 0;
-
-	OS_ShMemWrite(RD_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
-	OS_ShMemWrite(WR_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
-
-//	zynq_puts("Clear Fifo ID"); zynq_putdec(fifo_id); zynq_puts("\n");
-}
+//
+///* Flush the contents of a FIFO */
+//void flush_fifo(LRT_FIFO_HNDLE* fifo_hndl) {
+//	UINT32 tmp = 0;
+//
+//	OS_ShMemWrite(RD_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
+//	OS_ShMemWrite(WR_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
+//
+////	zynq_puts("Clear Fifo ID"); zynq_putdec(fifo_id); zynq_puts("\n");
+//}
+//
+//void flush_fifo_args(UINT8 fifo_id) {
+////	LRT_FIFO_HNDLE* fifo_hndl = get_fifo_hndl(fifo_id);
+////	UINT32 tmp = 0;
+////
+////	OS_ShMemWrite(RD_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
+////	OS_ShMemWrite(WR_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
+//
+////	zynq_puts("Clear Fifo ID"); zynq_putdec(fifo_id); zynq_puts("\n");
+//}
 
 /*
  *********************************************************************************************************
@@ -151,7 +149,7 @@ void flush_fifo_args(UINT8 fifo_id) {
  *
  *********************************************************************************************************
  */
-BOOLEAN check_input_fifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size) {
+BOOLEAN check_input_swfifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size) {
 	UINT32 wr_ix, rd_ix;
 
 	OS_ShMemRead(RD_IX_ADD(in_fifo_hndl), &rd_ix, sizeof(UINT32));
@@ -177,7 +175,7 @@ BOOLEAN check_input_fifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size) {
  *
  *********************************************************************************************************
  */
-void read_input_fifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffer) {
+void read_input_swfifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffer) {
 	UINT32 wr_ix, rd_ix, temp;
 
 	while(1){
@@ -222,7 +220,7 @@ void read_input_fifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffer) {
  *
  *********************************************************************************************************
  */
-BOOLEAN check_output_fifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size) {
+BOOLEAN check_output_swfifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size) {
 	UINT32 wr_ix, rd_ix;
 
 	OS_ShMemRead(RD_IX_ADD(out_fifo_hndl), &rd_ix, sizeof(UINT32));
@@ -237,19 +235,20 @@ BOOLEAN check_output_fifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size) {
 	 */
 }
 
-
-UINT32 get_fifo_cnt(UINT8 fifo_id){
-	UINT32 wr_ix, rd_ix;
-	LRT_FIFO_HNDLE	*fifo_hndl = get_fifo_hndl(fifo_id);
-
-	OS_ShMemRead(RD_IX_ADD(fifo_hndl), &rd_ix, sizeof(UINT32));
-	OS_ShMemRead(WR_IX_ADD(fifo_hndl), &wr_ix, sizeof(UINT32));
-
-	if (wr_ix < rd_ix)// If TRUE, wr_ix reached the end of the memory and restarted from the beginning.
-		wr_ix = wr_ix + fifo_hndl->Size;	// Place wr_ix to the right of rd_ix as in an unbounded memory.
-
-	return wr_ix-rd_ix ;	// Reader is allowed to read until rd_ix == wr_ix, i.e. until FIFO is empty.
-}
+//
+//UINT32 get_fifo_cnt(UINT8 fifo_id){
+//	return 0;
+////	UINT32 wr_ix, rd_ix;
+////	LRT_FIFO_HNDLE	*fifo_hndl = get_fifo_hndl(fifo_id);
+////
+////	OS_ShMemRead(RD_IX_ADD(fifo_hndl), &rd_ix, sizeof(UINT32));
+////	OS_ShMemRead(WR_IX_ADD(fifo_hndl), &wr_ix, sizeof(UINT32));
+////
+////	if (wr_ix < rd_ix)// If TRUE, wr_ix reached the end of the memory and restarted from the beginning.
+////		wr_ix = wr_ix + fifo_hndl->Size;	// Place wr_ix to the right of rd_ix as in an unbounded memory.
+////
+////	return wr_ix-rd_ix ;	// Reader is allowed to read until rd_ix == wr_ix, i.e. until FIFO is empty.
+//}
 
 /*
  *********************************************************************************************************
@@ -266,7 +265,7 @@ UINT32 get_fifo_cnt(UINT8 fifo_id){
  *
  *********************************************************************************************************
  */
-void write_output_fifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size, UINT8* buffer) {
+void write_output_swfifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size, UINT8* buffer) {
 	UINT32 wr_ix, rd_ix, temp;
 
 	while(1){

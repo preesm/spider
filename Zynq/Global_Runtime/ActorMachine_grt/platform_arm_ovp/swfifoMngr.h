@@ -56,13 +56,12 @@ typedef struct lrt_fifo_hndle{
 } LRT_FIFO_HNDLE;
 
 
-UINT8 create_fifo();
-UINT8 create_fifo_args(UINT8 id, UINT32 size, UINT32 address);
-void flush_fifo();
-void flush_fifo_args(UINT8 fifo_id);
-BOOLEAN check_input_fifo(UINT8 in_fifo_id, UINT32 size);
-BOOLEAN check_output_fifo(UINT8 out_fifo_id, UINT32 size);
-UINT32 get_fifo_cnt(UINT8 fifo_id);
-void write_output_fifo(UINT8 out_fifo_id, UINT32 size, UINT8* buffer);
-void read_input_fifo(UINT8 in_fifo_id, UINT32 size, UINT8* buffer);
+UINT8 create_swfifo(LRT_FIFO_HNDLE* fifo_hndl, UINT32 size, UINT32 address);
+//void flush_fifo();
+//void flush_fifo_args(UINT8 fifo_id);
+BOOLEAN check_input_swfifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size);
+BOOLEAN check_output_swfifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size);
+//UINT32 get_fifo_cnt(UINT8 fifo_id);
+void write_output_swfifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size, UINT8* buffer);
+void read_input_swfifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffer);
 #endif /* SW_FIFOMNGR_H_ */

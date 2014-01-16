@@ -35,29 +35,75 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#ifndef HWQUEUES_H_
-#define HWQUEUES_H_
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "types.h"
+#include "hwQueues.h"
+#include "swfifoMngr.h"
+#include <grt_definitions.h>
 
-typedef enum{
-	RTCtrlQueue,
-	RTInfoQueue,
-	RTJobQueue,
-	nbQueueTypes
-} RTQueueType;
+#define FIFOLength			512
 
-typedef enum{
-	RTInputQueue,
-	RTOutputQueue
-} RTQueueDir;
+//#define WRITE_REG_OFFSET	0x00	/**< Mbox write register */
+//#define READ_REG_OFFSET		0x08	/**< Mbox read register */
+//#define STATUS_REG_OFFSET	0x10	/**< Mbox status reg  */
+//#define STATUS_FIFO_EMPTY	0x00000001 /**< Receive FIFO is Empty */
+//#define STATUS_FIFO_FULL	0x00000002 /**< Send FIFO is Full */
+//
+//typedef struct MBox {
+//	UINT32 	base;
+////	UINT32 	dataBase;
+//	UINT32 	length;
+////	UINT32	WrDataReg;
+////	UINT32	RdDataReg;
+////	UINT32	StatusReg;
+////	FILE*	file;
+////	char	file_name[50];
+//} MBOX;
 
-void RTQueuesInit(UINT32 nbSlaves);
+static LRT_FIFO_HNDLE RTQueue[MAX_SLAVES][nbQueueTypes][2];
+int cpuId;
 
-UINT32 RTQueuePush(UINT8 slaveId, RTQueueType queueType, void* data, int size);
-UINT32 RTQueuePush_UINT32(UINT8 slaveId, RTQueueType queueType, UINT32 value);
-UINT32 RTQueuePop(UINT8 slaveId, RTQueueType queueType, void* data, int size);
-UINT32 RTQueuePop_UINT32(UINT8 slaveId, RTQueueType queueType);
-UINT32 RTQueueNonBlockingPop(UINT8 slaveId, RTQueueType queueType, void* data, int size);
+void RTQueuesInit(UINT32 nbSlaves){
+	create_swfifo(&RTQueue[0][RTCtrlQueue][RTInputQueue], FIFOLength, 0x0a000000);
+//	RTQueue[RTInfoQueue][RTInputQueue] =
+//	RTQueue[RTJobQueue][RTInputQueue] =
+//
+	create_swfifo(&RTQueue[0][RTCtrlQueue][RTOutputQueue], FIFOLength, 0x0a000300);
+//	RTQueue[RTInfoQueue][RTOutputQueue] =
+//	RTQueue[RTJobQueue][RTOutputQueue] =
+}
 
-#endif /* HWQUEUES_H_ */
+
+UINT32 RTQueuePush(UINT8 slaveId, RTQueueType queueType, void* data, int size){
+	write_output_swfifo(&RTQueue[slaveId][queueType][RTOutputQueue], size, (UINT8*)data);
+	return size;
+}
+
+
+UINT32 RTQueuePush_UINT32(UINT8 slaveId, RTQueueType queueType, UINT32 value){
+	return RTQueuePush(slaveId, queueType, &value, 4);
+}
+
+
+UINT32 RTQueuePop(UINT8 slaveId, RTQueueType queueType, void* data, int size){
+	read_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
+	return size;
+}
+
+
+UINT32 RTQueuePop_UINT32(UINT8 slaveId, RTQueueType queueType){
+	UINT32 data;
+	return RTQueuePop(slaveId, queueType, &data, 4);
+}
+
+
+UINT32 RTQueueNonBlockingPop(UINT8 slaveId, RTQueueType queueType, void* data, int size){
+	if(check_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size)){
+		read_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
+		return size;
+	}
+	else
+		return 0;
+}

@@ -87,7 +87,7 @@ public:
 		return &schedules[slave_id][vertexId];
 	}
 
-	bool isPresent(const UINT32 slaveId, const UINT32 vertexIx, const void* vertex){
+	bool isPresent(UINT32 slaveId, const UINT32 vertexIx, const void* vertex){
 		return (schedules[slaveId][vertexIx].vertex == vertex);
 //		for(UINT32 i=0; i<nbVertices[slaveId]; i++){
 //			if(vertex->getId() == schedules[slaveId][i].vertex->getId())// &&	vertex->getReferenceIndex() == schedules[slaveId][i]->getIndex())
@@ -96,7 +96,7 @@ public:
 //		return false;
 	}
 
-    bool findSlaveId(const UINT32 vertexIx, const void *vertex, UINT32 *slaveId){
+    bool findSlaveId(UINT32 vertexIx, const void *vertex, UINT32 *slaveId){
     	for (UINT32 i = 0; i < nbActiveSlaves; i++) {
    			if(schedules[i][vertexIx].vertex == vertex){
 				*slaveId = i;
@@ -106,7 +106,7 @@ public:
     	return false;
     }
 
-    UINT32 getVertexEndTime(const UINT32 vertexIx, const void* vertex){
+    UINT32 getVertexEndTime(UINT32 vertexIx, const void* vertex){
     	UINT32 slaveId;
     	if(findSlaveId(vertexIx, vertex, &slaveId))
     		return schedules[slaveId][vertexIx].endTime;
@@ -115,7 +115,7 @@ public:
     }
 
 
-    UINT32 getVertexStartTime(const UINT32 vertexIx, const void* vertex){
+    UINT32 getVertexStartTime(UINT32 vertexIx, const void* vertex){
     	UINT32 slaveId;
     	if(findSlaveId(vertexIx, vertex, &slaveId))
     		return schedules[slaveId][vertexIx].startTime;

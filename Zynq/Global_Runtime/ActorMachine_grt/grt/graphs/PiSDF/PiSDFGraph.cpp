@@ -558,17 +558,21 @@ void PiSDFGraph::evaluateExpressions()
 		globalParser.interpret(edge->getProduction(), &value);
 		edge->setProductionInt(value);
 
-		// Updating consumption's integer value.
-		globalParser.interpret(edge->getConsumption(), &value);
-		// Checking for unresolved parameters.
+
+		// Checking for unresolved parameters on the sink vertex.
 		for (UINT32 i = 0; i < sinkVertex->getNbParameters(); i++){
 			if(! sinkVertex->getParameter(i)->getResolved())
-			{// At least one parameters is unresolved.
-				// Assigning production's value to the production.
-				value = edge->getProductionInt();
+			{// At least one parameter is unresolved on the sink vertex.
+				value = -1;
 				break;
 			}
 		}
+		if(value == -1)
+			// Setting consumption's value equal to production's value.
+			value = edge->getProductionInt();
+		else
+			globalParser.interpret(edge->getConsumption(), &value);
+
 		edge->setConsumtionInt(value);
 
 		// Updating delay's integer value.
@@ -594,6 +598,7 @@ void PiSDFGraph::createSubGraph(SDFGraph *outSDF)
 			PiSDFGraph* subGraph = ((PiSDFVertex*)sinkVertex)->getSubGraph();
 			if(subGraph != (PiSDFGraph*)0)
 			{
+				// Getting real sink vertex, i.e. not the input vertex but its successor.
 				sinkVertex = subGraph->getInputVertex(edge)->getOutputEdge(0)->getSink();
 			}
 			outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
@@ -611,7 +616,7 @@ void PiSDFGraph::createSubGraph(SDFGraph *outSDF)
 
 
 
-		// Adding vertices if not already done.
+		// Adding vertices to the sub-graph if not already done.
 		if(outSDF->getVertexIndex(sourceVertex) == -1)
 			outSDF->addVertex(sourceVertex);
 

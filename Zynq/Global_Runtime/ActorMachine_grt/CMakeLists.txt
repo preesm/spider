@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project(AM_GRT)
+project(GRT)
 
 # Selecting the application to be built.
 set (APP_MPEG4 "ON" CACHE BOOL "")
@@ -24,16 +24,22 @@ file(GLOB_RECURSE grt_source_files
 )
 
 # Getting platform' sources.
-if(CMAKE_SYSTEM_NAME STREQUAL Windows)
-    include_directories(platform_desktop_win)
-    file(GLOB_RECURSE platform_source_files platform_desktop_win/*)
-elseif(CMAKE_SYSTEM_NAME STREQUAL Linux)
-    include_directories(platform_desktop)
-    file(GLOB_RECURSE platform_source_files platform_desktop/*)
+set (OVPSIM "ON" CACHE BOOL "")
+if(OVPSIM)
+	include_directories(platform_arm_ovp)
+	file(GLOB_RECURSE platform_source_files platform_arm_ovp/*)
 else()
-    include_directories(platform_arm)
-    file(GLOB_RECURSE platform_source_files platform_arm/*)
-endif()
+	if(CMAKE_SYSTEM_NAME STREQUAL Windows)
+		include_directories(platform_desktop_win)
+		file(GLOB_RECURSE platform_source_files platform_desktop_win/*)
+	elseif(CMAKE_SYSTEM_NAME STREQUAL Linux)
+		include_directories(platform_desktop)
+		file(GLOB_RECURSE platform_source_files platform_desktop/*)
+	else()
+		include_directories(platform_arm)
+		file(GLOB_RECURSE platform_source_files platform_arm/*)
+	endif()
+endif(OVPSIM)
 
 # Setting compiler' flags.
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -41,5 +47,5 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 # Compiling and linking.
-add_executable(AM_GRT ${app_source_files} ${grt_source_files} ${platform_source_files})
-target_link_libraries(AM_GRT)
+add_executable(GRT ${app_source_files} ${grt_source_files} ${platform_source_files})
+target_link_libraries(GRT)

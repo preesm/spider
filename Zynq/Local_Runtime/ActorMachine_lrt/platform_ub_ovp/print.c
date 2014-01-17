@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 #include "print.h"
+#include <lrt_definitions.h>
 
 void zynq_puts(const char* s){
 	printf("%s",s);

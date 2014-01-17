@@ -1,20 +1,23 @@
 cmake_minimum_required(VERSION 2.6)
 project(LRT)
 
-set (APP_MPEG4 "ON" CACHE BOOL "")
+set (APP_MPEG4 "" CACHE BOOL "")
+set (APP_TEST_OVP "ON" CACHE BOOL "")
 set (APP_SOBEL "" CACHE BOOL "")
 
-if(APP_MPEG4 AND APP_SOBEL)
-    MESSAGE(FATAL_ERROR "Only one application at once is allowed!")
-elseif(NOT (APP_MPEG4 OR APP_SOBEL))
-    MESSAGE(FATAL_ERROR "At least one application is required!")
-endif()
+# if(APP_MPEG4 AND APP_SOBEL)
+    # MESSAGE(FATAL_ERROR "Only one application at once is allowed!")
+# elseif(NOT (APP_MPEG4 OR APP_SOBEL))
+    # MESSAGE(FATAL_ERROR "At least one application is required!")
+# endif()
 
 # Getting application' sources.
 if(APP_MPEG4)    
     include_directories(applications/mpeg4Decoder/Sources/include)
     include_directories(applications/mpeg4Decoder)
     file(GLOB_RECURSE app_source_files applications/mpeg4Decoder/*)
+elseif(APP_TEST_OVP)
+    file(GLOB_RECURSE app_source_files applications/testForOVPSim/*)
 endif()
 
 # Getting local runtime' sources.  
@@ -24,7 +27,7 @@ file(GLOB_RECURSE lrt_source_files lrt
 ) 
 
 # Getting platform' sources. 
-set (OVPSIM "ON" CACHE BOOL "")
+set (OVPSIM "" CACHE BOOL "")
 if(OVPSIM)
 	include_directories(platform_ub_ovp)
 	file(GLOB_RECURSE platform_source_files platform_ub_ovp/*)
@@ -41,15 +44,26 @@ else()
 	endif(CMAKE_SYSTEM_NAME STREQUAL Windows)
 endif(OVPSIM)
 
-# Finding libraries.
-set (SDL_BUILDING_LIBRARY "ON" CACHE BOOL "" FORCE)
-find_package(SDL)
-if(SDL_FOUND)
-else()
-    set (SDL_LIB_DIR "" CACHE PATH "")
+# Setting compiler' flags.
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "-O0 -g3")        ## Optimize and max. debug
 endif()
 
-link_directories(${SDL_LIB_DIR})
+if(APP_MPEG4)  
+	# Finding libraries.
+	set (SDL_BUILDING_LIBRARY "ON" CACHE BOOL "" FORCE)
+	find_package(SDL)
+	if(SDL_FOUND)
+	else()
+		set (SDL_LIB_DIR "" CACHE PATH "")
+	endif(SDL_FOUND)
+		link_directories(${SDL_LIB_DIR})
+endif(APP_MPEG4) 
 
 add_executable(LRT ${app_source_files} ${lrt_source_files} ${platform_source_files})
-target_link_libraries(LRT SDL)
+
+if(APP_MPEG4)
+	target_link_libraries(LRT SDL)
+else()
+	target_link_libraries(LRT)	
+endif(APP_MPEG4)  

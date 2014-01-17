@@ -5,7 +5,7 @@
  *      Author: jheulot
  */
 
-#include <types.h>
+#include <lrt_definitions.h>
 
 void initGpio();
 

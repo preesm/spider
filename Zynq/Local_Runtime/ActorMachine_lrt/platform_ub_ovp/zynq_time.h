@@ -38,7 +38,7 @@
 #ifndef TIME_H_
 #define TIME_H_
 
-#include "types.h"
+#include <lrt_definitions.h>
 
 void OS_TimeInit();
 

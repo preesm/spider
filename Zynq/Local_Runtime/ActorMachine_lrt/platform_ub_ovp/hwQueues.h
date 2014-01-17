@@ -38,7 +38,7 @@
 #ifndef HWQUEUES_H_
 #define HWQUEUES_H_
 
-#include "types.h"
+#include <lrt_definitions.h>
 
 typedef enum{
 	RTCtrlQueue,

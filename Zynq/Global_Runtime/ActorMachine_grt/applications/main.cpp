@@ -53,7 +53,7 @@
 #define SRDAG_FILE_PATH			"srDag.gv"
 #define SRDAG_FIFO_ID_FILE_PATH	"srDagFifoId.gv"
 #define IS_AM 					0
-#define EXEC					0
+#define EXEC					1
 
 
 UINT32 PiSDFGraph::glbNbConfigVertices = 0;
@@ -75,11 +75,13 @@ void createArch(Architecture* arch, int nbSlaves){
 }
 
 int main(int argc, char* argv[]){
-	if(argc < 2){
-		printf("Usage: %s nbSlaves\n", argv[0]);
-		return 0;
-	}
-	int nbSlaves = atoi(argv[1]);
+//	if(argc < 2){
+//		printf("Usage: %s nbSlaves\n", argv[0]);
+//		return 0;
+//	}
+//	int nbSlaves = atoi(argv[1]);
+
+	int nbSlaves = 1;
 
 	printf("Starting with %d slaves max\n", nbSlaves);
 
@@ -200,6 +202,7 @@ int main(int argc, char* argv[]){
 					PiSDFParameter* param = configVertex->getRelatedParam(j);
 					if (!param->getResolved()){
 #if EXEC == 1
+						UINT32 slaveId;
 						if(schedule.findSlaveId(configVertex->getId(), configVertex, &slaveId)){
 							UINT64 value = RTQueuePop_UINT32(slaveId, RTCtrlQueue);
 							configVertex->getRelatedParam(j)->setValue(value);

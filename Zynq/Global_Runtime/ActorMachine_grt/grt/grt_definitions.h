@@ -279,7 +279,7 @@ typedef struct lrt_msg														// Message's structure
 *                                            EXTERN DECLARATIONS
 *********************************************************************************************************
 */
-extern void print(char*);
+//extern void print(char*);
 
 
 #endif

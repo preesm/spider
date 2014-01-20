@@ -57,7 +57,7 @@ if(APP_MPEG4)
 	else()
 		set (SDL_LIB_DIR "" CACHE PATH "")
 	endif(SDL_FOUND)
-		link_directories(${SDL_LIB_DIR})
+	link_directories(${SDL_LIB_DIR})
 endif(APP_MPEG4) 
 
 add_executable(LRT ${app_source_files} ${lrt_source_files} ${platform_source_files})

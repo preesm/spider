@@ -42,6 +42,9 @@
 #include "hwQueues.h"
 #include "swfifoMngr.h"
 
+#define IN_CTRL_QUEUE_BASE		0x20000000
+#define OUT_CTRL_QUEUE_BASE		0x20000300
+
 #define FIFOLength			512
 
 //#define WRITE_REG_OFFSET	0x00	/**< Mbox write register */
@@ -65,11 +68,11 @@ static LRT_FIFO_HNDLE RTQueue[nbQueueTypes][2];
 int cpuId;
 
 void RTQueuesInit(){
-	create_swfifo(&(RTQueue[RTCtrlQueue][RTInputQueue]), FIFOLength, 0x0a000000);
+	create_swfifo(&(RTQueue[RTCtrlQueue][RTInputQueue]), FIFOLength, IN_CTRL_QUEUE_BASE);
 //	RTQueue[RTInfoQueue][RTInputQueue] =
 //	RTQueue[RTJobQueue][RTInputQueue] =
 //
-	create_swfifo(&RTQueue[RTCtrlQueue][RTOutputQueue], FIFOLength, 0x0a000300);
+	create_swfifo(&RTQueue[RTCtrlQueue][RTOutputQueue], FIFOLength, OUT_CTRL_QUEUE_BASE);
 //	RTQueue[RTInfoQueue][RTOutputQueue] =
 //	RTQueue[RTJobQueue][RTOutputQueue] =
 }

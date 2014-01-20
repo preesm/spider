@@ -38,9 +38,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sharedMem.h"
+#include "platform.h"
 
 static OS_SHMEM OSShMemTbl[OS_MAX_SH_MEM];
-static int nbOSShMem = 0;
+static int nbOSShMem = 1;
 
 //void addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename) {
 //
@@ -49,6 +50,8 @@ static int nbOSShMem = 0;
 void OS_ShMemInit() {
 //	printf("Opening shMem...\n");
 //	addOSShMem(SH_MEM_BASE_ADDR, SH_MEM_BASE_ADDR + SH_MEM_DATA_REGION_SIZE, SH_MEM_SIZE, SH_MEM_FILE_PATH);
+	OSShMemTbl[0].base = SH_MEM_BASE_ADDR;
+	OSShMemTbl[0].length = SH_MEM_SIZE;
 }
 
 
@@ -70,8 +73,9 @@ UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
 
 			return NumBytes;
 		}
+		else
+			printf("Address : 0x%x is out of range 0x%x - 0x%x\n", address, OSShMemTbl[i].base, OSShMemTbl[i].length);
 	}
-	printf("Memory not found 0x%x\n", address);
 	return NumBytes;
 }
 

@@ -38,14 +38,17 @@
 #ifndef SHAREDMEM_H_
 #define SHAREDMEM_H_
 
-#include "types.h"
-#include "lrt_definitions.h"
 
-#define SH_MEM_BASE_ADDR			0x10000000
+#define SH_MEM_BASE_ADDR			0x0
 #define SH_MEM_HDR_REGION_SIZE		MAX_NB_FIFOs * FIFO_MUTEX_SIZE
 #define SH_MEM_DATA_REGION_SIZE		0x10000000
-#define SH_MEM_SIZE					SH_MEM_HDR_REGION_SIZE + SH_MEM_DATA_REGION_SIZE
-//#define SH_MEM_FILE_PATH			"../shMem"
+//#define SH_MEM_SIZE					SH_MEM_HDR_REGION_SIZE + SH_MEM_DATA_REGION_SIZE
+#define SH_MEM_SIZE					0xffffffff
+#define SH_MEM_FILE_PATH			"../shMem"
+
+
+#include "types.h"
+#include "lrt_definitions.h"
 
 typedef struct OS_SHMEM {
 	UINT32 	base;

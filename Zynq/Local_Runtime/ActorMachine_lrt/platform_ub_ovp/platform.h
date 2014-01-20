@@ -38,6 +38,8 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
+//#define SH_MEM_
+
 extern int cpuId;
 
 #endif /* PLATFORM_H_ */

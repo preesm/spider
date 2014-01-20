@@ -94,6 +94,17 @@ public:
 		return &edges[index];
 	}
 
+	int getEdgeIndex(BaseVertex* source, BaseVertex* sink)
+	{
+		for (UINT32 i = 0; i < nbEdges; i++) {
+			BaseEdge* edge = &edges[i];
+			if((edge->getSource() == source) &&
+				(edge->getSink() == sink))
+				return i;
+		}
+		return -1;
+	}
+
 	void addConfigVertex(BaseVertex* configVertex){
 		configVertices[nbConfigVertices++] = configVertex;
 	}

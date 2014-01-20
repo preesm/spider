@@ -53,7 +53,7 @@
 #define SRDAG_FILE_PATH			"srDag.gv"
 #define SRDAG_FIFO_ID_FILE_PATH	"srDagFifoId.gv"
 #define IS_AM 					0
-#define EXEC					1
+#define EXEC					0
 
 
 UINT32 PiSDFGraph::glbNbConfigVertices = 0;
@@ -138,7 +138,7 @@ int main(int argc, char* argv[]){
 
 			if(piSDF.getGlbNbRequiredEdges() > 0)
 			{
-				// Updating resolved parameters.
+				// Evaluating expressions with resolved parameters.
 				piSDF.evaluateExpressions();
 
 				// Creating a new subgraph with required edges and vertices.

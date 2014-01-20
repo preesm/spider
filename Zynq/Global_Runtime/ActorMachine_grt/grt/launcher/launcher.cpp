@@ -50,7 +50,8 @@
 
 
 
-launcher::launcher(): sharedMem(Memory(0x10000000, 0x10000000)){
+launcher::launcher(): sharedMem(Memory(0x0, 0xffffffff)){
+
 	nbFIFOs = 0;
 	launchedSlaveNb=0;
 };

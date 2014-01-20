@@ -121,8 +121,8 @@
 // Platform
 #define NB_MAX_CTRLQ 			8
 #define MAX_NB_HW_FIFO 			300
-//#define DEFAULT_FIFO_SIZE		1024
-#define DEFAULT_FIFO_SIZE		2057478
+#define DEFAULT_FIFO_SIZE		1024
+//#define DEFAULT_FIFO_SIZE		2057478
 #define FILE_PATH_LENGTH		50
 #define MAX_NB_AM				10
 

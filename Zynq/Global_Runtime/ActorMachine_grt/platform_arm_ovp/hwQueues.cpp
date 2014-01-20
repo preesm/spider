@@ -42,6 +42,11 @@
 #include "hwQueues.h"
 #include "swfifoMngr.h"
 #include <grt_definitions.h>
+#include "hwQueues.h"
+#include "sharedMem.h"
+
+#define OUT_CTRL_QUEUE_BASE		0x20000000
+#define IN_CTRL_QUEUE_BASE		0x20000300
 
 #define FIFOLength			512
 
@@ -66,11 +71,12 @@ static LRT_FIFO_HNDLE RTQueue[MAX_SLAVES][nbQueueTypes][2];
 int cpuId;
 
 void RTQueuesInit(UINT32 nbSlaves){
-	create_swfifo(&RTQueue[0][RTCtrlQueue][RTInputQueue], FIFOLength, 0x0a000000);
+	OS_ShMemInit();
+	create_swfifo(&RTQueue[0][RTCtrlQueue][RTInputQueue], FIFOLength, IN_CTRL_QUEUE_BASE);
 //	RTQueue[RTInfoQueue][RTInputQueue] =
 //	RTQueue[RTJobQueue][RTInputQueue] =
 //
-	create_swfifo(&RTQueue[0][RTCtrlQueue][RTOutputQueue], FIFOLength, 0x0a000300);
+	create_swfifo(&RTQueue[0][RTCtrlQueue][RTOutputQueue], FIFOLength, OUT_CTRL_QUEUE_BASE);
 //	RTQueue[RTInfoQueue][RTOutputQueue] =
 //	RTQueue[RTJobQueue][RTOutputQueue] =
 }

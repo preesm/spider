@@ -414,8 +414,8 @@ void PiSDFGraph::copyRequiredEdges(BaseVertex* startVertex)
 				 */
 				if(edge->getSink()->getType() == pisdf_vertex){
 					PiSDFGraph *sinkSubgraph;
-					if(((PiSDFVertex*)(edge->getSink()))->hasSubGraph(sinkSubgraph))
-						visitedIfs[glbNbVisitedIfs] = sinkSubgraph->getInputVertex(edge);
+					if(((PiSDFVertex*)(edge->getSink()))->hasSubGraph(&sinkSubgraph))
+						visitedIfs[glbNbVisitedIfs++] = sinkSubgraph->getInputVertex(edge);
 				}
 			}
 		}

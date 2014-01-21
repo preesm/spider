@@ -49,26 +49,26 @@
 #define MEM_INIT_POS		0
 
 typedef struct Section{
-	int start;
-	int size;
+	UINT32 start;
+	UINT32 size;
 	struct Section* prev;
 	struct Section* next;
 } Section;
 
 class Memory {
 private:
-	int base;
-	int size;
+	UINT32 base;
+	UINT32 size;
 //	Section* first;
-	int last;
+	UINT32 last;
 	char file_path[FILE_PATH_LENGTH];
 
-	int fifoAddr[MAX_NB_HW_FIFO];
-	int fifoSize[MAX_NB_HW_FIFO];
-	int fifoNb;
+	UINT32 fifoAddr[MAX_NB_HW_FIFO];
+	UINT32 fifoSize[MAX_NB_HW_FIFO];
+	UINT32 fifoNb;
 
 public:
-	Memory(int _base, int _size){
+	Memory(UINT32 _base, UINT32 _size){
 		base = _base;
 		size = _size;
 		last = MEM_INIT_POS;
@@ -76,7 +76,7 @@ public:
 //		first = NULL;
 	}
 
-	Memory(int _base, int _size, char* file_path){
+	Memory(UINT32 _base, UINT32 _size, char* file_path){
 		base = _base;
 		size = _size;
 		last = MEM_INIT_POS;
@@ -91,7 +91,7 @@ public:
 		fifoNb = 0;
 	}
 
-	int getTotalAllocated(){
+	UINT32 getTotalAllocated(){
 //		Section* cur = first;
 //		if(first==NULL) return 0;
 //
@@ -100,8 +100,8 @@ public:
 		return last;
 	}
 
-	int alloc(int sectionSize){
-		int start;
+	UINT32 alloc(UINT32 sectionSize){
+		UINT32 start;
 //		sectionSize += FIFO_HEADER_SIZE+1;
 		if(last+sectionSize >= size){
 			printf("Can't allocate, not enough shared memory\n");
@@ -171,7 +171,7 @@ public:
 
 	}
 
-	UINT32 read(const int address, void* data, const int size){
+	UINT32 read(const UINT32 address, void* data, const UINT32 size){
 		UINT16 i, res = 0;
 		for (i = 0; i < this->fifoNb && res == 0; i++) {
 			if (this->fifoAddr[i] <= address &&
@@ -194,7 +194,7 @@ public:
 
 		pFile = fopen (path,"w+");
 		if(pFile != NULL){
-			for (int i=0 ; i<fifoNb ; i++){
+			for (UINT32 i=0 ; i<fifoNb ; i++){
 				fprintf (pFile, "%d,%d,%d\n",i,fifoAddr[i], fifoSize[i]);
 			}
 			fclose(pFile);

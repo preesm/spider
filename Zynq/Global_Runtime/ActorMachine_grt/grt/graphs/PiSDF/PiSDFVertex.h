@@ -49,11 +49,11 @@ public:
 	PiSDFVertex(){subGraph = NULL;};
 	virtual ~PiSDFVertex();
 
-	bool hasSubGraph(PiSDFGraph* subGraph)
+	bool hasSubGraph(PiSDFGraph** subGraph)
 	{
 		if(this->subGraph != NULL)
 		{
-			subGraph = this->subGraph;
+			*subGraph = this->subGraph;
 			return true;
 		}
 		else

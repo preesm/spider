@@ -386,6 +386,13 @@ void PiSDFGraph::copyRequiredEdges(BaseVertex* startVertex)
 			 * Cycles are marked while treating output edges.
 			 */
 			PiSDFEdge* edge = startVertex->getInputEdge(i);
+			/*
+			 *
+			 */
+			if(edge->getSource()->getType() == input_vertex)
+				if(findVisitedIf((PiSDFIfVertex*)(edge->getSource())))
+					break;
+
 			if(edge->getSource() != startVertex)
 				if(!edge->getRequired()){// Avoids that the edge be included more than once.
 					requiredEdges[glbNbRequiredEdges++] = edge;
@@ -400,6 +407,16 @@ void PiSDFGraph::copyRequiredEdges(BaseVertex* startVertex)
 			if(!edge->getRequired()){// Avoids that the edge be included more than once.
 				requiredEdges[glbNbRequiredEdges++] = edge;
 				edge->setRequired(true);
+
+				/*
+				 * If the sink is a hierarchical vertex, the corresponding input vertex is stored
+				 * so that its output edge don't be included in the table of required edges.
+				 */
+				if(edge->getSink()->getType() == pisdf_vertex){
+					PiSDFGraph *sinkSubgraph;
+					if(((PiSDFVertex*)(edge->getSink()))->hasSubGraph(sinkSubgraph))
+						visitedIfs[glbNbVisitedIfs] = sinkSubgraph->getInputVertex(edge);
+				}
 			}
 		}
 
@@ -611,13 +628,13 @@ void PiSDFGraph::createSubGraph(SDFGraph *outSDF)
 
 		if(sourceVertex->getType() == input_vertex)
 		{
+			// Checking if this edge has
 			// Getting real source vertex, i.e. not the input vertex but the parent's predecessor.
 			sourceVertex = ((PiSDFIfVertex*)sourceVertex)->getParentEdge()->getSource();
 		}
 
 		// Adding the edge if not already present.
-		if(outSDF->getEdgeIndex(sourceVertex, sinkVertex) == -1)
-			outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
+		outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
 
 
 //		else if(sinkVertex->getType() == output_vertex)
@@ -673,6 +690,11 @@ void PiSDFGraph::clearIntraIteration(){
 		requiredEdges[i] = NULL;
 	}
 	glbNbRequiredEdges = 0;
+
+	for(UINT32 i = 0; i < glbNbVisitedIfs; i++){
+		visitedIfs[i] = NULL;
+	}
+	glbNbVisitedIfs = 0;
 }
 
 

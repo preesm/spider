@@ -79,9 +79,11 @@ class PiSDFGraph {
 	BaseVertex* rootVertex; // Must be set while creating the graph.
 //	static BaseVertex* ExecutableVertices[MAX_NB_VERTICES]; // Vertices which do not depend on unresolved parameters.
 	static PiSDFEdge* requiredEdges[MAX_NB_EDGES]; // Edges required for an execution.
+	static PiSDFIfVertex* visitedIfs[MAX_NB_VERTICES];
 	static UINT32 glbNbRequiredEdges;
 	static UINT32 glbNbExecConfigVertices;
 	static UINT32 glbNbExecVertices;
+	static UINT32 glbNbVisitedIfs;
 
 	UINT32 nbExecVertices; 			// Counts the number of executable vertices.
 	UINT32 nbDiscardVertices; 		// Counts the number of discarded vertices
@@ -120,6 +122,14 @@ public:
 	// With no parameters, it just looks on the configuration vertices.
 //	void setExecutableVertices();
 
+
+	bool findVisitedIf(PiSDFIfVertex* ifVertex)
+	{
+		for(UINT32 i = 0; i < glbNbVisitedIfs; i++){
+			if(visitedIfs[i] == ifVertex) return true;
+		}
+		return false;
+	}
 
 	/*
 	 * Marks the vertices that can be executed.

@@ -46,8 +46,20 @@ class PiSDFGraph;
 class PiSDFVertex: public BaseVertex {
 	PiSDFGraph *subGraph;
 public:
-	PiSDFVertex():subGraph(){};
+	PiSDFVertex(){subGraph = NULL;};
 	virtual ~PiSDFVertex();
+
+	bool hasSubGraph(PiSDFGraph* subGraph)
+	{
+		if(this->subGraph != NULL)
+		{
+			subGraph = this->subGraph;
+			return true;
+		}
+		else
+			return false;
+
+	}
 
 	PiSDFGraph *getSubGraph()
     {

@@ -17,7 +17,7 @@
 //#include "definitions.h"
 //#include "top_AM_actions.h"
 
-#define STANDALONE_APP		0
+#define STANDALONE_APP		1
 
 
 
@@ -75,10 +75,25 @@ int main(int argc, char **argv) {
 #if STANDALONE_APP == 0
 	LRTInit();
 #else
+	printf("Standalone application..\n");
+	OSTCBCur = (OS_TCB *) 0;
+	lrt_running = FALSE;
 	OS_ShMemInit();
 	flushFIFO(-1);	// Clear all FIFOs.
 	// Creating tasks and starting executions.
 
+	// Testing FIFOs.
+	UINT32 inputFIFOIds_readVOL[1] = {0};
+	UINT32 inputFIFOAddrs_readVOL[1] = {0};
+
+	UINT32 outputFIFOIds_readVOL[5] = {1, 2, 3, 4, 0};
+	UINT32 outputFIFOAddrs_readVOL[5] = {1024, 2048, 3072, 4096, 0};
+
+	UINT32 inputFIFOIds_decodeDsply[4] = {1, 2, 3, 4};
+	UINT32 inputFIFOAddrs_decodeDsply[4] = {1024, 2048, 3072, 4096};
+
+	readVOL(inputFIFOIds_readVOL, inputFIFOAddrs_readVOL, outputFIFOIds_readVOL, outputFIFOAddrs_readVOL, 0);
+	decodeDsply(inputFIFOIds_decodeDsply, inputFIFOAddrs_decodeDsply, 0, 0, 0);
 #endif
 
 	return 0;

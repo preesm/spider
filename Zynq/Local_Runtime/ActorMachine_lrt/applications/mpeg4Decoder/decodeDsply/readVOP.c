@@ -46,11 +46,11 @@
 
 
 //static uchar VOPCounter = 0;
-static FILE* pFile = NULL;
-static uchar FrmData[BUFFER_SIZE];
-static struct_VOLsimple VOL;
-static uchar complexity[5];
-static int VOLEndPos;
+FILE* pFile = NULL;
+uchar FrmData[BUFFER_SIZE];
+struct_VOLsimple VOL;
+uchar complexity[5];
+int VOLEndPos;
 
 
 readVOPStateInData stInData;
@@ -119,11 +119,11 @@ void readVOP(UINT32 inputFIFOIds[],
 
 	// Sending parameters' values to Global Runtime.
 	NbMb = (VOL.video_object_layer_height * VOL.video_object_layer_width)/256;
-	RTQueuePush_UINT32(RTInfoQueue, VOP.VideoObjectPlane_vop_coding_type);
-	RTQueuePush_UINT32(RTInfoQueue, NbMb);
+//	RTQueuePush_UINT32(RTInfoQueue, VOP.VideoObjectPlane_vop_coding_type);
+//	RTQueuePush_UINT32(RTInfoQueue, NbMb);
 
 	// Sending data.
-	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(readVOPStateInData), (UINT8*)&stInData);
-	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(readVOPOutData), (UINT8*)&VOP);
-	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], BUFFER_SIZE, (UINT8*)&FrmData);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(readVOPOutData), (UINT8*)&VOP);
+	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], BUFFER_SIZE, (UINT8*)&FrmData);
+	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], sizeof(readVOPStateInData), (UINT8*)&stInData);
 }

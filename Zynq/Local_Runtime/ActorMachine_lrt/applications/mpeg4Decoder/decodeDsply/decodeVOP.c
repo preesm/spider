@@ -84,7 +84,7 @@ void decodeVOP(UINT32 inputFIFOIds[],
 
 
 	/* switch on VOP coding type */
-	switch (params[0]) {
+	switch (0) {
 
 	  case 0 : {
 		  IVOPCounter++;

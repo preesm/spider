@@ -55,17 +55,17 @@ void decodeVOP();
 void displayVOP();
 
 #if HIERARCHY_LEVEL > 1
-	void inputVOL_L2();
-	void inputVOPData_L2();
-	void inputFrmData_L2();
-	void inputPrevImg_L2();
+//	void inputVOL_L2();
+//	void inputVOPData_L2();
+//	void inputFrmData_L2();
+//	void inputPrevImg_L2();
 	void setVOPType();
 	void switch_0();
 	void switch_1();
 	void decodeVOP_I();
 	void decodeVOP_P();
 	void select_0();
-	void outputImg();
+//	void outputImg();
 #else
 	void decodeVOP();
 #endif

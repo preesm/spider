@@ -50,8 +50,9 @@
 #define image_type 	unsigned char
 #define dpb_type 	unsigned char
 
-#define M4V_FILE_PATH		"C:\\work\\COMPA\\decodeur_mp4\\Sequences\\SIMPLE\\P-VOP\\jvc011.m4v"
-#define HIERARCHY_LEVEL	1
+#define M4V_FILE_PATH		"C:\\work\\COMPA\\decodeur_mp4\\Sequences\\SIMPLE\\I-VOP\\san001.m4v"
+//#define M4V_FILE_PATH		"C:\\work\\COMPA\\decodeur_mp4\\Sequences\\SIMPLE\\P-VOP\\jvc011.m4v"
+#define HIERARCHY_LEVEL		2
 
 // Frame dimensions assuming 4:2:0 sampling.
 #define X_DIM			1786

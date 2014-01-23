@@ -44,11 +44,11 @@
 #include "lrt_taskMngr.h"
 
 
-static imgDimensionsData ImgDim;
-static decodeVOPOutData Img;
+imgDimensionsData ImgDim;
+decodeVOPOutData Img;
 
-static image_type Display_Extract_Image_Y_o[685832];
-static int Zero_PC_decod1_out = 0;
+image_type Display_Extract_Image_Y_o[685832];
+int Zero_PC_decod1_out = 0;
 
 void displayVOP(UINT32 inputFIFOIds[],
 		 UINT32 inputFIFOAddrs[],
@@ -62,8 +62,8 @@ void displayVOP(UINT32 inputFIFOIds[],
 	uchar *U;
 	uchar *V;
 
-	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(imgDimensionsData), (UINT8*)&ImgDim); // From input port.
-	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&Img); // From decode VOP.
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&Img); // From decode VOP.
+	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(imgDimensionsData), (UINT8*)&ImgDim); // From input port.
 
 	XDIM = ((int *) Display_Extract_Image_Y_o)[0] = ImgDim.VideoObjectLayer_xsize_o;
 	YDIM = ((int *) Display_Extract_Image_Y_o)[1] = ImgDim.VideoObjectLayer_ysize_o;

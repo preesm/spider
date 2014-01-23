@@ -43,13 +43,13 @@
 #include <lrt_core.h>
 #include <lrt_taskMngr.h>
 
-static uchar buffer[BUFFER_SIZE];
+uchar buffer[BUFFER_SIZE];
 //static struct_VOLsimple VideoObjectLayer_VOLsimple;
 //static uchar VideoObjectLayer_vop_complexity[5];
 //static int VideoObjectLayer_pos_o;
 //static imgDimensionsData outData;
 
-static readVOLInData inData;
+readVOLInData inData;
 
 void readVOL(UINT32 inputFIFOIds[],
 			 UINT32 inputFIFOAddrs[],
@@ -96,9 +96,9 @@ void readVOL(UINT32 inputFIFOIds[],
 	}
 
 	/* Sending data */
-	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(readVOLInData), (UINT8*)&inData);
-	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(struct_VOLsimple), (UINT8*)&inData.VideoObjectLayer_VOLsimple);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&inData.VideoObjectLayer_VOLsimple);
+	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(int), (UINT8*)&(inData.VOLPosition));
 	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], sizeof(uchar) * 5, (UINT8*)(inData.VideoObjectLayer_vop_complexity));
-	writeFifo(outputFIFOIds[3], outputFIFOAddrs[3], sizeof(long), (UINT8*)&inData.VOLPosition);
-	writeFifo(outputFIFOIds[4], outputFIFOAddrs[4], sizeof(imgDimensionsData), (UINT8*)&inData.ImgDim);
+	writeFifo(outputFIFOIds[3], outputFIFOAddrs[3], sizeof(imgDimensionsData), (UINT8*)&(inData.ImgDim));
+	writeFifo(outputFIFOIds[4], outputFIFOAddrs[4], sizeof(readVOLInData), (UINT8*)&inData);
 }

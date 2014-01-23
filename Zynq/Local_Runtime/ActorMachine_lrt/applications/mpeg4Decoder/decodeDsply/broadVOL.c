@@ -38,30 +38,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "definitions.h"
-#include <lrt_1W1RfifoMngr.h>
-#include <hwQueues.h>
+#include "lrt_1W1RfifoMngr.h"
+#include "hwQueues.h"
 #include "lrt_core.h"
 #include "lrt_taskMngr.h"
 
+struct_VOLsimple VOL;
 
-static struct_VOLsimple VideoObjectLayer_VOLsimple;
-
-void inputVOL_L2(UINT32 inputFIFOIds[],
+void broadVOL(UINT32 inputFIFOIds[],
 		 UINT32 inputFIFOAddrs[],
 		 UINT32 outputFIFOIds[],
 		 UINT32 outputFIFOAddrs[],
-		 UINT32 params){
-	// Receiving data.
-//	AM_ACTOR_ACTION_STRUCT* action = OSCurActionQuery();
-//	OS_TCB* tcb;
-//	tcb = getCurrTask();
+		 UINT32 params[])
+{
 
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VOL);
 
-	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
-
-
-	// Sending data to read VOP action.
-	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
-	// Sending data to decode VOP action.
-	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(struct_VOLsimple), (UINT8*)&VideoObjectLayer_VOLsimple);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VOL);
+	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(struct_VOLsimple), (UINT8*)&VOL);
 }

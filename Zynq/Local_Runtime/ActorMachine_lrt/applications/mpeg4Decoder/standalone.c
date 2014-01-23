@@ -35,16 +35,7 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#ifndef LRT_CORE_H_
-#define LRT_CORE_H_
+void mpeg4Decoder()
+{
 
-#include "lrt_definitions.h"
-
-void LRTInit();
-void LRTInitCtrl();
-void LRTCtrlStart();
-void LRTStartCurrTask();
-void LRTSched();
-void LRTIncomingJobIRQRoutine();
-OS_TCB* getCurrTask();
-#endif /* LRT_CORE_H_ */
+}

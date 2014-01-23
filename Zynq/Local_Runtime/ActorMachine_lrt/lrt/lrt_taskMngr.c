@@ -63,7 +63,7 @@ UINT8 OSTaskIndex = 0;                     			// Tasks' index.
 static UINT8 workingMemory[WORKING_MEMORY_SIZE];
 static UINT8* freeWorkingMemoryPtr;
 
-extern void amTaskStart();
+//extern void amTaskStart();
 
 
 /*
@@ -75,12 +75,12 @@ extern void amTaskStart();
 *********************************************************************************************************
 */
 
-void  LrtTaskCreate (){
+OS_TCB *  LrtTaskCreate (){
 	// Popping second incoming word, the task Id.
 //	UINT8 id = RTQueuePop_UINT32(RTCtrlQueue);
 	OS_TCB *new_tcb;
 //	UINT32 taskFunctId;
-	LRTActor* newActor;
+//	LRTActor* newActor;
 
 	if(OSTaskCntr >= OS_MAX_TASKS){
 		zynq_puts("Create Task ");zynq_putdec(OSTaskIndex);zynq_puts("\n");
@@ -89,7 +89,7 @@ void  LrtTaskCreate (){
 
 	// Finding an unused TCB.
 	new_tcb = &OSTCBTbl[OSTaskIndex];
-	newActor = &LRTActorTbl[OSTaskIndex];
+//	newActor = &LRTActorTbl[OSTaskIndex];
 
 //	if (new_tcb->OSTCBState == OS_STAT_UNINITIALIZED) { /* Make sure task doesn't already exist at this id  */
 //		new_tcb->OSTCBState = OS_STAT_READY;/* Reserve the priority to prevent others from doing ...  */
@@ -110,44 +110,44 @@ void  LrtTaskCreate (){
 //			new_tcb->OSTCBNext = OSTCBCur;
 		}
 
-
+		return new_tcb;
 
 		/*
 		 * Getting data from the control queue.
 		 */
-		// Popping the task function id.
-		new_tcb->functionId = RTQueuePop_UINT32(RTCtrlQueue);
-
-		// Popping whether the task is stopped after completion.
-//		new_tcb->stop = RTQueuePop_UINT32(RTCtrlQueue);
-
-		// Popping the AM flag.
-		new_tcb->isAM = RTQueuePop_UINT32(RTCtrlQueue);
-
-		if(new_tcb->isAM){
-			// Popping the actor machine's info.
-			new_tcb->am.nbVertices 	= RTQueuePop_UINT32(RTCtrlQueue);
-			new_tcb->am.nbConds 	= RTQueuePop_UINT32(RTCtrlQueue);
-			new_tcb->am.nbActions	= RTQueuePop_UINT32(RTCtrlQueue);
-
-			// Popping the starting vertex of the AM.
-			new_tcb->am.currVertexId = RTQueuePop_UINT32(RTCtrlQueue);
-			new_tcb->task_func = amTaskStart; // An AM task's function is predefined.
-			new_tcb->stop = FALSE;
-			// Creating the AM.
-			AMCreate(&(new_tcb->am));
-		}
-		else
-		{
-			new_tcb->actor = newActor;
-			new_tcb->task_func = functions_tbl[new_tcb->functionId];
-			new_tcb->stop = TRUE;
-			createActor(new_tcb->actor);
-		}
-
-	    zynq_puts("Create Task ID"); zynq_putdec(new_tcb->OSTCBId);
-	    zynq_puts(" @");  zynq_putdec(new_tcb->am.currVertexId);
-	    zynq_puts("\n");
+//		// Popping the task function id.
+//		new_tcb->functionId = RTQueuePop_UINT32(RTCtrlQueue);
+//
+//		// Popping whether the task is stopped after completion.
+////		new_tcb->stop = RTQueuePop_UINT32(RTCtrlQueue);
+//
+//		// Popping the AM flag.
+//		new_tcb->isAM = RTQueuePop_UINT32(RTCtrlQueue);
+//
+//		if(new_tcb->isAM){
+//			// Popping the actor machine's info.
+//			new_tcb->am.nbVertices 	= RTQueuePop_UINT32(RTCtrlQueue);
+//			new_tcb->am.nbConds 	= RTQueuePop_UINT32(RTCtrlQueue);
+//			new_tcb->am.nbActions	= RTQueuePop_UINT32(RTCtrlQueue);
+//
+//			// Popping the starting vertex of the AM.
+//			new_tcb->am.currVertexId = RTQueuePop_UINT32(RTCtrlQueue);
+//			new_tcb->task_func = amTaskStart; // An AM task's function is predefined.
+//			new_tcb->stop = FALSE;
+//			// Creating the AM.
+//			AMCreate(&(new_tcb->am));
+//		}
+//		else
+//		{
+//			new_tcb->actor = newActor;
+//			new_tcb->task_func = functions_tbl[new_tcb->functionId];
+//			new_tcb->stop = TRUE;
+//			createActor(new_tcb->actor);
+//		}
+//
+//	    zynq_puts("Create Task ID"); zynq_putdec(new_tcb->OSTCBId);
+//	    zynq_puts(" @");  zynq_putdec(new_tcb->am.currVertexId);
+//	    zynq_puts("\n");
 
 #if defined ARM || defined DESKTOP
 		char s[8] = "tX_X.gv";
@@ -209,6 +209,7 @@ void  LrtTaskDeleteCur(){
 		lrt_running = FALSE;
     }
 
+    // TODO: Delete also the actor/actor machine.
 //    }else
 //    	exitWithCode(1013);
 }

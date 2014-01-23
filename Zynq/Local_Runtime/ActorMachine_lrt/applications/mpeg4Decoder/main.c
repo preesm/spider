@@ -67,6 +67,7 @@ int main(int argc, char **argv) {
 	OS_ShMemInit();
 	flushFIFO(-1);	// Clear all FIFOs.
 
+	mpeg4Decoder();
 
 #endif
 //

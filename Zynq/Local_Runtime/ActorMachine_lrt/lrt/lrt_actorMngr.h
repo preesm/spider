@@ -40,7 +40,7 @@
 
 #include "lrt_definitions.h"
 
-void createActor(LRTActor* actor);
+//void createActor(LRTActor* actor);
 void verifyActorCond(LRTActor* actor);
 
 #endif /* LRT_ACTORMNGR_H_ */

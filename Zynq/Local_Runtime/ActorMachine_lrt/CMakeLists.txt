@@ -17,7 +17,7 @@ if(APP_MPEG4)
     include_directories(applications/mpeg4Decoder)
     file(GLOB_RECURSE app_source_files applications/mpeg4Decoder/*)
 elseif(APP_TEST_OVP)
-    file(GLOB_RECURSE app_source_files applications/testForOVPSim/*)
+    file(GLOB_RECURSE app_source_files applications/testForOVPSim/main.c)
 endif()
 
 # Getting local runtime' sources.  
@@ -43,11 +43,6 @@ else()
 		file(GLOB_RECURSE platform_source_files platform_arm/*)
 	endif(CMAKE_SYSTEM_NAME STREQUAL Windows)
 endif(OVPSIM)
-
-# Setting compiler' flags.
-if(CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "-O0 -g3")        ## Optimize and max. debug
-endif()
 
 if(APP_MPEG4)  
 	# Finding libraries.

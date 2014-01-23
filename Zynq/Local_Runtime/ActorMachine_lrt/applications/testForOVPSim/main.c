@@ -32,10 +32,15 @@ void readVOL(UINT32 inputFIFOIds[],
 
 	/* Sending data */
 	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(inData), &inData);
+	inData++;
 	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(inData), &inData);
+	inData++;
 	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], sizeof(inData), &inData);
+	inData++;
 	writeFifo(outputFIFOIds[3], outputFIFOAddrs[3], sizeof(inData), &inData);
+	inData++;
 	writeFifo(outputFIFOIds[4], outputFIFOAddrs[4], sizeof(inData), &inData);
+	inData++;
 }
 
 
@@ -60,6 +65,9 @@ void decodeDsply(UINT32 inputFIFOIds[],
 
 
 int main(int argc, char **argv) {
+	OS_TCB *new_tcb;
+	UINT32 i;
+
 //	if(argc > 1)
 //		cpuId = atoi(argv[1]);
 //	else{
@@ -72,29 +80,73 @@ int main(int argc, char **argv) {
 	functions_tbl[0] = readVOL;
 	functions_tbl[1] = decodeDsply;
 
-#if STANDALONE_APP == 0
+
 	LRTInit();
-#else
+
+#if STANDALONE_APP == 1
 	printf("Standalone application..\n");
-	OSTCBCur = (OS_TCB *) 0;
-	lrt_running = FALSE;
-	OS_ShMemInit();
+
 	flushFIFO(-1);	// Clear all FIFOs.
-	// Creating tasks and starting executions.
 
-	// Testing FIFOs.
-	UINT32 inputFIFOIds_readVOL[1] = {0};
-	UINT32 inputFIFOAddrs_readVOL[1] = {0};
+	/*
+	 * Creating tasks.
+	 */
+	// readVOL
+	new_tcb = LrtTaskCreate();
+	new_tcb->functionId = 0;
+	new_tcb->isAM = FALSE;
 
-	UINT32 outputFIFOIds_readVOL[5] = {1, 2, 3, 4, 0};
-	UINT32 outputFIFOAddrs_readVOL[5] = {1024, 2048, 3072, 4096, 0};
+	new_tcb->actor = &LRTActorTbl[new_tcb->OSTCBId];
 
-	UINT32 inputFIFOIds_decodeDsply[4] = {1, 2, 3, 4};
-	UINT32 inputFIFOAddrs_decodeDsply[4] = {1024, 2048, 3072, 4096};
+	new_tcb->actor->nbInputFifos = 1;
+	new_tcb->actor->inputFifoId[0] = 0;
+	new_tcb->actor->inputFifoDataOff[0] = 0;
 
-	readVOL(inputFIFOIds_readVOL, inputFIFOAddrs_readVOL, outputFIFOIds_readVOL, outputFIFOAddrs_readVOL, 0);
-	decodeDsply(inputFIFOIds_decodeDsply, inputFIFOAddrs_decodeDsply, 0, 0, 0);
+	new_tcb->actor->nbOutputFifos = 5;
+	new_tcb->actor->outputFifoId[0] = 1;
+	new_tcb->actor->outputFifoId[1] = 2;
+	new_tcb->actor->outputFifoId[2] = 3;
+	new_tcb->actor->outputFifoId[3] = 4;
+	new_tcb->actor->outputFifoId[4] = 0;
+	new_tcb->actor->outputFifoDataOff[0] = 1024;
+	new_tcb->actor->outputFifoDataOff[1] = 2048;
+	new_tcb->actor->outputFifoDataOff[2] = 3072;
+	new_tcb->actor->outputFifoDataOff[3] = 4096;
+	new_tcb->actor->outputFifoDataOff[4] = 0;
+
+	new_tcb->task_func = functions_tbl[new_tcb->functionId];
+	new_tcb->stop = TRUE;
+
+	// decodeDsply
+	new_tcb = LrtTaskCreate();
+	new_tcb->functionId = 1;
+	new_tcb->isAM = FALSE;
+
+	new_tcb->actor = &LRTActorTbl[new_tcb->OSTCBId];
+
+	new_tcb->actor->nbInputFifos = 4;
+	new_tcb->actor->inputFifoId[0] = 1;
+	new_tcb->actor->inputFifoId[1] = 2;
+	new_tcb->actor->inputFifoId[2] = 3;
+	new_tcb->actor->inputFifoId[3] = 4;
+	new_tcb->actor->inputFifoDataOff[0] = 1024;
+	new_tcb->actor->inputFifoDataOff[1] = 2048;
+	new_tcb->actor->inputFifoDataOff[2] = 3072;
+	new_tcb->actor->inputFifoDataOff[3] = 4096;
+
+	new_tcb->actor->nbOutputFifos = 0;
+
+	new_tcb->task_func = functions_tbl[new_tcb->functionId];
+	new_tcb->stop = TRUE;
+
+
+	LRTStart();
+
+#else
+	LRTInitCtrl();
+	LRTCtrlStart();
 #endif
+
 
 	return 0;
 }

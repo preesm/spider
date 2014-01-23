@@ -54,7 +54,7 @@ static int nbOSShMem = 0;
 
 static void addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename) {
 	FILE *pFile;
-	if (nbOSShMem < OS_MAX_SH_MEM) {
+	if (nbOSShMem <= OS_MAX_SH_MEM) {
 		sprintf(OSShMemTbl[nbOSShMem].file_name, filename);
 
 		pFile = fopen(OSShMemTbl[nbOSShMem].file_name, "wb+");
@@ -81,8 +81,9 @@ void OS_ShMemInit() {
 }
 
 UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
-	int i, res = 0;
+	int i, res;
 	FILE* pFile;
+	res = 0;
 	for (i = 0; i < nbOSShMem && res == 0; i++) {
 		if (OSShMemTbl[i].base <= address
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
@@ -100,8 +101,9 @@ UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
 }
 
 UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
-	int i, res = 0;
+	int i, res;
 	FILE* pFile;
+	res = 0;
 	for (i = 0; i < nbOSShMem && res == 0; i++) {
 		if (OSShMemTbl[i].base <= address
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address

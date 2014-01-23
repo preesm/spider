@@ -59,7 +59,7 @@ LRTActor	LRTActorTbl[OS_MAX_TASKS];
 BOOLEAN 	lrt_running; 				/* Flag indicating that kernel is running   */
 
 void mainLoop(){
-	switchMonitor(CtrlFifoHandling);
+//	switchMonitor(CtrlFifoHandling);
 	wait_ext_msg();
 
 	switchMonitor(Default);
@@ -78,22 +78,35 @@ void mainLoop(){
 	}
 }
 
-/* Initialize and Launch the Runtime */
+/* Initialize the Runtime */
 void LRTInit() {
 	OSTCBCur = (OS_TCB *) 0;
 	memset(OSTCBTbl, 0, sizeof(OSTCBTbl)); /* Clear all the TCBs */
 	OS_ShMemInit();
-	RTQueuesInit();
 	initMonitor();
 	OSWorkingMemoryInit();
 
 	lrt_running = FALSE;
+}
 
+
+/*
+ * Initialize control queues for communications with the GRT.
+ */
+void LRTCtrlStart(){
+	RTQueuesInit();
 	while (TRUE)
 		mainLoop();
 }
 
 
+/*
+ * Launch the Runtime.
+ */
+void LRTStart(){
+	while(OSTCBCur)
+		LRTStartCurrTask();
+}
 
 /* Starts the task pointed by the OSTCBCur. */
 void LRTStartCurrTask() {
@@ -123,7 +136,7 @@ void LRTStartCurrTask() {
 //		LrtTaskDeleteCur();
 //		OS_CtrlQPush(&temp, sizeof(int));
 //	}
-	switchMonitor(Act);
+//	switchMonitor(Act);
 }
 
 /* Determine the next Task to run */

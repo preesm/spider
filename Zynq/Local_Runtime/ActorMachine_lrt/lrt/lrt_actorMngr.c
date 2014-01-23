@@ -40,24 +40,28 @@
 #include "lrt_actorMngr.h"
 
 
-void createActor(LRTActor* actor){
-	UINT32 i;
-	actor->nbInputFifos = RTQueuePop_UINT32(RTCtrlQueue);
-	actor->nbOutputFifos = RTQueuePop_UINT32(RTCtrlQueue);
-	for (i = 0; i < actor->nbInputFifos; i++) {
-		actor->inputFifoId[i] = RTQueuePop_UINT32(RTCtrlQueue);
-		actor->inputFifoDataOff[i] = RTQueuePop_UINT32(RTCtrlQueue);
-		// TODO: get the FIFO' size
-	}
-	for (i = 0; i < actor->nbOutputFifos; i++) {
-		actor->outputFifoId[i] = RTQueuePop_UINT32(RTCtrlQueue);
-		actor->outputFifoDataOff[i] = RTQueuePop_UINT32(RTCtrlQueue);
-		// TODO: get the FIFO' size
-	}
-	for ( i = 0; i < actor->nbParams; i++) {
-		actor->params[i] = RTQueuePop_UINT32(RTCtrlQueue);
-	}
-}
+//void createActor(OS_TCB* newTCB){
+//	UINT32 i;
+//	LRTActor* actor;
+//
+//	actor = &LRTActorTbl[newTCB->OSTCBId];
+//
+//	actor->nbInputFifos = RTQueuePop_UINT32(RTCtrlQueue);
+//	actor->nbOutputFifos = RTQueuePop_UINT32(RTCtrlQueue);
+//	for (i = 0; i < actor->nbInputFifos; i++) {
+//		actor->inputFifoId[i] = RTQueuePop_UINT32(RTCtrlQueue);
+//		actor->inputFifoDataOff[i] = RTQueuePop_UINT32(RTCtrlQueue);
+//		// TODO: get the FIFO' size
+//	}
+//	for (i = 0; i < actor->nbOutputFifos; i++) {
+//		actor->outputFifoId[i] = RTQueuePop_UINT32(RTCtrlQueue);
+//		actor->outputFifoDataOff[i] = RTQueuePop_UINT32(RTCtrlQueue);
+//		// TODO: get the FIFO' size
+//	}
+//	for ( i = 0; i < actor->nbParams; i++) {
+//		actor->params[i] = RTQueuePop_UINT32(RTCtrlQueue);
+//	}
+//}
 
 
 void verifyActorCond(LRTActor* actor){

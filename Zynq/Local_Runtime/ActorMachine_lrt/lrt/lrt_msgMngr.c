@@ -46,6 +46,7 @@
 #include "lrt_msgMngr.h"
 #include "lrt_core.h"
 
+extern void amTaskStart();
 
 /* Send a Message to the Global Runtime */
 void send_ext_msg(UINT32 addr, UINT32 msg_type, void* msg) {
@@ -72,13 +73,63 @@ void send_ext_msg(UINT32 addr, UINT32 msg_type, void* msg) {
 void wait_ext_msg() {
 	UINT32 msg_type;
 	UINT32 fifoID;
+	OS_TCB *new_tcb;
+	UINT32 i;
 
 	/* Popping the first incoming word i.e. the message type. */
 	if (RTQueueNonBlockingPop(RTCtrlQueue, &msg_type, sizeof(UINT32)) == sizeof(UINT32)) {
 		switch (msg_type) {
 		case MSG_CREATE_TASK:
 			// TODO: Reuse a previous TCB...
-			LrtTaskCreate();
+			new_tcb = LrtTaskCreate();
+
+			// Popping the task function id.
+			new_tcb->functionId = RTQueuePop_UINT32(RTCtrlQueue);
+
+			// Popping whether the task is stopped after completion.
+	//		new_tcb->stop = RTQueuePop_UINT32(RTCtrlQueue);
+
+			// Popping the AM flag.
+			new_tcb->isAM = RTQueuePop_UINT32(RTCtrlQueue);
+
+			if(new_tcb->isAM){
+				// Creating an actor machine.
+				// Popping the actor machine's info.
+				new_tcb->am.nbVertices 	= RTQueuePop_UINT32(RTCtrlQueue);
+				new_tcb->am.nbConds 	= RTQueuePop_UINT32(RTCtrlQueue);
+				new_tcb->am.nbActions	= RTQueuePop_UINT32(RTCtrlQueue);
+
+				// Popping the starting vertex of the AM.
+				new_tcb->am.currVertexId = RTQueuePop_UINT32(RTCtrlQueue);
+				new_tcb->task_func = amTaskStart; // An AM task's function is predefined.
+				new_tcb->stop = FALSE;
+				// Creating the AM.
+				AMCreate(&(new_tcb->am));
+			}
+			else
+			{
+				// Creating a single actor.
+				new_tcb->actor = &LRTActorTbl[new_tcb->OSTCBId];
+
+				new_tcb->actor->nbInputFifos = RTQueuePop_UINT32(RTCtrlQueue);
+				new_tcb->actor->nbOutputFifos = RTQueuePop_UINT32(RTCtrlQueue);
+				for (i = 0; i < new_tcb->actor->nbInputFifos; i++) {
+					new_tcb->actor->inputFifoId[i] = RTQueuePop_UINT32(RTCtrlQueue);
+					new_tcb->actor->inputFifoDataOff[i] = RTQueuePop_UINT32(RTCtrlQueue);
+					// TODO: get the FIFO' size
+				}
+				for (i = 0; i < new_tcb->actor->nbOutputFifos; i++) {
+					new_tcb->actor->outputFifoId[i] = RTQueuePop_UINT32(RTCtrlQueue);
+					new_tcb->actor->outputFifoDataOff[i] = RTQueuePop_UINT32(RTCtrlQueue);
+					// TODO: get the FIFO' size
+				}
+				for ( i = 0; i < new_tcb->actor->nbParams; i++) {
+					new_tcb->actor->params[i] = RTQueuePop_UINT32(RTCtrlQueue);
+				}
+				new_tcb->task_func = functions_tbl[new_tcb->functionId];
+				new_tcb->stop = TRUE;
+			}
+
 //			RTQueuePush(RTCtrlQueue, &msg_type, sizeof(UINT32));
 			break;
 

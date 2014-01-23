@@ -42,7 +42,7 @@
 
 //extern FUNCTION_TYPE functions_tbl[NB_LOCAL_FUNCTIONS]; /* Table of Action Fcts */
 
-void LrtTaskCreate();
+OS_TCB* LrtTaskCreate();
 UINT8 OSTaskQuery(UINT8 id, OS_TCB *p_task_data);
 OS_TCB* OSCurTaskQuery();
 AM_ACTOR_ACTION_STRUCT* OSCurActionQuery();

@@ -17,7 +17,7 @@ if(APP_MPEG4)
     include_directories(applications/mpeg4Decoder)
     file(GLOB_RECURSE app_source_files applications/mpeg4Decoder/*)
 elseif(APP_TEST_OVP)
-    file(GLOB_RECURSE app_source_files applications/testForOVPSim/main.c)
+    file(GLOB_RECURSE app_source_files applications/testForOVPSim/*)
 endif()
 
 # Getting local runtime' sources.  

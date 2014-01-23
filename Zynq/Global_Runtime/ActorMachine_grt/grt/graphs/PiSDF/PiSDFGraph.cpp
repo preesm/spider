@@ -634,7 +634,11 @@ void PiSDFGraph::createSubGraph(SDFGraph *outSDF)
 		}
 
 		// Adding the edge if not already present.
-		outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
+//		if((outSDF->getEdgeIndex(sourceVertex, sinkVertex) == -1) &&
+//			())
+//
+//			outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
+//		outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
 
 
 //		else if(sinkVertex->getType() == output_vertex)

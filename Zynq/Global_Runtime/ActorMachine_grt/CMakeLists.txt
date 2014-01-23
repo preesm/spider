@@ -41,11 +41,6 @@ else()
 	endif()
 endif(OVPSIM)
 
-# Setting compiler' flags.
-if(CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "-O0 -g3")        ## Optimize and max. debug
-endif()
-
 # Compiling and linking.
 add_executable(GRT applications/main.cpp ${app_source_files} ${grt_source_files} ${platform_source_files})
 target_link_libraries(GRT)

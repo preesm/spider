@@ -18,10 +18,12 @@
 #include "top_AM_actions.h"
 
 #define STANDALONE_APP		1
+#define FIFO_SIZE			4096
 
 int main(int argc, char **argv) {
 	OS_TCB *new_tcb;
 	UINT32 i, nbFrames;
+	UINT32 FifoIds[MAX_NB_FIFOs], FifoAddrs[MAX_NB_FIFOs];
 
 	UINT32 inputFifoId[MAX_NB_FIFOs];
 	UINT32 inputFifoAddr[MAX_NB_FIFOs];
@@ -77,7 +79,13 @@ int main(int argc, char **argv) {
 #if STANDALONE_APP == 1
 	printf("Standalone application..\n");
 
+	for (i = 0; i < MAX_NB_FIFOs; i++) {
+		FifoIds[i] = i;
+		FifoAddrs[i] = i * FIFO_SIZE;
+	}
 	flushFIFO(-1);	// Clear all FIFOs.
+
+
 
 
 	/*
@@ -108,80 +116,80 @@ int main(int argc, char **argv) {
 //
 //	new_tcb->task_func = functions_tbl[new_tcb->functionId];
 //	new_tcb->stop = TRUE;
-	inputFifoId[0] = 4;
-	inputFifoAddr[0] = 4096;
-	outputFifoId[0] = 0;
-	outputFifoId[1] = 1;
-	outputFifoId[2] = 2;
-	outputFifoId[3] = 3;
-	outputFifoId[4] = 4;
-	outputFifoAddr[0] = 0;
-	outputFifoAddr[1] = 1024;
-	outputFifoAddr[2] = 2048;
-	outputFifoAddr[3] = 3072;
-	outputFifoAddr[4] = 4096;
+	inputFifoId[0] = FifoIds[4];
+	inputFifoAddr[0] = FifoAddrs[4];
+	outputFifoId[0] = FifoIds[0];
+	outputFifoId[1] = FifoIds[1];
+	outputFifoId[2] = FifoIds[2];
+	outputFifoId[3] = FifoIds[3];
+	outputFifoId[4] = FifoIds[4];
+	outputFifoAddr[0] = FifoAddrs[0];
+	outputFifoAddr[1] = FifoAddrs[1];
+	outputFifoAddr[2] = FifoAddrs[2];
+	outputFifoAddr[3] = FifoAddrs[3];
+	outputFifoAddr[4] = FifoAddrs[4];
 	readVOL(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
 
 	while(nbFrames < 100){
 	//*** broadVOL ***//
-	inputFifoId[0] = 0;
-	inputFifoAddr[0] = 0;
-	outputFifoId[0] = 5;
-	outputFifoId[1] = 6;
-	outputFifoAddr[0] = 5120;
-	outputFifoAddr[1] = 6144;
+	inputFifoId[0] = FifoIds[0];
+	inputFifoAddr[0] = FifoAddrs[0];
+	outputFifoId[0] = FifoIds[5];
+	outputFifoId[1] = FifoIds[6];
+	outputFifoAddr[0] = FifoAddrs[5];
+	outputFifoAddr[1] = FifoAddrs[6];
 	broadVOL(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
 
 
 	//*** readVOP ***//
-	inputFifoId[0] = 6;
-	inputFifoId[1] = 1;
-	inputFifoId[2] = 2;
-	inputFifoId[3] = 9;
-	inputFifoAddr[0] = 6144;
-	inputFifoAddr[1] = 1024;
-	inputFifoAddr[2] = 2048;
-	inputFifoAddr[3] = 9216;
-	outputFifoId[0] = 7;
-	outputFifoId[1] = 8;
-	outputFifoId[2] = 9;
-	outputFifoAddr[0] = 7168;
-	outputFifoAddr[1] = 8192;
-	outputFifoAddr[2] = 9216;
+	inputFifoId[0] = FifoIds[6];
+	inputFifoId[1] = FifoIds[1];
+	inputFifoId[2] = FifoIds[2];
+	inputFifoId[3] = FifoIds[9];
+	inputFifoAddr[0] = FifoAddrs[6];
+	inputFifoAddr[1] = FifoAddrs[1];
+	inputFifoAddr[2] = FifoAddrs[2];
+	inputFifoAddr[3] = FifoAddrs[9];
+	outputFifoId[0] = FifoIds[7];
+	outputFifoId[1] = FifoIds[8];
+	outputFifoId[2] = FifoIds[9];
+	outputFifoAddr[0] = FifoAddrs[7];
+	outputFifoAddr[1] = FifoAddrs[8];
+	outputFifoAddr[2] = FifoAddrs[9];
 	readVOP(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
 
 
-//	//*** decodeVOP ***//
-	inputFifoId[0] = 5;
-	inputFifoId[1] = 7;
-	inputFifoId[2] = 8;
-	inputFifoId[3] = 11;
-	inputFifoAddr[0] = 5120;
-	inputFifoAddr[1] = 7168;
-	inputFifoAddr[2] = 8192;
-	inputFifoAddr[3] = 11264;
-	outputFifoId[0] = 10;
-	outputFifoId[1] = 12;
-	outputFifoAddr[0] = 10240;
-	outputFifoAddr[1] = 12088;
+	//*** decodeVOP ***//
+	inputFifoId[0] = FifoIds[5];
+	inputFifoId[1] = FifoIds[7];
+	inputFifoId[2] = FifoIds[8];
+	inputFifoId[3] = FifoIds[11];
+	inputFifoAddr[0] = FifoAddrs[5];
+	inputFifoAddr[1] = FifoAddrs[7];
+	inputFifoAddr[2] = FifoAddrs[8];
+	inputFifoAddr[3] = FifoAddrs[11];
+	outputFifoId[0] = FifoIds[10];
+	outputFifoId[1] = FifoIds[12];
+	outputFifoAddr[0] = FifoAddrs[10];
+	outputFifoAddr[1] = FifoAddrs[12];
 	decodeVOP(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
 
 //	//*** decodeVOP_I ***//
-//	inputFifoId[0] = 5;
-//	inputFifoId[1] = 7;
-//	inputFifoId[2] = 8;
-//	inputFifoAddr[0] = 5120;
-//	inputFifoAddr[1] = 7168;
-//	inputFifoAddr[2] = 8192;
-//	outputFifoId[0] = 10;
-//	outputFifoAddr[0] = 10240;
+//	inputFifoId[0] = FifoIds[5];
+//	inputFifoId[1] = FifoIds[7];
+//	inputFifoId[2] = FifoIds[8];
+//	inputFifoAddr[0] = FifoAddrs[5];
+//	inputFifoAddr[1] = FifoAddrs[7];
+//	inputFifoAddr[2] = FifoAddrs[8];
+//	outputFifoId[0] = FifoIds[10];
+//	outputFifoAddr[0] = FifoAddrs[10];
 //	decodeVOP_I(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
 
 	//*** display ***//
-	inputFifoId[0] = 10;
-	inputFifoId[1] = 3;
-	inputFifoAddr[0] = 10240;
-	inputFifoAddr[1] = 3072;
+	inputFifoId[0] = FifoIds[10];
+	inputFifoId[1] = FifoIds[3];
+	inputFifoAddr[0] = FifoAddrs[10];
+	inputFifoAddr[1] = FifoAddrs[3];
 	displayVOP(inputFifoId, inputFifoAddr, 0, 0, 0);
 
 	nbFrames++;

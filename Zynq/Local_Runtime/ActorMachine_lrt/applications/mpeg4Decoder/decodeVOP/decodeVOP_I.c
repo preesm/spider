@@ -45,9 +45,9 @@
 
 REVERSE_EVENT DCT3D_I[4096]; //init_vlc_tables_I_PC_decod1_DCT3D_I
 
-int keyframes[2] = {0};
+static int keyframes[2] = {0};
 
-uchar FrmData[BUFFER_SIZE];
+uchar FrmDataWithStartCode[BUFFER_SIZE];
 struct_VOLsimple VOL;
 readVOPOutData VOP;
 
@@ -63,10 +63,6 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 		 UINT32 params[]){
 //	int frame_pos_fin_vlc;
 
-	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VOL);
-	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(readVOPOutData), (UINT8*)&VOP);
-	readFifo(inputFIFOIds[2], inputFIFOAddrs[2], BUFFER_SIZE, (UINT8*)&FrmData);
-//	readFifo(inputFIFOIds[3], inputFIFOAddrs[3], sizeof(decodeVOPOutData), (UINT8*)&outputData);
 
 	   int             i, j, k ;
 	    int             MB_courant = 0 ;
@@ -100,6 +96,17 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 	    const int       edge_size2 = EDGE_SIZE >> 1 ;
 	    const int       stride = VOL.video_object_layer_width + 2 * EDGE_SIZE ;
 	    int pos_o;
+	    uchar* FrmData;
+
+	    init_vlc_tables_I(DCT3D_I);
+
+
+		readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VOL);
+		readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(readVOPOutData), (UINT8*)&VOP);
+		readFifo(inputFIFOIds[2], inputFIFOAddrs[2], BUFFER_SIZE, (UINT8*)&FrmDataWithStartCode);
+	//	readFifo(inputFIFOIds[3], inputFIFOAddrs[3], sizeof(decodeVOPOutData), (UINT8*)&outputData);
+
+		FrmData = &FrmDataWithStartCode[4]; // Skipping the start code.
 
 	    //DCpred_buffA
 	    DCpred_buffA [0] = StockBlockLum_BuffA ;
@@ -158,8 +165,8 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 	    for ( MB_courant = 0 ;
 	        MB_courant < VOL.video_object_layer_width * VOL.video_object_layer_height / 256 ;
 	        MB_courant++ ) {
-	//			if ( MB_courant == 342)
-	//				MB_courant += 0;
+				if ( MB_courant == 342)
+					MB_courant += 0;
 	            VideoPacketHeaderI(FrmData, pos_o, &VOL, &VOP, &MB_courant, new_VOP, VideoPacketHeader_pos
 	                , VideoPacketHeader_resync_marker, &MB_number);
 	            MB_courant = MB_number ;

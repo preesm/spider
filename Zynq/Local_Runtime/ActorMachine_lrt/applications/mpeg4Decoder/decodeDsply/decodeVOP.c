@@ -45,26 +45,26 @@
 
 //static uchar VOPCounter = 0;
 
-static REVERSE_EVENT init_vlc_tables_P_PC_decod1_DCT3D_P[4096];
-static REVERSE_EVENT init_vlc_tables_I_PC_decod1_DCT3D_I[4096];
+REVERSE_EVENT init_vlc_tables_P_PC_decod1_DCT3D_P[4096];
+REVERSE_EVENT init_vlc_tables_I_PC_decod1_DCT3D_I[4096];
 
 //static FILE* pFile = NULL;
-static uchar FrmData[BUFFER_SIZE];
+uchar FrmData[BUFFER_SIZE];
 
-static struct_VOLsimple VOL;
+struct_VOLsimple VOL;
 //static long filePosition = 28;
-static readVOPOutData VOP;
+readVOPOutData VOP;
 
-static uchar stock_mb_type_P[1620];
-static vector save_mv[1620];
-static int pos_fin_vlc;
+uchar stock_mb_type_P[1620];
+vector save_mv[1620];
+int pos_fin_vlc;
 static int keyframes[2] = {0};
 
-static decodeVOPOutData Img;
+decodeVOPOutData Img;
 decodeVOPOutData PrevImg;
 
-static UINT32 IVOPCounter = 0;
-static UINT32 PVOPCounter = 0;
+UINT32 IVOPCounter = 0;
+UINT32 PVOPCounter = 0;
 
 void decodeVOP(UINT32 inputFIFOIds[],
 		 UINT32 inputFIFOAddrs[],

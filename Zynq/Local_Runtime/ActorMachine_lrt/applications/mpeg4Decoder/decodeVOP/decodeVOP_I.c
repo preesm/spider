@@ -167,12 +167,12 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 	        MB_courant++ ) {
 				if ( MB_courant == 342)
 					MB_courant += 0;
-	            VideoPacketHeaderI(FrmData, pos_o, &VOL, &VOP, &MB_courant, new_VOP, VideoPacketHeader_pos
+	            VideoPacketHeaderI(FrmData, pos_o, &VOL, &VOP.VideoObjectPlane_VOP, &MB_courant, new_VOP, VideoPacketHeader_pos
 	                , VideoPacketHeader_resync_marker, &MB_number);
 	            MB_courant = MB_number ;
 	            i = MB_courant % (VOL.video_object_layer_width / 16);
 	            j = MB_courant / (VOL.video_object_layer_width / 16);
-	            Param_MB_I(VideoPacketHeader_pos [0], FrmData, new_VOP, &VOP, MacroblockI_pos);
+	            Param_MB_I(VideoPacketHeader_pos [0], FrmData, new_VOP, &VOP.VideoObjectPlane_VOP, MacroblockI_pos);
 	            StockBlocksLum(i, VideoPacketHeader_resync_marker [0], InverseQuant_BlkXn + 1 * 16, InverseQuant_BlkXn + 2 * 16
 	                , InverseQuant_BlkXn + 3 * 16, &VOL, StockBlockLum_BuffA, StockBlockLum_BuffB, StockBlockLum_BuffC
 	                , StockBlockLum_BuffD, StockBlockLum_BuffE);
@@ -186,7 +186,7 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 	            pos_X [0] = ((i + j * stride) << 4) + EDGE_SIZE + EDGE_SIZE * stride ;
 
 	            for ( k = 0 ; k < 4 ; k++ ) {
-	                decode_bloc_intra(k, FrmData, &VOP, VLCinverseXi_pos_prec [0], DCT3D_I, &VOL, MB_courant
+	                decode_bloc_intra(k, FrmData, &VOP.VideoObjectPlane_VOP, VLCinverseXi_pos_prec [0], DCT3D_I, &VOL, MB_courant
 	                    , DCpred_buffA [k], DCpred_buffB [k], DCpred_buffC [k]
 	                , InverseQuant_BlkXn + k * 16, block_8x8, VLCinverseXi_pos);
 	                Stock_block_in_pict(width + 2 * EDGE_SIZE, pos_X [0] + tab_pos_X [k], block_8x8
@@ -197,7 +197,7 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 	            width = VOL.video_object_layer_width >> 1 ;
 	            pos_X [0] = ((i + j * (stride >> 1)) << 3) + edge_size2 + edge_size2 * (stride >> 1);
 	            for ( k = 4 ; k < 6 ; k++ ) {
-	                decode_bloc_intra(k, FrmData, &VOP, VLCinverseXi_pos_prec [0], DCT3D_I, &VOL, MB_courant
+	                decode_bloc_intra(k, FrmData, &VOP.VideoObjectPlane_VOP, VLCinverseXi_pos_prec [0], DCT3D_I, &VOL, MB_courant
 	                    , DCpred_buffA [k], DCpred_buffB [k], DCpred_buffC [k]
 	                , InverseQuant_BlkXn + k * 16, block_8x8, VLCinverseXi_pos);
 	                Stock_block_in_pict(width + 2 * edge_size2, pos_X [0], block_8x8, display [k]);

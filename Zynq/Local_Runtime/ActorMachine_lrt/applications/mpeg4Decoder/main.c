@@ -18,7 +18,7 @@
 #include "top_AM_actions.h"
 
 #define STANDALONE_APP		1
-#define FIFO_SIZE			4096
+#define FIFO_SIZE			5120
 
 int main(int argc, char **argv) {
 	OS_TCB *new_tcb;
@@ -160,30 +160,30 @@ int main(int argc, char **argv) {
 
 
 	//*** decodeVOP ***//
-	inputFifoId[0] = FifoIds[5];
-	inputFifoId[1] = FifoIds[7];
-	inputFifoId[2] = FifoIds[8];
-	inputFifoId[3] = FifoIds[11];
-	inputFifoAddr[0] = FifoAddrs[5];
-	inputFifoAddr[1] = FifoAddrs[7];
-	inputFifoAddr[2] = FifoAddrs[8];
-	inputFifoAddr[3] = FifoAddrs[11];
-	outputFifoId[0] = FifoIds[10];
-	outputFifoId[1] = FifoIds[12];
-	outputFifoAddr[0] = FifoAddrs[10];
-	outputFifoAddr[1] = FifoAddrs[12];
-	decodeVOP(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
-
-//	//*** decodeVOP_I ***//
 //	inputFifoId[0] = FifoIds[5];
 //	inputFifoId[1] = FifoIds[7];
 //	inputFifoId[2] = FifoIds[8];
+//	inputFifoId[3] = FifoIds[11];
 //	inputFifoAddr[0] = FifoAddrs[5];
 //	inputFifoAddr[1] = FifoAddrs[7];
 //	inputFifoAddr[2] = FifoAddrs[8];
+//	inputFifoAddr[3] = FifoAddrs[11];
 //	outputFifoId[0] = FifoIds[10];
+//	outputFifoId[1] = FifoIds[12];
 //	outputFifoAddr[0] = FifoAddrs[10];
-//	decodeVOP_I(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
+//	outputFifoAddr[1] = FifoAddrs[12];
+//	decodeVOP(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
+
+	//*** decodeVOP_I ***//
+	inputFifoId[0] = FifoIds[5];
+	inputFifoId[1] = FifoIds[7];
+	inputFifoId[2] = FifoIds[8];
+	inputFifoAddr[0] = FifoAddrs[5];
+	inputFifoAddr[1] = FifoAddrs[7];
+	inputFifoAddr[2] = FifoAddrs[8];
+	outputFifoId[0] = FifoIds[10];
+	outputFifoAddr[0] = FifoAddrs[10];
+	decodeVOP_I(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
 
 	//*** display ***//
 	inputFifoId[0] = FifoIds[10];

@@ -50,9 +50,14 @@
 #define image_type 	unsigned char
 #define dpb_type 	unsigned char
 
-#define M4V_FILE_PATH		"..\\san001.m4v"
-//#define M4V_FILE_PATH		"..\\jvc011.m4v"
+
+#define DEC_P				1
+//#define M4V_FILE_PATH		"..\\san001.m4v"	// I sequence.
+#define M4V_FILE_PATH		"..\\jvc011.m4v"	// I-P sequence.
 #define HIERARCHY_LEVEL		2
+#define STANDALONE_APP		1
+#define FIFO_SIZE			5120
+
 
 // Frame dimensions assuming 4:2:0 sampling.
 #define X_DIM			1786

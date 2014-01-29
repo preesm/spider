@@ -63,9 +63,9 @@ void decodeMb_I_setEdges(UINT32 inputFIFOIds[],
 		 UINT32 params[]){
 
 
-	    image_setedges( (display [0]),  (display [4]),  (display [5])
-	    	,  (display [0]),  (display [4]),  (display [5]), VOL.video_object_layer_width + 2 * EDGE_SIZE
-	        , VOL.video_object_layer_height);
+//	    image_setedges( (display [0]),  (display [4]),  (display [5])
+//	    	,  (display [0]),  (display [4]),  (display [5]), VOL.video_object_layer_width + 2 * EDGE_SIZE
+//	        , VOL.video_object_layer_height);
 
 
 	// Sending output data.

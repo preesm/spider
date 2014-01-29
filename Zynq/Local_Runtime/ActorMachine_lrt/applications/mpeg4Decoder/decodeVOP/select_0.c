@@ -58,6 +58,6 @@ void select_0(UINT32 inputFIFOIds[],
 		readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&img);
 	}
 
-	writeFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&img);
-	writeFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&img);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&img);
+	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&img);
 }

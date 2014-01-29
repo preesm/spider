@@ -133,7 +133,7 @@ void decodeMb_I_Init(UINT32 inputFIFOIds[],
 //	}
 
 	pos_o = VOP.VideoObjectPlane_pos;
-	StockBlocksLum_init(&VOL, InverseQuant_BlkXn + 2 * 16, InverseQuant_BlkXn + 3 * 16);
+//	StockBlocksLum_init(&VOL, InverseQuant_BlkXn + 2 * 16, InverseQuant_BlkXn + 3 * 16);
 
 
 	// Sending output data.

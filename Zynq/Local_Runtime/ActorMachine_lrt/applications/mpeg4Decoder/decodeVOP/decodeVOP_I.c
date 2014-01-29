@@ -43,25 +43,25 @@
 #include <lrt_core.h>
 #include <lrt_taskMngr.h>
 
-REVERSE_EVENT DCT3D_I[4096]; //init_vlc_tables_I_PC_decod1_DCT3D_I
-
-static int keyframes[2] = {0};
-
 uchar FrmDataWithStartCode[BUFFER_SIZE];
-struct_VOLsimple VOL;
-readVOPOutData VOP;
-
-decodeVOPOutData outputData;
-
-
-//void decode_I_frame(const unsigned char *data,const struct_VOLsimple *VOL,const int position,struct_VOP *VOP,REVERSE_EVENT *DCT3D_I,int *pos_fin_vlc,int *address,unsigned char *Lum,unsigned char *Cb,unsigned char *Cr,int *keyframes);
+decodeVOPOutData img;
 
 void decodeVOP_I(UINT32 inputFIFOIds[],
 		 UINT32 inputFIFOAddrs[],
 		 UINT32 outputFIFOIds[],
 		 UINT32 outputFIFOAddrs[],
 		 UINT32 params[]){
-//	int frame_pos_fin_vlc;
+
+	REVERSE_EVENT DCT3D_I[4096]; //init_vlc_tables_I_PC_decod1_DCT3D_I
+
+	static int keyframes[2] = {0};
+
+
+	struct_VOLsimple VOL;
+	readVOPOutData VOP;
+//	uchar FrmDataWithStartCode[BUFFER_SIZE];
+
+
 
 
 	   int             i, j, k ;
@@ -88,13 +88,13 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 	    int             VLCinverseXi_pos_prec [1];
 	    short           InverseQuant_BlkXn [6 * 16];
 	    unsigned char   block_8x8 [64];
-	    short    *DCpred_buffA [6];
-	    short    *DCpred_buffB [6];
-	    short    *DCpred_buffC [6];
-	    unsigned char    *display [6];
+	    short    		*DCpred_buffA [6];
+	    short    		*DCpred_buffB [6];
+	    short    		*DCpred_buffC [6];
+	    unsigned char   *display [6];
 	    int             width ;
 	    const int       edge_size2 = EDGE_SIZE >> 1 ;
-	    const int       stride = VOL.video_object_layer_width + 2 * EDGE_SIZE ;
+	    int       		stride;
 	    int pos_o;
 	    uchar* FrmData;
 
@@ -104,8 +104,9 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 		readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VOL);
 		readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(readVOPOutData), (UINT8*)&VOP);
 		readFifo(inputFIFOIds[2], inputFIFOAddrs[2], BUFFER_SIZE, (UINT8*)&FrmDataWithStartCode);
-	//	readFifo(inputFIFOIds[3], inputFIFOAddrs[3], sizeof(decodeVOPOutData), (UINT8*)&outputData);
+	//	readFifo(inputFIFOIds[3], inputFIFOAddrs[3], sizeof(decodeVOPOutData), (UINT8*)&img);
 
+		stride = VOL.video_object_layer_width + 2 * EDGE_SIZE ;
 		FrmData = &FrmDataWithStartCode[4]; // Skipping the start code.
 
 	    //DCpred_buffA
@@ -136,28 +137,28 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 	    tab_pos_X [3] = 8 * stride + 8 ;
 	    //display
 	    if (keyframes[0]==0){
-	    	outputData.frame_address = stride * (VOL.video_object_layer_height + 2 * EDGE_SIZE) ;
-	        display [0] = outputData.mem_Y_last_buf;
-	        display [1] = outputData.mem_Y_last_buf;
-	        display [2] = outputData.mem_Y_last_buf;
-	        display [3] = outputData.mem_Y_last_buf;
-	        display [4] = outputData.mem_U_last_buf;
-	        display [5] = outputData.mem_V_last_buf;
+	    	img.frame_address = stride * (VOL.video_object_layer_height + 2 * EDGE_SIZE) ;
+	        display [0] = img.mem_Y_last_buf;
+	        display [1] = img.mem_Y_last_buf;
+	        display [2] = img.mem_Y_last_buf;
+	        display [3] = img.mem_Y_last_buf;
+	        display [4] = img.mem_U_last_buf;
+	        display [5] = img.mem_V_last_buf;
 	        keyframes[0]=1;
 	        keyframes[1]=0;
 	    }
 	    else
 	    {
-	    	outputData.frame_address = stride * (VOL.video_object_layer_height + 2 * EDGE_SIZE) ;
-	        display [0] = outputData.mem_Y_last_buf + outputData.frame_address;
-	        display [1] = outputData.mem_Y_last_buf + outputData.frame_address;
-	        display [2] = outputData.mem_Y_last_buf + outputData.frame_address;
-	        display [3] = outputData.mem_Y_last_buf + outputData.frame_address;
-	        display [4] = outputData.mem_U_last_buf + outputData.frame_address / 4;
-	        display [5] = outputData.mem_V_last_buf + outputData.frame_address / 4;
+	    	img.frame_address = stride * (VOL.video_object_layer_height + 2 * EDGE_SIZE) ;
+	        display [0] = img.mem_Y_last_buf + img.frame_address;
+	        display [1] = img.mem_Y_last_buf + img.frame_address;
+	        display [2] = img.mem_Y_last_buf + img.frame_address;
+	        display [3] = img.mem_Y_last_buf + img.frame_address;
+	        display [4] = img.mem_U_last_buf + img.frame_address / 4;
+	        display [5] = img.mem_V_last_buf + img.frame_address / 4;
 	        keyframes[0]=0;
 	        keyframes[1]=1;
-	        outputData.frame_address = 0;
+	        img.frame_address = 0;
 	    }
 
 	    pos_o = VOP.VideoObjectPlane_pos;
@@ -212,5 +213,5 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 
 
 	// Sending output data.
-	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&outputData);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&img);
 }

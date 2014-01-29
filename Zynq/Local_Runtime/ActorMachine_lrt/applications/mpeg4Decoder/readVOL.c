@@ -43,13 +43,13 @@
 #include <lrt_core.h>
 #include <lrt_taskMngr.h>
 
-uchar buffer[BUFFER_SIZE];
+
 //static struct_VOLsimple VideoObjectLayer_VOLsimple;
 //static uchar VideoObjectLayer_vop_complexity[5];
 //static int VideoObjectLayer_pos_o;
 //static imgDimensionsData outData;
 
-readVOLInData inData;
+
 
 void readVOL(UINT32 inputFIFOIds[],
 			 UINT32 inputFIFOAddrs[],
@@ -57,6 +57,9 @@ void readVOL(UINT32 inputFIFOIds[],
 			 UINT32 outputFIFOAddrs[],
 			 UINT32 params[])
 {
+	readVOLInData inData;
+	uchar buffer[BUFFER_SIZE];
+	UINT32	NbMb;	// Number of Macroblocks.
 	uint nbBytesRead;
 	FILE* pFile = NULL;
 
@@ -94,6 +97,10 @@ void readVOL(UINT32 inputFIFOIds[],
 		fclose(pFile);
 		inData.StartCodeCntr++;
 	}
+
+	// Sending parameter's value (NbMb)
+//	NbMb = (inData.VideoObjectLayer_VOLsimple.video_object_layer_width * inData.VideoObjectLayer_VOLsimple.video_object_layer_height) / 256;
+//	RTQueuePush_UINT32(RTInfoQueue, NbMb);
 
 	/* Sending data */
 	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&inData.VideoObjectLayer_VOLsimple);

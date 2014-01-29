@@ -74,7 +74,7 @@ short 				Blk_A;
 short 				Blk_B;
 short 				Blk_C;
 
-REVERSE_EVENT 		*DCT3D_I;
+//static REVERSE_EVENT 		*DCT3D_I;
 
 /*
  * Outputs
@@ -107,12 +107,12 @@ void decodeBlk_I(UINT32 inputFIFOIds[],
 //    short   DCpred_QFpred [7];
 //    int     InverseACDCpred_dc_scaler [1];
 
-    VLCinverseI(5 - k, MB_pos, pos_i, data, DCT3D_I, Blk_A, Blk_B, Blk_C, &VOP.VideoObjectPlane_VOP, pos_fin_vlc, InvDCT_f, DCpred_QFpred
-        , DCpred_F00pred, DCpred_QPpred, DCpred_prediction_direction);
-    InverseACDCpred(k, InvDCT_f, DCpred_QFpred, DCpred_F00pred [0], DCpred_QPpred [0], &VOP.VideoObjectPlane_VOP
-        , DCpred_prediction_direction [0], iDCT_data, InverseACDCpred_dc_scaler);
-    InverseQuantI(iDCT_data, &VOP.VideoObjectPlane_VOP, InverseACDCpred_dc_scaler [0], VOLsimple, InvDCT_f, InverseQuant_Blk_X);
-    InverseDCT_optim(InvDCT_f);
-    block_sat(InvDCT_f, block_sat_X);
+//    VLCinverseI(5 - k, MB_pos, pos_i, data, DCT3D_I, Blk_A, Blk_B, Blk_C, &VOP.VideoObjectPlane_VOP, pos_fin_vlc, InvDCT_f, DCpred_QFpred
+//        , DCpred_F00pred, DCpred_QPpred, DCpred_prediction_direction);
+//    InverseACDCpred(k, InvDCT_f, DCpred_QFpred, DCpred_F00pred [0], DCpred_QPpred [0], &VOP.VideoObjectPlane_VOP
+//        , DCpred_prediction_direction [0], iDCT_data, InverseACDCpred_dc_scaler);
+//    InverseQuantI(iDCT_data, &VOP.VideoObjectPlane_VOP, InverseACDCpred_dc_scaler [0], VOLsimple, InvDCT_f, InverseQuant_Blk_X);
+//    InverseDCT_optim(InvDCT_f);
+//    block_sat(InvDCT_f, block_sat_X);
 
 }

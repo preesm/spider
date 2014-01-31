@@ -62,6 +62,7 @@ static int keyframes[2] = {0};
 
 decodeVOPOutData Img;
 decodeVOPOutData PrevImg;
+int frame_address;
 
 UINT32 IVOPCounter = 0;
 UINT32 PVOPCounter = 0;
@@ -95,7 +96,7 @@ void decodeVOP(UINT32 inputFIFOIds[],
 				&VOP.VideoObjectPlane_VOP,
 				init_vlc_tables_I_PC_decod1_DCT3D_I,
 				&pos_fin_vlc,
-				&Img.frame_address,
+				&frame_address,
 				Img.mem_Y_last_buf,
 				Img.mem_U_last_buf,
 				Img.mem_V_last_buf,
@@ -114,7 +115,7 @@ void decodeVOP(UINT32 inputFIFOIds[],
 				init_vlc_tables_P_PC_decod1_DCT3D_P,
 				stock_mb_type_P,
 				&pos_fin_vlc,
-				&PrevImg.frame_address,
+				&frame_address,
 				PrevImg.mem_Y_last_buf,
 				PrevImg.mem_U_last_buf,
 				PrevImg.mem_V_last_buf,
@@ -127,4 +128,5 @@ void decodeVOP(UINT32 inputFIFOIds[],
 	// Sending data.
 	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&Img);
 	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&Img);
+	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], sizeof(int), (UINT8*)&frame_address);
 }

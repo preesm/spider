@@ -65,6 +65,7 @@ void displayVOP();
 	void decodeVOP_I();
 	void decodeVOP_P();
 	void select_0();
+	void select_1();
 //	void outputImg();
 #else
 	void decodeVOP();

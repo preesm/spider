@@ -43,8 +43,8 @@
 #include <lrt_core.h>
 #include <lrt_taskMngr.h>
 
-uchar FrmDataWithStartCode[BUFFER_SIZE];
-decodeVOPOutData img;
+static uchar FrmDataWithStartCode[BUFFER_SIZE];
+static decodeVOPOutData img;
 
 void decodeVOP_I(UINT32 inputFIFOIds[],
 		 UINT32 inputFIFOAddrs[],
@@ -97,6 +97,7 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 	    int       		stride;
 	    int pos_o;
 	    uchar* FrmData;
+	    int frame_address;
 
 	    init_vlc_tables_I(DCT3D_I);
 
@@ -137,7 +138,7 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 	    tab_pos_X [3] = 8 * stride + 8 ;
 	    //display
 	    if (keyframes[0]==0){
-	    	img.frame_address = stride * (VOL.video_object_layer_height + 2 * EDGE_SIZE) ;
+	    	frame_address = stride * (VOL.video_object_layer_height + 2 * EDGE_SIZE) ;
 	        display [0] = img.mem_Y_last_buf;
 	        display [1] = img.mem_Y_last_buf;
 	        display [2] = img.mem_Y_last_buf;
@@ -149,16 +150,16 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 	    }
 	    else
 	    {
-	    	img.frame_address = stride * (VOL.video_object_layer_height + 2 * EDGE_SIZE) ;
-	        display [0] = img.mem_Y_last_buf + img.frame_address;
-	        display [1] = img.mem_Y_last_buf + img.frame_address;
-	        display [2] = img.mem_Y_last_buf + img.frame_address;
-	        display [3] = img.mem_Y_last_buf + img.frame_address;
-	        display [4] = img.mem_U_last_buf + img.frame_address / 4;
-	        display [5] = img.mem_V_last_buf + img.frame_address / 4;
+	    	frame_address = stride * (VOL.video_object_layer_height + 2 * EDGE_SIZE) ;
+	        display [0] = img.mem_Y_last_buf + frame_address;
+	        display [1] = img.mem_Y_last_buf + frame_address;
+	        display [2] = img.mem_Y_last_buf + frame_address;
+	        display [3] = img.mem_Y_last_buf + frame_address;
+	        display [4] = img.mem_U_last_buf + frame_address / 4;
+	        display [5] = img.mem_V_last_buf + frame_address / 4;
 	        keyframes[0]=0;
 	        keyframes[1]=1;
-	        img.frame_address = 0;
+	        frame_address = 0;
 	    }
 
 	    pos_o = VOP.VideoObjectPlane_pos;
@@ -214,4 +215,6 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 
 	// Sending output data.
 	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&img);
+	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&img);
+	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], sizeof(int), (UINT8*)&frame_address);
 }

@@ -51,13 +51,21 @@ void select_0(UINT32 inputFIFOIds[],
 		  UINT32 outputFIFOAddrs[],
 		  UINT32 params[]){
 
-	if (params[0] == 0) { // image I.
-		readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&img);
-	}
-	else { // image P.
-		readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&img);
-	}
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&img);
 
 	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&img);
 	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&img);
 }
+
+void select_1(UINT32 inputFIFOIds[],
+		  UINT32 inputFIFOAddrs[],
+		  UINT32 outputFIFOIds[],
+		  UINT32 outputFIFOAddrs[],
+		  UINT32 params[]){
+
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&img);
+
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&img);
+}
+
+

@@ -45,8 +45,9 @@
 
 
 
-uchar FrmDataWithStartCode[BUFFER_SIZE];
-decodeVOPOutData img;
+static uchar FrmDataWithStartCode[BUFFER_SIZE];
+static decodeVOPOutData imgPrec;
+static decodeVOPOutData img;
 
 void decodeVOP_P(UINT32 inputFIFOIds[],
 		 UINT32 inputFIFOAddrs[],
@@ -109,13 +110,17 @@ void decodeVOP_P(UINT32 inputFIFOIds[],
 	    int       		stride;
 	    int pos_o;
 	    uchar* FrmData;
+	    int frame_address;
 
 
 		readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(struct_VOLsimple), (UINT8*)&VOL);
 		readFifo(inputFIFOIds[1], inputFIFOAddrs[1], sizeof(readVOPOutData), (UINT8*)&VOP);
 		readFifo(inputFIFOIds[2], inputFIFOAddrs[2], BUFFER_SIZE, (UINT8*)&FrmDataWithStartCode);
-		readFifo(inputFIFOIds[3], inputFIFOAddrs[3], sizeof(decodeVOPOutData), (UINT8*)&img);
+		readFifo(inputFIFOIds[3], inputFIFOAddrs[3], sizeof(decodeVOPOutData), (UINT8*)&imgPrec);
 
+		// Initializations...
+		init_vlc_tables_P(DCT3D_P);
+		init_vlc_tables_I(DCT3D_I);
 		stride = VOL.video_object_layer_width + 2 * EDGE_SIZE ;
 		FrmData = &FrmDataWithStartCode[4]; // Skipping the start code.
 
@@ -166,22 +171,28 @@ void decodeVOP_P(UINT32 inputFIFOIds[],
 //	    }
 //	    else
 	    {
-	        img.frame_address = stride * (VOL.video_object_layer_height + 2 * EDGE_SIZE);
-	        display [0] = (img.mem_Y_last_buf + img.frame_address);
-	        display [1] = (img.mem_Y_last_buf + img.frame_address);
-	        display [2] = (img.mem_Y_last_buf + img.frame_address);
-	        display [3] = (img.mem_Y_last_buf + img.frame_address);
-	        display [4] = (img.mem_U_last_buf + img.frame_address / 4);
-	        display [5] = (img.mem_V_last_buf + img.frame_address / 4);
-	        display_prec [0] = img.mem_Y_last_buf ;
-	        display_prec [1] = img.mem_Y_last_buf ;
-	        display_prec [2] = img.mem_Y_last_buf ;
-	        display_prec [3] = img.mem_Y_last_buf ;
-	        display_prec [4] = img.mem_U_last_buf ;
-	        display_prec [5] = img.mem_V_last_buf ;
+//	        frame_address = stride * (VOL.video_object_layer_height + 2 * EDGE_SIZE);
+//	        display [0] = (img.mem_Y_last_buf + frame_address);
+//	        display [1] = (img.mem_Y_last_buf + frame_address);
+//	        display [2] = (img.mem_Y_last_buf + frame_address);
+//	        display [3] = (img.mem_Y_last_buf + frame_address);
+//	        display [4] = (img.mem_U_last_buf + frame_address / 4);
+//	        display [5] = (img.mem_V_last_buf + frame_address / 4);
+	        display [0] = (img.mem_Y_last_buf);
+	        display [1] = (img.mem_Y_last_buf);
+	        display [2] = (img.mem_Y_last_buf);
+	        display [3] = (img.mem_Y_last_buf);
+	        display [4] = (img.mem_U_last_buf);
+	        display [5] = (img.mem_V_last_buf);
+	        display_prec [0] = imgPrec.mem_Y_last_buf ;
+	        display_prec [1] = imgPrec.mem_Y_last_buf ;
+	        display_prec [2] = imgPrec.mem_Y_last_buf ;
+	        display_prec [3] = imgPrec.mem_Y_last_buf ;
+	        display_prec [4] = imgPrec.mem_U_last_buf ;
+	        display_prec [5] = imgPrec.mem_V_last_buf ;
 	        keyframes[0]=0;
 	        keyframes[1]=1;
-	        img.frame_address = 0;
+	        frame_address = 0;
 	    }
 
 	    //mov_display_prec
@@ -204,7 +215,7 @@ void decodeVOP_P(UINT32 inputFIFOIds[],
 	            current_vector = &(save_mv [MB_courant]);
 	            /* sauvegarde de 4 vecteur par MB, à optimiser */
 	            if ( !mb_not_coded [0] ) {
-
+	            	printf("%u\n", MB_courant);
 	                /* CODED */
 	                if ( mb_type [0] == MODE_INTER || mb_type [0] == MODE_INTER_Q ) {
 
@@ -400,5 +411,7 @@ void decodeVOP_P(UINT32 inputFIFOIds[],
 	    //for B-frames
 
 	// Sending output data.
-	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)display);
+	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&img);
+	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], sizeof(decodeVOPOutData), (UINT8*)&img);
+	writeFifo(outputFIFOIds[2], outputFIFOAddrs[2], sizeof(int), (UINT8*)&frame_address);
 }

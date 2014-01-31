@@ -52,8 +52,8 @@
 
 
 #define DEC_P				1
-//#define M4V_FILE_PATH		"..\\san001.m4v"	// I sequence.
-#define M4V_FILE_PATH		"..\\jvc011.m4v"	// I-P sequence.
+#define M4V_FILE_PATH		"..\\san001.m4v"	// I sequence.
+//#define M4V_FILE_PATH		"..\\jvc011.m4v"	// I-P sequence.
 #define HIERARCHY_LEVEL		2
 #define STANDALONE_APP		1
 #define FIFO_SIZE			5120
@@ -124,7 +124,7 @@ typedef struct decodeVOPOutData{
 	uchar mem_Y_last_buf[Y_BUFFER_SIZE];
 	uchar mem_U_last_buf[U_BUFFER_SIZE];
 	uchar mem_V_last_buf[V_BUFFER_SIZE];
-	int frame_address;
+//	int frame_address;
 }decodeVOPOutData;
 
 

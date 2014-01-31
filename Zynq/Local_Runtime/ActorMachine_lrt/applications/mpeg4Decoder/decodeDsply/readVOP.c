@@ -114,6 +114,7 @@ void readVOP(UINT32 inputFIFOIds[],
 			&VOP.VideoObjectPlane_vop_coding_type);
 
 	// Sending parameters' values to Global Runtime.
+	params[0] = VOP.VideoObjectPlane_vop_coding_type;
 //	RTQueuePush_UINT32(RTInfoQueue, VOP.VideoObjectPlane_vop_coding_type);
 
 	// Sending data.

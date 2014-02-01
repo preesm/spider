@@ -147,16 +147,23 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 	        display [5] = img.mem_V_last_buf;
 	        keyframes[0]=1;
 	        keyframes[1]=0;
+	        frame_address = 0;
 	    }
 	    else
 	    {
 	    	frame_address = stride * (VOL.video_object_layer_height + 2 * EDGE_SIZE) ;
-	        display [0] = img.mem_Y_last_buf + frame_address;
-	        display [1] = img.mem_Y_last_buf + frame_address;
-	        display [2] = img.mem_Y_last_buf + frame_address;
-	        display [3] = img.mem_Y_last_buf + frame_address;
-	        display [4] = img.mem_U_last_buf + frame_address / 4;
-	        display [5] = img.mem_V_last_buf + frame_address / 4;
+//	        display [0] = img.mem_Y_last_buf + frame_address;
+//	        display [1] = img.mem_Y_last_buf + frame_address;
+//	        display [2] = img.mem_Y_last_buf + frame_address;
+//	        display [3] = img.mem_Y_last_buf + frame_address;
+//	        display [4] = img.mem_U_last_buf + frame_address / 4;
+//	        display [5] = img.mem_V_last_buf + frame_address / 4;
+	        display [0] = img.mem_Y_last_buf;
+	        display [1] = img.mem_Y_last_buf;
+	        display [2] = img.mem_Y_last_buf;
+	        display [3] = img.mem_Y_last_buf;
+	        display [4] = img.mem_U_last_buf;
+	        display [5] = img.mem_V_last_buf;
 	        keyframes[0]=0;
 	        keyframes[1]=1;
 	        frame_address = 0;

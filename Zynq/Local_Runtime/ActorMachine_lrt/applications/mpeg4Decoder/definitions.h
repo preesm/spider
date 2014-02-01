@@ -52,8 +52,8 @@
 
 
 #define DEC_P				1
-#define M4V_FILE_PATH		"..\\san001.m4v"	// I sequence.
-//#define M4V_FILE_PATH		"..\\jvc011.m4v"	// I-P sequence.
+//#define M4V_FILE_PATH		"..\\san001.m4v"	// I sequence.
+#define M4V_FILE_PATH		"..\\jvc011.m4v"	// I-P sequence.
 #define HIERARCHY_LEVEL		2
 #define STANDALONE_APP		1
 #define FIFO_SIZE			5120

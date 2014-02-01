@@ -50,6 +50,11 @@
 //static imgDimensionsData outData;
 
 
+static readVOLInData inData;
+static uchar buffer[BUFFER_SIZE];
+//static UINT32	NbMb;	// Number of Macroblocks.
+static uint nbBytesRead;
+static FILE* pFile = NULL;
 
 void readVOL(UINT32 inputFIFOIds[],
 			 UINT32 inputFIFOAddrs[],
@@ -57,11 +62,6 @@ void readVOL(UINT32 inputFIFOIds[],
 			 UINT32 outputFIFOAddrs[],
 			 UINT32 params[])
 {
-	readVOLInData inData;
-	uchar buffer[BUFFER_SIZE];
-	UINT32	NbMb;	// Number of Macroblocks.
-	uint nbBytesRead;
-	FILE* pFile = NULL;
 
 	readFifo(inputFIFOIds[0],inputFIFOAddrs[0], sizeof(readVOLInData), (UINT8*)&inData);
 

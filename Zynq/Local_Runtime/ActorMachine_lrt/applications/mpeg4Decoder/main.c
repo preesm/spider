@@ -21,7 +21,8 @@ int main(int argc, char **argv) {
 	OS_TCB *new_tcb;
 	UINT32 i, nbFrames;
 	UINT32 I_FrmCounter, P_FrmCounter;
-	UINT8 value;
+	readVOLInData readVOLInit;
+	readVOPStateInData readVOPStateInit;
 	UINT32 FifoIds[MAX_NB_FIFOs], FifoAddrs[MAX_NB_FIFOs];
 
 	UINT32 inputFifoId[MAX_NB_FIFOs];
@@ -88,9 +89,10 @@ int main(int argc, char **argv) {
 	flushFIFO(-1);	// Clear all FIFOs.
 
 	// Setting initial tokens.
-	value = 0;
-	writeFifo(FifoIds[4], FifoAddrs[4], sizeof(readVOLInData), &value);
-	writeFifo(FifoIds[9], FifoAddrs[9], sizeof(readVOPStateInData), &value);
+	memset(&readVOLInit, 0, sizeof(readVOLInData));
+	memset(&readVOPStateInit, 0, sizeof(readVOPStateInData));
+	writeFifo(FifoIds[4], FifoAddrs[4], sizeof(readVOLInData), (UINT8 *) &readVOLInit);
+	writeFifo(FifoIds[9], FifoAddrs[9], sizeof(readVOPStateInData), (UINT8 *) &readVOPStateInit);
 //	writeFifo(FifoIds[12], FifoAddrs[12], sizeof(decodeVOPOutData), &value);
 
 	/*

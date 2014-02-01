@@ -215,7 +215,6 @@ void decodeVOP_P(UINT32 inputFIFOIds[],
 	            current_vector = &(save_mv [MB_courant]);
 	            /* sauvegarde de 4 vecteur par MB, à optimiser */
 	            if ( !mb_not_coded [0] ) {
-	            	printf("%u\n", MB_courant);
 	                /* CODED */
 	                if ( mb_type [0] == MODE_INTER || mb_type [0] == MODE_INTER_Q ) {
 

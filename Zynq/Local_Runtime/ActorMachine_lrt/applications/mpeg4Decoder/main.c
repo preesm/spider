@@ -199,7 +199,13 @@ int main(int argc, char **argv) {
 //	#else
 		if(vopType == 0){
 			I_FrmCounter++;
+			//*** Trash ***//
+			inputFifoId[0] = FifoIds[12];
+			inputFifoAddr[0] = FifoAddrs[12];
+			trashPrecImg(inputFifoId, inputFifoAddr, 0, 0, 0);
+
 			//*** decodeVOP_I ***//
+			// TODO: empty the FIFO containing the precedent image inside decodeVOP_I instead of trashPrecImg...
 			inputFifoId[0] = FifoIds[5];
 			inputFifoId[1] = FifoIds[7];
 			inputFifoId[2] = FifoIds[8];
@@ -213,11 +219,6 @@ int main(int argc, char **argv) {
 			outputFifoAddr[1] = FifoAddrs[10];
 			outputFifoAddr[2] = FifoAddrs[11];
 			decodeVOP_I(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
-
-			//*** Trash ***//
-//			inputFifoId[0] = FifoIds[12];
-//			inputFifoAddr[0] = FifoAddrs[12];
-//			trashPrecImg(inputFifoId, inputFifoAddr, 0, 0, 0);
 		}
 		else
 		{

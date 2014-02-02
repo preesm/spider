@@ -63,6 +63,7 @@ void displayVOP();
 	void switch_0();
 	void switch_1();
 	void decodeVOP_I();
+	void trashPrecImg();
 	void decodeVOP_P();
 	void select_0();
 	void select_1();

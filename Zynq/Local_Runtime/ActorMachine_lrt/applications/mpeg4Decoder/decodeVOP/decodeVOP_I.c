@@ -44,7 +44,19 @@
 #include <lrt_taskMngr.h>
 
 static uchar FrmDataWithStartCode[BUFFER_SIZE];
+static decodeVOPOutData imgPrec;
 static decodeVOPOutData img;
+
+void trashPrecImg(UINT32 inputFIFOIds[],
+		 UINT32 inputFIFOAddrs[],
+		 UINT32 outputFIFOIds[],
+		 UINT32 outputFIFOAddrs[],
+		 UINT32 params[]){
+
+	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(decodeVOPOutData), (UINT8*)&imgPrec);
+
+}
+
 
 void decodeVOP_I(UINT32 inputFIFOIds[],
 		 UINT32 inputFIFOAddrs[],

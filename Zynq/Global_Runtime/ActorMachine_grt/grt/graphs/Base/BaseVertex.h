@@ -54,7 +54,8 @@ typedef enum {
 	broad_vertex,
 	output_vertex,
 	switch_vertex,
-	select_vertex
+	select_vertex,
+	roundBuff_vertex
 }VERTEXT_TYPE;
 
 typedef enum{
@@ -62,6 +63,12 @@ typedef enum{
 	impossible = 0,
 	possible = 1
 }EXE_FLAG;
+
+typedef enum{
+	executable,
+	executed,
+	noExecutable
+}STATUS_FLAG;
 
 class BaseVertex {
 	UINT32 id;
@@ -75,11 +82,14 @@ class BaseVertex {
 	UINT8 nbParameters;
 	PiSDFParameter* parameters[MAX_NB_PiSDF_PARAMS];
 
-	UINT32 nbRepetition; // Stores the number of replicas in a Sr graph.
+	BaseVertex* refPiSDFVertex;	// If generated from a PiSDF, this is the reference to PiSDF vertex.
 
-	EXE_FLAG executable; // Says whether the vertex can be executed.
-	bool scheduled; 	 // Says whether the vertex has been already scheduled within the current iteration.
-	UINT32 tempId; // Used while creating a topology matrix.
+	UINT32 		nbRepetition; // Stores the number of replicas in a Sr graph.
+
+	EXE_FLAG 	executable; // Says whether the vertex can be executed.
+	STATUS_FLAG status;
+	bool 		scheduled; 	// Says whether the vertex has been already scheduled within the current iteration.
+	UINT32 		tempId; 	// Used while creating a topology matrix.
 public:
 	BaseVertex();
 	virtual ~BaseVertex();
@@ -168,6 +178,10 @@ public:
         return tempId;
     }
 
+    STATUS_FLAG getStatus() const
+    {
+        return status;
+    }
 
 	EXE_FLAG getExecutable() const
 	{
@@ -180,6 +194,10 @@ public:
         return scheduled;
     }
 
+    BaseVertex *getRefPiSDFVertex() const
+    {
+        return refPiSDFVertex;
+    }
 
     void setId(UINT32 id)
     {
@@ -218,6 +236,12 @@ public:
     }
 
 
+    void setStatus(STATUS_FLAG status)
+    {
+        this->status = status;
+    }
+
+
     void setExecutable(EXE_FLAG executable)
     {
     	this->executable = executable;
@@ -240,6 +264,11 @@ public:
 //        this->parameters[index] = parameter;
 //    }
 
+
+    void setRefPiSDFVertex(BaseVertex *refPiSDFVertex)
+    {
+        this->refPiSDFVertex = refPiSDFVertex;
+    }
 };
 
 #endif /* BASEVERTEX_H_ */

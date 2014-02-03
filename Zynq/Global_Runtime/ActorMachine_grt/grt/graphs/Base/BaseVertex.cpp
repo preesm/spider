@@ -39,8 +39,10 @@
 
 BaseVertex::BaseVertex() {
 	id = nbInputEdges = nbOutputEdges = 0;
-	nbRepetition = 0;
+	refPiSDFVertex = 0;
+	nbRepetition = 1;
 //	visited = false;
+	status = noExecutable;
 	executable = undefined;
 	scheduled = false;
 }

@@ -212,6 +212,27 @@ void DotWriter::write(CSDAGGraph* graph, const char* path, char displayNames){
 
 
 static void draw_vertex(BaseVertex* vertex, char displayNames, FILE* pFile, bool drawParameters = true){
+
+//	char name[MAX_VERTEX_NAME_SIZE];
+//	char name2[MAX_VERTEX_NAME_SIZE];
+//
+//	switch (vertex->getType()) {
+//		case 0: // Normal vertex.
+//			sprintf(name,"%s_%d",vertex->getReference()->getName(),vertex->getReferenceIndex());
+//			break;
+//		case 1: // Explode vertex.
+//			sprintf(name,"%s_%d_%s_%d","Exp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
+//			break;
+//		case 2: // Implode vertex.
+//			sprintf(name,"%s_%d_%s_%d","Imp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
+//			break;
+//		case 3: // Round buffer vertex.
+//			sprintf(name,"%s_%d_%s_%d","RB", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
+//			break;
+//		default:
+//			break;
+//	}
+
 	if(displayNames){
 		fprintf (pFile, "\t%s [label=\"%s\"];\n", vertex->getName(), vertex->getName());
 	}

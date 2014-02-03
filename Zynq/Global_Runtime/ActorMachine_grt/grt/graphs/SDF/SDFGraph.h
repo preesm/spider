@@ -66,19 +66,12 @@ public:
 		nbConfigVertices = 0;
 	}
 
-	void addVertex(BaseVertex* originalVertex);
+	BaseVertex* addVertex(BaseVertex* originalVertex);
 
-	BaseVertex* getVertex(UINT32 index)
-	{
-		return vertices[index];
-	}
+	BaseEdge* addEdge(BaseVertex* source, UINT32 production, BaseVertex* sink, UINT32 consumption);
 
-	INT32 getVertexIndex(BaseVertex* vertex)
-	{
-		for (UINT32 i = 0; i < nbVertices; i++){
-			if(vertices[i] == vertex) return i;
-		}
-		return -1;
+	void addConfigVertex(BaseVertex* configVertex){
+		configVertices[nbConfigVertices++] = configVertex;
 	}
 
 	void removeVertex(UINT32 index)
@@ -86,33 +79,6 @@ public:
 		vertices[index] = 0;
 		nbVertices--;
 	}
-
-	BaseEdge* addEdge(BaseVertex* source, UINT32 production, BaseVertex* sink, UINT32 consumption);
-
-	BaseEdge* getEdge(UINT32 index)
-	{
-		return &edges[index];
-	}
-
-	int getEdgeIndex(BaseVertex* source, BaseVertex* sink)
-	{
-		for (UINT32 i = 0; i < nbEdges; i++) {
-			BaseEdge* edge = &edges[i];
-			if((edge->getSource() == source) &&
-				(edge->getSink() == sink))
-				return i;
-		}
-		return -1;
-	}
-
-	void addConfigVertex(BaseVertex* configVertex){
-		configVertices[nbConfigVertices++] = configVertex;
-	}
-
-	BaseVertex* getConfigVertex(UINT32 index){
-		return configVertices[index];
-	}
-
 
 	/*
 	 * Returns true if both the source and the sink vertices of 'edge' are present in 'vertices'.
@@ -138,6 +104,26 @@ public:
 		return (sourceOk && sinkOk);
 	}
 
+	void updateRBProd();
+
+	INT32 getVertexIndex(BaseVertex* vertex)
+	{
+		for (UINT32 i = 0; i < nbVertices; i++){
+			if(vertices[i] == vertex) return i;
+		}
+		return -1;
+	}
+
+	int getEdgeIndex(BaseVertex* source, BaseVertex* sink)
+	{
+		for (UINT32 i = 0; i < nbEdges; i++) {
+			BaseEdge* edge = &edges[i];
+			if((edge->getSource() == source) &&
+				(edge->getSink() == sink))
+				return i;
+		}
+		return -1;
+	}
 
 
 	/*
@@ -148,19 +134,9 @@ public:
         return nbVertices;
     }
 
-    void setNbVertices(UINT32 nbVertices)
-    {
-        this->nbVertices = nbVertices;
-    }
-
     UINT32 getNbEdges() const
     {
         return nbEdges;
-    }
-
-    void setNbEdges(UINT32 nbEdges)
-    {
-        this->nbEdges = nbEdges;
     }
 
     UINT32 getNbConfigVertices() const
@@ -168,36 +144,41 @@ public:
     	return nbConfigVertices;
     }
 
+    BaseVertex* getConfigVertex(UINT32 index){
+		return configVertices[index];
+	}
+
+	BaseVertex** getConfigVertices(){
+		return &configVertices[0];
+	}
+
+	BaseEdge* getEdge(UINT32 index)
+	{
+		return &edges[index];
+	}
+
+	BaseVertex* getVertex(UINT32 index)
+	{
+		return vertices[index];
+	}
+
+
+
+    void setNbVertices(UINT32 nbVertices)
+    {
+        this->nbVertices = nbVertices;
+    }
+
+    void setNbEdges(UINT32 nbEdges)
+    {
+        this->nbEdges = nbEdges;
+    }
+
     void setNbConfigVertices(UINT32 nbConfigVertices)
     {
     	this->nbConfigVertices = nbConfigVertices;
     }
+
+//    void toSrDAG(SRDAGGraph *srGraph);
 };
-
-inline void SDFGraph::addVertex(BaseVertex* originalVertex){
-	if(nbVertices >= MAX_NB_VERTICES){
-		// Adding a vertex while the graph is already full
-		exitWithCode(1000);
-	}
-	vertices[nbVertices++] = originalVertex;
-
-	if(((PiSDFVertex*)originalVertex)->getType() == config_vertex)
-		configVertices[nbConfigVertices++] = originalVertex;
-}
-
-inline BaseEdge* SDFGraph::addEdge(BaseVertex* source, UINT32 production, BaseVertex* sink, UINT32 consumption)
-{
-	if(nbEdges >= MAX_NB_EDGES){
-		// Adding an edge while the graph is already full
-		exitWithCode(1001);
-	}
-	BaseEdge* edge = &edges[nbEdges++];
-	edge->setSource(source);
-	edge->setProductionInt(production);
-	edge->setSink(sink);
-	edge->setConsumtionInt(consumption);
-
-	return edge;
-}
-
 #endif /* SDFGRAPH_H_ */

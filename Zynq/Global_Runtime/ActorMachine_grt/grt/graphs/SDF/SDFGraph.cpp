@@ -37,3 +37,65 @@
 
 #include "SDFGraph.h"
 
+BaseVertex* SDFGraph::addVertex(BaseVertex* originalVertex){
+	if(nbVertices >= MAX_NB_VERTICES){
+		// Adding a vertex while the graph is already full
+		exitWithCode(1000);
+	}
+	vertices[nbVertices++] = originalVertex;
+
+	if(((PiSDFVertex*)originalVertex)->getType() == config_vertex)
+		configVertices[nbConfigVertices++] = originalVertex;
+}
+
+BaseEdge* SDFGraph::addEdge(BaseVertex* source, UINT32 production, BaseVertex* sink, UINT32 consumption)
+{
+	if(nbEdges >= MAX_NB_EDGES){
+		// Adding an edge while the graph is already full
+		exitWithCode(1001);
+	}
+	BaseEdge* edge = &edges[nbEdges++];
+	edge->setSource(source);
+	edge->setProductionInt(production);
+	edge->setSink(sink);
+	edge->setConsumtionInt(consumption);
+
+	return edge;
+}
+
+void SDFGraph::updateRBProd(){
+	UINT32 maxResult = 0;
+	for (UINT32 i = 0; i < nbVertices; i++){
+		BaseVertex* vertex = vertices[i];
+		if(vertex->getType() == roundBuff_vertex){
+			BaseEdge* outEdge = vertex->getOutputEdge(0);
+			BaseEdge* inEdge = vertex->getInputEdge(0);
+
+			//
+			UINT32 prod = outEdge->getConsumptionInt() * outEdge->getSink()->getNbRepetition();
+			UINT32 cons = inEdge->getConsumptionInt();
+
+			outEdge->setProductionInt(prod);
+
+			UINT32 result;
+			if(cons > prod){
+				UINT32 rest = cons % prod;
+				result = cons / prod;
+				if(rest != 0) result += 1;
+			}
+			else
+				result = 1;
+
+			if(result > maxResult) maxResult = result;
+		}
+	}
+
+	for (UINT32 i = 0; i < nbVertices; i++){
+		BaseVertex* vertex = vertices[i];
+		if(vertex->getType() == roundBuff_vertex){
+			BaseEdge* outEdge = vertex->getOutputEdge(0);
+			UINT32 prod = outEdge->getProductionInt();
+			outEdge->setProductionInt(prod * maxResult);
+		}
+	}
+}

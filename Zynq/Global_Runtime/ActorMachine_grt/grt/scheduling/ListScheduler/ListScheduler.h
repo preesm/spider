@@ -137,12 +137,6 @@ class ListScheduler {
 		 * Schedules a group of vertices (e.g. configuration vertices of a PiSDF)
 		 */
 		void schedule(BaseVertex** vertices, UINT32 nbVertices, BaseSchedule* schedule);
-
-		/*
-		 * Examines the graph and adds the configVertices array all the vertices that
-		 * can already be scheduled.
-		 */
-		void getConfigVertices(PiSDFGraph*);
 };
 
 

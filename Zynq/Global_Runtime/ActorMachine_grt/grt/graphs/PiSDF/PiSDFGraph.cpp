@@ -48,6 +48,8 @@ PiSDFGraph::PiSDFGraph() {
 	nb_input_vertices = 0;
 	nb_broad_vertices = 0;
 	nb_output_vertices = 0;
+	nb_select_vertices = 0;
+	nb_roundB_vertices = 0;
 
 	rootVertex = NULL;
 
@@ -142,6 +144,16 @@ BaseVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEXT_TYPE type)
 				exitWithCode(1000);
 			}
 			break;
+		case roundBuff_vertex:
+			if(nb_select_vertices < MAX_NB_PiSDF_OUTPUT_VERTICES){
+				vertex = (BaseVertex*)&select_vertices[nb_roundB_vertices];
+				nb_roundB_vertices++;
+			}
+			else{
+				// Adding a vertex while the graph is already full
+				exitWithCode(1000);
+			}
+			break;
 		default:
 			break;
 	}
@@ -187,6 +199,30 @@ PiSDFEdge *PiSDFGraph::addEdge(BaseVertex* source, const char* production, BaseV
 	}
 	return edge;
 }
+
+PiSDFEdge *PiSDFGraph::addEdge(BaseVertex* source, abstract_syntax_elt* production, BaseVertex* sink, abstract_syntax_elt* consumption, abstract_syntax_elt* delay){
+	PiSDFEdge* edge = NULL;
+	if(nb_edges < MAX_NB_INPUT_EDGES + MAX_NB_OUTPUT_EDGES){
+		edge = &edges[nb_edges];
+		edge->setId(nb_edges);
+//		edge->setBase(this);
+		edge->setSource(source);
+		edge->setProduction(production);
+		edge->setSink(sink);
+		edge->setConsumption(consumption);
+		edge->setDelay(delay);
+		nb_edges++;
+
+		source->addOutputEdge(edge);
+		sink->addInputEdge(edge);
+	}
+	else{
+		// Adding an edge while the graph is already full
+		exitWithCode(1001);
+	}
+	return edge;
+}
+
 
 PiSDFParameter* PiSDFGraph::addParameter(const char *name)
 {
@@ -549,54 +585,26 @@ void PiSDFGraph::connectExecVertices(SDFGraph *outSDF)
 }
 
 
-/*
- * Evaluates expressions for edges that have been marked as 'required'.
- * Note that the source vertex of such edges are always executable or executed vertices.
- */
 void PiSDFGraph::evaluateExpressions()
 {
-	// Evaluating production/consumption/delay expressions of required edges.
-	for (UINT32 i = 0; i < glbNbRequiredEdges; i++){
-		PiSDFEdge* edge = requiredEdges[i];
+	int value;
+	UINT32 nbEdges = this->getNb_edges();
+	for (UINT32 i = 0; i < nbEdges; i++){
+		PiSDFEdge* edge = this->getEdge(i);
 
-		BaseVertex* sourceVertex = edge->getSource();
-		BaseVertex* sinkVertex = edge->getSink();
+		if(!edge->getEvaluated()){
+			// Updating production's integer value.
+			globalParser.interpret(edge->getProduction(), &value);
+			edge->setProductionInt(value);
 
-		int value;
-
-		// Updating production's integer value.
-		globalParser.interpret(edge->getProduction(), &value);
-		edge->setProductionInt(value);
-
-
-//		// Checking if the sink vertex is executable.
-//		for (UINT32 i = 0; i < sinkVertex->getNbParameters(); i++){
-//			if(! sinkVertex->getParameter(i)->getResolved())
-//			{// At least one parameter is unresolved on the sink vertex.
-//				value = -1;
-//				break;
-//			}
-//		}
-//		if(value == -1)
-//			// Setting consumption's value equal to production's value.
-//			value = edge->getProductionInt();
-//		else
-//			globalParser.interpret(edge->getConsumption(), &value);
-
-		/*
-		 * Updating consumption's integer value. Note that if the sink vertex is not executable,
-		 * the consumptions is equal to the production.
-		 */
-		if(sinkVertex->getExecutable() != possible)
-			value = edge->getProductionInt();
-		else
+			// Updating consumption's integer value.
 			globalParser.interpret(edge->getConsumption(), &value);
+			edge->setConsumtionInt(value);
 
-		edge->setConsumtionInt(value);
-
-		// Updating delay's integer value.
-		globalParser.interpret(edge->getDelay(), &value);
-		edge->setDelayInt(value);
+			// Updating delay's integer value.
+			globalParser.interpret(edge->getDelay(), &value);
+			edge->setDelayInt(value);
+		}
 	}
 }
 
@@ -735,4 +743,101 @@ void PiSDFGraph::clearAfterVisit(){
 	// Clearing other members..
 	nbExecVertices = 0;
 	nbDiscardVertices = 0;
+}
+
+
+/*
+ * Inserts round buffer vertices between configure vertices and normal vertices.
+ */
+void PiSDFGraph::insertRoundBuffers(){
+	for (UINT32 i = 0; i < nb_config_vertices; i++) {
+		PiSDFConfigVertex* vertex = &config_vertices[i];
+		for (UINT32 j = 0; j < vertex->getNbOutputEdges(); j++)
+		{
+			PiSDFEdge* edge = vertex->getOutputEdge(j);
+			if (edge->getSink()->getType() != config_vertex){
+
+				// Creating the new round buffer vertex.
+				char name[MAX_VERTEX_NAME_SIZE];
+				sprintf(name, "RoundB_%u", j);
+				BaseVertex* roundB = addVertex(name, roundBuff_vertex);
+
+				// Adding an new edge between the round buffer and the sink.
+				addEdge(roundB, edge->getConsumption(), edge->getSink(), edge->getConsumption(), edge->getDelay());
+
+				// Modifying the original edge so that the sink vertex is the round buffer.
+				edge->setSink(roundB);
+				edge->setConsumption(edge->getProduction());
+			}
+		}
+	}
+}
+
+
+/*
+ * Creates SDF graph including only no configure vertices.
+ */
+void PiSDFGraph::createSDF(SDFGraph* outSDF){
+	for (UINT32 i = 0; i < nb_vertices; i++) {
+		BaseVertex* refSource = vertices[i];
+		if(refSource->getType() != config_vertex){
+			if(outSDF->getVertexIndex(refSource) == -1) outSDF->addVertex(refSource);
+
+			for (UINT32 j = 0; j < refSource->getNbOutputEdges(); j++) {
+				PiSDFEdge* edge = refSource->getOutputEdge(j);
+				BaseVertex* refSink = edge->getSink();
+				if(outSDF->getVertexIndex(refSink) == -1) outSDF->addVertex(refSink);
+
+				// Adding edges to SDF graph.
+				outSDF->addEdge(refSource, edge->getProductionInt(), refSink, edge->getConsumptionInt());
+			}
+		}
+	}
+}
+
+/*
+ * Creates SrDAG including only configure vertices.
+ * Assumes the list of configure vertices is in topological order.
+ */
+void PiSDFGraph::createSrDAGConfigVertices(SRDAGGraph* outSrDAG){
+	for (UINT32 i = 0; i < nb_config_vertices; i++) {
+		PiSDFConfigVertex* refSource = &config_vertices[i];
+		refSource->setStatus(executable);
+		SRDAGVertex* source = 0;
+		UINT32 total = outSrDAG->getVerticesFromReference(refSource, &source);
+		if(total == 0){
+			source = outSrDAG->addVertex();
+			source->setReference(refSource);
+			source->setReferenceIndex(refSource->getId());
+		}
+		else if(total > 1)
+			exitWithCode(1063);
+
+		for (UINT32 j = 0; j < refSource->getNbOutputEdges(); j++) {
+			PiSDFEdge* edge = refSource->getOutputEdge(j);
+			BaseVertex* refSink = edge->getSink();
+			SRDAGVertex* sink = 0;
+			UINT32 total = outSrDAG->getVerticesFromReference(refSink, &sink);
+			if(total == 0){
+				sink = outSrDAG->addVertex();
+				sink->setReference(refSink);
+				sink->setReferenceIndex(refSink->getId());
+			}
+			else if(total > 1)
+				exitWithCode(1063);
+
+			// Evaluating expressions. Assuming the parameters which the configure vertices depend on, are solved.
+			int prod, cons, delay;
+			globalParser.interpret(edge->getProduction(), &prod);
+			globalParser.interpret(edge->getConsumption(), &cons);
+			globalParser.interpret(edge->getDelay(), &delay);
+			edge->setProductionInt(prod);
+			edge->setConsumtionInt(cons);
+			edge->setDelayInt(delay);
+			edge->setEvaluated(TRUE);
+
+			// Adding edges to SDF graph.
+			outSrDAG->addEdge(source, edge->getProductionInt(), sink);
+		}
+	}
 }

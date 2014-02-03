@@ -55,6 +55,7 @@ class PiSDFEdge: public BaseEdge {
 	abstract_syntax_elt consumption[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 	abstract_syntax_elt delay[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 
+	BOOLEAN evaluated;	// Whether the production/consumption expressions have been evaluated.
 	BOOLEAN required;	// When true, the edge is required in the execution.
 
 //	// Production, consumption and delay after pattern resolution.
@@ -65,7 +66,7 @@ class PiSDFEdge: public BaseEdge {
 //	UINT32 tempId; // Used while creating a topology matrix.
 public:
 	PiSDFEdge():BaseEdge(){
-//		consumptionInt = productionInt = delayInt = 0;
+		evaluated = FALSE;
 	}
 
     abstract_syntax_elt* getProduction()
@@ -88,9 +89,23 @@ public:
         return required;
     }
 
+    BOOLEAN getEvaluated() const
+    {
+        return evaluated;
+    }
+
+
+
+
+
     void setProduction(const char* production)
     {
     	globalParser.parse(production, this->production);
+    }
+
+    void setProduction(abstract_syntax_elt* production)
+    {
+    	memcpy(this->production, production, sizeof(abstract_syntax_elt));;
     }
 
     void setConsumption(const char* consumption)
@@ -98,15 +113,32 @@ public:
     	globalParser.parse(consumption, this->consumption);
     }
 
+    void setConsumption(abstract_syntax_elt* consumption)
+    {
+    	memcpy(this->consumption, consumption, sizeof(abstract_syntax_elt));;
+    }
+
+
     void setDelay(const char* delay)
     {
     	globalParser.parse(delay, this->delay);
+    }
+
+    void setDelay(abstract_syntax_elt* delay)
+    {
+    	memcpy(this->delay, delay, sizeof(abstract_syntax_elt));;
     }
 
     void setRequired(BOOLEAN required)
     {
         this->required = required;
     }
+
+    void setEvaluated(BOOLEAN evaluated)
+    {
+        this->evaluated = evaluated;
+    }
+
 
 /*
 

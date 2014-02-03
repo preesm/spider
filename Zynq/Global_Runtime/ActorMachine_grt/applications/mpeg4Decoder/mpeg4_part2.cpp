@@ -192,7 +192,6 @@ void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 
 	// Parameters.
 	PiSDFParameter *paramVOPType = graph->addParameter("VOPType");
-	PiSDFParameter *paramNbMb = graph->addParameter("NbMb");
 
 
 	// Broadcast vertices.
@@ -206,7 +205,6 @@ void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 //	vertex_read_vop->addTiming(1, "100");
 	vertex_read_vop->setFunction_index(6);
 	vertex_read_vop->addRelatedParam(paramVOPType);
-	vertex_read_vop->addRelatedParam(paramNbMb);
 
 
 	// Others..
@@ -221,7 +219,7 @@ void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 //	vertex_decod_vop->addTiming(1, "100");
 	vertex_decod_vop->setFunction_index(8);
 	vertex_decod_vop->addParameter(paramVOPType);
-	vertex_decod_vop->addParameter(paramNbMb);
+//	vertex_decod_vop->addParameter(paramNbMb);
 
 
 
@@ -260,25 +258,40 @@ void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 
 
 void create_PiSDF_dec_top(PiSDFGraph* graph){
-	// Vertices.
-	PiSDFVertex *vertex_read_vol = (PiSDFVertex *)graph->addVertex("ReadVOL", pisdf_vertex);
+	// Parameters.
+	PiSDFParameter *paramNbMb = graph->addParameter("NbMb");
+
+	// Configure vertices.
+	PiSDFConfigVertex *vertex_read_vol = (PiSDFConfigVertex *)graph->addVertex("ReadVOL", config_vertex);
 //	vertex_read_vop->addConstraint(0, 1);
 //	vertex_read_vop->addTiming(1, "100");
 	vertex_read_vol->setFunction_index(0);
+	vertex_read_vol->addRelatedParam(paramNbMb);
 	graph->setRootVertex(vertex_read_vol);
 
+	// Round buffer vertices
+	BaseVertex* roundB_0 = graph->addVertex("RoundBuf_0", roundBuff_vertex);
+	BaseVertex* roundB_1 = graph->addVertex("RoundBuf_1", roundBuff_vertex);
+	BaseVertex* roundB_2 = graph->addVertex("RoundBuf_2", roundBuff_vertex);
+	BaseVertex* roundB_3 = graph->addVertex("RoundBuf_3", roundBuff_vertex);
 
+	// Others
 	PiSDFVertex *vertex_decode_dsply = (PiSDFVertex *)graph->addVertex("DecodeDsply", pisdf_vertex);
 //	vertex_read_vop->addConstraint(0, 1);
 //	vertex_read_vop->addTiming(1, "100");
 	vertex_decode_dsply->setFunction_index(1);
 
 	// Edges.
-	graph->addEdge(vertex_read_vol, "1", vertex_decode_dsply, "1", "0");
-	graph->addEdge(vertex_read_vol, "1", vertex_decode_dsply, "1", "0");
-	graph->addEdge(vertex_read_vol, "1", vertex_decode_dsply, "1", "0");
-	graph->addEdge(vertex_read_vol, "1", vertex_decode_dsply, "1", "0");
+	graph->addEdge(vertex_read_vol, "1", roundB_0, "1", "0");
+	graph->addEdge(vertex_read_vol, "1", roundB_1, "1", "0");
+	graph->addEdge(vertex_read_vol, "1", roundB_2, "1", "0");
+	graph->addEdge(vertex_read_vol, "1", roundB_3, "1", "0");
 	graph->addEdge(vertex_read_vol, "1", vertex_read_vol, "1", "1");
+
+	graph->addEdge(roundB_0, "1", vertex_decode_dsply, "1", "0");
+	graph->addEdge(roundB_1, "1", vertex_decode_dsply, "1", "0");
+	graph->addEdge(roundB_2, "1", vertex_decode_dsply, "1", "0");
+	graph->addEdge(roundB_3, "1", vertex_decode_dsply, "1", "0");
 
 	// Subgraphs
 	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS - 1) exitWithCode(1054);

@@ -95,10 +95,8 @@ public:
 	*/
 	void transform(BaseVertex **vertices, UINT32 nbVertices, SRDAGGraph *srGraph);
 
-	/**
-	 Transforms a SDF graph into a Sr graph.
-	*/
-	void transform(SDFGraph *sdf, SRDAGGraph *srGraph);
+
+	void computeBVR(SDFGraph *sdf);
 
 };
 

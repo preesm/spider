@@ -44,6 +44,7 @@
 #include "PiSDFConfigVertex.h"
 #include "PiSDFIfVertex.h"
 #include "../SDF/SDFGraph.h"
+#include "../SRDAG/SRDAGGraph.h"
 
 class PiSDFGraph {
 	UINT32 nb_edges;
@@ -58,6 +59,7 @@ class PiSDFGraph {
 	UINT32 nb_output_vertices;
 	UINT32 nb_switch_vertices;
 	UINT32 nb_select_vertices;
+	UINT32 nb_roundB_vertices;
 
 	static UINT32 glbNbConfigVertices;
 
@@ -74,6 +76,7 @@ class PiSDFGraph {
 	PiSDFIfVertex		output_vertices[MAX_NB_PiSDF_OUTPUT_VERTICES];
 	BaseVertex 			switch_vertices[MAX_NB_PiSDF_SWITCH_VERTICES];
 	BaseVertex 			select_vertices[MAX_NB_PiSDF_SELECT_VERTICES];
+	BaseVertex 			roundB_vertices[MAX_NB_PiSDF_ROUNDB_VERTICES];
 
 
 	BaseVertex* rootVertex; // Must be set while creating the graph.
@@ -94,6 +97,8 @@ public:
 	PiSDFGraph();
 
 	PiSDFEdge* 	addEdge(BaseVertex* source, const char* production, BaseVertex* sink, const char* consumption, const char* delay);
+
+	PiSDFEdge*	addEdge(BaseVertex* source, abstract_syntax_elt* production, BaseVertex* sink, abstract_syntax_elt* consumption, abstract_syntax_elt* delay);
 
 	BaseVertex* addVertex(const char* vertexName, VERTEXT_TYPE type);
 
@@ -169,7 +174,20 @@ public:
 	void clearAfterVisit();
 
 
+	/*
+	 * Inserts round buffer vertices between configure vertices and normal vertices.
+	 */
+	void insertRoundBuffers();
 
+	/*
+	 * Creates SDF graph excluding the configure vertices.
+	 */
+	void createSDF(SDFGraph* outSDF);
+
+	/*
+	 * Creates SrDAG graph including only configure vertices.
+	 */
+	void createSrDAGConfigVertices(SRDAGGraph* outSrDAG);
 
 	/*
 	 * Auto-generated getters and setters.
@@ -202,6 +220,11 @@ public:
 	PiSDFConfigVertex* getConfig_vertex(UINT64 index)
 	{
 		return &config_vertices[index];
+	}
+
+	PiSDFConfigVertex* getListConfigVertices()
+	{
+		return &config_vertices[0];
 	}
 
 	UINT32 getNb_input_vertices() const

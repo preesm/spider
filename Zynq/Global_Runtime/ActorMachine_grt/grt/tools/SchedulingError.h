@@ -117,6 +117,7 @@ static void exitWithCode(int exitCode){
 	// 1060: Too many FIFOs.
 	// 1061: Graph already executed.
 	// 1062: No executable vertices found.
+	// 1063: Multiple SrDAG vertices reference a single PiSDF configure vertex.
 
 	printf("\nExiting with code %d\n", exitCode);
 	exit(exitCode);

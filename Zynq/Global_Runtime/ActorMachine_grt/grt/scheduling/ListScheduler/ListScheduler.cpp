@@ -374,7 +374,7 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 	for(int i=0; i<nbVertices; i++){
 		SRDAGVertex* vertex = dag->getVertex(i);
 		if((vertex->getScheduleIndex() == -1) &&
-		   (vertex->getReference()->getExecutable() == possible))
+		   (vertex->getReference()->getStatus() == executable))
 		{
 			this->schedule(schedule, arch, vertex);
 		}
@@ -384,16 +384,17 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 
 void ListScheduler::schedule(BaseVertex** vertices, UINT32 nbVertices, BaseSchedule* schedule)
 {
-//	// Iterating the vertices
-//	for(UINT32 i=0; i<nbVertices; i++){
-//		BaseVertex* vertex = vertices[i];
-//
+	// Iterating the vertices
+	for(UINT32 i=0; i<nbVertices; i++){
+		BaseVertex* vertex = vertices[i];
+
+//		this->schedule(schedule, , vertex);
 //		int bestSlave;
 //		unsigned int bestStartTime=-1;
 //		unsigned int bestEndTime=-1;
 //		unsigned int bestComInTime=-1;
 //		unsigned int bestComOutTime=-1;
-//
+
 ////		/* Getting minimum start time due to precedent vertices */
 //		unsigned int minimumStartTime = 0;
 ////		for(int i=0; i<vertex->getNbInputEdge(); i++){
@@ -432,7 +433,7 @@ void ListScheduler::schedule(BaseVertex** vertices, UINT32 nbVertices, BaseSched
 ////		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
 //		schedule->addVertex(bestSlave, vertex, bestStartTime, bestEndTime);
 ////		schedule->addCom(bestSlave, bestEndTime-bestComOutTime, bestEndTime);
-//	}
+	}
 }
 
 

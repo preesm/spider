@@ -66,6 +66,20 @@ UINT32 PiSDFGraph::glbNbRequiredEdges = 0;
 PiSDFIfVertex* PiSDFGraph::visitedIfs[MAX_NB_VERTICES] = {NULL};
 UINT32 PiSDFGraph::glbNbVisitedIfs = 0;
 
+Scenario 			scenario;
+Architecture 		arch;
+ListScheduler 		listScheduler;
+ScheduleWriter 		schedWriter;
+ScheduleChecker 	scheduleChecker;
+BaseSchedule		schedule;
+PiSDFTransformer 	transformer;
+ExecutionStat 		execStat;
+PiSDFGraph 			piSDF;
+SDFGraph 			sdf;
+SRDAGGraph 			dag;
+UINT32 				prevNbConfigVertices;
+launcher 			launch;
+
 
 void createArch(Architecture* arch, int nbSlaves){
 	static char tempStr[11];
@@ -88,13 +102,15 @@ int main(int argc, char* argv[]){
 
 	printf("Starting with %d slaves max\n", nbSlaves);
 
-	// Creating the architecture
-	Architecture arch;
 	createArch(&arch, nbSlaves);
 	arch.setNbActiveSlaves(nbSlaves);
+	listScheduler.setArchitecture(&arch);
+	listScheduler.setScenario(&scenario);
+	schedule.setNbActiveSlaves(arch.getNbActiveSlaves());
+	bool initFIFOs = true;
 
-	// Creating the graph.
-	PiSDFGraph piSDF;
+
+	// Getting the PiSDF graph.
 	create_PiSDF_mpeg_part2(&piSDF);
 
 #if PRINT_GRAPH
@@ -103,64 +119,79 @@ int main(int argc, char* argv[]){
 	dotWriter.write(&piSDF, PiSDF_FILE_PATH, 1);
 #endif
 
-	// Creating the scenario.
-	Scenario scenario;
 
 
-	// Creating the scheduler.
-	ListScheduler 	listScheduler;
-	listScheduler.setArchitecture(&arch);
-	listScheduler.setScenario(&scenario);
-
-	ScheduleWriter 	schedWriter;
-	ScheduleChecker scheduleChecker;
-
-	BaseSchedule	schedule;
-	schedule.setNbActiveSlaves(arch.getNbActiveSlaves());
 
 
-	PiSDFTransformer transformer;
 
-	ExecutionStat execStat;
-	SDFGraph sdf1;
-	UINT32 prevNbConfigVertices;
-	launcher launch;
-	bool initFIFOs = true;
+
 
 #if EXEC == 1
 	launch.init(nbSlaves);
 #endif
-	do{
-		bool init = true;
-		do{
-			prevNbConfigVertices = sdf1.getNbConfigVertices();
 
-			// Finding executable vertices.
-			sdf1.reset(); // Clears the graph.
-			piSDF.findRequiredEdges();
+//	do{
+//		bool init = true;
+//		do{
+//			prevNbConfigVertices = sdf1.getNbConfigVertices();
+//
+//			// Finding executable vertices.
+//			sdf1.reset(); // Clears the graph.
+//			piSDF.findRequiredEdges();
+//
+//			if(piSDF.getGlbNbRequiredEdges() > 0)
+//			{
+//				// Evaluating expressions with resolved parameters.
+//				piSDF.evaluateExpressions();
+//
+//				// Creating a new subgraph with required edges and vertices.
+//				piSDF.createSubGraph(&sdf1);
+//
+//				// Linking the executable vertices.
+////				piSDF.connectExecVertices(&sdf1);
+//			}
+//			else
+//				exitWithCode(1062);
+//
+//		#if PRINT_GRAPH
+//			// Printing the SDF sub-graph.
+//			dotWriter.write(&sdf1, SUB_SDF_FILE_0_PATH, 1);
+//		#endif
+//
+//			// Flattening subSDF graph and transforming it into DAG.
+//			SRDAGGraph dag;
+//			transformer.transform(&sdf1, &dag);
+//
+//			// Printing the DAG.
+//		#if PRINT_GRAPH
+//			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FILE_PATH, 1, 1);
+//			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+//		#endif
+//
+//			// Scheduling the DAG.
+//			schedule.reset();
+//			listScheduler.schedule(&dag, &schedule, &arch);
+//			schedWriter.write(&schedule, &dag, &arch, "test.xml");
 
-			if(piSDF.getGlbNbRequiredEdges() > 0)
-			{
-				// Evaluating expressions with resolved parameters.
-				piSDF.evaluateExpressions();
 
-				// Creating a new subgraph with required edges and vertices.
-				piSDF.createSubGraph(&sdf1);
 
-				// Linking the executable vertices.
-//				piSDF.connectExecVertices(&sdf1);
-			}
-			else
-				exitWithCode(1062);
 
-		#if PRINT_GRAPH
-			// Printing the SDF sub-graph.
-			dotWriter.write(&sdf1, SUB_SDF_FILE_0_PATH, 1);
-		#endif
+			// Inserting round buffer vertices.
+//			piSDF.insertRoundBuffers();
 
-			// Flattening subSDF graph and transforming it into DAG.
-			SRDAGGraph dag;
-			transformer.transform(&sdf1, &dag);
+			// Creating SrDAG with the configure vertices.
+			// TODO: treat delays
+			piSDF.createSrDAGConfigVertices(&dag);
+
+
+//
+//		#if PRINT_GRAPH
+//			// Printing the SDF sub-graph.
+//			dotWriter.write(&sdf1, SUB_SDF_FILE_0_PATH, 1);
+//		#endif
+//
+//			// Transforming the SDF into DAG.
+//			transformer.transform(&sdf1, &dag);
 
 			// Printing the DAG.
 		#if PRINT_GRAPH
@@ -168,18 +199,14 @@ int main(int argc, char* argv[]){
 			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
 		#endif
 
+
 			// Scheduling the DAG.
 			schedule.reset();
 			listScheduler.schedule(&dag, &schedule, &arch);
 			schedWriter.write(&schedule, &dag, &arch, "test.xml");
 
-			if(initFIFOs){
-				// Preparing FIFOs information.
-				launch.prepareFIFOsInfo(&dag);
-#if EXEC == 0
-				initFIFOs = false;
-#endif
-			}
+			// Preparing FIFOs information.
+			launch.prepareFIFOsInfo(&dag);
 
 			// Preparing tasks' informations
 			launch.prepareTasksInfo(&dag, &arch, &schedule, IS_AM, &execStat);
@@ -199,10 +226,12 @@ int main(int argc, char* argv[]){
 #endif
 
 			// Resolving parameters.
-			for (UINT32 i = 0; i < sdf1.getNbConfigVertices(); i++) {
-				PiSDFConfigVertex* configVertex = (PiSDFConfigVertex*)(sdf1.getConfigVertex(i));
+			for (UINT32 i = 0; i < piSDF.getNb_config_vertices(); i++) {
+				PiSDFConfigVertex* configVertex = piSDF.getConfig_vertex(i);
+				configVertex->setStatus(executed);
 				for (UINT32 j = 0; j < configVertex->getNbRelatedParams(); j++) {
 					PiSDFParameter* param = configVertex->getRelatedParam(j);
+					// TODO: to find out the returned value when there are several parameters.
 					if (!param->getResolved()){
 #if EXEC == 1
 						UINT32 slaveId;
@@ -211,24 +240,46 @@ int main(int argc, char* argv[]){
 							configVertex->getRelatedParam(j)->setValue(value);
 						}
 #else
-						UINT64 value;
-						if(init)
-							value = 0;
-						else
-							value = 1;
+						UINT64 value = 352 * 255 / 256; // for the mpeg4 decoder application.
+
+//						if(init)
+//							value = 0;
+//						else
+//							value = 1;
 
 						configVertex->getRelatedParam(j)->setValue(value);
 #endif
 					}
 				}
 			}
-			init = false;
 
-			// Clearing intra-iteration variables, e.g. required edges.
-			piSDF.clearIntraIteration();
+			// Resolving production/consumptions.
+			piSDF.evaluateExpressions();
 
-		}while(prevNbConfigVertices < piSDF.getGlbNbConfigVertices());
+			// Generating SDF from PiSDF excluding the configure vertices.
+			piSDF.createSDF(&sdf);
 
-		piSDF.clearAfterVisit();
-	}while(!STOP);
+		#if PRINT_GRAPH
+			// Printing the SDF sub-graph.
+			dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
+		#endif
+
+			// Computing BRV of normal vertices.
+			transformer.computeBVR(&sdf);
+
+			// Updating the productions of the round buffer vertices.
+			sdf.updateRBProd();
+
+		#if PRINT_GRAPH
+			// Printing the SDF sub-graph.
+			dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
+		#endif
+
+//			// Clearing intra-iteration variables, e.g. required edges.
+//			piSDF.clearIntraIteration();
+//
+//		}while(prevNbConfigVertices < piSDF.getGlbNbConfigVertices());
+//
+//		piSDF.clearAfterVisit();
+//	}while(!STOP);
 }

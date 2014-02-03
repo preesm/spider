@@ -444,56 +444,43 @@ void PiSDFTransformer::transform(BaseVertex **vertices, UINT32 nbVertices, SRDAG
 }
 
 
-void PiSDFTransformer::transform(SDFGraph *sdf, SRDAGGraph *srGraph)
+void PiSDFTransformer::computeBVR(SDFGraph *sdf)
 {
-	UINT32 nbVertices = sdf->getNbVertices();
-	UINT32 nbEdges = sdf->getNbEdges();
-
 	// Setting temporal Ids to be used as index of the topology matrix.
-	UINT32 index = 0;
-	UINT32 cntr = 0;
-	while(cntr < nbVertices){
-		BaseVertex* vertex = sdf->getVertex(index);
-		if(vertex != NULL){
-			vertex->setTempId(cntr);
-			cntr++;
-		}
-		index++;
+	UINT32 nbVertices = 0;
+	for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
+		BaseVertex* vertex = sdf->getVertex(i);
+		if(vertex->getType() != roundBuff_vertex) vertex->setTempId(nbVertices++);
 	}
 
-
-	// Filling the topology matrix(nbEdges x nbVertices). See Maxime Pelcat's thesis section 3.2.1
+	UINT32 nbEdges = 0;
 	memset(topo_matrix, 0, sizeof(topo_matrix));
-	for(UINT32 i = 0; i < nbEdges; i++){
+
+	// Filling the topology matrix(nbEdges x nbVertices).
+	for(UINT32 i = 0; i < sdf->getNbEdges(); i++){
 		BaseEdge* edge = sdf->getEdge(i);
-		if(edge->getSource() != edge->getSink()){
+		if((edge->getSource() != edge->getSink()) &&
+			(edge->getSource()->getType() !=  roundBuff_vertex) &&
+			(edge->getSink()->getType() !=  roundBuff_vertex)){ // TODO: treat cycles.
+			nbEdges++;
 			topo_matrix[i * nbVertices + edge->getSource()->getTempId()] = edge->getProductionInt();
 			topo_matrix[i * nbVertices + edge->getSink()->getTempId()] =  -edge->getConsumptionInt();
 		}
 	}
 
 
-	// Computing the null space (BRV) of the matrix.
-	// TODO: It may be improved by another algorithm to compute the null space (I'm not very sure of this one...)
-	if(nullspace(nbEdges, nbVertices, (int*)topo_matrix, brv) == 0)
-	{
-		// Setting the number of repetitions for each vertex.
-		index = 0;
-		cntr = 0;
-		while(cntr < nbVertices){
-			BaseVertex* vertex = sdf->getVertex(index);
-			if(vertex != NULL){
-				vertex->setNbRepetition(brv[cntr]);
-				// Creating the new vertices.
-				addVertices(vertex, brv[cntr], srGraph);
-
-				cntr++;
+	if(nbEdges > 0){
+		// Computing the null space (BRV) of the matrix.
+		// TODO: It may be improved by another algorithm to compute the null space (I'm not very sure of this one...)
+		if(nullspace(nbEdges, nbVertices, (int*)topo_matrix, brv) == 0)
+		{
+			// Setting the number of repetitions for each vertex.
+			nbVertices = 0;
+			for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
+				BaseVertex* vertex = sdf->getVertex(i);
+				if(vertex->getType() != roundBuff_vertex) vertex->setNbRepetition(brv[nbVertices++]);
 			}
-			index++;
 		}
-
-		// Connecting the vertices of the SrDAG output graph.
-		linkvertices(sdf, srGraph);
 	}
 }
 

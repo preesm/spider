@@ -42,7 +42,7 @@ BaseVertex::BaseVertex() {
 	refPiSDFVertex = 0;
 	nbRepetition = 1;
 //	visited = false;
-	status = noExecutable;
+	status = VxStNoExecutable;
 	executable = undefined;
 	scheduled = false;
 }
@@ -120,12 +120,12 @@ void BaseVertex::addParameter(PiSDFParameter* param)
 
 void BaseVertex::checkForExecution(){
 	// Checking if all parameters have been resolved.
-	for (UINT32 i = 0; i < this->nbParameters; i++){
-		if(! this->parameters[i]->getResolved()){
-//			executable = impossible;
-			return;
-		}
-	}
+//	for (UINT32 i = 0; i < this->nbParameters; i++){
+//		if(! this->parameters[i]->getResolved()){
+////			executable = impossible;
+//			return;
+//		}
+//	}
 
 	// Checking if all predecessors are executable.
 	for (UINT32 i = 0; i < this->nbInputEdges; i++)
@@ -140,6 +140,24 @@ void BaseVertex::checkForExecution(){
 
 	executable = possible; //The vertex can be executed.
 }
+
+
+bool BaseVertex::checkPredecessors(){
+	// Checking if all predecessors are executable.
+	for (UINT32 i = 0; i < this->nbInputEdges; i++)
+	{
+		BaseVertex* predVertex = inputEdges[i]->getSource();
+		if((predVertex != this) && (predVertex->getType() != input_vertex)){
+			if((predVertex->getStatus() != VxStExecutable)&&
+				(predVertex->getType() != roundBuff_vertex))
+				// Exiting since at least one predecessor has not been marked as possible.
+				return false;
+		}
+	}
+	return true;
+}
+
+
 
 //
 //

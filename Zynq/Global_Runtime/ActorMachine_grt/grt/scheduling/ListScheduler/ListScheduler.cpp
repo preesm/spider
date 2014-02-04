@@ -374,7 +374,7 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 	for(int i=0; i<nbVertices; i++){
 		SRDAGVertex* vertex = dag->getVertex(i);
 		if((vertex->getScheduleIndex() == -1) &&
-		   (vertex->getReference()->getStatus() == executable))
+		   (vertex->getReference()->getStatus() == VxStExecutable))
 		{
 			this->schedule(schedule, arch, vertex);
 		}

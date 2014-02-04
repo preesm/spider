@@ -35,7 +35,8 @@
  * knowledge of the CeCILL-C license and that you accept its terms.		*
  ********************************************************************************/
 
-#include "mpeg4_part2.h"
+//#include "mpeg4_part2.h"
+#include "DoubleLoop/PiSDFDoubleLoop.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Scenario/Scenario.h>
 #include <scheduling/ListScheduler/ListScheduler.h>
@@ -111,7 +112,7 @@ int main(int argc, char* argv[]){
 
 
 	// Getting the PiSDF graph.
-	create_PiSDF_mpeg_part2(&piSDF);
+	top(&piSDF);
 
 #if PRINT_GRAPH
 	// Printing the PiSDF graph.
@@ -121,7 +122,7 @@ int main(int argc, char* argv[]){
 
 
 
-
+	piSDF.AlgoMultiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag);
 
 
 
@@ -129,6 +130,14 @@ int main(int argc, char* argv[]){
 #if EXEC == 1
 	launch.init(nbSlaves);
 #endif
+
+
+//	 TODO: all the RB Vxs must be marked as executable and counted (with GlbNbExecVertices).
+//	while (!piSDF.getExecutable()){
+//		piSDF.multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag);
+//	}
+
+	// execute DAG of pisdf Vxs.
 
 //	do{
 //		bool init = true;
@@ -179,9 +188,9 @@ int main(int argc, char* argv[]){
 			// Inserting round buffer vertices.
 //			piSDF.insertRoundBuffers();
 
-			// Creating SrDAG with the configure vertices.
-			// TODO: treat delays
-			piSDF.createSrDAGConfigVertices(&dag);
+//			// Creating SrDAG with the configure vertices.
+//			// TODO: treat delays
+//			piSDF.createSrDAGConfigVertices(&dag);
 
 
 //
@@ -225,55 +234,58 @@ int main(int argc, char* argv[]){
 			launch.clear();
 #endif
 
-			// Resolving parameters.
-			for (UINT32 i = 0; i < piSDF.getNb_config_vertices(); i++) {
-				PiSDFConfigVertex* configVertex = piSDF.getConfig_vertex(i);
-				configVertex->setStatus(executed);
-				for (UINT32 j = 0; j < configVertex->getNbRelatedParams(); j++) {
-					PiSDFParameter* param = configVertex->getRelatedParam(j);
-					// TODO: to find out the returned value when there are several parameters.
-					if (!param->getResolved()){
-#if EXEC == 1
-						UINT32 slaveId;
-						if(schedule.findSlaveId(configVertex->getId(), configVertex, &slaveId)){
-							UINT64 value = RTQueuePop_UINT32(slaveId, RTCtrlQueue);
-							configVertex->getRelatedParam(j)->setValue(value);
-						}
-#else
-						UINT64 value = 352 * 255 / 256; // for the mpeg4 decoder application.
+//			// Resolving parameters.
+//			for (UINT32 i = 0; i < piSDF.getNb_config_vertices(); i++) {
+//				PiSDFConfigVertex* configVertex = piSDF.getConfig_vertex(i);
+//				configVertex->setStatus(executed);
+//				for (UINT32 j = 0; j < configVertex->getNbRelatedParams(); j++) {
+//					PiSDFParameter* param = configVertex->getRelatedParam(j);
+//					// TODO: to find out the returned value when there are several parameters.
+//					if (!param->getResolved()){
+//#if EXEC == 1
+//						UINT32 slaveId;
+//						if(schedule.findSlaveId(configVertex->getId(), configVertex, &slaveId)){
+//							UINT64 value = RTQueuePop_UINT32(slaveId, RTCtrlQueue);
+//							configVertex->getRelatedParam(j)->setValue(value);
+//						}
+//#else
+//						UINT64 value = 352 * 255 / 256; // for the mpeg4 decoder application.
+//
+////						if(init)
+////							value = 0;
+////						else
+////							value = 1;
+//
+//						configVertex->getRelatedParam(j)->setValue(value);
+//#endif
+//					}
+//				}
+//			}
 
-//						if(init)
-//							value = 0;
-//						else
-//							value = 1;
+//			// Resolving production/consumptions.
+//			piSDF.evaluateExpressions();
+//
+//			// Generating SDF from PiSDF excluding the configure vertices.
+//			piSDF.createSDF(&sdf);
+//
+//		#if PRINT_GRAPH
+//			// Printing the SDF sub-graph.
+//			dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
+//		#endif
+//
+//			// Computing BRV of normal vertices.
+//			transformer.computeBVR(&sdf);
+//
+//			// Updating the productions of the round buffer vertices.
+//			sdf.updateRBProd();
+//
+//		#if PRINT_GRAPH
+//			// Printing the SDF sub-graph.
+//			dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
+//		#endif
 
-						configVertex->getRelatedParam(j)->setValue(value);
-#endif
-					}
-				}
-			}
 
-			// Resolving production/consumptions.
-			piSDF.evaluateExpressions();
 
-			// Generating SDF from PiSDF excluding the configure vertices.
-			piSDF.createSDF(&sdf);
-
-		#if PRINT_GRAPH
-			// Printing the SDF sub-graph.
-			dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
-		#endif
-
-			// Computing BRV of normal vertices.
-			transformer.computeBVR(&sdf);
-
-			// Updating the productions of the round buffer vertices.
-			sdf.updateRBProd();
-
-		#if PRINT_GRAPH
-			// Printing the SDF sub-graph.
-			dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
-		#endif
 
 //			// Clearing intra-iteration variables, e.g. required edges.
 //			piSDF.clearIntraIteration();

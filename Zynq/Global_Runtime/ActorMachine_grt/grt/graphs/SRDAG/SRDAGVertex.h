@@ -49,6 +49,15 @@ class SRDAGEdge;
 #include "../CSDAG/CSDAGVertex.h"
 #include "../Base/BaseVertex.h"
 
+
+typedef enum{
+	SrVxStExecutable,
+	SrVxStExecuted,
+	SrVxStNoExecutable,
+	SrVxStHierarchy
+}SrVxSTATUS_FLAG;
+
+
 /**
  * A vertex in a SRDAG graph
  * 
@@ -101,6 +110,8 @@ class SRDAGVertex {
 
 		// The index of the vertex in a schedule. -1 if the vertex have not been scheduled.
 		int scheduleIndex;
+
+		SrVxSTATUS_FLAG state;
 
 		/**
 		 For graph traversal
@@ -284,6 +295,16 @@ class SRDAGVertex {
 	    void setId(UINT32 id)
 	    {
 	        this->id = id;
+	    }
+
+	    SrVxSTATUS_FLAG getState() const
+	    {
+	        return state;
+	    }
+
+	    void setState(SrVxSTATUS_FLAG state)
+	    {
+	        this->state = state;
 	    }
 };
 

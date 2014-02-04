@@ -208,6 +208,11 @@ class SRDAGGraph {
 
 //		CSDAGVertex* getExplodeVertex();
 
+
+		/*
+		 * TODO: comments..
+		 */
+		void merge(SRDAGGraph* newDag);
 };
 
 /**

@@ -65,9 +65,9 @@ typedef enum{
 }EXE_FLAG;
 
 typedef enum{
-	executable,
-	executed,
-	noExecutable
+	VxStExecutable,
+	VxStExecuted,
+	VxStNoExecutable
 }STATUS_FLAG;
 
 class BaseVertex {
@@ -116,7 +116,7 @@ public:
 	 */
 	void checkForExecution();
 
-//	void checkForExecution(SDFGraph* outSDF);
+	bool checkPredecessors();
 
 
 	/*

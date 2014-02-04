@@ -45,6 +45,9 @@
 #include "PiSDFIfVertex.h"
 #include "../SDF/SDFGraph.h"
 #include "../SRDAG/SRDAGGraph.h"
+#include <scheduling/ListScheduler/ListScheduler.h>
+#include "launcher/launcher.h"
+#include <tools/ExecutionStat.h>
 
 class PiSDFGraph {
 	UINT32 nb_edges;
@@ -92,7 +95,7 @@ class PiSDFGraph {
 	UINT32 nbDiscardVertices; 		// Counts the number of discarded vertices
 									// e.g. a classic vertex with 0 production on an input edge.
 						   // nbExecVertices = nb_vertices means the graph can be completely executed.
-//	bool execComplete;	   // True when the graph can be completely executed.
+	bool executable;				// True when the graph can be completely executed.
 public:
 	PiSDFGraph();
 
@@ -188,6 +191,23 @@ public:
 	 * Creates SrDAG graph including only configure vertices.
 	 */
 	void createSrDAGConfigVertices(SRDAGGraph* outSrDAG);
+
+
+	void multiStepScheduling(BaseSchedule* schedule,
+							ListScheduler* listScheduler,
+							Architecture* arch,
+							launcher* launch,
+							ExecutionStat* execStat,
+							SRDAGGraph* dag);
+
+
+	void AlgoMultiStepScheduling(BaseSchedule* schedule,
+							ListScheduler* listScheduler,
+							Architecture* arch,
+							launcher* launch,
+							ExecutionStat* execStat,
+							SRDAGGraph* dag);
+
 
 	/*
 	 * Auto-generated getters and setters.
@@ -369,6 +389,10 @@ public:
     	return glbNbRequiredEdges;
     }
 
+    bool getExecutable() const
+    {
+        return executable;
+    }
 
 //    void setExecComplete(bool execComplete)
 //    {
@@ -385,6 +409,11 @@ public:
         this->nb_switch_vertices = nb_switch_vertices;
     }
 
+
+    void setExecutable(bool executable)
+    {
+        this->executable = executable;
+    }
 
 //        void setBroad_vertices(BaseVertex broad_vertices[32])
 //        {

@@ -251,3 +251,11 @@ int SRDAGGraph::getCriticalPath(){
 	iterateCriticalPath(this->getVertex(0), 0, &max);
 	return max;
 }
+
+
+
+void SRDAGGraph::merge(SRDAGGraph* newDag){
+	if(nbVertices == 0){
+		memcpy(this, newDag, sizeof(SRDAGGraph));
+	}
+}

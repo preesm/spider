@@ -41,6 +41,7 @@
 
 class PiSDFIfVertex: public BaseVertex {
 	BaseVertex* parentVertex;
+	PiSDFEdge*	parentEdge;
 	UINT16 parentEdgeIndex;
 	UINT8 direction;
 public:
@@ -77,7 +78,12 @@ public:
 
     PiSDFEdge* getParentEdge() const
     {
-    	return this->parentVertex->getInputEdge(parentEdgeIndex);
+    	return this->parentEdge;
+    }
+
+    void setParentEdge(PiSDFEdge *parentEdge)
+    {
+        this->parentEdge = parentEdge;
     }
 };
 

@@ -169,43 +169,50 @@ void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 	vertexInVOL->setDirection(0);
 	vertexInVOL->setParentVertex(parentVertex);
 	vertexInVOL->setParentEdgeIndex(0);
+	vertexInVOL->setParentEdge(parentVertex->getInputEdge(5));
 	vertexInVOL->setFunction_index(2);
-
-	PiSDFIfVertex *vertexInVOLCompl = (PiSDFIfVertex*)graph->addVertex("InputVOLCompl_L1", input_vertex);
-	vertexInVOLCompl->setDirection(0);
-	vertexInVOLCompl->setParentVertex(parentVertex);
-	vertexInVOLCompl->setParentEdgeIndex(2);
-	vertexInVOLCompl->setFunction_index(3);
 
 	PiSDFIfVertex *vertexInPosVOL = (PiSDFIfVertex*)graph->addVertex("InputPosVOL_L1", input_vertex);
 	vertexInPosVOL->setDirection(0);
 	vertexInPosVOL->setParentVertex(parentVertex);
 	vertexInPosVOL->setParentEdgeIndex(1);
+	vertexInPosVOL->setParentEdge(parentVertex->getInputEdge(6));
 	vertexInPosVOL->setFunction_index(4);
+
+	PiSDFIfVertex *vertexInVOLCompl = (PiSDFIfVertex*)graph->addVertex("InputVOLCompl_L1", input_vertex);
+	vertexInVOLCompl->setDirection(0);
+	vertexInVOLCompl->setParentVertex(parentVertex);
+	vertexInVOLCompl->setParentEdgeIndex(2);
+	vertexInVOLCompl->setParentEdge(parentVertex->getInputEdge(7));
+	vertexInVOLCompl->setFunction_index(3);
 
 	PiSDFIfVertex *vertexInImgDim = (PiSDFIfVertex*)graph->addVertex("InputImgDim_L1", input_vertex);
 	vertexInImgDim->setDirection(0);
 	vertexInImgDim->setParentVertex(parentVertex);
 	vertexInImgDim->setParentEdgeIndex(3);
+	vertexInImgDim->setParentEdge(parentVertex->getInputEdge(8));
 	vertexInImgDim->setFunction_index(5);
 
 
 	// Parameters.
 	PiSDFParameter *paramVOPType = graph->addParameter("VOPType");
-
-
-	// Broadcast vertices.
-	PiSDFVertex *vertexBroadVOL = (PiSDFVertex*)graph->addVertex("BroadVOL", broad_vertex);
-	vertexBroadVOL->setFunction_index(5);
+	PiSDFParameter *paramNbMb = graph->addParameter("NbMb"); // Static
 
 
 	// Configuration vertices
+	PiSDFConfigVertex *vertexBroadVOL = (PiSDFConfigVertex*)graph->addVertex("BroadVOL", config_vertex);
+	vertexBroadVOL->setFunction_index(5);
+
 	PiSDFConfigVertex *vertex_read_vop = (PiSDFConfigVertex *)graph->addVertex("ReadVOP", config_vertex);
 //	vertex_read_vop->addConstraint(0, 1);
 //	vertex_read_vop->addTiming(1, "100");
 	vertex_read_vop->setFunction_index(6);
 	vertex_read_vop->addRelatedParam(paramVOPType);
 
+	// Round buffer vertices
+	BaseVertex* roundB_0_L1 = graph->addVertex("RoundBuf_0_L1", roundBuff_vertex);
+	BaseVertex* roundB_1_L1 = graph->addVertex("RoundBuf_1_L1", roundBuff_vertex);
+	BaseVertex* roundB_2_L1 = graph->addVertex("RoundBuf_2_L1", roundBuff_vertex);
 
 	// Others..
 	PiSDFVertex *vertex_display_vop = (PiSDFVertex*)graph->addVertex("DisplayVOP", pisdf_vertex);
@@ -219,7 +226,7 @@ void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 //	vertex_decod_vop->addTiming(1, "100");
 	vertex_decod_vop->setFunction_index(8);
 	vertex_decod_vop->addParameter(paramVOPType);
-//	vertex_decod_vop->addParameter(paramNbMb);
+	vertex_decod_vop->addParameter(paramNbMb);
 
 
 
@@ -233,11 +240,17 @@ void create_PiSDF_decode_dsply(PiSDFGraph* graph, BaseVertex* parentVertex){
 	graph->addEdge(vertexInImgDim, "1", vertex_display_vop, "1", "0");
 
 	graph->addEdge(vertexBroadVOL, "1", vertex_read_vop, "1", "0"); // VOL
-	graph->addEdge(vertexBroadVOL, "1", vertex_decod_vop, "1", "0"); // VOL
+	graph->addEdge(vertexBroadVOL, "1", roundB_0_L1, "1", "0"); // VOL
 
-	graph->addEdge(vertex_read_vop, "1", vertex_decod_vop, "1", "0"); // VOP data.
-	graph->addEdge(vertex_read_vop, "1", vertex_decod_vop, "1", "0"); // frame data.
+	graph->addEdge(vertex_read_vop, "1", roundB_1_L1, "1", "0"); // VOP data.
+	graph->addEdge(vertex_read_vop, "1", roundB_2_L1, "1", "0"); // frame data.
 	graph->addEdge(vertex_read_vop, "1", vertex_read_vop, "1", "1"); // cycles the file position.
+
+	graph->addEdge(roundB_0_L1, "1", vertex_decod_vop, "1", "0");
+
+	graph->addEdge(roundB_1_L1, "1", vertex_decod_vop, "1", "0");
+
+	graph->addEdge(roundB_2_L1, "1", vertex_decod_vop, "1", "0");
 
 	graph->addEdge(vertex_decod_vop, "1", vertex_display_vop, "1", "0"); // image.
 	graph->addEdge(vertex_decod_vop, "1", vertex_decod_vop, "1", "1"); // cycles the image for decoding the next frame.

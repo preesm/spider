@@ -119,11 +119,23 @@ int main(int argc, char* argv[]){
 	DotWriter 	dotWriter;
 	dotWriter.write(&piSDF, PiSDF_FILE_PATH, 1);
 #endif
+	PiSDFGraph* H = &piSDF;
+	while(H){
+		H->algoMultiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag);
 
+#if PRINT_GRAPH
+	// Printing the dag.
+	dotWriter.write(&dag, SRDAG_FILE_PATH, 1, 1);
+	dotWriter.write(&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+#endif
 
-
-	piSDF.AlgoMultiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag);
-
+		// Finding other hierarchical Vxs.
+		H = 0;
+		for (int i = 0; i < dag.getNbVertices(); i++) {
+			if(dag.getVertex(i)->getReference()->getType() == pisdf_vertex)
+				((PiSDFVertex*)(dag.getVertex(i)->getReference()))->hasSubGraph(&H);
+		}
+	}
 
 
 
@@ -202,11 +214,11 @@ int main(int argc, char* argv[]){
 //			// Transforming the SDF into DAG.
 //			transformer.transform(&sdf1, &dag);
 
-			// Printing the DAG.
-		#if PRINT_GRAPH
-			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FILE_PATH, 1, 1);
-			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-		#endif
+//			// Printing the DAG.
+//		#if PRINT_GRAPH
+//			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FILE_PATH, 1, 1);
+//			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+//		#endif
 
 
 			// Scheduling the DAG.

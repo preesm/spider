@@ -38,6 +38,8 @@
 #include <transformations/MatrixHandler.h>
 #include "PiSDFTransformer.h"
 
+// The topology matrix initialized to 0. Edges x Vertices.
+static int topo_matrix [MAX_NB_EDGES * MAX_NB_VERTICES] = {0};
 
 void PiSDFTransformer::addVertices(BaseVertex* vertex, int nb_repetitions, SRDAGGraph* outputGraph){
 	// Adding one SRDAG vertex per repetition
@@ -46,7 +48,7 @@ void PiSDFTransformer::addVertices(BaseVertex* vertex, int nb_repetitions, SRDAG
 
 		// Setting attributes from original vertex.
 		srdag_vertex->setReference(vertex);
-		srdag_vertex->setReferenceIndex(vertex->getId());
+		srdag_vertex->setReferenceIndex(j);
 //		for(int i = 0; i < csdag_vertex->getParamNb(); i++){
 //			srdag_vertex->setParamValue(i, csdag_vertex->getParamValue(j,i));
 //		}
@@ -54,6 +56,46 @@ void PiSDFTransformer::addVertices(BaseVertex* vertex, int nb_repetitions, SRDAG
 	}
 }
 
+
+void PiSDFTransformer::computeBVR(SDFGraph *sdf)
+{
+	// Setting temporal Ids to be used as index of the topology matrix.
+	UINT32 nbVertices = 0;
+	for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
+		BaseVertex* vertex = sdf->getVertex(i);
+		if(vertex->getType() != roundBuff_vertex) vertex->setTempId(nbVertices++);
+	}
+
+	UINT32 nbEdges = 0;
+	memset(topo_matrix, 0, sizeof(topo_matrix));
+
+	// Filling the topology matrix(nbEdges x nbVertices).
+	for(UINT32 i = 0; i < sdf->getNbEdges(); i++){
+		BaseEdge* edge = sdf->getEdge(i);
+		if((edge->getSource() != edge->getSink()) &&
+			(edge->getSource()->getType() !=  roundBuff_vertex) &&
+			(edge->getSink()->getType() !=  roundBuff_vertex)){ // TODO: treat cycles.
+			topo_matrix[nbEdges * nbVertices + edge->getSource()->getTempId()] = edge->getProductionInt();
+			topo_matrix[nbEdges * nbVertices + edge->getSink()->getTempId()] =  -edge->getConsumptionInt();
+			nbEdges++;
+		}
+	}
+
+
+	if(nbEdges > 0){
+		// Computing the null space (BRV) of the matrix.
+		// TODO: It may be improved by another algorithm to compute the null space (I'm not very sure of this one...)
+		if(nullspace(nbEdges, nbVertices, (int*)topo_matrix, brv) == 0)
+		{
+			// Setting the number of repetitions for each vertex.
+			nbVertices = 0;
+			for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
+				BaseVertex* vertex = sdf->getVertex(i);
+				if(vertex->getType() != roundBuff_vertex) vertex->setNbRepetition(brv[nbVertices++]);
+			}
+		}
+	}
+}
 
 void PiSDFTransformer::linkvertices(BaseVertex** vertices, UINT32 nbVertices, SRDAGGraph* outputGraph)
 {
@@ -230,11 +272,6 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph)
 	for (UINT32 i = 0; i < sdf->getNbEdges(); i++) {
 		BaseEdge *edge = sdf->getEdge(i);
 
-		// Resolving the delay expression. TODO : Verify that this is not already done.
-//		int nb_tokens;
-//		globalParser.interpret(edge->getDelay(), &nb_tokens);
-//		edge->setDelayInt(nb_tokens);
-
 		int nbDelays = edge->getDelayInt();
 
 		int nbSourceRepetitions = edge->getSource()->getNbRepetition();
@@ -390,9 +427,6 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph)
 }
 
 
-// The topology matrix initialized to 0. Edges x Vertices.
-int topo_matrix [MAX_NB_EDGES * MAX_NB_VERTICES] = {0};
-
 void PiSDFTransformer::transform(BaseVertex **vertices, UINT32 nbVertices, SRDAGGraph *srGraph)
 {
 //	memset(topo_matrix, 0, sizeof(topo_matrix));
@@ -444,7 +478,57 @@ void PiSDFTransformer::transform(BaseVertex **vertices, UINT32 nbVertices, SRDAG
 }
 
 
-void PiSDFTransformer::computeBVR(SDFGraph *sdf)
+//void PiSDFTransformer::transform(SDFGraph* sdf, SRDAGGraph *srGraph)
+//{
+////	memset(topo_matrix, 0, sizeof(topo_matrix));
+//
+//	PiSDFEdge* edges[MAX_NB_EDGES];
+//	UINT32 nbEdges = 0;
+//
+//	// Setting temporal Ids to be used as index of the topology matrix.
+//	for(UINT32 i = 0; i < sdf->getNbVertices(); i++){
+//		BaseVertex* vertex = sdf->getVertex(i);
+//		vertex->setTempId(i);
+//		for (UINT32 j = 0; j < vertex->getNbOutputEdges(); j++) {
+//			PiSDFEdge *edge = vertex->getOutputEdge(j);
+//			edge->setTempId(nbEdges);
+//
+//			// Adding edge to local array of edges;
+//			edges[nbEdges] = edge;
+//			nbEdges++;
+//		}
+//	}
+//
+//	// Filling the topology matrix(nbEdges x nbVertices). See Maxime Pelcat's thesis chapter 3.
+//	for(UINT32 i = 0; i < nbEdges; i++){
+//		topo_matrix[i * nbVertices + edges[i]->getSource()->getTempId()] = edges[i]->getProductionInt();
+//		topo_matrix[i * nbVertices + edges[i]->getSink()->getTempId()] = -edges[i]->getConsumptionInt();
+//	}
+//
+//	// Computing the null space (BRV) of the matrix.
+//	// TODO: It may be improved by another algorithm to compute the null space.
+//	if(nullspace(nbEdges, nbVertices, (int*)topo_matrix, brv) == 0)
+//	{
+//		// Setting the number of repetitions for each vertex.
+//		for (UINT32 j = 0; j < nbVertices; j++) {
+//			vertices[j]->setNbRepetition(brv[j]);
+//
+//			// Creating the new vertices.
+//			addVertices(vertices[j], brv[j], srGraph);
+//		}
+//
+//		// Connecting the vertices of the SrDAG ouput graph.
+//		linkvertices(vertices, nbVertices, srGraph);
+////		// Creating the edges of the SRDAG output graph.
+////		for(int i = 0; i < nb_rows; i++){
+////			PiCSDFEdge *edge = inputGraph->getEdge(i);
+////			createEdges(inputGraph, inputGraph->getVertexIndex(edge->getSource()), i,
+////						inputGraph->getVertexIndex(edge->getSink()), outputGraph);
+////		}
+//	}
+//}
+
+void PiSDFTransformer::transform(SDFGraph* sdf, SRDAGGraph *srGraph)
 {
 	// Setting temporal Ids to be used as index of the topology matrix.
 	UINT32 nbVertices = 0;
@@ -479,9 +563,13 @@ void PiSDFTransformer::computeBVR(SDFGraph *sdf)
 			for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
 				BaseVertex* vertex = sdf->getVertex(i);
 				if(vertex->getType() != roundBuff_vertex) vertex->setNbRepetition(brv[nbVertices++]);
+
+				// Creating the new vertices.
+				addVertices(vertex, vertex->getNbRepetition(), srGraph);
 			}
+
+			// Connecting the vertices of the SrDAG ouput graph.
+			linkvertices(sdf, srGraph);
 		}
 	}
 }
-
-

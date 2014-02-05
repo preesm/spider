@@ -96,6 +96,37 @@ SRDAGEdge* SRDAGGraph::addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* 
 	return edge;
 }
 
+
+void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
+	for (int i = 0; i < annex->getNbEdges(); i++) {
+		SRDAGEdge* edge = annex->getEdge(i);
+		SRDAGVertex* source;
+		SRDAGVertex* sink;
+		if(edge->getSource()->getVisited())
+			source = getVxByRefAndIx(edge->getSource()->getReference(), edge->getSource()->getReferenceIndex());
+		else
+		{
+			edge->getSource()->setVisited(true);
+			source = addVertex();
+			source->setReference(edge->getSource()->getReference());
+			source->setReferenceIndex(edge->getSource()->getReferenceIndex());
+		}
+
+		if(edge->getSink()->getVisited())
+			sink = getVxByRefAndIx(edge->getSink()->getReference(), edge->getSink()->getReferenceIndex());
+		else
+		{
+			edge->getSink()->setVisited(true);
+			sink = addVertex();
+			sink->setReference(edge->getSink()->getReference());
+			sink->setReferenceIndex(edge->getSink()->getReferenceIndex());
+		}
+
+		addEdge(source, edge->getTokenRate(), sink);
+	}
+}
+
+
 /**
  Removes the last added edge
 */
@@ -160,11 +191,64 @@ void quickSort(SRDAGEdge* edgePointers, int length, char sourceOrSink) {
 }
 #endif
 
+
+int SRDAGGraph::getMaxTime(){
+	int sum=0;
+	for(int i=0; i< nbVertices; i++){
+		sum += vertices[i].getCsDagReference()->getIntTiming(0);
+	}
+	return sum;
+}
+
+
+static void iterateCriticalPath(SRDAGVertex* curVertex, int curLenght, int* max){
+	curLenght += curVertex->getCsDagReference()->getIntTiming(0);
+	if(curVertex->getNbOutputEdge() == 0){
+		if(curLenght > *max) *max = curLenght;
+		return;
+	}
+	for(int i=0; i<curVertex->getNbOutputEdge(); i++){
+		iterateCriticalPath(curVertex->getOutputEdge(i)->getSink(), curLenght, max);
+	}
+}
+
+int SRDAGGraph::getCriticalPath(){
+	int max;
+	iterateCriticalPath(this->getVertex(0), 0, &max);
+	return max;
+}
+
+
+
+void SRDAGGraph::merge(SRDAGGraph* annex){
+	// Adding the annexing vertices and edges.
+	appendAnnex(annex);
+
+	// Finding an unplugged vertex to the left.
+	SRDAGVertex* leftVx;
+	while(leftVx = findUnplug()){
+		// Finding matching unplugged vertex to the right.
+		SRDAGVertex* rightVx;
+		if (!(rightVx = findMatch(leftVx->getReference()))) exitWithCode(1064);
+		// Plugging them.
+		addEdge(leftVx, leftVx->getInputEdge(0)->getTokenRate(), rightVx);
+//		leftVx->getInputEdge(0)->setSink(rightVx);
+		// Deleting left Vx.
+//		removeVx(leftVx);
+	}
+}
+
+
+void SRDAGGraph::removeVx(SRDAGVertex* Vx){
+
+}
+
+
 /**
  Gets pointers on the edges of the graph in the order of their source or sink.
  Accelerates getting the input or output edges. The edges are linked together
  to constitute a linked list.
- 
+
  @param startIndex: only the edges after this index are reordered
 */
 void SRDAGGraph::sortEdges(int startIndex){
@@ -177,7 +261,7 @@ void SRDAGGraph::sortEdges(int startIndex){
 
 	for(int i=startIndex; i<nbEdges; i++){
 		currentNewEdge = &edges[i];
-		
+
 		// Adding the first edge
 		if(SRDAGEdge::firstInSinkOrder == NULL){
 			SRDAGEdge::firstInSinkOrder = currentNewEdge;
@@ -187,7 +271,7 @@ void SRDAGGraph::sortEdges(int startIndex){
 		}
 		else{
 			currentNewSink = currentNewEdge->getSink();
-			
+
 			/*currentOldEdge = SRDAGEdge::firstInSinkOrder;
 			// Going through the already ordered edges
 			// while the edge has a next one and must be before the one we add, we go to the next one
@@ -223,39 +307,5 @@ void SRDAGGraph::sortEdges(int startIndex){
 				currentOldEdge->prevInSinkOrder = currentNewEdge;
 			}
 		}
-	}
-}
-
-int SRDAGGraph::getMaxTime(){
-	int sum=0;
-	for(int i=0; i< nbVertices; i++){
-		sum += vertices[i].getCsDagReference()->getIntTiming(0);
-	}
-	return sum;
-}
-
-
-static void iterateCriticalPath(SRDAGVertex* curVertex, int curLenght, int* max){
-	curLenght += curVertex->getCsDagReference()->getIntTiming(0);
-	if(curVertex->getNbOutputEdge() == 0){
-		if(curLenght > *max) *max = curLenght;
-		return;
-	}
-	for(int i=0; i<curVertex->getNbOutputEdge(); i++){
-		iterateCriticalPath(curVertex->getOutputEdge(i)->getSink(), curLenght, max);
-	}
-}
-
-int SRDAGGraph::getCriticalPath(){
-	int max;
-	iterateCriticalPath(this->getVertex(0), 0, &max);
-	return max;
-}
-
-
-
-void SRDAGGraph::merge(SRDAGGraph* newDag){
-	if(nbVertices == 0){
-		memcpy(this, newDag, sizeof(SRDAGGraph));
 	}
 }

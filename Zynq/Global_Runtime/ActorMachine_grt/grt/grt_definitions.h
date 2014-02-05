@@ -39,12 +39,13 @@
 #define GRT_DEFINITIONS_H_
 
 // Debug
-#define PRINT_GRAPH				1
-#define PiSDF_FILE_PATH			"pisdf.gv"
-#define SUB_SDF_FILE_0_PATH		"subSdf.gv"
-#define SUB_SRDAG_FILE_PATH		"subSrDag.gv"
-#define SRDAG_FILE_PATH			"srDag.gv"
-#define SRDAG_FIFO_ID_FILE_PATH	"srDagFifoId.gv"
+#define PRINT_GRAPH						1
+#define PiSDF_FILE_PATH					"pisdf.gv"
+#define SUB_SDF_FILE_0_PATH				"subSdf.gv"
+#define SUB_SRDAG_FILE_PATH				"subSrDag.gv"
+#define SUB_SRDAG_FIFO_ID_FILE_PATH		"subSrDagFifoId.gv"
+#define SRDAG_FILE_PATH					"srDag.gv"
+#define SRDAG_FIFO_ID_FILE_PATH			"srDagFifoId.gv"
 
 // Architecture
 #define MAX_SLAVE_TYPES 2 // The maximum number of slave types

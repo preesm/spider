@@ -105,10 +105,21 @@ class SRDAGGraph {
 		*/
 		SRDAGEdge* addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* sink);
 
+
+		void appendAnnex(SRDAGGraph* annex);
+
+
 		/**
 		 Removes the last added edge
 		*/
 		void removeLastEdge();
+
+		SRDAGVertex* findMatch(BaseVertex* refVx);
+
+		SRDAGVertex* findUnplug();
+
+
+
 
 		/**
 		 Removes all edges and vertices
@@ -206,13 +217,18 @@ class SRDAGGraph {
 		int getMaxTime();
 		int getCriticalPath();
 
+		SRDAGVertex* getVxByRefAndIx(BaseVertex* reference, int refIndex);
+
 //		CSDAGVertex* getExplodeVertex();
 
 
 		/*
 		 * TODO: comments..
 		 */
-		void merge(SRDAGGraph* newDag);
+		void merge(SRDAGGraph* localDag);
+
+
+		void removeVx(SRDAGVertex* Vx);
 };
 
 /**
@@ -365,6 +381,18 @@ inline int SRDAGGraph::getOutputEdges(SRDAGVertex* vertex, SRDAGEdge** output){
 	return nbEdges;
 }
 
+
+inline SRDAGVertex* SRDAGGraph::getVxByRefAndIx(BaseVertex* reference, int refIndex){
+	for(int i=0; i< nbVertices; i++){
+		if((vertices[i].getReference() == reference) &&
+		  (vertices[i].getReferenceIndex() == refIndex))
+			return &vertices[i];
+	}
+	return (SRDAGVertex*)0;
+}
+
+
+
 /**
  Adding a vertex to the graph
  
@@ -386,6 +414,29 @@ inline SRDAGVertex* SRDAGGraph::addVertex(){
 	nbVertices++;
 	return vertex;
 }
+
+
+inline SRDAGVertex* SRDAGGraph::findMatch(BaseVertex* refVx){
+	for (int i = 0; i < nbVertices; i++) {
+		if((vertices[i].getNbInputEdge() == 0) &&
+		   (vertices[i].getReference() == refVx)){
+			return &vertices[i];
+		}
+	}
+	return (SRDAGVertex*)0;
+}
+
+
+inline SRDAGVertex* SRDAGGraph::findUnplug(){
+	for (int i = 0; i < nbVertices; i++) {
+		if((vertices[i].getNbOutputEdge() == 0) &&
+		   (vertices[i].getReference()->getType() == roundBuff_vertex)){
+			return &vertices[i];
+		}
+	}
+	return (SRDAGVertex*)0;
+}
+
 
 
 

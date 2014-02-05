@@ -74,6 +74,7 @@ public:
 	 */
 	void addVertices(BaseVertex* vertex, int nb_repetitions, SRDAGGraph* outputGraph);
 
+	void computeBVR(SDFGraph *sdf);
 
 	/*
 	 * Connects vertices to form a SrDAG.
@@ -95,8 +96,7 @@ public:
 	*/
 	void transform(BaseVertex **vertices, UINT32 nbVertices, SRDAGGraph *srGraph);
 
-
-	void computeBVR(SDFGraph *sdf);
+	void transform(SDFGraph* sdf, SRDAGGraph *srGraph);
 
 };
 

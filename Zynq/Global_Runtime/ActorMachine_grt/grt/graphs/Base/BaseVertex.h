@@ -56,7 +56,7 @@ typedef enum {
 	switch_vertex,
 	select_vertex,
 	roundBuff_vertex
-}VERTEXT_TYPE;
+}VERTEX_TYPE;
 
 typedef enum{
 	undefined = -1,
@@ -74,7 +74,7 @@ class BaseVertex {
 	UINT32 id;
 	char name[MAX_VERTEX_NAME_SIZE];
 	UINT64 function_index;
-	VERTEXT_TYPE type;
+	VERTEX_TYPE type;
 	UINT64 nbInputEdges;
 	PiSDFEdge* inputEdges[MAX_NB_INPUT_EDGES];
 	UINT64 nbOutputEdges;
@@ -148,7 +148,7 @@ public:
         return name;
     }
 
-    VERTEXT_TYPE getType() const
+    VERTEX_TYPE getType() const
     {
     	return this->type;
     }
@@ -214,7 +214,7 @@ public:
     	strcpy(this->name,name);
     }
 
-    void setType(VERTEXT_TYPE type)
+    void setType(VERTEX_TYPE type)
     {
     	this->type = type;
     }

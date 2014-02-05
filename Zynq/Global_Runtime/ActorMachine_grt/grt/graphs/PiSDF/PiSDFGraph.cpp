@@ -65,7 +65,7 @@ PiSDFGraph::PiSDFGraph() {
 }
 
 
-BaseVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEXT_TYPE type)
+BaseVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEX_TYPE type)
 {
 	BaseVertex* vertex;
 
@@ -803,10 +803,10 @@ void PiSDFGraph::createSDF(SDFGraph* outSDF){
 }
 
 /*
- * Creates SrDAG including only configure vertices.
- * Assumes the list of configure vertices is in topological order.
+ * Creates SrDAG including only 'vxsType' vertices.
+ * Assumes the list of vertices is in topological order.
  */
-void PiSDFGraph::createSrDAGConfigVertices(SRDAGGraph* outSrDAG){
+void PiSDFGraph::createSrDAG(SRDAGGraph* outSrDAG, VERTEX_TYPE vxsType){
 	for (UINT32 i = 0; i < nb_config_vertices; i++) {
 		PiSDFConfigVertex* refConfigVertex = &config_vertices[i];
 		refConfigVertex->setStatus(VxStExecutable);
@@ -893,7 +893,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		// Creating SrDAG with the configure vertices.
 		// TODO: treat delays
 		SRDAGGraph 	dagConf;
-		createSrDAGConfigVertices(&dagConf);
+		createSrDAG(&dagConf, config_vertex);
 //		dag->merge(&dagConf);
 
 		// Printing the dagConf.
@@ -1000,7 +1000,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 }
 
 
-void PiSDFGraph::AlgoMultiStepScheduling(BaseSchedule* schedule,
+void PiSDFGraph::algoMultiStepScheduling(BaseSchedule* schedule,
 							ListScheduler* listScheduler,
 							Architecture* arch,
 							launcher* launch,
@@ -1010,19 +1010,18 @@ void PiSDFGraph::AlgoMultiStepScheduling(BaseSchedule* schedule,
 		// Creating SrDAG with the configure vertices.
 		// TODO: treat delays
 		if(dag->getNbVertices() == 0)
-			createSrDAGConfigVertices(dag);
+			createSrDAG(dag, config_vertex);
 		else{
-			SRDAGGraph 	dagConf;
-			createSrDAGConfigVertices(&dagConf);
-			dag->merge(&dagConf);
+			SRDAGGraph 	localDag;
+			createSrDAG(&localDag, config_vertex);
+			dag->merge(&localDag);
 		}
-//		dag->updateStates();
+//		TODO:dag->updateStates();
 
-		// Printing the dag.
 	#if PRINT_GRAPH
-//		dotWriter.write((SRDAGGraph*)&dagConf, SUB_SRDAG_FILE_PATH, 1, 1);
-		dotWriter.write(dag, SRDAG_FILE_PATH, 1, 1);
-		dotWriter.write(dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+		// Printing the dag.
+		dotWriter.write(dag, SUB_SRDAG_FILE_PATH, 1, 1);
+		dotWriter.write(dag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
 	#endif
 
 		// Scheduling the DAG.
@@ -1039,32 +1038,7 @@ void PiSDFGraph::AlgoMultiStepScheduling(BaseSchedule* schedule,
 		launch->prepareTasksInfo(dag, arch, schedule, false, execStat);
 
 		// Resolving parameters.
-		for (UINT32 i = 0; i < nb_config_vertices; i++) {
-			PiSDFConfigVertex* configVertex = &config_vertices[i];
-			configVertex->setStatus(VxStExecuted);
-			for (UINT32 j = 0; j < configVertex->getNbRelatedParams(); j++) {
-				PiSDFParameter* param = configVertex->getRelatedParam(j);
-				// TODO: to find out the returned value when there are several parameters.
-				if (!param->getResolved()){
-#if EXEC == 1
-					UINT32 slaveId;
-					if(schedule.findSlaveId(configVertex->getId(), configVertex, &slaveId)){
-						UINT64 value = RTQueuePop_UINT32(slaveId, RTCtrlQueue);
-						configVertex->getRelatedParam(j)->setValue(value);
-					}
-#else
-					UINT64 value = 352 * 255 / 256; // for the mpeg4 decoder application.
-
-//						if(init)
-//							value = 0;
-//						else
-//							value = 1;
-
-					configVertex->getRelatedParam(j)->setValue(value);
-#endif
-				}
-			}
-		}
+		solveParameters();
 	}
 
 
@@ -1093,16 +1067,41 @@ void PiSDFGraph::AlgoMultiStepScheduling(BaseSchedule* schedule,
 #endif
 
 
-	// Creating SrDAG with the no configure vertices...
+	// Transforming SDF with no configure vertices into SrDAG.
 	// TODO: treat delays
-//	SRDAGGraph 	dagConf;
-//	createSrDAGConfigVertices(&dagConf);
-//		dag->merge(&dagConf);
+	if(dag->getNbVertices() == 0)
+		transformer.transform(&sdf, dag);
+	else{
+		SRDAGGraph 	localDag;
+		transformer.transform(&sdf, &localDag);
+		dag->merge(&localDag);
+	}
+//	TODO: dag->updateStates
 
-	// Updating vertex' states.
+}
 
-//	while(H){
-//		AlgoMultiStepScheduling();
-//	}
 
+void PiSDFGraph::solveParameters(){
+	for (UINT32 i = 0; i < nb_config_vertices; i++) {
+		PiSDFConfigVertex* configVertex = &config_vertices[i];
+		configVertex->setStatus(VxStExecuted);
+		for (UINT32 j = 0; j < configVertex->getNbRelatedParams(); j++) {
+			PiSDFParameter* param = configVertex->getRelatedParam(j);
+			// TODO: to find out the returned value when there are several parameters.
+			if (!param->getResolved()){
+#if EXEC == 1
+				UINT32 slaveId;
+				if(schedule.findSlaveId(configVertex->getId(), configVertex, &slaveId)){
+					UINT64 value = RTQueuePop_UINT32(slaveId, RTCtrlQueue);
+					configVertex->getRelatedParam(j)->setValue(value);
+				}
+#else
+//					UINT64 value = 352 * 255 / 256; // for the mpeg4 decoder application.
+				UINT64 value = 2; 				// for the DoubleLoop application.
+
+				configVertex->getRelatedParam(j)->setValue(value);
+#endif
+			}
+		}
+	}
 }

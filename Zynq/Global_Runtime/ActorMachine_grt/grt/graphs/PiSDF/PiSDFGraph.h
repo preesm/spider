@@ -103,7 +103,7 @@ public:
 
 	PiSDFEdge*	addEdge(BaseVertex* source, abstract_syntax_elt* production, BaseVertex* sink, abstract_syntax_elt* consumption, abstract_syntax_elt* delay);
 
-	BaseVertex* addVertex(const char* vertexName, VERTEXT_TYPE type);
+	BaseVertex* addVertex(const char* vertexName, VERTEX_TYPE type);
 
 	PiSDFParameter*	addParameter(const char* name);
 
@@ -190,7 +190,7 @@ public:
 	/*
 	 * Creates SrDAG graph including only configure vertices.
 	 */
-	void createSrDAGConfigVertices(SRDAGGraph* outSrDAG);
+	void createSrDAG(SRDAGGraph* outSrDAG, VERTEX_TYPE vxsType);
 
 
 	void multiStepScheduling(BaseSchedule* schedule,
@@ -201,7 +201,7 @@ public:
 							SRDAGGraph* dag);
 
 
-	void AlgoMultiStepScheduling(BaseSchedule* schedule,
+	void algoMultiStepScheduling(BaseSchedule* schedule,
 							ListScheduler* listScheduler,
 							Architecture* arch,
 							launcher* launch,
@@ -209,6 +209,7 @@ public:
 							SRDAGGraph* dag);
 
 
+	void solveParameters();
 	/*
 	 * Auto-generated getters and setters.
 	 */

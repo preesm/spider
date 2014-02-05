@@ -1009,12 +1009,16 @@ void PiSDFGraph::AlgoMultiStepScheduling(BaseSchedule* schedule,
 	if(nb_config_vertices > 0){
 		// Creating SrDAG with the configure vertices.
 		// TODO: treat delays
-		SRDAGGraph 	dagConf;
-		createSrDAGConfigVertices(&dagConf);
-		dag->merge(&dagConf);
+		if(dag->getNbVertices() == 0)
+			createSrDAGConfigVertices(dag);
+		else{
+			SRDAGGraph 	dagConf;
+			createSrDAGConfigVertices(&dagConf);
+			dag->merge(&dagConf);
+		}
 //		dag->updateStates();
 
-		// Printing the dagConf.
+		// Printing the dag.
 	#if PRINT_GRAPH
 //		dotWriter.write((SRDAGGraph*)&dagConf, SUB_SRDAG_FILE_PATH, 1, 1);
 		dotWriter.write(dag, SRDAG_FILE_PATH, 1, 1);

@@ -462,9 +462,9 @@ void PiSDFTransformer::computeBVR(SDFGraph *sdf)
 		if((edge->getSource() != edge->getSink()) &&
 			(edge->getSource()->getType() !=  roundBuff_vertex) &&
 			(edge->getSink()->getType() !=  roundBuff_vertex)){ // TODO: treat cycles.
+			topo_matrix[nbEdges * nbVertices + edge->getSource()->getTempId()] = edge->getProductionInt();
+			topo_matrix[nbEdges * nbVertices + edge->getSink()->getTempId()] =  -edge->getConsumptionInt();
 			nbEdges++;
-			topo_matrix[i * nbVertices + edge->getSource()->getTempId()] = edge->getProductionInt();
-			topo_matrix[i * nbVertices + edge->getSink()->getTempId()] =  -edge->getConsumptionInt();
 		}
 	}
 

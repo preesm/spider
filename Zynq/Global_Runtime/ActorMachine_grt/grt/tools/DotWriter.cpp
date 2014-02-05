@@ -74,6 +74,7 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOLEAN displayNames,
 	//getcwd(directory, sizeof(directory));
 	char name[MAX_VERTEX_NAME_SIZE];
 	char name2[MAX_VERTEX_NAME_SIZE];
+	char color[6];
 
 	pFile = fopen (path,"w");
 	if(pFile != NULL){
@@ -101,11 +102,20 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOLEAN displayNames,
 					break;
 			}
 
+			switch (vertex->getState()) {
+				case SrVxStExecutable:
+					strcpy(color, "blue");
+					break;
+				default:
+					strcpy(color, "black");
+					break;
+			}
+
 			if(displayNames){
-				fprintf (pFile, "\t%s [label=\"%s\"];\n",name,name);
+				fprintf (pFile, "\t%s [label=\"%s\" color=\"%s\"];\n",name,name, color);
 			}
 			else{
-				fprintf (pFile, "\t%s [label=\"\"];\n",name);
+				fprintf (pFile, "\t%s [label=\"\" color=\"%s\"];\n",name, color);
 			}
 		}
 

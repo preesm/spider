@@ -190,7 +190,7 @@ public:
 	/*
 	 * Creates SrDAG graph including only configure vertices.
 	 */
-	void createSrDAG(SRDAGGraph* outSrDAG, VERTEX_TYPE vxsType);
+	void createSrDAGConfigVxs(SRDAGGraph* outSrDAG);
 
 
 	void multiStepScheduling(BaseSchedule* schedule,

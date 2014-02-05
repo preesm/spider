@@ -806,16 +806,17 @@ void PiSDFGraph::createSDF(SDFGraph* outSDF){
  * Creates SrDAG including only 'vxsType' vertices.
  * Assumes the list of vertices is in topological order.
  */
-void PiSDFGraph::createSrDAG(SRDAGGraph* outSrDAG, VERTEX_TYPE vxsType){
+void PiSDFGraph::createSrDAGConfigVxs(SRDAGGraph* outSrDAG){
 	for (UINT32 i = 0; i < nb_config_vertices; i++) {
 		PiSDFConfigVertex* refConfigVertex = &config_vertices[i];
-		refConfigVertex->setStatus(VxStExecutable);
+//		refConfigVertex->setStatus(VxStExecutable);
 		SRDAGVertex* srDagVertex = 0;
 		UINT32 total = outSrDAG->getVerticesFromReference(refConfigVertex, &srDagVertex);
 		if(total == 0){
 			srDagVertex = outSrDAG->addVertex();
 			srDagVertex->setReference(refConfigVertex);
 			srDagVertex->setReferenceIndex(refConfigVertex->getId());
+			srDagVertex->setState(SrVxStExecutable);
 		}
 		else if(total > 1)
 			exitWithCode(1063);
@@ -893,7 +894,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		// Creating SrDAG with the configure vertices.
 		// TODO: treat delays
 		SRDAGGraph 	dagConf;
-		createSrDAG(&dagConf, config_vertex);
+		createSrDAGConfigVxs(&dagConf);
 //		dag->merge(&dagConf);
 
 		// Printing the dagConf.
@@ -1010,10 +1011,10 @@ void PiSDFGraph::algoMultiStepScheduling(BaseSchedule* schedule,
 		// Creating SrDAG with the configure vertices.
 		// TODO: treat delays
 		if(dag->getNbVertices() == 0)
-			createSrDAG(dag, config_vertex);
+			createSrDAGConfigVxs(dag);
 		else{
 			SRDAGGraph 	localDag;
-			createSrDAG(&localDag, config_vertex);
+			createSrDAGConfigVxs(&localDag);
 			dag->merge(&localDag);
 		}
 //		TODO:dag->updateStates();

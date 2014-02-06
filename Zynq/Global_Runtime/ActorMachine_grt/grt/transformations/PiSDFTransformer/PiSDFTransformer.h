@@ -76,6 +76,8 @@ public:
 
 	void computeBVR(SDFGraph *sdf);
 
+	bool checkPredec(SRDAGVertex* Vx);
+
 	/*
 	 * Connects vertices to form a SrDAG.
 	 */

@@ -46,6 +46,7 @@ SRDAGVertex::SRDAGVertex(){
 	base=0;
 	scheduleIndex = -1;
 	visited=0;
+	mergeIx = -1;
 	csDagReference=NULL;
 	referenceIndex=-1;
 	tLevel=-1;
@@ -53,7 +54,7 @@ SRDAGVertex::SRDAGVertex(){
 	nbOutputEdges=0;
 	slaveIndex=-1;
 	type = 0; // Normal type by default.
-	state = SrVxStNoExecutable;
+	state = SrVxStNoExecuted;
 }
 
 /**

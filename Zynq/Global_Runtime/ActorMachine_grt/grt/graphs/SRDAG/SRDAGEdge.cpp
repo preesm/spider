@@ -42,6 +42,7 @@
  * 
  * @author mpelcat
  */
+#include <stddef.h>
 #include "SRDAGEdge.h"
 
 SRDAGEdge* SRDAGEdge::firstInSinkOrder = NULL;

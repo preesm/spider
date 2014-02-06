@@ -41,19 +41,19 @@
 class DAGVertex;
 //class CSDAGVertex;
 class SRDAGGraph;
-class SRDAGEdge;
+//class SRDAGEdge;
 #include <cstring>
 
 #include <grt_definitions.h>
 #include "../../tools/SchedulingError.h"
 #include "../CSDAG/CSDAGVertex.h"
 #include "../Base/BaseVertex.h"
-
+#include "SRDAGEdge.h"
 
 typedef enum{
 	SrVxStExecutable,
 	SrVxStExecuted,
-	SrVxStNoExecutable,
+	SrVxStNoExecuted,
 	SrVxStHierarchy
 }SrVxSTATUS_FLAG;
 
@@ -117,6 +117,8 @@ class SRDAGVertex {
 		 For graph traversal
 		*/
 		bool visited;
+
+		int mergeIx;	// Index in the merged graph.
 
 		// Indicates the type of vertex normal (0), explode (1) or implode (2). Normal (0) by default.
 		int type;
@@ -306,6 +308,18 @@ class SRDAGVertex {
 	    {
 	        this->state = state;
 	    }
+
+	    int getMergeIx() const
+	    {
+	        return mergeIx;
+	    }
+
+	    void setMergeIx(int ix)
+	    {
+	        this->mergeIx = ix;
+	    }
+
+	    bool checkPredec();
 };
 
 
@@ -510,4 +524,18 @@ inline
 void SRDAGVertex::setExpImpId(int id){
 	this->expImpId = id;
 }
+
+inline
+bool SRDAGVertex::checkPredec(){
+	// Checking if all predecessors are executable.
+	for (UINT32 i = 0; i < nbInputEdges; i++)
+	{
+		SRDAGVertex* predVertex = inputEdges[i]->getSource();
+		if((predVertex->getState() != SrVxStExecuted) &&
+		   (predVertex->getState() != SrVxStExecutable))
+				return false;
+	}
+	return true;
+}
+
 #endif

@@ -183,14 +183,19 @@ public:
 	void insertRoundBuffers();
 
 	/*
+	 *  Says if Vx is an interface/round-buffer preceding a configure vx.
+	 */
+	bool isConfigVxPred(BaseVertex* Vx);
+
+	/*
 	 * Creates SDF graph excluding the configure vertices.
 	 */
 	void createSDF(SDFGraph* outSDF);
 
 	/*
-	 * Creates SrDAG graph including only configure vertices.
+	 * Creates SrDAG graph including configure and input vertices.
 	 */
-	void createSrDAGConfigVxs(SRDAGGraph* outSrDAG);
+	void createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG);
 
 
 	void multiStepScheduling(BaseSchedule* schedule,
@@ -200,16 +205,11 @@ public:
 							ExecutionStat* execStat,
 							SRDAGGraph* dag);
 
+	void solveParameters(SRDAGGraph* dag);
 
-	void algoMultiStepScheduling(BaseSchedule* schedule,
-							ListScheduler* listScheduler,
-							Architecture* arch,
-							launcher* launch,
-							ExecutionStat* execStat,
-							SRDAGGraph* dag);
+	void updateDAGStates(SRDAGGraph* dag);
 
 
-	void solveParameters();
 	/*
 	 * Auto-generated getters and setters.
 	 */

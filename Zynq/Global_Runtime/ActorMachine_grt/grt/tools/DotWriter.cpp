@@ -106,6 +106,12 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOLEAN displayNames,
 				case SrVxStExecutable:
 					strcpy(color, "blue");
 					break;
+				case SrVxStExecuted:
+					strcpy(color, "gray");
+					break;
+				case SrVxStHierarchy:
+					strcpy(color, "red");
+					break;
 				default:
 					strcpy(color, "black");
 					break;
@@ -278,7 +284,7 @@ void DotWriter::write(PiSDFGraph* graph, const char* path, char displayNames){
 		fprintf (pFile, "digraph csdag {\n");
 		fprintf (pFile, "node [color=\"#433D63\"];\n");
 		fprintf (pFile, "edge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
-		//fprintf (pFile, "rankdir=LR;\n");
+		fprintf (pFile, "rankdir=LR;\n");
 
 		// Drawing parameters.
 		for (UINT64 i=0 ; i<graph->getNb_parameters(); i++)
@@ -320,17 +326,17 @@ void DotWriter::write(PiSDFGraph* graph, const char* path, char displayNames){
 		for (UINT32 i = 0; i < graph->getNb_pisdf_vertices(); i++) {
 			PiSDFVertex *vertex = graph->getPiSDFVertex(i);
 			draw_vertex(vertex, displayNames, pFile);
-			if(vertex->getSubGraph() != NULL){
-				char fileName[30];
-				char suffix[30];
-				char *pch;
-				strcpy (fileName, path);
-				sprintf(suffix, "_%s.gv", vertex->getName());
-				pch = strstr(fileName, ".");
-//				fileName =
-				strcpy (pch, suffix);
-				write(vertex->getSubGraph(), fileName, displayNames);
-			}
+//			if(vertex->getSubGraph() != NULL){
+//				char fileName[30];
+//				char suffix[30];
+//				char *pch;
+//				strcpy (fileName, path);
+//				sprintf(suffix, "_%s.gv", vertex->getName());
+//				pch = strstr(fileName, ".");
+////				fileName =
+//				strcpy (pch, suffix);
+//				write(vertex->getSubGraph(), fileName, displayNames);
+//			}
 		}
 
 		// Drawing Input vertices.

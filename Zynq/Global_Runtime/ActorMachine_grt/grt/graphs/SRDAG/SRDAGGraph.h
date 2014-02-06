@@ -116,7 +116,7 @@ class SRDAGGraph {
 
 		SRDAGVertex* findMatch(BaseVertex* refVx);
 
-		SRDAGVertex* findUnplug();
+		SRDAGVertex* findUnplugRB();
 
 
 
@@ -206,15 +206,8 @@ class SRDAGGraph {
 		*/
 		int getOutputEdges(SRDAGVertex* vertex, SRDAGEdge** output);
 
-		/**
-		 Gets pointers on the edges of the graph in the order of their source or sink.
-		 Accelerates getting the input or output edges
-		 
-		 @param sourceOrSink: 1 for sorting in source order, 0 for sink order
-		*/
-		void sortEdges(int startIndex);
-
 		int getMaxTime();
+
 		int getCriticalPath();
 
 		SRDAGVertex* getVxByRefAndIx(BaseVertex* reference, int refIndex);
@@ -227,8 +220,15 @@ class SRDAGGraph {
 		 */
 		void merge(SRDAGGraph* localDag);
 
-
 		void removeVx(SRDAGVertex* Vx);
+
+		/**
+		 Gets pointers on the edges of the graph in the order of their source or sink.
+		 Accelerates getting the input or output edges
+
+		 @param sourceOrSink: 1 for sorting in source order, 0 for sink order
+		*/
+		void sortEdges(int startIndex);
 };
 
 /**
@@ -427,7 +427,7 @@ inline SRDAGVertex* SRDAGGraph::findMatch(BaseVertex* refVx){
 }
 
 
-inline SRDAGVertex* SRDAGGraph::findUnplug(){
+inline SRDAGVertex* SRDAGGraph::findUnplugRB(){
 	for (int i = 0; i < nbVertices; i++) {
 		if((vertices[i].getNbOutputEdge() == 0) &&
 		   (vertices[i].getReference()->getType() == roundBuff_vertex)){

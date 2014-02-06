@@ -38,7 +38,8 @@
 #ifndef SRDAG_EDGE
 #define SRDAG_EDGE
 
-#include "SRDAGVertex.h"
+//#include "SRDAGVertex.h"
+class SRDAGVertex;
 
 #ifdef LINUX
 #define inline inline

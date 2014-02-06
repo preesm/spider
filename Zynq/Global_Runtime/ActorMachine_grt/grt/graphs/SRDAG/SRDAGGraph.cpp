@@ -102,24 +102,34 @@ void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
 		SRDAGEdge* edge = annex->getEdge(i);
 		SRDAGVertex* source;
 		SRDAGVertex* sink;
-		if(edge->getSource()->getVisited())
-			source = getVxByRefAndIx(edge->getSource()->getReference(), edge->getSource()->getReferenceIndex());
+		int srcMergeIx = edge->getSource()->getMergeIx();
+		int snkMergeIx = edge->getSink()->getMergeIx();
+		if(srcMergeIx != -1)
+			source = getVertex(srcMergeIx);
 		else
 		{
-			edge->getSource()->setVisited(true);
 			source = addVertex();
 			source->setReference(edge->getSource()->getReference());
 			source->setReferenceIndex(edge->getSource()->getReferenceIndex());
+			source->setState(edge->getSource()->getState());
+			source->setType(edge->getSource()->getType());
+			source->setExpImpId(edge->getSource()->getExpImpId());
+
+			edge->getSource()->setMergeIx(source->getId());
 		}
 
-		if(edge->getSink()->getVisited())
-			sink = getVxByRefAndIx(edge->getSink()->getReference(), edge->getSink()->getReferenceIndex());
+		if(snkMergeIx != -1)
+			sink = getVertex(snkMergeIx);
 		else
 		{
-			edge->getSink()->setVisited(true);
 			sink = addVertex();
 			sink->setReference(edge->getSink()->getReference());
 			sink->setReferenceIndex(edge->getSink()->getReferenceIndex());
+			sink->setState(edge->getSink()->getState());
+			sink->setType(edge->getSink()->getType());
+			sink->setExpImpId(edge->getSink()->getExpImpId());
+
+			edge->getSink()->setMergeIx(sink->getId());
 		}
 
 		addEdge(source, edge->getTokenRate(), sink);
@@ -224,9 +234,10 @@ void SRDAGGraph::merge(SRDAGGraph* annex){
 	// Adding the annexing vertices and edges.
 	appendAnnex(annex);
 
+	// Connecting two graphs from the same hierarchy level.
 	// Finding an unplugged vertex to the left.
 	SRDAGVertex* leftVx;
-	while(leftVx = findUnplug()){
+	while(leftVx = findUnplugRB()){
 		// Finding matching unplugged vertex to the right.
 		SRDAGVertex* rightVx;
 		if (!(rightVx = findMatch(leftVx->getReference()))) exitWithCode(1064);
@@ -236,6 +247,15 @@ void SRDAGGraph::merge(SRDAGGraph* annex){
 		// Deleting left Vx.
 //		removeVx(leftVx);
 	}
+
+	// Connecting two graphs from different hierarchy levels.
+	// Finding interface(s) in the annex.
+//	SRDAGVertex* inputVx;
+//	while(leftVx = findUnplugIF(input_vertex)){
+//		// Getting the parent vertex.
+//	}
+		// Iterating over the number of repetitions.
+		// Getting number of repetitions
 }
 
 
@@ -309,3 +329,4 @@ void SRDAGGraph::sortEdges(int startIndex){
 		}
 	}
 }
+

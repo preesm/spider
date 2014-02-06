@@ -41,7 +41,7 @@
 #include <transformations/PiSDFTransformer/PiSDFTransformer.h>
 
 
-DotWriter dotWriter;
+extern DotWriter dotWriter;
 
 PiSDFGraph::PiSDFGraph() {
 	nb_edges = 0;
@@ -780,19 +780,30 @@ void PiSDFGraph::insertRoundBuffers(){
 	}
 }
 
+/*
+ * Says if Vx is an interface/round-buffer preceding a configure vx.
+ */
+bool PiSDFGraph::isConfigVxPred(BaseVertex* Vx){
+	if((Vx->getType() == input_vertex) || (Vx->getType() == roundBuff_vertex))
+		return (Vx->getOutputEdge(0)->getSink()->getType() == config_vertex);
+}
 
 /*
- * Creates SDF graph including only no configure vertices.
+ * Creates SDF graph including normal vertices.
  */
 void PiSDFGraph::createSDF(SDFGraph* outSDF){
 	for (UINT32 i = 0; i < nb_vertices; i++) {
 		BaseVertex* refSource = vertices[i];
-		if(refSource->getType() != config_vertex){
+		if((refSource->getType() != config_vertex) && 	// Excludes configure Vxs.
+			!isConfigVxPred(refSource)){ 				// Excludes interface/round_buffer Vxs which precede configure Vxs.
+			// Adding the Vx into the output graph if not already present.
 			if(outSDF->getVertexIndex(refSource) == -1) outSDF->addVertex(refSource);
 
+			// Adding output edges.
 			for (UINT32 j = 0; j < refSource->getNbOutputEdges(); j++) {
 				PiSDFEdge* edge = refSource->getOutputEdge(j);
 				BaseVertex* refSink = edge->getSink();
+				// Adding the sink vx if not already present.
 				if(outSDF->getVertexIndex(refSink) == -1) outSDF->addVertex(refSink);
 
 				// Adding edges to SDF graph.
@@ -806,37 +817,32 @@ void PiSDFGraph::createSDF(SDFGraph* outSDF){
  * Creates SrDAG including only 'vxsType' vertices.
  * Assumes the list of vertices is in topological order.
  */
-void PiSDFGraph::createSrDAGConfigVxs(SRDAGGraph* outSrDAG){
+void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG){
+	// Adding configure vxs.
 	for (UINT32 i = 0; i < nb_config_vertices; i++) {
 		PiSDFConfigVertex* refConfigVertex = &config_vertices[i];
-//		refConfigVertex->setStatus(VxStExecutable);
+
+		// Finding the vx if it was already added into outSrDAG.
 		SRDAGVertex* srDagVertex = 0;
-		UINT32 total = outSrDAG->getVerticesFromReference(refConfigVertex, &srDagVertex);
-		if(total == 0){
+		outSrDAG->getVerticesFromReference(refConfigVertex, &srDagVertex);
+		// Adding the vx if not found.
+		if(!srDagVertex){
 			srDagVertex = outSrDAG->addVertex();
 			srDagVertex->setReference(refConfigVertex);
 			srDagVertex->setReferenceIndex(refConfigVertex->getId());
 			srDagVertex->setState(SrVxStExecutable);
 		}
-		else if(total > 1)
-			exitWithCode(1063);
 
-		// Adding input edges and their corresponding round buffers.
+		// Adding edges from input vxs (and the input vx too of course).
 		for (UINT32 j = 0; j < refConfigVertex->getNbInputEdges(); j++) {
 			PiSDFEdge* edge = refConfigVertex->getInputEdge(j);
 			BaseVertex* predec = edge->getSource();
 			if(predec->getType() == input_vertex){
-				SRDAGVertex* source = 0;
-				UINT32 total = outSrDAG->getVerticesFromReference(predec, &source);
-				if(total == 0){
-					source = outSrDAG->addVertex();
-					source->setReference(predec);
-					source->setReferenceIndex(predec->getId());
-				}
-				else if(total > 1)
-					exitWithCode(1063);
+				SRDAGVertex*source = outSrDAG->addVertex();
+				source->setReference(predec);
+				source->setReferenceIndex(predec->getId());
 
-				// Evaluating expressions. Maybe not needed.
+				// Evaluating expressions. TODO: Maybe not needed.
 				int prod, cons, delay;
 				globalParser.interpret(edge->getProduction(), &prod);
 				globalParser.interpret(edge->getConsumption(), &cons);
@@ -846,24 +852,24 @@ void PiSDFGraph::createSrDAGConfigVxs(SRDAGGraph* outSrDAG){
 				edge->setDelayInt(delay);
 				edge->setEvaluated(TRUE);
 
-				// Adding edges to the DAG.
+				// Adding edge into outSrDAG between input vx and configure vx.
 				outSrDAG->addEdge(source, edge->getProductionInt(), srDagVertex);
 			}
 		}
 
-		// Adding output edges
+		// Adding output edges (and the input vx too of course).
 		for (UINT32 j = 0; j < refConfigVertex->getNbOutputEdges(); j++) {
 			PiSDFEdge* edge = refConfigVertex->getOutputEdge(j);
 			BaseVertex* succec = edge->getSink();
+			// Finding the sink vx if it was already added into outSrDAG.
 			SRDAGVertex* sink = 0;
-			UINT32 total = outSrDAG->getVerticesFromReference(succec, &sink);
-			if(total == 0){
+			outSrDAG->getVerticesFromReference(succec, &sink);
+			// Adding the sink vx if not found.
+			if(!sink){
 				sink = outSrDAG->addVertex();
 				sink->setReference(succec);
 				sink->setReferenceIndex(succec->getId());
 			}
-			else if(total > 1)
-				exitWithCode(1063);
 
 			// Evaluating expressions. Assuming the parameters which the configure vertices depend on, are solved.
 			int prod, cons, delay;
@@ -875,133 +881,25 @@ void PiSDFGraph::createSrDAGConfigVxs(SRDAGGraph* outSrDAG){
 			edge->setDelayInt(delay);
 			edge->setEvaluated(TRUE);
 
-			// Adding edges to the DAG.
+			// Adding edge into outSrDAG between configure vx and successor vx (round buffer or other configure vx)
 			outSrDAG->addEdge(srDagVertex, edge->getProductionInt(), sink);
 		}
 	}
-}
 
+
+	// Adding input vxs into outSrDAG which are not connected to configure vxs.
+	for (UINT32 i = 0; i < nb_input_vertices; i++) {
+		PiSDFIfVertex* refInputVx = &input_vertices[i];
+		if(refInputVx->getOutputEdge(0)->getSink()->getType() != config_vertex){
+			SRDAGVertex* srDagVertex = outSrDAG->addVertex();
+			srDagVertex->setReference(refInputVx);
+			srDagVertex->setReferenceIndex(refInputVx->getId());
+		}
+	}
+}
 
 
 void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
-									ListScheduler* listScheduler,
-									Architecture* arch,
-									launcher* launch,
-									ExecutionStat* execStat,
-									SRDAGGraph* dag){
-
-	if(nb_config_vertices > 0){
-		// Creating SrDAG with the configure vertices.
-		// TODO: treat delays
-		SRDAGGraph 	dagConf;
-		createSrDAGConfigVxs(&dagConf);
-//		dag->merge(&dagConf);
-
-		// Printing the dagConf.
-	#if PRINT_GRAPH
-		dotWriter.write((SRDAGGraph*)&dagConf, SRDAG_FILE_PATH, 1, 1);
-		dotWriter.write((SRDAGGraph*)&dagConf, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-	#endif
-
-		// Scheduling the DAG.
-		schedule->reset();
-		listScheduler->schedule(&dagConf, schedule, arch);
-
-		ScheduleWriter schedWriter;
-		schedWriter.write(schedule, &dagConf, arch, "test.xml");
-
-		// Preparing FIFOs information.
-		launch->prepareFIFOsInfo(&dagConf);
-
-		// Preparing tasks' informations
-		launch->prepareTasksInfo(&dagConf, arch, schedule, false, execStat);
-
-		// Resolving parameters.
-		for (UINT32 i = 0; i < nb_config_vertices; i++) {
-			PiSDFConfigVertex* configVertex = &config_vertices[i];
-			configVertex->setStatus(VxStExecuted);
-			for (UINT32 j = 0; j < configVertex->getNbRelatedParams(); j++) {
-				PiSDFParameter* param = configVertex->getRelatedParam(j);
-				// TODO: to find out the returned value when there are several parameters.
-				if (!param->getResolved()){
-#if EXEC == 1
-					UINT32 slaveId;
-					if(schedule.findSlaveId(configVertex->getId(), configVertex, &slaveId)){
-						UINT64 value = RTQueuePop_UINT32(slaveId, RTCtrlQueue);
-						configVertex->getRelatedParam(j)->setValue(value);
-					}
-#else
-					UINT64 value = 352 * 255 / 256; // for the mpeg4 decoder application.
-
-//						if(init)
-//							value = 0;
-//						else
-//							value = 1;
-
-					configVertex->getRelatedParam(j)->setValue(value);
-#endif
-				}
-			}
-		}
-
-
-		// TODO: merge configure Vxs with DAG of higher level.
-	}
-	nbExecVertices += nb_config_vertices; //
-
-	// Resolving production/consumptions.
-	evaluateExpressions();
-
-	// Generating SDF from PiSDF excluding the configure vertices.
-	SDFGraph sdf;
-	createSDF(&sdf);
-
-#if PRINT_GRAPH
-	// Printing the SDF sub-graph.
-	dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
-#endif
-
-	// Computing BRV of normal vertices.
-	PiSDFTransformer transformer;
-	transformer.computeBVR(&sdf);
-
-	// Updating the productions of the round buffer vertices.
-	sdf.updateRBProd();
-
-#if PRINT_GRAPH
-	// Printing the SDF sub-graph.
-	dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
-#endif
-
-	// Treating the other vertices.
-	for (UINT32 i = 0; i < nb_pisdf_vertices; i++) {
-		PiSDFVertex* vertex = &pisdf_vertices[i];
-		if(vertex->checkPredecessors()){
-			PiSDFGraph* subGraph;
-			if(vertex->hasSubGraph(&subGraph)){
-				// Getting into the lower hierarchy.
-				subGraph->multiStepScheduling(schedule, listScheduler, arch, launch, execStat, dag);
-			}
-			else{
-				vertex->setStatus(VxStExecutable);
-				nbExecVertices++;
-
-				SRDAGVertex* srdag_vertex = dag->addVertex();
-				// Setting attributes from original vertex.
-				srdag_vertex->setReference(vertex);
-				srdag_vertex->setReferenceIndex(vertex->getId());
-			}
-		}
-	}
-	if (nbExecVertices == nb_vertices){
-		executable = true;
-//		glbNbExecVertices += nb_vertices;
-		//	dag.merge(vertex);
-	}
-}
-
-
-void PiSDFGraph::algoMultiStepScheduling(BaseSchedule* schedule,
 							ListScheduler* listScheduler,
 							Architecture* arch,
 							launcher* launch,
@@ -1011,13 +909,17 @@ void PiSDFGraph::algoMultiStepScheduling(BaseSchedule* schedule,
 		// Creating SrDAG with the configure vertices.
 		// TODO: treat delays
 		if(dag->getNbVertices() == 0)
-			createSrDAGConfigVxs(dag);
+			createSrDAGInputConfigVxs(dag);
 		else{
 			SRDAGGraph 	localDag;
-			createSrDAGConfigVxs(&localDag);
+			createSrDAGInputConfigVxs(&localDag);
+		#if PRINT_GRAPH
+			// Printing the dag.
+			dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
+			dotWriter.write(&localDag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+		#endif
 			dag->merge(&localDag);
 		}
-//		TODO:dag->updateStates();
 
 	#if PRINT_GRAPH
 		// Printing the dag.
@@ -1039,7 +941,7 @@ void PiSDFGraph::algoMultiStepScheduling(BaseSchedule* schedule,
 		launch->prepareTasksInfo(dag, arch, schedule, false, execStat);
 
 		// Resolving parameters.
-		solveParameters();
+		solveParameters(dag);
 	}
 
 
@@ -1075,17 +977,29 @@ void PiSDFGraph::algoMultiStepScheduling(BaseSchedule* schedule,
 	else{
 		SRDAGGraph 	localDag;
 		transformer.transform(&sdf, &localDag);
+	#if PRINT_GRAPH
+		// Printing the dag.
+		dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
+		dotWriter.write(&localDag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+	#endif
 		dag->merge(&localDag);
 	}
-//	TODO: dag->updateStates
+	// Updating vxs' states.
+	updateDAGStates(dag);
+
+#if PRINT_GRAPH
+	// Printing the dag.
+	dotWriter.write(dag, SRDAG_FILE_PATH, 1, 1);
+	dotWriter.write(dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+#endif
 
 }
 
 
-void PiSDFGraph::solveParameters(){
+void PiSDFGraph::solveParameters(SRDAGGraph* dag){
 	for (UINT32 i = 0; i < nb_config_vertices; i++) {
 		PiSDFConfigVertex* configVertex = &config_vertices[i];
-		configVertex->setStatus(VxStExecuted);
+//		configVertex->setStatus(VxStExecuted);
 		for (UINT32 j = 0; j < configVertex->getNbRelatedParams(); j++) {
 			PiSDFParameter* param = configVertex->getRelatedParam(j);
 			// TODO: to find out the returned value when there are several parameters.
@@ -1104,5 +1018,32 @@ void PiSDFGraph::solveParameters(){
 #endif
 			}
 		}
+
+		// Getting the corresponding vertex in the SrDAG. Note that since the
+		// reference is a configure vx, there is only one replica in the SrDAG.
+		SRDAGVertex* srVx;
+		dag->getVerticesFromReference(configVertex, &srVx);
+		srVx->setState(SrVxStExecuted);
 	}
 }
+
+
+void PiSDFGraph::updateDAGStates(SRDAGGraph* dag){
+	for (UINT32 i = 0; i < dag->getNbVertices(); i++) {
+		SRDAGVertex* Vx = dag->getVertex(i);
+		if(Vx->getState() == SrVxStNoExecuted){
+			if(Vx->getReference()->getType() == pisdf_vertex){
+				PiSDFGraph* subGraph;
+				if(((PiSDFVertex*)Vx->getReference())->hasSubGraph(&subGraph))
+					Vx->setState(SrVxStHierarchy);
+				else
+					if(Vx->checkPredec())
+						Vx->setState(SrVxStExecutable);
+			}
+			else if(Vx->getReference()->getType() == roundBuff_vertex){
+				Vx->setState(SrVxStExecutable);
+			}
+		}
+	}
+}
+

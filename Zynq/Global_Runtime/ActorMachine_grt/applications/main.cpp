@@ -80,6 +80,7 @@ SDFGraph 			sdf;
 SRDAGGraph 			dag;
 UINT32 				prevNbConfigVertices;
 launcher 			launch;
+DotWriter 			dotWriter;
 
 
 void createArch(Architecture* arch, int nbSlaves){
@@ -111,23 +112,27 @@ int main(int argc, char* argv[]){
 	bool initFIFOs = true;
 
 
+
+
+	/*
+	 * Multistep algorithm for mapping/scheduling PiSDF graphs.
+	 */
 	// Getting the PiSDF graph.
 	top(&piSDF);
-
-#if PRINT_GRAPH
-	// Printing the PiSDF graph.
-	DotWriter 	dotWriter;
-	dotWriter.write(&piSDF, PiSDF_FILE_PATH, 1);
-#endif
 	PiSDFGraph* H = &piSDF;
 	while(H){
-		H->algoMultiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag);
+	#if PRINT_GRAPH
+		// Printing the PiSDF graph.
+		dotWriter.write(H, PiSDF_FILE_PATH, 1);
+	#endif
 
-#if PRINT_GRAPH
-	// Printing the dag.
-	dotWriter.write(&dag, SRDAG_FILE_PATH, 1, 1);
-	dotWriter.write(&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-#endif
+		H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag);
+
+	#if PRINT_GRAPH
+		// Printing the dag.
+		dotWriter.write(&dag, SRDAG_FILE_PATH, 1, 1);
+		dotWriter.write(&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+	#endif
 
 		// Finding other hierarchical Vxs.
 		H = 0;

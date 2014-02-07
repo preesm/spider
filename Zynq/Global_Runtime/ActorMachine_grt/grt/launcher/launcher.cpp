@@ -321,14 +321,16 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, Architecture *archi, BaseSche
 //				msg_createTask.prepare(i, this);
 //				msg_createTask.getLRTActor()->prepare(i, this);
 
-				LRTActor actor = LRTActor(graph, (SRDAGVertex*)(schedule->getSchedule(i, j)->vertex), this);
-				actor.prepare(i, this);
+				SRDAGVertex* vertex = (SRDAGVertex*)(schedule->getSchedule(i, j)->vertex);
+				if (vertex->getState() == SrVxStExecutable){
+					LRTActor actor = LRTActor(graph, vertex, this);
+					actor.prepare(i, this);
 
 #if PRINT_ACTOR_IN_DOT_FILE == 1
-				SRDAGVertex* vertex = (SRDAGVertex*)(schedule->getSchedule(i, j)->vertex);
-				sprintf(name, "%s_%d", vertex->getReference()->getName(), vertex->getReferenceIndex());
-				actor.toDot(pFile, name, j);
+					sprintf(name, "%s_%d", vertex->getReference()->getName(), vertex->getReferenceIndex());
+					actor.toDot(pFile, name, j);
 #endif
+				}
 			}
 #if PRINT_ACTOR_IN_DOT_FILE == 1
 			fprintf (pFile, "}\n");

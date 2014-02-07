@@ -118,7 +118,7 @@ class SRDAGGraph {
 
 		SRDAGVertex* findUnplugIF(VERTEX_TYPE ifType);
 
-		SRDAGVertex* findUnplugRB();
+		SRDAGVertex* findUnplug();
 
 
 
@@ -222,7 +222,7 @@ class SRDAGGraph {
 		/*
 		 * TODO: comments..
 		 */
-		void merge(SRDAGGraph* localDag);
+		void merge(SRDAGGraph* localDag, bool intraLevel);
 
 		void removeVx(SRDAGVertex* Vx);
 
@@ -440,10 +440,11 @@ inline SRDAGVertex* SRDAGGraph::findUnplugIF(VERTEX_TYPE ifType){
 	return (SRDAGVertex*)0;
 }
 
-inline SRDAGVertex* SRDAGGraph::findUnplugRB(){
+inline SRDAGVertex* SRDAGGraph::findUnplug(){
 	for (int i = 0; i < nbVertices; i++) {
 		if((vertices[i].getNbOutputEdge() == 0) &&
-		   (vertices[i].getReference()->getType() == roundBuff_vertex)){
+		   ((vertices[i].getReference()->getType() == roundBuff_vertex) ||
+			(vertices[i].getReference()->getType() == input_vertex))){
 			return &vertices[i];
 		}
 	}

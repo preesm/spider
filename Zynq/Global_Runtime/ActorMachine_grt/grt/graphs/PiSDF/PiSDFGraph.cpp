@@ -921,13 +921,13 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 			dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
 			dotWriter.write(&localDag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
 		#endif
-			dag->merge(&localDag);
+			dag->merge(&localDag, false);
 		}
 
 	#if PRINT_GRAPH
 		// Printing the dag.
-		dotWriter.write(dag, SUB_SRDAG_FILE_PATH, 1, 1);
-		dotWriter.write(dag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+		dotWriter.write(dag, SRDAG_FILE_PATH, 1, 1);
+		dotWriter.write(dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
 	#endif
 
 		// Scheduling the DAG.
@@ -984,7 +984,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
 		dotWriter.write(&localDag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
 	#endif
-		dag->merge(&localDag);
+		dag->merge(&localDag, true);
 	}
 	// Updating vxs' states.
 	updateDAGStates(dag);

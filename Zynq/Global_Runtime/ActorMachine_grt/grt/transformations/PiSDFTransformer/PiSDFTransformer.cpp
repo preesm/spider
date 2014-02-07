@@ -170,7 +170,7 @@ void PiSDFTransformer::linkvertices(BaseVertex** vertices, UINT32 nbVertices, SR
 					exp_vertex->setReferenceIndex(origin_vertex->getReferenceIndex());
 
 					// Adding an edge between the source and the explode.
-					outputGraph->addEdge(origin_vertex, edge->getProductionInt(), exp_vertex);
+					outputGraph->addEdge(origin_vertex, edge->getProductionInt(), exp_vertex, edge->getRefEdge());
 				}
 
 				if (rest < (int)edge->getConsumptionInt() &&
@@ -191,7 +191,7 @@ void PiSDFTransformer::linkvertices(BaseVertex** vertices, UINT32 nbVertices, SR
 					imp_vertex->setReferenceIndex(origin_vertex->getReferenceIndex());
 
 					// Adding an edge between the implode and the sink.
-					outputGraph->addEdge(imp_vertex, edge->getConsumptionInt(), origin_vertex);
+					outputGraph->addEdge(imp_vertex, edge->getConsumptionInt(), origin_vertex, edge->getRefEdge());
 				}
 
 
@@ -235,7 +235,7 @@ void PiSDFTransformer::linkvertices(BaseVertex** vertices, UINT32 nbVertices, SR
 //					nbDelays = nbDelays - addedDelays;
 				} else {
 					//Creating the new edge between normal vertices or between a normal and an explode/implode one.
-					SRDAGEdge* new_edge = outputGraph->addEdge(sourceRepetitions[sourceIndex], rest, sinkRepetitions[targetIndex]);
+					SRDAGEdge* new_edge = outputGraph->addEdge(sourceRepetitions[sourceIndex], rest, sinkRepetitions[targetIndex], edge->getRefEdge());
 					new_edge->setDelay(0);
 				}
 
@@ -334,7 +334,7 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph)
 				exp_vertex->setReferenceIndex(origin_vertex->getReferenceIndex());
 
 				// Adding an edge between the source and the explode.
-				outputGraph->addEdge(origin_vertex, edge->getProductionInt(), exp_vertex);
+				outputGraph->addEdge(origin_vertex, edge->getProductionInt(), exp_vertex, edge->getRefEdge());
 			}
 
 			if (rest < (int)edge->getConsumptionInt() &&
@@ -355,7 +355,7 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph)
 				imp_vertex->setReferenceIndex(origin_vertex->getReferenceIndex());
 
 				// Adding an edge between the implode and the sink.
-				outputGraph->addEdge(imp_vertex, edge->getConsumptionInt(), origin_vertex);
+				outputGraph->addEdge(imp_vertex, edge->getConsumptionInt(), origin_vertex, edge->getRefEdge());
 			}
 
 
@@ -399,7 +399,7 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph)
 //					nbDelays = nbDelays - addedDelays;
 			} else {
 				//Creating the new edge between normal vertices or between a normal and an explode/implode one.
-				SRDAGEdge* new_edge = outputGraph->addEdge(sourceRepetitions[sourceIndex], rest, sinkRepetitions[targetIndex]);
+				SRDAGEdge* new_edge = outputGraph->addEdge(sourceRepetitions[sourceIndex], rest, sinkRepetitions[targetIndex], edge->getRefEdge());
 				new_edge->setDelay(0);
 			}
 

@@ -103,7 +103,7 @@ class SRDAGGraph {
 		 @param sink: The sink vertex of the edge
 		 @return the created edge
 		*/
-		SRDAGEdge* addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* sink);
+		SRDAGEdge* addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* sink, BaseEdge* refEdge = NULL);
 
 
 		void appendAnnex(SRDAGGraph* annex);
@@ -115,6 +115,8 @@ class SRDAGGraph {
 		void removeLastEdge();
 
 		SRDAGVertex* findMatch(BaseVertex* refVx);
+
+		SRDAGVertex* findUnplugIF(VERTEX_TYPE ifType);
 
 		SRDAGVertex* findUnplugRB();
 
@@ -209,6 +211,8 @@ class SRDAGGraph {
 		int getMaxTime();
 
 		int getCriticalPath();
+
+		SRDAGEdge* getEdgeByRef(SRDAGVertex* srDagVx, BaseEdge* refEdge, VERTEX_TYPE inOut);
 
 		SRDAGVertex* getVxByRefAndIx(BaseVertex* reference, int refIndex);
 
@@ -426,6 +430,15 @@ inline SRDAGVertex* SRDAGGraph::findMatch(BaseVertex* refVx){
 	return (SRDAGVertex*)0;
 }
 
+inline SRDAGVertex* SRDAGGraph::findUnplugIF(VERTEX_TYPE ifType){
+	for (int i = 0; i < nbVertices; i++) {
+		if((vertices[i].getNbInputEdge() == 0) &&
+		   (vertices[i].getReference()->getType() == input_vertex)){
+			return &vertices[i];
+		}
+	}
+	return (SRDAGVertex*)0;
+}
 
 inline SRDAGVertex* SRDAGGraph::findUnplugRB(){
 	for (int i = 0; i < nbVertices; i++) {

@@ -40,6 +40,7 @@
 
 //#include "SRDAGVertex.h"
 class SRDAGVertex;
+class BaseEdge;
 
 #ifdef LINUX
 #define inline inline
@@ -70,8 +71,9 @@ class SRDAGEdge {
 		*/
 		SRDAGVertex* sink;
 
-		// Delay or number of initial tokens.
-		int delay;
+		BaseEdge* refEdge;		// Reference to PiSDF edge.
+
+		int delay;				// Delay or number of initial tokens.
 
 	public : 
 		/**
@@ -139,6 +141,16 @@ class SRDAGEdge {
 		void setDelay(const int delay);
 
 		// Public for performance sake
+
+	    BaseEdge *getRefEdge() const
+	    {
+	        return refEdge;
+	    }
+
+	    void setRefEdge(BaseEdge *refEdge)
+	    {
+	        this->refEdge = refEdge;
+	    }
 
 		/**
 		 In order to fast access the input edges, a linked list of edges is done. The edges

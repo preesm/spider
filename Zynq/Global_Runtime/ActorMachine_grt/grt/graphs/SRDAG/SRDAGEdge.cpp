@@ -56,6 +56,7 @@ SRDAGEdge::SRDAGEdge()
 {
 	prevInSinkOrder = NULL;
 	nextInSinkOrder = NULL;
+	refEdge = NULL;
 }
 
 /**

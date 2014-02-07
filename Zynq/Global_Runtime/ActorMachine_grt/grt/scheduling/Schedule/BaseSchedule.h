@@ -78,7 +78,7 @@ public:
 		slaveReadyTimes[slave_id] = endTime;
 
 		int index = nbVertices[slave_id];
-		nbVertices[slave_id]++;
+		(nbVertices[slave_id])++;
 
 		return index;
     }

@@ -52,10 +52,12 @@ class BaseEdge {
 	UINT32 consumptionInt;
 	UINT32 delayInt;
 
-	UINT32 tempId; // Used while creating a topology matrix.
+	UINT32 tempId; 		// Used while creating a topology matrix.
+	BaseEdge* refEdge;  // Reference to the PiSDF edge.
 public:
 	BaseEdge(){
 		consumptionInt = productionInt = delayInt = 0;
+		refEdge = 0;
 	}
 
 
@@ -132,6 +134,17 @@ public:
     void setTempId(UINT32 tempId)
     {
         this->tempId = tempId;
+    }
+
+
+    BaseEdge *getRefEdge() const
+    {
+        return refEdge;
+    }
+
+    void setRefEdge(BaseEdge *refEdge)
+    {
+        this->refEdge = refEdge;
     }
 };
 

@@ -120,13 +120,14 @@ int main(int argc, char* argv[]){
 	// Getting the PiSDF graph.
 	top(&piSDF);
 	PiSDFGraph* H = &piSDF;
+	SRDAGVertex* hSrDagVx = 0;
 	while(H){
 	#if PRINT_GRAPH
 		// Printing the PiSDF graph.
 		dotWriter.write(H, PiSDF_FILE_PATH, 1);
 	#endif
 
-		H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag);
+		H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag, hSrDagVx);
 
 	#if PRINT_GRAPH
 		// Printing the dag.
@@ -137,8 +138,10 @@ int main(int argc, char* argv[]){
 		// Finding other hierarchical Vxs.
 		H = 0;
 		for (int i = 0; i < dag.getNbVertices(); i++) {
-			if(dag.getVertex(i)->getReference()->getType() == pisdf_vertex)
-				((PiSDFVertex*)(dag.getVertex(i)->getReference()))->hasSubGraph(&H);
+			hSrDagVx = dag.getVertex(i);
+			if(hSrDagVx->getReference()->getType() == pisdf_vertex){
+				if(((PiSDFVertex*)(hSrDagVx->getReference()))->hasSubGraph(&H)) break;
+			}
 		}
 	}
 

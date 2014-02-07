@@ -195,7 +195,7 @@ public:
 	/*
 	 * Creates SrDAG graph including configure and input vertices.
 	 */
-	void createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG);
+	void createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hSrDagVx);
 
 
 	void multiStepScheduling(BaseSchedule* schedule,
@@ -203,7 +203,8 @@ public:
 							Architecture* arch,
 							launcher* launch,
 							ExecutionStat* execStat,
-							SRDAGGraph* dag);
+							SRDAGGraph* dag,
+							SRDAGVertex* hSrDagVx);
 
 	void solveParameters(SRDAGGraph* dag);
 

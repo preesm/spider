@@ -48,7 +48,7 @@ BaseVertex* SDFGraph::addVertex(BaseVertex* originalVertex){
 		configVertices[nbConfigVertices++] = originalVertex;
 }
 
-BaseEdge* SDFGraph::addEdge(BaseVertex* source, UINT32 production, BaseVertex* sink, UINT32 consumption)
+BaseEdge* SDFGraph::addEdge(BaseVertex* source, UINT32 production, BaseVertex* sink, UINT32 consumption, BaseEdge* refEdge)
 {
 	if(nbEdges >= MAX_NB_EDGES){
 		// Adding an edge while the graph is already full
@@ -59,6 +59,7 @@ BaseEdge* SDFGraph::addEdge(BaseVertex* source, UINT32 production, BaseVertex* s
 	edge->setProductionInt(production);
 	edge->setSink(sink);
 	edge->setConsumtionInt(consumption);
+	edge->setRefEdge(refEdge);
 
 	return edge;
 }

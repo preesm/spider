@@ -88,6 +88,11 @@ class SRDAGVertex {
 		BaseVertex* Reference;
 
 		/**
+		 * Reference to the parent vertex.
+		 */
+		SRDAGVertex* parent;
+
+		/**
 		 The vertex top level
 		*/
 		int tLevel;
@@ -257,9 +262,6 @@ class SRDAGVertex {
 		void setTLevel(int value);
 
 
-		void addInputEdge(SRDAGEdge* edge);
-		void addOutputEdge(SRDAGEdge* edge);
-
 		SRDAGEdge* getInputEdge(int id);
 		SRDAGEdge* getOutputEdge(int id);
 
@@ -319,6 +321,18 @@ class SRDAGVertex {
 	        this->mergeIx = ix;
 	    }
 
+	    SRDAGVertex *getParent() const
+	    {
+	        return parent;
+	    }
+
+	    void setParent(SRDAGVertex *parent)
+	    {
+	        this->parent = parent;
+	    }
+
+		void addInputEdge(SRDAGEdge* edge);
+		void addOutputEdge(SRDAGEdge* edge);
 	    bool checkPredec();
 };
 

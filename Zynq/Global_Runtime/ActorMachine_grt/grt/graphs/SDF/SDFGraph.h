@@ -68,7 +68,7 @@ public:
 
 	BaseVertex* addVertex(BaseVertex* originalVertex);
 
-	BaseEdge* addEdge(BaseVertex* source, UINT32 production, BaseVertex* sink, UINT32 consumption);
+	BaseEdge* addEdge(BaseVertex* source, UINT32 production, BaseVertex* sink, UINT32 consumption, BaseEdge* refEdge);
 
 	void addConfigVertex(BaseVertex* configVertex){
 		configVertices[nbConfigVertices++] = configVertex;

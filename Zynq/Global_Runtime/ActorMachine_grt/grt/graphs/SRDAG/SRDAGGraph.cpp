@@ -45,6 +45,7 @@
 #include "SRDAGGraph.h"
 #include "SRDAGVertex.h"
 #include "../CSDAG/CSDAGVertex.h"
+#include "../PiSDF/PiSDFIfVertex.h"
 #include "SRDAGEdge.h"
 #include <cstdio>
 #include <cstdlib>
@@ -78,7 +79,7 @@ SRDAGGraph::~SRDAGGraph()
  @param consumption: number of tokens (chars) consumed by the sink
  @return the created edge
 */
-SRDAGEdge* SRDAGGraph::addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* sink){
+SRDAGEdge* SRDAGGraph::addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* sink, BaseEdge* refEdge){
 	SRDAGEdge* edge;
 #ifdef _DEBUG
 	if(nbEdges >= MAX_SRDAG_EDGES){
@@ -90,6 +91,7 @@ SRDAGEdge* SRDAGGraph::addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* 
 	edge->setSource(source);
 	edge->setTokenRate(tokenRate);
 	edge->setSink(sink);
+	edge->setRefEdge(refEdge);
 	source->addOutputEdge(edge);
 	sink->addInputEdge(edge);
 	nbEdges++;
@@ -98,6 +100,23 @@ SRDAGEdge* SRDAGGraph::addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* 
 
 
 void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
+	// Adding vxs
+	for (int i = 0; i < annex->getNbVertices(); i++) {
+		SRDAGVertex* annexVx = annex->getVertex(i);
+
+		SRDAGVertex* vx = addVertex();
+		vx->setReference(annexVx->getReference());
+		vx->setReferenceIndex(annexVx->getReferenceIndex());
+		vx->setState(annexVx->getState());
+		vx->setType(annexVx->getType());
+		vx->setExpImpId(annexVx->getExpImpId());
+		vx->setParent(annexVx->getParent());
+
+		// Storing the index in the merged graph.
+		annexVx->setMergeIx(vx->getId());
+	}
+
+	// Adding edges.
 	for (int i = 0; i < annex->getNbEdges(); i++) {
 		SRDAGEdge* edge = annex->getEdge(i);
 		SRDAGVertex* source;
@@ -105,15 +124,17 @@ void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
 		int srcMergeIx = edge->getSource()->getMergeIx();
 		int snkMergeIx = edge->getSink()->getMergeIx();
 		if(srcMergeIx != -1)
-			source = getVertex(srcMergeIx);
+			source = getVertex(srcMergeIx); // The source has already be added.
 		else
 		{
+			// Adding a new source vx.
 			source = addVertex();
 			source->setReference(edge->getSource()->getReference());
 			source->setReferenceIndex(edge->getSource()->getReferenceIndex());
 			source->setState(edge->getSource()->getState());
 			source->setType(edge->getSource()->getType());
 			source->setExpImpId(edge->getSource()->getExpImpId());
+			source->setParent(edge->getSource()->getParent());
 
 			edge->getSource()->setMergeIx(source->getId());
 		}
@@ -128,11 +149,12 @@ void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
 			sink->setState(edge->getSink()->getState());
 			sink->setType(edge->getSink()->getType());
 			sink->setExpImpId(edge->getSink()->getExpImpId());
+			sink->setParent(edge->getSink()->getParent());
 
 			edge->getSink()->setMergeIx(sink->getId());
 		}
 
-		addEdge(source, edge->getTokenRate(), sink);
+		addEdge(source, edge->getTokenRate(), sink, edge->getRefEdge());
 	}
 }
 
@@ -228,7 +250,18 @@ int SRDAGGraph::getCriticalPath(){
 	return max;
 }
 
+SRDAGEdge* SRDAGGraph::getEdgeByRef(SRDAGVertex* hSrDagVx, BaseEdge* refEdge, VERTEX_TYPE inOut){
+	if(inOut == input_vertex){
+		for (UINT32 i = 0; i < hSrDagVx->getNbInputEdge(); i++) {
+			SRDAGEdge* inSrDagEdge = hSrDagVx->getInputEdge(i);
+			if(inSrDagEdge->getRefEdge() == refEdge) return inSrDagEdge;
+		}
+	}
+	else if(inOut == output_vertex){
 
+	}
+	return 0;
+}
 
 void SRDAGGraph::merge(SRDAGGraph* annex){
 	// Adding the annexing vertices and edges.
@@ -241,8 +274,8 @@ void SRDAGGraph::merge(SRDAGGraph* annex){
 		// Finding matching unplugged vertex to the right.
 		SRDAGVertex* rightVx;
 		if (!(rightVx = findMatch(leftVx->getReference()))) exitWithCode(1064);
-		// Plugging them.
-		addEdge(leftVx, leftVx->getInputEdge(0)->getTokenRate(), rightVx);
+		// Connecting them.
+		addEdge(leftVx, leftVx->getInputEdge(0)->getTokenRate(), rightVx, leftVx->getInputEdge(0)->getRefEdge());
 //		leftVx->getInputEdge(0)->setSink(rightVx);
 		// Deleting left Vx.
 //		removeVx(leftVx);
@@ -250,12 +283,15 @@ void SRDAGGraph::merge(SRDAGGraph* annex){
 
 	// Connecting two graphs from different hierarchy levels.
 	// Finding interface(s) in the annex.
-//	SRDAGVertex* inputVx;
-//	while(leftVx = findUnplugIF(input_vertex)){
-//		// Getting the parent vertex.
-//	}
-		// Iterating over the number of repetitions.
-		// Getting number of repetitions
+	SRDAGVertex* inputVx;
+	while(inputVx = findUnplugIF(input_vertex)){
+		// Getting the parent input edge
+		BaseEdge* refEdge = ((PiSDFIfVertex*)inputVx->getReference())->getParentEdge();
+		SRDAGEdge* inSrDagEdge = getEdgeByRef(inputVx->getParent(), refEdge, input_vertex);
+		inSrDagEdge->setSink(inputVx);
+		inputVx->addInputEdge(inSrDagEdge);
+		if(inputVx->getNbOutputEdge()>0) inputVx->setState(SrVxStExecutable);
+	}
 }
 
 

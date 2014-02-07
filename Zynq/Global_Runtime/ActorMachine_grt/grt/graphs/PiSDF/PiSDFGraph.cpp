@@ -550,45 +550,45 @@ void PiSDFGraph::copyRequiredEdges(BaseVertex* startVertex)
 
 void PiSDFGraph::connectExecVertices(SDFGraph *outSDF)
 {
-	// Connecting the executable vertices.
-	for (UINT32 i = 0; i < outSDF->getNbVertices(); i++) {
-		BaseVertex* execVertex = outSDF->getVertex(i);
-
-		for (UINT32 i = 0; i < execVertex->getNbOutputEdges(); i++){
-			PiSDFEdge* edge = execVertex->getOutputEdge(i);
-			BaseVertex* sinkVertex = edge->getSink();
-
-			// Bypassing hierarchical vertices.
-			if(sinkVertex->getType() == pisdf_vertex)
-			{
-				PiSDFGraph* subGraph = ((PiSDFVertex*)sinkVertex)->getSubGraph();
-				if(subGraph != (PiSDFGraph*)0)
-				{
-					// Getting the successor of the corresponding input vertex.
-					sinkVertex = subGraph->getInputVertex(edge)->getOutputEdge(0)->getSink();
-				}
-				outSDF->addEdge(execVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
-			}
-			// Bypassing output vertices.
-			else if(sinkVertex->getType() == output_vertex)
-			{
-				PiSDFEdge* parentEdge = ((PiSDFIfVertex*)sinkVertex)->getParentEdge();
-				sinkVertex = parentEdge->getSink();
-				// Adding the edge with the parent vertex as sink.
-				outSDF->addEdge(execVertex, edge->getProductionInt(), sinkVertex, parentEdge->getConsumptionInt());
-			}
-			// Connecting common vertices.
-			else
-				outSDF->addEdge(execVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
-
-			/*
-			 * Adding the sink vertex if it's not already present. Even if the sink vertex isn't executable,
-			 * it is needed to build the topological matrix.
-			 */
-			if(outSDF->getVertexIndex(sinkVertex) == -1)
-				outSDF->addVertex(sinkVertex);
-		}
-	}
+//	// Connecting the executable vertices.
+//	for (UINT32 i = 0; i < outSDF->getNbVertices(); i++) {
+//		BaseVertex* execVertex = outSDF->getVertex(i);
+//
+//		for (UINT32 i = 0; i < execVertex->getNbOutputEdges(); i++){
+//			PiSDFEdge* edge = execVertex->getOutputEdge(i);
+//			BaseVertex* sinkVertex = edge->getSink();
+//
+//			// Bypassing hierarchical vertices.
+//			if(sinkVertex->getType() == pisdf_vertex)
+//			{
+//				PiSDFGraph* subGraph = ((PiSDFVertex*)sinkVertex)->getSubGraph();
+//				if(subGraph != (PiSDFGraph*)0)
+//				{
+//					// Getting the successor of the corresponding input vertex.
+//					sinkVertex = subGraph->getInputVertex(edge)->getOutputEdge(0)->getSink();
+//				}
+//				outSDF->addEdge(execVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
+//			}
+//			// Bypassing output vertices.
+//			else if(sinkVertex->getType() == output_vertex)
+//			{
+//				PiSDFEdge* parentEdge = ((PiSDFIfVertex*)sinkVertex)->getParentEdge();
+//				sinkVertex = parentEdge->getSink();
+//				// Adding the edge with the parent vertex as sink.
+//				outSDF->addEdge(execVertex, edge->getProductionInt(), sinkVertex, parentEdge->getConsumptionInt());
+//			}
+//			// Connecting common vertices.
+//			else
+//				outSDF->addEdge(execVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
+//
+//			/*
+//			 * Adding the sink vertex if it's not already present. Even if the sink vertex isn't executable,
+//			 * it is needed to build the topological matrix.
+//			 */
+//			if(outSDF->getVertexIndex(sinkVertex) == -1)
+//				outSDF->addVertex(sinkVertex);
+//		}
+//	}
 }
 
 
@@ -807,7 +807,7 @@ void PiSDFGraph::createSDF(SDFGraph* outSDF){
 				if(outSDF->getVertexIndex(refSink) == -1) outSDF->addVertex(refSink);
 
 				// Adding edges to SDF graph.
-				outSDF->addEdge(refSource, edge->getProductionInt(), refSink, edge->getConsumptionInt());
+				outSDF->addEdge(refSource, edge->getProductionInt(), refSink, edge->getConsumptionInt(), edge);
 			}
 		}
 	}
@@ -817,7 +817,7 @@ void PiSDFGraph::createSDF(SDFGraph* outSDF){
  * Creates SrDAG including only 'vxsType' vertices.
  * Assumes the list of vertices is in topological order.
  */
-void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG){
+void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hSrDagVx){
 	// Adding configure vxs.
 	for (UINT32 i = 0; i < nb_config_vertices; i++) {
 		PiSDFConfigVertex* refConfigVertex = &config_vertices[i];
@@ -841,6 +841,7 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG){
 				SRDAGVertex*source = outSrDAG->addVertex();
 				source->setReference(predec);
 				source->setReferenceIndex(predec->getId());
+				source->setParent(hSrDagVx);
 
 				// Evaluating expressions. TODO: Maybe not needed.
 				int prod, cons, delay;
@@ -853,7 +854,7 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG){
 				edge->setEvaluated(TRUE);
 
 				// Adding edge into outSrDAG between input vx and configure vx.
-				outSrDAG->addEdge(source, edge->getProductionInt(), srDagVertex);
+				outSrDAG->addEdge(source, edge->getProductionInt(), srDagVertex, edge);
 			}
 		}
 
@@ -882,7 +883,7 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG){
 			edge->setEvaluated(TRUE);
 
 			// Adding edge into outSrDAG between configure vx and successor vx (round buffer or other configure vx)
-			outSrDAG->addEdge(srDagVertex, edge->getProductionInt(), sink);
+			outSrDAG->addEdge(srDagVertex, edge->getProductionInt(), sink, edge);
 		}
 	}
 
@@ -891,9 +892,10 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG){
 	for (UINT32 i = 0; i < nb_input_vertices; i++) {
 		PiSDFIfVertex* refInputVx = &input_vertices[i];
 		if(refInputVx->getOutputEdge(0)->getSink()->getType() != config_vertex){
-			SRDAGVertex* srDagVertex = outSrDAG->addVertex();
-			srDagVertex->setReference(refInputVx);
-			srDagVertex->setReferenceIndex(refInputVx->getId());
+			SRDAGVertex* inputSrDagVx = outSrDAG->addVertex();
+			inputSrDagVx->setReference(refInputVx);
+			inputSrDagVx->setReferenceIndex(refInputVx->getId());
+			inputSrDagVx->setParent(hSrDagVx);
 		}
 	}
 }
@@ -904,15 +906,16 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 							Architecture* arch,
 							launcher* launch,
 							ExecutionStat* execStat,
-							SRDAGGraph* dag){
+							SRDAGGraph* dag,
+							SRDAGVertex* currSrDagVx){
 	if(nb_config_vertices > 0){
 		// Creating SrDAG with the configure vertices.
 		// TODO: treat delays
 		if(dag->getNbVertices() == 0)
-			createSrDAGInputConfigVxs(dag);
+			createSrDAGInputConfigVxs(dag, currSrDagVx);
 		else{
 			SRDAGGraph 	localDag;
-			createSrDAGInputConfigVxs(&localDag);
+			createSrDAGInputConfigVxs(&localDag, currSrDagVx);
 		#if PRINT_GRAPH
 			// Printing the dag.
 			dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
@@ -928,7 +931,6 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 	#endif
 
 		// Scheduling the DAG.
-		schedule->reset();
 		listScheduler->schedule(dag, schedule, arch);
 
 		ScheduleWriter schedWriter;

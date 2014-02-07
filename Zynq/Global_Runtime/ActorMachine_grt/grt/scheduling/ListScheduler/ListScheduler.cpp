@@ -316,17 +316,19 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 //	UINT32 noSchedule = -1; // Indicates that the vertex have not been scheduled.
 	UINT32 minimumStartTime = 0;
 	UINT32 precVertexEndTime;
+	// Computing the minimum start time.
 	for(int i=0; i<vertex->getNbInputEdge(); i++){
 		SRDAGVertex* precVertex = vertex->getInputEdge(i)->getSource();
-		if((precVertex != vertex) && (!precVertex->getReference()->getScheduled())){
+		if(precVertex != vertex){ // TODO: Normally there is no cycles in a DAG, so this is check is not needed.
 			if(precVertex->getScheduleIndex() != -1)
+				// Getting the end time of the predecessor, since it has already been scheduled.
 				precVertexEndTime = schedule->getVertexEndTime(precVertex->getScheduleIndex(), precVertex);
 			else
 				// Scheduling the precedent vertex.
 				precVertexEndTime = this->schedule(schedule, arch, precVertex);
 
 			minimumStartTime = std::max(minimumStartTime, precVertexEndTime);
-			vertex->getReference()->setScheduled(true);
+//			vertex->getReference()->setScheduled(true);
 		}
 	}
 
@@ -374,7 +376,7 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 	for(int i=0; i<nbVertices; i++){
 		SRDAGVertex* vertex = dag->getVertex(i);
 		if((vertex->getScheduleIndex() == -1) &&
-		   (vertex->getReference()->getStatus() == VxStExecutable))
+		   (vertex->getState() == SrVxStExecutable))
 		{
 			this->schedule(schedule, arch, vertex);
 		}

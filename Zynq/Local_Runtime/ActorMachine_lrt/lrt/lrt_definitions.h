@@ -172,12 +172,12 @@ typedef enum{
 
 // AM_VERTEX_TYPES
 typedef enum{
-	VERTEX_UNINITIALIZED=0,
-	WAIT,
-	STATE,
-	TEST,
-	EXEC
-} AM_VERTEX_TYPE ;
+	AMVxTypeUndefined=0,
+	AMVxTypeWait,
+	AMVxTypeState,
+	AMVxTypeTest,
+	AMVxTypeExec
+} AMVertexType;
 
 
 typedef enum{
@@ -224,8 +224,8 @@ typedef struct {
 
 typedef struct // Structure of an actor machine's vertex.
 {
-	AM_VERTEX_TYPE			type;								// Type of vertex.
-	UINT8					successor_ix[AM_MAX_NB_SUCCESSORS];	// Indices of the vertex' successors.
+	AMVertexType		type;								// Type of vertex.
+	UINT8				successor_ix[AM_MAX_NB_SUCCESSORS];	// Indices of the vertex' successors.
 	union{
 		UINT8			condID;								// Index, of the condition to be tested(Test vertex), in the actor's array of conditions.
 		UINT8			actionID;							// Index of the vertex's action function.

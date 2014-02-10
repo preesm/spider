@@ -130,8 +130,8 @@ int main(int argc, char* argv[]){
 
 	#if PRINT_GRAPH
 		// Printing the dag.
-		dotWriter.write(&dag, SRDAG_FILE_PATH, 1, 1);
-		dotWriter.write(&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+//		dotWriter.write(&dag, SRDAG_FILE_PATH, 1, 1);
+//		dotWriter.write(&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
 	#endif
 
 		// Finding other hierarchical Vxs.

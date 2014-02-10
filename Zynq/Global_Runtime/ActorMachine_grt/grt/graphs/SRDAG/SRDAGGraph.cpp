@@ -280,7 +280,7 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
 	if(intraLevel){
 		// Connecting two graphs from the same hierarchy level.
 
-		// Connecting an unplugged vx to the left (RB or IF).
+		// Finding an unplugged vx to the left (RoundBuffer or InterFace).
 		SRDAGVertex* leftVx;
 		while(leftVx = findUnplug()){
 			// Finding matching unplugged vertex to the right.
@@ -288,9 +288,11 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
 			if (!(rightVx = findMatch(leftVx->getReference()))) exitWithCode(1064);
 			// Connecting them.
 			addEdge(leftVx, leftVx->getInputEdge(0)->getTokenRate(), rightVx, leftVx->getInputEdge(0)->getRefEdge());
-	//		leftVx->getInputEdge(0)->setSink(rightVx);
+//			leftVx->getInputEdge(0)->setSink(rightVx);
+			rightVx->getOutputEdge(0)->setSource(leftVx);
 			// Deleting left Vx.
-	//		removeVx(leftVx);
+//			leftVx->setState(SrVxStDeleted);
+			rightVx->setState(SrVxStDeleted);
 		}
 
 		// Connecting output interface(s) in the annex.

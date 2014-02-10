@@ -950,8 +950,9 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 
 		#if PRINT_GRAPH
 			// Printing the dag.
-			dotWriter.write(dag, SUB_SRDAG_FILE_PATH, 1, 1);
-			dotWriter.write(dag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+//			sprintf(name, "srDag_%d.gv", stepsCntr);
+//			dotWriter.write(dag, name, 1, 1);
+//			dotWriter.write(dag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
 		#endif
 
 		// Scheduling the DAG.
@@ -980,9 +981,12 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 
 #if PRINT_GRAPH
 	// Printing the dag.
-	dotWriter.write(dag, SRDAG_FILE_PATH, 1, 1);
-	dotWriter.write(dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+//	dotWriter.write(dag, SRDAG_FILE_PATH, 1, 1);
+//	dotWriter.write(dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+	sprintf(name, "srDag_%d.gv", stepsCntr);
+	dotWriter.write(dag, name, 1, 1);
 #endif
+	stepsCntr++;
 
 	// Resolving productions/consumptions.
 	evaluateExpressions();

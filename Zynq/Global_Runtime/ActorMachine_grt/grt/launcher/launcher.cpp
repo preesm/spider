@@ -328,7 +328,7 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, Architecture *archi, BaseSche
 
 #if PRINT_ACTOR_IN_DOT_FILE == 1
 					sprintf(name, "%s_%d", vertex->getReference()->getName(), vertex->getReferenceIndex());
-					actor.toDot(pFile, name, j);
+					actor.toDot(pFile, vertex->getName(), j);
 #endif
 				}
 			}

@@ -82,89 +82,95 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOLEAN displayNames,
 		fprintf (pFile, "digraph srDag {\n");
 		fprintf (pFile, "node [color=Black];\n");
 		fprintf (pFile, "edge [color=Red];\n");
-		fprintf (pFile, "rankdir=LR;\n");
+//		fprintf (pFile, "rankdir=LR;\n");
 
 		for (int i=0 ; i<graph->getNbVertices() ; i++)
 		{
 			SRDAGVertex* vertex = graph->getVertex(i);
-			switch (vertex->getType()) {
-				case 0: // Normal vertex.
-					// TODO: Handle this and below lines for CSDAG vertices : sprintf(name,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
-					sprintf(name,"%s_%d",vertex->getReference()->getName(),vertex->getReferenceIndex());
-					break;
-				case 1: // Explode vertex.
-					sprintf(name,"%s_%d_%s_%d","Exp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
-					break;
-				case 2: // Implode vertex.
-					sprintf(name,"%s_%d_%s_%d","Imp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
-					break;
-				default:
-					break;
-			}
+			if(vertex->getState() != SrVxStDeleted){
+				switch (vertex->getType()) {
+					case 0: // Normal vertex.
+						// TODO: Handle this and below lines for CSDAG vertices : sprintf(name,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+						sprintf(name,"%s_%d",vertex->getReference()->getName(),vertex->getReferenceIndex());
+						break;
+					case 1: // Explode vertex.
+						sprintf(name,"%s_%d_%s_%d","Exp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
+						break;
+					case 2: // Implode vertex.
+						sprintf(name,"%s_%d_%s_%d","Imp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
+						break;
+					default:
+						break;
+				}
 
-			switch (vertex->getState()) {
-				case SrVxStExecutable:
-					strcpy(color, "blue");
-					break;
-				case SrVxStExecuted:
-					strcpy(color, "gray");
-					break;
-				case SrVxStHierarchy:
-					strcpy(color, "red");
-					break;
-				default:
-					strcpy(color, "black");
-					break;
-			}
+				switch (vertex->getState()) {
+					case SrVxStExecutable:
+						strcpy(color, "blue");
+						break;
+					case SrVxStExecuted:
+						strcpy(color, "gray");
+						break;
+					case SrVxStHierarchy:
+						strcpy(color, "red");
+						break;
+					case SrVxStNoExecuted:
+						strcpy(color, "black");
+						break;
+				}
 
-			if(displayNames){
-				fprintf (pFile, "\t%s [label=\"%s\" color=\"%s\"];\n",name,name, color);
-			}
-			else{
-				fprintf (pFile, "\t%s [label=\"\" color=\"%s\"];\n",name, color);
+				if(displayNames){
+					fprintf (pFile, "\t%s [label=\"%s\" color=\"%s\"];\n",vertex->getName(),vertex->getName(), color);
+				}
+				else{
+					fprintf (pFile, "\t%s [label=\"\" color=\"%s\"];\n",vertex->getName(), color);
+				}
 			}
 		}
 
 		for (int i=0 ; i<graph->getNbEdges() ; i++)
 		{
 			SRDAGEdge* edge = graph->getEdge(i);
+			SRDAGVertex* vxSrc = edge->getSource();
+			SRDAGVertex* vxSnk = edge->getSink();
+			if((vxSrc->getState() != SrVxStDeleted) && (vxSnk->getState() != SrVxStDeleted)){
+				switch (edge->getSource()->getType()) {
+					case 0: // Normal vertex.
+						sprintf(name,"%s_%d",edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
+						break;
+					case 1: // Explode vertex.
+						sprintf(name,"%s_%d_%s_%d","Exp", edge->getSource()->getExpImpId(), edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
+						break;
+					case 2: // Implode vertex.
+						sprintf(name,"%s_%d_%s_%d","Imp", edge->getSource()->getExpImpId(), edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
+						break;
+					default:
+						break;
+				}
 
-			switch (edge->getSource()->getType()) {
-				case 0: // Normal vertex.
-					sprintf(name,"%s_%d",edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
-					break;
-				case 1: // Explode vertex.
-					sprintf(name,"%s_%d_%s_%d","Exp", edge->getSource()->getExpImpId(), edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
-					break;
-				case 2: // Implode vertex.
-					sprintf(name,"%s_%d_%s_%d","Imp", edge->getSource()->getExpImpId(), edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
-					break;
-				default:
-					break;
+				switch (edge->getSink()->getType()) {
+					case 0: // Normal vertex.
+						sprintf(name2,"%s_%d",edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
+						break;
+					case 1: // Explode vertex.
+						sprintf(name2,"%s_%d_%s_%d","Exp", edge->getSink()->getExpImpId(), edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
+						break;
+					case 2: // Implode vertex.
+						sprintf(name2,"%s_%d_%s_%d","Imp", edge->getSink()->getExpImpId(), edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
+						break;
+					default:
+						break;
+				}
+				if(displayRates)
+					fprintf (pFile, "\t%s->%s [label=\"%d\"];\n", edge->getSource()->getName(), edge->getSink()->getName(), edge->getTokenRate());
+				else
+					fprintf (pFile, "\t%s->%s [label=\"%d\"];\n", edge->getSource()->getName(), edge->getSink()->getName(), i);
 			}
-
-			switch (edge->getSink()->getType()) {
-				case 0: // Normal vertex.
-					sprintf(name2,"%s_%d",edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
-					break;
-				case 1: // Explode vertex.
-					sprintf(name2,"%s_%d_%s_%d","Exp", edge->getSink()->getExpImpId(), edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
-					break;
-				case 2: // Implode vertex.
-					sprintf(name2,"%s_%d_%s_%d","Imp", edge->getSink()->getExpImpId(), edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
-					break;
-				default:
-					break;
-			}
-			if(displayRates)
-				fprintf (pFile, "\t%s->%s [label=\"%d\"];\n", name, name2, edge->getTokenRate());
-			else
-				fprintf (pFile, "\t%s->%s [label=\"%d\"];\n", name, name2, i);
 		}
 		fprintf (pFile, "}\n");
 
 		fclose (pFile);
-	}else{
+	}
+	else{
 		printf("Cannot open %s\n", path);
 	}
 }

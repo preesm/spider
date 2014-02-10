@@ -51,6 +51,10 @@
 #include <cstdlib>
 #include <cstring>
 
+
+
+static char name[MAX_VERTEX_NAME_SIZE];
+
 /**
  Constructor
 */
@@ -105,6 +109,7 @@ void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
 		SRDAGVertex* annexVx = annex->getVertex(i);
 
 		SRDAGVertex* vx = addVertex();
+		vx->setName(annexVx->getName());
 		vx->setReference(annexVx->getReference());
 		vx->setReferenceIndex(annexVx->getReferenceIndex());
 		vx->setState(annexVx->getState());
@@ -129,6 +134,7 @@ void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
 		{
 			// Adding a new source vx.
 			source = addVertex();
+			source->setName(edge->getSource()->getName());
 			source->setReference(edge->getSource()->getReference());
 			source->setReferenceIndex(edge->getSource()->getReferenceIndex());
 			source->setState(edge->getSource()->getState());
@@ -144,6 +150,7 @@ void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
 		else
 		{
 			sink = addVertex();
+			sink->setName(edge->getSink()->getName());
 			sink->setReference(edge->getSink()->getReference());
 			sink->setReferenceIndex(edge->getSink()->getReferenceIndex());
 			sink->setState(edge->getSink()->getState());
@@ -258,7 +265,10 @@ SRDAGEdge* SRDAGGraph::getEdgeByRef(SRDAGVertex* hSrDagVx, BaseEdge* refEdge, VE
 		}
 	}
 	else if(inOut == output_vertex){
-
+		for (UINT32 i = 0; i < hSrDagVx->getNbOutputEdge(); i++) {
+			SRDAGEdge* outSrDagEdge = hSrDagVx->getOutputEdge(i);
+			if(outSrDagEdge->getRefEdge() == refEdge) return outSrDagEdge;
+		}
 	}
 	return 0;
 }
@@ -269,7 +279,8 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
 
 	if(intraLevel){
 		// Connecting two graphs from the same hierarchy level.
-		// Finding an unplugged vx to the left (RB or IF).
+
+		// Connecting an unplugged vx to the left (RB or IF).
 		SRDAGVertex* leftVx;
 		while(leftVx = findUnplug()){
 			// Finding matching unplugged vertex to the right.
@@ -281,18 +292,34 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
 			// Deleting left Vx.
 	//		removeVx(leftVx);
 		}
+
+		// Connecting output interface(s) in the annex.
+		SRDAGVertex* outputVx;
+		while(outputVx = findUnplugIF(output_vertex)){
+			// Getting the output edge from the higher level in the PiSDF.
+			BaseEdge* refEdge = ((PiSDFIfVertex*)outputVx->getReference())->getParentEdge();
+			// Getting the corresponding edge in the DAG.
+			SRDAGEdge* outSrDagEdge = getEdgeByRef(outputVx->getParent(), refEdge, output_vertex);
+			// Changing the source of the DAG edge to the output of the lower level.
+			outSrDagEdge->setSource(outputVx);
+			outputVx->addOutputEdge(outSrDagEdge);
+//			if(outputVx->getNbOutputEdge()>0) outputVx->setState(SrVxStExecutable);
+		}
 	}
 	else{
 		// Connecting two graphs from different hierarchy levels.
-		// Finding interface(s) in the annex.
+
+		// Connecting input interface(s) in the annex.
 		SRDAGVertex* inputVx;
 		while(inputVx = findUnplugIF(input_vertex)){
-			// Getting the parent input edge
+			// Getting the input edge from the higher level in the PiSDF.
 			BaseEdge* refEdge = ((PiSDFIfVertex*)inputVx->getReference())->getParentEdge();
+			// Getting the corresponding edge in the DAG.
 			SRDAGEdge* inSrDagEdge = getEdgeByRef(inputVx->getParent(), refEdge, input_vertex);
+			// Changing the sink of the DAG edge to the input from the lower level.
 			inSrDagEdge->setSink(inputVx);
 			inputVx->addInputEdge(inSrDagEdge);
-			if(inputVx->getNbOutputEdge()>0) inputVx->setState(SrVxStExecutable);
+//			if(inputVx->getNbOutputEdge()>0) inputVx->setState(SrVxStExecutable);
 		}
 	}
 }

@@ -53,7 +53,7 @@
 #define MAX_SLAVE_NAME_SIZE 10// The maximum number of slaves
 
 // Common to all types of graphs
-#define MAX_VERTEX_NAME_SIZE 32
+#define MAX_VERTEX_NAME_SIZE 	100
 #define MAX_PARAM_NAME_SIZE 32
 #define MAX_NB_VERTICES			512
 #define MAX_NB_EDGES			512
@@ -104,6 +104,7 @@
 // Launcher
 #define MAX_CTRL_DATA 	2000
 #define MAX_JOB_DATA 	2000
+#define EXEC			0
 
 // XParser
 #define VARIABLE_NAME_LEN_MAX 30

@@ -72,7 +72,7 @@ public:
 	/**
 	 * Adds "nb_repetitions" SRDAGVertex vertices for "vertex" to the output SRDAG graph.
 	 */
-	void addVertices(BaseVertex* vertex, int nb_repetitions, SRDAGGraph* outputGraph);
+	void addVertices(BaseVertex* vertex, int nb_repetitions, SRDAGGraph* outputGraph, SRDAGVertex* hSrDagVx);
 
 	void computeBVR(SDFGraph *sdf);
 
@@ -83,7 +83,7 @@ public:
 	 */
 	void linkvertices(BaseVertex** vertices, UINT32 nbVertices, SRDAGGraph* outputGraph);
 
-	void linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph);
+	void linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDAGVertex* hSrDagVx);
 
 	/**
 	 Transforms a PiSDF graph in Sr
@@ -98,7 +98,7 @@ public:
 	*/
 	void transform(BaseVertex **vertices, UINT32 nbVertices, SRDAGGraph *srGraph);
 
-	void transform(SDFGraph* sdf, SRDAGGraph *srGraph);
+	void transform(SDFGraph* sdf, SRDAGGraph *srGraph, SRDAGVertex* currHSrVx);
 
 };
 

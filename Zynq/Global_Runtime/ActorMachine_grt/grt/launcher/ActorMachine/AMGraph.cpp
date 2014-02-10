@@ -26,7 +26,7 @@
  * that may mean  that it is complicated to manipulate,  and  that  also	*
  * therefore means  that it is reserved for developers  and  experienced	*
  * professionals having in-depth computer knowledge. Users are therefore	*
- * encouraged to load and test the software's suitability as regards their	*
+ * encouraged to load and AMVxTypeTest the software's suitability as regards their	*
  * requirements in conditions enabling the security of their systems and/or 	*
  * data to be ensured and,  more generally, to use and operate it in the 	*
  * same conditions as regards security. 					*
@@ -85,30 +85,30 @@ void AMGraph::generate(SRDAGVertex* srDagVertex) {
 	}
 
 	/* Creating Graph */
-	vertices[0] = AMVertex(0, STATE, condValues, nbConds);// Init State
+	vertices[0] = AMVertex(0, AMVxTypeState, condValues, nbConds);// Init AMVxTypeState
 	nbVertices++;
 
 	for(int i=0; i<nbConds; i++){
 
-		vertices[nbVertices] = AMVertex(nbVertices, TEST, i);
+		vertices[nbVertices] = AMVertex(nbVertices, AMVxTypeTest, i);
 		vertices[nbVertices-1].addSuc(nbVertices);
 
 		condValues[i]=COND_false;
-		vertices[nbVertices+1] = AMVertex(nbVertices+1, STATE, condValues, nbConds);
+		vertices[nbVertices+1] = AMVertex(nbVertices+1, AMVxTypeState, condValues, nbConds);
 		vertices[nbVertices].addSuc(nbVertices+1);
 		vertices[nbVertices+1].addSuc(nbVertices+2);
 
-		vertices[nbVertices+2] = AMVertex(nbVertices+2, WAIT); // Wait
+		vertices[nbVertices+2] = AMVertex(nbVertices+2, AMVxTypeWait); // AMVxTypeWait
 		vertices[nbVertices+2].addSuc(nbVertices-1);
 
 		condValues[i]=COND_TRUE;
-		vertices[nbVertices+3] = AMVertex(nbVertices+3, STATE, condValues, nbConds);
+		vertices[nbVertices+3] = AMVertex(nbVertices+3, AMVxTypeState, condValues, nbConds);
 		vertices[nbVertices].addSuc(nbVertices+3);
 
 		nbVertices+=4;
 	}
 
-	vertices[nbVertices] = AMVertex(nbVertices, EXEC, srDagVertex->getCsDagReference()->getFunctionIndex());// Execution State
+	vertices[nbVertices] = AMVertex(nbVertices, AMVxTypeExec, srDagVertex->getCsDagReference()->getFunctionIndex());// Execution AMVxTypeState
 	vertices[nbVertices-1].addSuc(nbVertices);
 	vertices[nbVertices].addSuc(0);
 	nbVertices++;
@@ -125,9 +125,9 @@ void AMGraph::generate(Schedule* schedule, UINT32 slave) {
 	if(schedule->getNbVertex(slave) == 0){
 		nbVertices = 1;
 		nbConds = 0;
-		vertices[0] = AMVertex(0, STATE, NULL, 0);
+		vertices[0] = AMVertex(0, AMVxTypeState, NULL, 0);
 		vertices[0].addSuc(1);
-		vertices[1] = AMVertex(1, WAIT);
+		vertices[1] = AMVertex(1, AMVxTypeWait);
 		vertices[1].addSuc(0);
 		return;
 	}
@@ -142,7 +142,7 @@ void AMGraph::generate(Schedule* schedule, UINT32 slave) {
 	}
 
 	/* Creating Graph */
-	vertices[0] = AMVertex(0, STATE, condValues, nbConds);// Init State
+	vertices[0] = AMVertex(0, AMVxTypeState, condValues, nbConds);// Init AMVxTypeState
 	nbVertices++;
 
 	for(int j=0; j<schedule->getNbVertex(slave); j++){
@@ -155,19 +155,19 @@ void AMGraph::generate(Schedule* schedule, UINT32 slave) {
 			if(!schedule->isPresent(slave, edge->getSource())){
 				conds[nbConds] = AMCond(FIFO_IN, graph->getEdgeIndex(edge), edge->getTokenRate());
 
-				vertices[nbVertices] = AMVertex(nbVertices, TEST, nbConds);  /* Test */
-				vertices[nbVertices-1].addSuc(nbVertices); /* Previous State -> Test */
+				vertices[nbVertices] = AMVertex(nbVertices, AMVxTypeTest, nbConds);  /* AMVxTypeTest */
+				vertices[nbVertices-1].addSuc(nbVertices); /* Previous AMVxTypeState -> AMVxTypeTest */
 
 				condValues[nbConds]=COND_false;
-				vertices[nbVertices+1] = AMVertex(nbVertices+1, STATE, condValues, nbConds+1); /* State false */
-				vertices[nbVertices].addSuc(nbVertices+1);  /* Test -> State false */
-				vertices[nbVertices+2] = AMVertex(nbVertices+2, WAIT); /* Wait */
-				vertices[nbVertices+1].addSuc(nbVertices+2);/* State false -> Wait */
-				vertices[nbVertices+2].addSuc(nbVertices-1);/* Wait -> Previous State */
+				vertices[nbVertices+1] = AMVertex(nbVertices+1, AMVxTypeState, condValues, nbConds+1); /* AMVxTypeState false */
+				vertices[nbVertices].addSuc(nbVertices+1);  /* AMVxTypeTest -> AMVxTypeState false */
+				vertices[nbVertices+2] = AMVertex(nbVertices+2, AMVxTypeWait); /* AMVxTypeWait */
+				vertices[nbVertices+1].addSuc(nbVertices+2);/* AMVxTypeState false -> AMVxTypeWait */
+				vertices[nbVertices+2].addSuc(nbVertices-1);/* AMVxTypeWait -> Previous AMVxTypeState */
 
 				condValues[nbConds]=COND_TRUE;
-				vertices[nbVertices+3] = AMVertex(nbVertices+3, STATE, condValues, nbConds+1); /* State TRUE */
-				vertices[nbVertices].addSuc(nbVertices+3); /* Test -> State TRUE */
+				vertices[nbVertices+3] = AMVertex(nbVertices+3, AMVxTypeState, condValues, nbConds+1); /* AMVxTypeState TRUE */
+				vertices[nbVertices].addSuc(nbVertices+3); /* AMVxTypeTest -> AMVxTypeState TRUE */
 
 				nbVertices+=4;
 				nbConds++;
@@ -191,19 +191,19 @@ void AMGraph::generate(Schedule* schedule, UINT32 slave) {
 			if(!schedule->isPresent(slave, edge->getSink())){
 				conds[nbConds] = AMCond(FIFO_OUT, graph->getEdgeIndex(edge), edge->getTokenRate());
 
-				vertices[nbVertices] = AMVertex(nbVertices, TEST, nbConds);  /* Test */
-				vertices[nbVertices-1].addSuc(nbVertices); /* Previous State -> Test */
+				vertices[nbVertices] = AMVertex(nbVertices, AMVxTypeTest, nbConds);  /* AMVxTypeTest */
+				vertices[nbVertices-1].addSuc(nbVertices); /* Previous AMVxTypeState -> AMVxTypeTest */
 
 				condValues[nbConds]=COND_false;
-				vertices[nbVertices+1] = AMVertex(nbVertices+1, STATE, condValues, nbConds+1); /* State false */
-				vertices[nbVertices].addSuc(nbVertices+1);  /* Test -> State false */
-				vertices[nbVertices+2] = AMVertex(nbVertices+2, WAIT); /* Wait */
-				vertices[nbVertices+1].addSuc(nbVertices+2);/* State false -> Wait */
-				vertices[nbVertices+2].addSuc(nbVertices-1);/* Wait -> Previous State */
+				vertices[nbVertices+1] = AMVertex(nbVertices+1, AMVxTypeState, condValues, nbConds+1); /* AMVxTypeState false */
+				vertices[nbVertices].addSuc(nbVertices+1);  /* AMVxTypeTest -> AMVxTypeState false */
+				vertices[nbVertices+2] = AMVertex(nbVertices+2, AMVxTypeWait); /* AMVxTypeWait */
+				vertices[nbVertices+1].addSuc(nbVertices+2);/* AMVxTypeState false -> AMVxTypeWait */
+				vertices[nbVertices+2].addSuc(nbVertices-1);/* AMVxTypeWait -> Previous AMVxTypeState */
 
 				condValues[nbConds]=COND_TRUE;
-				vertices[nbVertices+3] = AMVertex(nbVertices+3, STATE, condValues, nbConds+1); /* State TRUE */
-				vertices[nbVertices].addSuc(nbVertices+3); /* Test -> State TRUE */
+				vertices[nbVertices+3] = AMVertex(nbVertices+3, AMVxTypeState, condValues, nbConds+1); /* AMVxTypeState TRUE */
+				vertices[nbVertices].addSuc(nbVertices+3); /* AMVxTypeTest -> AMVxTypeState TRUE */
 
 				nbVertices+=4;
 				nbConds++;
@@ -243,13 +243,13 @@ void AMGraph::generate(Schedule* schedule, UINT32 slave) {
 			}
 		}
 
-		vertices[nbVertices] = AMVertex(nbVertices, EXEC, nbActions); /* Execution State */
-		vertices[nbVertices-1].addSuc(nbVertices); /* Previous State -> Exec */
+		vertices[nbVertices] = AMVertex(nbVertices, AMVxTypeExec, nbActions); /* Execution AMVxTypeState */
+		vertices[nbVertices-1].addSuc(nbVertices); /* Previous AMVxTypeState -> AMVxTypeExec */
 
 		for(int i=0; i<nbConds-1; i++)
 			condValues[i] = COND_X;
-		vertices[nbVertices+1] = AMVertex(nbVertices+1, STATE, condValues, nbConds); /* Post-Exec State */
-		vertices[nbVertices].addSuc(nbVertices+1); /* Exec -> Post-Exec State */
+		vertices[nbVertices+1] = AMVertex(nbVertices+1, AMVxTypeState, condValues, nbConds); /* Post-AMVxTypeExec AMVxTypeState */
+		vertices[nbVertices].addSuc(nbVertices+1); /* AMVxTypeExec -> Post-AMVxTypeExec AMVxTypeState */
 
 		nbVertices+=2;
 		nbActions++;
@@ -264,7 +264,7 @@ void AMGraph::generate(Schedule* schedule, UINT32 slave) {
 			abort();
 		}
 	}
-	vertices[nbVertices-1].addSuc(0); /* Exec -> Init State */
+	vertices[nbVertices-1].addSuc(0); /* AMVxTypeExec -> Init AMVxTypeState */
 
 	for(int i=0; i<nbVertices; i++){
 		vertices[i].setNbConds(nbConds);
@@ -275,9 +275,9 @@ void AMGraph::generate(SRDAGGraph* graph, BaseSchedule* schedule, UINT32 slave, 
 	if(schedule->getNbVertices(slave) == 0){
 		nbVertices = 1;
 		nbConds = 0;
-		vertices[0] = AMVertex(0, STATE, NULL, 0);
+		vertices[0] = AMVertex(0, AMVxTypeState, NULL, 0);
 		vertices[0].addSuc(1);
-		vertices[1] = AMVertex(1, WAIT);
+		vertices[1] = AMVertex(1, AMVxTypeWait);
 		vertices[1].addSuc(0);
 		return;
 	}
@@ -292,7 +292,7 @@ void AMGraph::generate(SRDAGGraph* graph, BaseSchedule* schedule, UINT32 slave, 
 	}
 
 	/* Creating Graph */
-	vertices[0] = AMVertex(0, STATE, condValues, nbConds);// Init State
+	vertices[0] = AMVertex(0, AMVxTypeState, condValues, nbConds);// Init AMVxTypeState
 	nbVertices++;
 	this->initState = 0;
 
@@ -307,19 +307,19 @@ void AMGraph::generate(SRDAGGraph* graph, BaseSchedule* schedule, UINT32 slave, 
 			if(!schedule->isPresent(slave, srcVertex->getScheduleIndex(), srcVertex)){
 				conds[nbConds] = AMCond(FIFO_IN, graph->getEdgeIndex(edge), edge->getTokenRate());
 
-				vertices[nbVertices] = AMVertex(nbVertices, TEST, nbConds);  /* Test */
-				vertices[nbVertices-1].addSuc(nbVertices); /* Previous State -> Test */
+				vertices[nbVertices] = AMVertex(nbVertices, AMVxTypeTest, nbConds);  /* AMVxTypeTest */
+				vertices[nbVertices-1].addSuc(nbVertices); /* Previous AMVxTypeState -> AMVxTypeTest */
 
 				condValues[nbConds]=COND_false;
-				vertices[nbVertices+1] = AMVertex(nbVertices+1, STATE, condValues, nbConds+1); /* State false */
-				vertices[nbVertices].addSuc(nbVertices+1);  /* Test -> State false */
-				vertices[nbVertices+2] = AMVertex(nbVertices+2, WAIT); /* Wait */
-				vertices[nbVertices+1].addSuc(nbVertices+2);/* State false -> Wait */
-				vertices[nbVertices+2].addSuc(nbVertices-1);/* Wait -> Previous State */
+				vertices[nbVertices+1] = AMVertex(nbVertices+1, AMVxTypeState, condValues, nbConds+1); /* AMVxTypeState false */
+				vertices[nbVertices].addSuc(nbVertices+1);  /* AMVxTypeTest -> AMVxTypeState false */
+				vertices[nbVertices+2] = AMVertex(nbVertices+2, AMVxTypeWait); /* AMVxTypeWait */
+				vertices[nbVertices+1].addSuc(nbVertices+2);/* AMVxTypeState false -> AMVxTypeWait */
+				vertices[nbVertices+2].addSuc(nbVertices-1);/* AMVxTypeWait -> Previous AMVxTypeState */
 
 				condValues[nbConds]=COND_TRUE;
-				vertices[nbVertices+3] = AMVertex(nbVertices+3, STATE, condValues, nbConds+1); /* State TRUE */
-				vertices[nbVertices].addSuc(nbVertices+3); /* Test -> State TRUE */
+				vertices[nbVertices+3] = AMVertex(nbVertices+3, AMVxTypeState, condValues, nbConds+1); /* AMVxTypeState TRUE */
+				vertices[nbVertices].addSuc(nbVertices+3); /* AMVxTypeTest -> AMVxTypeState TRUE */
 
 				nbVertices+=4;
 				nbConds++;
@@ -344,19 +344,19 @@ void AMGraph::generate(SRDAGGraph* graph, BaseSchedule* schedule, UINT32 slave, 
 			if(!schedule->isPresent(slave, snkVertex->getScheduleIndex(), snkVertex)){
 				conds[nbConds] = AMCond(FIFO_OUT, graph->getEdgeIndex(edge), edge->getTokenRate());
 
-				vertices[nbVertices] = AMVertex(nbVertices, TEST, nbConds);  /* Test */
-				vertices[nbVertices-1].addSuc(nbVertices); /* Previous State -> Test */
+				vertices[nbVertices] = AMVertex(nbVertices, AMVxTypeTest, nbConds);  /* AMVxTypeTest */
+				vertices[nbVertices-1].addSuc(nbVertices); /* Previous AMVxTypeState -> AMVxTypeTest */
 
 				condValues[nbConds]=COND_false;
-				vertices[nbVertices+1] = AMVertex(nbVertices+1, STATE, condValues, nbConds+1); /* State false */
-				vertices[nbVertices].addSuc(nbVertices+1);  /* Test -> State false */
-				vertices[nbVertices+2] = AMVertex(nbVertices+2, WAIT); /* Wait */
-				vertices[nbVertices+1].addSuc(nbVertices+2);/* State false -> Wait */
-				vertices[nbVertices+2].addSuc(nbVertices-1);/* Wait -> Previous State */
+				vertices[nbVertices+1] = AMVertex(nbVertices+1, AMVxTypeState, condValues, nbConds+1); /* AMVxTypeState false */
+				vertices[nbVertices].addSuc(nbVertices+1);  /* AMVxTypeTest -> AMVxTypeState false */
+				vertices[nbVertices+2] = AMVertex(nbVertices+2, AMVxTypeWait); /* AMVxTypeWait */
+				vertices[nbVertices+1].addSuc(nbVertices+2);/* AMVxTypeState false -> AMVxTypeWait */
+				vertices[nbVertices+2].addSuc(nbVertices-1);/* AMVxTypeWait -> Previous AMVxTypeState */
 
 				condValues[nbConds]=COND_TRUE;
-				vertices[nbVertices+3] = AMVertex(nbVertices+3, STATE, condValues, nbConds+1); /* State TRUE */
-				vertices[nbVertices].addSuc(nbVertices+3); /* Test -> State TRUE */
+				vertices[nbVertices+3] = AMVertex(nbVertices+3, AMVxTypeState, condValues, nbConds+1); /* AMVxTypeState TRUE */
+				vertices[nbVertices].addSuc(nbVertices+3); /* AMVxTypeTest -> AMVxTypeState TRUE */
 
 				nbVertices+=4;
 				nbConds++;
@@ -416,13 +416,13 @@ void AMGraph::generate(SRDAGGraph* graph, BaseSchedule* schedule, UINT32 slave, 
 			}
 		}
 
-		vertices[nbVertices] = AMVertex(nbVertices, EXEC, nbActions); /* Execution State */
-		vertices[nbVertices-1].addSuc(nbVertices); /* Previous State -> Exec */
+		vertices[nbVertices] = AMVertex(nbVertices, AMVxTypeExec, nbActions); /* Execution AMVxTypeState */
+		vertices[nbVertices-1].addSuc(nbVertices); /* Previous AMVxTypeState -> AMVxTypeExec */
 
 		for(int i=0; i<nbConds-1; i++)
 			condValues[i] = COND_X;
-		vertices[nbVertices+1] = AMVertex(nbVertices+1, STATE, condValues, nbConds); /* Post-Exec State */
-		vertices[nbVertices].addSuc(nbVertices+1); /* Exec -> Post-Exec State */
+		vertices[nbVertices+1] = AMVertex(nbVertices+1, AMVxTypeState, condValues, nbConds); /* Post-AMVxTypeExec AMVxTypeState */
+		vertices[nbVertices].addSuc(nbVertices+1); /* AMVxTypeExec -> Post-AMVxTypeExec AMVxTypeState */
 
 		nbVertices+=2;
 		nbActions++;
@@ -437,7 +437,7 @@ void AMGraph::generate(SRDAGGraph* graph, BaseSchedule* schedule, UINT32 slave, 
 			abort();
 		}
 	}
-	vertices[nbVertices-1].addSuc(0); /* Exec -> Init State */
+	vertices[nbVertices-1].addSuc(0); /* AMVxTypeExec -> Init AMVxTypeState */
 
 	for(int i=0; i<nbVertices; i++){
 		vertices[i].setNbConds(nbConds);
@@ -459,14 +459,14 @@ void AMGraph::prepare(int slave, launcher* launch){
 		launch->addUINT32ToSend(slave, vertices[i].getSucID(1));
 
 		switch(vertices[i].getType()){
-		case EXEC:
+		case AMVxTypeExec:
 			launch->addUINT32ToSend(slave, vertices[i].getAction());
 			break;
-		case TEST:
+		case AMVxTypeTest:
 			launch->addUINT32ToSend(slave, vertices[i].getCondID());
 			break;
-		case WAIT:
-		case STATE:
+		case AMVxTypeWait:
+		case AMVxTypeState:
 			launch->addUINT32ToSend(slave, 0);
 			break;
 		default:
@@ -532,11 +532,11 @@ void AMGraph::toDot(const char* filename){
 		{
 			vertex = &(vertices[i]);
 			switch(vertex->getType()){
-			case STATE:
+			case AMVxTypeState:
 				//vertex->printStateVertex(name);
 				fprintf (pFile, "\t%d [label=\"%d\\n0\",shape=%s];\n",vertex->getId(),vertex->getId(),/*name,*/types[vertex->getType()]);
 				break;
-			case TEST:
+			case AMVxTypeTest:
 				cond = &conds[vertex->getCondID()];
 				fprintf (pFile, "\t%d [label=\"%d\\nF-%d\\n%s %dB\",shape=%s];\n",
 						vertex->getId(),
@@ -546,7 +546,7 @@ void AMGraph::toDot(const char* filename){
 						cond->fifo.size,
 						types[vertex->getType()]);
 				break;
-			case EXEC:
+			case AMVxTypeExec:
 				action = &(actions[vertex->getAction()]);
 				fprintf (pFile, "\t%d [label=\"%d\\nFunction F%d\\n",vertex->getId(),vertex->getId(),action->getFunctionId());
 				for(j=0; j<action->getNbInFifos(); j++)
@@ -559,7 +559,7 @@ void AMGraph::toDot(const char* filename){
 				break;
 //				fprintf (pFile, "\t%d [label=\"%s\",shape=%s];\n",vertex->getId(),actions[vertex->getAction()].getName(),types[vertex->getType()]);
 //				break;
-			case WAIT:
+			case AMVxTypeWait:
 				fprintf (pFile, "\t%d [label=\"%d\\n\",shape=%s];\n",vertex->getId(),vertex->getId(),types[vertex->getType()]);
 				break;
 			default:

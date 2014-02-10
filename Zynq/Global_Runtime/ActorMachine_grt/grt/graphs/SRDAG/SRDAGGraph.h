@@ -233,6 +233,11 @@ class SRDAGGraph {
 		 @param sourceOrSink: 1 for sorting in source order, 0 for sink order
 		*/
 		void sortEdges(int startIndex);
+
+		/*
+		 * Sets all the executable vx' states to executed.
+		 */
+		void updateExecuted();
 };
 
 /**
@@ -431,10 +436,20 @@ inline SRDAGVertex* SRDAGGraph::findMatch(BaseVertex* refVx){
 }
 
 inline SRDAGVertex* SRDAGGraph::findUnplugIF(VERTEX_TYPE ifType){
-	for (int i = 0; i < nbVertices; i++) {
-		if((vertices[i].getNbInputEdge() == 0) &&
-		   (vertices[i].getReference()->getType() == input_vertex)){
-			return &vertices[i];
+	if(ifType == input_vertex) {
+		for (int i = 0; i < nbVertices; i++) {
+			if((vertices[i].getNbInputEdge() == 0) &&
+			   (vertices[i].getReference()->getType() == input_vertex)){
+					return &vertices[i];
+			}
+		}
+	}
+	else{
+		for (int i = 0; i < nbVertices; i++) {
+			if((vertices[i].getNbOutputEdge() == 0) &&
+			   (vertices[i].getReference()->getType() == output_vertex)){
+				return &vertices[i];
+			}
 		}
 	}
 	return (SRDAGVertex*)0;
@@ -451,7 +466,11 @@ inline SRDAGVertex* SRDAGGraph::findUnplug(){
 	return (SRDAGVertex*)0;
 }
 
-
+inline void SRDAGGraph::updateExecuted(){
+	for (int i = 0; i < nbVertices; i++) {
+		if(vertices[i].getState() == SrVxStExecutable) vertices[i].setState(SrVxStExecuted);
+	}
+}
 
 
 #endif

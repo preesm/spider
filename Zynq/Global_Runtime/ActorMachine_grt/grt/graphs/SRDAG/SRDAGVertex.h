@@ -54,7 +54,8 @@ typedef enum{
 	SrVxStExecutable,
 	SrVxStExecuted,
 	SrVxStNoExecuted,
-	SrVxStHierarchy
+	SrVxStHierarchy,
+	SrVxStDeleted
 }SrVxSTATUS_FLAG;
 
 
@@ -132,6 +133,8 @@ class SRDAGVertex {
 		int expImpId;
 
 		UINT32 id;
+
+		char name[MAX_VERTEX_NAME_SIZE];
 	public : 
 		/**
 		 Constructor
@@ -331,9 +334,19 @@ class SRDAGVertex {
 	        this->parent = parent;
 	    }
 
+	    char* getName()
+	    {
+	        return name;
+	    }
+
+	    void setName(char* name)
+	    {
+	    	strcpy(this->name,name);
+	    }
+
 		void addInputEdge(SRDAGEdge* edge);
 		void addOutputEdge(SRDAGEdge* edge);
-	    bool checkPredec();
+	    bool checkForExecution();
 };
 
 
@@ -540,15 +553,18 @@ void SRDAGVertex::setExpImpId(int id){
 }
 
 inline
-bool SRDAGVertex::checkPredec(){
+bool SRDAGVertex::checkForExecution(){
 	// Checking if all predecessors are executable.
 	for (UINT32 i = 0; i < nbInputEdges; i++)
 	{
 		SRDAGVertex* predVertex = inputEdges[i]->getSource();
-		if((predVertex->getState() != SrVxStExecuted) &&
-		   (predVertex->getState() != SrVxStExecutable))
-				return false;
+		if(predVertex->getState() == SrVxStNoExecuted){
+			if(!predVertex->checkForExecution()) return false;
+		}
+		else if(predVertex->getState() == SrVxStHierarchy)
+			return false;
 	}
+	state = SrVxStExecutable;
 	return true;
 }
 

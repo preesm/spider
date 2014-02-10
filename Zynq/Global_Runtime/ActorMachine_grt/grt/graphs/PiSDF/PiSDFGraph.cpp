@@ -42,6 +42,7 @@
 
 
 extern DotWriter dotWriter;
+static char name[MAX_VERTEX_NAME_SIZE];
 
 PiSDFGraph::PiSDFGraph() {
 	nb_edges = 0;
@@ -828,6 +829,12 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hS
 		// Adding the vx if not found.
 		if(!srDagVertex){
 			srDagVertex = outSrDAG->addVertex();
+			if(hSrDagVx)
+				sprintf(name, "%s_%s", hSrDagVx->getName(), refConfigVertex->getName());
+			else
+				sprintf(name, "%s", refConfigVertex->getName());
+
+			srDagVertex->setName(name);
 			srDagVertex->setReference(refConfigVertex);
 			srDagVertex->setReferenceIndex(refConfigVertex->getId());
 			srDagVertex->setState(SrVxStExecutable);
@@ -839,8 +846,14 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hS
 			BaseVertex* predec = edge->getSource();
 			if(predec->getType() == input_vertex){
 				SRDAGVertex*source = outSrDAG->addVertex();
+				if(hSrDagVx)
+					sprintf(name, "%s_%s", hSrDagVx->getName(), predec->getName());
+				else
+					sprintf(name, "%s", predec->getName());
+				source->setName(name);
 				source->setReference(predec);
 				source->setReferenceIndex(predec->getId());
+				source->setState(SrVxStExecutable);
 				source->setParent(hSrDagVx);
 
 				// Evaluating expressions. TODO: Maybe not needed.
@@ -858,7 +871,7 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hS
 			}
 		}
 
-		// Adding output edges (and the input vx too of course).
+		// Adding output edges (and the output vx too of course).
 		for (UINT32 j = 0; j < refConfigVertex->getNbOutputEdges(); j++) {
 			PiSDFEdge* edge = refConfigVertex->getOutputEdge(j);
 			BaseVertex* succec = edge->getSink();
@@ -868,6 +881,11 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hS
 			// Adding the sink vx if not found.
 			if(!sink){
 				sink = outSrDAG->addVertex();
+				if(hSrDagVx)
+					sprintf(name, "%s_%s", hSrDagVx->getName(), succec->getName());
+				else
+					sprintf(name, "%s", succec->getName());
+				sink->setName(name);
 				sink->setReference(succec);
 				sink->setReferenceIndex(succec->getId());
 			}
@@ -893,6 +911,11 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hS
 		PiSDFIfVertex* refInputVx = &input_vertices[i];
 		if(refInputVx->getOutputEdge(0)->getSink()->getType() != config_vertex){
 			SRDAGVertex* inputSrDagVx = outSrDAG->addVertex();
+			if(hSrDagVx)
+				sprintf(name, "%s_%s", hSrDagVx->getName(), refInputVx->getName());
+			else
+				sprintf(name, "%s", refInputVx->getName());
+			inputSrDagVx->setName(name);
 			inputSrDagVx->setReference(refInputVx);
 			inputSrDagVx->setReferenceIndex(refInputVx->getId());
 			inputSrDagVx->setParent(hSrDagVx);
@@ -907,15 +930,16 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 							launcher* launch,
 							ExecutionStat* execStat,
 							SRDAGGraph* dag,
-							SRDAGVertex* currSrDagVx){
+							SRDAGVertex* currHSrDagVx){
+	static UINT8 stepsCntr = 0;
 	if(nb_config_vertices > 0){
 		// Creating SrDAG with the configure vertices.
 		// TODO: treat delays
 		if(dag->getNbVertices() == 0)
-			createSrDAGInputConfigVxs(dag, currSrDagVx);
+			createSrDAGInputConfigVxs(dag, currHSrDagVx);
 		else{
 			SRDAGGraph 	localDag;
-			createSrDAGInputConfigVxs(&localDag, currSrDagVx);
+			createSrDAGInputConfigVxs(&localDag, currHSrDagVx);
 		#if PRINT_GRAPH
 			// Printing the dag.
 			dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
@@ -924,11 +948,11 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 			dag->merge(&localDag, false);
 		}
 
-	#if PRINT_GRAPH
-		// Printing the dag.
-		dotWriter.write(dag, SRDAG_FILE_PATH, 1, 1);
-		dotWriter.write(dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-	#endif
+		#if PRINT_GRAPH
+			// Printing the dag.
+			dotWriter.write(dag, SUB_SRDAG_FILE_PATH, 1, 1);
+			dotWriter.write(dag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+		#endif
 
 		// Scheduling the DAG.
 		listScheduler->schedule(dag, schedule, arch);
@@ -942,10 +966,23 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		// Preparing tasks' informations
 		launch->prepareTasksInfo(dag, arch, schedule, false, execStat);
 
+#if EXEC == 1
+		// Executing the executable vxs.
+		launch.launch(nbSlaves);
+#endif
+
+		// Updating states.
+		dag->updateExecuted();
+
 		// Resolving parameters.
 		solveParameters(dag);
 	}
 
+#if PRINT_GRAPH
+	// Printing the dag.
+	dotWriter.write(dag, SRDAG_FILE_PATH, 1, 1);
+	dotWriter.write(dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+#endif
 
 	// Resolving productions/consumptions.
 	evaluateExpressions();
@@ -965,6 +1002,9 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 
 	// Updating the productions of the round buffer vertices.
 	sdf.updateRBProd();
+	// Marking the current hierarchical vx as deleted.
+	// TODO: the top level must be a hierarchical vx, so checking if currHSrDagVx != 0 is not needed.
+	if (currHSrDagVx) currHSrDagVx->setState(SrVxStDeleted);
 
 #if PRINT_GRAPH
 	// Printing the SDF sub-graph.
@@ -975,10 +1015,10 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 	// Transforming SDF with no configure vertices into SrDAG.
 	// TODO: treat delays
 	if(dag->getNbVertices() == 0)
-		transformer.transform(&sdf, dag);
+		transformer.transform(&sdf, dag, currHSrDagVx);
 	else{
 		SRDAGGraph 	localDag;
-		transformer.transform(&sdf, &localDag);
+		transformer.transform(&sdf, &localDag, currHSrDagVx);
 	#if PRINT_GRAPH
 		// Printing the dag.
 		dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
@@ -991,10 +1031,11 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 
 #if PRINT_GRAPH
 	// Printing the dag.
-	dotWriter.write(dag, SRDAG_FILE_PATH, 1, 1);
-	dotWriter.write(dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+	sprintf(name, "srDag_%d.gv", stepsCntr);
+	dotWriter.write(dag, name, 1, 1);
+//	dotWriter.write(dag, name, 1, 0);
 #endif
-
+	stepsCntr++;
 }
 
 
@@ -1031,20 +1072,26 @@ void PiSDFGraph::solveParameters(SRDAGGraph* dag){
 
 
 void PiSDFGraph::updateDAGStates(SRDAGGraph* dag){
+	// Updating all input, round-buffer and hierarchical vxs.
 	for (UINT32 i = 0; i < dag->getNbVertices(); i++) {
 		SRDAGVertex* Vx = dag->getVertex(i);
 		if(Vx->getState() == SrVxStNoExecuted){
-			if(Vx->getReference()->getType() == pisdf_vertex){
-				PiSDFGraph* subGraph;
-				if(((PiSDFVertex*)Vx->getReference())->hasSubGraph(&subGraph))
-					Vx->setState(SrVxStHierarchy);
-				else
-					if(Vx->checkPredec())
-						Vx->setState(SrVxStExecutable);
-			}
-			else if(Vx->getReference()->getType() == roundBuff_vertex){
+			if((Vx->getReference()->getType() == input_vertex)||
+				(Vx->getReference()->getType() == roundBuff_vertex)){
 				Vx->setState(SrVxStExecutable);
 			}
+			else if(Vx->getReference()->getType() == pisdf_vertex){
+				PiSDFGraph* subGraph;
+				if(((PiSDFVertex*)Vx->getReference())->hasSubGraph(&subGraph)) Vx->setState(SrVxStHierarchy);
+			}
+		}
+	}
+
+	// Updating other vxs.
+	for (UINT32 i = 0; i < dag->getNbVertices(); i++) {
+		SRDAGVertex* Vx = dag->getVertex(i);
+		if(Vx->getState() == SrVxStNoExecuted){
+				Vx->checkForExecution();
 		}
 	}
 }

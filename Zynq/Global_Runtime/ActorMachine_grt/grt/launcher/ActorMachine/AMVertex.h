@@ -45,11 +45,11 @@
 #include <cstdlib>
 
 typedef enum{
-	VERTEX_UNINITIALIZED=0,
-	WAIT,
-	STATE,
-	TEST,
-	EXEC
+	AMVxTypeUndefined=0,
+	AMVxTypeWait,
+	AMVxTypeState,
+	AMVxTypeTest,
+	AMVxTypeExec
 } AMVertexType;
 
 typedef enum{
@@ -84,7 +84,7 @@ private:
 public:
 	AMVertex(){
 		ID = -1;
-		type = VERTEX_UNINITIALIZED;
+		type = AMVxTypeUndefined;
 		nbSuc = 0;
 	}
 
@@ -96,18 +96,18 @@ public:
 		type = t;
 		nbSuc = 0;
 		switch(type){
-		case WAIT:
+		case AMVxTypeWait:
 			break;
 
-		case TEST:
+		case AMVxTypeTest:
 			condID = param;
 			break;
 
-		case EXEC:
+		case AMVxTypeExec:
 			actionID = param;
 			break;
 
-		case STATE:
+		case AMVxTypeState:
 			break;
 		default:
 			//todo error
@@ -117,10 +117,10 @@ public:
 
 	/* StateVertex Constructor */
 	AMVertex(int id, AMVertexType t, CondValue* _condValue, int _nbConds){
-		if(t != STATE){
+		if(t != AMVxTypeState){
 			// todo error
 		}else{
-			type = STATE;
+			type = AMVxTypeState;
 			ID = id;
 			nbSuc = 0;
 			state.nbConds = 0;//_nbConds;

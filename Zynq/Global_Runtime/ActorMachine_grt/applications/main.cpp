@@ -54,7 +54,6 @@
 #define SRDAG_FILE_PATH			"srDag.gv"
 #define SRDAG_FIFO_ID_FILE_PATH	"srDagFifoId.gv"
 #define IS_AM 					0
-#define EXEC					0
 #define STOP					1
 
 
@@ -115,19 +114,19 @@ int main(int argc, char* argv[]){
 
 
 	/*
-	 * Multistep algorithm for mapping/scheduling PiSDF graphs.
+	 * Multi step algorithm for mapping/scheduling PiSDF graphs.
 	 */
 	// Getting the PiSDF graph.
 	top(&piSDF);
 	PiSDFGraph* H = &piSDF;
-	SRDAGVertex* hSrDagVx = 0;
+	SRDAGVertex* currHSrDagVx = 0;
 	while(H){
 	#if PRINT_GRAPH
 		// Printing the PiSDF graph.
 		dotWriter.write(H, PiSDF_FILE_PATH, 1);
 	#endif
 
-		H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag, hSrDagVx);
+		H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag, currHSrDagVx);
 
 	#if PRINT_GRAPH
 		// Printing the dag.
@@ -138,9 +137,10 @@ int main(int argc, char* argv[]){
 		// Finding other hierarchical Vxs.
 		H = 0;
 		for (int i = 0; i < dag.getNbVertices(); i++) {
-			hSrDagVx = dag.getVertex(i);
-			if(hSrDagVx->getReference()->getType() == pisdf_vertex){
-				if(((PiSDFVertex*)(hSrDagVx->getReference()))->hasSubGraph(&H)) break;
+			currHSrDagVx = dag.getVertex(i);
+			if((currHSrDagVx->getReference()->getType() == pisdf_vertex)&&
+					(currHSrDagVx->getState() == SrVxStHierarchy)){
+				if(((PiSDFVertex*)(currHSrDagVx->getReference()))->hasSubGraph(&H)) break;
 			}
 		}
 	}
@@ -253,6 +253,8 @@ int main(int argc, char* argv[]){
 			// Clearing the launcher.
 			launch.clear();
 #endif
+
+			dag.updateExecuted();
 
 //			// Resolving parameters.
 //			for (UINT32 i = 0; i < piSDF.getNb_config_vertices(); i++) {

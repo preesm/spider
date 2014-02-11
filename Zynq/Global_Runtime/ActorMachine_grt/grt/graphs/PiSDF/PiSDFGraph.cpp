@@ -931,7 +931,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 							ExecutionStat* execStat,
 							SRDAGGraph* dag,
 							SRDAGVertex* currHSrDagVx){
-	static UINT8 stepsCntr = 0;
+	static INT8 stepsCntr = -1;
 	if(nb_config_vertices > 0){
 		// Creating SrDAG with the configure vertices.
 		// TODO: treat delays
@@ -969,24 +969,28 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 
 #if EXEC == 1
 		// Executing the executable vxs.
-		launch.launch(nbSlaves);
+		launch->launch(arch->getNbActiveSlaves());
 #endif
 
 		// Updating states.
 		dag->updateExecuted();
 
 		// Resolving parameters.
-		solveParameters(dag);
-	}
+		solveParameters(dag, schedule);
 
+		stepsCntr++;
+	}
 #if PRINT_GRAPH
 	// Printing the dag.
 //	dotWriter.write(dag, SRDAG_FILE_PATH, 1, 1);
 //	dotWriter.write(dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-	sprintf(name, "srDag_%d.gv", stepsCntr);
-	dotWriter.write(dag, name, 1, 1);
+	if(stepsCntr >= 0){
+		sprintf(name, "srDag_%d.gv", stepsCntr);
+		dotWriter.write(dag, name, 1, 1);
+		sprintf(name, "srDagFifoId_%d.gv", stepsCntr);
+		dotWriter.write(dag, name, 1, 0);
+	}
 #endif
-	stepsCntr++;
 
 	// Resolving productions/consumptions.
 	evaluateExpressions();
@@ -1033,17 +1037,18 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 	// Updating vxs' states.
 	updateDAGStates(dag);
 
+	stepsCntr++;
 #if PRINT_GRAPH
 	// Printing the dag.
 	sprintf(name, "srDag_%d.gv", stepsCntr);
 	dotWriter.write(dag, name, 1, 1);
-//	dotWriter.write(dag, name, 1, 0);
+	sprintf(name, "srDagFifoId_%d.gv", stepsCntr);
+	dotWriter.write(dag, name, 1, 0);
 #endif
-	stepsCntr++;
 }
 
 
-void PiSDFGraph::solveParameters(SRDAGGraph* dag){
+void PiSDFGraph::solveParameters(SRDAGGraph* dag, BaseSchedule* schedule){
 	for (UINT32 i = 0; i < nb_config_vertices; i++) {
 		PiSDFConfigVertex* configVertex = &config_vertices[i];
 //		configVertex->setStatus(VxStExecuted);
@@ -1052,15 +1057,16 @@ void PiSDFGraph::solveParameters(SRDAGGraph* dag){
 			// TODO: to find out the returned value when there are several parameters.
 			if (!param->getResolved()){
 #if EXEC == 1
+				SRDAGVertex* vx;
+				dag->getVerticesFromReference(configVertex, &vx);
 				UINT32 slaveId;
-				if(schedule.findSlaveId(configVertex->getId(), configVertex, &slaveId)){
+				if(schedule->findSlaveId(vx->getScheduleIndex(), vx, &slaveId)){
 					UINT64 value = RTQueuePop_UINT32(slaveId, RTCtrlQueue);
 					configVertex->getRelatedParam(j)->setValue(value);
 				}
 #else
 //					UINT64 value = 352 * 255 / 256; // for the mpeg4 decoder application.
 				UINT64 value = 2; 				// for the DoubleLoop application.
-
 				configVertex->getRelatedParam(j)->setValue(value);
 #endif
 			}

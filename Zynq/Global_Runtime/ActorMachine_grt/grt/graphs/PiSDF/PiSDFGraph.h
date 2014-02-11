@@ -206,7 +206,7 @@ public:
 							SRDAGGraph* dag,
 							SRDAGVertex* hSrDagVx);
 
-	void solveParameters(SRDAGGraph* dag);
+	void solveParameters(SRDAGGraph* dag, BaseSchedule* schedule);
 
 	void updateDAGStates(SRDAGGraph* dag);
 

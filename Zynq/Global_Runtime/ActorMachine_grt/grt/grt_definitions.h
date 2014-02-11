@@ -104,7 +104,7 @@
 // Launcher
 #define MAX_CTRL_DATA 	2000
 #define MAX_JOB_DATA 	2000
-#define EXEC			0
+#define EXEC			1
 
 // XParser
 #define VARIABLE_NAME_LEN_MAX 30

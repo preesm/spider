@@ -108,12 +108,15 @@ int main(int argc, char* argv[]){
 	listScheduler.setArchitecture(&arch);
 	listScheduler.setScenario(&scenario);
 	schedule.setNbActiveSlaves(arch.getNbActiveSlaves());
-	bool initFIFOs = true;
 
 
+#if EXEC == 1
+	launch.init(nbSlaves);
+//	launch.launchWaitAck(nbSlaves);
+#endif
 
 
-	/*
+	/*****************************
 	 * Multi step algorithm for mapping/scheduling PiSDF graphs.
 	 */
 	// Getting the PiSDF graph.
@@ -144,176 +147,25 @@ int main(int argc, char* argv[]){
 			}
 		}
 	}
+/*********************////
 
 
 
-#if EXEC == 1
-	launch.init(nbSlaves);
-#endif
+	// Scheduling the DAG.
+	listScheduler.schedule(&dag, &schedule, &arch);
+	schedWriter.write(&schedule, &dag, &arch, "test.xml");
 
-
-//	 TODO: all the RB Vxs must be marked as executable and counted (with GlbNbExecVertices).
-//	while (!piSDF.getExecutable()){
-//		piSDF.multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag);
-//	}
-
-	// execute DAG of pisdf Vxs.
-
-//	do{
-//		bool init = true;
-//		do{
-//			prevNbConfigVertices = sdf1.getNbConfigVertices();
-//
-//			// Finding executable vertices.
-//			sdf1.reset(); // Clears the graph.
-//			piSDF.findRequiredEdges();
-//
-//			if(piSDF.getGlbNbRequiredEdges() > 0)
-//			{
-//				// Evaluating expressions with resolved parameters.
-//				piSDF.evaluateExpressions();
-//
-//				// Creating a new subgraph with required edges and vertices.
-//				piSDF.createSubGraph(&sdf1);
-//
-//				// Linking the executable vertices.
-////				piSDF.connectExecVertices(&sdf1);
-//			}
-//			else
-//				exitWithCode(1062);
-//
-//		#if PRINT_GRAPH
-//			// Printing the SDF sub-graph.
-//			dotWriter.write(&sdf1, SUB_SDF_FILE_0_PATH, 1);
-//		#endif
-//
-//			// Flattening subSDF graph and transforming it into DAG.
-//			SRDAGGraph dag;
-//			transformer.transform(&sdf1, &dag);
-//
-//			// Printing the DAG.
-//		#if PRINT_GRAPH
-//			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FILE_PATH, 1, 1);
-//			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-//		#endif
-//
-//			// Scheduling the DAG.
-//			schedule.reset();
-//			listScheduler.schedule(&dag, &schedule, &arch);
-//			schedWriter.write(&schedule, &dag, &arch, "test.xml");
-
-
-
-
-			// Inserting round buffer vertices.
-//			piSDF.insertRoundBuffers();
-
-//			// Creating SrDAG with the configure vertices.
-//			// TODO: treat delays
-//			piSDF.createSrDAGConfigVertices(&dag);
-
-
-//
-//		#if PRINT_GRAPH
-//			// Printing the SDF sub-graph.
-//			dotWriter.write(&sdf1, SUB_SDF_FILE_0_PATH, 1);
-//		#endif
-//
-//			// Transforming the SDF into DAG.
-//			transformer.transform(&sdf1, &dag);
-
-//			// Printing the DAG.
-//		#if PRINT_GRAPH
-//			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FILE_PATH, 1, 1);
-//			dotWriter.write((SRDAGGraph*)&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-//		#endif
-
-
-			// Scheduling the DAG.
-			schedule.reset();
-			listScheduler.schedule(&dag, &schedule, &arch);
-			schedWriter.write(&schedule, &dag, &arch, "test.xml");
-
-			// Preparing FIFOs information.
-			launch.prepareFIFOsInfo(&dag);
-
-			// Preparing tasks' informations
-			launch.prepareTasksInfo(&dag, &arch, &schedule, IS_AM, &execStat);
+	// Preparing tasks' informations
+	launch.prepareTasksInfo(&dag, &arch, &schedule, IS_AM, &execStat);
 
 #if EXEC == 1
-			// Launching execution.
-			if(initFIFOs){
-				launch.launchWaitAck(nbSlaves);
-				initFIFOs = false;
-			}
-			else{
-				launch.launch(nbSlaves);
-			}
+	// Launching the execution on LRTs.
+	launch.launch(nbSlaves);
 
-			// Clearing the launcher.
-			launch.clear();
+	// Clearing the launcher.
+	launch.clear();
 #endif
 
-			dag.updateExecuted();
+	dag.updateExecuted();
 
-//			// Resolving parameters.
-//			for (UINT32 i = 0; i < piSDF.getNb_config_vertices(); i++) {
-//				PiSDFConfigVertex* configVertex = piSDF.getConfig_vertex(i);
-//				configVertex->setStatus(executed);
-//				for (UINT32 j = 0; j < configVertex->getNbRelatedParams(); j++) {
-//					PiSDFParameter* param = configVertex->getRelatedParam(j);
-//					// TODO: to find out the returned value when there are several parameters.
-//					if (!param->getResolved()){
-//#if EXEC == 1
-//						UINT32 slaveId;
-//						if(schedule.findSlaveId(configVertex->getId(), configVertex, &slaveId)){
-//							UINT64 value = RTQueuePop_UINT32(slaveId, RTCtrlQueue);
-//							configVertex->getRelatedParam(j)->setValue(value);
-//						}
-//#else
-//						UINT64 value = 352 * 255 / 256; // for the mpeg4 decoder application.
-//
-////						if(init)
-////							value = 0;
-////						else
-////							value = 1;
-//
-//						configVertex->getRelatedParam(j)->setValue(value);
-//#endif
-//					}
-//				}
-//			}
-
-//			// Resolving production/consumptions.
-//			piSDF.evaluateExpressions();
-//
-//			// Generating SDF from PiSDF excluding the configure vertices.
-//			piSDF.createSDF(&sdf);
-//
-//		#if PRINT_GRAPH
-//			// Printing the SDF sub-graph.
-//			dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
-//		#endif
-//
-//			// Computing BRV of normal vertices.
-//			transformer.computeBVR(&sdf);
-//
-//			// Updating the productions of the round buffer vertices.
-//			sdf.updateRBProd();
-//
-//		#if PRINT_GRAPH
-//			// Printing the SDF sub-graph.
-//			dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
-//		#endif
-
-
-
-
-//			// Clearing intra-iteration variables, e.g. required edges.
-//			piSDF.clearIntraIteration();
-//
-//		}while(prevNbConfigVertices < piSDF.getGlbNbConfigVertices());
-//
-//		piSDF.clearAfterVisit();
-//	}while(!STOP);
 }

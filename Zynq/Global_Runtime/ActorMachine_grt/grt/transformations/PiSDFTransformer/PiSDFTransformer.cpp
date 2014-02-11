@@ -573,16 +573,18 @@ void PiSDFTransformer::transform(SDFGraph* sdf, SRDAGGraph *srGraph, SRDAGVertex
 //		{
 			// Setting the number of repetitions for each vertex.
 //			nbVertices = 0;
-			for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
-				BaseVertex* vertex = sdf->getVertex(i);
+	if(sdf->getNbVertices() > 0){
+		for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
+			BaseVertex* vertex = sdf->getVertex(i);
 //				if(vertex->getType() != roundBuff_vertex) vertex->setNbRepetition(brv[nbVertices++]);
 
-				// Creating the new vertices.
-				addVertices(vertex, vertex->getNbRepetition(), srGraph, currHSrVx);
-			}
+			// Creating the new vertices.
+			addVertices(vertex, vertex->getNbRepetition(), srGraph, currHSrVx);
+		}
 
-			// Connecting the vertices of the SrDAG ouput graph.
-			linkvertices(sdf, srGraph, currHSrVx);
+		// Connecting the vertices of the SrDAG ouput graph.
+		linkvertices(sdf, srGraph, currHSrVx);
+	}
 //		}
 //	}
 }

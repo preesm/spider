@@ -41,7 +41,6 @@
 #include "lrt_definitions.h"
 
 void LRTInit();
-void LRTInitCtrl();
 void LRTCtrlStart();
 void LRTStartCurrTask();
 void LRTSched();

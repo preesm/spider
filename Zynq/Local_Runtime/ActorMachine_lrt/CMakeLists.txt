@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 2.6)
 project(LRT)
 
+set (APP_DOUBLE_LOOP "ON" CACHE BOOL "")
 set (APP_MPEG4 "" CACHE BOOL "")
-set (APP_TEST_OVP "ON" CACHE BOOL "")
 set (APP_SOBEL "" CACHE BOOL "")
+set (APP_TEST_OVP "" CACHE BOOL "")
 
 # if(APP_MPEG4 AND APP_SOBEL)
     # MESSAGE(FATAL_ERROR "Only one application at once is allowed!")
@@ -18,6 +19,8 @@ if(APP_MPEG4)
     file(GLOB_RECURSE app_source_files applications/mpeg4Decoder/*)
 elseif(APP_TEST_OVP)
     file(GLOB_RECURSE app_source_files applications/testForOVPSim/*)
+elseif(APP_DOUBLE_LOOP)
+    file(GLOB_RECURSE app_source_files applications/DoubleLoop/*)
 endif()
 
 # Getting local runtime' sources.  

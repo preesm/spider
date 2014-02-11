@@ -143,7 +143,6 @@ int main(int argc, char **argv) {
 	LRTStart();
 
 #else
-	LRTInitCtrl();
 	LRTCtrlStart();
 #endif
 

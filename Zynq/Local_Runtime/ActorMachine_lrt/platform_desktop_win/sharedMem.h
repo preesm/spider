@@ -46,8 +46,12 @@
 #define SH_MEM_DATA_REGION_SIZE		0x10000000
 #define SH_MEM_SIZE					SH_MEM_HDR_REGION_SIZE + SH_MEM_DATA_REGION_SIZE
 #define SH_MEM_FILE_PATH			"../shMem"
-void OS_ShMemInit();
 
+#define MBOX_MEM_BASE_ADDR			0x20000000
+#define MBOX_MEM_SIZE				1024
+#define MBOX_MEM_FILE_PATH			"../mboxMem"
+
+void OS_ShMemInit();
 UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size);
 UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size);
 

@@ -76,9 +76,13 @@ static void addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* 
 }
 
 void OS_ShMemInit() {
-	printf("Opening shMem...\n");
+	// Adding a memory for the data fifos.
 	addOSShMem(SH_MEM_BASE_ADDR, SH_MEM_BASE_ADDR + SH_MEM_DATA_REGION_SIZE, SH_MEM_SIZE, SH_MEM_FILE_PATH);
+
+	// Adding a memory for the mailboxes.
+	addOSShMem(MBOX_MEM_BASE_ADDR, MBOX_MEM_BASE_ADDR, MBOX_MEM_SIZE, MBOX_MEM_FILE_PATH);
 }
+
 
 UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
 	int i, res;

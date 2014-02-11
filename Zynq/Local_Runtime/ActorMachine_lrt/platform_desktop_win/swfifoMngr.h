@@ -35,47 +35,16 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#ifndef OS_CFG_H
-#define OS_CFG_H
+#ifndef SW_FIFOMNGR_H_
+#define SW_FIFOMNGR_H_
 
-#define OS_LOWEST_PRIO 				15
-#define OS_MAX_TASKS 				15
-#define NB_LOCAL_FUNCTIONS 			15
-#define OS_DEBUG_EN 				1
-#define CONTROL_COMM				0
-
-#define SCHED_POLICY_RR				0
-#define SCHED_POLICY_FP				0
-#define ACTOR_MACHINE				1
-
-#define OS_MAX_SH_MEM				10
-#define OS_MAX_CTRL_Q				2
+#include "lrt_definitions.h"
 
 
-//#define AM_STATE_MAX_CONDITIONS	2
-//#define AM_MAX_NB_EDGES			100
-
-#if defined ARM || defined DESKTOP
-#define AM_MAX_NB_VERTICES		300
-#define AM_MAX_NB_ACTIONS		60
-#define AM_MAX_NB_CONDITIONS	60
-#else
-#define AM_MAX_NB_VERTICES		200
-#define AM_MAX_NB_CONDITIONS	50
-#define AM_MAX_NB_ACTIONS		20
-#endif
-
-#define AM_MAX_NB_SUCCESSORS	2
-#define OS_NB_FIFO		150
-
-#if defined ARM || defined DESKTOP
-#define MAX_NB_ARGS		OS_NB_FIFO
-#define MAX_NB_FIFO		OS_NB_FIFO
-#define WORKING_MEMORY_SIZE 720*400*3
-#else
-#define MAX_NB_FIFO			100
-#define MAX_NB_PARAMETERS	10
-#define WORKING_MEMORY_SIZE 720*(400/8)
-#endif
-
-#endif
+UINT8 create_swfifo(LRT_FIFO_HNDLE* fifo_hndl, UINT32 size, UINT32 address);
+void flush_swfifo(LRT_FIFO_HNDLE* fifo_hndl);
+BOOLEAN check_input_swfifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size);
+BOOLEAN check_output_swfifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size);
+void write_output_swfifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size, UINT8* buffer);
+void read_input_swfifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffer);
+#endif /* SW_FIFOMNGR_H_ */

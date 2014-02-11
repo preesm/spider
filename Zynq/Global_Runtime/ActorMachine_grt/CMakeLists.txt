@@ -5,11 +5,11 @@ project(GRT)
 set (APP_MPEG4 "ON" CACHE BOOL "")
 set (APP_SOBEL "" CACHE BOOL "")
 
-if(APP_MPEG4 AND APP_SOBEL)
-    MESSAGE(FATAL_ERROR "Only one application at once is allowed!")
-elseif(NOT (APP_MPEG4 OR APP_SOBEL))
-    MESSAGE(FATAL_ERROR "At least one application is required!")
-endif()
+#if(APP_MPEG4 AND APP_SOBEL)
+#    MESSAGE(FATAL_ERROR "Only one application at once is allowed!")
+#elseif(NOT (APP_MPEG4 OR APP_SOBEL))
+#    MESSAGE(FATAL_ERROR "At least one application is required!")
+#endif()
 
 # Getting the application' sources.
 if(APP_MPEG4)    

@@ -35,28 +35,19 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#ifndef HWQUEUES_H_
-#define HWQUEUES_H_
+#ifndef SHAREDMEM_H_
+#define SHAREDMEM_H_
 
+#include <grt_definitions.h>
 #include "types.h"
 
-typedef enum{
-	RTCtrlQueue,
-	RTInfoQueue,
-	RTJobQueue,
-	nbQueueTypes
-} RTQueueType;
+#define MBOX_MEM_BASE_ADDR			0x20000000
+#define MBOX_MEM_SIZE				1024 * MAX_SLAVES
+#define MBOX_MEM_FILE_PATH			"../mboxMem"
 
-typedef enum{
-	RTInputQueue,
-	RTOutputQueue
-} RTQueueDir;
+void addShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename);
+void ShMemInit();
+UINT32 ShMemRead(UINT32 address, void* data, UINT32 size);
+UINT32 ShMemWrite(UINT32 address, void* data, UINT32 size);
 
-void RTQueuesInit(UINT8 nbSlaves);
-UINT32 RTQueuePush(UINT8 slaveId, RTQueueType queueType, void* data, int size);
-UINT32 RTQueuePush_UINT32(UINT8 slaveId, RTQueueType queueType, UINT32 data);
-UINT32 RTQueuePop(UINT8 slaveId, RTQueueType queueType, void* data, int size);
-UINT32 RTQueuePop_UINT32(UINT8 slaveId, RTQueueType queueType);
-UINT32 RTQueueNonBlockingPop(UINT8 slaveId, RTQueueType queueType, void* data, int size);
-
-#endif /* HWQUEUES_H_ */
+#endif /* SHAREDMEM_H_ */

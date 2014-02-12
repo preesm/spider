@@ -35,67 +35,22 @@
  * knowledge of the CeCILL-C license and that you accept its terms.		*
  ********************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
+#ifndef TYPES_H_
+#define TYPES_H_
 
-#include "types.h"
-#include "swfifoMngr.h"
-#include "sharedMem.h"
-#include "hwQueues.h"
-#include <grt_definitions.h>
+#define TRUE 			1
+#define FALSE 			0
 
-#define NB_MAX_QUEUES				60
-#define QUEUE_SIZE					512
-#define OUTPUT_CTRL_QUEUE_MEM_BASE	0x20000000
-#define INPUT_CTRL_QUEUE_MEM_BASE	0x20000200
+typedef unsigned char 	BOOLEAN;
 
+typedef signed char		INT8;
+typedef short int		INT16;
+typedef int			 	INT32;
+typedef long long int 	INT64;
 
-static RT_SW_FIFO_HNDLE RTQueue[MAX_SLAVES][nbQueueTypes][2];
+typedef unsigned char 			UINT8;
+typedef unsigned short  		UINT16;
+typedef unsigned int			UINT32;
+typedef long long unsigned int	UINT64;
 
-void RTQueuesInit(UINT8 nbSlaves){
-	ShMemInit();
-	for (int i = 0; i < nbSlaves; i++) {
-		// Creating output queues.
-		create_swfifo(&(RTQueue[i][RTCtrlQueue][RTOutputQueue]), QUEUE_SIZE, OUTPUT_CTRL_QUEUE_MEM_BASE + i * (2 * QUEUE_SIZE));
-//		flush_swfifo(&(RTQueue[i][RTCtrlQueue][RTOutputQueue]));// Queues are flushed by the LRTs.
-
-		// Creating input queues.
-		create_swfifo(&(RTQueue[i][RTCtrlQueue][RTInputQueue]), QUEUE_SIZE, INPUT_CTRL_QUEUE_MEM_BASE + i * (2 * QUEUE_SIZE));
-//		flush_swfifo(&(RTQueue[i][RTCtrlQueue][RTInputQueue]));
-	}
-}
-
-
-UINT32 RTQueuePush(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	write_output_swfifo(&RTQueue[slaveId][queueType][RTOutputQueue], size, (UINT8*)data);
-	return size;
-}
-
-
-UINT32 RTQueuePush_UINT32(UINT8 slaveId, RTQueueType queueType, UINT32 data){
-	return RTQueuePush(slaveId, queueType, &data, sizeof(UINT32));
-}
-
-
-UINT32 RTQueuePop(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	read_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
-	return size;
-}
-
-
-UINT32 RTQueuePop_UINT32(UINT8 slaveId, RTQueueType queueType){
-	UINT32 data;
-	RTQueuePop(slaveId, queueType, &data, sizeof(UINT32));
-	return data;
-}
-
-
-UINT32 RTQueueNonBlockingPop(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	if(check_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size)){
-		read_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
-		return size;
-	}
-	else
-		return 0;
-}
+#endif /* TYPES_H_ */

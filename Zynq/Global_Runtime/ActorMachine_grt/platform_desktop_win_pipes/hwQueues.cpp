@@ -46,6 +46,7 @@
 #define NB_MAX_QUEUES		60
 #define PIPE_BASE_NAME 	"\\\\.\\pipe\\"
 #define BUFFER_SIZE		512
+#define GRT_ACK_WORD	0xffffffff
 
 static HANDLE RTQueue[MAX_SLAVES][nbQueueTypes][2];
 
@@ -58,9 +59,9 @@ void RTQueuesInit(UINT8 nbSlaves){
 		sprintf(tempStr, "%sCtrl_%dtoGrt", PIPE_BASE_NAME, i);
 		RTQueue[i][RTCtrlQueue][RTInputQueue] = CreateNamedPipe(
 								tempStr,
-								PIPE_ACCESS_DUPLEX,
+								PIPE_ACCESS_INBOUND,
 								PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-								2,
+								PIPE_UNLIMITED_INSTANCES,
 								0,
 								BUFFER_SIZE,
 								0,
@@ -69,87 +70,93 @@ void RTQueuesInit(UINT8 nbSlaves){
 			printf("CreateNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 		}
 
-
-		sprintf(tempStr, "%sInfo_%dtoGrt", PIPE_BASE_NAME, i);
-		RTQueue[i][RTInfoQueue][RTInputQueue] = CreateNamedPipe(
-								tempStr,
-								PIPE_ACCESS_DUPLEX,
-								PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-								2,
-								0,
-								BUFFER_SIZE,
-								0,
-								NULL);
-		if (RTQueue[RTInfoQueue][RTInputQueue] == INVALID_HANDLE_VALUE) {
-			printf("CreateNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
-		}
-
-
-		sprintf(tempStr, "%sJob_%dtoGrt", PIPE_BASE_NAME, i);
-		RTQueue[i][RTJobQueue][RTInputQueue] = CreateNamedPipe(
-								tempStr,
-								PIPE_ACCESS_DUPLEX,
-								PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-								2,
-								0,
-								BUFFER_SIZE,
-								0,
-								NULL);
-		if (RTQueue[RTJobQueue][RTInputQueue] == INVALID_HANDLE_VALUE) {
-			printf("CreateNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
-		}
+//
+//		sprintf(tempStr, "%sInfo_%dtoGrt", PIPE_BASE_NAME, i);
+//		RTQueue[i][RTInfoQueue][RTInputQueue] = CreateNamedPipe(
+//								tempStr,
+//								PIPE_ACCESS_DUPLEX,
+//								PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+//								2,
+//								0,
+//								BUFFER_SIZE,
+//								0,
+//								NULL);
+//		if (RTQueue[RTInfoQueue][RTInputQueue] == INVALID_HANDLE_VALUE) {
+//			printf("CreateNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+//		}
+//
+//
+//		sprintf(tempStr, "%sJob_%dtoGrt", PIPE_BASE_NAME, i);
+//		RTQueue[i][RTJobQueue][RTInputQueue] = CreateNamedPipe(
+//								tempStr,
+//								PIPE_ACCESS_DUPLEX,
+//								PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+//								2,
+//								0,
+//								BUFFER_SIZE,
+//								0,
+//								NULL);
+//		if (RTQueue[RTJobQueue][RTInputQueue] == INVALID_HANDLE_VALUE) {
+//			printf("CreateNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+//		}
 
 
 		// Connecting to output pipes.
 		sprintf(tempStr, "%sCtrl_Grtto%d", PIPE_BASE_NAME, i);
 		RTQueue[i][RTCtrlQueue][RTOutputQueue] = CreateFile(
-									tempStr,   		// pipe name
-									GENERIC_WRITE,	// write access
-									0,              // no sharing
-									NULL,           // default security attributes
-									OPEN_EXISTING,  // opens existing pipe
-									0,              // default attributes
-									NULL);          // no template file
+										tempStr,   		// pipe name
+										GENERIC_WRITE,	// write access
+										0,              // no sharing
+										NULL,           // default security attributes
+										OPEN_EXISTING,  // opens existing pipe
+										0,              // default attributes
+										NULL);          // no template file
 		if (RTQueue[i][RTCtrlQueue][RTOutputQueue] == INVALID_HANDLE_VALUE) {
 			printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 		}
 
-		sprintf(tempStr, "%sInfo_Grtto%d",PIPE_BASE_NAME, i);
-		RTQueue[i][RTInfoQueue][RTOutputQueue] = CreateFile(
-									tempStr,   		// pipe name
-									GENERIC_WRITE,	// write access
-									0,              // no sharing
-									NULL,           // default security attributes
-									OPEN_EXISTING,  // opens existing pipe
-									0,              // default attributes
-									NULL);          // no template file
-		if (RTQueue[i][RTInfoQueue][RTOutputQueue] == INVALID_HANDLE_VALUE) {
-			printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
-		}
-
-		sprintf(tempStr, "%sJob_Grtto%d",PIPE_BASE_NAME, i);
-		RTQueue[i][RTJobQueue][RTOutputQueue] = CreateFile(
-									tempStr,   		// pipe name
-									GENERIC_WRITE,	// write access
-									0,              // no sharing
-									NULL,           // default security attributes
-									OPEN_EXISTING,  // opens existing pipe
-									0,              // default attributes
-									NULL);          // no template file
-		if (RTQueue[i][RTJobQueue][RTOutputQueue] == INVALID_HANDLE_VALUE) {
-			printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
-		}
+//		RTQueuePush_UINT32(i, RTCtrlQueue, GRT_ACK_WORD);
+//
+//		sprintf(tempStr, "%sInfo_Grtto%d",PIPE_BASE_NAME, i);
+//		RTQueue[i][RTInfoQueue][RTOutputQueue] = CreateFile(
+//									tempStr,   		// pipe name
+//									GENERIC_WRITE,	// write access
+//									0,              // no sharing
+//									NULL,           // default security attributes
+//									OPEN_EXISTING,  // opens existing pipe
+//									0,              // default attributes
+//									NULL);          // no template file
+//		if (RTQueue[i][RTInfoQueue][RTOutputQueue] == INVALID_HANDLE_VALUE) {
+//			printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+//		}
+//
+//		sprintf(tempStr, "%sJob_Grtto%d",PIPE_BASE_NAME, i);
+//		RTQueue[i][RTJobQueue][RTOutputQueue] = CreateFile(
+//									tempStr,   		// pipe name
+//									GENERIC_WRITE,	// write access
+//									0,              // no sharing
+//									NULL,           // default security attributes
+//									OPEN_EXISTING,  // opens existing pipe
+//									0,              // default attributes
+//									NULL);          // no template file
+//		if (RTQueue[i][RTJobQueue][RTOutputQueue] == INVALID_HANDLE_VALUE) {
+//			printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+//		}
 
 		// Waiting for clients to connect.
-		if(!ConnectNamedPipe(RTQueue[i][RTCtrlQueue][RTInputQueue], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
+		if((!ConnectNamedPipe(RTQueue[i][RTCtrlQueue][RTInputQueue], NULL)) && (GetLastError() != ERROR_PIPE_CONNECTED)){
 			printf("ConnectNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 		}
-		if(!ConnectNamedPipe(RTQueue[i][RTInfoQueue][RTInputQueue], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
-			printf("ConnectNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
-		}
-		if(!ConnectNamedPipe(RTQueue[i][RTJobQueue][RTInputQueue], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
-			printf("ConnectNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
-		}
+
+//		// Closing connection to output.
+//		CloseHandle(RTQueue[i][RTCtrlQueue][RTOutputQueue]);
+
+//		if(!ConnectNamedPipe(RTQueue[i][RTInfoQueue][RTInputQueue], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
+//			printf("ConnectNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+//		}
+//		if(!ConnectNamedPipe(RTQueue[i][RTJobQueue][RTInputQueue], NULL) && GetLastError() != ERROR_PIPE_CONNECTED){
+//			printf("ConnectNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+//		}
 	}
 
 //	UINT32 c;

@@ -35,67 +35,22 @@
  * knowledge of the CeCILL-C license and that you accept its terms.		*
  ********************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
+#ifndef TIMER_H_
+#define TIMER_H_
 
-#include "types.h"
-#include "swfifoMngr.h"
-#include "sharedMem.h"
-#include "hwQueues.h"
-#include <grt_definitions.h>
+#include <time.h>
 
-#define NB_MAX_QUEUES				60
-#define QUEUE_SIZE					512
-#define OUTPUT_CTRL_QUEUE_MEM_BASE	0x20000000
-#define INPUT_CTRL_QUEUE_MEM_BASE	0x20000200
+class Timer {
+private:
+	time_t start;
+public:
+	unsigned int getValue();
+	unsigned int print(const char* txt);
+	unsigned int printAndReset(const char* txt);
+	unsigned int getValueAndReset();
+	void resetAndStart();
+};
 
+extern Timer timer;
 
-static RT_SW_FIFO_HNDLE RTQueue[MAX_SLAVES][nbQueueTypes][2];
-
-void RTQueuesInit(UINT8 nbSlaves){
-	ShMemInit();
-	for (int i = 0; i < nbSlaves; i++) {
-		// Creating output queues.
-		create_swfifo(&(RTQueue[i][RTCtrlQueue][RTOutputQueue]), QUEUE_SIZE, OUTPUT_CTRL_QUEUE_MEM_BASE + i * (2 * QUEUE_SIZE));
-//		flush_swfifo(&(RTQueue[i][RTCtrlQueue][RTOutputQueue]));// Queues are flushed by the LRTs.
-
-		// Creating input queues.
-		create_swfifo(&(RTQueue[i][RTCtrlQueue][RTInputQueue]), QUEUE_SIZE, INPUT_CTRL_QUEUE_MEM_BASE + i * (2 * QUEUE_SIZE));
-//		flush_swfifo(&(RTQueue[i][RTCtrlQueue][RTInputQueue]));
-	}
-}
-
-
-UINT32 RTQueuePush(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	write_output_swfifo(&RTQueue[slaveId][queueType][RTOutputQueue], size, (UINT8*)data);
-	return size;
-}
-
-
-UINT32 RTQueuePush_UINT32(UINT8 slaveId, RTQueueType queueType, UINT32 data){
-	return RTQueuePush(slaveId, queueType, &data, sizeof(UINT32));
-}
-
-
-UINT32 RTQueuePop(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	read_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
-	return size;
-}
-
-
-UINT32 RTQueuePop_UINT32(UINT8 slaveId, RTQueueType queueType){
-	UINT32 data;
-	RTQueuePop(slaveId, queueType, &data, sizeof(UINT32));
-	return data;
-}
-
-
-UINT32 RTQueueNonBlockingPop(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	if(check_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size)){
-		read_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
-		return size;
-	}
-	else
-		return 0;
-}
+#endif /* TIMER_H_ */

@@ -40,36 +40,67 @@
 #include <windows.h>
 
 #include "types.h"
-#include "swfifoMngr.h"
-#include "sharedMem.h"
 #include "hwQueues.h"
 #include <grt_definitions.h>
 
-#define NB_MAX_QUEUES				60
-#define QUEUE_SIZE					512
-#define OUTPUT_CTRL_QUEUE_MEM_BASE	0x20000000
-#define INPUT_CTRL_QUEUE_MEM_BASE	0x20000200
+#define NB_MAX_QUEUES		60
+#define MAILSLOT_BASE_NAME 	"\\\\.\\mailslot\\"
+#define BUFFER_SIZE		512
+#define GRT_ACK_WORD	0xffffffff
 
-
-static RT_SW_FIFO_HNDLE RTQueue[MAX_SLAVES][nbQueueTypes][2];
+static HANDLE RTQueue[MAX_SLAVES][nbQueueTypes][2];
 
 void RTQueuesInit(UINT8 nbSlaves){
-	ShMemInit();
-	for (int i = 0; i < nbSlaves; i++) {
-		// Creating output queues.
-		create_swfifo(&(RTQueue[i][RTCtrlQueue][RTOutputQueue]), QUEUE_SIZE, OUTPUT_CTRL_QUEUE_MEM_BASE + i * (2 * QUEUE_SIZE));
-//		flush_swfifo(&(RTQueue[i][RTCtrlQueue][RTOutputQueue]));// Queues are flushed by the LRTs.
+	UINT8 i;
 
-		// Creating input queues.
-		create_swfifo(&(RTQueue[i][RTCtrlQueue][RTInputQueue]), QUEUE_SIZE, INPUT_CTRL_QUEUE_MEM_BASE + i * (2 * QUEUE_SIZE));
-//		flush_swfifo(&(RTQueue[i][RTCtrlQueue][RTInputQueue]));
+	for(i=0; i<nbSlaves; i++){
+		char tempStr[50];
+
+//		// Creating output pipes.
+//		sprintf(tempStr, "%sCtrl_Grtto%d", MAILSLOT_BASE_NAME, i);
+//		RTQueue[i][RTCtrlQueue][RTOutputQueue] = CreateMailslot(tempStr,
+//	        0,                             // no maximum message size
+//	        MAILSLOT_WAIT_FOREVER,         // no time-out for operations
+//	        (LPSECURITY_ATTRIBUTES) NULL); // default security
+//
+//	    if (RTQueue[i][RTCtrlQueue][RTOutputQueue] == INVALID_HANDLE_VALUE)
+//	    {
+//	        printf("CreateMailslot failed with %d\n", GetLastError());
+//	        exit(EXIT_FAILURE);
+//	    }
+
+		// Creating input pipes.
+		sprintf(tempStr, "%sCtrl_%dtoGrt", MAILSLOT_BASE_NAME, i);
+		RTQueue[i][RTCtrlQueue][RTInputQueue] = CreateMailslot(tempStr,
+	        0,                             // no maximum message size
+	        MAILSLOT_WAIT_FOREVER,         // no time-out for operations
+	        (LPSECURITY_ATTRIBUTES) NULL); // default security
+
+	    if (RTQueue[i][RTCtrlQueue][RTInputQueue] == INVALID_HANDLE_VALUE)
+	    {
+	        printf("CreateMailslot failed with %d\n", GetLastError());
+	        exit(EXIT_FAILURE);
+	    }
 	}
 }
 
 
 UINT32 RTQueuePush(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	write_output_swfifo(&RTQueue[slaveId][queueType][RTOutputQueue], size, (UINT8*)data);
-	return size;
+    BOOL fSuccess = FALSE;
+    int nb_bytes_written;
+
+    fSuccess = WriteFile(
+    				RTQueue[slaveId][queueType][RTOutputQueue],	// pipe handle
+    				data,		             	// message
+    				size,		             	// message length
+    				(PDWORD)&nb_bytes_written,	// bytes written
+    				NULL);                 		// not overlapped
+
+    if (!fSuccess){
+    	printf("WriteFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+    }
+
+	return nb_bytes_written;
 }
 
 
@@ -79,10 +110,20 @@ UINT32 RTQueuePush_UINT32(UINT8 slaveId, RTQueueType queueType, UINT32 data){
 
 
 UINT32 RTQueuePop(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	read_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
-	return size;
-}
+	BOOL fSuccess = FALSE;
+	int nb_bytes_read;
+	fSuccess = ReadFile(RTQueue[slaveId][queueType][RTInputQueue],
+				   data,
+				   size,
+				   (PDWORD)&nb_bytes_read,
+				   NULL);
 
+    if (!fSuccess){
+    	printf("ReadFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+    }
+
+	return nb_bytes_read;
+}
 
 UINT32 RTQueuePop_UINT32(UINT8 slaveId, RTQueueType queueType){
 	UINT32 data;
@@ -90,12 +131,28 @@ UINT32 RTQueuePop_UINT32(UINT8 slaveId, RTQueueType queueType){
 	return data;
 }
 
-
 UINT32 RTQueueNonBlockingPop(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	if(check_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size)){
-		read_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
-		return size;
+	int nb_bytes_read;
+	DWORD cbMessage, cMessage;
+	BOOL fSuccess;
+
+	nb_bytes_read = 0;
+	cbMessage = 0;
+	cMessage = 0;
+
+	fSuccess = GetMailslotInfo(
+			RTQueue[slaveId][queueType][RTInputQueue],  // mailslot handle
+        (LPDWORD) NULL,               // no maximum message size
+        &cbMessage,                   // size of next message
+        &cMessage,                    // number of messages
+        (LPDWORD) NULL);              // no read time-out
+
+	if(!fSuccess){
+    	printf("GetMailslotInfo failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 	}
-	else
-		return 0;
+    if (cbMessage != MAILSLOT_NO_MESSAGE)
+    {
+    	nb_bytes_read = RTQueuePop(slaveId, queueType, data, size);
+    }
+	return nb_bytes_read;
 }

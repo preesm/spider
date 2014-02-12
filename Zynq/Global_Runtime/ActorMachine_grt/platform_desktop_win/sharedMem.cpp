@@ -56,12 +56,12 @@ void addShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename)
 	if (nbOSShMem <= MAX_SLAVES) {
 		sprintf(OSShMemTbl[nbOSShMem].file_name, filename);
 
-		pFile = fopen(OSShMemTbl[nbOSShMem].file_name, "wb+");
-		if (pFile == (FILE*)0) {
-			perror("");
-			exit(1);
-		}
-		fclose(pFile);
+//		pFile = fopen(OSShMemTbl[nbOSShMem].file_name, "wb+");
+//		if (pFile == (FILE*)0) {
+//			perror("");
+//			exit(1);
+//		}
+//		fclose(pFile);
 		OSShMemTbl[nbOSShMem].base 	 	= base;
 //		OSShMemTbl[nbOSShMem].dataBase	= dataBase;
 		OSShMemTbl[nbOSShMem].length = length;

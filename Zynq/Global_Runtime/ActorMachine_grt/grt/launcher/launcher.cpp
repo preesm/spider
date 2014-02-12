@@ -273,7 +273,7 @@ void launcher::prepareFIFOsInfo(SRDAGGraph* graph){
 //	}
 
 	// Setting the type of acknowledge message that should be received from LRT 0.
-	addUINT32ToReceive(0, MSG_CLEAR_FIFO);
+//	addUINT32ToReceive(0, MSG_CLEAR_FIFO);
 
 }
 

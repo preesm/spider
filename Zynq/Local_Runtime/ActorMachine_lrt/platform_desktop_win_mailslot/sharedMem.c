@@ -37,78 +37,83 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "types.h"
-#include "hwQueues.h"
-#include "swfifoMngr.h"
-
-#define IN_CTRL_QUEUE_BASE		0x20000000
-#define OUT_CTRL_QUEUE_BASE		0x20000200
-
-#define MBOX_SIZE				512
-
-//#define WRITE_REG_OFFSET	0x00	/**< Mbox write register */
-//#define READ_REG_OFFSET		0x08	/**< Mbox read register */
-//#define STATUS_REG_OFFSET	0x10	/**< Mbox status reg  */
-//#define STATUS_FIFO_EMPTY	0x00000001 /**< Receive FIFO is Empty */
-//#define STATUS_FIFO_FULL	0x00000002 /**< Send FIFO is Full */
-//
-//typedef struct MBox {
-//	UINT32 	base;
-////	UINT32 	dataBase;
-//	UINT32 	length;
-////	UINT32	WrDataReg;
-////	UINT32	RdDataReg;
-////	UINT32	StatusReg;
-////	FILE*	file;
-////	char	file_name[50];
-//} MBOX;
-
-static LRT_FIFO_HNDLE RTQueue[nbQueueTypes][2];
-int cpuId;
-
-void RTQueuesInit(){
-	create_swfifo(&(RTQueue[RTCtrlQueue][RTInputQueue]), MBOX_SIZE, IN_CTRL_QUEUE_BASE);
-	flush_swfifo(&(RTQueue[RTCtrlQueue][RTInputQueue]));
-//	RTQueue[RTInfoQueue][RTInputQueue] =
-//	RTQueue[RTJobQueue][RTInputQueue] =
-//
-	create_swfifo(&(RTQueue[RTCtrlQueue][RTOutputQueue]), MBOX_SIZE, OUT_CTRL_QUEUE_BASE);
-	flush_swfifo(&(RTQueue[RTCtrlQueue][RTOutputQueue]));
-//	RTQueue[RTInfoQueue][RTOutputQueue] =
-//	RTQueue[RTJobQueue][RTOutputQueue] =
-}
+#include "sharedMem.h"
 
 
-UINT32 RTQueuePush(RTQueueType queueType, void* data, int size){
-	write_output_swfifo(&RTQueue[queueType][RTOutputQueue], size, data);
-	return size;
-}
 
+typedef struct OS_SHMEM {
+	UINT32 	base;
+//	UINT32 	dataBase;
+	UINT32 	length;
+//	FILE*	file;
+	char	file_name[50];
+} OS_SHMEM;
 
-UINT32 RTQueuePush_UINT32(RTQueueType queueType, UINT32 value){
-	return RTQueuePush(queueType, &value, sizeof(UINT32));
-}
+static OS_SHMEM OSShMemTbl[OS_MAX_SH_MEM];
+static int nbOSShMem = 0;
 
+static void addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename) {
+	FILE *pFile;
+	if (nbOSShMem <= OS_MAX_SH_MEM) {
+		sprintf(OSShMemTbl[nbOSShMem].file_name, filename);
 
-UINT32 RTQueuePop(RTQueueType queueType, void* data, int size){
-	read_input_swfifo(&RTQueue[queueType][RTInputQueue], size, data);
-	return size;
-}
-
-
-UINT32 RTQueuePop_UINT32(RTQueueType queueType){
-	UINT32 data;
-	RTQueuePop(queueType, &data, sizeof(UINT32));
-	return data;
-}
-
-
-UINT32 RTQueueNonBlockingPop(RTQueueType queueType, void* data, int size){
-	if(check_input_swfifo(&RTQueue[queueType][RTInputQueue], size)){
-		read_input_swfifo(&RTQueue[queueType][RTInputQueue], size, data);
-		return size;
+		pFile = fopen(OSShMemTbl[nbOSShMem].file_name, "wb+");
+		if (pFile == (FILE*)0) {
+			perror("");
+			exit(1);
+		}
+		fclose(pFile);
+		OSShMemTbl[nbOSShMem].base 	 	= base;
+//		OSShMemTbl[nbOSShMem].dataBase	= dataBase;
+		OSShMemTbl[nbOSShMem].length = length;
+		nbOSShMem++;
+	} else {
+		fprintf(stderr,
+				"Error too many Memory regions, "
+				"change OS_MAX_SH_MEM macro\n");
+		exit(1);
 	}
-	else
-		return 0;
+}
+
+void OS_ShMemInit() {
+	printf("Opening shMem...\n");
+	addOSShMem(SH_MEM_BASE_ADDR, SH_MEM_BASE_ADDR + SH_MEM_DATA_REGION_SIZE, SH_MEM_SIZE, SH_MEM_FILE_PATH);
+}
+
+UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
+	int i, res;
+	FILE* pFile;
+	res = 0;
+	for (i = 0; i < nbOSShMem && res == 0; i++) {
+		if (OSShMemTbl[i].base <= address
+				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
+				&& OSShMemTbl[i].base <= address + size
+				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
+			pFile = fopen(OSShMemTbl[i].file_name, "rb+");
+			fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
+			res = fread(data, size, 1, pFile);
+			fclose(pFile);
+			return res;
+		}
+	}
+	printf("Memory not found 0x%x\n", address);
+	return res;
+}
+
+UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
+	int i, res;
+	FILE* pFile;
+	res = 0;
+	for (i = 0; i < nbOSShMem && res == 0; i++) {
+		if (OSShMemTbl[i].base <= address
+				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
+				&& OSShMemTbl[i].base <= address + size
+				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
+			pFile = fopen(OSShMemTbl[i].file_name, "rb+");
+			fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
+			res = fwrite(data, size, 1, pFile);
+			fclose(pFile);
+		}
+	}
+	return res;
 }

@@ -59,7 +59,7 @@ static void addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* 
 
 		pFile = fopen(OSShMemTbl[nbOSShMem].file_name, "wb+");
 		if (pFile == (FILE*)0) {
-			perror("");
+			perror("Can't open file memory");
 			exit(1);
 		}
 		fclose(pFile);
@@ -94,6 +94,10 @@ UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
 				&& OSShMemTbl[i].base <= address + size
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
 			pFile = fopen(OSShMemTbl[i].file_name, "rb+");
+			if (pFile == (FILE*)0) {
+				perror("Can't open file memory");
+				exit(1);
+			}
 			fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
 			res = fread(data, size, 1, pFile);
 			fclose(pFile);
@@ -114,6 +118,10 @@ UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
 				&& OSShMemTbl[i].base <= address + size
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
 			pFile = fopen(OSShMemTbl[i].file_name, "rb+");
+			if (pFile == (FILE*)0) {
+				perror("Can't open file memory");
+				exit(1);
+			}
 			fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
 			res = fwrite(data, size, 1, pFile);
 			fclose(pFile);

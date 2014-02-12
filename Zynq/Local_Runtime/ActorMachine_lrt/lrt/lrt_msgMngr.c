@@ -145,7 +145,7 @@ void wait_ext_msg() {
 		case MSG_CLEAR_FIFO:
 			fifoID = RTQueuePop_UINT32(RTCtrlQueue);
 			flushFIFO(fifoID);
-			RTQueuePush_UINT32(RTCtrlQueue, msg_type);
+//			RTQueuePush_UINT32(RTCtrlQueue, msg_type);
 			break;
 
 		case MSG_START_SCHED:

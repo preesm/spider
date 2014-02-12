@@ -35,80 +35,22 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef TYPES_H_
+#define TYPES_H_
 
-#include "types.h"
-#include "hwQueues.h"
-#include "swfifoMngr.h"
-
-#define IN_CTRL_QUEUE_BASE		0x20000000
-#define OUT_CTRL_QUEUE_BASE		0x20000200
-
-#define MBOX_SIZE				512
-
-//#define WRITE_REG_OFFSET	0x00	/**< Mbox write register */
-//#define READ_REG_OFFSET		0x08	/**< Mbox read register */
-//#define STATUS_REG_OFFSET	0x10	/**< Mbox status reg  */
-//#define STATUS_FIFO_EMPTY	0x00000001 /**< Receive FIFO is Empty */
-//#define STATUS_FIFO_FULL	0x00000002 /**< Send FIFO is Full */
+//#define TRUE 			1
+//#define FALSE 			0
 //
-//typedef struct MBox {
-//	UINT32 	base;
-////	UINT32 	dataBase;
-//	UINT32 	length;
-////	UINT32	WrDataReg;
-////	UINT32	RdDataReg;
-////	UINT32	StatusReg;
-////	FILE*	file;
-////	char	file_name[50];
-//} MBOX;
-
-static LRT_FIFO_HNDLE RTQueue[nbQueueTypes][2];
-int cpuId;
-
-void RTQueuesInit(){
-	create_swfifo(&(RTQueue[RTCtrlQueue][RTInputQueue]), MBOX_SIZE, IN_CTRL_QUEUE_BASE);
-	flush_swfifo(&(RTQueue[RTCtrlQueue][RTInputQueue]));
-//	RTQueue[RTInfoQueue][RTInputQueue] =
-//	RTQueue[RTJobQueue][RTInputQueue] =
+typedef unsigned char 	BOOLEAN;
 //
-	create_swfifo(&(RTQueue[RTCtrlQueue][RTOutputQueue]), MBOX_SIZE, OUT_CTRL_QUEUE_BASE);
-	flush_swfifo(&(RTQueue[RTCtrlQueue][RTOutputQueue]));
-//	RTQueue[RTInfoQueue][RTOutputQueue] =
-//	RTQueue[RTJobQueue][RTOutputQueue] =
-}
+//typedef char			INT8;
+//typedef short			INT16;
+//typedef int			 	INT32;
+//typedef long long	 	INT64;
+//
+//typedef unsigned char 	UINT8;
+//typedef unsigned short	UINT16;
+typedef unsigned int	UINT32;
+//typedef long long unsigned	UINT64;
 
-
-UINT32 RTQueuePush(RTQueueType queueType, void* data, int size){
-	write_output_swfifo(&RTQueue[queueType][RTOutputQueue], size, data);
-	return size;
-}
-
-
-UINT32 RTQueuePush_UINT32(RTQueueType queueType, UINT32 value){
-	return RTQueuePush(queueType, &value, sizeof(UINT32));
-}
-
-
-UINT32 RTQueuePop(RTQueueType queueType, void* data, int size){
-	read_input_swfifo(&RTQueue[queueType][RTInputQueue], size, data);
-	return size;
-}
-
-
-UINT32 RTQueuePop_UINT32(RTQueueType queueType){
-	UINT32 data;
-	RTQueuePop(queueType, &data, sizeof(UINT32));
-	return data;
-}
-
-
-UINT32 RTQueueNonBlockingPop(RTQueueType queueType, void* data, int size){
-	if(check_input_swfifo(&RTQueue[queueType][RTInputQueue], size)){
-		read_input_swfifo(&RTQueue[queueType][RTInputQueue], size, data);
-		return size;
-	}
-	else
-		return 0;
-}
+#endif /* TYPES_H_ */

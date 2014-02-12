@@ -55,7 +55,7 @@ void rdFile(UINT32 inputFIFOIds[],
 	M[2] = 0;
 
 	// Sending parameter's value.
-	RTQueuePush_UINT32(RTInfoQueue, N);
+	RTQueuePush_UINT32(RTCtrlQueue, N);
 
 	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], M_MAX_VALUE * sizeof(UINT16), (UINT8*)M);
 	writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], M_MAX_VALUE * N_MAX_VALUE * sizeof(UINT16), (UINT8*)array);

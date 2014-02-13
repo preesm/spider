@@ -21,6 +21,9 @@
 int main(int argc, char **argv) {
 	UINT32 FifoIds[MAX_NB_FIFOs], FifoAddrs[MAX_NB_FIFOs];
 
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
+
 	if(argc > 1)
 		cpuId = atoi(argv[1]);
 	else{
@@ -29,7 +32,6 @@ int main(int argc, char **argv) {
 	}
 
 	functions_tbl[0] = rdFile;
-	functions_tbl[1] = broadcast;
 	functions_tbl[2] = initNLoop;
 	functions_tbl[3] = endNLoop;
 	functions_tbl[4] = wrFile;
@@ -41,14 +43,11 @@ int main(int argc, char **argv) {
 	functions_tbl[8] = endMLoop;
 
 	//*** Special actors ***//
-	functions_tbl[9] = RB0;
-	functions_tbl[10] = RB1;
-	functions_tbl[11] = M_in;
-	functions_tbl[12] = line_in;
-	functions_tbl[13] = line_out;
-
-	//*** Implodes/Explodes ***//
-//	functions_tbl[14] = switch_1;
+//	functions_tbl[9] = input;
+	functions_tbl[10] = RB;
+	functions_tbl[11] = broadcast;
+//	functions_tbl[12] = output;
+	functions_tbl[13] = Xplode;
 
 
 
@@ -71,6 +70,8 @@ int main(int argc, char **argv) {
 	readFile(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
 
 #else
+
+	printf("Starting local runtime ..\n");
 	LRTCtrlStart();
 #endif
 	return 0;

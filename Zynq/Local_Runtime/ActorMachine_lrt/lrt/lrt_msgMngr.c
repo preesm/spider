@@ -113,6 +113,7 @@ void wait_ext_msg() {
 
 				new_tcb->actor->nbInputFifos = RTQueuePop_UINT32(RTCtrlQueue);
 				new_tcb->actor->nbOutputFifos = RTQueuePop_UINT32(RTCtrlQueue);
+				new_tcb->actor->nbParams = RTQueuePop_UINT32(RTCtrlQueue);
 				for (i = 0; i < new_tcb->actor->nbInputFifos; i++) {
 					new_tcb->actor->inputFifoId[i] = RTQueuePop_UINT32(RTCtrlQueue);
 					new_tcb->actor->inputFifoDataOff[i] = RTQueuePop_UINT32(RTCtrlQueue);

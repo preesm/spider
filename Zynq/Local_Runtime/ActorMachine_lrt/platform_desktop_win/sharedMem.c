@@ -35,11 +35,12 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "sharedMem.h"
 
-
+#define MUTEX_BASE_NAME	"Mutex_"
 
 typedef struct OS_SHMEM {
 	UINT32 	base;
@@ -51,6 +52,8 @@ typedef struct OS_SHMEM {
 
 static OS_SHMEM OSShMemTbl[OS_MAX_SH_MEM];
 static int nbOSShMem = 0;
+static HANDLE ghMutex;
+int cpuId;
 
 static void addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename) {
 	FILE *pFile;
@@ -76,56 +79,119 @@ static void addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* 
 }
 
 void OS_ShMemInit() {
+	char mutexName[50];
 	// Adding a memory for the data fifos.
 	addOSShMem(SH_MEM_BASE_ADDR, SH_MEM_BASE_ADDR + SH_MEM_DATA_REGION_SIZE, SH_MEM_SIZE, SH_MEM_FILE_PATH);
 
 	// Adding a memory for the mailboxes.
 	addOSShMem(MBOX_MEM_BASE_ADDR, MBOX_MEM_BASE_ADDR, MBOX_MEM_SIZE, MBOX_MEM_FILE_PATH);
+
+	// Creating windows mutex to synchronize access to the memory file.
+	sprintf(mutexName, "%s%d", MUTEX_BASE_NAME, cpuId);
+    ghMutex = CreateMutex(
+        NULL,              // default security attributes
+        FALSE,             // initially not owned
+        mutexName);  		// object name
+
+    if (ghMutex == NULL)
+    {
+        printf("CreateMutex error: %d\n", GetLastError());
+        exit(1);
+    }
 }
 
 
 UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
 	int i, res;
 	FILE* pFile;
+	DWORD dwWaitResult;
+
 	res = 0;
 	for (i = 0; i < nbOSShMem && res == 0; i++) {
 		if (OSShMemTbl[i].base <= address
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
 				&& OSShMemTbl[i].base <= address + size
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
-			pFile = fopen(OSShMemTbl[i].file_name, "rb+");
-			if (pFile == (FILE*)0) {
-				perror("Can't open file memory");
-				exit(1);
-			}
-			fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
-			res = fread(data, size, 1, pFile);
-			fclose(pFile);
-			return res;
+
+			// Request ownership of mutex.
+			dwWaitResult = WaitForSingleObject(
+	            ghMutex,    // handle to mutex
+	            INFINITE);  // no time-out interval
+
+//			if (dwWaitResult == WAIT_OBJECT_0)
+//	        {
+	            // The thread got ownership of the mutex
+				pFile = fopen(OSShMemTbl[i].file_name, "rb+");
+				if (pFile == (FILE*)0) {
+					perror("Can't open file memory");
+					exit(1);
+				}
+				fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
+				res = fread(data, size, 1, pFile);
+				fclose(pFile);
+//	        }
+//			else if(dwWaitResult == WAIT_ABANDONED){
+//	            // The thread got ownership of an abandoned mutex
+//	            // The file is in an indeterminate state
+//				perror("Mutex was abandoned");
+//				exit(1);
+//			}
+			// Release ownership of the mutex object
+            if (! ReleaseMutex(ghMutex))
+            {
+                // Handle error.
+            }
+        	return res;
 		}
 	}
-	printf("Memory not found 0x%x\n", address);
-	return res;
+	printf("Memory address not found 0x%x\n", address);
+	exit(1);
 }
 
 UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
 	int i, res;
 	FILE* pFile;
+	DWORD dwWaitResult;
+
 	res = 0;
 	for (i = 0; i < nbOSShMem && res == 0; i++) {
 		if (OSShMemTbl[i].base <= address
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
 				&& OSShMemTbl[i].base <= address + size
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
-			pFile = fopen(OSShMemTbl[i].file_name, "rb+");
-			if (pFile == (FILE*)0) {
-				perror("Can't open file memory");
-				exit(1);
+
+			// Request ownership of mutex.
+			dwWaitResult = WaitForSingleObject(
+	            ghMutex,    // handle to mutex
+	            INFINITE);  // no time-out interval
+
+//			if (dwWaitResult == WAIT_OBJECT_0)
+//	        {
+	            // The thread got ownership of the mutex
+				pFile = fopen(OSShMemTbl[i].file_name, "rb+");
+				if (pFile == (FILE*)0) {
+					perror("Can't open file memory");
+					exit(1);
+				}
+				fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
+				res = fwrite(data, size, 1, pFile);
+				fclose(pFile);
+//	        }
+//			else if(dwWaitResult == WAIT_ABANDONED){
+//	            // The thread got ownership of an abandoned mutex
+//	            // The file is in an indeterminate state
+//				perror("Mutex was abandoned");
+//				exit(1);
+//			}
+			// Release ownership of the mutex object
+			if (! ReleaseMutex(ghMutex))
+			{
+				// Handle error.
 			}
-			fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
-			res = fwrite(data, size, 1, pFile);
-			fclose(pFile);
+
+			return res;
 		}
 	}
-	return res;
+	printf("Memory address not found 0x%x\n", address);
+	exit(1);
 }

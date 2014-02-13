@@ -92,7 +92,7 @@ OS_TCB *  LrtTaskCreate (){
 //	newActor = &LRTActorTbl[OSTaskIndex];
 
 //	if (new_tcb->OSTCBState == OS_STAT_UNINITIALIZED) { /* Make sure task doesn't already exist at this id  */
-//		new_tcb->OSTCBState = OS_STAT_READY;/* Reserve the priority to prevent others from doing ...  */
+		new_tcb->OSTCBState = OS_STAT_READY;/* Reserve the priority to prevent others from doing ...  */
 
 		/* Store task ID */
 		new_tcb->OSTCBId = OSTaskIndex++;
@@ -185,7 +185,7 @@ void  LrtTaskDeleteCur(){
 //    OS_TCB    *del_tcb = &OSTCBTbl[id];
 
 //    if (del_tcb->OSTCBState == OS_STAT_READY) { /* Make sure task doesn't already exist at this id  */
-//    	del_tcb->OSTCBState = OS_STAT_UNINITIALIZED;/* Reserve the priority to prevent others from doing ...  */
+	OSTCBCur->OSTCBState = OS_STAT_UNINITIALIZED;
 
     	/* Update current running Task List */
 //		if(del_tcb->OSTCBNext == del_tcb){
@@ -232,8 +232,9 @@ void PrintTasksIntoDot(){
 	UINT32 i, j, k;
 	OS_TCB *tcb;
 	LRTActor *actor;
+	static UINT32 stepCntr = 0;
 
-	sprintf(name, "Slave%d.gv", cpuId);
+	sprintf(name, "Slave%d_%d.gv", cpuId, stepCntr);
 	pFile = fopen (name,"w");
 	if(pFile != NULL){
 		// Writing header
@@ -248,24 +249,27 @@ void PrintTasksIntoDot(){
 			tcb = &OSTCBTbl[k];
 			k++;
 			if(tcb != (OS_TCB*)0){
-				j++;
-				fprintf (pFile, "\t%d [label=\"Function F%d\\n", j, tcb->functionId);
-				actor = tcb->actor;
-				for (i = 0; i < actor->nbInputFifos; i++)
-					fprintf (pFile, "Fin  %d\\n", actor->inputFifoId[i]);
+				if(tcb->OSTCBState == OS_STAT_READY){
+					j++;
+					fprintf (pFile, "\t%d [label=\"Function F%d\\n", j, tcb->functionId);
+					actor = tcb->actor;
+					for (i = 0; i < actor->nbInputFifos; i++)
+						fprintf (pFile, "Fin  %d\\n", actor->inputFifoId[i]);
 
-				for (i = 0; i < actor->nbOutputFifos; i++)
-					fprintf (pFile, "Fout %d\\n", actor->outputFifoId[i]);
+					for (i = 0; i < actor->nbOutputFifos; i++)
+						fprintf (pFile, "Fout %d\\n", actor->outputFifoId[i]);
 
-				for(i = 0; i < actor->nbParams; i++)
-					fprintf (pFile, "Param %d\\n", actor->params[i]);
+					for(i = 0; i < actor->nbParams; i++)
+						fprintf (pFile, "Param %d\\n", actor->params[i]);
 
-				fprintf (pFile, "\",shape=box];\n");
+					fprintf (pFile, "\",shape=box];\n");
+				}
 			}
 		}
 	}
 	fprintf (pFile, "}\n");
 	fclose (pFile);
+	stepCntr++;
 }
 
 

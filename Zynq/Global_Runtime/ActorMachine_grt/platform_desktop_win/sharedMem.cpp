@@ -35,10 +35,12 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "sharedMem.h"
 
+#define MUTEX_BASE_NAME	"Mutex_"
 
 typedef struct OS_SHMEM {
 	UINT32 	base;
@@ -46,10 +48,12 @@ typedef struct OS_SHMEM {
 	UINT32 	length;
 //	FILE*	file;
 	char	file_name[50];
+	HANDLE 	ghMutex;
 } OS_SHMEM;
 
 static OS_SHMEM OSShMemTbl[MAX_SLAVES];
 static int nbOSShMem = 0;
+static HANDLE ghMutex[MAX_SLAVES];
 
 void addShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename) {
 	FILE *pFile;
@@ -74,9 +78,25 @@ void addShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename)
 	}
 }
 
-void ShMemInit() {
+void ShMemInit(UINT8 nbSlaves) {
+	char mutexName[50];
 	// Adding a memory for the mailboxes.
 	addShMem(MBOX_MEM_BASE_ADDR, MBOX_MEM_BASE_ADDR, MBOX_MEM_SIZE, MBOX_MEM_FILE_PATH);
+
+	for (int i = 0; i < nbSlaves; i++) {
+		// Creating windows mutex to synchronize access to the memory file.
+		sprintf(mutexName, "%s%d", MUTEX_BASE_NAME, i);
+		OSShMemTbl[i].ghMutex = CreateMutex(
+	        NULL,              // default security attributes
+	        FALSE,             // initially not owned
+	        mutexName);  		// object name
+
+	    if (OSShMemTbl[i].ghMutex == NULL)
+	    {
+	        printf("CreateMutex error: %d\n", GetLastError());
+	        exit(1);
+	    }
+	}
 }
 
 
@@ -84,6 +104,7 @@ UINT32 ShMemRead(UINT32 address, void* data, UINT32 size) {
 	FILE *pFile;
 	int NumBytes;
 	int i;
+	DWORD dwWaitResult;
 	UINT32* ptr = (UINT32*)data;
 	NumBytes = 0;
 
@@ -93,14 +114,26 @@ UINT32 ShMemRead(UINT32 address, void* data, UINT32 size) {
 				&& OSShMemTbl[i].base <= address + size
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
 
+			// Request ownership of mutex.
+			dwWaitResult = WaitForSingleObject(
+				OSShMemTbl[i].ghMutex,    // handle to mutex
+	            INFINITE);  // no time-out interval
+
 			pFile = fopen(OSShMemTbl[i].file_name, "rb+");
 			fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
 			NumBytes = fread(data, size, 1, pFile);
 			fclose(pFile);
+			// Release ownership of the mutex object
+            if (! ReleaseMutex(OSShMemTbl[i].ghMutex))
+            {
+                // Handle error.
+            }
 			return NumBytes;
 		}
-		else
+		else{
 			printf("Address : 0x%x is out of range 0x%x - 0x%x\n", address, OSShMemTbl[i].base, OSShMemTbl[i].length);
+	        exit(1);
+		}
 	}
 	return NumBytes;
 }
@@ -110,6 +143,7 @@ UINT32 ShMemWrite(UINT32 address, void* data, UINT32 size) {
 	FILE *pFile;
 	int NumBytes;
 	int i;
+	DWORD dwWaitResult;
 	UINT32* ptr = (UINT32*)data;
 	NumBytes = 0;
 
@@ -118,10 +152,26 @@ UINT32 ShMemWrite(UINT32 address, void* data, UINT32 size) {
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
 				&& OSShMemTbl[i].base <= address + size
 				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
+
+			// Request ownership of mutex.
+			dwWaitResult = WaitForSingleObject(
+				OSShMemTbl[i].ghMutex,    // handle to mutex
+	            INFINITE);  // no time-out interval
+
 			pFile = fopen(OSShMemTbl[i].file_name, "rb+");
 			fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
 			NumBytes = fwrite(data, size, 1, pFile);
 			fclose(pFile);
+			// Release ownership of the mutex object
+            if (! ReleaseMutex(OSShMemTbl[i].ghMutex))
+            {
+                // Handle error.
+            }
+			return NumBytes;
+		}
+		else{
+			printf("Address : 0x%x is out of range 0x%x - 0x%x\n", address, OSShMemTbl[i].base, OSShMemTbl[i].length);
+	        exit(1);
 		}
 	}
 	return NumBytes;

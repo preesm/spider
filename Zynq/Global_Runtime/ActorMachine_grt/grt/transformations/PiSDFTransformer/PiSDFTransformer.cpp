@@ -53,6 +53,7 @@ void PiSDFTransformer::addVertices(BaseVertex* vertex, int nb_repetitions, SRDAG
 		else
 			sprintf(name, "%s_%d", vertex->getName(), j);
 		srdag_vertex->setName(name);
+		srdag_vertex->setFunctIx(vertex->getFunction_index());
 		srdag_vertex->setReference(vertex);
 		srdag_vertex->setReferenceIndex(j);
 
@@ -342,6 +343,7 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDA
 				// Setting attributes from original vertex.
 				sprintf(name, "Exp%d_%s", cntExpVxs, origin_vertex->getName());
 				exp_vertex->setName(name);
+				exp_vertex->setFunctIx(XPLODE_FUNCT_IX);
 				exp_vertex->setReference(origin_vertex->getReference());
 				exp_vertex->setReferenceIndex(origin_vertex->getReferenceIndex());
 				cntExpVxs++;
@@ -366,6 +368,7 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDA
 				// Setting attributes from original vertex.
 				sprintf(name, "Imp%d_%s", cntImpVxs, origin_vertex->getName());
 				imp_vertex->setName(name);
+				imp_vertex->setFunctIx(XPLODE_FUNCT_IX);
 				imp_vertex->setReference(origin_vertex->getReference());
 				imp_vertex->setReferenceIndex(origin_vertex->getReferenceIndex());
 				cntImpVxs++;

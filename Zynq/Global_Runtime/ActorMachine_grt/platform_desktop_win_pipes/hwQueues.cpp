@@ -55,20 +55,20 @@ void RTQueuesInit(UINT8 nbSlaves){
 
 	for(i=0; i<nbSlaves; i++){
 		char tempStr[50];
-		// Creating input pipes.
-		sprintf(tempStr, "%sCtrl_%dtoGrt", PIPE_BASE_NAME, i);
-		RTQueue[i][RTCtrlQueue][RTInputQueue] = CreateNamedPipe(
-								tempStr,
-								PIPE_ACCESS_INBOUND,
-								PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-								PIPE_UNLIMITED_INSTANCES,
-								0,
-								BUFFER_SIZE,
-								0,
-								NULL);
-		if (RTQueue[i][RTCtrlQueue][RTInputQueue] == INVALID_HANDLE_VALUE) {
-			printf("CreateNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
-		}
+//		// Creating input pipes.
+//		sprintf(tempStr, "%sCtrl_%dtoGrt", PIPE_BASE_NAME, i);
+//		RTQueue[i][RTCtrlQueue][RTInputQueue] = CreateNamedPipe(
+//								tempStr,
+//								PIPE_ACCESS_INBOUND,
+//								PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+//								PIPE_UNLIMITED_INSTANCES,
+//								0,
+//								BUFFER_SIZE,
+//								0,
+//								NULL);
+//		if (RTQueue[i][RTCtrlQueue][RTInputQueue] == INVALID_HANDLE_VALUE) {
+//			printf("CreateNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+//		}
 
 //
 //		sprintf(tempStr, "%sInfo_%dtoGrt", PIPE_BASE_NAME, i);
@@ -101,7 +101,7 @@ void RTQueuesInit(UINT8 nbSlaves){
 //		}
 
 
-		// Connecting to output pipes.
+		// Connecting to LRT' pipes.
 		sprintf(tempStr, "%sCtrl_Grtto%d", PIPE_BASE_NAME, i);
 		RTQueue[i][RTCtrlQueue][RTOutputQueue] = CreateFile(
 										tempStr,   		// pipe name
@@ -112,6 +112,19 @@ void RTQueuesInit(UINT8 nbSlaves){
 										0,              // default attributes
 										NULL);          // no template file
 		if (RTQueue[i][RTCtrlQueue][RTOutputQueue] == INVALID_HANDLE_VALUE) {
+			printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+		}
+
+		sprintf(tempStr, "%sCtrl_%dtoGrt", PIPE_BASE_NAME, i);
+		RTQueue[i][RTCtrlQueue][RTInputQueue] = CreateFile(
+										tempStr,   		// pipe name
+										GENERIC_READ,	// read access
+										0,              // no sharing
+										NULL,           // default security attributes
+										OPEN_EXISTING,  // opens existing pipe
+										0,              // default attributes
+										NULL);          // no template file
+		if (RTQueue[i][RTCtrlQueue][RTInputQueue] == INVALID_HANDLE_VALUE) {
 			printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 		}
 
@@ -143,10 +156,10 @@ void RTQueuesInit(UINT8 nbSlaves){
 //			printf("CreateFile failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
 //		}
 
-		// Waiting for clients to connect.
-		if((!ConnectNamedPipe(RTQueue[i][RTCtrlQueue][RTInputQueue], NULL)) && (GetLastError() != ERROR_PIPE_CONNECTED)){
-			printf("ConnectNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
-		}
+//		// Waiting for clients to connect.
+//		if((!ConnectNamedPipe(RTQueue[i][RTCtrlQueue][RTInputQueue], NULL)) && (GetLastError() != ERROR_PIPE_CONNECTED)){
+//			printf("ConnectNamedPipe failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+//		}
 
 //		// Closing connection to output.
 //		CloseHandle(RTQueue[i][RTCtrlQueue][RTOutputQueue]);

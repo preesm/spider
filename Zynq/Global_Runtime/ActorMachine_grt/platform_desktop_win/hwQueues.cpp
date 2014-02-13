@@ -54,7 +54,7 @@
 static RT_SW_FIFO_HNDLE RTQueue[MAX_SLAVES][nbQueueTypes][2];
 
 void RTQueuesInit(UINT8 nbSlaves){
-	ShMemInit();
+	ShMemInit(nbSlaves);
 	for (int i = 0; i < nbSlaves; i++) {
 		// Creating output queues.
 		create_swfifo(&(RTQueue[i][RTCtrlQueue][RTOutputQueue]), QUEUE_SIZE, OUTPUT_CTRL_QUEUE_MEM_BASE + i * (2 * QUEUE_SIZE));

@@ -281,6 +281,7 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, Architecture *archi, BaseSche
 //	CreateFifoMsg msg_createFifo;
 //	ClearFifoMsg msg_clearFifo;
 	CreateTaskMsg msg_createTask;
+	static UINT16 stepsCntr = 0;
 
 	/* Creating Tasks */
 	for(int i=0; i<archi->getNbActiveSlaves(); i++){
@@ -291,7 +292,7 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, Architecture *archi, BaseSche
 
 			// Writing AM into .dot file.
 			char name[20];
-			sprintf(name, "Slave%d.gv", i);
+			sprintf(name, "Slave%d_%d.gv", i, stepsCntr);
 			msg_createTask.toDot(name);
 
 			// Copying task and AM data into the chunk of data that will be sent.
@@ -302,7 +303,7 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, Architecture *archi, BaseSche
 		{
 #if PRINT_ACTOR_IN_DOT_FILE == 1
 			char name[20];
-			sprintf(name, "Slave%d.gv", i);
+			sprintf(name, "Slave%d_%d.gv", i, stepsCntr);
 			FILE * pFile = fopen (name,"w");
 			if(pFile != NULL){
 				// Writing header
@@ -347,7 +348,7 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, Architecture *archi, BaseSche
 //			this->addUINT32ToSend(i, true);	// An AM is present.
 //		}
 	}
-
+	stepsCntr++;
 	/* Launch schedule */
 //	for(int j=0; j<archi->getNbActiveSlaves(); j++)
 ////		dataToSendCnt[j] += StartMsg().prepare(dataToSend[j], dataToSendCnt[j]);

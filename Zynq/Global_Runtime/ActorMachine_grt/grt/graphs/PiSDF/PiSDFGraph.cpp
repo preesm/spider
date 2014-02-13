@@ -41,6 +41,8 @@
 #include <transformations/PiSDFTransformer/PiSDFTransformer.h>
 
 
+#define EXEC			1
+
 extern DotWriter dotWriter;
 static char name[MAX_VERTEX_NAME_SIZE];
 
@@ -56,6 +58,7 @@ PiSDFGraph::PiSDFGraph() {
 	nb_broad_vertices = 0;
 	nb_output_vertices = 0;
 	nb_select_vertices = 0;
+	nb_switch_vertices = 0;
 	nb_roundB_vertices = 0;
 
 	rootVertex = NULL;
@@ -787,6 +790,8 @@ void PiSDFGraph::insertRoundBuffers(){
 bool PiSDFGraph::isConfigVxPred(BaseVertex* Vx){
 	if((Vx->getType() == input_vertex) || (Vx->getType() == roundBuff_vertex))
 		return (Vx->getOutputEdge(0)->getSink()->getType() == config_vertex);
+	else
+		return false;
 }
 
 /*
@@ -835,6 +840,7 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hS
 				sprintf(name, "%s", refConfigVertex->getName());
 
 			srDagVertex->setName(name);
+			srDagVertex->setFunctIx(refConfigVertex->getFunction_index());
 			srDagVertex->setReference(refConfigVertex);
 			srDagVertex->setReferenceIndex(refConfigVertex->getId());
 			srDagVertex->setState(SrVxStExecutable);
@@ -851,6 +857,7 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hS
 				else
 					sprintf(name, "%s", predec->getName());
 				source->setName(name);
+				source->setFunctIx(predec->getFunction_index());
 				source->setReference(predec);
 				source->setReferenceIndex(predec->getId());
 				source->setState(SrVxStExecutable);
@@ -886,6 +893,7 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hS
 				else
 					sprintf(name, "%s", succec->getName());
 				sink->setName(name);
+				sink->setFunctIx(succec->getFunction_index());
 				sink->setReference(succec);
 				sink->setReferenceIndex(succec->getId());
 			}
@@ -916,6 +924,7 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hS
 			else
 				sprintf(name, "%s", refInputVx->getName());
 			inputSrDagVx->setName(name);
+			inputSrDagVx->setFunctIx(refInputVx->getFunction_index());
 			inputSrDagVx->setReference(refInputVx);
 			inputSrDagVx->setReferenceIndex(refInputVx->getId());
 			inputSrDagVx->setParent(hSrDagVx);
@@ -960,6 +969,8 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 
 		ScheduleWriter schedWriter;
 		schedWriter.write(schedule, dag, arch, "test.xml");
+
+		launch->clear();
 
 		// Preparing FIFOs information.
 		launch->prepareFIFOsInfo(dag);

@@ -77,6 +77,7 @@
 #define MAX_SRDAG_INPUT_EDGES 	64
 #define MAX_SRDAG_OUTPUT_EDGES 	100
 #define MAX_VERTEX_REPETITION 	100 // The maximum number of repetitions for one vertex
+#define XPLODE_FUNCT_IX			13	// Index of the function for implode/explode vxs.
 
 // PICSDF
 //#define MAX_PISDF_CONFIG_PORTS		512
@@ -104,7 +105,6 @@
 // Launcher
 #define MAX_CTRL_DATA 	2000
 #define MAX_JOB_DATA 	2000
-#define EXEC			1
 
 // XParser
 #define VARIABLE_NAME_LEN_MAX 30

@@ -47,7 +47,7 @@
 #include <tools/ScheduleWriter.h>
 #include <tools/ScheduleChecker.h>
 
-
+#define LAST_EXEC				1
 #define PRINT_GRAPH				1
 #define PiSDF_FILE_PATH			"pisdf.gv"
 #define SUB_SDF_FILE_0_PATH		"subSdf.gv"
@@ -98,6 +98,8 @@ int main(int argc, char* argv[]){
 //		return 0;
 //	}
 //	int nbSlaves = atoi(argv[1]);
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
 
 	int nbSlaves = 1;
 
@@ -110,7 +112,7 @@ int main(int argc, char* argv[]){
 	schedule.setNbActiveSlaves(arch.getNbActiveSlaves());
 
 
-#if EXEC == 1
+#if LAST_EXEC == 1
 	launch.init(nbSlaves);
 //	launch.launchWaitAck(nbSlaves);
 #endif
@@ -158,7 +160,7 @@ int main(int argc, char* argv[]){
 	// Preparing tasks' informations
 	launch.prepareTasksInfo(&dag, &arch, &schedule, IS_AM, &execStat);
 
-#if EXEC == 1
+#if LAST_EXEC == 1
 	// Launching the execution on LRTs.
 	launch.launch(nbSlaves);
 

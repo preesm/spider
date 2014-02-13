@@ -110,6 +110,7 @@ void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
 
 		SRDAGVertex* vx = addVertex();
 		vx->setName(annexVx->getName());
+		vx->setFunctIx(annexVx->getFunctIx());
 		vx->setReference(annexVx->getReference());
 		vx->setReferenceIndex(annexVx->getReferenceIndex());
 		vx->setState(annexVx->getState());
@@ -135,6 +136,7 @@ void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
 			// Adding a new source vx.
 			source = addVertex();
 			source->setName(edge->getSource()->getName());
+			source->setFunctIx(edge->getSource()->getFunctIx());
 			source->setReference(edge->getSource()->getReference());
 			source->setReferenceIndex(edge->getSource()->getReferenceIndex());
 			source->setState(edge->getSource()->getState());
@@ -151,6 +153,7 @@ void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
 		{
 			sink = addVertex();
 			sink->setName(edge->getSink()->getName());
+			sink->setFunctIx(edge->getSink()->getFunctIx());
 			sink->setReference(edge->getSink()->getReference());
 			sink->setReferenceIndex(edge->getSink()->getReferenceIndex());
 			sink->setState(edge->getSink()->getState());

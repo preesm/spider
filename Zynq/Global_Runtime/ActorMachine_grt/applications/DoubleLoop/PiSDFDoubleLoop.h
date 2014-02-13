@@ -50,19 +50,19 @@ void MLoop(PiSDFGraph* graph, BaseVertex* parentVertex){
 	vxM_in->setDirection(0);
 	vxM_in->setParentVertex(parentVertex);
 	vxM_in->setParentEdge(parentVertex->getInputEdge(0));
-	vxM_in->setFunction_index(11);
+	vxM_in->setFunction_index(10);
 
 	PiSDFIfVertex *vxLine_in = (PiSDFIfVertex*)graph->addVertex("Line_in", input_vertex);
 	vxLine_in->setDirection(0);
 	vxLine_in->setParentVertex(parentVertex);
 	vxLine_in->setParentEdge(parentVertex->getInputEdge(1));
-	vxLine_in->setFunction_index(12);
+	vxLine_in->setFunction_index(10);
 
 	PiSDFIfVertex *vxLine_out = (PiSDFIfVertex*)graph->addVertex("Line_out", output_vertex);
 	vxLine_out->setDirection(1);
 	vxLine_out->setParentVertex(parentVertex);
 	vxLine_out->setParentEdge(parentVertex->getOutputEdge(0));
-	vxLine_out->setFunction_index(13);
+	vxLine_out->setFunction_index(10);
 
 
 	// Configuration vertices
@@ -109,13 +109,13 @@ void PiSDFDoubleLoop(PiSDFGraph* graph, BaseVertex* parentVertex){
 
 	// Round buffer vertices
 	BaseVertex* roundB_0 = graph->addVertex("RoundBuf_0", roundBuff_vertex);
-	roundB_0->setFunction_index(9);
+	roundB_0->setFunction_index(10);
 	BaseVertex* roundB_1 = graph->addVertex("RoundBuf_1", roundBuff_vertex);
 	roundB_1->setFunction_index(10);
 
 	// Others
 	PiSDFVertex *vxBroad 		= (PiSDFVertex *)graph->addVertex("Broadcast", pisdf_vertex);
-	vxBroad->setFunction_index(1);
+	vxBroad->setFunction_index(11);
 
 	PiSDFVertex *vxInitNLoop 	= (PiSDFVertex *)graph->addVertex("InitNLoop", pisdf_vertex);
 	vxInitNLoop->addParameter(paramN);

@@ -40,10 +40,9 @@
 
 
 LRTActor::LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch){
-	this->ActionID = srvertex->getReference()->getFunction_index();
+	this->ActionID = srvertex->getFunctIx();
+
 	this->nbInputFifos = srvertex->getNbInputEdge();
-	this->nbOutputFifos = srvertex->getNbOutputEdge();
-	this->nbParams = srvertex->getReference()->getNbParameters();
 
 	for(UINT32 i=0; i<this->nbInputFifos; i++){
 		SRDAGEdge* edge = srvertex->getInputEdge(i);
@@ -53,6 +52,8 @@ LRTActor::LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch
 //		this->inputFifoAddr[i] = mem->alloc(this->readDataSize[i]);
 	}
 
+	this->nbOutputFifos = srvertex->getNbOutputEdge();
+
 	for(UINT32 i=0; i<this->nbOutputFifos; i++){
 		SRDAGEdge* edge = srvertex->getOutputEdge(i);
 		this->outFIFOs[i] = curLaunch->getFIFO(graph->getEdgeIndex(edge));
@@ -61,8 +62,24 @@ LRTActor::LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch
 //		this->outputFifoAddr[i] = mem->alloc(this->writeDataSize[i]);
 	}
 
-	for(UINT32 i=0; i<this->nbParams; i++){
-		this->params[i] = srvertex->getReference()->getParameter(i)->getValue();
+	if(srvertex->getType() == 0){
+		this->nbParams = srvertex->getReference()->getNbParameters();
+
+		for(UINT32 i=0; i<this->nbParams; i++){
+			this->params[i] = srvertex->getReference()->getParameter(i)->getValue();
+		}
+	}
+	else{
+		nbParams = nbInputFifos + nbOutputFifos + 2;
+		params[0] = nbInputFifos;
+		params[1] = nbOutputFifos;
+
+		for(UINT32 i=0; i<nbInputFifos; i++){
+			params[i + 2] = srvertex->getInputEdge(i)->getTokenRate();
+		}
+		for(UINT32 i=0; i<nbOutputFifos; i++){
+			params[i + 2 + nbInputFifos] = srvertex->getOutputEdge(i)->getTokenRate();
+		}
 	}
 }
 
@@ -73,6 +90,8 @@ void LRTActor::prepare(int slave, launcher* launch){
 	launch->addUINT32ToSend(slave, 0); // Not an actor machine.
 	launch->addUINT32ToSend(slave, this->nbInputFifos);
 	launch->addUINT32ToSend(slave, this->nbOutputFifos);
+	launch->addUINT32ToSend(slave, this->nbParams);
+
 	for (UINT32 i = 0; i < this->nbInputFifos; i++) {
 		launch->addUINT32ToSend(slave, this->inFIFOs[i]->id);
 		launch->addUINT32ToSend(slave, this->inFIFOs[i]->addr);

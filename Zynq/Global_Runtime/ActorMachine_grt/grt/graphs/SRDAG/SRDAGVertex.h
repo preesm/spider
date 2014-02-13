@@ -135,6 +135,9 @@ class SRDAGVertex {
 		UINT32 id;
 
 		char name[MAX_VERTEX_NAME_SIZE];
+
+		// Identifies the function implementing the actor's action(s).
+		UINT64 functIx;
 	public : 
 		/**
 		 Constructor
@@ -344,9 +347,19 @@ class SRDAGVertex {
 	    	strcpy(this->name,name);
 	    }
 
+		UINT64 getFunctIx() const {
+			return functIx;
+		}
+
+		void setFunctIx(UINT64 functIx) {
+			this->functIx = functIx;
+		}
+
+
 		void addInputEdge(SRDAGEdge* edge);
 		void addOutputEdge(SRDAGEdge* edge);
 	    bool checkForExecution();
+
 };
 
 

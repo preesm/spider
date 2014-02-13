@@ -86,6 +86,17 @@ UINT32 RTQueuePush(RTQueueType queueType, void* data, int size){
     DWORD nb_bytes_written;
     fSuccess = FALSE;
 
+	fSuccess = GetMailslotInfo(
+			RTQueue[queueType][RTOutputQueue],  // mailslot handle
+        (LPDWORD) NULL,               // no maximum message size
+        (LPDWORD) NULL,                   // size of next message
+        (LPDWORD) NULL,                    // number of messages
+        (LPDWORD) NULL);              // no read time-out
+
+	if(!fSuccess){
+    	printf("GetMailslotInfo failed, error %ld.\n", GetLastError()); exit(EXIT_FAILURE);
+	}
+
     fSuccess = WriteFile(
     				RTQueue[queueType][RTOutputQueue],		// pipe handle
     				data,		             	// message

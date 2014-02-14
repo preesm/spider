@@ -83,6 +83,9 @@ void LRTInit() {
 	OSTCBCur = (OS_TCB *) 0;
 	memset(OSTCBTbl, 0, sizeof(OSTCBTbl)); /* Clear all the TCBs */
 	OS_ShMemInit();
+	if(cpuId == 0)
+		/* Clear all the data FIFOs */
+		flushFIFO(-1);
 	initMonitor();
 	OSWorkingMemoryInit();
 
@@ -95,6 +98,7 @@ void LRTInit() {
  */
 void LRTCtrlStart(){
 	RTQueuesInit();
+	releaseShMemMx();
 	while (TRUE)
 		mainLoop();
 }

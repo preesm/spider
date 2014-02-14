@@ -46,9 +46,14 @@ void rdFile(UINT32 inputFIFOIds[],
 			 UINT32 outputFIFOAddrs[],
 			 UINT32 params[])
 {
-	UINT16 N;
+	UINT16 N, i;
 	UINT16 M[M_MAX_VALUE];
-	UINT16 array[M_MAX_VALUE][N_MAX_VALUE] = {{1, 1, 0}, {1, 1, 0}, {0, 0, 0}};
+	UINT16 array[MAX_DATA_SIZE] = {1, 1, 0, 1, 1, 0, 0, 0, 0};
+
+	printf("Reading file:\n");
+	for (i = 0; i < M_MAX_VALUE; i++) {
+		printf("%d, %d, %d\n", array[0 + i * N_MAX_VALUE], array[1 + i * N_MAX_VALUE], array[2 + i * N_MAX_VALUE]);
+	}
 
 	N = 2;
 	M[0] = 2;
@@ -78,6 +83,8 @@ void initNLoop(UINT32 inputFIFOIds[],
 	N = params[0];
 	readFifo(inputFIFOIds[0],inputFIFOAddrs[0], M_MAX_VALUE * sizeof(UINT16), (UINT8*)M_in);
 	readFifo(inputFIFOIds[1],inputFIFOAddrs[1], M_MAX_VALUE * N_MAX_VALUE * sizeof(UINT16), (UINT8*)array_in);
+
+	printf("Init N loop with N=%d\n", N);
 
 	writeFifo(outputFIFOIds[0],outputFIFOAddrs[0], N * sizeof(UINT16), (UINT8*)&M_in);
 	writeFifo(outputFIFOIds[1],outputFIFOAddrs[1], N * M_MAX_VALUE * sizeof(UINT16), (UINT8*)array_in);
@@ -128,6 +135,7 @@ void configM(UINT32 inputFIFOIds[],
 	UINT16 M;
 
 	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(UINT16), (UINT8*)&M);
+	printf("Configure M=%d\n", M);
 	// Sending parameter's value.
 	RTQueuePush_UINT32(RTCtrlQueue, M);
 }
@@ -201,7 +209,7 @@ void RB(UINT32 inputFIFOIds[],
 			 UINT32 outputFIFOAddrs[],
 			 UINT32 params[])
 {
-	UINT32 nbTknIn, nbTknOut;
+	UINT32 nbTknIn, nbTknOut, i;
 	UINT32 quotient, residual;
 	UINT16 data[MAX_DATA_SIZE];
 
@@ -210,6 +218,12 @@ void RB(UINT32 inputFIFOIds[],
 	nbTknOut = params[1];
 
 	readFifo(inputFIFOIds[0],inputFIFOAddrs[0], nbTknIn * sizeof(UINT16), (UINT8*)data);
+
+	printf("Round buffering %d to %d:\n%d", nbTknIn, nbTknOut, data[0]);
+	for (i = 1; i < nbTknIn; i++) {
+		printf(", %d", data[i]);
+	}
+	printf("\n");
 
 	if(nbTknIn == nbTknOut){
 		writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], nbTknIn * sizeof(UINT16), (UINT8*)data);
@@ -240,6 +254,12 @@ void broadcast(UINT32 inputFIFOIds[],
 	nbTknIn = params[1];
 
 	readFifo(inputFIFOIds[0],inputFIFOAddrs[0], nbTknIn * sizeof(UINT16), (UINT8*)data);
+
+	printf("Broadcasting to %d:\n%d", nbFifoOut, data[0]);
+	for (i = 1; i < nbTknIn; i++) {
+		printf(", %d", data[i]);
+	}
+	printf("\n");
 
 	for (i = 0; i < nbFifoOut; i++) {
 		writeFifo(outputFIFOIds[i], outputFIFOAddrs[i], nbTknIn * sizeof(UINT16), (UINT8*)data);

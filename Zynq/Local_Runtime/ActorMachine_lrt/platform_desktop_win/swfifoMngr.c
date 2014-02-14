@@ -127,13 +127,9 @@ UINT8 create_swfifo(LRT_FIFO_HNDLE* fifo_hndl, UINT32 size, UINT32 address){
 //}
 
 void flush_swfifo(LRT_FIFO_HNDLE* fifo_hndl) {
-//	LRT_FIFO_HNDLE* fifo_hndl = get_fifo_hndl(fifo_id);
-	UINT32 tmp = 0;
-
-	OS_ShMemWrite(RD_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
-	OS_ShMemWrite(WR_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
-
-//	zynq_puts("Clear Fifo ID"); zynq_putdec(fifo_id); zynq_puts("\n");
+	// Resetting to 0 the RD & WR indices.
+	resetShMemAddr(RD_IX_ADD(fifo_hndl));
+	resetShMemAddr(WR_IX_ADD(fifo_hndl));
 }
 
 /*

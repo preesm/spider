@@ -80,17 +80,12 @@ static void addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* 
 
 void OS_ShMemInit() {
 	char mutexName[50];
-	// Adding a memory for the data fifos.
-	addOSShMem(SH_MEM_BASE_ADDR, SH_MEM_BASE_ADDR + SH_MEM_DATA_REGION_SIZE, SH_MEM_SIZE, SH_MEM_FILE_PATH);
-
-	// Adding a memory for the mailboxes.
-	addOSShMem(MBOX_MEM_BASE_ADDR, MBOX_MEM_BASE_ADDR, MBOX_MEM_SIZE, MBOX_MEM_FILE_PATH);
-
 	// Creating windows mutex to synchronize access to the memory file.
+	// The mutex is released after the queues' initializations.
 	sprintf(mutexName, "%s%d", MUTEX_BASE_NAME, cpuId);
     ghMutex = CreateMutex(
-        NULL,              // default security attributes
-        FALSE,             // initially not owned
+        NULL,              	// default security attributes
+        TRUE,             	// initially owned
         mutexName);  		// object name
 
     if (ghMutex == NULL)
@@ -98,6 +93,12 @@ void OS_ShMemInit() {
         printf("CreateMutex error: %d\n", GetLastError());
         exit(1);
     }
+
+	// Adding a memory for the data fifos.
+	addOSShMem(SH_MEM_BASE_ADDR, SH_MEM_BASE_ADDR + SH_MEM_DATA_REGION_SIZE, SH_MEM_SIZE, SH_MEM_FILE_PATH);
+
+	// Adding a memory for the mailboxes.
+	addOSShMem(MBOX_MEM_BASE_ADDR, MBOX_MEM_BASE_ADDR, MBOX_MEM_SIZE, MBOX_MEM_FILE_PATH);
 }
 
 
@@ -136,11 +137,7 @@ UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
 //				perror("Mutex was abandoned");
 //				exit(1);
 //			}
-			// Release ownership of the mutex object
-            if (! ReleaseMutex(ghMutex))
-            {
-                // Handle error.
-            }
+			releaseShMemMx();
         	return res;
 		}
 	}
@@ -183,13 +180,44 @@ UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
 //				perror("Mutex was abandoned");
 //				exit(1);
 //			}
-			// Release ownership of the mutex object
-			if (! ReleaseMutex(ghMutex))
-			{
-				// Handle error.
-			}
+			releaseShMemMx();
 
 			return res;
+		}
+	}
+	printf("Memory address not found 0x%x\n", address);
+	exit(1);
+}
+
+void releaseShMemMx(){
+	// Release ownership of the mutex object
+	if (! ReleaseMutex(ghMutex))
+	{
+		perror("Memory Mutex couldn't be released");
+		exit(1);
+	}
+}
+
+
+void resetShMemAddr(UINT32 address){
+	int i;
+	FILE* pFile;
+	UINT32 data = 0;
+	for (i = 0; i < nbOSShMem; i++) {
+		if ((OSShMemTbl[i].base <= address) &&
+			(OSShMemTbl[i].base + OSShMemTbl[i].length > address) &&
+			(OSShMemTbl[i].base <= address + sizeof(UINT32)) &&
+			(OSShMemTbl[i].base + OSShMemTbl[i].length > address + sizeof(UINT32))) {
+			pFile = fopen(OSShMemTbl[i].file_name, "rb+");
+			if (pFile == (FILE*)0) {
+				perror("Can't open file memory");
+				exit(1);
+			}
+			fseek(pFile, address-OSShMemTbl[i].base, SEEK_SET);
+			fwrite(&data, 1, sizeof(UINT32), pFile);
+			fclose(pFile);
+
+			return;
 		}
 	}
 	printf("Memory address not found 0x%x\n", address);

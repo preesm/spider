@@ -54,5 +54,6 @@
 void OS_ShMemInit();
 UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size);
 UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size);
-
+void releaseShMemMx();
+void resetShMemAddr(UINT32 address);
 #endif /* SHAREDMEM_H_ */

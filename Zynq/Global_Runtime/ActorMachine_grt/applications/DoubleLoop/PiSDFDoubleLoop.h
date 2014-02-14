@@ -114,7 +114,7 @@ void PiSDFDoubleLoop(PiSDFGraph* graph, BaseVertex* parentVertex){
 	roundB_1->setFunction_index(10);
 
 	// Others
-	PiSDFVertex *vxBroad 		= (PiSDFVertex *)graph->addVertex("Broadcast", pisdf_vertex);
+	PiSDFVertex *vxBroad 		= (PiSDFVertex *)graph->addVertex("Broadcast", broad_vertex);
 	vxBroad->setFunction_index(11);
 
 	PiSDFVertex *vxInitNLoop 	= (PiSDFVertex *)graph->addVertex("InitNLoop", pisdf_vertex);

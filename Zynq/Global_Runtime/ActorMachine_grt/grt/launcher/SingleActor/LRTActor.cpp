@@ -46,7 +46,7 @@ LRTActor::LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch
 
 	for(UINT32 i=0; i<this->nbInputFifos; i++){
 		SRDAGEdge* edge = srvertex->getInputEdge(i);
-		this->inFIFOs[i] = curLaunch->getFIFO(graph->getEdgeIndex(edge));
+		this->inFIFOs[i] = curLaunch->getFIFO(edge->getFifoId());
 //		this->inputFifoId[i] = graph->getEdgeIndex(edge);
 //		this->readDataSize[i] = edge->getTokenRate() * DEFAULT_FIFO_SIZE; // TODO: the size should come within the edge.
 //		this->inputFifoAddr[i] = mem->alloc(this->readDataSize[i]);
@@ -56,24 +56,42 @@ LRTActor::LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch
 
 	for(UINT32 i=0; i<this->nbOutputFifos; i++){
 		SRDAGEdge* edge = srvertex->getOutputEdge(i);
-		this->outFIFOs[i] = curLaunch->getFIFO(graph->getEdgeIndex(edge));
+		this->outFIFOs[i] = curLaunch->getFIFO(edge->getFifoId());
 //		this->outputFifoId[i] = graph->getEdgeIndex(edge);
 //		this->writeDataSize[i] = edge->getTokenRate() * DEFAULT_FIFO_SIZE; // TODO: the size should come within the edge.
 //		this->outputFifoAddr[i] = mem->alloc(this->writeDataSize[i]);
 	}
 
-	if(srvertex->getType() == 0){
-		this->nbParams = srvertex->getReference()->getNbParameters();
 
-		for(UINT32 i=0; i<this->nbParams; i++){
-			this->params[i] = srvertex->getReference()->getParameter(i)->getValue();
+
+	if(srvertex->getType() == 0){
+		VERTEX_TYPE refType = srvertex->getReference()->getType();
+		if((refType == roundBuff_vertex)||
+			(refType == input_vertex)||
+			(refType == output_vertex)){
+			this->nbParams = 2;
+			this->params[0] = srvertex->getInputEdge(0)->getTokenRate();
+			this->params[1] = srvertex->getOutputEdge(0)->getTokenRate();
+		}
+		else if (refType == broad_vertex){
+			this->nbParams = 2;
+			this->params[0] = srvertex->getNbOutputEdge();
+			this->params[1] = srvertex->getInputEdge(0)->getTokenRate();
+		}
+		else{
+			this->nbParams = srvertex->getReference()->getNbParameters();
+
+			for(UINT32 i=0; i<this->nbParams; i++){
+				this->params[i] = srvertex->getReference()->getParameter(i)->getValue();
+			}
 		}
 	}
-	else{
+	else{// Implode/Explode vertices.
 		nbParams = nbInputFifos + nbOutputFifos + 2;
 		params[0] = nbInputFifos;
 		params[1] = nbOutputFifos;
 
+		// Setting number of tokens through each input/output.
 		for(UINT32 i=0; i<nbInputFifos; i++){
 			params[i + 2] = srvertex->getInputEdge(i)->getTokenRate();
 		}

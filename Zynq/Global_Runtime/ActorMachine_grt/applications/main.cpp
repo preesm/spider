@@ -47,9 +47,9 @@
 #include <tools/ScheduleWriter.h>
 #include <tools/ScheduleChecker.h>
 
-#define LAST_EXEC				1
+#define LAST_EXEC				0
 #define PRINT_GRAPH				1
-#define PiSDF_FILE_PATH			"pisdf.gv"
+#define PiSDF_FILE_PATH			"pisdf"
 #define SUB_SDF_FILE_0_PATH		"subSdf.gv"
 #define SRDAG_FILE_PATH			"srDag.gv"
 #define SRDAG_FIFO_ID_FILE_PATH	"srDagFifoId.gv"
@@ -65,6 +65,9 @@ PiSDFEdge* PiSDFGraph::requiredEdges[MAX_NB_EDGES] = {NULL};
 UINT32 PiSDFGraph::glbNbRequiredEdges = 0;
 PiSDFIfVertex* PiSDFGraph::visitedIfs[MAX_NB_VERTICES] = {NULL};
 UINT32 PiSDFGraph::glbNbVisitedIfs = 0;
+
+
+static char name[MAX_VERTEX_NAME_SIZE];
 
 Scenario 			scenario;
 Architecture 		arch;
@@ -125,10 +128,12 @@ int main(int argc, char* argv[]){
 	top(&piSDF);
 	PiSDFGraph* H = &piSDF;
 	SRDAGVertex* currHSrDagVx = 0;
+	UINT32 lvlCntr = 0;
 	while(H){
 	#if PRINT_GRAPH
 		// Printing the PiSDF graph.
-		dotWriter.write(H, PiSDF_FILE_PATH, 1);
+		sprintf(name, "%s_%d.gv", PiSDF_FILE_PATH, lvlCntr);
+		dotWriter.write(H, name, 1);
 	#endif
 
 		H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag, currHSrDagVx);
@@ -145,7 +150,10 @@ int main(int argc, char* argv[]){
 			currHSrDagVx = dag.getVertex(i);
 			if((currHSrDagVx->getReference()->getType() == pisdf_vertex)&&
 					(currHSrDagVx->getState() == SrVxStHierarchy)){
-				if(((PiSDFVertex*)(currHSrDagVx->getReference()))->hasSubGraph(&H)) break;
+				if(((PiSDFVertex*)(currHSrDagVx->getReference()))->hasSubGraph(&H)){
+					lvlCntr++;
+					break;
+				}
 			}
 		}
 	}

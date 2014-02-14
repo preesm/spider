@@ -88,12 +88,26 @@ public:
 	void launch(SRDAGGraph* graph, Architecture *archi);
 
 	//
-	LauncherFIFO* addFIFO(UINT32 id, UINT32 size, UINT32 addr){
+//	LauncherFIFO* addFIFO(UINT32 id, UINT32 size, UINT32 addr){
+//		if (nbFIFOs >= MAX_NB_FIFO) exitWithCode(1060);
+//		LauncherFIFO* fifo = &fifos[nbFIFOs++];
+//		fifo->id = id;
+//		fifo->size = size;
+//		fifo->addr = addr;
+//		return fifo;
+//	}
+
+	LauncherFIFO* addFIFO(SRDAGEdge* edge){
 		if (nbFIFOs >= MAX_NB_FIFO) exitWithCode(1060);
-		LauncherFIFO* fifo = &fifos[nbFIFOs++];
-		fifo->id = id;
-		fifo->size = size;
-		fifo->addr = addr;
+		LauncherFIFO* fifo = &fifos[nbFIFOs];
+		fifo->id = nbFIFOs;
+		fifo->size = edge->getTokenRate() * DEFAULT_FIFO_SIZE;
+		fifo->addr = sharedMem.alloc(edge->getTokenRate() * DEFAULT_FIFO_SIZE);
+
+		edge->setFifoId(nbFIFOs);
+
+		nbFIFOs++;
+
 		return fifo;
 	}
 
@@ -112,7 +126,7 @@ public:
 	// Prepares the execution of a SRDAG or a group of actors (e.g. the configuration actors of a PiSDF).
 	void prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedule, ExecutionStat* execStat);
 
-	void prepareFIFOsInfo(SRDAGGraph* graph);
+	void prepareFIFOsInfo(SRDAGGraph* graph, Architecture* arch);
 
 	void prepareTasksInfo(SRDAGGraph* graph, Architecture *archi, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat);
 
@@ -143,6 +157,8 @@ public:
 //	void launchJobs(UINT16 nbSlaves);
 	void stop();
 	void stopWOCheck();
+
+	void toDot(const char* path, UINT32 slaveId);
 
 	int getNbLaunchedSlave();
 

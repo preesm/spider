@@ -245,13 +245,26 @@ void launcher::prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedul
 	sharedMem.exportMem("mem.csv");
 }
 
-void launcher::prepareFIFOsInfo(SRDAGGraph* graph){
-	/* Creating fifos */
-	for(int i=0; i<graph->getNbEdges(); i++){
-		SRDAGEdge* edge =graph->getEdge(i);
-		int nbTokens =  edge->getTokenRate();
-		addFIFO(i, nbTokens * DEFAULT_FIFO_SIZE, sharedMem.alloc(nbTokens * DEFAULT_FIFO_SIZE));
+void launcher::prepareFIFOsInfo(SRDAGGraph* graph, Architecture* arch){
+	/* Creating fifos for executable vxs.*/
+	for (UINT32 i = 0; i < graph->getNbVertices(); i++) {
+		SRDAGVertex* vx = graph->getVertex(i);
+		if(vx->getState() == SrVxStExecutable){
+			for (UINT32 j = 0; j < vx->getNbInputEdge(); j++){
+				SRDAGEdge* edge = vx->getInputEdge(j);
+				if(edge->getFifoId() == -1){
+					addFIFO(edge);
+				}
+			}
+			for (UINT32 j = 0; j < vx->getNbOutputEdge(); j++){
+				SRDAGEdge* edge = vx->getOutputEdge(j);
+				if(edge->getFifoId() == -1){
+					addFIFO(edge);
+				}
+			}
+		}
 	}
+
 
 //	for(int i=0; i<graph->getNbEdges(); i++){
 ////		msg_createFifo = CreateFifoMsg(graph, graph->getEdge(i), &sharedMem);
@@ -263,8 +276,8 @@ void launcher::prepareFIFOsInfo(SRDAGGraph* graph){
 //	execStat->memAllocated = sharedMem.getTotalAllocated();
 //	execStat->fifoNb = graph->getNbEdges();
 
-	/* Clearing fifos */
-	ClearFifoMsg(-1).prepare(0, this);
+//	/* Clearing fifos */
+//	ClearFifoMsg(-1).prepare(0, this);
 //	for(int i=0; i<graph->getNbEdges(); i++){
 //		msg_clearFifo = ClearFifoMsg(i);
 ////		int j = i%archi->getNbActiveSlaves();
@@ -504,6 +517,24 @@ void launcher::stopWOCheck(){
 		msg.sendWOCheck(i);
 	}
 	launchedSlaveNb=0;
+}
+
+void launcher::toDot(const char* path, UINT32 slaveId){
+	char name[20];
+	sprintf(name, "%s_%d.gv", path, slaveId);
+	FILE * pFile = fopen (name,"w");
+	if(pFile != NULL){
+		// Writing header
+		fprintf (pFile, "digraph Actors {\n");
+		fprintf (pFile, "node [color=Black];\n");
+		fprintf (pFile, "edge [color=Black];\n");
+//		fprintf (pFile, "rankdir=LR;\n");
+
+
+	}
+	fprintf (pFile, "}\n");
+	fclose (pFile);
+
 }
 
 void launcher::reset(){

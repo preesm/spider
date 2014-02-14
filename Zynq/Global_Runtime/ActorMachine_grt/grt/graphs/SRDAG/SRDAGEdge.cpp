@@ -57,6 +57,8 @@ SRDAGEdge::SRDAGEdge()
 	prevInSinkOrder = NULL;
 	nextInSinkOrder = NULL;
 	refEdge = NULL;
+	fifoId = -1;
+	delay = 0;
 }
 
 /**

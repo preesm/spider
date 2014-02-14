@@ -133,38 +133,39 @@ void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
 			source = getVertex(srcMergeIx); // The source has already be added.
 		else
 		{
-			// Adding a new source vx.
-			source = addVertex();
-			source->setName(edge->getSource()->getName());
-			source->setFunctIx(edge->getSource()->getFunctIx());
-			source->setReference(edge->getSource()->getReference());
-			source->setReferenceIndex(edge->getSource()->getReferenceIndex());
-			source->setState(edge->getSource()->getState());
-			source->setType(edge->getSource()->getType());
-			source->setExpImpId(edge->getSource()->getExpImpId());
-			source->setParent(edge->getSource()->getParent());
-
-			edge->getSource()->setMergeIx(source->getId());
+//			// Adding a new source vx.
+//			source = addVertex();
+//			source->setName(edge->getSource()->getName());
+//			source->setFunctIx(edge->getSource()->getFunctIx());
+//			source->setReference(edge->getSource()->getReference());
+//			source->setReferenceIndex(edge->getSource()->getReferenceIndex());
+//			source->setState(edge->getSource()->getState());
+//			source->setType(edge->getSource()->getType());
+//			source->setExpImpId(edge->getSource()->getExpImpId());
+//			source->setParent(edge->getSource()->getParent());
+//
+//			edge->getSource()->setMergeIx(source->getId());
 		}
 
 		if(snkMergeIx != -1)
 			sink = getVertex(snkMergeIx);
 		else
 		{
-			sink = addVertex();
-			sink->setName(edge->getSink()->getName());
-			sink->setFunctIx(edge->getSink()->getFunctIx());
-			sink->setReference(edge->getSink()->getReference());
-			sink->setReferenceIndex(edge->getSink()->getReferenceIndex());
-			sink->setState(edge->getSink()->getState());
-			sink->setType(edge->getSink()->getType());
-			sink->setExpImpId(edge->getSink()->getExpImpId());
-			sink->setParent(edge->getSink()->getParent());
-
-			edge->getSink()->setMergeIx(sink->getId());
+//			sink = addVertex();
+//			sink->setName(edge->getSink()->getName());
+//			sink->setFunctIx(edge->getSink()->getFunctIx());
+//			sink->setReference(edge->getSink()->getReference());
+//			sink->setReferenceIndex(edge->getSink()->getReferenceIndex());
+//			sink->setState(edge->getSink()->getState());
+//			sink->setType(edge->getSink()->getType());
+//			sink->setExpImpId(edge->getSink()->getExpImpId());
+//			sink->setParent(edge->getSink()->getParent());
+//
+//			edge->getSink()->setMergeIx(sink->getId());
 		}
 
 		addEdge(source, edge->getTokenRate(), sink, edge->getRefEdge());
+//		newEdge->setFifoId(edge->getFifoId());
 	}
 }
 
@@ -290,11 +291,11 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
 			SRDAGVertex* rightVx;
 			if (!(rightVx = findMatch(leftVx->getReference()))) exitWithCode(1064);
 			// Connecting them.
-			addEdge(leftVx, leftVx->getInputEdge(0)->getTokenRate(), rightVx, leftVx->getInputEdge(0)->getRefEdge());
+//			addEdge(leftVx, leftVx->getInputEdge(0)->getTokenRate(), rightVx, leftVx->getInputEdge(0)->getRefEdge());
 //			leftVx->getInputEdge(0)->setSink(rightVx);
 			rightVx->getOutputEdge(0)->setSource(leftVx);
-			// Deleting left Vx.
-//			leftVx->setState(SrVxStDeleted);
+			leftVx->addOutputEdge(rightVx->getOutputEdge(0));
+			// Deleting right Vx.
 			rightVx->setState(SrVxStDeleted);
 		}
 

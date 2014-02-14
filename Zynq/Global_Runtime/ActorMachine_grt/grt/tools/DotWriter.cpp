@@ -163,7 +163,7 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOLEAN displayNames,
 				if(displayRates)
 					fprintf (pFile, "\t%s->%s [label=\"%d\"];\n", edge->getSource()->getName(), edge->getSink()->getName(), edge->getTokenRate());
 				else
-					fprintf (pFile, "\t%s->%s [label=\"%d\"];\n", edge->getSource()->getName(), edge->getSink()->getName(), i);
+					fprintf (pFile, "\t%s->%s [label=\"%d\"];\n", edge->getSource()->getName(), edge->getSink()->getName(), edge->getFifoId());
 			}
 		}
 		fprintf (pFile, "}\n");

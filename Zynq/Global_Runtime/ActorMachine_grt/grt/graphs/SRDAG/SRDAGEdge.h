@@ -75,6 +75,8 @@ class SRDAGEdge {
 
 		int delay;				// Delay or number of initial tokens.
 
+		int fifoId;			// Id of the implemented FIFO.
+
 	public : 
 		/**
 		 Constructor
@@ -151,6 +153,14 @@ class SRDAGEdge {
 	    {
 	        this->refEdge = refEdge;
 	    }
+
+		int getFifoId() const {
+			return fifoId;
+		}
+
+		void setFifoId(int fifoId) {
+			this->fifoId = fifoId;
+		}
 
 		/**
 		 In order to fast access the input edges, a linked list of edges is done. The edges

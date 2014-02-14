@@ -53,7 +53,6 @@ typedef struct OS_SHMEM {
 
 static OS_SHMEM OSShMemTbl[MAX_SLAVES];
 static int nbOSShMem = 0;
-static HANDLE ghMutex[MAX_SLAVES];
 
 void addShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename) {
 	FILE *pFile;
@@ -86,10 +85,10 @@ void ShMemInit(UINT8 nbSlaves) {
 	for (int i = 0; i < nbSlaves; i++) {
 		// Creating windows mutex to synchronize access to the memory file.
 		sprintf(mutexName, "%s%d", MUTEX_BASE_NAME, i);
-		OSShMemTbl[i].ghMutex = CreateMutex(
-	        NULL,              // default security attributes
-	        FALSE,             // initially not owned
-	        mutexName);  		// object name
+		OSShMemTbl[i].ghMutex = OpenMutex(
+			SYNCHRONIZE,
+	        FALSE,
+	        mutexName);
 
 	    if (OSShMemTbl[i].ghMutex == NULL)
 	    {

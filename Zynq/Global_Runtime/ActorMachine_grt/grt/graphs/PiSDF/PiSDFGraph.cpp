@@ -41,7 +41,7 @@
 #include <transformations/PiSDFTransformer/PiSDFTransformer.h>
 
 
-#define EXEC			1
+#define EXEC			0
 
 extern DotWriter dotWriter;
 static char name[MAX_VERTEX_NAME_SIZE];
@@ -951,7 +951,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 			createSrDAGInputConfigVxs(&localDag, currHSrDagVx);
 		#if PRINT_GRAPH
 			// Printing the dag.
-			dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
+//			dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
 			dotWriter.write(&localDag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
 		#endif
 			dag->merge(&localDag, false);
@@ -972,11 +972,18 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 
 		launch->clear();
 
-		// Preparing FIFOs information.
-		launch->prepareFIFOsInfo(dag);
+		// Creating FIFOs for executable vxs.
+		// Note that some FIFOs have already been created in previous steps.
+		launch->prepareFIFOsInfo(dag, arch);
 
 		// Preparing tasks' informations
 		launch->prepareTasksInfo(dag, arch, schedule, false, execStat);
+
+		stepsCntr++;
+
+#if PRINT_LAUNCH_DOT
+
+#endif
 
 #if EXEC == 1
 		// Executing the executable vxs.
@@ -988,19 +995,17 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 
 		// Resolving parameters.
 		solveParameters(dag, schedule);
-
-		stepsCntr++;
 	}
 #if PRINT_GRAPH
 	// Printing the dag.
 //	dotWriter.write(dag, SRDAG_FILE_PATH, 1, 1);
 //	dotWriter.write(dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-	if(stepsCntr >= 0){
-		sprintf(name, "srDag_%d.gv", stepsCntr);
-		dotWriter.write(dag, name, 1, 1);
-		sprintf(name, "srDagFifoId_%d.gv", stepsCntr);
-		dotWriter.write(dag, name, 1, 0);
-	}
+//	if(dag->getNbVertices() > 0){
+//		sprintf(name, "srDag_%d.gv", stepsCntr);
+//		dotWriter.write(dag, name, 1, 1);
+//		sprintf(name, "srDagFifoId_%d.gv", stepsCntr);
+//		dotWriter.write(dag, name, 1, 0);
+//	}
 #endif
 
 	// Resolving productions/consumptions.
@@ -1034,15 +1039,17 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 	// Transforming SDF with no configure vertices into SrDAG.
 	// TODO: treat delays
 	if(dag->getNbVertices() == 0)
+		// First step, so the global DAG is used.
 		transformer.transform(&sdf, dag, currHSrDagVx);
 	else{
+		// From the second step on an intermediate DAG is used and then merged with the global one.
 		SRDAGGraph 	localDag;
 		transformer.transform(&sdf, &localDag, currHSrDagVx);
-	#if PRINT_GRAPH
-		// Printing the dag.
-		dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
-		dotWriter.write(&localDag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-	#endif
+//	#if PRINT_GRAPH
+//		// Printing the dag.
+//		dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
+//		dotWriter.write(&localDag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+//	#endif
 		dag->merge(&localDag, true);
 	}
 	// Updating vxs' states.

@@ -53,7 +53,7 @@
 
 
 
-static char name[MAX_VERTEX_NAME_SIZE];
+//static char name[MAX_VERTEX_NAME_SIZE];
 
 /**
  Constructor
@@ -284,9 +284,10 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
 	if(intraLevel){
 		// Connecting two graphs from the same hierarchy level.
 
-		// Finding an unplugged vx to the left (RoundBuffer or InterFace).
+		// Finding an unplugged vx to the left (RoundBuffer).
 		SRDAGVertex* leftVx;
-		while(leftVx = findUnplug()){
+		leftVx = findUnplug();
+		while(leftVx){
 			// Finding matching unplugged vertex to the right.
 			SRDAGVertex* rightVx;
 			if (!(rightVx = findMatch(leftVx->getReference()))) exitWithCode(1064);
@@ -297,11 +298,14 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
 			leftVx->addOutputEdge(rightVx->getOutputEdge(0));
 			// Deleting right Vx.
 			rightVx->setState(SrVxStDeleted);
+
+			leftVx = findUnplug();
 		}
 
 		// Connecting output interface(s) in the annex.
 		SRDAGVertex* outputVx;
-		while(outputVx = findUnplugIF(output_vertex)){
+		outputVx = findUnplugIF(output_vertex);
+		while(outputVx){
 			// Getting the output edge from the higher level in the PiSDF.
 			BaseEdge* refEdge = ((PiSDFIfVertex*)outputVx->getReference())->getParentEdge();
 			// Getting the corresponding edge in the DAG.
@@ -310,6 +314,8 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
 			outSrDagEdge->setSource(outputVx);
 			outputVx->addOutputEdge(outSrDagEdge);
 //			if(outputVx->getNbOutputEdge()>0) outputVx->setState(SrVxStExecutable);
+
+			outputVx = findUnplugIF(output_vertex);
 		}
 	}
 	else{
@@ -317,7 +323,8 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
 
 		// Connecting input interface(s) in the annex.
 		SRDAGVertex* inputVx;
-		while(inputVx = findUnplugIF(input_vertex)){
+		inputVx = findUnplugIF(input_vertex);
+		while(inputVx){
 			// Getting the input edge from the higher level in the PiSDF.
 			BaseEdge* refEdge = ((PiSDFIfVertex*)inputVx->getReference())->getParentEdge();
 			// Getting the corresponding edge in the DAG.
@@ -326,6 +333,8 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
 			inSrDagEdge->setSink(inputVx);
 			inputVx->addInputEdge(inSrDagEdge);
 //			if(inputVx->getNbOutputEdge()>0) inputVx->setState(SrVxStExecutable);
+
+			inputVx = findUnplugIF(input_vertex);
 		}
 	}
 }

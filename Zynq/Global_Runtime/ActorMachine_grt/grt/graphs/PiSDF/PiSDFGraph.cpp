@@ -41,7 +41,7 @@
 #include <transformations/PiSDFTransformer/PiSDFTransformer.h>
 
 
-#define EXEC			0
+#define EXEC			1
 
 extern DotWriter dotWriter;
 static char name[MAX_VERTEX_NAME_SIZE];

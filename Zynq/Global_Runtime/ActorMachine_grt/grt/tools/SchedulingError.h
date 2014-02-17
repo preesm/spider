@@ -119,6 +119,7 @@ static void exitWithCode(int exitCode){
 	// 1062: No executable vertices found.
 	// 1063: Multiple SrDAG vertices reference a single PiSDF configure vertex.
 	// 1064: Matching not found for unplugged vertex when merging SrDAG.
+	// 1065: Vertex was deleted.
 
 	printf("\nExiting with code %d\n", exitCode);
 	exit(exitCode);

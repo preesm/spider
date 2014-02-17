@@ -47,7 +47,7 @@
 #include <tools/ScheduleWriter.h>
 #include <tools/ScheduleChecker.h>
 
-#define LAST_EXEC				0
+#define LAST_EXEC				1
 #define PRINT_GRAPH				1
 #define PiSDF_FILE_PATH			"pisdf"
 #define SUB_SDF_FILE_0_PATH		"subSdf.gv"
@@ -164,6 +164,12 @@ int main(int argc, char* argv[]){
 	// Scheduling the DAG.
 	listScheduler.schedule(&dag, &schedule, &arch);
 	schedWriter.write(&schedule, &dag, &arch, "test.xml");
+
+	launch.clear();
+
+	// Creating FIFOs for executable vxs.
+	// Note that some FIFOs have already been created in previous steps.
+	launch.prepareFIFOsInfo(&dag, &arch);
 
 	// Preparing tasks' informations
 	launch.prepareTasksInfo(&dag, &arch, &schedule, IS_AM, &execStat);

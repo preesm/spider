@@ -81,8 +81,8 @@ void initNLoop(UINT32 inputFIFOIds[],
 //	UINT16 array_out[M_MAX_VALUE * N_MAX_VALUE];
 
 	N = params[0];
-	readFifo(inputFIFOIds[0],inputFIFOAddrs[0], M_MAX_VALUE * sizeof(UINT16), (UINT8*)M_in);
-	readFifo(inputFIFOIds[1],inputFIFOAddrs[1], M_MAX_VALUE * N_MAX_VALUE * sizeof(UINT16), (UINT8*)array_in);
+	readFifo(inputFIFOIds[0],inputFIFOAddrs[0], M_MAX_VALUE * N_MAX_VALUE * sizeof(UINT16), (UINT8*)array_in);
+	readFifo(inputFIFOIds[1],inputFIFOAddrs[1], M_MAX_VALUE * sizeof(UINT16), (UINT8*)M_in);
 
 	printf("Init N loop with N=%d\n", N);
 
@@ -147,15 +147,20 @@ void initMLoop(UINT32 inputFIFOIds[],
 			 UINT32 outputFIFOAddrs[],
 			 UINT32 params[])
 {
-	UINT16 M;
+	UINT16 M, i;
 	UINT16 line[M_MAX_VALUE];
-	UINT16 line_out[M_MAX_VALUE];
 
 	M = params[0];
 	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], M_MAX_VALUE * sizeof(UINT16), (UINT8*)line);
-	readFifo(inputFIFOIds[1], inputFIFOAddrs[1], M_MAX_VALUE * sizeof(UINT16), (UINT8*)line);
 
-	writeFifo(outputFIFOIds[0],outputFIFOAddrs[0], M * sizeof(UINT16), (UINT8*)line_out);
+	printf("Init M loop with M=%d. Line out : %d", M, line[0]);
+
+	for (i = 1; i < M; i++) {
+		printf(", %d", line[i]);
+	}
+	printf("\n");
+
+	writeFifo(outputFIFOIds[0],outputFIFOAddrs[0], M * sizeof(UINT16), (UINT8*)line);
 }
 
 
@@ -219,7 +224,7 @@ void RB(UINT32 inputFIFOIds[],
 
 	readFifo(inputFIFOIds[0],inputFIFOAddrs[0], nbTknIn * sizeof(UINT16), (UINT8*)data);
 
-	printf("Round buffering %d to %d:\n%d", nbTknIn, nbTknOut, data[0]);
+	printf("Round buffering %d to %d: %d", nbTknIn, nbTknOut, data[0]);
 	for (i = 1; i < nbTknIn; i++) {
 		printf(", %d", data[i]);
 	}
@@ -255,7 +260,7 @@ void broadcast(UINT32 inputFIFOIds[],
 
 	readFifo(inputFIFOIds[0],inputFIFOAddrs[0], nbTknIn * sizeof(UINT16), (UINT8*)data);
 
-	printf("Broadcasting to %d:\n%d", nbFifoOut, data[0]);
+	printf("Broadcasting to %d: %d", nbFifoOut, data[0]);
 	for (i = 1; i < nbTknIn; i++) {
 		printf(", %d", data[i]);
 	}
@@ -282,28 +287,42 @@ void Xplode(UINT32 inputFIFOIds[],
 			 UINT32 outputFIFOAddrs[],
 			 UINT32 params[])
 {
-	UINT32 nbFifoIn, nbFifoOut, i;//, count;
+	UINT32 nbFifoIn, nbFifoOut, i, j;//, count;
 	UINT16 data[MAX_DATA_SIZE];
+	UINT16 nbTknIn;
+	UINT16 nbTknOut;
+
 
 	nbFifoIn = params[0];
 	nbFifoOut = params[1];
 
 	if(nbFifoIn == 1){
 		/* Explode */
-		readFifo(inputFIFOIds[0],inputFIFOAddrs[0], params[2] * sizeof(UINT16), (UINT8*)data);
-//		count=0;
-		for(i=0; i<nbFifoOut; i++){
-			writeFifo(outputFIFOIds[i], outputFIFOAddrs[i], params[i + 3] * sizeof(UINT16), (UINT8*)(data + params[i + 3]));
-//			count += action->param_value[i+1];
+		nbTknIn = params[2];
+		readFifo(inputFIFOIds[0],inputFIFOAddrs[0], nbTknIn * sizeof(UINT16), (UINT8*)data);
+
+		printf("Exploding : %d", data[0]);
+		for (i = 1; i < nbTknIn; i++) {
+			printf(", %d", data[i]);
 		}
+		printf(" -> ");
+
+		for(i=0; i<nbFifoOut; i++){
+			nbTknOut = params[i + 3];
+			printf(" {%d tkn}", nbTknOut);
+			writeFifo(outputFIFOIds[i], outputFIFOAddrs[i], nbTknOut * sizeof(UINT16), (UINT8*)(data + nbTknOut));
+		}
+		printf("\n");
 	}else if(nbFifoOut == 1){
 		/* Implode */
-//		int count=0;
+		printf("Imploding %d\n", nbFifoIn);
 		for(i=0; i<nbFifoIn; i++){
-			readFifo(inputFIFOIds[i], inputFIFOAddrs[i], params[i + 3] * sizeof(UINT16), (UINT8*)(data + params[i + 3]));
+			nbTknIn = params[i + 3];
+			readFifo(inputFIFOIds[i], inputFIFOAddrs[i], nbTknIn * sizeof(UINT16), (UINT8*)(data + nbTknIn));
 //			count += action->param_value[i+1];
 		}
-		writeFifo(outputFIFOIds[0],outputFIFOAddrs[0], params[2] * sizeof(UINT16), (UINT8*)data);
+		nbTknOut = params[2];
+		writeFifo(outputFIFOIds[0],outputFIFOAddrs[0], nbTknOut * sizeof(UINT16), (UINT8*)data);
 	}else{
 		printf("Error in Xplode\n");
 		exit(-1);

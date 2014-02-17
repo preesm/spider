@@ -939,8 +939,9 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 							launcher* launch,
 							ExecutionStat* execStat,
 							SRDAGGraph* dag,
-							SRDAGVertex* currHSrDagVx){
-	static INT8 stepsCntr = -1;
+							SRDAGVertex* currHSrDagVx,
+							INT8* stepsCntr){
+
 	if(nb_config_vertices > 0){
 		// Creating SrDAG with the configure vertices.
 		// TODO: treat delays
@@ -952,17 +953,18 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		#if PRINT_GRAPH
 			// Printing the dag.
 //			dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
-			dotWriter.write(&localDag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
+//			dotWriter.write(&localDag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
 		#endif
 			dag->merge(&localDag, false);
 		}
 
-		#if PRINT_GRAPH
-			// Printing the dag.
-//			sprintf(name, "srDag_%d.gv", stepsCntr);
-//			dotWriter.write(dag, name, 1, 1);
-//			dotWriter.write(dag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-		#endif
+		(*stepsCntr)++;
+
+#if PRINT_GRAPH
+		// Printing the dag.
+		sprintf(name, "%s_%d.gv", SRDAG_FILE_PATH, *stepsCntr);
+		dotWriter.write(dag, name, 1, 1);
+#endif
 
 		// Scheduling the DAG.
 		listScheduler->schedule(dag, schedule, arch);
@@ -976,37 +978,26 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		// Note that some FIFOs have already been created in previous steps.
 		launch->prepareFIFOsInfo(dag, arch);
 
+#if PRINT_GRAPH
+		// Printing the dag with FIFOs' Ids.
+		sprintf(name, "%s_%d.gv", SRDAG_FIFO_ID_FILE_PATH, *stepsCntr);
+		dotWriter.write(dag, name, 1, 0);
+#endif
+
 		// Preparing tasks' informations
 		launch->prepareTasksInfo(dag, arch, schedule, false, execStat);
-
-		stepsCntr++;
-
-#if PRINT_LAUNCH_DOT
-
-#endif
 
 #if EXEC == 1
 		// Executing the executable vxs.
 		launch->launch(arch->getNbActiveSlaves());
 #endif
 
-		// Updating states.
+		// Updating states. Sets the future states when the current execution is done.
 		dag->updateExecuted();
 
-		// Resolving parameters.
+		// Resolving parameters. Waiting for parameters' values from LRT (configure actors' execution).
 		solveParameters(dag, schedule);
 	}
-#if PRINT_GRAPH
-	// Printing the dag.
-//	dotWriter.write(dag, SRDAG_FILE_PATH, 1, 1);
-//	dotWriter.write(dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-//	if(dag->getNbVertices() > 0){
-//		sprintf(name, "srDag_%d.gv", stepsCntr);
-//		dotWriter.write(dag, name, 1, 1);
-//		sprintf(name, "srDagFifoId_%d.gv", stepsCntr);
-//		dotWriter.write(dag, name, 1, 0);
-//	}
-#endif
 
 	// Resolving productions/consumptions.
 	evaluateExpressions();
@@ -1017,7 +1008,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 
 #if PRINT_GRAPH
 	// Printing the SDF sub-graph.
-	dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
+//	dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
 #endif
 
 	// Computing BRV of normal vertices.
@@ -1031,8 +1022,9 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 	if (currHSrDagVx) currHSrDagVx->setState(SrVxStDeleted);
 
 #if PRINT_GRAPH
-	// Printing the SDF sub-graph.
-	dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
+//	// Printing the SDF sub-graph.
+//	sprintf(name, "subSDF_%d.gv", *stepsCntr);
+//	dotWriter.write(&sdf, name, 1);
 #endif
 
 
@@ -1045,23 +1037,21 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		// From the second step on an intermediate DAG is used and then merged with the global one.
 		SRDAGGraph 	localDag;
 		transformer.transform(&sdf, &localDag, currHSrDagVx);
-//	#if PRINT_GRAPH
-//		// Printing the dag.
-//		dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
-//		dotWriter.write(&localDag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-//	#endif
+	#if PRINT_GRAPH
+		// Printing the DAG for the current level.
+		sprintf(name, "%s_%d.gv", SUB_SRDAG_FILE_PATH, *stepsCntr);
+		dotWriter.write(&localDag, name, 1, 1);
+	#endif
 		dag->merge(&localDag, true);
 	}
 	// Updating vxs' states.
 	updateDAGStates(dag);
 
-	stepsCntr++;
+	(*stepsCntr)++;
 #if PRINT_GRAPH
 	// Printing the dag.
-	sprintf(name, "srDag_%d.gv", stepsCntr);
+	sprintf(name, "%s_%d.gv", SRDAG_FILE_PATH, *stepsCntr);
 	dotWriter.write(dag, name, 1, 1);
-	sprintf(name, "srDagFifoId_%d.gv", stepsCntr);
-	dotWriter.write(dag, name, 1, 0);
 #endif
 }
 

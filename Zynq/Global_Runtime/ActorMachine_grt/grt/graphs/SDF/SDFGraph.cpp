@@ -42,10 +42,12 @@ BaseVertex* SDFGraph::addVertex(BaseVertex* originalVertex){
 		// Adding a vertex while the graph is already full
 		exitWithCode(1000);
 	}
-	vertices[nbVertices++] = originalVertex;
+	vertices[nbVertices] = originalVertex;
 
 	if(((PiSDFVertex*)originalVertex)->getType() == config_vertex)
 		configVertices[nbConfigVertices++] = originalVertex;
+
+	return vertices[nbVertices++];
 }
 
 BaseEdge* SDFGraph::addEdge(BaseVertex* source, UINT32 production, BaseVertex* sink, UINT32 consumption, BaseEdge* refEdge)

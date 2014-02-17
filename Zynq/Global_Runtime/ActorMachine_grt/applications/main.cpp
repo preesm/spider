@@ -48,11 +48,6 @@
 #include <tools/ScheduleChecker.h>
 
 #define LAST_EXEC				1
-#define PRINT_GRAPH				1
-#define PiSDF_FILE_PATH			"pisdf"
-#define SUB_SDF_FILE_0_PATH		"subSdf.gv"
-#define SRDAG_FILE_PATH			"srDag.gv"
-#define SRDAG_FIFO_ID_FILE_PATH	"srDagFifoId.gv"
 #define IS_AM 					0
 #define STOP					1
 
@@ -129,6 +124,8 @@ int main(int argc, char* argv[]){
 	PiSDFGraph* H = &piSDF;
 	SRDAGVertex* currHSrDagVx = 0;
 	UINT32 lvlCntr = 0;
+	INT8 stepsCntr = -1;
+
 	while(H){
 	#if PRINT_GRAPH
 		// Printing the PiSDF graph.
@@ -136,7 +133,7 @@ int main(int argc, char* argv[]){
 		dotWriter.write(H, name, 1);
 	#endif
 
-		H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag, currHSrDagVx);
+		H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag, currHSrDagVx, &stepsCntr);
 
 	#if PRINT_GRAPH
 		// Printing the dag.
@@ -177,11 +174,15 @@ int main(int argc, char* argv[]){
 #if LAST_EXEC == 1
 	// Launching the execution on LRTs.
 	launch.launch(nbSlaves);
-
-	// Clearing the launcher.
-	launch.clear();
 #endif
 
 	dag.updateExecuted();
 
+#if PRINT_GRAPH
+	// Printing the dag.
+//	sprintf(name, "srDag_%d.gv", stepsCntr);
+//	dotWriter.write(&dag, name, 1, 1);
+	sprintf(name, "%s_%d.gv", SRDAG_FIFO_ID_FILE_PATH, stepsCntr);
+	dotWriter.write(&dag, name, 1, 0);
+#endif
 }

@@ -204,7 +204,8 @@ public:
 							launcher* launch,
 							ExecutionStat* execStat,
 							SRDAGGraph* dag,
-							SRDAGVertex* hSrDagVx);
+							SRDAGVertex* hSrDagVx,
+							INT8* stepsCntr);
 
 	void solveParameters(SRDAGGraph* dag, BaseSchedule* schedule);
 

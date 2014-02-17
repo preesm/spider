@@ -91,7 +91,7 @@ LRTActor::LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch
 		params[0] = nbInputFifos;
 		params[1] = nbOutputFifos;
 
-		// Setting number of tokens through each input/output.
+		// Setting number of tokens going through each input/output.
 		for(UINT32 i=0; i<nbInputFifos; i++){
 			params[i + 2] = srvertex->getInputEdge(i)->getTokenRate();
 		}

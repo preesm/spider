@@ -103,22 +103,16 @@ int main(int argc, char* argv[]){
 
 	printf("Starting with %d slaves max\n", nbSlaves);
 
+	/*
+	 * These objects should be created within PREESM.
+	 * Architecture, Scheduling policy and the PiSDF graphs.
+	 */
 	createArch(&arch, nbSlaves);
 	arch.setNbActiveSlaves(nbSlaves);
 	listScheduler.setArchitecture(&arch);
 	listScheduler.setScenario(&scenario);
 	schedule.setNbActiveSlaves(arch.getNbActiveSlaves());
 
-
-#if LAST_EXEC == 1
-	launch.init(nbSlaves);
-//	launch.launchWaitAck(nbSlaves);
-#endif
-
-
-	/*****************************
-	 * Multi step algorithm for mapping/scheduling PiSDF graphs.
-	 */
 	// Getting the PiSDF graph.
 	top(&piSDF);
 	PiSDFGraph* H = &piSDF;
@@ -126,27 +120,48 @@ int main(int argc, char* argv[]){
 	UINT32 lvlCntr = 0;
 	INT8 stepsCntr = -1;
 
+
+#if LAST_EXEC == 1
+	/*
+	 * Initializing the queues and data containers (see launcher class) for communication with local RTs.
+	 * This must be done here, before calling the multiStepScheduling method.
+	 */
+	launch.init(nbSlaves);
+//	launch.launchWaitAck(nbSlaves);
+#endif
+
+	/*
+	 * H contains the current PiSDF at each hierarchical level.
+	 * Note that the loop stops when H is null, i.e. all levels have been treated,
+	 * the graph has been completely flatten.
+	 */
 	while(H){
 	#if PRINT_GRAPH
-		// Printing the PiSDF graph.
+		// Printing the current PiSDF graph.
 		sprintf(name, "%s_%d.gv", PiSDF_FILE_PATH, lvlCntr);
 		dotWriter.write(H, name, 1);
 	#endif
 
+		/*
+		 * Calling the multi steps scheduling method. At each iteration (or for each hierarchical level), the method :
+		 * 1. Executes the configure actors.
+		 * 2. Resolves parameter depending expressions.
+		 * 3. Computes the Basic Repetition Vector.
+		 * 4. Converts into a DAG
+		 * 5. And merges the underlying DAG with the DAG of above levels.
+		 * At the end, the "dag" argument will contain the complete flattened model.
+		 * A final execution must be launched after the end of the method.
+		 */
 		H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag, currHSrDagVx, &stepsCntr);
 
-	#if PRINT_GRAPH
-		// Printing the dag.
-//		dotWriter.write(&dag, SRDAG_FILE_PATH, 1, 1);
-//		dotWriter.write(&dag, SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-	#endif
-
-		// Finding other hierarchical Vxs.
+		/*
+		 * Finding other hierarchical Vxs. Here the variable "H" gets the next hierarchical level to be flattened.
+		 * Remember that when no more hierarchies are found, it marks the end of a complete execution of the model.
+		 */
 		H = 0;
 		for (int i = 0; i < dag.getNbVertices(); i++) {
 			currHSrDagVx = dag.getVertex(i);
-			if((currHSrDagVx->getReference()->getType() == pisdf_vertex)&&
-					(currHSrDagVx->getState() == SrVxStHierarchy)){
+			if((currHSrDagVx->getReference()->getType() == pisdf_vertex) && (currHSrDagVx->getState() == SrVxStHierarchy)){
 				if(((PiSDFVertex*)(currHSrDagVx->getReference()))->hasSubGraph(&H)){
 					lvlCntr++;
 					break;
@@ -154,11 +169,12 @@ int main(int argc, char* argv[]){
 			}
 		}
 	}
-/*********************////
 
 
-
-	// Scheduling the DAG.
+	/*
+	 * Last scheduling and execution. After all hierarchical levels have been flattened,
+	 * there is one more execution to do for completing one complete execution of the model.
+	 */
 	listScheduler.schedule(&dag, &schedule, &arch);
 	schedWriter.write(&schedule, &dag, &arch, "test.xml");
 
@@ -176,10 +192,11 @@ int main(int argc, char* argv[]){
 	launch.launch(nbSlaves);
 #endif
 
+	// Setting all executable vxs to executed since their execution was already launched.
 	dag.updateExecuted();
 
 #if PRINT_GRAPH
-	// Printing the dag.
+	// Printing the final dag.
 //	sprintf(name, "srDag_%d.gv", stepsCntr);
 //	dotWriter.write(&dag, name, 1, 1);
 	sprintf(name, "%s_%d.gv", SRDAG_FIFO_ID_FILE_PATH, stepsCntr);

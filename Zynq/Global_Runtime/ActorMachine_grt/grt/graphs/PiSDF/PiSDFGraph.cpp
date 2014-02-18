@@ -846,7 +846,7 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hS
 			srDagVertex->setState(SrVxStExecutable);
 		}
 
-		// Adding edges from input vxs (and the input vx too of course).
+		// Adding edges coming from input vxs (and the input vx too of course).
 		for (UINT32 j = 0; j < refConfigVertex->getNbInputEdges(); j++) {
 			PiSDFEdge* edge = refConfigVertex->getInputEdge(j);
 			BaseVertex* predec = edge->getSource();
@@ -943,8 +943,8 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 							INT8* stepsCntr){
 
 	if(nb_config_vertices > 0){
-		// Creating SrDAG with the configure vertices.
-		// TODO: treat delays
+		// Creating SrDAG with configure and input vertices.
+		// TODO: treat delays and cycles?
 		if(dag->getNbVertices() == 0)
 			createSrDAGInputConfigVxs(dag, currHSrDagVx);
 		else{

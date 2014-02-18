@@ -80,15 +80,14 @@ void createArch(Architecture* arch, int nbSlaves){
 }
 
 int main(int argc, char* argv[]){
-//	if(argc < 2){
-//		printf("Usage: %s nbSlaves\n", argv[0]);
-//		return 0;
-//	}
-//	int nbSlaves = atoi(argv[1]);
+	if(argc < 2){
+		printf("Usage: %s nbSlaves\n", argv[0]);
+		return 0;
+	}
+	int nbSlaves = atoi(argv[1]);
+
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
-
-	int nbSlaves = 1;
 
 	printf("Starting with %d slaves max\n", nbSlaves);
 

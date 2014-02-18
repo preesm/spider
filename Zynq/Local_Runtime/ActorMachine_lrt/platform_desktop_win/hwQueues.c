@@ -43,9 +43,9 @@
 #include "swfifoMngr.h"
 
 #define IN_CTRL_QUEUE_BASE		0x20000000
-#define OUT_CTRL_QUEUE_BASE		0x20000200
+#define OUT_CTRL_QUEUE_BASE		0x20000600
 
-#define MBOX_SIZE				512
+#define MBOX_SIZE				1024
 
 //#define WRITE_REG_OFFSET	0x00	/**< Mbox write register */
 //#define READ_REG_OFFSET		0x08	/**< Mbox read register */

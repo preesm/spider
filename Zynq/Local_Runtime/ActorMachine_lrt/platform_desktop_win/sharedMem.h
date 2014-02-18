@@ -48,7 +48,7 @@
 #define SH_MEM_FILE_PATH			"../shMem"
 
 #define MBOX_MEM_BASE_ADDR			0x20000000
-#define MBOX_MEM_SIZE				1024
+#define MBOX_MEM_SIZE				0x100000
 #define MBOX_MEM_FILE_PATH			"../mboxMem"
 
 void OS_ShMemInit();

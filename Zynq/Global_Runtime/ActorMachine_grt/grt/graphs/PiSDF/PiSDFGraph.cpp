@@ -88,7 +88,7 @@ BaseVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEX_TYPE type)
 			if(nb_config_vertices < MAX_NB_PiSDF_CONFIG_VERTICES){
 				vertex = (BaseVertex*)&config_vertices[nb_config_vertices];
 				nb_config_vertices++;
-				glbNbConfigVertices++;
+//				glbNbConfigVertices++;
 			}
 			else{
 				// Adding a vertex while the graph is already full
@@ -246,354 +246,11 @@ PiSDFParameter* PiSDFGraph::addParameter(const char *name)
 		return param;
 	}
 	else{
-		// Adding an edge while the graph is already full
-		exitWithCode(1001);
+		exitWithCode(1057);
 	}
 	return param;
 }
 
-
-//void PiSDFGraph::setExecutableVertices(BaseVertex* vertex)
-//{
-//	if(vertex->getExecutable())
-//	{
-//		// Calling this function for the child graph, if necessary.
-//		if(vertex->getType() == pisdf_vertex){
-//			PiSDFGraph* subGraph = ((PiSDFVertex*)vertex)->getSubGraph();
-//			if(subGraph != (PiSDFGraph*)0)
-//			{
-//				subGraph->setExecutableVertices(subGraph->getRootVertex());
-//				if(subGraph->getExecComplete()) // The sub graph can be executed completely.
-//				{
-//					// Checking successors of the current parent vertex.
-//					for (UINT32 i = 0; i < vertex->getNbOutputEdges(); i++) {
-//						PiSDFEdge* edge = vertex->getOutputEdge(i);
-//						BaseVertex* sinkVertex = edge->getSink();
-//						if(! sinkVertex->getVisited())
-//							setExecutableVertices(edge->getSink());
-//					}
-//				}
-//				return; // So that the parent vertex is not included in the list.
-//			}
-//		}
-//		// Adding vertex to the list of executable vertices.
-//		ExecutableVertices[nbExecutableVertices++] = vertex;
-//		vertex->setVisited(true);
-//
-//		// Checking successors.
-//		for (UINT32 i = 0; i < vertex->getNbOutputEdges(); i++) {
-//			PiSDFEdge* edge = vertex->getOutputEdge(i);
-//			BaseVertex* sinkVertex = edge->getSink();
-//
-//			// Discarding edges with zero production.
-//			if(edge->getProductionInt() > 0)
-//				// Adding the vertex if not visited yet.
-//				if (! sinkVertex->getVisited())
-//					setExecutableVertices(edge->getSink());
-//		}
-//
-//		if(vertex->getType() == output_vertex)
-//			this->setExecComplete(true); // It is a sub graph and can be executed completely.
-//	}
-//}
-
-//void PiSDFGraph::setExecutableVertices()
-//{
-//	for (UINT32 i = 0; i < this->getNb_config_vertices(); i++) {
-//		PiSDFConfigVertex* vertex = &this->config_vertices[i];
-//		if(vertex->getExecutable())
-//			// Adding vertex to the list of executable vertices.
-//			ExecutableVertices[nbExecutableVertices++] = vertex;
-//	}
-//}
-
-
-//
-//void PiSDFGraph::copyExecutableVertices(BaseVertex* startVertex, SDFGraph *outSDF)
-//{
-//	startVertex->checkForExecution(outSDF);
-//	if(startVertex->getExecutable() == possible)
-//	{
-//		// Checking if the startVertex contains a sub graph.
-//		if(startVertex->getType() == pisdf_vertex)
-//		{
-//			PiSDFGraph* subGraph = ((PiSDFVertex*)startVertex)->getSubGraph();
-//			if(subGraph != (PiSDFGraph*)0)
-//			{
-//				/***  Only hierarchical vertices ***/
-//
-//				// Checking the sub graph.
-//				subGraph->getSDFGraph(outSDF);
-////				subGraph->copyExecutableVertices(subGraph->getRootVertex(), outSDF);
-//
-//				if(subGraph->getNbExecVertices() == (subGraph->getNb_vertices() - subGraph->getNbDiscardVertices()))
-////				if(subGraph->getExecComplete()) // The sub graph can be executed completely,
-//				{								// so the parent's successors can be examined.
-////					startVertex->setExecutable(possible);
-//					// Checking successors of the current parent vertex.
-//					for (UINT32 i = 0; i < startVertex->getNbOutputEdges(); i++)
-//					{
-//						PiSDFEdge* edge = startVertex->getOutputEdge(i);
-//						BaseVertex* sinkVertex = edge->getSink();
-//						// Discarding edges with zero production and vertices already visited.
-//						if((edge->getProductionInt() > 0) && (sinkVertex->getExecutable() == undefined))
-//								copyExecutableVertices(edge->getSink(), outSDF);
-//					}
-//				}
-//				else
-//					// Making that the hierarchical vertex is examined during the next iteration.
-//					startVertex->setExecutable(undefined);
-//
-//
-////				startVertex->setVisited(true); // So that subsequent incoming edges ignore this vertex.
-//				return; // So that the hierarchical vertex is not included.
-//			}
-//		}
-//
-//		/***  Only non hierarchical vertices ***/
-//
-//
-////		if(startVertex->getVisited()) return; // If the first vertex was already visited, the graph was already visited.
-//
-//		// Adding vertex to the SDF graph.
-//		outSDF->addVertex(startVertex);
-//		if(startVertex->getType()== config_vertex)
-//			outSDF->addConfigVertex(startVertex);
-////		startVertex->setVisited(true);
-//
-//		// Checking successors.
-//		for (UINT32 i = 0; i < startVertex->getNbOutputEdges(); i++)
-//		{
-//			PiSDFEdge* edge = startVertex->getOutputEdge(i);
-//			BaseVertex* sinkVertex = edge->getSink();
-//			// Discarding edges with zero production and vertices already marked as executable.
-//			if(edge->getProductionInt() > 0){
-//				if(sinkVertex->getExecutable() == undefined)
-//					copyExecutableVertices(sinkVertex, outSDF);
-//			}
-//			else{
-//				if(sinkVertex->getExecutable() != impossible){
-//					sinkVertex->setExecutable(impossible);
-//					nbDiscardVertices++;
-//				}
-//			}
-//
-//		}
-//		nbExecVertices++;
-//	}
-//}
-
-
-
-void PiSDFGraph::copyRequiredEdges(BaseVertex* startVertex)
-{
-	startVertex->checkForExecution();
-	if(startVertex->getExecutable() == possible)
-	{
-		// Checking if the startVertex contains a sub graph.
-		if(startVertex->getType() == pisdf_vertex)
-		{
-			PiSDFGraph* subGraph = ((PiSDFVertex*)startVertex)->getSubGraph();
-			if(subGraph != (PiSDFGraph*)0)
-			{
-				/***  Only hierarchical vertices ***/
-
-				// Checking the sub graph.
-				subGraph->findRequiredEdges();
-//				subGraph->copyExecutableVertices(subGraph->getRootVertex(), outSDF);
-
-				if(subGraph->getNbExecVertices() == (subGraph->getNb_vertices() - subGraph->getNbDiscardVertices())) // The sub graph can be executed completely.
-				{
-					// Checking successors of the current parent vertex.
-					for (UINT32 i = 0; i < startVertex->getNbOutputEdges(); i++)
-					{
-						PiSDFEdge* edge = startVertex->getOutputEdge(i);
-						BaseVertex* sinkVertex = edge->getSink();
-						// Discarding edges with zero production and vertices already visited.
-						if((edge->getProductionInt() > 0) && (sinkVertex->getExecutable() == undefined))
-							copyRequiredEdges(edge->getSink());
-					}
-				}
-				else
-					// Making that the hierarchical vertex is examined during the next iteration.
-					startVertex->setExecutable(undefined);
-
-
-//				startVertex->setVisited(true); // So that subsequent incoming edges ignore this vertex.
-				return; // So that the hierarchical vertex is not included.
-			}
-		}
-
-		/***  Only non hierarchical vertices ***/
-
-		for (UINT32 i = 0; i < startVertex->getNbInputEdges(); i++)
-		{
-			/*
-			 * Adding input edges to the table of required edges, except cycles.
-			 * Cycles are marked while treating output edges.
-			 */
-			PiSDFEdge* edge = startVertex->getInputEdge(i);
-			/*
-			 *
-			 */
-			if(edge->getSource()->getType() == input_vertex)
-				if(findVisitedIf((PiSDFIfVertex*)(edge->getSource())))
-					break;
-
-			if(edge->getSource() != startVertex)
-				if(!edge->getRequired()){// Avoids that the edge be included more than once.
-					requiredEdges[glbNbRequiredEdges++] = edge;
-					edge->setRequired(true);
-				}
-		}
-
-		for (UINT32 i = 0; i < startVertex->getNbOutputEdges(); i++)
-		{
-			// Adding output edges to the table of required edges.
-			PiSDFEdge* edge = startVertex->getOutputEdge(i);
-			if(!edge->getRequired()){// Avoids that the edge be included more than once.
-				requiredEdges[glbNbRequiredEdges++] = edge;
-				edge->setRequired(true);
-
-				/*
-				 * If the sink is a hierarchical vertex, the corresponding input vertex is stored
-				 * so that its output edge don't be included in the table of required edges.
-				 */
-				if(edge->getSink()->getType() == pisdf_vertex){
-					PiSDFGraph *sinkSubgraph;
-					if(((PiSDFVertex*)(edge->getSink()))->hasSubGraph(&sinkSubgraph))
-						visitedIfs[glbNbVisitedIfs++] = sinkSubgraph->getInputVertex(edge);
-				}
-			}
-		}
-
-
-		glbNbExecVertices++; // Counts executable vertices from the entire graph.
-		nbExecVertices++;	// Counts executable vertices from the current level.
-		if(startVertex->getType()== config_vertex)
-			glbNbExecConfigVertices++; // Counts executable configure vertices from the entire graph.
-	}
-}
-
-
-//
-///*
-// * TODO: Try to link the vertices at the same time they are selected as
-// * 		executable within 'copyExecutableVertices'.
-// */
-//void PiSDFGraph::linkExecutableVertices(SDFGraph *outSDF){
-//	UINT32 nbVertices = outSDF->getNbVertices();
-//	for (UINT32 i = 0; i < nbVertices; i++)
-//	{
-//		BaseVertex* vertex = outSDF->getVertex(i);
-//		// Excluding interface vertices.
-//		if((vertex->getType() != input_vertex)&&(vertex->getType() != output_vertex))
-//		{
-//			UINT32 nbInputEdges = vertex->getNbInputEdges();
-//			// Examining input edges.
-//			for (UINT32 j = 0; j < nbInputEdges; j++)
-//			{
-//				PiSDFEdge* inputEdge = vertex->getInputEdge(j);
-//				BaseVertex *sourceVertex = inputEdge->getSource();
-//				if(sourceVertex->getType() == input_vertex)
-//				{
-//					// Getting incoming edge, i.e. from parent's predecessor vertex to input vertex.
-//					UINT16 parentEdgeIndex = ((PiSDFIfVertex*)sourceVertex)->getParentEdgeIndex();
-//					PiSDFEdge* parentEdge = ((PiSDFIfVertex*)sourceVertex)->getParentVertex()->getInputEdge(parentEdgeIndex);
-//
-//					// Bypassing the input vertex by adding an edge between the parent's predecessor and the current vertex.
-//					if (parentEdge->getConsumptionInt() > 0)
-//						outSDF->addEdge(parentEdge->getSource(),
-//										parentEdge->getProductionInt(),
-//										vertex,
-//										parentEdge->getConsumptionInt());
-//				}
-//				else
-//				{
-//					/*
-//					 * Checking if the input edge is valid, i.e. the consumption > 0 and if its source vertex is executable.
-//					 * 'checkEdge' verifies if source and sink vertices are executables while only the source needs to be verified.
-//					 * TODO: Verification wont be required of the linking is done within 'copyExecutableVertices'.
-//					 */
-//					if ((inputEdge->getConsumptionInt() > 0) && (outSDF->checkEdge(inputEdge)))
-//					{
-//						outSDF->addEdge(inputEdge->getSource(), inputEdge->getProductionInt(),
-//										vertex, inputEdge->getConsumptionInt());
-//					}
-//				}
-//			}
-//		}
-//		else if(vertex->getType() == output_vertex)
-//		{
-//			PiSDFEdge* inputEdge = vertex->getInputEdge(0); // There is only one input.
-//			/*
-//			 * Checking if the input edge is valid, i.e. the consumption > 0 and if its source vertex is executable.
-//			 * 'checkEdge' verifies if source and sink vertices are executables while only the source needs to be verified.
-//			 * TODO: Verification wont be required of the linking is done within 'copyExecutableVertices'.
-//			 */
-//			if ((inputEdge->getConsumptionInt() > 0) && (outSDF->checkEdge(inputEdge)))
-//			{
-//				// Getting outgoing edge, i.e. from output vertex to parent's successor vertex.
-//				UINT16 parentEdgeIndex = ((PiSDFIfVertex*)vertex)->getParentEdgeIndex();
-//				PiSDFEdge* parentEdge = ((PiSDFIfVertex*)vertex)->getParentVertex()->getOutputEdge(parentEdgeIndex);
-//
-//				// Bypassing the output vertex by adding an edge between the current vertex' predecessor and the parent's successor.
-//				outSDF->addEdge(inputEdge->getSource(), inputEdge->getProductionInt(),
-//								parentEdge->getSink(), parentEdge->getConsumptionInt());
-//			}
-//
-//			// Removing output vertices from 'outSDF'.
-//			outSDF->removeVertex(i);
-//		}
-//		else
-//			// Removing input vertex from 'outSDF'.
-//			outSDF->removeVertex(i);
-//	}
-//}
-
-
-void PiSDFGraph::connectExecVertices(SDFGraph *outSDF)
-{
-//	// Connecting the executable vertices.
-//	for (UINT32 i = 0; i < outSDF->getNbVertices(); i++) {
-//		BaseVertex* execVertex = outSDF->getVertex(i);
-//
-//		for (UINT32 i = 0; i < execVertex->getNbOutputEdges(); i++){
-//			PiSDFEdge* edge = execVertex->getOutputEdge(i);
-//			BaseVertex* sinkVertex = edge->getSink();
-//
-//			// Bypassing hierarchical vertices.
-//			if(sinkVertex->getType() == pisdf_vertex)
-//			{
-//				PiSDFGraph* subGraph = ((PiSDFVertex*)sinkVertex)->getSubGraph();
-//				if(subGraph != (PiSDFGraph*)0)
-//				{
-//					// Getting the successor of the corresponding input vertex.
-//					sinkVertex = subGraph->getInputVertex(edge)->getOutputEdge(0)->getSink();
-//				}
-//				outSDF->addEdge(execVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
-//			}
-//			// Bypassing output vertices.
-//			else if(sinkVertex->getType() == output_vertex)
-//			{
-//				PiSDFEdge* parentEdge = ((PiSDFIfVertex*)sinkVertex)->getParentEdge();
-//				sinkVertex = parentEdge->getSink();
-//				// Adding the edge with the parent vertex as sink.
-//				outSDF->addEdge(execVertex, edge->getProductionInt(), sinkVertex, parentEdge->getConsumptionInt());
-//			}
-//			// Connecting common vertices.
-//			else
-//				outSDF->addEdge(execVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
-//
-//			/*
-//			 * Adding the sink vertex if it's not already present. Even if the sink vertex isn't executable,
-//			 * it is needed to build the topological matrix.
-//			 */
-//			if(outSDF->getVertexIndex(sinkVertex) == -1)
-//				outSDF->addVertex(sinkVertex);
-//		}
-//	}
-}
 
 
 void PiSDFGraph::evaluateExpressions()
@@ -620,104 +277,18 @@ void PiSDFGraph::evaluateExpressions()
 }
 
 
-void PiSDFGraph::createSubGraph(SDFGraph *outSDF)
-{
-	for (UINT32 i = 0; i < glbNbRequiredEdges; i++) {
-		PiSDFEdge* edge = requiredEdges[i];
-
-
-		BaseVertex* sourceVertex = edge->getSource();
-		BaseVertex* sinkVertex = edge->getSink();
-		BaseVertex* newSourceVertex = NULL;
-		BaseVertex* newSinkVertex = NULL;
-		/*** Adding edges to the new graph. ***/
-
-
-
-
-		if(sinkVertex->getType() == pisdf_vertex)
-		{
-			PiSDFGraph* subGraph = ((PiSDFVertex*)sinkVertex)->getSubGraph();
-			if(subGraph != (PiSDFGraph*)0) // Bypasses hierarchical vertices.
-			{
-				// Getting real sink vertex, i.e. not the input vertex but its successor.
-				sinkVertex = subGraph->getInputVertex(edge)->getOutputEdge(0)->getSink();
-			}
-		}
-
-		if(sourceVertex->getType() == input_vertex)
-		{
-			// Checking if this edge has
-			// Getting real source vertex, i.e. not the input vertex but the parent's predecessor.
-			sourceVertex = ((PiSDFIfVertex*)sourceVertex)->getParentEdge()->getSource();
-		}
-
-		// Adding the edge if not already present.
-//		if((outSDF->getEdgeIndex(sourceVertex, sinkVertex) == -1) &&
-//			())
-//
-//			outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
-//		outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
-
-
-//		else if(sinkVertex->getType() == output_vertex)
-//		{
-//			// Bypassing output vertices.
-//			PiSDFEdge* parentEdge = ((PiSDFIfVertex*)sinkVertex)->getParentEdge();
-//			sinkVertex = parentEdge->getSink();
-//			// Adding the edge with the parent's successor vertex as sink.
-//			outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, parentEdge->getConsumptionInt());
-//		}
-//		else
-//			outSDF->addEdge(sourceVertex, edge->getProductionInt(), sinkVertex, edge->getConsumptionInt());
-
-
-
-		// Adding vertices to the sub-graph if not already done.
-		if(outSDF->getVertexIndex(sourceVertex) == -1)
-			outSDF->addVertex(sourceVertex);
-
-		if(outSDF->getVertexIndex(sinkVertex) == -1)
-			outSDF->addVertex(sinkVertex);
-	}
-}
-
-
-void PiSDFGraph::findRequiredEdges()
-{
-	for (UINT32 i = 0; i < nb_vertices; i++) {
-		BaseVertex* vertex = vertices[i];
-		if((vertex->getType() != input_vertex) && (vertex->getType() != output_vertex)){
-			if(vertex->getExecutable() == undefined){
-	//			copyExecutableVertices(vertices[i], outSDF);
-				copyRequiredEdges(vertex);
-
-				// Checking successors.
-				for (UINT32 i = 0; i < vertex->getNbOutputEdges(); i++)
-				{
-					PiSDFEdge* edge = vertex->getOutputEdge(i);
-					BaseVertex* sinkVertex = edge->getSink();
-					if((sinkVertex->getExecutable() == undefined)&&(sinkVertex->getType()!= output_vertex))// Discards successors already marked as executable.
-						copyRequiredEdges(sinkVertex);
-				}
-			}
-		}
-	}
-}
-
-
 void PiSDFGraph::clearIntraIteration(){
-	// Clearing table of required edges.
-	for (UINT32 i = 0; i < glbNbRequiredEdges; i++) {
-		requiredEdges[i]->setRequired(false);
-		requiredEdges[i] = NULL;
-	}
-	glbNbRequiredEdges = 0;
-
-	for(UINT32 i = 0; i < glbNbVisitedIfs; i++){
-		visitedIfs[i] = NULL;
-	}
-	glbNbVisitedIfs = 0;
+//	// Clearing table of required edges.
+//	for (UINT32 i = 0; i < glbNbRequiredEdges; i++) {
+//		requiredEdges[i]->setRequired(false);
+//		requiredEdges[i] = NULL;
+//	}
+//	glbNbRequiredEdges = 0;
+//
+//	for(UINT32 i = 0; i < glbNbVisitedIfs; i++){
+//		visitedIfs[i] = NULL;
+//	}
+//	glbNbVisitedIfs = 0;
 }
 
 
@@ -978,21 +549,21 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		// Note that some FIFOs have already been created in previous steps.
 		launch->prepareFIFOsInfo(dag, arch);
 
+		// Preparing tasks' informations
+		launch->prepareTasksInfo(dag, arch, schedule, false, execStat);
+
 #if PRINT_GRAPH
 		// Printing the dag with FIFOs' Ids.
 		sprintf(name, "%s_%d.gv", SRDAG_FIFO_ID_FILE_PATH, *stepsCntr);
 		dotWriter.write(dag, name, 1, 0);
 #endif
 
-		// Preparing tasks' informations
-		launch->prepareTasksInfo(dag, arch, schedule, false, execStat);
-
 #if EXEC == 1
 		// Executing the executable vxs.
 		launch->launch(arch->getNbActiveSlaves());
 #endif
 
-		// Updating states. Sets the future states when the current execution is done.
+		// Updating states. Sets all executable vxs to executed since their execution was already launched.
 		dag->updateExecuted();
 
 		// Resolving parameters. Waiting for parameters' values from LRT (configure actors' execution).
@@ -1034,7 +605,10 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		// First step, so the global DAG is used.
 		transformer.transform(&sdf, dag, currHSrDagVx);
 	else{
-		// From the second step on an intermediate DAG is used and then merged with the global one.
+		/*
+		 * From the second step, a local DAG is used for flattening the current level,
+		 * then it is merged with the global DAG.
+		 */
 		SRDAGGraph 	localDag;
 		transformer.transform(&sdf, &localDag, currHSrDagVx);
 	#if PRINT_GRAPH
@@ -1056,14 +630,17 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 }
 
 
+/*
+ * Setting the parameter's value for each configure vx. It assumes that there is only
+ * one parameter per configure vx.
+ */
 void PiSDFGraph::solveParameters(SRDAGGraph* dag, BaseSchedule* schedule){
 	for (UINT32 i = 0; i < nb_config_vertices; i++) {
 		PiSDFConfigVertex* configVertex = &config_vertices[i];
-//		configVertex->setStatus(VxStExecuted);
 		for (UINT32 j = 0; j < configVertex->getNbRelatedParams(); j++) {
 			PiSDFParameter* param = configVertex->getRelatedParam(j);
 			// TODO: to find out the returned value when there are several parameters.
-			if (!param->getResolved()){
+//			if (!param->getResolved()){
 #if EXEC == 1
 				SRDAGVertex* vx;
 				dag->getVerticesFromReference(configVertex, &vx);
@@ -1077,7 +654,7 @@ void PiSDFGraph::solveParameters(SRDAGGraph* dag, BaseSchedule* schedule){
 				UINT64 value = 2; 				// for the DoubleLoop application.
 				configVertex->getRelatedParam(j)->setValue(value);
 #endif
-			}
+//			}
 		}
 
 		// Getting the corresponding vertex in the SrDAG. Note that since the

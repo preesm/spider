@@ -46,9 +46,9 @@
 #include <grt_definitions.h>
 
 #define NB_MAX_QUEUES				60
-#define QUEUE_SIZE					512
+#define QUEUE_SIZE					1024
 #define OUTPUT_CTRL_QUEUE_MEM_BASE	0x20000000
-#define INPUT_CTRL_QUEUE_MEM_BASE	0x20000200
+#define INPUT_CTRL_QUEUE_MEM_BASE	0x20000600
 
 
 static RT_SW_FIFO_HNDLE RTQueue[MAX_SLAVES][nbQueueTypes][2];

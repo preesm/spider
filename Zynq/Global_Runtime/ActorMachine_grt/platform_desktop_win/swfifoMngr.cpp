@@ -40,7 +40,7 @@
 #include <platform.h>
 #include "sharedMem.h"
 #include "swfifoMngr.h"
-#include <rtErrorCodes.h>
+//#include <rtErrorCodes.h>
 
 /* MACROs */
 #define FIFO_RD_IX_OFFSET		0		// Offsets in number of 32-bits words.

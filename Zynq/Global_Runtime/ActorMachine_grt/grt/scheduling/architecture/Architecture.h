@@ -152,7 +152,7 @@ class Architecture {
 };
 
 /**
- Returns the name of a slave
+ Returns the type of a slave
 
  @param index of the slave
 */

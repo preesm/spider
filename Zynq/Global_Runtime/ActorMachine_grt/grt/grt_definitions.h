@@ -45,6 +45,7 @@
 #define SUB_SRDAG_FIFO_ID_FILE_PATH		"subSrDagFifoId"
 #define SRDAG_FILE_PATH					"srDag"
 #define SRDAG_FIFO_ID_FILE_PATH			"srDagFifoId"
+#define SCHED_FILE_NAME					"test"
 
 // Architecture
 #define MAX_SLAVE_TYPES 2 // The maximum number of slave types

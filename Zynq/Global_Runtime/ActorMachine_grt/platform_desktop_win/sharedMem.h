@@ -47,7 +47,7 @@
 
 void addShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename);
 void ShMemInit(UINT8 nbSlaves);
-UINT32 ShMemRead(UINT32 address, void* data, UINT32 size);
-UINT32 ShMemWrite(UINT32 address, void* data, UINT32 size);
+UINT32 ShMemRead(UINT32 shMemIx, UINT32 address, void* data, UINT32 size);
+UINT32 ShMemWrite(UINT32 shMemIx, UINT32 address, void* data, UINT32 size);
 
 #endif /* SHAREDMEM_H_ */

@@ -72,8 +72,9 @@ DotWriter 			dotWriter;
 void createArch(Architecture* arch, int nbSlaves){
 	static char tempStr[11];
 	// Architecture Zynq
-	arch->addSlave(0, "ARM", 0.410, 331, 0.4331, 338);
-	for(int i=1; i<nbSlaves; i++){
+//	arch->addSlave(0, "ARM", 0.410, 331, 0.4331, 338);
+	// TODO: Add master "ARM"
+	for(int i=0; i<nbSlaves; i++){
 		sprintf(tempStr,"uBlaze%02d",i);
 		arch->addSlave(1, tempStr, 0.9267, 435, 0.9252, 430);
 	}
@@ -102,8 +103,7 @@ int main(int argc, char* argv[]){
 	schedule.setNbActiveSlaves(arch.getNbActiveSlaves());
 
 	// Getting the PiSDF graph.
-	top(&piSDF);
-
+	top(&piSDF, &scenario);
 
 #if LAST_EXEC == 1
 	/*
@@ -167,6 +167,7 @@ int main(int argc, char* argv[]){
 		 * there is one more execution to do for completing one complete execution of the model.
 		 */
 		listScheduler.schedule(&dag, &schedule, &arch);
+//		sprintf(name, "%s_%d.xml", SCHED_FILE_NAME, stepsCntr);
 		schedWriter.write(&schedule, &dag, &arch, "test.xml");
 
 		launch.clear();
@@ -176,7 +177,7 @@ int main(int argc, char* argv[]){
 		launch.prepareFIFOsInfo(&dag, &arch);
 
 		// Preparing tasks' informations
-		launch.prepareTasksInfo(&dag, &arch, &schedule, IS_AM, &execStat);
+		launch.prepareTasksInfo(&dag, nbSlaves, &schedule, IS_AM, &execStat);
 
 	#if PRINT_GRAPH
 		// Printing the final dag with FIFO ids.

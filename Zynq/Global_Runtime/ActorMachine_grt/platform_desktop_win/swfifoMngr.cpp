@@ -58,11 +58,11 @@ void create_swfifo(RT_SW_FIFO_HNDLE* fifo_hndl, UINT32 size, UINT32 address){
 }
 
 
-void flush_swfifo(RT_SW_FIFO_HNDLE* fifo_hndl) {
+void flush_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE* fifo_hndl) {
 	UINT32 tmp = 0;
 
-	ShMemWrite(RD_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
-	ShMemWrite(WR_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
+	ShMemWrite(cpuId, RD_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
+	ShMemWrite(cpuId, WR_IX_ADD(fifo_hndl), &tmp, sizeof(UINT32));
 }
 
 /*
@@ -78,11 +78,11 @@ void flush_swfifo(RT_SW_FIFO_HNDLE* fifo_hndl) {
  *
  *********************************************************************************************************
  */
-bool check_input_swfifo(RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 size) {
+bool check_input_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 size) {
 	UINT32 wr_ix, rd_ix;
 
-	ShMemRead(RD_IX_ADD(in_fifo_hndl), &rd_ix, sizeof(UINT32));
-	ShMemRead(WR_IX_ADD(in_fifo_hndl), &wr_ix, sizeof(UINT32));
+	ShMemRead(cpuId, RD_IX_ADD(in_fifo_hndl), &rd_ix, sizeof(UINT32));
+	ShMemRead(cpuId, WR_IX_ADD(in_fifo_hndl), &wr_ix, sizeof(UINT32));
 
 	if (wr_ix < rd_ix)// If TRUE, wr_ix reached the end of the memory and restarted from the beginning.
 		wr_ix = wr_ix + in_fifo_hndl->Size;	// Place wr_ix to the right of rd_ix as in an unbounded memory.
@@ -104,13 +104,13 @@ bool check_input_swfifo(RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 size) {
  *
  *********************************************************************************************************
  */
-void read_input_swfifo(RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffer) {
+void read_input_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffer) {
 	UINT32 wr_ix, rd_ix, temp;
 
 	while(1){
 		// Get indices from the handle.
-		ShMemRead(RD_IX_ADD(in_fifo_hndl), &rd_ix, sizeof(UINT32));
-		ShMemRead(WR_IX_ADD(in_fifo_hndl), &wr_ix, sizeof(UINT32));
+		ShMemRead(cpuId, RD_IX_ADD(in_fifo_hndl), &rd_ix, sizeof(UINT32));
+		ShMemRead(cpuId, WR_IX_ADD(in_fifo_hndl), &wr_ix, sizeof(UINT32));
 
 		if (wr_ix < rd_ix)// If TRUE, wr_ix reached the end of the memory and restarted from the beginning.
 			wr_ix += in_fifo_hndl->Size;// Place wr_ix to the right of rd_ix as in an unbounded memory.
@@ -118,17 +118,17 @@ void read_input_swfifo(RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffe
 		if (rd_ix + size <= wr_ix){
 			// Reader is allowed to read until rd_ix == wr_ix, i.e. until FIFO is empty.
 			if (rd_ix + size > in_fifo_hndl->Size) {
-				ShMemRead(DATA_ADD(in_fifo_hndl) + rd_ix, buffer, in_fifo_hndl->Size - rd_ix);
-				ShMemRead(DATA_ADD(in_fifo_hndl), buffer + in_fifo_hndl->Size - rd_ix, size - in_fifo_hndl->Size + rd_ix);
+				ShMemRead(cpuId, DATA_ADD(in_fifo_hndl) + rd_ix, buffer, in_fifo_hndl->Size - rd_ix);
+				ShMemRead(cpuId, DATA_ADD(in_fifo_hndl), buffer + in_fifo_hndl->Size - rd_ix, size - in_fifo_hndl->Size + rd_ix);
 			} else {
-				ShMemRead(DATA_ADD(in_fifo_hndl) + rd_ix, buffer, size);
+				ShMemRead(cpuId, DATA_ADD(in_fifo_hndl) + rd_ix, buffer, size);
 			}
 
 			// Update the read index.
 			rd_ix = (rd_ix + size) % in_fifo_hndl->Size;
 			do{
-				ShMemWrite(RD_IX_ADD(in_fifo_hndl), &rd_ix, sizeof(UINT32));
-				ShMemRead(RD_IX_ADD(in_fifo_hndl), &temp, sizeof(UINT32));
+				ShMemWrite(cpuId, RD_IX_ADD(in_fifo_hndl), &rd_ix, sizeof(UINT32));
+				ShMemRead(cpuId, RD_IX_ADD(in_fifo_hndl), &temp, sizeof(UINT32));
 			}while(rd_ix != temp);
 
 			return;
@@ -149,11 +149,11 @@ void read_input_swfifo(RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffe
  *
  *********************************************************************************************************
  */
-bool check_output_swfifo(RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 size) {
+bool check_output_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 size) {
 	UINT32 wr_ix, rd_ix;
 
-	ShMemRead(RD_IX_ADD(out_fifo_hndl), &rd_ix, sizeof(UINT32));
-	ShMemRead(WR_IX_ADD(out_fifo_hndl), &wr_ix, sizeof(UINT32));
+	ShMemRead(cpuId, RD_IX_ADD(out_fifo_hndl), &rd_ix, sizeof(UINT32));
+	ShMemRead(cpuId, WR_IX_ADD(out_fifo_hndl), &wr_ix, sizeof(UINT32));
 
 	if (rd_ix <= wr_ix)	// If TRUE, rd_ix reached the end of the memory and restarted from the beginning.
 						// Or the FIFO is empty.
@@ -179,13 +179,13 @@ bool check_output_swfifo(RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 size) {
  *
  *********************************************************************************************************
  */
-void write_output_swfifo(RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 size, UINT8* buffer) {
+void write_output_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 size, UINT8* buffer) {
 	UINT32 wr_ix, rd_ix, temp;
 
 	while(1){
 		// Get indices from the handle.
-		ShMemRead(RD_IX_ADD(out_fifo_hndl), &rd_ix, sizeof(UINT32));
-		ShMemRead(WR_IX_ADD(out_fifo_hndl), &wr_ix, sizeof(UINT32));
+		ShMemRead(cpuId, RD_IX_ADD(out_fifo_hndl), &rd_ix, sizeof(UINT32));
+		ShMemRead(cpuId, WR_IX_ADD(out_fifo_hndl), &wr_ix, sizeof(UINT32));
 
 		if (rd_ix <= wr_ix)	// If TRUE, rd_ix reached the end of the memory and restarted from the beginning.
 							// Or the FIFO is empty.
@@ -195,18 +195,18 @@ void write_output_swfifo(RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 size, UINT8* bu
 								   // cause wr_ix == rd_ix means that the FIFO is empty.
 
 			if (wr_ix + size > out_fifo_hndl->Size) {
-				ShMemWrite(DATA_ADD(out_fifo_hndl) + wr_ix, buffer, out_fifo_hndl->Size - wr_ix);
-				ShMemWrite(DATA_ADD(out_fifo_hndl), buffer + out_fifo_hndl->Size - wr_ix, size - out_fifo_hndl->Size + wr_ix);
+				ShMemWrite(cpuId, DATA_ADD(out_fifo_hndl) + wr_ix, buffer, out_fifo_hndl->Size - wr_ix);
+				ShMemWrite(cpuId, DATA_ADD(out_fifo_hndl), buffer + out_fifo_hndl->Size - wr_ix, size - out_fifo_hndl->Size + wr_ix);
 			} else {
-				ShMemWrite(DATA_ADD(out_fifo_hndl) + wr_ix, buffer, size);
+				ShMemWrite(cpuId, DATA_ADD(out_fifo_hndl) + wr_ix, buffer, size);
 			}
 
 			// Update write index.
 			wr_ix = (wr_ix + size) % out_fifo_hndl->Size;
 
 			do{
-				ShMemWrite(WR_IX_ADD(out_fifo_hndl), &wr_ix, sizeof(UINT32));
-				ShMemRead(WR_IX_ADD(out_fifo_hndl), &temp, sizeof(UINT32));
+				ShMemWrite(cpuId, WR_IX_ADD(out_fifo_hndl), &wr_ix, sizeof(UINT32));
+				ShMemRead(cpuId, WR_IX_ADD(out_fifo_hndl), &temp, sizeof(UINT32));
 			}while(wr_ix != temp);
 
 

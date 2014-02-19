@@ -45,9 +45,9 @@ typedef struct rt_sw_fifo_hndle{
 
 
 void create_swfifo(RT_SW_FIFO_HNDLE* fifo_hndl, UINT32 size, UINT32 address);
-void flush_swfifo(RT_SW_FIFO_HNDLE* fifo_hndl);
-bool check_input_swfifo(RT_SW_FIFO_HNDLE *in_fifo_hndl, UINT32 size);
-bool check_output_swfifo(RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 size);
-void write_output_swfifo(RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 size, UINT8* buffer);
-void read_input_swfifo(RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffer);
+void flush_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE* fifo_hndl);
+bool check_input_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE *in_fifo_hndl, UINT32 size);
+bool check_output_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 size);
+void write_output_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 size, UINT8* buffer);
+void read_input_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffer);
 #endif /* SW_FIFOMNGR_H_ */

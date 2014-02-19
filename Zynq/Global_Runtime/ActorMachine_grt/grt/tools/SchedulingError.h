@@ -120,6 +120,7 @@ static void exitWithCode(int exitCode){
 	// 1063: Multiple SrDAG vertices reference a single PiSDF configure vertex.
 	// 1064: Matching not found for unplugged vertex when merging SrDAG.
 	// 1065: Vertex was deleted.
+	// 1066: Invalid production/consumption value.
 
 	printf("\nExiting with code %d\n", exitCode);
 	exit(exitCode);

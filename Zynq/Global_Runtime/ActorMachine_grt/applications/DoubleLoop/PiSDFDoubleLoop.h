@@ -41,7 +41,7 @@
 static PiSDFGraph graphs[MAX_NB_PiSDF_SUB_GRAPHS];
 static UINT8 nb_graphs = 0;
 
-void MLoop(PiSDFGraph* graph, BaseVertex* parentVertex){
+void MLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scenario){
 	// Parameters.
 	PiSDFParameter *paramM = graph->addParameter("M");
 
@@ -94,10 +94,29 @@ void MLoop(PiSDFGraph* graph, BaseVertex* parentVertex){
 	graph->addEdge(vxF, "1", vxEndMLoop, "M", "0");
 
 	graph->addEdge(vxEndMLoop, "3", vxLine_out, "3", "0");
+
+
+	// Timings
+	scenario->setTiming(vxM_in->getId(), 1, "100");
+	scenario->setTiming(vxLine_in->getId(), 1, "100");
+	scenario->setTiming(vxConfigM->getId(), 1, "100");
+	scenario->setTiming(vxInitMLoop->getId(), 1, "100");
+	scenario->setTiming(vxF->getId(), 1, "100");
+	scenario->setTiming(vxEndMLoop->getId(), 1, "100");
+	scenario->setTiming(vxLine_out->getId(), 1, "100");
+
+//	// Constraints
+//	scenario->setConstraints(vxM_in->getId(), 0);
+//	scenario->setConstraints(vxLine_in->getId(), 0);
+//	scenario->setConstraints(vxConfigM->getId(), 0);
+//	scenario->setConstraints(vxInitMLoop->getId(), 0);
+//	scenario->setConstraints(vxF->getId(), 0);
+//	scenario->setConstraints(vxEndMLoop->getId(), 0);
+//	scenario->setConstraints(vxLine_out->getId(), 0);
 }
 
 
-void PiSDFDoubleLoop(PiSDFGraph* graph, BaseVertex* parentVertex){
+void PiSDFDoubleLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scenario){
 	// Parameters.
 	PiSDFParameter *paramN = graph->addParameter("N");
 
@@ -148,20 +167,39 @@ void PiSDFDoubleLoop(PiSDFGraph* graph, BaseVertex* parentVertex){
 
 	graph->addEdge(vxEndNLoop, "9", vxWriteFile, "9", "0");
 
+	// Timings
+	scenario->setTiming(vxReadFile->getId(), 1, "100");
+	scenario->setTiming(roundB_0->getId(), 1, "100");
+	scenario->setTiming(roundB_1->getId(), 1, "100");
+	scenario->setTiming(vxBroad->getId(), 1, "100");
+	scenario->setTiming(vxInitNLoop->getId(), 1, "100");
+	scenario->setTiming(vxEndNLoop->getId(), 1, "100");
+	scenario->setTiming(vxWriteFile->getId(), 1, "100");
+
+//	// Constraints
+//	scenario->setConstraints(vxReadFile->getId(), 0);
+//	scenario->setConstraints(roundB_0->getId(), 0);
+//	scenario->setConstraints(roundB_1->getId(), 0);
+//	scenario->setConstraints(vxBroad->getId(), 0);
+//	scenario->setConstraints(vxInitNLoop->getId(), 0);
+//	scenario->setConstraints(vxEndNLoop->getId(), 0);
+//	scenario->setConstraints(vxWriteFile->getId(), 0);
+
+
 	// Subgraphs
 	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS - 1) exitWithCode(1054);
 	PiSDFGraph *MLoop_subGraph = &graphs[nb_graphs]; nb_graphs++;
-	MLoop(MLoop_subGraph, vxMLoop);
+	MLoop(MLoop_subGraph, vxMLoop, scenario);
 	vxMLoop->setSubGraph(MLoop_subGraph);
 }
 
 
-void top(PiSDFGraph* graph){
+void top(PiSDFGraph* graph, Scenario* scenario){
 	PiSDFVertex *vxDoubleLoop = (PiSDFVertex *)graph->addVertex("DoubleLoop", pisdf_vertex);
 
 	// Subgraphs
 	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS - 1) exitWithCode(1054);
 	PiSDFGraph *DoubleLoop_subGraph = &graphs[nb_graphs]; nb_graphs++;
-	PiSDFDoubleLoop(DoubleLoop_subGraph, vxDoubleLoop);
+	PiSDFDoubleLoop(DoubleLoop_subGraph, vxDoubleLoop, scenario);
 	vxDoubleLoop->setSubGraph(DoubleLoop_subGraph);
 }

@@ -540,8 +540,9 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		// Scheduling the DAG.
 		listScheduler->schedule(dag, schedule, arch);
 
-		ScheduleWriter schedWriter;
-		schedWriter.write(schedule, dag, arch, "test.xml");
+//		ScheduleWriter schedWriter;
+//		sprintf(name, "%s_%d.xml", SCHED_FILE_NAME, *stepsCntr);
+//		schedWriter.write(schedule, dag, arch, name);
 
 		launch->clear();
 
@@ -550,7 +551,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		launch->prepareFIFOsInfo(dag, arch);
 
 		// Preparing tasks' informations
-		launch->prepareTasksInfo(dag, arch, schedule, false, execStat);
+		launch->prepareTasksInfo(dag, arch->getNbSlaves(), schedule, false, execStat);
 
 #if PRINT_GRAPH
 		// Printing the dag with FIFOs' Ids.
@@ -560,7 +561,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 
 #if EXEC == 1
 		// Executing the executable vxs.
-		launch->launch(arch->getNbActiveSlaves());
+		launch->launch(arch->getNbSlaves());
 #endif
 
 		// Updating states. Sets all executable vxs to executed since their execution was already launched.

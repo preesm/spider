@@ -48,7 +48,7 @@ class Scenario {
 	char timings[MAX_NB_VERTICES][MAX_SLAVE_TYPES][MAX_VERTEX_NAME_SIZE];
 public:
 	Scenario(){
-		memset(constraints, 0, sizeof(constraints));
+		memset(constraints, false, sizeof(constraints));
 		memset(timings, 0, sizeof(timings));
 	}
 
@@ -57,9 +57,9 @@ public:
         return constraints[vertex_id][slave_id];
     }
 
-    void setConstraints(UINT32 vertex_id, UINT32 slave_id, bool value)
+    void setConstraints(UINT32 vertex_id, UINT32 slave_id)
     {
-        constraints[vertex_id][slave_id] = value;
+        constraints[vertex_id][slave_id] = true;
     }
 
     UINT64 getTiming(UINT32 vertex_id, UINT32 slave_type) const

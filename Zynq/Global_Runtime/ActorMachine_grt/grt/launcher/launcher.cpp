@@ -290,14 +290,14 @@ void launcher::prepareFIFOsInfo(SRDAGGraph* graph, Architecture* arch){
 
 }
 
-void launcher::prepareTasksInfo(SRDAGGraph* graph, Architecture *archi, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat){
+void launcher::prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat){
 //	CreateFifoMsg msg_createFifo;
 //	ClearFifoMsg msg_clearFifo;
 	CreateTaskMsg msg_createTask;
 	static UINT16 stepsCntr = 0;
 
 	/* Creating Tasks */
-	for(int i=0; i<archi->getNbActiveSlaves(); i++){
+	for(int i=0; i < nbSlaves; i++){
 		if(isAM){
 			// Creating an actor machine.
 			msg_createTask = CreateTaskMsg(graph, schedule, i, this);

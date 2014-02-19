@@ -68,7 +68,7 @@ void RTQueuesInit(UINT8 nbSlaves){
 
 
 UINT32 RTQueuePush(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	write_output_swfifo(&RTQueue[slaveId][queueType][RTOutputQueue], size, (UINT8*)data);
+	write_output_swfifo(slaveId, &RTQueue[slaveId][queueType][RTOutputQueue], size, (UINT8*)data);
 	return size;
 }
 
@@ -79,7 +79,7 @@ UINT32 RTQueuePush_UINT32(UINT8 slaveId, RTQueueType queueType, UINT32 data){
 
 
 UINT32 RTQueuePop(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	read_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
+	read_input_swfifo(slaveId, &RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
 	return size;
 }
 
@@ -92,8 +92,8 @@ UINT32 RTQueuePop_UINT32(UINT8 slaveId, RTQueueType queueType){
 
 
 UINT32 RTQueueNonBlockingPop(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	if(check_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size)){
-		read_input_swfifo(&RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
+	if(check_input_swfifo(slaveId, &RTQueue[slaveId][queueType][RTInputQueue], size)){
+		read_input_swfifo(slaveId, &RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
 		return size;
 	}
 	else

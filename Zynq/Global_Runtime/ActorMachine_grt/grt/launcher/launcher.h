@@ -128,7 +128,7 @@ public:
 
 	void prepareFIFOsInfo(SRDAGGraph* graph, Architecture* arch);
 
-	void prepareTasksInfo(SRDAGGraph* graph, Architecture *archi, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat);
+	void prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat);
 
 	/*
 	 * Prepares the execution of configuration vertices. Note that the outputs will be written directly

@@ -68,7 +68,6 @@ public:
 		// TODO Auto-generated destructor stub
 	}
 
-
 	/**
 	 * Adds "nb_repetitions" SRDAGVertex vertices for "vertex" to the output SRDAG graph.
 	 */
@@ -76,27 +75,7 @@ public:
 
 	void computeBVR(SDFGraph *sdf);
 
-	bool checkPredec(SRDAGVertex* Vx);
-
-	/*
-	 * Connects vertices to form a SrDAG.
-	 */
-	void linkvertices(BaseVertex** vertices, UINT32 nbVertices, SRDAGGraph* outputGraph);
-
 	void linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDAGVertex* hSrDagVx);
-
-	/**
-	 Transforms a PiSDF graph in Sr
-
-	 @param input: input PiSDF graph with pattern expressions on production, consumption and delays.
-	 @param output: output SrSDD graph with variable expressions on production and consumption???
-	*/
-//	void transform(PiCSDFGraph* input_graph, SRDAGGraph* output_graph, Architecture* archi);
-
-	/**
-	 Transforms a set of PiSDF vertices into a Sr graph.
-	*/
-	void transform(BaseVertex **vertices, UINT32 nbVertices, SRDAGGraph *srGraph);
 
 	void transform(SDFGraph* sdf, SRDAGGraph *srGraph, SRDAGVertex* currHSrVx);
 

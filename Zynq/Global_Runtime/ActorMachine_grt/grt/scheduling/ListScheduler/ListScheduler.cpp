@@ -337,12 +337,12 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 	UINT32 bestEndTime = -1; // Very high value.
 
 	// Getting a slave for the vertex.
-	for(int slave=0; slave<arch->getNbActiveSlaves(); slave++){
+	for(int slave=0; slave<arch->getNbSlaves(); slave++){
 		int slaveType = arch->getSlaveType(slave);
 		// checking the constraints
-		if(! scenario->getConstraints(vertex->getId(), slave)){
+		if(! scenario->getConstraints(vertex->getReference()->getId(), slave)){
 			unsigned int startTime = std::max(schedule->getReadyTime(slave), minimumStartTime);
-			unsigned int execTime = scenario->getTiming(vertex->getId(), slaveType);
+			unsigned int execTime = scenario->getTiming(vertex->getReference()->getId(), slaveType);
 			unsigned int comInTime=0, comOutTime=0;
 //				for(int input=0; input<vertex->getNbInputEdge(); input++){
 //					comInTime += arch->getTimeCom(slave, Read, vertex->getInputEdge(input)->getTokenRate());

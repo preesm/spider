@@ -249,7 +249,7 @@ void ScheduleWriter::write(BaseSchedule* schedule, SRDAGGraph* dag, Architecture
 //				int vertexID = dag->getVertexIndex(vertex);
 
 	//			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
-				sprintf(name,"%s_%d", vertex->getReference()->getName(), vertex->getId());
+				sprintf(name,"%s_%d", vertex->getName(), vertex->getId());
 				fprintf (pFile, "\t<event\n");
 				fprintf (pFile, "\t\tstart=\"%d\"\n", schedule->getVertexStartTime(vertex->getScheduleIndex(), vertex));
 				fprintf (pFile, "\t\tend=\"%d\"\n",	schedule->getVertexEndTime(vertex->getScheduleIndex(), vertex));

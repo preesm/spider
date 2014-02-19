@@ -42,12 +42,21 @@
 #include "../launcher.h"
 
 class StartMsg: public LRTMsg {
+	bool clearAfterCompletion;
 public:
 	StartMsg();
 
 	void send(int LRTID);
 	int prepare(int* data, int offset);
 	void prepare(int slave, launcher* l);
+
+	bool isClearAfterCompletion() const {
+		return clearAfterCompletion;
+	}
+
+	void setClearAfterCompletion(bool clearAfterCompletion) {
+		this->clearAfterCompletion = clearAfterCompletion;
+	}
 };
 
 #endif /* STARTMSG_H_ */

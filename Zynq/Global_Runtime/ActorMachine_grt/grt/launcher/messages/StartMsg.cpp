@@ -39,10 +39,12 @@
 #include <hwQueues.h>
 
 StartMsg::StartMsg() {
+	clearAfterCompletion = false;
 }
 
 void StartMsg::send(int LRTID){
 	RTQueuePush_UINT32(LRTID, RTCtrlQueue, MSG_START_SCHED);
+	RTQueuePush_UINT32(LRTID, RTCtrlQueue, clearAfterCompletion);
 }
 
 int StartMsg::prepare(int* data, int offset){

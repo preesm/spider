@@ -149,8 +149,8 @@ void launcher::launchWaitAck(int nbSlaves){
 
 }
 
-void launcher::launch(int nbSlaves){
-	UINT32 data[MAX_CTRL_DATA];
+void launcher::launch(int nbSlaves, bool clearAfterCompletion){
+	StartMsg msg;
 	launchedSlaveNb = nbSlaves;
 
 	// Sending FIFO flushing and task creation messages.
@@ -160,7 +160,8 @@ void launcher::launch(int nbSlaves){
 
 	// Starting executions.
 	for(int i=0; i<nbSlaves; i++){
-		StartMsg().send(i);
+		msg.setClearAfterCompletion(clearAfterCompletion);
+		msg.send(i);
 	}
 }
 
@@ -579,5 +580,12 @@ void launcher::flushDataToSend(){
 void launcher::flushDataToReceive(){
 	for(int i=0; i<MAX_SLAVES; i++){
 		dataToReceiveCnt[i]=0;
+	}
+}
+
+
+void launcher::sendClearTasks(int nbSlaves){
+	for(int i=0; i<nbSlaves; i++){
+		RTQueuePush_UINT32(i, RTCtrlQueue, MSG_CLEAR_TASKS);
 	}
 }

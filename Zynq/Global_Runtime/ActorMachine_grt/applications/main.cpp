@@ -186,8 +186,11 @@ int main(int argc, char* argv[]){
 	#endif
 
 	#if LAST_EXEC == 1
-		// Launching the execution on LRTs.
-		launch.launch(nbSlaves);
+		/*
+		 * Launching the execution on LRTs. The "true" means that is the last execution
+		 * of the current iteration, so the local RTs clear the tasks table.
+		 */
+		launch.launch(nbSlaves, true);
 	#endif
 
 		// Updating states. Sets all executable vxs to executed since their execution was already launched.
@@ -198,5 +201,6 @@ int main(int argc, char* argv[]){
 		sprintf(name, "%s_%d.gv", SRDAG_FILE_PATH, stepsCntr);
 		dotWriter.write(&dag, name, 1, 1);
 	#endif
+
 //	}
 }

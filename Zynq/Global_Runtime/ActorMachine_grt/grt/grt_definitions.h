@@ -143,6 +143,7 @@
 #define MSG_STOP_TASK			4
 #define MSG_CLEAR_FIFO			5
 #define MSG_CURR_VERTEX_ID		6
+#define MSG_CLEAR_TASKS			7
 
 
 /**************** FIFO's******************************/

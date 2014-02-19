@@ -153,7 +153,7 @@ public:
 
 	void launchWaitAck(int nbSlaves);
 
-	void launch(int nbSlaves);
+	void launch(int nbSlaves, bool clearAfterCompletion = false);
 //	void launchJobs(UINT16 nbSlaves);
 	void stop();
 	void stopWOCheck();
@@ -173,6 +173,8 @@ public:
 
 	void flushDataToSend();
 	void flushDataToReceive();
+
+	void sendClearTasks(int nbSlaves);
 };
 
 inline int launcher::getNbLaunchedSlave(){

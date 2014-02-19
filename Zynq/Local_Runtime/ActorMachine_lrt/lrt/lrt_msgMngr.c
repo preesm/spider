@@ -154,6 +154,7 @@ void wait_ext_msg() {
 			PrintTasksIntoDot();
 #endif
 			lrt_running = TRUE;
+			clearAfterCompletion = RTQueuePop_UINT32(RTCtrlQueue);
 //			zynq_puts("Start Schedule\n");
 //			OS_CtrlQPush(&msg_type, sizeof(UINT32));
 			break;

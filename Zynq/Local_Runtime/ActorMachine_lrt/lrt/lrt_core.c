@@ -57,6 +57,8 @@ OS_TCB 		*OSTCBCur;               	/* Pointer to currently scheduled TCB. 		*/
 OS_TCB 		OSTCBTbl[OS_MAX_TASKS];		/* Table of TCBs							*/
 LRTActor	LRTActorTbl[OS_MAX_TASKS];
 BOOLEAN 	lrt_running; 				/* Flag indicating that kernel is running   */
+UINT32		clearAfterCompletion;		/* Indicates that the tasks table must be cleared after the execution
+											of the current set of tasks   */
 
 void mainLoop(){
 //	switchMonitor(CtrlFifoHandling);
@@ -76,6 +78,10 @@ void mainLoop(){
 		LRTStartCurrTask();
 
 	}
+	if((OSTaskCntr == 0) && (clearAfterCompletion)){
+		clearTCBTbl();
+		clearAfterCompletion = FALSE;
+	}
 }
 
 /* Initialize the Runtime */
@@ -90,6 +96,7 @@ void LRTInit() {
 	OSWorkingMemoryInit();
 
 	lrt_running = FALSE;
+	clearAfterCompletion = FALSE;
 }
 
 

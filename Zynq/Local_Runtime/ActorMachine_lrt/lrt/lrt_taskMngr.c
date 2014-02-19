@@ -69,19 +69,16 @@ static UINT8* freeWorkingMemoryPtr;
 
 void clearTCBTbl(){
 	UINT32 i;
-	i = 0;
-
-	if(OSTaskCntr == 0) return;
-
-	while(i<OSTaskCntr){
-		OSTCBCur = &OSTCBTbl[i++];
-		OSTCBCur->OSTCBState = OS_STAT_UNINITIALIZED;
-		printf("Task %d started at %d:%d:%d and lasted %d clock ticks",
-				OSTCBCur->OSTCBId,
-				OSTCBCur->startTime->tm_hour,
-				OSTCBCur->startTime->tm_min,
-				OSTCBCur->startTime->tm_sec,
-				OSTCBCur->nbCpuCycles);
+	for(i=0;i<OS_MAX_TASKS;i++){
+		if(OSTCBTbl[i].OSTCBState == OS_STAT_DELETED){
+			OSTCBTbl[i].OSTCBState = OS_STAT_UNINITIALIZED;
+			printf("Task %d started at %d:%d:%d and lasted %d clock ticks\n",
+					OSTCBTbl[i].OSTCBId,
+					OSTCBTbl[i].startTime->tm_hour,
+					OSTCBTbl[i].startTime->tm_min,
+					OSTCBTbl[i].startTime->tm_sec,
+					OSTCBTbl[i].nbCpuCycles);
+		}
 	}
 	OSTaskCntr = 0;
 	OSTaskIndex = 0;
@@ -206,7 +203,7 @@ void  LrtTaskDeleteCur(){
 //    OS_TCB    *del_tcb = &OSTCBTbl[id];
 
 //    if (del_tcb->OSTCBState == OS_STAT_READY) { /* Make sure task doesn't already exist at this id  */
-	OSTCBCur->OSTCBState = OS_STAT_UNINITIALIZED;
+	OSTCBCur->OSTCBState = OS_STAT_DELETED;
 
     	/* Update current running Task List */
 //		if(del_tcb->OSTCBNext == del_tcb){

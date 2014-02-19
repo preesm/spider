@@ -115,7 +115,8 @@ typedef long long unsigned	UINT64;
 typedef enum os_stat{
 	OS_STAT_UNINITIALIZED,
 	OS_STAT_READY,
-	OS_STAT_RUNNING
+	OS_STAT_RUNNING,
+	OS_STAT_DELETED
 } OS_STAT;
 
 
@@ -301,7 +302,7 @@ typedef struct os_tcb {
 // OS's global variables.
 extern OS_TCB			*OSTCBCur;                        			/* Pointer to currently running TCB */
 extern OS_TCB          	OSTCBTbl[OS_MAX_TASKS];						// Table of TCBs
-
+extern UINT8 			OSTaskCntr;									// Tasks counter
 extern LRTActor			LRTActorTbl[OS_MAX_TASKS];
 // Table of functions.
 
@@ -309,7 +310,8 @@ extern FUNCTION_TYPE 		functions_tbl[];						// Table of local functions.
 
 // Miscellaneous.
 extern BOOLEAN          lrt_running;                       			/* Flag indicating that kernel is running   		*/
-
+extern UINT32			clearAfterCompletion;						/* Indicates that the table of tasks must be cleared
+																	after the execution	of the current set of tasks   */
 // AM's functions.
 extern void (*am_funct[5]) (void);
 

@@ -114,22 +114,25 @@ void LRTStart(){
 
 /* Starts the task pointed by the OSTCBCur. */
 void LRTStartCurrTask() {
-	// Executes the vertex's code.
+	time_t rawtime;
+	clock_t nbCpuCyclesStart;
 
+	// Executes the vertex's code.
 	MonitorAction Act = switchMonitor(AMManagement);
 	if(OSTCBCur->isAM){
 		OSTCBCur->task_func(0, 0, 0, 0, 0); // Fifos are not required whe calling the AM default function.
 	}
 	else{
-		verifyActorCond(OSTCBCur->actor);
+		time(&rawtime);
+		OSTCBCur->startTime = localtime(&rawtime);
+		nbCpuCyclesStart = clock();
 		OSTCBCur->task_func(OSTCBCur->actor->inputFifoId,
 							OSTCBCur->actor->inputFifoDataOff,
 							OSTCBCur->actor->outputFifoId,
 							OSTCBCur->actor->outputFifoDataOff,
 							OSTCBCur->actor->params);
+		OSTCBCur->nbCpuCycles = clock() - nbCpuCyclesStart;
 	}
-
-
 
 	if(OSTCBCur->stop)
 		LrtTaskDeleteCur();

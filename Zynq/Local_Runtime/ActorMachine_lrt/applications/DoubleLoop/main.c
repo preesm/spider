@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 
 #else
 
-	printf("Starting local runtime ..\n");
+	printf("Starting local runtime %d...\n", cpuId);
 	LRTCtrlStart();
 #endif
 	return 0;

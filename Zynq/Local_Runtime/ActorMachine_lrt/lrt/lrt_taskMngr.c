@@ -66,6 +66,27 @@ static UINT8* freeWorkingMemoryPtr;
 //extern void amTaskStart();
 
 
+
+void clearTCBTbl(){
+	UINT32 i;
+	i = 0;
+
+	if(OSTaskCntr == 0) return;
+
+	while(i<OSTaskCntr){
+		OSTCBCur = &OSTCBTbl[i++];
+		OSTCBCur->OSTCBState = OS_STAT_UNINITIALIZED;
+		printf("Task %d started at %d:%d:%d and lasted %d clock ticks",
+				OSTCBCur->OSTCBId,
+				OSTCBCur->startTime->tm_hour,
+				OSTCBCur->startTime->tm_min,
+				OSTCBCur->startTime->tm_sec,
+				OSTCBCur->nbCpuCycles);
+	}
+	OSTaskCntr = 0;
+	OSTaskIndex = 0;
+}
+
 /*
 *********************************************************************************************************
 *                                     CREATE A LRT's TASK

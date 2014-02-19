@@ -38,8 +38,8 @@
 #ifndef RT_DEFINITIONS_H_
 #define RT_DEFINITIONS_H_
 
+#include <time.h>
 #include "lrt_cfg.h"
-
 
 
 #define TRUE 			1
@@ -283,9 +283,11 @@ typedef struct os_tcb {
     UINT32			functionId;
     FUNCTION_TYPE	task_func;
     BOOLEAN			isAM;
-	BOOLEAN 		stop;		// Whether the task must stop running.
+	BOOLEAN 		stop;		// Whether the task must be deleted after completion.
 	LRTActor*		actor;
 	ActorMachine	am;			// TODO: ..define it as a pointer to save memory footprint.
+	struct tm*		startTime;
+	clock_t			nbCpuCycles;
 } OS_TCB;
 
 

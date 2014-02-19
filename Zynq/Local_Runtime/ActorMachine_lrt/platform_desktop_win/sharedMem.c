@@ -80,6 +80,7 @@ static void addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* 
 
 void OS_ShMemInit() {
 	char mutexName[50];
+	char mboxFileName[50];
 	// Creating windows mutex to synchronize access to the memory file.
 	// The mutex is released after the queues' initializations.
 	sprintf(mutexName, "%s%d", MUTEX_BASE_NAME, cpuId);
@@ -98,7 +99,8 @@ void OS_ShMemInit() {
 	addOSShMem(SH_MEM_BASE_ADDR, SH_MEM_BASE_ADDR + SH_MEM_DATA_REGION_SIZE, SH_MEM_SIZE, SH_MEM_FILE_PATH);
 
 	// Adding a memory for the mailboxes.
-	addOSShMem(MBOX_MEM_BASE_ADDR, MBOX_MEM_BASE_ADDR, MBOX_MEM_SIZE, MBOX_MEM_FILE_PATH);
+	sprintf(mboxFileName, "%s_%d", MBOX_MEM_FILE_PATH, cpuId);
+	addOSShMem(MBOX_MEM_BASE_ADDR, MBOX_MEM_BASE_ADDR, MBOX_MEM_SIZE, mboxFileName);
 }
 
 

@@ -540,9 +540,10 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		// Scheduling the DAG.
 		listScheduler->schedule(dag, schedule, arch);
 
-//		ScheduleWriter schedWriter;
+		ScheduleWriter schedWriter;
 //		sprintf(name, "%s_%d.xml", SCHED_FILE_NAME, *stepsCntr);
-//		schedWriter.write(schedule, dag, arch, name);
+		sprintf(name, "%s.xml", SCHED_FILE_NAME);
+		schedWriter.write(schedule, dag, arch, name);
 
 		launch->clear();
 

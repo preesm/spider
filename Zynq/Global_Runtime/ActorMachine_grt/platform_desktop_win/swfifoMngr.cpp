@@ -81,6 +81,8 @@ void flush_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE* fifo_hndl) {
 bool check_input_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 size) {
 	UINT32 wr_ix, rd_ix;
 
+	if(size<=0) return false;
+
 	ShMemRead(cpuId, RD_IX_ADD(in_fifo_hndl), &rd_ix, sizeof(UINT32));
 	ShMemRead(cpuId, WR_IX_ADD(in_fifo_hndl), &wr_ix, sizeof(UINT32));
 
@@ -106,6 +108,8 @@ bool check_input_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 siz
  */
 void read_input_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffer) {
 	UINT32 wr_ix, rd_ix, temp;
+
+	if(size <= 0) return;
 
 	while(1){
 		// Get indices from the handle.
@@ -152,6 +156,8 @@ void read_input_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE	*in_fifo_hndl, UINT32 size
 bool check_output_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 size) {
 	UINT32 wr_ix, rd_ix;
 
+	if(size<=0) return false;
+
 	ShMemRead(cpuId, RD_IX_ADD(out_fifo_hndl), &rd_ix, sizeof(UINT32));
 	ShMemRead(cpuId, WR_IX_ADD(out_fifo_hndl), &wr_ix, sizeof(UINT32));
 
@@ -182,6 +188,7 @@ bool check_output_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 s
 void write_output_swfifo(UINT32 cpuId, RT_SW_FIFO_HNDLE *out_fifo_hndl, UINT32 size, UINT8* buffer) {
 	UINT32 wr_ix, rd_ix, temp;
 
+	if(size<=0) return;
 	while(1){
 		// Get indices from the handle.
 		ShMemRead(cpuId, RD_IX_ADD(out_fifo_hndl), &rd_ix, sizeof(UINT32));

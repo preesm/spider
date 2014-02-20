@@ -129,12 +129,14 @@ void LRTActor::prepare(int slave, launcher* launch){
 
 void LRTActor::toDot(FILE* pFile, char* vertexName, UINT32 vertexId){
 	fprintf (pFile, "\t%d [label=\"%s\\nFunction F%d\\n", vertexId, vertexName, this->ActionID);
-	for (UINT32 i = 0; i < this->nbInputFifos; i++)
-		fprintf (pFile, "Fin  %d\\n", this->inFIFOs[i]->id);
-
-	for (UINT32 i = 0; i < this->nbOutputFifos; i++)
-		fprintf (pFile, "Fout %d\\n", this->outFIFOs[i]->id);
-
+	for (UINT32 i = 0; i < this->nbInputFifos; i++){
+		fprintf (pFile, "Fin  %d ", this->inFIFOs[i]->id);
+		fprintf (pFile, "addr %d\\n", this->inFIFOs[i]->addr);
+	}
+	for (UINT32 i = 0; i < this->nbOutputFifos; i++){
+		fprintf (pFile, "Fout %d ", this->outFIFOs[i]->id);
+		fprintf (pFile, "addr %d\\n", this->outFIFOs[i]->addr);
+	}
 	for(UINT32 i = 0; i < this->nbParams; i++)
 		fprintf (pFile, "Param %d\\n", this->params[i]);
 

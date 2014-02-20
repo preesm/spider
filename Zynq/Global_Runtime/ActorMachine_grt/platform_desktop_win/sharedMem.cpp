@@ -40,7 +40,7 @@
 #include <stdlib.h>
 #include "sharedMem.h"
 
-#define MUTEX_BASE_NAME	"Mutex_"
+#define MBOX_MEM_MUTEX_NAME	"MBOX_MEM_Mutex_"
 
 typedef struct OS_SHMEM {
 	UINT32 	base;
@@ -51,23 +51,23 @@ typedef struct OS_SHMEM {
 	HANDLE 	ghMutex;
 } OS_SHMEM;
 
-static OS_SHMEM OSShMemTbl[MAX_SLAVES];
+static OS_SHMEM mboxMem[MAX_SLAVES];
 static int nbOSShMem = 0;
 
 void addShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename) {
 	FILE *pFile;
 	if (nbOSShMem <= MAX_SLAVES) {
-		sprintf(OSShMemTbl[nbOSShMem].file_name, filename);
+		sprintf(mboxMem[nbOSShMem].file_name, filename);
 
-//		pFile = fopen(OSShMemTbl[nbOSShMem].file_name, "wb+");
+//		pFile = fopen(mboxMem[nbOSShMem].file_name, "wb+");
 //		if (pFile == (FILE*)0) {
 //			perror("");
 //			exit(1);
 //		}
 //		fclose(pFile);
-		OSShMemTbl[nbOSShMem].base 	 	= base;
-//		OSShMemTbl[nbOSShMem].dataBase	= dataBase;
-		OSShMemTbl[nbOSShMem].length = length;
+		mboxMem[nbOSShMem].base 	 	= base;
+//		mboxMem[nbOSShMem].dataBase	= dataBase;
+		mboxMem[nbOSShMem].length = length;
 		nbOSShMem++;
 	} else {
 		fprintf(stderr,
@@ -87,13 +87,13 @@ void ShMemInit(UINT8 nbSlaves) {
 		addShMem(MBOX_MEM_BASE_ADDR, MBOX_MEM_BASE_ADDR, MBOX_MEM_SIZE, mboxFileName);
 
 		// Creating windows mutex to synchronize access to the memory file.
-		sprintf(mutexName, "%s%d", MUTEX_BASE_NAME, i);
-		OSShMemTbl[i].ghMutex = OpenMutex(
+		sprintf(mutexName, "%s%d", MBOX_MEM_MUTEX_NAME, i);
+		mboxMem[i].ghMutex = OpenMutex(
 			SYNCHRONIZE,
 	        FALSE,
 	        mutexName);
 
-	    if (OSShMemTbl[i].ghMutex == NULL)
+	    if (mboxMem[i].ghMutex == NULL)
 	    {
 	        printf("CreateMutex error: %d\n", GetLastError());
 	        exit(1);
@@ -111,31 +111,32 @@ UINT32 ShMemRead(UINT32 shMemIx, UINT32 address, void* data, UINT32 size) {
 	NumBytes = 0;
 
 //	for (i = 0; i < nbOSShMem && NumBytes == 0; i++) {
-		if (OSShMemTbl[shMemIx].base <= address
-				&& OSShMemTbl[shMemIx].base + OSShMemTbl[shMemIx].length > address
-				&& OSShMemTbl[shMemIx].base <= address + size
-				&& OSShMemTbl[shMemIx].base + OSShMemTbl[shMemIx].length > address + size) {
+	if(size > 0){
+		if (mboxMem[shMemIx].base <= address
+				&& mboxMem[shMemIx].base + mboxMem[shMemIx].length > address
+				&& mboxMem[shMemIx].base <= address + size
+				&& mboxMem[shMemIx].base + mboxMem[shMemIx].length > address + size) {
 
 			// Request ownership of mutex.
 			dwWaitResult = WaitForSingleObject(
-				OSShMemTbl[shMemIx].ghMutex,    // handle to mutex
+				mboxMem[shMemIx].ghMutex,    // handle to mutex
 	            INFINITE);  // no time-out interval
 
-			pFile = fopen(OSShMemTbl[shMemIx].file_name, "rb+");
-			fseek(pFile, address-OSShMemTbl[shMemIx].base, SEEK_SET);
+			pFile = fopen(mboxMem[shMemIx].file_name, "rb+");
+			fseek(pFile, address-mboxMem[shMemIx].base, SEEK_SET);
 			NumBytes = fread(data, size, 1, pFile);
 			fclose(pFile);
 			// Release ownership of the mutex object
-            if (! ReleaseMutex(OSShMemTbl[shMemIx].ghMutex))
+            if (! ReleaseMutex(mboxMem[shMemIx].ghMutex))
             {
                 // Handle error.
             }
-			return NumBytes;
 		}
 		else{
-			printf("Address : 0x%x is out of range 0x%x - 0x%x\n", address, OSShMemTbl[shMemIx].base, OSShMemTbl[shMemIx].length);
+			printf("Address : 0x%x is out of range 0x%x - 0x%x\n", address, mboxMem[shMemIx].base, mboxMem[shMemIx].length);
 	        exit(1);
 		}
+	}
 //	}
 	return NumBytes;
 }
@@ -150,31 +151,32 @@ UINT32 ShMemWrite(UINT32 shMemIx, UINT32 address, void* data, UINT32 size) {
 	NumBytes = 0;
 
 //	for (i = 0; i < nbOSShMem && NumBytes == 0; i++) {
-		if (OSShMemTbl[shMemIx].base <= address
-				&& OSShMemTbl[shMemIx].base + OSShMemTbl[shMemIx].length > address
-				&& OSShMemTbl[shMemIx].base <= address + size
-				&& OSShMemTbl[shMemIx].base + OSShMemTbl[shMemIx].length > address + size) {
+	if(size > 0){
+		if (mboxMem[shMemIx].base <= address
+				&& mboxMem[shMemIx].base + mboxMem[shMemIx].length > address
+				&& mboxMem[shMemIx].base <= address + size
+				&& mboxMem[shMemIx].base + mboxMem[shMemIx].length > address + size) {
 
 			// Request ownership of mutex.
 			dwWaitResult = WaitForSingleObject(
-				OSShMemTbl[shMemIx].ghMutex,    // handle to mutex
+				mboxMem[shMemIx].ghMutex,    // handle to mutex
 	            INFINITE);  // no time-out interval
 
-			pFile = fopen(OSShMemTbl[shMemIx].file_name, "rb+");
-			fseek(pFile, address-OSShMemTbl[shMemIx].base, SEEK_SET);
+			pFile = fopen(mboxMem[shMemIx].file_name, "rb+");
+			fseek(pFile, address-mboxMem[shMemIx].base, SEEK_SET);
 			NumBytes = fwrite(data, size, 1, pFile);
 			fclose(pFile);
 			// Release ownership of the mutex object
-            if (! ReleaseMutex(OSShMemTbl[shMemIx].ghMutex))
+            if (! ReleaseMutex(mboxMem[shMemIx].ghMutex))
             {
                 // Handle error.
             }
-			return NumBytes;
 		}
 		else{
-			printf("Address : 0x%x is out of range 0x%x - 0x%x\n", address, OSShMemTbl[shMemIx].base, OSShMemTbl[shMemIx].length);
+			printf("Address : 0x%x is out of range 0x%x - 0x%x\n", address, mboxMem[shMemIx].base, mboxMem[shMemIx].length);
 	        exit(1);
 		}
+	}
 //	}
 	return NumBytes;
 }

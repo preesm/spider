@@ -155,13 +155,12 @@ void launcher::launch(int nbSlaves, bool clearAfterCompletion){
 
 	// Sending FIFO flushing and task creation messages.
 	for(int i=0; i<nbSlaves; i++){
-		RTQueuePush(i, RTCtrlQueue, dataToSend[i], dataToSendCnt[i]*sizeof(UINT32));
-	}
-
-	// Starting executions.
-	for(int i=0; i<nbSlaves; i++){
-		msg.setClearAfterCompletion(clearAfterCompletion);
-		msg.send(i);
+		if(dataToSendCnt[i] > 0){
+			RTQueuePush(i, RTCtrlQueue, dataToSend[i], dataToSendCnt[i]*sizeof(UINT32));
+			// Starting executions.
+			msg.setClearAfterCompletion(clearAfterCompletion);
+			msg.send(i);
+		}
 	}
 }
 

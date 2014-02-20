@@ -57,18 +57,19 @@ void RTQueuesInit(UINT8 nbSlaves){
 	ShMemInit(nbSlaves);
 	for (int i = 0; i < nbSlaves; i++) {
 		// Creating output queues.
-		create_swfifo(&(RTQueue[i][RTCtrlQueue][RTOutputQueue]), QUEUE_SIZE, OUTPUT_CTRL_QUEUE_MEM_BASE + i * (2 * QUEUE_SIZE));
+		create_swfifo(&(RTQueue[i][RTCtrlQueue][RTOutputQueue]), QUEUE_SIZE, OUTPUT_CTRL_QUEUE_MEM_BASE);
 //		flush_swfifo(&(RTQueue[i][RTCtrlQueue][RTOutputQueue]));// Queues are flushed by the LRTs.
 
 		// Creating input queues.
-		create_swfifo(&(RTQueue[i][RTCtrlQueue][RTInputQueue]), QUEUE_SIZE, INPUT_CTRL_QUEUE_MEM_BASE + i * (2 * QUEUE_SIZE));
+		create_swfifo(&(RTQueue[i][RTCtrlQueue][RTInputQueue]), QUEUE_SIZE, INPUT_CTRL_QUEUE_MEM_BASE);
 //		flush_swfifo(&(RTQueue[i][RTCtrlQueue][RTInputQueue]));
 	}
 }
 
 
 UINT32 RTQueuePush(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	write_output_swfifo(slaveId, &RTQueue[slaveId][queueType][RTOutputQueue], size, (UINT8*)data);
+	if(size > 0)
+		write_output_swfifo(slaveId, &RTQueue[slaveId][queueType][RTOutputQueue], size, (UINT8*)data);
 	return size;
 }
 
@@ -79,7 +80,8 @@ UINT32 RTQueuePush_UINT32(UINT8 slaveId, RTQueueType queueType, UINT32 data){
 
 
 UINT32 RTQueuePop(UINT8 slaveId, RTQueueType queueType, void* data, int size){
-	read_input_swfifo(slaveId, &RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
+	if(size > 0)
+		read_input_swfifo(slaveId, &RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
 	return size;
 }
 
@@ -92,6 +94,8 @@ UINT32 RTQueuePop_UINT32(UINT8 slaveId, RTQueueType queueType){
 
 
 UINT32 RTQueueNonBlockingPop(UINT8 slaveId, RTQueueType queueType, void* data, int size){
+	if (size<=0) return 0;
+
 	if(check_input_swfifo(slaveId, &RTQueue[slaveId][queueType][RTInputQueue], size)){
 		read_input_swfifo(slaveId, &RTQueue[slaveId][queueType][RTInputQueue], size, (UINT8*)data);
 		return size;

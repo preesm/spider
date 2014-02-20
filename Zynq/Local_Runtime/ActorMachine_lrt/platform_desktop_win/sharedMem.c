@@ -35,72 +35,113 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "sharedMem.h"
 
-#define MUTEX_BASE_NAME	"Mutex_"
-
-typedef struct OS_SHMEM {
-	UINT32 	base;
-//	UINT32 	dataBase;
-	UINT32 	length;
-//	FILE*	file;
-	char	file_name[50];
-} OS_SHMEM;
-
+#define SH_MEM_MUTEX_NAME	"SH_MEM_Mutex"
+#define MBOX_MEM_MUTEX_NAME	"MBOX_MEM_Mutex_"
 static OS_SHMEM OSShMemTbl[OS_MAX_SH_MEM];
 static int nbOSShMem = 0;
-static HANDLE ghMutex;
 int cpuId;
+static OS_SHMEM *shMem;
+static OS_SHMEM *mboxMem;
 
-static void addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename) {
-	FILE *pFile;
+static OS_SHMEM * addOSShMem(UINT32 base, UINT32 dataBase, UINT32 length, const char* filename) {
+	OS_SHMEM *mem;
 	if (nbOSShMem <= OS_MAX_SH_MEM) {
-		sprintf(OSShMemTbl[nbOSShMem].file_name, filename);
-
-		pFile = fopen(OSShMemTbl[nbOSShMem].file_name, "wb+");
-		if (pFile == (FILE*)0) {
-			perror("Can't open file memory");
-			exit(1);
-		}
-		fclose(pFile);
-		OSShMemTbl[nbOSShMem].base 	 	= base;
-//		OSShMemTbl[nbOSShMem].dataBase	= dataBase;
-		OSShMemTbl[nbOSShMem].length = length;
+		mem = &OSShMemTbl[nbOSShMem];
+		sprintf(mem->file_name, filename);
+		mem->base 	 	= base;
+//		mem->dataBase	= dataBase;
+		mem->length = length;
 		nbOSShMem++;
+		return mem;
 	} else {
 		fprintf(stderr,
 				"Error too many Memory regions, "
 				"change OS_MAX_SH_MEM macro\n");
-		exit(1);
 	}
+	return 0;
 }
 
-void OS_ShMemInit() {
-	char mutexName[50];
+void addMboxMem(){
 	char mboxFileName[50];
+	sprintf(mboxFileName, "%s_%d", MBOX_MEM_FILE_PATH, cpuId);
+	mboxMem = addOSShMem(MBOX_MEM_BASE_ADDR, MBOX_MEM_BASE_ADDR, MBOX_MEM_SIZE, mboxFileName);
+}
+
+void addShMem(){
+	shMem = addOSShMem(SH_MEM_BASE_ADDR, SH_MEM_BASE_ADDR + SH_MEM_DATA_REGION_SIZE, SH_MEM_SIZE, SH_MEM_FILE_PATH);
+}
+
+void mboxMemInit(){
+	char mutexName[50];
+	FILE *pFile;
+
 	// Creating windows mutex to synchronize access to the memory file.
 	// The mutex is released after the queues' initializations.
-	sprintf(mutexName, "%s%d", MUTEX_BASE_NAME, cpuId);
-    ghMutex = CreateMutex(
+	sprintf(mutexName, "%s%d", MBOX_MEM_MUTEX_NAME, cpuId);
+	mboxMem->ghMutex = CreateMutex(
         NULL,              	// default security attributes
         TRUE,             	// initially owned
         mutexName);  		// object name
 
-    if (ghMutex == NULL)
+    if (mboxMem->ghMutex == NULL)
     {
         printf("CreateMutex error: %d\n", GetLastError());
         exit(1);
     }
 
-	// Adding a memory for the data fifos.
-	addOSShMem(SH_MEM_BASE_ADDR, SH_MEM_BASE_ADDR + SH_MEM_DATA_REGION_SIZE, SH_MEM_SIZE, SH_MEM_FILE_PATH);
+	// Creating the system file.
+	pFile = fopen(mboxMem->file_name, "wb+");
+	if (pFile == (FILE*)0) {
+		perror("Can't open file memory");
+		exit(1);
+	}
+	fclose(pFile);
+}
 
-	// Adding a memory for the mailboxes.
-	sprintf(mboxFileName, "%s_%d", MBOX_MEM_FILE_PATH, cpuId);
-	addOSShMem(MBOX_MEM_BASE_ADDR, MBOX_MEM_BASE_ADDR, MBOX_MEM_SIZE, mboxFileName);
+void shMemInit(UINT32 cpuId) {
+	char mutexName[50];
+	FILE *pFile;
+
+	sprintf(mutexName, "%s", SH_MEM_MUTEX_NAME);
+	if(cpuId == 0){
+		// Creating windows mutex to synchronize access to the memory file.
+		// The mutex is released after the queues' initializations.
+		shMem->ghMutex = CreateMutex(
+	        NULL,              	// default security attributes
+	        FALSE,             	// initially not owned
+	        mutexName);  		// object name
+
+	    if (shMem->ghMutex == NULL)
+	    {
+	        printf("CreateMutex error: %d\n", GetLastError());
+	        exit(1);
+	    }
+
+		// Creating the system file.
+		pFile = fopen(shMem->file_name, "wb+");
+		if (pFile == (FILE*)0) {
+			perror("Can't open file memory");
+			exit(1);
+		}
+		fclose(pFile);
+	}
+	else{
+		// The other CPUs only get the mutex created by CPU_0.
+		shMem->ghMutex = OpenMutex(
+			SYNCHRONIZE,
+	        FALSE,
+	        mutexName);
+
+	    if (shMem->ghMutex == NULL)
+	    {
+	        printf("CreateMutex error: %d\n", GetLastError());
+	        exit(1);
+	    }
+	}
 }
 
 
@@ -118,8 +159,8 @@ UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
 
 			// Request ownership of mutex.
 			dwWaitResult = WaitForSingleObject(
-	            ghMutex,    // handle to mutex
-	            INFINITE);  // no time-out interval
+				OSShMemTbl[i].ghMutex,  // handle to mutex
+	            INFINITE);  			// no time-out interval
 
 //			if (dwWaitResult == WAIT_OBJECT_0)
 //	        {
@@ -139,7 +180,13 @@ UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
 //				perror("Mutex was abandoned");
 //				exit(1);
 //			}
-			releaseShMemMx();
+
+			// Release ownership of the mutex object
+			if (! ReleaseMutex(OSShMemTbl[i].ghMutex))
+			{
+				printf("Error %d at MUTEX release\n", GetLastError());
+				exit(1);
+			}
         	return res;
 		}
 	}
@@ -161,8 +208,8 @@ UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
 
 			// Request ownership of mutex.
 			dwWaitResult = WaitForSingleObject(
-	            ghMutex,    // handle to mutex
-	            INFINITE);  // no time-out interval
+				OSShMemTbl[i].ghMutex,  // handle to mutex
+	            INFINITE);  			// no time-out interval
 
 //			if (dwWaitResult == WAIT_OBJECT_0)
 //	        {
@@ -182,7 +229,13 @@ UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
 //				perror("Mutex was abandoned");
 //				exit(1);
 //			}
-			releaseShMemMx();
+
+			// Release ownership of the mutex object
+			if (! ReleaseMutex(OSShMemTbl[i].ghMutex))
+			{
+				printf("Error %d at MUTEX release\n", GetLastError());
+				exit(1);
+			}
 
 			return res;
 		}
@@ -193,9 +246,19 @@ UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
 
 void releaseShMemMx(){
 	// Release ownership of the mutex object
-	if (! ReleaseMutex(ghMutex))
+	if (! ReleaseMutex(shMem->ghMutex))
 	{
-		perror("Memory Mutex couldn't be released");
+		printf("Error %d at MUTEX release\n", GetLastError());
+		exit(1);
+	}
+}
+
+
+void releaseMboxMemMx(){
+	// Release ownership of the mutex object
+	if (! ReleaseMutex(mboxMem->ghMutex))
+	{
+		printf("Error %d at MUTEX release\n", GetLastError());
 		exit(1);
 	}
 }

@@ -88,10 +88,19 @@ void mainLoop(){
 void LRTInit() {
 	OSTCBCur = (OS_TCB *) 0;
 	memset(OSTCBTbl, 0, sizeof(OSTCBTbl)); /* Clear all the TCBs */
-	OS_ShMemInit();
-	if(cpuId == 0)
+
+	addMboxMem();
+	mboxMemInit();
+
+	addShMem();
+	// Initializing the shared memory for data FIFOs.
+	shMemInit(cpuId);
+
+	if(cpuId == 0){
 		/* Clear all the data FIFOs */
 		flushFIFO(-1);
+	}
+
 	initMonitor();
 	OSWorkingMemoryInit();
 
@@ -105,7 +114,7 @@ void LRTInit() {
  */
 void LRTCtrlStart(){
 	RTQueuesInit();
-	releaseShMemMx();
+	releaseMboxMemMx();
 	while (TRUE)
 		mainLoop();
 }

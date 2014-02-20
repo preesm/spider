@@ -88,7 +88,7 @@ void initNLoop(UINT32 inputFIFOIds[],
 			 UINT32 outputFIFOAddrs[],
 			 UINT32 params[])
 {
-	UINT16 N;
+	UINT16 N, i;
 	UINT16 M_in[M_MAX_VALUE];
 	UINT16 array_in[MAX_DATA_SIZE];
 //	UINT16 M_out[M_MAX_VALUE];
@@ -98,7 +98,11 @@ void initNLoop(UINT32 inputFIFOIds[],
 	readFifo(inputFIFOIds[0],inputFIFOAddrs[0], MAX_DATA_SIZE * sizeof(UINT16), (UINT8*)array_in);
 	readFifo(inputFIFOIds[1],inputFIFOAddrs[1], M_MAX_VALUE * sizeof(UINT16), (UINT8*)M_in);
 
-	printf("Init N loop with N=%d\n", N);
+	printf("Init N loop with N=%d array = %d", N, array_in[0]);
+	for (i = 1; i < N * M_MAX_VALUE; i++) {
+		printf(", %d", array_in[i]);
+	}
+	printf("\n");
 
 	writeFifo(outputFIFOIds[0],outputFIFOAddrs[0], N * sizeof(UINT16), (UINT8*)&M_in);
 	writeFifo(outputFIFOIds[1],outputFIFOAddrs[1], N * M_MAX_VALUE * sizeof(UINT16), (UINT8*)array_in);

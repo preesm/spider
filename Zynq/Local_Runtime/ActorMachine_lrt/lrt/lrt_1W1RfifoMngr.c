@@ -66,21 +66,23 @@ void flushFIFO(UINT32 id){
 
 void writeFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
 	UINT8 mutex;
-	OS_ShMemRead(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &mutex, FIFO_MUTEX_SIZE);
-	if (mutex == 0){
-		OS_ShMemWrite(addr + SH_MEM_HDR_REGION_SIZE, buffer, size);
-		mutex = 1;
-		OS_ShMemWrite(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &mutex, FIFO_MUTEX_SIZE);
-	}
+	mutex = 1;
+	while(mutex != 0)
+		OS_ShMemRead(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &mutex, FIFO_MUTEX_SIZE);
+
+	OS_ShMemWrite(addr + SH_MEM_HDR_REGION_SIZE, buffer, size);
+	mutex = 1;
+	OS_ShMemWrite(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &mutex, FIFO_MUTEX_SIZE);
 }
 
 
 void readFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
 	UINT8 mutex;
-	OS_ShMemRead(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &mutex, FIFO_MUTEX_SIZE);
-	if (mutex == 1){
-		OS_ShMemRead(addr + SH_MEM_HDR_REGION_SIZE, buffer, size);
-		mutex = 0;
-		OS_ShMemWrite(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &mutex, FIFO_MUTEX_SIZE);
-	}
+	mutex = 0;
+	while(mutex != 1)
+		OS_ShMemRead(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &mutex, FIFO_MUTEX_SIZE);
+
+	OS_ShMemRead(addr + SH_MEM_HDR_REGION_SIZE, buffer, size);
+	mutex = 0;
+	OS_ShMemWrite(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &mutex, FIFO_MUTEX_SIZE);
 }

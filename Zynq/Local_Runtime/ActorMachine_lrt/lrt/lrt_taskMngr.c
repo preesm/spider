@@ -271,12 +271,14 @@ void PrintTasksIntoDot(){
 					j++;
 					fprintf (pFile, "\t%d [label=\"Function F%d\\n", j, tcb->functionId);
 					actor = tcb->actor;
-					for (i = 0; i < actor->nbInputFifos; i++)
-						fprintf (pFile, "Fin  %d\\n", actor->inputFifoId[i]);
-
-					for (i = 0; i < actor->nbOutputFifos; i++)
-						fprintf (pFile, "Fout %d\\n", actor->outputFifoId[i]);
-
+					for (i = 0; i < actor->nbInputFifos; i++){
+						fprintf (pFile, "Fin  %d ", actor->inputFifoId[i]);
+						fprintf (pFile, "addr  %d\\n ", actor->inputFifoDataOff[i]);
+					}
+					for (i = 0; i < actor->nbOutputFifos; i++){
+						fprintf (pFile, "Fout %d ", actor->outputFifoId[i]);
+						fprintf (pFile, "addr  %d\\n ", actor->outputFifoDataOff[i]);
+					}
 					for(i = 0; i < actor->nbParams; i++)
 						fprintf (pFile, "Param %d\\n", actor->params[i]);
 

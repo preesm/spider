@@ -38,6 +38,7 @@
 #ifndef SHAREDMEM_H_
 #define SHAREDMEM_H_
 
+#include <windows.h>
 #include "types.h"
 #include "lrt_definitions.h"
 
@@ -51,9 +52,23 @@
 #define MBOX_MEM_SIZE				0x100000
 #define MBOX_MEM_FILE_PATH			"../mboxMem"
 
-void OS_ShMemInit();
+typedef struct OS_SHMEM {
+	UINT32 	base;
+//	UINT32 	dataBase;
+	UINT32 	length;
+//	FILE*	file;
+	char	file_name[50];
+	HANDLE 	ghMutex;
+} OS_SHMEM;
+
+
+void addMboxMem();
+void addShMem();
+void mboxMemInit();
+void shMemInit();
 UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size);
 UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size);
 void releaseShMemMx();
+void releaseMboxMemMx();
 void resetShMemAddr(UINT32 address);
 #endif /* SHAREDMEM_H_ */

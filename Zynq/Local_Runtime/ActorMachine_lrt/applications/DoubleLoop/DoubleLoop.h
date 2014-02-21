@@ -51,6 +51,7 @@ void rdFile(UINT32 inputFIFOIds[],
 	UINT16 N, i, j;
 	UINT16 M[M_MAX_VALUE];
 	UINT16 array[MAX_DATA_SIZE];
+	UINT32 vxId;
 
 	/* initialize random seed: */
 	srand (time(NULL));
@@ -75,6 +76,8 @@ void rdFile(UINT32 inputFIFOIds[],
 	}
 
 	// Sending parameter's value.
+	RTQueuePush_UINT32(RTCtrlQueue, MSG_PARAM_VALUE);
+	RTQueuePush_UINT32(RTCtrlQueue, rtGetVxId());
 	RTQueuePush_UINT32(RTCtrlQueue, N);
 
 	writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], M_MAX_VALUE * sizeof(UINT16), (UINT8*)M);
@@ -161,6 +164,8 @@ void configM(UINT32 inputFIFOIds[],
 	readFifo(inputFIFOIds[0], inputFIFOAddrs[0], sizeof(UINT16), (UINT8*)&M);
 	printf("Configure M=%d\n", M);
 	// Sending parameter's value.
+	RTQueuePush_UINT32(RTCtrlQueue, MSG_PARAM_VALUE);
+	RTQueuePush_UINT32(RTCtrlQueue, rtGetVxId());
 	RTQueuePush_UINT32(RTCtrlQueue, M);
 }
 

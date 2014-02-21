@@ -88,7 +88,7 @@
 #define putnum				zynq_putnum						// Wrapper for putnum. Implemented at lrt_debug.c
 #define putnum_dec			zynq_putnum_dec					// Wrapper for putnum in decimal.
 
-
+#define MAX_DATA_WORDS				1024
 #define PRINT_ACTOR_IN_DOT_FILE		1
 
 
@@ -139,7 +139,10 @@ typedef enum{
 	MSG_START_SCHED=3,
 	MSG_STOP_TASK=4,
 	MSG_CLEAR_FIFO=5,
-	MSG_CURR_VERTEX_ID=6
+	MSG_CURR_VERTEX_ID=6,
+	MSG_CLEAR_TASKS =7,
+	MSG_PARAM_VALUE = 8,
+	MSG_EXEC_TIMES = 9
 }GRT_MSG_TYPE;
 
 
@@ -279,6 +282,7 @@ typedef struct lrtActor{
 
 typedef struct os_tcb {
     UINT16			OSTCBId;
+    UINT32			vertexId;	// Id of the SrDAG vertex on the GRT.
     UINT8           OSTCBState;
     struct os_tcb   *OSTCBNext;
     UINT32			functionId;
@@ -287,7 +291,9 @@ typedef struct os_tcb {
 	BOOLEAN 		stop;		// Whether the task must be deleted after completion.
 	LRTActor*		actor;
 	ActorMachine	am;			// TODO: ..define it as a pointer to save memory footprint.
-	struct tm*		startTime;
+//	struct tm		*startTime;
+	UINT32			startTime;
+	UINT32			execTime;
 	clock_t			nbCpuCycles;
 } OS_TCB;
 

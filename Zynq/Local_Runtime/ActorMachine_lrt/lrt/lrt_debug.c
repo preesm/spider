@@ -63,6 +63,7 @@ void exitWithCode(int exitCode){
 	// 1013: Try to delete an uninitialized task
 	// 1014: Bad Monitor Action
 	// 1015: Not enough working memory
+	// 1016: Data to be sent exceeds the MAX_DATA_WORDS.
 
 	zynq_puts("\nExiting with code ");
 	zynq_putdec(exitCode);

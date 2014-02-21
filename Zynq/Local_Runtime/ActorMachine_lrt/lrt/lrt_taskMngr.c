@@ -72,12 +72,12 @@ void clearTCBTbl(){
 	for(i=0;i<OS_MAX_TASKS;i++){
 		if(OSTCBTbl[i].OSTCBState == OS_STAT_DELETED){
 			OSTCBTbl[i].OSTCBState = OS_STAT_UNINITIALIZED;
-			printf("Task %d started at %d:%d:%d and lasted %d clock ticks\n",
-					OSTCBTbl[i].OSTCBId,
-					OSTCBTbl[i].startTime->tm_hour,
-					OSTCBTbl[i].startTime->tm_min,
-					OSTCBTbl[i].startTime->tm_sec,
-					OSTCBTbl[i].nbCpuCycles);
+//			printf("Task %d started at %d:%d:%d and lasted %d clock ticks\n",
+//					OSTCBTbl[i].OSTCBId,
+//					OSTCBTbl[i].startTime->tm_hour,
+//					OSTCBTbl[i].startTime->tm_min,
+//					OSTCBTbl[i].startTime->tm_sec,
+//					OSTCBTbl[i].nbCpuCycles);
 		}
 	}
 	OSTaskCntr = 0;
@@ -310,4 +310,37 @@ void* OSAllocWorkingMemory(int size){
 
 void OSFreeWorkingMemory(){
 	freeWorkingMemoryPtr = workingMemory;
+}
+
+UINT32 rtGetVxId(){
+	return OSTCBCur->vertexId;
+}
+
+
+void sendExecData(){
+	UINT32 i, taskCnt;;
+	UINT32 data[MAX_DATA_WORDS], wordCnt;
+	taskCnt = 0; wordCnt = 0;
+	data[wordCnt++] = MSG_EXEC_TIMES;
+//	data[wordCnt++] = CLOCKS_PER_SEC;
+	wordCnt++;	// Leaves a space for the number of bytes that will be sent.
+	for(i=0;i<OS_MAX_TASKS;i++){
+		if(OSTCBTbl[i].OSTCBState == OS_STAT_DELETED){
+			taskCnt++;
+			data[wordCnt++] = OSTCBTbl[i].vertexId;
+			data[wordCnt++] = OSTCBTbl[i].startTime;
+			data[wordCnt++] = OSTCBTbl[i].execTime;
+//			data[wordCnt++] = OSTCBTbl[i].startTime->tm_hour;
+//			data[wordCnt++] = OSTCBTbl[i].startTime->tm_min;
+//			data[wordCnt++] = OSTCBTbl[i].startTime->tm_sec;
+//			data[wordCnt++] = OSTCBTbl[i].nbCpuCycles;
+
+			printf("task %d started at %d ended at %d\n", taskCnt, OSTCBTbl[i].startTime, OSTCBTbl[i].startTime + OSTCBTbl[i].execTime);
+		}
+	}
+	if(wordCnt >= MAX_DATA_WORDS) exitWithCode(1016);
+	data[1] = wordCnt*sizeof(UINT32); // Number of bytes that will be sent.
+	RTQueuePush(RTCtrlQueue, data, data[1]);
+	printf("%d tasks -> ", taskCnt);
+	printf("%d bytes sent\n", data[1]);
 }

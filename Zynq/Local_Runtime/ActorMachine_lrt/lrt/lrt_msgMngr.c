@@ -86,6 +86,9 @@ void wait_ext_msg() {
 			// Popping the task function id.
 			new_tcb->functionId = RTQueuePop_UINT32(RTCtrlQueue);
 
+			// Popping the id of the vx in the current SrDAG on the GRT.
+			new_tcb->vertexId = RTQueuePop_UINT32(RTCtrlQueue);
+
 			// Popping whether the task is stopped after completion.
 	//		new_tcb->stop = RTQueuePop_UINT32(RTCtrlQueue);
 

@@ -41,7 +41,8 @@
 
 LRTActor::LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch){
 	this->ActionID = srvertex->getFunctIx();
-
+	this->vertexId = srvertex->getId();
+	this->isConfigVx = (srvertex->getType() == config_vertex);
 	this->nbInputFifos = srvertex->getNbInputEdge();
 
 	for(UINT32 i=0; i<this->nbInputFifos; i++){
@@ -105,6 +106,7 @@ LRTActor::LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch
 void LRTActor::prepare(int slave, launcher* launch){
 	launch->addUINT32ToSend(slave, MSG_CREATE_TASK);
 	launch->addUINT32ToSend(slave, this->ActionID);
+	launch->addUINT32ToSend(slave, this->vertexId);
 	launch->addUINT32ToSend(slave, 0); // Not an actor machine.
 	launch->addUINT32ToSend(slave, this->nbInputFifos);
 	launch->addUINT32ToSend(slave, this->nbOutputFifos);
@@ -123,7 +125,9 @@ void LRTActor::prepare(int slave, launcher* launch){
 	for(UINT32 i = 0; i < this->nbParams; i++)
 		launch->addUINT32ToSend(slave, this->params[i]);
 
-//	launch->addUINT32ToReceive(slave, MSG_CREATE_TASK);
+	if(this->isConfigVx){
+		launch->addUINT32ToReceive(slave, this->vertexId);
+	}
 }
 
 

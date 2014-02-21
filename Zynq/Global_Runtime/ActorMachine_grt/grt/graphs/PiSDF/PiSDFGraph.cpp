@@ -551,7 +551,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		// Note that some FIFOs have already been created in previous steps.
 		launch->prepareFIFOsInfo(dag, arch);
 
-		// Preparing tasks' informations
+		// Preparing tasks' information.
 		launch->prepareTasksInfo(dag, arch->getNbSlaves(), schedule, false, execStat);
 
 #if PRINT_GRAPH
@@ -569,7 +569,8 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		dag->updateExecuted();
 
 		// Resolving parameters. Waiting for parameters' values from LRT (configure actors' execution).
-		solveParameters(dag, schedule);
+//		solveParameters(dag, schedule);
+		launch->resolveParameters(dag, arch->getNbSlaves());
 	}
 
 	// Resolving productions/consumptions.

@@ -121,6 +121,8 @@ static void exitWithCode(int exitCode){
 	// 1064: Matching not found for unplugged vertex when merging SrDAG.
 	// 1065: Vertex was deleted.
 	// 1066: Invalid production/consumption value.
+	// 1067: Unexpected amount of data received.
+	// 1068: Unexpected data values received.
 
 	printf("\nExiting with code %d\n", exitCode);
 	exit(exitCode);

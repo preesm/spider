@@ -188,9 +188,11 @@ int main(int argc, char* argv[]){
 	#if LAST_EXEC == 1
 		/*
 		 * Launching the execution on LRTs. The "true" means that is the last execution
-		 * of the current iteration, so the local RTs clear the tasks table.
+		 * of the current iteration, so the local RTs clear the tasks table and
+		 * send back execution information.
 		 */
 		launch.launch(nbSlaves, true);
+		launch.createRealTimeGantt(&arch, &dag, "Gantt.xml");
 	#endif
 
 		// Updating states. Sets all executable vxs to executed since their execution was already launched.

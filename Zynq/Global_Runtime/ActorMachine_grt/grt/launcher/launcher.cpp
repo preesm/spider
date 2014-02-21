@@ -35,7 +35,7 @@
  * knowledge of the CeCILL-C license and that you accept its terms.		*
  ********************************************************************************/
 
-
+#include <time.h>
 #include "Memory.h"
 #include "../graphs/SRDAG/SRDAGGraph.h"
 #include "launcher.h"
@@ -48,6 +48,47 @@
 #include <hwQueues.h>
 #include <algorithm>
 
+#define PRINT_ACTOR_IN_DOT_FILE		0
+
+
+static char* regenerateColor(int refInd){
+	static char color[8];
+	color[0] = '\0';
+
+	int ired = (refInd & 0x3)*50 + 100;
+	int igreen = ((refInd >> 2) & 0x3)*50 + 100;
+	int iblue = ((refInd >> 4) & 0x3)*50 + 100;
+	char red[5];
+	char green[5];
+	char blue[5];
+	if(ired <= 0xf){
+		sprintf(red,"0%x",ired);
+	}
+	else{
+		sprintf(red,"%x",ired);
+	}
+
+	if(igreen <= 0xf){
+		sprintf(green,"0%x",igreen);
+	}
+	else{
+		sprintf(green,"%x",igreen);
+	}
+
+	if(iblue <= 0xf){
+		sprintf(blue,"0%x",iblue);
+	}
+	else{
+		sprintf(blue,"%x",iblue);
+	}
+
+	strcpy(color,"#");
+	strcat(color,red);
+	strcat(color,green);
+	strcat(color,blue);
+
+	return color;
+}
 
 
 launcher::launcher(): sharedMem(Memory(0x0, 0xffffffff)){
@@ -66,6 +107,41 @@ void launcher::clear(){
 	flushDataToSend();
 	flushDataToReceive();
 }
+
+void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName){
+	// Creating the Gantt with real times.
+	FILE * pFile;
+	pFile = fopen(filePathName, "w+");
+	if(pFile != NULL){
+		// Writing header
+		fprintf (pFile, "<data>\n");
+
+		// Writing execution data for each slave.
+		for(UINT32 i=0; i<arch->getNbSlaves(); i++){
+			UINT32 data[MAX_CTRL_DATA];
+			UINT32 nbTasks = popExecInfo(i, data);
+
+			for (UINT32 j=0 ; j<nbTasks; j++){
+				SRDAGVertex* vertex = dag->getVertex(data[j + j*2]); // data[0] contains the vertex's id.
+				fprintf (pFile, "\t<event\n");
+				UINT32 startTime = data[(1+j) + j*2];
+				UINT32 execTime = data[(2+j) + j*2];
+				fprintf (pFile, "\t\tstart=\"%d\"\n", startTime);
+				fprintf (pFile, "\t\tend=\"%d\"\n",	startTime + execTime);
+//				fprintf (pFile, "\t\tend=\"%d\"\n",	mktime(&execTime) + mktime(&startTime));
+				fprintf (pFile, "\t\ttitle=\"%s\"\n", vertex->getReference()->getName());
+				fprintf (pFile, "\t\tmapping=\"%s\"\n", arch->getSlaveName(i));
+				fprintf (pFile, "\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
+				fprintf (pFile, "\t\t>%s.</event>\n", vertex->getReference()->getName());
+
+				printf("task %d started at %d ended at %d\n", j, startTime, startTime + execTime);
+			}
+		}
+		fprintf (pFile, "</data>\n");
+		fclose (pFile);
+	}
+}
+
 
 void launcher::initFifos(SRDAGGraph* graph, int nbSlaves){
 	CreateFifoMsg msg_create;
@@ -337,8 +413,78 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule
 
 				SRDAGVertex* vertex = (SRDAGVertex*)(schedule->getSchedule(i, j)->vertex);
 				if (vertex->getState() == SrVxStExecutable){
-					LRTActor actor = LRTActor(graph, vertex, this);
-					actor.prepare(i, this);
+//					LRTActor actor = LRTActor(graph, vertex, this);
+//					actor.prepare(i, this);
+
+					addUINT32ToSend(i, MSG_CREATE_TASK);
+					addUINT32ToSend(i, vertex->getFunctIx());
+					addUINT32ToSend(i, vertex->getId());
+					addUINT32ToSend(i, 0); // Not an actor machine.
+					addUINT32ToSend(i, vertex->getNbInputEdge());
+					addUINT32ToSend(i, vertex->getNbOutputEdge());
+
+					UINT32 nbParams = 0;
+					UINT32 params[MAX_NB_ARGS];
+					if(vertex->getType() == 0){
+						VERTEX_TYPE refType = vertex->getReference()->getType();
+						if((refType == roundBuff_vertex)||
+							(refType == input_vertex)||
+							(refType == output_vertex)){
+							nbParams = 2;
+							params[0] = vertex->getInputEdge(0)->getTokenRate();
+							params[1] = vertex->getOutputEdge(0)->getTokenRate();
+						}
+						else if (refType == broad_vertex){
+							nbParams = 2;
+							params[0] = vertex->getNbOutputEdge();
+							params[1] = vertex->getInputEdge(0)->getTokenRate();
+						}
+						else{
+							nbParams = vertex->getReference()->getNbParameters();
+
+							for(UINT32 i=0; i<nbParams; i++){
+								params[i] = vertex->getReference()->getParameter(i)->getValue();
+							}
+						}
+					}
+					else{// Implode/Explode vertices.
+						nbParams = vertex->getNbInputEdge() + vertex->getNbOutputEdge() + 2;
+						params[0] = vertex->getNbInputEdge();
+						params[1] = vertex->getNbOutputEdge();
+
+						// Setting number of tokens going through each input/output.
+						for(UINT32 i=0; i<vertex->getNbInputEdge(); i++){
+							params[i + 2] = vertex->getInputEdge(i)->getTokenRate();
+						}
+						for(UINT32 i=0; i<vertex->getNbOutputEdge(); i++){
+							params[i + 2 + vertex->getNbInputEdge()] = vertex->getOutputEdge(i)->getTokenRate();
+						}
+					}
+
+					addUINT32ToSend(i, nbParams);
+
+					for (UINT32 k = 0; k < vertex->getNbInputEdge(); k++) {
+						addUINT32ToSend(i, getFIFO(vertex->getInputEdge(k)->getFifoId())->id);
+						addUINT32ToSend(i, getFIFO(vertex->getInputEdge(k)->getFifoId())->addr);
+						// TODO: see if the FIFO' size is required.
+					}
+					for (UINT32 k = 0; k < vertex->getNbOutputEdge(); k++) {
+						addUINT32ToSend(i, getFIFO(vertex->getOutputEdge(k)->getFifoId())->id);
+						addUINT32ToSend(i, getFIFO(vertex->getOutputEdge(k)->getFifoId())->addr);
+						// TODO: see if the FIFO' size is required.
+					}
+					for(UINT32 k = 0; k < nbParams; k++)
+						addUINT32ToSend(i, params[k]);
+
+					if(vertex->getReference()->getType() == config_vertex){
+						UINT32 dataCnt = 0;
+						dataCnt++;			// MSG_PARAM_VALUE must be received as first word.
+						dataCnt++;			// The id of the vertex must be received as second word.
+						// Storing the number of parameter values that must be received.
+						dataCnt += ((PiSDFConfigVertex*)(vertex->getReference()))->getNbRelatedParams();
+
+						dataToReceiveCnt[i] = dataCnt*sizeof(UINT32); // Number of bytes to be received.
+					}
 
 #if PRINT_ACTOR_IN_DOT_FILE == 1
 					sprintf(name, "%s_%d", vertex->getReference()->getName(), vertex->getReferenceIndex());
@@ -467,33 +613,25 @@ void launcher::prepareConfigExec(
 	}
 }
 
-
-void launcher::resolvePiSDFParameters(
-		BaseVertex** configVertices,
-		UINT32 nb_vertices,
-		BaseSchedule* schedule,
-		Architecture* archi)
-{
-	for (UINT32 i = 0; i < nb_vertices; i++) {
-		PiSDFConfigVertex* vertex = (PiSDFConfigVertex*)configVertices[i];
-		UINT64 value;
-		UINT32 slaveId;
-
-		for (UINT32 j = 0; j < vertex->getNbRelatedParams(); j++) {
-//			TODO: Get a value for each single parameter.
-//			if(schedule->findSlaveId(vertex->getId(), vertex, &slaveId)){
-//				value = OS_InfoQPopInt(slaveId);
-//				vertex->getRelatedParam()->setValue(value);
-//			}
-		}
+UINT32 launcher::rcvData(UINT32 slave, UINT32 msgType, UINT32* data){
+	UINT32 bytesRcvd = 0;
+	UINT32 bytesToRcv = dataToReceiveCnt[slave];
+	if(bytesToRcv > 0){
+		bytesRcvd = RTQueuePop(slave, RTCtrlQueue, data, bytesToRcv);
+		if(bytesRcvd != bytesToRcv) exitWithCode(1067);
+		if(data[0] != msgType) exitWithCode(1068);
+		dataToReceiveCnt[slave] -= bytesRcvd;
 	}
+	return bytesRcvd;
 }
+
 
 void launcher::launchOnce(SRDAGGraph* graph, Architecture *archi, Schedule* schedule){
 	initFifos(graph, archi->getNbActiveSlaves());
 	initTasks(graph, schedule, archi->getNbActiveSlaves());
 	start(archi->getNbActiveSlaves());
 }
+
 
 void launcher::stop(){
 //	initFifos(graph, archi->getNbSlaves());
@@ -506,6 +644,7 @@ void launcher::stop(){
 	}
 	launchedSlaveNb=0;
 }
+
 
 void launcher::stopWOCheck(){
 //	initFifos(graph, archi->getNbSlaves());
@@ -580,6 +719,43 @@ void launcher::flushDataToReceive(){
 	for(int i=0; i<MAX_SLAVES; i++){
 		dataToReceiveCnt[i]=0;
 	}
+}
+
+
+void launcher::resolveParameters(SRDAGGraph* dag, UINT32 nbSlaves){
+	UINT32 data[MAX_CTRL_DATA];
+	for (UINT32 i = 0; i < nbSlaves; i++) {
+		UINT32 nbBytesRcvd = rcvData(i, MSG_PARAM_VALUE, data);
+		if(nbBytesRcvd > 0){
+			UINT32 vxId = data[1];
+			PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(dag->getVertex(vxId)->getReference());
+			for(UINT32 j = 0; j < refConfigVx->getNbRelatedParams(); j++){
+				refConfigVx->getRelatedParam(j)->setValue(data[j + 2]);
+			}
+		}
+	}
+}
+
+
+UINT32 launcher::popExecInfo(UINT32 slaveId, UINT32* data){
+	UINT32 dataHdr[MAX_CTRL_DATA], nbTasks;
+
+	UINT32 nbHdrBytes = RTQueuePop(slaveId, RTCtrlQueue, dataHdr, 2*sizeof(UINT32));
+	if(dataHdr[0] != MSG_EXEC_TIMES) exitWithCode(1068);
+
+//	UINT32 clocksPerSec = dataHdr[1];
+	UINT32 nbBytes = dataHdr[1];
+
+	RTQueuePop(slaveId, RTCtrlQueue, data, nbBytes - nbHdrBytes);
+
+
+	/*
+	 * For each task there is 3 sizeof(UINT32) words.
+	 * For details see the 'sendExecData' function at 'lrt_taskMngr.c'.
+	 */
+	nbTasks = (nbBytes/sizeof(UINT32))/3;
+
+	return nbTasks;
 }
 
 

@@ -134,7 +134,6 @@
 
 
 #define DEBUG_EN				1
-#define PRINT_ACTOR_IN_DOT_FILE	1
 
 /**************** Message types ******************/
 #define MSG_CREATE_TASK			1
@@ -144,6 +143,8 @@
 #define MSG_CLEAR_FIFO			5
 #define MSG_CURR_VERTEX_ID		6
 #define MSG_CLEAR_TASKS			7
+#define MSG_PARAM_VALUE			8
+#define	MSG_EXEC_TIMES			9
 
 
 /**************** FIFO's******************************/

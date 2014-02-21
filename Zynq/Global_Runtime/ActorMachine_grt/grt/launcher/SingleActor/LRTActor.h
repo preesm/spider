@@ -44,6 +44,8 @@
 class LRTActor {
 private:
 	UINT32 ActionID;
+	UINT32 vertexId;
+	bool   isConfigVx;
 	UINT32 nbInputFifos;
 	UINT32 nbOutputFifos;
 	UINT32 nbParams;
@@ -57,7 +59,7 @@ private:
 //	UINT32 readDataSize[MAX_NB_FIFO];
 //	UINT32 writeDataSize[MAX_NB_FIFO];
 public:
-	LRTActor(){};
+//	LRTActor(){};
 	LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher*);
 	void prepare(int slave, launcher* launch);
 	void toDot(FILE* pFile, char* vertexName, UINT32 vertexId);

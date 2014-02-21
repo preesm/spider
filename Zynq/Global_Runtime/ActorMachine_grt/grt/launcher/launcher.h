@@ -85,6 +85,7 @@ public:
 
 	void init(int nbSlaves);
 	void clear();
+	void createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName);
 	void launch(SRDAGGraph* graph, Architecture *archi);
 
 	//
@@ -173,6 +174,12 @@ public:
 
 	void flushDataToSend();
 	void flushDataToReceive();
+
+	UINT32 popExecInfo(UINT32 slaveId, UINT32* data);
+
+	UINT32 rcvData(UINT32 slave, UINT32 msgType, UINT32* data);
+
+	void resolveParameters(SRDAGGraph* dag, UINT32 nbSlaves);
 
 	void sendClearTasks(int nbSlaves);
 };

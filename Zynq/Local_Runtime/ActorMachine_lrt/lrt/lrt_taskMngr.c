@@ -328,14 +328,17 @@ void sendExecData(){
 		if(OSTCBTbl[i].OSTCBState == OS_STAT_DELETED){
 			taskCnt++;
 			data[wordCnt++] = OSTCBTbl[i].vertexId;
-			data[wordCnt++] = OSTCBTbl[i].startTime;
-			data[wordCnt++] = OSTCBTbl[i].execTime;
-//			data[wordCnt++] = OSTCBTbl[i].startTime->tm_hour;
-//			data[wordCnt++] = OSTCBTbl[i].startTime->tm_min;
-//			data[wordCnt++] = OSTCBTbl[i].startTime->tm_sec;
+//			data[wordCnt++] = OSTCBTbl[i].startTime;
+			data[wordCnt++] = OSTCBTbl[i].startTimeStruct.hour;
+			data[wordCnt++] = OSTCBTbl[i].startTimeStruct.min;
+			data[wordCnt++] = OSTCBTbl[i].startTimeStruct.sec;
+			data[wordCnt++] = OSTCBTbl[i].startTimeStruct.milisec;
 //			data[wordCnt++] = OSTCBTbl[i].nbCpuCycles;
+			data[wordCnt++] = OSTCBTbl[i].execTime;
 
-			printf("task %d started at %d ended at %d\n", taskCnt, OSTCBTbl[i].startTime, OSTCBTbl[i].startTime + OSTCBTbl[i].execTime);
+			printf("task %d started at %d:%d:%d:%d ended at +%d\n",
+					taskCnt, OSTCBTbl[i].startTimeStruct.hour, OSTCBTbl[i].startTimeStruct.min, OSTCBTbl[i].startTimeStruct.sec,
+					OSTCBTbl[i].startTimeStruct.milisec, OSTCBTbl[i].execTime/CLOCKS_PER_SEC * 1000);
 		}
 	}
 	if(wordCnt >= MAX_DATA_WORDS) exitWithCode(1016);

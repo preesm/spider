@@ -52,5 +52,17 @@ void OS_TimeStop(){
 }
 
 UINT32 OS_TimeGetValue(){
-	return 1;
+	return 0;
+}
+
+
+void lrtGetTime(LRTSYSTime *buffer){
+	struct _timeb 	timebuffer;
+	struct tm 		*strucTM;
+	_ftime_s(&timebuffer);
+	strucTM = localtime(&timebuffer.time);
+	buffer->hour = strucTM->tm_hour;
+	buffer->min = strucTM->tm_min;
+	buffer->sec = strucTM->tm_sec;
+	buffer->milisec = timebuffer.millitm;
 }

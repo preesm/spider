@@ -107,6 +107,18 @@ typedef unsigned short	UINT16;
 typedef unsigned int	UINT32;
 typedef long long unsigned	UINT64;
 
+
+/******
+ * System time.
+ */
+typedef struct lrtTime{
+	UINT8 	hour;
+	UINT8 	min;
+	UINT8	sec;
+	UINT16	milisec;
+}LRTSYSTime;
+
+
 /*
 *********************************************************************************************************
 *                              TASK STATUS (Bit definition for OSTCBStat)
@@ -291,7 +303,7 @@ typedef struct os_tcb {
 	BOOLEAN 		stop;		// Whether the task must be deleted after completion.
 	LRTActor*		actor;
 	ActorMachine	am;			// TODO: ..define it as a pointer to save memory footprint.
-//	struct tm		*startTime;
+	LRTSYSTime		startTimeStruct;
 	UINT32			startTime;
 	UINT32			execTime;
 	clock_t			nbCpuCycles;

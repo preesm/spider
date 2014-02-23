@@ -124,17 +124,23 @@ void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 			for (UINT32 j=0 ; j<nbTasks; j++){
 				SRDAGVertex* vertex = dag->getVertex(data[j + j*2]); // data[0] contains the vertex's id.
 				fprintf (pFile, "\t<event\n");
-				UINT32 startTime = data[(1+j) + j*2];
-				UINT32 execTime = data[(2+j) + j*2];
-				fprintf (pFile, "\t\tstart=\"%d\"\n", startTime);
-				fprintf (pFile, "\t\tend=\"%d\"\n",	startTime + execTime);
+				UINT32 hour = data[(1+j) + j*2];
+				UINT32 min = hour * 60 + data[(2+j) + j*2];
+				UINT32 sec = min * 60 + data[(3+j) + j*2];
+				UINT32 mili = sec * 1000 + data[(4+j) + j*2];
+				UINT32 execTime = (data[(5+j) + j*2]/CLOCKS_PER_SEC) * 1000;
+//				UINT32 startTime = data[(1+j) + j*2];
+//				UINT32 execTime = data[(2+j) + j*2];
+				fprintf (pFile, "\t\tstart=\"%d\"\n", mili);
+				fprintf (pFile, "\t\tend=\"%d\"\n",	mili + execTime);
 //				fprintf (pFile, "\t\tend=\"%d\"\n",	mktime(&execTime) + mktime(&startTime));
 				fprintf (pFile, "\t\ttitle=\"%s\"\n", vertex->getReference()->getName());
 				fprintf (pFile, "\t\tmapping=\"%s\"\n", arch->getSlaveName(i));
 				fprintf (pFile, "\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
 				fprintf (pFile, "\t\t>%s.</event>\n", vertex->getReference()->getName());
 
-				printf("task %d started at %d ended at %d\n", j, startTime, startTime + execTime);
+				printf("task %d started at %d:%d:%d:%d ended at +%d\n",
+						j, hour, min, sec, mili, (execTime/CLOCKS_PER_SEC) * 1000);
 			}
 		}
 		fprintf (pFile, "</data>\n");
@@ -750,10 +756,10 @@ UINT32 launcher::popExecInfo(UINT32 slaveId, UINT32* data){
 
 
 	/*
-	 * For each task there is 3 sizeof(UINT32) words.
+	 * For each task there is 6 sizeof(UINT32) words.
 	 * For details see the 'sendExecData' function at 'lrt_taskMngr.c'.
 	 */
-	nbTasks = (nbBytes/sizeof(UINT32))/3;
+	nbTasks = (nbBytes/sizeof(UINT32))/6;
 
 	return nbTasks;
 }

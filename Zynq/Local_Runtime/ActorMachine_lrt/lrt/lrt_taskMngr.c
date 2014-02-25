@@ -318,7 +318,7 @@ UINT32 rtGetVxId(){
 
 
 void sendExecData(){
-	UINT32 i, taskCnt;;
+	UINT32 i, taskCnt;
 	UINT32 data[MAX_DATA_WORDS], wordCnt;
 	taskCnt = 0; wordCnt = 0;
 	data[wordCnt++] = MSG_EXEC_TIMES;

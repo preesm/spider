@@ -48,8 +48,8 @@
 #include <hwQueues.h>
 #include <algorithm>
 
-#define PRINT_ACTOR_IN_DOT_FILE		0
 
+#define PRINT_ACTOR_IN_DOT_FILE		0
 
 static char* regenerateColor(int refInd){
 	static char color[8];

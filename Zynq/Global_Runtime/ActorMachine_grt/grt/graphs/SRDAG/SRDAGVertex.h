@@ -571,11 +571,13 @@ bool SRDAGVertex::checkForExecution(){
 	for (UINT32 i = 0; i < nbInputEdges; i++)
 	{
 		SRDAGVertex* predVertex = inputEdges[i]->getSource();
-		if(predVertex->getState() == SrVxStNoExecuted){
-			if(!predVertex->checkForExecution()) return false;
+		if(predVertex != this){
+			if(predVertex->getState() == SrVxStNoExecuted){
+				if(!predVertex->checkForExecution()) return false;
+			}
+			else if(predVertex->getState() == SrVxStHierarchy)
+				return false;
 		}
-		else if(predVertex->getState() == SrVxStHierarchy)
-			return false;
 	}
 	state = SrVxStExecutable;
 	return true;

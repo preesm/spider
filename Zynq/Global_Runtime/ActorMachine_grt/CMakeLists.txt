@@ -15,6 +15,8 @@ set (APP_SOBEL "" CACHE BOOL "")
 if(APP_MPEG4)    
     include_directories(applications/mpeg4Decoder)
     file(GLOB_RECURSE app_source_files applications/mpeg4Decoder/*)
+elseif(APP_DOUBLE_LOOP)
+    file(GLOB_RECURSE app_source_files applications/DoubleLoop/*)
 endif()
 
 # Getting global runtime' sources.

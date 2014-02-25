@@ -39,9 +39,7 @@
 #include <tools/ScheduleWriter.h>
 #include "PiSDFGraph.h"
 #include <transformations/PiSDFTransformer/PiSDFTransformer.h>
-
-
-#define EXEC			1
+#include "debuggingOptions.h"
 
 extern DotWriter dotWriter;
 static char name[MAX_VERTEX_NAME_SIZE];
@@ -416,6 +414,8 @@ void PiSDFGraph::createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hS
 			srDagVertex->setReferenceIndex(refConfigVertex->getId());
 			srDagVertex->setState(SrVxStExecutable);
 		}
+		else
+			srDagVertex->setState(SrVxStExecutable);
 
 		// Adding edges coming from input vxs (and the input vx too of course).
 		for (UINT32 j = 0; j < refConfigVertex->getNbInputEdges(); j++) {
@@ -568,9 +568,16 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		// Updating states. Sets all executable vxs to executed since their execution was already launched.
 		dag->updateExecuted();
 
+#if EXEC == 1
 		// Resolving parameters. Waiting for parameters' values from LRT (configure actors' execution).
-//		solveParameters(dag, schedule);
 		launch->resolveParameters(dag, arch->getNbSlaves());
+#else
+		for (UINT32 i = 0; i < nb_config_vertices; ++i) {
+			PiSDFConfigVertex *refConfigVx = &config_vertices[i];
+			if(refConfigVx->getNbRelatedParams() > 0)
+				refConfigVx->getRelatedParam(0)->setValue(350);
+		}
+#endif
 	}
 
 	// Resolving productions/consumptions.
@@ -615,11 +622,16 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		SRDAGGraph 	localDag;
 		transformer.transform(&sdf, &localDag, currHSrDagVx);
 	#if PRINT_GRAPH
-		// Printing the DAG for the current level.
+		// Printing the local DAG of the current step.
 		sprintf(name, "%s_%d.gv", SUB_SRDAG_FILE_PATH, *stepsCntr);
 		dotWriter.write(&localDag, name, 1, 1);
 	#endif
 		dag->merge(&localDag, true);
+#if PRINT_GRAPH
+		// Printing the dag.
+		sprintf(name, "%s_%d.gv", SRDAG_FILE_PATH, *stepsCntr);
+		dotWriter.write(dag, name, 1, 1);
+#endif
 	}
 	// Updating vxs' states.
 	updateDAGStates(dag);

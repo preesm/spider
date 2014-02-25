@@ -35,8 +35,8 @@
  * knowledge of the CeCILL-C license and that you accept its terms.		*
  ********************************************************************************/
 
-//#include "mpeg4_part2.h"
-#include "DoubleLoop/PiSDFDoubleLoop.h"
+#include "mpeg4_part2.h"
+//#include "DoubleLoop/PiSDFDoubleLoop.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Scenario/Scenario.h>
 #include <scheduling/ListScheduler/ListScheduler.h>
@@ -46,8 +46,8 @@
 #include <tools/DotWriter.h>
 #include <tools/ScheduleWriter.h>
 #include <tools/ScheduleChecker.h>
+#include "debuggingOptions.h"
 
-#define LAST_EXEC				1
 #define IS_AM 					0
 #define STOP					1
 
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]){
 	// Getting the PiSDF graph.
 	top(&piSDF, &scenario);
 
-#if LAST_EXEC == 1
+#if EXEC == 1
 	/*
 	 * Initializing the queues and data containers (see launcher class) for communication with local RTs.
 	 * This must be done before calling the multiStepScheduling method.
@@ -185,7 +185,7 @@ int main(int argc, char* argv[]){
 		dotWriter.write(&dag, name, 1, 0);
 	#endif
 
-	#if LAST_EXEC == 1
+	#if EXEC == 1
 		/*
 		 * Launching the execution on LRTs. The "true" means that is the last execution
 		 * of the current iteration, so the local RTs clear the tasks table and

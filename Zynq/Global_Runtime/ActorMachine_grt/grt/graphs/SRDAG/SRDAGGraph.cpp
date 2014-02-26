@@ -50,10 +50,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include "debuggingOptions.h"
+#include <tools/DotWriter.h>
 
-
-
-//static char name[MAX_VERTEX_NAME_SIZE];
+extern DotWriter dotWriter;
+static char name[MAX_VERTEX_NAME_SIZE];
 
 /**
  Constructor
@@ -277,14 +278,53 @@ SRDAGEdge* SRDAGGraph::getEdgeByRef(SRDAGVertex* hSrDagVx, BaseEdge* refEdge, VE
 	return 0;
 }
 
-void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
-	// Adding the annexing vertices and edges.
+
+
+
+/*
+ * Merges one DAG into the current DAG object.
+ * -"annex" is the DAG that will be annexed into the current DAG object.
+ * -"intralevel" indicates the type of merging.
+ *
+ * There are two types of merging :
+ * 	1. When "intralevel" is true, it indicates that both DAGs correspond to the same hierarchical level.
+ * 	This is the case of one sub-graph which contains configure vertices, and requires
+ * 	to be executed in two times. At the first time, all the configure vertices and its
+ * 	predecessors are executed. At the second time, before the rest of the sub-graph can be executed,
+ * 	an INTRA-level merging must be done. Like this, the successor vertices are plugged to the output edges
+ * 	of the executed configure vertices.
+ *
+ * 	2. When "intralevel" is false, it indicates that the DAGs correspond to different hierarchical levels.
+ * 	This is the case of the first execution of a sub-graph with configure vertices, or a sub-graph with
+ * 	no configure vertex at all. In both cases an INTER-level merging is done. I.e. the "annex" sub-graph
+ * 	replaces its parent vertex in the current DAG object.
+ *
+ * To do the merging, it adds all vertices and edges from "annex" into the same global DAG.
+ * (let's call the vertices from the global DAG the left side, and those of the "annex", the right side).
+ * For both types of merging, the left side connectors are round buffer/input vertices without output edges.
+ * The right side connectors are round buffer/input vertices without input edges.
+ *
+ *
+ */
+void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel, UINT32 level, UINT8 step){
+#if PRINT_GRAPH
+	// Printing the global dag before merging.
+	sprintf(name, "%s_%d_%d.gv", PRE_SRDAG_FILE_NAME, level, step);
+	dotWriter.write(this, name, 1, 1);
+#endif
+
+#if PRINT_GRAPH
+	// Printing the annexing dag.
+	sprintf(name, "%s_%d_%d.gv", SUB_SRDAG_FILE_NAME, level, step);
+	dotWriter.write(annex, name, 1, 1);
+#endif
+
+	// Adding all (annexing vertices and edges) to the global DAG.
 	appendAnnex(annex);
 
+	// Doing connections.
 	if(intraLevel){
-		// Connecting two graphs from the same hierarchy level.
-
-		// Finding an unplugged vx to the left (RoundBuffer).
+		// Finding an unplugged vx to the left (RoundBuffer/Input vertex).
 		SRDAGVertex* leftVx;
 		leftVx = findUnplug();
 		while(leftVx){
@@ -319,11 +359,12 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
 		}
 	}
 	else{
-		// Connecting two graphs from different hierarchy levels.
+		// INTER-level merging.
 
 		// Connecting input interface(s) in the annex.
 		SRDAGVertex* inputVx;
 		inputVx = findUnplugIF(input_vertex);
+
 		while(inputVx){
 			// Getting the input edge from the higher level in the PiSDF.
 			BaseEdge* refEdge = ((PiSDFIfVertex*)inputVx->getReference())->getParentEdge();
@@ -337,6 +378,13 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel){
 			inputVx = findUnplugIF(input_vertex);
 		}
 	}
+
+
+#if PRINT_GRAPH
+	// Printing the global dag after merging.
+	sprintf(name, "%s_%d_%d.gv", POST_SRDAG_FILE_NAME, level, step);
+	dotWriter.write(this, name, 1, 1);
+#endif
 }
 
 

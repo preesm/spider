@@ -369,7 +369,8 @@ bool PiSDFGraph::isConfigVxPred(BaseVertex* Vx){
 void PiSDFGraph::createSDF(SDFGraph* outSDF){
 	for (UINT32 i = 0; i < nb_vertices; i++) {
 		BaseVertex* refSource = vertices[i];
-		if((refSource->getType() != config_vertex) && 	// Excludes configure Vxs.
+		if((!refSource->invalidEdges()) &&				// Excludes vxs whose input and output edges do not exchange tokens.
+			(refSource->getType() != config_vertex) && 	// Excludes configure Vxs.
 			!isConfigVxPred(refSource)){ 				// Excludes interface/round_buffer Vxs which precede configure Vxs.
 			// Adding the Vx into the output graph if not already present.
 			if(outSDF->getVertexIndex(refSource) == -1) outSDF->addVertex(refSource);
@@ -377,12 +378,14 @@ void PiSDFGraph::createSDF(SDFGraph* outSDF){
 			// Adding output edges.
 			for (UINT32 j = 0; j < refSource->getNbOutputEdges(); j++) {
 				PiSDFEdge* edge = refSource->getOutputEdge(j);
-				BaseVertex* refSink = edge->getSink();
-				// Adding the sink vx if not already present.
-				if(outSDF->getVertexIndex(refSink) == -1) outSDF->addVertex(refSink);
+				if((edge->getProductionInt() > 0) && (edge->getConsumptionInt() > 0)){
+					BaseVertex* refSink = edge->getSink();
+					// Adding the sink vx if not already present.
+					if(outSDF->getVertexIndex(refSink) == -1) outSDF->addVertex(refSink);
 
-				// Adding edges to SDF graph.
-				outSDF->addEdge(refSource, edge->getProductionInt(), refSink, edge->getConsumptionInt(), edge);
+					// Adding edges to SDF graph.
+					outSDF->addEdge(refSource, edge->getProductionInt(), refSink, edge->getConsumptionInt(), edge);
+				}
 			}
 		}
 	}
@@ -511,33 +514,28 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 							ExecutionStat* execStat,
 							SRDAGGraph* dag,
 							SRDAGVertex* currHSrDagVx,
-							INT8* stepsCntr){
-
+							UINT32 level,
+							UINT8* step){
 	if(nb_config_vertices > 0){
-		// Creating SrDAG with configure and input vertices.
-		// TODO: treat delays and cycles?
+		/*
+		 * Creating a local SrDAG with configure and input vertices of the current level.
+		 * The global DAG is used for the very first level, for it is empty
+		 * and no merging will be required.
+		 * TODO: treat delays and cycles?
+		 */
 		if(dag->getNbVertices() == 0)
 			createSrDAGInputConfigVxs(dag, currHSrDagVx);
 		else{
 			SRDAGGraph 	localDag;
 			createSrDAGInputConfigVxs(&localDag, currHSrDagVx);
-		#if PRINT_GRAPH
-			// Printing the dag.
-//			dotWriter.write(&localDag, SUB_SRDAG_FILE_PATH, 1, 1);
-//			dotWriter.write(&localDag, SUB_SRDAG_FIFO_ID_FILE_PATH, 1, 0);
-		#endif
-			dag->merge(&localDag, false);
+
+			// Merging the local DAG into the global DAG.
+			dag->merge(&localDag, false, level, *step);
 		}
 
-		(*stepsCntr)++;
+		(*step)++;
 
-#if PRINT_GRAPH
-		// Printing the dag.
-		sprintf(name, "%s_%d.gv", SRDAG_FILE_PATH, *stepsCntr);
-		dotWriter.write(dag, name, 1, 1);
-#endif
-
-		// Scheduling the DAG.
+		// Scheduling the global DAG.
 		listScheduler->schedule(dag, schedule, arch);
 
 		ScheduleWriter schedWriter;
@@ -545,19 +543,19 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		sprintf(name, "%s.xml", SCHED_FILE_NAME);
 		schedWriter.write(schedule, dag, arch, name);
 
+		// Clearing the buffers which will contain the data to be sent/received to/from LRTs.
 		launch->clear();
 
-		// Creating FIFOs for executable vxs.
-		// Note that some FIFOs have already been created in previous steps.
-		launch->prepareFIFOsInfo(dag, arch);
+		// Assigning FIFO ids to executable vxs' edges.
+		launch->assignFIFOId(dag, arch);
 
-		// Preparing tasks' information.
+		// Preparing tasks' information that will be sent to LRTs.
 		launch->prepareTasksInfo(dag, arch->getNbSlaves(), schedule, false, execStat);
 
 #if PRINT_GRAPH
-		// Printing the dag with FIFOs' Ids.
-		sprintf(name, "%s_%d.gv", SRDAG_FIFO_ID_FILE_PATH, *stepsCntr);
-		dotWriter.write(dag, name, 1, 0);
+//		// Printing the dag with FIFOs' Ids.
+//		sprintf(name, "%s_%d.gv", SRDAG_FIFO_ID_FILE_PATH, *stepsCntr);
+//		dotWriter.write(dag, name, 1, 0);
 #endif
 
 #if EXEC == 1
@@ -568,51 +566,49 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		// Updating states. Sets all executable vxs to executed since their execution was already launched.
 		dag->updateExecuted();
 
+		/*
+		 * Resolving parameters. If the actors' execution is disabled, the parameters
+		 * should had been set at compile time.
+		 */
 #if EXEC == 1
-		// Resolving parameters. Waiting for parameters' values from LRT (configure actors' execution).
+		// Waiting for parameters' values from LRT (configure actors' execution).
 		launch->resolveParameters(dag, arch->getNbSlaves());
-#else
-		for (UINT32 i = 0; i < nb_config_vertices; ++i) {
-			PiSDFConfigVertex *refConfigVx = &config_vertices[i];
-			if(refConfigVx->getNbRelatedParams() > 0)
-				refConfigVx->getRelatedParam(0)->setValue(350);
-		}
 #endif
 	}
 
 	// Resolving productions/consumptions.
 	evaluateExpressions();
 
-	// Generating SDF from PiSDF excluding the configure vertices.
+	// Generating a local (for the current level) SDF without configure vertices.
 	SDFGraph sdf;
 	createSDF(&sdf);
 
 #if PRINT_GRAPH
-	// Printing the SDF sub-graph.
-//	dotWriter.write(&sdf, SUB_SDF_FILE_0_PATH, 1);
+//	// Printing the SDF sub-graph.
+//	sprintf(name, "subSDF_%d_0.gv", lvlCntr);
+//	dotWriter.write(&sdf, name, 1);
 #endif
 
-	// Computing BRV of normal vertices.
+	// Computing BRV of the local SDF. TODO: ..place this function in the SDF class...
 	PiSDFTransformer transformer;
 	transformer.computeBVR(&sdf);
 
 	// Updating the productions of the round buffer vertices.
 	sdf.updateRBProd();
-	// Marking the current hierarchical vx as deleted.
-	// TODO: the top level must be a hierarchical vx, so checking if currHSrDagVx != 0 is not needed.
+
+	// Marking the current hierarchical vx as deleted, for it is going to be replaced by its sub-graph.
 	if (currHSrDagVx) currHSrDagVx->setState(SrVxStDeleted);
 
 #if PRINT_GRAPH
-//	// Printing the SDF sub-graph.
-//	sprintf(name, "subSDF_%d.gv", *stepsCntr);
+//	// Printing the local SDF with updated productions.
+//	sprintf(name, "subSDF_%d_1.gv", *lvlCntr);
 //	dotWriter.write(&sdf, name, 1);
 #endif
 
-
-	// Transforming SDF with no configure vertices into SrDAG.
+	// Transforming local SDF into a local SrDAG.
 	// TODO: treat delays
 	if(dag->getNbVertices() == 0)
-		// First step, so the global DAG is used.
+		// First step, so the global DAG is used for it is empty.
 		transformer.transform(&sdf, dag, currHSrDagVx);
 	else{
 		/*
@@ -621,27 +617,39 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		 */
 		SRDAGGraph 	localDag;
 		transformer.transform(&sdf, &localDag, currHSrDagVx);
-	#if PRINT_GRAPH
-		// Printing the local DAG of the current step.
-		sprintf(name, "%s_%d.gv", SUB_SRDAG_FILE_PATH, *stepsCntr);
-		dotWriter.write(&localDag, name, 1, 1);
-	#endif
-		dag->merge(&localDag, true);
-#if PRINT_GRAPH
-		// Printing the dag.
-		sprintf(name, "%s_%d.gv", SRDAG_FILE_PATH, *stepsCntr);
-		dotWriter.write(dag, name, 1, 1);
-#endif
+
+//	#if PRINT_GRAPH
+//		// Printing the local DAG.
+//		sprintf(name, "%s_%d.gv", SUB_SRDAG_FILE_PATH, *stepsCntr);
+//		dotWriter.write(&localDag, name, 1, 1);
+//	#endif
+
+		/*
+		 * Merging the local DAG into the global DAG. If there are configure vertices at this level,
+		 * an INTRA-level merging is done. Otherwise, an INTER-level merging is done.
+		 * See the merge method in the SRDAGGraph class for details.
+		 */
+		if(nb_config_vertices > 0)
+			dag->merge(&localDag, true, level, *step);
+		else
+			dag->merge(&localDag, false, level, *step);
+		(*step)++;
+
+//#if PRINT_GRAPH
+//		// Printing the global DAG.
+//		sprintf(name, "%s_%d.gv", SRDAG_FILE_PATH, *stepsCntr);
+//		dotWriter.write(dag, name, 1, 1);
+//#endif
 	}
 	// Updating vxs' states.
 	updateDAGStates(dag);
 
-	(*stepsCntr)++;
-#if PRINT_GRAPH
-	// Printing the dag.
-	sprintf(name, "%s_%d.gv", SRDAG_FILE_PATH, *stepsCntr);
-	dotWriter.write(dag, name, 1, 1);
-#endif
+////	(*stepsCntr)++;
+//#if PRINT_GRAPH
+//	// Printing the dag.
+//	sprintf(name, "%s_%d.gv", SRDAG_FILE_PATH, *lvlCntr);
+//	dotWriter.write(dag, name, 1, 1);
+//#endif
 }
 
 

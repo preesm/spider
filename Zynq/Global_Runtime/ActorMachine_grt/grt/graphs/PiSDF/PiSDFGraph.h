@@ -139,7 +139,8 @@ public:
 							ExecutionStat* execStat,
 							SRDAGGraph* dag,
 							SRDAGVertex* hSrDagVx,
-							INT8* stepsCntr);
+							UINT32 level,
+							UINT8* step);
 
 	void solveParameters(SRDAGGraph* dag, BaseSchedule* schedule);
 
@@ -248,6 +249,46 @@ public:
     {
         this->rootVertex = rootVertex;
     }
+
+	UINT32 getNbRoundBVertices() const {
+		return nb_roundB_vertices;
+	}
+
+	void setNbRoundBVertices(UINT32 nbRoundBVertices) {
+		nb_roundB_vertices = nbRoundBVertices;
+	}
+
+	UINT32 getNbSelectVertices() const {
+		return nb_select_vertices;
+	}
+
+	void setNbSelectVertices(UINT32 nbSelectVertices) {
+		nb_select_vertices = nbSelectVertices;
+	}
+
+	UINT32 getNbSwitchVertices() const {
+		return nb_switch_vertices;
+	}
+
+	void setNbSwitchVertices(UINT32 nbSwitchVertices) {
+		nb_switch_vertices = nbSwitchVertices;
+	}
+
+	BaseVertex* getRoundBVertex(UINT32 index) {
+		return &roundB_vertices[index];
+	}
+
+	BaseVertex* getSelectVertex(UINT32 index) {
+		return &select_vertices[index];
+	}
+
+	BaseVertex* getSwitchVertex(UINT32 index) {
+		return &switch_vertices[index];
+	}
+
+	const BaseVertex* getRootVertex() const {
+		return rootVertex;
+	}
 };
 
 #endif /* PISDFGRAPH_H_ */

@@ -37,6 +37,7 @@
 
 #include <string.h>
 #include <graphs/PiSDF/PiSDFGraph.h>
+#include "debuggingOptions.h"
 
 static PiSDFGraph graphs[MAX_NB_PiSDF_SUB_GRAPHS];
 static UINT8 nb_graphs = 0;
@@ -44,6 +45,9 @@ static UINT8 nb_graphs = 0;
 void MLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scenario){
 	// Parameters.
 	PiSDFParameter *paramM = graph->addParameter("M");
+#if EXEC == 0
+	paramM->setValue(3);
+#endif
 
 	// Interface vertices.
 	PiSDFIfVertex *vxM_in = (PiSDFIfVertex*)graph->addVertex("M_in", input_vertex);
@@ -119,6 +123,9 @@ void MLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scenario){
 void PiSDFDoubleLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scenario){
 	// Parameters.
 	PiSDFParameter *paramN = graph->addParameter("N");
+#if EXEC == 0
+	paramN->setValue(3);
+#endif
 
 	// Configure vertices.
 	PiSDFConfigVertex *vxReadFile = (PiSDFConfigVertex *)graph->addVertex("ReadFile", config_vertex);
@@ -196,6 +203,8 @@ void PiSDFDoubleLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scen
 
 void top(PiSDFGraph* graph, Scenario* scenario){
 	PiSDFVertex *vxDoubleLoop = (PiSDFVertex *)graph->addVertex("DoubleLoop", pisdf_vertex);
+
+	graph->setRootVertex(vxDoubleLoop);
 
 	// Subgraphs
 	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS - 1) exitWithCode(1054);

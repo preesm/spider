@@ -218,11 +218,7 @@ class SRDAGGraph {
 
 //		CSDAGVertex* getExplodeVertex();
 
-
-		/*
-		 * TODO: comments..
-		 */
-		void merge(SRDAGGraph* localDag, bool intraLevel);
+		void merge(SRDAGGraph* localDag, bool intraLevel, UINT32 level, UINT8 step);
 
 		void removeVx(SRDAGVertex* Vx);
 

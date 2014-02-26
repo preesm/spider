@@ -38,7 +38,23 @@
 #ifndef DEBUGGINGOPTIONS_H_
 #define DEBUGGINGOPTIONS_H_
 
-#define EXEC			0
+
+// File names for graph's printing
+#define EXEC							0
+#define PRINT_GRAPH						1
+
+#define PiSDF_FILE_PATH					"pisdf"
+#define SUB_SRDAG_FIFO_ID_FILE_PATH		"subSrDagFifoId"
+#define SUB_SDF_FILE_0_PATH				"subSDF"
+#define SRDAG_FILE_PATH					"srDag"
+#define PRE_SRDAG_FILE_NAME				"preSrDag"
+#define SUB_SRDAG_FILE_NAME				"subSrDag"
+#define POST_SRDAG_FILE_NAME			"postSrDag"
+#define SRDAG_FIFO_ID_FILE_PATH			"srDagFifoId"
+#define SCHED_FILE_NAME					"test"
+
+
+
 
 
 #endif /* DEBUGGINGOPTIONS_H_ */

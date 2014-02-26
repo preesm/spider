@@ -158,6 +158,29 @@ bool BaseVertex::checkPredecessors(){
 }
 
 
+/*
+ * See the header file for comments..
+ */
+bool BaseVertex::invalidEdges(){
+	UINT32 nbNulInputs, nbNulOutputs;
+	nbNulInputs = 0;
+	nbNulOutputs = 0;
+
+	for (UINT32 i = 0; i < nbInputEdges; i++) {
+		if((inputEdges[i]->getProductionInt() == 0) &&
+		   (inputEdges[i]->getConsumptionInt() == 0))
+			nbNulInputs++;
+	}
+
+	for (UINT32 i = 0; i < nbOutputEdges; i++) {
+		if((outputEdges[i]->getProductionInt() == 0) &&
+		   (outputEdges[i]->getConsumptionInt() == 0))
+			nbNulOutputs++;
+	}
+
+	return ((nbNulInputs == nbInputEdges) && (nbNulOutputs == nbOutputEdges));
+}
+
 
 //
 //

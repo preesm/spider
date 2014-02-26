@@ -35,7 +35,7 @@
  * knowledge of the CeCILL-C license and that you accept its terms.		*
  ********************************************************************************/
 
-#include "mpeg4_part2.h"
+#include "mpeg4Decoder/mpeg4_part2.h"
 //#include "DoubleLoop/PiSDFDoubleLoop.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Scenario/Scenario.h>
@@ -50,7 +50,6 @@
 
 #define IS_AM 					0
 #define STOP					1
-
 
 static char name[MAX_VERTEX_NAME_SIZE];
 
@@ -115,12 +114,15 @@ int main(int argc, char* argv[]){
 #endif
 
 //	while(1){
-		PiSDFGraph* 	H = &piSDF;
+		PiSDFGraph* 	H;
+		PiSDFVertex* root = (PiSDFVertex*)piSDF.getRootVertex();
+		if(!root) exitWithCode(1070);
+		if(!root->hasSubGraph(&H)) exitWithCode(1069);
 		SRDAGGraph		dag;
 		SRDAGVertex* 	currHSrDagVx = 0;
 
 		UINT32 	lvlCntr = 0;
-		INT8 	stepsCntr = -1;
+		UINT8 	stepsCntr;
 		/*
 		 * H contains the current PiSDF at each hierarchical level.
 		 * Note that the loop stops when H is null, i.e. all levels have been treated,
@@ -134,16 +136,17 @@ int main(int argc, char* argv[]){
 		#endif
 
 			/*
-			 * Calling the multi steps scheduling method. At each iteration (or for each hierarchical level), the method :
+			 * Calling the multi steps scheduling method. For each hierarchical level, the method :
 			 * 1. Executes the configure actors.
 			 * 2. Resolves parameter depending expressions.
 			 * 3. Computes the Basic Repetition Vector.
 			 * 4. Converts into a DAG.
-			 * 5. And merges the underlying DAG with the DAG of above levels.
+			 * 5. And merges the underlying (local) DAG with the (global) DAG of above levels.
 			 * At the end, the "dag" argument will contain the complete flattened model.
-			 * A final execution must be launched after the end of the method.
+			 * A final execution must be launched to complete one iteration, i.e. one complete execution of the application.
 			 */
-			H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag, currHSrDagVx, &stepsCntr);
+			stepsCntr = 0;
+			H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag, currHSrDagVx, lvlCntr, &stepsCntr);
 
 			/*
 			 * Finding other hierarchical Vxs. Here the variable "H" gets the next hierarchical level to be flattened.
@@ -172,18 +175,11 @@ int main(int argc, char* argv[]){
 
 		launch.clear();
 
-		// Creating FIFOs for executable vxs.
-		// Note that some FIFOs have already been created in previous steps.
-		launch.prepareFIFOsInfo(&dag, &arch);
+		// Assigning FIFO ids to executable vxs' edges.
+		launch.assignFIFOId(&dag, &arch);
 
 		// Preparing tasks' informations
 		launch.prepareTasksInfo(&dag, nbSlaves, &schedule, IS_AM, &execStat);
-
-	#if PRINT_GRAPH
-		// Printing the final dag with FIFO ids.
-		sprintf(name, "%s_%d.gv", SRDAG_FIFO_ID_FILE_PATH, stepsCntr);
-		dotWriter.write(&dag, name, 1, 0);
-	#endif
 
 	#if EXEC == 1
 		/*
@@ -200,8 +196,11 @@ int main(int argc, char* argv[]){
 
 	#if PRINT_GRAPH
 		// Printing the final dag.
-		sprintf(name, "%s_%d.gv", SRDAG_FILE_PATH, stepsCntr);
+		sprintf(name, "%s.gv", SRDAG_FILE_PATH);
 		dotWriter.write(&dag, name, 1, 1);
+		// Printing the final dag with FIFO ids.
+		sprintf(name, "%s.gv", SRDAG_FIFO_ID_FILE_PATH);
+		dotWriter.write(&dag, name, 1, 0);
 	#endif
 
 //	}

@@ -123,6 +123,8 @@ static void exitWithCode(int exitCode){
 	// 1066: Invalid production/consumption value.
 	// 1067: Unexpected amount of data received.
 	// 1068: Unexpected data values received.
+	// 1069: Top's subgraph is missing.
+	// 1070: Top's root vertex is missing.
 
 	printf("\nExiting with code %d\n", exitCode);
 	exit(exitCode);

@@ -100,16 +100,6 @@ public:
 
 	void addParameter(PiSDFParameter* param);
 
-	PiSDFEdge* getInputEdge(UINT32 index){
-		if(index >= nbInputEdges) exitWithCode(1041);
-		return inputEdges[index];
-	}
-
-	PiSDFEdge* getOutputEdge(UINT32 index){
-		if(index >= nbOutputEdges) exitWithCode(1041);
-		return outputEdges[index];
-	}
-
 	/*
 	 * Marks a vertex as executable, i.e. all its parameters have been solved and
 	 * all its predecessors are executable.
@@ -117,6 +107,18 @@ public:
 	void checkForExecution();
 
 	bool checkPredecessors();
+
+	/*
+	 * Checks the input and output edges of the vertex. It returns true, if all the edges
+	 * productions and consumptions are zero. It means that the vertex will not be
+	 * considered in the current iteration. It is the case of vertices that depend on
+	 * parameters, and such parameters' values reduce the edges' expression to zero.
+	 */
+	bool invalidEdges();
+
+
+
+
 
 
 	/*
@@ -127,6 +129,16 @@ public:
     {
         return id;
     }
+
+	PiSDFEdge* getInputEdge(UINT32 index){
+		if(index >= nbInputEdges) exitWithCode(1041);
+		return inputEdges[index];
+	}
+
+	PiSDFEdge* getOutputEdge(UINT32 index){
+		if(index >= nbOutputEdges) exitWithCode(1041);
+		return outputEdges[index];
+	}
 
     UINT64 getNbInputEdges() const
     {

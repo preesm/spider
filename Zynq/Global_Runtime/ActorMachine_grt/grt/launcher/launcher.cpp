@@ -97,16 +97,43 @@ launcher::launcher(): sharedMem(Memory(0x0, 0xffffffff)){
 	launchedSlaveNb=0;
 };
 
-void launcher::init(int nbSlaves){
-	RTQueuesInit(nbSlaves);
-	flushDataToSend();
-	flushDataToReceive();
+
+/*
+ * Assigns a FIFO id to each input and output edge of executable vertices.
+ * Note that an edge may be linked to another vertex that has already been executed,
+ * in this case the edge keeps the FIFO id from the previous assignment.
+ * This ensures that data dependencies execution of different steps.
+ */
+void launcher::assignFIFOId(SRDAGGraph* graph, Architecture* arch){
+	/* Creating fifos for executable vxs.*/
+	for (UINT32 i = 0; i < graph->getNbVertices(); i++) {
+		SRDAGVertex* vx = graph->getVertex(i);
+		if(vx->getState() == SrVxStExecutable){
+			for (UINT32 j = 0; j < vx->getNbInputEdge(); j++){
+				SRDAGEdge* edge = vx->getInputEdge(j);
+				if(edge->getFifoId() == -1){
+					addFIFO(edge);
+				}
+			}
+			for (UINT32 j = 0; j < vx->getNbOutputEdge(); j++){
+				SRDAGEdge* edge = vx->getOutputEdge(j);
+				if(edge->getFifoId() == -1){
+					addFIFO(edge);
+				}
+			}
+		}
+	}
 }
+
+
 
 void launcher::clear(){
 	flushDataToSend();
 	flushDataToReceive();
 }
+
+
+
 
 void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName){
 	// Creating the Gantt with real times.
@@ -147,6 +174,14 @@ void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		fclose (pFile);
 	}
 }
+
+
+void launcher::init(int nbSlaves){
+	RTQueuesInit(nbSlaves);
+	flushDataToSend();
+	flushDataToReceive();
+}
+
 
 
 void launcher::initFifos(SRDAGGraph* graph, int nbSlaves){
@@ -327,51 +362,12 @@ void launcher::prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedul
 	sharedMem.exportMem("mem.csv");
 }
 
-void launcher::prepareFIFOsInfo(SRDAGGraph* graph, Architecture* arch){
-	/* Creating fifos for executable vxs.*/
-	for (UINT32 i = 0; i < graph->getNbVertices(); i++) {
-		SRDAGVertex* vx = graph->getVertex(i);
-		if(vx->getState() == SrVxStExecutable){
-			for (UINT32 j = 0; j < vx->getNbInputEdge(); j++){
-				SRDAGEdge* edge = vx->getInputEdge(j);
-				if(edge->getFifoId() == -1){
-					addFIFO(edge);
-				}
-			}
-			for (UINT32 j = 0; j < vx->getNbOutputEdge(); j++){
-				SRDAGEdge* edge = vx->getOutputEdge(j);
-				if(edge->getFifoId() == -1){
-					addFIFO(edge);
-				}
-			}
-		}
-	}
 
 
-//	for(int i=0; i<graph->getNbEdges(); i++){
-////		msg_createFifo = CreateFifoMsg(graph, graph->getEdge(i), &sharedMem);
-//		msg_createFifo = CreateFifoMsg(graph, graph->getEdge(i), DEFAULT_FIFO_SIZE, &sharedMem);
-//		for(int j=0; j<archi->getNbActiveSlaves(); j++)
-//			msg_createFifo.prepare(j,this);
-////			dataToSendCnt[j] += msg_createFifo.prepare(dataToSend[j], dataToSendCnt[j]);
-//	}
-//	execStat->memAllocated = sharedMem.getTotalAllocated();
-//	execStat->fifoNb = graph->getNbEdges();
-
-//	/* Clearing fifos */
-//	ClearFifoMsg(-1).prepare(0, this);
-//	for(int i=0; i<graph->getNbEdges(); i++){
-//		msg_clearFifo = ClearFifoMsg(i);
-////		int j = i%archi->getNbActiveSlaves();
-////		dataToSendCnt[j] += msg_clearFifo.prepare(dataToSend[j], dataToSendCnt[j]);
-//		msg_clearFifo.prepare(0, this);
-//	}
-
-	// Setting the type of acknowledge message that should be received from LRT 0.
-//	addUINT32ToReceive(0, MSG_CLEAR_FIFO);
-
-}
-
+/*
+ * Compiles all the information concerning the actors that are about to be executed.
+ *
+ */
 void launcher::prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat){
 //	CreateFifoMsg msg_createFifo;
 //	ClearFifoMsg msg_clearFifo;

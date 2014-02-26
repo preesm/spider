@@ -38,15 +38,6 @@
 #ifndef GRT_DEFINITIONS_H_
 #define GRT_DEFINITIONS_H_
 
-// Debug
-#define PRINT_GRAPH						1
-#define PiSDF_FILE_PATH					"pisdf"
-#define SUB_SRDAG_FILE_PATH				"subSrDag"
-#define SUB_SRDAG_FIFO_ID_FILE_PATH		"subSrDagFifoId"
-#define SRDAG_FILE_PATH					"srDag"
-#define SRDAG_FIFO_ID_FILE_PATH			"srDagFifoId"
-#define SCHED_FILE_NAME					"test"
-
 // Architecture
 #define MAX_SLAVE_TYPES 2 // The maximum number of slave types
 #define MAX_SLAVES 12// The maximum number of slaves

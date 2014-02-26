@@ -56,6 +56,7 @@ void PiSDFTransformer::addVertices(BaseVertex* vertex, int nb_repetitions, SRDAG
 		srdag_vertex->setFunctIx(vertex->getFunction_index());
 		srdag_vertex->setReference(vertex);
 		srdag_vertex->setReferenceIndex(j);
+		srdag_vertex->setParent(hSrDagVx);
 
 	}
 }

@@ -83,9 +83,10 @@ private:
 public:
 	launcher();
 
-	void init(int nbSlaves);
+	void assignFIFOId(SRDAGGraph* graph, Architecture* arch);
 	void clear();
 	void createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName);
+	void init(int nbSlaves);
 	void launch(SRDAGGraph* graph, Architecture *archi);
 
 	//
@@ -127,7 +128,6 @@ public:
 	// Prepares the execution of a SRDAG or a group of actors (e.g. the configuration actors of a PiSDF).
 	void prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedule, ExecutionStat* execStat);
 
-	void prepareFIFOsInfo(SRDAGGraph* graph, Architecture* arch);
 
 	void prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat);
 

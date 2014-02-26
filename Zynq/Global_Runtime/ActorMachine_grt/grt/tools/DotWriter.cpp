@@ -355,6 +355,19 @@ void DotWriter::write(PiSDFGraph* graph, const char* path, char displayNames){
 			draw_vertex(graph->getOutput_vertex(i), displayNames, pFile);
 		}
 
+		// Drawing switch vertices.
+		for (UINT32 i = 0; i < graph->getNbSwitchVertices(); i++) {
+			draw_vertex(graph->getSwitchVertex(i), displayNames, pFile);
+		}
+
+		// Drawing select vertices.
+		for (UINT32 i = 0; i < graph->getNbSelectVertices(); i++) {
+			draw_vertex(graph->getSelectVertex(i), displayNames, pFile);
+		}
+
+		// TODO: print round buffer vertex.
+
+
 		// Drawing Join vertices.
 		for (UINT32 i = 0; i < graph->getNb_join_vertices(); i++) {
 			draw_vertex(graph->getJoin_vertex(i), displayNames, pFile);

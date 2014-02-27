@@ -210,8 +210,7 @@ void decodeVOP_I(UINT32 inputFIFOIds[],
 	                decode_bloc_intra(k, FrmData, &VOP.VideoObjectPlane_VOP, VLCinverseXi_pos_prec [0], DCT3D_I, &VOL, MB_courant
 	                    , DCpred_buffA [k], DCpred_buffB [k], DCpred_buffC [k]
 	                , InverseQuant_BlkXn + k * 16, block_8x8, VLCinverseXi_pos);
-	                Stock_block_in_pict(width + 2 * EDGE_SIZE, pos_X [0] + tab_pos_X [k], block_8x8
-	                    , display [0]);
+	                Stock_block_in_pict(width + 2 * EDGE_SIZE, pos_X [0] + tab_pos_X [k], block_8x8, display [0]);
 	                VLCinverseXi_pos_prec [0] = VLCinverseXi_pos [0];
 	            }
 

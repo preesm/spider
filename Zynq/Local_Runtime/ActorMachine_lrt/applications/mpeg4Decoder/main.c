@@ -21,8 +21,9 @@ int main(int argc, char **argv) {
 	OS_TCB *new_tcb;
 	UINT32 i, nbFrames;
 	UINT32 I_FrmCounter, P_FrmCounter;
-	readVOLInData readVOLInit;
-	readVOPStateInData readVOPStateInit;
+	readVOLInData 		readVOLInit;
+	readVOPStateInData 	readVOPStateInit;
+	decodeVOPOutData 	initImg;
 	UINT32 FifoIds[MAX_NB_FIFOs], FifoAddrs[MAX_NB_FIFOs];
 
 	UINT32 inputFifoId[MAX_NB_FIFOs];
@@ -68,14 +69,7 @@ int main(int argc, char **argv) {
 	functions_tbl[8] = decodeVOP;
 #endif
 
-//	UINT32 data = 1;
-//	FILE* pFile = fopen(SH_MEM_FILE_PATH, "rb+");
-//	fseek(pFile, 0, SEEK_SET);
-//	fwrite(&data, 8, 1, pFile);
-//	fclose(pFile);
-
 	Init_SDL(16, 720, 576);
-
 
 	LRTInit();
 
@@ -91,9 +85,10 @@ int main(int argc, char **argv) {
 	// Setting initial tokens.
 	memset(&readVOLInit, 0, sizeof(readVOLInData));
 	memset(&readVOPStateInit, 0, sizeof(readVOPStateInData));
+	memset(&initImg, 0, sizeof(decodeVOPOutData));
 	writeFifo(FifoIds[4], FifoAddrs[4], sizeof(readVOLInData), (UINT8 *) &readVOLInit);
 	writeFifo(FifoIds[9], FifoAddrs[9], sizeof(readVOPStateInData), (UINT8 *) &readVOPStateInit);
-//	writeFifo(FifoIds[12], FifoAddrs[12], sizeof(decodeVOPOutData), &value);
+	writeFifo(FifoIds[12], FifoAddrs[12], sizeof(decodeVOPOutData), (UINT8 *) &initImg);
 
 	/*
 	 * Creating tasks.
@@ -218,7 +213,8 @@ int main(int argc, char **argv) {
 			outputFifoAddr[0] = FifoAddrs[12];
 			outputFifoAddr[1] = FifoAddrs[10];
 			outputFifoAddr[2] = FifoAddrs[11];
-			decodeVOP_I(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
+			decodeMB_I(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
+//			decodeVOP_I(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
 		}
 		else
 		{
@@ -268,12 +264,12 @@ int main(int argc, char **argv) {
 	inputFifoAddr[1] = FifoAddrs[7];
 	inputFifoAddr[2] = FifoAddrs[8];
 	inputFifoAddr[3] = FifoAddrs[12];
-	outputFifoId[0] = FifoIds[11];
-	outputFifoId[1] = FifoIds[12];
-	outputFifoId[2] = FifoIds[14];
-	outputFifoAddr[0] = FifoAddrs[11];
-	outputFifoAddr[1] = FifoAddrs[12];
-	outputFifoAddr[2] = FifoAddrs[14];
+	outputFifoId[0] = FifoIds[12];
+	outputFifoId[1] = FifoIds[10];
+	outputFifoId[2] = FifoIds[11];
+	outputFifoAddr[0] = FifoAddrs[12];
+	outputFifoAddr[1] = FifoAddrs[10];
+	outputFifoAddr[2] = FifoAddrs[11];
 	decodeVOP(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
 #endif
 

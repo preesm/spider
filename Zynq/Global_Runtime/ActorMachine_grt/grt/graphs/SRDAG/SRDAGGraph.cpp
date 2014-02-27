@@ -301,10 +301,10 @@ SRDAGEdge* SRDAGGraph::getEdgeByRef(SRDAGVertex* hSrDagVx, BaseEdge* refEdge, VE
  *
  * To do the merging, it adds all vertices and edges from "annex" into the same global DAG.
  * (let's call the vertices from the global DAG the left side, and those of the "annex", the right side).
- * For both types of merging, the left side connectors are round buffer/input vertices without output edges.
- * The right side connectors are round buffer/input vertices without input edges.
+ * For both types of merging, the left side connectors are round buffer or input vertices without output edges.
+ * The right side connectors are round buffer or input vertices without input edges.
  *
- *
+ * INTER-level:
  */
 void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel, UINT32 level, UINT8 step){
 #if PRINT_GRAPH
@@ -348,7 +348,7 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel, UINT32 level, UINT8 s
 		while(outputVx){
 			// Getting the output edge from the higher level in the PiSDF.
 			BaseEdge* refEdge = ((PiSDFIfVertex*)outputVx->getReference())->getParentEdge();
-			// Getting the corresponding edge in the DAG.
+			// Getting the corresponding edge in the global DAG.
 			SRDAGEdge* outSrDagEdge = getEdgeByRef(outputVx->getParent(), refEdge, output_vertex);
 			// Changing the source of the DAG edge to the output of the lower level.
 			outSrDagEdge->setSource(outputVx);
@@ -361,21 +361,38 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel, UINT32 level, UINT8 s
 	else{
 		// INTER-level merging.
 
-		// Connecting input interface(s) in the annex.
+		// Finding an unplugged input connector vertex in the right side.
 		SRDAGVertex* inputVx;
 		inputVx = findUnplugIF(input_vertex);
 
 		while(inputVx){
-			// Getting the input edge from the higher level in the PiSDF.
+			// Getting the input edge from the parent vertex in the PiSDF.
 			BaseEdge* refEdge = ((PiSDFIfVertex*)inputVx->getReference())->getParentEdge();
-			// Getting the corresponding edge in the DAG.
+			// Getting the associated edge in the global DAG.
 			SRDAGEdge* inSrDagEdge = getEdgeByRef(inputVx->getParent(), refEdge, input_vertex);
-			// Changing the sink of the DAG edge to the input from the lower level.
+			// Replacing the parent vertex by its descendant vertex as sink of the input DAG edge.
 			inSrDagEdge->setSink(inputVx);
 			inputVx->addInputEdge(inSrDagEdge);
 //			if(inputVx->getNbOutputEdge()>0) inputVx->setState(SrVxStExecutable);
 
+			// Finding an unplugged connector vertex in the right side.
 			inputVx = findUnplugIF(input_vertex);
+		}
+
+		// Finding an unplugged output connector vertex in the right side.
+		SRDAGVertex* outputVx;
+		outputVx = findUnplugIF(output_vertex);
+		while(outputVx){
+			// Getting the output edge from the higher level in the PiSDF.
+			BaseEdge* refEdge = ((PiSDFIfVertex*)outputVx->getReference())->getParentEdge();
+			// Getting the corresponding edge in the global DAG.
+			SRDAGEdge* outSrDagEdge = getEdgeByRef(outputVx->getParent(), refEdge, output_vertex);
+			// Changing the source of the DAG edge to the output of the lower level.
+			outSrDagEdge->setSource(outputVx);
+			outputVx->addOutputEdge(outSrDagEdge);
+//			if(outputVx->getNbOutputEdge()>0) outputVx->setState(SrVxStExecutable);
+
+			outputVx = findUnplugIF(output_vertex);
 		}
 	}
 

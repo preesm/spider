@@ -48,7 +48,12 @@ static decodeVOPOutData imgPrec;
 static decodeVOPOutData img;
 
 
-
+short   InvDCT_f[6][128];
+short   DCpred_F00pred[6];
+short   DCpred_QFpred[6][7];
+short   DCpred_QPpred[6];
+int 	pos_fin_vlc[6];
+int     DCpred_prediction_direction[6];
 
 static void decodeBlk_I(
 		const int k,
@@ -247,46 +252,47 @@ void decodeMB_I(UINT32 inputFIFOIds[],
 	            VLCinverseXi_pos_prec [0] = MacroblockI_pos [0];
 
 
-                short   InvDCT_f[6][128];
-                short   DCpred_F00pred[6];
-                short   DCpred_QFpred[6][7];
-                short   DCpred_QPpred[6];
-	            int 	pos_fin_vlc[6];
-                int     DCpred_prediction_direction[6];
+//                short   InvDCT_f[6][128];
+//                short   DCpred_F00pred[6];
+//                short   DCpred_QFpred[6][7];
+//                short   DCpred_QPpred[6];
+//	            int 	pos_fin_vlc[6];
+//                int     DCpred_prediction_direction[6];
 
 	            for ( k = 0 ; k < 6 ; k++ ) {
-	                VLCinverseI(5 - k, MB_courant, VLCinverseXi_pos_prec[0], FrmData, DCT3D_I, DCpred_buffA[k], DCpred_buffB[k], DCpred_buffC[k], &VOP.VideoObjectPlane_VOP,
-	                			&pos_fin_vlc[k], InvDCT_f[k], DCpred_QFpred[k], &DCpred_F00pred[k], &DCpred_QPpred[k], &DCpred_prediction_direction[k]);
+	                VLCinverseI(5 - k, MB_courant, VLCinverseXi_pos_prec[0], FrmData, DCT3D_I,
+	                			DCpred_buffA[k], DCpred_buffB[k], DCpred_buffC[k], &VOP.VideoObjectPlane_VOP,
+	                			&pos_fin_vlc[k], &InvDCT_f[k][0], DCpred_QFpred[k], &DCpred_F00pred[k], &DCpred_QPpred[k], &DCpred_prediction_direction[k]);
 	                VLCinverseXi_pos_prec[0] = pos_fin_vlc[k];
 	            }
 
 	            // Luminances
 	            width = VOL.video_object_layer_width ;
 	            pos_X [0] = ((i + j * stride) << 4) + EDGE_SIZE + EDGE_SIZE * stride ;
-	            decodeBlk_I(0, InvDCT_f[0], DCpred_QFpred[0], DCpred_F00pred[0], DCpred_QPpred[0], &VOP.VideoObjectPlane_VOP, DCpred_prediction_direction[0],
+	            decodeBlk_I(0, &InvDCT_f[0][0], DCpred_QFpred[0], DCpred_F00pred[0], DCpred_QPpred[0], &VOP.VideoObjectPlane_VOP, DCpred_prediction_direction[0],
 	            			&VOL, InverseQuant_BlkXn + 0 * 16, block_8x8);
 	            Stock_block_in_pict(width + 2 * EDGE_SIZE, pos_X [0] + tab_pos_X [0], block_8x8, display [0]);
 
-	            decodeBlk_I(1, InvDCT_f[1], DCpred_QFpred[1], DCpred_F00pred[1], DCpred_QPpred[1], &VOP.VideoObjectPlane_VOP, DCpred_prediction_direction[1],
+	            decodeBlk_I(1, &InvDCT_f[1][0], DCpred_QFpred[1], DCpred_F00pred[1], DCpred_QPpred[1], &VOP.VideoObjectPlane_VOP, DCpred_prediction_direction[1],
 	            			&VOL, InverseQuant_BlkXn + 1 * 16, block_8x8);
 	            Stock_block_in_pict(width + 2 * EDGE_SIZE, pos_X [0] + tab_pos_X [1], block_8x8, display [0]);
 
-	            decodeBlk_I(2, InvDCT_f[2], DCpred_QFpred[2], DCpred_F00pred[2], DCpred_QPpred[2], &VOP.VideoObjectPlane_VOP, DCpred_prediction_direction[2],
+	            decodeBlk_I(2, &InvDCT_f[2][0], DCpred_QFpred[2], DCpred_F00pred[2], DCpred_QPpred[2], &VOP.VideoObjectPlane_VOP, DCpred_prediction_direction[2],
 	            			&VOL, InverseQuant_BlkXn + 2 * 16, block_8x8);
 	            Stock_block_in_pict(width + 2 * EDGE_SIZE, pos_X [0] + tab_pos_X [2], block_8x8, display [0]);
 
-	            decodeBlk_I(3, InvDCT_f[3], DCpred_QFpred[3], DCpred_F00pred[3], DCpred_QPpred[3], &VOP.VideoObjectPlane_VOP, DCpred_prediction_direction[3],
+	            decodeBlk_I(3, &InvDCT_f[3][0], DCpred_QFpred[3], DCpred_F00pred[3], DCpred_QPpred[3], &VOP.VideoObjectPlane_VOP, DCpred_prediction_direction[3],
 	            			&VOL, InverseQuant_BlkXn + 3 * 16, block_8x8);
 	            Stock_block_in_pict(width + 2 * EDGE_SIZE, pos_X [0] + tab_pos_X [3], block_8x8, display [0]);
 
 	            // Chrominances
 	            width = VOL.video_object_layer_width >> 1 ;
 	            pos_X [0] = ((i + j * (stride >> 1)) << 3) + edge_size2 + edge_size2 * (stride >> 1);
-	            decodeBlk_I(4, InvDCT_f[4], DCpred_QFpred[4], DCpred_F00pred[4], DCpred_QPpred[4], &VOP.VideoObjectPlane_VOP, DCpred_prediction_direction[4],
+	            decodeBlk_I(4, &InvDCT_f[4][0], DCpred_QFpred[4], DCpred_F00pred[4], DCpred_QPpred[4], &VOP.VideoObjectPlane_VOP, DCpred_prediction_direction[4],
             				&VOL, InverseQuant_BlkXn + 4 * 16, block_8x8);
 	            Stock_block_in_pict(width + 2 * edge_size2, pos_X [0], block_8x8, display [4]);
 
-	            decodeBlk_I(5, InvDCT_f[5], DCpred_QFpred[5], DCpred_F00pred[5], DCpred_QPpred[5], &VOP.VideoObjectPlane_VOP, DCpred_prediction_direction[5],
+	            decodeBlk_I(5, &InvDCT_f[5][0], DCpred_QFpred[5], DCpred_F00pred[5], DCpred_QPpred[5], &VOP.VideoObjectPlane_VOP, DCpred_prediction_direction[5],
             				&VOL, InverseQuant_BlkXn + 5 * 16, block_8x8);
 	            Stock_block_in_pict(width + 2 * edge_size2, pos_X [0], block_8x8, display [5]);
 

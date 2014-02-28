@@ -353,6 +353,7 @@ void VLCinverseI ( const int N, const int posMB, const int pos_i, const unsigned
     int             last ;
     unsigned int    *scan_table ;
     
+    printf("%d, %d, %d, %d\n", pos_i, BlkA, BlkB, BlkC);
     *pos_fin_vlc = pos_i ;
     //alternate_horizontal_scan = 0 ;
     //alternate_vertical_scan = 1 ;

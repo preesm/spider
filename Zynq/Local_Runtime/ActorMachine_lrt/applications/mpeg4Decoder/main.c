@@ -213,8 +213,8 @@ int main(int argc, char **argv) {
 			outputFifoAddr[0] = FifoAddrs[12];
 			outputFifoAddr[1] = FifoAddrs[10];
 			outputFifoAddr[2] = FifoAddrs[11];
-			decodeMB_I(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
-//			decodeVOP_I(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
+//			decodeMB_I(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
+			decodeVOP_I(inputFifoId, inputFifoAddr, outputFifoId, outputFifoAddr, 0);
 		}
 		else
 		{

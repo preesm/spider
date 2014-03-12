@@ -80,7 +80,6 @@ class CSDAGVertex {
 
 		/**
 		 Number of repetitions of the vertex in the current SRDAG.
-		 Need for Jani's flow-shop.
 		*/
 		unsigned char repetitionNb;
 

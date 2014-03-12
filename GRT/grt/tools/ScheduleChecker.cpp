@@ -1,7 +1,7 @@
 
 /********************************************************************************
- * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet			*
+ * Copyright or Â© or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-FranÃ§ois Nezan, Jean-Christophe Prevotet			*
  * 										*
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr			*
  * 										*
@@ -40,7 +40,6 @@
 #include "../scheduling/architecture/Architecture.h"
 #include "../graphs/SRDAG/SRDAGGraph.h"
 #include "../graphs/CSDAG/CSDAGGraph.h"
-#include "../graphs/JobSet/JobSet.h"
 
 ScheduleChecker::ScheduleChecker() {
 }
@@ -161,39 +160,6 @@ inline int testCommunication(SRDAGGraph* srDag, Architecture* archi){
 	return test;
 }
 
-inline int testPipeline(SRDAGGraph* srDag, JobSet  *jobSet, Architecture* archi){
-	int test=1;
-	// Check Graph Dependency
-	for (int i=0 ; i<srDag->getNbVertices() && test; i++){
-		SRDAGVertex* vertexI = srDag->getVertex(i);
-		int setI = jobSet->getOperation(vertexI->getCsDagReference()->getFunctionIndex())->getMachineSetId();
-
-		for (int j=0 ; j<vertexI->getNbInputEdge() && test; j++){
-			SRDAGVertex* vertexJ = vertexI->getInputEdge(j)->getSource();
-			int setJ = jobSet->getOperation(vertexJ->getCsDagReference()->getFunctionIndex())->getMachineSetId();
-
-			if(setI == setJ){
-				if((test = (vertexJ->getSlaveIndex() == vertexI->getSlaveIndex()))==0)
-					printf("Same set different slave: task %s%d (core %d) -> %s%d (core %d)\n",
-						vertexJ->getCsDagReference()->getName(),
-						vertexJ->getReferenceIndex(),
-						vertexJ->getSlaveIndex(),
-						vertexI->getCsDagReference()->getName(),
-						vertexI->getReferenceIndex(),
-						vertexI->getSlaveIndex());
-			}else{
-				if((test = (setJ < setI)) == 0)
-					printf("Wrong set order: task %s%d -> %s%d\n",
-						vertexJ->getCsDagReference()->getName(),
-						vertexJ->getReferenceIndex(),
-						vertexI->getCsDagReference()->getName(),
-						vertexI->getReferenceIndex());
-			}
-		}
-	}
-	return test;
-}
-
 void ScheduleChecker::checkSchedule(SRDAGGraph* srDag, Schedule* schedule, Architecture* archi){
 	int ret=1;
 #ifdef DISPLAY
@@ -228,24 +194,3 @@ void ScheduleChecker::checkList(SRDAGGraph* srDag, Architecture* archi){
 	if(!ret) exitWithCode(1049);
 }
 
-void ScheduleChecker::checkFlow(SRDAGGraph* srDag, JobSet* jobSet, Architecture* archi){
-	int ret=1;
-#ifdef DISPLAY
-	printf("Test FlowShop Schedule:\n");
-#endif
-	ret = testConcurency(srDag, archi);
-#ifdef DISPLAY
-	printf("\tCore Conc.: %s\n", (ret)?("Ok"):("Failed"));
-#endif
-	if(!ret) exitWithCode(1049);
-	ret = testCommunication(srDag, archi);
-#ifdef DISPLAY
-	printf("\tCommunic. : %s\n", (ret)?("Ok"):("Failed"));
-#endif
-	if(!ret) exitWithCode(1049);
-	ret = testPipeline(srDag, jobSet, archi);
-#ifdef DISPLAY
-	printf("\tPipeline  : %s\n", (ret)?("Ok"):("Failed"));
-#endif
-	if(!ret) exitWithCode(1049);
-}

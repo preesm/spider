@@ -1,7 +1,7 @@
 
 /********************************************************************************
- * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet			*
+ * Copyright or Â© or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-FranÃ§ois Nezan, Jean-Christophe Prevotet			*
  * 										*
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr			*
  * 										*
@@ -51,14 +51,9 @@ typedef enum{
 
 class ExecutionStat {
 public:
-	unsigned int flowScheduleTime;
 	unsigned int listScheduleTime;
 	unsigned int srDAGTransfTime;
-	unsigned int jobTransfTime;
-	unsigned int flowMappingTime;
-	unsigned int flowMakespan;
 	unsigned int listMakespan;
-	unsigned int flowThroughput;
 	unsigned int listThroughput;
 	unsigned int criticalPath;
 	unsigned int t1Latency;
@@ -81,36 +76,27 @@ public:
 
 
 	ExecutionStat(){
-		flowScheduleTime = listScheduleTime = srDAGTransfTime = 0;
-		jobTransfTime = flowMappingTime = flowMakespan = 0;
-		listMakespan = flowThroughput = listThroughput = 0;
+		listScheduleTime = srDAGTransfTime = 0;
+		nbSRDAGVertices = nbSRDAGEdges = memAllocated = 0;
+		nbRunningCore = fifoNb = 0;
+		listMakespan = listThroughput = 0;
 		criticalPath = t1Latency = nbFunction=0;
 	};
 
 	virtual ~ExecutionStat(){};
-
-	inline unsigned int getFlowExecutionTime(){
-		return flowScheduleTime+srDAGTransfTime+jobTransfTime+flowMappingTime;
-	}
 
 	inline unsigned int getListExecutionTime(){
 		return listScheduleTime+srDAGTransfTime;
 	}
 
 	void average(ExecutionStat* tab, int nb){
-		double temp1=0, temp2=0, temp3=0, temp4=0, temp5=0;
+		double temp1=0, temp2=0;
 		for(int i=0; i<nb; i++){
-			temp1 += tab[i].flowScheduleTime;
-			temp2 += tab[i].listScheduleTime;
-			temp3 += tab[i].srDAGTransfTime;
-			temp4 += tab[i].jobTransfTime;
-			temp5 += tab[i].flowMappingTime;
+			temp1 += tab[i].listScheduleTime;
+			temp2 += tab[i].srDAGTransfTime;
 		}
-		flowScheduleTime = temp1/nb;
-		listScheduleTime = temp2/nb;
-		srDAGTransfTime  = temp3/nb;
-		jobTransfTime    = temp4/nb;
-		flowMappingTime  = temp5/nb;
+		listScheduleTime = temp1/nb;
+		srDAGTransfTime  = temp2/nb;
 	}
 };
 

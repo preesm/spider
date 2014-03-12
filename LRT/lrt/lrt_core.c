@@ -90,12 +90,13 @@ void LRTInit() {
 	OSTCBCur = (OS_TCB *) 0;
 	memset(OSTCBTbl, 0, sizeof(OSTCBTbl)); /* Clear all the TCBs */
 
-	addMboxMem();
-	mboxMemInit();
+//	addMboxMem();
+//	mboxMemInit();
 
-	addShMem();
+//	addShMem();
 	// Initializing the shared memory for data FIFOs.
-	shMemInit(cpuId);
+//	shMemInit(cpuId);
+	OS_ShMemInit();
 
 	if(cpuId == 0){
 		/* Clear all the data FIFOs */
@@ -115,7 +116,7 @@ void LRTInit() {
  */
 void LRTCtrlStart(){
 	RTQueuesInit();
-	releaseMboxMemMx();
+//	releaseMboxMemMx();
 	while (TRUE)
 		mainLoop();
 }

@@ -40,8 +40,6 @@
 #include <linux/types.h>
 
 typedef __u8 BOOLEAN;
-#define TRUE -1
-#define FALSE 0
 
 typedef __s8	INT8;
 typedef __s16 	INT16;

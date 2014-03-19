@@ -38,6 +38,7 @@
 #define TIME_H_
 
 #include "types.h"
+#include <lrt_definitions.h>
 
 void OS_TimeInit();
 
@@ -45,6 +46,6 @@ void OS_TimeReset();
 void OS_TimeStart();
 void OS_TimeStop();
 
-UINT32 OS_TimeGetValue();
+LRTSYSTime OS_TimeGetValue();
 
 #endif /* TIME_H_ */

@@ -37,8 +37,8 @@
 #include "CreateFifoMsg.h"
 #include "../../graphs/SRDAG/SRDAGEdge.h"
 #include "../../graphs/SRDAG/SRDAGGraph.h"
-#include <Memory.h>
-#include <hwQueues.h>
+#include "../Memory.h"
+#include <platform_queue.h>
 
 CreateFifoMsg::CreateFifoMsg(SRDAGGraph* graph, SRDAGEdge* edge, Memory *mem){
 	fifoID = graph->getEdgeIndex(edge);
@@ -65,10 +65,10 @@ CreateFifoMsg::CreateFifoMsg(UINT32 fifoID, UINT32 fifoSize, Memory *mem){
 };
 
 void CreateFifoMsg::send(int LRTID){
-	RTQueuePush_UINT32(LRTID, RTCtrlQueue, MSG_CREATE_FIFO);
-	RTQueuePush_UINT32(LRTID, RTCtrlQueue, fifoID);
-	RTQueuePush_UINT32(LRTID, RTCtrlQueue, fifoSize);
-	RTQueuePush_UINT32(LRTID, RTCtrlQueue, fifoAdd);
+	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_CREATE_FIFO);
+	platform_QPushUINT32(LRTID, platformCtrlQ, fifoID);
+	platform_QPushUINT32(LRTID, platformCtrlQ, fifoSize);
+	platform_QPushUINT32(LRTID, platformCtrlQ, fifoAdd);
 }
 
 int CreateFifoMsg::prepare(int* data, int offset){

@@ -45,7 +45,7 @@
 #include "scheduling/Schedule/Schedule.h"
 #include "scheduling/Schedule/BaseSchedule.h"
 #include "grt_definitions.h"
-#include "Memory.h"
+#include "../Memory.h"
 #include "launcher/launcher.h"
 
 class AMGraph {

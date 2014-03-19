@@ -34,7 +34,7 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <lrt.h>
+#include <lrt_cfg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -71,7 +71,7 @@ static void addOSShMem(UINT32 base, UINT32 length, const char* filename) {
 
 void OS_ShMemInit() {
 	printf("Openning /home/jheulot/dev/shMem...\n");
-	addOSShMem(0x10000000, 0x10000000, "/home/jheulot/dev/shMem");
+	addOSShMem(0x0, 0x10000000, "/home/jheulot/dev/shMem");
 }
 
 UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {

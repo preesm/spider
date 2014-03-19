@@ -672,7 +672,7 @@ void PiSDFGraph::solveParameters(SRDAGGraph* dag, BaseSchedule* schedule){
 				dag->getVerticesFromReference(configVertex, &vx);
 				UINT32 slaveId;
 				if(schedule->findSlaveId(vx->getScheduleIndex(), vx, &slaveId)){
-					UINT64 value = RTQueuePop_UINT32(slaveId, RTCtrlQueue);
+					UINT64 value = platform_QPopUINT32(slaveId, platformCtrlQ);
 					configVertex->getRelatedParam(j)->setValue(value);
 				}
 #else

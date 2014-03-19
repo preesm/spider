@@ -39,104 +39,86 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include "types.h"
 #include "hwQueues.h"
-
-typedef enum{
-	CTRL=0,
-	INFO=1
-} MailboxType;
 
 typedef enum{
 	IN=0,
 	OUT=1
 } FifoDir;
 
-static int OS_QGRT[2][2];
+static int OS_QGRT[nbQueueTypes][2];
 int cpuId;
+
+static const char* typeName[3] = {
+		"CTRL",
+		"INFO",
+		"JOB"
+};
 
 #define BASE_PATH "/home/jheulot/dev/"
 
-void OS_QInit(){
+void RTQueuesInit(){
 	char tempStr[50];
+	int i, flags;
 
-	sprintf(tempStr, "%sCtrl_Grtto%d",BASE_PATH,cpuId);
-	OS_QGRT[CTRL][IN] = open(tempStr, O_RDWR | O_NONBLOCK);
-	if (OS_QGRT[CTRL][IN] == -1) {perror("open Ctrl_Grtto"); abort();}
+	for(i=0; i<nbQueueTypes; i++){
+		sprintf(tempStr, "%s%s_%dtoGrt",BASE_PATH,typeName[i],cpuId);
+		OS_QGRT[i][OUT] =  open(tempStr, O_RDWR);
+		if (OS_QGRT[i][OUT] == -1) {
+			printf("Failed to open %s: creating...\n",tempStr);
+			mkfifo(tempStr, S_IRWXU);
+		}
 
-	sprintf(tempStr, "%sCtrl_%dtoGrt",BASE_PATH,cpuId);
-	OS_QGRT[CTRL][OUT] = open(tempStr, O_RDWR | O_NONBLOCK);
-	if (OS_QGRT[CTRL][OUT] == -1) {perror("open Ctrl_toGrt"); abort();}
+		sprintf(tempStr, "%s%s_Grtto%d",BASE_PATH,typeName[i],cpuId);
+		OS_QGRT[i][IN] = open(tempStr, O_RDWR);
+		if (OS_QGRT[i][IN] == -1) {
+			printf("Failed to open %s: creating...\n",tempStr);
+			mkfifo(tempStr, S_IRWXU);
+		}
 
-	sprintf(tempStr, "%sInfo_Grtto%d",BASE_PATH,cpuId);
-	OS_QGRT[INFO][IN] = open(tempStr, O_RDWR | O_NONBLOCK);
-	if (OS_QGRT[INFO][IN] == -1) {perror("open Info_Grtto"); abort();}
-
-	sprintf(tempStr, "%sInfo_%dtoGrt",BASE_PATH,cpuId);
-	OS_QGRT[INFO][OUT] = open(tempStr, O_RDWR | O_NONBLOCK);
-	if (OS_QGRT[INFO][OUT] == -1) {perror("open Info_toGrt"); abort();}
+		flags = fcntl(OS_QGRT[i][IN], F_GETFL, 0);
+		fcntl(OS_QGRT[i][IN], F_SETFL, flags | O_NONBLOCK);
+	}
 }
 
-/*******************/
-/* Control Mailbox */
-/*******************/
+UINT32 RTQueuePush(RTQueueType queueType, void* data, int size){
+	int file = OS_QGRT[queueType][OUT];
 
-UINT32 OS_CtrlQPush(void* data, int size){
-	return write(OS_QGRT[CTRL][OUT], data, size);
-}
-
-UINT32 OS_CtrlQPop(void* data, int size){
 	int i=0;
 	while(i < size){
-		int res = read(OS_QGRT[CTRL][IN], (char*)data+i, size-i);
+		int res = write(file, (char*)data+i, size-i);
 		if(res>0) i+=res;
 	}
 	return i;
 }
 
-UINT32 OS_CtrlQPop_UINT32(){
-	UINT32 value;
-	OS_CtrlQPop(&value, sizeof(UINT32));
-	return value;
+UINT32 RTQueuePush_UINT32(RTQueueType queueType, UINT32 data){
+	return RTQueuePush(queueType, &data, sizeof(unsigned int));
 }
 
-void OS_CtrlQPush_UINT32(UINT32 value){
-	UINT32 val = value;
-	OS_CtrlQPush(&val, sizeof(UINT32));
-}
+UINT32 RTQueuePop(RTQueueType queueType, void* data, int size){
+	int file = OS_QGRT[queueType][IN];
 
-UINT32 OS_CtrlQPop_nonBlocking(void* data, int size){
-	return read(OS_QGRT[CTRL][IN], data, size);
-}
-
-/****************/
-/* Info Mailbox */
-/****************/
-
-UINT32 OS_InfoQPush(void* data, int size){
-	return write(OS_QGRT[INFO][OUT], data, size);
-}
-
-UINT32 OS_InfoQPop(void* data, int size){
 	int i=0;
 	while(i < size){
-		int res = read(OS_QGRT[INFO][IN], (char*)data+i, size-i);
+		int res = read(file, (char*)data+i, size-i);
 		if(res>0) i+=res;
 	}
 	return i;
 }
 
-UINT32 OS_InfoQPop_UINT32(){
-	UINT32 value;
-	OS_InfoQPop(&value, sizeof(UINT32));
-	return value;
+UINT32 RTQueuePop_UINT32(RTQueueType queueType){
+	UINT32 data;
+	RTQueuePop(queueType, &data, sizeof(UINT32));
+	return data;
 }
 
-void OS_InfoQPush_UINT32(UINT32 value){
-	UINT32 val = value;
-	OS_InfoQPush(&val, sizeof(UINT32));
-}
+UINT32 RTQueueNonBlockingPop(RTQueueType queueType, void* data, int size){
+	int file = OS_QGRT[queueType][IN];
 
-UINT32 OS_InfoQPop_nonBlocking(void* data, int size){
-	return read(OS_QGRT[INFO][IN], data, size);
+	return read(file, (char*)data, size);
 }

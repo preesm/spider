@@ -51,7 +51,7 @@
 #include "graphs/Schedule/Schedule.h"
 #include "ExecutionStat.h"
 
-#include <hwQueues.h>
+#include <platform_queue.h>
 #include <Timer.h>
 
 #include "launcher/launcher.h"

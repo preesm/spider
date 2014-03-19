@@ -35,6 +35,7 @@
  ****************************************************************************/
 
 #include "zynq_time.h"
+#include <sys/time.h>
 
 
 void OS_TimeInit(){
@@ -50,6 +51,6 @@ void OS_TimeStart(){
 void OS_TimeStop(){
 }
 
-UINT32 OS_TimeGetValue(){
-	return 1;
+LRTSYSTime OS_TimeGetValue(){
+	return clock();
 }

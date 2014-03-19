@@ -37,7 +37,7 @@
 #ifndef PISDFEDGE_H_
 #define PISDFEDGE_H_
 
-#include <types.h>
+#include <platform_types.h>
 #include "../Base/BaseEdge.h"
 #include "../../expressionParser/XParser.h"
 #include <expressionParser/ReversePolishNotationGenerator.h>
@@ -54,8 +54,8 @@ class PiSDFEdge: public BaseEdge {
 	abstract_syntax_elt consumption[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 	abstract_syntax_elt delay[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 
-	BOOLEAN evaluated;	// Whether the production/consumption expressions have been evaluated.
-	BOOLEAN required;	// When true, the edge is required in the execution.
+	BOOL evaluated;	// Whether the production/consumption expressions have been evaluated.
+	BOOL required;	// When true, the edge is required in the execution.
 
 //	// Production, consumption and delay after pattern resolution.
 //	UINT32 productionInt;
@@ -83,12 +83,12 @@ public:
         return delay;
     }
 
-    BOOLEAN getRequired() const
+    BOOL getRequired() const
     {
         return required;
     }
 
-    BOOLEAN getEvaluated() const
+    BOOL getEvaluated() const
     {
         return evaluated;
     }
@@ -128,12 +128,12 @@ public:
     	memcpy(this->delay, delay, sizeof(abstract_syntax_elt));;
     }
 
-    void setRequired(BOOLEAN required)
+    void setRequired(BOOL required)
     {
         this->required = required;
     }
 
-    void setEvaluated(BOOLEAN evaluated)
+    void setEvaluated(BOOL evaluated)
     {
         this->evaluated = evaluated;
     }

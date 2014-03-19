@@ -34,35 +34,27 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "StopTaskMsg.h"
-#include <platform_queue.h>
-#include <grt_definitions.h>
+#ifndef platform_QUEUES_H_
+#define platform_QUEUES_H_
 
-StopTaskMsg::StopTaskMsg(INT32 _TaskID, INT32 _VectorID): TaskID(_TaskID), VectorID(_VectorID) {
-}
+#include <platform_types.h>
 
-void StopTaskMsg::send(int LRTID){
-	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_STOP_TASK);
-	platform_QPushUINT32(LRTID, platformCtrlQ, TaskID);
-	platform_QPushUINT32(LRTID, platformCtrlQ, VectorID);
+typedef enum{
+	platformCtrlQ,
+	platformInfoQ,
+	platformJobQ,
+	platformNbQTypes
+} platformQType;
 
-	platform_QPopUINT32(LRTID, platformCtrlQ);
-}
+typedef enum{
+	platformQIn,
+	platformQOut
+} platformQDir;
 
-void StopTaskMsg::sendWOCheck(int LRTID){
-	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_STOP_TASK);
-	platform_QPushUINT32(LRTID, platformCtrlQ, TaskID);
-	platform_QPushUINT32(LRTID, platformCtrlQ, VectorID);
-}
+UINT32 platform_QPush(UINT8 slaveId, platformQType queueType, void* data, int size);
+UINT32 platform_QPushUINT32(UINT8 slaveId, platformQType queueType, UINT32 data);
+UINT32 platform_QPop(UINT8 slaveId, platformQType queueType, void* data, int size);
+UINT32 platform_QPopUINT32(UINT8 slaveId, platformQType queueType);
+UINT32 platform_QNonBlockingPop(UINT8 slaveId, platformQType queueType, void* data, int size);
 
-int StopTaskMsg::prepare(int* data, int offset){
-	int size = 0;
-	data[offset + size++] = MSG_STOP_TASK;
-	data[offset + size++] = TaskID;
-	data[offset + size++] = VectorID;
-	return size;
-}
-
-//void StopTaskMsg::prepare(int slave, launcher* launch){
-//	launch->addUINT32ToSend(slave, MSG_STOP_TASK);
-//}
+#endif /* platform_QUEUES_H_ */

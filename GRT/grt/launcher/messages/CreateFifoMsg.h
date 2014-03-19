@@ -38,8 +38,8 @@
 #define CREATEFIFOMSG_H_
 
 #include "LRTMsg.h"
-#include <types.h>
-#include <Memory.h>
+#include <platform_types.h>
+#include "../Memory.h"
 #include "../launcher.h"
 #include "../../graphs/SRDAG/SRDAGGraph.h"
 #include "../../graphs/SRDAG/SRDAGEdge.h"

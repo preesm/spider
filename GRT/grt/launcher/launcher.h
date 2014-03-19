@@ -44,8 +44,8 @@
 #include <scheduling/Schedule/BaseSchedule.h>
 #include <scheduling/architecture/Architecture.h>
 #include <tools/ExecutionStat.h>
-#include <hwQueues.h>
-#include <types.h>
+#include <platform_queue.h>
+#include <platform_types.h>
 
 typedef struct {
 	UINT32 id;
@@ -168,7 +168,7 @@ public:
 	void addDataToSend(int slave, void* data, int size);
 	void addDataToReceive(int slave, void* data, int size);
 
-	void addUINT32ToSend(int slave, UINT32 val, RTQueueType queue = RTCtrlQueue);
+	void addUINT32ToSend(int slave, UINT32 val, platformQType queue = platformCtrlQ);
 	void addUINT32ToReceive(int slave, UINT32 val);
 
 	void flushDataToSend();

@@ -75,7 +75,7 @@ class DotWriter {
 		 @param graph: written graph
 		 @param path: output file path
 		*/
-		void write(SRDAGGraph* graph, const char* path, BOOLEAN displayNames, BOOLEAN displayRates);
+		void write(SRDAGGraph* graph, const char* path, BOOL displayNames, BOOL displayRates);
 
 
 		/**

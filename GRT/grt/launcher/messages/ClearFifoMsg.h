@@ -39,7 +39,7 @@
 
 #include "LRTMsg.h"
 #include "../launcher.h"
-#include <types.h>
+#include <platform_types.h>
 
 class ClearFifoMsg: public LRTMsg {
 private:

@@ -37,6 +37,8 @@
 #ifndef GRT_DEFINITIONS_H_
 #define GRT_DEFINITIONS_H_
 
+#include <platform_types.h>
+
 // Architecture
 #define MAX_SLAVE_TYPES 2 // The maximum number of slave types
 #define MAX_SLAVES 12// The maximum number of slaves
@@ -135,6 +137,7 @@
 #define MSG_CLEAR_TASKS			7
 #define MSG_PARAM_VALUE			8
 #define	MSG_EXEC_TIMES			9
+#define	MSG_CLEAR_TIME			10
 
 
 /**************** FIFO's******************************/
@@ -168,17 +171,6 @@
 #define FALSE				0
 #define TRUE				1
 
-/**************** Data types ******************/
-typedef unsigned int 		UINT32;
-
-typedef int					INT32;
-
-typedef unsigned char		UINT8;
-
-typedef char				INT8S;
-
-typedef unsigned char		BOOLEAN;
-
 
 typedef void (*FUNCTION_TYPE)(void);						// Function of a task/vertex.
 
@@ -205,7 +197,7 @@ typedef struct am_actor_cond_struct		//
 typedef struct am_vertex_cond_struct		//
 {
 	UINT32				ix;					// Index in the actor's array of conditions.
-	BOOLEAN				value;
+	BOOL				value;
 }AM_VERTEX_COND_STRUCT;
 
 
@@ -249,7 +241,7 @@ typedef struct msg_create_fifo_struct	// Structure of a create FIFO message.
 	UINT32	mem_block;				// Memory block where the FIFO will be created.
 	UINT32	block_ix;				// Index of each FIFO in a single memory block.
 	UINT32	direction;				// Input : 0, Output : 1.
-	BOOLEAN init;					// If TRUE, the FIFO's indices are cleared, if false they are updated from the FIFO's registers.
+	BOOL	init;					// If TRUE, the FIFO's indices are cleared, if false they are updated from the FIFO's registers.
 }MSG_CREATE_FIFO_STRUCT;
 
 

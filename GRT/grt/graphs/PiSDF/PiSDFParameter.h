@@ -39,7 +39,7 @@
 
 #include <grt_definitions.h>
 #include <expressionParser/ReversePolishNotationGenerator.h>
-#include <types.h>
+#include <platform_types.h>
 
 class PiSDFParameter {
 	char name[MAX_PARAM_NAME_SIZE];

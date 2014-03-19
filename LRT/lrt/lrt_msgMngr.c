@@ -131,6 +131,12 @@ void wait_ext_msg() {
 				}
 				new_tcb->task_func = functions_tbl[new_tcb->functionId];
 				new_tcb->stop = TRUE;
+
+//				printf("New Job:\n");
+//				printf("\t id: %d\n", new_tcb->functionId);
+//				printf("\t nbFifo in: %d\n", new_tcb->actor->nbInputFifos);
+//				printf("\t nbFifo out: %d\n", new_tcb->actor->nbOutputFifos);
+//				printf("\t nbParams: %d\n", new_tcb->actor->nbParams);
 			}
 
 //			RTQueuePush(RTCtrlQueue, &msg_type, sizeof(UINT32));

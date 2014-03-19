@@ -519,72 +519,69 @@ void AMGraph::toDot(const char* filename){
 	//char directory[_MAX_PATH];
 	//getcwd(directory, sizeof(directory));
 
-	pFile = fopen (filename,"w");
-	if(pFile != NULL){
-		// Writing header
-		fprintf (pFile, "digraph ActorMachine {\n");
-		fprintf (pFile, "node [color=Black];\n");
-		fprintf (pFile, "edge [color=Black];\n");
-		fprintf (pFile, "rankdir=LR;\n");
+	platform_fopen (filename);
 
-		for (i=0 ; i<nbVertices; i++)
-		{
-			vertex = &(vertices[i]);
-			switch(vertex->getType()){
-			case AMVxTypeState:
-				//vertex->printStateVertex(name);
-				fprintf (pFile, "\t%d [label=\"%d\\n0\",shape=%s];\n",vertex->getId(),vertex->getId(),/*name,*/types[vertex->getType()]);
-				break;
-			case AMVxTypeTest:
-				cond = &conds[vertex->getCondID()];
-				fprintf (pFile, "\t%d [label=\"%d\\nF-%d\\n%s %dB\",shape=%s];\n",
-						vertex->getId(),
-						vertex->getId(),
-						cond->fifo.id,
-						(cond->type == FIFO_OUT)?("push"):("pop"),
-						cond->fifo.size,
-						types[vertex->getType()]);
-				break;
-			case AMVxTypeExec:
-				action = &(actions[vertex->getAction()]);
-				fprintf (pFile, "\t%d [label=\"%d\\nFunction F%d\\n",vertex->getId(),vertex->getId(),action->getFunctionId());
-				for(j=0; j<action->getNbInFifos(); j++)
-					fprintf (pFile, "Fin  %d\\n",action->getInFifo(j)->id);
-				for(j=0; j<action->getNbOutFifos(); j++)
-					fprintf (pFile, "Fout %d\\n",action->getOutFifo(j)->id);
-				for(j=0; j<action->getNbArgs(); j++)
-					fprintf (pFile, "Param %d\\n",action->getArg(j));
-				fprintf (pFile, "\",shape=%s];\n",types[vertex->getType()]);
-				break;
-//				fprintf (pFile, "\t%d [label=\"%s\",shape=%s];\n",vertex->getId(),actions[vertex->getAction()].getName(),types[vertex->getType()]);
+	// Writing header
+	platform_fprintf("digraph ActorMachine {\n");
+	platform_fprintf("node [color=Black];\n");
+	platform_fprintf("edge [color=Black];\n");
+	platform_fprintf("rankdir=LR;\n");
+
+	for (i=0 ; i<nbVertices; i++)
+	{
+		vertex = &(vertices[i]);
+		switch(vertex->getType()){
+		case AMVxTypeState:
+			//vertex->printStateVertex(name);
+			platform_fprintf("\t%d [label=\"%d\\n0\",shape=%s];\n",vertex->getId(),vertex->getId(),/*name,*/types[vertex->getType()]);
+			break;
+		case AMVxTypeTest:
+			cond = &conds[vertex->getCondID()];
+			platform_fprintf("\t%d [label=\"%d\\nF-%d\\n%s %dB\",shape=%s];\n",
+					vertex->getId(),
+					vertex->getId(),
+					cond->fifo.id,
+					(cond->type == FIFO_OUT)?("push"):("pop"),
+					cond->fifo.size,
+					types[vertex->getType()]);
+			break;
+		case AMVxTypeExec:
+			action = &(actions[vertex->getAction()]);
+			platform_fprintf("\t%d [label=\"%d\\nFunction F%d\\n",vertex->getId(),vertex->getId(),action->getFunctionId());
+			for(j=0; j<action->getNbInFifos(); j++)
+				platform_fprintf("Fin  %d\\n",action->getInFifo(j)->id);
+			for(j=0; j<action->getNbOutFifos(); j++)
+				platform_fprintf("Fout %d\\n",action->getOutFifo(j)->id);
+			for(j=0; j<action->getNbArgs(); j++)
+				platform_fprintf("Param %d\\n",action->getArg(j));
+			platform_fprintf("\",shape=%s];\n",types[vertex->getType()]);
+			break;
+//				platform_fprintf("\t%d [label=\"%s\",shape=%s];\n",vertex->getId(),actions[vertex->getAction()].getName(),types[vertex->getType()]);
 //				break;
-			case AMVxTypeWait:
-				fprintf (pFile, "\t%d [label=\"%d\\n\",shape=%s];\n",vertex->getId(),vertex->getId(),types[vertex->getType()]);
-				break;
-			default:
-				break; // todo error
-			}
+		case AMVxTypeWait:
+			platform_fprintf("\t%d [label=\"%d\\n\",shape=%s];\n",vertex->getId(),vertex->getId(),types[vertex->getType()]);
+			break;
+		default:
+			break; // todo error
 		}
-
-		for (i=0 ; i<nbVertices ; i++)
-		{
-			vertex = &(vertices[i]);
-			switch(vertex->getNbSuc()){
-			case 1:
-				fprintf (pFile, "\t%d->%d;\n",vertex->getId(),vertex->getSucID(0));
-				break;
-			case 2:
-				fprintf (pFile, "\t%d->%d[label=\"yes\"];\n",vertex->getId(),vertex->getSucID(0));
-				fprintf (pFile, "\t%d->%d[label=\"no\"];\n",vertex->getId(),vertex->getSucID(1));
-				break;
-			default:
-				break; // todo error
-			}
-		}
-		fprintf (pFile, "}\n");
-
-		fclose (pFile);
-	}else{
-		printf("Cannot open %s\n", filename);
 	}
+
+	for (i=0 ; i<nbVertices ; i++)
+	{
+		vertex = &(vertices[i]);
+		switch(vertex->getNbSuc()){
+		case 1:
+			platform_fprintf("\t%d->%d;\n",vertex->getId(),vertex->getSucID(0));
+			break;
+		case 2:
+			platform_fprintf("\t%d->%d[label=\"yes\"];\n",vertex->getId(),vertex->getSucID(0));
+			platform_fprintf("\t%d->%d[label=\"no\"];\n",vertex->getId(),vertex->getSucID(1));
+			break;
+		default:
+			break; // todo error
+		}
+	}
+	platform_fprintf("}\n");
+
+	fclose (pFile);
 }

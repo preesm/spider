@@ -42,11 +42,12 @@
 #include <scheduling/ListScheduler/ListScheduler.h>
 #include <transformations/PiSDFTransformer/PiSDFTransformer.h>
 #include <tools/ExecutionStat.h>
-#include "launcher/launcher.h"
+#include <launcher/launcher.h>
+#include <launcher/messages/ClearTimeMsg.h>
 #include <tools/DotWriter.h>
 #include <tools/ScheduleWriter.h>
 #include <tools/ScheduleChecker.h>
-#include "debuggingOptions.h"
+#include <debuggingOptions.h>
 
 #define IS_AM 					0
 #define STOP					1
@@ -110,6 +111,10 @@ int main(int argc, char* argv[]){
 	 * This must be done before calling the multiStepScheduling method.
 	 */
 	launch.init(nbSlaves);
+	ClearTimeMsg resetMsg;
+	int i;
+	for(i=0; i<nbSlaves; i++)
+		resetMsg.send(i);
 //	launch.launchWaitAck(nbSlaves);
 #endif
 

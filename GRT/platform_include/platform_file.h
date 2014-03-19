@@ -34,24 +34,12 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef TYPES_H_
-#define TYPES_H_
+#ifndef platform_FILE_H_
+#define platform_FILE_H_
 
-#include <linux/types.h>
+/* Allow to write a file on the target or on a remote device */
+void platform_fopen(const char* name);
+void platform_fprintf(const char* fmt, ...);
+void platform_fclose();
 
-#define TRUE -1
-#define FALSE 0
-
-typedef __s8	INT8;
-typedef __s16 	INT16;
-typedef __s32 	INT32;
-typedef __s64 	INT64;
-
-typedef __u8 	UINT8;
-typedef __u16 	UINT16;
-typedef __u32 	UINT32;
-typedef __u64 	UINT64;
-
-typedef int		BOOL;
-
-#endif /* TYPES_H_ */
+#endif /* platform_FILE_H_ */

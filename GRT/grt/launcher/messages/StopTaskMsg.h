@@ -38,7 +38,7 @@
 #define STOPTASKMSG_H_
 
 #include "LRTMsg.h"
-#include <types.h>
+#include <platform_types.h>
 
 class StopTaskMsg: public LRTMsg {
 	INT32 TaskID;

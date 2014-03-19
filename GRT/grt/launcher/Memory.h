@@ -34,53 +34,44 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef Memory_H_
-#define Memory_H_
+#ifndef MEMORY_H_
+#define MEMORY_H_
 
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
 
-#include <types.h>
-#include "../SchedulerDimensions.h"
+#include <platform_types.h>
+#include <platform_file.h>
+#include <grt_definitions.h>
 
 #define FIFO_HEADER_SIZE 	8
 #define MEM_INIT_POS		0
 
 typedef struct Section{
-	int start;
-	int size;
+	UINT32 start;
+	UINT32 size;
 	struct Section* prev;
 	struct Section* next;
 } Section;
 
 class Memory {
 private:
-	int base;
-	int size;
-//	Section* first;
-	int last;
+	UINT32 base;
+	UINT32 size;
+	UINT32 last;
 	char file_path[FILE_PATH_LENGTH];
 
-	int fifoAddr[MAX_NB_HW_FIFO];
-	int fifoSize[MAX_NB_HW_FIFO];
-	int fifoNb;
+	UINT32 fifoAddr[MAX_NB_HW_FIFO];
+	UINT32 fifoSize[MAX_NB_HW_FIFO];
+	UINT32 fifoNb;
 
 public:
-	Memory(int _base, int _size){
+	Memory(UINT32 _base, UINT32 _size){
 		base = _base;
 		size = _size;
 		last = MEM_INIT_POS;
 		fifoNb = 0;
-//		first = NULL;
-	}
-
-	Memory(int _base, int _size, char* file_path){
-		base = _base;
-		size = _size;
-		last = MEM_INIT_POS;
-		fifoNb = 0;
-		memcpy(this->file_path, file_path, sizeof(file_path));
 	}
 
 	virtual ~Memory(){}
@@ -90,18 +81,12 @@ public:
 		fifoNb = 0;
 	}
 
-	int getTotalAllocated(){
-//		Section* cur = first;
-//		if(first==NULL) return 0;
-//
-//		while(cur->next != NULL) cur = cur->next;
-//		return cur->start+cur->size;
+	UINT32 getTotalAllocated(){
 		return last;
 	}
 
-	int alloc(int sectionSize){
-		int start;
-		sectionSize += FIFO_HEADER_SIZE+1;
+	UINT32 alloc(UINT32 sectionSize){
+		UINT32 start;
 		if(last+sectionSize >= size){
 			printf("Can't allocate, not enough shared memory\n");
 			return -1;
@@ -112,105 +97,15 @@ public:
 		fifoSize[fifoNb] = sectionSize;
 		fifoAddr[fifoNb++] = start;
 		return start;
-
-//		Section* cur = first, *newSection;
-//
-//		sectionSize += FIFO_HEADER_SIZE;
-//
-//		if(cur == NULL){
-//			if(sectionSize <= size){
-//				newSection = new Section;
-//				newSection->start = 0;
-//				newSection->size = sectionSize;
-//				newSection->prev = NULL;
-//				newSection->next = NULL;
-//
-//				first = newSection;
-//				return newSection->start+base;
-//			}else return -1;
-//		}
-//
-//		if(cur->next == NULL){
-//			if(size - cur->start - cur->size >= sectionSize){
-//				newSection = new Section;
-//				newSection->start = cur->start + cur->size;
-//				newSection->size = sectionSize;
-//				newSection->prev = cur;
-//				newSection->next = NULL;
-//
-//				cur->next = newSection;
-//				return newSection->start+base;
-//			}else return -1;
-//		}
-//
-//		while(cur != NULL){
-//			if(cur->next != NULL && cur->next->start - cur->start - cur->size >= sectionSize ){
-//				newSection = new Section;
-//				newSection->start = cur->start + cur->size;
-//				newSection->size = sectionSize;
-//				newSection->prev = cur;
-//				newSection->next = cur->next;
-//
-//				cur->next->prev = newSection;
-//				cur->next = newSection;
-//				return newSection->start+base;
-//			}else if(cur->next == NULL && size - cur->start - cur->size >= sectionSize){
-//				newSection = new Section;
-//				newSection->start = cur->start + cur->size;
-//				newSection->size = sectionSize;
-//				newSection->prev = cur;
-//				newSection->next = NULL;
-//
-//				return newSection->start+base;
-//			}else{
-//				cur = cur->next;
-//			}
-//		}
-//		return -1;
-
-	}
-
-	UINT32 read(const int address, void* data, const int size){
-		UINT16 i, res = 0;
-		for (i = 0; i < this->fifoNb && res == 0; i++) {
-			if (this->fifoAddr[i] <= address &&
-				this->fifoAddr[i] + this->fifoSize[i] > address + size){
-//					&& this->fifoAddr[i].base <= address + size
-//					&& this->fifoAddr[i].base + this->fifoAddr[i].length > address + size) {
-				FILE* file = fopen(this->file_path, "rb");
-				fseek(file, address - this->fifoAddr[i], SEEK_SET);
-				res = fread(data, size, 1, file);
-				fclose(file);
-				return res;
-			}
-		}
-		printf("Memory not found 0x%x\n", address);
-		return res;
 	}
 
 	void exportMem(const char* path){
-		FILE * pFile;
-
-		pFile = fopen (path,"w+");
-		if(pFile != NULL){
-			for (int i=0 ; i<fifoNb ; i++){
-				fprintf (pFile, "%d,%d,%d\n",i,fifoAddr[i], fifoSize[i]);
-			}
-			fclose(pFile);
+		platform_fopen(path);
+		for (UINT32 i=0 ; i<fifoNb ; i++){
+			platform_fprintf ("%d,%d,%d\n",i,fifoAddr[i], fifoSize[i]);
 		}
-	}
-
-	void free(Section* freeSect){
-//		if(freeSect->prev != NULL){
-//			freeSect->prev->next = freeSect->next;
-//		}else{
-//			first = first->next;
-//		}
-//		if(freeSect->next != NULL){
-//			freeSect->next->prev = freeSect->prev;
-//		}
-//		delete freeSect;
+		platform_fclose();
 	}
 };
 
-#endif /* Memory_H_ */
+#endif /* MEMORY_H_ */

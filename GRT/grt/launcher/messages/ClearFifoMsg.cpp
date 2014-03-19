@@ -35,14 +35,14 @@
  ****************************************************************************/
 
 #include "ClearFifoMsg.h"
-#include <hwQueues.h>
+#include <platform_queue.h>
 
 ClearFifoMsg::ClearFifoMsg(UINT32 _fifoID): fifoID(_fifoID) {
 }
 
 void ClearFifoMsg::send(int LRTID){
-	RTQueuePush_UINT32(LRTID, RTCtrlQueue, MSG_CLEAR_FIFO);
-	RTQueuePush_UINT32(LRTID, RTCtrlQueue, fifoID);
+	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_CLEAR_FIFO);
+	platform_QPushUINT32(LRTID, platformCtrlQ, fifoID);
 }
 
 int ClearFifoMsg::prepare(int* data, int offset){

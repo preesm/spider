@@ -47,6 +47,7 @@
 #include <sharedMem.h>
 #include <print.h>
 #include <gpio.h>
+#include <zynq_time.h>
 
 #include "lrt_core.h"
 #include "lrt_actorMngr.h"
@@ -130,8 +131,8 @@ void LRTStart(){
 
 /* Starts the task pointed by the OSTCBCur. */
 void LRTStartCurrTask() {
-//	time_t rawtime;
-//	clock_t nbCpuCyclesStart;
+	time_t rawtime;
+	clock_t nbCpuCyclesStart;
 
 	// Executes the vertex's code.
 	MonitorAction Act = switchMonitor(AMManagement);
@@ -141,8 +142,9 @@ void LRTStartCurrTask() {
 	else{
 //		time(&rawtime);
 //		OSTCBCur->startTime = localtime(&rawtime);
-//		nbCpuCyclesStart = clock();
-		lrtGetTime(&OSTCBCur->startTimeStruct);
+		nbCpuCyclesStart = clock();
+//		printf("Execute fn %d\n", OSTCBCur->functionId);
+		OSTCBCur->startTime = OS_TimeGetValue();
 		OSTCBCur->task_func(OSTCBCur->actor->inputFifoId,
 							OSTCBCur->actor->inputFifoDataOff,
 							OSTCBCur->actor->outputFifoId,
@@ -150,7 +152,7 @@ void LRTStartCurrTask() {
 							OSTCBCur->actor->params);
 //		OSTCBCur->startTime = ((float)nbCpuCyclesStart)/CLOCKS_PER_SEC;
 //		OSTCBCur->nbCpuCycles = clock() - nbCpuCyclesStart;
-//		OSTCBCur->execTime = clock() - nbCpuCyclesStart;
+		OSTCBCur->execTime = clock() - nbCpuCyclesStart;
 	}
 
 	if(OSTCBCur->stop)

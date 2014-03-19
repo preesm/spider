@@ -34,28 +34,21 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef HWQUEUES_H_
-#define HWQUEUES_H_
+#ifndef platform_TYPES_H_
+#define platform_TYPES_H_
 
-#define NB_MAX_CTRLQ 8
+#include <platform_types_impl.h>
 
-#include <stdio.h>
-#include <fcntl.h>
+typedef platform_INT8	INT8;
+typedef platform_INT16 	INT16;
+typedef platform_INT32	INT32;
+typedef platform_INT64	INT64;
 
-#include "types.h"
+typedef platform_UINT8	UINT8;
+typedef platform_UINT16	UINT16;
+typedef platform_UINT32	UINT32;
+typedef platform_UINT64	UINT64;
 
-void OS_QInit(int nbSlaves);
+typedef platform_BOOL	BOOL;
 
-UINT32 OS_CtrlQPush(INT32 id, void* data, int size);
-UINT32 OS_CtrlQPop(INT32 id, void* data, int size);
-UINT32 OS_CtrlQPop_nonBlocking(INT32 id, void* data, int size);
-UINT32 OS_CtrlQPushInt(int id, unsigned int data);
-UINT32 OS_CtrlQPopInt(int id);
-
-UINT32 OS_InfoQPush(INT32 id, void* data, int size);
-UINT32 OS_InfoQPop(INT32 id, void* data, int size);
-UINT32 OS_InfoQPop_nonBlocking(INT32 id, void* data, int size);
-UINT32 OS_InfoQPushInt(int id, unsigned int data);
-UINT32 OS_InfoQPopInt(int id);
-
-#endif /* HWQUEUES_H_ */
+#endif /* platform_TYPES_H_ */

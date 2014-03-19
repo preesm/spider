@@ -36,6 +36,7 @@
 
 #include "ScheduleWriter.h"
 #include <cstdio>
+#include <platform_file.h>
 
 /**
  Constructor
@@ -104,171 +105,158 @@ static char* regenerateColor(int refInd){
 void ScheduleWriter::write(CSDAGGraph* csGraph, SRDAGGraph* hGraph, Architecture* archi, const char* path){
 	// Getting sure that the timings expressions are resolved
 	csGraph->resolveTimings(archi);
-	FILE * pFile;
 
-	pFile = fopen (path,"w");
+	platform_fopen(path);
 	char name[MAX_VERTEX_NAME_SIZE];
-	if(pFile != NULL){
-		// Writing header
-		fprintf (pFile, "<data>\n");
-		
-		// Exporting for gantt display
-		for (int i=0 ; i<hGraph->getNbVertices() ; i++)
-		{
-			SRDAGVertex* vertex = hGraph->getVertex(i);
-			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
-			sprintf(name,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
-			fprintf (pFile, "\t<event\n");
-			fprintf (pFile, "\t\tstart=\"%d\"\n",	(vertex->getTLevel()) );
-			fprintf (pFile, "\t\tend=\"%d\"\n",		(vertex->getTLevel() + duration) );
-			fprintf (pFile, "\t\ttitle=\"%s\"\n",name);
-			fprintf (pFile, "\t\tmapping=\"%s\"\n",archi->getSlaveName(vertex->getSlaveIndex()));
-			fprintf (pFile, "\t\tcolor=\"%s\"\n",regenerateColor(vertex->getReferenceIndex()));
-			fprintf (pFile, "\t\t>%s.</event>\n",name);
-		}
+	// Writing header
+	platform_fprintf ("<data>\n");
 
-		// Exporting for Latex
-		fprintf (pFile, "</data>\n");
-		fprintf (pFile, "<!-- latex\n");
-		fprintf (pFile, "{");
-		for (int i=0 ; i<hGraph->getNbVertices() ; i++)
-		{
-			SRDAGVertex* vertex = hGraph->getVertex(i);
-			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
-			sprintf(name,"%s-%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
-			fprintf (pFile, "%.3f/",	(float)(vertex->getTLevel())/1000 );/*start*/
-			fprintf (pFile, "%.3f/", (float)duration/1000 );/*duration*/
-			fprintf (pFile, "%d/",vertex->getSlaveIndex());/*core index*/
-			fprintf (pFile, "%s/","");/*name*/
-			fprintf (pFile, "color%d",vertex->getReferenceIndex());
-			if(i!=hGraph->getNbVertices()-1){
-				fprintf (pFile, ",");
-			}
-		}
-		fprintf (pFile, "}\n");
-		fprintf (pFile, "latex -->\n");
-		
-		fclose (pFile);
-	}else{
-		printf("Cannot open %s\n", path);
+	// Exporting for gantt display
+	for (int i=0 ; i<hGraph->getNbVertices() ; i++)
+	{
+		SRDAGVertex* vertex = hGraph->getVertex(i);
+		int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
+		sprintf(name,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+		platform_fprintf ("\t<event\n");
+		platform_fprintf ("\t\tstart=\"%d\"\n",	(vertex->getTLevel()) );
+		platform_fprintf ("\t\tend=\"%d\"\n",		(vertex->getTLevel() + duration) );
+		platform_fprintf ("\t\ttitle=\"%s\"\n",name);
+		platform_fprintf ("\t\tmapping=\"%s\"\n",archi->getSlaveName(vertex->getSlaveIndex()));
+		platform_fprintf ("\t\tcolor=\"%s\"\n",regenerateColor(vertex->getReferenceIndex()));
+		platform_fprintf ("\t\t>%s.</event>\n",name);
 	}
+
+	// Exporting for Latex
+	platform_fprintf ("</data>\n");
+	platform_fprintf ("<!-- latex\n");
+	platform_fprintf ("{");
+	for (int i=0 ; i<hGraph->getNbVertices() ; i++)
+	{
+		SRDAGVertex* vertex = hGraph->getVertex(i);
+		int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
+		sprintf(name,"%s-%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+		platform_fprintf ("%.3f/",	(float)(vertex->getTLevel())/1000 );/*start*/
+		platform_fprintf ("%.3f/", (float)duration/1000 );/*duration*/
+		platform_fprintf ("%d/",vertex->getSlaveIndex());/*core index*/
+		platform_fprintf ("%s/","");/*name*/
+		platform_fprintf ("color%d",vertex->getReferenceIndex());
+		if(i!=hGraph->getNbVertices()-1){
+			platform_fprintf (",");
+		}
+	}
+	platform_fprintf ("}\n");
+	platform_fprintf ("latex -->\n");
+
+	platform_fclose();
 }
 
 void ScheduleWriter::write(Schedule* schedule, SRDAGGraph* hGraph, Architecture* archi, const char* path){
 //	// Getting sure that the timings expressions are resolved
 //	csGraph->resolveTimings(archi);
-	FILE * pFile;
 
-	pFile = fopen (path,"w");
+	platform_fopen (path);
 	char name[MAX_VERTEX_NAME_SIZE];
-	if(pFile != NULL){
-		// Writing header
-		fprintf (pFile, "<data>\n");
 
-		// Exporting for gantt display
-		for(int slave=0; slave<archi->getNbSlaves(); slave++){
-			for (int i=0 ; i<schedule->getNbVertex(slave); i++){
-				SRDAGVertex* vertex = schedule->getVertex(slave, i);
-				int vertexID = hGraph->getVertexIndex(vertex);
+	// Writing header
+	platform_fprintf ("<data>\n");
 
-	//			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
-				sprintf(name,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
-				fprintf (pFile, "\t<event\n");
-				fprintf (pFile, "\t\tstart=\"%d\"\n",	schedule->getVertexStartTime(vertexID) );
-				fprintf (pFile, "\t\tend=\"%d\"\n",		schedule->getVertexEndTime(vertexID) );
-				fprintf (pFile, "\t\ttitle=\"%s\"\n",name);
-				fprintf (pFile, "\t\tmapping=\"%s\"\n",archi->getSlaveName(slave));
-				fprintf (pFile, "\t\tcolor=\"%s\"\n",regenerateColor(vertex->getReferenceIndex()));
-				fprintf (pFile, "\t\t>%s.</event>\n",name);
-			}
+	// Exporting for gantt display
+	for(int slave=0; slave<archi->getNbSlaves(); slave++){
+		for (int i=0 ; i<schedule->getNbVertex(slave); i++){
+			SRDAGVertex* vertex = schedule->getVertex(slave, i);
+			int vertexID = hGraph->getVertexIndex(vertex);
 
-			for (int i=0 ; i<schedule->getNbComs(slave); i++){
-				sprintf(name,"com_%d",i);
-				fprintf (pFile, "\t<event\n");
-				fprintf (pFile, "\t\tstart=\"%d\"\n",	schedule->getComStartTime(slave, i) );
-				fprintf (pFile, "\t\tend=\"%d\"\n",		schedule->getComEndTime(slave, i) );
-				fprintf (pFile, "\t\ttitle=\"%s\"\n",name);
-				fprintf (pFile, "\t\tmapping=\"%s_com\"\n",archi->getSlaveName(slave));
-				fprintf (pFile, "\t\tcolor=\"%s\"\n",regenerateColor(i));
-				fprintf (pFile, "\t\t>%s.</event>\n",name);
-			}
+//			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
+			sprintf(name,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+			platform_fprintf ("\t<event\n");
+			platform_fprintf ("\t\tstart=\"%d\"\n",	schedule->getVertexStartTime(vertexID) );
+			platform_fprintf ("\t\tend=\"%d\"\n",		schedule->getVertexEndTime(vertexID) );
+			platform_fprintf ("\t\ttitle=\"%s\"\n",name);
+			platform_fprintf ("\t\tmapping=\"%s\"\n",archi->getSlaveName(slave));
+			platform_fprintf ("\t\tcolor=\"%s\"\n",regenerateColor(vertex->getReferenceIndex()));
+			platform_fprintf ("\t\t>%s.</event>\n",name);
 		}
-		fprintf (pFile, "</data>\n");
+
+		for (int i=0 ; i<schedule->getNbComs(slave); i++){
+			sprintf(name,"com_%d",i);
+			platform_fprintf ("\t<event\n");
+			platform_fprintf ("\t\tstart=\"%d\"\n",	schedule->getComStartTime(slave, i) );
+			platform_fprintf ("\t\tend=\"%d\"\n",		schedule->getComEndTime(slave, i) );
+			platform_fprintf ("\t\ttitle=\"%s\"\n",name);
+			platform_fprintf ("\t\tmapping=\"%s_com\"\n",archi->getSlaveName(slave));
+			platform_fprintf ("\t\tcolor=\"%s\"\n",regenerateColor(i));
+			platform_fprintf ("\t\t>%s.</event>\n",name);
+		}
+	}
+	platform_fprintf ("</data>\n");
 
 //
 //
 //		// Exporting for Latex
-//		fprintf (pFile, "</data>\n");
-//		fprintf (pFile, "<!-- latex\n");
-//		fprintf (pFile, "{");
+//		platform_fprintf ("</data>\n");
+//		platform_fprintf ("<!-- latex\n");
+//		platform_fprintf ("{");
 //		for (int i=0 ; i<hGraph->getNbVertices() ; i++)
 //		{
 //			SRDAGVertex* vertex = hGraph->getVertex(i);
 //			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
 //			sprintf(name,"%s-%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
-//			fprintf (pFile, "%.3f/",	(float)(vertex->getTLevel())/1000 );/*start*/
-//			fprintf (pFile, "%.3f/", (float)duration/1000 );/*duration*/
-//			fprintf (pFile, "%d/",vertex->getSlaveIndex());/*core index*/
-//			fprintf (pFile, "%s/","");/*name*/
-//			fprintf (pFile, "color%d",vertex->getReferenceIndex());
+//			platform_fprintf ("%.3f/",	(float)(vertex->getTLevel())/1000 );/*start*/
+//			platform_fprintf ("%.3f/", (float)duration/1000 );/*duration*/
+//			platform_fprintf ("%d/",vertex->getSlaveIndex());/*core index*/
+//			platform_fprintf ("%s/","");/*name*/
+//			platform_fprintf ("color%d",vertex->getReferenceIndex());
 //			if(i!=hGraph->getNbVertices()-1){
-//				fprintf (pFile, ",");
+//				platform_fprintf (",");
 //			}
 //		}
-//		fprintf (pFile, "}\n");
-//		fprintf (pFile, "latex -->\n");
+//		platform_fprintf ("}\n");
+//		platform_fprintf ("latex -->\n");
 
-		fclose (pFile);
-	}else{
-		printf("Cannot open %s\n", path);
-	}
+	platform_fclose();
 }
 
 
 void ScheduleWriter::write(BaseSchedule* schedule, SRDAGGraph* dag, Architecture* archi, const char* path){
 //	// Getting sure that the timings expressions are resolved
 //	csGraph->resolveTimings(archi);
-	FILE * pFile;
 
-	pFile = fopen (path,"w");
+	platform_fopen (path);
 	char name[MAX_VERTEX_NAME_SIZE];
-	if(pFile != NULL){
-		// Writing header
-		fprintf (pFile, "<data>\n");
 
-		// Exporting for gantt display
-		for(int slave=0; slave<archi->getNbSlaves(); slave++){
-			for (UINT32 i=0 ; i<schedule->getNbVertices(slave); i++){
-				SRDAGVertex* vertex = (SRDAGVertex*)(schedule->getVertex(slave, i));
+	// Writing header
+	platform_fprintf ("<data>\n");
+
+	// Exporting for gantt display
+	for(int slave=0; slave<archi->getNbSlaves(); slave++){
+		for (UINT32 i=0 ; i<schedule->getNbVertices(slave); i++){
+			SRDAGVertex* vertex = (SRDAGVertex*)(schedule->getVertex(slave, i));
 //				int vertexID = dag->getVertexIndex(vertex);
 
-	//			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
-				sprintf(name,"%s_%d", vertex->getName(), vertex->getId());
-				fprintf (pFile, "\t<event\n");
-				fprintf (pFile, "\t\tstart=\"%d\"\n", schedule->getVertexStartTime(vertex->getScheduleIndex(), vertex));
-				fprintf (pFile, "\t\tend=\"%d\"\n",	schedule->getVertexEndTime(vertex->getScheduleIndex(), vertex));
-				fprintf (pFile, "\t\ttitle=\"%s\"\n", name);
-				fprintf (pFile, "\t\tmapping=\"%s\"\n", archi->getSlaveName(slave));
-				fprintf (pFile, "\t\tcolor=\"%s\"\n",regenerateColor(vertex->getId()));
-				fprintf (pFile, "\t\t>%s.</event>\n", name);
-			}
+//			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
+			sprintf(name,"%s_%d", vertex->getName(), vertex->getId());
+			platform_fprintf ("\t<event\n");
+			platform_fprintf ("\t\tstart=\"%d\"\n", schedule->getVertexStartTime(vertex->getScheduleIndex(), vertex));
+			platform_fprintf ("\t\tend=\"%d\"\n",	schedule->getVertexEndTime(vertex->getScheduleIndex(), vertex));
+			platform_fprintf ("\t\ttitle=\"%s\"\n", name);
+			platform_fprintf ("\t\tmapping=\"%s\"\n", archi->getSlaveName(slave));
+			platform_fprintf ("\t\tcolor=\"%s\"\n",regenerateColor(vertex->getId()));
+			platform_fprintf ("\t\t>%s.</event>\n", name);
+		}
 
 //			for (int i=0 ; i<schedule->getNbComs(slave); i++){
 //				sprintf(name,"com_%d",i);
-//				fprintf (pFile, "\t<event\n");
-//				fprintf (pFile, "\t\tstart=\"%d\"\n",	schedule->getComStartTime(slave, i) );
-//				fprintf (pFile, "\t\tend=\"%d\"\n",		schedule->getComEndTime(slave, i) );
-//				fprintf (pFile, "\t\ttitle=\"%s\"\n",name);
-//				fprintf (pFile, "\t\tmapping=\"%s_com\"\n",archi->getSlaveName(slave));
-//				fprintf (pFile, "\t\tcolor=\"%s\"\n",regenerateColor(i));
-//				fprintf (pFile, "\t\t>%s.</event>\n",name);
+//				platform_fprintf ("\t<event\n");
+//				platform_fprintf ("\t\tstart=\"%d\"\n",	schedule->getComStartTime(slave, i) );
+//				platform_fprintf ("\t\tend=\"%d\"\n",		schedule->getComEndTime(slave, i) );
+//				platform_fprintf ("\t\ttitle=\"%s\"\n",name);
+//				platform_fprintf ("\t\tmapping=\"%s_com\"\n",archi->getSlaveName(slave));
+//				platform_fprintf ("\t\tcolor=\"%s\"\n",regenerateColor(i));
+//				platform_fprintf ("\t\t>%s.</event>\n",name);
 //			}
-		}
-		fprintf (pFile, "</data>\n");
-		fclose (pFile);
-	}else{
-		printf("Cannot open %s\n", path);
 	}
+	platform_fprintf ("</data>\n");
+	platform_fclose();
 }
 
 
@@ -317,48 +305,38 @@ void ScheduleWriter::exportSpeedups(CSDAGGraph* csGraph, SRDAGGraph* hGraph, Arc
 	}
 
 	if(ul_nb_cb == 100 && ul_nb_user == 100){
-		FILE * pFile;
-
-		pFile = fopen (spansPath,"wt");
-		if(pFile != NULL){
-			for(int i=0; i<100;i++){
-				for(int j=0; j<100;j++){
-					if(spans[i][j] == 0){
-						fprintf (pFile, "N");
-						fprintf (pFile, "a");
-						fprintf (pFile, "N");
-						fprintf (pFile, " ");
-					}
-					else{
-						fprintf (pFile, "%d ",spans[i][j]);
-					}
+		platform_fopen(spansPath);
+		for(int i=0; i<100;i++){
+			for(int j=0; j<100;j++){
+				if(spans[i][j] == 0){
+					platform_fprintf ("N");
+					platform_fprintf ("a");
+					platform_fprintf ("N");
+					platform_fprintf (" ");
 				}
-				fprintf (pFile, "\n");
-			}
-			fclose (pFile);
-		}else{
-			printf("Cannot open %s\n", spansPath);
-		}
-
-		pFile = fopen (worksPath,"wt");
-		if(pFile != NULL){
-			for(int i=0; i<100;i++){
-				for(int j=0; j<100;j++){
-					if(works[i][j] == 0){
-						fprintf (pFile, "N");
-						fprintf (pFile, "a");
-						fprintf (pFile, "N");
-						fprintf (pFile, " ");
-					}
-					else{
-						fprintf (pFile, "%d ",works[i][j]);
-					}
+				else{
+					platform_fprintf ("%d ",spans[i][j]);
 				}
-				fprintf (pFile, "\n");
 			}
-			fclose (pFile);
-		}else{
-			printf("Cannot open %s\n", worksPath);
+			platform_fprintf ("\n");
 		}
+		platform_fclose();
+
+		platform_fopen(worksPath);
+		for(int i=0; i<100;i++){
+			for(int j=0; j<100;j++){
+				if(works[i][j] == 0){
+					platform_fprintf ("N");
+					platform_fprintf ("a");
+					platform_fprintf ("N");
+					platform_fprintf (" ");
+				}
+				else{
+					platform_fprintf ("%d ",works[i][j]);
+				}
+			}
+			platform_fprintf ("\n");
+		}
+		platform_fclose();
 	}
 }

@@ -34,35 +34,12 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "StopTaskMsg.h"
+#include "ClearTimeMsg.h"
 #include <platform_queue.h>
-#include <grt_definitions.h>
 
-StopTaskMsg::StopTaskMsg(INT32 _TaskID, INT32 _VectorID): TaskID(_TaskID), VectorID(_VectorID) {
+ClearTimeMsg::ClearTimeMsg(){
 }
 
-void StopTaskMsg::send(int LRTID){
-	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_STOP_TASK);
-	platform_QPushUINT32(LRTID, platformCtrlQ, TaskID);
-	platform_QPushUINT32(LRTID, platformCtrlQ, VectorID);
-
-	platform_QPopUINT32(LRTID, platformCtrlQ);
+void ClearTimeMsg::send(int LRTID){
+	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_CLEAR_TIME);
 }
-
-void StopTaskMsg::sendWOCheck(int LRTID){
-	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_STOP_TASK);
-	platform_QPushUINT32(LRTID, platformCtrlQ, TaskID);
-	platform_QPushUINT32(LRTID, platformCtrlQ, VectorID);
-}
-
-int StopTaskMsg::prepare(int* data, int offset){
-	int size = 0;
-	data[offset + size++] = MSG_STOP_TASK;
-	data[offset + size++] = TaskID;
-	data[offset + size++] = VectorID;
-	return size;
-}
-
-//void StopTaskMsg::prepare(int slave, launcher* launch){
-//	launch->addUINT32ToSend(slave, MSG_STOP_TASK);
-//}

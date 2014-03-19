@@ -37,7 +37,7 @@
 #ifndef BASEEDGE_H_
 #define BASEEDGE_H_
 
-#include <types.h>
+#include <platform_types.h>
 #include <stddef.h>
 
 class BaseVertex;

@@ -38,7 +38,7 @@
 #define SCENARIO_H_
 
 #include <cstring>
-#include <types.h>
+#include <platform_types.h>
 #include <grt_definitions.h>
 #include "../../expressionParser/XParser.h"
 

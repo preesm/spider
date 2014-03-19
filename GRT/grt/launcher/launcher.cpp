@@ -44,8 +44,10 @@
 #include "messages/StopTaskMsg.h"
 #include "messages/StartMsg.h"
 #include <tools/ExecutionStat.h>
-#include <hwQueues.h>
+#include <platform_queue.h>
+#include <platform.h>
 #include <algorithm>
+#include <platform_file.h>
 
 
 #define PRINT_ACTOR_IN_DOT_FILE		0
@@ -136,47 +138,46 @@ void launcher::clear(){
 
 void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName){
 	// Creating the Gantt with real times.
-	FILE * pFile;
-	pFile = fopen(filePathName, "w+");
-	if(pFile != NULL){
-		// Writing header
-		fprintf (pFile, "<data>\n");
+	platform_fopen(filePathName);
 
-		// Writing execution data for each slave.
-		for(UINT32 i=0; i<arch->getNbSlaves(); i++){
-			UINT32 data[MAX_CTRL_DATA];
-			UINT32 nbTasks = popExecInfo(i, data);
+	// Writing header
+	platform_fprintf("<data>\n");
 
-			for (UINT32 j=0 ; j<nbTasks; j++){
-				SRDAGVertex* vertex = dag->getVertex(data[j + j*2]); // data[0] contains the vertex's id.
-				fprintf (pFile, "\t<event\n");
-				UINT32 hour = data[(1+j) + j*2];
-				UINT32 min = hour * 60 + data[(2+j) + j*2];
-				UINT32 sec = min * 60 + data[(3+j) + j*2];
-				UINT32 mili = sec * 1000 + data[(4+j) + j*2];
-				UINT32 execTime = (data[(5+j) + j*2]/CLOCKS_PER_SEC) * 1000;
+	// Writing execution data for each slave.
+	for(UINT32 i=0; i<arch->getNbSlaves(); i++){
+		UINT32 data[MAX_CTRL_DATA];
+		UINT32 nbTasks = popExecInfo(i, data);
+
+		for (UINT32 j=0 ; j<nbTasks; j++){
+			SRDAGVertex* vertex = dag->getVertex(data[j + j*2]); // data[0] contains the vertex's id.
+			platform_fprintf("\t<event\n");
+//				UINT32 hour = data[(1+j) + j*2];
+//				UINT32 min = hour * 60 + data[(2+j) + j*2];
+//				UINT32 sec = min * 60 + data[(3+j) + j*2];
+//				UINT32 mili = sec * 1000 + data[(4+j) + j*2];
+			UINT32 startTime = data[(1+j) + j*2];
+			UINT32 execTime = data[(2+j) + j*2];
 //				UINT32 startTime = data[(1+j) + j*2];
 //				UINT32 execTime = data[(2+j) + j*2];
-				fprintf (pFile, "\t\tstart=\"%d\"\n", mili);
-				fprintf (pFile, "\t\tend=\"%d\"\n",	mili + execTime);
-//				fprintf (pFile, "\t\tend=\"%d\"\n",	mktime(&execTime) + mktime(&startTime));
-				fprintf (pFile, "\t\ttitle=\"%s\"\n", vertex->getReference()->getName());
-				fprintf (pFile, "\t\tmapping=\"%s\"\n", arch->getSlaveName(i));
-				fprintf (pFile, "\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
-				fprintf (pFile, "\t\t>%s.</event>\n", vertex->getReference()->getName());
+			platform_fprintf("\t\tstart=\"%d\"\n", startTime);
+			platform_fprintf("\t\tend=\"%d\"\n",	startTime + execTime);
+//				platform_fprintf("\t\tend=\"%d\"\n",	mktime(&execTime) + mktime(&startTime));
+			platform_fprintf("\t\ttitle=\"%s\"\n", vertex->getReference()->getName());
+			platform_fprintf("\t\tmapping=\"%s\"\n", arch->getSlaveName(i));
+			platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
+			platform_fprintf("\t\t>%s.</event>\n", vertex->getReference()->getName());
 
-				printf("task %d started at %d:%d:%d:%d ended at +%d\n",
-						j, hour, min, sec, mili, (execTime/CLOCKS_PER_SEC) * 1000);
-			}
+//			printf("task %d started at %d ended at +%d\n",
+//					j, startTime, execTime);
 		}
-		fprintf (pFile, "</data>\n");
-		fclose (pFile);
 	}
+	platform_fprintf("</data>\n");
+	platform_fclose();
 }
 
 
 void launcher::init(int nbSlaves){
-	RTQueuesInit(nbSlaves);
+	platform_init(nbSlaves);
 	flushDataToSend();
 	flushDataToReceive();
 }
@@ -247,11 +248,11 @@ void launcher::launchWaitAck(int nbSlaves){
 
 	// Sending FIFO flushing and task creation messages.
 	for(int i=0; i<nbSlaves; i++){
-		RTQueuePush(i, RTCtrlQueue, dataToSend[i], dataToSendCnt[i]*sizeof(UINT32));
+		platform_QPush(i, platformCtrlQ, dataToSend[i], dataToSendCnt[i]*sizeof(UINT32));
 	}
 
 	// Waiting for acknowledge from LRT 0.
-	RTQueuePop(0, RTCtrlQueue, &data, dataToReceiveCnt[0]*sizeof(UINT32));
+	platform_QPop(0, platformCtrlQ, &data, dataToReceiveCnt[0]*sizeof(UINT32));
 	for(int j=0; (UINT32)j< dataToReceiveCnt[0]; j++)
 		if(dataToReceive[0][j] != data[j]){
 			printf("Unattended ack message from Slave %d (%d instead of %d)\n", 0, data[j], dataToReceive[0][j]);
@@ -272,7 +273,7 @@ void launcher::launch(int nbSlaves, bool clearAfterCompletion){
 	// Sending FIFO flushing and task creation messages.
 	for(int i=0; i<nbSlaves; i++){
 		if(dataToSendCnt[i] > 0){
-			RTQueuePush(i, RTCtrlQueue, dataToSend[i], dataToSendCnt[i]*sizeof(UINT32));
+			platform_QPush(i, platformCtrlQ, dataToSend[i], dataToSendCnt[i]*sizeof(UINT32));
 			// Starting executions.
 			msg.setClearAfterCompletion(clearAfterCompletion);
 			msg.send(i);
@@ -284,8 +285,8 @@ void launcher::launch(int nbSlaves, bool clearAfterCompletion){
 //	UINT32 data[MAX_JOB_DATA];
 ////	launchedSlaveNb = nbSlaves;
 //	for(UINT16 i=0; i<nbSlaves; i++){
-//		RTQueuePush(i, RTJobQueue, jobDataToSend[i], jobDataToSendCnt[i]*sizeof(UINT32));
-////		RTQueuePop(i, RTCtrlQueue, &data, dataToReceiveCnt[i]*sizeof(UINT32));
+//		platform_queue_Push(i, platformJobQueue, jobDataToSend[i], jobDataToSendCnt[i]*sizeof(UINT32));
+////		platform_queue_Pop(i, platformCtrlQueue, &data, dataToReceiveCnt[i]*sizeof(UINT32));
 ////		for(int j=0; (UINT32)j< dataToReceiveCnt[i]; j++){
 ////			if(dataToReceive[i][j] != data[j]){
 ////				printf("Unattended ack message from Slave %d (%d instead of %d)\n", i, data[j], dataToReceive[i][j]);
@@ -394,14 +395,13 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule
 #if PRINT_ACTOR_IN_DOT_FILE == 1
 			char name[20];
 			sprintf(name, "Slave%d_%d.gv", i, stepsCntr);
-			FILE * pFile = fopen (name,"w");
-			if(pFile != NULL){
-				// Writing header
-				fprintf (pFile, "digraph Actors {\n");
-				fprintf (pFile, "node [color=Black];\n");
-				fprintf (pFile, "edge [color=Black];\n");
-//				fprintf (pFile, "rankdir=LR;\n");
-			}
+			platform_fopen (name,"w");
+
+			// Writing header
+			platform_fprintf("digraph Actors {\n");
+			platform_fprintf("node [color=Black];\n");
+			platform_fprintf("edge [color=Black];\n");
+//			platform_fprintf("rankdir=LR;\n");
 #endif
 			// Creating single actors.
 			for (UINT32 j = 0; j < schedule->getNbVertices(i); j++) {
@@ -494,8 +494,8 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule
 				}
 			}
 #if PRINT_ACTOR_IN_DOT_FILE == 1
-			fprintf (pFile, "}\n");
-			fclose (pFile);
+			platform_fprintf("}\n");
+			platform_fclose();
 #endif
 		}
 
@@ -618,7 +618,7 @@ UINT32 launcher::rcvData(UINT32 slave, UINT32 msgType, UINT32* data){
 	UINT32 bytesRcvd = 0;
 	UINT32 bytesToRcv = dataToReceiveCnt[slave];
 	if(bytesToRcv > 0){
-		bytesRcvd = RTQueuePop(slave, RTCtrlQueue, data, bytesToRcv);
+		bytesRcvd = platform_QPop(slave, platformCtrlQ, data, bytesToRcv);
 		if(bytesRcvd != bytesToRcv) exitWithCode(1067);
 		if(data[0] != msgType) exitWithCode(1068);
 		dataToReceiveCnt[slave] -= bytesRcvd;
@@ -662,18 +662,17 @@ void launcher::stopWOCheck(){
 void launcher::toDot(const char* path, UINT32 slaveId){
 	char name[20];
 	sprintf(name, "%s_%d.gv", path, slaveId);
-	FILE * pFile = fopen (name,"w");
-	if(pFile != NULL){
-		// Writing header
-		fprintf (pFile, "digraph Actors {\n");
-		fprintf (pFile, "node [color=Black];\n");
-		fprintf (pFile, "edge [color=Black];\n");
-//		fprintf (pFile, "rankdir=LR;\n");
 
+	platform_fopen (name);
 
-	}
-	fprintf (pFile, "}\n");
-	fclose (pFile);
+	// Writing header
+	platform_fprintf("digraph Actors {\n");
+	platform_fprintf("node [color=Black];\n");
+	platform_fprintf("edge [color=Black];\n");
+//		platform_fprintf("rankdir=LR;\n");
+
+	platform_fprintf("}\n");
+	platform_fclose();
 
 }
 
@@ -691,13 +690,13 @@ void launcher::addDataToReceive(int slave, void* data, int size){
 	dataToReceiveCnt[slave] += size;
 }
 
-void launcher::addUINT32ToSend(int slave, UINT32 val, RTQueueType queue){
+void launcher::addUINT32ToSend(int slave, UINT32 val, platformQType queue){
 	switch (queue) {
-		case RTCtrlQueue:
+		case platformCtrlQ:
 			dataToSend[slave][dataToSendCnt[slave]] = val;
 			dataToSendCnt[slave]++;
 			break;
-		case RTJobQueue:
+		case platformJobQ:
 			jobDataToSend[slave][jobDataToSendCnt[slave]] = val;
 			jobDataToSendCnt[slave]++;
 			break;
@@ -741,20 +740,20 @@ void launcher::resolveParameters(SRDAGGraph* dag, UINT32 nbSlaves){
 UINT32 launcher::popExecInfo(UINT32 slaveId, UINT32* data){
 	UINT32 dataHdr[MAX_CTRL_DATA], nbTasks;
 
-	UINT32 nbHdrBytes = RTQueuePop(slaveId, RTCtrlQueue, dataHdr, 2*sizeof(UINT32));
+	UINT32 nbHdrBytes = platform_QPop(slaveId, platformCtrlQ, dataHdr, 2*sizeof(UINT32));
 	if(dataHdr[0] != MSG_EXEC_TIMES) exitWithCode(1068);
 
 //	UINT32 clocksPerSec = dataHdr[1];
 	UINT32 nbBytes = dataHdr[1];
 
-	RTQueuePop(slaveId, RTCtrlQueue, data, nbBytes - nbHdrBytes);
+	platform_QPop(slaveId, platformCtrlQ, data, nbBytes - nbHdrBytes);
 
 
 	/*
 	 * For each task there is 6 sizeof(UINT32) words.
 	 * For details see the 'sendExecData' function at 'lrt_taskMngr.c'.
 	 */
-	nbTasks = (nbBytes/sizeof(UINT32))/6;
+	nbTasks = (nbBytes/sizeof(UINT32))/3;
 
 	return nbTasks;
 }
@@ -762,6 +761,6 @@ UINT32 launcher::popExecInfo(UINT32 slaveId, UINT32* data){
 
 void launcher::sendClearTasks(int nbSlaves){
 	for(int i=0; i<nbSlaves; i++){
-		RTQueuePush_UINT32(i, RTCtrlQueue, MSG_CLEAR_TASKS);
+		platform_QPushUINT32(i, platformCtrlQ, MSG_CLEAR_TASKS);
 	}
 }

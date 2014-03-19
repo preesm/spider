@@ -50,6 +50,6 @@ void setLed(BOOLEAN b){
 }
 
 BOOLEAN getSw(){
-	return TRUE;
+	return -1;
 //    XGpio_DiscreteRead(&gpio_leds, 1, b & 0x01);
 }

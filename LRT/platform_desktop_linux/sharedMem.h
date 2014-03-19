@@ -37,11 +37,41 @@
 #ifndef SHAREDMEM_H_
 #define SHAREDMEM_H_
 
-#include <lrt.h>
+#include <lrt_cfg.h>
 #include <stdio.h>
 
 #include "types.h"
 #include <fcntl.h>
+
+#define SH_MEM_BASE_ADDR			0x0
+#define SH_MEM_HDR_REGION_SIZE		MAX_NB_FIFOs * FIFO_MUTEX_SIZE
+//#define SH_MEM_DATA_REGION_SIZE		0x10000000
+//#define SH_MEM_SIZE					SH_MEM_HDR_REGION_SIZE + SH_MEM_DATA_REGION_SIZE
+//#define SH_MEM_FILE_PATH			"../shMem"
+//
+//#define MBOX_MEM_BASE_ADDR			0x20000000
+//#define MBOX_MEM_SIZE				0x100000
+//#define MBOX_MEM_FILE_PATH			"../mboxMem"
+//
+//typedef struct OS_SHMEM {
+//	UINT32 	base;
+////	UINT32 	dataBase;
+//	UINT32 	length;
+////	FILE*	file;
+//	char	file_name[50];
+//	HANDLE 	ghMutex;
+//} OS_SHMEM;
+//
+//
+//void addMboxMem();
+//void addShMem();
+//void mboxMemInit();
+//void shMemInit();
+//UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size);
+//UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size);
+//void releaseShMemMx();
+//void releaseMboxMemMx();
+//void resetShMemAddr(UINT32 address);
 
 void OS_ShMemInit();
 

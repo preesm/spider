@@ -35,7 +35,7 @@
  ****************************************************************************/
 
 #include "CreateTaskMsg.h"
-#include <hwQueues.h>
+#include <platform_queue.h>
 
 //AMGraph AMGraphTbl[MAX_NB_AM];
 //UINT32 nbAM 		= 0;
@@ -177,7 +177,7 @@ void CreateTaskMsg::send(int LRTID){
 //
 //
 //
-//	RTQueuePush(LRTID, RTCtrlQueue, msg, k*sizeof(UINT32));
+//	platform_queue_Push(LRTID, platformCtrlQueue, msg, k*sizeof(UINT32));
 }
 
 //AMGraph* CreateTaskMsg::getAm(){

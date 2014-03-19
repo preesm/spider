@@ -37,12 +37,12 @@
 #ifndef SRDAG_GRAPH
 #define SRDAG_GRAPH
 
-#include <types.h>
 #include "SRDAGVertex.h"
 #include "SRDAGEdge.h"
 #include "../Base/BaseVertex.h"
 
 #include <grt_definitions.h>
+#include <platform_types.h>
 #include "../../tools/SchedulingError.h"
 
 /**

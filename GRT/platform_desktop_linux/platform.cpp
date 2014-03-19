@@ -34,33 +34,11 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef TIMER_H_
-#define TIMER_H_
+#include <platform.h>
+#include <platform_types.h>
 
-#ifndef ZYNQ
-#include <sys/time.h>
-#endif
+void platform_queue_Init(UINT8 nbSlaves);
 
-class Timer {
-private:
-#ifdef ZYNQ
-	int file;
-#else
-	timeval start;
-#endif
-
-
-public:
-	Timer();
-	virtual ~Timer();
-
-	unsigned int getValue();
-	unsigned int print(const char* txt);
-	unsigned int printAndReset(const char* txt);
-	unsigned int getValueAndReset();
-	void resetAndStart();
-};
-
-extern Timer timer;
-
-#endif /* TIMER_H_ */
+void platform_init(UINT8 nbSlaves){
+	platform_queue_Init(nbSlaves);
+}

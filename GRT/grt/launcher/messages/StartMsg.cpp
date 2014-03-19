@@ -35,15 +35,15 @@
  ****************************************************************************/
 
 #include "StartMsg.h"
-#include <hwQueues.h>
+#include <platform_queue.h>
 
 StartMsg::StartMsg() {
 	clearAfterCompletion = false;
 }
 
 void StartMsg::send(int LRTID){
-	RTQueuePush_UINT32(LRTID, RTCtrlQueue, MSG_START_SCHED);
-	RTQueuePush_UINT32(LRTID, RTCtrlQueue, clearAfterCompletion);
+	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_START_SCHED);
+	platform_QPushUINT32(LRTID, platformCtrlQ, clearAfterCompletion);
 }
 
 int StartMsg::prepare(int* data, int offset){

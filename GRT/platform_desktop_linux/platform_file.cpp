@@ -34,9 +34,24 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PLATFORM_H_
-#define PLATFORM_H_
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 
-#define PLAT_CPU_ID 0
+static FILE* f;
+static char buffer[100];
 
-#endif /* PLATFORM_H_ */
+void platform_fopen(const char* name){
+	f = fopen(name, "w+");
+}
+
+void platform_fprintf(const char* fmt, ...){
+	va_list ap;
+	va_start(ap, fmt);
+	vsprintf(buffer, fmt, ap);
+	fprintf(f, "%s", buffer);
+}
+
+void platform_fclose(){
+	fclose(f);
+}

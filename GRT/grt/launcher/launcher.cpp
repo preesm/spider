@@ -371,12 +371,14 @@ void launcher::prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedul
 void launcher::prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat){
 //	CreateFifoMsg msg_createFifo;
 //	ClearFifoMsg msg_clearFifo;
-	CreateTaskMsg msg_createTask;
 	static UINT16 stepsCntr = 0;
 
 	/* Creating Tasks */
 	for(int i=0; i < nbSlaves; i++){
 		if(isAM){
+			#if USE_AM
+			CreateTaskMsg msg_createTask;
+
 			// Creating an actor machine.
 			msg_createTask = CreateTaskMsg(graph, schedule, i, this);
 			msg_createTask.setIsAM(1);
@@ -389,6 +391,7 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule
 			// Copying task and AM data into the chunk of data that will be sent.
 			msg_createTask.prepare(i, this);
 			msg_createTask.getAM()->prepare(i, this);
+			#endif
 		}
 		else
 		{

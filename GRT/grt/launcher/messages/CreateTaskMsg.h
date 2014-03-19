@@ -49,6 +49,7 @@
 #include "../launcher.h"
 #include "../SingleActor/LRTActor.h"
 
+#if USE_AM
 //extern AMGraph AMGraphTbl[MAX_NB_AM];
 //extern UINT32 nbAM;
 //extern LRTActor LRTActorTbl[MAX_SRDAG_VERTICES];
@@ -103,5 +104,7 @@ public:
         this->isAM = isAM;
     }
 };
+
+#endif
 
 #endif /* TASKMSG_H_ */

@@ -37,6 +37,9 @@
 #ifndef AMCOND_H_
 #define AMCOND_H_
 
+#include <debuggingOptions.h>
+#if USE_AM
+
 typedef enum{
 	COND_UNINITIALIZED=0,
 	FIFO_IN=1,
@@ -66,5 +69,7 @@ public:
 		fifo.size = size;
 	}
 };
+
+#endif
 
 #endif /* AMCOND_H_ */

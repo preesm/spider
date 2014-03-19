@@ -43,6 +43,9 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <debuggingOptions.h>
+#if USE_AM
+
 typedef enum{
 	AMVxTypeUndefined=0,
 	AMVxTypeWait,
@@ -172,5 +175,7 @@ public:
 		vals[state.nbConds]='\0';
 	}
 };
+
+#endif
 
 #endif /* AMVERTEX_H_ */

@@ -48,6 +48,9 @@
 #include "../Memory.h"
 #include "launcher/launcher.h"
 
+#include <debuggingOptions.h>
+#if USE_AM
+
 class AMGraph {
 private:
 	int nbVertices;
@@ -83,5 +86,7 @@ public:
 
 	void prepare(int slave, launcher* launch);
 };
+
+#endif
 
 #endif /* AMGRAPH_H_ */

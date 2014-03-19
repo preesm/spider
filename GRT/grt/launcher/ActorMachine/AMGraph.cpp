@@ -47,6 +47,9 @@
 #include <cstring>
 #include <cstdio>
 
+#include <debuggingOptions.h>
+#if USE_AM
+
 AMGraph::AMGraph(){
 	nbConds = nbVertices = nbActions = 0; initState = 0;
 }
@@ -585,3 +588,5 @@ void AMGraph::toDot(const char* filename){
 
 	fclose (pFile);
 }
+
+#endif

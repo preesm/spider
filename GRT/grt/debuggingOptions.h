@@ -41,6 +41,7 @@
 // File names for graph's printing
 #define EXEC							0
 #define PRINT_GRAPH						1
+#define USE_AM							0
 
 #define PiSDF_FILE_PATH					"pisdf"
 #define SUB_SRDAG_FIFO_ID_FILE_PATH		"subSrDagFifoId"

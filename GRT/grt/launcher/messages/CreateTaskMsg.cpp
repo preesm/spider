@@ -42,6 +42,8 @@
 //LRTActor LRTActorTbl[MAX_SRDAG_VERTICES];
 //UINT32 nbLRTActors 	= 0;
 
+#include <debuggingOptions.h>
+#if USE_AM
 
 CreateTaskMsg::CreateTaskMsg(SRDAGGraph* graph, Schedule* schedule, int slave, AMGraph* am) {
 	taskID = 0;
@@ -266,3 +268,5 @@ void CreateTaskMsg::prepare(int slave, launcher* launch){
 
 //	launch->addUINT32ToReceive(slave, MSG_CREATE_TASK);
 }
+
+#endif

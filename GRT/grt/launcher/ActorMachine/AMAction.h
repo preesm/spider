@@ -44,6 +44,8 @@
 #include "launcher/launcher.h"
 
 
+#include <debuggingOptions.h>
+#if USE_AM
 
 class AMAction {
 private:
@@ -123,5 +125,7 @@ public:
 	char* getName(){return name;}
 
 };
+
+#endif
 
 #endif /* AMACTION_H_ */

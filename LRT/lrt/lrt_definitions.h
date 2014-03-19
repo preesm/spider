@@ -38,7 +38,7 @@
 #ifndef RT_DEFINITIONS_H_
 #define RT_DEFINITIONS_H_
 
-#include <time.h>
+//#include <time.h>
 #include "lrt_cfg.h"
 
 
@@ -306,7 +306,7 @@ typedef struct os_tcb {
 	LRTSYSTime		startTimeStruct;
 	UINT32			startTime;
 	UINT32			execTime;
-	clock_t			nbCpuCycles;
+//	clock_t			nbCpuCycles;
 } OS_TCB;
 
 

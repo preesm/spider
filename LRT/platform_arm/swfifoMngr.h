@@ -35,43 +35,16 @@
  * knowledge of the CeCILL-C license and that you accept its terms.			*
  ****************************************************************************/
 
-#include "zynq_time.h"
-//#include <sys/time.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <fcntl.h>
-//#include <sys/ioctl.h>
-//#include <timerArm.h>
+#ifndef SW_FIFOMNGR_H_
+#define SW_FIFOMNGR_H_
 
-int times;
-static int timerFile;
+#include "lrt_definitions.h"
 
-void OS_TimeInit(){
-//	timerFile = open("/dev/timerArm", O_RDWR, S_IRUSR | S_IWUSR);
-//	if(timerFile == -1){
-//		fprintf(stderr, "Cannot open /dev/timerArm\n");
-//		abort();
-//	}
-}
 
-void OS_TimeReset(){
-//	ioctl(timerFile,TIMERARM_IOCT_RESET);
-}
-
-void OS_TimeStart(){
-//	ioctl(timerFile,TIMERARM_IOCT_START);
-}
-
-void OS_TimeStop(){
-//	ioctl(timerFile,TIMERARM_IOCT_STOP);
-}
-
-UINT32 OS_TimeGetValue(){
-//	UINT32 elapsedTime=0;
-//	ioctl(timerFile,TIMERARM_IOCT_GETVALUE, &elapsedTime);
-//	return elapsedTime/6.66;
-}
-
-void lrtGetTime(LRTSYSTime *buffer){
-
-}
+UINT8 create_swfifo(LRT_FIFO_HNDLE* fifo_hndl, UINT32 size, UINT32 address);
+void flush_swfifo(LRT_FIFO_HNDLE* fifo_hndl);
+BOOLEAN check_input_swfifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size);
+BOOLEAN check_output_swfifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size);
+void write_output_swfifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size, UINT8* buffer);
+void read_input_swfifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffer);
+#endif /* SW_FIFOMNGR_H_ */

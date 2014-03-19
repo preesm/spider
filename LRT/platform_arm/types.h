@@ -8,22 +8,24 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 
-#include <linux/types.h>
+//#include <linux/types.h>
 
-#define TRUE -1
-#define FALSE 0
-
-
-typedef __u8	BOOLEAN;
-
-typedef __s8	INT8;
-typedef __s16 	INT16;
-typedef __s32 	INT32;
-typedef __s64 	INT64;
-
-typedef __u8 	UINT8;
-typedef __u16 	UINT16;
-typedef __u32 	UINT32;
-typedef __u64 	UINT64;
+#define TRUE 			1
+#define FALSE 			0
+//
+//
+//typedef __u8	BOOLEAN;
+//
+//typedef __s8	INT8;
+//typedef __s16 	INT16;
+//typedef __s32 	INT32;
+//typedef __s64 	INT64;
+//
+//typedef __u8 	UINT8;
+//typedef __u16 	UINT16;
+//typedef __u32 	UINT32;
+//typedef __u64 	UINT64;
+typedef unsigned char 	BOOLEAN;
+typedef unsigned int	UINT32;
 
 #endif /* TYPES_H_ */

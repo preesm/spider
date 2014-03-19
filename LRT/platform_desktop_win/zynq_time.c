@@ -57,12 +57,12 @@ UINT32 OS_TimeGetValue(){
 
 
 void lrtGetTime(LRTSYSTime *buffer){
-	struct _timeb 	timebuffer;
-	struct tm 		*strucTM;
-//	TODO: resolve this _ftime_s(&timebuffer);
-	strucTM = localtime(&timebuffer.time);
-	buffer->hour = strucTM->tm_hour;
-	buffer->min = strucTM->tm_min;
-	buffer->sec = strucTM->tm_sec;
-	buffer->milisec = timebuffer.millitm;
+//	struct _timeb 	timebuffer;
+//	struct tm 		*strucTM;
+////	TODO: resolve this _ftime_s(&timebuffer);
+//	strucTM = localtime(&timebuffer.time);
+//	buffer->hour = strucTM->tm_hour;
+//	buffer->min = strucTM->tm_min;
+//	buffer->sec = strucTM->tm_sec;
+//	buffer->milisec = timebuffer.millitm;
 }

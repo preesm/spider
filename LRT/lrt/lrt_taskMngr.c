@@ -38,7 +38,7 @@
 #include "lrt_cfg.h"
 #include "stdio.h"
 #include <hwQueues.h>
-#include <print.h>
+//#include <print.h>
 #include <platform.h>
 #include "lrt_taskMngr.h"
 #include "lrt_debug.h"
@@ -336,9 +336,9 @@ void sendExecData(){
 //			data[wordCnt++] = OSTCBTbl[i].nbCpuCycles;
 			data[wordCnt++] = OSTCBTbl[i].execTime;
 
-			printf("task %d started at %d:%d:%d:%d ended at +%d\n",
-					taskCnt, OSTCBTbl[i].startTimeStruct.hour, OSTCBTbl[i].startTimeStruct.min, OSTCBTbl[i].startTimeStruct.sec,
-					OSTCBTbl[i].startTimeStruct.milisec, OSTCBTbl[i].execTime/CLOCKS_PER_SEC * 1000);
+//			printf("task %d started at %d:%d:%d:%d ended at +%d\n",
+//					taskCnt, OSTCBTbl[i].startTimeStruct.hour, OSTCBTbl[i].startTimeStruct.min, OSTCBTbl[i].startTimeStruct.sec,
+//					OSTCBTbl[i].startTimeStruct.milisec, OSTCBTbl[i].execTime/CLOCKS_PER_SEC * 1000);
 		}
 	}
 	if(wordCnt >= MAX_DATA_WORDS) exitWithCode(1016);

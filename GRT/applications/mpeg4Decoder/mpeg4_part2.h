@@ -1,7 +1,7 @@
 
 /********************************************************************************
- * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet			*
+ * Copyright or Â© or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-FranÂçois Nezan, Jean-Christophe Prevotet			*
  * 										*
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr			*
  * 										*

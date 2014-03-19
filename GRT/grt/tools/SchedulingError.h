@@ -1,7 +1,7 @@
 
 /********************************************************************************
- * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet			*
+ * Copyright or ï¿½ or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-Franï¿½ois Nezan, Jean-Christophe Prevotet			*
  * 										*
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr			*
  * 										*
@@ -125,6 +125,7 @@ static void exitWithCode(int exitCode){
 	// 1068: Unexpected data values received.
 	// 1069: Top's subgraph is missing.
 	// 1070: Top's root vertex is missing.
+	// 1071: Local SDF graph was empty.
 
 	printf("\nExiting with code %d\n", exitCode);
 	exit(exitCode);

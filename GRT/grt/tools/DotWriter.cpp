@@ -1,7 +1,7 @@
 
 /********************************************************************************
- * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet			*
+ * Copyright or ï¿½ or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-Franï¿½ois Nezan, Jean-Christophe Prevotet			*
  * 										*
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr			*
  * 										*
@@ -406,6 +406,142 @@ void DotWriter::write(PiSDFGraph* graph, const char* path, char displayNames){
 		printf("Cannot open %s\n", path);
 	}
 }
+
+
+/**
+ Writes all levels of a PiSDFGraph in a file
+
+ @param graph: written graph
+ @param path: output file path
+*/
+void DotWriter::writeAllLevels(PiSDFGraph* graph, const char* path, char displayNames){
+	FILE * pFile;
+
+	//char directory[_MAX_PATH];
+	//getcwd(directory, sizeof(directory));
+
+	pFile = fopen (path,"w");
+	if(pFile != NULL){
+		// Writing header
+		fprintf (pFile, "digraph csdag {\n");
+		fprintf (pFile, "node [color=\"#433D63\"];\n");
+		fprintf (pFile, "edge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
+		fprintf (pFile, "rankdir=LR;\n");
+
+		// Drawing parameters.
+		for (UINT64 i=0 ; i<graph->getNb_parameters(); i++)
+		{
+			PiSDFParameter* param = graph->getParameter(i);
+			if(displayNames){
+				fprintf (pFile, "\t%s [label=\"%s\" shape=house];\n", param->getName(), param->getName());
+			}
+			else{
+				fprintf (pFile, "\t%s [label=\"\" shape=house];\n", param->getName());
+			}
+		}
+
+		// Drawing configuration vertices.
+		for (UINT32 i=0 ; i < graph->getNb_config_vertices(); i++)
+		{
+			PiSDFConfigVertex* vertex = graph->getConfig_vertex(i);
+//			draw_vertex(vertex, displayNames, pFile);
+			if(displayNames){
+				fprintf (pFile, "\t%s [label=\"%s\"];\n",vertex->getName(),vertex->getName());
+			}
+			else{
+				fprintf (pFile, "\t%s [label=\"\"];\n",vertex->getName());
+			}
+
+			// Drawing lines : vertex -> parameters.
+			for (UINT32 j = 0; j < vertex->getNbRelatedParams(); j++) {
+				fprintf(pFile, "\t%s->%s [style=dotted];\n", vertex->getName(), vertex->getRelatedParam(j)->getName());
+			}
+
+			// Drawing lines : parameter -> vertex.
+			for (int j = 0; j < vertex->getNbParameters(); j++) {
+				PiSDFParameter* param = vertex->getParameter(j);
+				fprintf(pFile, "\t%s->%s [style=dotted];\n", param->getName(), vertex->getName());
+			}
+		}
+
+		// Drawing PiSDF vertices.
+		for (UINT32 i = 0; i < graph->getNb_pisdf_vertices(); i++) {
+			PiSDFVertex *vertex = graph->getPiSDFVertex(i);
+			draw_vertex(vertex, displayNames, pFile);
+			if(vertex->getSubGraph() != NULL){
+				char fileName[30];
+				char suffix[30];
+				char *pch;
+				strcpy (fileName, path);
+				sprintf(suffix, "_%s.gv", vertex->getName());
+				pch = strstr(fileName, ".");
+				strcpy (pch, suffix);
+				write(vertex->getSubGraph(), fileName, displayNames);
+			}
+		}
+
+		// Drawing Input vertices.
+		for (UINT32 i = 0; i < graph->getNb_input_vertices(); i++) {
+			draw_vertex(graph->getInput_vertex(i), displayNames, pFile);
+		}
+
+		// Drawing Output vertices.
+		for (UINT32 i = 0; i < graph->getNb_output_vertices(); i++) {
+			draw_vertex(graph->getOutput_vertex(i), displayNames, pFile);
+		}
+
+		// Drawing switch vertices.
+		for (UINT32 i = 0; i < graph->getNbSwitchVertices(); i++) {
+			draw_vertex(graph->getSwitchVertex(i), displayNames, pFile);
+		}
+
+		// Drawing select vertices.
+		for (UINT32 i = 0; i < graph->getNbSelectVertices(); i++) {
+			draw_vertex(graph->getSelectVertex(i), displayNames, pFile);
+		}
+
+		// TODO: print round buffer vertex.
+
+
+		// Drawing Join vertices.
+		for (UINT32 i = 0; i < graph->getNb_join_vertices(); i++) {
+			draw_vertex(graph->getJoin_vertex(i), displayNames, pFile);
+		}
+
+		// Drawing Broad vertices.
+		for (UINT32 i = 0; i < graph->getNb_broad_vertices(); i++) {
+			draw_vertex(graph->getBroad_vertex(i), displayNames, pFile);
+		}
+
+		// Drawing edges.
+		for (UINT32 i=0 ; i<graph->getNb_edges(); i++)
+		{
+			char shortenedPExpr[EXPR_LEN_MAX];
+			char shortenedCExpr[EXPR_LEN_MAX];
+			PiSDFEdge* edge = graph->getEdge(i);
+
+			globalParser.prettyPrint(edge->getProduction(), shortenedPExpr);
+			globalParser.prettyPrint(edge->getConsumption(), shortenedCExpr);
+
+			/*fprintf (pFile, "\t%s->%s [taillabel=\"%s\" headlabel=\"%s\" labeldistance=%d labelangle=50];\n",
+				edge->getSource()->getName(),edge->getSink()->getName(),
+				shortenedPExpr,shortenedCExpr,labelDistance);*/
+			fprintf (pFile, "\t%s->%s [taillabel=\"%s\" headlabel=\"%s\"];\n",
+				edge->getSource()->getName(),
+				edge->getSink()->getName(),
+				shortenedPExpr,
+				shortenedCExpr);
+			//labelDistance = 3 + labelDistance%(3*4); // Oscillating the label distance to keep visibility
+		}
+
+		fprintf (pFile, "}\n");
+
+		fclose (pFile);
+	}else{
+		printf("Cannot open %s\n", path);
+	}
+}
+
 
 void DotWriter::write(BaseVertex **schedulableVertices, UINT32 nbSchedulabeVertices, const char *path, char displayNames)
 {

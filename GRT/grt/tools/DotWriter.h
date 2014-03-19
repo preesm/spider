@@ -1,7 +1,7 @@
 
 /********************************************************************************
- * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet			*
+ * Copyright or ï¿½ or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-Franï¿½ois Nezan, Jean-Christophe Prevotet			*
  * 										*
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr			*
  * 										*
@@ -95,6 +95,8 @@ class DotWriter {
 		 @param path: output file path
 		*/
 		void write(PiSDFGraph* graph, const char* path, char displayNames);
+
+		void writeAllLevels(PiSDFGraph* graph, const char* path, char displayNames);
 
 		void write(BaseVertex** schedulableVertices, UINT32 nbSchedulabeVertices, const char* path, char displayNames);
 

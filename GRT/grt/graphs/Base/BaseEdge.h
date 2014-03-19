@@ -38,6 +38,7 @@
 #define BASEEDGE_H_
 
 #include <types.h>
+#include <stddef.h>
 
 class BaseVertex;
 
@@ -55,10 +56,23 @@ class BaseEdge {
 	BaseEdge* refEdge;  // Reference to the PiSDF edge.
 public:
 	BaseEdge(){
+		id = -1;
+		sink = (BaseVertex *)0;
+		source = (BaseVertex *)0;
 		consumptionInt = productionInt = delayInt = 0;
+		tempId = -1;
 		refEdge = 0;
 	}
 
+	void reset(){
+		id = -1;
+		source = (BaseVertex *)NULL;
+		sink = (BaseVertex *)NULL;
+		consumptionInt = productionInt = delayInt = 0;
+		tempId = -1;
+		refEdge = 0;
+
+	}
 
 	// Auto-generated setters and getters.
     UINT32 getId() const

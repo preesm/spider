@@ -43,6 +43,8 @@
 
 extern DotWriter dotWriter;
 static char name[MAX_VERTEX_NAME_SIZE];
+static SRDAGGraph localDag;
+static SDFGraph sdf;
 
 PiSDFGraph::PiSDFGraph() {
 	nb_edges = 0;
@@ -526,7 +528,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		if(dag->getNbVertices() == 0)
 			createSrDAGInputConfigVxs(dag, currHSrDagVx);
 		else{
-			SRDAGGraph 	localDag;
+			localDag.reset();
 			createSrDAGInputConfigVxs(&localDag, currHSrDagVx);
 
 			// Merging the local DAG into the global DAG.
@@ -580,7 +582,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 	evaluateExpressions();
 
 	// Generating a local (for the current level) SDF without configure vertices.
-	SDFGraph sdf;
+	sdf.reset();
 	createSDF(&sdf);
 	if(sdf.getNbVertices() == 0) exitWithCode(1071);
 
@@ -616,7 +618,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		 * From the second step, a local DAG is used for flattening the current level,
 		 * then it is merged with the global DAG.
 		 */
-		SRDAGGraph 	localDag;
+		localDag.reset();
 		transformer.transform(&sdf, &localDag, currHSrDagVx);
 
 //	#if PRINT_GRAPH

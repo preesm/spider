@@ -46,10 +46,12 @@ SRDAGEdge* SRDAGEdge::lastInSinkOrder = NULL;
 */
 SRDAGEdge::SRDAGEdge()
 {
+	source = sink = NULL;
 	prevInSinkOrder = NULL;
 	nextInSinkOrder = NULL;
 	refEdge = NULL;
 	fifoId = -1;
+	tokenRate = 0;
 	delay = 0;
 }
 
@@ -58,4 +60,15 @@ SRDAGEdge::SRDAGEdge()
 */
 SRDAGEdge::~SRDAGEdge()
 {
+}
+
+void SRDAGEdge::reset()
+{
+	source = sink = NULL;
+	prevInSinkOrder = NULL;
+	nextInSinkOrder = NULL;
+	refEdge = NULL;
+	fifoId = -1;
+	tokenRate = 0;
+	delay = 0;
 }

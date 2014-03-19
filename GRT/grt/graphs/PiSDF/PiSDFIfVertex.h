@@ -46,6 +46,14 @@ class PiSDFIfVertex: public BaseVertex {
 	UINT8 direction;
 public:
 
+	void reset(){
+		this->BaseVertex::reset();
+		parentVertex = (BaseVertex *)NULL;
+		parentEdge = (PiSDFEdge *)NULL;
+		parentEdgeIndex = -1;
+		direction = 0;
+	}
+
     BaseVertex *getParentVertex() const
     {
         return parentVertex;

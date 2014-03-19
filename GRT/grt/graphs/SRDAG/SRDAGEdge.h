@@ -87,6 +87,8 @@ class SRDAGEdge {
 		*/
 		~SRDAGEdge();
 
+		void reset();
+
 		/**
 		 TokenRate getter
 

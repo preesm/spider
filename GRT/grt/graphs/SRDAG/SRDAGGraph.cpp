@@ -60,6 +60,11 @@ SRDAGGraph::SRDAGGraph()
 //	memset(edges,'\0',MAX_SRDAG_EDGES*sizeof(SRDAGEdge));
 }
 
+void SRDAGGraph::reset(){
+	nbVertices = 0;
+	nbEdges = 0;
+}
+
 /**
  Destructor
 */
@@ -85,6 +90,7 @@ SRDAGEdge* SRDAGGraph::addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* 
 	}
 #endif
 	edge = &edges[nbEdges];
+	edge->reset();
 	edge->setSource(source);
 	edge->setTokenRate(tokenRate);
 	edge->setSink(sink);

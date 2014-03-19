@@ -201,6 +201,7 @@ void PiSDFDoubleLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scen
 
 
 void top(PiSDFGraph* graph, Scenario* scenario){
+	nb_graphs = 0;
 	PiSDFVertex *vxDoubleLoop = (PiSDFVertex *)graph->addVertex("DoubleLoop", pisdf_vertex);
 
 	graph->setRootVertex(vxDoubleLoop);

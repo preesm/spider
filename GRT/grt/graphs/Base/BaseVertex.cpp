@@ -37,19 +37,36 @@
 #include "BaseVertex.h"
 
 BaseVertex::BaseVertex() {
-	id = nbInputEdges = nbOutputEdges = 0;
-	refPiSDFVertex = 0;
+	id=-1;
+	name[0] = '\0';
+	function_index = -1;
+	type=pisdf_vertex;
+	nbInputEdges = nbOutputEdges = nbParameters = 0;
+	refPiSDFVertex = NULL;
 	nbRepetition = 1;
-//	visited = false;
-	status = VxStNoExecutable;
 	executable = undefined;
+	status = VxStNoExecutable;
 	scheduled = false;
+	tempId=-1;
 }
 
 BaseVertex::~BaseVertex() {
 	// TODO Auto-generated destructor stub
 }
 
+void BaseVertex::reset() {
+	id=-1;
+	name[0] = '\0';
+	function_index = -1;
+	type=pisdf_vertex;
+	nbInputEdges = nbOutputEdges = nbParameters = 0;
+	refPiSDFVertex = NULL;
+	nbRepetition = 1;
+	executable = undefined;
+	status = VxStNoExecutable;
+	scheduled = false;
+	tempId=-1;
+}
 
 void BaseVertex::addInputEdge(PiSDFEdge *edge)
 {

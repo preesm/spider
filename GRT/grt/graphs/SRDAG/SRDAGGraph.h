@@ -86,6 +86,11 @@ class SRDAGGraph {
 		~SRDAGGraph();
 
 		/**
+		 * Reset the graph as at initialization
+		 */
+		void reset();
+
+		/**
 		 Adding a vertex to the graph. Vertices and edges must be added in topological order.
 		 There is no initial token on edges
 		 

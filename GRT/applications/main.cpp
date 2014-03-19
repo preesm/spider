@@ -118,7 +118,6 @@ int main(int argc, char* argv[]){
 		PiSDFVertex* root = (PiSDFVertex*)piSDF.getRootVertex();
 		if(!root) exitWithCode(1070);
 		if(!root->hasSubGraph(&H)) exitWithCode(1069);
-		SRDAGGraph		dag;
 		SRDAGVertex* 	currHSrDagVx = 0;
 
 		UINT32 	lvlCntr = 0;
@@ -202,4 +201,6 @@ int main(int argc, char* argv[]){
 		sprintf(name, "%s.gv", SRDAG_FIFO_ID_FILE_PATH);
 		dotWriter.write(&dag, name, 1, 0);
 	#endif
+
+	printf("finished\n");
 }

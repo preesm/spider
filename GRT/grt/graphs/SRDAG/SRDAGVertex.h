@@ -155,6 +155,8 @@ class SRDAGVertex {
 		*/
 		void setBase(SRDAGGraph* graph);
 
+		void reset();
+
 		/**
 		 Getting the base, i.e. the graph in which current vertex is included
 

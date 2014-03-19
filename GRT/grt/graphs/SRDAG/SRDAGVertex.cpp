@@ -52,6 +52,31 @@ SRDAGVertex::SRDAGVertex(){
 	nbInputEdges=0;
 	nbOutputEdges=0;
 	slaveIndex=-1;
+	expImpId=-1;
+	Reference = NULL;
+	id=-1;
+	functIx=-1;
+	parent=NULL;
+	type = 0; // Normal type by default.
+	state = SrVxStNoExecuted;
+}
+
+void SRDAGVertex::reset(){
+	base=0;
+	scheduleIndex = -1;
+	visited=0;
+	mergeIx = -1;
+	csDagReference=NULL;
+	referenceIndex=-1;
+	tLevel=-1;
+	nbInputEdges=0;
+	nbOutputEdges=0;
+	slaveIndex=-1;
+	expImpId=-1;
+	Reference = NULL;
+	id=-1;
+	functIx=-1;
+	parent=NULL;
 	type = 0; // Normal type by default.
 	state = SrVxStNoExecuted;
 }

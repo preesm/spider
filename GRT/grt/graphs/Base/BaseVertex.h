@@ -93,6 +93,8 @@ public:
 	BaseVertex();
 	virtual ~BaseVertex();
 
+	void reset();
+
 	void addInputEdge(PiSDFEdge* edge);
 
 	void addOutputEdge(PiSDFEdge* edge);

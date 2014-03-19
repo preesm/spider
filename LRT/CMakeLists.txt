@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 project(LRT)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
 set (APP_DOUBLE_LOOP "ON" CACHE BOOL "")
 set (APP_MPEG4 "" CACHE BOOL "")
 set (APP_SOBEL "" CACHE BOOL "")
@@ -30,10 +32,18 @@ file(GLOB_RECURSE lrt_source_files lrt
 ) 
 
 # Getting platform' sources. 
-set (OVPSIM "" CACHE BOOL "")
-if(OVPSIM)
+set (ARCH_OVPSIM "" CACHE BOOL "")
+set (ARCH_Zynq "" CACHE BOOL "")
+if(ARCH_OVPSIM)
 	include_directories(platform_ub_ovp)
 	file(GLOB_RECURSE platform_source_files platform_ub_ovp/*)
+elseif(ARCH_Zynq)
+	include_directories(platform_arm)
+	file(GLOB_RECURSE platform_source_files platform_arm/*)
+	
+	find_package(BSPlibs REQUIRED)
+	include_directories(${BSPlibs_INCLUDE_DIRS})
+	set(LIBS ${LIBS} ${BSPlibs_LIBRARIES})
 else()
 	if(CMAKE_SYSTEM_NAME STREQUAL Windows)
 		SET(CMAKE_MFC_FLAG 2)
@@ -45,11 +55,8 @@ else()
 	elseif(CMAKE_SYSTEM_NAME STREQUAL Linux)
 		include_directories(platform_desktop_linux)
 		file(GLOB_RECURSE platform_source_files platform_desktop/*)
-	else()
-		include_directories(platform_arm)
-		file(GLOB_RECURSE platform_source_files platform_arm/*)
 	endif(CMAKE_SYSTEM_NAME STREQUAL Windows)
-endif(OVPSIM)
+endif(ARCH_OVPSIM)
 
 if(APP_MPEG4)  
 	# Finding libraries.
@@ -64,8 +71,14 @@ endif(APP_MPEG4)
 
 add_executable(LRT WIN32 ${app_source_files} ${lrt_source_files} ${platform_source_files})
 
+#add_library(xil STATIC IMPORTED)
+#set_property(TARGET xil PROPERTY IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/../../xilinx/standalone_bsp_0/microblaze_0/lib/libxil.a)
+#set(CMAKE_EXE_LINKER_FLAGS "-L${CMAKE_SOURCE_DIR}/../../xilinx/standalone_bsp_0/microblaze_0/lib")
+#add_library(c STATIC IMPORTED)
+#set_property(TARGET c PROPERTY IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/../../xilinx/standalone_bsp_0/microblaze_0/lib/libc.a)
+
 if(APP_MPEG4)
 	target_link_libraries(LRT SDL)
 else()
-	target_link_libraries(LRT)	
+	target_link_libraries(LRT ${LIBS})
 endif(APP_MPEG4)  

@@ -95,6 +95,8 @@ class DotWriter {
 		*/
 		void write(PiSDFGraph* graph, const char* path, char displayNames);
 
+		void writeAllLevels(PiSDFGraph* graph, const char* path, char displayNames);
+
 		void write(BaseVertex** schedulableVertices, UINT32 nbSchedulabeVertices, const char* path, char displayNames);
 
 		void write(SDFGraph* sdf, const char* path, char displayNames);

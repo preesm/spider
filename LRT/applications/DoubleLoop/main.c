@@ -43,7 +43,7 @@
 #include <lrt_core.h>
 #include <lrt_taskMngr.h>
 
-#include "DoubleLoop.h"
+//#include "DoubleLoop.h"
 
 #define STANDALONE_APP	0
 
@@ -53,30 +53,30 @@ int main(int argc, char **argv) {
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
 
-	if(argc > 1)
-		cpuId = atoi(argv[1]);
-	else{
-		printf("You must specify procID\n");
-		return -1;
-	}
-
-	functions_tbl[0] = rdFile;
-	functions_tbl[2] = initNLoop;
-	functions_tbl[3] = endNLoop;
-	functions_tbl[4] = wrFile;
-
-	//*** MLoop hierarchy ***//
-	functions_tbl[5] = configM;
-	functions_tbl[6] = initMLoop;
-	functions_tbl[7] = f;
-	functions_tbl[8] = endMLoop;
-
-	//*** Special actors ***//
-//	functions_tbl[9] = input;
-	functions_tbl[10] = RB;
-	functions_tbl[11] = broadcast;
-//	functions_tbl[12] = output;
-	functions_tbl[13] = Xplode;
+//	if(argc > 1)
+//		cpuId = atoi(argv[1]);
+//	else{
+//		printf("You must specify procID\n");
+//		return -1;
+//	}
+//
+//	functions_tbl[0] = rdFile;
+//	functions_tbl[2] = initNLoop;
+//	functions_tbl[3] = endNLoop;
+//	functions_tbl[4] = wrFile;
+//
+//	//*** MLoop hierarchy ***//
+//	functions_tbl[5] = configM;
+//	functions_tbl[6] = initMLoop;
+//	functions_tbl[7] = f;
+//	functions_tbl[8] = endMLoop;
+//
+//	//*** Special actors ***//
+////	functions_tbl[9] = input;
+//	functions_tbl[10] = RB;
+//	functions_tbl[11] = broadcast;
+////	functions_tbl[12] = output;
+//	functions_tbl[13] = Xplode;
 
 
 

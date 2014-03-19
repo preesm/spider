@@ -39,6 +39,29 @@
 
 #include "types.h"
 
+typedef enum{
+	RTCtrlQueue,
+	RTInfoQueue,
+	RTJobQueue,
+	nbQueueTypes
+} RTQueueType;
+
+typedef enum{
+	RTInputQueue,
+	RTOutputQueue
+} RTQueueDir;
+
+void RTQueuesInit();
+
+UINT32 RTQueuePush(RTQueueType queueType, void* data, int size);
+UINT32 RTQueuePush_UINT32(RTQueueType queueType, UINT32 value);
+UINT32 RTQueuePop(RTQueueType queueType, void* data, int size);
+UINT32 RTQueuePop_UINT32(RTQueueType queueType);
+UINT32 RTQueueNonBlockingPop(RTQueueType queueType, void* data, int size);
+
+
+
+
 void OS_QInit();
 
 UINT32 OS_CtrlQPush(void* data, int size);

@@ -42,6 +42,10 @@
 #include "types.h"
 #include <fcntl.h>
 
+// TODO: these MACROS are defined in parameters.h
+#define SH_MEM_BASE_ADDR			0x0
+#define SH_MEM_HDR_REGION_SIZE		MAX_NB_FIFOs * FIFO_MUTEX_SIZE
+
 void OS_ShMemInit();
 
 UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size);

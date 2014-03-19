@@ -35,37 +35,42 @@
  ****************************************************************************/
 
 #include "zynq_time.h"
-#include <sys/time.h>
+//#include <sys/time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <sys/ioctl.h>
-#include <timerArm.h>
+//#include <sys/ioctl.h>
+//#include <timerArm.h>
 
+int times;
 static int timerFile;
 
 void OS_TimeInit(){
-	timerFile = open("/dev/timerArm", O_RDWR, S_IRUSR | S_IWUSR);
-	if(timerFile == -1){
-		fprintf(stderr, "Cannot open /dev/timerArm\n");
-		abort();
-	}
+//	timerFile = open("/dev/timerArm", O_RDWR, S_IRUSR | S_IWUSR);
+//	if(timerFile == -1){
+//		fprintf(stderr, "Cannot open /dev/timerArm\n");
+//		abort();
+//	}
 }
 
 void OS_TimeReset(){
-	ioctl(timerFile,TIMERARM_IOCT_RESET);
+//	ioctl(timerFile,TIMERARM_IOCT_RESET);
 }
 
 void OS_TimeStart(){
-	ioctl(timerFile,TIMERARM_IOCT_START);
+//	ioctl(timerFile,TIMERARM_IOCT_START);
 }
 
 void OS_TimeStop(){
-	ioctl(timerFile,TIMERARM_IOCT_STOP);
+//	ioctl(timerFile,TIMERARM_IOCT_STOP);
 }
 
 UINT32 OS_TimeGetValue(){
-	UINT32 elapsedTime=0;
-	ioctl(timerFile,TIMERARM_IOCT_GETVALUE, &elapsedTime);
-	return elapsedTime/6.66;
+//	UINT32 elapsedTime=0;
+//	ioctl(timerFile,TIMERARM_IOCT_GETVALUE, &elapsedTime);
+//	return elapsedTime/6.66;
+}
+
+void lrtGetTime(LRTSYSTime *buffer){
+
 }

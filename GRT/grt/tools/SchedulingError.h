@@ -124,6 +124,7 @@ static void exitWithCode(int exitCode){
 	// 1068: Unexpected data values received.
 	// 1069: Top's subgraph is missing.
 	// 1070: Top's root vertex is missing.
+	// 1071: Local SDF graph was empty.
 
 	printf("\nExiting with code %d\n", exitCode);
 	exit(exitCode);

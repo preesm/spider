@@ -582,6 +582,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 	// Generating a local (for the current level) SDF without configure vertices.
 	SDFGraph sdf;
 	createSDF(&sdf);
+	if(sdf.getNbVertices() == 0) exitWithCode(1071);
 
 #if PRINT_GRAPH
 //	// Printing the SDF sub-graph.

@@ -34,8 +34,9 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "mpeg4Decoder/mpeg4_part2.h"
+//#include "mpeg4Decoder/mpeg4_part2.h"
 //#include "DoubleLoop/PiSDFDoubleLoop.h"
+#include "generatedC++/doubleLoop_gen.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Scenario/Scenario.h>
 #include <scheduling/ListScheduler/ListScheduler.h>
@@ -201,6 +202,4 @@ int main(int argc, char* argv[]){
 		sprintf(name, "%s.gv", SRDAG_FIFO_ID_FILE_PATH);
 		dotWriter.write(&dag, name, 1, 0);
 	#endif
-
-//	}
 }

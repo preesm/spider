@@ -34,19 +34,16 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef TIME_H_
-#define TIME_H_
+#ifndef SW_FIFOMNGR_H_
+#define SW_FIFOMNGR_H_
 
-#include "types.h"
-#include <lrt_definitions.h>
+#include "lrt_definitions.h"
 
-void OS_TimeInit();
 
-void OS_TimeReset();
-void OS_TimeStart();
-void OS_TimeStop();
-
-UINT32 OS_TimeGetValue();
-void lrtGetTime(LRTSYSTime *buffer);
-
-#endif /* TIME_H_ */
+UINT8 create_swfifo(LRT_FIFO_HNDLE* fifo_hndl, UINT32 size, UINT32 address);
+void flush_swfifo(LRT_FIFO_HNDLE* fifo_hndl);
+BOOLEAN check_input_swfifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size);
+BOOLEAN check_output_swfifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size);
+void write_output_swfifo(LRT_FIFO_HNDLE *out_fifo_hndl, UINT32 size, UINT8* buffer);
+void read_input_swfifo(LRT_FIFO_HNDLE	*in_fifo_hndl, UINT32 size, UINT8* buffer);
+#endif /* SW_FIFOMNGR_H_ */

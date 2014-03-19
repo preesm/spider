@@ -41,12 +41,20 @@
 
 #include "types.h"
 #include "hwQueues.h"
+#include "swfifoMngr.h"
+
+#define IN_CTRL_QUEUE_BASE		0x20000000
+#define OUT_CTRL_QUEUE_BASE		0x20000600
+
+#define MBOX_SIZE				1024
+
 
 typedef enum{
 	CTRL,
 	INFO
 } MailboxType;
 
+static LRT_FIFO_HNDLE RTQueue[nbQueueTypes][2];
 static int OS_QIn[2], OS_QOut[2];
 int cpuId;
 
@@ -126,4 +134,52 @@ void OS_InfoQPush_UINT32(UINT32 value){
 
 UINT32 OS_InfoQPop_nonBlocking(void* data, int size){
 	return read(OS_QIn[INFO], data, size);
+}
+
+
+
+void RTQueuesInit(){
+	create_swfifo(&(RTQueue[RTCtrlQueue][RTInputQueue]), MBOX_SIZE, IN_CTRL_QUEUE_BASE);
+	flush_swfifo(&(RTQueue[RTCtrlQueue][RTInputQueue]));
+//	RTQueue[RTInfoQueue][RTInputQueue] =
+//	RTQueue[RTJobQueue][RTInputQueue] =
+//
+	create_swfifo(&(RTQueue[RTCtrlQueue][RTOutputQueue]), MBOX_SIZE, OUT_CTRL_QUEUE_BASE);
+	flush_swfifo(&(RTQueue[RTCtrlQueue][RTOutputQueue]));
+//	RTQueue[RTInfoQueue][RTOutputQueue] =
+//	RTQueue[RTJobQueue][RTOutputQueue] =
+}
+
+
+UINT32 RTQueuePush(RTQueueType queueType, void* data, int size){
+	write_output_swfifo(&RTQueue[queueType][RTOutputQueue], size, data);
+	return size;
+}
+
+
+UINT32 RTQueuePush_UINT32(RTQueueType queueType, UINT32 value){
+	return RTQueuePush(queueType, &value, sizeof(UINT32));
+}
+
+
+UINT32 RTQueuePop(RTQueueType queueType, void* data, int size){
+	read_input_swfifo(&RTQueue[queueType][RTInputQueue], size, data);
+	return size;
+}
+
+
+UINT32 RTQueuePop_UINT32(RTQueueType queueType){
+	UINT32 data;
+	RTQueuePop(queueType, &data, sizeof(UINT32));
+	return data;
+}
+
+
+UINT32 RTQueueNonBlockingPop(RTQueueType queueType, void* data, int size){
+	if(check_input_swfifo(&RTQueue[queueType][RTInputQueue], size)){
+		read_input_swfifo(&RTQueue[queueType][RTInputQueue], size, data);
+		return size;
+	}
+	else
+		return 0;
 }

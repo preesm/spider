@@ -35,7 +35,7 @@
  ****************************************************************************/
 
 #include <stdlib.h>     /* srand, rand */
-#include <time.h>       /* time */
+//#include <time.h>       /* time */
 #include <string.h>
 
 #define	M_MAX_VALUE			3

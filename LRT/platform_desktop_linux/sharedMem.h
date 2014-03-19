@@ -35,69 +35,18 @@
  * knowledge of the CeCILL-C license and that you accept its terms.		*
  ********************************************************************************/
 
-#ifndef EXECUTIONSTAT_H_
-#define EXECUTIONSTAT_H_
+#ifndef SHAREDMEM_H_
+#define SHAREDMEM_H_
 
-typedef enum{
-	Default		  = 0,
-	AMManagement  = 1,
-	Scheduling	  = 2,
-	FifoCheck	  = 3,
-	DataTransfert = 4,
-	CtrlFifoHandling = 5,
-	Action		  = 6,
-	MaxMonitor	  = Action+6,
-} Timings;
+#include <lrt.h>
+#include <stdio.h>
 
-class ExecutionStat {
-public:
-	unsigned int listScheduleTime;
-	unsigned int srDAGTransfTime;
-	unsigned int listMakespan;
-	unsigned int listThroughput;
-	unsigned int criticalPath;
-	unsigned int t1Latency;
-	unsigned int nbFunction;
-	unsigned int nbRunningCore;
-	unsigned int nbSlavesFunction[MAX_CSDAG_VERTICES];
+#include "types.h"
+#include <fcntl.h>
 
-	unsigned int nbSRDAGVertices;
-	unsigned int nbSRDAGEdges;
-	unsigned int fifoNb;
+void OS_ShMemInit();
 
-	unsigned int nbAMVertices[MAX_SLAVES];
-	unsigned int nbAMActions[MAX_SLAVES];
-	unsigned int nbAMConds[MAX_SLAVES];
+UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size);
+UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size);
 
-	unsigned int memAllocated;
-	unsigned int msgLength[MAX_SLAVES];
-
-	unsigned int timings[MAX_SLAVES][MAX_CSDAG_VERTICES+6];
-
-
-	ExecutionStat(){
-		listScheduleTime = srDAGTransfTime = 0;
-		nbSRDAGVertices = nbSRDAGEdges = memAllocated = 0;
-		nbRunningCore = fifoNb = 0;
-		listMakespan = listThroughput = 0;
-		criticalPath = t1Latency = nbFunction=0;
-	};
-
-	virtual ~ExecutionStat(){};
-
-	inline unsigned int getListExecutionTime(){
-		return listScheduleTime+srDAGTransfTime;
-	}
-
-	void average(ExecutionStat* tab, int nb){
-		double temp1=0, temp2=0;
-		for(int i=0; i<nb; i++){
-			temp1 += tab[i].listScheduleTime;
-			temp2 += tab[i].srDAGTransfTime;
-		}
-		listScheduleTime = temp1/nb;
-		srDAGTransfTime  = temp2/nb;
-	}
-};
-
-#endif /* EXECUTIONSTAT_H_ */
+#endif /* SHAREDMEM_H_ */

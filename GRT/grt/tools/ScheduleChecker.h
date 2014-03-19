@@ -1,7 +1,7 @@
 
 /********************************************************************************
- * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet			*
+ * Copyright or Â© or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,	*
+ * Maxime Pelcat, Jean-FranÃ§ois Nezan, Jean-Christophe Prevotet			*
  * 										*
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr			*
  * 										*
@@ -40,7 +40,6 @@
 
 #include "../scheduling/architecture/Architecture.h"
 #include "../graphs/SRDAG/SRDAGGraph.h"
-#include "../graphs/JobSet/JobSet.h"
 #include "../scheduling/Schedule/Schedule.h"
 
 class ScheduleChecker {
@@ -49,8 +48,6 @@ public:
 	virtual ~ScheduleChecker();
 
 	void checkList(SRDAGGraph* srDag, Architecture* archi);
-	void checkFlow(SRDAGGraph* srDag, JobSet* jobset, Architecture* archi);
-
 	void checkSchedule(SRDAGGraph* srDag, Schedule* schedule, Architecture* archi);
 };
 

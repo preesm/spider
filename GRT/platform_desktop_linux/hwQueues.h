@@ -35,69 +35,28 @@
  * knowledge of the CeCILL-C license and that you accept its terms.		*
  ********************************************************************************/
 
-#ifndef EXECUTIONSTAT_H_
-#define EXECUTIONSTAT_H_
+#ifndef HWQUEUES_H_
+#define HWQUEUES_H_
 
-typedef enum{
-	Default		  = 0,
-	AMManagement  = 1,
-	Scheduling	  = 2,
-	FifoCheck	  = 3,
-	DataTransfert = 4,
-	CtrlFifoHandling = 5,
-	Action		  = 6,
-	MaxMonitor	  = Action+6,
-} Timings;
+#define NB_MAX_CTRLQ 8
 
-class ExecutionStat {
-public:
-	unsigned int listScheduleTime;
-	unsigned int srDAGTransfTime;
-	unsigned int listMakespan;
-	unsigned int listThroughput;
-	unsigned int criticalPath;
-	unsigned int t1Latency;
-	unsigned int nbFunction;
-	unsigned int nbRunningCore;
-	unsigned int nbSlavesFunction[MAX_CSDAG_VERTICES];
+#include <stdio.h>
+#include <fcntl.h>
 
-	unsigned int nbSRDAGVertices;
-	unsigned int nbSRDAGEdges;
-	unsigned int fifoNb;
+#include "types.h"
 
-	unsigned int nbAMVertices[MAX_SLAVES];
-	unsigned int nbAMActions[MAX_SLAVES];
-	unsigned int nbAMConds[MAX_SLAVES];
+void OS_QInit(int nbSlaves);
 
-	unsigned int memAllocated;
-	unsigned int msgLength[MAX_SLAVES];
+UINT32 OS_CtrlQPush(INT32 id, void* data, int size);
+UINT32 OS_CtrlQPop(INT32 id, void* data, int size);
+UINT32 OS_CtrlQPop_nonBlocking(INT32 id, void* data, int size);
+UINT32 OS_CtrlQPushInt(int id, unsigned int data);
+UINT32 OS_CtrlQPopInt(int id);
 
-	unsigned int timings[MAX_SLAVES][MAX_CSDAG_VERTICES+6];
+UINT32 OS_InfoQPush(INT32 id, void* data, int size);
+UINT32 OS_InfoQPop(INT32 id, void* data, int size);
+UINT32 OS_InfoQPop_nonBlocking(INT32 id, void* data, int size);
+UINT32 OS_InfoQPushInt(int id, unsigned int data);
+UINT32 OS_InfoQPopInt(int id);
 
-
-	ExecutionStat(){
-		listScheduleTime = srDAGTransfTime = 0;
-		nbSRDAGVertices = nbSRDAGEdges = memAllocated = 0;
-		nbRunningCore = fifoNb = 0;
-		listMakespan = listThroughput = 0;
-		criticalPath = t1Latency = nbFunction=0;
-	};
-
-	virtual ~ExecutionStat(){};
-
-	inline unsigned int getListExecutionTime(){
-		return listScheduleTime+srDAGTransfTime;
-	}
-
-	void average(ExecutionStat* tab, int nb){
-		double temp1=0, temp2=0;
-		for(int i=0; i<nb; i++){
-			temp1 += tab[i].listScheduleTime;
-			temp2 += tab[i].srDAGTransfTime;
-		}
-		listScheduleTime = temp1/nb;
-		srDAGTransfTime  = temp2/nb;
-	}
-};
-
-#endif /* EXECUTIONSTAT_H_ */
+#endif /* HWQUEUES_H_ */

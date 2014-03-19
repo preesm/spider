@@ -35,69 +35,16 @@
  * knowledge of the CeCILL-C license and that you accept its terms.		*
  ********************************************************************************/
 
-#ifndef EXECUTIONSTAT_H_
-#define EXECUTIONSTAT_H_
+#include <stdio.h>
+#include <types.h>
+#include <print.h>
 
-typedef enum{
-	Default		  = 0,
-	AMManagement  = 1,
-	Scheduling	  = 2,
-	FifoCheck	  = 3,
-	DataTransfert = 4,
-	CtrlFifoHandling = 5,
-	Action		  = 6,
-	MaxMonitor	  = Action+6,
-} Timings;
-
-class ExecutionStat {
-public:
-	unsigned int listScheduleTime;
-	unsigned int srDAGTransfTime;
-	unsigned int listMakespan;
-	unsigned int listThroughput;
-	unsigned int criticalPath;
-	unsigned int t1Latency;
-	unsigned int nbFunction;
-	unsigned int nbRunningCore;
-	unsigned int nbSlavesFunction[MAX_CSDAG_VERTICES];
-
-	unsigned int nbSRDAGVertices;
-	unsigned int nbSRDAGEdges;
-	unsigned int fifoNb;
-
-	unsigned int nbAMVertices[MAX_SLAVES];
-	unsigned int nbAMActions[MAX_SLAVES];
-	unsigned int nbAMConds[MAX_SLAVES];
-
-	unsigned int memAllocated;
-	unsigned int msgLength[MAX_SLAVES];
-
-	unsigned int timings[MAX_SLAVES][MAX_CSDAG_VERTICES+6];
-
-
-	ExecutionStat(){
-		listScheduleTime = srDAGTransfTime = 0;
-		nbSRDAGVertices = nbSRDAGEdges = memAllocated = 0;
-		nbRunningCore = fifoNb = 0;
-		listMakespan = listThroughput = 0;
-		criticalPath = t1Latency = nbFunction=0;
-	};
-
-	virtual ~ExecutionStat(){};
-
-	inline unsigned int getListExecutionTime(){
-		return listScheduleTime+srDAGTransfTime;
-	}
-
-	void average(ExecutionStat* tab, int nb){
-		double temp1=0, temp2=0;
-		for(int i=0; i<nb; i++){
-			temp1 += tab[i].listScheduleTime;
-			temp2 += tab[i].srDAGTransfTime;
-		}
-		listScheduleTime = temp1/nb;
-		srDAGTransfTime  = temp2/nb;
-	}
-};
-
-#endif /* EXECUTIONSTAT_H_ */
+void zynq_puts(const char* s){
+	printf("%s",s);
+}
+void zynq_putdec(UINT32 value){
+	printf("%d",value);
+}
+void zynq_puthex(UINT32 value){
+	printf("0x%x",value);
+}

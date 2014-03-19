@@ -35,69 +35,24 @@
  * knowledge of the CeCILL-C license and that you accept its terms.		*
  ********************************************************************************/
 
-#ifndef EXECUTIONSTAT_H_
-#define EXECUTIONSTAT_H_
+#ifndef TYPES_H_
+#define TYPES_H_
 
-typedef enum{
-	Default		  = 0,
-	AMManagement  = 1,
-	Scheduling	  = 2,
-	FifoCheck	  = 3,
-	DataTransfert = 4,
-	CtrlFifoHandling = 5,
-	Action		  = 6,
-	MaxMonitor	  = Action+6,
-} Timings;
+#include <linux/types.h>
 
-class ExecutionStat {
-public:
-	unsigned int listScheduleTime;
-	unsigned int srDAGTransfTime;
-	unsigned int listMakespan;
-	unsigned int listThroughput;
-	unsigned int criticalPath;
-	unsigned int t1Latency;
-	unsigned int nbFunction;
-	unsigned int nbRunningCore;
-	unsigned int nbSlavesFunction[MAX_CSDAG_VERTICES];
+#define TRUE -1
+#define FALSE 0
 
-	unsigned int nbSRDAGVertices;
-	unsigned int nbSRDAGEdges;
-	unsigned int fifoNb;
+typedef __s8	INT8;
+typedef __s16 	INT16;
+typedef __s32 	INT32;
+typedef __s64 	INT64;
 
-	unsigned int nbAMVertices[MAX_SLAVES];
-	unsigned int nbAMActions[MAX_SLAVES];
-	unsigned int nbAMConds[MAX_SLAVES];
+typedef __u8 	UINT8;
+typedef __u16 	UINT16;
+typedef __u32 	UINT32;
+typedef __u64 	UINT64;
 
-	unsigned int memAllocated;
-	unsigned int msgLength[MAX_SLAVES];
+typedef int		BOOL;
 
-	unsigned int timings[MAX_SLAVES][MAX_CSDAG_VERTICES+6];
-
-
-	ExecutionStat(){
-		listScheduleTime = srDAGTransfTime = 0;
-		nbSRDAGVertices = nbSRDAGEdges = memAllocated = 0;
-		nbRunningCore = fifoNb = 0;
-		listMakespan = listThroughput = 0;
-		criticalPath = t1Latency = nbFunction=0;
-	};
-
-	virtual ~ExecutionStat(){};
-
-	inline unsigned int getListExecutionTime(){
-		return listScheduleTime+srDAGTransfTime;
-	}
-
-	void average(ExecutionStat* tab, int nb){
-		double temp1=0, temp2=0;
-		for(int i=0; i<nb; i++){
-			temp1 += tab[i].listScheduleTime;
-			temp2 += tab[i].srDAGTransfTime;
-		}
-		listScheduleTime = temp1/nb;
-		srDAGTransfTime  = temp2/nb;
-	}
-};
-
-#endif /* EXECUTIONSTAT_H_ */
+#endif /* TYPES_H_ */

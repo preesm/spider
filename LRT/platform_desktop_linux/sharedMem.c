@@ -35,69 +35,72 @@
  * knowledge of the CeCILL-C license and that you accept its terms.		*
  ********************************************************************************/
 
-#ifndef EXECUTIONSTAT_H_
-#define EXECUTIONSTAT_H_
 
-typedef enum{
-	Default		  = 0,
-	AMManagement  = 1,
-	Scheduling	  = 2,
-	FifoCheck	  = 3,
-	DataTransfert = 4,
-	CtrlFifoHandling = 5,
-	Action		  = 6,
-	MaxMonitor	  = Action+6,
-} Timings;
+#include <lrt.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-class ExecutionStat {
-public:
-	unsigned int listScheduleTime;
-	unsigned int srDAGTransfTime;
-	unsigned int listMakespan;
-	unsigned int listThroughput;
-	unsigned int criticalPath;
-	unsigned int t1Latency;
-	unsigned int nbFunction;
-	unsigned int nbRunningCore;
-	unsigned int nbSlavesFunction[MAX_CSDAG_VERTICES];
+#include "types.h"
+#include <fcntl.h>
 
-	unsigned int nbSRDAGVertices;
-	unsigned int nbSRDAGEdges;
-	unsigned int fifoNb;
+typedef struct OS_SHMEM {
+	UINT32 base;
+	UINT32 length;
+	int file;
+} OS_SHMEM;
 
-	unsigned int nbAMVertices[MAX_SLAVES];
-	unsigned int nbAMActions[MAX_SLAVES];
-	unsigned int nbAMConds[MAX_SLAVES];
+static OS_SHMEM OSShMemTbl[OS_MAX_SH_MEM];
+static int nbOSShMem = 0;
 
-	unsigned int memAllocated;
-	unsigned int msgLength[MAX_SLAVES];
-
-	unsigned int timings[MAX_SLAVES][MAX_CSDAG_VERTICES+6];
-
-
-	ExecutionStat(){
-		listScheduleTime = srDAGTransfTime = 0;
-		nbSRDAGVertices = nbSRDAGEdges = memAllocated = 0;
-		nbRunningCore = fifoNb = 0;
-		listMakespan = listThroughput = 0;
-		criticalPath = t1Latency = nbFunction=0;
-	};
-
-	virtual ~ExecutionStat(){};
-
-	inline unsigned int getListExecutionTime(){
-		return listScheduleTime+srDAGTransfTime;
-	}
-
-	void average(ExecutionStat* tab, int nb){
-		double temp1=0, temp2=0;
-		for(int i=0; i<nb; i++){
-			temp1 += tab[i].listScheduleTime;
-			temp2 += tab[i].srDAGTransfTime;
+static void addOSShMem(UINT32 base, UINT32 length, const char* filename) {
+	if (nbOSShMem < OS_MAX_SH_MEM) {
+		OSShMemTbl[nbOSShMem].file = open(filename, O_RDWR);
+		if (OSShMemTbl[nbOSShMem].file == -1) {
+			perror("open mem");
+			abort();
 		}
-		listScheduleTime = temp1/nb;
-		srDAGTransfTime  = temp2/nb;
+		OSShMemTbl[nbOSShMem].base = base;
+		OSShMemTbl[nbOSShMem].length = length;
+		nbOSShMem++;
+	} else {
+		fprintf(stderr,
+				"Error too many Memory regions, "
+				"change OS_MAX_SH_MEM macro\n");
+		abort();
 	}
-};
+}
 
-#endif /* EXECUTIONSTAT_H_ */
+void OS_ShMemInit() {
+	printf("Openning /home/jheulot/dev/shMem...\n");
+	addOSShMem(0x10000000, 0x10000000, "/home/jheulot/dev/shMem");
+}
+
+UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
+	int i, res = 0;
+	for (i = 0; i < nbOSShMem && res == 0; i++) {
+		if (OSShMemTbl[i].base <= address
+				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
+				&& OSShMemTbl[i].base <= address + size
+				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
+			lseek(OSShMemTbl[i].file, address-OSShMemTbl[i].base, SEEK_SET);
+			return res = read(OSShMemTbl[i].file, data, size);
+		}
+	}
+	printf("Memory not found 0x%x\n", address);
+	return res;
+}
+
+UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
+	int i, res = 0;
+	for (i = 0; i < nbOSShMem && res == 0; i++) {
+		if (OSShMemTbl[i].base <= address
+				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address
+				&& OSShMemTbl[i].base <= address + size
+				&& OSShMemTbl[i].base + OSShMemTbl[i].length > address + size) {
+			lseek(OSShMemTbl[i].file, address-OSShMemTbl[i].base, SEEK_SET);
+			res = write(OSShMemTbl[i].file, data, size);
+		}
+	}
+	return res;
+}

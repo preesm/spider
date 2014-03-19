@@ -38,7 +38,7 @@
 #define TASKMSG_H_
 
 #include "LRTMsg.h"
-#include <types.h>
+#include <platform_types.h>
 #include "../../graphs/SRDAG/SRDAGGraph.h"
 #include "../../graphs/SRDAG/SRDAGEdge.h"
 #include "../../graphs/PiSDF/PiSDFEdge.h"

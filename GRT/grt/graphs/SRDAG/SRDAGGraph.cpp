@@ -187,7 +187,7 @@ void SRDAGGraph::removeLastEdge(){
 */
 void SRDAGGraph::flush(){
 	nbVertices = nbEdges = 0;
-	SRDAGEdge::firstInSinkOrder = NULL;
+	SRDAGEdge::firstInSinkOrder = (SRDAGEdge*) NULL;
 }
 
 #if 0
@@ -427,11 +427,11 @@ void SRDAGGraph::sortEdges(int startIndex){
 		currentNewEdge = &edges[i];
 
 		// Adding the first edge
-		if(SRDAGEdge::firstInSinkOrder == NULL){
+		if(SRDAGEdge::firstInSinkOrder == (SRDAGEdge*)NULL){
 			SRDAGEdge::firstInSinkOrder = currentNewEdge;
 			SRDAGEdge::lastInSinkOrder = currentNewEdge;
-			currentNewEdge->prevInSinkOrder = NULL;
-			currentNewEdge->nextInSinkOrder = NULL;
+			currentNewEdge->prevInSinkOrder = (SRDAGEdge*)NULL;
+			currentNewEdge->nextInSinkOrder = (SRDAGEdge*)NULL;
 		}
 		else{
 			currentNewSink = currentNewEdge->getSink();
@@ -453,14 +453,14 @@ void SRDAGGraph::sortEdges(int startIndex){
 			// The next is null and we need to add the new edge after the old one
 			if(currentOldEdge->getSink() <= currentNewSink){
 				currentNewEdge->prevInSinkOrder = currentOldEdge;
-				currentNewEdge->nextInSinkOrder = NULL;
+				currentNewEdge->nextInSinkOrder = (SRDAGEdge*)NULL;
 				SRDAGEdge::lastInSinkOrder = currentNewEdge;
 				currentOldEdge->nextInSinkOrder = currentNewEdge;
 			}
 			else{
 				// We need to add the new edge before the old one
 				currentNewEdge->prevInSinkOrder = currentOldEdge->prevInSinkOrder;
-				if(currentOldEdge->prevInSinkOrder != NULL){
+				if(currentOldEdge->prevInSinkOrder != (SRDAGEdge*)NULL){
 					currentOldEdge->prevInSinkOrder->nextInSinkOrder = currentNewEdge;
 				}
 				else{

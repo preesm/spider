@@ -107,7 +107,7 @@ class SRDAGGraph {
 		 @param sink: The sink vertex of the edge
 		 @return the created edge
 		*/
-		SRDAGEdge* addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* sink, BaseEdge* refEdge = NULL);
+		SRDAGEdge* addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* sink, BaseEdge* refEdge = (BaseEdge*)NULL);
 
 
 		void appendAnnex(SRDAGGraph* annex);

@@ -44,7 +44,7 @@
 */
 ListScheduler::ListScheduler()
 {
-	archi = NULL;
+	archi = (Architecture*)NULL;
 }
 
 /**
@@ -189,7 +189,7 @@ void ListScheduler::schedule(CSDAGGraph* csGraph, SRDAGGraph* hGraph){
 		// iterating the slaves
 		for(int j=0; j<nbSlaves; j++){
 			// Invalidating the currentPrecedenceEdge
-			currentPrecedenceEdge.setSource(NULL);
+			currentPrecedenceEdge.setSource((SRDAGVertex*)NULL);
 
 			// checking the constraints
 			if(vertex->getCsDagReference()->getConstraint(j) != 0){
@@ -222,7 +222,7 @@ void ListScheduler::schedule(CSDAGGraph* csGraph, SRDAGGraph* hGraph){
 			}
 		}
 
-		currentPrecedenceEdge.setSource(NULL);
+		currentPrecedenceEdge.setSource((SRDAGVertex*)NULL);
 		// Adding a precedence edge
 		if(lastVertexOfSlave[earliestStartTimeIndex] != NULL){
 			currentPrecedenceEdge.setSource(lastVertexOfSlave[earliestStartTimeIndex]);

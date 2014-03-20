@@ -99,10 +99,6 @@ void CSDAGTransformer::transform(CSDAGGraph* input, SRDAGGraph* output, Architec
 
 		createGraph(input, inputVertex, output);
 
-//		char tempstr[30];
-//		sprintf(tempstr, "srdag%d.gv", i);
-//		dot.write(output, tempstr, 1);
-
 		// The edges newly added are sorted in the order of their SRDAG sink. Only the edges after the given index are sorted
 		output->sortEdges(firstCreatedEdgeIndex);
 	}

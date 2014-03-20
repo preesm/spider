@@ -46,7 +46,7 @@
 #include <tools/DotWriter.h>
 
 extern DotWriter dotWriter;
-static char name[MAX_VERTEX_NAME_SIZE];
+static char file[MAX_FILE_NAME_SIZE];
 
 /**
  Constructor
@@ -307,14 +307,18 @@ SRDAGEdge* SRDAGGraph::getEdgeByRef(SRDAGVertex* hSrDagVx, BaseEdge* refEdge, VE
 void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel, UINT32 level, UINT8 step){
 #if PRINT_GRAPH
 	// Printing the global dag before merging.
-	sprintf(name, "%s_%d_%d.gv", PRE_SRDAG_FILE_NAME, level, step);
-	dotWriter.write(this, name, 1, 1);
-#endif
+	UINT32 len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d_%d.gv", PRE_SRDAG_FILE_NAME, level, step);
+	if(len > MAX_FILE_NAME_SIZE){
+		exitWithCode(1072);
+	}
+	dotWriter.write(this, file, 1, 1);
 
-#if PRINT_GRAPH
 	// Printing the annexing dag.
-	sprintf(name, "%s_%d_%d.gv", SUB_SRDAG_FILE_NAME, level, step);
-	dotWriter.write(annex, name, 1, 1);
+	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d_%d.gv", SUB_SRDAG_FILE_NAME, level, step);
+	if(len > MAX_FILE_NAME_SIZE){
+		exitWithCode(1072);
+	}
+	dotWriter.write(annex, file, 1, 1);
 #endif
 
 	// Adding all (annexing vertices and edges) to the global DAG.
@@ -397,8 +401,11 @@ void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel, UINT32 level, UINT8 s
 
 #if PRINT_GRAPH
 	// Printing the global dag after merging.
-	sprintf(name, "%s_%d_%d.gv", POST_SRDAG_FILE_NAME, level, step);
-	dotWriter.write(this, name, 1, 1);
+	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d_%d.gv", POST_SRDAG_FILE_NAME, level, step);
+	if(len > MAX_FILE_NAME_SIZE){
+		exitWithCode(1072);
+	}
+	dotWriter.write(this, file, 1, 1);
 #endif
 }
 

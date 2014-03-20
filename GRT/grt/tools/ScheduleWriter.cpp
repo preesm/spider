@@ -108,6 +108,8 @@ void ScheduleWriter::write(CSDAGGraph* csGraph, SRDAGGraph* hGraph, Architecture
 
 	platform_fopen(path);
 	char name[MAX_VERTEX_NAME_SIZE];
+	UINT32 len;
+
 	// Writing header
 	platform_fprintf ("<data>\n");
 
@@ -116,7 +118,9 @@ void ScheduleWriter::write(CSDAGGraph* csGraph, SRDAGGraph* hGraph, Architecture
 	{
 		SRDAGVertex* vertex = hGraph->getVertex(i);
 		int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
-		sprintf(name,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+		len = snprintf(name, MAX_VERTEX_NAME_SIZE,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+		if(len > MAX_VERTEX_NAME_SIZE)
+			exitWithCode(1075);
 		platform_fprintf ("\t<event\n");
 		platform_fprintf ("\t\tstart=\"%d\"\n",	(vertex->getTLevel()) );
 		platform_fprintf ("\t\tend=\"%d\"\n",		(vertex->getTLevel() + duration) );
@@ -134,7 +138,9 @@ void ScheduleWriter::write(CSDAGGraph* csGraph, SRDAGGraph* hGraph, Architecture
 	{
 		SRDAGVertex* vertex = hGraph->getVertex(i);
 		int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
-		sprintf(name,"%s-%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+		len = snprintf(name, MAX_VERTEX_NAME_SIZE,"%s-%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+		if(len > MAX_VERTEX_NAME_SIZE)
+			exitWithCode(1075);
 		platform_fprintf ("%.3f/",	(float)(vertex->getTLevel())/1000 );/*start*/
 		platform_fprintf ("%.3f/", (float)duration/1000 );/*duration*/
 		platform_fprintf ("%d/",vertex->getSlaveIndex());/*core index*/
@@ -156,6 +162,7 @@ void ScheduleWriter::write(Schedule* schedule, SRDAGGraph* hGraph, Architecture*
 
 	platform_fopen (path);
 	char name[MAX_VERTEX_NAME_SIZE];
+	UINT32 len;
 
 	// Writing header
 	platform_fprintf ("<data>\n");
@@ -167,7 +174,9 @@ void ScheduleWriter::write(Schedule* schedule, SRDAGGraph* hGraph, Architecture*
 			int vertexID = hGraph->getVertexIndex(vertex);
 
 //			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
-			sprintf(name,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+			len = snprintf(name, MAX_VERTEX_NAME_SIZE, "%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+			if(len > MAX_VERTEX_NAME_SIZE)
+				exitWithCode(1075);
 			platform_fprintf ("\t<event\n");
 			platform_fprintf ("\t\tstart=\"%d\"\n",	schedule->getVertexStartTime(vertexID) );
 			platform_fprintf ("\t\tend=\"%d\"\n",		schedule->getVertexEndTime(vertexID) );
@@ -178,7 +187,9 @@ void ScheduleWriter::write(Schedule* schedule, SRDAGGraph* hGraph, Architecture*
 		}
 
 		for (int i=0 ; i<schedule->getNbComs(slave); i++){
-			sprintf(name,"com_%d",i);
+			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"com_%d",i);
+			if(len > MAX_VERTEX_NAME_SIZE)
+				exitWithCode(1075);
 			platform_fprintf ("\t<event\n");
 			platform_fprintf ("\t\tstart=\"%d\"\n",	schedule->getComStartTime(slave, i) );
 			platform_fprintf ("\t\tend=\"%d\"\n",		schedule->getComEndTime(slave, i) );
@@ -223,6 +234,7 @@ void ScheduleWriter::write(BaseSchedule* schedule, SRDAGGraph* dag, Architecture
 
 	platform_fopen (path);
 	char name[MAX_VERTEX_NAME_SIZE];
+	UINT32 len;
 
 	// Writing header
 	platform_fprintf ("<data>\n");
@@ -234,7 +246,10 @@ void ScheduleWriter::write(BaseSchedule* schedule, SRDAGGraph* dag, Architecture
 //				int vertexID = dag->getVertexIndex(vertex);
 
 //			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
-			sprintf(name,"%s_%d", vertex->getName(), vertex->getId());
+			len = snprintf(name, MAX_VERTEX_NAME_SIZE, "%s_%d", vertex->getName(), vertex->getId());
+			if(len > MAX_VERTEX_NAME_SIZE)
+				exitWithCode(1075);
+
 			platform_fprintf ("\t<event\n");
 			platform_fprintf ("\t\tstart=\"%d\"\n", schedule->getVertexStartTime(vertex->getScheduleIndex(), vertex));
 			platform_fprintf ("\t\tend=\"%d\"\n",	schedule->getVertexEndTime(vertex->getScheduleIndex(), vertex));

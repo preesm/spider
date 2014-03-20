@@ -39,6 +39,7 @@
 #include "../tools/SchedulingError.h"
 #include <cstdio>
 #include <cstdlib>
+#include <tools/SchedulingError.h>
 
 // TODO: Careful allocation
 // The parser object
@@ -698,7 +699,9 @@ void XParser::prettyPrint(abstract_syntax_elt* queue, char* string){
 			}
 			case NUM_RPN:{
 				// If the token is a value Push it onto the stack.
-				sprintf(parseStack[parseStackSize],"%d",elt->elt_union.num);
+				UINT32 len = snprintf(parseStack[parseStackSize], EXPR_LEN_MAX, "%d",elt->elt_union.num);
+				if(len > EXPR_LEN_MAX)
+					exitWithCode(1074);
 				parseStackSize++;
 				break;
 			}
@@ -714,7 +717,9 @@ void XParser::prettyPrint(abstract_syntax_elt* queue, char* string){
 				operator_id op = elt->elt_union.op;
 				if(op == ASSIGN_RPN){
 					if(strlen(assignVariable) != 0 && parseStackSize == 1){
-						sprintf(parseStack[0],"%s=%s",assignVariable,parseStack[0]);
+						UINT32 len = snprintf(parseStack[0],EXPR_LEN_MAX, "%s=%s",assignVariable,parseStack[0]);
+						if(len > EXPR_LEN_MAX)
+							exitWithCode(1074);
 					}
 					else{
 						// Problem with variable assignment
@@ -799,5 +804,7 @@ void XParser::displayOperator(int op_id, char* lhs, char* rhs, char* output)
 								break;
     }
 
-	sprintf(output,"(%s %s %s)",lhs,op,rhs);
+	UINT32 len = snprintf(output, EXPR_LEN_MAX, "(%s %s %s)",lhs,op,rhs);
+	if(len > EXPR_LEN_MAX)
+		exitWithCode(1074);
 }

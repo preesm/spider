@@ -125,6 +125,10 @@ static void exitWithCode(int exitCode){
 	// 1069: Top's subgraph is missing.
 	// 1070: Top's root vertex is missing.
 	// 1071: Local SDF graph was empty.
+	// 1072: MAX_FILE_NAME_SIZE too small.
+	// 1073: MAX_SLAVE_NAME_SIZE too small.
+	// 1074: EXPR_LEN_MAX too small.
+	// 1075: MAX_VERTEX_NAME_SIZE too small.
 
 	printf("\nExiting with code %d\n", exitCode);
 	exit(exitCode);

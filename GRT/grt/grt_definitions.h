@@ -121,6 +121,7 @@
 //#define DEFAULT_FIFO_SIZE		2057478
 #define FILE_PATH_LENGTH		50
 #define MAX_NB_AM				10
+#define MAX_FILE_NAME_SIZE		30
 
 
 

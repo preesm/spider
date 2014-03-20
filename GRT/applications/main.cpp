@@ -52,7 +52,7 @@
 #define IS_AM 					0
 #define STOP					1
 
-static char name[MAX_VERTEX_NAME_SIZE];
+static char name[MAX_FILE_NAME_SIZE];
 
 Scenario 			scenario;
 Architecture 		arch;
@@ -70,17 +70,22 @@ DotWriter 			dotWriter;
 
 
 void createArch(Architecture* arch, int nbSlaves){
-	static char tempStr[11];
+	char tempStr[MAX_SLAVE_NAME_SIZE];
 	// Architecture Zynq
 //	arch->addSlave(0, "ARM", 0.410, 331, 0.4331, 338);
 	// TODO: Add master "ARM"
 	for(int i=0; i<nbSlaves; i++){
-		sprintf(tempStr,"uBlaze%02d",i);
+		UINT32 len = snprintf(tempStr, MAX_SLAVE_NAME_SIZE, "uBlaze%02d", i);
+		if(len > MAX_SLAVE_NAME_SIZE){
+			exitWithCode(1073);
+		}
 		arch->addSlave(1, tempStr, 0.9267, 435, 0.9252, 430);
 	}
 }
 
 int main(int argc, char* argv[]){
+	UINT32 len;
+
 	if(argc < 2){
 		printf("Usage: %s nbSlaves\n", argv[0]);
 		return 0;
@@ -135,7 +140,10 @@ int main(int argc, char* argv[]){
 		while(H){
 		#if PRINT_GRAPH
 			// Printing the current PiSDF graph.
-			sprintf(name, "%s_%d.gv", PiSDF_FILE_PATH, lvlCntr);
+			len = snprintf(name, MAX_FILE_NAME_SIZE, "%s_%d.gv", PiSDF_FILE_PATH, lvlCntr);
+			if(len > MAX_FILE_NAME_SIZE){
+				exitWithCode(1072);
+			}
 			dotWriter.write(H, name, 1);
 		#endif
 
@@ -174,8 +182,14 @@ int main(int argc, char* argv[]){
 		 * there is one more execution to do for completing one complete execution of the model.
 		 */
 		listScheduler.schedule(&dag, &schedule, &arch);
-//		sprintf(name, "%s_%d.xml", SCHED_FILE_NAME, stepsCntr);
-		schedWriter.write(&schedule, &dag, &arch, "test.xml");
+
+	#if PRINT_GRAPH
+		len = snprintf(name, MAX_FILE_NAME_SIZE, "%s_%d.xml", SCHED_FILE_NAME, stepsCntr);
+		if(len > MAX_FILE_NAME_SIZE){
+			exitWithCode(1072);
+		}
+		schedWriter.write(&schedule, &dag, &arch, name);
+	#endif
 
 		launch.clear();
 
@@ -200,10 +214,16 @@ int main(int argc, char* argv[]){
 
 	#if PRINT_GRAPH
 		// Printing the final dag.
-		sprintf(name, "%s.gv", SRDAG_FILE_PATH);
+		len = snprintf(name, MAX_FILE_NAME_SIZE, "%s.gv", SRDAG_FILE_PATH);
+		if(len > MAX_FILE_NAME_SIZE){
+			exitWithCode(1072);
+		}
 		dotWriter.write(&dag, name, 1, 1);
 		// Printing the final dag with FIFO ids.
-		sprintf(name, "%s.gv", SRDAG_FIFO_ID_FILE_PATH);
+		len = snprintf(name, MAX_FILE_NAME_SIZE, "%s.gv", SRDAG_FIFO_ID_FILE_PATH);
+		if(len > MAX_FILE_NAME_SIZE){
+			exitWithCode(1072);
+		}
 		dotWriter.write(&dag, name, 1, 0);
 	#endif
 

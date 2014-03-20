@@ -45,12 +45,17 @@ void PiSDFTransformer::addVertices(BaseVertex* vertex, int nb_repetitions, SRDAG
 	// Adding one SRDAG vertex per repetition
 	for(UINT32 j = 0; j < nb_repetitions; j++){
 		SRDAGVertex* srdag_vertex = outputGraph->addVertex();
+		UINT32 len;
 
 		// Setting attributes from original vertex.
 		if(hSrDagVx)
-			sprintf(name, "%s_%s_%d", hSrDagVx->getName(), vertex->getName(), j);
+			len = snprintf(name, MAX_VERTEX_NAME_SIZE, "%s_%s_%d", hSrDagVx->getName(), vertex->getName(), j);
 		else
-			sprintf(name, "%s_%d", vertex->getName(), j);
+			len = snprintf(name, MAX_VERTEX_NAME_SIZE, "%s_%d", vertex->getName(), j);
+		if(len > MAX_VERTEX_NAME_SIZE)
+			exitWithCode(1075);
+
+
 		srdag_vertex->setName(name);
 		srdag_vertex->setFunctIx(vertex->getFunction_index());
 		srdag_vertex->setReference(vertex);
@@ -110,6 +115,7 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDA
 {
 	UINT32 cntExpVxs = 0;
 	UINT32 cntImpVxs = 0;
+	UINT32 len;
 
 	for (UINT32 i = 0; i < sdf->getNbEdges(); i++) {
 		BaseEdge *edge = sdf->getEdge(i);
@@ -176,7 +182,10 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDA
 				sourceRepetitions[sourceIndex] = exp_vertex;
 
 				// Setting attributes from original vertex.
-				sprintf(name, "Exp%d_%s", cntExpVxs, origin_vertex->getName());
+				len = snprintf(name,MAX_VERTEX_NAME_SIZE, "Exp%d_%s", cntExpVxs, origin_vertex->getName());
+				if(len > MAX_VERTEX_NAME_SIZE)
+					exitWithCode(1075);
+
 				exp_vertex->setName(name);
 				exp_vertex->setFunctIx(XPLODE_FUNCT_IX);
 				exp_vertex->setReference(origin_vertex->getReference());
@@ -201,7 +210,10 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDA
 
 
 				// Setting attributes from original vertex.
-				sprintf(name, "Imp%d_%s", cntImpVxs, origin_vertex->getName());
+				len = snprintf(name,MAX_VERTEX_NAME_SIZE, "Imp%d_%s", cntImpVxs, origin_vertex->getName());
+				if(len > MAX_VERTEX_NAME_SIZE)
+					exitWithCode(1075);
+
 				imp_vertex->setName(name);
 				imp_vertex->setFunctIx(XPLODE_FUNCT_IX);
 				imp_vertex->setReference(origin_vertex->getReference());

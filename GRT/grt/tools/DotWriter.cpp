@@ -73,6 +73,7 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 	char name[MAX_VERTEX_NAME_SIZE];
 	char name2[MAX_VERTEX_NAME_SIZE];
 	char color[6];
+	UINT32 len;
 
 	platform_fopen (path);
 	// Writing header
@@ -87,14 +88,20 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 		if(vertex->getState() != SrVxStDeleted){
 			switch (vertex->getType()) {
 				case 0: // Normal vertex.
-					// TODO: Handle this and below lines for CSDAG vertices : sprintf(name,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
-					sprintf(name,"%s_%d",vertex->getReference()->getName(),vertex->getReferenceIndex());
+					// TODO: Handle this and below lines for CSDAG vertices : len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+					len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d",vertex->getReference()->getName(),vertex->getReferenceIndex());
+					if(len > MAX_VERTEX_NAME_SIZE)
+						exitWithCode(1075);
 					break;
 				case 1: // Explode vertex.
-					sprintf(name,"%s_%d_%s_%d","Exp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
+					len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d","Exp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
+					if(len > MAX_VERTEX_NAME_SIZE)
+						exitWithCode(1075);
 					break;
 				case 2: // Implode vertex.
-					sprintf(name,"%s_%d_%s_%d","Imp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
+					len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d","Imp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
+					if(len > MAX_VERTEX_NAME_SIZE)
+						exitWithCode(1075);
 					break;
 				default:
 					break;
@@ -132,13 +139,19 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 		if((vxSrc->getState() != SrVxStDeleted) && (vxSnk->getState() != SrVxStDeleted)){
 			switch (edge->getSource()->getType()) {
 				case 0: // Normal vertex.
-					sprintf(name,"%s_%d",edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
+					len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d",edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
+					if(len > MAX_VERTEX_NAME_SIZE)
+						exitWithCode(1075);
 					break;
 				case 1: // Explode vertex.
-					sprintf(name,"%s_%d_%s_%d","Exp", edge->getSource()->getExpImpId(), edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
+					len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d","Exp", edge->getSource()->getExpImpId(), edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
+					if(len > MAX_VERTEX_NAME_SIZE)
+						exitWithCode(1075);
 					break;
 				case 2: // Implode vertex.
-					sprintf(name,"%s_%d_%s_%d","Imp", edge->getSource()->getExpImpId(), edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
+					len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d","Imp", edge->getSource()->getExpImpId(), edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
+					if(len > MAX_VERTEX_NAME_SIZE)
+						exitWithCode(1075);
 					break;
 				default:
 					break;
@@ -146,13 +159,19 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 
 			switch (edge->getSink()->getType()) {
 				case 0: // Normal vertex.
-					sprintf(name2,"%s_%d",edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
+					len = snprintf(name2,MAX_VERTEX_NAME_SIZE,"%s_%d",edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
+					if(len > MAX_VERTEX_NAME_SIZE)
+						exitWithCode(1075);
 					break;
 				case 1: // Explode vertex.
-					sprintf(name2,"%s_%d_%s_%d","Exp", edge->getSink()->getExpImpId(), edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
+					len = snprintf(name2,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d","Exp", edge->getSink()->getExpImpId(), edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
+					if(len > MAX_VERTEX_NAME_SIZE)
+						exitWithCode(1075);
 					break;
 				case 2: // Implode vertex.
-					sprintf(name2,"%s_%d_%s_%d","Imp", edge->getSink()->getExpImpId(), edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
+					len = snprintf(name2,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d","Imp", edge->getSink()->getExpImpId(), edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
+					if(len > MAX_VERTEX_NAME_SIZE)
+						exitWithCode(1075);
 					break;
 				default:
 					break;
@@ -221,27 +240,6 @@ void DotWriter::write(CSDAGGraph* graph, const char* path, char displayNames){
 
 
 static void draw_vertex(BaseVertex* vertex, char displayNames, bool drawParameters = true){
-
-//	char name[MAX_VERTEX_NAME_SIZE];
-//	char name2[MAX_VERTEX_NAME_SIZE];
-//
-//	switch (vertex->getType()) {
-//		case 0: // Normal vertex.
-//			sprintf(name,"%s_%d",vertex->getReference()->getName(),vertex->getReferenceIndex());
-//			break;
-//		case 1: // Explode vertex.
-//			sprintf(name,"%s_%d_%s_%d","Exp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
-//			break;
-//		case 2: // Implode vertex.
-//			sprintf(name,"%s_%d_%s_%d","Imp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
-//			break;
-//		case 3: // Round buffer vertex.
-//			sprintf(name,"%s_%d_%s_%d","RB", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
-//			break;
-//		default:
-//			break;
-//	}
-
 	if(displayNames){
 		platform_fprintf ("\t%s [label=\"%s\"];\n", vertex->getName(), vertex->getName());
 	}
@@ -316,17 +314,6 @@ void DotWriter::write(PiSDFGraph* graph, const char* path, char displayNames){
 	for (UINT32 i = 0; i < graph->getNb_pisdf_vertices(); i++) {
 		PiSDFVertex *vertex = graph->getPiSDFVertex(i);
 		draw_vertex(vertex, displayNames);
-//			if(vertex->getSubGraph() != NULL){
-//				char fileName[30];
-//				char suffix[30];
-//				char *pch;
-//				strcpy (fileName, path);
-//				sprintf(suffix, "_%s.gv", vertex->getName());
-//				pch = strstr(fileName, ".");
-////				fileName =
-//				strcpy (pch, suffix);
-//				write(vertex->getSubGraph(), fileName, displayNames);
-//			}
 	}
 
 	// Drawing Input vertices.

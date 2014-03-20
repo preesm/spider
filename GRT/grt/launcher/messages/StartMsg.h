@@ -37,10 +37,9 @@
 #ifndef STARTMSG_H_
 #define STARTMSG_H_
 
-#include "LRTMsg.h"
 #include "../launcher.h"
 
-class StartMsg: public LRTMsg {
+class StartMsg {
 	bool clearAfterCompletion;
 public:
 	StartMsg();

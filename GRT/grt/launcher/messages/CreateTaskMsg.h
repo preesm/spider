@@ -37,7 +37,6 @@
 #ifndef TASKMSG_H_
 #define TASKMSG_H_
 
-#include "LRTMsg.h"
 #include <platform_types.h>
 #include "../../graphs/SRDAG/SRDAGGraph.h"
 #include "../../graphs/SRDAG/SRDAGEdge.h"
@@ -55,7 +54,7 @@
 //extern LRTActor LRTActorTbl[MAX_SRDAG_VERTICES];
 //extern UINT32 nbLRTActors;
 
-class CreateTaskMsg: public LRTMsg {
+class CreateTaskMsg {
 private:
 	UINT32 taskID;
 	UINT32 functID;

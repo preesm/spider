@@ -37,10 +37,9 @@
 #ifndef STOPTASKMSG_H_
 #define STOPTASKMSG_H_
 
-#include "LRTMsg.h"
 #include <platform_types.h>
 
-class StopTaskMsg: public LRTMsg {
+class StopTaskMsg {
 	INT32 TaskID;
 	INT32 VectorID;
 

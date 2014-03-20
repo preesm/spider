@@ -37,7 +37,6 @@
 #ifndef CREATEFIFOMSG_H_
 #define CREATEFIFOMSG_H_
 
-#include "LRTMsg.h"
 #include <platform_types.h>
 #include "../Memory.h"
 #include "../launcher.h"
@@ -45,7 +44,7 @@
 #include "../../graphs/SRDAG/SRDAGEdge.h"
 #include "../../graphs/PiSDF/PiSDFEdge.h"
 
-class CreateFifoMsg: public LRTMsg {
+class CreateFifoMsg {
 private:
 	UINT32 fifoID;
 	UINT32 fifoAdd;

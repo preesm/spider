@@ -37,11 +37,10 @@
 #ifndef CLEARFIFOMSG_H_
 #define CLEARFIFOMSG_H_
 
-#include "LRTMsg.h"
 #include "../launcher.h"
 #include <platform_types.h>
 
-class ClearFifoMsg: public LRTMsg {
+class ClearFifoMsg {
 private:
 	UINT32 fifoID;
 

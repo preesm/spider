@@ -35,8 +35,8 @@
  ****************************************************************************/
 
 //#include "mpeg4Decoder/mpeg4_part2.h"
-//#include "DoubleLoop/PiSDFDoubleLoop.h"
-#include "generatedC++/doubleLoop_gen.h"
+#include "DoubleLoop/PiSDFDoubleLoop.h"
+//#include "generatedC++/doubleLoop_gen.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Scenario/Scenario.h>
 #include <scheduling/ListScheduler/ListScheduler.h>

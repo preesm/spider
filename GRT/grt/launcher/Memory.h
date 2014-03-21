@@ -37,9 +37,9 @@
 #ifndef MEMORY_H_
 #define MEMORY_H_
 
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <platform_types.h>
 #include <platform_file.h>
@@ -89,7 +89,7 @@ public:
 		UINT32 start;
 		if(last+sectionSize >= size){
 			printf("Can't allocate, not enough shared memory\n");
-			return -1;
+			return (UINT32)-1;
 		}
 		start = last+base;
 		last += sectionSize;

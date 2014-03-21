@@ -52,9 +52,9 @@
  @param base: graph in which the edge is added
 */
 CSDAGEdge::CSDAGEdge(){
-	base = NULL;
-	source = NULL;
-	sink = NULL;
+	base = (CSDAGGraph*) 	NULL;
+	source = (CSDAGVertex*)	NULL;
+	sink = (CSDAGVertex*)	NULL;
 	consumptionPatternNb = 0;
 	productionPatternNb = 0;
 }
@@ -86,7 +86,7 @@ unsigned short CSDAGEdge::resolvePattern(const abstract_syntax_elt* expression, 
 	unsigned short intPatternIndex=0;
 	static int values[MAX_PARAM];	// parameter values
 	int value=0;	// Currentpattern value
-	abstract_syntax_elt* currentParamExpr = NULL;
+	abstract_syntax_elt* currentParamExpr = (abstract_syntax_elt*)NULL;
 	int nbPatternsReachCompletion = 0;
 
 	int paramNb = vertex->getParamNb();

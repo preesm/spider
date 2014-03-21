@@ -40,8 +40,8 @@
 #include "AMCond.h"
 #include <grt_definitions.h>
 
-#include <cstdio>
-#include <cstdlib>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <debuggingOptions.h>
 #if USE_AM

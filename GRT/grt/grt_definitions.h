@@ -169,9 +169,6 @@
 
 
 /**************** MISCELLANEOUS ************************/
-#define FALSE				0
-#define TRUE				1
-
 
 typedef void (*FUNCTION_TYPE)(void);						// Function of a task/vertex.
 

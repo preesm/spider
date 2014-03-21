@@ -100,7 +100,7 @@ bool isDigit(const char c)
 XParser::XParser()
 {
     expr[0] = '\0';
-    e = NULL;
+    e = (char*)NULL;
 
     token[0] = '\0';
     token_type = NOTHING;
@@ -116,7 +116,7 @@ XParser::XParser()
 int XParser::interpret(const abstract_syntax_elt* queue, int* value){
 	static int parseStack[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 	int parseStackSize = 0;
-	variable* assignVariable = NULL;
+	variable* assignVariable = (variable*)NULL;
 	int index=0;
 
     //While there are input tokens left
@@ -507,7 +507,7 @@ void XParser::getToken()
 
         // check if this is a variable or a function.
         // a function has a parentesis '(' open after the name 
-        char* e2 = NULL;
+        char* e2 = (char*)NULL;
         e2 = e;
 
         // skip whitespaces

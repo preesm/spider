@@ -162,6 +162,14 @@ int main(int argc, char* argv[]){
 			stepsCntr = 0;
 			H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &dag, currHSrDagVx, lvlCntr, &stepsCntr);
 
+		#if PRINT_GRAPH
+			len = snprintf(name, MAX_FILE_NAME_SIZE, "%s_%d.xml", SCHED_FILE_NAME, lvlCntr);
+			if(len > MAX_FILE_NAME_SIZE){
+				exitWithCode(1072);
+			}
+			schedWriter.write(&schedule, &dag, &arch, name);
+		#endif
+
 			/*
 			 * Finding other hierarchical Vxs. Here the variable "H" gets the next hierarchical level to be flattened.
 			 * Remember that when no more hierarchies are found, it marks the end of a complete execution of the model.
@@ -185,13 +193,7 @@ int main(int argc, char* argv[]){
 		 */
 		listScheduler.schedule(&dag, &schedule, &arch);
 
-	#if PRINT_GRAPH
-		len = snprintf(name, MAX_FILE_NAME_SIZE, "%s_%d.xml", SCHED_FILE_NAME, stepsCntr);
-		if(len > MAX_FILE_NAME_SIZE){
-			exitWithCode(1072);
-		}
-		schedWriter.write(&schedule, &dag, &arch, name);
-	#endif
+
 
 		launch.clear();
 

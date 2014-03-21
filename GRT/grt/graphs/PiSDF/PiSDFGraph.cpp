@@ -519,6 +519,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 							SRDAGVertex* currHSrDagVx,
 							UINT32 level,
 							UINT8* step){
+	UINT32 len;
 	if(nb_config_vertices > 0){
 		/*
 		 * Creating a local SrDAG with configure and input vertices of the current level.
@@ -543,7 +544,7 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 
 #if PRINT_GRAPH
 		ScheduleWriter schedWriter;
-		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.xml", SCHED_FILE_NAME, step++);
+		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.xml", SCHED_FILE_NAME, *step);
 		if(len > MAX_FILE_NAME_SIZE)
 			exitWithCode(1072);
 		schedWriter.write(schedule, dag, arch, file);
@@ -559,11 +560,11 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		launch->prepareTasksInfo(dag, arch->getNbSlaves(), schedule, false, execStat);
 
 #if PRINT_GRAPH
-		// Printing the dag with FIFOs' Ids.
-		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", SRDAG_FIFO_ID_FILE_PATH, *step);
-		if(len > MAX_FILE_NAME_SIZE)
-			exitWithCode(1072);
-		dotWriter.write(dag, file, 1, 0);
+//		// Printing the dag with FIFOs' Ids.
+//		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", SRDAG_FIFO_ID_FILE_PATH, *step);
+//		if(len > MAX_FILE_NAME_SIZE)
+//			exitWithCode(1072);
+//		dotWriter.write(dag, file, 1, 0);
 #endif
 
 #if EXEC == 1
@@ -609,11 +610,11 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 	if (currHSrDagVx) currHSrDagVx->setState(SrVxStDeleted);
 
 #if PRINT_GRAPH
-	// Printing the local SDF with updated productions.
-	len = snprintf(file, MAX_FILE_NAME_SIZE, "subSDF_%d_1.gv", step);
-	if(len > MAX_FILE_NAME_SIZE)
-		exitWithCode(1072);
-	dotWriter.write(&sdf, file, 1);
+//	// Printing the local SDF with updated productions.
+//	len = snprintf(file, MAX_FILE_NAME_SIZE, "subSDF_%d_1.gv", level);
+//	if(len > MAX_FILE_NAME_SIZE)
+//		exitWithCode(1072);
+//	dotWriter.write(&sdf, file, 1);
 #endif
 
 	// Transforming local SDF into a local SrDAG.
@@ -630,11 +631,11 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		transformer.transform(&sdf, &localDag, currHSrDagVx);
 
 	#if PRINT_GRAPH
-		// Printing the local DAG.
-		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", SUB_SRDAG_FILE_NAME, *step);
-		if(len > MAX_FILE_NAME_SIZE)
-			exitWithCode(1072);
-		dotWriter.write(&localDag, file, 1, 1);
+//		// Printing the local DAG.
+//		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", SUB_SRDAG_FILE_NAME, *step);
+//		if(len > MAX_FILE_NAME_SIZE)
+//			exitWithCode(1072);
+//		dotWriter.write(&localDag, file, 1, 1);
 	#endif
 
 		/*
@@ -647,21 +648,13 @@ void PiSDFGraph::multiStepScheduling(BaseSchedule* schedule,
 		else
 			dag->merge(&localDag, false, level, *step);
 		(*step)++;
-
-#if PRINT_GRAPH
-		// Printing the global DAG.
-		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", SRDAG_FILE_PATH, *step);
-		if(len > MAX_FILE_NAME_SIZE)
-			exitWithCode(1072);
-		dotWriter.write(dag, file, 1, 1);
-#endif
 	}
 	// Updating vxs' states.
 	updateDAGStates(dag);
 
 #if PRINT_GRAPH
 	// Printing the dag.
-	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", SRDAG_FILE_PATH, *step);
+	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", SRDAG_FILE_PATH, level);
 	if(len > MAX_FILE_NAME_SIZE)
 		exitWithCode(1072);
 	dotWriter.write(dag, file, 1, 1);

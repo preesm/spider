@@ -48,6 +48,7 @@
 #include <tools/ScheduleWriter.h>
 #include <tools/ScheduleChecker.h>
 #include <debuggingOptions.h>
+#include <platform.h>
 
 #define IS_AM 					0
 #define STOP					1
@@ -96,6 +97,7 @@ int main(int argc, char* argv[]){
 	setvbuf(stderr, NULL, _IONBF, 0);
 
 	printf("Starting with %d slaves max\n", nbSlaves);
+	platform_init(nbSlaves);
 
 	/*
 	 * These objects should be obtained from the PREESM generator :

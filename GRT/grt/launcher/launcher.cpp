@@ -177,7 +177,6 @@ void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 
 
 void launcher::init(int nbSlaves){
-	platform_init(nbSlaves);
 	flushDataToSend();
 	flushDataToReceive();
 }

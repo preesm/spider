@@ -40,5 +40,7 @@
 void platform_queue_Init(UINT8 nbSlaves);
 
 void platform_init(UINT8 nbSlaves){
+#if EXEC == 1
 	platform_queue_Init(nbSlaves);
+#endif
 }

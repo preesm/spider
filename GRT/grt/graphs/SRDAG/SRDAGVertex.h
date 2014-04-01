@@ -45,7 +45,6 @@ class SRDAGGraph;
 
 #include <grt_definitions.h>
 #include "../../tools/SchedulingError.h"
-#include "../CSDAG/CSDAGVertex.h"
 #include "../PiSDF/PiSDFAbstractVertex.h"
 #include "../PiSDF/PiSDFVertex.h"
 #include "SRDAGEdge.h"
@@ -85,11 +84,6 @@ class SRDAGVertex {
 		 Integer solved parameters. Retrieved while solving the edges
 		*/
 		int paramValues[MAX_PARAM];
-
-		/**
-		 The reference DAG graph (if generated from a CSDAG)
-		*/
-		CSDAGVertex* csDagReference;
 
 		/**
 		 The reference PiSDF vertex (if generated from a PiSDF)
@@ -191,20 +185,6 @@ class SRDAGVertex {
 		 @param value: the parameter value
 		*/
 		void setParamValue(int paramIndex, int value);
-
-		/**
-		 Getting the CSDAG vertex that generated the current SRDAG vertex
-
-		 @return the CSDAG reference vertex
-		*/
-		CSDAGVertex* getCsDagReference();
-
-		/**
-		 Setting the value of a parameter
-
-		 @param:vertex the CSDAG reference vertex
-		*/
-		void setCsDagReference(CSDAGVertex* vertex);
 
 		/**
 		 Getting the duplication index of the vertex that distinguishes
@@ -449,26 +429,6 @@ int SRDAGVertex::getParamValue(int paramIndex){
 inline
 void SRDAGVertex::setParamValue(int paramIndex, int value){
 	paramValues[paramIndex] = value;
-}
-
-/**
- Getting the CSDAG vertex that generated the current SRDAG vertex
-
- @return the CSDAG reference vertex
-*/
-inline
-CSDAGVertex* SRDAGVertex::getCsDagReference(){
-	return csDagReference;
-}
-
-/**
- Setting the value of a parameter
-
- @param vertex: the CSDAG reference vertex
-*/
-inline
-void SRDAGVertex::setCsDagReference(CSDAGVertex* vertex){
-	csDagReference = vertex;
 }
 
 /**

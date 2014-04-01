@@ -40,9 +40,6 @@
 #include "../../graphs/SRDAG/SRDAGGraph.h"
 #include "../../graphs/SRDAG/SRDAGVertex.h"
 #include "../../graphs/SRDAG/SRDAGEdge.h"
-#include "../../graphs/CSDAG/CSDAGGraph.h"
-#include "../../graphs/CSDAG/CSDAGVertex.h"
-#include "../../graphs/CSDAG/CSDAGEdge.h"
 #include "../../graphs/PiSDF/PiSDFVertex.h"
 //#include "../../graphs/PiSDF/PiSDFGraph.h"
 #include "../Schedule/Schedule.h"
@@ -134,7 +131,6 @@ class ListScheduler {
 		*/
 		void schedule(SRDAGGraph* hGraph, Schedule* schedule, Architecture* arch);
 		void schedule(SRDAGGraph* hGraph, BaseSchedule* schedule, Architecture* arch);
-		void schedule(CSDAGGraph* csGraph, SRDAGGraph* hGraph);
 
 		/*
 		 * Schedules a group of vertices (e.g. configuration vertices of a PiSDF)

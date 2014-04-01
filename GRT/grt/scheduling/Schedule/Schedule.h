@@ -88,11 +88,11 @@ public:
 	}
 
 	bool isPresent(int slave, SRDAGVertex* vertex){
-		for(int i=0; i<nbVertex[slave]; i++){
-			if(vertex->getCsDagReference() == schedule[slave][i]->getCsDagReference() &&
-					vertex->getReferenceIndex() == schedule[slave][i]->getReferenceIndex())
-				return true;
-		}
+//		for(int i=0; i<nbVertex[slave]; i++){
+//			if(vertex->getCsDagReference() == schedule[slave][i]->getCsDagReference() &&
+//					vertex->getReferenceIndex() == schedule[slave][i]->getReferenceIndex())
+//				return true;
+//		}
 		return false;
 	}
 

@@ -37,9 +37,6 @@
 #ifndef SCHEDULE_WRITER
 #define SCHEDULE_WRITER
 
-#include "../graphs/CSDAG/CSDAGGraph.h"
-#include "../graphs/CSDAG/CSDAGVertex.h"
-#include "../graphs/CSDAG/CSDAGEdge.h"
 #include "../graphs/SRDAG/SRDAGGraph.h"
 #include "../graphs/SRDAG/SRDAGVertex.h"
 #include "../graphs/SRDAG/SRDAGEdge.h"
@@ -81,19 +78,8 @@ class ScheduleWriter {
 		 @param archi: architecture
 		 @param path: output file path
 		*/
-		void write(CSDAGGraph* csGraph, SRDAGGraph* hGraph, Architecture* archi, const char* path);
 		void write(Schedule* schedule, SRDAGGraph* hGraph, Architecture* archi, const char* path);
 		void write(BaseSchedule* schedule, SRDAGGraph* hGraph, Architecture* archi, const char* path);
-
-		/**
-		 Exports the speedups to display them with matlab
-
-		 @param csGraph: reference CSDAG
-		 @param hGraph: implemented SRDAG
-		 @param archi: architecture
-		 @param path: output file path
-		*/
-		void exportSpeedups(CSDAGGraph* csGraph, SRDAGGraph* hGraph, Architecture* archi, char* speedupsPath, char* spansPath, char* worksPath);
 
 };
 

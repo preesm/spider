@@ -43,7 +43,6 @@
 #include "PiSDFVertex.h"
 #include "PiSDFConfigVertex.h"
 #include "PiSDFIfVertex.h"
-#include "../SDF/SDFGraph.h"
 #include "../SRDAG/SRDAGGraph.h"
 #include <scheduling/ListScheduler/ListScheduler.h>
 #include "launcher/launcher.h"
@@ -120,11 +119,6 @@ public:
 	 *  Says if Vx is an interface/round-buffer preceding a configure vx.
 	 */
 	bool isConfigVxPred(PiSDFAbstractVertex* Vx);
-
-	/*
-	 * Creates SDF graph excluding the configure vertices.
-	 */
-	void createSDF(SDFGraph* outSDF);
 
 	/*
 	 * Creates SrDAG graph including configure and input vertices.

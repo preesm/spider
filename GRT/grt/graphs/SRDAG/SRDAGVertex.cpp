@@ -46,7 +46,6 @@ SRDAGVertex::SRDAGVertex(){
 	scheduleIndex = -1;
 	visited=0;
 	mergeIx = -1;
-	csDagReference=NULL;
 	referenceIndex=-1;
 	tLevel=-1;
 	slaveIndex=-1;
@@ -66,7 +65,6 @@ void SRDAGVertex::reset(){
 	scheduleIndex = -1;
 	visited=0;
 	mergeIx = -1;
-	csDagReference=NULL;
 	referenceIndex=-1;
 	tLevel=-1;
 	slaveIndex=-1;

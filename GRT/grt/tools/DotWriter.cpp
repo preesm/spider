@@ -131,57 +131,6 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 }
 
 
-/**
- Writes a CSDAGGraph in a file
-
- @param graph: written graph
- @param path: output file path
-*/
-void DotWriter::write(CSDAGGraph* graph, const char* path, char displayNames){
-	//char directory[_MAX_PATH];
-	//getcwd(directory, sizeof(directory));
-
-	platform_fopen (path);
-	// Writing header
-	platform_fprintf ("digraph csdag {\n");
-	platform_fprintf ("node [color=\"#433D63\"];\n");
-	platform_fprintf ("edge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
-	//platform_fprintf ("rankdir=LR;\n");
-	for (int i=0 ; i<graph->getNbVertices() ; i++)
-	{
-		CSDAGVertex* vertex = graph->getVertex(i);
-		if(displayNames){
-			platform_fprintf ("\t%s [label=\"%s\"];\n",vertex->getName(),vertex->getName());
-		}
-		else{
-			platform_fprintf ("\t%s [label=\"\"];\n",vertex->getName());
-		}
-	}
-
-	//int labelDistance = 3;
-	for (int i=0 ; i<graph->getNbEdges() ; i++)
-	{
-		char shortenedPExpr[EXPR_LEN_MAX];
-		char shortenedCExpr[EXPR_LEN_MAX];
-		CSDAGEdge* edge = graph->getEdge(i);
-
-		globalParser.prettyPrint(edge->getProduction(),shortenedPExpr);
-		globalParser.prettyPrint(edge->getConsumption(),shortenedCExpr);
-
-		/*platform_fprintf ("\t%s->%s [taillabel=\"%s\" headlabel=\"%s\" labeldistance=%d labelangle=50];\n",
-			edge->getSource()->getName(),edge->getSink()->getName(),
-			shortenedPExpr,shortenedCExpr,labelDistance);*/
-		platform_fprintf ("\t%s->%s [taillabel=\"%s\" headlabel=\"%s\"];\n",
-			edge->getSource()->getName(),edge->getSink()->getName(),
-			shortenedPExpr,shortenedCExpr);
-		//labelDistance = 3 + labelDistance%(3*4); // Oscillating the label distance to keep visibility
-	}
-	platform_fprintf ("}\n");
-
-	platform_fclose();
-}
-
-
 static void draw_vertex(PiSDFAbstractVertex* vertex, char displayNames, bool drawParameters = true){
 	if(displayNames){
 		platform_fprintf ("\t%s [label=\"%s\"];\n", vertex->getName(), vertex->getName());
@@ -377,32 +326,6 @@ void DotWriter::write(PiSDFAbstractVertex **schedulableVertices, UINT32 nbSchedu
 							edge->getConsumptionInt());
 			}
 		}
-	}
-
-	platform_fprintf ("}\n");
-
-	platform_fclose();
-}
-
-
-void DotWriter::write(SDFGraph *sdf, const char *path, char displayNames){
-
-	//char directory[_MAX_PATH];
-	//getcwd(directory, sizeof(directory));
-
-	platform_fopen (path);
-	// Writing header
-	platform_fprintf ("digraph csdag {\n");
-	platform_fprintf ("node [color=\"#433D63\"];\n");
-	platform_fprintf ("edge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
-
-	for (UINT32 j = 0; j < sdf->getNbEdges(); j++) {
-		PiSDFEdge* edge = sdf->getEdge(j);
-		platform_fprintf ("\t%s->%s [taillabel=\"%d\" headlabel=\"%d\"];\n",
-				edge->getSource()->getName(),
-				edge->getSink()->getName(),
-				edge->getProductionInt(),
-				edge->getConsumptionInt());
 	}
 
 	platform_fprintf ("}\n");

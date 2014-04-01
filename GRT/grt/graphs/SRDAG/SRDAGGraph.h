@@ -134,8 +134,6 @@ class SRDAGGraph {
 		 @param output: the output SRDAG vertices
 		 @return the number of found references
 		*/
-		int getVerticesFromCSDAGReference(CSDAGVertex* ref, SRDAGVertex** output);
-
 		UINT32 getVerticesFromReference(PiSDFAbstractVertex* ref, UINT32 iteration, SRDAGVertex** output);
 
 		/**
@@ -300,19 +298,6 @@ inline void SRDAGGraph::resetVisited(){
  @param output: the output SRDAG vertices
  @return the number of found references
 */
-inline int SRDAGGraph::getVerticesFromCSDAGReference(CSDAGVertex* ref, SRDAGVertex** output){
-	int size = 0;
-	for(int i=0; i<vertices.getNb(); i++){
-		SRDAGVertex* vertex = &vertices[i];
-		if(vertex->getCsDagReference() == ref){
-			output[size] = vertex;
-			size++;
-		}
-	}
-	return size;
-}
-
-
 inline UINT32 SRDAGGraph::getVerticesFromReference(PiSDFAbstractVertex* ref, UINT32 iteration, SRDAGVertex** output){
 	UINT32 size = 0;
 	for(int i=0; i<vertices.getNb(); i++){

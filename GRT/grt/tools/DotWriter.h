@@ -37,14 +37,10 @@
 #ifndef DOT_WRITER
 #define DOT_WRITER
 
-#include "../graphs/CSDAG/CSDAGGraph.h"
-#include "../graphs/CSDAG/CSDAGVertex.h"
-#include "../graphs/CSDAG/CSDAGEdge.h"
 #include "../graphs/SRDAG/SRDAGGraph.h"
 #include "../graphs/SRDAG/SRDAGVertex.h"
 #include "../graphs/SRDAG/SRDAGEdge.h"
 #include "../graphs/PiSDF/PiSDFGraph.h"
-#include "../graphs/SDF/SDFGraph.h"
 
 /**
  * Writes a dot file from a graph of a given type
@@ -75,16 +71,6 @@ class DotWriter {
 		*/
 		void write(SRDAGGraph* graph, const char* path, BOOL displayNames, BOOL displayRates);
 
-
-		/**
-		 Writes a CSDAGGraph in a file
-
-		 @param graph: written graph
-		 @param path: output file path
-		*/
-		void write(CSDAGGraph* graph, const char* path, char displayNames);
-
-
 		/**
 		 Writes a PiSDFGraph in a file
 
@@ -96,8 +82,6 @@ class DotWriter {
 		void writeAllLevels(PiSDFGraph* graph, const char* path, char displayNames);
 
 		void write(PiSDFAbstractVertex** schedulableVertices, UINT32 nbSchedulabeVertices, const char* path, char displayNames);
-
-		void write(SDFGraph* sdf, const char* path, char displayNames);
 };
 
 #endif

@@ -41,7 +41,6 @@
 #include "graphs/SRDAG/SRDAGEdge.h"
 #include "graphs/SRDAG/SRDAGVertex.h"
 #include "graphs/SRDAG/SRDAGGraph.h"
-#include "graphs/CSDAG/CSDAGVertex.h"
 #include "scheduling/Schedule/Schedule.h"
 
 #include <cstring>

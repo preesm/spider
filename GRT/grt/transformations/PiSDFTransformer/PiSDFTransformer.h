@@ -42,7 +42,6 @@
 #include "../../graphs/SRDAG/SRDAGGraph.h"
 #include "../../graphs/SRDAG/SRDAGVertex.h"
 #include "../../graphs/SRDAG/SRDAGEdge.h"
-#include "../../graphs/SDF/SDFGraph.h"
 
 
 class PiSDFTransformer {
@@ -72,11 +71,7 @@ public:
 	 */
 	void addVertices(PiSDFAbstractVertex* vertex, int nb_repetitions, int iteration, SRDAGGraph* outputGraph);
 
-	void computeBVR(SDFGraph *sdf);
-
 	void linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, SRDAGGraph* topDag, int* brv);
-
-	void transform(SDFGraph* sdf, SRDAGGraph *srGraph, SRDAGVertex* currHSrVx);
 
 	void replaceHwithRB(SRDAGGraph* topDag, SRDAGVertex* H, PiSDFGraph* currentPiSDF);
 };

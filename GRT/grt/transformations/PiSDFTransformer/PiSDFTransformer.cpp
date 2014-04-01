@@ -56,51 +56,6 @@ void PiSDFTransformer::addVertices(PiSDFAbstractVertex* vertex, int nb_repetitio
 }
 
 
-void PiSDFTransformer::computeBVR(SDFGraph *sdf)
-{
-	/*
-	 * Setting temporal Ids to be used as indices in the topology matrix.
-	 * Note that only normal Vxs are considered.
-	 */
-	UINT32 nbVertices = 0;
-	for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
-		PiSDFAbstractVertex* vertex = sdf->getVertex(i);
-		if(vertex->getType() == pisdf_vertex) vertex->setTempId(nbVertices++);
-	}
-
-	UINT32 nbEdges = 0;
-	memset(topo_matrix, 0, sizeof(topo_matrix));
-
-	// Filling the topology matrix(nbEdges x nbVertices).
-	for(UINT32 i = 0; i < sdf->getNbEdges(); i++){
-		PiSDFEdge* edge = sdf->getEdge(i);
-		if((edge->getSource() != edge->getSink()) &&
-			(edge->getSource()->getType() ==  pisdf_vertex) &&
-			(edge->getSink()->getType() ==  pisdf_vertex)){ // TODO: treat cycles.
-			if((edge->getProductionInt() <= 0) || (edge->getConsumptionInt() <= 0 )) exitWithCode(1066);
-			topo_matrix[nbEdges * nbVertices + edge->getSource()->getTempId()] = edge->getProductionInt();
-			topo_matrix[nbEdges * nbVertices + edge->getSink()->getTempId()] =  -edge->getConsumptionInt();
-			nbEdges++;
-		}
-	}
-
-
-	if(nbEdges > 0){
-		// Computing the null space (BRV) of the matrix.
-		// TODO: It may be improved by another algorithm to compute the null space (I'm not very sure of this one...)
-		if(nullspace(nbEdges, nbVertices, (int*)topo_matrix, brv) == 0)
-		{
-			// Setting the number of repetitions for each vertex.
-			nbVertices = 0;
-			for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
-				PiSDFAbstractVertex* vertex = sdf->getVertex(i);
-				if(vertex->getType() == pisdf_vertex) vertex->setNbRepetition(brv[nbVertices++]);
-			}
-		}
-	}
-}
-
-
 void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, SRDAGGraph* topDag, int* brv)
 {
 	UINT32 cntExpVxs = 0;
@@ -313,22 +268,6 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 			}
 		}
 	}
-}
-
-void PiSDFTransformer::transform(SDFGraph* sdf, SRDAGGraph *srGraph, SRDAGVertex* currHSrVx)
-{
-//	if(sdf->getNbVertices() > 0){
-//		for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
-//			PiSDFAbstractVertex* vertex = sdf->getVertex(i);
-////				if(vertex->getType() != roundBuff_vertex) vertex->setNbRepetition(brv[nbVertices++]);
-//
-//			// Creating the new vertices.
-//			addVertices(vertex, vertex->getNbRepetition(), srGraph, currHSrVx);
-//		}
-//
-//		// Connecting the vertices of the SrDAG ouput graph.
-//		linkvertices(sdf, srGraph, currHSrVx);
-//	}
 }
 
 void PiSDFTransformer::replaceHwithRB(SRDAGGraph* topDag, SRDAGVertex* H, PiSDFGraph* currentPiSDF){

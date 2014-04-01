@@ -38,7 +38,6 @@
 
 #include "../scheduling/architecture/Architecture.h"
 #include "../graphs/SRDAG/SRDAGGraph.h"
-#include "../graphs/CSDAG/CSDAGGraph.h"
 
 ScheduleChecker::ScheduleChecker() {
 }
@@ -48,114 +47,114 @@ ScheduleChecker::~ScheduleChecker() {
 
 inline int testConcurency(SRDAGGraph* srDag, Schedule* schedule, Architecture* archi){
 	int test=1;
-	// Check core concurrency
-
-	for(int slave=0; slave<archi->getNbSlaves() && test; slave++){
-		for(int i=0; i<schedule->getNbVertex(slave)-1 && test; i++){
-			SRDAGVertex* vertex = schedule->getVertex(slave, i);
-			SRDAGVertex* nextVertex = schedule->getVertex(slave, i+1);
-			int vertexID = srDag->getVertexIndex(vertex);
-			int nextVertexID = srDag->getVertexIndex(nextVertex);
-
-			if(schedule->getVertexEndTime(vertexID)>schedule->getVertexEndTime(nextVertexID)){
-				test = 0;
-				printf("Superposition: task %s%d and %s%d\n",
-						vertex->getCsDagReference()->getName(),
-						vertex->getReferenceIndex(),
-						nextVertex->getCsDagReference()->getName(),
-						nextVertex->getReferenceIndex());
-			}
-		}
-	}
+//	// Check core concurrency
+//
+//	for(int slave=0; slave<archi->getNbSlaves() && test; slave++){
+//		for(int i=0; i<schedule->getNbVertex(slave)-1 && test; i++){
+//			SRDAGVertex* vertex = schedule->getVertex(slave, i);
+//			SRDAGVertex* nextVertex = schedule->getVertex(slave, i+1);
+//			int vertexID = srDag->getVertexIndex(vertex);
+//			int nextVertexID = srDag->getVertexIndex(nextVertex);
+//
+//			if(schedule->getVertexEndTime(vertexID)>schedule->getVertexEndTime(nextVertexID)){
+//				test = 0;
+//				printf("Superposition: task %s%d and %s%d\n",
+//						vertex->getCsDagReference()->getName(),
+//						vertex->getReferenceIndex(),
+//						nextVertex->getCsDagReference()->getName(),
+//						nextVertex->getReferenceIndex());
+//			}
+//		}
+//	}
 
 	return test;
 }
 
 inline int testCommunication(SRDAGGraph* srDag, Schedule* schedule, Architecture* archi){
 	int test=1;
-	// Check Graph Dependency
-	for (int i=0 ; i<srDag->getNbVertices() && test; i++){
-		SRDAGVertex* vertex = srDag->getVertex(i);
-		int vertexID = srDag->getVertexIndex(vertex);
-
-		for (int j=0 ; j<vertex->getNbInputEdge() && test; j++){
-			SRDAGVertex* precVertex = vertex->getInputEdge(j)->getSource();
-			int precVertexID = srDag->getVertexIndex(precVertex);
-
-			if(schedule->getVertexEndTime(vertexID) >= schedule->getVertexEndTime(precVertexID))
-				test=1;
-			else{
-				test=0;
-				printf("Communication: task %s%d -> %s%d\n",
-						vertex->getCsDagReference()->getName(),
-						vertex->getReferenceIndex(),
-						precVertex->getCsDagReference()->getName(),
-						precVertex->getReferenceIndex());
-			}
-		}
-	}
+//	// Check Graph Dependency
+//	for (int i=0 ; i<srDag->getNbVertices() && test; i++){
+//		SRDAGVertex* vertex = srDag->getVertex(i);
+//		int vertexID = srDag->getVertexIndex(vertex);
+//
+//		for (int j=0 ; j<vertex->getNbInputEdge() && test; j++){
+//			SRDAGVertex* precVertex = vertex->getInputEdge(j)->getSource();
+//			int precVertexID = srDag->getVertexIndex(precVertex);
+//
+//			if(schedule->getVertexEndTime(vertexID) >= schedule->getVertexEndTime(precVertexID))
+//				test=1;
+//			else{
+//				test=0;
+//				printf("Communication: task %s%d -> %s%d\n",
+//						vertex->getCsDagReference()->getName(),
+//						vertex->getReferenceIndex(),
+//						precVertex->getCsDagReference()->getName(),
+//						precVertex->getReferenceIndex());
+//			}
+//		}
+//	}
 	return test;
 }
 
 inline int testConcurency(SRDAGGraph* srDag, Architecture* archi){
 	int test=1;
-	// Check core concurency
-	for (int i=0 ; i<srDag->getNbVertices() && test; i++){
-		for (int j=0 ; j<srDag->getNbVertices() && test; j++){
-			SRDAGVertex* vertexI = srDag->getVertex(i);
-			SRDAGVertex* vertexJ = srDag->getVertex(j);
-
-			if(		vertexI->getSlaveIndex() < 0 ||
-					vertexJ->getSlaveIndex() < 0 ||
-					vertexJ->getSlaveIndex() >= archi->getNbSlaves() ||
-					vertexJ->getSlaveIndex() >= archi->getNbSlaves() ){
-				test = 0;
-				printf("Using non-identified Slave: %d or %d\n ", vertexI->getSlaveIndex(), vertexJ->getSlaveIndex());
-			}
-
-			if(j!=i && (vertexI->getSlaveIndex() == vertexJ->getSlaveIndex())){
-				unsigned int startI = vertexI->getTLevel();
-				unsigned int endI = startI + vertexI->getCsDagReference()->getIntTiming(0);
-				unsigned int startJ = vertexJ->getTLevel();
-				unsigned int endJ = startJ + vertexJ->getCsDagReference()->getIntTiming(0);
-
-				if((startI <= startJ && endI > startJ) ||
-						(startJ <= startI && endJ > startI)){
-					test = 0;
-					printf("Superposition: task %s%d and %s%d\n",
-							vertexI->getCsDagReference()->getName(),
-							vertexI->getReferenceIndex(),
-							vertexJ->getCsDagReference()->getName(),
-							vertexJ->getReferenceIndex());
-				}
-			}
-		}
-	}
+//	// Check core concurency
+//	for (int i=0 ; i<srDag->getNbVertices() && test; i++){
+//		for (int j=0 ; j<srDag->getNbVertices() && test; j++){
+//			SRDAGVertex* vertexI = srDag->getVertex(i);
+//			SRDAGVertex* vertexJ = srDag->getVertex(j);
+//
+//			if(		vertexI->getSlaveIndex() < 0 ||
+//					vertexJ->getSlaveIndex() < 0 ||
+//					vertexJ->getSlaveIndex() >= archi->getNbSlaves() ||
+//					vertexJ->getSlaveIndex() >= archi->getNbSlaves() ){
+//				test = 0;
+//				printf("Using non-identified Slave: %d or %d\n ", vertexI->getSlaveIndex(), vertexJ->getSlaveIndex());
+//			}
+//
+//			if(j!=i && (vertexI->getSlaveIndex() == vertexJ->getSlaveIndex())){
+//				unsigned int startI = vertexI->getTLevel();
+//				unsigned int endI = startI + vertexI->getCsDagReference()->getIntTiming(0);
+//				unsigned int startJ = vertexJ->getTLevel();
+//				unsigned int endJ = startJ + vertexJ->getCsDagReference()->getIntTiming(0);
+//
+//				if((startI <= startJ && endI > startJ) ||
+//						(startJ <= startI && endJ > startI)){
+//					test = 0;
+//					printf("Superposition: task %s%d and %s%d\n",
+//							vertexI->getCsDagReference()->getName(),
+//							vertexI->getReferenceIndex(),
+//							vertexJ->getCsDagReference()->getName(),
+//							vertexJ->getReferenceIndex());
+//				}
+//			}
+//		}
+//	}
 	return test;
 }
 
 inline int testCommunication(SRDAGGraph* srDag, Architecture* archi){
 	int test=1;
-	// Check Graph Dependency
-	for (int i=0 ; i<srDag->getNbVertices() && test; i++){
-		SRDAGVertex* vertexI = srDag->getVertex(i);
-		unsigned int startI = vertexI->getTLevel();
-
-		for (int j=0 ; j<vertexI->getNbInputEdge() && test; j++){
-			SRDAGVertex* vertexJ = vertexI->getInputEdge(j)->getSource();
-			unsigned int endJ = vertexJ->getTLevel() + vertexJ->getCsDagReference()->getIntTiming(0);
-
-			if(startI >= endJ) test=1;
-			else{
-				test=0;
-				printf("Communication: task %s%d -> %s%d\n",
-						vertexJ->getCsDagReference()->getName(),
-						vertexJ->getReferenceIndex(),
-						vertexI->getCsDagReference()->getName(),
-						vertexI->getReferenceIndex());
-			}
-		}
-	}
+//	// Check Graph Dependency
+//	for (int i=0 ; i<srDag->getNbVertices() && test; i++){
+//		SRDAGVertex* vertexI = srDag->getVertex(i);
+//		unsigned int startI = vertexI->getTLevel();
+//
+//		for (int j=0 ; j<vertexI->getNbInputEdge() && test; j++){
+//			SRDAGVertex* vertexJ = vertexI->getInputEdge(j)->getSource();
+//			unsigned int endJ = vertexJ->getTLevel() + vertexJ->getCsDagReference()->getIntTiming(0);
+//
+//			if(startI >= endJ) test=1;
+//			else{
+//				test=0;
+//				printf("Communication: task %s%d -> %s%d\n",
+//						vertexJ->getCsDagReference()->getName(),
+//						vertexJ->getReferenceIndex(),
+//						vertexI->getCsDagReference()->getName(),
+//						vertexI->getReferenceIndex());
+//			}
+//		}
+//	}
 	return test;
 }
 

@@ -36,7 +36,6 @@
 
 #include "SRDAGGraph.h"
 #include "SRDAGVertex.h"
-#include "../CSDAG/CSDAGVertex.h"
 #include "../PiSDF/PiSDFIfVertex.h"
 #include "SRDAGEdge.h"
 #include <cstdio>
@@ -233,23 +232,24 @@ void quickSort(SRDAGEdge* edgePointers, int length, char sourceOrSink) {
 
 
 int SRDAGGraph::getMaxTime(){
-	int sum=0;
-	for(int i=0; i< vertices.getNb(); i++){
-		sum += vertices[i].getCsDagReference()->getIntTiming(0);
-	}
-	return sum;
+//	int sum=0;
+//	for(int i=0; i< vertices.getNb(); i++){
+//		sum += vertices[i].getCsDagReference()->getIntTiming(0);
+//	}
+//	return sum;
+	return 0;
 }
 
 
 static void iterateCriticalPath(SRDAGVertex* curVertex, int curLenght, int* max){
-	curLenght += curVertex->getCsDagReference()->getIntTiming(0);
-	if(curVertex->getNbOutputEdge() == 0){
-		if(curLenght > *max) *max = curLenght;
-		return;
-	}
-	for(int i=0; i<curVertex->getNbOutputEdge(); i++){
-		iterateCriticalPath(curVertex->getOutputEdge(i)->getSink(), curLenght, max);
-	}
+//	curLenght += curVertex->getCsDagReference()->getIntTiming(0);
+//	if(curVertex->getNbOutputEdge() == 0){
+//		if(curLenght > *max) *max = curLenght;
+//		return;
+//	}
+//	for(int i=0; i<curVertex->getNbOutputEdge(); i++){
+//		iterateCriticalPath(curVertex->getOutputEdge(i)->getSink(), curLenght, max);
+//	}
 }
 
 int SRDAGGraph::getCriticalPath(){

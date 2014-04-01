@@ -45,10 +45,13 @@ extern "C"{
 #include <platform_file.h>
 #include <platform_types.h>
 
+#define USE_UART 0
 #define BUFFER_SIZE 100
 
-static UINT8 crc=0;
 static char buffer[BUFFER_SIZE];
+
+#if USE_UART == 1
+static UINT8 crc=0;
 
 void platform_file_init(){
     platform_init_flags  init_flags;
@@ -120,3 +123,28 @@ void platform_fclose(){
 
 	platform_uart_write('\4');	// EOT
 }
+#else
+
+static FILE* f;
+
+void platform_file_init(){
+}
+
+void platform_fopen(const char* name){
+	f = fopen(name, "w+");
+}
+
+void platform_fprintf(const char* fmt, ...){
+	va_list ap;
+	va_start(ap, fmt);
+	vsprintf(buffer, fmt, ap);
+	fprintf(f, "%s", buffer);
+}
+
+void platform_fclose(){
+	fclose(f);
+}
+
+#endif
+
+

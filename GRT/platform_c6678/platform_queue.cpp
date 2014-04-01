@@ -34,94 +34,38 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <unistd.h>
-//#include <fcntl.h>
-
 #include <platform_types.h>
 #include <platform_queue.h>
 #include <grt_definitions.h>
 
-//static int platform_QLRT[NB_MAX_CTRLQ][platformNbQTypes][2];
-//
-//static const char* typeName[platformNbQTypes] = {
-//		"CTRL",
-//		"INFO",
-//		"JOB"
-//};
+extern "C"{
+void 	__c_platform_queue_Init();
+UINT32 	__c_platform_QPush(UINT8 slaveId, platformQType queueType, void* data, int size);
+UINT32 	__c_platform_QPushUINT32(UINT8 slaveId, platformQType queueType, UINT32 data);
+UINT32 	__c_platform_QPop(UINT8 slaveId, platformQType queueType, void* data, int size);
+UINT32 	__c_platform_QPopUINT32(UINT8 slaveId, platformQType queueType);
+UINT32 	__c_platform_QNonBlockingPop(UINT8 slaveId, platformQType queueType, void* data, int size);
+}
 
-#define BASE_PATH "/home/jheulot/dev/"
-
-void platform_queue_Init(UINT8 nbSlaves){
-//	int i, j, flags;
-//
-//	for(i=0; i<nbSlaves; i++){
-//		char tempStr[50];
-//
-//		for(j=0; j<platformNbQTypes; j++){
-//			sprintf(tempStr, "%s%s_%dtoGrt",BASE_PATH,typeName[j],i);
-//			platform_QLRT[i][j][platformQIn] =  open(tempStr, O_RDWR);
-//			if (platform_QLRT[i][j][platformQIn] == -1) {printf("Failed to open %s\n",tempStr); abort();}
-//
-//			sprintf(tempStr, "%s%s_Grtto%d",BASE_PATH,typeName[j],i);
-//			platform_QLRT[i][j][platformQOut] = open(tempStr, O_RDWR);
-//			if (platform_QLRT[i][j][platformQOut] == -1) {printf("Failed to open %s\n",tempStr); abort();}
-//
-//			flags = fcntl(platform_QLRT[i][j][platformQIn], F_GETFL, 0);
-//			fcntl(platform_QLRT[i][j][platformQIn], F_SETFL, flags | O_NONBLOCK);
-//		}
-//	}
-//
-//	/* Reset all queues */
-//	UINT32 c;
-//	for(i=0; i<nbSlaves; i++){
-//		for(j=0; j<platformNbQTypes; j++){
-//			while(platform_QNonBlockingPop(i, (platformQType)j, &c, sizeof(UINT32))==sizeof(UINT32));
-//		}
-//	}
-	return;
+void platform_queue_Init(){
+	__c_platform_queue_Init();
 }
 
 UINT32 platform_QPush(UINT8 slaveId, platformQType queueType, void* data, int size){
-//	int file = platform_QLRT[slaveId][queueType][platformQOut];
-//
-//	int i=0;
-//	while(i < size){
-//		int res = write(file, (char*)data+i, size-i);
-//		if(res>0) i+=res;
-//	}
-//	return i;
-	return 0;
+	return __c_platform_QPush(slaveId, queueType, data, size);
 }
 
 UINT32 platform_QPushUINT32(UINT8 slaveId, platformQType queueType, UINT32 data){
-//	return platfrm_QPush(slaveId, queueType, &data, sizeof(unsigned int));
-	return 0;
+	return __c_platform_QPushUINT32(slaveId, queueType, data);
 }
 
 UINT32 platform_QPop(UINT8 slaveId, platformQType queueType, void* data, int size){
-//	int file = platform_QLRT[slaveId][queueType][platformQIn];
-//
-//	int i=0;
-//	while(i < size){
-//		int res = read(file, (char*)data+i, size-i);
-//		if(res>0) i+=res;
-//	}
-//	return i;
-	return 0;
+	return __c_platform_QPop(slaveId, queueType, data, size);
 }
 
 UINT32 platform_QPopUINT32(UINT8 slaveId, platformQType queueType){
-//	UINT32 data;
-//	platform_QPop(slaveId, queueType, &data, sizeof(UINT32));
-//	return data;
-	return 0;
+	return __c_platform_QPopUINT32(slaveId, queueType);
 }
-
 UINT32 platform_QNonBlockingPop(UINT8 slaveId, platformQType queueType, void* data, int size){
-//	int file = platform_QLRT[slaveId][queueType][platformQIn];
-//
-//	return read(file, (char*)data, size);
-	return 0;
+	return __c_platform_QNonBlockingPop(slaveId, queueType, data, size);
 }

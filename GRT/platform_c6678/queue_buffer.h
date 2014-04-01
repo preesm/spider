@@ -34,22 +34,15 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <ti/csl/csl_cacheAux.h>
-#include <ti/csl/csl_cache.h>
+#ifndef QUEUE_BUFFER_H_
+#define QUEUE_BUFFER_H_
 
-#include <platform.h>
 #include <platform_types.h>
-#include "semaphore.h"
+#include <platform_queue.h>
 
-void platform_file_init();
-void platform_queue_Init();
+UINT32 QBuffer_getNbData(UINT8 slaveId, platformQType type);
 
-void platform_init(UINT8 nbSlaves){
-	mutex_pend(MUTEX_CACHE);
-	CACHE_setL1DSize(CACHE_L1_0KCACHE);
-	CACHE_setL2Size (CACHE_0KCACHE);
-	mutex_post(MUTEX_CACHE);
+void QBuffer_push(UINT8 slaveId, platformQType type, void* data, UINT32 size);
+void QBuffer_pop(UINT8 slaveId, platformQType type, void* data, UINT32 size);
 
-	platform_file_init();
-	platform_queue_Init();
-}
+#endif /* QUEUE_BUFFER_H_ */

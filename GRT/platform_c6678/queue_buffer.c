@@ -34,22 +34,58 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <ti/csl/csl_cacheAux.h>
-#include <ti/csl/csl_cache.h>
+#include <grt_definitions.h>
+#include "queue_buffer.h"
 
-#include <platform.h>
-#include <platform_types.h>
-#include "semaphore.h"
+#define BUFFER_SIZE 160
 
-void platform_file_init();
-void platform_queue_Init();
+static UINT8  buffer[NB_MAX_CTRLQ][platformNbQTypes][BUFFER_SIZE];
+static UINT32 read_idx[NB_MAX_CTRLQ][platformNbQTypes], write_idx[NB_MAX_CTRLQ][platformNbQTypes];
 
-void platform_init(UINT8 nbSlaves){
-	mutex_pend(MUTEX_CACHE);
-	CACHE_setL1DSize(CACHE_L1_0KCACHE);
-	CACHE_setL2Size (CACHE_0KCACHE);
-	mutex_post(MUTEX_CACHE);
+UINT32 QBuffer_getNbData(UINT8 slaveId, platformQType type){
+	INT32 count = write_idx[slaveId][type]-read_idx[slaveId][type];
+	if (count < 0) count += BUFFER_SIZE;
+	return count;
+}
 
-	platform_file_init();
-	platform_queue_Init();
+void QBuffer_push(UINT8 slaveId, platformQType type, void* data, UINT32 size){
+	UINT32 rd_ix = read_idx[slaveId][type];
+	UINT32 wr_ix = write_idx[slaveId][type];
+	if (rd_ix <= wr_ix)
+		rd_ix += BUFFER_SIZE;
+
+	if (wr_ix + size < rd_ix){
+		if (wr_ix + size >BUFFER_SIZE) {
+			memcpy(buffer[slaveId][type] + wr_ix, data, BUFFER_SIZE - wr_ix);
+			memcpy(buffer[slaveId][type],
+					(void*)(((UINT32)data) + BUFFER_SIZE - wr_ix),
+					size - BUFFER_SIZE + wr_ix);
+		} else {
+			memcpy(buffer[slaveId][type] + wr_ix, data, size);
+		}
+
+		// Update write index.
+		write_idx[slaveId][type] = (write_idx[slaveId][type] + size) % BUFFER_SIZE;
+	}
+}
+
+void QBuffer_pop(UINT8 slaveId, platformQType type, void* data, UINT32 size){
+	UINT32 rd_ix = read_idx[slaveId][type];
+	UINT32 wr_ix = write_idx[slaveId][type];
+
+	if (wr_ix < rd_ix)
+		wr_ix += BUFFER_SIZE;
+
+	if (rd_ix + size <= wr_ix){
+		if (rd_ix + size > BUFFER_SIZE) {
+			memcpy(data, buffer[slaveId][type]+rd_ix, BUFFER_SIZE-rd_ix);
+			memcpy((void*)(((UINT32)data)+BUFFER_SIZE-rd_ix),
+					buffer[slaveId][type], size - BUFFER_SIZE + rd_ix);
+		} else {
+			memcpy(data, buffer[slaveId][type]+rd_ix, size);
+		}
+
+		// Update the read index.
+		read_idx[slaveId][type] = (read_idx[slaveId][type] + size) % BUFFER_SIZE;
+	}
 }

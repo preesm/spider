@@ -59,9 +59,9 @@
 #define AM_MAX_NB_ACTIONS		60
 #define AM_MAX_NB_CONDITIONS	60
 #else
-#define AM_MAX_NB_VERTICES		200
-#define AM_MAX_NB_CONDITIONS	50
-#define AM_MAX_NB_ACTIONS		20
+#define AM_MAX_NB_VERTICES		0 //200
+#define AM_MAX_NB_CONDITIONS	0 //50
+#define AM_MAX_NB_ACTIONS		0 //20
 #endif
 
 #define AM_MAX_NB_SUCCESSORS	2

@@ -40,36 +40,36 @@
 #include <platform_types.h>
 
 // Architecture
-#define MAX_SLAVE_TYPES 2 // The maximum number of slave types
-#define MAX_SLAVES 12// The maximum number of slaves
-#define MAX_SLAVE_NAME_SIZE 10// The maximum number of slaves
+#define MAX_SLAVE_TYPES 		2	//2 	// The maximum number of slave types
+#define MAX_SLAVES 				2	//12	// The maximum number of slaves
+#define MAX_SLAVE_NAME_SIZE 	10	// The maximum number of slaves
 
 // Common to all types of graphs
-#define MAX_VERTEX_NAME_SIZE 	100
-#define MAX_PARAM_NAME_SIZE 32
-#define MAX_NB_VERTICES			512
-#define MAX_NB_EDGES			512
-#define MAX_NB_OUTPUT_EDGES		512
-#define MAX_NB_INPUT_EDGES		512
+#define MAX_VERTEX_NAME_SIZE 	30	//100
+#define MAX_PARAM_NAME_SIZE 	10	//32
+#define MAX_NB_VERTICES			16	//512
+#define MAX_NB_EDGES			32	//512
+#define MAX_NB_OUTPUT_EDGES		16	//512
+#define MAX_NB_INPUT_EDGES		16	//512
 
 // CSDAG
-#define MAX_ARG_EXPRESSION 64
-#define MAX_CSDAG_ARGS 64
-#define MAX_CSDAG_VERTICES 32
-#define MAX_CSDAG_EDGES 32
-#define MAX_CSDAG_INPUT_EDGES 32 // Maximum of input edges for a given DAG vertex
+#define MAX_ARG_EXPRESSION 		32	//64
+#define MAX_CSDAG_ARGS 			16	//64
+#define MAX_CSDAG_VERTICES 		16	//32
+#define MAX_CSDAG_EDGES 		32	//32
+#define MAX_CSDAG_INPUT_EDGES 	16	//32 // Maximum of input edges for a given DAG vertex
 
-#define MAX_CSDAG_VERTEX_REPETITION 100 // The maximum number of repetitions for one vertex
-#define MAX_CSDAG_PATTERN_TABLE_SIZE 2100 // Maximum size of the whole table containing the patterns of one CSDAG graph
-#define MAX_CSDAG_PATTERN_SIZE 100 // Maximum size of one integer pattern (in number of integers)
+#define MAX_CSDAG_VERTEX_REPETITION 	10		//100 // The maximum number of repetitions for one vertex
+#define MAX_CSDAG_PATTERN_TABLE_SIZE 	1000	//2100 // Maximum size of the whole table containing the patterns of one CSDAG graph
+#define MAX_CSDAG_PATTERN_SIZE 			20		//100 // Maximum size of one integer pattern (in number of integers)
 
 // Single Rate DAG
-#define MAX_SRDAG_VERTICES 		512
-#define MAX_SRDAG_EDGES 		512
-#define MAX_SRDAG_INPUT_EDGES 	64
-#define MAX_SRDAG_OUTPUT_EDGES 	100
-#define MAX_VERTEX_REPETITION 	100 // The maximum number of repetitions for one vertex
-#define XPLODE_FUNCT_IX			13	// Index of the function for implode/explode vxs.
+#define MAX_SRDAG_VERTICES 		64	//512
+#define MAX_SRDAG_EDGES 		64	//512
+#define MAX_SRDAG_INPUT_EDGES 	16	//64
+#define MAX_SRDAG_OUTPUT_EDGES 	16	//100
+#define MAX_VERTEX_REPETITION 	10	//100 // The maximum number of repetitions for one vertex
+#define XPLODE_FUNCT_IX			13	//13	// Index of the function for implode/explode vxs.
 
 // PICSDF
 //#define MAX_PISDF_CONFIG_PORTS		512
@@ -77,26 +77,26 @@
 
 
 // PiSDF
-#define MAX_NB_PiSDF_SUB_GRAPHS			32
-#define MAX_NB_PiSDF_EDGES				32
-#define MAX_NB_PiSDF_PARAMS				32
-#define MAX_NB_PiSDF_VERTICES			32
-#define MAX_NB_PiSDF_CONFIG_VERTICES	32
-#define MAX_NB_PiSDF_JOIN_VERTICES		32
-#define MAX_NB_PiSDF_INPUT_VERTICES		32
-#define MAX_NB_PiSDF_BROAD_VERTICES		32
-#define MAX_NB_PiSDF_OUTPUT_VERTICES	32
-#define MAX_NB_PiSDF_SWITCH_VERTICES	32
-#define MAX_NB_PiSDF_SELECT_VERTICES	32
-#define MAX_NB_PiSDF_ROUNDB_VERTICES	32
-#define MAX_NB_PiSDF_CONFIG_VERTEX_PARAMS	10
+#define MAX_NB_PiSDF_SUB_GRAPHS			4	//32
+#define MAX_NB_PiSDF_EDGES				16	//32
+#define MAX_NB_PiSDF_PARAMS				2	//32
+#define MAX_NB_PiSDF_VERTICES			16	//32
+#define MAX_NB_PiSDF_CONFIG_VERTICES	8	//32
+#define MAX_NB_PiSDF_JOIN_VERTICES		8	//32
+#define MAX_NB_PiSDF_INPUT_VERTICES		8	//32
+#define MAX_NB_PiSDF_BROAD_VERTICES		8	//32
+#define MAX_NB_PiSDF_OUTPUT_VERTICES	8	//32
+#define MAX_NB_PiSDF_SWITCH_VERTICES	1	//32
+#define MAX_NB_PiSDF_SELECT_VERTICES	1	//32
+#define MAX_NB_PiSDF_ROUNDB_VERTICES	8	//32
+#define MAX_NB_PiSDF_CONFIG_VERTEX_PARAMS	2	//10
 
 // DAG
-#define MAX_DAG_VERTEX_REPETITION 100 // The maximum number of repetitions for one vertex
+#define MAX_DAG_VERTEX_REPETITION 10	//100 // The maximum number of repetitions for one vertex
 
 // Launcher
-#define MAX_CTRL_DATA 	2000
-#define MAX_JOB_DATA 	2000
+#define MAX_CTRL_DATA 	800	//2000
+#define MAX_JOB_DATA 	800	//2000
 
 // XParser
 #define VARIABLE_NAME_LEN_MAX 30
@@ -107,12 +107,11 @@
 #define MAX_PARAM 4 // Maximum number of parameters for an actor
 
 // AM
-
-#define AM_VERTEX_MAX_SUCCESSOR 2 //10 //2
-#define AM_GRAPH_MAX_VERTEX		300
-#define AM_GRAPH_MAX_COND		300
-#define AM_GRAPH_MAX_ACTIONS	100
-#define AM_ACTION_NAME 100
+#define AM_VERTEX_MAX_SUCCESSOR 0	//2 //10 //2
+#define AM_GRAPH_MAX_VERTEX		0	//300
+#define AM_GRAPH_MAX_COND		0	//300
+#define AM_GRAPH_MAX_ACTIONS	0	//100
+#define AM_ACTION_NAME 			0	//100
 
 // Platform
 #define NB_MAX_CTRLQ 			8
@@ -138,7 +137,7 @@
 #define MSG_CLEAR_TASKS			7
 #define MSG_PARAM_VALUE			8
 #define	MSG_EXEC_TIMES			9
-#define	MSG_CLEAR_TIME			10
+#define MSG_CLEAR_TIME			10
 
 
 /**************** FIFO's******************************/
@@ -151,11 +150,11 @@
 
 
 /**************** Actor machine's*********************/
-#define AM_STATE_MAX_CONDITIONS	10
-#define AM_MAX_NB_VERTICES		10
-#define AM_MAX_NB_EDGES			10
-#define AM_MAX_NB_CONDITIONS	10
-#define AM_MAX_NB_SUCCESSORS	5
+#define AM_STATE_MAX_CONDITIONS	0//10
+#define AM_MAX_NB_VERTICES		0//10
+#define AM_MAX_NB_EDGES			0//10
+#define AM_MAX_NB_CONDITIONS	0//10
+#define AM_MAX_NB_SUCCESSORS	0//5
 
 // AM_CONDITION_TYPE
 #define cond_check_out_fifo		0

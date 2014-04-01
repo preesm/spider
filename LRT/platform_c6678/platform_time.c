@@ -34,10 +34,26 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <types.h>
+#include <platform_time.h>
 
-void initGpio();
+#include <ti/csl/csl_tsc.h>
+#include <ti/csl/csl_chipAux.h>
 
-void setLed(BOOLEAN b);
+#include <stdio.h>
 
-BOOLEAN getSw();
+void timer_start();
+void timer_reset();
+
+static UINT32 start=0;
+
+void platform_time_init(){
+	CSL_tscEnable();
+}
+
+void platform_time_reset(){
+	start = CSL_tscRead();
+}
+
+UINT32 platform_time_getValue(){
+	return  CSL_tscRead()-start;
+}

@@ -34,8 +34,56 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "lrt_definitions.h"
+#include <lrt_cfg.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-void flushFIFO(UINT32 id);
-void writeFifo(UINT8 id, UINT32 address, UINT32 size, UINT8* buffer);
-void readFifo(UINT8 id, UINT32 address, UINT32 size, UINT8* buffer);
+#include <platform_types.h>
+#include <qmss_utils.h>
+
+#define BASE   0x0C100000
+#define LENGTH 0x00100000
+
+#define EMPTY_DATA 	940
+#define BASE_DATA	941
+#define NB_Q		8191 - BASE_ID
+
+#define FIFO_MUTEX_SIZE			1
+#define SH_MEM_HDR_REGION_SIZE  FIFO_MUTEX_SIZE*OS_NB_FIFO
+
+void platform_flushFIFO(UINT32 id){
+	UINT32 n;
+	empty_queue(id, (UINT32*)NULL, &n);
+}
+
+
+void platform_writeFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
+	MNAV_MonolithicPacketDescriptor *mono_pkt;
+	do{
+		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(EMPTY_DATA);
+	}while(mono_pkt == 0);
+
+	mono_pkt->type_id = 0x2;
+	mono_pkt->packet_type = 0;
+	mono_pkt->data_offset = 12;
+	mono_pkt->packet_length = 16;
+	mono_pkt->epib = 0;
+	mono_pkt->pkt_return_qnum = EMPTY_DATA;
+	mono_pkt->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
+
+	memcpy((void*)(BASE + addr), buffer, size);
+	push_queue(BASE_DATA+id, 1, 0, (UINT32)mono_pkt);
+}
+
+
+void platform_readFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
+	MNAV_MonolithicPacketDescriptor *mono_pkt;
+
+	do{
+		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(BASE_DATA+id);
+	}while(mono_pkt == 0);
+
+	memcpy(buffer, (void*)(BASE + addr), size);
+
+	push_queue(EMPTY_DATA, 1, 0, (UINT32)mono_pkt);
+}

@@ -34,9 +34,15 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PLATFORM_H_
-#define PLATFORM_H_
+#ifndef QUEUE_BUFFER_H_
+#define QUEUE_BUFFER_H_
 
-extern int cpuId;
+#include <platform_types.h>
+#include <platform_queue.h>
 
-#endif /* PLATFORM_H_ */
+UINT32 QBuffer_getNbData(PlatformQueueType type);
+
+void QBuffer_push(PlatformQueueType type, void* data, UINT32 size);
+void QBuffer_pop(PlatformQueueType type, void* data, UINT32 size);
+
+#endif /* QUEUE_BUFFER_H_ */

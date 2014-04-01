@@ -34,15 +34,15 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "lrt_cfg.h"
-#include "stdio.h"
-#include <hwQueues.h>
-#include <print.h>
+#include <stdio.h>
+#include <platform_queue.h>
+#include <platform_print.h>
 #include <platform.h>
 #include "lrt_taskMngr.h"
 #include "lrt_debug.h"
 #include "lrt_amMngr.h"
 #include "lrt_actorMngr.h"
+#include "lrt_cfg.h"
 
 
 /*
@@ -54,7 +54,7 @@
 /* GLOBAL VARIABLES */
 FUNCTION_TYPE functions_tbl[NB_LOCAL_FUNCTIONS]; /* Table of Action Fcts */
 
-
+static UINT32 data[MAX_DATA_WORDS];
 UINT8 OSTaskCntr = 0;                     			// Tasks' counter.
 UINT8 OSTaskIndex = 0;                     			// Tasks' index.
 
@@ -100,7 +100,7 @@ OS_TCB *  LrtTaskCreate (){
 //	LRTActor* newActor;
 
 	if(OSTaskCntr >= OS_MAX_TASKS){
-		zynq_puts("Create Task ");zynq_putdec(OSTaskIndex);zynq_puts("\n");
+		platform_puts("Create Task ");platform_putdec(OSTaskIndex);platform_puts("\n");
 		exitWithCode(1003);
 	}
 
@@ -162,9 +162,9 @@ OS_TCB *  LrtTaskCreate (){
 //			createActor(new_tcb->actor);
 //		}
 //
-//	    zynq_puts("Create Task ID"); zynq_putdec(new_tcb->OSTCBId);
-//	    zynq_puts(" @");  zynq_putdec(new_tcb->am.currVertexId);
-//	    zynq_puts("\n");
+//	    platform_puts("Create Task ID"); platform_putdec(new_tcb->OSTCBId);
+//	    platform_puts(" @");  platform_putdec(new_tcb->am.currVertexId);
+//	    platform_puts("\n");
 
 #if defined ARM || defined DESKTOP
 		char s[8] = "tX_X.gv";
@@ -232,14 +232,14 @@ void  LrtTaskDeleteCur(){
 }
 
 void  OSTaskDel (){
-	UINT8 taskId   = RTQueuePop_UINT32(RTCtrlQueue);
-	UINT8 vectorId = RTQueuePop_UINT32(RTCtrlQueue);
+	UINT8 taskId   = platform_queue_pop_UINT32(PlatformCtrlQueue);
+	UINT8 vectorId = platform_queue_pop_UINT32(PlatformCtrlQueue);
     OS_TCB       *ptcb = &OSTCBTbl[taskId];
     ptcb->stop = TRUE;
     ptcb->am.stopVertexId = vectorId;
-    zynq_puts("Stop Task ID"); zynq_putdec(taskId);
-    zynq_puts(" at Vector ID");  zynq_putdec(vectorId);
-    zynq_puts("\n");
+    platform_puts("Stop Task ID"); platform_putdec(taskId);
+    platform_puts(" at Vector ID");  platform_putdec(vectorId);
+    platform_puts("\n");
 }
 
 
@@ -251,7 +251,7 @@ void PrintTasksIntoDot(){
 	LRTActor *actor;
 	static UINT32 stepCntr = 0;
 
-	sprintf(name, "Slave%d_%d.gv", cpuId, stepCntr);
+	sprintf(name, "Slave%d_%d.gv", platform_getCoreId(), stepCntr);
 	pFile = fopen (name,"w");
 	if(pFile != NULL){
 		// Writing header
@@ -299,7 +299,7 @@ void OSWorkingMemoryInit(){
 void* OSAllocWorkingMemory(int size){
 	void* mem;
 	if(freeWorkingMemoryPtr-workingMemory+size > WORKING_MEMORY_SIZE){
-		zynq_puts("Asked ");zynq_putdec(size);zynq_puts(" bytes, but ");zynq_putdec(WORKING_MEMORY_SIZE-(int)freeWorkingMemoryPtr+(int)workingMemory);zynq_puts(" bytes available\n");
+		platform_puts("Asked ");platform_putdec(size);platform_puts(" bytes, but ");platform_putdec(WORKING_MEMORY_SIZE-(int)freeWorkingMemoryPtr+(int)workingMemory);platform_puts(" bytes available\n");
 		exitWithCode(1015);
 	}
 	mem = freeWorkingMemoryPtr;
@@ -317,8 +317,7 @@ UINT32 rtGetVxId(){
 
 
 void sendExecData(){
-	UINT32 i, taskCnt;
-	UINT32 data[MAX_DATA_WORDS], wordCnt;
+	UINT32 i, taskCnt, wordCnt;
 	taskCnt = 0; wordCnt = 0;
 	data[wordCnt++] = MSG_EXEC_TIMES;
 //	data[wordCnt++] = CLOCKS_PER_SEC;
@@ -331,13 +330,14 @@ void sendExecData(){
 //			data[wordCnt++] = OSTCBTbl[i].nbCpuCycles;
 			data[wordCnt++] = OSTCBTbl[i].execTime;
 
-			printf("task %d started at %d ended at +%d\n",
-					taskCnt, OSTCBTbl[i].startTime, OSTCBTbl[i].execTime/CLOCKS_PER_SEC * 1000);
+//			printf("task %d vertex %d started at %d ended at +%d\n",
+//					taskCnt, OSTCBTbl[i].vertexId, OSTCBTbl[i].startTime, OSTCBTbl[i].execTime);
 		}
 	}
 	if(wordCnt >= MAX_DATA_WORDS) exitWithCode(1016);
 	data[1] = wordCnt*sizeof(UINT32); // Number of bytes that will be sent.
-	RTQueuePush(RTCtrlQueue, data, data[1]);
-	printf("%d tasks -> ", taskCnt);
-	printf("%d bytes sent\n", data[1]);
+	platform_queue_push(PlatformCtrlQueue, data, data[1]);
+//	platform_putdec(taskCnt); platform_puts(" tasks \n");
+//	platform_putdec(data[1]); platform_puts(" bytes sent\n");
+	exit(0);
 }

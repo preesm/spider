@@ -34,12 +34,11 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <zynq_time.h>
-//#include <print.h>
-#include <types.h>
 #include <string.h>
-#include <gpio.h>
-#include <hwQueues.h>
+#include <platform_types.h>
+#include <platform_gpio.h>
+#include <platform_queue.h>
+#include <platform_time.h>
 
 #include "lrt_definitions.h"
 #include "lrt_monitor.h"
@@ -48,32 +47,26 @@
 static UINT32 monitorTimes[MaxMonitor];
 static MonitorAction currentAction;
 
+static UINT32 start;
+
 void initMonitor(){
 	int i;
 	for(i=0; i<MaxMonitor; i++) monitorTimes[i]=0;
-	OS_TimeInit();
-	OS_TimeStop();
-	OS_TimeReset();
-	initGpio();
 }
 
 void resetMonitor(){
 	memset(monitorTimes, 0, sizeof(monitorTimes));
 	currentAction = Default;
-	OS_TimeStop();
-	OS_TimeReset();
-	OS_TimeStart();
+	start = platform_time_getValue();
 }
 
 MonitorAction switchMonitor(MonitorAction action){
 	MonitorAction last = action;
-	OS_TimeStop();
 	if(action >= MaxMonitor) exitWithCode(1014);
-	monitorTimes[currentAction] += OS_TimeGetValue();
+	monitorTimes[currentAction] += platform_time_getValue()-start;
+	start = platform_time_getValue();
 	currentAction = action;
 	if(currentAction >= Action) setLed(1); else setLed(0);
-	OS_TimeReset();
-	OS_TimeStart();
 	return last;
 }
 
@@ -82,8 +75,7 @@ void printResult(){
 	UINT32 totalTime = 0;
 	UINT32 val;
 
-	OS_TimeStop();
-	monitorTimes[currentAction] += OS_TimeGetValue();
+	monitorTimes[currentAction] += platform_time_getValue();
 
 	for(i=0; i<MaxMonitor; i++){
 		totalTime += monitorTimes[i];
@@ -93,13 +85,13 @@ void printResult(){
 		val = 100*monitorTimes[i];
 		val /= totalTime;
 
-		RTQueuePush_UINT32(RTInfoQueue, val);
+		platform_queue_push_UINT32(PlatformInfoQueue, val);
 	}
 
 //		if(monitorTimes[i] != 0){
-//			zynq_puts("\nAction "); zynq_putdec(i-Action);
-//			zynq_puts(" : "); 		zynq_putdec(100*monitorTimes[i]/totalTime);
+//			platform_puts("\nAction "); platform_putdec(i-Action);
+//			platform_puts(" : "); 		platform_putdec(100*monitorTimes[i]/totalTime);
 //		}
 //	}
-//	zynq_puts("\n\n");
+//	platform_puts("\n\n");
 }

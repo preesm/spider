@@ -35,13 +35,14 @@
  ****************************************************************************/
 
 #include <string.h>
-
-#include <types.h>
-#include <hwQueues.h>
+#include <stdio.h>
+#include <platform_types.h>
+#include <platform_data_queue.h>
+#include <platform_queue.h>
+#include <platform_time.h>
 #include <platform.h>
-//#include <print.h>
+
 #include "lrt_taskMngr.h"
-#include "lrt_1W1RfifoMngr.h"
 #include "lrt_msgMngr.h"
 #include "lrt_core.h"
 
@@ -52,7 +53,7 @@ void send_ext_msg(UINT32 addr, UINT32 msg_type, void* msg) {
 	UINT32 msg_size = 0;
 
 	// Sending the type of message as the first data word.
-	RTQueuePush(RTCtrlQueue, &msg_type, sizeof(UINT32));
+	platform_queue_push(PlatformCtrlQueue, &msg_type, sizeof(UINT32));
 
 	// Determining the size of the rest of data.
 	switch (msg_type) {
@@ -65,7 +66,7 @@ void send_ext_msg(UINT32 addr, UINT32 msg_type, void* msg) {
 
 	// Sending the rest of data.
 	if (msg_size > 0)
-		RTQueuePush(RTCtrlQueue, msg, msg_size);
+		platform_queue_push(PlatformCtrlQueue, msg, msg_size);
 }
 
 /* Waits for an external message from the Global Runtime and execute the current task */
@@ -76,33 +77,33 @@ void wait_ext_msg() {
 	UINT32 i;
 
 	/* Popping the first incoming word i.e. the message type. */
-	if (RTQueueNonBlockingPop(RTCtrlQueue, &msg_type, sizeof(UINT32)) == sizeof(UINT32)) {
+	if (platform_queue_NBPop_UINT32(PlatformCtrlQueue, &msg_type)) {
 		switch (msg_type) {
 		case MSG_CREATE_TASK:
 			// TODO: Reuse a previous TCB...
 			new_tcb = LrtTaskCreate();
 
 			// Popping the task function id.
-			new_tcb->functionId = RTQueuePop_UINT32(RTCtrlQueue);
+			new_tcb->functionId = platform_queue_pop_UINT32(PlatformCtrlQueue);
 
 			// Popping the id of the vx in the current SrDAG on the GRT.
-			new_tcb->vertexId = RTQueuePop_UINT32(RTCtrlQueue);
+			new_tcb->vertexId = platform_queue_pop_UINT32(PlatformCtrlQueue);
 
 			// Popping whether the task is stopped after completion.
 	//		new_tcb->stop = RTQueuePop_UINT32(RTCtrlQueue);
 
 			// Popping the AM flag.
-			new_tcb->isAM = RTQueuePop_UINT32(RTCtrlQueue);
+			new_tcb->isAM = platform_queue_pop_UINT32(PlatformCtrlQueue);
 
 			if(new_tcb->isAM){
 				// Creating an actor machine.
 				// Popping the actor machine's info.
-				new_tcb->am.nbVertices 	= RTQueuePop_UINT32(RTCtrlQueue);
-				new_tcb->am.nbConds 	= RTQueuePop_UINT32(RTCtrlQueue);
-				new_tcb->am.nbActions	= RTQueuePop_UINT32(RTCtrlQueue);
+				new_tcb->am.nbVertices 	= platform_queue_pop_UINT32(PlatformCtrlQueue);
+				new_tcb->am.nbConds 	= platform_queue_pop_UINT32(PlatformCtrlQueue);
+				new_tcb->am.nbActions	= platform_queue_pop_UINT32(PlatformCtrlQueue);
 
 				// Popping the starting vertex of the AM.
-				new_tcb->am.currVertexId = RTQueuePop_UINT32(RTCtrlQueue);
+				new_tcb->am.currVertexId = platform_queue_pop_UINT32(PlatformCtrlQueue);
 				new_tcb->task_func = amTaskStart; // An AM task's function is predefined.
 				new_tcb->stop = FALSE;
 				// Creating the AM.
@@ -113,22 +114,31 @@ void wait_ext_msg() {
 				// Creating a single actor.
 				new_tcb->actor = &LRTActorTbl[new_tcb->OSTCBId];
 
-				new_tcb->actor->nbInputFifos = RTQueuePop_UINT32(RTCtrlQueue);
-				new_tcb->actor->nbOutputFifos = RTQueuePop_UINT32(RTCtrlQueue);
-				new_tcb->actor->nbParams = RTQueuePop_UINT32(RTCtrlQueue);
-				for (i = 0; i < new_tcb->actor->nbInputFifos; i++) {
-					new_tcb->actor->inputFifoId[i] = RTQueuePop_UINT32(RTCtrlQueue);
-					new_tcb->actor->inputFifoDataOff[i] = RTQueuePop_UINT32(RTCtrlQueue);
-					// TODO: get the FIFO' size
-				}
-				for (i = 0; i < new_tcb->actor->nbOutputFifos; i++) {
-					new_tcb->actor->outputFifoId[i] = RTQueuePop_UINT32(RTCtrlQueue);
-					new_tcb->actor->outputFifoDataOff[i] = RTQueuePop_UINT32(RTCtrlQueue);
-					// TODO: get the FIFO' size
-				}
-				for ( i = 0; i < new_tcb->actor->nbParams; i++) {
-					new_tcb->actor->params[i] = RTQueuePop_UINT32(RTCtrlQueue);
-				}
+				new_tcb->actor->nbInputFifos = platform_queue_pop_UINT32(PlatformCtrlQueue);
+				new_tcb->actor->nbOutputFifos = platform_queue_pop_UINT32(PlatformCtrlQueue);
+				new_tcb->actor->nbParams = platform_queue_pop_UINT32(PlatformCtrlQueue);
+
+//				for (i = 0; i < new_tcb->actor->nbInputFifos; i++)
+//					new_tcb->actor->inputFifoId[i] = platform_queue_pop_UINT32(PlatformCtrlQueue);
+				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->inputFifoId, new_tcb->actor->nbInputFifos*sizeof(UINT32));
+
+//				for (i = 0; i < new_tcb->actor->nbInputFifos; i++)
+//					new_tcb->actor->inputFifoDataOff[i] = platform_queue_pop_UINT32(PlatformCtrlQueue);
+				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->inputFifoDataOff, new_tcb->actor->nbInputFifos*sizeof(UINT32));
+
+
+//				for (i = 0; i < new_tcb->actor->nbOutputFifos; i++)
+//					new_tcb->actor->outputFifoId[i] = platform_queue_pop_UINT32(PlatformCtrlQueue);
+				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->outputFifoId, new_tcb->actor->nbOutputFifos*sizeof(UINT32));
+
+//				for (i = 0; i < new_tcb->actor->nbOutputFifos; i++)
+//					new_tcb->actor->outputFifoDataOff[i] = platform_queue_pop_UINT32(PlatformCtrlQueue);
+				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->outputFifoDataOff, new_tcb->actor->nbOutputFifos*sizeof(UINT32));
+
+
+
+				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->params, new_tcb->actor->nbParams*sizeof(UINT32));
+
 				new_tcb->task_func = functions_tbl[new_tcb->functionId];
 				new_tcb->stop = TRUE;
 
@@ -152,9 +162,13 @@ void wait_ext_msg() {
 			break;
 
 		case MSG_CLEAR_FIFO:
-			fifoID = RTQueuePop_UINT32(RTCtrlQueue);
-			flushFIFO(fifoID);
+			fifoID = platform_queue_pop_UINT32(PlatformCtrlQueue);
+			platform_flushFIFO(fifoID);
 //			RTQueuePush_UINT32(RTCtrlQueue, msg_type);
+			break;
+
+		case MSG_CLEAR_TIME:
+			platform_time_reset();
 			break;
 
 		case MSG_START_SCHED:
@@ -162,13 +176,13 @@ void wait_ext_msg() {
 			PrintTasksIntoDot();
 #endif
 			lrt_running = TRUE;
-			clearAfterCompletion = RTQueuePop_UINT32(RTCtrlQueue);
-//			zynq_puts("Start Schedule\n");
+			clearAfterCompletion = platform_queue_pop_UINT32(PlatformCtrlQueue);
+//			platform_puts("Start Schedule\n");
 //			OS_CtrlQPush(&msg_type, sizeof(UINT32));
 			break;
 
 		default:
-			zynq_puts("Bad msg Received\n");
+			platform_puts("Bad msg Received\n");
 			break;
 		}
 	}

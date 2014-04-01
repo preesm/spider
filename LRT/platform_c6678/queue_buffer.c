@@ -34,48 +34,57 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef SHAREDMEM_H_
-#define SHAREDMEM_H_
+#include "queue_buffer.h"
 
-#include <lrt_cfg.h>
-#include <stdio.h>
+#define BUFFER_SIZE 160
 
-#include "types.h"
-#include <fcntl.h>
+static UINT8  buffer[PlatformNbQueueTypes][BUFFER_SIZE];
+static UINT32 read_idx[PlatformNbQueueTypes], write_idx[PlatformNbQueueTypes];
 
-#define SH_MEM_BASE_ADDR			0x0
-#define SH_MEM_HDR_REGION_SIZE		MAX_NB_FIFOs * FIFO_MUTEX_SIZE
-//#define SH_MEM_DATA_REGION_SIZE		0x10000000
-//#define SH_MEM_SIZE					SH_MEM_HDR_REGION_SIZE + SH_MEM_DATA_REGION_SIZE
-//#define SH_MEM_FILE_PATH			"../shMem"
-//
-//#define MBOX_MEM_BASE_ADDR			0x20000000
-//#define MBOX_MEM_SIZE				0x100000
-//#define MBOX_MEM_FILE_PATH			"../mboxMem"
-//
-//typedef struct OS_SHMEM {
-//	UINT32 	base;
-////	UINT32 	dataBase;
-//	UINT32 	length;
-////	FILE*	file;
-//	char	file_name[50];
-//	HANDLE 	ghMutex;
-//} OS_SHMEM;
-//
-//
-//void addMboxMem();
-//void addShMem();
-//void mboxMemInit();
-//void shMemInit();
-//UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size);
-//UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size);
-//void releaseShMemMx();
-//void releaseMboxMemMx();
-//void resetShMemAddr(UINT32 address);
+UINT32 QBuffer_getNbData(PlatformQueueType type){
+	INT32 count = write_idx[type]-read_idx[type];
+	if (count < 0) count += BUFFER_SIZE;
+	return count;
+}
 
-void OS_ShMemInit();
+void QBuffer_push(PlatformQueueType type, void* data, UINT32 size){
+	UINT32 rd_ix = read_idx[type];
+	UINT32 wr_ix = write_idx[type];
+	if (rd_ix <= wr_ix)
+		rd_ix += BUFFER_SIZE;
 
-UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size);
-UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size);
+	if (wr_ix + size < rd_ix){
+		if (wr_ix + size >BUFFER_SIZE) {
+			memcpy(buffer[type] + wr_ix, data, BUFFER_SIZE - wr_ix);
+			memcpy(buffer[type],
+					(void*)(((UINT32)data) + BUFFER_SIZE - wr_ix),
+					size - BUFFER_SIZE + wr_ix);
+		} else {
+			memcpy(buffer[type] + wr_ix, data, size);
+		}
 
-#endif /* SHAREDMEM_H_ */
+		// Update write index.
+		write_idx[type] = (write_idx[type] + size) % BUFFER_SIZE;
+	}
+}
+
+void QBuffer_pop(PlatformQueueType type, void* data, UINT32 size){
+	UINT32 rd_ix = read_idx[type];
+	UINT32 wr_ix = write_idx[type];
+
+	if (wr_ix < rd_ix)
+		wr_ix += BUFFER_SIZE;
+
+	if (rd_ix + size <= wr_ix){
+		if (rd_ix + size > BUFFER_SIZE) {
+			memcpy(data, buffer[type]+rd_ix, BUFFER_SIZE-rd_ix);
+			memcpy((void*)(((UINT32)data)+BUFFER_SIZE-rd_ix),
+					buffer[type], size - BUFFER_SIZE + rd_ix);
+		} else {
+			memcpy(data, buffer[type]+rd_ix, size);
+		}
+
+		// Update the read index.
+		read_idx[type] = (read_idx[type] + size) % BUFFER_SIZE;
+	}
+}

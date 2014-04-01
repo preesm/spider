@@ -34,32 +34,21 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <platform_gpio.h>
 
-#include "sobel.h"
+void initGpio(){
 
-#include <lrt.h>
-#include <lrt_prototypes.h>
+}
 
-#include <xparameters.h>
+void setLed(BOOL b){
 
-#include <platform.h>
-#include <print.h>
+}
 
-
-int main(int argc, char** argv){
-	init_platform();
-
-	cpuId = XPAR_CPU_ID+1;
-
-	platform_puts("Start Sobel LRT on UB");platform_putdec(cpuId);platform_puts("\n");
-
-	/* Sobel */
-	functions_tbl[3] = sobel;
-
-	init_lrt();
-
-	cleanup_platform();
-	return 0;
+BOOL getSw(){
+	return -1;
+//    XGpio_DiscreteRead(&gpio_leds, 1, b & 0x01);
 }

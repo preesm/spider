@@ -36,89 +36,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <platform_gpio.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
+void initGpio(){
 
-#include "types.h"
-#include "hwQueues.h"
-
-typedef enum{
-	IN=0,
-	OUT=1
-} FifoDir;
-
-static int OS_QGRT[nbQueueTypes][2];
-int cpuId;
-
-static const char* typeName[3] = {
-		"CTRL",
-		"INFO",
-		"JOB"
-};
-
-#define BASE_PATH "/home/jheulot/dev/"
-
-void RTQueuesInit(){
-	char tempStr[50];
-	int i, flags;
-
-	for(i=0; i<nbQueueTypes; i++){
-		sprintf(tempStr, "%s%s_%dtoGrt",BASE_PATH,typeName[i],cpuId);
-		OS_QGRT[i][OUT] =  open(tempStr, O_RDWR);
-		if (OS_QGRT[i][OUT] == -1) {
-			printf("Failed to open %s: creating...\n",tempStr);
-			mkfifo(tempStr, S_IRWXU);
-		}
-
-		sprintf(tempStr, "%s%s_Grtto%d",BASE_PATH,typeName[i],cpuId);
-		OS_QGRT[i][IN] = open(tempStr, O_RDWR);
-		if (OS_QGRT[i][IN] == -1) {
-			printf("Failed to open %s: creating...\n",tempStr);
-			mkfifo(tempStr, S_IRWXU);
-		}
-
-		flags = fcntl(OS_QGRT[i][IN], F_GETFL, 0);
-		fcntl(OS_QGRT[i][IN], F_SETFL, flags | O_NONBLOCK);
-	}
 }
 
-UINT32 RTQueuePush(RTQueueType queueType, void* data, int size){
-	int file = OS_QGRT[queueType][OUT];
+void setLed(BOOL b){
 
-	int i=0;
-	while(i < size){
-		int res = write(file, (char*)data+i, size-i);
-		if(res>0) i+=res;
-	}
-	return i;
 }
 
-UINT32 RTQueuePush_UINT32(RTQueueType queueType, UINT32 data){
-	return RTQueuePush(queueType, &data, sizeof(unsigned int));
-}
-
-UINT32 RTQueuePop(RTQueueType queueType, void* data, int size){
-	int file = OS_QGRT[queueType][IN];
-
-	int i=0;
-	while(i < size){
-		int res = read(file, (char*)data+i, size-i);
-		if(res>0) i+=res;
-	}
-	return i;
-}
-
-UINT32 RTQueuePop_UINT32(RTQueueType queueType){
-	UINT32 data;
-	RTQueuePop(queueType, &data, sizeof(UINT32));
-	return data;
-}
-
-UINT32 RTQueueNonBlockingPop(RTQueueType queueType, void* data, int size){
-	int file = OS_QGRT[queueType][IN];
-
-	return read(file, (char*)data, size);
+BOOL getSw(){
+	return -1;
+//    XGpio_DiscreteRead(&gpio_leds, 1, b & 0x01);
 }

@@ -34,13 +34,12 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PRINT_H_
-#define PRINT_H_
+#ifndef PLATFORM_H_
+#define PLATFORM_H_
 
-#include <types.h>
+#include <platform_types.h>
 
-void zynq_puts(const char* s);
-void zynq_putdec(UINT32);
-void zynq_puthex(UINT32);
+UINT8 platform_getCoreId();
+void platform_init(UINT8 core_id);
 
-#endif /* PRINT_H_ */
+#endif /* PLATFORM_H_ */

@@ -34,18 +34,7 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef LRT_FIFOMNGR_H_
-#define LRT_FIFOMNGR_H_
+#include <platform_types.h>
 
-#include "lrt_definitions.h"
-
-UINT8 create_fifo();
-UINT8 create_fifo_args(UINT8 id, UINT32 size, UINT32 address);
-void flush_fifo();
-void flush_fifo_args(UINT8 fifo_id);
-BOOLEAN check_input_fifo(UINT8 in_fifo_id, UINT32 size);
-BOOLEAN check_output_fifo(UINT8 out_fifo_id, UINT32 size);
-UINT32 get_fifo_cnt(UINT8 fifo_id);
-void write_output_fifo(UINT8 out_fifo_id, UINT32 size, UINT8* buffer);
-void read_input_fifo(UINT8 in_fifo_id, UINT32 size, UINT8* buffer);
-#endif /* LRT_FIFOMNGR_H_ */
+void setLed(BOOL b);
+BOOL getSw();

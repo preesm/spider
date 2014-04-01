@@ -39,10 +39,9 @@
 #include "lrt_cfg.h"
 #include "lrt_taskMngr.h"
 #include "lrt_monitor.h"
-#include "lrt_fifoMngr.h"
 #include "lrt_core.h"
 #include "lrt_debug.h"
-#include "hwQueues.h"
+#include <platform_queue.h>
 
 
 void am_funct_test();
@@ -84,27 +83,27 @@ void AMCreate(ActorMachine *am){
 	// Popping vertices.
 	for(i=0; i < am->nbVertices; i++){
 		am_vertex_ptr = &(am->am_vertices[i]);
-		am_vertex_ptr->type 			= RTQueuePop_UINT32(RTCtrlQueue);
-		am_vertex_ptr->successor_ix[0] 	= RTQueuePop_UINT32(RTCtrlQueue);
-		am_vertex_ptr->successor_ix[1] 	= RTQueuePop_UINT32(RTCtrlQueue);
-		am_vertex_ptr->actionID 		= RTQueuePop_UINT32(RTCtrlQueue);
+		am_vertex_ptr->type 			= platform_queue_pop_UINT32(PlatformCtrlQueue);
+		am_vertex_ptr->successor_ix[0] 	= platform_queue_pop_UINT32(PlatformCtrlQueue);
+		am_vertex_ptr->successor_ix[1] 	= platform_queue_pop_UINT32(PlatformCtrlQueue);
+		am_vertex_ptr->actionID 		= platform_queue_pop_UINT32(PlatformCtrlQueue);
 	}
 
 	// Popping conditions.
 	for (i = 0; i < am->nbConds; i++) {
 		am_cond_ptr = &(am->am_conditions[i]);
-		am_cond_ptr->type 		= RTQueuePop_UINT32(RTCtrlQueue);
-		am_cond_ptr->fifo.id	= RTQueuePop_UINT32(RTCtrlQueue);
-		am_cond_ptr->fifo.size 	= RTQueuePop_UINT32(RTCtrlQueue);
+		am_cond_ptr->type 		= platform_queue_pop_UINT32(PlatformCtrlQueue);
+		am_cond_ptr->fifo.id	= platform_queue_pop_UINT32(PlatformCtrlQueue);
+		am_cond_ptr->fifo.size 	= platform_queue_pop_UINT32(PlatformCtrlQueue);
 	}
 
 	// Popping actions.
 	for (i = 0; i < am->nbActions; i++) {
 		am_action_ptr = &(am->am_actions[i]);
-		am_action_ptr->functionID	= RTQueuePop_UINT32(RTCtrlQueue);
-		am_action_ptr->nb_fifo_in 	= RTQueuePop_UINT32(RTCtrlQueue);
-		am_action_ptr->nb_fifo_out	= RTQueuePop_UINT32(RTCtrlQueue);
-		am_action_ptr->nb_param		= RTQueuePop_UINT32(RTCtrlQueue);
+		am_action_ptr->functionID	= platform_queue_pop_UINT32(PlatformCtrlQueue);
+		am_action_ptr->nb_fifo_in 	= platform_queue_pop_UINT32(PlatformCtrlQueue);
+		am_action_ptr->nb_fifo_out	= platform_queue_pop_UINT32(PlatformCtrlQueue);
+		am_action_ptr->nb_param		= platform_queue_pop_UINT32(PlatformCtrlQueue);
 
 		// todo verify non null function
 		if(am_action_ptr->functionID > NB_LOCAL_FUNCTIONS)
@@ -117,17 +116,17 @@ void AMCreate(ActorMachine *am){
 			exitWithCode(1011);
 
 		for (j = 0; j < am_action_ptr->nb_fifo_in; j++) {
-			am_action_ptr->inputFifoIds[j] = RTQueuePop_UINT32(RTCtrlQueue);
-			am_action_ptr->inputFifoDataOffs[j] = RTQueuePop_UINT32(RTCtrlQueue);
+			am_action_ptr->inputFifoIds[j] = platform_queue_pop_UINT32(PlatformCtrlQueue);
+			am_action_ptr->inputFifoDataOffs[j] = platform_queue_pop_UINT32(PlatformCtrlQueue);
 			// TODO: get the FIFO' size
 		}
 		for (j = 0; j < am_action_ptr->nb_fifo_out; j++) {
-			am_action_ptr->outputFifoIds[j] = RTQueuePop_UINT32(RTCtrlQueue);
-			am_action_ptr->outputFifoDataOffs[j] = RTQueuePop_UINT32(RTCtrlQueue);
+			am_action_ptr->outputFifoIds[j] = platform_queue_pop_UINT32(PlatformCtrlQueue);
+			am_action_ptr->outputFifoDataOffs[j] = platform_queue_pop_UINT32(PlatformCtrlQueue);
 			// TODO: get the FIFO' size
 		}
 		for (j = 0; j < am_action_ptr->nb_param; j++) {
-			am_action_ptr->params[j] = RTQueuePop_UINT32(RTCtrlQueue);
+			am_action_ptr->params[j] = platform_queue_pop_UINT32(PlatformCtrlQueue);
 		}
 	}
 
@@ -136,7 +135,7 @@ void AMCreate(ActorMachine *am){
 
 /* Function corresponding to the Test vertex of a AM Graph */
 void am_funct_test(){
-	BOOLEAN test=0;
+	BOOL test=0;
 	AM_VERTEX_STRUCT *vertex_ptr = &(OSTCBCur->am.am_vertices[OSTCBCur->am.currVertexId]);
 	AM_ACTOR_COND_STRUCT *actor_cond = &OSTCBCur->am.am_conditions[vertex_ptr->condID];
 
@@ -145,12 +144,12 @@ void am_funct_test(){
 	switch (actor_cond->type) {
 		case FIFO_OUT:
 			Act = switchMonitor(FifoCheck);
-			test = check_output_fifo(actor_cond->fifo.id, actor_cond->fifo.size);
+//			test = check_output_fifo(actor_cond->fifo.id, actor_cond->fifo.size);
 			switchMonitor(Act);
 			break;
 		case FIFO_IN:
 			Act = switchMonitor(FifoCheck);
-			test = check_input_fifo(actor_cond->fifo.id, actor_cond->fifo.size);
+//			test = check_input_fifo(actor_cond->fifo.id, actor_cond->fifo.size);
 			switchMonitor(Act);
 			break;
 		default:

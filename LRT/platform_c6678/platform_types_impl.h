@@ -34,54 +34,22 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-//#include <string.h>
-//
-//#include <types.h>
-//#include <hwQueues.h>
-//#include <platform.h>
-#include "sharedMem.h"
-//
-//#include <hwQueues.h>
-//#include <print.h>
+#ifndef TYPES_H_
+#define TYPES_H_
 
-#include "lrt_1W1RfifoMngr.h"
-#include "lrt_debug.h"
+#include <ti/csl/tistdtypes.h>
+#include <ti/csl/csl_types.h>
 
+typedef Int8	platform_INT8;
+typedef Int16 	platform_INT16;
+typedef Int32 	platform_INT32;
+typedef CSL_Uint64 	platform_INT64;
 
-/* LOCAL VARIABLES */
+typedef Uint8 	platform_UINT8;
+typedef Uint16 	platform_UINT16;
+typedef Uint32 	platform_UINT32;
+typedef CSL_Uint64 	platform_UINT64;
 
-void flushFIFO(UINT32 id){
-	UINT32 i;
-	UINT8 data = 0;
-	if(id == (UINT32)-1){
-		for(i=0; i<MAX_NB_FIFOs; i++)
-			OS_ShMemWrite(SH_MEM_BASE_ADDR + (i * FIFO_MUTEX_SIZE), &data, FIFO_MUTEX_SIZE);
-	}
-	else{
-		OS_ShMemWrite(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &data, FIFO_MUTEX_SIZE);
-	}
-}
+typedef Bool	platform_BOOL;
 
-
-void writeFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
-	UINT8 mutex;
-	mutex = 1;
-	while(mutex != 0)
-		OS_ShMemRead(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &mutex, FIFO_MUTEX_SIZE);
-
-	OS_ShMemWrite(addr + SH_MEM_HDR_REGION_SIZE, buffer, size);
-	mutex = 1;
-	OS_ShMemWrite(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &mutex, FIFO_MUTEX_SIZE);
-}
-
-
-void readFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
-	UINT8 mutex;
-	mutex = 0;
-	while(mutex != 1)
-		OS_ShMemRead(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &mutex, FIFO_MUTEX_SIZE);
-
-	OS_ShMemRead(addr + SH_MEM_HDR_REGION_SIZE, buffer, size);
-	mutex = 0;
-	OS_ShMemWrite(SH_MEM_BASE_ADDR + (id * FIFO_MUTEX_SIZE), &mutex, FIFO_MUTEX_SIZE);
-}
+#endif /* TYPES_H_ */

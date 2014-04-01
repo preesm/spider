@@ -34,23 +34,13 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "zynq_time.h"
-#include <sys/time.h>
+#ifndef TIME_H_
+#define TIME_H_
 
+#include <platform_types.h>
+#include <lrt_definitions.h>
 
-void OS_TimeInit(){
+void platform_time_reset();
+LRTSYSTime platform_time_getValue();
 
-}
-
-void OS_TimeReset(){
-}
-
-void OS_TimeStart(){
-}
-
-void OS_TimeStop(){
-}
-
-LRTSYSTime OS_TimeGetValue(){
-	return clock();
-}
+#endif /* TIME_H_ */

@@ -36,19 +36,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sharedMem.h>
-#include <hwQueues.h>
-#include <lrt_1W1RfifoMngr.h>
+#include <platform_queue.h>
+#include <platform_data_queue.h>
 #include <platform.h>
 #include <lrt_core.h>
 #include <lrt_taskMngr.h>
 
-//#include "DoubleLoop.h"
+#include "DoubleLoop.h"
 
 #define STANDALONE_APP	0
 
 int main(int argc, char **argv) {
-	UINT32 FifoIds[MAX_NB_FIFOs], FifoAddrs[MAX_NB_FIFOs];
 
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
@@ -60,29 +58,32 @@ int main(int argc, char **argv) {
 //		return -1;
 //	}
 //
-//	functions_tbl[0] = rdFile;
-//	functions_tbl[2] = initNLoop;
-//	functions_tbl[3] = endNLoop;
-//	functions_tbl[4] = wrFile;
-//
-//	//*** MLoop hierarchy ***//
-//	functions_tbl[5] = configM;
-//	functions_tbl[6] = initMLoop;
-//	functions_tbl[7] = f;
-//	functions_tbl[8] = endMLoop;
-//
-//	//*** Special actors ***//
-////	functions_tbl[9] = input;
-//	functions_tbl[10] = RB;
-//	functions_tbl[11] = broadcast;
-////	functions_tbl[12] = output;
-//	functions_tbl[13] = Xplode;
+	platform_init(0);
+
+	functions_tbl[0] = rdFile;
+	functions_tbl[2] = initNLoop;
+	functions_tbl[3] = endNLoop;
+	functions_tbl[4] = wrFile;
+
+	//*** MLoop hierarchy ***//
+	functions_tbl[5] = configM;
+	functions_tbl[6] = initMLoop;
+	functions_tbl[7] = f;
+	functions_tbl[8] = endMLoop;
+
+	//*** Special actors ***//
+//	functions_tbl[9] = input;
+	functions_tbl[10] = RB;
+	functions_tbl[11] = broadcast;
+//	functions_tbl[12] = output;
+	functions_tbl[13] = Xplode;
 
 
 
 	LRTInit();
 
 #if STANDALONE_APP == 1
+	UINT32 FifoIds[MAX_NB_FIFOs], FifoAddrs[MAX_NB_FIFOs];
 	printf("Standalone application..\n");
 
 	for (i = 0; i < MAX_NB_FIFOs; i++) {
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
 
 #else
 
-	printf("Starting local runtime %d...\n", cpuId);
+//	printf("Starting local runtime %d...\n", platform_getCoreId());
 	LRTCtrlStart();
 #endif
 	return 0;

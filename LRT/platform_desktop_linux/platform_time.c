@@ -34,32 +34,24 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <platform_time.h>
+#include <sys/time.h>
 
-#include "sobel.h"
+#include <time.h>
 
-#include <lrt.h>
-#include <lrt_prototypes.h>
+static struct timespec start;
 
-#include <xparameters.h>
+void platform_time_reset(){
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &start);
+}
 
-#include <platform.h>
-#include <print.h>
-
-
-int main(int argc, char** argv){
-	init_platform();
-
-	cpuId = XPAR_CPU_ID+1;
-
-	platform_puts("Start Sobel LRT on UB");platform_putdec(cpuId);platform_puts("\n");
-
-	/* Sobel */
-	functions_tbl[3] = sobel;
-
-	init_lrt();
-
-	cleanup_platform();
-	return 0;
+LRTSYSTime platform_time_getValue(){
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	UINT64 val = ts.tv_sec - start.tv_sec;
+	val *= 1000000000;
+	val += ts.tv_nsec - start.tv_nsec;
+	return val;
+	//  return clock();
 }

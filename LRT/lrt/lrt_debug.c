@@ -34,8 +34,8 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <print.h>
 #include <stdlib.h>
+#include <platform_print.h>
 #include "lrt_debug.h"
 
 /**
@@ -63,8 +63,8 @@ void exitWithCode(int exitCode){
 	// 1015: Not enough working memory
 	// 1016: Data to be sent exceeds the MAX_DATA_WORDS.
 
-	zynq_puts("\nExiting with code ");
-	zynq_putdec(exitCode);
-	zynq_puts("\n");
+	platform_puts("\nExiting with code ");
+	platform_putdec(exitCode);
+	platform_puts("\n");
 	exit(exitCode);
 }

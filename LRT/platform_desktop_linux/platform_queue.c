@@ -34,22 +34,88 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "gpio.h"
-#include <fcntl.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
 
-void initGpio(){
+#include <platform_types.h>
+#include <platform_queue.h>
 
+static int platform_QGRT[PlatformNbQueueTypes][2];
+int cpuId;
+
+static const char* typeName[3] = {
+		"CTRL",
+		"INFO",
+		"JOB"
+};
+
+#define PiSDF_PATH "/home/jheulot/dev/"
+
+void platform_queue_Init(){
+	char tempStr[50];
+	int i, flags;
+
+	for(i=0; i<PlatformNbQueueTypes; i++){
+		sprintf(tempStr, "%s%s_%dtoGrt",PiSDF_PATH,typeName[i],cpuId);
+		platform_QGRT[i][PlatformOutputQueue] =  open(tempStr, O_RDWR);
+		if (platform_QGRT[i][PlatformOutputQueue] == -1) {
+			printf("Failed to open %s: creating...\n",tempStr);
+			mkfifo(tempStr, S_IRWXU);
+		}
+
+		sprintf(tempStr, "%s%s_Grtto%d",PiSDF_PATH,typeName[i],cpuId);
+		platform_QGRT[i][PlatformInputQueue] = open(tempStr, O_RDWR);
+		if (platform_QGRT[i][PlatformInputQueue] == -1) {
+			printf("Failed to open %s: creating...\n",tempStr);
+			mkfifo(tempStr, S_IRWXU);
+		}
+
+		flags = fcntl(platform_QGRT[i][PlatformInputQueue], F_GETFL, 0);
+		fcntl(platform_QGRT[i][PlatformInputQueue], F_SETFL, flags | O_NONBLOCK);
+	}
 }
 
-void setLed(BOOLEAN b){
+UINT32 platform_queue_push(PlatformQueueType queueType, void* data, int size){
+	int file = platform_QGRT[queueType][PlatformOutputQueue];
 
+	int i=0;
+	while(i < size){
+		int res = write(file, (char*)data+i, size-i);
+		if(res>0) i+=res;
+	}
+	return i;
 }
 
-BOOLEAN getSw(){
-	return -1;
-//    XGpio_DiscreteRead(&gpio_leds, 1, b & 0x01);
+UINT32 platform_queue_push_UINT32(PlatformQueueType queueType, UINT32 data){
+	return platform_queue_push(queueType, &data, sizeof(unsigned int));
+}
+
+UINT32 platform_queue_pop(PlatformQueueType queueType, void* data, int size){
+	int file = platform_QGRT[queueType][PlatformInputQueue];
+
+	int i=0;
+	while(i < size){
+		int res = read(file, (char*)data+i, size-i);
+		if(res>0) i+=res;
+	}
+	return i;
+}
+
+UINT32 platform_queue_pop_UINT32(PlatformQueueType queueType){
+	UINT32 data;
+	platform_queue_pop(queueType, &data, sizeof(UINT32));
+	return data;
+}
+
+BOOL platform_queue_NBPop_UINT32(PlatformQueueType queueType, UINT32* data){
+	int file = platform_QGRT[queueType][PlatformInputQueue];
+	int res = read(file, data, sizeof(UINT32));
+	if(res == -1)
+		return 0;
+	return res;
 }

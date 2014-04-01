@@ -34,16 +34,34 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <stdio.h>
-#include <types.h>
-#include <print.h>
+#include <ti/csl/csl_cache.h>
+#include <ti/csl/csl_cacheAux.h>
+#include <ti/csl/csl_chipAux.h>
 
-void zynq_puts(const char* s){
-	printf("%s",s);
+#include <platform.h>
+#include <platform_types.h>
+
+#include "semaphore.h"
+
+void platform_queue_Init();
+void platform_time_reset();
+void platform_time_init();
+
+static UINT8 coreId;
+
+UINT8 platform_getCoreId(){
+	return coreId;
 }
-void zynq_putdec(UINT32 value){
-	printf("%d",value);
-}
-void zynq_puthex(UINT32 value){
-	printf("0x%x",value);
+
+void platform_init(UINT8 core_id){
+	coreId = CSL_chipReadDNUM()-1;
+
+	mutex_pend(MUTEX_CACHE);
+	CACHE_setL1DSize(CACHE_L1_0KCACHE);
+	CACHE_setL2Size (CACHE_0KCACHE);
+	mutex_post(MUTEX_CACHE);
+
+	platform_queue_Init();
+	platform_time_init();
+	platform_time_reset();
 }

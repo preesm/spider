@@ -34,21 +34,83 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef TYPES_H_
-#define TYPES_H_
+#include <platform_data_queue.h>
+#include <lrt_definitions.h>
+#include <lrt_cfg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-#include <linux/types.h>
+#include <platform_types.h>
+#include <fcntl.h>
 
-typedef __u8 BOOLEAN;
+#define LENGTH 0x10000000
 
-typedef __s8	INT8;
-typedef __s16 	INT16;
-typedef __s32 	INT32;
-typedef __s64 	INT64;
+static int file;
 
-typedef __u8 	UINT8;
-typedef __u16 	UINT16;
-typedef __u32 	UINT32;
-typedef __u64 	UINT64;
+#define FIFO_MUTEX_SIZE			1
+#define SH_MEM_HDR_REGION_SIZE  FIFO_MUTEX_SIZE*OS_NB_FIFO
 
-#endif /* TYPES_H_ */
+void OS_ShMemInit() {
+	printf("Openning /home/jheulot/dev/shMem...\n");
+	file = open("/home/jheulot/dev/shMem", O_RDWR);
+	if (file == -1) {
+		perror("open mem");
+		abort();
+	}
+}
+
+inline UINT32 OS_ShMemRead(UINT32 address, void* data, UINT32 size) {
+	int res = 0;
+	if (LENGTH > address + size) {
+		lseek(file, address, SEEK_SET);
+		return res = read(file, data, size);
+	}
+	printf("Memory not found 0x%x\n", address);
+	return res;
+}
+
+inline UINT32 OS_ShMemWrite(UINT32 address, void* data, UINT32 size) {
+	int res = 0;
+	if (LENGTH > address + size) {
+		lseek(file, address, SEEK_SET);
+		res = write(file, data, size);
+	}
+	return res;
+}
+
+void platform_flushFIFO(UINT32 id){
+	UINT32 i;
+	UINT8 data = 0;
+	if(id == (UINT32)-1){
+		for(i=0; i<MAX_NB_FIFO; i++)
+			OS_ShMemWrite(i * FIFO_MUTEX_SIZE, &data, FIFO_MUTEX_SIZE);
+	}
+	else{
+		OS_ShMemWrite(id * FIFO_MUTEX_SIZE, &data, FIFO_MUTEX_SIZE);
+	}
+}
+
+
+void platform_writeFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
+	UINT8 mutex;
+	mutex = 1;
+	while(mutex != 0)
+		OS_ShMemRead(id * FIFO_MUTEX_SIZE, &mutex, FIFO_MUTEX_SIZE);
+
+	OS_ShMemWrite(addr + SH_MEM_HDR_REGION_SIZE, buffer, size);
+	mutex = 1;
+	OS_ShMemWrite(id * FIFO_MUTEX_SIZE, &mutex, FIFO_MUTEX_SIZE);
+}
+
+
+void platform_readFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
+	UINT8 mutex;
+	mutex = 0;
+	while(mutex != 1)
+		OS_ShMemRead(id * FIFO_MUTEX_SIZE, &mutex, FIFO_MUTEX_SIZE);
+
+	OS_ShMemRead(addr + SH_MEM_HDR_REGION_SIZE, buffer, size);
+	mutex = 0;
+	OS_ShMemWrite(id * FIFO_MUTEX_SIZE, &mutex, FIFO_MUTEX_SIZE);
+}

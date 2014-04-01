@@ -34,32 +34,13 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
+#ifndef PRINT_H_
+#define PRINT_H_
 
-#include "sobel.h"
+#include <platform_types.h>
 
-#include <lrt.h>
-#include <lrt_prototypes.h>
+void platform_puts(const char* s);
+void platform_putdec(UINT32);
+void platform_puthex(UINT32);
 
-#include <xparameters.h>
-
-#include <platform.h>
-#include <print.h>
-
-
-int main(int argc, char** argv){
-	init_platform();
-
-	cpuId = XPAR_CPU_ID+1;
-
-	platform_puts("Start Sobel LRT on UB");platform_putdec(cpuId);platform_puts("\n");
-
-	/* Sobel */
-	functions_tbl[3] = sobel;
-
-	init_lrt();
-
-	cleanup_platform();
-	return 0;
-}
+#endif /* PRINT_H_ */

@@ -43,11 +43,10 @@
 #include "lrt_taskMngr.h"
 
 #include <platform.h>
-#include <hwQueues.h>
-#include <sharedMem.h>
-#include <print.h>
-#include <gpio.h>
-#include <zynq_time.h>
+#include <platform_queue.h>
+#include <platform_print.h>
+#include <platform_gpio.h>
+#include <platform_time.h>
 
 #include "lrt_core.h"
 #include "lrt_actorMngr.h"
@@ -56,7 +55,7 @@
 OS_TCB 		*OSTCBCur;               	/* Pointer to currently scheduled TCB. 		*/
 OS_TCB 		OSTCBTbl[OS_MAX_TASKS];		/* Table of TCBs							*/
 LRTActor	LRTActorTbl[OS_MAX_TASKS];
-BOOLEAN 	lrt_running; 				/* Flag indicating that kernel is running   */
+BOOL 	lrt_running; 				/* Flag indicating that kernel is running   */
 UINT32		clearAfterCompletion;		/* Indicates that the tasks table must be cleared after the execution
 											of the current set of tasks   */
 
@@ -67,7 +66,7 @@ void mainLoop(){
 	switchMonitor(Default);
 	if (lrt_running && getSw()){
 #ifdef ARM
-//		zynq_puts("vertex ");zynq_putdec(OSTCBCur->am.currVertexId);zynq_puts("\n");
+//		platform_puts("vertex ");platform_putdec(OSTCBCur->am.currVertexId);platform_puts("\n");
 #endif
 
 //		if(OSTCBCur->am.currVertexId == OSTCBCur->am.nbVertices-1){
@@ -90,17 +89,9 @@ void LRTInit() {
 	OSTCBCur = (OS_TCB *) 0;
 	memset(OSTCBTbl, 0, sizeof(OSTCBTbl)); /* Clear all the TCBs */
 
-//	addMboxMem();
-//	mboxMemInit();
-
-//	addShMem();
-	// Initializing the shared memory for data FIFOs.
-//	shMemInit(cpuId);
-	OS_ShMemInit();
-
-	if(cpuId == 0){
+	if(platform_getCoreId() == 0){
 		/* Clear all the data FIFOs */
-		flushFIFO(-1);
+		platform_flushFIFO(-1);
 	}
 
 	initMonitor();
@@ -115,7 +106,6 @@ void LRTInit() {
  * Initialize control queues for communications with the GRT.
  */
 void LRTCtrlStart(){
-	RTQueuesInit();
 //	releaseMboxMemMx();
 	while (TRUE)
 		mainLoop();
@@ -132,8 +122,6 @@ void LRTStart(){
 
 /* Starts the task pointed by the OSTCBCur. */
 void LRTStartCurrTask() {
-	time_t rawtime;
-	clock_t nbCpuCyclesStart;
 
 	// Executes the vertex's code.
 	MonitorAction Act = switchMonitor(AMManagement);
@@ -143,9 +131,8 @@ void LRTStartCurrTask() {
 	else{
 //		time(&rawtime);
 //		OSTCBCur->startTime = localtime(&rawtime);
-		nbCpuCyclesStart = clock();
 //		printf("Execute fn %d\n", OSTCBCur->functionId);
-		OSTCBCur->startTime = OS_TimeGetValue();
+		OSTCBCur->startTime = platform_time_getValue();
 		OSTCBCur->task_func(OSTCBCur->actor->inputFifoId,
 							OSTCBCur->actor->inputFifoDataOff,
 							OSTCBCur->actor->outputFifoId,
@@ -153,7 +140,7 @@ void LRTStartCurrTask() {
 							OSTCBCur->actor->params);
 //		OSTCBCur->startTime = ((float)nbCpuCyclesStart)/CLOCKS_PER_SEC;
 //		OSTCBCur->nbCpuCycles = clock() - nbCpuCyclesStart;
-		OSTCBCur->execTime = clock() - nbCpuCyclesStart;
+		OSTCBCur->execTime = platform_time_getValue() - OSTCBCur->startTime;
 	}
 
 	if(OSTCBCur->stop)

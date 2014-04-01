@@ -34,18 +34,13 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef TIME_H_
-#define TIME_H_
+#ifndef DATA_QUEUES_H_
+#define DATA_QUEUES_H_
 
-#include "types.h"
-#include <lrt_definitions.h>
+#include <platform_types.h>
 
-void OS_TimeInit();
+void platform_flushFIFO(UINT32 id);
+void platform_writeFifo(UINT8 id, UINT32 address, UINT32 size, UINT8* buffer);
+void platform_readFifo(UINT8 id, UINT32 address, UINT32 size, UINT8* buffer);
 
-void OS_TimeReset();
-void OS_TimeStart();
-void OS_TimeStop();
-
-LRTSYSTime OS_TimeGetValue();
-
-#endif /* TIME_H_ */
+#endif /* HWQUEUES_H_ */

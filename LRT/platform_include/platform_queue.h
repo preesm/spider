@@ -34,32 +34,27 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
+#ifndef HWQUEUES_H_
+#define HWQUEUES_H_
 
-#include "sobel.h"
+#include <platform_types.h>
 
-#include <lrt.h>
-#include <lrt_prototypes.h>
+typedef enum{
+	PlatformCtrlQueue,
+	PlatformInfoQueue,
+	PlatformJobQueue,
+	PlatformNbQueueTypes
+} PlatformQueueType;
 
-#include <xparameters.h>
+typedef enum{
+	PlatformInputQueue,
+	PlatformOutputQueue
+} PlatformQueueDir;
 
-#include <platform.h>
-#include <print.h>
+UINT32 platform_queue_push(PlatformQueueType queueType, void* data, int size);
+UINT32 platform_queue_push_UINT32(PlatformQueueType queueType, UINT32 value);
+UINT32 platform_queue_pop(PlatformQueueType queueType, void* data, int size);
+UINT32 platform_queue_pop_UINT32(PlatformQueueType queueType);
+BOOL   platform_queue_NBPop_UINT32(PlatformQueueType queueType, UINT32* data);
 
-
-int main(int argc, char** argv){
-	init_platform();
-
-	cpuId = XPAR_CPU_ID+1;
-
-	platform_puts("Start Sobel LRT on UB");platform_putdec(cpuId);platform_puts("\n");
-
-	/* Sobel */
-	functions_tbl[3] = sobel;
-
-	init_lrt();
-
-	cleanup_platform();
-	return 0;
-}
+#endif /* HWQUEUES_H_ */

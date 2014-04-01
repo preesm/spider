@@ -34,9 +34,9 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "lrt_fifoMngr.h"
-#include <hwQueues.h>
+
 #include "lrt_actorMngr.h"
+#include <platform_queue.h>
 
 
 //void createActor(OS_TCB* newTCB){

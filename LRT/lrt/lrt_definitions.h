@@ -39,10 +39,7 @@
 
 //#include <time.h>
 #include "lrt_cfg.h"
-
-
-#define TRUE 			1
-#define FALSE 			0
+#include <platform_types.h>
 
 #define  OS_TCB_RESERVED        ((OS_TCB *)1)
 
@@ -70,8 +67,8 @@
 #define FIFO_WR_IX_OFFSET		4
 #define FIFO_DATA_OFFSET		8
 
-#define FIFO_MUTEX_SIZE			1
-#define MAX_NB_FIFOs			200
+
+#define MAX_NB_FIFO			200
 
 //************************ Status codes
 #define FIFO_STAT_INIT		1
@@ -148,7 +145,8 @@ typedef enum{
 	MSG_CURR_VERTEX_ID=6,
 	MSG_CLEAR_TASKS =7,
 	MSG_PARAM_VALUE = 8,
-	MSG_EXEC_TIMES = 9
+	MSG_EXEC_TIMES = 9,
+	MSG_CLEAR_TIME = 10
 }GRT_MSG_TYPE;
 
 
@@ -213,8 +211,8 @@ typedef struct {		//
 	union{
 		/* FIFO Condition specific attributes */
 		struct {
-			INT8_S 	id;
-			INT32_S size;
+			INT8 	id;
+			INT32 	size;
 		} fifo;
 	};
 }AM_ACTOR_COND_STRUCT;
@@ -293,8 +291,8 @@ typedef struct os_tcb {
     struct os_tcb   *OSTCBNext;
     UINT32			functionId;
     FUNCTION_TYPE	task_func;
-    BOOLEAN			isAM;
-	BOOLEAN 		stop;		// Whether the task must be deleted after completion.
+    BOOL			isAM;
+	BOOL 		stop;		// Whether the task must be deleted after completion.
 	LRTActor*		actor;
 	ActorMachine	am;			// TODO: ..define it as a pointer to save memory footprint.
 	LRTSYSTime		startTime;
@@ -320,7 +318,7 @@ extern LRTActor			LRTActorTbl[OS_MAX_TASKS];
 extern FUNCTION_TYPE 		functions_tbl[];						// Table of local functions.
 
 // Miscellaneous.
-extern BOOLEAN          lrt_running;                       			/* Flag indicating that kernel is running   		*/
+extern BOOL          lrt_running;                       			/* Flag indicating that kernel is running   		*/
 extern UINT32			clearAfterCompletion;						/* Indicates that the table of tasks must be cleared
 																	after the execution	of the current set of tasks   */
 // AM's functions.

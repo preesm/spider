@@ -34,29 +34,22 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef HWQUEUES_H_
-#define HWQUEUES_H_
+#include <platform.h>
+#include <platform_types.h>
 
-#include "types.h"
+void platform_queue_Init();
+void platform_time_reset();
+void OS_ShMemInit();
 
-typedef enum{
-	RTCtrlQueue,
-	RTInfoQueue,
-	RTJobQueue,
-	nbQueueTypes
-} RTQueueType;
+static UINT8 coreId;
 
-typedef enum{
-	RTInputQueue,
-	RTOutputQueue
-} RTQueueDir;
+UINT8 platform_getCoreId(){
+	return 0;
+}
 
-void RTQueuesInit();
-
-UINT32 RTQueuePush(RTQueueType queueType, void* data, int size);
-UINT32 RTQueuePush_UINT32(RTQueueType queueType, UINT32 value);
-UINT32 RTQueuePop(RTQueueType queueType, void* data, int size);
-UINT32 RTQueuePop_UINT32(RTQueueType queueType);
-UINT32 RTQueueNonBlockingPop(RTQueueType queueType, void* data, int size);
-
-#endif /* HWQUEUES_H_ */
+void platform_init(UINT8 core_id){
+	coreId = core_id;
+	platform_queue_Init();
+	platform_time_reset();
+	OS_ShMemInit();
+}

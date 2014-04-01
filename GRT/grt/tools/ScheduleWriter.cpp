@@ -246,9 +246,8 @@ void ScheduleWriter::write(BaseSchedule* schedule, SRDAGGraph* dag, Architecture
 //				int vertexID = dag->getVertexIndex(vertex);
 
 //			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
-			len = snprintf(name, MAX_VERTEX_NAME_SIZE, "%s_%d", vertex->getName(), vertex->getId());
-			if(len > MAX_VERTEX_NAME_SIZE)
-				exitWithCode(1075);
+
+			vertex->getName(name, MAX_VERTEX_NAME_SIZE);
 
 			platform_fprintf ("\t<event\n");
 			platform_fprintf ("\t\tstart=\"%d\"\n", schedule->getVertexStartTime(vertex->getScheduleIndex(), vertex));

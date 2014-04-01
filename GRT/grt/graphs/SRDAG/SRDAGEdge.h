@@ -37,9 +37,8 @@
 #ifndef SRDAG_EDGE
 #define SRDAG_EDGE
 
-//#include "SRDAGVertex.h"
 class SRDAGVertex;
-class BaseEdge;
+class PiSDFEdge;
 
 #ifdef LINUX
 #define inline inline
@@ -70,7 +69,7 @@ class SRDAGEdge {
 		*/
 		SRDAGVertex* sink;
 
-		BaseEdge* refEdge;		// Reference to PiSDF edge.
+		PiSDFEdge* refEdge;		// Reference to PiSDF edge.
 
 		int delay;				// Delay or number of initial tokens.
 
@@ -145,12 +144,12 @@ class SRDAGEdge {
 
 		// Public for performance sake
 
-	    BaseEdge *getRefEdge() const
+	    PiSDFEdge *getRefEdge() const
 	    {
 	        return refEdge;
 	    }
 
-	    void setRefEdge(BaseEdge *refEdge)
+	    void setRefEdge(PiSDFEdge *refEdge)
 	    {
 	        this->refEdge = refEdge;
 	    }
@@ -173,7 +172,6 @@ class SRDAGEdge {
 		SRDAGEdge* nextInSinkOrder;
 		static SRDAGEdge* lastInSinkOrder;
 };
-
 
 /**
  Source getter

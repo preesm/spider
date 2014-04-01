@@ -43,8 +43,6 @@
 #include "../graphs/SRDAG/SRDAGGraph.h"
 #include "../graphs/SRDAG/SRDAGVertex.h"
 #include "../graphs/SRDAG/SRDAGEdge.h"
-#include "../graphs/PiCSDF/PiCSDFGraph.h"
-#include "../graphs/PiCSDF/PiCSDFEdge.h"
 #include "../graphs/PiSDF/PiSDFGraph.h"
 #include "../graphs/SDF/SDFGraph.h"
 
@@ -97,7 +95,7 @@ class DotWriter {
 
 		void writeAllLevels(PiSDFGraph* graph, const char* path, char displayNames);
 
-		void write(BaseVertex** schedulableVertices, UINT32 nbSchedulabeVertices, const char* path, char displayNames);
+		void write(PiSDFAbstractVertex** schedulableVertices, UINT32 nbSchedulabeVertices, const char* path, char displayNames);
 
 		void write(SDFGraph* sdf, const char* path, char displayNames);
 };

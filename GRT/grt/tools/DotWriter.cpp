@@ -71,7 +71,6 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 	//char directory[_MAX_PATH];
 	//getcwd(directory, sizeof(directory));
 	char name[MAX_VERTEX_NAME_SIZE];
-	char name2[MAX_VERTEX_NAME_SIZE];
 	char color[6];
 	UINT32 len;
 
@@ -82,30 +81,13 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 	platform_fprintf ("edge [color=Red];\n");
 //		platform_fprintf ("rankdir=LR;\n");
 
+	int RB_nb = 0;
+
 	for (int i=0 ; i<graph->getNbVertices() ; i++)
 	{
 		SRDAGVertex* vertex = graph->getVertex(i);
 		if(vertex->getState() != SrVxStDeleted){
-			switch (vertex->getType()) {
-				case 0: // Normal vertex.
-					// TODO: Handle this and below lines for CSDAG vertices : len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
-					len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d",vertex->getReference()->getName(),vertex->getReferenceIndex());
-					if(len > MAX_VERTEX_NAME_SIZE)
-						exitWithCode(1075);
-					break;
-				case 1: // Explode vertex.
-					len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d","Exp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
-					if(len > MAX_VERTEX_NAME_SIZE)
-						exitWithCode(1075);
-					break;
-				case 2: // Implode vertex.
-					len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d","Imp", vertex->getExpImpId(), vertex->getReference()->getName(),vertex->getReferenceIndex());
-					if(len > MAX_VERTEX_NAME_SIZE)
-						exitWithCode(1075);
-					break;
-				default:
-					break;
-			}
+			vertex->getName(name, MAX_VERTEX_NAME_SIZE);
 
 			switch (vertex->getState()) {
 				case SrVxStExecutable:
@@ -114,19 +96,19 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 				case SrVxStExecuted:
 					strcpy(color, "gray");
 					break;
-				case SrVxStHierarchy:
-					strcpy(color, "red");
-					break;
 				case SrVxStNoExecuted:
-					strcpy(color, "black");
+					if(vertex->isHierarchical())
+						strcpy(color, "red");
+					else
+						strcpy(color, "black");
 					break;
 			}
 
 			if(displayNames){
-				platform_fprintf ("\t%s [label=\"%s\" color=\"%s\"];\n",vertex->getName(),vertex->getName(), color);
+				platform_fprintf ("\t%d [label=\"%d\\n%s\" color=\"%s\"];\n",i,i,name, color);
 			}
 			else{
-				platform_fprintf ("\t%s [label=\"\" color=\"%s\"];\n",vertex->getName(), color);
+				platform_fprintf ("\t%d [label=\"%d\" color=\"%s\"];\n",i,i, color);
 			}
 		}
 	}
@@ -137,49 +119,10 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 		SRDAGVertex* vxSrc = edge->getSource();
 		SRDAGVertex* vxSnk = edge->getSink();
 		if((vxSrc->getState() != SrVxStDeleted) && (vxSnk->getState() != SrVxStDeleted)){
-			switch (edge->getSource()->getType()) {
-				case 0: // Normal vertex.
-					len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d",edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
-					if(len > MAX_VERTEX_NAME_SIZE)
-						exitWithCode(1075);
-					break;
-				case 1: // Explode vertex.
-					len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d","Exp", edge->getSource()->getExpImpId(), edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
-					if(len > MAX_VERTEX_NAME_SIZE)
-						exitWithCode(1075);
-					break;
-				case 2: // Implode vertex.
-					len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d","Imp", edge->getSource()->getExpImpId(), edge->getSource()->getReference()->getName(),edge->getSource()->getReferenceIndex());
-					if(len > MAX_VERTEX_NAME_SIZE)
-						exitWithCode(1075);
-					break;
-				default:
-					break;
-			}
-
-			switch (edge->getSink()->getType()) {
-				case 0: // Normal vertex.
-					len = snprintf(name2,MAX_VERTEX_NAME_SIZE,"%s_%d",edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
-					if(len > MAX_VERTEX_NAME_SIZE)
-						exitWithCode(1075);
-					break;
-				case 1: // Explode vertex.
-					len = snprintf(name2,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d","Exp", edge->getSink()->getExpImpId(), edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
-					if(len > MAX_VERTEX_NAME_SIZE)
-						exitWithCode(1075);
-					break;
-				case 2: // Implode vertex.
-					len = snprintf(name2,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d","Imp", edge->getSink()->getExpImpId(), edge->getSink()->getReference()->getName(),edge->getSink()->getReferenceIndex());
-					if(len > MAX_VERTEX_NAME_SIZE)
-						exitWithCode(1075);
-					break;
-				default:
-					break;
-			}
 			if(displayRates)
-				platform_fprintf ("\t%s->%s [label=\"%d\"];\n", edge->getSource()->getName(), edge->getSink()->getName(), edge->getTokenRate());
+				platform_fprintf ("\t%d->%d [label=\"%d\",taillabel=\"%d\",headlabel=\"%d\"];\n", edge->getSource()->getId(), edge->getSink()->getId(), edge->getTokenRate(), edge->getSource()->getOutputEdgeId(edge), edge->getSink()->getInputEdgeId(edge));
 			else
-				platform_fprintf ("\t%s->%s [label=\"%d\"];\n", edge->getSource()->getName(), edge->getSink()->getName(), edge->getFifoId());
+				platform_fprintf ("\t%d->%d [label=\"%d\"];\n", edge->getSource()->getId(), edge->getSink()->getId(), edge->getFifoId());
 		}
 	}
 	platform_fprintf ("}\n");
@@ -239,7 +182,7 @@ void DotWriter::write(CSDAGGraph* graph, const char* path, char displayNames){
 }
 
 
-static void draw_vertex(BaseVertex* vertex, char displayNames, bool drawParameters = true){
+static void draw_vertex(PiSDFAbstractVertex* vertex, char displayNames, bool drawParameters = true){
 	if(displayNames){
 		platform_fprintf ("\t%s [label=\"%s\"];\n", vertex->getName(), vertex->getName());
 	}
@@ -362,10 +305,12 @@ void DotWriter::write(PiSDFGraph* graph, const char* path, char displayNames){
 		/*platform_fprintf ("\t%s->%s [taillabel=\"%s\" headlabel=\"%s\" labeldistance=%d labelangle=50];\n",
 			edge->getSource()->getName(),edge->getSink()->getName(),
 			shortenedPExpr,shortenedCExpr,labelDistance);*/
-		platform_fprintf ("\t%s->%s [taillabel=\"%s\" headlabel=\"%s\"];\n",
+		platform_fprintf ("\t%s->%s [taillabel=\"(%d):%s\" headlabel=\"(%d):%s\"];\n",
 			edge->getSource()->getName(),
 			edge->getSink()->getName(),
+			edge->getSource()->getOutputEdgeIx(edge),
 			shortenedPExpr,
+			edge->getSink()->getInputEdgeIx(edge),
 			shortenedCExpr);
 		//labelDistance = 3 + labelDistance%(3*4); // Oscillating the label distance to keep visibility
 	}
@@ -374,7 +319,7 @@ void DotWriter::write(PiSDFGraph* graph, const char* path, char displayNames){
 	platform_fclose();
 }
 
-void DotWriter::write(BaseVertex **schedulableVertices, UINT32 nbSchedulabeVertices, const char *path, char displayNames)
+void DotWriter::write(PiSDFAbstractVertex **schedulableVertices, UINT32 nbSchedulabeVertices, const char *path, char displayNames)
 {
 	//char directory[_MAX_PATH];
 	//getcwd(directory, sizeof(directory));
@@ -387,7 +332,7 @@ void DotWriter::write(BaseVertex **schedulableVertices, UINT32 nbSchedulabeVerti
 
 	for (UINT32 i = 0; i < nbSchedulabeVertices; i++) {
 		// Drawing vertex.
-		BaseVertex* vertex = schedulableVertices[i];
+		PiSDFAbstractVertex* vertex = schedulableVertices[i];
 		draw_vertex(vertex, 1, false);
 
 		// Replacing hierarchical vertices by their output child vertex.
@@ -452,7 +397,7 @@ void DotWriter::write(SDFGraph *sdf, const char *path, char displayNames){
 	platform_fprintf ("edge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
 
 	for (UINT32 j = 0; j < sdf->getNbEdges(); j++) {
-		BaseEdge* edge = sdf->getEdge(j);
+		PiSDFEdge* edge = sdf->getEdge(j);
 		platform_fprintf ("\t%s->%s [taillabel=\"%d\" headlabel=\"%d\"];\n",
 				edge->getSource()->getName(),
 				edge->getSink()->getName(),

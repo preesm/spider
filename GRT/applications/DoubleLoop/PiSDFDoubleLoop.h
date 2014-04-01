@@ -41,7 +41,7 @@
 static PiSDFGraph graphs[MAX_NB_PiSDF_SUB_GRAPHS];
 static UINT8 nb_graphs = 0;
 
-void MLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scenario){
+void MLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scenario* scenario){
 	// Parameters.
 	PiSDFParameter *paramM = graph->addParameter("M");
 #if EXEC == 0
@@ -88,15 +88,15 @@ void MLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scenario){
 
 
 	// Edges.
-	graph->addEdge(vxM_in, "1", vxConfigM, "1", "0");
+	graph->addEdge(vxM_in, 0, "1", vxConfigM, 0, "1", "0");
 
-	graph->addEdge(vxLine_in, "3", vxInitMLoop, "3", "0");
+	graph->addEdge(vxLine_in, 0, "3", vxInitMLoop, 0, "3", "0");
 
-	graph->addEdge(vxInitMLoop, "M", vxF, "1", "0");
+	graph->addEdge(vxInitMLoop, 0, "M", vxF, 0, "1", "0");
 
-	graph->addEdge(vxF, "1", vxEndMLoop, "M", "0");
+	graph->addEdge(vxF, 0, "1", vxEndMLoop, 0, "M", "0");
 
-	graph->addEdge(vxEndMLoop, "3", vxLine_out, "3", "0");
+	graph->addEdge(vxEndMLoop, 0, "3", vxLine_out, 0, "3", "0");
 
 
 	// Timings
@@ -119,7 +119,7 @@ void MLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scenario){
 }
 
 
-void PiSDFDoubleLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scenario){
+void PiSDFDoubleLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scenario* scenario){
 	// Parameters.
 	PiSDFParameter *paramN = graph->addParameter("N");
 #if EXEC == 0
@@ -131,16 +131,6 @@ void PiSDFDoubleLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scen
 	vxReadFile->setFunction_index(0);
 	vxReadFile->addRelatedParam(paramN);
 	graph->setRootVertex(vxReadFile);
-
-	// Round buffer vertices
-	BaseVertex* roundB_0 = graph->addVertex("RoundBuf_0", roundBuff_vertex);
-	roundB_0->setFunction_index(10);
-	BaseVertex* roundB_1 = graph->addVertex("RoundBuf_1", roundBuff_vertex);
-	roundB_1->setFunction_index(10);
-
-	// Others
-	PiSDFVertex *vxBroad 		= (PiSDFVertex *)graph->addVertex("Broadcast", broad_vertex);
-	vxBroad->setFunction_index(11);
 
 	PiSDFVertex *vxInitNLoop 	= (PiSDFVertex *)graph->addVertex("InitNLoop", pisdf_vertex);
 	vxInitNLoop->addParameter(paramN);
@@ -156,28 +146,18 @@ void PiSDFDoubleLoop(PiSDFGraph* graph, BaseVertex* parentVertex, Scenario* scen
 	vxWriteFile->setFunction_index(4);
 
 	// Edges.
-	graph->addEdge(vxReadFile, "3", roundB_0, "3", "0");
-	graph->addEdge(vxReadFile, "9", roundB_1, "9", "0");
+	graph->addEdge(vxReadFile, 0, "3", vxInitNLoop, 0, "3", "0");
+	graph->addEdge(vxReadFile, 1, "9", vxInitNLoop, 1,  "9", "0");
+	
+	graph->addEdge(vxInitNLoop, 0, "N", vxMLoop, 0, "1", "0");
+	graph->addEdge(vxInitNLoop, 1, "N*3", vxMLoop, 1, "3", "0");
 
-	graph->addEdge(roundB_0, "3", vxBroad, "3", "0");
+	graph->addEdge(vxMLoop, 0, "3", vxEndNLoop, 0, "N*3", "0");
 
-	graph->addEdge(roundB_1, "9", vxInitNLoop, "9", "0");
-
-	graph->addEdge(vxBroad, "3", vxWriteFile, "3", "0");
-	graph->addEdge(vxBroad, "3", vxInitNLoop, "3", "0");
-
-	graph->addEdge(vxInitNLoop, "N", vxMLoop, "1", "1");
-	graph->addEdge(vxInitNLoop, "N*3", vxMLoop, "3", "0");
-
-	graph->addEdge(vxMLoop, "3", vxEndNLoop, "N*3", "0");
-
-	graph->addEdge(vxEndNLoop, "9", vxWriteFile, "9", "0");
+	graph->addEdge(vxEndNLoop, 0, "9", vxWriteFile, 0, "9", "0");
 
 	// Timings
 	scenario->setTiming(vxReadFile->getId(), 1, "100");
-	scenario->setTiming(roundB_0->getId(), 1, "100");
-	scenario->setTiming(roundB_1->getId(), 1, "100");
-	scenario->setTiming(vxBroad->getId(), 1, "100");
 	scenario->setTiming(vxInitNLoop->getId(), 1, "100");
 	scenario->setTiming(vxEndNLoop->getId(), 1, "100");
 	scenario->setTiming(vxWriteFile->getId(), 1, "100");

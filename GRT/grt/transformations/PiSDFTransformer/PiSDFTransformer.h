@@ -37,7 +37,7 @@
 #ifndef PISDFTRANSFORMER_H_
 #define PISDFTRANSFORMER_H_
 
-#include <graphs/Base/BaseVertex.h>
+#include <graphs/PiSDF/PiSDFAbstractVertex.h>
 
 #include "../../graphs/SRDAG/SRDAGGraph.h"
 #include "../../graphs/SRDAG/SRDAGVertex.h"
@@ -70,14 +70,15 @@ public:
 	/**
 	 * Adds "nb_repetitions" SRDAGVertex vertices for "vertex" to the output SRDAG graph.
 	 */
-	void addVertices(BaseVertex* vertex, int nb_repetitions, SRDAGGraph* outputGraph, SRDAGVertex* hSrDagVx);
+	void addVertices(PiSDFAbstractVertex* vertex, int nb_repetitions, int iteration, SRDAGGraph* outputGraph);
 
 	void computeBVR(SDFGraph *sdf);
 
-	void linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDAGVertex* hSrDagVx);
+	void linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, SRDAGGraph* topDag, int* brv);
 
 	void transform(SDFGraph* sdf, SRDAGGraph *srGraph, SRDAGVertex* currHSrVx);
 
+	void replaceHwithRB(SRDAGGraph* topDag, SRDAGVertex* H, PiSDFGraph* currentPiSDF);
 };
 
 #endif /* PISDFTRANSFORMER_H_ */

@@ -37,29 +37,29 @@
 #ifndef PISDFIFVERTEX_H_
 #define PISDFIFVERTEX_H_
 
-#include "../Base/BaseVertex.h"
+#include "../PiSDF/PiSDFAbstractVertex.h"
 
-class PiSDFIfVertex: public BaseVertex {
-	BaseVertex* parentVertex;
+class PiSDFIfVertex: public PiSDFAbstractVertex {
+	PiSDFAbstractVertex* parentVertex;
 	PiSDFEdge*	parentEdge;
 	UINT16 parentEdgeIndex;
 	UINT8 direction;
 public:
 
 	void reset(){
-		this->BaseVertex::reset();
-		parentVertex = (BaseVertex *)NULL;
+		this->PiSDFAbstractVertex::reset();
+		parentVertex = (PiSDFAbstractVertex *)NULL;
 		parentEdge = (PiSDFEdge *)NULL;
 		parentEdgeIndex = -1;
 		direction = 0;
 	}
 
-    BaseVertex *getParentVertex() const
+    PiSDFAbstractVertex *getParentVertex() const
     {
         return parentVertex;
     }
 
-    void setParentVertex(BaseVertex *parentVertex)
+    void setParentVertex(PiSDFAbstractVertex *parentVertex)
     {
         this->parentVertex = parentVertex;
     }

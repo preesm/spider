@@ -34,96 +34,146 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PICSDFEDGE_H_
-#define PICSDFEDGE_H_
+#ifndef ARRAY_H_
+#define ARRAY_H_
 
-#include "../CSDAG/CSDAGEdge.h"
+#include "SchedulingError.h"
+#include <platform_types.h>
 
-class PiCSDFEdge : public CSDAGEdge{
-	private:
-		/**
-		 Expression defining the delay (in abstract_syntax_elt)
-		*/
-		abstract_syntax_elt delay[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
+/**
+ * Generic Array Class
+ */
+template <class T, int SIZE> class Array {
+private:
+	/**
+	 * Array of values.
+	 */
+	T array[SIZE];
 
-		// Production, consumption and delay after pattern resolution.
-		int productionInt; int consumtionInt; int delayInt;
+	/**
+	 * Validity of array values.
+	 */
+	BOOL valid[SIZE];
 
-	public:
+	/**
+	 * Number of valid values.
+	 */
+	UINT32 nb;
 
+public:
+	/**
+	 * Default Constructor.
+	 */
+	Array();
 
-		/**
-		 delay getter.
+	/**
+	 * Reset Array.
+	 */
+	void reset();
 
-		 @return delay
-		*/
-		abstract_syntax_elt* getDelay();
+	/**
+	 * Overloading operator[].
+	 * @param n Rank of the element.
+	 * @return Element of rank n.
+	 */
+	T& operator [](int n);
 
-		/**
-		 delay setter
+	void add(T& e, int n);
+	void remove(T& e);
 
-		 @param expression defining the delay
-		*/
-		void setDelay(const char* delay);
+	/**
+	 * Get current number of element in the list.
+	 * @return number of element.
+	 */
+	UINT32 getNb();
 
-		// Getter/setter for productionInt/consumptionInt/delayInt.
-		int getProductionInt();
-
-		void setProductionInt(const int prod);
-
-		int getConsumptionInt();
-
-		void setConsumptionInt(const int cons);
-
-		int getDelayInt();
-
-		void setDelayInt(const int delay);
+	/**
+	 * Get the Id from an element
+	 */
+	UINT32 getIdOf(T& t);
 };
 
+/**
+ * Default Constructor.
+ */
+template <class T, int SIZE>
+inline Array<T,SIZE>::Array(){
+	nb = 0;
+	memset(valid, FALSE, SIZE*sizeof(BOOL));
+}
 
 /**
- delay getter
-
- @return delay expression
-*/
-inline abstract_syntax_elt* PiCSDFEdge::getDelay(){
-	return(this->delay);
+ * Reset List.
+ */
+template <class T, int SIZE>
+inline void Array<T,SIZE>::reset(){
+	nb = 0;
+	memset(valid, FALSE, SIZE*sizeof(BOOL));
 }
 
 /**
- delay setter. Careful! Not made to set it more than once!
-
- @param delay: expression defining the initial tokens (in char)
- @return delay after resolving the expression
-*/
-inline void PiCSDFEdge::setDelay(const char* delay){
-	// Parsing the expression
-	globalParser.parse(delay, this->delay);
+ * Overloading operator[].
+ * @param n Rank of the element.
+ * @return Element of rank n.
+ */
+template <class T, int SIZE>
+inline T& Array<T,SIZE>::operator [](int n){
+	if(valid[n]){
+		return array[n];
+	}else{
+		printf("Array: Error get uninitialized var\n");
+		abort();
+	}
 }
 
-
-// Getter/setter for productionInt/consumptionInt.
-inline int PiCSDFEdge::getProductionInt(){
-	return this->productionInt;
+/**
+ * Get current number of element in the list.
+ * @return number of element.
+ */
+template <class T, int SIZE>
+inline UINT32 Array<T,SIZE>::getNb(){
+	return nb;
 }
 
-inline void PiCSDFEdge::setProductionInt(const int prod){
-	this->productionInt = prod;
+template <class T, int SIZE>
+inline void Array<T,SIZE>::add(T& e, int n){
+	if(!valid[n]){
+		valid[n] = TRUE;
+		array[n] = e;
+		nb++;
+	}else{
+		printf("Array: Adding element on initialized element\n");
+		abort();
+	}
 }
 
-inline int PiCSDFEdge::getConsumptionInt(){
-	return this->consumtionInt;
+template <class T, int SIZE>
+inline void Array<T,SIZE>::remove(T& t){
+	int n = getIdOf(t);
+	if(valid[n]){
+		valid[n] = FALSE;
+		nb--;
+	}else{
+		printf("Array: Removing uninitialized element\n");
+		abort();
+	}
 }
 
-inline void PiCSDFEdge::setConsumptionInt(const int cons){
-	this->consumtionInt = cons;
+/**
+ *
+ */
+template <class T, int SIZE>
+inline UINT32 Array<T,SIZE>::getIdOf(T& t){
+	int nbSeen=0;
+	for(int i=0; i<SIZE; i++){
+		if(valid[i]){
+			if(array[i] == t)
+				return i;
+			if(++nbSeen == nb)
+				return -1;
+		}
+	}
+	return -1;
 }
 
-inline int PiCSDFEdge::getDelayInt(){
-	return this->delayInt;
-}
-
-inline void PiCSDFEdge::setDelayInt(const int delay){
-	this->delayInt = delay;
-}
-#endif /* PICSDFEDGE_H_ */
+#endif /* ARRAY_H_ */

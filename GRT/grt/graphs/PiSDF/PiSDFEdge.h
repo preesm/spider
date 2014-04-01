@@ -38,16 +38,15 @@
 #define PISDFEDGE_H_
 
 #include <platform_types.h>
-#include "../Base/BaseEdge.h"
 #include "../../expressionParser/XParser.h"
 #include <expressionParser/ReversePolishNotationGenerator.h>
 
-class BaseVertex;
+class PiSDFAbstractVertex;
 
-class PiSDFEdge: public BaseEdge {
-//	UINT32 id;
-//	BaseVertex *source;
-//	BaseVertex *sink;
+class PiSDFEdge{
+	UINT32 id;
+	PiSDFAbstractVertex *source;
+	PiSDFAbstractVertex *sink;
 
 	// Expression defining the token production, consumption and delay (in abstract_syntax_elt)
 	abstract_syntax_elt production[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
@@ -57,15 +56,21 @@ class PiSDFEdge: public BaseEdge {
 	BOOL evaluated;	// Whether the production/consumption expressions have been evaluated.
 	BOOL required;	// When true, the edge is required in the execution.
 
-//	// Production, consumption and delay after pattern resolution.
-//	UINT32 productionInt;
-//	UINT32 consumptionInt;
-//	UINT32 delayInt;
-//
-//	UINT32 tempId; // Used while creating a topology matrix.
+	// Production, consumption and delay after pattern resolution.
+	UINT32 productionInt;
+	UINT32 consumptionInt;
+	UINT32 delayInt;
+
+	PiSDFEdge* refEdge;  // Reference to the PiSDF edge.
+
 public:
-	PiSDFEdge():BaseEdge(){
-		evaluated = FALSE;
+	PiSDFEdge(){
+		id = -1;
+		sink = (PiSDFAbstractVertex *)0;
+		source = (PiSDFAbstractVertex *)0;
+		consumptionInt = productionInt = delayInt = 0;
+		refEdge = (PiSDFEdge*) NULL;
+		evaluated = required = FALSE;
 	}
 
     abstract_syntax_elt* getProduction()
@@ -138,9 +143,6 @@ public:
         this->evaluated = evaluated;
     }
 
-
-/*
-
 	// Auto-generated setters and getters.
     UINT32 getId() const
     {
@@ -168,22 +170,28 @@ public:
         return productionInt;
     }
 
-//    BaseVertex *getSink() const
-//    {
-//        return sink;
-//    }
-//
-//    BaseVertex *getSource() const
-//    {
-//        return source;
-//    }
-
-    UINT32 getTempId() const
+    PiSDFAbstractVertex *getSink() const
     {
-        return tempId;
+        return sink;
     }
 
+    PiSDFAbstractVertex *getSource() const
+    {
+        return source;
+    }
 
+    PiSDFEdge* getRefEdge() const {
+		return refEdge;
+	}
+
+	void reset(){
+		id = -1;
+		source = (PiSDFAbstractVertex *)NULL;
+		sink = (PiSDFAbstractVertex *)NULL;
+		consumptionInt = productionInt = delayInt = 0;
+//		refEdge = 0;
+
+	}
 
 
 
@@ -202,21 +210,19 @@ public:
         this->productionInt = productionInt;
     }
 
-    void setSink(BaseVertex *sink)
+    void setSink(PiSDFAbstractVertex *sink)
     {
         this->sink = sink;
     }
 
-    void setSource(BaseVertex *source)
+    void setSource(PiSDFAbstractVertex *source)
     {
         this->source = source;
     }
 
-    void setTempId(UINT32 tempId)
-    {
-        this->tempId = tempId;
-    }
-*/
+    void setRefEdge(PiSDFEdge* edge){
+		refEdge = edge;
+	}
 };
 
 #endif /* PISDFEDGE_H_ */

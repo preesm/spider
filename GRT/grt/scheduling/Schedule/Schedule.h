@@ -77,8 +77,8 @@ public:
 	void addVertex(int slave,SRDAGVertex* vertex, int startTime, int endTime){
 		schedule[slave][nbVertex[slave]++] = vertex;
 		readyTime[slave] = endTime;
-		vertexStartTime[vertex->getBase()->getVertexIndex(vertex)] = startTime;
-		vertexEndTime[vertex->getBase()->getVertexIndex(vertex)] = endTime;
+		vertexStartTime[vertex->getId()] = startTime;
+		vertexEndTime[vertex->getId()] = endTime;
 	}
 
 	void addCom(int slave, int start, int end){

@@ -56,7 +56,7 @@ AMGraph::AMGraph(){
 
 void AMGraph::generate(SRDAGVertex* srDagVertex) {
 	SRDAGEdge* edge;
-	SRDAGGraph* graph = srDagVertex->getBase();
+	SRDAGGraph* graph = srDagVertex->getPiSDF();
 	CondValue condValues[AM_GRAPH_MAX_COND];
 	nbConds = nbVertices = nbActions = 0;
 
@@ -134,7 +134,7 @@ void AMGraph::generate(Schedule* schedule, UINT32 slave) {
 		return;
 	}
 
-	SRDAGGraph* graph = schedule->getVertex(0,0)->getBase();
+	SRDAGGraph* graph = schedule->getVertex(0,0)->getPiSDF();
 	CondValue condValues[AM_GRAPH_MAX_COND];
 	nbConds = nbVertices = nbActions = 0;
 
@@ -230,9 +230,9 @@ void AMGraph::generate(Schedule* schedule, UINT32 slave) {
 		action->setName(name);
 		action->setFunctionId(srvertex->getCsDagReference()->getFunctionIndex());
 		for(int i=0; i<srvertex->getNbInputEdge(); i++)
-//			action->addFifoIn(srvertex->getBase()->getEdgeIndex(srvertex->getInputEdge(i)));
+//			action->addFifoIn(srvertex->getPiSDF()->getEdgeIndex(srvertex->getInputEdge(i)));
 		for(int i=0; i<srvertex->getNbOutputEdge(); i++)
-//			action->addFifoOut(srvertex->getBase()->getEdgeIndex(srvertex->getOutputEdge(i)));
+//			action->addFifoOut(srvertex->getPiSDF()->getEdgeIndex(srvertex->getOutputEdge(i)));
 		if(action->getFunctionId() == 0){
 			/* Explode-Implode */
 			for(int i=0; i<srvertex->getNbInputEdge(); i++)
@@ -284,7 +284,7 @@ void AMGraph::generate(SRDAGGraph* graph, BaseSchedule* schedule, UINT32 slave, 
 		return;
 	}
 
-//	SRDAGGraph* graph = schedule->getVertex(0,0)->getBase();
+//	SRDAGGraph* graph = schedule->getVertex(0,0)->getPiSDF();
 	CondValue condValues[AM_GRAPH_MAX_COND];
 	nbConds = nbVertices = nbActions = 0;
 
@@ -390,7 +390,7 @@ void AMGraph::generate(SRDAGGraph* graph, BaseSchedule* schedule, UINT32 slave, 
 			action->setInFifo(curLaunch->getFIFO(graph->getEdgeIndex(edge)));
 
 //			UINT32 size = srvertex->getInputEdge(i)->getTokenRate() * DEFAULT_FIFO_SIZE; // TODO: the size should come within the edge.)
-//			action->addFifoIn(srvertex->getBase()->getEdgeIndex(srvertex->getInputEdge(i)),
+//			action->addFifoIn(srvertex->getPiSDF()->getEdgeIndex(srvertex->getInputEdge(i)),
 //							  size,
 //							  mem->alloc(size));
 		}
@@ -401,7 +401,7 @@ void AMGraph::generate(SRDAGGraph* graph, BaseSchedule* schedule, UINT32 slave, 
 			action->setOutFifo(curLaunch->getFIFO(graph->getEdgeIndex(edge)));
 
 //			UINT32 size = srvertex->getOutputEdge(i)->getTokenRate() * DEFAULT_FIFO_SIZE; // TODO: the size should come within the edge.)
-//			action->addFifoOut(srvertex->getBase()->getEdgeIndex(srvertex->getOutputEdge(i)),
+//			action->addFifoOut(srvertex->getPiSDF()->getEdgeIndex(srvertex->getOutputEdge(i)),
 //					  size,
 //					  mem->alloc(size));
 		}

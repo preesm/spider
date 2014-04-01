@@ -34,59 +34,61 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "BaseVertex.h"
+#include "PiSDFAbstractVertex.h"
 
-BaseVertex::BaseVertex() {
+PiSDFAbstractVertex::PiSDFAbstractVertex() {
 	id=-1;
 	name[0] = '\0';
 	function_index = -1;
 	type=pisdf_vertex;
-	nbInputEdges = nbOutputEdges = nbParameters = 0;
+	nbParameters = 0;
 	refPiSDFVertex = NULL;
 	nbRepetition = 1;
 	executable = undefined;
 	status = VxStNoExecutable;
 	scheduled = false;
 	tempId=-1;
+	inputEdges.reset();
+	outputEdges.reset();
 }
 
-BaseVertex::~BaseVertex() {
+PiSDFAbstractVertex::~PiSDFAbstractVertex() {
 	// TODO Auto-generated destructor stub
 }
 
-void BaseVertex::reset() {
+void PiSDFAbstractVertex::reset() {
 	id=-1;
 	name[0] = '\0';
 	function_index = -1;
 	type=pisdf_vertex;
-	nbInputEdges = nbOutputEdges = nbParameters = 0;
+	nbParameters = 0;
 	refPiSDFVertex = NULL;
 	nbRepetition = 1;
 	executable = undefined;
 	status = VxStNoExecutable;
 	scheduled = false;
 	tempId=-1;
+	inputEdges.reset();
+	outputEdges.reset();
+}
+void PiSDFAbstractVertex::setInputEdge(PiSDFEdge* edge, UINT32 id){
+	inputEdges.add(edge,id);
 }
 
-void BaseVertex::addInputEdge(PiSDFEdge *edge)
-{
-	if(nbInputEdges > MAX_NB_INPUT_EDGES){
-		exitWithCode(1047);
-	}
-	inputEdges[nbInputEdges++] = edge;
-}
-
-
-void BaseVertex::addOutputEdge(PiSDFEdge *edge)
-{
-	if(nbOutputEdges > MAX_NB_OUTPUT_EDGES){
-		exitWithCode(1048);
-	}
-	outputEdges[nbOutputEdges++] = edge;
+void PiSDFAbstractVertex::setOutputEdge(PiSDFEdge* edge, UINT32 id){
+	outputEdges.add(edge,id);
 }
 
 
-void BaseVertex::addParameter(PiSDFParameter* param)
+UINT32 PiSDFAbstractVertex::getInputEdgeId(PiSDFEdge* edge){
+	return inputEdges.getIdOf(edge);
+}
+UINT32 PiSDFAbstractVertex::getOutputEdgeId(PiSDFEdge* edge){
+	return outputEdges.getIdOf(edge);
+}
+
+
+void PiSDFAbstractVertex::addParameter(PiSDFParameter* param)
 {
 	if(nbParameters > MAX_NB_PiSDF_PARAMS){
 		exitWithCode(1057);
@@ -95,7 +97,7 @@ void BaseVertex::addParameter(PiSDFParameter* param)
 }
 
 //
-//bool BaseVertex::getExecutable(){
+//bool PiSDFAbstractVertex::getExecutable(){
 //	// Checking if all parameters have been resolved.
 //	for (UINT32 i = 0; i < this->nbParameters; i++) {
 //		if(! this->parameters[i]->getResolved()) return false;
@@ -134,7 +136,7 @@ void BaseVertex::addParameter(PiSDFParameter* param)
 //}
 
 
-void BaseVertex::checkForExecution(){
+void PiSDFAbstractVertex::checkForExecution(){
 	// Checking if all parameters have been resolved.
 //	for (UINT32 i = 0; i < this->nbParameters; i++){
 //		if(! this->parameters[i]->getResolved()){
@@ -144,9 +146,9 @@ void BaseVertex::checkForExecution(){
 //	}
 
 	// Checking if all predecessors are executable.
-	for (UINT32 i = 0; i < this->nbInputEdges; i++)
+	for (UINT32 i = 0; i < this->inputEdges.getNb(); i++)
 	{
-		BaseVertex* predVertex = inputEdges[i]->getSource();
+		PiSDFAbstractVertex* predVertex = inputEdges[i]->getSource();
 		if((predVertex != this) && (predVertex->getType() != input_vertex)){
 			if(predVertex->getExecutable() != possible)
 				// Exiting since at least one predecessor has not been marked as possible.
@@ -158,11 +160,11 @@ void BaseVertex::checkForExecution(){
 }
 
 
-bool BaseVertex::checkPredecessors(){
+bool PiSDFAbstractVertex::checkPredecessors(){
 	// Checking if all predecessors are executable.
-	for (UINT32 i = 0; i < this->nbInputEdges; i++)
+	for (UINT32 i = 0; i < this->inputEdges.getNb(); i++)
 	{
-		BaseVertex* predVertex = inputEdges[i]->getSource();
+		PiSDFAbstractVertex* predVertex = inputEdges[i]->getSource();
 		if((predVertex != this) && (predVertex->getType() != input_vertex)){
 			if((predVertex->getStatus() != VxStExecutable)&&
 				(predVertex->getType() != roundBuff_vertex))
@@ -177,97 +179,23 @@ bool BaseVertex::checkPredecessors(){
 /*
  * See the header file for comments..
  */
-bool BaseVertex::invalidEdges(){
+bool PiSDFAbstractVertex::invalidEdges(){
 	UINT32 nbNulInputs, nbNulOutputs;
 	nbNulInputs = 0;
 	nbNulOutputs = 0;
 
-	for (UINT32 i = 0; i < nbInputEdges; i++) {
+	for (UINT32 i = 0; i < inputEdges.getNb(); i++) {
 		if((inputEdges[i]->getProductionInt() == 0) &&
 		   (inputEdges[i]->getConsumptionInt() == 0))
 			nbNulInputs++;
 	}
 
-	for (UINT32 i = 0; i < nbOutputEdges; i++) {
+	for (UINT32 i = 0; i < outputEdges.getNb(); i++) {
 		if((outputEdges[i]->getProductionInt() == 0) &&
 		   (outputEdges[i]->getConsumptionInt() == 0))
 			nbNulOutputs++;
 	}
 
-	return ((nbNulInputs == nbInputEdges) && (nbNulOutputs == nbOutputEdges));
+	return ((nbNulInputs == inputEdges.getNb()) && (nbNulOutputs == outputEdges.getNb()));
 }
 
-
-//
-//
-///*
-// * If the function executes until the end, it marks the vertex as executable.
-// */
-//void BaseVertex::checkForExecution(SDFGraph* outSDF){
-//	// Checking if all parameters have been resolved.
-//	for (UINT32 i = 0; i < this->nbParameters; i++)
-//		if(! this->parameters[i]->getResolved()) return;
-//
-//	// Resolving parameter-depending expressions.
-//	for (UINT32 i = 0; i < this->nbInputEdges; i++){
-//		PiSDFEdge* edge = this->inputEdges[i];
-//		// Updating integer consumption value.
-//		int value;
-//		globalParser.interpret(edge->getConsumption(), &value);
-//		edge->setConsumtionInt(value);
-//
-//		// Updating integer delay value.
-//		globalParser.interpret(edge->getDelay(), &value);
-//		edge->setDelayInt(value);
-//
-//		// Checking if input edges have enough initial tokens (delays).
-//		// TODO: check (edge->getConsumptionInt() > 0)) and (edge->getConsumptionInt() < edge->getDelayInt())
-//
-//		if ((this->getType() == select_vertex)&&(this->getType() == switch_vertex)){
-//			// TODO: Special treatment for "select" and "switch" vertices...
-//			break;
-//		}
-//		else{
-//			// Checking if all predecessors can be executed.
-//			BaseVertex* predVertex = inputEdges[i]->getSource();
-//			// Call this function on each predecessor.
-//			if((predVertex != this) && (predVertex->getType() != input_vertex))
-//				if(predVertex->getExecutable() != possible) // Exits if at least one predecessor has not been marked as possible.
-//					return;
-//		}
-//	}
-//
-//	for (UINT32 i = 0; i < this->nbOutputEdges; i++){
-//		PiSDFEdge* edge = this->outputEdges[i];
-//		// Updating integer production value.
-//		int value;
-//		globalParser.interpret(edge->getProduction(), &value);
-//		edge->setProductionInt(value);
-//	}
-//
-//
-////	// Checking if all inputs can be executed.
-////	for (UINT32 i = 0; i < this->nbInputEdges; i++) {
-////		BaseVertex* input = inputEdges[i]->getSource();
-////		// Call this function on each predecessor.
-////		if(!input->getVisited()){ // Exists if at least one predecessor has not been visited yet.
-////			visited = false;
-////			return;
-//////			input->checkForExecution(outSDF);
-////		}
-////		if(!input->getExecutable()) return; // Exists if at least one predecessor can't be executed yet.
-////	}
-//
-////	// Treating hierarchical vertices.
-////	if(type == pisdf_vertex)
-////	{
-////		PiSDFGraph* subGraph = ((PiSDFVertex*)this)->getSubGraph();
-////		if(subGraph != (PiSDFGraph*)0)
-////			for (UINT32 i = 0; i < subGraph->getnb; i++) {
-////
-////			}
-////	}
-////	else{
-////	}
-//	executable = possible; //The vertex can be executed.
-//}

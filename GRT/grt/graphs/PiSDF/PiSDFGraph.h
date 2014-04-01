@@ -70,19 +70,19 @@ class PiSDFGraph {
 	PiSDFParameter 	parameters[MAX_NB_PiSDF_PARAMS];
 //	variable* 	parameters[MAX_NB_PiSDF_PARAMS];
 
-	BaseVertex*			vertices[MAX_NB_VERTICES];
-	PiSDFVertex 		pisdf_vertices[MAX_NB_PiSDF_VERTICES];
-	PiSDFConfigVertex 	config_vertices[MAX_NB_PiSDF_CONFIG_VERTICES];
-	BaseVertex 			join_vertices[MAX_NB_PiSDF_JOIN_VERTICES];
-	PiSDFIfVertex		input_vertices[MAX_NB_PiSDF_INPUT_VERTICES];
-	BaseVertex 			broad_vertices[MAX_NB_PiSDF_BROAD_VERTICES];
-	PiSDFIfVertex		output_vertices[MAX_NB_PiSDF_OUTPUT_VERTICES];
-	BaseVertex 			switch_vertices[MAX_NB_PiSDF_SWITCH_VERTICES];
-	BaseVertex 			select_vertices[MAX_NB_PiSDF_SELECT_VERTICES];
-	BaseVertex 			roundB_vertices[MAX_NB_PiSDF_ROUNDB_VERTICES];
+	PiSDFAbstractVertex*	vertices[MAX_NB_VERTICES];
+	PiSDFVertex 			pisdf_vertices[MAX_NB_PiSDF_VERTICES];
+	PiSDFConfigVertex 		config_vertices[MAX_NB_PiSDF_CONFIG_VERTICES];
+	PiSDFAbstractVertex 	join_vertices[MAX_NB_PiSDF_JOIN_VERTICES];
+	PiSDFIfVertex			input_vertices[MAX_NB_PiSDF_INPUT_VERTICES];
+	PiSDFAbstractVertex 	broad_vertices[MAX_NB_PiSDF_BROAD_VERTICES];
+	PiSDFIfVertex			output_vertices[MAX_NB_PiSDF_OUTPUT_VERTICES];
+	PiSDFAbstractVertex 	switch_vertices[MAX_NB_PiSDF_SWITCH_VERTICES];
+	PiSDFAbstractVertex 	select_vertices[MAX_NB_PiSDF_SELECT_VERTICES];
+	PiSDFAbstractVertex 	roundB_vertices[MAX_NB_PiSDF_ROUNDB_VERTICES];
 
 
-	BaseVertex* rootVertex; // Must be set while creating the graph.
+	PiSDFAbstractVertex* rootVertex; // Must be set while creating the graph.
 	UINT32 nbExecVertices; 			// Counts the number of executable vertices.
 	UINT32 nbDiscardVertices; 		// Counts the number of discarded vertices
 									// e.g. a classic vertex with 0 production on an input edge.
@@ -91,11 +91,11 @@ class PiSDFGraph {
 public:
 	PiSDFGraph();
 
-	PiSDFEdge* 	addEdge(BaseVertex* source, const char* production, BaseVertex* sink, const char* consumption, const char* delay);
+	PiSDFEdge* 	addEdge(PiSDFAbstractVertex* source, UINT32 sourcePortId, const char* production, PiSDFAbstractVertex* sink, UINT32 sinkPortId, const char* consumption, const char* delay);
 
-	PiSDFEdge*	addEdge(BaseVertex* source, abstract_syntax_elt* production, BaseVertex* sink, abstract_syntax_elt* consumption, abstract_syntax_elt* delay);
+	PiSDFEdge*	addEdge(PiSDFAbstractVertex* source, UINT32 sourcePortId, abstract_syntax_elt* production, PiSDFAbstractVertex* sink, UINT32 sinkPortId, abstract_syntax_elt* consumption, abstract_syntax_elt* delay);
 
-	BaseVertex* addVertex(const char* vertexName, VERTEX_TYPE type);
+	PiSDFAbstractVertex* addVertex(const char* vertexName, VERTEX_TYPE type);
 
 	PiSDFParameter*	addParameter(const char* name);
 
@@ -119,7 +119,7 @@ public:
 	/*
 	 *  Says if Vx is an interface/round-buffer preceding a configure vx.
 	 */
-	bool isConfigVxPred(BaseVertex* Vx);
+	bool isConfigVxPred(PiSDFAbstractVertex* Vx);
 
 	/*
 	 * Creates SDF graph excluding the configure vertices.
@@ -165,7 +165,7 @@ public:
 		return nb_broad_vertices;
 	}
 
-    BaseVertex* getBroad_vertex(UINT64 index)
+    PiSDFAbstractVertex* getBroad_vertex(UINT64 index)
     {
     	return &broad_vertices[index];
 	}
@@ -210,7 +210,7 @@ public:
 		return nb_join_vertices;
 	}
 
-	BaseVertex* getJoin_vertex(UINT64 index)
+	PiSDFAbstractVertex* getJoin_vertex(UINT64 index)
     {
         return &join_vertices[index];
     }
@@ -220,7 +220,7 @@ public:
 		return nb_output_vertices;
 	}
 
-    BaseVertex* getOutput_vertex(UINT64 index)
+    PiSDFIfVertex* getOutput_vertex(UINT64 index)
     {
         return &output_vertices[index];
     }
@@ -245,7 +245,7 @@ public:
 		return &edges[index];
 	}
 
-    void setRootVertex(BaseVertex *rootVertex)
+    void setRootVertex(PiSDFAbstractVertex *rootVertex)
     {
         this->rootVertex = rootVertex;
     }
@@ -274,19 +274,19 @@ public:
 		nb_switch_vertices = nbSwitchVertices;
 	}
 
-	BaseVertex* getRoundBVertex(UINT32 index) {
+	PiSDFAbstractVertex* getRoundBVertex(UINT32 index) {
 		return &roundB_vertices[index];
 	}
 
-	BaseVertex* getSelectVertex(UINT32 index) {
+	PiSDFAbstractVertex* getSelectVertex(UINT32 index) {
 		return &select_vertices[index];
 	}
 
-	BaseVertex* getSwitchVertex(UINT32 index) {
+	PiSDFAbstractVertex* getSwitchVertex(UINT32 index) {
 		return &switch_vertices[index];
 	}
 
-	const BaseVertex* getRootVertex() const {
+	PiSDFAbstractVertex* getRootVertex() {
 		return rootVertex;
 	}
 };

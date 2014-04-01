@@ -39,16 +39,16 @@
 
 #include <grt_definitions.h>
 #include "../../expressionParser/variablelist.h"
-#include "../Base/BaseVertex.h"
+#include "../PiSDF/PiSDFAbstractVertex.h"
 
 //class Parameter;
 
-class PiSDFConfigVertex: public BaseVertex {
+class PiSDFConfigVertex: public PiSDFAbstractVertex {
 	PiSDFParameter *relatedParams[MAX_NB_PiSDF_CONFIG_VERTEX_PARAMS];
 	UINT32 nbRelatedParams;
 //	PiSDFParameter* related_parameter; // Assumes one parameter per configuration vertex.
 public:
-	PiSDFConfigVertex():BaseVertex(){nbRelatedParams = 0;};
+	PiSDFConfigVertex():PiSDFAbstractVertex(){nbRelatedParams = 0;};
 
     PiSDFParameter *getRelatedParam(UINT32 index) const
     {

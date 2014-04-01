@@ -39,7 +39,7 @@
 
 #include "Memory.h"
 #include "../graphs/SRDAG/SRDAGGraph.h"
-#include "../graphs/Base/BaseVertex.h"
+#include "../graphs/PiSDF/PiSDFAbstractVertex.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Schedule/BaseSchedule.h>
 #include <scheduling/architecture/Architecture.h>
@@ -135,7 +135,7 @@ public:
 	 * on the GlobalRT's queues and not on the shared memory.
 	 */
 	void prepareConfigExec(
-			BaseVertex** configVertices,
+			PiSDFAbstractVertex** configVertices,
 			UINT32 nb_vertices,
 			Architecture *archi,
 			BaseSchedule* schedule,
@@ -146,7 +146,7 @@ public:
 	 * and resolves the corresponding parameters.
 	 */
 	void resolvePiSDFParameters(
-			BaseVertex** configVertices,
+			PiSDFAbstractVertex** configVertices,
 			UINT32 nb_vertices,
 			BaseSchedule* schedule,
 			Architecture* archi);

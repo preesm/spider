@@ -54,15 +54,13 @@ static char file[MAX_FILE_NAME_SIZE];
 SRDAGGraph::SRDAGGraph()
 {
 	// There is no dynamic allocation of graph members
-	nbVertices = 0;
-//	memset(vertices,'\0',MAX_SRDAG_VERTICES*sizeof(SRDAGVertex));
-	nbEdges = 0;
-//	memset(edges,'\0',MAX_SRDAG_EDGES*sizeof(SRDAGEdge));
+	vertices.reset();
+	edges.reset();
 }
 
 void SRDAGGraph::reset(){
-	nbVertices = 0;
-	nbEdges = 0;
+	vertices.reset();
+	edges.reset();
 }
 
 /**
@@ -81,7 +79,7 @@ SRDAGGraph::~SRDAGGraph()
  @param consumption: number of tokens (chars) consumed by the sink
  @return the created edge
 */
-SRDAGEdge* SRDAGGraph::addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* sink, BaseEdge* refEdge){
+SRDAGEdge* SRDAGGraph::addEdge(SRDAGVertex* source, UINT32 sourcePortIx, int tokenRate, SRDAGVertex* sink, UINT32 sinkPortIx, PiSDFEdge* refEdge){
 	SRDAGEdge* edge;
 #ifdef _DEBUG
 	if(nbEdges >= MAX_SRDAG_EDGES){
@@ -89,83 +87,82 @@ SRDAGEdge* SRDAGGraph::addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* 
 		exitWithCode(1001);
 	}
 #endif
-	edge = &edges[nbEdges];
+	edge = edges.add();
 	edge->reset();
 	edge->setSource(source);
 	edge->setTokenRate(tokenRate);
 	edge->setSink(sink);
 	edge->setRefEdge(refEdge);
-	source->addOutputEdge(edge);
-	sink->addInputEdge(edge);
-	nbEdges++;
+	source->setOutputEdge(edge, sourcePortIx);
+	sink->setInputEdge(edge, sinkPortIx);
 	return edge;
 }
 
 
 void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
-	// Adding vxs
-	for (int i = 0; i < annex->getNbVertices(); i++) {
-		SRDAGVertex* annexVx = annex->getVertex(i);
-
-		SRDAGVertex* vx = addVertex();
-		vx->setName(annexVx->getName());
-		vx->setFunctIx(annexVx->getFunctIx());
-		vx->setReference(annexVx->getReference());
-		vx->setReferenceIndex(annexVx->getReferenceIndex());
-		vx->setState(annexVx->getState());
-		vx->setType(annexVx->getType());
-		vx->setExpImpId(annexVx->getExpImpId());
-		vx->setParent(annexVx->getParent());
-
-		// Storing the index in the merged graph.
-		annexVx->setMergeIx(vx->getId());
-	}
-
-	// Adding edges.
-	for (int i = 0; i < annex->getNbEdges(); i++) {
-		SRDAGEdge* edge = annex->getEdge(i);
-		SRDAGVertex* source;
-		SRDAGVertex* sink;
-		int srcMergeIx = edge->getSource()->getMergeIx();
-		int snkMergeIx = edge->getSink()->getMergeIx();
-		if(srcMergeIx != -1)
-			source = getVertex(srcMergeIx); // The source has already be added.
-		else
-		{
-//			// Adding a new source vx.
-//			source = addVertex();
-//			source->setName(edge->getSource()->getName());
-//			source->setFunctIx(edge->getSource()->getFunctIx());
-//			source->setReference(edge->getSource()->getReference());
-//			source->setReferenceIndex(edge->getSource()->getReferenceIndex());
-//			source->setState(edge->getSource()->getState());
-//			source->setType(edge->getSource()->getType());
-//			source->setExpImpId(edge->getSource()->getExpImpId());
-//			source->setParent(edge->getSource()->getParent());
+//	// Adding vxs
+//	for (int i = 0; i < annex->getNbVertices(); i++) {
+//		SRDAGVertex* annexVx = annex->getVertex(i);
 //
-//			edge->getSource()->setMergeIx(source->getId());
-		}
-
-		if(snkMergeIx != -1)
-			sink = getVertex(snkMergeIx);
-		else
-		{
-//			sink = addVertex();
-//			sink->setName(edge->getSink()->getName());
-//			sink->setFunctIx(edge->getSink()->getFunctIx());
-//			sink->setReference(edge->getSink()->getReference());
-//			sink->setReferenceIndex(edge->getSink()->getReferenceIndex());
-//			sink->setState(edge->getSink()->getState());
-//			sink->setType(edge->getSink()->getType());
-//			sink->setExpImpId(edge->getSink()->getExpImpId());
-//			sink->setParent(edge->getSink()->getParent());
+//		SRDAGVertex* vx = addVertex();
+//		vx->setName(annexVx->getName());
+//		vx->setFunctIx(annexVx->getFunctIx());
+//		vx->setReference(annexVx->getReference());
+//		vx->setReferenceIndex(annexVx->getReferenceIndex());
+//		vx->setState(annexVx->getState());
+//		vx->setType(annexVx->getType());
+//		vx->setExpImpId(annexVx->getExpImpId());
+//		vx->setParent(annexVx->getParent());
 //
-//			edge->getSink()->setMergeIx(sink->getId());
-		}
-
-		addEdge(source, edge->getTokenRate(), sink, edge->getRefEdge());
-//		newEdge->setFifoId(edge->getFifoId());
-	}
+//		// Storing the index in the merged graph.
+//		annexVx->setMergeIx(vx->getId());
+//	}
+//
+//	// Adding edges.
+//	for (int i = 0; i < annex->getNbEdges(); i++) {
+//		SRDAGEdge* edge = annex->getEdge(i);
+//		SRDAGVertex* source;
+//		SRDAGVertex* sink;
+//		int srcMergeIx = edge->getSource()->getMergeIx();
+//		int snkMergeIx = edge->getSink()->getMergeIx();
+//		if(srcMergeIx != -1)
+//			source = getVertex(srcMergeIx); // The source has already be added.
+//		else
+//		{
+////			// Adding a new source vx.
+////			source = addVertex();
+////			source->setName(edge->getSource()->getName());
+////			source->setFunctIx(edge->getSource()->getFunctIx());
+////			source->setReference(edge->getSource()->getReference());
+////			source->setReferenceIndex(edge->getSource()->getReferenceIndex());
+////			source->setState(edge->getSource()->getState());
+////			source->setType(edge->getSource()->getType());
+////			source->setExpImpId(edge->getSource()->getExpImpId());
+////			source->setParent(edge->getSource()->getParent());
+////
+////			edge->getSource()->setMergeIx(source->getId());
+//		}
+//
+//		if(snkMergeIx != -1)
+//			sink = getVertex(snkMergeIx);
+//		else
+//		{
+////			sink = addVertex();
+////			sink->setName(edge->getSink()->getName());
+////			sink->setFunctIx(edge->getSink()->getFunctIx());
+////			sink->setReference(edge->getSink()->getReference());
+////			sink->setReferenceIndex(edge->getSink()->getReferenceIndex());
+////			sink->setState(edge->getSink()->getState());
+////			sink->setType(edge->getSink()->getType());
+////			sink->setExpImpId(edge->getSink()->getExpImpId());
+////			sink->setParent(edge->getSink()->getParent());
+////
+////			edge->getSink()->setMergeIx(sink->getId());
+//		}
+//
+//		addEdge(source, edge->getTokenRate(), sink, edge->getRefEdge());
+////		newEdge->setFifoId(edge->getFifoId());
+//	}
 }
 
 
@@ -173,8 +170,8 @@ void SRDAGGraph::appendAnnex(SRDAGGraph* annex){
  Removes the last added edge
 */
 void SRDAGGraph::removeLastEdge(){
-	if(nbEdges > 0){
-		nbEdges--;
+	if(edges.getNb() > 0){
+		edges.remove(edges.getNb()-1);
 	}
 	else{
 		// Removing an edge from an empty graph
@@ -186,7 +183,8 @@ void SRDAGGraph::removeLastEdge(){
  Removes all edges and vertices
 */
 void SRDAGGraph::flush(){
-	nbVertices = nbEdges = 0;
+	vertices.reset();
+	edges.reset();
 	SRDAGEdge::firstInSinkOrder = (SRDAGEdge*) NULL;
 }
 
@@ -236,7 +234,7 @@ void quickSort(SRDAGEdge* edgePointers, int length, char sourceOrSink) {
 
 int SRDAGGraph::getMaxTime(){
 	int sum=0;
-	for(int i=0; i< nbVertices; i++){
+	for(int i=0; i< vertices.getNb(); i++){
 		sum += vertices[i].getCsDagReference()->getIntTiming(0);
 	}
 	return sum;
@@ -260,7 +258,7 @@ int SRDAGGraph::getCriticalPath(){
 	return max;
 }
 
-SRDAGEdge* SRDAGGraph::getEdgeByRef(SRDAGVertex* hSrDagVx, BaseEdge* refEdge, VERTEX_TYPE inOut){
+SRDAGEdge* SRDAGGraph::getEdgeByRef(SRDAGVertex* hSrDagVx, PiSDFEdge* refEdge, VERTEX_TYPE inOut){
 	if(inOut == input_vertex){
 		for (UINT32 i = 0; i < hSrDagVx->getNbInputEdge(); i++) {
 			SRDAGEdge* inSrDagEdge = hSrDagVx->getInputEdge(i);
@@ -304,114 +302,115 @@ SRDAGEdge* SRDAGGraph::getEdgeByRef(SRDAGVertex* hSrDagVx, BaseEdge* refEdge, VE
  *
  * INTER-level:
  */
-void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel, UINT32 level, UINT8 step){
-#if PRINT_GRAPH
-//	// Printing the global dag before merging.
-//	UINT32 len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d_%d.gv", PRE_SRDAG_FILE_NAME, level, step);
-//	if(len > MAX_FILE_NAME_SIZE){
-//		exitWithCode(1072);
-//	}
-//	dotWriter.write(this, file, 1, 1);
+//void SRDAGGraph::merge(SRDAGGraph* annex, bool intraLevel, UINT32 level, UINT8 step){
+//#if PRINT_GRAPH
+////	// Printing the global dag before merging.
+////	UINT32 len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d_%d.gv", PRE_SRDAG_FILE_NAME, level, step);
+////	if(len > MAX_FILE_NAME_SIZE){
+////		exitWithCode(1072);
+////	}
+////	dotWriter.write(this, file, 1, 1);
+////
+////	// Printing the annexing dag.
+////	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d_%d.gv", SUB_SRDAG_FILE_NAME, level, step);
+////	if(len > MAX_FILE_NAME_SIZE){
+////		exitWithCode(1072);
+////	}
+////	dotWriter.write(annex, file, 1, 1);
+//#endif
 //
-//	// Printing the annexing dag.
-//	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d_%d.gv", SUB_SRDAG_FILE_NAME, level, step);
-//	if(len > MAX_FILE_NAME_SIZE){
-//		exitWithCode(1072);
+//	// Adding all (annexing vertices and edges) to the global DAG.
+//	appendAnnex(annex);
+//
+//	// Doing connections.
+//	if(intraLevel){
+//		// Finding an unplugged vx to the left (RoundBuffer/Input vertex).
+//		SRDAGVertex* leftVx;
+//		leftVx = findUnplug();
+//		while(leftVx){
+//			// Finding matching unplugged vertex to the right.
+//			SRDAGVertex* rightVx;
+//			if (!(rightVx = findMatch(leftVx->getReference()))) exitWithCode(1064);
+//			// Connecting them.
+////			addEdge(leftVx, leftVx->getInputEdge(0)->getTokenRate(), rightVx, leftVx->getInputEdge(0)->getRefEdge());
+////			leftVx->getInputEdge(0)->setSink(rightVx);
+//			rightVx->getOutputEdge(0)->setSource(leftVx);
+//			leftVx->addOutputEdge(rightVx->getOutputEdge(0));
+//			// Deleting right Vx.
+//			rightVx->setState(SrVxStDeleted);
+//
+//			leftVx = findUnplug();
+//		}
+//
+//		// Connecting output interface(s) in the annex.
+//		SRDAGVertex* outputVx;
+//		outputVx = findUnplugIF(output_vertex);
+//		while(outputVx){
+//			// Getting the output edge from the higher level in the PiSDF.
+//			PiSDFEdge* refEdge = ((PiSDFIfVertex*)outputVx->getReference())->getParentEdge();
+//			// Getting the corresponding edge in the global DAG.
+//			SRDAGEdge* outSrDagEdge = getEdgeByRef(outputVx->getParent(), refEdge, output_vertex);
+//			// Changing the source of the DAG edge to the output of the lower level.
+//			outSrDagEdge->setSource(outputVx);
+//			outputVx->addOutputEdge(outSrDagEdge);
+////			if(outputVx->getNbOutputEdge()>0) outputVx->setState(SrVxStExecutable);
+//
+//			outputVx = findUnplugIF(output_vertex);
+//		}
 //	}
-//	dotWriter.write(annex, file, 1, 1);
-#endif
-
-	// Adding all (annexing vertices and edges) to the global DAG.
-	appendAnnex(annex);
-
-	// Doing connections.
-	if(intraLevel){
-		// Finding an unplugged vx to the left (RoundBuffer/Input vertex).
-		SRDAGVertex* leftVx;
-		leftVx = findUnplug();
-		while(leftVx){
-			// Finding matching unplugged vertex to the right.
-			SRDAGVertex* rightVx;
-			if (!(rightVx = findMatch(leftVx->getReference()))) exitWithCode(1064);
-			// Connecting them.
-//			addEdge(leftVx, leftVx->getInputEdge(0)->getTokenRate(), rightVx, leftVx->getInputEdge(0)->getRefEdge());
-//			leftVx->getInputEdge(0)->setSink(rightVx);
-			rightVx->getOutputEdge(0)->setSource(leftVx);
-			leftVx->addOutputEdge(rightVx->getOutputEdge(0));
-			// Deleting right Vx.
-			rightVx->setState(SrVxStDeleted);
-
-			leftVx = findUnplug();
-		}
-
-		// Connecting output interface(s) in the annex.
-		SRDAGVertex* outputVx;
-		outputVx = findUnplugIF(output_vertex);
-		while(outputVx){
-			// Getting the output edge from the higher level in the PiSDF.
-			BaseEdge* refEdge = ((PiSDFIfVertex*)outputVx->getReference())->getParentEdge();
-			// Getting the corresponding edge in the global DAG.
-			SRDAGEdge* outSrDagEdge = getEdgeByRef(outputVx->getParent(), refEdge, output_vertex);
-			// Changing the source of the DAG edge to the output of the lower level.
-			outSrDagEdge->setSource(outputVx);
-			outputVx->addOutputEdge(outSrDagEdge);
-//			if(outputVx->getNbOutputEdge()>0) outputVx->setState(SrVxStExecutable);
-
-			outputVx = findUnplugIF(output_vertex);
-		}
-	}
-	else{
-		// INTER-level merging.
-
-		// Finding an unplugged input connector vertex in the right side.
-		SRDAGVertex* inputVx;
-		inputVx = findUnplugIF(input_vertex);
-
-		while(inputVx){
-			// Getting the input edge from the parent vertex in the PiSDF.
-			BaseEdge* refEdge = ((PiSDFIfVertex*)inputVx->getReference())->getParentEdge();
-			// Getting the associated edge in the global DAG.
-			SRDAGEdge* inSrDagEdge = getEdgeByRef(inputVx->getParent(), refEdge, input_vertex);
-			// Replacing the parent vertex by its descendant vertex as sink of the input DAG edge.
-			inSrDagEdge->setSink(inputVx);
-			inputVx->addInputEdge(inSrDagEdge);
-//			if(inputVx->getNbOutputEdge()>0) inputVx->setState(SrVxStExecutable);
-
-			// Finding an unplugged connector vertex in the right side.
-			inputVx = findUnplugIF(input_vertex);
-		}
-
-		// Finding an unplugged output connector vertex in the right side.
-		SRDAGVertex* outputVx;
-		outputVx = findUnplugIF(output_vertex);
-		while(outputVx){
-			// Getting the output edge from the higher level in the PiSDF.
-			BaseEdge* refEdge = ((PiSDFIfVertex*)outputVx->getReference())->getParentEdge();
-			// Getting the corresponding edge in the global DAG.
-			SRDAGEdge* outSrDagEdge = getEdgeByRef(outputVx->getParent(), refEdge, output_vertex);
-			// Changing the source of the DAG edge to the output of the lower level.
-			outSrDagEdge->setSource(outputVx);
-			outputVx->addOutputEdge(outSrDagEdge);
-//			if(outputVx->getNbOutputEdge()>0) outputVx->setState(SrVxStExecutable);
-
-			outputVx = findUnplugIF(output_vertex);
-		}
-	}
-
-
-#if PRINT_GRAPH
-//	// Printing the global dag after merging.
-//	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d_%d.gv", POST_SRDAG_FILE_NAME, level, step);
-//	if(len > MAX_FILE_NAME_SIZE){
-//		exitWithCode(1072);
+//	else{
+//		// INTER-level merging.
+//
+//		// Finding an unplugged input connector vertex in the right side.
+//		SRDAGVertex* inputVx;
+//		inputVx = findUnplugIF(input_vertex);
+//
+//		while(inputVx){
+//			// Getting the input edge from the parent vertex in the PiSDF.
+//			PiSDFEdge* refEdge = ((PiSDFIfVertex*)inputVx->getReference())->getParentEdge();
+//			// Getting the associated edge in the global DAG.
+//			SRDAGEdge* inSrDagEdge = getEdgeByRef(inputVx->getParent(), refEdge, input_vertex);
+//			// Replacing the parent vertex by its descendant vertex as sink of the input DAG edge.
+//			inSrDagEdge->setSink(inputVx);
+//			inputVx->addInputEdge(inSrDagEdge);
+////			if(inputVx->getNbOutputEdge()>0) inputVx->setState(SrVxStExecutable);
+//
+//			// Finding an unplugged connector vertex in the right side.
+//			inputVx = findUnplugIF(input_vertex);
+//		}
+//
+//		// Finding an unplugged output connector vertex in the right side.
+//		SRDAGVertex* outputVx;
+//		outputVx = findUnplugIF(output_vertex);
+//		while(outputVx){
+//			// Getting the output edge from the higher level in the PiSDF.
+//			PiSDFEdge* refEdge = ((PiSDFIfVertex*)outputVx->getReference())->getParentEdge();
+//			// Getting the corresponding edge in the global DAG.
+//			SRDAGEdge* outSrDagEdge = getEdgeByRef(outputVx->getParent(), refEdge, output_vertex);
+//			// Changing the source of the DAG edge to the output of the lower level.
+//			outSrDagEdge->setSource(outputVx);
+//			outputVx->addOutputEdge(outSrDagEdge);
+////			if(outputVx->getNbOutputEdge()>0) outputVx->setState(SrVxStExecutable);
+//
+//			outputVx = findUnplugIF(output_vertex);
+//		}
 //	}
-//	dotWriter.write(this, file, 1, 1);
-#endif
-}
+//
+//
+//#if PRINT_GRAPH
+////	// Printing the global dag after merging.
+////	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d_%d.gv", POST_SRDAG_FILE_NAME, level, step);
+////	if(len > MAX_FILE_NAME_SIZE){
+////		exitWithCode(1072);
+////	}
+////	dotWriter.write(this, file, 1, 1);
+//#endif
+//}
 
 
 void SRDAGGraph::removeVx(SRDAGVertex* Vx){
-
+//	vertices.remove(Vx);
+	Vx->setState(SrVxStDeleted);
 }
 
 
@@ -430,7 +429,7 @@ void SRDAGGraph::sortEdges(int startIndex){
 	SRDAGEdge* currentNewEdge, *currentOldEdge;
 	SRDAGVertex* currentNewSink;
 
-	for(int i=startIndex; i<nbEdges; i++){
+	for(int i=startIndex; i<edges.getNb(); i++){
 		currentNewEdge = &edges[i];
 
 		// Adding the first edge

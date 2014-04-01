@@ -38,25 +38,27 @@
 #define PISDFVERTEX_H_
 
 //#include "PiSDFGraph.h"
-#include "../Base/BaseVertex.h"
+#include "../PiSDF/PiSDFAbstractVertex.h"
 
 class PiSDFGraph;
 
-class PiSDFVertex: public BaseVertex {
+class PiSDFVertex: public PiSDFAbstractVertex {
 	PiSDFGraph *subGraph;
 public:
 	PiSDFVertex(){subGraph = (PiSDFGraph *)NULL;};
-	virtual ~PiSDFVertex();
+	virtual ~PiSDFVertex(){};
 
-	bool hasSubGraph(PiSDFGraph** subGraph)
+	bool hasSubGraph()
+	{
+		return this->subGraph != NULL;
+	}
+
+	void getSubGraph(PiSDFGraph** subGraph)
 	{
 		if(this->subGraph != NULL)
 		{
 			*subGraph = this->subGraph;
-			return true;
 		}
-		else
-			return false;
 
 	}
 

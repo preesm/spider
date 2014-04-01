@@ -46,17 +46,26 @@ class SRDAGGraph;
 #include <grt_definitions.h>
 #include "../../tools/SchedulingError.h"
 #include "../CSDAG/CSDAGVertex.h"
-#include "../Base/BaseVertex.h"
+#include "../PiSDF/PiSDFAbstractVertex.h"
+#include "../PiSDF/PiSDFVertex.h"
 #include "SRDAGEdge.h"
+#include <tools/Array.h>
 
 typedef enum{
 	SrVxStExecutable,
 	SrVxStExecuted,
 	SrVxStNoExecuted,
-	SrVxStHierarchy,
 	SrVxStDeleted
 }SrVxSTATUS_FLAG;
 
+
+typedef enum{
+	Normal,
+	ConfigureActor,
+	Explode,
+	Implode,
+	RoundBuffer,
+}SrVxTYPE;
 
 /**
  * A vertex in a SRDAG graph
@@ -68,9 +77,9 @@ class SRDAGVertex {
 
 	private :
 		/**
-		 The base, i.e. the graph in which current vertex is included
+		 The PiSDF, i.e. the graph in which current vertex is included
 		*/
-		SRDAGGraph* base;
+		SRDAGGraph* graph;
 		
 		/**
 		 Integer solved parameters. Retrieved while solving the edges
@@ -85,7 +94,12 @@ class SRDAGVertex {
 		/**
 		 The reference PiSDF vertex (if generated from a PiSDF)
 		*/
-		BaseVertex* Reference;
+		PiSDFAbstractVertex* Reference;
+
+		/**
+		 * Edge Reference (for round buffer)
+		 */
+		PiSDFEdge* EdgeReference;
 
 		/**
 		 * Reference to the parent vertex.
@@ -106,12 +120,10 @@ class SRDAGVertex {
 		 The duplication index of the vertex to distinguish it from other vertices created from dagReference.
 		*/
 		int referenceIndex;
+		int iterationIndex;
 
-		SRDAGEdge *outputEdges[MAX_SRDAG_OUTPUT_EDGES];
-		SRDAGEdge *inputEdges[MAX_SRDAG_INPUT_EDGES];
-
-		int nbInputEdges;
-		int nbOutputEdges;
+		Array<SRDAGEdge*,MAX_SRDAG_OUTPUT_EDGES> outputEdges;
+		Array<SRDAGEdge*,MAX_SRDAG_INPUT_EDGES> inputEdges;
 
 		// The index of the vertex in a schedule. -1 if the vertex have not been scheduled.
 		int scheduleIndex;
@@ -126,7 +138,7 @@ class SRDAGVertex {
 		int mergeIx;	// Index in the merged graph.
 
 		// Indicates the type of vertex normal (0), explode (1) or implode (2). Normal (0) by default.
-		int type;
+		SrVxTYPE type;
 
 		// Distinguishes among several explode/implode vertices.
 		int expImpId;
@@ -149,20 +161,20 @@ class SRDAGVertex {
 		~SRDAGVertex();
 
 		/**
-		 Setting the base, i.e. the graph in which current vertex is included
+		 Setting the PiSDF, i.e. the graph in which current vertex is included
 
-		 @param base: the base
+		 @param PiSDF: the PiSDF
 		*/
-		void setBase(SRDAGGraph* graph);
+		void setGraph(SRDAGGraph* graph);
 
 		void reset();
 
 		/**
-		 Getting the base, i.e. the graph in which current vertex is included
+		 Getting the PiSDF, i.e. the graph in which current vertex is included
 
-		 @param base: the base
+		 @param PiSDF: the PiSDF
 		*/
-		SRDAGGraph* getBase();
+		SRDAGGraph* getGraph();
 
 		/**
 		 Getting the value of a parameter
@@ -213,6 +225,13 @@ class SRDAGVertex {
 		void setReferenceIndex(int index);
 
 		void setGlobalIndex(int index);
+
+		void setIterationIndex(int index){
+			iterationIndex = index;
+		}
+		int getIterationIndex(){
+			return iterationIndex;
+		}
 
 
 	    int getScheduleIndex() const
@@ -278,8 +297,8 @@ class SRDAGVertex {
 		/*
 		 * Getter and setter for the type.
 		 */
-		int getType();
-		void setType(int type);
+		SrVxTYPE getType();
+		void setType(SrVxTYPE type);
 
 		/*
 		 * Getter and setter for the expImpId.
@@ -287,15 +306,20 @@ class SRDAGVertex {
 		int getExpImpId();
 		void setExpImpId(int id);
 
-	    BaseVertex *getReference() const
+	    PiSDFAbstractVertex *getReference() const
 	    {
 	        return Reference;
 	    }
 
-	    void setReference(BaseVertex *Reference)
+	    void setReference(PiSDFAbstractVertex *Reference)
 	    {
 	        this->Reference = Reference;
 	    }
+
+	    void setEdgeReference(PiSDFEdge *Reference)
+		{
+			this->EdgeReference = Reference;
+		}
 
 
 	    UINT32 getId() const
@@ -357,31 +381,52 @@ class SRDAGVertex {
 		}
 
 
-		void addInputEdge(SRDAGEdge* edge);
-		void addOutputEdge(SRDAGEdge* edge);
+		void setInputEdge(SRDAGEdge* edge, UINT32 id);
+		void setOutputEdge(SRDAGEdge* edge, UINT32 id);
 	    bool checkForExecution();
 
+	    void updateState();
+
+
+		int getInputEdgeId(SRDAGEdge* edge);
+		int getOutputEdgeId(SRDAGEdge* edge);
+
+		void removeInputEdge(SRDAGEdge* edge);
+		void removeOutputEdge(SRDAGEdge* edge);
+
+		BOOL isHierarchical(){
+			return Reference
+					&& Reference->getType() == pisdf_vertex
+					&& ((PiSDFVertex*)Reference)->hasSubGraph();
+		}
+
+		void getName(char* name, UINT32 sizeMax);
+
+
+	PiSDFEdge* getEdgeReference(){
+		return EdgeReference;
+	}
 };
 
 
 /**
- Setting the base, i.e. the graph in which current vertex is included
+ Setting the PiSDF, i.e. the graph in which current vertex is included
 
- @param base: the base
+ @param PiSDF: the PiSDF
 */
 inline
-void SRDAGVertex::setBase(SRDAGGraph* graph){
-	this->base = graph;
+void SRDAGVertex::setGraph(SRDAGGraph* graph){
+	this->graph = graph;
 }
 
 /**
- Getting the base, i.e. the graph in which current vertex is included
+ Getting the PiSDF, i.e. the graph in which current vertex is included
 
- @param base: the base
+ @param PiSDF: the PiSDF
 */
 inline
-SRDAGGraph* SRDAGVertex::getBase(){
-	return this->base;
+SRDAGGraph* SRDAGVertex::getGraph(){
+	return this->graph;
 }
 
 /**
@@ -511,19 +556,13 @@ void SRDAGVertex::setVisited(bool value){
 }
 
 inline
-void SRDAGVertex::addInputEdge(SRDAGEdge* edge){
-	if(nbInputEdges > MAX_SRDAG_INPUT_EDGES){
-		exitWithCode(1047);
-	}
-	inputEdges[nbInputEdges++] = edge;
+void SRDAGVertex::setInputEdge(SRDAGEdge* edge, UINT32 id){
+	inputEdges.add(edge,id);
 }
 
 inline
-void SRDAGVertex::addOutputEdge(SRDAGEdge* edge){
-	if(nbOutputEdges > MAX_SRDAG_OUTPUT_EDGES){
-		exitWithCode(1048);
-	}
-	outputEdges[nbOutputEdges++] = edge;
+void SRDAGVertex::setOutputEdge(SRDAGEdge* edge, UINT32 id){
+	outputEdges.add(edge,id);
 }
 
 inline
@@ -538,21 +577,21 @@ SRDAGEdge* SRDAGVertex::getOutputEdge(int id){
 
 inline
 int SRDAGVertex::getNbInputEdge(){
-	return nbInputEdges;
+	return inputEdges.getNb();
 }
 
 inline
 int SRDAGVertex::getNbOutputEdge(){
-	return nbOutputEdges;
+	return outputEdges.getNb();
 }
 
 inline
-int SRDAGVertex::getType(){
+SrVxTYPE SRDAGVertex::getType(){
 	return type;
 }
 
 inline
-void SRDAGVertex::setType(int type){
+void SRDAGVertex::setType(SrVxTYPE type){
 	this->type = type;
 }
 
@@ -564,24 +603,6 @@ int SRDAGVertex::getExpImpId(){
 inline
 void SRDAGVertex::setExpImpId(int id){
 	this->expImpId = id;
-}
-
-inline
-bool SRDAGVertex::checkForExecution(){
-	// Checking if all predecessors are executable.
-	for (UINT32 i = 0; i < nbInputEdges; i++)
-	{
-		SRDAGVertex* predVertex = inputEdges[i]->getSource();
-		if(predVertex != this){
-			if(predVertex->getState() == SrVxStNoExecuted){
-				if(!predVertex->checkForExecution()) return false;
-			}
-			else if(predVertex->getState() == SrVxStHierarchy)
-				return false;
-		}
-	}
-	state = SrVxStExecutable;
-	return true;
 }
 
 #endif

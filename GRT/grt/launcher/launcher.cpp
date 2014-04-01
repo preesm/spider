@@ -143,6 +143,8 @@ void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 	// Writing header
 	platform_fprintf("<data>\n");
 
+	UINT32 endTime = 0;
+
 	// Writing execution data for each slave.
 	for(UINT32 i=0; i<arch->getNbSlaves(); i++){
 		UINT32 data[MAX_CTRL_DATA];
@@ -159,20 +161,24 @@ void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 			UINT32 execTime = data[(2+j) + j*2];
 //				UINT32 startTime = data[(1+j) + j*2];
 //				UINT32 execTime = data[(2+j) + j*2];
-			platform_fprintf("\t\tstart=\"%d\"\n", startTime);
-			platform_fprintf("\t\tend=\"%d\"\n",	startTime + execTime);
+			platform_fprintf("\t\tstart=\"%u\"\n", startTime);
+			platform_fprintf("\t\tend=\"%u\"\n",	startTime + execTime);
 //				platform_fprintf("\t\tend=\"%d\"\n",	mktime(&execTime) + mktime(&startTime));
-			platform_fprintf("\t\ttitle=\"%s\"\n", vertex->getReference()->getName());
+			platform_fprintf("\t\ttitle=\"%s\"\n", vertex->getName());
 			platform_fprintf("\t\tmapping=\"%s\"\n", arch->getSlaveName(i));
 			platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
-			platform_fprintf("\t\t>%s.</event>\n", vertex->getReference()->getName());
+			platform_fprintf("\t\t>%s.</event>\n", vertex->getName());
 
-//			printf("task %d started at %d ended at +%d\n",
-//					j, startTime, execTime);
+//			printf("task %d  vertex %d started at %d ended at +%d\n",
+//					j, data[j + j*2], startTime, execTime);
+			if(endTime < startTime + execTime)
+				endTime = startTime + execTime;
 		}
 	}
 	platform_fprintf("</data>\n");
 	platform_fclose();
+
+	printf("EndTime %ld\n", endTime);
 }
 
 
@@ -428,29 +434,21 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule
 
 					UINT32 nbParams = 0;
 					UINT32 params[MAX_NB_ARGS];
-					if(vertex->getType() == 0){
-						VERTEX_TYPE refType = vertex->getReference()->getType();
-						if((refType == roundBuff_vertex)||
-							(refType == input_vertex)||
-							(refType == output_vertex)){
-							nbParams = 2;
-							params[0] = vertex->getInputEdge(0)->getTokenRate();
-							params[1] = vertex->getOutputEdge(0)->getTokenRate();
+					switch(vertex->getType()){
+					case Normal:
+					case ConfigureActor:
+						nbParams = vertex->getReference()->getNbParameters();
+						for(UINT32 i=0; i<nbParams; i++){
+							params[i] = vertex->getReference()->getParameter(i)->getValue();
 						}
-						else if (refType == broad_vertex){
-							nbParams = 2;
-							params[0] = vertex->getNbOutputEdge();
-							params[1] = vertex->getInputEdge(0)->getTokenRate();
-						}
-						else{
-							nbParams = vertex->getReference()->getNbParameters();
-
-							for(UINT32 i=0; i<nbParams; i++){
-								params[i] = vertex->getReference()->getParameter(i)->getValue();
-							}
-						}
-					}
-					else{// Implode/Explode vertices.
+						break;
+					case RoundBuffer:
+						nbParams = 2;
+						params[0] = vertex->getInputEdge(0)->getTokenRate();
+						params[1] = vertex->getOutputEdge(0)->getTokenRate();
+						break;
+					case Explode:
+					case Implode:
 						nbParams = vertex->getNbInputEdge() + vertex->getNbOutputEdge() + 2;
 						params[0] = vertex->getNbInputEdge();
 						params[1] = vertex->getNbOutputEdge();
@@ -462,24 +460,27 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule
 						for(UINT32 i=0; i<vertex->getNbOutputEdge(); i++){
 							params[i + 2 + vertex->getNbInputEdge()] = vertex->getOutputEdge(i)->getTokenRate();
 						}
+						break;
 					}
 
 					addUINT32ToSend(i, nbParams);
 
-					for (UINT32 k = 0; k < vertex->getNbInputEdge(); k++) {
+					for (UINT32 k = 0; k < vertex->getNbInputEdge(); k++)
 						addUINT32ToSend(i, getFIFO(vertex->getInputEdge(k)->getFifoId())->id);
+					for (UINT32 k = 0; k < vertex->getNbInputEdge(); k++)
 						addUINT32ToSend(i, getFIFO(vertex->getInputEdge(k)->getFifoId())->addr);
 						// TODO: see if the FIFO' size is required.
-					}
-					for (UINT32 k = 0; k < vertex->getNbOutputEdge(); k++) {
+
+					for (UINT32 k = 0; k < vertex->getNbOutputEdge(); k++)
 						addUINT32ToSend(i, getFIFO(vertex->getOutputEdge(k)->getFifoId())->id);
+					for (UINT32 k = 0; k < vertex->getNbOutputEdge(); k++)
 						addUINT32ToSend(i, getFIFO(vertex->getOutputEdge(k)->getFifoId())->addr);
 						// TODO: see if the FIFO' size is required.
-					}
+
 					for(UINT32 k = 0; k < nbParams; k++)
 						addUINT32ToSend(i, params[k]);
 
-					if(vertex->getReference()->getType() == config_vertex){
+					if(vertex->getType() == ConfigureActor){
 						UINT32 dataCnt = 0;
 						dataCnt++;			// MSG_PARAM_VALUE must be received as first word.
 						dataCnt++;			// The id of the vertex must be received as second word.
@@ -534,7 +535,7 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule
 
 
 void launcher::prepareConfigExec(
-		BaseVertex** configVertices,
+		PiSDFAbstractVertex** configVertices,
 		UINT32 nbConfigVertices,
 		Architecture *archi,
 		BaseSchedule* schedule,

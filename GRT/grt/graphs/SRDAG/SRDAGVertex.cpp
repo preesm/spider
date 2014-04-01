@@ -42,43 +42,43 @@
  Constructor
 */
 SRDAGVertex::SRDAGVertex(){
-	base=0;
+	graph=0;
 	scheduleIndex = -1;
 	visited=0;
 	mergeIx = -1;
 	csDagReference=NULL;
 	referenceIndex=-1;
 	tLevel=-1;
-	nbInputEdges=0;
-	nbOutputEdges=0;
 	slaveIndex=-1;
 	expImpId=-1;
 	Reference = NULL;
 	id=-1;
 	functIx=-1;
 	parent=NULL;
-	type = 0; // Normal type by default.
+	type = Normal; // Normal type by default.
 	state = SrVxStNoExecuted;
+	inputEdges.reset();
+	outputEdges.reset();
 }
 
 void SRDAGVertex::reset(){
-	base=0;
+	graph=0;
 	scheduleIndex = -1;
 	visited=0;
 	mergeIx = -1;
 	csDagReference=NULL;
 	referenceIndex=-1;
 	tLevel=-1;
-	nbInputEdges=0;
-	nbOutputEdges=0;
 	slaveIndex=-1;
 	expImpId=-1;
 	Reference = NULL;
 	id=-1;
 	functIx=-1;
 	parent=NULL;
-	type = 0; // Normal type by default.
+	type = Normal; // Normal type by default.
 	state = SrVxStNoExecuted;
+	inputEdges.reset();
+	outputEdges.reset();
 }
 
 /**
@@ -86,4 +86,84 @@ void SRDAGVertex::reset(){
 */
 SRDAGVertex::~SRDAGVertex()
 {
+}
+
+
+void SRDAGVertex::removeInputEdge(SRDAGEdge* edge){
+	inputEdges.remove(edge);
+}
+
+void SRDAGVertex::removeOutputEdge(SRDAGEdge* edge){
+	outputEdges.remove(edge);
+}
+
+int SRDAGVertex::getInputEdgeId(SRDAGEdge* edge){
+	return inputEdges.getIdOf(edge);
+}
+
+int SRDAGVertex::getOutputEdgeId(SRDAGEdge* edge){
+	return outputEdges.getIdOf(edge);
+}
+
+void SRDAGVertex::updateState(){
+	if(state != SrVxStExecuted && state != SrVxStDeleted){
+		switch(type){
+		case ConfigureActor:
+			state = SrVxStExecutable;
+			break;
+		case RoundBuffer:
+			if(inputEdges.getNb() == 1 && outputEdges.getNb() == 1)
+				state = SrVxStExecutable;
+			else
+				state = SrVxStNoExecuted;
+			break;
+		default:
+			if(isHierarchical()){
+				state = SrVxStNoExecuted;
+				return;
+			}
+			for (UINT32 i = 0; i < inputEdges.getNb(); i++){
+				SRDAGVertex* predecessor = inputEdges[i]->getSource();
+
+				if(predecessor->state == SrVxStNoExecuted)
+					predecessor->updateState();
+
+				if(predecessor->state == SrVxStNoExecuted){
+					state = SrVxStNoExecuted;
+					return;
+				}
+			}
+			state = SrVxStExecutable;
+		}
+	}
+}
+
+void SRDAGVertex::getName(char* name, UINT32 sizeMax){
+	UINT32 len;
+	switch (type) {
+		case Normal: // Normal vertex.
+		case ConfigureActor:
+			// TODO: Handle this and below lines for CSDAG vertices : len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%d",Reference->getName(),iterationIndex, referenceIndex);
+			if(len > MAX_VERTEX_NAME_SIZE)
+				exitWithCode(1075);
+			break;
+		case Explode: // Explode vertex.
+			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d_%d","Exp", expImpId, Reference->getName(), iterationIndex, referenceIndex);
+			if(len > MAX_VERTEX_NAME_SIZE)
+				exitWithCode(1075);
+			break;
+		case Implode: // Implode vertex.
+			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d_%d","Imp", expImpId, Reference->getName(), iterationIndex, referenceIndex);
+			if(len > MAX_VERTEX_NAME_SIZE)
+				exitWithCode(1075);
+			break;
+		case RoundBuffer: // Round buffer
+			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"RB");
+			if(len > MAX_VERTEX_NAME_SIZE)
+				exitWithCode(1075);
+			break;
+		default:
+			break;
+	}
 }

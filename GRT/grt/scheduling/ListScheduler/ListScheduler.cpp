@@ -270,7 +270,7 @@ void ListScheduler::schedule(SRDAGGraph* hGraph, Schedule* schedule, Architectur
 			SRDAGVertex* precVertex = vertex->getInputEdge(i)->getSource();
 			minimumStartTime = std::max(
 					minimumStartTime,
-					schedule->getVertexEndTime(precVertex->getBase()->getVertexIndex(precVertex))
+					schedule->getVertexEndTime(precVertex->getGraph()->getVertexIndex(precVertex))
 					);
 		}
 
@@ -305,6 +305,32 @@ void ListScheduler::schedule(SRDAGGraph* hGraph, Schedule* schedule, Architectur
 	}
 }
 
+BOOL ListScheduler::checkConstraint(SRDAGVertex* vertex, Architecture* arch, UINT32 slave){
+	switch(vertex->getType()){
+	case Normal:
+	case ConfigureActor:
+		return ! scenario->getConstraints(vertex->getReference()->getId(), slave);
+	case Explode:
+	case Implode:
+	case RoundBuffer:
+	default:
+		return true;
+	}
+}
+
+UINT32 ListScheduler::getTiming(SRDAGVertex* vertex, Architecture* arch, UINT32 slaveType){
+	switch(vertex->getType()){
+	case Normal:
+	case ConfigureActor:
+		return scenario->getTiming(vertex->getReference()->getId(), slaveType);
+	case Explode:
+	case Implode:
+	case RoundBuffer:
+	default:
+		return 10;
+	}
+}
+
 UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVertex* vertex){
 //	UINT32 noSchedule = -1; // Indicates that the vertex have not been scheduled.
 	UINT32 minimumStartTime = 0;
@@ -333,9 +359,9 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 	for(int slave=0; slave<arch->getNbSlaves(); slave++){
 		int slaveType = arch->getSlaveType(slave);
 		// checking the constraints
-		if(! scenario->getConstraints(vertex->getReference()->getId(), slave)){
+		if(checkConstraint(vertex, arch, slave)){
 			unsigned int startTime = std::max(schedule->getReadyTime(slave), minimumStartTime);
-			unsigned int execTime = scenario->getTiming(vertex->getReference()->getId(), slaveType);
+			unsigned int execTime = getTiming(vertex, arch, slaveType);
 			unsigned int comInTime=0, comOutTime=0;
 //				for(int input=0; input<vertex->getNbInputEdge(); input++){
 //					comInTime += arch->getTimeCom(slave, Read, vertex->getInputEdge(input)->getTokenRate());
@@ -377,11 +403,11 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 }
 
 
-void ListScheduler::schedule(BaseVertex** vertices, UINT32 nbVertices, BaseSchedule* schedule)
+void ListScheduler::schedule(PiSDFAbstractVertex** vertices, UINT32 nbVertices, BaseSchedule* schedule)
 {
 	// Iterating the vertices
 	for(UINT32 i=0; i<nbVertices; i++){
-		BaseVertex* vertex = vertices[i];
+		PiSDFAbstractVertex* vertex = vertices[i];
 
 //		this->schedule(schedule, , vertex);
 //		int bestSlave;
@@ -393,10 +419,10 @@ void ListScheduler::schedule(BaseVertex** vertices, UINT32 nbVertices, BaseSched
 ////		/* Getting minimum start time due to precedent vertices */
 //		unsigned int minimumStartTime = 0;
 ////		for(int i=0; i<vertex->getNbInputEdge(); i++){
-////			BaseVertex* precVertex = vertex->getInputEdge(i)->getSource();
+////			PiSDFAbstractVertex* precVertex = vertex->getInputEdge(i)->getSource();
 ////			minimumStartTime = std::max(
 ////					minimumStartTime,
-////					schedule->getVertexEndTime(precVertex->getBase()->getVertexIndex(precVertex))
+////					schedule->getVertexEndTime(precVertex->getPiSDF()->getVertexIndex(precVertex))
 ////					);
 ////		}
 //

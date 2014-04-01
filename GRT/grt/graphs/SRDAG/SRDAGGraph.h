@@ -39,11 +39,12 @@
 
 #include "SRDAGVertex.h"
 #include "SRDAGEdge.h"
-#include "../Base/BaseVertex.h"
+#include "../PiSDF/PiSDFAbstractVertex.h"
 
 #include <grt_definitions.h>
 #include <platform_types.h>
 #include "../../tools/SchedulingError.h"
+#include <tools/List.h>
 
 /**
  * A SRDAG graph. It contains SRDAG vertices and edges. It has a bigger table for vertices and edges than DAG.
@@ -54,25 +55,8 @@
 class SRDAGGraph {
 
 	private :
-		/**
-		 number of SRDAG vertices
-		*/
-		int nbVertices;
-
-		/**
-		 table of SRDAG vertices
-		*/
-		SRDAGVertex vertices[MAX_SRDAG_VERTICES];
-
-		/**
-		 number of SRDAG edges
-		*/
-		int nbEdges;
-
-		/**
-		 table of SRDAG edges
-		*/
-		SRDAGEdge edges[MAX_SRDAG_EDGES];
+		List<SRDAGVertex,MAX_SRDAG_VERTICES> vertices;
+		List<SRDAGEdge,MAX_SRDAG_EDGES> edges;
 
 	public : 
 		/**
@@ -107,7 +91,7 @@ class SRDAGGraph {
 		 @param sink: The sink vertex of the edge
 		 @return the created edge
 		*/
-		SRDAGEdge* addEdge(SRDAGVertex* source, int tokenRate, SRDAGVertex* sink, BaseEdge* refEdge = (BaseEdge*)NULL);
+		SRDAGEdge* addEdge(SRDAGVertex* source, UINT32 sourcePortIx, int tokenRate, SRDAGVertex* sink, UINT32 sinkPortIx, PiSDFEdge* refEdge = (PiSDFEdge*)NULL);
 
 
 		void appendAnnex(SRDAGGraph* annex);
@@ -118,12 +102,15 @@ class SRDAGGraph {
 		*/
 		void removeLastEdge();
 
-		SRDAGVertex* findMatch(BaseVertex* refVx);
+		SRDAGVertex* findMatch(PiSDFAbstractVertex* refVx);
 
 		SRDAGVertex* findUnplugIF(VERTEX_TYPE ifType);
 
 		SRDAGVertex* findUnplug();
 
+
+		void changeEdgeSource(SRDAGEdge* edge, SRDAGVertex* vertex);
+		void changeEdgeSink(SRDAGEdge* edge, SRDAGVertex* vertex);
 
 
 
@@ -149,7 +136,7 @@ class SRDAGGraph {
 		*/
 		int getVerticesFromCSDAGReference(CSDAGVertex* ref, SRDAGVertex** output);
 
-		UINT32 getVerticesFromReference(BaseVertex* ref, SRDAGVertex** output);
+		UINT32 getVerticesFromReference(PiSDFAbstractVertex* ref, UINT32 iteration, SRDAGVertex** output);
 
 		/**
 		 Gets the index of the given actor
@@ -172,7 +159,7 @@ class SRDAGGraph {
 		 
 		 @return number of vertices
 		*/
-		int getNbVertices();
+		UINT32 getNbVertices();
 
 		/**
 		 Gets the edge at the given index
@@ -216,9 +203,9 @@ class SRDAGGraph {
 
 		int getCriticalPath();
 
-		SRDAGEdge* getEdgeByRef(SRDAGVertex* srDagVx, BaseEdge* refEdge, VERTEX_TYPE inOut);
+		SRDAGEdge* getEdgeByRef(SRDAGVertex* srDagVx, PiSDFEdge* refEdge, VERTEX_TYPE inOut);
 
-		SRDAGVertex* getVxByRefAndIx(BaseVertex* reference, int refIndex);
+		SRDAGVertex* getVxByRefAndIx(PiSDFAbstractVertex* reference, int refIndex);
 
 //		CSDAGVertex* getExplodeVertex();
 
@@ -257,13 +244,7 @@ inline SRDAGVertex* SRDAGGraph::getVertex(int index){
  @return index of the actor in the actor list
 */
 inline int SRDAGGraph::getVertexIndex(SRDAGVertex* vertex){
-	int index;
-	for(index=0;index<nbVertices;index++){
-		if(vertex == &vertices[index]){
-			return index;
-		}
-	}
-	return -1;
+	return vertices.getId(vertex);
 }
 
 /**
@@ -273,13 +254,7 @@ inline int SRDAGGraph::getVertexIndex(SRDAGVertex* vertex){
  @return index of the edge in the edge list
 */
 inline int SRDAGGraph::getEdgeIndex(SRDAGEdge* edge){
-	int index;
-	for(index=0;index<nbEdges;index++){
-		if(edge == &edges[index]){
-			return index;
-		}
-	}
-	return -1;
+	return edges.getId(edge);
 }
 
 /**
@@ -287,8 +262,8 @@ inline int SRDAGGraph::getEdgeIndex(SRDAGEdge* edge){
  
  @return number of vertices
 */
-inline int SRDAGGraph::getNbVertices(){
-	return nbVertices;
+inline UINT32 SRDAGGraph::getNbVertices(){
+	return vertices.getNb();
 }
 
 /**
@@ -307,14 +282,14 @@ inline SRDAGEdge* SRDAGGraph::getEdge(int index){
  @return number of edges
 */
 inline int SRDAGGraph::getNbEdges(){
-	return nbEdges;
+	return edges.getNb();
 }
 
 /**
  Reset the "visited" status of all vertices
 */
 inline void SRDAGGraph::resetVisited(){
-	for(int i = 0; i < nbVertices; i++)
+	for(int i = 0; i < vertices.getNb(); i++)
 		vertices[i].setVisited(0);
 }
 
@@ -327,7 +302,7 @@ inline void SRDAGGraph::resetVisited(){
 */
 inline int SRDAGGraph::getVerticesFromCSDAGReference(CSDAGVertex* ref, SRDAGVertex** output){
 	int size = 0;
-	for(int i=0; i<nbVertices; i++){
+	for(int i=0; i<vertices.getNb(); i++){
 		SRDAGVertex* vertex = &vertices[i];
 		if(vertex->getCsDagReference() == ref){
 			output[size] = vertex;
@@ -338,11 +313,11 @@ inline int SRDAGGraph::getVerticesFromCSDAGReference(CSDAGVertex* ref, SRDAGVert
 }
 
 
-inline UINT32 SRDAGGraph::getVerticesFromReference(BaseVertex* ref, SRDAGVertex** output){
+inline UINT32 SRDAGGraph::getVerticesFromReference(PiSDFAbstractVertex* ref, UINT32 iteration, SRDAGVertex** output){
 	UINT32 size = 0;
-	for(int i=0; i<nbVertices; i++){
+	for(int i=0; i<vertices.getNb(); i++){
 		SRDAGVertex* vertex = &vertices[i];
-		if(vertex->getReference() == ref){
+		if(vertex->getReference() == ref && vertex->getIterationIndex() == iteration){
 			output[size] = vertex;
 			size++;
 		}
@@ -359,7 +334,7 @@ inline UINT32 SRDAGGraph::getVerticesFromReference(BaseVertex* ref, SRDAGVertex*
 */
 inline int SRDAGGraph::getInputEdges(SRDAGVertex* vertex, SRDAGEdge** output){
 	int nbEdges = 0;
-	for(int i=0; i<this->nbEdges; i++){
+	for(int i=0; i<edges.getNb(); i++){
 		SRDAGEdge* edge = &edges[i];
 		SRDAGVertex* sink = edge->getSink();
 		if(sink == vertex){
@@ -379,7 +354,7 @@ inline int SRDAGGraph::getInputEdges(SRDAGVertex* vertex, SRDAGEdge** output){
 */
 inline int SRDAGGraph::getOutputEdges(SRDAGVertex* vertex, SRDAGEdge** output){
 	int nbEdges = 0;
-	for(int i=0; i<this->nbEdges; i++){
+	for(int i=0; i<edges.getNb(); i++){
 		SRDAGEdge* edge = &edges[i];
 		SRDAGVertex* source = edge->getSource();
 		if(source == vertex){
@@ -391,8 +366,8 @@ inline int SRDAGGraph::getOutputEdges(SRDAGVertex* vertex, SRDAGEdge** output){
 }
 
 
-inline SRDAGVertex* SRDAGGraph::getVxByRefAndIx(BaseVertex* reference, int refIndex){
-	for(int i=0; i< nbVertices; i++){
+inline SRDAGVertex* SRDAGGraph::getVxByRefAndIx(PiSDFAbstractVertex* reference, int refIndex){
+	for(int i=0; i< vertices.getNb(); i++){
 		if((vertices[i].getReference() == reference) &&
 		   (vertices[i].getState() != SrVxStDeleted) &&
 		   (vertices[i].getReferenceIndex() == refIndex))
@@ -418,16 +393,16 @@ inline SRDAGVertex* SRDAGGraph::addVertex(){
 		exitWithCode(1000);
 	}
 #endif
-	vertex = &vertices[nbVertices];
-	vertex->setBase(this);
-	vertex->setId(nbVertices);
-	nbVertices++;
+	vertex = vertices.add();
+	vertex->reset();
+	vertex->setGraph(this);
+	vertex->setId(vertices.getId(vertex));
 	return vertex;
 }
 
 
-inline SRDAGVertex* SRDAGGraph::findMatch(BaseVertex* refVx){
-	for (int i = 0; i < nbVertices; i++) {
+inline SRDAGVertex* SRDAGGraph::findMatch(PiSDFAbstractVertex* refVx){
+	for (int i = 0; i < vertices.getNb(); i++) {
 		if((vertices[i].getNbInputEdge() == 0) &&
 		   (vertices[i].getState() != SrVxStDeleted) &&
 		   (vertices[i].getReference() == refVx)){
@@ -439,7 +414,7 @@ inline SRDAGVertex* SRDAGGraph::findMatch(BaseVertex* refVx){
 
 inline SRDAGVertex* SRDAGGraph::findUnplugIF(VERTEX_TYPE ifType){
 	if(ifType == input_vertex) {
-		for (int i = 0; i < nbVertices; i++) {
+		for (int i = 0; i < vertices.getNb(); i++) {
 			if((vertices[i].getNbInputEdge() == 0) &&
 			   (vertices[i].getState() != SrVxStDeleted) &&
 			   (vertices[i].getReference()->getType() == input_vertex)){
@@ -448,7 +423,7 @@ inline SRDAGVertex* SRDAGGraph::findUnplugIF(VERTEX_TYPE ifType){
 		}
 	}
 	else{
-		for (int i = 0; i < nbVertices; i++) {
+		for (int i = 0; i < vertices.getNb(); i++) {
 			if((vertices[i].getNbOutputEdge() == 0) &&
 			   (vertices[i].getState() != SrVxStDeleted) &&
 			   (vertices[i].getReference()->getType() == output_vertex)){
@@ -460,7 +435,7 @@ inline SRDAGVertex* SRDAGGraph::findUnplugIF(VERTEX_TYPE ifType){
 }
 
 inline SRDAGVertex* SRDAGGraph::findUnplug(){
-	for (int i = 0; i < nbVertices; i++) {
+	for (int i = 0; i < vertices.getNb(); i++) {
 		if((vertices[i].getNbOutputEdge() == 0) &&
 		   (vertices[i].getState() != SrVxStDeleted) &&
 		   ((vertices[i].getReference()->getType() == roundBuff_vertex) ||
@@ -472,7 +447,7 @@ inline SRDAGVertex* SRDAGGraph::findUnplug(){
 }
 
 inline void SRDAGGraph::updateExecuted(){
-	for (int i = 0; i < nbVertices; i++) {
+	for (int i = 0; i < vertices.getNb(); i++) {
 		if(vertices[i].getState() == SrVxStExecutable) vertices[i].setState(SrVxStExecuted);
 	}
 }

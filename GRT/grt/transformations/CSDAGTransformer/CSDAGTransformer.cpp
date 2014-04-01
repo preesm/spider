@@ -240,111 +240,111 @@ void CSDAGTransformer::addVertices(CSDAGGraph* inputGraph, CSDAGVertex* sinkVert
 
 
 void CSDAGTransformer::createGraph(CSDAGGraph* inputGraph, CSDAGVertex* csdag_vertex, SRDAGGraph* outputGraph){
-	int csdag_nbInput = csdag_vertex->getNbInputEdge();
-	int csdag_brv = brv[inputGraph->getVertexIndex(csdag_vertex)];
-	int csdag_sources_brv[MAX_CSDAG_INPUT_EDGES];
-
-	SRDAGVertex* sourceRepetitionsInput[MAX_CSDAG_INPUT_EDGES][MAX_CSDAG_VERTEX_REPETITION];
-
-	int remainingSourceTokens[MAX_CSDAG_INPUT_EDGES];
-	int remainingSinkTokens[MAX_CSDAG_INPUT_EDGES];
-
-	int hSourceIndex[MAX_CSDAG_INPUT_EDGES];
-
-	int toAddNb=0;
-	SRDAGVertex* toAddSource[MAX_CSDAG_INPUT_EDGES];
-	int toAddRate[MAX_CSDAG_INPUT_EDGES];
-
-	SRDAGVertex* 	explode			[MAX_CSDAG_INPUT_EDGES];
-	SRDAGEdge* 		lastSource		[MAX_CSDAG_INPUT_EDGES];
-	int 			lastSinkId		[MAX_CSDAG_INPUT_EDGES];
-	int 			curSourceSREdge	[MAX_CSDAG_INPUT_EDGES];
-	int 			curSinkSREdge	[MAX_CSDAG_INPUT_EDGES];
-
-	memset(curSourceSREdge, 0, MAX_CSDAG_INPUT_EDGES*sizeof(int));
-	memset(curSinkSREdge, 0, MAX_CSDAG_INPUT_EDGES*sizeof(int));
-	memset(hSourceIndex, 0, MAX_CSDAG_INPUT_EDGES*sizeof(int));
-
-
-	for(int i=0; i<csdag_nbInput; i++){
-		remainingSourceTokens[i] = resolvedInputEdgesPatterns[Source][i][0];
-		remainingSinkTokens[i]   = resolvedInputEdgesPatterns[Sink][i][0];
-		csdag_sources_brv[i]     = brv[inputGraph->getVertexIndex(csdag_vertex->getInputEdge(i)->getSource())];
-		outputGraph->getVerticesFromCSDAGReference(csdag_vertex->getInputEdge(i)->getSource(),sourceRepetitionsInput[i]);
-	}
-
-	for(int srdag_vertexId=0; srdag_vertexId< csdag_brv; srdag_vertexId++){
-		for(int inputId=0; inputId<csdag_nbInput; inputId++){
-
-			if(remainingSourceTokens[inputId] == remainingSinkTokens[inputId] && curSourceSREdge[inputId] == 0 && curSinkSREdge[inputId] == 0){
-				toAddSource[toAddNb] = sourceRepetitionsInput[inputId][hSourceIndex[inputId]];
-				toAddRate[toAddNb] = remainingSourceTokens[inputId];
-				toAddNb++;
-
-			}else{
-				if(curSourceSREdge[inputId] == 0 && curSinkSREdge[inputId] == 0){
-					explode[inputId] = outputGraph->addVertex();
-					explode[inputId]->setCsDagReference(CSDAGExplodeVertex);
-					explode[inputId]->setReferenceIndex(nbExplode++);
-				}
-
-				while(1){
-					int tokenRate = std::min(remainingSourceTokens[inputId],remainingSinkTokens[inputId]);
-
-					if(curSourceSREdge[inputId] == 0){
-						lastSource[inputId] = outputGraph->addEdge(sourceRepetitionsInput[inputId][hSourceIndex[inputId]],tokenRate,explode[inputId]);
-					}else{
-						lastSource[inputId]->setTokenRate(lastSource[inputId]->getTokenRate() + tokenRate);
-					}
-
-					if(curSinkSREdge[inputId] == 0){
-						toAddSource[toAddNb] = explode[inputId];
-						toAddRate[toAddNb] = tokenRate;
-						lastSinkId[inputId] = toAddNb;
-						toAddNb++;
-					}else{
-						toAddRate[lastSinkId[inputId]] += tokenRate;
-					}
-
-					curSourceSREdge[inputId]++;
-					curSinkSREdge[inputId]++;
-
-					remainingSourceTokens[inputId] -= tokenRate;
-					remainingSinkTokens[inputId] -= tokenRate;
-
-					if(remainingSourceTokens[inputId] == 0){
-						hSourceIndex[inputId]++;
-						curSourceSREdge[inputId] = 0;
-						if(hSourceIndex[inputId]>=csdag_sources_brv[inputId]){
-							if(remainingSinkTokens[inputId] != 0){
-								// SRDAG edge creation led to an unbalanced number of produced and consumed token for an edge
-								exitWithCode(1006);
-							}
-							break;
-						}
-						remainingSourceTokens[inputId] = resolvedInputEdgesPatterns[Source][inputId][hSourceIndex[inputId]]; /* /!\ */
-					}else if(curSinkSREdge[inputId] > 1)
-						curSourceSREdge[inputId] = 0;
-
-					if(remainingSinkTokens[inputId] == 0){
-						curSinkSREdge[inputId] = 0;
-						remainingSinkTokens[inputId] = resolvedInputEdgesPatterns[Sink][inputId][srdag_vertexId];
-						break;
-					}else if(curSourceSREdge[inputId] > 1)
-						curSinkSREdge[inputId] = 0;
-				}
-			}
-		}
-
-		SRDAGVertex* vertex = outputGraph->addVertex();
-		vertex->setCsDagReference(csdag_vertex);
-		vertex->setReferenceIndex(srdag_vertexId);
-
-		for(int i=0; i<toAddNb; i++){
-			outputGraph->addEdge(toAddSource[i],toAddRate[i],vertex);
-		}
-		toAddNb = 0;
-	}
+//	int csdag_nbInput = csdag_vertex->getNbInputEdge();
+//	int csdag_brv = brv[inputGraph->getVertexIndex(csdag_vertex)];
+//	int csdag_sources_brv[MAX_CSDAG_INPUT_EDGES];
+//
+//	SRDAGVertex* sourceRepetitionsInput[MAX_CSDAG_INPUT_EDGES][MAX_CSDAG_VERTEX_REPETITION];
+//
+//	int remainingSourceTokens[MAX_CSDAG_INPUT_EDGES];
+//	int remainingSinkTokens[MAX_CSDAG_INPUT_EDGES];
+//
+//	int hSourceIndex[MAX_CSDAG_INPUT_EDGES];
+//
+//	int toAddNb=0;
+//	SRDAGVertex* toAddSource[MAX_CSDAG_INPUT_EDGES];
+//	int toAddRate[MAX_CSDAG_INPUT_EDGES];
+//
+//	SRDAGVertex* 	explode			[MAX_CSDAG_INPUT_EDGES];
+//	SRDAGEdge* 		lastSource		[MAX_CSDAG_INPUT_EDGES];
+//	int 			lastSinkId		[MAX_CSDAG_INPUT_EDGES];
+//	int 			curSourceSREdge	[MAX_CSDAG_INPUT_EDGES];
+//	int 			curSinkSREdge	[MAX_CSDAG_INPUT_EDGES];
+//
+//	memset(curSourceSREdge, 0, MAX_CSDAG_INPUT_EDGES*sizeof(int));
+//	memset(curSinkSREdge, 0, MAX_CSDAG_INPUT_EDGES*sizeof(int));
+//	memset(hSourceIndex, 0, MAX_CSDAG_INPUT_EDGES*sizeof(int));
+//
+//
+//	for(int i=0; i<csdag_nbInput; i++){
+//		remainingSourceTokens[i] = resolvedInputEdgesPatterns[Source][i][0];
+//		remainingSinkTokens[i]   = resolvedInputEdgesPatterns[Sink][i][0];
+//		csdag_sources_brv[i]     = brv[inputGraph->getVertexIndex(csdag_vertex->getInputEdge(i)->getSource())];
+//		outputGraph->getVerticesFromCSDAGReference(csdag_vertex->getInputEdge(i)->getSource(),sourceRepetitionsInput[i]);
+//	}
+//
+//	for(int srdag_vertexId=0; srdag_vertexId< csdag_brv; srdag_vertexId++){
+//		for(int inputId=0; inputId<csdag_nbInput; inputId++){
+//
+//			if(remainingSourceTokens[inputId] == remainingSinkTokens[inputId] && curSourceSREdge[inputId] == 0 && curSinkSREdge[inputId] == 0){
+//				toAddSource[toAddNb] = sourceRepetitionsInput[inputId][hSourceIndex[inputId]];
+//				toAddRate[toAddNb] = remainingSourceTokens[inputId];
+//				toAddNb++;
+//
+//			}else{
+//				if(curSourceSREdge[inputId] == 0 && curSinkSREdge[inputId] == 0){
+//					explode[inputId] = outputGraph->addVertex();
+//					explode[inputId]->setCsDagReference(CSDAGExplodeVertex);
+//					explode[inputId]->setReferenceIndex(nbExplode++);
+//				}
+//
+//				while(1){
+//					int tokenRate = std::min(remainingSourceTokens[inputId],remainingSinkTokens[inputId]);
+//
+//					if(curSourceSREdge[inputId] == 0){
+//						lastSource[inputId] = outputGraph->addEdge(sourceRepetitionsInput[inputId][hSourceIndex[inputId]],tokenRate,explode[inputId]);
+//					}else{
+//						lastSource[inputId]->setTokenRate(lastSource[inputId]->getTokenRate() + tokenRate);
+//					}
+//
+//					if(curSinkSREdge[inputId] == 0){
+//						toAddSource[toAddNb] = explode[inputId];
+//						toAddRate[toAddNb] = tokenRate;
+//						lastSinkId[inputId] = toAddNb;
+//						toAddNb++;
+//					}else{
+//						toAddRate[lastSinkId[inputId]] += tokenRate;
+//					}
+//
+//					curSourceSREdge[inputId]++;
+//					curSinkSREdge[inputId]++;
+//
+//					remainingSourceTokens[inputId] -= tokenRate;
+//					remainingSinkTokens[inputId] -= tokenRate;
+//
+//					if(remainingSourceTokens[inputId] == 0){
+//						hSourceIndex[inputId]++;
+//						curSourceSREdge[inputId] = 0;
+//						if(hSourceIndex[inputId]>=csdag_sources_brv[inputId]){
+//							if(remainingSinkTokens[inputId] != 0){
+//								// SRDAG edge creation led to an unbalanced number of produced and consumed token for an edge
+//								exitWithCode(1006);
+//							}
+//							break;
+//						}
+//						remainingSourceTokens[inputId] = resolvedInputEdgesPatterns[Source][inputId][hSourceIndex[inputId]]; /* /!\ */
+//					}else if(curSinkSREdge[inputId] > 1)
+//						curSourceSREdge[inputId] = 0;
+//
+//					if(remainingSinkTokens[inputId] == 0){
+//						curSinkSREdge[inputId] = 0;
+//						remainingSinkTokens[inputId] = resolvedInputEdgesPatterns[Sink][inputId][srdag_vertexId];
+//						break;
+//					}else if(curSourceSREdge[inputId] > 1)
+//						curSinkSREdge[inputId] = 0;
+//				}
+//			}
+//		}
+//
+//		SRDAGVertex* vertex = outputGraph->addVertex();
+//		vertex->setCsDagReference(csdag_vertex);
+//		vertex->setReferenceIndex(srdag_vertexId);
+//
+//		for(int i=0; i<toAddNb; i++){
+//			outputGraph->addEdge(toAddSource[i],toAddRate[i],vertex);
+//		}
+//		toAddNb = 0;
+//	}
 
 //	int sourcePatternSize = brv[sourceVertexIndex];
 //	int sinkPatternSize = brv[sinkVertexIndex];
@@ -365,88 +365,88 @@ void CSDAGTransformer::createGraph(CSDAGGraph* inputGraph, CSDAGVertex* csdag_ve
 void CSDAGTransformer::createEdges(CSDAGGraph* inputGraph, int sourceVertexIndex, int edgeIndex,
 							   int sinkVertexIndex, SRDAGGraph* outputGraph){
 
-	if((brv[sourceVertexIndex] != 0) && (brv[sinkVertexIndex] != 0)){
-		// Retrieving the different repetitions of source in the correct order
-		outputGraph->getVerticesFromCSDAGReference(inputGraph->getVertex(sourceVertexIndex),sourceRepetitions);
-		// The sink repetitions are already in the array sinkRepetitions
-
-		int* sourcePattern = resolvedInputEdgesPatterns[Source][edgeIndex];
-		int sourcePatternSize = brv[sourceVertexIndex];
-		int* sinkPattern = resolvedInputEdgesPatterns[Sink][edgeIndex];
-		int sinkPatternSize = brv[sinkVertexIndex];
-
-		int remainingSourceTokens = sourcePattern[0];
-		int remainingSinkTokens = sinkPattern[0];
-
-		int hSourceIndex = 0;
-		int hSinkIndex = 0;
-
-		SRDAGVertex* explode;
-		SRDAGEdge *source, *sink;
-		int curSourceSREdge = 0;
-		int curSinkSREdge = 0;
-
-		/* If prod == conso, it is a single rate edge, no explode needed */
-		if(remainingSourceTokens == remainingSinkTokens){
-			outputGraph->addEdge(sourceRepetitions[hSourceIndex],remainingSourceTokens, sinkRepetitions[hSinkIndex]);
-			return;
-		}
-
-		while(1){
-			int tokenRate = (remainingSourceTokens>remainingSinkTokens)?remainingSinkTokens:remainingSourceTokens; //min
-
-			if(curSourceSREdge == 0 && curSinkSREdge == 0){
-				explode = outputGraph->addVertex();
-				explode->setCsDagReference(CSDAGExplodeVertex);
-				explode->setReferenceIndex(nbExplode++);
-			}
-
-			if(curSourceSREdge == 0){
-				source = outputGraph->addEdge(sourceRepetitions[hSourceIndex],tokenRate,explode);
-			}else{
-				source->setTokenRate(source->getTokenRate() + tokenRate);
-			}
-
-			if(curSinkSREdge == 0){
-				sink = outputGraph->addEdge(explode, tokenRate, sinkRepetitions[hSinkIndex]);
-			}else{
-				sink->setTokenRate(sink->getTokenRate() + tokenRate);
-			}
-
-			curSourceSREdge++;
-			curSinkSREdge++;
-
-//			SRDAGEdge* newEdge = outputGraph->addEdge(sourceRepetitions[hSourceIndex],tokenRate,sinkRepetitions[hSinkIndex]);
-			remainingSourceTokens -= tokenRate;
-			remainingSinkTokens -= tokenRate;
-
-			if(remainingSourceTokens == 0){
-				hSourceIndex++;
-				curSourceSREdge = 0;
-				if(hSourceIndex>=sourcePatternSize){
-					if(remainingSinkTokens != 0){
-						// SRDAG edge creation led to an unbalanced number of produced and consumed token for an edge
-						exitWithCode(1006);
-					}
-					break;
-				}
-				remainingSourceTokens = sourcePattern[hSourceIndex];
-			}else if(curSinkSREdge > 1)
-				curSourceSREdge = 0;
-
-			if(remainingSinkTokens == 0){
-				hSinkIndex++;
-				curSinkSREdge = 0;
-				if(hSinkIndex>=sinkPatternSize){
-					// SRDAG edge creation led to an unbalanced number of produced and consumed token for an edge
-					exitWithCode(1006);
-					break;
-				}
-				remainingSinkTokens = sinkPattern[hSinkIndex];
-			}else if(curSourceSREdge > 1)
-				curSinkSREdge = 0;
-		}
-	}
+//	if((brv[sourceVertexIndex] != 0) && (brv[sinkVertexIndex] != 0)){
+//		// Retrieving the different repetitions of source in the correct order
+//		outputGraph->getVerticesFromCSDAGReference(inputGraph->getVertex(sourceVertexIndex),sourceRepetitions);
+//		// The sink repetitions are already in the array sinkRepetitions
+//
+//		int* sourcePattern = resolvedInputEdgesPatterns[Source][edgeIndex];
+//		int sourcePatternSize = brv[sourceVertexIndex];
+//		int* sinkPattern = resolvedInputEdgesPatterns[Sink][edgeIndex];
+//		int sinkPatternSize = brv[sinkVertexIndex];
+//
+//		int remainingSourceTokens = sourcePattern[0];
+//		int remainingSinkTokens = sinkPattern[0];
+//
+//		int hSourceIndex = 0;
+//		int hSinkIndex = 0;
+//
+//		SRDAGVertex* explode;
+//		SRDAGEdge *source, *sink;
+//		int curSourceSREdge = 0;
+//		int curSinkSREdge = 0;
+//
+//		/* If prod == conso, it is a single rate edge, no explode needed */
+//		if(remainingSourceTokens == remainingSinkTokens){
+//			outputGraph->addEdge(sourceRepetitions[hSourceIndex],remainingSourceTokens, sinkRepetitions[hSinkIndex]);
+//			return;
+//		}
+//
+//		while(1){
+//			int tokenRate = (remainingSourceTokens>remainingSinkTokens)?remainingSinkTokens:remainingSourceTokens; //min
+//
+//			if(curSourceSREdge == 0 && curSinkSREdge == 0){
+//				explode = outputGraph->addVertex();
+//				explode->setCsDagReference(CSDAGExplodeVertex);
+//				explode->setReferenceIndex(nbExplode++);
+//			}
+//
+//			if(curSourceSREdge == 0){
+//				source = outputGraph->addEdge(sourceRepetitions[hSourceIndex],tokenRate,explode);
+//			}else{
+//				source->setTokenRate(source->getTokenRate() + tokenRate);
+//			}
+//
+//			if(curSinkSREdge == 0){
+//				sink = outputGraph->addEdge(explode, tokenRate, sinkRepetitions[hSinkIndex]);
+//			}else{
+//				sink->setTokenRate(sink->getTokenRate() + tokenRate);
+//			}
+//
+//			curSourceSREdge++;
+//			curSinkSREdge++;
+//
+////			SRDAGEdge* newEdge = outputGraph->addEdge(sourceRepetitions[hSourceIndex],tokenRate,sinkRepetitions[hSinkIndex]);
+//			remainingSourceTokens -= tokenRate;
+//			remainingSinkTokens -= tokenRate;
+//
+//			if(remainingSourceTokens == 0){
+//				hSourceIndex++;
+//				curSourceSREdge = 0;
+//				if(hSourceIndex>=sourcePatternSize){
+//					if(remainingSinkTokens != 0){
+//						// SRDAG edge creation led to an unbalanced number of produced and consumed token for an edge
+//						exitWithCode(1006);
+//					}
+//					break;
+//				}
+//				remainingSourceTokens = sourcePattern[hSourceIndex];
+//			}else if(curSinkSREdge > 1)
+//				curSourceSREdge = 0;
+//
+//			if(remainingSinkTokens == 0){
+//				hSinkIndex++;
+//				curSinkSREdge = 0;
+//				if(hSinkIndex>=sinkPatternSize){
+//					// SRDAG edge creation led to an unbalanced number of produced and consumed token for an edge
+//					exitWithCode(1006);
+//					break;
+//				}
+//				remainingSinkTokens = sinkPattern[hSinkIndex];
+//			}else if(curSourceSREdge > 1)
+//				curSinkSREdge = 0;
+//		}
+//	}
 
 }
 

@@ -35,33 +35,23 @@
  ****************************************************************************/
 
 #include <transformations/MatrixHandler.h>
+#include <graphs/PiSDF/PiSDFGraph.h>
 #include "PiSDFTransformer.h"
 
 // The topology matrix initialized to 0. Edges x Vertices.
 static int topo_matrix [MAX_NB_EDGES * MAX_NB_VERTICES] = {0};
-static char name[MAX_VERTEX_NAME_SIZE];
+//static char name[MAX_VERTEX_NAME_SIZE];
 
-void PiSDFTransformer::addVertices(BaseVertex* vertex, int nb_repetitions, SRDAGGraph* outputGraph, SRDAGVertex* hSrDagVx){
+void PiSDFTransformer::addVertices(PiSDFAbstractVertex* vertex, int nb_repetitions, int iteration, SRDAGGraph* outputGraph){
 	// Adding one SRDAG vertex per repetition
 	for(UINT32 j = 0; j < nb_repetitions; j++){
 		SRDAGVertex* srdag_vertex = outputGraph->addVertex();
 		UINT32 len;
 
-		// Setting attributes from original vertex.
-		if(hSrDagVx)
-			len = snprintf(name, MAX_VERTEX_NAME_SIZE, "%s_%s_%d", hSrDagVx->getName(), vertex->getName(), j);
-		else
-			len = snprintf(name, MAX_VERTEX_NAME_SIZE, "%s_%d", vertex->getName(), j);
-		if(len > MAX_VERTEX_NAME_SIZE)
-			exitWithCode(1075);
-
-
-		srdag_vertex->setName(name);
 		srdag_vertex->setFunctIx(vertex->getFunction_index());
 		srdag_vertex->setReference(vertex);
 		srdag_vertex->setReferenceIndex(j);
-		srdag_vertex->setParent(hSrDagVx);
-
+		srdag_vertex->setIterationIndex(iteration);
 	}
 }
 
@@ -74,7 +64,7 @@ void PiSDFTransformer::computeBVR(SDFGraph *sdf)
 	 */
 	UINT32 nbVertices = 0;
 	for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
-		BaseVertex* vertex = sdf->getVertex(i);
+		PiSDFAbstractVertex* vertex = sdf->getVertex(i);
 		if(vertex->getType() == pisdf_vertex) vertex->setTempId(nbVertices++);
 	}
 
@@ -83,7 +73,7 @@ void PiSDFTransformer::computeBVR(SDFGraph *sdf)
 
 	// Filling the topology matrix(nbEdges x nbVertices).
 	for(UINT32 i = 0; i < sdf->getNbEdges(); i++){
-		BaseEdge* edge = sdf->getEdge(i);
+		PiSDFEdge* edge = sdf->getEdge(i);
 		if((edge->getSource() != edge->getSink()) &&
 			(edge->getSource()->getType() ==  pisdf_vertex) &&
 			(edge->getSink()->getType() ==  pisdf_vertex)){ // TODO: treat cycles.
@@ -103,7 +93,7 @@ void PiSDFTransformer::computeBVR(SDFGraph *sdf)
 			// Setting the number of repetitions for each vertex.
 			nbVertices = 0;
 			for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
-				BaseVertex* vertex = sdf->getVertex(i);
+				PiSDFAbstractVertex* vertex = sdf->getVertex(i);
 				if(vertex->getType() == pisdf_vertex) vertex->setNbRepetition(brv[nbVertices++]);
 			}
 		}
@@ -111,25 +101,28 @@ void PiSDFTransformer::computeBVR(SDFGraph *sdf)
 }
 
 
-void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDAGVertex* hSrDagVx)
+void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, SRDAGGraph* topDag, int* brv)
 {
 	UINT32 cntExpVxs = 0;
 	UINT32 cntImpVxs = 0;
 	UINT32 len;
 
-	for (UINT32 i = 0; i < sdf->getNbEdges(); i++) {
-		BaseEdge *edge = sdf->getEdge(i);
+	for (UINT32 i = 0; i < currentPiSDF->getNb_edges(); i++) {
+		PiSDFEdge *edge = currentPiSDF->getEdge(i);
+
+		if(edge->getSink()->getType() == config_vertex)
+			continue;
 
 		int nbDelays = edge->getDelayInt();
 
-		int nbSourceRepetitions = edge->getSource()->getNbRepetition();
-		int nbTargetRepetitions = edge->getSink()->getNbRepetition();
+		int nbSourceRepetitions = brv[edge->getSource()->getId()];
+		int nbTargetRepetitions = brv[edge->getSink()->getId()];
 
 		// Getting the replicas of the source vertex into sourceRepetitions.
-		outputGraph->getVerticesFromReference(edge->getSource(), sourceRepetitions);
+		topDag->getVerticesFromReference(edge->getSource(), iteration, sourceRepetitions);
 
 		// Getting the replicas of the sink vertex into sinkRepetitions.
-		outputGraph->getVerticesFromReference(edge->getSink(), sinkRepetitions);
+		topDag->getVerticesFromReference(edge->getSink(), iteration, sinkRepetitions);
 
 		// Total number of token exchanged (produced and consumed) for an edge.
 		int totalNbTokens = edge->getProductionInt() * nbSourceRepetitions;
@@ -172,8 +165,8 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDA
 				(sourceRepetitions[sourceIndex]->getType() == 0)){ // Type == 0 indicates it is a normal SR vx.
 
 				// Adding an explode vertex.
-				SRDAGVertex *exp_vertex = outputGraph->addVertex();
-				exp_vertex->setType(1); 			// Indicates it is an explode vx.
+				SRDAGVertex *exp_vertex = topDag->addVertex();
+				exp_vertex->setType(Explode); 			// Indicates it is an explode vx.
 //				exp_vertex->setExpImpId(nbExpVxs++);
 				exp_vertex->setExpImpId(i);
 
@@ -181,47 +174,56 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDA
 				SRDAGVertex *origin_vertex = sourceRepetitions[sourceIndex];
 				sourceRepetitions[sourceIndex] = exp_vertex;
 
-				// Setting attributes from original vertex.
-				len = snprintf(name,MAX_VERTEX_NAME_SIZE, "Exp%d_%s", cntExpVxs, origin_vertex->getName());
-				if(len > MAX_VERTEX_NAME_SIZE)
-					exitWithCode(1075);
-
-				exp_vertex->setName(name);
 				exp_vertex->setFunctIx(XPLODE_FUNCT_IX);
 				exp_vertex->setReference(origin_vertex->getReference());
 				exp_vertex->setReferenceIndex(origin_vertex->getReferenceIndex());
+				exp_vertex->setIterationIndex(origin_vertex->getIterationIndex());
 				cntExpVxs++;
 
+				SRDAGVertex* sourceVertex;
+				UINT32 sourcePortId;
+				if(origin_vertex->getReference()->getType() == config_vertex){
+					sourceVertex = origin_vertex->getOutputEdge(edge->getSource()->getOutputEdgeId(edge))->getSink();
+					sourcePortId = 0;
+				}else{
+					sourceVertex = origin_vertex;
+					sourcePortId = origin_vertex->getReference()->getOutputEdgeId(edge);
+				}
+
 				// Adding an edge between the source and the explode.
-				outputGraph->addEdge(origin_vertex, edge->getProductionInt(), exp_vertex, edge->getRefEdge());
+				topDag->addEdge(
+						sourceVertex, sourcePortId,
+						edge->getProductionInt(),
+						exp_vertex, 0,
+						edge->getRefEdge());
 			}
 
 			if (rest < (int)edge->getConsumptionInt() &&
 				(sinkRepetitions[targetIndex]->getType() == 0)){ // Type == 0 indicates it is a normal vertex.
 
 				// Adding an implode vertex.
-				SRDAGVertex *imp_vertex = outputGraph->addVertex();
-				imp_vertex->setType(2); 	// Indicates it is an implode vertex.
+				SRDAGVertex *imp_vertex = topDag->addVertex();
+				imp_vertex->setType(Implode); 	// Indicates it is an implode vertex.
 				imp_vertex->setExpImpId(i); // Distinction among implode vertices for the same SRDAGVertex.
 
 				// Replacing the sink vertex by the implode vertex in the array of sources.
-				SRDAGVertex *origin_vertex = sinkRepetitions[targetIndex];
+				SRDAGVertex *origin_vertex = sinkRepetitions[targetIndex];//	// Adding vxs
 				sinkRepetitions[targetIndex] = imp_vertex;
 
 
 				// Setting attributes from original vertex.
-				len = snprintf(name,MAX_VERTEX_NAME_SIZE, "Imp%d_%s", cntImpVxs, origin_vertex->getName());
-				if(len > MAX_VERTEX_NAME_SIZE)
-					exitWithCode(1075);
-
-				imp_vertex->setName(name);
 				imp_vertex->setFunctIx(XPLODE_FUNCT_IX);
 				imp_vertex->setReference(origin_vertex->getReference());
 				imp_vertex->setReferenceIndex(origin_vertex->getReferenceIndex());
+				imp_vertex->setIterationIndex(origin_vertex->getIterationIndex());
 				cntImpVxs++;
 
 				// Adding an edge between the implode and the sink.
-				outputGraph->addEdge(imp_vertex, edge->getConsumptionInt(), origin_vertex, edge->getRefEdge());
+				topDag->addEdge(
+						imp_vertex, 0,
+						edge->getConsumptionInt(),
+						origin_vertex, origin_vertex->getReference()->getInputEdgeId(edge),
+						edge->getRefEdge());
 			}
 
 
@@ -265,7 +267,31 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDA
 //					nbDelays = nbDelays - addedDelays;
 			} else {
 				//Creating the new edge between normal vertices or between a normal and an explode/implode one.
-				SRDAGEdge* new_edge = outputGraph->addEdge(sourceRepetitions[sourceIndex], rest, sinkRepetitions[targetIndex], edge->getRefEdge());
+				SRDAGVertex* sourceVertex, *sinkVertex;
+				UINT32 sourcePortId, sinkPortId;
+				if(edge->getSource()->getType() == config_vertex){
+					sourceVertex = sourceRepetitions[sourceIndex]->getOutputEdge(edge->getSource()->getOutputEdgeId(edge))->getSink();
+					sourcePortId = 0;
+				}else{
+					sourceVertex = sourceRepetitions[sourceIndex];
+					if(sourceVertex->getType() == Explode)
+						sourcePortId = sourceVertex->getNbOutputEdge();
+					else
+						sourcePortId = edge->getSource()->getOutputEdgeId(edge);
+				}
+
+				sinkVertex = sinkRepetitions[targetIndex];
+				if(sinkRepetitions[targetIndex]->getType() == Implode)
+					sinkPortId = sinkVertex->getNbInputEdge();
+				else
+					sinkPortId = edge->getSink()->getInputEdgeId(edge);
+
+
+				SRDAGEdge* new_edge = topDag->addEdge(
+						sourceVertex, sourcePortId,
+						rest,
+						sinkVertex, sinkPortId,
+						edge->getRefEdge());
 				new_edge->setDelay(0);
 			}
 
@@ -291,16 +317,20 @@ void PiSDFTransformer::linkvertices(SDFGraph* sdf, SRDAGGraph* outputGraph, SRDA
 
 void PiSDFTransformer::transform(SDFGraph* sdf, SRDAGGraph *srGraph, SRDAGVertex* currHSrVx)
 {
-	if(sdf->getNbVertices() > 0){
-		for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
-			BaseVertex* vertex = sdf->getVertex(i);
-//				if(vertex->getType() != roundBuff_vertex) vertex->setNbRepetition(brv[nbVertices++]);
+//	if(sdf->getNbVertices() > 0){
+//		for (UINT32 i = 0; i < sdf->getNbVertices(); i++) {
+//			PiSDFAbstractVertex* vertex = sdf->getVertex(i);
+////				if(vertex->getType() != roundBuff_vertex) vertex->setNbRepetition(brv[nbVertices++]);
+//
+//			// Creating the new vertices.
+//			addVertices(vertex, vertex->getNbRepetition(), srGraph, currHSrVx);
+//		}
+//
+//		// Connecting the vertices of the SrDAG ouput graph.
+//		linkvertices(sdf, srGraph, currHSrVx);
+//	}
+}
 
-			// Creating the new vertices.
-			addVertices(vertex, vertex->getNbRepetition(), srGraph, currHSrVx);
-		}
+void PiSDFTransformer::replaceHwithRB(SRDAGGraph* topDag, SRDAGVertex* H, PiSDFGraph* currentPiSDF){
 
-		// Connecting the vertices of the SrDAG ouput graph.
-		linkvertices(sdf, srGraph, currHSrVx);
-	}
 }

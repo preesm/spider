@@ -34,13 +34,14 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef BASEVERTEX_H_
-#define BASEVERTEX_H_
+#ifndef PiSDFAbstractVertex_H_
+#define PiSDFAbstractVertex_H_
 
 #include <cstring>
 #include <platform_types.h>
 #include <grt_definitions.h>
 #include <tools/SchedulingError.h>
+#include <tools/Array.h>
 #include "../PiSDF/PiSDFParameter.h"
 #include "../PiSDF/PiSDFEdge.h"
 //#include "graphs/SDF/SDFGraph.h"
@@ -69,19 +70,19 @@ typedef enum{
 	VxStNoExecutable
 }STATUS_FLAG;
 
-class BaseVertex {
+class PiSDFAbstractVertex {
 	UINT32 id;
 	char name[MAX_VERTEX_NAME_SIZE];
 	UINT64 function_index;
 	VERTEX_TYPE type;
-	UINT64 nbInputEdges;
-	PiSDFEdge* inputEdges[MAX_NB_INPUT_EDGES];
-	UINT64 nbOutputEdges;
-	PiSDFEdge* outputEdges[MAX_NB_OUTPUT_EDGES];
+
+	Array<PiSDFEdge*,MAX_NB_INPUT_EDGES> inputEdges;
+	Array<PiSDFEdge*,MAX_NB_OUTPUT_EDGES> outputEdges;
+
 	UINT8 nbParameters;
 	PiSDFParameter* parameters[MAX_NB_PiSDF_PARAMS];
 
-	BaseVertex* refPiSDFVertex;	// If generated from a PiSDF, this is the reference to PiSDF vertex.
+	PiSDFAbstractVertex* refPiSDFVertex;	// If generated from a PiSDF, this is the reference to PiSDF vertex.
 
 	UINT32 		nbRepetition; // Stores the number of replicas in a Sr graph.
 
@@ -90,14 +91,14 @@ class BaseVertex {
 	bool 		scheduled; 	// Says whether the vertex has been already scheduled within the current iteration.
 	UINT32 		tempId; 	// Used while creating a topology matrix.
 public:
-	BaseVertex();
-	virtual ~BaseVertex();
+	PiSDFAbstractVertex();
+	virtual ~PiSDFAbstractVertex();
 
 	void reset();
 
-	void addInputEdge(PiSDFEdge* edge);
+	void setInputEdge(PiSDFEdge* edge, UINT32 id);
 
-	void addOutputEdge(PiSDFEdge* edge);
+	void setOutputEdge(PiSDFEdge* edge, UINT32 id);
 
 	void addParameter(PiSDFParameter* param);
 
@@ -132,24 +133,42 @@ public:
     }
 
 	PiSDFEdge* getInputEdge(UINT32 index){
-		if(index >= nbInputEdges) exitWithCode(1041);
+		if(index >= inputEdges.getNb()) exitWithCode(1041);
 		return inputEdges[index];
 	}
 
 	PiSDFEdge* getOutputEdge(UINT32 index){
-		if(index >= nbOutputEdges) exitWithCode(1041);
+		if(index >= outputEdges.getNb()) exitWithCode(1041);
 		return outputEdges[index];
 	}
 
-    UINT64 getNbInputEdges() const
-    {
-        return nbInputEdges;
+	UINT32 getInputEdgeIx(PiSDFEdge* edge){
+		for(UINT32 i=0; i<inputEdges.getNb(); i++){
+			if(inputEdges[i] == edge)
+				return i;
+		}
+		return -1;
+	}
+
+	UINT32 getOutputEdgeIx(PiSDFEdge* edge){
+		for(UINT32 i=0; i<outputEdges.getNb(); i++){
+			if(outputEdges[i] == edge)
+				return i;
+		}
+		return -1;
+	}
+
+
+    UINT64 getNbInputEdges(){
+        return inputEdges.getNb();
     }
 
-    UINT64 getNbOutputEdges() const
-    {
-        return nbOutputEdges;
+    UINT64 getNbOutputEdges(){
+        return outputEdges.getNb();
     }
+
+    UINT32 getInputEdgeId(PiSDFEdge* edge);
+    UINT32 getOutputEdgeId(PiSDFEdge* edge);
 
     UINT64 getFunction_index() const
     {
@@ -207,7 +226,7 @@ public:
         return scheduled;
     }
 
-    BaseVertex *getRefPiSDFVertex() const
+    PiSDFAbstractVertex *getRefPiSDFVertex() const
     {
         return refPiSDFVertex;
     }
@@ -278,10 +297,10 @@ public:
 //    }
 
 
-    void setRefPiSDFVertex(BaseVertex *refPiSDFVertex)
+    void setRefPiSDFVertex(PiSDFAbstractVertex *refPiSDFVertex)
     {
         this->refPiSDFVertex = refPiSDFVertex;
     }
 };
 
-#endif /* BASEVERTEX_H_ */
+#endif /* PiSDFAbstractVertex_H_ */

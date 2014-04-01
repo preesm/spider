@@ -69,6 +69,10 @@ class ListScheduler {
 		*/
 		SRDAGVertex* lastVertexOfSlave[MAX_SLAVES];
 
+		BOOL checkConstraint(SRDAGVertex* vertex, Architecture* arch, UINT32 slave);
+
+		UINT32 getTiming(SRDAGVertex* vertex, Architecture* arch, UINT32 slaveType);
+
 		inline void scheduleVertex(
 				SRDAGGraph* hGraph,
 				SRDAGVertex* vertex,
@@ -135,7 +139,7 @@ class ListScheduler {
 		/*
 		 * Schedules a group of vertices (e.g. configuration vertices of a PiSDF)
 		 */
-		void schedule(BaseVertex** vertices, UINT32 nbVertices, BaseSchedule* schedule);
+		void schedule(PiSDFAbstractVertex** vertices, UINT32 nbVertices, BaseSchedule* schedule);
 };
 
 

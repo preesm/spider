@@ -107,7 +107,7 @@ void push_queue(Uint16 qn, Uint8 mode, Uint32 c_val, Uint32 d_val) {
 
 /* This function pops a descriptor address from a queue. */
 Uint32 pop_queue(Uint16 qn) {
-	Uint32 *reg;
+	volatile Uint32 *reg;
 	Uint32 value;
 	reg = (Uint32 *) (QM_QMAN_REGION + QM_REG_QUE_REG_D + (qn * 16));
 	value = *reg;
@@ -119,7 +119,7 @@ Uint32 pop_queue(Uint16 qn) {
  * headtail = 0, the source queue is appended to the tail of the
  * dest queue. If 1, it is appended at the head. */
 void divert_queue(Uint16 src_qn, Uint16 dest_qn, Uint8 headtail) {
-	Uint32 *reg;
+	volatile Uint32 *reg;
 	Uint32 value;
 	reg = (Uint32 *) (QM_CTRL_REGION + QM_REG_QUE_DIVERSION);
 	value = (headtail << 31) + (dest_qn << 16) + src_qn;

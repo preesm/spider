@@ -41,11 +41,7 @@
 #include "../graphs/SRDAG/SRDAGGraph.h"
 #include "../scheduling/Schedule/Schedule.h"
 
-class ScheduleChecker {
-public:
-	ScheduleChecker();
-	virtual ~ScheduleChecker();
-
+namespace ScheduleChecker {
 	void checkList(SRDAGGraph* srDag, Architecture* archi);
 	void checkSchedule(SRDAGGraph* srDag, Schedule* schedule, Architecture* archi);
 };

@@ -39,12 +39,6 @@
 #include "../scheduling/architecture/Architecture.h"
 #include "../graphs/SRDAG/SRDAGGraph.h"
 
-ScheduleChecker::ScheduleChecker() {
-}
-
-ScheduleChecker::~ScheduleChecker() {
-}
-
 inline int testConcurency(SRDAGGraph* srDag, Schedule* schedule, Architecture* archi){
 	int test=1;
 //	// Check core concurrency

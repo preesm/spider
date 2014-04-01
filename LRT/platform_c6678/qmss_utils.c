@@ -94,7 +94,7 @@ void push_queue(Uint16 qn, Uint8 mode, Uint32 c_val, Uint32 d_val) {
 		*reg = d_val;
 	}
 #else
-	Uint32 *reg;
+	volatile Uint32 *reg;
 	if (mode == 2) {
 		reg = (Uint32 *) (QM_QMAN_REGION + QM_REG_QUE_REG_C + (qn * 16));
 		*reg = c_val;
@@ -107,7 +107,7 @@ void push_queue(Uint16 qn, Uint8 mode, Uint32 c_val, Uint32 d_val) {
 
 /* This function pops a descriptor address from a queue. */
 Uint32 pop_queue(Uint16 qn) {
-	Uint32 *reg;
+	volatile Uint32 *reg;
 	Uint32 value;
 	reg = (Uint32 *) (QM_QMAN_REGION + QM_REG_QUE_REG_D + (qn * 16));
 	value = *reg;

@@ -36,29 +36,10 @@
 
 /**
  * Writes a dot file from a graph of a given type
- * 
- * @author mpelcat
  */
 #include "DotWriter.h"
 #include <string.h>
 #include <platform_file.h>
-
-//#include <direct.h> // for getcwd
-
-
-/**
- Constructor
-*/
-DotWriter::DotWriter()
-{
-}
-
-/**
- Destructor
-*/
-DotWriter::~DotWriter()
-{
-}
 
 /**
  Writes a SRDAGGraph in a file
@@ -72,7 +53,6 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 	//getcwd(directory, sizeof(directory));
 	char name[MAX_VERTEX_NAME_SIZE];
 	char color[6];
-	UINT32 len;
 
 	platform_fopen (path);
 	// Writing header
@@ -81,9 +61,7 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 	platform_fprintf ("edge [color=Red];\n");
 //		platform_fprintf ("rankdir=LR;\n");
 
-	int RB_nb = 0;
-
-	for (int i=0 ; i<graph->getNbVertices() ; i++)
+	for (UINT32 i=0 ; i<graph->getNbVertices() ; i++)
 	{
 		SRDAGVertex* vertex = graph->getVertex(i);
 		if(vertex->getState() != SrVxStDeleted){
@@ -101,6 +79,8 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 						strcpy(color, "red");
 					else
 						strcpy(color, "black");
+					break;
+				case SrVxStDeleted:
 					break;
 			}
 

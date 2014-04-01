@@ -44,44 +44,27 @@
 
 /**
  * Writes a dot file from a graph of a given type
- * 
- * @author mpelcat
  */
-class DotWriter {
+namespace DotWriter{
+	/**
+	 Writes a SRDAGGraph in a file
 
-	private :
-	public : 
-		/**
-		 Constructor
-		*/
-		DotWriter();
+	 @param graph: written graph
+	 @param path: output file path
+	*/
+	void write(SRDAGGraph* graph, const char* path, BOOL displayNames, BOOL displayRates);
 
+	/**
+	 Writes a PiSDFGraph in a file
 
-		/**
-		 Destructor
-		*/
-		~DotWriter();
+	 @param graph: written graph
+	 @param path: output file path
+	*/
+	void write(PiSDFGraph* graph, const char* path, char displayNames);
 
+	void writeAllLevels(PiSDFGraph* graph, const char* path, char displayNames);
 
-		/**
-		 Writes a SRDAGGraph in a file
-
-		 @param graph: written graph
-		 @param path: output file path
-		*/
-		void write(SRDAGGraph* graph, const char* path, BOOL displayNames, BOOL displayRates);
-
-		/**
-		 Writes a PiSDFGraph in a file
-
-		 @param graph: written graph
-		 @param path: output file path
-		*/
-		void write(PiSDFGraph* graph, const char* path, char displayNames);
-
-		void writeAllLevels(PiSDFGraph* graph, const char* path, char displayNames);
-
-		void write(PiSDFAbstractVertex** schedulableVertices, UINT32 nbSchedulabeVertices, const char* path, char displayNames);
+	void write(PiSDFAbstractVertex** schedulableVertices, UINT32 nbSchedulabeVertices, const char* path, char displayNames);
 };
 
 #endif

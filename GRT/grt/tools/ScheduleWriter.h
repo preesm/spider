@@ -53,23 +53,7 @@
  * 
  * @author mpelcat
  */
-class ScheduleWriter {
-
-	private :
-
-	public : 
-		/**
-		 Constructor
-		*/
-		ScheduleWriter();
-
-
-		/**
-		 Destructor
-		*/
-		~ScheduleWriter();
-
-
+namespace ScheduleWriter {
 		/**
 		 Writes a schedule in a file
 

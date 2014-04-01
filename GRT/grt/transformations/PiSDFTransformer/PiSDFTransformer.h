@@ -44,28 +44,7 @@
 #include "../../graphs/SRDAG/SRDAGEdge.h"
 
 
-class PiSDFTransformer {
-	/**
-	 Basis repetition vector for the original vertices.
-	*/
-	int brv[MAX_NB_VERTICES];
-	/**
-	 Different SRDAG repetitions of an CSDAG vertex source to generate edges
-	 */
-	SRDAGVertex* sourceRepetitions[MAX_VERTEX_REPETITION];
-	/**
-	 Different SRDAG repetitions of an CSDAG vertex sink to generate edges
-	 */
-	SRDAGVertex* sinkRepetitions[MAX_VERTEX_REPETITION];
-public:
-	PiSDFTransformer() {
-		// TODO Auto-generated constructor stub
-
-	}
-	~PiSDFTransformer() {
-		// TODO Auto-generated destructor stub
-	}
-
+namespace PiSDFTransformer {
 	/**
 	 * Adds "nb_repetitions" SRDAGVertex vertices for "vertex" to the output SRDAG graph.
 	 */
@@ -73,7 +52,24 @@ public:
 
 	void linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, SRDAGGraph* topDag, int* brv);
 
-	void replaceHwithRB(SRDAGGraph* topDag, SRDAGVertex* H, PiSDFGraph* currentPiSDF);
+	void replaceHwithRB(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, SRDAGVertex* currHSrDagVx);
+
+	void addCAtoSRDAG(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, SRDAGVertex* currHSrDagVx);
+
+	void computeBRV(PiSDFGraph* currentPiSDF, int* brv);
+
+	void multiStepScheduling(
+		PiSDFGraph* currentPiSDF,
+		BaseSchedule* schedule,
+		ListScheduler* listScheduler,
+		Architecture* arch,
+		launcher* launch,
+		ExecutionStat* execStat,
+		SRDAGGraph* topDag,
+		SRDAGVertex* currHSrDagVx,
+		UINT32 level,
+		UINT8* step
+	);
 };
 
 #endif /* PISDFTRANSFORMER_H_ */

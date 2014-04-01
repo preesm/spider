@@ -54,24 +54,20 @@
 #define STOP					1
 
 static char name[MAX_FILE_NAME_SIZE];
+static char tempStr[MAX_SLAVE_NAME_SIZE];
 
 Scenario 			scenario;
 Architecture 		arch;
 ListScheduler 		listScheduler;
-ScheduleWriter 		schedWriter;
-ScheduleChecker 	scheduleChecker;
 BaseSchedule		schedule;
-PiSDFTransformer 	transformer;
 ExecutionStat 		execStat;
 PiSDFGraph 			piSDF;
 SRDAGGraph 			topDag;
 launcher 			launch;
-DotWriter 			dotWriter;
 
 
 
 void createArch(Architecture* arch, int nbSlaves){
-	char tempStr[MAX_SLAVE_NAME_SIZE];
 	// Architecture Zynq
 //	arch->addSlave(0, "ARM", 0.410, 331, 0.4331, 338);
 	// TODO: Add master "ARM"
@@ -87,17 +83,19 @@ void createArch(Architecture* arch, int nbSlaves){
 int main(int argc, char* argv[]){
 	UINT32 len;
 
-	if(argc < 2){
-		printf("Usage: %s nbSlaves\n", argv[0]);
-		return 0;
-	}
-	int nbSlaves = atoi(argv[1]);
-
-	setvbuf(stdout, NULL, _IONBF, 0);
-	setvbuf(stderr, NULL, _IONBF, 0);
+//	if(argc < 2){
+//		printf("Usage: %s nbSlaves\n", argv[0]);
+//		return 0;
+//	}
+//	int nbSlaves = atoi(argv[1]);
+//
+//	setvbuf(stdout, NULL, _IONBF, 0);
+//	setvbuf(stderr, NULL, _IONBF, 0);
+	int nbSlaves = 1;
 
 	printf("Starting with %d slaves max\n", nbSlaves);
 	platform_init(nbSlaves);
+
 
 	/*
 	 * These objects should be obtained from the PREESM generator :
@@ -155,7 +153,7 @@ int main(int argc, char* argv[]){
 			if(len > MAX_FILE_NAME_SIZE){
 				exitWithCode(1072);
 			}
-			dotWriter.write(H, name, 1);
+			DotWriter::write(H, name, 1);
 		#endif
 
 			/*
@@ -168,7 +166,7 @@ int main(int argc, char* argv[]){
 			 * At the end, the "dag" argument will contain the complete flattened model.
 			 * A final execution must be launched to complete one iteration, i.e. one complete execution of the application.
 			 */
-			H->multiStepScheduling(&schedule, &listScheduler, &arch, &launch, &execStat, &topDag, currHSrDagVx, lvlCntr, &stepsCntr);
+			PiSDFTransformer::multiStepScheduling(H, &schedule, &listScheduler, &arch, &launch, &execStat, &topDag, currHSrDagVx, lvlCntr, &stepsCntr);
 
 			/*
 			 * Finding other hierarchical Vxs. Here the variable "H" gets the next hierarchical level to be flattened.
@@ -187,14 +185,11 @@ int main(int argc, char* argv[]){
 			}
 		}
 
-
 		/*
 		 * Last scheduling and execution. After all hierarchical levels have been flattened,
 		 * there is one more execution to do for completing one complete execution of the model.
 		 */
 		listScheduler.schedule(&topDag, &schedule, &arch);
-
-
 
 		launch.clear();
 
@@ -223,13 +218,13 @@ int main(int argc, char* argv[]){
 		if(len > MAX_FILE_NAME_SIZE){
 			exitWithCode(1072);
 		}
-		dotWriter.write(&topDag, name, 1, 1);
+		DotWriter::write(&topDag, name, 1, 1);
 		// Printing the final dag with FIFO ids.
 		len = snprintf(name, MAX_FILE_NAME_SIZE, "%s.gv", SRDAG_FIFO_ID_FILE_PATH);
 		if(len > MAX_FILE_NAME_SIZE){
 			exitWithCode(1072);
 		}
-		dotWriter.write(&topDag, name, 1, 0);
+		DotWriter::write(&topDag, name, 1, 0);
 	#endif
 
 	printf("finished\n");

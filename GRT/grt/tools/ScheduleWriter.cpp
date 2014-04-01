@@ -38,20 +38,6 @@
 #include <cstdio>
 #include <platform_file.h>
 
-/**
- Constructor
-*/
-ScheduleWriter::ScheduleWriter()
-{
-}
-
-/**
- Destructor
-*/
-ScheduleWriter::~ScheduleWriter()
-{
-}
-
 static char* regenerateColor(int refInd){
 	static char color[8];
 	color[0] = '\0';

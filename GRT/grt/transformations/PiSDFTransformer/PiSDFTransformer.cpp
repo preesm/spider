@@ -38,6 +38,34 @@
 #include <graphs/PiSDF/PiSDFGraph.h>
 #include "PiSDFTransformer.h"
 
+#include <cmath>
+#include <debuggingOptions.h>
+#include <tools/DotWriter.h>
+#include <tools/ScheduleWriter.h>
+
+
+#if PRINT_GRAPH
+static char file[MAX_FILE_NAME_SIZE];
+#endif
+
+#define MAX(a,b) ((a>b)?a:b)
+
+/**
+ Different SRDAG repetitions of an PiSDF vertex source to generate edges
+ */
+static SRDAGVertex* sourceRepetitions[MAX_VERTEX_REPETITION];
+
+/**
+ Different SRDAG repetitions of an PiSDF vertex sink to generate edges
+ */
+static SRDAGVertex* sinkRepetitions[MAX_VERTEX_REPETITION];
+
+
+static UINT32 vertexId[MAX_NB_VERTICES];
+static INT32 topo_matrix [MAX_NB_EDGES * MAX_NB_VERTICES];
+static int tempBrv[MAX_NB_VERTICES];
+static SRDAGGraph localDag;
+static int brv[MAX_NB_VERTICES];
 
 void PiSDFTransformer::addVertices(PiSDFAbstractVertex* vertex, UINT32 nb_repetitions, UINT32 iteration, SRDAGGraph* outputGraph){
 	// Adding one SRDAG vertex per repetition
@@ -265,6 +293,266 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 	}
 }
 
-void PiSDFTransformer::replaceHwithRB(SRDAGGraph* topDag, SRDAGVertex* H, PiSDFGraph* currentPiSDF){
+void PiSDFTransformer::replaceHwithRB(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, SRDAGVertex* currHSrDagVx){
+	/* Replace hierarchical actor in topDag with RBs */
+	int nb=currHSrDagVx->getNbInputEdge();
+	for(int i=0; i<nb; i++){
+		SRDAGEdge* edge = currHSrDagVx->getInputEdge(i);
+		SRDAGVertex* rb = topDag->addVertex();
+		rb->setFunctIx(10); // RB
+		rb->setReference(currentPiSDF->getInput_vertex(i));
+		rb->setReferenceIndex(0);
+		rb->setIterationIndex(currHSrDagVx->getReferenceIndex());
+		rb->setType(RoundBuffer); // RB
 
+		edge->getSink()->removeInputEdge(edge);
+		edge->setSink(rb);
+		rb->setInputEdge(edge, 0);
+	}
+	nb=currHSrDagVx->getNbOutputEdge();
+	for(int i=0; i<nb; i++){
+		SRDAGEdge* edge = currHSrDagVx->getOutputEdge(i);
+		SRDAGVertex* rb = topDag->addVertex();
+		rb->setFunctIx(10); // RB
+		rb->setReference(currentPiSDF->getOutput_vertex(i));
+		rb->setReferenceIndex(0);
+		rb->setIterationIndex(currHSrDagVx->getReferenceIndex());
+		rb->setType(RoundBuffer); // RB
+
+		edge->getSource()->removeOutputEdge(edge);
+		edge->setSource(rb);
+		rb->setOutputEdge(edge, 0);
+	}
+	topDag->removeVx(currHSrDagVx);
+}
+
+void PiSDFTransformer::addCAtoSRDAG(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, SRDAGVertex* currHSrDagVx){
+	/* Put CA in topDag with RB between CA and /CA */
+	for(UINT32 i=0; i<currentPiSDF->getNb_config_vertices(); i++){
+		PiSDFConfigVertex* pi_ca = currentPiSDF->getConfig_vertex(i);
+		SRDAGVertex* dag_ca = topDag->addVertex();
+		dag_ca->setFunctIx(pi_ca->getFunction_index());
+		dag_ca->setReference(pi_ca);
+		dag_ca->setReferenceIndex(0);
+		dag_ca->setIterationIndex(currHSrDagVx->getReferenceIndex());
+		dag_ca->setType(ConfigureActor);
+
+		for(UINT32 j=0; j<pi_ca->getNbInputEdges(); j++){
+			SRDAGVertex* refvertex[1];
+			PiSDFEdge* edge = pi_ca->getInputEdge(j);
+			topDag->getVerticesFromReference(edge->getSource(), currHSrDagVx->getReferenceIndex(), refvertex);
+			topDag->addEdge(
+					refvertex[0], pi_ca->getInputEdgeIx(edge),
+					edge->getConsumptionInt(),
+					dag_ca, j,
+					edge);
+		}
+		for(UINT32 j=0; j<pi_ca->getNbOutputEdges(); j++){
+			PiSDFEdge* edge = pi_ca->getOutputEdge(j);
+			if(edge->getSink()->getType() == output_vertex){
+				SRDAGVertex* refvertex[1];
+				topDag->getVerticesFromReference(edge->getSink(), currHSrDagVx->getReferenceIndex(), refvertex);
+				topDag->addEdge(
+					dag_ca, j,
+					edge->getProductionInt(),
+					refvertex[0], 0,
+					edge);
+			}
+			if(edge->getSink()->getType() != config_vertex){
+				SRDAGVertex* rb = topDag->addVertex();
+				rb->setFunctIx(10); // RB
+				rb->setEdgeReference(edge);
+				rb->setReferenceIndex(0);
+				rb->setIterationIndex(currHSrDagVx->getReferenceIndex());
+				rb->setType(RoundBuffer); // RB
+				topDag->addEdge(
+						dag_ca, j,
+						edge->getProductionInt(),
+						rb, 0,
+						edge);
+			}
+		}
+	}
+}
+
+void PiSDFTransformer::computeBRV(PiSDFGraph* currentPiSDF, int* brv){
+
+	int brvNbEdges=0, brvNbVertices=0;
+	for (UINT32 i = 0; i < currentPiSDF->getNbVertices(); i++) {
+		PiSDFAbstractVertex* vertex = currentPiSDF->getVertex(i);
+		if(vertex->getType() == pisdf_vertex)
+			vertexId[i] = brvNbVertices++;
+		else{
+			vertexId[i] = -1;
+			brv[i] = 1;
+		}
+	}
+
+	memset(topo_matrix, 0, sizeof(topo_matrix));
+
+	// Filling the topology matrix(nbEdges x nbVertices).
+	for(UINT32 i = 0; i < currentPiSDF->getNb_edges(); i++){
+		PiSDFEdge* edge = currentPiSDF->getEdge(i);
+		if((edge->getSource() != edge->getSink()) &&
+			(edge->getSource()->getType() ==  pisdf_vertex) &&
+			(edge->getSink()->getType() ==  pisdf_vertex)){ // TODO: treat cycles.
+			if((edge->getProductionInt() <= 0) || (edge->getConsumptionInt() <= 0 )) exitWithCode(1066);
+			topo_matrix[brvNbEdges * brvNbVertices + vertexId[edge->getSource()->getId()]] = edge->getProductionInt();
+			topo_matrix[brvNbEdges * brvNbVertices + vertexId[edge->getSink()->getId()]] = -edge->getConsumptionInt();
+			brvNbEdges++;
+		}
+	}
+
+
+	if(brvNbEdges > 0){
+		// Computing the null space (BRV) of the matrix.
+		// TODO: It may be improved by another algorithm to compute the null space (I'm not very sure of this one...)
+		if(!nullspace(brvNbEdges, brvNbVertices, (int*)topo_matrix, tempBrv) == 0)
+		{
+			printf("Not Schedulable\n");
+		}
+	}
+
+	/* Updating the productions of the round buffer vertices. */
+	UINT32 coef=1;
+
+	/* Looking on interfaces */
+	for(UINT32 i = 0; i < currentPiSDF->getNb_input_vertices(); i++){
+		PiSDFIfVertex* interface = currentPiSDF->getInput_vertex(i);
+		coef = MAX(coef, std::ceil((double)interface->getOutputEdge(0)->getConsumptionInt()
+											/(double)interface->getOutputEdge(0)->getProductionInt()));
+	}
+	for(UINT32 i = 0; i < currentPiSDF->getNb_output_vertices(); i++){
+		PiSDFIfVertex* interface = currentPiSDF->getOutput_vertex(i);
+		coef = MAX(coef, std::ceil((double)interface->getInputEdge(0)->getProductionInt())
+											/(double)interface->getInputEdge(0)->getConsumptionInt());
+	}
+	/* Looking on implicit RB between CA and /CA */
+	for(UINT32 i = 0; i < currentPiSDF->getNb_edges(); i++){
+		PiSDFEdge* edge = currentPiSDF->getEdge(i);
+		if(edge->getSource()->getType() == config_vertex
+				&& edge->getSink()->getType() != config_vertex){
+			coef = MAX(coef, std::ceil((double)edge->getConsumptionInt()
+												/(double)edge->getProductionInt()));
+		}
+	}
+
+	for(int i=0; i<brvNbVertices; i++){
+		tempBrv[i] = tempBrv[i] * coef;
+	}
+
+	// Setting the number of repetitions for each vertex.
+	brvNbVertices = 0;
+	for (UINT32 i = 0; i < currentPiSDF->getNbVertices(); i++) {
+		PiSDFAbstractVertex* vertex = currentPiSDF->getVertex(i);
+		if(vertex->getType() == pisdf_vertex)
+			brv[vertex->getId()] = tempBrv[vertexId[vertex->getId()]];
+	}
+}
+
+void PiSDFTransformer::multiStepScheduling(
+							PiSDFGraph* currentPiSDF,
+							BaseSchedule* schedule,
+							ListScheduler* listScheduler,
+							Architecture* arch,
+							launcher* launch,
+							ExecutionStat* execStat,
+							SRDAGGraph* topDag,
+							SRDAGVertex* currHSrDagVx,
+							UINT32 level,
+							UINT8* step){
+
+#if PRINT_GRAPH
+	UINT32 len;
+	// Printing the topDag
+	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", "topDag_start", *step);
+	if(len > MAX_FILE_NAME_SIZE)
+		exitWithCode(1072);
+	DotWriter::write(topDag, file, 1, 0);
+#endif
+
+
+
+	if(currentPiSDF->getNb_config_vertices() > 0){
+
+		/* Resolve */
+		currentPiSDF->evaluateExpressions();
+
+		/* Replace hierarchical actor in topDag with RBs */
+		PiSDFTransformer::replaceHwithRB(currentPiSDF, topDag, currHSrDagVx);
+
+		/* Put CA in topDag with RB between CA and /CA */
+		PiSDFTransformer::addCAtoSRDAG(currentPiSDF, topDag, currHSrDagVx);
+
+		currentPiSDF->updateDAGStates(topDag);
+	}
+
+	/* Schedule */
+	listScheduler->schedule(topDag, schedule, arch);
+
+
+	// Clearing the buffers which will contain the data to be sent/received to/from LRTs.
+	launch->clear();
+
+	// Assigning FIFO ids to executable vxs' edges.
+	launch->assignFIFOId(topDag, arch);
+
+	// Preparing tasks' information that will be sent to LRTs.
+	launch->prepareTasksInfo(topDag, arch->getNbSlaves(), schedule, false, execStat);
+
+#if PRINT_GRAPH
+	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.xml", SCHED_FILE_NAME, *step);
+	if(len > MAX_FILE_NAME_SIZE)
+		exitWithCode(1072);
+	ScheduleWriter::write(schedule, topDag, arch, file);
+
+	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", "topDag_mid", *step);
+	if(len > MAX_FILE_NAME_SIZE)
+		exitWithCode(1072);
+	DotWriter::write(topDag, file, 1, 0);
+#endif
+
+
+
+#if EXEC == 1
+	// Executing the executable vxs.
+	launch->launch(arch->getNbSlaves());
+#endif
+
+	// Updating states. Sets all executable vxs to executed since their execution was already launched.
+	topDag->updateExecuted();
+
+	/*
+	 * Resolving parameters. If the actors' execution is disabled, the parameters
+	 * should had been set at compile time.
+	 */
+#if EXEC == 1
+	// Waiting for parameters' values from LRT (configure actors' execution).
+	launch->resolveParameters(topDag, arch->getNbSlaves());
+#endif
+
+
+	// Resolving productions/consumptions.
+	currentPiSDF->evaluateExpressions();
+
+	/* Compute BRV */
+	/*
+	 * Setting temporal Ids to be used as indices in the topology matrix.
+	 * Note that only normal Vxs are considered.
+	 */
+	PiSDFTransformer::computeBRV(currentPiSDF, brv);
+
+	/* Replace SRDAG of /CA in topDag */
+	for (UINT32 i = 0; i < currentPiSDF->getNb_pisdf_vertices(); i++) {
+		PiSDFAbstractVertex* vertex = currentPiSDF->getPiSDFVertex(i);
+
+		// Creating the new vertices.
+		PiSDFTransformer::addVertices(vertex, brv[vertex->getId()], currHSrDagVx->getReferenceIndex(), topDag);
+	}
+
+	// Connecting the vertices of the SrDAG ouput graph.
+	PiSDFTransformer::linkvertices(currentPiSDF, currHSrDagVx->getReferenceIndex(), topDag, brv);
+
+	currentPiSDF->updateDAGStates(topDag);
+	(*step)++;
 }

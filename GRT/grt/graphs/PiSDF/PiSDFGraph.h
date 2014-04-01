@@ -100,21 +100,6 @@ public:
 
 	void evaluateExpressions();
 
-
-	void clearIntraIteration();
-
-	/*
-	 * Resets the visited vertices (the "visited" field is set to false),
-	 * so that the "getSDFGraph" algorithm can re-examine the entire graph.
-	 */
-	void clearAfterVisit();
-
-
-	/*
-	 * Inserts round buffer vertices between configure vertices and normal vertices.
-	 */
-	void insertRoundBuffers();
-
 	/*
 	 *  Says if Vx is an interface/round-buffer preceding a configure vx.
 	 */
@@ -282,6 +267,14 @@ public:
 
 	PiSDFAbstractVertex* getRootVertex() {
 		return rootVertex;
+	}
+
+	UINT32 getNbVertices() {
+		return nb_vertices;
+	}
+
+	PiSDFAbstractVertex* getVertex(UINT32 id){
+		return vertices[id];
 	}
 };
 

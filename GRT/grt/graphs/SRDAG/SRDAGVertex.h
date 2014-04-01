@@ -209,7 +209,8 @@ class SRDAGVertex {
 		void setIterationIndex(int index){
 			iterationIndex = index;
 		}
-		int getIterationIndex(){
+
+		UINT32 getIterationIndex(){
 			return iterationIndex;
 		}
 
@@ -271,8 +272,8 @@ class SRDAGVertex {
 		SRDAGEdge* getInputEdge(int id);
 		SRDAGEdge* getOutputEdge(int id);
 
-		int getNbInputEdge();
-		int getNbOutputEdge();
+		UINT32 getNbInputEdge();
+		UINT32 getNbOutputEdge();
 
 		/*
 		 * Getter and setter for the type.
@@ -283,8 +284,8 @@ class SRDAGVertex {
 		/*
 		 * Getter and setter for the expImpId.
 		 */
-		int getExpImpId();
-		void setExpImpId(int id);
+		UINT32 getExpImpId();
+		void setExpImpId(UINT32 id);
 
 	    PiSDFAbstractVertex *getReference() const
 	    {
@@ -536,12 +537,12 @@ SRDAGEdge* SRDAGVertex::getOutputEdge(int id){
 }
 
 inline
-int SRDAGVertex::getNbInputEdge(){
+UINT32 SRDAGVertex::getNbInputEdge(){
 	return inputEdges.getNb();
 }
 
 inline
-int SRDAGVertex::getNbOutputEdge(){
+UINT32 SRDAGVertex::getNbOutputEdge(){
 	return outputEdges.getNb();
 }
 
@@ -556,12 +557,12 @@ void SRDAGVertex::setType(SrVxTYPE type){
 }
 
 inline
-int SRDAGVertex::getExpImpId(){
+UINT32 SRDAGVertex::getExpImpId(){
 	return expImpId;
 }
 
 inline
-void SRDAGVertex::setExpImpId(int id){
+void SRDAGVertex::setExpImpId(UINT32 id){
 	this->expImpId = id;
 }
 

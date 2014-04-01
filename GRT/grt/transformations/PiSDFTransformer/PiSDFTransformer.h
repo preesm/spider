@@ -69,7 +69,7 @@ public:
 	/**
 	 * Adds "nb_repetitions" SRDAGVertex vertices for "vertex" to the output SRDAG graph.
 	 */
-	void addVertices(PiSDFAbstractVertex* vertex, int nb_repetitions, int iteration, SRDAGGraph* outputGraph);
+	void addVertices(PiSDFAbstractVertex* vertex, UINT32 nb_repetitions, UINT32 iteration, SRDAGGraph* outputGraph);
 
 	void linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, SRDAGGraph* topDag, int* brv);
 

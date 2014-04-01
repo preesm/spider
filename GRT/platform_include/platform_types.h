@@ -51,7 +51,4 @@ typedef platform_UINT64	UINT64;
 
 typedef platform_BOOL	BOOL;
 
-#define TRUE ((BOOL)-1)
-#define FALSE ((BOOL)0)
-
 #endif /* platform_TYPES_H_ */

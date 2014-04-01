@@ -42,7 +42,7 @@
 LRTActor::LRTActor(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher* curLaunch){
 	this->ActionID = srvertex->getFunctIx();
 	this->vertexId = srvertex->getId();
-	this->isConfigVx = (srvertex->getType() == config_vertex);
+	this->isConfigVx = (srvertex->getType() == ConfigureActor);
 	this->nbInputFifos = srvertex->getNbInputEdge();
 
 	for(UINT32 i=0; i<this->nbInputFifos; i++){

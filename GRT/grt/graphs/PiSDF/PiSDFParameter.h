@@ -48,7 +48,10 @@ class PiSDFParameter {
 	// Expression defining the parameter's value (in abstract_syntax_elt)
 //	abstract_syntax_elt production[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 public:
-	PiSDFParameter(){resolved = false;};
+	PiSDFParameter(){
+		resolved = false;
+		var = (variable*)NULL;
+	};
 
 	void setValue(UINT32 value){
 		this->var->value = value;

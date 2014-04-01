@@ -146,7 +146,7 @@ void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 	UINT32 endTime = 0;
 
 	// Writing execution data for each slave.
-	for(UINT32 i=0; i<arch->getNbSlaves(); i++){
+	for(int i=0; i<arch->getNbSlaves(); i++){
 		UINT32 data[MAX_CTRL_DATA];
 		UINT32 nbTasks = popExecInfo(i, data);
 
@@ -178,7 +178,7 @@ void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 	platform_fprintf("</data>\n");
 	platform_fclose();
 
-	printf("EndTime %ld\n", endTime);
+	printf("EndTime %d\n", endTime);
 }
 
 
@@ -379,7 +379,7 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule
 	static UINT16 stepsCntr = 0;
 
 	/* Creating Tasks */
-	for(int i=0; i < nbSlaves; i++){
+	for(UINT32 i=0; i < nbSlaves; i++){
 		if(isAM){
 			#if USE_AM
 			CreateTaskMsg msg_createTask;
@@ -531,90 +531,6 @@ void launcher::prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule
 //	}
 //
 //	sharedMem.exportMem("mem.csv");
-}
-
-
-void launcher::prepareConfigExec(
-		PiSDFAbstractVertex** configVertices,
-		UINT32 nbConfigVertices,
-		Architecture *archi,
-		BaseSchedule* schedule,
-		ExecutionStat* execStat)
-{
-	CreateFifoMsg msg_createFifo;
-	ClearFifoMsg msg_clearFifo;
-//	CreateTaskMsg msg_createTask;
-
-	flushDataToSend();
-	flushDataToReceive();
-
-	for(UINT32 i=0; i < nbConfigVertices; i++){
-		PiSDFConfigVertex* vertex = (PiSDFConfigVertex*)configVertices[i];
-
-//		/* Creating input fifos */
-//		for (UINT32 j = 0; j < vertex->getNbInputEdges(); j++) {
-//			PiSDFEdge* edge = vertex->getInputEdge(j);
-//			msg_createFifo = CreateFifoMsg(vertex-edge, DEFAULT_FIFO_SIZE, &sharedMem);
-//
-//			for(int k = 0; k < archi->getNbActiveSlaves(); k++){
-//				msg_createFifo.prepare(k, this);
-//			}
-//		}
-
-//		/*
-//		 * Creating the output fifo to receive the parameter's value.
-//		 */
-//		PiSDFParameter* param = vertex->getRelatedParameter();
-//		msg_createFifo = CreateFifoMsg(param->getId(), DEFAULT_FIFO_SIZE, &sharedMem);
-//
-//		// A create fifo msg will be sent to each active local RT.
-//		for(int k = 0; k < archi->getNbActiveSlaves(); k++){
-//			msg_createFifo.prepare(k, this);
-//		}
-
-
-//
-//
-//
-//
-//
-//
-//		/* Clearing fifos */
-//		for (UINT32 j = 0; j < vertex->getNbOutputEdges(); j++) {
-//			PiSDFEdge* edge = vertex->getOutputEdge(j);
-//			msg_clearFifo = ClearFifoMsg(edge->getId());
-//
-//			for(int k = 0; k < archi->getNbActiveSlaves(); k++){
-//				msg_clearFifo.prepare(0, this);
-//			}
-//		}
-//
-//		execStat->fifoNb += vertex->getNbOutputEdges();
-//	}
-//	execStat->memAllocated = sharedMem.getTotalAllocated();
-
-	/* Creating single tasks (not Actor Machines) */
-		// TODO: Creating tasks on selected slaves.
-//		for(int i=0; i<archi->getNbActiveSlaves(); i++){
-//			if(nbAM == MAX_NB_AM) exitWithCode(1058);
-//			AMGraph* am = &AMGraphTbl[nbAM++];
-//			CreateTaskMsg msg_createTask = CreateTaskMsg(vertex, am, 1);
-//		//		char name[20];
-//		//		sprintf(name, "Slave%d.gv", j);
-//		//		msg_createTask.toDot(name);
-//		//		execStat->nbAMVertices[i]	= msg_createTask.getAm()->getNbVertices();
-//		//		execStat->nbAMConds[i]		= msg_createTask.getAm()->getNbConds();
-//		//		execStat->nbAMActions[i]	= msg_createTask.getAm()->getNbActions();
-//		//		dataToSendCnt[i] += msg_createTask.prepare(dataToSend[i], dataToSendCnt[i]);
-//			msg_createTask.prepare(i, this);
-//
-//			// Creating start message.
-//			StartMsg().prepare(i, this);
-//
-////			// Creating stop message for the actor executes only once.
-////			StopTaskMsg().prepare(i, this);
-//		}
-	}
 }
 
 UINT32 launcher::rcvData(UINT32 slave, UINT32 msgType, UINT32* data){

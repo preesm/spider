@@ -38,15 +38,11 @@
 #include <graphs/PiSDF/PiSDFGraph.h>
 #include "PiSDFTransformer.h"
 
-// The topology matrix initialized to 0. Edges x Vertices.
-static int topo_matrix [MAX_NB_EDGES * MAX_NB_VERTICES] = {0};
-//static char name[MAX_VERTEX_NAME_SIZE];
 
-void PiSDFTransformer::addVertices(PiSDFAbstractVertex* vertex, int nb_repetitions, int iteration, SRDAGGraph* outputGraph){
+void PiSDFTransformer::addVertices(PiSDFAbstractVertex* vertex, UINT32 nb_repetitions, UINT32 iteration, SRDAGGraph* outputGraph){
 	// Adding one SRDAG vertex per repetition
 	for(UINT32 j = 0; j < nb_repetitions; j++){
 		SRDAGVertex* srdag_vertex = outputGraph->addVertex();
-		UINT32 len;
 
 		srdag_vertex->setFunctIx(vertex->getFunction_index());
 		srdag_vertex->setReference(vertex);
@@ -60,7 +56,6 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 {
 	UINT32 cntExpVxs = 0;
 	UINT32 cntImpVxs = 0;
-	UINT32 len;
 
 	for (UINT32 i = 0; i < currentPiSDF->getNb_edges(); i++) {
 		PiSDFEdge *edge = currentPiSDF->getEdge(i);
@@ -68,10 +63,10 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 		if(edge->getSink()->getType() == config_vertex)
 			continue;
 
-		int nbDelays = edge->getDelayInt();
+		UINT32 nbDelays = edge->getDelayInt();
 
-		int nbSourceRepetitions = brv[edge->getSource()->getId()];
-		int nbTargetRepetitions = brv[edge->getSink()->getId()];
+		UINT32 nbSourceRepetitions = brv[edge->getSource()->getId()];
+		UINT32 nbTargetRepetitions = brv[edge->getSink()->getId()];
 
 		// Getting the replicas of the source vertex into sourceRepetitions.
 		topDag->getVerticesFromReference(edge->getSource(), iteration, sourceRepetitions);
@@ -80,17 +75,17 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 		topDag->getVerticesFromReference(edge->getSink(), iteration, sinkRepetitions);
 
 		// Total number of token exchanged (produced and consumed) for an edge.
-		int totalNbTokens = edge->getProductionInt() * nbSourceRepetitions;
+		UINT32 totalNbTokens = edge->getProductionInt() * nbSourceRepetitions;
 
 		// Absolute target is the targeted consumed token among the total number of consumed/produced tokens.
-		int absoluteSource = 0;
-//		int producedTokens = 0;
-		int absoluteTarget = nbDelays;
-//		int availableTokens = nbDelays;
+		UINT32 absoluteSource = 0;
+//		UINT32 producedTokens = 0;
+		UINT32 absoluteTarget = nbDelays;
+//		UINT32 availableTokens = nbDelays;
 
 		// totProd is updated to store the number of token consumed by the
 		// targets that are "satisfied" by the added edges.
-		int totProd = 0;
+		UINT32 totProd = 0;
 
 		// Iterating until all consumptions are "satisfied".
 		while (totProd < totalNbTokens) {
@@ -98,17 +93,17 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 			 * Computing the indexes and rates.
 			 */
 			// Index of the source vertex's instance (among all the replicas).
-			int sourceIndex = (absoluteSource / edge->getProductionInt())% nbSourceRepetitions;
+			UINT32 sourceIndex = (absoluteSource / edge->getProductionInt())% nbSourceRepetitions;
 
 			// Index of the target vertex's instance (among all the replicas).
-			int targetIndex = (absoluteTarget / edge->getConsumptionInt())% nbTargetRepetitions;
+			UINT32 targetIndex = (absoluteTarget / edge->getConsumptionInt())% nbTargetRepetitions;
 
 			// Number of token already produced/consumed by the current source/target.
-			int sourceProd = absoluteSource % edge->getProductionInt();
-			int targetCons = absoluteTarget % edge->getConsumptionInt();
+			UINT32 sourceProd = absoluteSource % edge->getProductionInt();
+			UINT32 targetCons = absoluteTarget % edge->getConsumptionInt();
 
 			// Production/consumption rate for the current source/target.
-			int rest =((edge->getProductionInt() - sourceProd) < (edge->getConsumptionInt() - targetCons))?
+			UINT32 rest =((edge->getProductionInt() - sourceProd) < (edge->getConsumptionInt() - targetCons))?
 					(edge->getProductionInt() - sourceProd):(edge->getConsumptionInt() - targetCons); // Minimum.
 
 
@@ -116,7 +111,7 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 			 * Adding explode/implode vertices if required.
 			 */
 
-			if (rest < (int)edge->getProductionInt() &&
+			if (rest < edge->getProductionInt() &&
 				(sourceRepetitions[sourceIndex]->getType() == 0)){ // Type == 0 indicates it is a normal SR vx.
 
 				// Adding an explode vertex.
@@ -153,7 +148,7 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 						edge->getRefEdge());
 			}
 
-			if (rest < (int)edge->getConsumptionInt() &&
+			if (rest < edge->getConsumptionInt() &&
 				(sinkRepetitions[targetIndex]->getType() == 0)){ // Type == 0 indicates it is a normal vertex.
 
 				// Adding an implode vertex.
@@ -188,21 +183,21 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 			 **************************/
 
 			// The delay.
-			// This int represent the number of iteration separating the
+			// This UINT32 represent the number of iteration separating the
 			// currently indexed source and target (between which an edge is
 			// added)
-			// If this int is > to 0, this means that the added edge must
+			// If this UINT32 is > to 0, this means that the added edge must
 			// have
 			// delays (with delay=prod=cons of the added edge).
 			// Warning, this integer division is not factorable
-			int iterationDiff = absoluteTarget / totalNbTokens - absoluteSource / totalNbTokens;
+			UINT32 iterationDiff = absoluteTarget / totalNbTokens - absoluteSource / totalNbTokens;
 
 			// If the edge has a delay and that delay still exist in the
 			// SRSDF (i.e. if the source & target do not belong to the same
 			// "iteration")
 			if (iterationDiff > 0) {
 				// TODO: Treating delays
-//					int addedDelays = iterationDiff * new_edge->getTokenRate();
+//					UINT32 addedDelays = iterationDiff * new_edge->getTokenRate();
 
 				// Check that there are enough delays available
 //					if (nbDelays < addedDelays) {

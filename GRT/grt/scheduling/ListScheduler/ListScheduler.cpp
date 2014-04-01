@@ -45,6 +45,7 @@
 ListScheduler::ListScheduler()
 {
 	archi = (Architecture*)NULL;
+	scenario = (Scenario*)NULL;
 }
 
 /**
@@ -138,7 +139,7 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 	UINT32 minimumStartTime = 0;
 	UINT32 precVertexEndTime;
 	// Computing the minimum start time.
-	for(int i=0; i<vertex->getNbInputEdge(); i++){
+	for(UINT32 i=0; i<vertex->getNbInputEdge(); i++){
 		SRDAGVertex* precVertex = vertex->getInputEdge(i)->getSource();
 		if(precVertex != vertex){ // TODO: Normally there is no cycles in a DAG, so this is check is not needed.
 			if(precVertex->getScheduleIndex() != -1)

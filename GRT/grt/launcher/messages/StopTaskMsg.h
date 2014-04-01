@@ -44,7 +44,10 @@ class StopTaskMsg {
 	INT32 VectorID;
 
 public:
-	StopTaskMsg(){};
+	StopTaskMsg(){
+		VectorID = -1;
+		TaskID = -1;
+	};
 	StopTaskMsg(INT32 TaskID, INT32 VectorID);
 
 	void send(int LRTID);

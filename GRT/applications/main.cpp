@@ -175,7 +175,7 @@ int main(int argc, char* argv[]){
 			 * Remember that when no more hierarchies are found, it marks the end of a complete execution of the model.
 			 */
 			H = 0;
-			for (int i = 0; i < topDag.getNbVertices(); i++) {
+			for (UINT32 i = 0; i < topDag.getNbVertices(); i++) {
 				currHSrDagVx = topDag.getVertex(i);
 				if(currHSrDagVx->isHierarchical() && currHSrDagVx->getState() != SrVxStDeleted){
 					if(((PiSDFVertex*)(currHSrDagVx->getReference()))->hasSubGraph()){

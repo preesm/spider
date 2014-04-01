@@ -47,10 +47,12 @@ SRDAGVertex::SRDAGVertex(){
 	visited=0;
 	mergeIx = -1;
 	referenceIndex=-1;
+	iterationIndex=-1;
 	tLevel=-1;
 	slaveIndex=-1;
 	expImpId=-1;
 	Reference = NULL;
+	EdgeReference = NULL;
 	id=-1;
 	functIx=-1;
 	parent=NULL;
@@ -66,10 +68,12 @@ void SRDAGVertex::reset(){
 	visited=0;
 	mergeIx = -1;
 	referenceIndex=-1;
+	iterationIndex=-1;
 	tLevel=-1;
 	slaveIndex=-1;
 	expImpId=-1;
 	Reference = NULL;
+	EdgeReference = NULL;
 	id=-1;
 	functIx=-1;
 	parent=NULL;

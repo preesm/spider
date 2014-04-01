@@ -120,10 +120,10 @@ template <class T, int SIZE>
 inline T& Array<T,SIZE>::operator [](int n){
 	if(valid[n]){
 		return array[n];
-	}else{
-		printf("Array: Error get uninitialized var\n");
-		abort();
 	}
+	printf("Array: Error get uninitialized var\n");
+	abort();
+	return array[0];
 }
 
 /**

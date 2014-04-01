@@ -87,23 +87,6 @@
 #define MAX_DATA_WORDS				1024
 #define PRINT_ACTOR_IN_DOT_FILE		1
 
-
-/*
- * Data types.
- */
-typedef unsigned char 	BOOLEAN;
-
-typedef char			INT8_S;
-typedef short			INT16_S;
-typedef int			 	INT32_S;
-typedef long long	 	INT64_S;
-
-typedef unsigned char 	UINT8;
-typedef unsigned short	UINT16;
-typedef unsigned int	UINT32;
-typedef long long unsigned	UINT64;
-
-
 /******
  * System time.
  */

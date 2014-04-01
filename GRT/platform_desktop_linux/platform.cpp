@@ -36,6 +36,7 @@
 
 #include <platform.h>
 #include <platform_types.h>
+#include <debuggingOptions.h>
 
 void platform_queue_Init(UINT8 nbSlaves);
 

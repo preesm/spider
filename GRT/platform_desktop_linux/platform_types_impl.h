@@ -51,4 +51,7 @@ typedef __u64 	platform_UINT64;
 
 typedef bool	platform_BOOL;
 
+#define TRUE ((BOOL)-1)
+#define FALSE ((BOOL)0)
+
 #endif /* TYPES_H_ */

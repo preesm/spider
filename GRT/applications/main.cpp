@@ -49,6 +49,7 @@
 #include <tools/ScheduleChecker.h>
 #include <debuggingOptions.h>
 #include <platform.h>
+#include <platform_time.h>
 
 #define IS_AM 					0
 #define STOP					1
@@ -126,6 +127,7 @@ int main(int argc, char* argv[]){
 	int i;
 	for(i=0; i<nbSlaves; i++)
 		resetMsg.send(i);
+	platform_time_reset();
 //	launch.launchWaitAck(nbSlaves);
 #endif
 
@@ -144,6 +146,9 @@ int main(int argc, char* argv[]){
 		 * Note that the loop stops when H is null, i.e. all levels have been treated,
 		 * the graph has been completely flatten.
 		 */
+
+		launch.initSchedulingTime();
+		platform_time_reset();
 
 		while(H){
 
@@ -198,6 +203,8 @@ int main(int argc, char* argv[]){
 
 		// Preparing tasks' informations
 		launch.prepareTasksInfo(&topDag, nbSlaves, &schedule, IS_AM, &execStat);
+
+		launch.endSchedulingTime();
 
 	#if EXEC == 1
 		/*

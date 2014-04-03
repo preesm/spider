@@ -181,6 +181,9 @@ public:
 	void resolveParameters(SRDAGGraph* dag, UINT32 nbSlaves);
 
 	void sendClearTasks(int nbSlaves);
+
+	void initSchedulingTime();
+	void endSchedulingTime();
 };
 
 inline int launcher::getNbLaunchedSlave(){

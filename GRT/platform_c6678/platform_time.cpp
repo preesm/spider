@@ -37,6 +37,7 @@
 #include <platform_time.h>
 
 #include <ti/csl/csl_tmr.h>
+#include <ti/csl/csl_tmrAux.h>
 #include <ti/csl/csl_chipAux.h>
 
 #include <stdio.h>
@@ -44,12 +45,85 @@
 void timer_start();
 void timer_reset();
 
+
 void platform_time_init(){
-//	CSL_tscEnable();
+	CSL_TmrContext context;
+	CSL_TmrHwSetup hwSetup;
+	CSL_TmrParam param;
+	CSL_TmrObj object;
+	CSL_Status status;
+
+	CSL_tmrInit(&context);
+
+	CSL_TmrHandle timer_hdl = CSL_tmrOpen(&object, 0, &param, &status);
+
+	hwSetup.tmrTimerPeriodLo		= 0xFFFF;
+	hwSetup.tmrTimerPeriodHi		= 0xFFFF;
+	hwSetup.tmrTimerCounterLo		= 0x0;
+	hwSetup.tmrTimerCounterHi		= 0x0;
+	hwSetup.tmrIpGateHi				= CSL_TMR_CLOCK_INP_NOGATE;
+	hwSetup.tmrClksrcHi				= CSL_TMR_CLKSRC_INTERNAL;
+	hwSetup.tmrIpGateLo				= CSL_TMR_CLOCK_INP_NOGATE;
+	hwSetup.tmrClksrcLo				= CSL_TMR_CLKSRC_INTERNAL;
+	hwSetup.tmrPreScalarCounterHi	= 1;
+	hwSetup.tmrTimerMode			= CSL_TMR_TIMMODE_GPT;
+	CSL_tmrHwSetup(timer_hdl, &hwSetup);
+
+	CSL_tmrClose(timer_hdl);
+	timer_start();
+}
+
+void timer_reset(){
+	CSL_TmrParam param;
+	CSL_TmrObj object;
+	CSL_TmrHwSetup hwSetup;
+	CSL_Status status;
+
+	CSL_TmrHandle timer_hdl = CSL_tmrOpen(&object, 0, &param, &status);
+
+		hwSetup.tmrTimerPeriodLo		= 0xFFFF;
+		hwSetup.tmrTimerPeriodHi		= 0xFFFF;
+		hwSetup.tmrTimerCounterLo		= 0x0;
+		hwSetup.tmrTimerCounterHi		= 0x0;
+		hwSetup.tmrIpGateHi				= CSL_TMR_CLOCK_INP_NOGATE;
+		hwSetup.tmrClksrcHi				= CSL_TMR_CLKSRC_INTERNAL;
+		hwSetup.tmrIpGateLo				= CSL_TMR_CLOCK_INP_NOGATE;
+		hwSetup.tmrClksrcLo				= CSL_TMR_CLKSRC_INTERNAL;
+		hwSetup.tmrPreScalarCounterHi	= 1;
+		hwSetup.tmrTimerMode			= CSL_TMR_TIMMODE_GPT;
+		CSL_tmrHwSetup(timer_hdl, &hwSetup);
+
+		CSL_tmrClose(timer_hdl);
+}
+
+void timer_start(){
+	CSL_TmrParam param;
+	CSL_TmrObj object;
+	CSL_Status status;
+//    CSL_TmrEnamode TimeCountMode = CSL_TMR_ENAMODE_ENABLE;
+
+	CSL_TmrHandle timer_hdl = CSL_tmrOpen(&object, 0, &param, &status);
+	CSL_TmrStart64(timer_hdl, CSL_TMR_ENAMODE_ENABLE);
+//    CSL_tmrHwControl(timer_hdl, CSL_TMR_CMD_START64, (void *)&TimeCountMode);
+    CSL_tmrClose(timer_hdl);
+}
+
+void timer_stop(){
+	CSL_TmrParam param;
+	CSL_TmrObj object;
+	CSL_Status status;
+//    CSL_TmrEnamode TimeCountMode = CSL_TMR_ENAMODE_ENABLE;
+
+	CSL_TmrHandle timer_hdl = CSL_tmrOpen(&object, 0, &param, &status);
+	CSL_TmrStop64(timer_hdl);
+//    CSL_tmrHwControl(timer_hdl, CSL_TMR_CMD_STOP64, (void *)&TimeCountMode);
+    CSL_tmrClose(timer_hdl);
 }
 
 void platform_time_reset(){
-//	*start = CSL_tscRead();
+	timer_stop();
+	timer_reset();
+	timer_start();
 }
 
 UINT32 platform_time_getValue(){

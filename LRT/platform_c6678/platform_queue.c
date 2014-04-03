@@ -64,11 +64,21 @@ typedef enum{
 	NORMAL
 }MSG_Types;
 
+void delay(UINT32 cycles){
+	UINT64      value;
+    /* Get the current TSC  */
+    value = CSL_tscRead ();
+    while ((CSL_tscRead ()  - value) < cycles);
+}
+
 void platform_queue_Init(){
+	CSL_tscEnable();
+
 	/* Wait on Core0 init*/
 	MNAV_MonolithicPacketDescriptor *mono_pkt;
 	do{
 		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(CTRL_IN);
+		delay(100);
 	}while(mono_pkt == 0);
 
 	if (mono_pkt->packet_type == INIT)
@@ -90,6 +100,7 @@ UINT32 platform_queue_push_data(PlatformQueueType queueType, void* data, int siz
 	MNAV_MonolithicPacketDescriptor *mono_pkt;
 	do{
 		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(EMPTY_CTRL);
+		delay(100);
 	}while(mono_pkt == 0);
 
 	mono_pkt->type_id = 0x2;
@@ -126,6 +137,7 @@ UINT32 platform_queue_pop_data(PlatformQueueType queueType){
 
 	do{
 		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(queues[queueType][PlatformInputQueue]);
+		delay(100);
 	}while(mono_pkt == 0);
 
 	void* data_pkt = (void*)(((UINT32)mono_pkt) + mono_pkt->data_offset);

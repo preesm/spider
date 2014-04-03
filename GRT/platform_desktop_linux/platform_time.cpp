@@ -35,36 +35,22 @@
  ****************************************************************************/
 
 #include <platform_time.h>
+#include <sys/time.h>
 
-#include <ti/csl/csl_tmr.h>
-#include <ti/csl/csl_chipAux.h>
+#include <time.h>
 
-#include <stdio.h>
-
-void timer_start();
-void timer_reset();
-
-void platform_time_init(){
-//	CSL_tscEnable();
-}
+static struct timespec start;
 
 void platform_time_reset(){
-//	*start = CSL_tscRead();
+	clock_gettime(CLOCK_MONOTONIC, &start);
 }
 
-UINT32 platform_time_getValue(){
-	CSL_Uint64 res;
-	CSL_TmrParam param;
-	CSL_TmrObj object;
-	CSL_Status status;
-
-	CSL_TmrHandle timer_hand = CSL_tmrOpen(&object, 0, &param, &status);
-
-	res = object.regs->CNTHI;
-	res = res << 32;
-	res += object.regs->CNTLO;
-
-	CSL_tmrClose(timer_hand);
-
-	return res;
+UINT64 platform_time_getValue(){
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	UINT64 val = ts.tv_sec - start.tv_sec;
+	val *= 1000000000;
+	val += ts.tv_nsec - start.tv_nsec;
+	return val;
+	//  return clock();
 }

@@ -94,12 +94,12 @@ void push_queue(Uint16 qn, Uint8 mode, Uint32 c_val, Uint32 d_val) {
 		*reg = d_val;
 	}
 #else
-	Uint32 *reg;
+	volatile Uint32 *reg;
 	if (mode == 2) {
-		reg = (Uint32 *) (QM_QMAN_REGION + QM_REG_QUE_REG_C + (qn * 16));
+		reg = (volatile Uint32 *) (QM_QMAN_REGION + QM_REG_QUE_REG_C + (qn * 16));
 		*reg = c_val;
 	}
-	reg = (Uint32 *) (QM_QMAN_REGION + QM_REG_QUE_REG_D + (qn * 16));
+	reg = (volatile Uint32 *) (QM_QMAN_REGION + QM_REG_QUE_REG_D + (qn * 16));
 	*reg = d_val;
 #endif
 }
@@ -108,8 +108,8 @@ void push_queue(Uint16 qn, Uint8 mode, Uint32 c_val, Uint32 d_val) {
 /* This function pops a descriptor address from a queue. */
 Uint32 pop_queue(Uint16 qn) {
 	volatile Uint32 *reg;
-	Uint32 value;
-	reg = (Uint32 *) (QM_QMAN_REGION + QM_REG_QUE_REG_D + (qn * 16));
+	volatile Uint32 value;
+	reg = (volatile Uint32 *) (QM_QMAN_REGION + QM_REG_QUE_REG_D + (qn * 16));
 	value = *reg;
 	return (value);
 }
@@ -131,14 +131,14 @@ void divert_queue(Uint16 src_qn, Uint16 dest_qn, Uint8 headtail) {
 /* This function pops a queue until it is empty. If *list is not NULL,
  * it will return the list of descriptor addresses and the count. */
 void empty_queue(Uint16 qn, Uint32 *list, Uint32 *listCount) {
-	Uint32 *reg;
+	volatile Uint32 *reg;
 	Uint32 value;
 	Uint16 idx;
 	Uint32 count;
-	reg = (Uint32 *) (QM_PEEK_REGION + QM_REG_QUE_REG_A + (qn * 16));
+	reg = (volatile Uint32 *) (QM_PEEK_REGION + QM_REG_QUE_REG_A + (qn * 16));
 	count = *reg; //read the descriptor count
 	*listCount = count;
-	reg = (Uint32 *) (QM_QMAN_REGION + QM_REG_QUE_REG_D + (qn * 16));
+	reg = (volatile Uint32 *) (QM_QMAN_REGION + QM_REG_QUE_REG_D + (qn * 16));
 	for (idx = 0; idx < count; idx++) {
 		value = *reg;
 		if (list != NULL) {
@@ -160,9 +160,9 @@ Uint32 get_byte_count(Uint16 qn) {
 
 /* This function returns the descriptor count of a queue. */
 Uint32 get_descriptor_count(Uint16 qn) {
-	Uint32 *reg;
+	volatile Uint32 *reg;
 	Uint32 count;
-	reg = (Uint32 *) (QM_PEEK_REGION + QM_REG_QUE_REG_A + (qn * 16));
+	reg = (volatile Uint32 *) (QM_PEEK_REGION + QM_REG_QUE_REG_A + (qn * 16));
 	count = *reg;
 	return (count);
 }

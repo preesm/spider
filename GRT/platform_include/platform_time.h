@@ -34,37 +34,12 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <platform_time.h>
+#ifndef TIME_H_
+#define TIME_H_
 
-#include <ti/csl/csl_tmr.h>
-#include <ti/csl/csl_chipAux.h>
+#include <platform_types.h>
 
-#include <stdio.h>
+void platform_time_reset();
+UINT32 platform_time_getValue();
 
-void timer_start();
-void timer_reset();
-
-void platform_time_init(){
-//	CSL_tscEnable();
-}
-
-void platform_time_reset(){
-//	*start = CSL_tscRead();
-}
-
-UINT32 platform_time_getValue(){
-	CSL_Uint64 res;
-	CSL_TmrParam param;
-	CSL_TmrObj object;
-	CSL_Status status;
-
-	CSL_TmrHandle timer_hand = CSL_tmrOpen(&object, 0, &param, &status);
-
-	res = object.regs->CNTHI;
-	res = res << 32;
-	res += object.regs->CNTLO;
-
-	CSL_tmrClose(timer_hand);
-
-	return res;
-}
+#endif /* TIME_H_ */

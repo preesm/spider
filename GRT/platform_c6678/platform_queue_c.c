@@ -43,6 +43,7 @@
 #include <platform_queue.h>
 #include <grt_definitions.h>
 
+#include <ti/csl/csl_tsc.h>
 #include <memoryAlloc.h>
 #include "queue_buffer.h"
 
@@ -71,12 +72,21 @@ typedef enum{
 
 #include "qmss_utils.h"
 
-UINT8 *mono_region = CTRL_DESCRIPTOR;
-UINT8 *mono_data_region = DATA_DESCRIPTOR;
+UINT8 *mono_region = (UINT8 *)CTRL_DESCRIPTOR;
+UINT8 *mono_data_region = (UINT8 *)DATA_DESCRIPTOR;
+
+void delay(UINT32 cycles){
+	UINT64      value;
+    /* Get the current TSC  */
+    value = CSL_tscRead ();
+    while ((CSL_tscRead ()  - value) < cycles);
+}
 
 void __c_platform_queue_Init(){
 	MNAV_MonolithicPacketDescriptor * mono_pkt;
 	UINT32 idx;
+
+	CSL_tscEnable();
 
 	/* Setup Memory Region 1 for 8 148B Monolithic descriptors. Our
 	 * Mono descriptors will be 12 bytes plus 16 bytes of EPIB Info, plus
@@ -136,6 +146,7 @@ UINT32 __c_platform_QPush_data(UINT8 slaveId, platformQType queueType, void* dat
 	MNAV_MonolithicPacketDescriptor *mono_pkt;
 	do{
 		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(EMPTY_CTRL);
+		delay(100);
 	}while(mono_pkt == 0);
 
 	mono_pkt->type_id = 0x2;
@@ -194,6 +205,7 @@ UINT32 __c_platform_QPop_data(UINT8 slaveId, platformQType queueType){
 
 	do{
 		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(queue);
+		delay(100);
 	}while(mono_pkt == 0);
 
 	void* data_pkt = (void*)(((UINT32)mono_pkt) + mono_pkt->data_offset);

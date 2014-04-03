@@ -47,6 +47,6 @@ void setLed(BOOL b){
 }
 
 BOOL getSw(){
-	return -1;
+	return TRUE;
 //    XGpio_DiscreteRead(&gpio_leds, 1, b & 0x01);
 }

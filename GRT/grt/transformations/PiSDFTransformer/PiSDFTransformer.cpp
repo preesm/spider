@@ -512,6 +512,7 @@ void PiSDFTransformer::multiStepScheduling(
 	DotWriter::write(topDag, file, 1, 0);
 #endif
 
+	launch->endSchedulingTime();
 
 
 #if EXEC == 1
@@ -526,11 +527,13 @@ void PiSDFTransformer::multiStepScheduling(
 	 * Resolving parameters. If the actors' execution is disabled, the parameters
 	 * should had been set at compile time.
 	 */
+
 #if EXEC == 1
 	// Waiting for parameters' values from LRT (configure actors' execution).
 	launch->resolveParameters(topDag, arch->getNbSlaves());
 #endif
 
+	launch->initSchedulingTime();
 
 	// Resolving productions/consumptions.
 	currentPiSDF->evaluateExpressions();

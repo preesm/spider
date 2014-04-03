@@ -48,6 +48,7 @@
 #include <platform.h>
 #include <algorithm>
 #include <platform_file.h>
+#include <platform_time.h>
 
 
 #define PRINT_ACTOR_IN_DOT_FILE		0
@@ -133,8 +134,19 @@ void launcher::clear(){
 	flushDataToReceive();
 }
 
+static UINT32 timeStartScheduling[MAX_PISDF_STEPS];
+static UINT32 timeEndScheduling[MAX_PISDF_STEPS];
+static UINT32 nbSteps=0;
 
-
+void launcher::initSchedulingTime(){
+	timeStartScheduling[nbSteps] = platform_time_getValue();
+//	printf("start:%d\n", timeStartScheduling[nbSteps]);
+}
+void launcher::endSchedulingTime(){
+	timeEndScheduling[nbSteps] = platform_time_getValue();
+//	printf("end:%d\n", timeEndScheduling[nbSteps]);
+	nbSteps++;
+}
 
 void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName){
 	// Creating the Gantt with real times.
@@ -144,6 +156,18 @@ void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 	platform_fprintf("<data>\n");
 
 	UINT32 endTime = 0;
+	char name[MAX_VERTEX_NAME_SIZE];
+
+	// Writing execution data for the master.
+	for (UINT32 j=0 ; j<nbSteps; j++){
+		platform_fprintf("\t<event\n");
+		platform_fprintf("\t\tstart=\"%u\"\n", 	timeStartScheduling[j]);
+		platform_fprintf("\t\tend=\"%u\"\n",	timeEndScheduling[j]);
+		platform_fprintf("\t\ttitle=\"Step_%d\"\n", j);
+		platform_fprintf("\t\tmapping=\"Master\"\n");
+		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
+		platform_fprintf("\t\t>Step_%d.</event>\n", j);
+	}
 
 	// Writing execution data for each slave.
 	for(int i=0; i<arch->getNbSlaves(); i++){
@@ -152,25 +176,19 @@ void launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 
 		for (UINT32 j=0 ; j<nbTasks; j++){
 			SRDAGVertex* vertex = dag->getVertex(data[j + j*2]); // data[0] contains the vertex's id.
+			vertex->getName(name, MAX_VERTEX_NAME_SIZE);
+
 			platform_fprintf("\t<event\n");
-//				UINT32 hour = data[(1+j) + j*2];
-//				UINT32 min = hour * 60 + data[(2+j) + j*2];
-//				UINT32 sec = min * 60 + data[(3+j) + j*2];
-//				UINT32 mili = sec * 1000 + data[(4+j) + j*2];
 			UINT32 startTime = data[(1+j) + j*2];
 			UINT32 execTime = data[(2+j) + j*2];
-//				UINT32 startTime = data[(1+j) + j*2];
-//				UINT32 execTime = data[(2+j) + j*2];
 			platform_fprintf("\t\tstart=\"%u\"\n", startTime);
 			platform_fprintf("\t\tend=\"%u\"\n",	startTime + execTime);
-//				platform_fprintf("\t\tend=\"%d\"\n",	mktime(&execTime) + mktime(&startTime));
-			platform_fprintf("\t\ttitle=\"%s\"\n", vertex->getName());
+			platform_fprintf("\t\ttitle=\"%s\"\n", name);
 			platform_fprintf("\t\tmapping=\"%s\"\n", arch->getSlaveName(i));
 			platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
-			platform_fprintf("\t\t>%s.</event>\n", vertex->getName());
+			platform_fprintf("\t\t>%s.</event>\n", name);
 
-//			printf("task %d  vertex %d started at %d ended at +%d\n",
-//					j, data[j + j*2], startTime, execTime);
+
 			if(endTime < startTime + execTime)
 				endTime = startTime + execTime;
 		}

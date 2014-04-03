@@ -42,6 +42,7 @@
 #include "semaphore.h"
 
 void platform_file_init();
+void platform_time_init();
 void platform_queue_Init();
 
 void platform_init(UINT8 nbSlaves){
@@ -51,5 +52,6 @@ void platform_init(UINT8 nbSlaves){
 	mutex_post(MUTEX_CACHE);
 
 	platform_file_init();
+	platform_time_init();
 	platform_queue_Init();
 }

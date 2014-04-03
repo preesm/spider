@@ -85,7 +85,7 @@
 #define putnum_dec			zynq_putnum_dec					// Wrapper for putnum in decimal.
 
 #define MAX_DATA_WORDS				1024
-#define PRINT_ACTOR_IN_DOT_FILE		1
+#define PRINT_ACTOR_IN_DOT_FILE		0
 
 /******
  * System time.

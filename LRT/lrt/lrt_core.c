@@ -63,7 +63,7 @@ void mainLoop(){
 //	switchMonitor(CtrlFifoHandling);
 	wait_ext_msg();
 
-	switchMonitor(Default);
+//	switchMonitor(Default);
 	if (lrt_running && getSw()){
 #ifdef ARM
 //		platform_puts("vertex ");platform_putdec(OSTCBCur->am.currVertexId);platform_puts("\n");
@@ -124,7 +124,7 @@ void LRTStart(){
 void LRTStartCurrTask() {
 
 	// Executes the vertex's code.
-	MonitorAction Act = switchMonitor(AMManagement);
+//	MonitorAction Act = switchMonitor(AMManagement);
 	if(OSTCBCur->isAM){
 		OSTCBCur->task_func(0, 0, 0, 0, 0); // Fifos are not required when calling the AM default function.
 	}

@@ -40,9 +40,8 @@
 
 #include <platform_types.h>
 #include <qmss_utils.h>
-
-#define BASE   0x0C100000
-#define LENGTH 0x00100000
+#include "cache.h"
+#include "memoryAlloc.h"
 
 #define EMPTY_DATA 	940
 #define BASE_DATA	941
@@ -63,6 +62,8 @@ void platform_writeFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
 		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(EMPTY_DATA);
 	}while(mono_pkt == 0);
 
+	cache_invL1D(mono_pkt, DATA_DESC_SIZE);
+
 	mono_pkt->type_id = 0x2;
 	mono_pkt->packet_type = 0;
 	mono_pkt->data_offset = 12;
@@ -71,7 +72,10 @@ void platform_writeFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
 	mono_pkt->pkt_return_qnum = EMPTY_DATA;
 	mono_pkt->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
 
-	memcpy((void*)(BASE + addr), buffer, size);
+	memcpy((void*)(SHARED_MEM_BASE + addr), buffer, size);
+
+	cache_wbInvL1D(mono_pkt, DATA_DESC_SIZE);
+
 	push_queue(BASE_DATA+id, 1, 0, (UINT32)mono_pkt);
 }
 
@@ -83,7 +87,8 @@ void platform_readFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
 		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(BASE_DATA+id);
 	}while(mono_pkt == 0);
 
-	memcpy(buffer, (void*)(BASE + addr), size);
+	cache_invL1D(mono_pkt, DATA_DESC_SIZE);
+	memcpy(buffer, (void*)(SHARED_MEM_BASE + addr), size);
 
 	push_queue(EMPTY_DATA, 1, 0, (UINT32)mono_pkt);
 }

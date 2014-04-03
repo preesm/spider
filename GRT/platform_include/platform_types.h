@@ -51,4 +51,6 @@ typedef platform_UINT64	UINT64;
 
 typedef platform_BOOL	BOOL;
 
+#define CACHELINE_SIZE PLATFORM_CACHELINE_SIZE
+
 #endif /* platform_TYPES_H_ */

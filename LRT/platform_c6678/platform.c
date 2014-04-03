@@ -57,7 +57,8 @@ void platform_init(UINT8 core_id){
 	coreId = CSL_chipReadDNUM()-1;
 
 	mutex_pend(MUTEX_CACHE);
-	CACHE_setL1DSize(CACHE_L1_0KCACHE);
+	CACHE_setL1PSize(CACHE_L1_32KCACHE);
+	CACHE_setL1DSize(CACHE_L1_32KCACHE);
 	CACHE_setL2Size (CACHE_0KCACHE);
 	mutex_post(MUTEX_CACHE);
 

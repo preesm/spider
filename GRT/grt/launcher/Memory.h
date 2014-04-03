@@ -94,6 +94,10 @@ public:
 		start = last+base;
 		last += sectionSize;
 
+		if(last%CACHELINE_SIZE){
+			last = (last/CACHELINE_SIZE+1)*CACHELINE_SIZE;
+		}
+
 		fifoSize[fifoNb] = sectionSize;
 		fifoAddr[fifoNb++] = start;
 		return start;

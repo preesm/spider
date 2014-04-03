@@ -34,12 +34,13 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <ti/csl/csl_cacheAux.h>
 #include <ti/csl/csl_cache.h>
+#include <ti/csl/csl_cacheAux.h>
 
 #include <platform.h>
 #include <platform_types.h>
 #include "semaphore.h"
+#include "memoryAlloc.h"
 
 void platform_file_init();
 void platform_time_init();
@@ -47,7 +48,8 @@ void platform_queue_Init();
 
 void platform_init(UINT8 nbSlaves){
 	mutex_pend(MUTEX_CACHE);
-	CACHE_setL1DSize(CACHE_L1_0KCACHE);
+	CACHE_setL1PSize(CACHE_L1_32KCACHE);
+	CACHE_setL1DSize(CACHE_L1_32KCACHE);
 	CACHE_setL2Size (CACHE_0KCACHE);
 	mutex_post(MUTEX_CACHE);
 

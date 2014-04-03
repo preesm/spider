@@ -52,4 +52,6 @@ typedef CSL_Uint64 	platform_UINT64;
 
 typedef Bool	platform_BOOL;
 
+#define PLATFORM_CACHELINE_SIZE 64
+
 #endif /* TYPES_H_ */

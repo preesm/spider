@@ -102,8 +102,8 @@ public:
 		if (nbFIFOs >= MAX_NB_FIFO) exitWithCode(1060);
 		LauncherFIFO* fifo = &fifos[nbFIFOs];
 		fifo->id = nbFIFOs;
-		fifo->size = edge->getTokenRate() * DEFAULT_FIFO_SIZE;
-		fifo->addr = sharedMem.alloc(edge->getTokenRate() * DEFAULT_FIFO_SIZE);
+		fifo->size = edge->getTokenRate();
+		fifo->addr = sharedMem.alloc(edge->getTokenRate());
 
 		edge->setFifoId(nbFIFOs);
 

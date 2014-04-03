@@ -46,6 +46,7 @@
 #include <ti/csl/csl_tsc.h>
 #include <memoryAlloc.h>
 #include "queue_buffer.h"
+#include "cache.h"
 
 #define PACKET_SIZE 160-12
 #define EMPTY_CTRL 	896
@@ -72,8 +73,8 @@ typedef enum{
 
 #include "qmss_utils.h"
 
-UINT8 *mono_region = (UINT8 *)CTRL_DESCRIPTOR;
-UINT8 *mono_data_region = (UINT8 *)DATA_DESCRIPTOR;
+UINT8 *mono_ctrl_region = (UINT8 *)CTRL_DESC_BASE;
+UINT8 *mono_data_region = (UINT8 *)DATA_DESC_BASE;
 
 void delay(UINT32 cycles){
 	UINT64      value;
@@ -92,7 +93,7 @@ void __c_platform_queue_Init(){
 	 * Mono descriptors will be 12 bytes plus 16 bytes of EPIB Info, plus
 	 * 128 bytes of payload, but the next best size is 160 bytes times
 	 * 32 descriptors. (dead space is possible) */
-	set_memory_region(0, (Uint32) mono_region, 0, 0x00090000);
+	set_memory_region(0, (Uint32) mono_ctrl_region, 0, 0x00090000);
 
 	/*****************************************************************
 	 * Configure Linking RAM 0 to use the 16k entry internal link ram.
@@ -100,36 +101,48 @@ void __c_platform_queue_Init(){
 	set_link_ram(0, 0x00080000, 0x3FFF);
 
 	/* Initialize descriptor regions to zero */
-	memset(mono_region, 	 0, 32 * 160);
-	memset(mono_data_region, 0, 128 * 16);
+	memset(mono_ctrl_region, 0, CTRL_DESC_SIZE*CTRL_DESC_NB);
+	cache_wbInvL1D(mono_ctrl_region, CTRL_DESC_SIZE*CTRL_DESC_NB);
+	memset(mono_data_region, 0, DATA_DESC_SIZE*DATA_DESC_NB);
+	cache_wbInvL1D(mono_data_region, CTRL_DESC_SIZE*CTRL_DESC_NB);
 
 
 	Uint32 n;
 	for(idx = EMPTY_CTRL; idx < 8192; idx++)
 		empty_queue(idx, (UINT32*)NULL, &n);
 
-	for (idx = 0; idx < 32; idx++) {
-		mono_pkt = (MNAV_MonolithicPacketDescriptor *) (mono_region
-				+ (idx * 160));
+	for (idx = 0; idx < CTRL_DESC_NB; idx++) {
+		mono_pkt = (MNAV_MonolithicPacketDescriptor *) (mono_ctrl_region
+				+ (idx * CTRL_DESC_SIZE));
+
+		cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
 
 		mono_pkt->pkt_return_qmgr = 1;
 		mono_pkt->pkt_return_qnum = 1;
+
+		cache_wbInvL1D(mono_pkt, CTRL_DESC_SIZE);
 
 		push_queue(EMPTY_CTRL, 1, 0, (Uint32) (mono_pkt));
 	}
 
-	for (idx = 0; idx < 128; idx++) {
+	for (idx = 0; idx < DATA_DESC_NB; idx++) {
 		mono_pkt = (MNAV_MonolithicPacketDescriptor *) (mono_data_region
-				+ (idx * 16));
+				+ (idx * DATA_DESC_SIZE));
+
+		cache_invL1D(mono_pkt, DATA_DESC_SIZE);
 
 		mono_pkt->pkt_return_qmgr = 1;
 		mono_pkt->pkt_return_qnum = 1;
+
+		cache_wbInvL1D(mono_pkt, DATA_DESC_SIZE);
 
 		push_queue(EMPTY_DATA, 1, 0, (Uint32) (mono_pkt));
 	}
 
 //	for(idx = 0; idx<7; idx++)
 	mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(EMPTY_CTRL);
+
+	cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
 
 	mono_pkt->type_id = 0x2;
 	mono_pkt->packet_type = INIT;
@@ -138,6 +151,8 @@ void __c_platform_queue_Init(){
 	mono_pkt->epib = 0;
 	mono_pkt->pkt_return_qnum = EMPTY_CTRL;
 	mono_pkt->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
+
+	cache_wbInvL1D(mono_pkt, CTRL_DESC_SIZE);
 
 	push_queue(CTRL_OUT(0), 1, 0, (UINT32)mono_pkt);
 }
@@ -149,6 +164,8 @@ UINT32 __c_platform_QPush_data(UINT8 slaveId, platformQType queueType, void* dat
 		delay(100);
 	}while(mono_pkt == 0);
 
+	cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
+
 	mono_pkt->type_id = 0x2;
 	mono_pkt->packet_type = NORMAL;
 	mono_pkt->data_offset = 12;
@@ -159,6 +176,8 @@ UINT32 __c_platform_QPush_data(UINT8 slaveId, platformQType queueType, void* dat
 
 	void* data_pkt = (void*)(((UINT32)mono_pkt) + mono_pkt->data_offset);
 	memcpy(data_pkt, data, size);
+
+	cache_wbInvL1D(mono_pkt, CTRL_DESC_SIZE);
 
 	switch(queueType){
 	case platformCtrlQ:
@@ -208,8 +227,11 @@ UINT32 __c_platform_QPop_data(UINT8 slaveId, platformQType queueType){
 		delay(100);
 	}while(mono_pkt == 0);
 
+	cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
+
 	void* data_pkt = (void*)(((UINT32)mono_pkt) + mono_pkt->data_offset);
 	UINT32 size = mono_pkt->packet_length-mono_pkt->data_offset;
+
 	QBuffer_push(slaveId, queueType, data_pkt, size);
 
 	push_queue(EMPTY_CTRL, 1, 0, (UINT32)mono_pkt);
@@ -269,6 +291,8 @@ UINT32 __c_platform_QNonBlockingPop(UINT8 slaveId, platformQType queueType, void
 	if(mono_pkt == 0){
 		return 0;
 	}
+
+	cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
 
 	void* data_pkt = (void*)(((UINT32)mono_pkt) + mono_pkt->data_offset);
 	memcpy(data, data_pkt, size);

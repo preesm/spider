@@ -37,12 +37,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <ti/csl/csl_tsc.h>
+
 #include <platform_types.h>
 #include <platform_queue.h>
 #include <platform.h>
 
 #include "qmss_utils.h"
 #include "queue_buffer.h"
+#include "memoryAlloc.h"
+#include "cache.h"
 
 #define MAX(a,b) (a>b?a:b)
 #define MIN(a,b) (a<b?a:b)
@@ -81,6 +85,8 @@ void platform_queue_Init(){
 		delay(100);
 	}while(mono_pkt == 0);
 
+	cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
+
 	if (mono_pkt->packet_type == INIT)
 		push_queue(EMPTY_CTRL,1,0,(UINT32)mono_pkt);
 	else{
@@ -103,6 +109,8 @@ UINT32 platform_queue_push_data(PlatformQueueType queueType, void* data, int siz
 		delay(100);
 	}while(mono_pkt == 0);
 
+	cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
+
 	mono_pkt->type_id = 0x2;
 	mono_pkt->packet_type = NORMAL;
 	mono_pkt->data_offset = 12;
@@ -113,6 +121,8 @@ UINT32 platform_queue_push_data(PlatformQueueType queueType, void* data, int siz
 
 	void* data_pkt = (void*)(((UINT32)mono_pkt) + mono_pkt->data_offset);
 	memcpy(data_pkt, data, size);
+
+	cache_wbInvL1D(mono_pkt, CTRL_DESC_SIZE);
 
 	push_queue(queues[queueType][PlatformOutputQueue], 1, 0, (UINT32)mono_pkt);
 
@@ -139,6 +149,8 @@ UINT32 platform_queue_pop_data(PlatformQueueType queueType){
 		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(queues[queueType][PlatformInputQueue]);
 		delay(100);
 	}while(mono_pkt == 0);
+
+	cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
 
 	void* data_pkt = (void*)(((UINT32)mono_pkt) + mono_pkt->data_offset);
 	UINT32 size = mono_pkt->packet_length-mono_pkt->data_offset;

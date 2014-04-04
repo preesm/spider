@@ -64,7 +64,6 @@ BaseSchedule		schedule;
 ExecutionStat 		execStat;
 PiSDFGraph 			piSDF;
 SRDAGGraph 			topDag;
-launcher 			launch;
 
 
 
@@ -122,11 +121,10 @@ int main(int argc, char* argv[]){
 	 * Initializing the queues and data containers (see launcher class) for communication with local RTs.
 	 * This must be done before calling the multiStepScheduling method.
 	 */
-	launch.init(nbSlaves);
-	ClearTimeMsg resetMsg;
+//	launch.init(nbSlaves);
 	int i;
 	for(i=0; i<nbSlaves; i++)
-		resetMsg.send(i);
+		ClearTimeMsg::send(i);
 	platform_time_reset();
 //	launch.launchWaitAck(nbSlaves);
 #endif
@@ -147,8 +145,8 @@ int main(int argc, char* argv[]){
 		 * the graph has been completely flatten.
 		 */
 
-		launch.initSchedulingTime();
 		platform_time_reset();
+		Launcher::initSchedulingTime();
 
 		while(H){
 
@@ -171,7 +169,7 @@ int main(int argc, char* argv[]){
 			 * At the end, the "dag" argument will contain the complete flattened model.
 			 * A final execution must be launched to complete one iteration, i.e. one complete execution of the application.
 			 */
-			PiSDFTransformer::multiStepScheduling(H, &schedule, &listScheduler, &arch, &launch, &execStat, &topDag, currHSrDagVx, lvlCntr, &stepsCntr);
+			PiSDFTransformer::multiStepScheduling(H, &schedule, &listScheduler, &arch, &execStat, &topDag, currHSrDagVx, lvlCntr, &stepsCntr);
 
 			/*
 			 * Finding other hierarchical Vxs. Here the variable "H" gets the next hierarchical level to be flattened.
@@ -196,15 +194,10 @@ int main(int argc, char* argv[]){
 		 */
 		listScheduler.schedule(&topDag, &schedule, &arch);
 
-		launch.clear();
-
 		// Assigning FIFO ids to executable vxs' edges.
-		launch.assignFIFOId(&topDag, &arch);
+		Launcher::assignFifo(&topDag);
 
-		// Preparing tasks' informations
-		launch.prepareTasksInfo(&topDag, nbSlaves, &schedule, IS_AM, &execStat);
-
-		launch.endSchedulingTime();
+		Launcher::endSchedulingTime();
 
 	#if EXEC == 1
 		/*
@@ -212,8 +205,8 @@ int main(int argc, char* argv[]){
 		 * of the current iteration, so the local RTs clear the tasks table and
 		 * send back execution information.
 		 */
-		launch.launch(nbSlaves, true);
-		launch.createRealTimeGantt(&arch, &topDag, "Gantt.xml");
+		Launcher::launch(&topDag, &arch, &schedule);
+		Launcher::createRealTimeGantt(&arch, &topDag, "Gantt.xml");
 	#endif
 
 		// Updating states. Sets all executable vxs to executed since their execution was already launched.

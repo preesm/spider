@@ -45,8 +45,8 @@
 
 #include <ti/csl/csl_tsc.h>
 #include <memoryAlloc.h>
-#include "queue_buffer.h"
 #include "cache.h"
+#include "qmss_utils.h"
 
 #define PACKET_SIZE 160-12
 #define EMPTY_CTRL 	896
@@ -66,12 +66,15 @@
 #define JOB_OUT(id)		(897+28+id)
 #define JOB_IN(id)		(897+35+id)
 
+static MNAV_MonolithicPacketDescriptor* cur_mono_pkt[7][3][2];
+static int cur_mono_pkt_size[7][3][2];
+
+
 typedef enum{
 	INIT,
 	NORMAL
 }MSG_Types;
 
-#include "qmss_utils.h"
 
 UINT8 *mono_ctrl_region = (UINT8 *)CTRL_DESC_BASE;
 UINT8 *mono_data_region = (UINT8 *)DATA_DESC_BASE;
@@ -86,6 +89,9 @@ void delay(UINT32 cycles){
 void __c_platform_queue_Init(){
 	MNAV_MonolithicPacketDescriptor * mono_pkt;
 	UINT32 idx;
+
+	memset(cur_mono_pkt, 0, sizeof(cur_mono_pkt));
+	memset(cur_mono_pkt_size, 0, sizeof(cur_mono_pkt_size));
 
 	CSL_tscEnable();
 
@@ -157,42 +163,72 @@ void __c_platform_queue_Init(){
 	push_queue(CTRL_OUT(0), 1, 0, (UINT32)mono_pkt);
 }
 
-UINT32 __c_platform_QPush_data(UINT8 slaveId, platformQType queueType, void* data, int size){
-	MNAV_MonolithicPacketDescriptor *mono_pkt;
-	do{
-		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(EMPTY_CTRL);
+UINT32 __c_platform_QPush_data_internal(UINT8 slaveId, platformQType queueType, void* data, int size){
+	while(cur_mono_pkt[slaveId][queueType][0] == 0){
+		cur_mono_pkt[slaveId][queueType][0] = (MNAV_MonolithicPacketDescriptor*)pop_queue(EMPTY_CTRL);
+		if(cur_mono_pkt[slaveId][queueType][0] !=0){
+			/* Initialize header */
+			cache_invL1D(cur_mono_pkt[slaveId][queueType][0], CTRL_DESC_SIZE);
+
+			cur_mono_pkt[slaveId][queueType][0]->type_id = 0x2;
+			cur_mono_pkt[slaveId][queueType][0]->packet_type = NORMAL;
+			cur_mono_pkt[slaveId][queueType][0]->data_offset = 12;
+			cur_mono_pkt[slaveId][queueType][0]->epib = 0;
+			cur_mono_pkt[slaveId][queueType][0]->pkt_return_qnum = EMPTY_CTRL;
+			cur_mono_pkt[slaveId][queueType][0]->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
+			break;
+		}
 		delay(100);
-	}while(mono_pkt == 0);
-
-	cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
-
-	mono_pkt->type_id = 0x2;
-	mono_pkt->packet_type = NORMAL;
-	mono_pkt->data_offset = 12;
-	mono_pkt->packet_length = size+12;
-	mono_pkt->epib = 0;
-	mono_pkt->pkt_return_qnum = EMPTY_CTRL;
-	mono_pkt->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
-
-	void* data_pkt = (void*)(((UINT32)mono_pkt) + mono_pkt->data_offset);
-	memcpy(data_pkt, data, size);
-
-	cache_wbInvL1D(mono_pkt, CTRL_DESC_SIZE);
-
-	switch(queueType){
-	case platformCtrlQ:
-		push_queue(CTRL_OUT(slaveId), 1, 0, (UINT32)mono_pkt);
-		break;
-	case platformInfoQ:
-		push_queue(INFO_OUT(slaveId), 1, 0, (UINT32)mono_pkt);
-		break;
-	case platformJobQ:
-		push_queue(JOB_OUT(slaveId), 1, 0, (UINT32)mono_pkt);
-		break;
 	}
 
-	return size;
+	UINT32 toCopy = MIN(CTRL_DESC_SIZE - cur_mono_pkt_size[slaveId][queueType][0] - 12, size);
+
+	/* Add data to current descriptor */
+	void* data_pkt = (void*)(((UINT32)cur_mono_pkt[slaveId][queueType][0]) + 12 + cur_mono_pkt_size[slaveId][queueType][0]);
+	memcpy(data_pkt, data, toCopy);
+
+	cur_mono_pkt_size[slaveId][queueType][0] += toCopy;
+	return toCopy;
 }
+
+void __c_platform_QPush_finalize(UINT8 slaveId, platformQType queueType){
+	if(cur_mono_pkt[slaveId][queueType][0]){
+		/* Send the descriptor */
+		cur_mono_pkt[slaveId][queueType][0]->packet_length = cur_mono_pkt_size[slaveId][queueType][0]+12;
+
+		cache_wbInvL1D(cur_mono_pkt[slaveId][queueType][0], CTRL_DESC_SIZE);
+
+		switch(queueType){
+		case platformCtrlQ:
+			push_queue(CTRL_OUT(slaveId), 1, 0, (UINT32)cur_mono_pkt[slaveId][queueType][0]);
+			break;
+		case platformInfoQ:
+			push_queue(INFO_OUT(slaveId), 1, 0, (UINT32)cur_mono_pkt[slaveId][queueType][0]);
+			break;
+		case platformJobQ:
+			push_queue(JOB_OUT(slaveId), 1, 0, (UINT32)cur_mono_pkt[slaveId][queueType][0]);
+			break;
+		}
+
+//		printf("Send a descriptor of %d bytes\n", cur_mono_pkt_size[slaveId][queueType][0]);
+
+		cur_mono_pkt[slaveId][queueType][0] = 0;
+		cur_mono_pkt_size[slaveId][queueType][0] = 0;
+
+	}
+}
+
+UINT32 __c_platform_QPush_data(UINT8 slaveId, platformQType queueType, void* data, int size){
+	UINT32 sended = 0;
+	sended += __c_platform_QPush_data_internal(slaveId, queueType, ((char*)data)+sended, size-sended);
+	while(sended < size){
+		__c_platform_QPush_finalize(slaveId, queueType);
+		sended += __c_platform_QPush_data_internal(slaveId, queueType, ((char*)data)+sended, size-sended);
+	}
+	return sended;
+}
+
+
 
 UINT32 __c_platform_QPush(UINT8 slaveId, platformQType queueType, void* data, int size){
 	int res = 0;
@@ -207,8 +243,7 @@ UINT32 __c_platform_QPushUINT32(UINT8 slaveId, platformQType queueType, UINT32 d
 	return res;
 }
 
-UINT32 __c_platform_QPop_data(UINT8 slaveId, platformQType queueType){
-	MNAV_MonolithicPacketDescriptor *mono_pkt;
+UINT32 __c_platform_QNBPop_data(UINT8 slaveId, platformQType queueType, void* data, UINT32 size){
 	UINT32 queue;
 	switch(queueType){
 	case platformCtrlQ:
@@ -222,48 +257,43 @@ UINT32 __c_platform_QPop_data(UINT8 slaveId, platformQType queueType){
 		break;
 	}
 
-	do{
-		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(queue);
-		delay(100);
-	}while(mono_pkt == 0);
-
-	cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
-
-	void* data_pkt = (void*)(((UINT32)mono_pkt) + mono_pkt->data_offset);
-	UINT32 size = mono_pkt->packet_length-mono_pkt->data_offset;
-
-	QBuffer_push(slaveId, queueType, data_pkt, size);
-
-	push_queue(EMPTY_CTRL, 1, 0, (UINT32)mono_pkt);
-
-	return size;
-}
-
-UINT32 __c_platform_QPop(UINT8 slaveId, platformQType queueType, void* data, int size){
-	int res=0;
-
-	if(size==0)
-		return 0;
-
-	int nbData = QBuffer_getNbData(slaveId, queueType);
-	if(nbData > 0){
-		nbData = MIN(nbData, size);
-		QBuffer_pop(slaveId, queueType, (void*)((UINT32)data+res), nbData);
-		res = nbData;
-		if(size == res)
-			return res;
+	if(cur_mono_pkt[slaveId][queueType][1] == 0){
+		cur_mono_pkt[slaveId][queueType][1] = (MNAV_MonolithicPacketDescriptor*)pop_queue(queue);
+		if(cur_mono_pkt[slaveId][queueType][1] == 0){
+			return 0;
+		}
+		cache_invL1D(cur_mono_pkt[slaveId][queueType][1], CTRL_DESC_SIZE);
 	}
 
-	do{
-		__c_platform_QPop_data(slaveId, queueType);
+	void* data_pkt = (void*)(((UINT32)cur_mono_pkt[slaveId][queueType][1])
+			+ cur_mono_pkt[slaveId][queueType][1]->data_offset
+			+ cur_mono_pkt_size[slaveId][queueType][1]);
+	UINT32 data_size = cur_mono_pkt[slaveId][queueType][1]->packet_length
+			- cur_mono_pkt[slaveId][queueType][1]->data_offset
+			- cur_mono_pkt_size[slaveId][queueType][1];
 
-		nbData = QBuffer_getNbData(slaveId, queueType);
-		nbData = MIN(nbData, size-res);
-		QBuffer_pop(slaveId, queueType, (void*)((UINT32)data+res), nbData);
-		res += nbData;
-	}while(size != res);
+	UINT32 toCopy = MIN(size, data_size);
 
-	return res;
+	memcpy(data, data_pkt, toCopy);
+	cur_mono_pkt_size[slaveId][queueType][1] += toCopy;
+
+	/* End of descriptor */
+	if(toCopy == data_size){
+		push_queue(EMPTY_CTRL, 1, 0, (UINT32)cur_mono_pkt[slaveId][queueType][1]);
+		cur_mono_pkt[slaveId][queueType][1] = 0;
+		cur_mono_pkt_size[slaveId][queueType][1] = 0;
+	}
+
+	return toCopy;
+}
+
+
+UINT32 __c_platform_QPop(UINT8 slaveId, platformQType queueType, void* data, int size){
+	UINT32 recved = 0;
+	while(recved < size){
+		recved += __c_platform_QNBPop_data(slaveId, queueType, (char*)data+recved, size-recved);
+	}
+	return recved;
 }
 
 UINT32 __c_platform_QPopUINT32(UINT8 slaveId, platformQType queueType){
@@ -273,31 +303,5 @@ UINT32 __c_platform_QPopUINT32(UINT8 slaveId, platformQType queueType){
 }
 
 UINT32 __c_platform_QNonBlockingPop(UINT8 slaveId, platformQType queueType, void* data, int size){
-	MNAV_MonolithicPacketDescriptor *mono_pkt;
-	UINT32 queue;
-	switch(queueType){
-	case platformCtrlQ:
-		queue = CTRL_IN(slaveId);
-		break;
-	case platformInfoQ:
-		queue = INFO_IN(slaveId);
-		break;
-	case platformJobQ:
-		queue = JOB_IN(slaveId);
-		break;
-	}
-
-	mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(queue);
-	if(mono_pkt == 0){
-		return 0;
-	}
-
-	cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
-
-	void* data_pkt = (void*)(((UINT32)mono_pkt) + mono_pkt->data_offset);
-	memcpy(data, data_pkt, size);
-
-	push_queue(EMPTY_CTRL, 1, 0, (UINT32)mono_pkt);
-
-	return size;
+	return __c_platform_QNBPop_data(slaveId, queueType, data, size);
 }

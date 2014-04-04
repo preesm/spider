@@ -455,7 +455,6 @@ void PiSDFTransformer::multiStepScheduling(
 							BaseSchedule* schedule,
 							ListScheduler* listScheduler,
 							Architecture* arch,
-							launcher* launch,
 							ExecutionStat* execStat,
 							SRDAGGraph* topDag,
 							SRDAGVertex* currHSrDagVx,
@@ -490,15 +489,8 @@ void PiSDFTransformer::multiStepScheduling(
 	/* Schedule */
 	listScheduler->schedule(topDag, schedule, arch);
 
-
-	// Clearing the buffers which will contain the data to be sent/received to/from LRTs.
-	launch->clear();
-
 	// Assigning FIFO ids to executable vxs' edges.
-	launch->assignFIFOId(topDag, arch);
-
-	// Preparing tasks' information that will be sent to LRTs.
-	launch->prepareTasksInfo(topDag, arch->getNbSlaves(), schedule, false, execStat);
+	Launcher::assignFifo(topDag);
 
 #if PRINT_GRAPH
 	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.xml", SCHED_FILE_NAME, *step);
@@ -512,12 +504,12 @@ void PiSDFTransformer::multiStepScheduling(
 	DotWriter::write(topDag, file, 1, 0);
 #endif
 
-	launch->endSchedulingTime();
+	Launcher::endSchedulingTime();
 
 
 #if EXEC == 1
 	// Executing the executable vxs.
-	launch->launch(arch->getNbSlaves());
+	Launcher::launch(topDag, arch, schedule);
 #endif
 
 	// Updating states. Sets all executable vxs to executed since their execution was already launched.
@@ -530,10 +522,10 @@ void PiSDFTransformer::multiStepScheduling(
 
 #if EXEC == 1
 	// Waiting for parameters' values from LRT (configure actors' execution).
-	launch->resolveParameters(topDag, arch->getNbSlaves());
+	Launcher::resolveParameters(arch, topDag);
 #endif
 
-	launch->initSchedulingTime();
+	Launcher::initSchedulingTime();
 
 	// Resolving productions/consumptions.
 	currentPiSDF->evaluateExpressions();

@@ -54,4 +54,6 @@ typedef bool	platform_BOOL;
 #define TRUE ((BOOL)-1)
 #define FALSE ((BOOL)0)
 
+#define PLATFORM_CACHELINE_SIZE 1
+
 #endif /* TYPES_H_ */

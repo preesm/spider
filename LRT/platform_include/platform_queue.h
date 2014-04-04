@@ -57,4 +57,6 @@ UINT32 platform_queue_pop(PlatformQueueType queueType, void* data, int size);
 UINT32 platform_queue_pop_UINT32(PlatformQueueType queueType);
 BOOL   platform_queue_NBPop_UINT32(PlatformQueueType queueType, UINT32* data);
 
+void platform_queue_push_finalize(PlatformQueueType queueType);
+
 #endif /* HWQUEUES_H_ */

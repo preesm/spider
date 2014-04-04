@@ -40,13 +40,13 @@
 #include "../launcher.h"
 #include <platform_types.h>
 
-class ClearTimeMsg {
-private:
-
-public:
-	ClearTimeMsg();
-
+namespace ClearTimeMsg {
 	void send(int LRTID);
 };
+
+void inline ClearTimeMsg::send(int LRTID){
+	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_CLEAR_TIME);
+	platform_QPush_finalize(LRTID, platformCtrlQ);
+}
 
 #endif /* CLEARFIFOMSG_H_ */

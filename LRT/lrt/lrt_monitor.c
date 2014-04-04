@@ -86,6 +86,7 @@ void printResult(){
 		val /= totalTime;
 
 		platform_queue_push_UINT32(PlatformInfoQueue, val);
+		platform_queue_push_finalize(PlatformCtrlQueue);
 	}
 
 //		if(monitorTimes[i] != 0){

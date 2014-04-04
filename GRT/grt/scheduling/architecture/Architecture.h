@@ -134,7 +134,7 @@ class Architecture {
 
 		 @return the number of slaves
 		*/
-		int getNbSlaves();
+		UINT32 getNbSlaves();
 
 		/**
 		 Gets the communication rate between two slaves in ns/64Bytes
@@ -164,7 +164,7 @@ inline int Architecture::getSlaveType(int index){
 
  @return the number of slaves
 */
-inline int Architecture::getNbSlaves(){
+inline UINT32 Architecture::getNbSlaves(){
 	return nbSlaves;
 }
 

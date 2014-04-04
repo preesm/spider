@@ -48,33 +48,10 @@
 
 extern void amTaskStart();
 
-/* Send a Message to the Global Runtime */
-void send_ext_msg(UINT32 addr, UINT32 msg_type, void* msg) {
-	UINT32 msg_size = 0;
-
-	// Sending the type of message as the first data word.
-	platform_queue_push(PlatformCtrlQueue, &msg_type, sizeof(UINT32));
-
-	// Determining the size of the rest of data.
-	switch (msg_type) {
-	case MSG_CURR_VERTEX_ID:
-		msg_size = sizeof(UINT32);
-		break;
-	default:
-		break;
-	}
-
-	// Sending the rest of data.
-	if (msg_size > 0)
-		platform_queue_push(PlatformCtrlQueue, msg, msg_size);
-}
-
 /* Waits for an external message from the Global Runtime and execute the current task */
 void wait_ext_msg() {
 	UINT32 msg_type;
-	UINT32 fifoID;
 	OS_TCB *new_tcb;
-	UINT32 i;
 
 	/* Popping the first incoming word i.e. the message type. */
 	if (platform_queue_NBPop_UINT32(PlatformCtrlQueue, &msg_type)) {
@@ -126,6 +103,8 @@ void wait_ext_msg() {
 //					new_tcb->actor->inputFifoDataOff[i] = platform_queue_pop_UINT32(PlatformCtrlQueue);
 				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->inputFifoDataOff, new_tcb->actor->nbInputFifos*sizeof(UINT32));
 
+				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->inputFifoDataSize, new_tcb->actor->nbInputFifos*sizeof(UINT32));
+
 
 //				for (i = 0; i < new_tcb->actor->nbOutputFifos; i++)
 //					new_tcb->actor->outputFifoId[i] = platform_queue_pop_UINT32(PlatformCtrlQueue);
@@ -134,6 +113,7 @@ void wait_ext_msg() {
 //				for (i = 0; i < new_tcb->actor->nbOutputFifos; i++)
 //					new_tcb->actor->outputFifoDataOff[i] = platform_queue_pop_UINT32(PlatformCtrlQueue);
 				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->outputFifoDataOff, new_tcb->actor->nbOutputFifos*sizeof(UINT32));
+				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->outputFifoDataSize, new_tcb->actor->nbOutputFifos*sizeof(UINT32));
 
 
 
@@ -150,35 +130,15 @@ void wait_ext_msg() {
 			}
 
 //			RTQueuePush(RTCtrlQueue, &msg_type, sizeof(UINT32));
-			break;
-
-		case MSG_STOP_TASK:
-			OSTaskDel();
-			break;
-
-		case MSG_CREATE_FIFO:
-//			create_fifo();
-//			OS_CtrlQPush(&msg_type, sizeof(UINT32));
-			break;
-
-		case MSG_CLEAR_FIFO:
-			fifoID = platform_queue_pop_UINT32(PlatformCtrlQueue);
-			platform_flushFIFO(fifoID);
-//			RTQueuePush_UINT32(RTCtrlQueue, msg_type);
+			lrt_running = TRUE;
 			break;
 
 		case MSG_CLEAR_TIME:
 			platform_time_reset();
 			break;
 
-		case MSG_START_SCHED:
-#if PRINT_ACTOR_IN_DOT_FILE == 1
-			PrintTasksIntoDot();
-#endif
-			lrt_running = TRUE;
-			clearAfterCompletion = platform_queue_pop_UINT32(PlatformCtrlQueue);
-//			platform_puts("Start Schedule\n");
-//			OS_CtrlQPush(&msg_type, sizeof(UINT32));
+		case MSG_SEND_INFO_DATA:
+			sendExecData();
 			break;
 
 		default:

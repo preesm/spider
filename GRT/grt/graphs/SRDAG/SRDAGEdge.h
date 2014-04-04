@@ -37,6 +37,8 @@
 #ifndef SRDAG_EDGE
 #define SRDAG_EDGE
 
+#include <platform_types.h>
+
 class SRDAGVertex;
 class PiSDFEdge;
 
@@ -56,9 +58,8 @@ class SRDAGEdge {
 	protected :
 		/**
 		 token rate (solved and not depending on an expression). 
-		 tokenRate = -1 means that the edge only represents a precedence
 		*/
-		int tokenRate;
+		UINT32 tokenRate;
 
 		/**
 		 Edge source
@@ -71,9 +72,10 @@ class SRDAGEdge {
 
 		PiSDFEdge* refEdge;		// Reference to PiSDF edge.
 
-		int delay;				// Delay or number of initial tokens.
+		UINT32 delay;				// Delay or number of initial tokens.
 
-		int fifoId;			// Id of the implemented FIFO.
+		int fifoId;				// Id of the implemented FIFO (-1 if not implemented).
+		UINT32 fifoAddress;		// Address of the implemented FIFO.
 
 	public : 
 		/**
@@ -93,14 +95,14 @@ class SRDAGEdge {
 
 		 @return production after resolving the expression
 		*/
-		int getTokenRate();
+		UINT32 getTokenRate();
 
 		/**
 		 TokenRate setter
 
 		 @param integer defining the token rate
 		*/
-		void setTokenRate(int rate);
+		void setTokenRate(UINT32 rate);
 
 		/**
 		 Source getter
@@ -135,12 +137,12 @@ class SRDAGEdge {
 
 		 @return delay
 		*/
-		int getDelay();
+		UINT32 getDelay();
 
 		/**
 		 delay setter
 		*/
-		void setDelay(const int delay);
+		void setDelay(const UINT32 delay);
 
 		// Public for performance sake
 
@@ -161,6 +163,14 @@ class SRDAGEdge {
 		void setFifoId(int fifoId) {
 			this->fifoId = fifoId;
 		}
+
+UINT32 getFifoAddress() const {
+		return fifoAddress;
+	}
+
+	void setFifoAddress(UINT32 fifoAddress) {
+		this->fifoAddress = fifoAddress;
+	}
 
 		/**
 		 In order to fast access the input edges, a linked list of edges is done. The edges
@@ -219,7 +229,7 @@ void SRDAGEdge::setSink(SRDAGVertex* vertex){
  @return production after resolving the expression
 */
 inline
-int SRDAGEdge::getTokenRate()
+UINT32 SRDAGEdge::getTokenRate()
 {
 	return(this->tokenRate);
 }
@@ -231,7 +241,7 @@ int SRDAGEdge::getTokenRate()
  @return production after resolving the expression
 */
 inline
-void SRDAGEdge::setTokenRate(int rate)
+void SRDAGEdge::setTokenRate(const UINT32 rate)
 {
 	this->tokenRate = rate;
 }
@@ -239,14 +249,16 @@ void SRDAGEdge::setTokenRate(int rate)
 /**
  delay getter.
  */
-inline int SRDAGEdge::getDelay(){
+inline
+UINT32 SRDAGEdge::getDelay(){
 	return(this->delay);
 }
 
 /**
  delay setter.
  */
-inline void SRDAGEdge::setDelay(const int delay){
+inline
+void SRDAGEdge::setDelay(const UINT32 delay){
 	this->delay = delay;
 }
 

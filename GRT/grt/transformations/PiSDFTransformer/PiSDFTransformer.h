@@ -63,7 +63,6 @@ namespace PiSDFTransformer {
 		BaseSchedule* schedule,
 		ListScheduler* listScheduler,
 		Architecture* arch,
-		launcher* launch,
 		ExecutionStat* execStat,
 		SRDAGGraph* topDag,
 		SRDAGVertex* currHSrDagVx,

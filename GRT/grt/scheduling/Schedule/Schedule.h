@@ -96,7 +96,7 @@ public:
 		return false;
 	}
 
-	int getNbVertex(int slave){
+	UINT32 getNbVertices(int slave){
 		return nbVertex[slave];
 	}
 

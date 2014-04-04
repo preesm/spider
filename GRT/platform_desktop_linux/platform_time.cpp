@@ -45,7 +45,7 @@ void platform_time_reset(){
 	clock_gettime(CLOCK_MONOTONIC, &start);
 }
 
-UINT64 platform_time_getValue(){
+UINT32 platform_time_getValue(){
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	UINT64 val = ts.tv_sec - start.tv_sec;

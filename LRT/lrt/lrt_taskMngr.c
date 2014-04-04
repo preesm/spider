@@ -319,25 +319,19 @@ UINT32 rtGetVxId(){
 void sendExecData(){
 	UINT32 i, taskCnt, wordCnt;
 	taskCnt = 0; wordCnt = 0;
-	data[wordCnt++] = MSG_EXEC_TIMES;
-//	data[wordCnt++] = CLOCKS_PER_SEC;
-	wordCnt++;	// Leaves a space for the number of bytes that will be sent.
+	platform_queue_push_UINT32(PlatformCtrlQueue, MSG_EXEC_TIMES);
 	for(i=0;i<OS_MAX_TASKS;i++){
 		if(OSTCBTbl[i].OSTCBState == OS_STAT_DELETED){
-			taskCnt++;
 			data[wordCnt++] = OSTCBTbl[i].vertexId;
 			data[wordCnt++] = OSTCBTbl[i].startTime;
-//			data[wordCnt++] = OSTCBTbl[i].nbCpuCycles;
 			data[wordCnt++] = OSTCBTbl[i].execTime;
-
-//			printf("task %d vertex %d started at %d ended at +%d\n",
-//					taskCnt, OSTCBTbl[i].vertexId, OSTCBTbl[i].startTime, OSTCBTbl[i].execTime);
+			taskCnt++;
 		}
 	}
 	if(wordCnt >= MAX_DATA_WORDS) exitWithCode(1016);
-	data[1] = wordCnt*sizeof(UINT32); // Number of bytes that will be sent.
-	platform_queue_push(PlatformCtrlQueue, data, data[1]);
-//	platform_putdec(taskCnt); platform_puts(" tasks \n");
-//	platform_putdec(data[1]); platform_puts(" bytes sent\n");
+	data[1] = taskCnt; // Number of bytes that will be sent.
+	platform_queue_push_UINT32(PlatformCtrlQueue, taskCnt);
+	platform_queue_push(PlatformCtrlQueue, data, wordCnt*sizeof(UINT32));
+	platform_queue_push_finalize(PlatformCtrlQueue);
 	exit(0);
 }

@@ -34,35 +34,19 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "StopTaskMsg.h"
-#include <platform_queue.h>
-#include <grt_definitions.h>
+#ifndef CLEARTIMEMSG_H_
+#define CLEARTIMEMSG_H_
 
-StopTaskMsg::StopTaskMsg(INT32 _TaskID, INT32 _VectorID): TaskID(_TaskID), VectorID(_VectorID) {
+#include "../launcher.h"
+#include <platform_types.h>
+
+namespace SendInfoData {
+	void send(int LRTID);
+};
+
+void inline SendInfoData::send(int LRTID){
+	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_SEND_INFO_DATA);
+	platform_QPush_finalize(LRTID, platformCtrlQ);
 }
 
-void StopTaskMsg::send(int LRTID){
-	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_STOP_TASK);
-	platform_QPushUINT32(LRTID, platformCtrlQ, TaskID);
-	platform_QPushUINT32(LRTID, platformCtrlQ, VectorID);
-
-	platform_QPopUINT32(LRTID, platformCtrlQ);
-}
-
-void StopTaskMsg::sendWOCheck(int LRTID){
-	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_STOP_TASK);
-	platform_QPushUINT32(LRTID, platformCtrlQ, TaskID);
-	platform_QPushUINT32(LRTID, platformCtrlQ, VectorID);
-}
-
-int StopTaskMsg::prepare(int* data, int offset){
-	int size = 0;
-	data[offset + size++] = MSG_STOP_TASK;
-	data[offset + size++] = TaskID;
-	data[offset + size++] = VectorID;
-	return size;
-}
-
-//void StopTaskMsg::prepare(int slave, launcher* launch){
-//	launch->addUINT32ToSend(slave, MSG_STOP_TASK);
-//}
+#endif /* CLEARFIFOMSG_H_ */

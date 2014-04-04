@@ -53,140 +53,15 @@ typedef struct {
 	UINT32 addr;
 }LauncherFIFO;
 
-
-class launcher {
-private:
-
-	UINT32 nbFIFOs;
-	LauncherFIFO fifos[MAX_NB_FIFO];
-
-	Memory sharedMem;
-	UINT32 dataToSend[MAX_SLAVES][MAX_CTRL_DATA];
-	UINT32 dataToSendCnt[MAX_SLAVES];
-	UINT32 dataToReceive[MAX_SLAVES][MAX_CTRL_DATA];
-	UINT32 dataToReceiveCnt[MAX_SLAVES];
-
-	UINT32 jobDataToSend[MAX_SLAVES][MAX_JOB_DATA];
-	UINT32 jobDataToSendCnt[MAX_SLAVES];
-	UINT32 jobDataToReceive[MAX_SLAVES][MAX_JOB_DATA];
-	UINT32 jobDataToReceiveCnt[MAX_SLAVES];
-
-	int launchedSlaveNb;
-
-	void initFifos(SRDAGGraph* graph, int nbSlaves);
-	void initTasks(SRDAGGraph* graph, Schedule* schedule, int nbSlaves);
-	void initTasks(SRDAGGraph* graph);
-	void stopTasks(SRDAGGraph* graph, Schedule* schedule, int nbSlaves);
-	void start(int nbSlaves);
-
-public:
-	launcher();
-
-	void assignFIFOId(SRDAGGraph* graph, Architecture* arch);
-	void clear();
+namespace Launcher {
+	void assignFifo(SRDAGGraph* graph);
+	void launch(SRDAGGraph* graph, Architecture* arch, BaseSchedule* schedule);
 	void createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName);
-	void init(int nbSlaves);
-	void launch(SRDAGGraph* graph, Architecture *archi);
-
-	//
-//	LauncherFIFO* addFIFO(UINT32 id, UINT32 size, UINT32 addr){
-//		if (nbFIFOs >= MAX_NB_FIFO) exitWithCode(1060);
-//		LauncherFIFO* fifo = &fifos[nbFIFOs++];
-//		fifo->id = id;
-//		fifo->size = size;
-//		fifo->addr = addr;
-//		return fifo;
-//	}
-
-	LauncherFIFO* addFIFO(SRDAGEdge* edge){
-		if (nbFIFOs >= MAX_NB_FIFO) exitWithCode(1060);
-		LauncherFIFO* fifo = &fifos[nbFIFOs];
-		fifo->id = nbFIFOs;
-		fifo->size = edge->getTokenRate();
-		fifo->addr = sharedMem.alloc(edge->getTokenRate());
-
-		edge->setFifoId(nbFIFOs);
-
-		nbFIFOs++;
-
-		return fifo;
-	}
-
-	UINT32 getNbFIFOs(){
-		return nbFIFOs;
-	}
-
-	LauncherFIFO* getFIFO(UINT32 id){
-		for (UINT32 i = 0; i < nbFIFOs; i++) {
-			if (fifos[i].id == id)
-				return &fifos[i];
-		}
-		return 0;
-	}
-
-	// Prepares the execution of a SRDAG or a group of actors (e.g. the configuration actors of a PiSDF).
-	void prepare(SRDAGGraph* graph, Architecture *archi, Schedule* schedule, ExecutionStat* execStat);
-
-
-	void prepareTasksInfo(SRDAGGraph* graph, UINT32 nbSlaves, BaseSchedule* schedule, bool isAM, ExecutionStat* execStat);
-
-	/*
-	 * Prepares the execution of configuration vertices. Note that the outputs will be written directly
-	 * on the GlobalRT's queues and not on the shared memory.
-	 */
-	void prepareConfigExec(
-			PiSDFAbstractVertex** configVertices,
-			UINT32 nb_vertices,
-			Architecture *archi,
-			BaseSchedule* schedule,
-			ExecutionStat* execStat);
-
-	/*
-	 * Gets the returning values of configuration vertices' executions,
-	 * and resolves the corresponding parameters.
-	 */
-	void resolvePiSDFParameters(
-			PiSDFAbstractVertex** configVertices,
-			UINT32 nb_vertices,
-			BaseSchedule* schedule,
-			Architecture* archi);
-
-	void launchWaitAck(int nbSlaves);
-
-	void launch(int nbSlaves, bool clearAfterCompletion = false);
-//	void launchJobs(UINT16 nbSlaves);
-	void stop();
-	void stopWOCheck();
-
-	void toDot(const char* path, UINT32 slaveId);
-
-	int getNbLaunchedSlave();
-
-	void launchOnce(SRDAGGraph* graph, Architecture *archi, Schedule* schedule);
-	void reset();
-
-	void addDataToSend(int slave, void* data, int size);
-	void addDataToReceive(int slave, void* data, int size);
-
-	void addUINT32ToSend(int slave, UINT32 val, platformQType queue = platformCtrlQ);
-	void addUINT32ToReceive(int slave, UINT32 val);
-
-	void flushDataToSend();
-	void flushDataToReceive();
-
-	UINT32 popExecInfo(UINT32 slaveId, UINT32* data);
-
-	UINT32 rcvData(UINT32 slave, UINT32 msgType, UINT32* data);
-
-	void resolveParameters(SRDAGGraph* dag, UINT32 nbSlaves);
-
-	void sendClearTasks(int nbSlaves);
+	void resolveParameters(Architecture *arch, SRDAGGraph* topDag);
 
 	void initSchedulingTime();
 	void endSchedulingTime();
+
 };
 
-inline int launcher::getNbLaunchedSlave(){
-	return launchedSlaveNb;
-}
 #endif /* LAUNCHER_H_ */

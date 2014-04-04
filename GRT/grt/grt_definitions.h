@@ -129,15 +129,10 @@
 
 /**************** Message types ******************/
 #define MSG_CREATE_TASK			1
-#define MSG_CREATE_FIFO			2
-#define MSG_START_SCHED			3
-#define MSG_STOP_TASK			4
-#define MSG_CLEAR_FIFO			5
-#define MSG_CURR_VERTEX_ID		6
-#define MSG_CLEAR_TASKS			7
-#define MSG_PARAM_VALUE			8
-#define	MSG_EXEC_TIMES			9
-#define MSG_CLEAR_TIME			10
+#define MSG_EXEC_TIMES			2
+#define MSG_PARAM_VALUE			3
+#define MSG_CLEAR_TIME			4
+#define MSG_SEND_INFO_DATA		5
 
 
 /**************** FIFO's******************************/

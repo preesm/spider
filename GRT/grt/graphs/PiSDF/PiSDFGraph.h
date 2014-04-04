@@ -110,17 +110,6 @@ public:
 	 */
 	void createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hSrDagVx);
 
-
-	void multiStepScheduling(BaseSchedule* schedule,
-							ListScheduler* listScheduler,
-							Architecture* arch,
-							launcher* launch,
-							ExecutionStat* execStat,
-							SRDAGGraph* dag,
-							SRDAGVertex* hSrDagVx,
-							UINT32 level,
-							UINT8* step);
-
 	void solveParameters(SRDAGGraph* dag, BaseSchedule* schedule);
 
 	void updateDAGStates(SRDAGGraph* dag);

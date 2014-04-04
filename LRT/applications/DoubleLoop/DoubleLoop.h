@@ -78,6 +78,7 @@ void rdFile(UINT32 inputFIFOIds[],
 	platform_queue_push_UINT32(PlatformCtrlQueue, MSG_PARAM_VALUE);
 	platform_queue_push_UINT32(PlatformCtrlQueue, rtGetVxId());
 	platform_queue_push_UINT32(PlatformCtrlQueue, N);
+	platform_queue_push_finalize(PlatformCtrlQueue);
 
 	platform_writeFifo(outputFIFOIds[0], outputFIFOAddrs[0], M_MAX_VALUE * sizeof(UINT8), (UINT8*)M);
 	platform_writeFifo(outputFIFOIds[1], outputFIFOAddrs[1], MAX_DATA_SIZE * sizeof(UINT8), (UINT8*)array);
@@ -165,6 +166,7 @@ void configM(UINT32 inputFIFOIds[],
 	platform_queue_push_UINT32(PlatformCtrlQueue, MSG_PARAM_VALUE);
 	platform_queue_push_UINT32(PlatformCtrlQueue, rtGetVxId());
 	platform_queue_push_UINT32(PlatformCtrlQueue, M);
+	platform_queue_push_finalize(PlatformCtrlQueue);
 }
 
 

@@ -129,6 +129,7 @@ static void exitWithCode(int exitCode){
 	// 1073: MAX_SLAVE_NAME_SIZE too small.
 	// 1074: EXPR_LEN_MAX too small.
 	// 1075: MAX_VERTEX_NAME_SIZE too small.
+	// 1076: List too small
 
 	printf("\nExiting with code %d\n", exitCode);
 	exit(exitCode);

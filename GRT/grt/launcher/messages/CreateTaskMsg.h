@@ -45,65 +45,72 @@
 #include "../ActorMachine/AMGraph.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <grt_definitions.h>
+#include <platform_queue.h>
 #include "../launcher.h"
-#include "../SingleActor/LRTActor.h"
 
-#if USE_AM
-//extern AMGraph AMGraphTbl[MAX_NB_AM];
-//extern UINT32 nbAM;
-//extern LRTActor LRTActorTbl[MAX_SRDAG_VERTICES];
-//extern UINT32 nbLRTActors;
-
-class CreateTaskMsg {
-private:
-	UINT32 taskID;
-	UINT32 functID;
-	UINT32 isAM;
-//	INT32 stopAfterComplet;
-//	INT32 nbFifoIn;
-//	INT32 nbFifoOut;
-//	INT32 FifosInID[MAX_NB_FIFO];
-//	INT32 FifosOutID[MAX_NB_FIFO];
-
-	union{
-		AMGraph* 	am;
-		LRTActor* 	lrtActor;
-	}actor;
-
-	/* Actor Machine */
-//	INT32 initStateAM;
-//	AMGraph* am;
-public:
-	CreateTaskMsg(){
-		taskID = 0;
-		functID = 0;
-		isAM = 0;
-	}
-	CreateTaskMsg(SRDAGGraph* graph, SRDAGVertex* vertex, AMGraph* am);
-	CreateTaskMsg(SRDAGGraph* graph, Schedule* schedule, int slave, AMGraph* am);
-	CreateTaskMsg(SRDAGGraph* graph, BaseSchedule* schedule, int slave, launcher*);
-	CreateTaskMsg(SRDAGGraph *graph, SRDAGVertex* srvertex, launcher*);
-	CreateTaskMsg(PiSDFConfigVertex* vertex, AMGraph* am, INT32 stopAfterComplet = 0);
-
-	AMGraph* getAM(){return actor.am;}
-	LRTActor* getLRTActor(){return actor.lrtActor;}
-
-	void send(int LRTID);
-	int prepare(int* data, int offset);
-	void prepare(int slave, launcher* launch);
-	void toDot(const char* path);
-//	AMGraph* getAm();
-    UINT32 getIsAM() const
-    {
-        return isAM;
-    }
-
-    void setIsAM(UINT32 isAM)
-    {
-        this->isAM = isAM;
-    }
+namespace CreateTaskMsg {
+	void send(int LRTID, SRDAGVertex* vertex);
 };
 
-#endif
+void inline CreateTaskMsg::send(int lrtID, SRDAGVertex* vertex){
+	platform_QPushUINT32(lrtID, platformCtrlQ, MSG_CREATE_TASK);
+	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getFunctIx());
+	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getId());
+	platform_QPushUINT32(lrtID, platformCtrlQ, 0); // Not an actor machine.
+
+	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getNbInputEdge());
+	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getNbOutputEdge());
+
+	UINT32 nbParams = 0;
+	UINT32 params[MAX_NB_ARGS];
+	switch(vertex->getType()){
+	case Normal:
+	case ConfigureActor:
+		nbParams = vertex->getReference()->getNbParameters();
+		for(UINT32 i=0; i<nbParams; i++){
+			params[i] = vertex->getReference()->getParameter(i)->getValue();
+		}
+		break;
+	case RoundBuffer:
+		nbParams = 2;
+		params[0] = vertex->getInputEdge(0)->getTokenRate();
+		params[1] = vertex->getOutputEdge(0)->getTokenRate();
+		break;
+	case Explode:
+	case Implode:
+		nbParams = vertex->getNbInputEdge() + vertex->getNbOutputEdge() + 2;
+		params[0] = vertex->getNbInputEdge();
+		params[1] = vertex->getNbOutputEdge();
+
+		// Setting number of tokens going through each input/output.
+		for(UINT32 i=0; i<vertex->getNbInputEdge(); i++){
+			params[i + 2] = vertex->getInputEdge(i)->getTokenRate();
+		}
+		for(UINT32 i=0; i<vertex->getNbOutputEdge(); i++){
+			params[i + 2 + vertex->getNbInputEdge()] = vertex->getOutputEdge(i)->getTokenRate();
+		}
+		break;
+	}
+
+	platform_QPushUINT32(lrtID, platformCtrlQ, nbParams);
+
+	for (UINT32 k = 0; k < vertex->getNbInputEdge(); k++)
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getInputEdge(k)->getFifoId());
+	for (UINT32 k = 0; k < vertex->getNbInputEdge(); k++)
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getInputEdge(k)->getFifoAddress());
+	for (UINT32 k = 0; k < vertex->getNbInputEdge(); k++)
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getInputEdge(k)->getTokenRate());
+
+	for (UINT32 k = 0; k < vertex->getNbOutputEdge(); k++)
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getOutputEdge(k)->getFifoId());
+	for (UINT32 k = 0; k < vertex->getNbOutputEdge(); k++)
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getOutputEdge(k)->getFifoAddress());
+	for (UINT32 k = 0; k < vertex->getNbOutputEdge(); k++)
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getOutputEdge(k)->getTokenRate());
+
+	platform_QPush(lrtID, platformCtrlQ, params, nbParams*sizeof(UINT32));
+
+	platform_QPush_finalize(lrtID, platformCtrlQ);
+}
 
 #endif /* TASKMSG_H_ */

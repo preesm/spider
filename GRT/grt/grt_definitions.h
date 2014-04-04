@@ -47,8 +47,8 @@
 // Common to all types of graphs
 #define MAX_VERTEX_NAME_SIZE 	30	//100
 #define MAX_PARAM_NAME_SIZE 	10	//32
-#define MAX_NB_VERTICES			16	//512
-#define MAX_NB_EDGES			32	//512
+#define MAX_NB_VERTICES			128	//512
+#define MAX_NB_EDGES			128	//512
 #define MAX_NB_OUTPUT_EDGES		16	//512
 #define MAX_NB_INPUT_EDGES		16	//512
 

@@ -42,6 +42,7 @@
 #include <platform_types.h>
 
 class PiSDFParameter {
+private:
 	char name[MAX_PARAM_NAME_SIZE];
 	variable* var;
 	bool resolved;

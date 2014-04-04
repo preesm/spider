@@ -58,17 +58,17 @@ namespace PiSDFTransformer {
 
 	void computeBRV(PiSDFGraph* currentPiSDF, int* brv);
 
+	static void singleRateTransformation(
+			PiSDFGraph *currentPiSDF,
+			SRDAGVertex *currHSrDagVx,
+			SRDAGGraph *topDag,
+			int *brv);
+
 	void multiStepScheduling(
-		PiSDFGraph* currentPiSDF,
-		BaseSchedule* schedule,
-		ListScheduler* listScheduler,
-		Architecture* arch,
-		ExecutionStat* execStat,
-		SRDAGGraph* topDag,
-		SRDAGVertex* currHSrDagVx,
-		UINT32 level,
-		UINT8* step
-	);
+			Architecture* arch,
+			PiSDFGraph* pisdf,
+			ListScheduler* listScheduler,
+			SRDAGGraph* topDag);
 };
 
 #endif /* PISDFTRANSFORMER_H_ */

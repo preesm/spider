@@ -42,8 +42,8 @@
 #include <grt_definitions.h>
 #include <tools/SchedulingError.h>
 #include <tools/Array.h>
-#include "../PiSDF/PiSDFParameter.h"
-#include "../PiSDF/PiSDFEdge.h"
+#include <graphs/PiSDF/PiSDFEdge.h>
+#include <graphs/PiSDF/PiSDFParameter.h>
 //#include "graphs/SDF/SDFGraph.h"
 
 typedef enum {

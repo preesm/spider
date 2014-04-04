@@ -39,8 +39,8 @@
 
 
 // File names for graph's printing
-#define EXEC							1
-#define PRINT_GRAPH						0
+#define EXEC							0
+#define PRINT_GRAPH						1
 #define USE_AM							0
 
 #define PiSDF_FILE_PATH					"pisdf"

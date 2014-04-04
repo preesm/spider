@@ -42,6 +42,9 @@
 #include <debuggingOptions.h>
 #include <tools/DotWriter.h>
 #include <tools/ScheduleWriter.h>
+#include <tools/Queue.h>
+
+#include <platform_time.h>
 
 
 #if PRINT_GRAPH
@@ -65,7 +68,7 @@ static UINT32 vertexId[MAX_NB_VERTICES];
 static INT32 topo_matrix [MAX_NB_EDGES * MAX_NB_VERTICES];
 static int tempBrv[MAX_NB_VERTICES];
 static SRDAGGraph localDag;
-static int brv[MAX_NB_VERTICES];
+static BaseSchedule schedule;
 
 void PiSDFTransformer::addVertices(PiSDFAbstractVertex* vertex, UINT32 nb_repetitions, UINT32 iteration, SRDAGGraph* outputGraph){
 	// Adding one SRDAG vertex per repetition
@@ -450,93 +453,7 @@ void PiSDFTransformer::computeBRV(PiSDFGraph* currentPiSDF, int* brv){
 	}
 }
 
-void PiSDFTransformer::multiStepScheduling(
-							PiSDFGraph* currentPiSDF,
-							BaseSchedule* schedule,
-							ListScheduler* listScheduler,
-							Architecture* arch,
-							ExecutionStat* execStat,
-							SRDAGGraph* topDag,
-							SRDAGVertex* currHSrDagVx,
-							UINT32 level,
-							UINT8* step){
-
-#if PRINT_GRAPH
-	UINT32 len;
-	// Printing the topDag
-	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", "topDag_start", *step);
-	if(len > MAX_FILE_NAME_SIZE)
-		exitWithCode(1072);
-	DotWriter::write(topDag, file, 1, 0);
-#endif
-
-
-
-	if(currentPiSDF->getNb_config_vertices() > 0){
-
-		/* Resolve */
-		currentPiSDF->evaluateExpressions();
-
-		/* Replace hierarchical actor in topDag with RBs */
-		PiSDFTransformer::replaceHwithRB(currentPiSDF, topDag, currHSrDagVx);
-
-		/* Put CA in topDag with RB between CA and /CA */
-		PiSDFTransformer::addCAtoSRDAG(currentPiSDF, topDag, currHSrDagVx);
-
-		currentPiSDF->updateDAGStates(topDag);
-	}
-
-	/* Schedule */
-	listScheduler->schedule(topDag, schedule, arch);
-
-	// Assigning FIFO ids to executable vxs' edges.
-	Launcher::assignFifo(topDag);
-
-#if PRINT_GRAPH
-	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.xml", SCHED_FILE_NAME, *step);
-	if(len > MAX_FILE_NAME_SIZE)
-		exitWithCode(1072);
-	ScheduleWriter::write(schedule, topDag, arch, file);
-
-	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", "topDag_mid", *step);
-	if(len > MAX_FILE_NAME_SIZE)
-		exitWithCode(1072);
-	DotWriter::write(topDag, file, 1, 0);
-#endif
-
-	Launcher::endSchedulingTime();
-
-
-#if EXEC == 1
-	// Executing the executable vxs.
-	Launcher::launch(topDag, arch, schedule);
-#endif
-
-	// Updating states. Sets all executable vxs to executed since their execution was already launched.
-	topDag->updateExecuted();
-
-	/*
-	 * Resolving parameters. If the actors' execution is disabled, the parameters
-	 * should had been set at compile time.
-	 */
-
-#if EXEC == 1
-	// Waiting for parameters' values from LRT (configure actors' execution).
-	Launcher::resolveParameters(arch, topDag);
-#endif
-
-	Launcher::initSchedulingTime();
-
-	// Resolving productions/consumptions.
-	currentPiSDF->evaluateExpressions();
-
-	/* Compute BRV */
-	/*
-	 * Setting temporal Ids to be used as indices in the topology matrix.
-	 * Note that only normal Vxs are considered.
-	 */
-	PiSDFTransformer::computeBRV(currentPiSDF, brv);
-
+static void PiSDFTransformer::singleRateTransformation(PiSDFGraph *currentPiSDF, SRDAGVertex *currHSrDagVx, SRDAGGraph *topDag, int *brv){
 	/* Replace SRDAG of /CA in topDag */
 	for (UINT32 i = 0; i < currentPiSDF->getNb_pisdf_vertices(); i++) {
 		PiSDFAbstractVertex* vertex = currentPiSDF->getPiSDFVertex(i);
@@ -547,7 +464,203 @@ void PiSDFTransformer::multiStepScheduling(
 
 	// Connecting the vertices of the SrDAG ouput graph.
 	PiSDFTransformer::linkvertices(currentPiSDF, currHSrDagVx->getReferenceIndex(), topDag, brv);
+}
 
-	currentPiSDF->updateDAGStates(topDag);
-	(*step)++;
+void PiSDFTransformer::multiStepScheduling(
+							Architecture* arch,
+							PiSDFGraph* pisdf,
+							ListScheduler* listScheduler,
+							SRDAGGraph* topDag){
+	static int brv[MAX_NB_VERTICES];
+	PiSDFGraph*   currentPiSDF;
+	UINT32 len;
+	UINT32 	lvlCntr = 0;
+	UINT8 	stepsCntr = 0;
+
+	Queue<PiSDFGraph*, 10> graphFifo;
+	Queue<SRDAGVertex*, 10> vertexFifo;
+
+	schedule.reset();
+	graphFifo.reset();
+	schedule.setNbActiveSlaves(arch->getNbActiveSlaves());
+
+	PiSDFVertex* root = (PiSDFVertex*)pisdf->getRootVertex();
+	if(!root) exitWithCode(1070);
+	if(!root->hasSubGraph()) exitWithCode(1069);
+
+	SRDAGVertex* currHSrDagVx;
+	topDag->getVerticesFromReference(root,0,&currHSrDagVx);
+
+	platform_time_reset();
+	Launcher::initSchedulingTime();
+
+	root->getSubGraph(&currentPiSDF);
+
+	do{
+		do{
+		#if PRINT_GRAPH
+			// Printing the current PiSDF graph.
+			len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", PiSDF_FILE_PATH, lvlCntr);
+			if(len > MAX_FILE_NAME_SIZE){
+				exitWithCode(1072);
+			}
+			DotWriter::write(currentPiSDF, file, 1);
+
+			// Printing the topDag
+			len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", "topDag_start", stepsCntr);
+			if(len > MAX_FILE_NAME_SIZE)
+				exitWithCode(1072);
+			DotWriter::write(topDag, file, 1, 0);
+		#endif
+
+			if(currentPiSDF->getNb_config_vertices() > 0){
+				/* Resolve */
+				currentPiSDF->evaluateExpressions();
+
+				/* Replace hierarchical actor in topDag with RBs */
+				PiSDFTransformer::replaceHwithRB(currentPiSDF, topDag, currHSrDagVx);
+
+				/* Put CA in topDag with RB between CA and /CA */
+				PiSDFTransformer::addCAtoSRDAG(currentPiSDF, topDag, currHSrDagVx);
+
+				currentPiSDF->updateDAGStates(topDag);
+
+				graphFifo.push(currentPiSDF);
+				vertexFifo.push(currHSrDagVx);
+			}else{
+				/* Resolve */
+				currentPiSDF->evaluateExpressions();
+
+				/* Replace hierarchical actor in topDag with RBs */
+				PiSDFTransformer::replaceHwithRB(currentPiSDF, topDag, currHSrDagVx);
+
+				PiSDFTransformer::computeBRV(currentPiSDF, brv);
+				PiSDFTransformer::singleRateTransformation(currentPiSDF, currHSrDagVx, topDag, brv);
+				currentPiSDF->updateDAGStates(topDag);
+			}
+
+			currentPiSDF = 0;
+			for (UINT32 i = 0; i < topDag->getNbVertices(); i++) {
+				currHSrDagVx = topDag->getVertex(i);
+				if(currHSrDagVx->isHierarchical() && currHSrDagVx->getState() == SrVxStExecutable){
+					if(((PiSDFVertex*)(currHSrDagVx->getReference()))->hasSubGraph()){
+						((PiSDFVertex*)(currHSrDagVx->getReference()))->getSubGraph(&currentPiSDF);
+						lvlCntr++;
+						break;
+					}
+				}
+			}
+		}while(currentPiSDF); /* There is executable hierarchical actor in SRDAG */
+
+		/* Schedule */
+		listScheduler->schedule(topDag, &schedule, arch);
+
+		// Assigning FIFO ids to executable vxs' edges.
+		Launcher::assignFifo(topDag);
+
+	#if PRINT_GRAPH
+		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.xml", SCHED_FILE_NAME, stepsCntr);
+		if(len > MAX_FILE_NAME_SIZE)
+			exitWithCode(1072);
+		ScheduleWriter::write(&schedule, topDag, arch, file);
+
+		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", "topDag_mid", stepsCntr);
+		if(len > MAX_FILE_NAME_SIZE)
+			exitWithCode(1072);
+		DotWriter::write(topDag, file, 1, 0);
+	#endif
+
+		Launcher::endSchedulingTime();
+
+
+	#if EXEC == 1
+		// Executing the executable vxs.
+		Launcher::launch(topDag, arch, &schedule);
+	#endif
+
+		// Updating states. Sets all executable vxs to executed since their execution was already launched.
+		topDag->updateExecuted();
+
+		/*
+		 * Resolving parameters. If the actors' execution is disabled, the parameters
+		 * should had been set at compile time.
+		 */
+	#if EXEC == 1
+		// Waiting for parameters' values from LRT (configure actors' execution).
+		Launcher::resolveParameters(arch, topDag);
+	#endif
+
+		Launcher::initSchedulingTime();
+		while(!graphFifo.isEmpty()){
+			currentPiSDF = graphFifo.pop();
+			currHSrDagVx = vertexFifo.pop();
+
+			// Resolving productions/consumptions.
+			currentPiSDF->evaluateExpressions();
+
+			/* Compute BRV */
+			/*
+			 * Setting temporal Ids to be used as indices in the topology matrix.
+			 * Note that only normal Vxs are considered.
+			 */
+			PiSDFTransformer::computeBRV(currentPiSDF, brv);
+
+			PiSDFTransformer::singleRateTransformation(currentPiSDF, currHSrDagVx, topDag, brv);
+
+			currentPiSDF->updateDAGStates(topDag);
+			stepsCntr++;
+		}
+
+		currentPiSDF = 0;
+		for (UINT32 i = 0; i < topDag->getNbVertices(); i++) {
+			currHSrDagVx = topDag->getVertex(i);
+			if(currHSrDagVx->isHierarchical() && currHSrDagVx->getState() == SrVxStExecutable){
+				if(((PiSDFVertex*)(currHSrDagVx->getReference()))->hasSubGraph()){
+					((PiSDFVertex*)(currHSrDagVx->getReference()))->getSubGraph(&currentPiSDF);
+					lvlCntr++;
+					break;
+				}
+			}
+		}
+	}while(currentPiSDF);
+
+	/*
+	 * Last scheduling and execution. After all hierarchical levels have been flattened,
+	 * there is one more execution to do for completing one complete execution of the model.
+	 */
+	listScheduler->schedule(topDag, &schedule, arch);
+
+	// Assigning FIFO ids to executable vxs' edges.
+	Launcher::assignFifo(topDag);
+
+	Launcher::endSchedulingTime();
+
+#if EXEC == 1
+	/*
+	 * Launching the execution on LRTs. The "true" means that is the last execution
+	 * of the current iteration, so the local RTs clear the tasks table and
+	 * send back execution information.
+	 */
+	Launcher::launch(topDag, arch, &schedule);
+	Launcher::createRealTimeGantt(arch, topDag, "Gantt.xml");
+#endif
+
+	// Updating states. Sets all executable vxs to executed since their execution was already launched.
+	topDag->updateExecuted();
+
+#if PRINT_GRAPH
+	// Printing the final dag.
+	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s.gv", SRDAG_FILE_PATH);
+	if(len > MAX_FILE_NAME_SIZE){
+		exitWithCode(1072);
+	}
+	DotWriter::write(topDag, file, 1, 1);
+	// Printing the final dag with FIFO ids.
+	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s.gv", SRDAG_FIFO_ID_FILE_PATH);
+	if(len > MAX_FILE_NAME_SIZE){
+		exitWithCode(1072);
+	}
+	DotWriter::write(topDag, file, 1, 0);
+#endif
+
 }

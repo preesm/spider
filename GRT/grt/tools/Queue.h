@@ -34,45 +34,95 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef CONFIGVERTEX_H_
-#define CONFIGVERTEX_H_
+#ifndef QUEUE_H_
+#define QUEUE_H_
 
-#include <grt_definitions.h>
-#include "../../expressionParser/variablelist.h"
-#include "../PiSDF/PiSDFAbstractVertex.h"
+#include "SchedulingError.h"
+#include <platform_types.h>
 
-//class Parameter;
-
-class PiSDFConfigVertex: public PiSDFAbstractVertex {
+/**
+ * Generic Queue Class
+ */
+template <class T, int SIZE> class Queue {
 private:
-	PiSDFParameter *relatedParams[MAX_NB_PiSDF_CONFIG_VERTEX_PARAMS];
-	UINT32 nbRelatedParams;
-//	PiSDFParameter* related_parameter; // Assumes one parameter per configuration vertex.
+	/**
+	 * Array of values.
+	 */
+	T buffer[SIZE];
+
+	/**
+	 * Read/Write Index
+	 */
+	int wIx, rIx;
+
 public:
-	PiSDFConfigVertex():PiSDFAbstractVertex(){nbRelatedParams = 0;};
+	/**
+	 * Default Constructor.
+	 */
+	Queue();
 
-    PiSDFParameter *getRelatedParam(UINT32 index) const
-    {
-    	if(index >= nbRelatedParams) exitWithCode(1041);
-        return relatedParams[index];
-    }
+	/**
+	 * Reset Array.
+	 */
+	void reset();
 
-    void addRelatedParam(PiSDFParameter *param)
-    {
-    	if(nbRelatedParams >= MAX_NB_PiSDF_CONFIG_VERTEX_PARAMS) exitWithCode(1055);
-        this->relatedParams[nbRelatedParams++] = param;
-    }
+	void push(T& e);
+	T pop();
 
-    UINT32 getNbRelatedParams() const
-    {
-        return nbRelatedParams;
-    }
-
-    void setNbRelatedParams(UINT32 nbRelatedParams)
-    {
-        this->nbRelatedParams = nbRelatedParams;
-    }
-
+	BOOL isEmpty();
 };
 
-#endif /* CONFIGVERTEX_H_ */
+/**
+ * Default Constructor.
+ */
+template <class T, int SIZE>
+inline Queue<T,SIZE>::Queue(){
+	rIx = wIx = 0;
+}
+
+/**
+ * Reset Queue.
+ */
+template <class T, int SIZE>
+inline void Queue<T,SIZE>::reset(){
+	rIx = wIx = 0;
+}
+
+/**
+ *
+ */
+template <class T, int SIZE>
+inline void Queue<T,SIZE>::push(T& e){
+	buffer[wIx] = e;
+	wIx = (wIx+1)%SIZE;
+	if(isEmpty()){
+		printf("Queue: impossible to push in queue\n");
+		abort();
+	}
+}
+
+/**
+ *
+ */
+template <class T, int SIZE>
+inline T Queue<T,SIZE>::pop(){
+	if(!isEmpty()){
+		T res = buffer[rIx];
+		rIx = (rIx+1)%SIZE;
+		return res;
+	}else{
+		printf("Queue: pop empty queue\n");
+		abort();
+		return buffer[0];
+	}
+}
+
+/**
+ *
+ */
+template <class T, int SIZE>
+inline BOOL Queue<T,SIZE>::isEmpty(){
+	return wIx == rIx;
+}
+
+#endif /* QUEUE_H_ */

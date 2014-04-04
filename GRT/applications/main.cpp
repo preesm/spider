@@ -60,7 +60,6 @@ static char tempStr[MAX_SLAVE_NAME_SIZE];
 Scenario 			scenario;
 Architecture 		arch;
 ListScheduler 		listScheduler;
-BaseSchedule		schedule;
 ExecutionStat 		execStat;
 PiSDFGraph 			piSDF;
 SRDAGGraph 			topDag;
@@ -81,7 +80,6 @@ void createArch(Architecture* arch, int nbSlaves){
 }
 
 int main(int argc, char* argv[]){
-	UINT32 len;
 
 //	if(argc < 2){
 //		printf("Usage: %s nbSlaves\n", argv[0]);
@@ -105,7 +103,6 @@ int main(int argc, char* argv[]){
 	arch.setNbActiveSlaves(nbSlaves);
 	listScheduler.setArchitecture(&arch);
 	listScheduler.setScenario(&scenario);
-	schedule.setNbActiveSlaves(arch.getNbActiveSlaves());
 
 	// Getting the PiSDF graph.
 	top(&piSDF, &scenario);
@@ -114,6 +111,7 @@ int main(int argc, char* argv[]){
 	SRDAGVertex* topActor = topDag.addVertex();
 	topActor->setReference(piSDF.getRootVertex());
 	topActor->setReferenceIndex(0);
+	topActor->setIterationIndex(0);
 
 
 #if EXEC == 1
@@ -129,103 +127,9 @@ int main(int argc, char* argv[]){
 //	launch.launchWaitAck(nbSlaves);
 #endif
 
-//	while(1){
-		PiSDFGraph* 	H;
-		PiSDFVertex* root = (PiSDFVertex*)piSDF.getRootVertex();
-		if(!root) exitWithCode(1070);
-		if(!root->hasSubGraph()) exitWithCode(1069);
-		root->getSubGraph(&H);
-		SRDAGVertex* 	currHSrDagVx = topActor;
+	PiSDFTransformer::multiStepScheduling(&arch, &piSDF, &listScheduler, &topDag);
 
-		UINT32 	lvlCntr = 0;
-		UINT8 	stepsCntr = 0;
-		/*
-		 * H contains the current PiSDF at each hierarchical level.
-		 * Note that the loop stops when H is null, i.e. all levels have been treated,
-		 * the graph has been completely flatten.
-		 */
 
-		platform_time_reset();
-		Launcher::initSchedulingTime();
-
-		while(H){
-
-		#if PRINT_GRAPH
-			// Printing the current PiSDF graph.
-			len = snprintf(name, MAX_FILE_NAME_SIZE, "%s_%d.gv", PiSDF_FILE_PATH, lvlCntr);
-			if(len > MAX_FILE_NAME_SIZE){
-				exitWithCode(1072);
-			}
-			DotWriter::write(H, name, 1);
-		#endif
-
-			/*
-			 * Calling the multi steps scheduling method. For each hierarchical level, the method :
-			 * 1. Executes the configure actors.
-			 * 2. Resolves parameter depending expressions.
-			 * 3. Computes the Basic Repetition Vector.
-			 * 4. Converts into a DAG.
-			 * 5. And merges the underlying (local) DAG with the (global) DAG of above levels.
-			 * At the end, the "dag" argument will contain the complete flattened model.
-			 * A final execution must be launched to complete one iteration, i.e. one complete execution of the application.
-			 */
-			PiSDFTransformer::multiStepScheduling(H, &schedule, &listScheduler, &arch, &execStat, &topDag, currHSrDagVx, lvlCntr, &stepsCntr);
-
-			/*
-			 * Finding other hierarchical Vxs. Here the variable "H" gets the next hierarchical level to be flattened.
-			 * Remember that when no more hierarchies are found, it marks the end of a complete execution of the model.
-			 */
-			H = 0;
-			for (UINT32 i = 0; i < topDag.getNbVertices(); i++) {
-				currHSrDagVx = topDag.getVertex(i);
-				if(currHSrDagVx->isHierarchical() && currHSrDagVx->getState() != SrVxStDeleted){
-					if(((PiSDFVertex*)(currHSrDagVx->getReference()))->hasSubGraph()){
-						((PiSDFVertex*)(currHSrDagVx->getReference()))->getSubGraph(&H);
-						lvlCntr++;
-						break;
-					}
-				}
-			}
-		}
-
-		/*
-		 * Last scheduling and execution. After all hierarchical levels have been flattened,
-		 * there is one more execution to do for completing one complete execution of the model.
-		 */
-		listScheduler.schedule(&topDag, &schedule, &arch);
-
-		// Assigning FIFO ids to executable vxs' edges.
-		Launcher::assignFifo(&topDag);
-
-		Launcher::endSchedulingTime();
-
-	#if EXEC == 1
-		/*
-		 * Launching the execution on LRTs. The "true" means that is the last execution
-		 * of the current iteration, so the local RTs clear the tasks table and
-		 * send back execution information.
-		 */
-		Launcher::launch(&topDag, &arch, &schedule);
-		Launcher::createRealTimeGantt(&arch, &topDag, "Gantt.xml");
-	#endif
-
-		// Updating states. Sets all executable vxs to executed since their execution was already launched.
-		topDag.updateExecuted();
-
-	#if PRINT_GRAPH
-		// Printing the final dag.
-		len = snprintf(name, MAX_FILE_NAME_SIZE, "%s.gv", SRDAG_FILE_PATH);
-		if(len > MAX_FILE_NAME_SIZE){
-			exitWithCode(1072);
-		}
-		DotWriter::write(&topDag, name, 1, 1);
-		// Printing the final dag with FIFO ids.
-		len = snprintf(name, MAX_FILE_NAME_SIZE, "%s.gv", SRDAG_FIFO_ID_FILE_PATH);
-		if(len > MAX_FILE_NAME_SIZE){
-			exitWithCode(1072);
-		}
-		DotWriter::write(&topDag, name, 1, 0);
-	#endif
 
 	printf("finished\n");
 }

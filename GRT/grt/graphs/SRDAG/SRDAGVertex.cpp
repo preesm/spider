@@ -120,17 +120,14 @@ void SRDAGVertex::updateState(){
 				state = SrVxStNoExecuted;
 			break;
 		default:
-			if(isHierarchical()){
-				state = SrVxStNoExecuted;
-				return;
-			}
 			for (UINT32 i = 0; i < inputEdges.getNb(); i++){
 				SRDAGVertex* predecessor = inputEdges[i]->getSource();
 
 				if(predecessor->state == SrVxStNoExecuted)
 					predecessor->updateState();
 
-				if(predecessor->state == SrVxStNoExecuted){
+				if(predecessor->state == SrVxStNoExecuted
+						|| predecessor->isHierarchical()){
 					state = SrVxStNoExecuted;
 					return;
 				}

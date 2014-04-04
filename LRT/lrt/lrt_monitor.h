@@ -39,8 +39,9 @@
 
 #include "lrt_definitions.h"
 
-void initMonitor();
-void resetMonitor();
-MonitorAction switchMonitor(MonitorAction action);
-void printResult();
+void Monitor_init();
+void Monitor_startTask(UINT32 vertexID);
+inline void Monitor_endTask();
+inline void Monitor_sendData();
+
 #endif /* LRT_MONITOR_H_ */

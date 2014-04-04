@@ -49,38 +49,17 @@
 #include <platform_time.h>
 
 #include "lrt_core.h"
-#include "lrt_actorMngr.h"
 
 /* GLOBAL VARIABLES */
 OS_TCB 		*OSTCBCur;               	/* Pointer to currently scheduled TCB. 		*/
 OS_TCB 		OSTCBTbl[OS_MAX_TASKS];		/* Table of TCBs							*/
-LRTActor	LRTActorTbl[OS_MAX_TASKS];
-BOOL 	lrt_running; 				/* Flag indicating that kernel is running   */
-UINT32		clearAfterCompletion;		/* Indicates that the tasks table must be cleared after the execution
-											of the current set of tasks   */
+BOOL 		lrt_running; 				/* Flag indicating that kernel is running   */
 
 void mainLoop(){
-//	switchMonitor(CtrlFifoHandling);
 	wait_ext_msg();
 
-//	switchMonitor(Default);
 	if (lrt_running && getSw()){
-#ifdef ARM
-//		platform_puts("vertex ");platform_putdec(OSTCBCur->am.currVertexId);platform_puts("\n");
-#endif
-
-//		if(OSTCBCur->am.currVertexId == OSTCBCur->am.nbVertices-1){
-//			printResult();
-//			resetMonitor();
-//		}
-
 		LRTStartCurrTask();
-
-	}
-	if((OSTaskCntr == 0) && (clearAfterCompletion)){
-		sendExecData();
-		clearTCBTbl();
-		clearAfterCompletion = FALSE;
 	}
 }
 
@@ -89,16 +68,10 @@ void LRTInit() {
 	OSTCBCur = (OS_TCB *) 0;
 	memset(OSTCBTbl, 0, sizeof(OSTCBTbl)); /* Clear all the TCBs */
 
-	if(platform_getCoreId() == 0){
-		/* Clear all the data FIFOs */
-		platform_flushFIFO(-1);
-	}
-
-	initMonitor();
+	Monitor_init();
 	OSWorkingMemoryInit();
 
 	lrt_running = FALSE;
-	clearAfterCompletion = FALSE;
 }
 
 
@@ -106,7 +79,6 @@ void LRTInit() {
  * Initialize control queues for communications with the GRT.
  */
 void LRTCtrlStart(){
-//	releaseMboxMemMx();
 	while (TRUE)
 		mainLoop();
 }
@@ -122,37 +94,19 @@ void LRTStart(){
 
 /* Starts the task pointed by the OSTCBCur. */
 void LRTStartCurrTask() {
-
 	// Executes the vertex's code.
-//	MonitorAction Act = switchMonitor(AMManagement);
-	if(OSTCBCur->isAM){
-		OSTCBCur->task_func(0, 0, 0, 0, 0); // Fifos are not required when calling the AM default function.
-	}
-	else{
-//		time(&rawtime);
-//		OSTCBCur->startTime = localtime(&rawtime);
-//		printf("Execute fn %d\n", OSTCBCur->functionId);
-		OSTCBCur->startTime = platform_time_getValue();
-		OSTCBCur->task_func(OSTCBCur->actor->inputFifoId,
-							OSTCBCur->actor->inputFifoDataOff,
-							OSTCBCur->actor->outputFifoId,
-							OSTCBCur->actor->outputFifoDataOff,
-							OSTCBCur->actor->params);
-//		OSTCBCur->startTime = ((float)nbCpuCyclesStart)/CLOCKS_PER_SEC;
-//		OSTCBCur->nbCpuCycles = clock() - nbCpuCyclesStart;
-		OSTCBCur->execTime = platform_time_getValue() - OSTCBCur->startTime;
-	}
+#if USE_AM
+	OSTCBCur->task_func(0, 0, 0, 0, 0); // Fifos are not required when calling the AM default function.
+#else
+	Monitor_startTask(OSTCBCur->vertexId);
+	OSTCBCur->task_func(OSTCBCur->actor.inputFifo,
+						OSTCBCur->actor.outputFifo,
+						OSTCBCur->actor.params);
+	Monitor_endTask();
+#endif
 
 	if(OSTCBCur->stop)
 		LrtTaskDeleteCur();
-//	am_funct[OSTCBCur->am_vertices[OSTCBCur->am.currVertexId].type]();
-
-//	if(OSTCBCur->stop && (OSTCBCur->am.stopVertexId == -1 || OSTCBCur->am.stopVertexId == OSTCBCur->am.currVertexId)){
-//		int temp = OSTCBCur->am.currVertexId;
-//		LrtTaskDeleteCur();
-//		OS_CtrlQPush(&temp, sizeof(int));
-//	}
-//	switchMonitor(Act);
 }
 
 /* Determine the next Task to run */

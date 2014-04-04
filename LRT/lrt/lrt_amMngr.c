@@ -43,7 +43,7 @@
 #include "lrt_debug.h"
 #include <platform_queue.h>
 
-
+#if USE_AM
 void am_funct_test();
 void am_funct_exec();
 void am_funct_wait();
@@ -210,4 +210,4 @@ void amTaskStart() {
 //	}
 	switchMonitor(Act);
 }
-
+#endif

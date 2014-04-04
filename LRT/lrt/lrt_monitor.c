@@ -34,7 +34,7 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <string.h>
+#include <stdlib.h>
 #include <platform_types.h>
 #include <platform_gpio.h>
 #include <platform_queue.h>
@@ -44,55 +44,35 @@
 #include "lrt_monitor.h"
 #include "lrt_debug.h"
 
-static UINT32 monitorTimes[MaxMonitor];
-static MonitorAction currentAction;
+typedef struct{
+	UINT32 vertexID;
+	UINT32 start;
+	UINT32 end;
+} taskTime;
 
-static UINT32 start;
+static taskTime taskTimes[OS_MAX_TASKS_TIME];
+static UINT32 nbTaskTime;
 
-void initMonitor(){
-	int i;
-	for(i=0; i<MaxMonitor; i++) monitorTimes[i]=0;
+void Monitor_init(){
+	nbTaskTime = 0;
 }
 
-void resetMonitor(){
-	memset(monitorTimes, 0, sizeof(monitorTimes));
-	currentAction = Default;
-	start = platform_time_getValue();
+inline void Monitor_startTask(UINT32 vertexID){
+	taskTimes[nbTaskTime].vertexID = vertexID;
+	taskTimes[nbTaskTime].start = platform_time_getValue();
 }
 
-MonitorAction switchMonitor(MonitorAction action){
-	MonitorAction last = action;
-	if(action >= MaxMonitor) exitWithCode(1014);
-	monitorTimes[currentAction] += platform_time_getValue()-start;
-	start = platform_time_getValue();
-	currentAction = action;
-	if(currentAction >= Action) setLed(1); else setLed(0);
-	return last;
+inline void Monitor_endTask(){
+	taskTimes[nbTaskTime].end = platform_time_getValue();
+	nbTaskTime++;
 }
 
-void printResult(){
-	int i=0;
-	UINT32 totalTime = 0;
-	UINT32 val;
-
-	monitorTimes[currentAction] += platform_time_getValue();
-
-	for(i=0; i<MaxMonitor; i++){
-		totalTime += monitorTimes[i];
-	}
-
-	for(i=0; i<MaxMonitor; i++){
-		val = 100*monitorTimes[i];
-		val /= totalTime;
-
-		platform_queue_push_UINT32(PlatformInfoQueue, val);
-		platform_queue_push_finalize(PlatformCtrlQueue);
-	}
-
-//		if(monitorTimes[i] != 0){
-//			platform_puts("\nAction "); platform_putdec(i-Action);
-//			platform_puts(" : "); 		platform_putdec(100*monitorTimes[i]/totalTime);
-//		}
-//	}
-//	platform_puts("\n\n");
+void Monitor_sendData(){
+	platform_queue_push_UINT32(PlatformCtrlQueue, MSG_EXEC_TIMES);
+	platform_queue_push_UINT32(PlatformCtrlQueue, nbTaskTime);
+	platform_queue_push(PlatformCtrlQueue, taskTimes, nbTaskTime*sizeof(taskTime));
+	platform_queue_push_finalize(PlatformCtrlQueue);
+	nbTaskTime = 0;
+	exit(0);
 }
+

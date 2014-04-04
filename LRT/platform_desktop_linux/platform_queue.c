@@ -95,6 +95,10 @@ UINT32 platform_queue_push_UINT32(PlatformQueueType queueType, UINT32 data){
 	return platform_queue_push(queueType, &data, sizeof(unsigned int));
 }
 
+void platform_queue_push_finalize(PlatformQueueType queueType){
+
+}
+
 UINT32 platform_queue_pop(PlatformQueueType queueType, void* data, int size){
 	int file = platform_QGRT[queueType][PlatformInputQueue];
 

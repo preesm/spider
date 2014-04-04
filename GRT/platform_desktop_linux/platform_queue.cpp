@@ -97,6 +97,10 @@ UINT32 platform_QPushUINT32(UINT8 slaveId, platformQType queueType, UINT32 data)
 	return platform_QPush(slaveId, queueType, &data, sizeof(unsigned int));
 }
 
+void platform_QPush_finalize(UINT8 slaveId, platformQType queueType){
+
+}
+
 UINT32 platform_QPop(UINT8 slaveId, platformQType queueType, void* data, int size){
 	int file = platform_QLRT[slaveId][queueType][platformQIn];
 

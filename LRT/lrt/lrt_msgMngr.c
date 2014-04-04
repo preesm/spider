@@ -40,10 +40,12 @@
 #include <platform_data_queue.h>
 #include <platform_queue.h>
 #include <platform_time.h>
+#include <platform_print.h>
 #include <platform.h>
 
 #include "lrt_taskMngr.h"
 #include "lrt_msgMngr.h"
+#include "lrt_monitor.h"
 #include "lrt_core.h"
 
 extern void amTaskStart();
@@ -73,6 +75,7 @@ void wait_ext_msg() {
 			new_tcb->isAM = platform_queue_pop_UINT32(PlatformCtrlQueue);
 
 			if(new_tcb->isAM){
+#if USE_AM
 				// Creating an actor machine.
 				// Popping the actor machine's info.
 				new_tcb->am.nbVertices 	= platform_queue_pop_UINT32(PlatformCtrlQueue);
@@ -85,51 +88,37 @@ void wait_ext_msg() {
 				new_tcb->stop = FALSE;
 				// Creating the AM.
 				AMCreate(&(new_tcb->am));
+#endif
 			}
 			else
 			{
 				// Creating a single actor.
-				new_tcb->actor = &LRTActorTbl[new_tcb->OSTCBId];
+				new_tcb->actor.nbInputFifos = platform_queue_pop_UINT32(PlatformCtrlQueue);
+				new_tcb->actor.nbOutputFifos = platform_queue_pop_UINT32(PlatformCtrlQueue);
+				new_tcb->actor.nbParams = platform_queue_pop_UINT32(PlatformCtrlQueue);
 
-				new_tcb->actor->nbInputFifos = platform_queue_pop_UINT32(PlatformCtrlQueue);
-				new_tcb->actor->nbOutputFifos = platform_queue_pop_UINT32(PlatformCtrlQueue);
-				new_tcb->actor->nbParams = platform_queue_pop_UINT32(PlatformCtrlQueue);
+				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor.inputFifo, new_tcb->actor.nbInputFifos*sizeof(FIFO));
 
-//				for (i = 0; i < new_tcb->actor->nbInputFifos; i++)
-//					new_tcb->actor->inputFifoId[i] = platform_queue_pop_UINT32(PlatformCtrlQueue);
-				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->inputFifoId, new_tcb->actor->nbInputFifos*sizeof(UINT32));
+				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor.outputFifo, new_tcb->actor.nbOutputFifos*sizeof(FIFO));
 
-//				for (i = 0; i < new_tcb->actor->nbInputFifos; i++)
-//					new_tcb->actor->inputFifoDataOff[i] = platform_queue_pop_UINT32(PlatformCtrlQueue);
-				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->inputFifoDataOff, new_tcb->actor->nbInputFifos*sizeof(UINT32));
-
-				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->inputFifoDataSize, new_tcb->actor->nbInputFifos*sizeof(UINT32));
-
-
-//				for (i = 0; i < new_tcb->actor->nbOutputFifos; i++)
-//					new_tcb->actor->outputFifoId[i] = platform_queue_pop_UINT32(PlatformCtrlQueue);
-				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->outputFifoId, new_tcb->actor->nbOutputFifos*sizeof(UINT32));
-
-//				for (i = 0; i < new_tcb->actor->nbOutputFifos; i++)
-//					new_tcb->actor->outputFifoDataOff[i] = platform_queue_pop_UINT32(PlatformCtrlQueue);
-				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->outputFifoDataOff, new_tcb->actor->nbOutputFifos*sizeof(UINT32));
-				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->outputFifoDataSize, new_tcb->actor->nbOutputFifos*sizeof(UINT32));
-
-
-
-				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor->params, new_tcb->actor->nbParams*sizeof(UINT32));
+				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor.params, new_tcb->actor.nbParams*sizeof(UINT32));
 
 				new_tcb->task_func = functions_tbl[new_tcb->functionId];
 				new_tcb->stop = TRUE;
 
 //				printf("New Job:\n");
 //				printf("\t id: %d\n", new_tcb->functionId);
-//				printf("\t nbFifo in: %d\n", new_tcb->actor->nbInputFifos);
-//				printf("\t nbFifo out: %d\n", new_tcb->actor->nbOutputFifos);
-//				printf("\t nbParams: %d\n", new_tcb->actor->nbParams);
+//				printf("\t nbFifo in: %d\n", new_tcb->actor.nbInputFifos);
+//				int i;
+//				for(i=0; i< new_tcb->actor.nbInputFifos; i++){
+//					printf("\t\t%d - id %d add %#x size %d\n", i, new_tcb->actor.inputFifo[i].id, new_tcb->actor.inputFifo[i].add, new_tcb->actor.inputFifo[i].size);
+//				}
+//				printf("\t nbFifo out: %d\n", new_tcb->actor.nbOutputFifos);
+//				for(i=0; i< new_tcb->actor.nbOutputFifos; i++){
+//					printf("\t\t%d - id %d add %#x size %d\n", i, new_tcb->actor.outputFifo[i].id, new_tcb->actor.outputFifo[i].add, new_tcb->actor.outputFifo[i].size);
+//				}
+//				printf("\t nbParams: %d\n", new_tcb->actor.nbParams);
 			}
-
-//			RTQueuePush(RTCtrlQueue, &msg_type, sizeof(UINT32));
 			lrt_running = TRUE;
 			break;
 
@@ -138,7 +127,7 @@ void wait_ext_msg() {
 			break;
 
 		case MSG_SEND_INFO_DATA:
-			sendExecData();
+			Monitor_sendData();
 			break;
 
 		default:

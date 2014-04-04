@@ -99,7 +99,10 @@ void __c_platform_queue_Init(){
 	 * Mono descriptors will be 12 bytes plus 16 bytes of EPIB Info, plus
 	 * 128 bytes of payload, but the next best size is 160 bytes times
 	 * 32 descriptors. (dead space is possible) */
-	set_memory_region(0, (Uint32) mono_ctrl_region, 0, 0x00090000);
+
+	printf("CTRL_REG %#x DATA_REG %#x\n", CTRL_REG, DATA_REG);
+	set_memory_region(0, (Uint32) mono_ctrl_region, 0, CTRL_REG);
+	set_memory_region(1, (Uint32) mono_data_region, CTRL_DESC_NB, DATA_REG);
 
 	/*****************************************************************
 	 * Configure Linking RAM 0 to use the 16k entry internal link ram.

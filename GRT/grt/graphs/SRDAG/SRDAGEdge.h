@@ -42,9 +42,11 @@
 class SRDAGVertex;
 class PiSDFEdge;
 
-#ifdef LINUX
-#define inline inline
-#endif
+typedef struct{
+	UINT32 id;
+	UINT32 add;
+	UINT32 size;
+} FIFO;
 
 /**
  * An edge in a delay-less SRDAG graph (no initial token). 
@@ -56,11 +58,6 @@ class PiSDFEdge;
 class SRDAGEdge {
 
 	protected :
-		/**
-		 token rate (solved and not depending on an expression). 
-		*/
-		UINT32 tokenRate;
-
 		/**
 		 Edge source
 		*/
@@ -74,8 +71,8 @@ class SRDAGEdge {
 
 		UINT32 delay;				// Delay or number of initial tokens.
 
-		int fifoId;				// Id of the implemented FIFO (-1 if not implemented).
-		UINT32 fifoAddress;		// Address of the implemented FIFO.
+		BOOL isImplemented;
+		FIFO fifo;
 
 	public : 
 		/**
@@ -144,6 +141,11 @@ class SRDAGEdge {
 		*/
 		void setDelay(const UINT32 delay);
 
+		/**
+		 *
+		 */
+		FIFO* getFifo();
+
 		// Public for performance sake
 
 	    PiSDFEdge *getRefEdge() const
@@ -157,19 +159,23 @@ class SRDAGEdge {
 	    }
 
 		int getFifoId() const {
-			return fifoId;
+			if(isImplemented)
+				return fifo.id;
+			else
+				return -1;
 		}
 
 		void setFifoId(int fifoId) {
-			this->fifoId = fifoId;
+			this->fifo.id = fifoId;
+			this->isImplemented = TRUE;
 		}
 
 UINT32 getFifoAddress() const {
-		return fifoAddress;
+		return fifo.add;
 	}
 
 	void setFifoAddress(UINT32 fifoAddress) {
-		this->fifoAddress = fifoAddress;
+		this->fifo.add = fifoAddress;
 	}
 
 		/**
@@ -231,7 +237,7 @@ void SRDAGEdge::setSink(SRDAGVertex* vertex){
 inline
 UINT32 SRDAGEdge::getTokenRate()
 {
-	return(this->tokenRate);
+	return(this->fifo.size);
 }
 
 /**
@@ -243,7 +249,7 @@ UINT32 SRDAGEdge::getTokenRate()
 inline
 void SRDAGEdge::setTokenRate(const UINT32 rate)
 {
-	this->tokenRate = rate;
+	this->fifo.size = rate;
 }
 
 /**
@@ -260,6 +266,11 @@ UINT32 SRDAGEdge::getDelay(){
 inline
 void SRDAGEdge::setDelay(const UINT32 delay){
 	this->delay = delay;
+}
+
+inline
+FIFO* SRDAGEdge::getFifo(){
+	return &fifo;
 }
 
 #endif

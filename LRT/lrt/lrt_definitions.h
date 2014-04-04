@@ -60,29 +60,9 @@
 
 /*
 *********************************************************************************************************
-*                                             FIFOs
-*********************************************************************************************************
-*/
-#define FIFO_RD_IX_OFFSET		0		// Offsets in number of 32-bits words.
-#define FIFO_WR_IX_OFFSET		4
-#define FIFO_DATA_OFFSET		8
-
-
-#define MAX_NB_FIFO			200
-
-//************************ Status codes
-#define FIFO_STAT_INIT		1
-#define FIFO_STAT_USED		2
-
-/*
-*********************************************************************************************************
 *                                          MISCELLANEOUS
 *********************************************************************************************************
 */
-
-#define print				zynq_print						// Wrapper for print. Implemented at lrt_debug.c
-#define putnum				zynq_putnum						// Wrapper for putnum. Implemented at lrt_debug.c
-#define putnum_dec			zynq_putnum_dec					// Wrapper for putnum in decimal.
 
 #define MAX_DATA_WORDS				1024
 #define PRINT_ACTOR_IN_DOT_FILE		0
@@ -101,16 +81,19 @@ typedef UINT32 LRTSYSTime;
 typedef enum os_stat{
 	OS_STAT_UNINITIALIZED,
 	OS_STAT_READY,
-	OS_STAT_RUNNING,
-	OS_STAT_DELETED
+	OS_STAT_RUNNING
 } OS_STAT;
 
 
+typedef struct{
+	UINT32 id;
+	UINT32 add;
+	UINT32 size;
+} FIFO;
 
-typedef void (*FUNCTION_TYPE)(UINT32 inputFIFOIds[],
-							  UINT32 inputFIFOAddrs[],
-							  UINT32 outputFIFOIds[],
-							  UINT32 outputFIFOAddrs[],
+
+typedef void (*FUNCTION_TYPE)(FIFO inputFIFOs[],
+							  FIFO outputFIFOs[],
 							  UINT32 params[]);// Function of a task/vertex.
 
 /*
@@ -126,22 +109,6 @@ typedef enum{
 	MSG_CLEAR_TIME=4,
 	MSG_SEND_INFO_DATA=5
 }GRT_MSG_TYPE;
-
-
-/*
-*********************************************************************************************************
-*                           FIFO's
-*********************************************************************************************************
-*/
-
-// FIFO handle block
-typedef struct lrt_fifo_hndle{
-    UINT32	address;				// FIFO's base address.
-    UINT32  Size;                 		// FIFO's depth.
-    UINT8	Status;						// One of the defined FIFO states.
-} LRT_FIFO_HNDLE;
-
-
 
 /*
 *********************************************************************************************************
@@ -184,6 +151,8 @@ typedef enum{
 *********************************************************************************************************
 */
 
+#if USE_AM
+
 typedef struct {		//
 	unsigned  char	type;
 	union{
@@ -219,8 +188,6 @@ typedef struct // Structure of an actor machine's vertex.
 }AM_VERTEX_STRUCT;
 
 
-
-
 /*
  * Actor Machine' structure
  */
@@ -235,8 +202,7 @@ typedef struct actorMachine{
 	UINT8	currVertexId;	// Active vertex' index.
 	UINT8 	stopVertexId;	// Stop vertex' index.
 } ActorMachine;
-
-
+#endif
 
 /*
  * Job' structure.
@@ -245,12 +211,8 @@ typedef struct lrtActor{
 	UINT32	nbInputFifos;
 	UINT32	nbOutputFifos;
 	UINT32	nbParams;
-	UINT32	inputFifoId[MAX_NB_FIFO];
-	UINT32	outputFifoId[MAX_NB_FIFO];
-	UINT32	inputFifoDataSize[MAX_NB_FIFO];
-	UINT32	outputFifoDataSize[MAX_NB_FIFO];
-	UINT32 	inputFifoDataOff[MAX_NB_FIFO];
-	UINT32 	outputFifoDataOff[MAX_NB_FIFO];
+	FIFO	inputFifo[MAX_NB_FIFO];
+	FIFO	outputFifo[MAX_NB_FIFO];
 	UINT32	params[MAX_NB_PARAMETERS];
 }LRTActor;
 
@@ -271,11 +233,11 @@ typedef struct os_tcb {
     FUNCTION_TYPE	task_func;
     BOOL			isAM;
 	BOOL 		stop;		// Whether the task must be deleted after completion.
-	LRTActor*		actor;
+#if USE_AM
 	ActorMachine	am;			// TODO: ..define it as a pointer to save memory footprint.
-	LRTSYSTime		startTime;
-	UINT32			execTime;
-//	clock_t			nbCpuCycles;
+#else
+	LRTActor		actor;
+#endif
 } OS_TCB;
 
 
@@ -290,7 +252,6 @@ typedef struct os_tcb {
 extern OS_TCB			*OSTCBCur;                        			/* Pointer to currently running TCB */
 extern OS_TCB          	OSTCBTbl[OS_MAX_TASKS];						// Table of TCBs
 extern UINT8 			OSTaskCntr;									// Tasks counter
-extern LRTActor			LRTActorTbl[OS_MAX_TASKS];
 // Table of functions.
 
 extern FUNCTION_TYPE 		functions_tbl[];						// Table of local functions.

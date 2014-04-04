@@ -41,7 +41,6 @@
 #include "lrt_taskMngr.h"
 #include "lrt_debug.h"
 #include "lrt_amMngr.h"
-#include "lrt_actorMngr.h"
 #include "lrt_cfg.h"
 
 
@@ -54,31 +53,13 @@
 /* GLOBAL VARIABLES */
 FUNCTION_TYPE functions_tbl[NB_LOCAL_FUNCTIONS]; /* Table of Action Fcts */
 
-static UINT32 data[MAX_DATA_WORDS];
 UINT8 OSTaskCntr = 0;                     			// Tasks' counter.
 UINT8 OSTaskIndex = 0;                     			// Tasks' index.
 
-//static UINT8* workingMemory;
 static UINT8 workingMemory[WORKING_MEMORY_SIZE];
 static UINT8* freeWorkingMemoryPtr;
 
-//extern void amTaskStart();
-
-
-
 void clearTCBTbl(){
-	UINT32 i;
-	for(i=0;i<OS_MAX_TASKS;i++){
-		if(OSTCBTbl[i].OSTCBState == OS_STAT_DELETED){
-			OSTCBTbl[i].OSTCBState = OS_STAT_UNINITIALIZED;
-//			printf("Task %d started at %d:%d:%d and lasted %d clock ticks\n",
-//					OSTCBTbl[i].OSTCBId,
-//					OSTCBTbl[i].startTime->tm_hour,
-//					OSTCBTbl[i].startTime->tm_min,
-//					OSTCBTbl[i].startTime->tm_sec,
-//					OSTCBTbl[i].nbCpuCycles);
-		}
-	}
 	OSTaskCntr = 0;
 	OSTaskIndex = 0;
 }
@@ -93,11 +74,7 @@ void clearTCBTbl(){
 */
 
 OS_TCB *  LrtTaskCreate (){
-	// Popping second incoming word, the task Id.
-//	UINT8 id = RTQueuePop_UINT32(RTCtrlQueue);
 	OS_TCB *new_tcb;
-//	UINT32 taskFunctId;
-//	LRTActor* newActor;
 
 	if(OSTaskCntr >= OS_MAX_TASKS){
 		platform_puts("Create Task ");platform_putdec(OSTaskIndex);platform_puts("\n");
@@ -106,80 +83,32 @@ OS_TCB *  LrtTaskCreate (){
 
 	// Finding an unused TCB.
 	new_tcb = &OSTCBTbl[OSTaskIndex];
-//	newActor = &LRTActorTbl[OSTaskIndex];
 
-//	if (new_tcb->OSTCBState == OS_STAT_UNINITIALIZED) { /* Make sure task doesn't already exist at this id  */
-		new_tcb->OSTCBState = OS_STAT_READY;/* Reserve the priority to prevent others from doing ...  */
+	new_tcb->OSTCBState = OS_STAT_READY;/* Reserve the priority to prevent others from doing ...  */
 
-		/* Store task ID */
-		new_tcb->OSTCBId = OSTaskIndex++;
-		if(OSTaskIndex == (OS_MAX_TASKS)) OSTaskIndex = 0;
+	/* Store task ID */
+	new_tcb->OSTCBId = OSTaskIndex++;
+	if(OSTaskIndex == (OS_MAX_TASKS)) OSTaskIndex = 0;
 
-		// Incrementing the task counter.
-		OSTaskCntr++;
+	// Incrementing the task counter.
+	OSTaskCntr++;
 
-		// Set the current TCB pointer if it is not already done.
-		if(OSTCBCur == (OS_TCB*)0){
-			/* If no running Task */
-			OSTCBCur = new_tcb;
+	// Set the current TCB pointer if it is not already done.
+	if(OSTCBCur == (OS_TCB*)0){
+		/* If no running Task */
+		OSTCBCur = new_tcb;
 //			new_tcb->OSTCBNext = new_tcb;
 //		}else{
 //			new_tcb->OSTCBNext = OSTCBCur;
-		}
-
-		return new_tcb;
-
-		/*
-		 * Getting data from the control queue.
-		 */
-//		// Popping the task function id.
-//		new_tcb->functionId = RTQueuePop_UINT32(RTCtrlQueue);
-//
-//		// Popping whether the task is stopped after completion.
-////		new_tcb->stop = RTQueuePop_UINT32(RTCtrlQueue);
-//
-//		// Popping the AM flag.
-//		new_tcb->isAM = RTQueuePop_UINT32(RTCtrlQueue);
-//
-//		if(new_tcb->isAM){
-//			// Popping the actor machine's info.
-//			new_tcb->am.nbVertices 	= RTQueuePop_UINT32(RTCtrlQueue);
-//			new_tcb->am.nbConds 	= RTQueuePop_UINT32(RTCtrlQueue);
-//			new_tcb->am.nbActions	= RTQueuePop_UINT32(RTCtrlQueue);
-//
-//			// Popping the starting vertex of the AM.
-//			new_tcb->am.currVertexId = RTQueuePop_UINT32(RTCtrlQueue);
-//			new_tcb->task_func = amTaskStart; // An AM task's function is predefined.
-//			new_tcb->stop = FALSE;
-//			// Creating the AM.
-//			AMCreate(&(new_tcb->am));
-//		}
-//		else
-//		{
-//			new_tcb->actor = newActor;
-//			new_tcb->task_func = functions_tbl[new_tcb->functionId];
-//			new_tcb->stop = TRUE;
-//			createActor(new_tcb->actor);
-//		}
-//
-//	    platform_puts("Create Task ID"); platform_putdec(new_tcb->OSTCBId);
-//	    platform_puts(" @");  platform_putdec(new_tcb->am.currVertexId);
-//	    platform_puts("\n");
-
-#if defined ARM || defined DESKTOP
-		char s[8] = "tX_X.gv";
-		s[1] = new_tcb->OSTCBId + '0';
-		s[3] = cpuId + '0';
-		dotWriter(new_tcb, s);
-#endif
-//	}else
-//		exitWithCode(1012);
+	}
+	return new_tcb;
 }
 
-
+#if USE_AM
 AM_ACTOR_ACTION_STRUCT* OSCurActionQuery(){
 	return &OSTCBCur->am.am_actions[OSTCBCur->am.am_vertices[OSTCBCur->am.currVertexId].actionID];
 }
+#endif
 
 
 /*
@@ -202,7 +131,7 @@ void  LrtTaskDeleteCur(){
 //    OS_TCB    *del_tcb = &OSTCBTbl[id];
 
 //    if (del_tcb->OSTCBState == OS_STAT_READY) { /* Make sure task doesn't already exist at this id  */
-	OSTCBCur->OSTCBState = OS_STAT_DELETED;
+	OSTCBCur->OSTCBState = OS_STAT_UNINITIALIZED;
 
     	/* Update current running Task List */
 //		if(del_tcb->OSTCBNext == del_tcb){
@@ -225,10 +154,6 @@ void  LrtTaskDeleteCur(){
 		OSTCBCur = (OS_TCB*)0;
 		lrt_running = FALSE;
     }
-
-    // TODO: Delete also the actor/actor machine.
-//    }else
-//    	exitWithCode(1013);
 }
 
 void  OSTaskDel (){
@@ -236,7 +161,9 @@ void  OSTaskDel (){
 	UINT8 vectorId = platform_queue_pop_UINT32(PlatformCtrlQueue);
     OS_TCB       *ptcb = &OSTCBTbl[taskId];
     ptcb->stop = TRUE;
+#if USE_AM
     ptcb->am.stopVertexId = vectorId;
+#endif
     platform_puts("Stop Task ID"); platform_putdec(taskId);
     platform_puts(" at Vector ID");  platform_putdec(vectorId);
     platform_puts("\n");
@@ -269,14 +196,14 @@ void PrintTasksIntoDot(){
 				if(tcb->OSTCBState == OS_STAT_READY){
 					j++;
 					fprintf (pFile, "\t%d [label=\"Function F%d\\n", j, tcb->functionId);
-					actor = tcb->actor;
+					actor = &tcb->actor;
 					for (i = 0; i < actor->nbInputFifos; i++){
-						fprintf (pFile, "Fin  %d ", actor->inputFifoId[i]);
-						fprintf (pFile, "addr  %d\\n ", actor->inputFifoDataOff[i]);
+//						fprintf (pFile, "Fin  %d ", actor->inputFifoId[i]);
+//						fprintf (pFile, "addr  %d\\n ", actor->inputFifoDataOff[i]);
 					}
 					for (i = 0; i < actor->nbOutputFifos; i++){
-						fprintf (pFile, "Fout %d ", actor->outputFifoId[i]);
-						fprintf (pFile, "addr  %d\\n ", actor->outputFifoDataOff[i]);
+//						fprintf (pFile, "Fout %d ", actor->outputFifoId[i]);
+//						fprintf (pFile, "addr  %d\\n ", actor->outputFifoDataOff[i]);
 					}
 					for(i = 0; i < actor->nbParams; i++)
 						fprintf (pFile, "Param %d\\n", actor->params[i]);
@@ -309,29 +236,4 @@ void* OSAllocWorkingMemory(int size){
 
 void OSFreeWorkingMemory(){
 	freeWorkingMemoryPtr = workingMemory;
-}
-
-UINT32 rtGetVxId(){
-	return OSTCBCur->vertexId;
-}
-
-
-void sendExecData(){
-	UINT32 i, taskCnt, wordCnt;
-	taskCnt = 0; wordCnt = 0;
-	platform_queue_push_UINT32(PlatformCtrlQueue, MSG_EXEC_TIMES);
-	for(i=0;i<OS_MAX_TASKS;i++){
-		if(OSTCBTbl[i].OSTCBState == OS_STAT_DELETED){
-			data[wordCnt++] = OSTCBTbl[i].vertexId;
-			data[wordCnt++] = OSTCBTbl[i].startTime;
-			data[wordCnt++] = OSTCBTbl[i].execTime;
-			taskCnt++;
-		}
-	}
-	if(wordCnt >= MAX_DATA_WORDS) exitWithCode(1016);
-	data[1] = taskCnt; // Number of bytes that will be sent.
-	platform_queue_push_UINT32(PlatformCtrlQueue, taskCnt);
-	platform_queue_push(PlatformCtrlQueue, data, wordCnt*sizeof(UINT32));
-	platform_queue_push_finalize(PlatformCtrlQueue);
-	exit(0);
 }

@@ -94,19 +94,13 @@ void inline CreateTaskMsg::send(int lrtID, SRDAGVertex* vertex){
 
 	platform_QPushUINT32(lrtID, platformCtrlQ, nbParams);
 
-	for (UINT32 k = 0; k < vertex->getNbInputEdge(); k++)
-		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getInputEdge(k)->getFifoId());
-	for (UINT32 k = 0; k < vertex->getNbInputEdge(); k++)
-		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getInputEdge(k)->getFifoAddress());
-	for (UINT32 k = 0; k < vertex->getNbInputEdge(); k++)
-		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getInputEdge(k)->getTokenRate());
+	for (UINT32 k = 0; k < vertex->getNbInputEdge(); k++){
+		platform_QPush(lrtID, platformCtrlQ, vertex->getInputEdge(k)->getFifo(), sizeof(FIFO));
+	}
 
-	for (UINT32 k = 0; k < vertex->getNbOutputEdge(); k++)
-		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getOutputEdge(k)->getFifoId());
-	for (UINT32 k = 0; k < vertex->getNbOutputEdge(); k++)
-		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getOutputEdge(k)->getFifoAddress());
-	for (UINT32 k = 0; k < vertex->getNbOutputEdge(); k++)
-		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getOutputEdge(k)->getTokenRate());
+	for (UINT32 k = 0; k < vertex->getNbOutputEdge(); k++){
+		platform_QPush(lrtID, platformCtrlQ, vertex->getOutputEdge(k)->getFifo(), sizeof(FIFO));
+	}
 
 	platform_QPush(lrtID, platformCtrlQ, params, nbParams*sizeof(UINT32));
 

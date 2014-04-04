@@ -39,5 +39,8 @@
 
 #include "lrt_definitions.h"
 
+#if USE_AM
 void AMCreate(ActorMachine *am);
+#endif
+
 #endif /* LRT_AMMNGR_H_ */

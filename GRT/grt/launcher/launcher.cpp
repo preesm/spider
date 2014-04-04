@@ -144,7 +144,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 	// Writing header
 	platform_fprintf("<data>\n");
 
-	UINT32 endTime = 0;
+	UINT32 globalEndTime = 0;
 	char name[MAX_VERTEX_NAME_SIZE];
 
 	// Writing execution data for the master.
@@ -171,26 +171,26 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		for (UINT32 j=0 ; j<nbTasks; j++){
 			SRDAGVertex* vertex = dag->getVertex(platform_QPopUINT32(slave, platformCtrlQ)); // data[0] contains the vertex's id.
 			UINT32 startTime = platform_QPopUINT32(slave, platformCtrlQ);
-			UINT32 execTime = platform_QPopUINT32(slave, platformCtrlQ);
+			UINT32 endTime = platform_QPopUINT32(slave, platformCtrlQ);
 			vertex->getName(name, MAX_VERTEX_NAME_SIZE);
 
 			platform_fprintf("\t<event\n");
 			platform_fprintf("\t\tstart=\"%u\"\n", startTime);
-			platform_fprintf("\t\tend=\"%u\"\n",	startTime + execTime);
+			platform_fprintf("\t\tend=\"%u\"\n",	endTime);
 			platform_fprintf("\t\ttitle=\"%s\"\n", name);
 			platform_fprintf("\t\tmapping=\"%s\"\n", arch->getSlaveName(slave));
 			platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
 			platform_fprintf("\t\t>%s.</event>\n", name);
 
 
-			if(endTime < startTime + execTime)
-				endTime = startTime + execTime;
+			if(globalEndTime < endTime)
+				globalEndTime = endTime;
 		}
 	}
 	platform_fprintf("</data>\n");
 	platform_fclose();
 
-	printf("EndTime %d\n", endTime);
+	printf("EndTime %d\n", globalEndTime);
 }
 
 void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){

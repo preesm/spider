@@ -50,8 +50,10 @@ SRDAGEdge::SRDAGEdge()
 	prevInSinkOrder = NULL;
 	nextInSinkOrder = NULL;
 	refEdge = NULL;
-	fifoId = -1;
-	tokenRate = 0;
+	isImplemented = FALSE;
+	fifo.id=0;
+	fifo.add= 0;
+	fifo.size=0;
 	delay = 0;
 }
 
@@ -68,7 +70,9 @@ void SRDAGEdge::reset()
 	prevInSinkOrder = NULL;
 	nextInSinkOrder = NULL;
 	refEdge = NULL;
-	fifoId = -1;
-	tokenRate = 0;
+	fifo.id=0;
+	fifo.add= 0;
+	fifo.size=0;
+	isImplemented = FALSE;
 	delay = 0;
 }

@@ -44,13 +44,13 @@
 OS_TCB* LrtTaskCreate();
 UINT8 OSTaskQuery(UINT8 id, OS_TCB *p_task_data);
 OS_TCB* OSCurTaskQuery();
+#if USE_AM
 AM_ACTOR_ACTION_STRUCT* OSCurActionQuery();
+#endif
 void LrtTaskDeleteCur();
 void OSTaskDel();
 void PrintTasksIntoDot();
 void OSWorkingMemoryInit();
 void* OSAllocWorkingMemory(int size);
 void OSFreeWorkingMemory();
-UINT32 rtGetVxId();
-void sendExecData();
 #endif /* LRT_TASKMNGR_H_ */

@@ -149,14 +149,7 @@ inline T* List<T,SIZE>::add(){
 
 template <class T, int SIZE>
 inline UINT32 List<T,SIZE>::getId(T* e){
-	// TODO faire mieux (soustraction de ptr)
-	for(int i=0; i<SIZE; i++){
-		if(valid[i]){
-			if(&array[i] == e)
-				return i;
-		}
-	}
-	return -1;
+	return (e-array)/(&array[1]-&array[0]);
 }
 
 template <class T, int SIZE>

@@ -52,11 +52,13 @@ SRDAGGraph::SRDAGGraph()
 	// There is no dynamic allocation of graph members
 	vertices.reset();
 	edges.reset();
+	hierVertex.reset();
 }
 
 void SRDAGGraph::reset(){
 	vertices.reset();
 	edges.reset();
+	hierVertex.reset();
 }
 
 /**

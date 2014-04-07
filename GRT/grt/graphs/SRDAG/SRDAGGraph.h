@@ -56,6 +56,7 @@ class SRDAGGraph {
 
 	private :
 		List<SRDAGVertex,MAX_SRDAG_VERTICES> vertices;
+		List<SRDAGVertex*,MAX_SRDAG_VERTICES> hierVertex;
 		List<SRDAGEdge,MAX_SRDAG_EDGES> edges;
 
 	public : 
@@ -81,6 +82,17 @@ class SRDAGGraph {
 		 @return the new vertex
 		*/
 		SRDAGVertex* addVertex();
+
+		void storeHierVertex(SRDAGVertex* vertex){
+			hierVertex.add(vertex);
+		}
+		SRDAGVertex* getExHierVertex(){
+			for(UINT32 i=0; i<hierVertex.getNb(); i++){
+				if(hierVertex[i]->getState() == SrVxStExecutable)
+					return hierVertex[i];
+			}
+			return (SRDAGVertex*)NULL;
+		}
 
 		/**
 		 Adding an edge to the graph. Vertices and edges must be added in topological order.

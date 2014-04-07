@@ -78,6 +78,9 @@ void PiSDFTransformer::addVertices(PiSDFAbstractVertex* vertex, UINT32 nb_repeti
 		srdag_vertex->setReference(vertex);
 		srdag_vertex->setReferenceIndex(j);
 		srdag_vertex->setIterationIndex(iteration);
+
+		if(srdag_vertex->isHierarchical())
+			outputGraph->storeHierVertex(srdag_vertex);
 	}
 }
 
@@ -538,18 +541,10 @@ void PiSDFTransformer::multiStepScheduling(
 				currentPiSDF->updateDAGStates(topDag);
 			}
 
-			currentPiSDF = 0;
-			for (UINT32 i = 0; i < topDag->getNbVertices(); i++) {
-				currHSrDagVx = topDag->getVertex(i);
-				if(currHSrDagVx->isHierarchical() && currHSrDagVx->getState() == SrVxStExecutable){
-					if(((PiSDFVertex*)(currHSrDagVx->getReference()))->hasSubGraph()){
-						((PiSDFVertex*)(currHSrDagVx->getReference()))->getSubGraph(&currentPiSDF);
-						lvlCntr++;
-						break;
-					}
-				}
-			}
-		}while(currentPiSDF); /* There is executable hierarchical actor in SRDAG */
+			currHSrDagVx = topDag->getExHierVertex();
+			if(currHSrDagVx)
+				currentPiSDF = currHSrDagVx->getHierarchy();
+		}while(currHSrDagVx); /* There is executable hierarchical actor in SRDAG */
 
 		/* Schedule */
 		listScheduler->schedule(topDag, &schedule, arch);
@@ -619,18 +614,10 @@ void PiSDFTransformer::multiStepScheduling(
 			stepsCntr++;
 		}
 
-		currentPiSDF = 0;
-		for (UINT32 i = 0; i < topDag->getNbVertices(); i++) {
-			currHSrDagVx = topDag->getVertex(i);
-			if(currHSrDagVx->isHierarchical() && currHSrDagVx->getState() == SrVxStExecutable){
-				if(((PiSDFVertex*)(currHSrDagVx->getReference()))->hasSubGraph()){
-					((PiSDFVertex*)(currHSrDagVx->getReference()))->getSubGraph(&currentPiSDF);
-					lvlCntr++;
-					break;
-				}
-			}
-		}
-	}while(currentPiSDF);
+		currHSrDagVx = topDag->getExHierVertex();
+		if(currHSrDagVx)
+			currentPiSDF = currHSrDagVx->getHierarchy();
+	}while(currHSrDagVx);
 
 	/*
 	 * Last scheduling and execution. After all hierarchical levels have been flattened,

@@ -60,6 +60,8 @@ public:
     void addRelatedParam(PiSDFParameter *param)
     {
     	if(nbRelatedParams >= MAX_NB_PiSDF_CONFIG_VERTEX_PARAMS) exitWithCode(1055);
+    	param->setSetter(this);
+    	param->setSetterIx(nbRelatedParams);
         this->relatedParams[nbRelatedParams++] = param;
     }
 

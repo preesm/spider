@@ -202,7 +202,7 @@ void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){
 			UINT32 vxId = platform_QPopUINT32(slave, platformCtrlQ);
 			PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(topDag->getVertex(vxId)->getReference());
 			for(UINT32 j = 0; j < refConfigVx->getNbRelatedParams(); j++){
-				refConfigVx->getRelatedParam(j)->setValue(platform_QPopUINT32(slave, platformCtrlQ));
+				topDag->getVertex(vxId)->setRelatedParamValue(j,platform_QPopUINT32(slave, platformCtrlQ));
 			}
 			slave = (slave+1)%arch->getNbSlaves();
 			nbParamToRecv -= refConfigVx->getNbRelatedParams();

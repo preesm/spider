@@ -67,7 +67,6 @@ static SRDAGVertex* sinkRepetitions[MAX_VERTEX_REPETITION];
 static UINT32 vertexId[MAX_NB_VERTICES];
 static INT32 topo_matrix [MAX_NB_EDGES * MAX_NB_VERTICES];
 static int tempBrv[MAX_NB_VERTICES];
-static SRDAGGraph localDag;
 static BaseSchedule schedule;
 
 void PiSDFTransformer::addVertices(PiSDFAbstractVertex* vertex, UINT32 nb_repetitions, UINT32 iteration, SRDAGGraph* outputGraph){
@@ -595,6 +594,15 @@ void PiSDFTransformer::multiStepScheduling(
 			currentPiSDF = graphFifo.pop();
 			currHSrDagVx = vertexFifo.pop();
 
+			#if EXEC == 1
+				// Update iteration parameters' values.
+				for(UINT32 i=0; i<currentPiSDF->getNb_parameters(); i++){
+					PiSDFParameter *param = currentPiSDF->getParameter(i);
+					SRDAGVertex* config_vertex;
+					topDag->getVerticesFromReference(param->getSetter(), currHSrDagVx->getReferenceIndex(), &config_vertex);
+					param->setValue(config_vertex->getRelatedParamValue(param->getSetterIx()));
+				}
+			#endif
 			// Resolving productions/consumptions.
 			currentPiSDF->evaluateExpressions();
 

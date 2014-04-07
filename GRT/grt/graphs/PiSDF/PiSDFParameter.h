@@ -41,11 +41,15 @@
 #include <expressionParser/ReversePolishNotationGenerator.h>
 #include <platform_types.h>
 
+class PiSDFConfigVertex;
+
 class PiSDFParameter {
 private:
 	char name[MAX_PARAM_NAME_SIZE];
 	variable* var;
 	bool resolved;
+	PiSDFConfigVertex* setter;
+	UINT32 setterIx;
 	// Expression defining the parameter's value (in abstract_syntax_elt)
 //	abstract_syntax_elt production[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 public:
@@ -95,6 +99,22 @@ public:
     {
         this->resolved = resolved;
     }
+
+    PiSDFConfigVertex* getSetter() {
+		return setter;
+	}
+
+	void setSetter(PiSDFConfigVertex* setter) {
+		this->setter = setter;
+	}
+
+	UINT32 getSetterIx() const {
+		return setterIx;
+	}
+
+	void setSetterIx(UINT32 setterIx) {
+		this->setterIx = setterIx;
+	}
 };
 
 #endif /* PARAMETER_H_ */

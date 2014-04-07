@@ -85,6 +85,8 @@ class SRDAGVertex {
 		*/
 		int paramValues[MAX_PARAM];
 
+		int relatedParamValues[MAX_PARAM];
+
 		/**
 		 The reference PiSDF vertex (if generated from a PiSDF)
 		*/
@@ -185,6 +187,9 @@ class SRDAGVertex {
 		 @param value: the parameter value
 		*/
 		void setParamValue(int paramIndex, int value);
+
+		int getRelatedParamValue(int paramIndex);
+		void setRelatedParamValue(int paramIndex, int value);
 
 		/**
 		 Getting the duplication index of the vertex that distinguishes
@@ -381,6 +386,10 @@ class SRDAGVertex {
 					&& ((PiSDFVertex*)Reference)->hasSubGraph();
 		}
 
+		PiSDFGraph* getHierarchy(){
+			return ((PiSDFVertex*)Reference)->getSubGraph();
+		}
+
 		void getName(char* name, UINT32 sizeMax);
 
 
@@ -430,6 +439,16 @@ int SRDAGVertex::getParamValue(int paramIndex){
 inline
 void SRDAGVertex::setParamValue(int paramIndex, int value){
 	paramValues[paramIndex] = value;
+}
+
+inline
+int SRDAGVertex::getRelatedParamValue(int paramIndex){
+	return relatedParamValues[paramIndex];
+}
+
+inline
+void SRDAGVertex::setRelatedParamValue(int paramIndex, int value){
+	relatedParamValues[paramIndex] = value;
 }
 
 /**

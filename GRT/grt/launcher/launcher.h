@@ -61,6 +61,8 @@ namespace Launcher {
 
 	void initSchedulingTime();
 	void endSchedulingTime();
+	void initGraphTime();
+	void endGraphTime();
 
 };
 

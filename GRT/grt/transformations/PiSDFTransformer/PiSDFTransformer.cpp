@@ -494,7 +494,7 @@ void PiSDFTransformer::multiStepScheduling(
 	topDag->getVerticesFromReference(root,0,&currHSrDagVx);
 
 	platform_time_reset();
-	Launcher::initSchedulingTime();
+	Launcher::initGraphTime();
 
 	root->getSubGraph(&currentPiSDF);
 
@@ -546,6 +546,8 @@ void PiSDFTransformer::multiStepScheduling(
 				currentPiSDF = currHSrDagVx->getHierarchy();
 		}while(currHSrDagVx); /* There is executable hierarchical actor in SRDAG */
 
+		Launcher::endGraphTime();
+		Launcher::initSchedulingTime();
 		/* Schedule */
 		listScheduler->schedule(topDag, &schedule, arch);
 
@@ -584,7 +586,7 @@ void PiSDFTransformer::multiStepScheduling(
 		Launcher::resolveParameters(arch, topDag);
 	#endif
 
-		Launcher::initSchedulingTime();
+		Launcher::initGraphTime();
 		while(!graphFifo.isEmpty()){
 			currentPiSDF = graphFifo.pop();
 			currHSrDagVx = vertexFifo.pop();
@@ -619,6 +621,9 @@ void PiSDFTransformer::multiStepScheduling(
 			currentPiSDF = currHSrDagVx->getHierarchy();
 	}while(currHSrDagVx);
 
+
+	Launcher::endGraphTime();
+	Launcher::initSchedulingTime();
 	/*
 	 * Last scheduling and execution. After all hierarchical levels have been flattened,
 	 * there is one more execution to do for completing one complete execution of the model.

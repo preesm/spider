@@ -53,17 +53,27 @@ static Memory memory = Memory(0x0, 0xffffffff);
 static UINT32 nbFifo;
 static UINT32 nbParamToRecv;
 
-
+static UINT32 timeStartGraph[MAX_PISDF_STEPS];
+static UINT32 timeEndGraph[MAX_PISDF_STEPS];
 static UINT32 timeStartScheduling[MAX_PISDF_STEPS];
 static UINT32 timeEndScheduling[MAX_PISDF_STEPS];
-static UINT32 nbSteps=0;
+static UINT32 nbStepsSched=0;
+static UINT32 nbStepsGraph=0;
+
+void Launcher::initGraphTime(){
+	timeStartGraph[nbStepsGraph] = platform_time_getValue();
+}
+void Launcher::endGraphTime(){
+	timeEndGraph[nbStepsGraph] = platform_time_getValue();
+	nbStepsGraph++;
+}
 
 void Launcher::initSchedulingTime(){
-	timeStartScheduling[nbSteps] = platform_time_getValue();
+	timeStartScheduling[nbStepsSched] = platform_time_getValue();
 }
 void Launcher::endSchedulingTime(){
-	timeEndScheduling[nbSteps] = platform_time_getValue();
-	nbSteps++;
+	timeEndScheduling[nbStepsSched] = platform_time_getValue();
+	nbStepsSched++;
 }
 
 
@@ -148,11 +158,20 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 	char name[MAX_VERTEX_NAME_SIZE];
 
 	// Writing execution data for the master.
-	for (UINT32 j=0 ; j<nbSteps; j++){
+	for (UINT32 j=0 ; j<nbStepsSched; j++){
 		platform_fprintf("\t<event\n");
 		platform_fprintf("\t\tstart=\"%u\"\n", 	timeStartScheduling[j]);
 		platform_fprintf("\t\tend=\"%u\"\n",	timeEndScheduling[j]);
-		platform_fprintf("\t\ttitle=\"Step_%d\"\n", j);
+		platform_fprintf("\t\ttitle=\"Sched_%d\"\n", j);
+		platform_fprintf("\t\tmapping=\"Master\"\n");
+		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
+		platform_fprintf("\t\t>Step_%d.</event>\n", j);
+	}
+	for (UINT32 j=0 ; j<nbStepsGraph; j++){
+		platform_fprintf("\t<event\n");
+		platform_fprintf("\t\tstart=\"%u\"\n", 	timeStartGraph[j]);
+		platform_fprintf("\t\tend=\"%u\"\n",	timeEndGraph[j]);
+		platform_fprintf("\t\ttitle=\"Graph_%d\"\n", j);
 		platform_fprintf("\t\tmapping=\"Master\"\n");
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
 		platform_fprintf("\t\t>Step_%d.</event>\n", j);

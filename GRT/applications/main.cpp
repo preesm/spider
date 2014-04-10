@@ -35,7 +35,8 @@
  ****************************************************************************/
 
 //#include "mpeg4Decoder/mpeg4_part2.h"
-#include "DoubleLoop/PiSDFDoubleLoop.h"
+//#include "DoubleLoop/PiSDFDoubleLoop.h"
+#include "SimpleLoop/PiSDFSimpleLoop.h"
 //#include "generatedC++/doubleLoop_gen.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Scenario/Scenario.h>
@@ -50,19 +51,13 @@
 #include <debuggingOptions.h>
 #include <platform.h>
 #include <platform_time.h>
+#include <stdio.h>
 
 #define IS_AM 					0
 #define STOP					1
 
-static char name[MAX_FILE_NAME_SIZE];
 static char tempStr[MAX_SLAVE_NAME_SIZE];
 
-Scenario 			scenario;
-Architecture 		arch;
-ListScheduler 		listScheduler;
-ExecutionStat 		execStat;
-PiSDFGraph 			piSDF;
-SRDAGGraph 			topDag;
 
 
 
@@ -90,6 +85,14 @@ int main(int argc, char* argv[]){
 //	setvbuf(stdout, NULL, _IONBF, 0);
 //	setvbuf(stderr, NULL, _IONBF, 0);
 	int nbSlaves = 1;
+	static Scenario 			scenario;
+	static Architecture 		arch;
+	static ListScheduler 		listScheduler;
+//	static ExecutionStat 		execStat;
+	static PiSDFGraph 			piSDF;
+	static SRDAGGraph 			topDag;
+
+	UINT32 endTimes[101];
 
 	printf("Starting with %d slaves max\n", nbSlaves);
 	platform_init(nbSlaves);
@@ -101,35 +104,43 @@ int main(int argc, char* argv[]){
 	 */
 	createArch(&arch, nbSlaves);
 	arch.setNbActiveSlaves(nbSlaves);
-	listScheduler.setArchitecture(&arch);
-	listScheduler.setScenario(&scenario);
 
-	// Getting the PiSDF graph.
-	top(&piSDF, &scenario);
-
-	// Add topActor to topDag
-	SRDAGVertex* topActor = topDag.addVertex();
-	topActor->setReference(piSDF.getRootVertex());
-	topActor->setReferenceIndex(0);
-	topActor->setIterationIndex(0);
+	for(int iter=1; iter<=100; iter++){
+		listScheduler.reset();
+		piSDF.reset();
+		topDag.reset();
+		clearAllGraphs();
+		Launcher::init();
 
 
-#if EXEC == 1
-	/*
-	 * Initializing the queues and data containers (see launcher class) for communication with local RTs.
-	 * This must be done before calling the multiStepScheduling method.
-	 */
-//	launch.init(nbSlaves);
-	int i;
-	for(i=0; i<nbSlaves; i++)
-		ClearTimeMsg::send(i);
-	platform_time_reset();
-//	launch.launchWaitAck(nbSlaves);
-#endif
+		listScheduler.setArchitecture(&arch);
+		listScheduler.setScenario(&scenario);
 
-	PiSDFTransformer::multiStepScheduling(&arch, &piSDF, &listScheduler, &topDag);
+		// Getting the PiSDF graph.
+		top(&piSDF, &scenario, iter);
+
+		// Add topActor to topDag
+		SRDAGVertex* topActor = topDag.addVertex();
+		topActor->setReference(piSDF.getRootVertex());
+		topActor->setReferenceIndex(0);
+		topActor->setIterationIndex(0);
 
 
+	#if EXEC == 1
+		for(int i=0; i<nbSlaves; i++)
+			ClearTimeMsg::send(i);
+		platform_time_reset();
+	#endif
+
+		endTimes[iter] = PiSDFTransformer::multiStepScheduling(&arch, &piSDF, &listScheduler, &topDag);
+		printf("%d: EndTime %d\n", iter, endTimes[iter]);
+	}
+
+	FILE* f = fopen("/home/jheulot/dev/compa_times.csv", "w+");
+	for(int iter=1; iter<=100; iter++){
+		fprintf(f, "%d,%d\n", iter, endTimes[iter]);
+	}
+	fclose(f);
 
 	printf("finished\n");
 }

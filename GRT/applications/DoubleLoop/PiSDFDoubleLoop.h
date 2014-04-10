@@ -41,9 +41,17 @@
 static PiSDFGraph graphs[MAX_NB_PiSDF_SUB_GRAPHS];
 static UINT8 nb_graphs = 0;
 
-void MLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scenario* scenario){
+void clearAllGraphs(){
+	for(int i=0; i<MAX_NB_PiSDF_SUB_GRAPHS; i++)
+		graphs[i].reset();
+}
+
+void MLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scenario* scenario, UINT32 MMAX){
 	// Parameters.
 	PiSDFParameter *paramM = graph->addParameter("M");
+	PiSDFParameter *paramMMAX = graph->addParameter("MMAX");
+
+	paramMMAX->setValue(MMAX);
 #if EXEC == 0
 	paramM->setValue(3);
 #endif
@@ -57,12 +65,14 @@ void MLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scenario* scena
 
 	PiSDFIfVertex *vxLine_in = (PiSDFIfVertex*)graph->addVertex("Line_in", input_vertex);
 	vxLine_in->setDirection(0);
+	vxLine_in->addParameter(paramMMAX);
 	vxLine_in->setParentVertex(parentVertex);
 	vxLine_in->setParentEdge(parentVertex->getInputEdge(1));
 	vxLine_in->setFunction_index(10);
 
 	PiSDFIfVertex *vxLine_out = (PiSDFIfVertex*)graph->addVertex("Line_out", output_vertex);
 	vxLine_out->setDirection(1);
+	vxLine_out->addParameter(paramMMAX);
 	vxLine_out->setParentVertex(parentVertex);
 	vxLine_out->setParentEdge(parentVertex->getOutputEdge(0));
 	vxLine_out->setFunction_index(10);
@@ -77,6 +87,7 @@ void MLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scenario* scena
 	// Others..
 	PiSDFVertex *vxInitMLoop = (PiSDFVertex*)graph->addVertex("InitMLoop", pisdf_vertex);
 	vxInitMLoop->setFunction_index(6);
+	vxInitMLoop->addParameter(paramMMAX);
 	vxInitMLoop->addParameter(paramM);
 
 	PiSDFVertex *vxF = (PiSDFVertex *)graph->addVertex("F", pisdf_vertex);
@@ -84,19 +95,20 @@ void MLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scenario* scena
 
 	PiSDFVertex *vxEndMLoop = (PiSDFVertex*)graph->addVertex("EndMLoop", pisdf_vertex);
 	vxEndMLoop->setFunction_index(8);
+	vxEndMLoop->addParameter(paramMMAX);
 	vxEndMLoop->addParameter(paramM);
 
 
 	// Edges.
 	graph->addEdge(vxM_in, 0, "1", vxConfigM, 0, "1", "0");
 
-	graph->addEdge(vxLine_in, 0, "3", vxInitMLoop, 0, "3", "0");
+	graph->addEdge(vxLine_in, 0, "MMAX", vxInitMLoop, 0, "MMAX", "0");
 
 	graph->addEdge(vxInitMLoop, 0, "M", vxF, 0, "1", "0");
 
 	graph->addEdge(vxF, 0, "1", vxEndMLoop, 0, "M", "0");
 
-	graph->addEdge(vxEndMLoop, 0, "3", vxLine_out, 0, "3", "0");
+	graph->addEdge(vxEndMLoop, 0, "MMAX", vxLine_out, 0, "MMAX", "0");
 
 
 	// Timings
@@ -119,9 +131,15 @@ void MLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scenario* scena
 }
 
 
-void PiSDFDoubleLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scenario* scenario){
+void PiSDFDoubleLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scenario* scenario, UINT32 NMAX, UINT32 MMAX){
 	// Parameters.
 	PiSDFParameter *paramN = graph->addParameter("N");
+	PiSDFParameter *paramNMAX = graph->addParameter("NMAX");
+	PiSDFParameter *paramMMAX = graph->addParameter("MMAX");
+
+	paramNMAX->setValue(NMAX);
+	paramMMAX->setValue(MMAX);
+
 #if EXEC == 0
 	paramN->setValue(3);
 #endif
@@ -130,31 +148,38 @@ void PiSDFDoubleLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scena
 	PiSDFConfigVertex *vxReadFile = (PiSDFConfigVertex *)graph->addVertex("ReadFile", config_vertex);
 	vxReadFile->setFunction_index(0);
 	vxReadFile->addRelatedParam(paramN);
+	vxReadFile->addParameter(paramNMAX);
+	vxReadFile->addParameter(paramMMAX);
 	graph->setRootVertex(vxReadFile);
 
 	PiSDFVertex *vxInitNLoop 	= (PiSDFVertex *)graph->addVertex("InitNLoop", pisdf_vertex);
 	vxInitNLoop->addParameter(paramN);
+	vxInitNLoop->addParameter(paramNMAX);
+	vxInitNLoop->addParameter(paramMMAX);
 	vxInitNLoop->setFunction_index(2);
 
 	PiSDFVertex *vxMLoop 		= (PiSDFVertex *)graph->addVertex("MLoop", pisdf_vertex);
 
 	PiSDFVertex *vxEndNLoop 	= (PiSDFVertex *)graph->addVertex("EndNLoop", pisdf_vertex);
 	vxEndNLoop->addParameter(paramN);
+	vxEndNLoop->addParameter(paramMMAX);
 	vxEndNLoop->setFunction_index(3);
 
 	PiSDFVertex *vxWriteFile 	= (PiSDFVertex *)graph->addVertex("WriteFile", pisdf_vertex);
+	vxWriteFile->addParameter(paramNMAX);
+	vxWriteFile->addParameter(paramMMAX);
 	vxWriteFile->setFunction_index(4);
 
 	// Edges.
-	graph->addEdge(vxReadFile, 0, "3", vxInitNLoop, 0, "3", "0");
-	graph->addEdge(vxReadFile, 1, "9", vxInitNLoop, 1,  "9", "0");
+	graph->addEdge(vxReadFile, 0, "NMAX", vxInitNLoop, 0, "NMAX", "0");
+	graph->addEdge(vxReadFile, 1, "NMAX*MMAX", vxInitNLoop, 1,  "NMAX*MMAX", "0");
 	
 	graph->addEdge(vxInitNLoop, 0, "N", vxMLoop, 0, "1", "0");
-	graph->addEdge(vxInitNLoop, 1, "N*3", vxMLoop, 1, "3", "0");
+	graph->addEdge(vxInitNLoop, 1, "N*MMAX", vxMLoop, 1, "MMAX", "0");
 
-	graph->addEdge(vxMLoop, 0, "3", vxEndNLoop, 0, "N*3", "0");
+	graph->addEdge(vxMLoop, 0, "MMAX", vxEndNLoop, 0, "N*MMAX", "0");
 
-	graph->addEdge(vxEndNLoop, 0, "9", vxWriteFile, 0, "9", "0");
+	graph->addEdge(vxEndNLoop, 0, "NMAX*MMAX", vxWriteFile, 0, "NMAX*MMAX", "0");
 
 	// Timings
 	scenario->setTiming(vxReadFile->getId(), 1, "100");
@@ -175,12 +200,12 @@ void PiSDFDoubleLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scena
 	// Subgraphs
 	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS - 1) exitWithCode(1054);
 	PiSDFGraph *MLoop_subGraph = &graphs[nb_graphs]; nb_graphs++;
-	MLoop(MLoop_subGraph, vxMLoop, scenario);
+	MLoop(MLoop_subGraph, vxMLoop, scenario, MMAX);
 	vxMLoop->setSubGraph(MLoop_subGraph);
 }
 
 
-void top(PiSDFGraph* graph, Scenario* scenario){
+void top(PiSDFGraph* graph, Scenario* scenario, UINT32 NMAX, UINT32 MMAX){
 	nb_graphs = 0;
 	PiSDFVertex *vxDoubleLoop = (PiSDFVertex *)graph->addVertex("DoubleLoop", pisdf_vertex);
 
@@ -189,6 +214,6 @@ void top(PiSDFGraph* graph, Scenario* scenario){
 	// Subgraphs
 	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS - 1) exitWithCode(1054);
 	PiSDFGraph *DoubleLoop_subGraph = &graphs[nb_graphs]; nb_graphs++;
-	PiSDFDoubleLoop(DoubleLoop_subGraph, vxDoubleLoop, scenario);
+	PiSDFDoubleLoop(DoubleLoop_subGraph, vxDoubleLoop, scenario, NMAX, MMAX);
 	vxDoubleLoop->setSubGraph(DoubleLoop_subGraph);
 }

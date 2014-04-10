@@ -101,6 +101,11 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 		UINT32 nbSourceRepetitions = brv[edge->getSource()->getId()];
 		UINT32 nbTargetRepetitions = brv[edge->getSink()->getId()];
 
+		if(nbSourceRepetitions > MAX_VERTEX_REPETITION || nbTargetRepetitions > nbTargetRepetitions){
+			printf("MAX_VERTEX_REPETITION too small\n");
+			abort();
+		}
+
 		// Getting the replicas of the source vertex into sourceRepetitions.
 		topDag->getVerticesFromReference(edge->getSource(), iteration, sourceRepetitions);
 
@@ -298,6 +303,29 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 	}
 }
 
+static void PiSDFTransformer::removeUnusedRB(SRDAGGraph *topDag){
+	for (UINT32 i = 0; i < topDag->getNbVertices(); i++) {
+		SRDAGVertex* vertex = topDag->getVertex(i);
+		if(vertex->getState() != SrVxStDeleted
+				&& vertex->getType() == RoundBuffer
+				&& vertex->getInputEdge(0)->getTokenRate() == vertex->getOutputEdge(0)->getTokenRate()){
+			SRDAGEdge* outputEdge = vertex->getOutputEdge(0);
+			SRDAGEdge* inputEdge = vertex->getInputEdge(0);
+			SRDAGVertex *sink = outputEdge->getSink();
+			SRDAGVertex *source = inputEdge->getSource();
+			UINT32 sinkEdgeID = sink->getInputEdgeId(outputEdge);
+			UINT32 sourceEdgeID = source->getOutputEdgeId(inputEdge);
+
+			vertex->removeInputEdge(inputEdge);
+			sink->removeInputEdge(outputEdge);
+			inputEdge->setSink(sink);
+			sink->setInputEdge(inputEdge, sinkEdgeID);
+			vertex->setState(SrVxStDeleted);
+		}
+	}
+}
+
+
 void PiSDFTransformer::replaceHwithRB(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, SRDAGVertex* currHSrDagVx){
 	/* Replace hierarchical actor in topDag with RBs */
 	int nb=currHSrDagVx->getNbInputEdge();
@@ -468,7 +496,7 @@ static void PiSDFTransformer::singleRateTransformation(PiSDFGraph *currentPiSDF,
 	PiSDFTransformer::linkvertices(currentPiSDF, currHSrDagVx->getReferenceIndex(), topDag, brv);
 }
 
-void PiSDFTransformer::multiStepScheduling(
+UINT32 PiSDFTransformer::multiStepScheduling(
 							Architecture* arch,
 							PiSDFGraph* pisdf,
 							ListScheduler* listScheduler,
@@ -477,10 +505,11 @@ void PiSDFTransformer::multiStepScheduling(
 	PiSDFGraph*   currentPiSDF;
 	UINT32 len;
 	UINT32 	lvlCntr = 0;
+	UINT32 endTime = 0;
 	UINT8 	stepsCntr = 0;
 
-	Queue<PiSDFGraph*, 10> graphFifo;
-	Queue<SRDAGVertex*, 10> vertexFifo;
+	Queue<PiSDFGraph*, 15> graphFifo;
+	Queue<SRDAGVertex*, 15> vertexFifo;
 
 	schedule.reset();
 	graphFifo.reset();
@@ -548,11 +577,12 @@ void PiSDFTransformer::multiStepScheduling(
 
 		Launcher::endGraphTime();
 		Launcher::initSchedulingTime();
+
 		/* Schedule */
 		listScheduler->schedule(topDag, &schedule, arch);
 
 		// Assigning FIFO ids to executable vxs' edges.
-		Launcher::assignFifo(topDag);
+//		Launcher::assignFifo(topDag);
 
 	#if PRINT_GRAPH
 		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.xml", SCHED_FILE_NAME, stepsCntr);
@@ -571,7 +601,7 @@ void PiSDFTransformer::multiStepScheduling(
 
 	#if EXEC == 1
 		// Executing the executable vxs.
-		Launcher::launch(topDag, arch, &schedule);
+//		Launcher::launch(topDag, arch, &schedule);
 	#endif
 
 		// Updating states. Sets all executable vxs to executed since their execution was already launched.
@@ -596,8 +626,11 @@ void PiSDFTransformer::multiStepScheduling(
 				for(UINT32 i=0; i<currentPiSDF->getNb_parameters(); i++){
 					PiSDFParameter *param = currentPiSDF->getParameter(i);
 					SRDAGVertex* config_vertex;
-					topDag->getVerticesFromReference(param->getSetter(), currHSrDagVx->getReferenceIndex(), &config_vertex);
-					param->setValue(config_vertex->getRelatedParamValue(param->getSetterIx()));
+					PiSDFConfigVertex* pisdf_config = param->getSetter();
+					if(pisdf_config!=0){
+						topDag->getVerticesFromReference(param->getSetter(), currHSrDagVx->getReferenceIndex(), &config_vertex);
+						param->setValue(config_vertex->getRelatedParamValue(param->getSetterIx()));
+					}
 				}
 			#endif
 			// Resolving productions/consumptions.
@@ -631,7 +664,7 @@ void PiSDFTransformer::multiStepScheduling(
 	listScheduler->schedule(topDag, &schedule, arch);
 
 	// Assigning FIFO ids to executable vxs' edges.
-	Launcher::assignFifo(topDag);
+//	Launcher::assignFifo(topDag);
 
 	Launcher::endSchedulingTime();
 
@@ -641,8 +674,8 @@ void PiSDFTransformer::multiStepScheduling(
 	 * of the current iteration, so the local RTs clear the tasks table and
 	 * send back execution information.
 	 */
-	Launcher::launch(topDag, arch, &schedule);
-	Launcher::createRealTimeGantt(arch, topDag, "Gantt.xml");
+//	Launcher::launch(topDag, arch, &schedule);
+	endTime = Launcher::createRealTimeGantt(arch, topDag, "Gantt.xml");
 #endif
 
 	// Updating states. Sets all executable vxs to executed since their execution was already launched.
@@ -663,4 +696,5 @@ void PiSDFTransformer::multiStepScheduling(
 	DotWriter::write(topDag, file, 1, 0);
 #endif
 
+	return endTime;
 }

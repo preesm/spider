@@ -61,6 +61,41 @@ PiSDFGraph::PiSDFGraph() {
 	executable = false;
 }
 
+void PiSDFGraph::reset() {
+	nb_edges = 0;
+	nb_parameters = 0;
+
+	nb_vertices = 0;
+	nb_pisdf_vertices = 0;
+	nb_config_vertices = 0;
+	nb_join_vertices = 0;
+	nb_input_vertices = 0;
+	nb_broad_vertices = 0;
+	nb_output_vertices = 0;
+	nb_select_vertices = 0;
+	nb_switch_vertices = 0;
+	nb_roundB_vertices = 0;
+
+	rootVertex = NULL;
+
+	nbExecVertices = 0;
+	nbDiscardVertices = 0;
+	executable = false;
+
+	memset(edges,0,sizeof(edges));
+	memset(parameters,0,sizeof(parameters));
+	memset(vertices,0,sizeof(vertices));
+	memset(pisdf_vertices,0,sizeof(pisdf_vertices));
+	memset(config_vertices,0,sizeof(config_vertices));
+	memset(join_vertices,0,sizeof(join_vertices));
+	memset(input_vertices,0,sizeof(input_vertices));
+	memset(broad_vertices,0,sizeof(broad_vertices));
+	memset(output_vertices,0,sizeof(output_vertices));
+	memset(switch_vertices,0,sizeof(switch_vertices));
+	memset(select_vertices,0,sizeof(select_vertices));
+	memset(roundB_vertices,0,sizeof(roundB_vertices));
+}
+
 
 PiSDFAbstractVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEX_TYPE type)
 {

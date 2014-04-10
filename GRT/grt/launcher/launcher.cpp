@@ -146,15 +146,40 @@ void Launcher::launch(SRDAGGraph* graph, Architecture* arch, BaseSchedule* sched
 	}
 }
 
+void Launcher::assignFifoVertex(SRDAGVertex* vertex){
+	UINT32 i, base, offset;
+	SRDAGEdge* edge;
+	for (i = 0; i < vertex->getNbOutputEdge(); i++){
+		edge = vertex->getOutputEdge(i);
+		if(edge->getFifoId() == -1){
+			edge->setFifoId(nbFifo++);
+			edge->setFifoAddress(memory.alloc(edge->getTokenRate()));
+		}
+	}
+}
 
-void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName){
+void Launcher::launchVertex(SRDAGVertex* vertex, UINT32 slave){
+	Launcher::assignFifoVertex(vertex);
+	CreateTaskMsg::send(slave, vertex);
+	if(vertex->getType() == ConfigureActor)
+		nbParamToRecv += ((PiSDFConfigVertex*)(vertex->getReference()))->getNbRelatedParams();
+}
+
+void Launcher::init(){
+	nbStepsSched = nbStepsGraph = 0;
+	nbFifo = nbParamToRecv = 0;
+	memory = Memory(0x0, 0xffffffff);
+}
+
+UINT32 Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName){
 	// Creating the Gantt with real times.
+	UINT32 globalEndTime = 0;
+#if PRINT_GRAPH
 	platform_fopen(filePathName);
 
 	// Writing header
 	platform_fprintf("<data>\n");
 
-	UINT32 globalEndTime = 0;
 	char name[MAX_VERTEX_NAME_SIZE];
 
 	// Writing execution data for the master.
@@ -176,6 +201,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
 		platform_fprintf("\t\t>Step_%d.</event>\n", j);
 	}
+#endif
 
 	// Writing execution data for each slave.
 	for(UINT32 slave=0; slave<arch->getNbSlaves(); slave++){
@@ -191,8 +217,8 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 			SRDAGVertex* vertex = dag->getVertex(platform_QPopUINT32(slave, platformCtrlQ)); // data[0] contains the vertex's id.
 			UINT32 startTime = platform_QPopUINT32(slave, platformCtrlQ);
 			UINT32 endTime = platform_QPopUINT32(slave, platformCtrlQ);
+#if PRINT_GRAPH
 			vertex->getName(name, MAX_VERTEX_NAME_SIZE);
-
 			platform_fprintf("\t<event\n");
 			platform_fprintf("\t\tstart=\"%u\"\n", startTime);
 			platform_fprintf("\t\tend=\"%u\"\n",	endTime);
@@ -200,16 +226,17 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 			platform_fprintf("\t\tmapping=\"%s\"\n", arch->getSlaveName(slave));
 			platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
 			platform_fprintf("\t\t>%s.</event>\n", name);
-
-
+#endif
 			if(globalEndTime < endTime)
 				globalEndTime = endTime;
 		}
 	}
+#if PRINT_GRAPH
 	platform_fprintf("</data>\n");
 	platform_fclose();
+#endif
 
-	printf("EndTime %d\n", globalEndTime);
+	return globalEndTime;
 }
 
 void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){

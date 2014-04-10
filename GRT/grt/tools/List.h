@@ -127,7 +127,7 @@ inline T* List<T,SIZE>::add(T e){
 		return &(array[wrNb++]);
 	}else{
 		exitWithCode(1058);
-		return NULL;
+		return (T*)0;
 	}
 }
 

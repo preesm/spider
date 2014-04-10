@@ -36,6 +36,8 @@
 
 #include "ListScheduler.h"
 #include <algorithm>    // std::min
+#include <debuggingOptions.h>
+#include <launcher/launcher.h>
 
 /**
  Constructor
@@ -47,6 +49,14 @@ ListScheduler::ListScheduler()
 	archi = (Architecture*)NULL;
 	scenario = (Scenario*)NULL;
 }
+
+void ListScheduler::reset()
+{
+	archi = (Architecture*)NULL;
+	scenario = (Scenario*)NULL;
+	memset(lastVertexOfSlave,0,sizeof(lastVertexOfSlave));
+}
+
 
 /**
  Destructor
@@ -136,6 +146,9 @@ UINT32 ListScheduler::getTiming(SRDAGVertex* vertex, Architecture* arch, UINT32 
 
 UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVertex* vertex){
 //	UINT32 noSchedule = -1; // Indicates that the vertex have not been scheduled.
+	if(vertex->getScheduleIndex() != -1)
+		return schedule->getVertexEndTime(vertex->getScheduleIndex(), vertex);
+
 	UINT32 minimumStartTime = 0;
 	UINT32 precVertexEndTime;
 	// Computing the minimum start time.
@@ -186,6 +199,10 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 	int scheduleIndex = schedule->addSchedule(bestSlave, vertex, bestStartTime, bestEndTime);
 //		schedule->addCom(bestSlave, bestEndTime-bestComOutTime, bestEndTime);
 	vertex->setScheduleIndex(scheduleIndex);
+
+#if EXEC
+	Launcher::launchVertex(vertex, bestSlave);
+#endif
 
 	return bestEndTime;
 }

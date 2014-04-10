@@ -52,23 +52,12 @@
 #define MAX_NB_OUTPUT_EDGES		16	//512
 #define MAX_NB_INPUT_EDGES		16	//512
 
-// CSDAG
-#define MAX_ARG_EXPRESSION 		32	//64
-#define MAX_CSDAG_ARGS 			16	//64
-#define MAX_CSDAG_VERTICES 		16	//32
-#define MAX_CSDAG_EDGES 		32	//32
-#define MAX_CSDAG_INPUT_EDGES 	16	//32 // Maximum of input edges for a given DAG vertex
-
-#define MAX_CSDAG_VERTEX_REPETITION 	10		//100 // The maximum number of repetitions for one vertex
-#define MAX_CSDAG_PATTERN_TABLE_SIZE 	1000	//2100 // Maximum size of the whole table containing the patterns of one CSDAG graph
-#define MAX_CSDAG_PATTERN_SIZE 			20		//100 // Maximum size of one integer pattern (in number of integers)
-
 // Single Rate DAG
-#define MAX_SRDAG_VERTICES 		64	//512
-#define MAX_SRDAG_EDGES 		64	//512
-#define MAX_SRDAG_INPUT_EDGES 	16	//64
-#define MAX_SRDAG_OUTPUT_EDGES 	16	//100
-#define MAX_VERTEX_REPETITION 	10	//100 // The maximum number of repetitions for one vertex
+#define MAX_SRDAG_VERTICES 		110	//512
+#define MAX_SRDAG_EDGES 		230	//512
+#define MAX_SRDAG_INPUT_EDGES 	100	//64
+#define MAX_SRDAG_OUTPUT_EDGES 	100	//100
+#define MAX_VERTEX_REPETITION 	100	//100 // The maximum number of repetitions for one vertex
 #define XPLODE_FUNCT_IX			13	//13	// Index of the function for implode/explode vxs.
 
 // PICSDF
@@ -77,10 +66,10 @@
 
 
 // PiSDF
-#define MAX_NB_PiSDF_SUB_GRAPHS			4	//32
-#define MAX_NB_PiSDF_EDGES				16	//32
-#define MAX_NB_PiSDF_PARAMS				2	//32
-#define MAX_NB_PiSDF_VERTICES			16	//32
+#define MAX_NB_PiSDF_SUB_GRAPHS			2	//32
+#define MAX_NB_PiSDF_EDGES				8	//32
+#define MAX_NB_PiSDF_PARAMS				5	//32
+#define MAX_NB_PiSDF_VERTICES			8	//32
 #define MAX_NB_PiSDF_CONFIG_VERTICES	8	//32
 #define MAX_NB_PiSDF_JOIN_VERTICES		8	//32
 #define MAX_NB_PiSDF_INPUT_VERTICES		8	//32

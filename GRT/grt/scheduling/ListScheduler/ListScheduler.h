@@ -83,6 +83,7 @@ class ListScheduler {
 		ListScheduler();
 
 
+		void reset();
 		/**
 		 Destructor
 		*/

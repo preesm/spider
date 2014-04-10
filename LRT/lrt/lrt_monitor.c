@@ -65,6 +65,9 @@ inline void Monitor_startTask(UINT32 vertexID){
 inline void Monitor_endTask(){
 	taskTimes[nbTaskTime].end = platform_time_getValue();
 	nbTaskTime++;
+	if(nbTaskTime>OS_MAX_TASKS_TIME){
+		exitWithCode(1017);
+	}
 }
 
 void Monitor_sendData(){
@@ -73,6 +76,6 @@ void Monitor_sendData(){
 	platform_queue_push(PlatformCtrlQueue, taskTimes, nbTaskTime*sizeof(taskTime));
 	platform_queue_push_finalize(PlatformCtrlQueue);
 	nbTaskTime = 0;
-	exit(0);
+//	exit(0);
 }
 

@@ -90,6 +90,8 @@ class PiSDFGraph {
 public:
 	PiSDFGraph();
 
+	void reset();
+
 	PiSDFEdge* 	addEdge(PiSDFAbstractVertex* source, UINT32 sourcePortId, const char* production, PiSDFAbstractVertex* sink, UINT32 sinkPortId, const char* consumption, const char* delay);
 
 	PiSDFEdge*	addEdge(PiSDFAbstractVertex* source, UINT32 sourcePortId, abstract_syntax_elt* production, PiSDFAbstractVertex* sink, UINT32 sinkPortId, abstract_syntax_elt* consumption, abstract_syntax_elt* delay);

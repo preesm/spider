@@ -62,6 +62,7 @@ void exitWithCode(int exitCode){
 	// 1014: Bad Monitor Action
 	// 1015: Not enough working memory
 	// 1016: Data to be sent exceeds the MAX_DATA_WORDS.
+	// 1017: OS_MAX_TASKS_TIME too small.
 
 	platform_puts("\nExiting with code ");
 	platform_putdec(exitCode);

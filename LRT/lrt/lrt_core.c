@@ -103,6 +103,7 @@ void LRTStartCurrTask() {
 						OSTCBCur->actor.outputFifo,
 						OSTCBCur->actor.params);
 	Monitor_endTask();
+	OSFreeWorkingMemory();
 #endif
 
 	if(OSTCBCur->stop)

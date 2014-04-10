@@ -39,7 +39,7 @@
 #include <grt_definitions.h>
 
 extern "C"{
-void 	__c_platform_queue_Init();
+void 	__c_platform_queue_Init(UINT8 nbSlaves);
 UINT32 	__c_platform_QPush(UINT8 slaveId, platformQType queueType, void* data, int size);
 UINT32 	__c_platform_QPushUINT32(UINT8 slaveId, platformQType queueType, UINT32 data);
 UINT32 	__c_platform_QPop(UINT8 slaveId, platformQType queueType, void* data, int size);
@@ -48,8 +48,8 @@ UINT32 	__c_platform_QNonBlockingPop(UINT8 slaveId, platformQType queueType, voi
 void __c_platform_QPush_finalize(UINT8 slaveId, platformQType queueType);
 }
 
-void platform_queue_Init(){
-	__c_platform_queue_Init();
+void platform_queue_Init(UINT8 nbSlaves){
+	__c_platform_queue_Init(nbSlaves);
 }
 
 UINT32 platform_QPush(UINT8 slaveId, platformQType queueType, void* data, int size){

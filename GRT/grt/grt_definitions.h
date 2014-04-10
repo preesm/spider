@@ -41,7 +41,7 @@
 
 // Architecture
 #define MAX_SLAVE_TYPES 		2	//2 	// The maximum number of slave types
-#define MAX_SLAVES 				2	//12	// The maximum number of slaves
+#define MAX_SLAVES 				8	//12	// The maximum number of slaves
 #define MAX_SLAVE_NAME_SIZE 	10	// The maximum number of slaves
 
 // Common to all types of graphs

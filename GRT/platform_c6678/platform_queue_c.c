@@ -86,7 +86,7 @@ void delay(UINT32 cycles){
     while ((CSL_tscRead ()  - value) < cycles);
 }
 
-void __c_platform_queue_Init(){
+void __c_platform_queue_Init(UINT8 nbSlaves){
 	MNAV_MonolithicPacketDescriptor * mono_pkt;
 	UINT32 idx;
 
@@ -148,22 +148,23 @@ void __c_platform_queue_Init(){
 		push_queue(EMPTY_DATA, 1, 0, (Uint32) (mono_pkt));
 	}
 
-//	for(idx = 0; idx<7; idx++)
-	mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(EMPTY_CTRL);
+	for(idx = 0; idx<nbSlaves; idx++){
+		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(EMPTY_CTRL);
 
-	cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
+		cache_invL1D(mono_pkt, CTRL_DESC_SIZE);
 
-	mono_pkt->type_id = 0x2;
-	mono_pkt->packet_type = INIT;
-	mono_pkt->data_offset = 12;
-	mono_pkt->packet_length = 160;
-	mono_pkt->epib = 0;
-	mono_pkt->pkt_return_qnum = EMPTY_CTRL;
-	mono_pkt->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
+		mono_pkt->type_id = 0x2;
+		mono_pkt->packet_type = INIT;
+		mono_pkt->data_offset = 12;
+		mono_pkt->packet_length = 160;
+		mono_pkt->epib = 0;
+		mono_pkt->pkt_return_qnum = EMPTY_CTRL;
+		mono_pkt->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
 
-	cache_wbInvL1D(mono_pkt, CTRL_DESC_SIZE);
+		cache_wbInvL1D(mono_pkt, CTRL_DESC_SIZE);
 
-	push_queue(CTRL_OUT(0), 1, 0, (UINT32)mono_pkt);
+		push_queue(CTRL_OUT(idx), 1, 0, (UINT32)mono_pkt);
+	}
 }
 
 UINT32 __c_platform_QPush_data_internal(UINT8 slaveId, platformQType queueType, void* data, int size){

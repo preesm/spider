@@ -44,7 +44,7 @@
 
 void platform_file_init();
 void platform_time_init();
-void platform_queue_Init();
+void platform_queue_Init(UINT8 nbSlaves);
 
 void platform_init(UINT8 nbSlaves){
 	mutex_pend(MUTEX_CACHE);
@@ -55,5 +55,5 @@ void platform_init(UINT8 nbSlaves){
 
 	platform_file_init();
 	platform_time_init();
-	platform_queue_Init();
+	platform_queue_Init(nbSlaves);
 }

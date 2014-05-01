@@ -198,7 +198,7 @@ void PiSDFDoubleLoop(PiSDFGraph* graph, PiSDFAbstractVertex* parentVertex, Scena
 
 
 	// Subgraphs
-	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS - 1) exitWithCode(1054);
+	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS) exitWithCode(1054);
 	PiSDFGraph *MLoop_subGraph = &graphs[nb_graphs]; nb_graphs++;
 	MLoop(MLoop_subGraph, vxMLoop, scenario, MMAX);
 	vxMLoop->setSubGraph(MLoop_subGraph);
@@ -212,7 +212,7 @@ void top(PiSDFGraph* graph, Scenario* scenario, UINT32 NMAX, UINT32 MMAX){
 	graph->setRootVertex(vxDoubleLoop);
 
 	// Subgraphs
-	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS - 1) exitWithCode(1054);
+	if(nb_graphs >= MAX_NB_PiSDF_SUB_GRAPHS) exitWithCode(1054);
 	PiSDFGraph *DoubleLoop_subGraph = &graphs[nb_graphs]; nb_graphs++;
 	PiSDFDoubleLoop(DoubleLoop_subGraph, vxDoubleLoop, scenario, NMAX, MMAX);
 	vxDoubleLoop->setSubGraph(DoubleLoop_subGraph);

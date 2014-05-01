@@ -44,9 +44,12 @@
 
 #include <platform.h>
 #include <platform_queue.h>
+#include <platform_data_queue.h>
 #include <platform_print.h>
 #include <platform_gpio.h>
 #include <platform_time.h>
+
+#include <memoryAlloc.h>
 
 #include "lrt_core.h"
 
@@ -92,17 +95,37 @@ void LRTStart(){
 		LRTStartCurrTask();
 }
 
+static UINT8* inputFIFOs[MAX_NB_FIFO];
+static UINT8* outputFIFOs[MAX_NB_FIFO];
+
 /* Starts the task pointed by the OSTCBCur. */
 void LRTStartCurrTask() {
 	// Executes the vertex's code.
 #if USE_AM
 	OSTCBCur->task_func(0, 0, 0, 0, 0); // Fifos are not required when calling the AM default function.
 #else
+	int i;
+	for(i=0;i<OSTCBCur->actor.nbInputFifos; i++){
+		platform_readFifo(OSTCBCur->actor.inputFifo[i].id,
+				OSTCBCur->actor.inputFifo[i].add,
+				OSTCBCur->actor.inputFifo[i].size,
+				0);
+		inputFIFOs[i] = (UINT8*)(SHARED_MEM_BASE + OSTCBCur->actor.inputFifo[i].add);
+	}
+	for(i=0;i<OSTCBCur->actor.nbOutputFifos; i++){
+		outputFIFOs[i] = (UINT8*)(SHARED_MEM_BASE + OSTCBCur->actor.outputFifo[i].add);
+	}
 	Monitor_startTask(OSTCBCur->vertexId);
-	OSTCBCur->task_func(OSTCBCur->actor.inputFifo,
-						OSTCBCur->actor.outputFifo,
+	OSTCBCur->task_func(inputFIFOs,
+						outputFIFOs,
 						OSTCBCur->actor.params);
 	Monitor_endTask();
+	for(i=0;i<OSTCBCur->actor.nbOutputFifos; i++){
+		platform_writeFifo(OSTCBCur->actor.outputFifo[i].id,
+				OSTCBCur->actor.outputFifo[i].add,
+				OSTCBCur->actor.outputFifo[i].size,
+				0);
+	}
 	OSFreeWorkingMemory();
 #endif
 

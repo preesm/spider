@@ -56,7 +56,10 @@ FUNCTION_TYPE functions_tbl[NB_LOCAL_FUNCTIONS]; /* Table of Action Fcts */
 UINT8 OSTaskCntr = 0;                     			// Tasks' counter.
 UINT8 OSTaskIndex = 0;                     			// Tasks' index.
 
-static UINT8 workingMemory[WORKING_MEMORY_SIZE];
+//#pragma DATA_SECTION(workingMemory, ".workingMem")
+//#pragma DATA_ALIGN(workingMemory, 128)
+
+static UINT8* workingMemory = 0x80000000;//[WORKING_MEMORY_SIZE];
 static UINT8* freeWorkingMemoryPtr;
 
 void clearTCBTbl(){
@@ -220,7 +223,9 @@ void PrintTasksIntoDot(){
 
 
 void OSWorkingMemoryInit(){
+	workingMemory = 0x90000000+(platform_getCoreId())*WORKING_MEMORY_SIZE;
 	freeWorkingMemoryPtr = workingMemory;
+
 }
 
 void* OSAllocWorkingMemory(int size){

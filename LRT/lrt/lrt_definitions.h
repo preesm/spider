@@ -92,8 +92,8 @@ typedef struct{
 } FIFO;
 
 
-typedef void (*FUNCTION_TYPE)(FIFO inputFIFOs[],
-							  FIFO outputFIFOs[],
+typedef void (*FUNCTION_TYPE)(UINT8* inputFIFOs[],
+							  UINT8* outputFIFOs[],
 							  UINT32 params[]);// Function of a task/vertex.
 
 /*

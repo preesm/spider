@@ -98,11 +98,11 @@ void wait_ext_msg() {
 				new_tcb->actor.nbParams = platform_queue_pop_UINT32(PlatformCtrlQueue);
 
 				if(new_tcb->actor.nbInputFifos > MAX_NB_FIFO || new_tcb->actor.nbOutputFifos > MAX_NB_FIFO){
-					printf("Too many FIFOs (increase MAX_NB_FIFO)\n");
+					printf("Too many FIFOs (increase MAX_NB_FIFO > %d or %d)\n",new_tcb->actor.nbInputFifos, new_tcb->actor.nbOutputFifos);
 				}
 
 				if(new_tcb->actor.nbParams > MAX_NB_PARAMETERS){
-					printf("Too many Parameters (increase MAX_NB_PARAMETERS)\n");
+					printf("Too many Parameters (increase MAX_NB_PARAMETERS > %d)\n",new_tcb->actor.nbParams);
 				}
 
 				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor.inputFifo, new_tcb->actor.nbInputFifos*sizeof(FIFO));

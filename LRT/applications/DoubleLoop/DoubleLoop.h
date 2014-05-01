@@ -38,39 +38,19 @@
 
 #define MAX(a,b) (a>b?a:b)
 
-void rdFile(FIFO inputFIFOs[],
-			FIFO outputFIFOs[],
+void rdFile(UINT8* inputFIFOs[],
+			UINT8* outputFIFOs[],
 			UINT32 params[])
 {
 	UINT8 N, i;//, j;
 	UINT32 NMAX,MMAX;
 	UINT8* array, *M;
 
-	/* initialize random seed: */
-
-//	N = 0;
-//	memset(M, 0, M_MAX_VALUE * sizeof(UINT8));
-//
-//	//printf("Reading file:\n");
-//	for (i = 0; i < MAX_DATA_SIZE; i++) {
-//		array[i] = i;
-//	}
-//
-//	for (i = 0; i < N_MAX_VALUE; i++) {
-//		// Printing the values.
-//		//printf("%d, %d, %d\n", array[0 + i * M_MAX_VALUE], array[1 + i * M_MAX_VALUE], array[2 + i * M_MAX_VALUE]);
-//		// Computing N (number of rows with a non zero at least)
-//		if(array[0 + i * M_MAX_VALUE] + array[1 + i * M_MAX_VALUE] + array[2 + i * M_MAX_VALUE]) N++;
-//		// Computing M[i] (number of non zero for each row)
-//		for (j = 0; j < M_MAX_VALUE; j++) {
-//			if(array[i + j * M_MAX_VALUE] > 0) M[i]++;
-//		}
-//	}
 	NMAX = params[0];
 	MMAX = params[1];
 
-	array = OSAllocWorkingMemory(NMAX*MMAX);
-	M = OSAllocWorkingMemory(NMAX);
+	M = outputFIFOs[0];//OSAllocWorkingMemory(NMAX);
+	array = outputFIFOs[1];//OSAllocWorkingMemory(NMAX*MMAX);
 
 	N = NMAX;
 	for(i=0; i<NMAX*MMAX; ++i){
@@ -87,28 +67,34 @@ void rdFile(FIFO inputFIFOs[],
 	platform_queue_push_UINT32(PlatformCtrlQueue, N);
 	platform_queue_push_finalize(PlatformCtrlQueue);
 
-	platform_writeFifo(outputFIFOs[0].id, outputFIFOs[0].add, MMAX * sizeof(UINT8), M);
-	platform_writeFifo(outputFIFOs[1].id, outputFIFOs[1].add, NMAX*MMAX * sizeof(UINT8), array);
+//	platform_writeFifo(outputFIFOs[0].id, outputFIFOs[0].add, MMAX * sizeof(UINT8), M);
+//	platform_writeFifo(outputFIFOs[1].id, outputFIFOs[1].add, NMAX*MMAX * sizeof(UINT8), array);
 }
 
 
-void initNLoop(FIFO inputFIFOs[],
-		FIFO outputFIFOs[],
+void initNLoop(UINT8* inputFIFOs[],
+		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
 //	UINT32 i;
 	UINT32 N,NMAX,MMAX;
-	UINT8 *M, *array;
+	UINT8 *M_in, *array_in;
+	UINT8 *M_out, *array_out;
 
 	N = params[0];
 	NMAX = params[1];
 	MMAX = params[2];
 
-	array = OSAllocWorkingMemory(NMAX*MMAX);
-	M = OSAllocWorkingMemory(NMAX);
+	M_in = inputFIFOs[0];//OSAllocWorkingMemory(NMAX);
+	array_in = inputFIFOs[1];//OSAllocWorkingMemory(NMAX*MMAX);
 
-	platform_readFifo(inputFIFOs[1].id,inputFIFOs[1].add, NMAX*MMAX * sizeof(UINT8), array);
-	platform_readFifo(inputFIFOs[0].id,inputFIFOs[0].add, NMAX * sizeof(UINT8), M);
+	M_out = outputFIFOs[0];
+	array_out = outputFIFOs[1];
+
+	memcpy(M_out, M_in, N);
+	memcpy(array_out, array_in, N*MMAX);
+//	platform_readFifo(inputFIFOs[1].id,inputFIFOs[1].add, NMAX*MMAX * sizeof(UINT8), array);
+//	platform_readFifo(inputFIFOs[0].id,inputFIFOs[0].add, NMAX * sizeof(UINT8), M);
 
 //	printf("Init N loop with N=%d M = %d", N, M[0]);
 //	for (i = 1; i < N; i++) {
@@ -116,44 +102,48 @@ void initNLoop(FIFO inputFIFOs[],
 //	}
 //	printf("\n");
 
-	platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, N * sizeof(UINT8), M);
-	platform_writeFifo(outputFIFOs[1].id,outputFIFOs[1].add, N * MMAX * sizeof(UINT8), array);
+//	platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, N * sizeof(UINT8), M);
+//	platform_writeFifo(outputFIFOs[1].id,outputFIFOs[1].add, N * MMAX * sizeof(UINT8), array);
 }
 
 
-void endNLoop(FIFO inputFIFOs[],
-		FIFO outputFIFOs[],
+void endNLoop(UINT8* inputFIFOs[],
+		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
 	UINT32 N,NMAX,MMAX;
-	UINT8 *array;
+	UINT8 *array_in, *array_out;
 
 	N = params[0];
 	NMAX = params[1];
 	MMAX = params[2];
 
-	array = OSAllocWorkingMemory(NMAX*MMAX);
+	array_in = inputFIFOs[0];// OSAllocWorkingMemory(NMAX*MMAX);
+	array_out = outputFIFOs[0];
 
-	platform_readFifo(inputFIFOs[0].id,inputFIFOs[0].add, N * MMAX * sizeof(UINT8), array);
-	memset(array+N*MMAX,0,(NMAX-N)*MMAX);
+//	platform_readFifo(inputFIFOs[0].id,inputFIFOs[0].add, N * MMAX * sizeof(UINT8), array);
+//	memset(array+N*MMAX,0,(NMAX-N)*MMAX);array = inputFIFOs[0];
 
-	platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, MMAX*NMAX * sizeof(UINT8), array);
+	memcpy(array_out, array_in, N*MMAX);
+	memset(array_out+N*MMAX,0,(NMAX-N)*MMAX);
+
+//	platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, MMAX*NMAX * sizeof(UINT8), array);
 }
 
 
-void wrFile(FIFO inputFIFOs[],
-		FIFO outputFIFOs[],
+void wrFile(UINT8* inputFIFOs[],
+		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
 	UINT32 NMAX,MMAX;
-	UINT8 *array;
+	UINT8 *array_in;
 
 	NMAX = params[0];
 	MMAX = params[1];
 
-	array = OSAllocWorkingMemory(NMAX*MMAX);
+	array_in = inputFIFOs[0];//OSAllocWorkingMemory(NMAX*MMAX);
 
-	platform_readFifo(inputFIFOs[0].id, inputFIFOs[0].add, NMAX*MMAX * sizeof(UINT8), array);
+//	platform_readFifo(inputFIFOs[0].id, inputFIFOs[0].add, NMAX*MMAX * sizeof(UINT8), array);
 
 //	//printf("Writing into file:\n");
 //	for (i = 0; i < M_MAX_VALUE; i++) {
@@ -161,9 +151,9 @@ void wrFile(FIFO inputFIFOs[],
 //	}
 	int i;
 	for(i=0; i<NMAX*MMAX; ++i){
-		if(array[i] != (unsigned char)(NMAX*MMAX+i+1)){
+		if(array_in[i] != (unsigned char)(NMAX*MMAX+i+1)){
 			printf("Nb(%d): Error bad value\n", NMAX*MMAX);
-			printf("(%d)(%d,%d) expected (%d) get (%d)\n", i, i/NMAX*MMAX, i%NMAX*MMAX, NMAX*MMAX+i+1, array[i]);
+			printf("(%d)(%d,%d) expected (%d) get (%d)\n", i, i/NMAX*MMAX, i%NMAX*MMAX, NMAX*MMAX+i+1, array_in[i]);
 			abort();
 		}
 	}
@@ -173,13 +163,14 @@ void wrFile(FIFO inputFIFOs[],
 
 /********** MLoop hierarchy *********/
 
-void configM(FIFO inputFIFOs[],
-			FIFO outputFIFOs[],
+void configM(UINT8* inputFIFOs[],
+			UINT8* outputFIFOs[],
 			UINT32 params[])
 {
 	UINT8 M;
 
-	platform_readFifo(inputFIFOs[0].id, inputFIFOs[0].add, sizeof(UINT8), &M);
+	M = *(inputFIFOs[0]);
+//	platform_readFifo(inputFIFOs[0].id, inputFIFOs[0].add, sizeof(UINT8), &M);
 //	printf("Configure M=%d\n", M);
 
 	// Sending parameter's value.
@@ -190,19 +181,22 @@ void configM(FIFO inputFIFOs[],
 }
 
 
-void initMLoop(FIFO inputFIFOs[],
-		FIFO outputFIFOs[],
+void initMLoop(UINT8* inputFIFOs[],
+		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
 	UINT32 M, MMAX;
-	UINT8 *line;
+	UINT8 *line_in, *line_out;
 
 	M = params[0];
 	MMAX = params[1];
 
-	line = OSAllocWorkingMemory(MMAX);
+	line_in = inputFIFOs[0];//OSAllocWorkingMemory(MMAX);
+	line_out = outputFIFOs[0];
 
-	platform_readFifo(inputFIFOs[0].id, inputFIFOs[0].add, MMAX * sizeof(UINT8), line);
+	memcpy(line_out, line_in, M);
+
+//	platform_readFifo(inputFIFOs[0].id, inputFIFOs[0].add, MMAX * sizeof(UINT8), line);
 
 	//printf("Init M loop with M=%d. Line out : %d", M, line[0]);
 
@@ -211,87 +205,93 @@ void initMLoop(FIFO inputFIFOs[],
 //	}
 //	printf("\n");
 
-	platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, M * sizeof(UINT8), line);
+//	platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, M * sizeof(UINT8), line);
 }
 
 
-void f(FIFO inputFIFOs[],
-		FIFO outputFIFOs[],
+void f(UINT8* inputFIFOs[],
+		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
-	UINT8 inData;
-	UINT8 outData;
+//	UINT8 inData;
+//	UINT8 outData;
 
-	platform_readFifo(inputFIFOs[0].id, inputFIFOs[0].add, sizeof(UINT8), &inData);
+	*(outputFIFOs[0]) = *(inputFIFOs[0])+1;
 
-	outData = ++inData;
+//	platform_readFifo(inputFIFOs[0].id, inputFIFOs[0].add, sizeof(UINT8), &inData);
 
-	platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, sizeof(UINT8), &outData);
+//	outData = ++inData;
+
+//	platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, sizeof(UINT8), &outData);
 //	printf("F -> %d\n", outputFIFOs[0].id);
 }
 
 
-void endMLoop(FIFO inputFIFOs[],
-		FIFO outputFIFOs[],
+void endMLoop(UINT8* inputFIFOs[],
+		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
 	UINT32 M, MMAX;
-	UINT8 *line;
+	UINT8 *line_in, *line_out;
 
 	M = params[0];
 	MMAX = params[1];
 
-	line = OSAllocWorkingMemory(MMAX);
+	line_in = inputFIFOs[0]; //OSAllocWorkingMemory(MMAX);
+	line_out = outputFIFOs[0];
 
-	platform_readFifo(inputFIFOs[0].id, inputFIFOs[0].add, M * sizeof(UINT8), line);
-	memset(line+M,0,MMAX-M);
+	memcpy(line_out, line_in, M);
+	memset(line_out+M,0,MMAX-M);
 
-	platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, MMAX * sizeof(UINT8), line);
+//	platform_readFifo(inputFIFOs[0].id, inputFIFOs[0].add, M * sizeof(UINT8), line);
+//	memset(line+M,0,MMAX-M);
+
+//	platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, MMAX * sizeof(UINT8), line);
 }
 
 
 //******** Special actors ***********//
-void RB(FIFO inputFIFOs[],
-		FIFO outputFIFOs[],
+void RB(UINT8* inputFIFOs[],
+		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
-	UINT32 nbTknIn, nbTknOut;//, i;
-	UINT32 quotient, residual;
-	UINT8 *data;
-
-
-	nbTknIn = params[0];
-	nbTknOut = params[1];
-
-	data = OSAllocWorkingMemory(MAX(nbTknIn,nbTknOut));
-
-	platform_readFifo(inputFIFOs[0].id,inputFIFOs[0].add, nbTknIn * sizeof(UINT8), data);
-
-
-//	printf("Round buffering %d to %d: %d", nbTknIn, nbTknOut, data[0]);
-//	for (i = 1; i < nbTknIn; i++) {
-//		printf(", %d", data[i]);
+//	UINT32 nbTknIn, nbTknOut;//, i;
+//	UINT32 quotient, residual;
+//	UINT8 *data;
+//
+//
+//	nbTknIn = params[0];
+//	nbTknOut = params[1];
+//
+//	data = OSAllocWorkingMemory(MAX(nbTknIn,nbTknOut));
+//
+//	platform_readFifo(inputFIFOs[0].id,inputFIFOs[0].add, nbTknIn * sizeof(UINT8), data);
+//
+//
+////	printf("Round buffering %d to %d: %d", nbTknIn, nbTknOut, data[0]);
+////	for (i = 1; i < nbTknIn; i++) {
+////		printf(", %d", data[i]);
+////	}
+////	printf("\n");
+//
+//	if(nbTknIn == nbTknOut){
+//		platform_writeFifo(outputFIFOs[0].id, outputFIFOs[0].add, nbTknIn * sizeof(UINT8), data);
 //	}
-//	printf("\n");
-
-	if(nbTknIn == nbTknOut){
-		platform_writeFifo(outputFIFOs[0].id, outputFIFOs[0].add, nbTknIn * sizeof(UINT8), data);
-	}
-	else if(nbTknIn < nbTknOut){
-		quotient = nbTknOut / nbTknIn;
-		residual = nbTknOut % nbTknIn;
-		platform_writeFifo(outputFIFOs[0].id, outputFIFOs[0].add, quotient * sizeof(UINT8), data);
-		if(residual > 0)
-			platform_writeFifo(outputFIFOs[0].id, outputFIFOs[0].add, residual * sizeof(UINT8), data);
-	}
-	else{
+//	else if(nbTknIn < nbTknOut){
+//		quotient = nbTknOut / nbTknIn;
+//		residual = nbTknOut % nbTknIn;
+//		platform_writeFifo(outputFIFOs[0].id, outputFIFOs[0].add, quotient * sizeof(UINT8), data);
+//		if(residual > 0)
+//			platform_writeFifo(outputFIFOs[0].id, outputFIFOs[0].add, residual * sizeof(UINT8), data);
+//	}
+//	else{
 		printf("Error in RB, incoming tokens > outgoing tokens\n");
-		exit(-1);
-	}
+//		exit(-1);
+//	}
 }
 
-void broadcast(FIFO inputFIFOs[],
-		FIFO outputFIFOs[],
+void broadcast(UINT8* inputFIFOs[],
+		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
 	UINT32 nbFifoOut, nbTknIn, i;
@@ -302,7 +302,7 @@ void broadcast(FIFO inputFIFOs[],
 
 	data = OSAllocWorkingMemory(nbTknIn);
 
-	platform_readFifo(inputFIFOs[0].id,inputFIFOs[0].add, nbTknIn * sizeof(UINT8), data);
+//	platform_readFifo(inputFIFOs[0].id,inputFIFOs[0].add, nbTknIn * sizeof(UINT8), data);
 
 //	printf("Broadcasting: %d", data[0]);
 //	for (i = 1; i < nbTknIn; i++) {
@@ -310,65 +310,63 @@ void broadcast(FIFO inputFIFOs[],
 //	}
 //	printf("\n");
 
-	for (i = 0; i < nbFifoOut; i++) {
-		platform_writeFifo(outputFIFOs[i].id, outputFIFOs[i].add, nbTknIn * sizeof(UINT8), data);
-	}
+//	for (i = 0; i < nbFifoOut; i++) {
+//		platform_writeFifo(outputFIFOs[i].id, outputFIFOs[i].add, nbTknIn * sizeof(UINT8), data);
+//	}
+	printf("Error in Broadcast\n");
 }
 
 
-void Xplode(FIFO inputFIFOs[],
-		FIFO outputFIFOs[],
+void Xplode(UINT8* inputFIFOs[],
+		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
-	UINT32 nbFifoIn, nbFifoOut, i, index;
-	UINT8 *data;
-	UINT32 nbTknIn, nbTknOut;
+//	UINT32 nbFifoIn, nbFifoOut, i, index;
+//	UINT8 *data;
+//	UINT32 nbTknIn, nbTknOut;
+//	UINT32 inFifoBase, outFifoBase;
 
+//	nbFifoIn = params[0];
+//	inFifoBase = params[1];
+//	nbFifoOut = params[1];
+//	outFifoBase = params[3];
 
-	nbFifoIn = params[0];
-	nbFifoOut = params[1];
-	index = 0;
-	if(nbFifoIn == 1){
+//	index = 0;
+//	if(nbFifoIn == 1){
 		/* Explode */
-		nbTknIn = params[2];
-		data = OSAllocWorkingMemory(nbTknIn);
+//		nbTknIn = params[2];
+//		data = OSAllocWorkingMemory(nbTknIn);
 
-		platform_readFifo(inputFIFOs[0].id,inputFIFOs[0].add, nbTknIn * sizeof(UINT8), data);
+//		platform_readFifo(inputFIFOs[0].id,inputFIFOs[0].add, nbTknIn, data);
 
-//		printf("Exploding : %d", data[0]);
-//		for (i = 1; i < nbTknIn; i++) {
-//			printf(", %d", data[i]);
-//		}
-//		printf(" -> ");
-
-		for(i=0; i<nbFifoOut; i++){
-			nbTknOut = params[i + 3];
+//		printf("Exploding : {%d tkn} -> ", nbTknIn);
+//		for(i=0; i<nbFifoOut; i++){
+//			nbTknOut = params[i + 3];
 //			printf(" {%d tkn}", nbTknOut);
-			platform_writeFifo(outputFIFOs[i].id, outputFIFOs[i].add, nbTknOut * sizeof(UINT8), (&data[index]));
-			index += nbTknOut;
-		}
+//			memcpy(outputFIFOs[i], inputFIFOs[0]+index, nbTknOut);
+//			platform_writeFifo(outputFIFOs[i].id, outputFIFOs[i].add, nbTknOut, data+index);
+//			index += nbTknOut;
+//		}
 //		printf("\n");
-	}else if(nbFifoOut == 1){
+//	}else if(nbFifoOut == 1){
 		/* Implode */
 //		printf("Imploding : ");
-		nbTknOut = params[nbFifoIn + 2];
-		data = OSAllocWorkingMemory(nbTknOut);
+//		nbTknOut = params[nbFifoIn + 2];
+//		data = OSAllocWorkingMemory(nbTknOut);
 
-		for(i=0; i<nbFifoIn; i++){
-			nbTknIn = params[i + 2];
+//		for(i=0; i<nbFifoIn; i++){
+//			nbTknIn = params[i + 2];
 //			printf("{%d tkn}", nbTknIn);
-			platform_readFifo(inputFIFOs[i].id, inputFIFOs[i].add, nbTknIn * sizeof(UINT8), (&data[index]));
-			index += nbTknIn;
-		}
-//		printf(" -> %d", data[0]);
-//		for(i=1; i<nbTknOut; i++){
-//			printf(", %d", data[i]);
-//
+//			platform_readFifo(inputFIFOs[i].id, inputFIFOs[i].add, nbTknIn, data+index);
+//			memcpy(outputFIFOs[0]+index, inputFIFOs[i], nbTknIn);
+//			index += nbTknIn;
 //		}
+//		printf(" -> {%d tkn}", nbTknOut);
 //		printf("\n");
-		platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, nbTknOut * sizeof(UINT8), data);
-	}else{
-		printf("Error in Xplode\n");
-		exit(-1);
-	}
+
+//		platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, nbTknOut, data);
+//	}else{
+//		printf("Error in Xplode\n");
+//		exit(-1);
+//	}
 }

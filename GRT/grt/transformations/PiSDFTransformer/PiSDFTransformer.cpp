@@ -47,9 +47,9 @@
 #include <platform_time.h>
 
 
-#if PRINT_GRAPH
+//#if PRINT_GRAPH
 static char file[MAX_FILE_NAME_SIZE];
-#endif
+//#endif
 
 #define MAX(a,b) ((a>b)?a:b)
 
@@ -64,12 +64,12 @@ static SRDAGVertex* sourceRepetitions[MAX_VERTEX_REPETITION];
 static SRDAGVertex* sinkRepetitions[MAX_VERTEX_REPETITION];
 
 
-static UINT32 vertexId[MAX_NB_VERTICES];
-static INT32 topo_matrix [MAX_NB_EDGES * MAX_NB_VERTICES];
-static int tempBrv[MAX_NB_VERTICES];
+static UINT32 vertexId[MAX_NB_PiSDF_VERTICES];
+static int topo_matrix [MAX_NB_PiSDF_EDGES * MAX_NB_PiSDF_VERTICES];
+static int tempBrv[MAX_NB_PiSDF_VERTICES];
 static BaseSchedule schedule;
 
-void PiSDFTransformer::addVertices(PiSDFAbstractVertex* vertex, UINT32 nb_repetitions, UINT32 iteration, SRDAGGraph* outputGraph){
+void PiSDFTransformer::addVertices(PiSDFVertex* vertex, UINT32 nb_repetitions, UINT32 iteration, SRDAGGraph* outputGraph){
 	// Adding one SRDAG vertex per repetition
 	for(UINT32 j = 0; j < nb_repetitions; j++){
 		SRDAGVertex* srdag_vertex = outputGraph->addVertex();
@@ -78,6 +78,10 @@ void PiSDFTransformer::addVertices(PiSDFAbstractVertex* vertex, UINT32 nb_repeti
 		srdag_vertex->setReference(vertex);
 		srdag_vertex->setReferenceIndex(j);
 		srdag_vertex->setIterationIndex(iteration);
+		srdag_vertex->setExecTime(vertex->getExecTime());
+
+		for(UINT32 i=0; i<vertex->getNbParameters(); i++)
+			srdag_vertex->setParamValue(i,vertex->getParameter(i)->getValue());
 
 		if(srdag_vertex->isHierarchical())
 			outputGraph->storeHierVertex(srdag_vertex);
@@ -150,7 +154,7 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 			 */
 
 			if (rest < edge->getProductionInt() &&
-				(sourceRepetitions[sourceIndex]->getType() == 0)){ // Type == 0 indicates it is a normal SR vx.
+				(sourceRepetitions[sourceIndex]->getType() != Explode)){
 
 				// Adding an explode vertex.
 				SRDAGVertex *exp_vertex = topDag->addVertex();
@@ -187,7 +191,7 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 			}
 
 			if (rest < edge->getConsumptionInt() &&
-				(sinkRepetitions[targetIndex]->getType() == 0)){ // Type == 0 indicates it is a normal vertex.
+				(sinkRepetitions[targetIndex]->getType() != Implode)){ // Type == 0 indicates it is a normal vertex.
 
 				// Adding an implode vertex.
 				SRDAGVertex *imp_vertex = topDag->addVertex();
@@ -257,15 +261,14 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 				//Creating the new edge between normal vertices or between a normal and an explode/implode one.
 				SRDAGVertex* sourceVertex, *sinkVertex;
 				UINT32 sourcePortId, sinkPortId;
-				if(edge->getSource()->getType() == config_vertex){
-					sourceVertex = sourceRepetitions[sourceIndex]->getOutputEdge(edge->getSource()->getOutputEdgeId(edge))->getSink();
+				sourceVertex = sourceRepetitions[sourceIndex];
+				if(sourceVertex->getType() == Explode){
+					sourcePortId = sourceVertex->getNbOutputEdge();
+				}else if(edge->getSource()->getType() == config_vertex){
+					sourceVertex = sourceVertex->getOutputEdge(edge->getSource()->getOutputEdgeId(edge))->getSink();
 					sourcePortId = 0;
 				}else{
-					sourceVertex = sourceRepetitions[sourceIndex];
-					if(sourceVertex->getType() == Explode)
-						sourcePortId = sourceVertex->getNbOutputEdge();
-					else
-						sourcePortId = edge->getSource()->getOutputEdgeId(edge);
+					sourcePortId = edge->getSource()->getOutputEdgeId(edge);
 				}
 
 				sinkVertex = sinkRepetitions[targetIndex];
@@ -302,29 +305,6 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 		}
 	}
 }
-
-static void PiSDFTransformer::removeUnusedRB(SRDAGGraph *topDag){
-	for (UINT32 i = 0; i < topDag->getNbVertices(); i++) {
-		SRDAGVertex* vertex = topDag->getVertex(i);
-		if(vertex->getState() != SrVxStDeleted
-				&& vertex->getType() == RoundBuffer
-				&& vertex->getInputEdge(0)->getTokenRate() == vertex->getOutputEdge(0)->getTokenRate()){
-			SRDAGEdge* outputEdge = vertex->getOutputEdge(0);
-			SRDAGEdge* inputEdge = vertex->getInputEdge(0);
-			SRDAGVertex *sink = outputEdge->getSink();
-			SRDAGVertex *source = inputEdge->getSource();
-			UINT32 sinkEdgeID = sink->getInputEdgeId(outputEdge);
-			UINT32 sourceEdgeID = source->getOutputEdgeId(inputEdge);
-
-			vertex->removeInputEdge(inputEdge);
-			sink->removeInputEdge(outputEdge);
-			inputEdge->setSink(sink);
-			sink->setInputEdge(inputEdge, sinkEdgeID);
-			vertex->setState(SrVxStDeleted);
-		}
-	}
-}
-
 
 void PiSDFTransformer::replaceHwithRB(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, SRDAGVertex* currHSrDagVx){
 	/* Replace hierarchical actor in topDag with RBs */
@@ -369,16 +349,29 @@ void PiSDFTransformer::addCAtoSRDAG(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag
 		dag_ca->setReferenceIndex(0);
 		dag_ca->setIterationIndex(currHSrDagVx->getReferenceIndex());
 		dag_ca->setType(ConfigureActor);
+		for(UINT32 i=0; i<pi_ca->getNbParameters(); i++)
+			dag_ca->setParamValue(i,pi_ca->getParameter(i)->getValue());
 
 		for(UINT32 j=0; j<pi_ca->getNbInputEdges(); j++){
 			SRDAGVertex* refvertex[1];
 			PiSDFEdge* edge = pi_ca->getInputEdge(j);
 			topDag->getVerticesFromReference(edge->getSource(), currHSrDagVx->getReferenceIndex(), refvertex);
-			topDag->addEdge(
+
+			if(edge->getProductionInt() == edge->getConsumptionInt()){
+				SRDAGVertex* rb = refvertex[0];
+				SRDAGEdge* edge = rb->getInputEdge(0);
+
+				rb->removeInputEdge(edge);
+				edge->setSink(dag_ca);
+				dag_ca->setInputEdge(edge, j);
+				topDag->removeVx(rb);
+			}else{
+				topDag->addEdge(
 					refvertex[0], pi_ca->getInputEdgeIx(edge),
 					edge->getConsumptionInt(),
 					dag_ca, j,
 					edge);
+			}
 		}
 		for(UINT32 j=0; j<pi_ca->getNbOutputEdges(); j++){
 			PiSDFEdge* edge = pi_ca->getOutputEdge(j);
@@ -431,7 +424,7 @@ void PiSDFTransformer::computeBRV(PiSDFGraph* currentPiSDF, int* brv){
 			(edge->getSink()->getType() ==  pisdf_vertex)){ // TODO: treat cycles.
 			if((edge->getProductionInt() <= 0) || (edge->getConsumptionInt() <= 0 )) exitWithCode(1066);
 			topo_matrix[brvNbEdges * brvNbVertices + vertexId[edge->getSource()->getId()]] = edge->getProductionInt();
-			topo_matrix[brvNbEdges * brvNbVertices + vertexId[edge->getSink()->getId()]] = -edge->getConsumptionInt();
+			topo_matrix[brvNbEdges * brvNbVertices + vertexId[edge->getSink()->getId()]] = -(INT64)(edge->getConsumptionInt());
 			brvNbEdges++;
 		}
 	}
@@ -440,10 +433,21 @@ void PiSDFTransformer::computeBRV(PiSDFGraph* currentPiSDF, int* brv){
 	if(brvNbEdges > 0){
 		// Computing the null space (BRV) of the matrix.
 		// TODO: It may be improved by another algorithm to compute the null space (I'm not very sure of this one...)
-		if(!nullspace(brvNbEdges, brvNbVertices, (int*)topo_matrix, tempBrv) == 0)
+		if(!nullspace(brvNbEdges, brvNbVertices, topo_matrix, tempBrv) == 0)
 		{
 			printf("Not Schedulable\n");
 		}
+	}else if(brvNbVertices == 1){
+		tempBrv[0] = 1;
+	}
+
+	// Setting the number of repetitions for each vertex.
+	for (UINT32 i = 0; i < currentPiSDF->getNbVertices(); i++) {
+		PiSDFAbstractVertex* vertex = currentPiSDF->getVertex(i);
+		if(vertex->getType() == pisdf_vertex)
+			vertex->setNbRepetition(tempBrv[vertexId[vertex->getId()]]);
+		else
+			vertex->setNbRepetition(1);
 	}
 
 	/* Updating the productions of the round buffer vertices. */
@@ -452,21 +456,21 @@ void PiSDFTransformer::computeBRV(PiSDFGraph* currentPiSDF, int* brv){
 	/* Looking on interfaces */
 	for(UINT32 i = 0; i < currentPiSDF->getNb_input_vertices(); i++){
 		PiSDFIfVertex* interface = currentPiSDF->getInput_vertex(i);
-		coef = MAX(coef, std::ceil((double)interface->getOutputEdge(0)->getConsumptionInt()
-											/(double)interface->getOutputEdge(0)->getProductionInt()));
+		coef = MAX(coef, std::ceil((double)(interface->getOutputEdge(0)->getProductionInt())
+											/(double)(interface->getOutputEdge(0)->getConsumptionInt()*interface->getOutputEdge(0)->getSink()->getNbRepetition())));
 	}
 	for(UINT32 i = 0; i < currentPiSDF->getNb_output_vertices(); i++){
 		PiSDFIfVertex* interface = currentPiSDF->getOutput_vertex(i);
-		coef = MAX(coef, std::ceil((double)interface->getInputEdge(0)->getProductionInt())
-											/(double)interface->getInputEdge(0)->getConsumptionInt());
+		coef = MAX(coef, std::ceil((double)interface->getInputEdge(0)->getConsumptionInt())
+											/(double)interface->getInputEdge(0)->getProductionInt()*interface->getInputEdge(0)->getSource()->getNbRepetition());
 	}
 	/* Looking on implicit RB between CA and /CA */
 	for(UINT32 i = 0; i < currentPiSDF->getNb_edges(); i++){
 		PiSDFEdge* edge = currentPiSDF->getEdge(i);
 		if(edge->getSource()->getType() == config_vertex
 				&& edge->getSink()->getType() != config_vertex){
-			coef = MAX(coef, std::ceil((double)edge->getConsumptionInt()
-												/(double)edge->getProductionInt()));
+			coef = MAX(coef, std::ceil((double)edge->getProductionInt()
+												/((double)edge->getConsumptionInt()*edge->getSink()->getNbRepetition())));
 		}
 	}
 
@@ -475,18 +479,21 @@ void PiSDFTransformer::computeBRV(PiSDFGraph* currentPiSDF, int* brv){
 	}
 
 	// Setting the number of repetitions for each vertex.
-	brvNbVertices = 0;
 	for (UINT32 i = 0; i < currentPiSDF->getNbVertices(); i++) {
 		PiSDFAbstractVertex* vertex = currentPiSDF->getVertex(i);
-		if(vertex->getType() == pisdf_vertex)
+		if(vertex->getType() == pisdf_vertex){
 			brv[vertex->getId()] = tempBrv[vertexId[vertex->getId()]];
+			vertex->setNbRepetition(tempBrv[vertexId[vertex->getId()]]);
+		}else{
+			vertex->setNbRepetition(1);
+		}
 	}
 }
 
 static void PiSDFTransformer::singleRateTransformation(PiSDFGraph *currentPiSDF, SRDAGVertex *currHSrDagVx, SRDAGGraph *topDag, int *brv){
 	/* Replace SRDAG of /CA in topDag */
 	for (UINT32 i = 0; i < currentPiSDF->getNb_pisdf_vertices(); i++) {
-		PiSDFAbstractVertex* vertex = currentPiSDF->getPiSDFVertex(i);
+		PiSDFVertex* vertex = currentPiSDF->getPiSDFVertex(i);
 
 		// Creating the new vertices.
 		PiSDFTransformer::addVertices(vertex, brv[vertex->getId()], currHSrDagVx->getReferenceIndex(), topDag);
@@ -496,16 +503,410 @@ static void PiSDFTransformer::singleRateTransformation(PiSDFGraph *currentPiSDF,
 	PiSDFTransformer::linkvertices(currentPiSDF, currHSrDagVx->getReferenceIndex(), topDag, brv);
 }
 
-UINT32 PiSDFTransformer::multiStepScheduling(
+static UINT32 getValue(PiSDFParameter *param, SRDAGGraph* topDag, SRDAGVertex *currHSrDagVx){
+	SRDAGVertex* config_vertex;
+	PiSDFConfigVertex* pisdf_config = param->getSetter();
+	if(pisdf_config!=0){
+		#if EXEC == 1
+			topDag->getVerticesFromReference(param->getSetter(), currHSrDagVx->getReferenceIndex(), &config_vertex);
+			return config_vertex->getRelatedParamValue(param->getSetterIx());
+		#else
+			return param->getValue();
+		#endif
+	}else if(param->getParameterParentID() != -1){
+		return currHSrDagVx->getReference()->getParameter(param->getParameterParentID())->getValue();
+//		return getValue(param->getParameterParent(), topDag, config_vertex);
+	}else{
+		return param->getValue();
+	}
+}
+
+static int reduceImplImpl(SRDAGGraph* topDag){
+	for(int i=0; i<topDag->getNbVertices(); i++){
+		SRDAGVertex* implode0 = topDag->getVertex(i);
+		if(implode0->getType() == Implode && implode0->getState() != SrVxStDeleted){
+			for(int j=0; j<implode0->getNbOutputEdge(); j++){
+				SRDAGVertex* implode1 = implode0->getOutputEdge(j)->getSink();
+				if(implode1->getType() == Implode && implode1->getState() != SrVxStDeleted){
+
+					int nbToAdd = implode0->getNbInputEdge();
+					int ixToAdd = implode1->getInputEdgeId(implode0->getOutputEdge(0));
+
+					int nbTotEdges = implode1->getNbInputEdge()+nbToAdd-1;
+
+					// Shift edges after
+					for(int k=nbTotEdges-1; k>ixToAdd+nbToAdd-1; k--){
+						SRDAGEdge *edge = implode1->getInputEdge(k-nbToAdd+1);
+						implode1->removeInputEdge(edge);
+						implode1->setInputEdge(edge, k);
+					}
+					// Add edges
+					implode1->removeInputEdge(implode1->getInputEdge(ixToAdd));
+					for(int k=0; k<nbToAdd; k++){
+						SRDAGEdge *edge = implode0->getInputEdge(k);
+						implode1->setInputEdge(edge, k+ixToAdd);
+						edge->setSink(implode1);
+
+						implode0->removeInputEdge(edge);
+					}
+
+					implode0->setState(SrVxStDeleted);
+					return 1;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+static int removeImpExp(SRDAGGraph* topDag){
+	for(int i=0; i<topDag->getNbVertices(); i++){
+		SRDAGVertex* implode = topDag->getVertex(i);
+		if(implode->getType() == Implode && implode->getState() != SrVxStDeleted){
+			SRDAGVertex* explode = implode->getOutputEdge(0)->getSink();
+			if(explode->getType() == Explode && explode->getState() != SrVxStDeleted){
+				UINT32 totalNbTokens = 0;
+				UINT32 totProd = 0;
+
+				UINT32 sourceIndex=0, sinkIndex=0;
+
+				PiSDFEdge* refEdge = explode->getInputEdge(0)->getRefEdge();
+
+				SRDAGVertex* sources[MAX_SRDAG_INPUT_EDGES];
+				UINT32 sourceProds[MAX_SRDAG_INPUT_EDGES];
+				UINT32 sourcePortIx[MAX_SRDAG_INPUT_EDGES];
+				BOOL sourceExplode[MAX_SRDAG_INPUT_EDGES];
+				UINT32 nbSourceRepetitions = implode->getNbInputEdge();
+				for(int k=0; k<nbSourceRepetitions; k++){
+					SRDAGEdge *edge = implode->getInputEdge(k);
+					sources[k] = edge->getSource();
+					sourceProds[k] = edge->getTokenRate();
+					sourcePortIx[k] = sources[k]->getOutputEdgeId(edge);
+
+					sources[k]->removeOutputEdge(edge);
+					totalNbTokens += sourceProds[k];
+					sourceExplode[k] = FALSE;
+				}
+				implode->setState(SrVxStDeleted);
+
+				SRDAGVertex* sinks[MAX_SRDAG_INPUT_EDGES];
+				UINT32 sinkCons[MAX_SRDAG_INPUT_EDGES];
+				UINT32 sinkPortIx[MAX_SRDAG_INPUT_EDGES];
+				UINT32 nbSinkRepetitions = explode->getNbOutputEdge();
+				BOOL sinkImplode[MAX_SRDAG_INPUT_EDGES];
+				for(int k=0; k<nbSinkRepetitions; k++){
+					SRDAGEdge *edge = explode->getOutputEdge(k);
+					sinks[k] = edge->getSink();
+					sinkCons[k] = edge->getTokenRate();
+					sinkPortIx[k] = sinks[k]->getInputEdgeId(edge);
+
+					sinks[k]->removeInputEdge(edge);
+					sinkImplode[k] = FALSE;
+				}
+				explode->setState(SrVxStDeleted);
+
+				UINT32 curProd = sourceProds[0];
+				UINT32 curCons = sinkCons[0];
+
+				while (totProd < totalNbTokens) {
+					// Production/consumption rate for the current source/target.
+					UINT32 rest = (curProd > curCons) ? curCons:curProd;
+
+					/*
+					 * Adding explode/implode vertices if required.
+					 */
+
+					if (rest < curProd && !sourceExplode[sourceIndex]){
+						// Adding an explode vertex.
+						SRDAGVertex *exp_vertex = topDag->addVertex();
+						exp_vertex->setType(Explode); 			// Indicates it is an explode vx.
+						exp_vertex->setExpImpId(explode->getId());
+
+						// Replacing the source vertex by the explode vertex in the array of sources.
+						SRDAGVertex *origin_vertex = sources[sourceIndex];
+						sources[sourceIndex] = exp_vertex;
+
+						exp_vertex->setFunctIx(XPLODE_FUNCT_IX);
+						exp_vertex->setReference(origin_vertex->getReference());
+						exp_vertex->setReferenceIndex(origin_vertex->getReferenceIndex());
+						exp_vertex->setIterationIndex(origin_vertex->getIterationIndex());
+
+						sourceExplode[sourceIndex] = TRUE;
+
+						// Adding an edge between the source and the explode.
+						topDag->addEdge(
+								origin_vertex, sourcePortIx[sourceIndex],
+								sourceProds[sourceIndex],
+								exp_vertex, 0,
+								refEdge);
+					}
+
+					if (rest < curCons && !sinkImplode[sinkIndex]){
+						// Adding an implode vertex.
+						SRDAGVertex *imp_vertex = topDag->addVertex();
+						imp_vertex->setType(Implode); 	// Indicates it is an implode vertex.
+						imp_vertex->setExpImpId(implode->getId()); // Distinction among implode vertices for the same SRDAGVertex.
+
+						// Replacing the sink vertex by the implode vertex in the array of sources.
+						SRDAGVertex *origin_vertex = sinks[sinkIndex];//	// Adding vxs
+						sinks[sinkIndex] = imp_vertex;
+
+						// Setting attributes from original vertex.
+						imp_vertex->setFunctIx(XPLODE_FUNCT_IX);
+						imp_vertex->setReference(origin_vertex->getReference());
+						imp_vertex->setReferenceIndex(origin_vertex->getReferenceIndex());
+						imp_vertex->setIterationIndex(origin_vertex->getIterationIndex());
+
+						sinkImplode[sinkIndex] = TRUE;
+
+						// Adding an edge between the implode and the sink.
+						topDag->addEdge(
+								imp_vertex, 0,
+								sinkCons[sinkIndex],
+								origin_vertex, sinkPortIx[sinkIndex],
+								refEdge);
+					}
+
+					//Creating the new edge between normal vertices or between a normal and an explode/implode one.
+					UINT32 sourcePortId, sinkPortId;
+					if(sourceExplode[sourceIndex]){
+						sourcePortId = sources[sourceIndex]->getNbOutputEdge();
+					}else{
+						sourcePortId = sourcePortIx[sourceIndex];
+					}
+
+					if(sinkImplode[sinkIndex])
+						sinkPortId = sinks[sinkIndex]->getNbInputEdge();
+					else
+						sinkPortId = sinkPortIx[sinkIndex];
+
+
+					SRDAGEdge* new_edge = topDag->addEdge(
+							sources[sourceIndex], sourcePortId,
+							rest,
+							sinks[sinkIndex], sinkPortId,
+							refEdge);
+
+					// Update the totProd for the current edge (totProd is used in the condition of the While loop)
+					totProd += rest;
+
+					curCons -= rest;
+					curProd -= rest;
+
+					if(curProd == 0){
+						curProd += sourceProds[++sourceIndex];
+					}
+					if(curCons == 0){
+						curCons += sinkCons[++sinkIndex];
+					}
+				}
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+
+static int reduceExplExpl(SRDAGGraph* topDag){
+	for(int i=0; i<topDag->getNbVertices(); i++){
+		SRDAGVertex* explode0 = topDag->getVertex(i);
+		if(explode0->getType() == Explode && explode0->getState() != SrVxStDeleted){
+			for(int j=0; j<explode0->getNbOutputEdge(); j++){
+				SRDAGVertex* explode1 = explode0->getOutputEdge(j)->getSink();
+				if(explode1->getType() == Explode && explode1->getState() != SrVxStDeleted){
+
+					int nbToAdd = explode1->getNbOutputEdge();
+					int ixToAdd = explode0->getOutputEdgeId(explode1->getInputEdge(0));
+
+					int nbTotEdges = explode0->getNbOutputEdge()+nbToAdd-1;
+
+					// Shift edges after
+					for(int k=nbTotEdges-1; k>ixToAdd+nbToAdd-1; k--){
+						SRDAGEdge *edge = explode0->getOutputEdge(k-nbToAdd+1);
+						explode0->removeOutputEdge(edge);
+						explode0->setOutputEdge(edge, k);
+					}
+					// Add edges
+					explode0->removeOutputEdge(explode0->getOutputEdge(ixToAdd));
+					for(int k=0; k<nbToAdd; k++){
+						SRDAGEdge *edge = explode1->getOutputEdge(k);
+						explode0->setOutputEdge(edge, k+ixToAdd);
+						edge->setSource(explode0);
+
+						explode1->removeOutputEdge(edge);
+					}
+
+					explode1->setState(SrVxStDeleted);
+					return 1;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+static int reduceImplExpl(SRDAGGraph* topDag){
+	for(int i=0; i<topDag->getNbVertices(); i++){
+		SRDAGVertex* implode = topDag->getVertex(i);
+		if(implode->getType() == Implode && implode->getState() != SrVxStDeleted){
+			for(int j=0; j<implode->getNbOutputEdge(); j++){
+				SRDAGVertex* explode = implode->getOutputEdge(j)->getSink();
+				if(explode->getType() == Explode && explode->getState() != SrVxStDeleted){
+					// if equal tokenRate ?
+					if(implode->getInputEdge(0)->getTokenRate() > explode->getOutputEdge(0)->getTokenRate()
+							&& explode->getNbOutputEdge() == 2
+							&& implode->getNbInputEdge() == 2){
+						SRDAGVertex* source = implode->getInputEdge(0)->getSource();
+						SRDAGVertex* sink = explode->getOutputEdge(0)->getSink();
+						int srcIx = source->getOutputEdgeId(implode->getInputEdge(0));
+						int snkIx = sink->getInputEdgeId(explode->getOutputEdge(0));
+
+						SRDAGEdge *imp_edge = implode->getInputEdge(0);
+						SRDAGEdge *middle_edge = implode->getOutputEdge(0);
+						SRDAGEdge *exp_edge = explode->getOutputEdge(0);
+						SRDAGEdge *new_edge = explode->getOutputEdge(1);
+
+						SRDAGVertex *implode2 = explode->getOutputEdge(1)->getSink();
+
+//						SRDAGVertex* new_explode = topDag->addVertex();
+//						new_explode->setType(Explode);
+//						new_explode->setExpImpId(topDag->getNbEdges());
+//						new_explode->setFunctIx(XPLODE_FUNCT_IX);
+//						new_explode->setReference(source->getReference());
+//						new_explode->setReferenceIndex(source->getReferenceIndex());
+//						new_explode->setIterationIndex(source->getIterationIndex());
+
+						// Remove
+						explode->removeInputEdge(middle_edge);
+						implode2->removeInputEdge(new_edge);
+						implode->removeInputEdge(imp_edge);
+						explode->removeOutputEdge(exp_edge);
+						explode->removeOutputEdge(new_edge);
+
+						exp_edge->setSource(explode);
+						explode->setOutputEdge(exp_edge,0);
+
+						imp_edge->setSink(explode);
+						explode->setInputEdge(imp_edge,0);
+
+						new_edge->setSource(explode);
+						explode->setOutputEdge(new_edge,1);
+
+						new_edge->setSink(implode);
+						implode->setInputEdge(new_edge,0);
+						new_edge->setTokenRate(imp_edge->getTokenRate()-exp_edge->getTokenRate());
+
+						middle_edge->setSink(implode2);
+						implode2->setInputEdge(middle_edge,0);
+						middle_edge->setTokenRate(middle_edge->getTokenRate()-exp_edge->getTokenRate());
+
+//						explode->setState(SrVxStDeleted);
+						return 1;
+					}
+					if(implode->getInputEdge(1)->getTokenRate() > explode->getOutputEdge(1)->getTokenRate()
+												&& explode->getNbOutputEdge() == 2
+												&& implode->getNbInputEdge() == 2){
+						SRDAGVertex* source = implode->getInputEdge(1)->getSource();
+						SRDAGVertex* sink = explode->getOutputEdge(1)->getSink();
+						int srcIx = source->getOutputEdgeId(implode->getInputEdge(1));
+						int snkIx = sink->getInputEdgeId(explode->getOutputEdge(1));
+
+						SRDAGEdge *imp_edge = implode->getInputEdge(1);
+						SRDAGEdge *middle_edge = implode->getOutputEdge(0);
+						SRDAGEdge *exp_edge = explode->getOutputEdge(1);
+						SRDAGEdge *new_edge = explode->getOutputEdge(0);
+
+						SRDAGVertex *implode2 = explode->getOutputEdge(0)->getSink();
+						int implode2Ix = implode2->getInputEdgeId(new_edge);
+
+//						SRDAGVertex* new_explode = topDag->addVertex();
+//						new_explode->setType(Explode);
+//						new_explode->setExpImpId(topDag->getNbEdges());
+//						new_explode->setFunctIx(XPLODE_FUNCT_IX);
+//						new_explode->setReference(source->getReference());
+//						new_explode->setReferenceIndex(source->getReferenceIndex());
+//						new_explode->setIterationIndex(source->getIterationIndex());
+
+						// Remove
+						explode->removeInputEdge(middle_edge);
+						implode2->removeInputEdge(new_edge);
+						implode->removeInputEdge(imp_edge);
+						explode->removeOutputEdge(exp_edge);
+						explode->removeOutputEdge(new_edge);
+
+						exp_edge->setSource(explode);
+						explode->setOutputEdge(exp_edge,1);
+
+						imp_edge->setSink(explode);
+						explode->setInputEdge(imp_edge,0);
+
+						new_edge->setSource(explode);
+						explode->setOutputEdge(new_edge,0);
+
+						new_edge->setSink(implode);
+						implode->setInputEdge(new_edge,1);
+						new_edge->setTokenRate(imp_edge->getTokenRate()-exp_edge->getTokenRate());
+
+						middle_edge->setSink(implode2);
+						implode2->setInputEdge(middle_edge,implode2Ix);
+						middle_edge->setTokenRate(middle_edge->getTokenRate()-exp_edge->getTokenRate());
+
+//						explode->setState(SrVxStDeleted);
+						return 1;
+					}
+					if(implode->getInputEdge(0)->getTokenRate() == explode->getOutputEdge(0)->getTokenRate()
+												&& explode->getNbOutputEdge() == 2
+												&& implode->getNbInputEdge() == 2){
+						SRDAGVertex* source0 = implode->getInputEdge(0)->getSource();
+						SRDAGVertex* sink0 = explode->getOutputEdge(0)->getSink();
+						SRDAGVertex* source1 = implode->getInputEdge(1)->getSource();
+						SRDAGVertex* sink1 = explode->getOutputEdge(1)->getSink();
+						int snkIx0 = sink0->getInputEdgeId(explode->getOutputEdge(0));
+						int snkIx1 = sink1->getInputEdgeId(explode->getOutputEdge(1));
+
+						SRDAGEdge *edge0 = implode->getInputEdge(0);
+						SRDAGEdge *edge1 = implode->getInputEdge(1);
+						SRDAGEdge *del_edge0 = explode->getOutputEdge(0);
+						SRDAGEdge *del_edge1 = explode->getOutputEdge(1);
+						SRDAGEdge *del_middle = explode->getInputEdge(0);
+
+						// Remove
+						explode->setState(SrVxStDeleted);
+						implode->setState(SrVxStDeleted);
+
+						implode->removeInputEdge(edge0);
+						implode->removeInputEdge(edge1);
+
+						sink0->removeInputEdge(del_edge0);
+						sink1->removeInputEdge(del_edge1);
+
+						edge0->setSink(sink0);
+						sink0->setInputEdge(edge0,snkIx0);
+
+						edge1->setSink(sink1);
+						sink1->setInputEdge(edge1,snkIx1);
+
+						return 1;
+					}
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+void PiSDFTransformer::multiStepScheduling(
 							Architecture* arch,
 							PiSDFGraph* pisdf,
 							ListScheduler* listScheduler,
-							SRDAGGraph* topDag){
-	static int brv[MAX_NB_VERTICES];
+//							Scenario* scenario,
+							SRDAGGraph* topDag,
+							ExecutionStat* execStat){
+	static int brv[MAX_SRDAG_VERTICES];
 	PiSDFGraph*   currentPiSDF;
 	UINT32 len;
 	UINT32 	lvlCntr = 0;
-	UINT32 endTime = 0;
 	UINT8 	stepsCntr = 0;
 
 	Queue<PiSDFGraph*, 15> graphFifo;
@@ -546,7 +947,7 @@ UINT32 PiSDFTransformer::multiStepScheduling(
 
 			if(currentPiSDF->getNb_config_vertices() > 0){
 				/* Resolve */
-				currentPiSDF->evaluateExpressions();
+				currentPiSDF->evaluateExpressions(/*scenario*/);
 
 				/* Replace hierarchical actor in topDag with RBs */
 				PiSDFTransformer::replaceHwithRB(currentPiSDF, topDag, currHSrDagVx);
@@ -560,7 +961,7 @@ UINT32 PiSDFTransformer::multiStepScheduling(
 				vertexFifo.push(currHSrDagVx);
 			}else{
 				/* Resolve */
-				currentPiSDF->evaluateExpressions();
+				currentPiSDF->evaluateExpressions(/*scenario*/);
 
 				/* Replace hierarchical actor in topDag with RBs */
 				PiSDFTransformer::replaceHwithRB(currentPiSDF, topDag, currHSrDagVx);
@@ -574,6 +975,8 @@ UINT32 PiSDFTransformer::multiStepScheduling(
 			if(currHSrDagVx)
 				currentPiSDF = currHSrDagVx->getHierarchy();
 		}while(currHSrDagVx); /* There is executable hierarchical actor in SRDAG */
+
+//		PiSDFTransformer::removeUnusedRB(topDag);
 
 		Launcher::endGraphTime();
 		Launcher::initSchedulingTime();
@@ -621,20 +1024,19 @@ UINT32 PiSDFTransformer::multiStepScheduling(
 			currentPiSDF = graphFifo.pop();
 			currHSrDagVx = vertexFifo.pop();
 
-			#if EXEC == 1
-				// Update iteration parameters' values.
-				for(UINT32 i=0; i<currentPiSDF->getNb_parameters(); i++){
-					PiSDFParameter *param = currentPiSDF->getParameter(i);
-					SRDAGVertex* config_vertex;
-					PiSDFConfigVertex* pisdf_config = param->getSetter();
-					if(pisdf_config!=0){
-						topDag->getVerticesFromReference(param->getSetter(), currHSrDagVx->getReferenceIndex(), &config_vertex);
-						param->setValue(config_vertex->getRelatedParamValue(param->getSetterIx()));
-					}
-				}
+//			#if EXEC == 1
+			// Update iteration parameters' values.
+			for(UINT32 i=0; i<currentPiSDF->getNb_parameters(); i++){
+				PiSDFParameter *param = currentPiSDF->getParameter(i);
+				UINT32 value = getValue(param, topDag, currHSrDagVx);
+			#if SEE_PARAM_VAL
+				printf("%s gets %d\n", param->getName(), value);
 			#endif
+				param->setValue(value);
+			}
+//			#endif
 			// Resolving productions/consumptions.
-			currentPiSDF->evaluateExpressions();
+			currentPiSDF->evaluateExpressions(/*scenario*/);
 
 			/* Compute BRV */
 			/*
@@ -654,6 +1056,20 @@ UINT32 PiSDFTransformer::multiStepScheduling(
 			currentPiSDF = currHSrDagVx->getHierarchy();
 	}while(currHSrDagVx);
 
+	while(removeImpExp(topDag));
+	while(reduceImplImpl(topDag));
+//	while(reduceExplExpl(topDag));
+	currentPiSDF->updateDAGStates(topDag);
+
+//	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", "topDag_afterRed", stepsCntr);
+//	if(len > MAX_FILE_NAME_SIZE)
+//		exitWithCode(1072);
+//	DotWriter::write(topDag, file, 1, 1);
+//
+//	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", "topDag_afterRed_fifoId", stepsCntr);
+//	if(len > MAX_FILE_NAME_SIZE)
+//		exitWithCode(1072);
+//	DotWriter::write(topDag, file, 1, 0);
 
 	Launcher::endGraphTime();
 	Launcher::initSchedulingTime();
@@ -661,6 +1077,7 @@ UINT32 PiSDFTransformer::multiStepScheduling(
 	 * Last scheduling and execution. After all hierarchical levels have been flattened,
 	 * there is one more execution to do for completing one complete execution of the model.
 	 */
+	schedule.newStep();
 	listScheduler->schedule(topDag, &schedule, arch);
 
 	// Assigning FIFO ids to executable vxs' edges.
@@ -675,7 +1092,14 @@ UINT32 PiSDFTransformer::multiStepScheduling(
 	 * send back execution information.
 	 */
 //	Launcher::launch(topDag, arch, &schedule);
-	endTime = Launcher::createRealTimeGantt(arch, topDag, "Gantt.xml");
+	Launcher::createRealTimeGantt(arch, topDag, "Gantt.xml", execStat);
+
+#if PRINT_REAL_GANTT
+	len = snprintf(file, MAX_FILE_NAME_SIZE, "Gantt_simulated.xml");
+	if(len > MAX_FILE_NAME_SIZE)
+		exitWithCode(1072);
+	ScheduleWriter::write(&schedule, topDag, arch, file);
+#endif
 #endif
 
 	// Updating states. Sets all executable vxs to executed since their execution was already launched.
@@ -695,6 +1119,4 @@ UINT32 PiSDFTransformer::multiStepScheduling(
 	}
 	DotWriter::write(topDag, file, 1, 0);
 #endif
-
-	return endTime;
 }

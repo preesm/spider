@@ -47,6 +47,6 @@
  * 				0 if OK.
  * 				1 if no solution or singular matrix.
  */
-int nullspace(int nb_rows, int nb_cols, int* matrix, int *results);
+int nullspace(int nb_rows, int nb_cols, int * matrix, int *results);
 
 #endif /* MTRIXHANDLER_H_ */

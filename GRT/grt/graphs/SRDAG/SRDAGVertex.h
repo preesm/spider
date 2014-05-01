@@ -105,7 +105,7 @@ class SRDAGVertex {
 		/**
 		 The vertex top level
 		*/
-		int tLevel;
+		int schedLevel;
 
 		/**
 		 The vertex implementation slave index
@@ -139,9 +139,12 @@ class SRDAGVertex {
 		// Distinguishes among several explode/implode vertices.
 		int expImpId;
 
+		UINT32 execTime;
+		int minStartTime;
+
 		UINT32 id;
 
-		char name[MAX_VERTEX_NAME_SIZE];
+//		char name[MAX_VERTEX_NAME_SIZE];
 
 		// Identifies the function implementing the actor's action(s).
 		UINT64 functIx;
@@ -259,19 +262,25 @@ class SRDAGVertex {
 		*/
 		void setSlaveIndex(int slaveIndex);
 
-		/**
-		 Getter of the vertex top level: the time between the loop execution beginning and the vertex execution beginning.
+		int getSchedLevel();
 
-		 @return the t level of the vertex
-		*/
-		int getTLevel();
+		void setExecTime(UINT32 exec){
+			execTime = exec;
+		}
 
-		/**
-		 Setter of the vertex top level: the time between the loop execution beginning and the vertex execution beginning.
+		UINT32 getExecTime(){
+			return execTime;
+		}
 
-		 @param value: the t level of the vertex
-		*/
-		void setTLevel(int value);
+		void setMinStartTime(int t){
+			minStartTime = t;
+		}
+
+		int getMinStartTime(){
+			return minStartTime;
+		}
+
+		void setSchedLevel(int value);
 
 
 		SRDAGEdge* getInputEdge(int id);
@@ -350,12 +359,13 @@ class SRDAGVertex {
 
 	    char* getName()
 	    {
-	        return name;
+//	        return name;
+	    	return "";
 	    }
 
 	    void setName(char* name)
 	    {
-	    	strcpy(this->name,name);
+//	    	strcpy(this->name,name);
 	    }
 
 		UINT64 getFunctIx() const {
@@ -383,7 +393,8 @@ class SRDAGVertex {
 		BOOL isHierarchical(){
 			return Reference
 					&& Reference->getType() == pisdf_vertex
-					&& ((PiSDFVertex*)Reference)->hasSubGraph();
+					&& ((PiSDFVertex*)Reference)->hasSubGraph()
+					&& type == Normal;
 		}
 
 		PiSDFGraph* getHierarchy(){
@@ -495,24 +506,14 @@ void SRDAGVertex::setSlaveIndex(int index){
 	slaveIndex = index;
 }
 
-/**
- Getter of the vertex top level: the time between the loop execution beginning and the vertex execution beginning.
-
- @return the t level of the vertex
-*/
 inline
-int SRDAGVertex::getTLevel(){
-	return tLevel;
+int SRDAGVertex::getSchedLevel(){
+	return schedLevel;
 }
 
-/**
- Setter of the vertex top level: the time between the loop execution beginning and the vertex execution beginning.
-
- @param value: the t level of the vertex
-*/
 inline
-void SRDAGVertex::setTLevel(int value){
-	tLevel = value;
+void SRDAGVertex::setSchedLevel(int value){
+	schedLevel = value;
 }
 
 /**

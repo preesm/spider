@@ -149,12 +149,46 @@ void Launcher::launch(SRDAGGraph* graph, Architecture* arch, BaseSchedule* sched
 void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 	UINT32 i, base, offset;
 	SRDAGEdge* edge;
-	for (i = 0; i < vertex->getNbOutputEdge(); i++){
-		edge = vertex->getOutputEdge(i);
-		if(edge->getFifoId() == -1){
+	switch(vertex->getType()){
+	 case Explode:
+		base = vertex->getInputEdge(0)->getFifoAddress();
+		offset = 0;
+		for (i = 0; i < vertex->getNbOutputEdge(); i++){
+			edge = vertex->getOutputEdge(i);
 			edge->setFifoId(nbFifo++);
-			edge->setFifoAddress(memory.alloc(edge->getTokenRate()));
+			edge->setFifoAddress(base+offset);
+			offset += edge->getTokenRate();
 		}
+		break;
+//	 case Implode:
+//		 if(vertex->getOutputEdge(0)->getFifoId() == -1){
+//			 base = memory.alloc(vertex->getOutputEdge(0)->getTokenRate());
+//			 offset = 0;
+//			 vertex->getOutputEdge(0)->setFifoId(nbFifo++);
+//			 vertex->getOutputEdge(0)->setFifoAddress(base);
+//			for (i = 0; i < vertex->getNbInputEdge(); i++){
+//				edge = vertex->getInputEdge(i);
+//				if(edge->getFifoId() == -1){
+//					edge->setFifoId(nbFifo++);
+//					edge->setFifoAddress(base+offset);
+//				}
+//				offset += edge->getTokenRate();
+//			}
+//		 }
+//		 break;
+	 case Implode:
+	 default:
+		for (i = 0; i < vertex->getNbOutputEdge(); i++){
+			edge = vertex->getOutputEdge(i);
+//			if(edge->getSink()->getType() == Implode){
+//				assignFifoVertex(edge->getSink());
+//			}
+			if(edge->getFifoId() == -1){
+				edge->setFifoId(nbFifo++);
+				edge->setFifoAddress(memory.alloc(edge->getTokenRate()));
+			}
+		}
+		break;
 	}
 }
 
@@ -168,22 +202,26 @@ void Launcher::launchVertex(SRDAGVertex* vertex, UINT32 slave){
 void Launcher::init(){
 	nbStepsSched = nbStepsGraph = 0;
 	nbFifo = nbParamToRecv = 0;
-	memory = Memory(0x0, 0xffffffff);
+	memory = Memory(0x0, 0x003F8000);
 }
 
-UINT32 Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName){
+//#define PRINT_GRAPH 1
+void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName, ExecutionStat* stat){
 	// Creating the Gantt with real times.
-	UINT32 globalEndTime = 0;
-#if PRINT_GRAPH
+	memset(stat, 0, sizeof(ExecutionStat));
+
+#if PRINT_REAL_GANTT
 	platform_fopen(filePathName);
 
 	// Writing header
 	platform_fprintf("<data>\n");
 
 	char name[MAX_VERTEX_NAME_SIZE];
+#endif
 
 	// Writing execution data for the master.
 	for (UINT32 j=0 ; j<nbStepsSched; j++){
+#if PRINT_REAL_GANTT
 		platform_fprintf("\t<event\n");
 		platform_fprintf("\t\tstart=\"%u\"\n", 	timeStartScheduling[j]);
 		platform_fprintf("\t\tend=\"%u\"\n",	timeEndScheduling[j]);
@@ -191,8 +229,11 @@ UINT32 Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const 
 		platform_fprintf("\t\tmapping=\"Master\"\n");
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
 		platform_fprintf("\t\t>Step_%d.</event>\n", j);
+#endif
+		stat->schedulingTime += timeEndScheduling[j] - timeStartScheduling[j];
 	}
 	for (UINT32 j=0 ; j<nbStepsGraph; j++){
+#if PRINT_REAL_GANTT
 		platform_fprintf("\t<event\n");
 		platform_fprintf("\t\tstart=\"%u\"\n", 	timeStartGraph[j]);
 		platform_fprintf("\t\tend=\"%u\"\n",	timeEndGraph[j]);
@@ -200,11 +241,12 @@ UINT32 Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const 
 		platform_fprintf("\t\tmapping=\"Master\"\n");
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
 		platform_fprintf("\t\t>Step_%d.</event>\n", j);
-	}
 #endif
+		stat->graphTransfoTime += timeEndGraph[j] - timeStartGraph[j];
+	}
 
 	// Writing execution data for each slave.
-	for(UINT32 slave=0; slave<arch->getNbSlaves(); slave++){
+	for(UINT32 slave=0; slave<arch->getNbActiveSlaves(); slave++){
 		SendInfoData::send(slave);
 
 		UINT32 msgType = platform_QPopUINT32(slave, platformCtrlQ);
@@ -217,7 +259,35 @@ UINT32 Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const 
 			SRDAGVertex* vertex = dag->getVertex(platform_QPopUINT32(slave, platformCtrlQ)); // data[0] contains the vertex's id.
 			UINT32 startTime = platform_QPopUINT32(slave, platformCtrlQ);
 			UINT32 endTime = platform_QPopUINT32(slave, platformCtrlQ);
-#if PRINT_GRAPH
+
+			UINT32 k;
+			switch(vertex->getType()){
+			case Normal:
+			case ConfigureActor:
+				for(k=0; k<stat->nbActor; k++){
+					if(stat->actors[k] == vertex->getReference()){
+						stat->actorTimes[k] += endTime - startTime;
+						break;
+					}
+				}
+				if(k == stat->nbActor){
+					stat->actors[stat->nbActor] = vertex->getReference();
+					stat->actorTimes[stat->nbActor] = endTime - startTime;
+					stat->nbActor++;
+				}
+				break;
+			case Explode:
+				stat->explodeTime += endTime - startTime;
+				break;
+			case Implode:
+				stat->implodeTime += endTime - startTime;
+				break;
+			case RoundBuffer:
+				stat->roundBufferTime += endTime - startTime;
+				break;
+			}
+
+#if PRINT_REAL_GANTT
 			vertex->getName(name, MAX_VERTEX_NAME_SIZE);
 			platform_fprintf("\t<event\n");
 			platform_fprintf("\t\tstart=\"%u\"\n", startTime);
@@ -227,16 +297,14 @@ UINT32 Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const 
 			platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
 			platform_fprintf("\t\t>%s.</event>\n", name);
 #endif
-			if(globalEndTime < endTime)
-				globalEndTime = endTime;
+			if(stat->globalEndTime < endTime)
+				stat->globalEndTime = endTime;
 		}
 	}
-#if PRINT_GRAPH
+#if PRINT_REAL_GANTT
 	platform_fprintf("</data>\n");
 	platform_fclose();
 #endif
-
-	return globalEndTime;
 }
 
 void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){
@@ -250,8 +318,8 @@ void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){
 			for(UINT32 j = 0; j < refConfigVx->getNbRelatedParams(); j++){
 				topDag->getVertex(vxId)->setRelatedParamValue(j,platform_QPopUINT32(slave, platformCtrlQ));
 			}
-			slave = (slave+1)%arch->getNbSlaves();
 			nbParamToRecv -= refConfigVx->getNbRelatedParams();
 		}
+		slave = (slave+1)%arch->getNbActiveSlaves();
 	}
 }

@@ -36,8 +36,11 @@
 
 //#include "mpeg4Decoder/mpeg4_part2.h"
 //#include "DoubleLoop/PiSDFDoubleLoop.h"
+//#include "SimpleLoop/PiSDFSimpleLoop.h"
+//#include "MedianSobel/PiSDFMedianSobel.h"
 #include "SimpleLoop/PiSDFSimpleLoop.h"
 //#include "generatedC++/doubleLoop_gen.h"
+//#include "MedianSobelDL/PiSDFMedianSobelDL.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Scenario/Scenario.h>
 #include <scheduling/ListScheduler/ListScheduler.h>
@@ -83,11 +86,11 @@ int main(int argc, char* argv[]){
 //
 //	setvbuf(stdout, NULL, _IONBF, 0);
 //	setvbuf(stderr, NULL, _IONBF, 0);
-	int nbSlaves = 1;
+	int nbSlaves = 7;
 //	static Scenario 			scenario;
 	static Architecture 		arch;
 	static ListScheduler 		listScheduler;
-//	static ExecutionStat 		execStat;
+	static ExecutionStat 		execStat[ITER_MAX+1];
 	static PiSDFGraph 			piSDF;
 	static SRDAGGraph 			topDag;
 

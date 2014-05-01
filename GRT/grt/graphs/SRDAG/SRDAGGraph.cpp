@@ -79,14 +79,37 @@ SRDAGGraph::~SRDAGGraph()
 */
 SRDAGEdge* SRDAGGraph::addEdge(SRDAGVertex* source, UINT32 sourcePortIx, int tokenRate, SRDAGVertex* sink, UINT32 sinkPortIx, PiSDFEdge* refEdge){
 	SRDAGEdge* edge;
-	edge = edges.add();
-	edge->reset();
-	edge->setSource(source);
-	edge->setTokenRate(tokenRate);
-	edge->setSink(sink);
-	edge->setRefEdge(refEdge);
-	source->setOutputEdge(edge, sourcePortIx);
-	sink->setInputEdge(edge, sinkPortIx);
+
+	if(source->getType() == RoundBuffer
+			&& source->getNbInputEdge() > 0
+			&& tokenRate == source->getInputEdge(0)->getTokenRate()){
+		SRDAGVertex* rb = source;
+		edge = rb->getInputEdge(0);
+
+		rb->removeInputEdge(edge);
+		edge->setSink(sink);
+		sink->setInputEdge(edge, sinkPortIx);
+		removeVx(rb);
+	}else if(sink->getType() == RoundBuffer
+			&& sink->getNbOutputEdge() > 0
+			&& tokenRate == sink->getOutputEdge(0)->getTokenRate()){
+		SRDAGVertex* rb = sink;
+		edge = rb->getOutputEdge(0);
+
+		rb->removeOutputEdge(edge);
+		edge->setSource(source);
+		source->setOutputEdge(edge, sourcePortIx);
+		removeVx(rb);
+	}else{
+		edge = edges.add();
+		edge->reset();
+		edge->setSource(source);
+		edge->setTokenRate(tokenRate);
+		edge->setSink(sink);
+		edge->setRefEdge(refEdge);
+		source->setOutputEdge(edge, sourcePortIx);
+		sink->setInputEdge(edge, sinkPortIx);
+	}
 	return edge;
 }
 

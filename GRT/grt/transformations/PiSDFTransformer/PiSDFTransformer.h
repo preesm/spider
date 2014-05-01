@@ -48,7 +48,7 @@ namespace PiSDFTransformer {
 	/**
 	 * Adds "nb_repetitions" SRDAGVertex vertices for "vertex" to the output SRDAG graph.
 	 */
-	void addVertices(PiSDFAbstractVertex* vertex, UINT32 nb_repetitions, UINT32 iteration, SRDAGGraph* outputGraph);
+	void addVertices(PiSDFVertex* vertex, UINT32 nb_repetitions, UINT32 iteration, SRDAGGraph* outputGraph);
 
 	void linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, SRDAGGraph* topDag, int* brv);
 
@@ -66,11 +66,13 @@ namespace PiSDFTransformer {
 			SRDAGGraph *topDag,
 			int *brv);
 
-	UINT32 multiStepScheduling(
+	void multiStepScheduling(
 			Architecture* arch,
 			PiSDFGraph* pisdf,
 			ListScheduler* listScheduler,
-			SRDAGGraph* topDag);
+//			Scenario* scenario,
+			SRDAGGraph* topDag,
+			ExecutionStat* stat);
 };
 
 #endif /* PISDFTRANSFORMER_H_ */

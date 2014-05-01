@@ -59,7 +59,7 @@ class ListScheduler {
 		*/
 		Architecture* archi;
 		
-		Scenario* scenario;
+//		Scenario* scenario;
 
 		/**
 		 Temporary storage for the vertex executed last on each slave
@@ -76,6 +76,9 @@ class ListScheduler {
 				Schedule* schedule,
 				Architecture* arch);
 
+		UINT32 getMinStartTime(BaseSchedule* schedule, Architecture* arch, SRDAGVertex* vertex);
+
+		UINT32 evaluateMinStartTime(BaseSchedule* schedule, Architecture* arch, SRDAGVertex* vertex);
 	public : 
 		/**
 		 Constructor
@@ -108,7 +111,7 @@ class ListScheduler {
 		void setArchitecture(Architecture* archi);
 
 
-	    void setScenario(Scenario *scenario){this->scenario = scenario;}
+//	    void setScenario(Scenario *scenario){this->scenario = scenario;}
 
 		/**
 		 Return the schedule makespan

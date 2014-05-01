@@ -43,7 +43,7 @@
 typedef Int8	platform_INT8;
 typedef Int16 	platform_INT16;
 typedef Int32 	platform_INT32;
-typedef CSL_Uint64 	platform_INT64;
+typedef long long 	platform_INT64;
 
 typedef Uint8 	platform_UINT8;
 typedef Uint16 	platform_UINT16;

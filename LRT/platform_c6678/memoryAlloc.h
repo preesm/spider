@@ -52,6 +52,6 @@
 #define DATA_DESC_SIZE 	64
 #define DATA_DESC_NB 	256
 
-#define SHARED_MEM_BASE	0x0C008000
+#define SHARED_MEM_BASE	0xA0008000
 
 #endif /* MEMORYALLOC_H_ */

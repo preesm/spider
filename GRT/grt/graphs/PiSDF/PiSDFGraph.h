@@ -63,13 +63,15 @@ class PiSDFGraph {
 	UINT32 nb_select_vertices;
 	UINT32 nb_roundB_vertices;
 
+	UINT32 baseId;
+
 	static UINT32 glbNbConfigVertices;
 
 	PiSDFEdge 		edges[MAX_NB_PiSDF_EDGES];
 	PiSDFParameter 	parameters[MAX_NB_PiSDF_PARAMS];
 //	variable* 	parameters[MAX_NB_PiSDF_PARAMS];
 
-	PiSDFAbstractVertex*	vertices[MAX_NB_VERTICES];
+	PiSDFAbstractVertex*	vertices[MAX_NB_PiSDF_VERTICES];
 	PiSDFVertex 			pisdf_vertices[MAX_NB_PiSDF_VERTICES];
 	PiSDFConfigVertex 		config_vertices[MAX_NB_PiSDF_CONFIG_VERTICES];
 	PiSDFAbstractVertex 	join_vertices[MAX_NB_PiSDF_JOIN_VERTICES];
@@ -81,6 +83,7 @@ class PiSDFGraph {
 	PiSDFAbstractVertex 	roundB_vertices[MAX_NB_PiSDF_ROUNDB_VERTICES];
 
 
+	PiSDFAbstractVertex* parentVertex;
 	PiSDFAbstractVertex* rootVertex; // Must be set while creating the graph.
 	UINT32 nbExecVertices; 			// Counts the number of executable vertices.
 	UINT32 nbDiscardVertices; 		// Counts the number of discarded vertices
@@ -100,7 +103,7 @@ public:
 
 	PiSDFParameter*	addParameter(const char* name);
 
-	void evaluateExpressions();
+	void evaluateExpressions(/*Scenario* scenario*/);
 
 	/*
 	 *  Says if Vx is an interface/round-buffer preceding a configure vx.
@@ -124,6 +127,16 @@ public:
     UINT32 getNb_parameters() const
     {
         return nb_parameters;
+    }
+
+
+    UINT32 getBaseId()
+    {
+        return baseId;
+    }
+
+    void setBaseId(UINT32 base){
+    	baseId = base;
     }
 
     PiSDFParameter* getParameter(UINT64 index){
@@ -266,6 +279,14 @@ public:
 
 	PiSDFAbstractVertex* getVertex(UINT32 id){
 		return vertices[id];
+	}
+
+	PiSDFAbstractVertex* getParentVertex(){
+		return parentVertex;
+	}
+
+	void setParentVertex(PiSDFAbstractVertex* parentVertex) {
+		this->parentVertex = parentVertex;
 	}
 };
 

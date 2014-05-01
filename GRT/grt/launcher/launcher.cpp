@@ -49,7 +49,7 @@
 
 #define PRINT_ACTOR_IN_DOT_FILE		0
 
-static Memory memory = Memory(0x0, 0xffffffff);
+static Memory memory = Memory(0x0, 0x003F8000);
 static UINT32 nbFifo;
 static UINT32 nbParamToRecv;
 
@@ -134,7 +134,7 @@ void Launcher::assignFifo(SRDAGGraph* graph){
 
 void Launcher::launch(SRDAGGraph* graph, Architecture* arch, BaseSchedule* schedule){
 	/* Creating Tasks */
-	for(UINT32 slave=0; slave < arch->getNbSlaves(); slave++){
+	for(UINT32 slave=0; slave < arch->getNbActiveSlaves(); slave++){
 		for(UINT32 i=0; i < schedule->getNbVertices(slave); i++){
 			SRDAGVertex* vertex = (SRDAGVertex*)schedule->getVertex(slave,i);
 			if(vertex->getState() == SrVxStExecutable){

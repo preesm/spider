@@ -40,23 +40,17 @@
 #include <platform_types.h>
 
 // Architecture
-#define MAX_SLAVE_TYPES 		2	//2 	// The maximum number of slave types
+#define MAX_SLAVE_TYPES 		1	//2 	// The maximum number of slave types
 #define MAX_SLAVES 				8	//12	// The maximum number of slaves
 #define MAX_SLAVE_NAME_SIZE 	10	// The maximum number of slaves
 
-// Common to all types of graphs
-#define MAX_VERTEX_NAME_SIZE 	30	//100
-#define MAX_PARAM_NAME_SIZE 	10	//32
-#define MAX_NB_VERTICES			128	//512
-#define MAX_NB_EDGES			128	//512
-#define MAX_NB_OUTPUT_EDGES		16	//512
-#define MAX_NB_INPUT_EDGES		16	//512
+#define MAX_VERTEX_NAME_SIZE 50
 
 // Single Rate DAG
-#define MAX_SRDAG_VERTICES 		110	//512
-#define MAX_SRDAG_EDGES 		230	//512
-#define MAX_SRDAG_INPUT_EDGES 	100	//64
-#define MAX_SRDAG_OUTPUT_EDGES 	100	//100
+#define MAX_SRDAG_VERTICES 		200	//512
+#define MAX_SRDAG_EDGES 		350	//512
+#define MAX_SRDAG_INPUT_EDGES 	45	//64
+#define MAX_SRDAG_OUTPUT_EDGES 	45	//100
 #define MAX_VERTEX_REPETITION 	100	//100 // The maximum number of repetitions for one vertex
 #define XPLODE_FUNCT_IX			13	//13	// Index of the function for implode/explode vxs.
 
@@ -68,24 +62,21 @@
 // PiSDF
 #define MAX_NB_PiSDF_SUB_GRAPHS			2	//32
 #define MAX_NB_PiSDF_EDGES				8	//32
-#define MAX_NB_PiSDF_PARAMS				5	//32
+#define MAX_NB_PiSDF_PARAMS				8	//32
 #define MAX_NB_PiSDF_VERTICES			8	//32
 #define MAX_NB_PiSDF_CONFIG_VERTICES	8	//32
 #define MAX_NB_PiSDF_JOIN_VERTICES		8	//32
 #define MAX_NB_PiSDF_INPUT_VERTICES		8	//32
+#define MAX_NB_PiSDF_INPUT_EDGES		3	//32
+#define MAX_NB_PiSDF_OUTPUT_EDGES		3	//32
 #define MAX_NB_PiSDF_BROAD_VERTICES		8	//32
 #define MAX_NB_PiSDF_OUTPUT_VERTICES	8	//32
 #define MAX_NB_PiSDF_SWITCH_VERTICES	1	//32
 #define MAX_NB_PiSDF_SELECT_VERTICES	1	//32
 #define MAX_NB_PiSDF_ROUNDB_VERTICES	8	//32
 #define MAX_NB_PiSDF_CONFIG_VERTEX_PARAMS	2	//10
-
-// DAG
-#define MAX_DAG_VERTEX_REPETITION 10	//100 // The maximum number of repetitions for one vertex
-
-// Launcher
-#define MAX_CTRL_DATA 	800	//2000
-#define MAX_JOB_DATA 	800	//2000
+#define MAX_NB_PiSDF_VERTEX_NAME	30	//10
+#define MAX_NB_PiSDF_PARAM_NAME	30	//10
 
 // XParser
 #define VARIABLE_NAME_LEN_MAX 30

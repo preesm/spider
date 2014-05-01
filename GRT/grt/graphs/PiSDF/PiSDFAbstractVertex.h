@@ -72,12 +72,14 @@ typedef enum{
 
 class PiSDFAbstractVertex {
 	UINT32 id;
-	char name[MAX_VERTEX_NAME_SIZE];
+	char name[MAX_NB_PiSDF_VERTEX_NAME];
 	UINT64 function_index;
 	VERTEX_TYPE type;
 
-	Array<PiSDFEdge*,MAX_NB_INPUT_EDGES> inputEdges;
-	Array<PiSDFEdge*,MAX_NB_OUTPUT_EDGES> outputEdges;
+	PiSDFGraph* graph;
+
+	Array<PiSDFEdge*,MAX_NB_PiSDF_INPUT_EDGES> inputEdges;
+	Array<PiSDFEdge*,MAX_NB_PiSDF_OUTPUT_EDGES> outputEdges;
 
 	UINT8 nbParameters;
 	PiSDFParameter* parameters[MAX_NB_PiSDF_PARAMS];
@@ -88,8 +90,13 @@ class PiSDFAbstractVertex {
 
 	EXE_FLAG 	executable; // Says whether the vertex can be executed.
 	STATUS_FLAG status;
-	bool 		scheduled; 	// Says whether the vertex has been already scheduled within the current iteration.
+	BOOL 		scheduled; 	// Says whether the vertex has been already scheduled within the current iteration.
 	UINT32 		tempId; 	// Used while creating a topology matrix.
+
+
+	BOOL constraints [MAX_SLAVES];
+	abstract_syntax_elt timings[MAX_SLAVE_TYPES][REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
+
 public:
 	PiSDFAbstractVertex();
 	virtual ~PiSDFAbstractVertex();
@@ -101,6 +108,13 @@ public:
 	void setOutputEdge(PiSDFEdge* edge, UINT32 id);
 
 	void addParameter(PiSDFParameter* param);
+
+	void setGraph(PiSDFGraph* graph_){
+		graph = graph_;
+	}
+	PiSDFGraph* getGraph(){
+		return graph;
+	}
 
 	/*
 	 * Marks a vertex as executable, i.e. all its parameters have been solved and
@@ -119,7 +133,29 @@ public:
 	bool invalidEdges();
 
 
+	BOOL getConstraints(UINT32 slave_id){
+        return constraints[slave_id];
+    }
 
+    void setConstraints(UINT32 slave_id){
+    	if (slave_id>MAX_SLAVES){
+    		printf("Error: Scenario constraints vertex_id > MAX_NB_PiSDF_VERTICES\n");
+    		abort();
+    	}
+        constraints[slave_id] = true;
+    }
+
+    abstract_syntax_elt* getTiming(UINT32 slave_type){
+        return timings[slave_type];
+    }
+
+    void setTiming(UINT32 slave_type, const char* timing){
+    	if (slave_type>MAX_SLAVE_TYPES){
+    		printf("Error: Scenario constraints vertex_id > MAX_SLAVE_TYPES\n");
+    		abort();
+    	}
+    	globalParser.parse(timing, timings[slave_type]);
+    }
 
 
 

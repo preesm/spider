@@ -97,9 +97,10 @@ inline void List<T,SIZE>::reset(){
  */
 template <class T, int SIZE>
 inline T& List<T,SIZE>::operator [](int n){
-	if(n>=0 && n<nb)
+	if(n>=0 && n<wrNb)
 		return array[n];
 	else{
+		printf("List: Accesing unitialized element\n");
 		exitWithCode(1057);
 		return array[0];
 	}

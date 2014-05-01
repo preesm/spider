@@ -200,6 +200,7 @@ PiSDFAbstractVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEX_TYPE t
 	vertex->setId(nb_vertices);
 	vertex->setName(vertexName);
 	vertex->setType(type);
+	vertex->setGraph(this);
 	//		vertex->setPiSDF(this);
 	vertices[nb_vertices++] = vertex;
 	return vertex;
@@ -218,7 +219,7 @@ PiSDFAbstractVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEX_TYPE t
 */
 PiSDFEdge *PiSDFGraph::addEdge(PiSDFAbstractVertex* source, UINT32 sourcePortId, const char* production, PiSDFAbstractVertex* sink, UINT32 sinkPortId, const char* consumption, const char* delay){
 	PiSDFEdge* edge = NULL;
-	if(nb_edges < MAX_NB_INPUT_EDGES + MAX_NB_OUTPUT_EDGES){
+	if(nb_edges < MAX_NB_PiSDF_EDGES){
 		edge = &edges[nb_edges];
 		edge->setId(nb_edges);
 //		edge->setPiSDF(this);
@@ -241,7 +242,7 @@ PiSDFEdge *PiSDFGraph::addEdge(PiSDFAbstractVertex* source, UINT32 sourcePortId,
 
 PiSDFEdge *PiSDFGraph::addEdge(PiSDFAbstractVertex* source, UINT32 sourcePortId, abstract_syntax_elt* production, PiSDFAbstractVertex* sink, UINT32 sinkPortId, abstract_syntax_elt* consumption, abstract_syntax_elt* delay){
 	PiSDFEdge* edge = NULL;
-	if(nb_edges < MAX_NB_INPUT_EDGES + MAX_NB_OUTPUT_EDGES){
+	if(nb_edges < MAX_NB_PiSDF_EDGES){
 		edge = &edges[nb_edges];
 		edge->setId(nb_edges);
 //		edge->setPiSDF(this);
@@ -269,7 +270,9 @@ PiSDFParameter* PiSDFGraph::addParameter(const char *name)
 	if(nb_parameters < MAX_NB_PiSDF_PARAMS - 1)
 	{
 		param = &parameters[nb_parameters++];
+		param->reset();
 		param->setName(name);
+		param->setGraph(this);
 		param->setVariable(globalParser.addVariable(name, 1));
 		return param;
 	}
@@ -281,11 +284,10 @@ PiSDFParameter* PiSDFGraph::addParameter(const char *name)
 
 
 
-void PiSDFGraph::evaluateExpressions()
+void PiSDFGraph::evaluateExpressions(/*Scenario* scenario*/)
 {
 	int value;
-	UINT32 nbEdges = this->getNb_edges();
-	for (UINT32 i = 0; i < nbEdges; i++){
+	for (UINT32 i = 0; i < nb_edges; i++){
 		PiSDFEdge* edge = this->getEdge(i);
 
 		if(!edge->getEvaluated()){
@@ -301,6 +303,15 @@ void PiSDFGraph::evaluateExpressions()
 			globalParser.interpret(edge->getDelay(), &value);
 			edge->setDelayInt(value);
 		}
+	}
+
+	for(UINT32 i = 0; i < nb_pisdf_vertices; i++){
+		PiSDFVertex* vertex = this->getPiSDFVertex(i);
+		if(!vertex->hasSubGraph()){
+			globalParser.interpret(/*scenario->*/vertex->getTiming(0), &value);
+			vertex->setExecTime(value);
+		}else
+			vertex->setExecTime(0);
 	}
 }
 

@@ -44,8 +44,9 @@ class PiSDFGraph;
 
 class PiSDFVertex: public PiSDFAbstractVertex {
 	PiSDFGraph *subGraph;
+	UINT32 execTime;
 public:
-	PiSDFVertex(){subGraph = (PiSDFGraph *)NULL;};
+	PiSDFVertex(){subGraph = (PiSDFGraph *)NULL;execTime=0;};
 	virtual ~PiSDFVertex(){};
 
 	bool hasSubGraph()
@@ -70,6 +71,14 @@ public:
     void setSubGraph(PiSDFGraph *subGraph)
     {
         this->subGraph = subGraph;
+    }
+
+    void setExecTime(UINT32 exec){
+    	execTime = exec;
+    }
+
+    UINT32 getExecTime(){
+    	return execTime;
     }
 
 };

@@ -121,6 +121,12 @@ int XParser::interpret(const abstract_syntax_elt* queue, int* value){
 
     //While there are input tokens left
 	for(; queue[index].type != VOID_RPN; index++){
+
+		if(index >= REVERSE_POLISH_STACK_MAX_ELEMENTS){
+			printf("REVERSE_POLISH_STACK_MAX_ELEMENTS too small\n");
+			abort();
+		}
+
         // Read the next token from input.
 		const abstract_syntax_elt* elt = &queue[index];
 		switch(elt->type){

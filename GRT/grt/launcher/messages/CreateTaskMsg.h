@@ -89,7 +89,7 @@ void inline CreateTaskMsg::send(int lrtID, SRDAGVertex* vertex){
 	case Normal:
 	case ConfigureActor:
 		for(UINT32 i=0; i<vertex->getReference()->getNbParameters(); i++){
-			platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getReference()->getParameter(i)->getValue());
+			platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getParamValue(i));
 		}
 		break;
 	case RoundBuffer:

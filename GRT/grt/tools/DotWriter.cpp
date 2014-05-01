@@ -85,7 +85,7 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 			}
 
 			if(displayNames){
-				platform_fprintf ("\t%d [label=\"%d\\n%s\" color=\"%s\"];\n",i,i,name, color);
+				platform_fprintf ("\t%d [label=\"%d\\n%s\\n%d\\n%d\" color=\"%s\"];\n",i,i,name, vertex->getMinStartTime(), vertex->getExecTime(), color);
 			}
 			else{
 				platform_fprintf ("\t%d [label=\"%d\" color=\"%s\"];\n",i,i, color);
@@ -102,7 +102,7 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 			if(displayRates)
 				platform_fprintf ("\t%d->%d [label=\"%d\",taillabel=\"%d\",headlabel=\"%d\"];\n", edge->getSource()->getId(), edge->getSink()->getId(), edge->getTokenRate(), edge->getSource()->getOutputEdgeId(edge), edge->getSink()->getInputEdgeId(edge));
 			else
-				platform_fprintf ("\t%d->%d [label=\"%d\"];\n", edge->getSource()->getId(), edge->getSink()->getId(), edge->getFifoId());
+				platform_fprintf ("\t%d->%d [label=\"%d: %#x\"];\n", edge->getSource()->getId(), edge->getSink()->getId(), edge->getFifoId(), edge->getFifoAddress());
 		}
 	}
 	platform_fprintf ("}\n");

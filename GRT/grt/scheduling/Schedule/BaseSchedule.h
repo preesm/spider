@@ -39,6 +39,7 @@
 
 #include "../../graphs/SRDAG/SRDAGVertex.h"
 #include <scheduling/architecture/Architecture.h>
+#include <platform_time.h>
 
 typedef struct SchedType{
 	void* 	vertex;
@@ -50,13 +51,20 @@ class BaseSchedule {
 	UINT32 nbActiveSlaves;
 	UINT32 nbVertices[MAX_SLAVES];
 	UINT32 slaveReadyTimes[MAX_SLAVES];
-	SchedType schedules[MAX_SLAVES][MAX_NB_VERTICES];
+	SchedType schedules[MAX_SLAVES][MAX_SRDAG_VERTICES];
 public:
 
 	void reset(){
 		memset(nbVertices, 0, sizeof(nbVertices));
 		memset(slaveReadyTimes, 0, sizeof(slaveReadyTimes));
 		memset(schedules, 0, sizeof(schedules));
+	}
+
+	void newStep(){
+		UINT32 time = platform_time_getValue();
+		for(int i=0; i<nbActiveSlaves; i++){
+			slaveReadyTimes[i] = time;
+		}
 	}
 
     UINT32 getReadyTime(UINT32 slaveId) const

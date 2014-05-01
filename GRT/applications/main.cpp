@@ -62,19 +62,18 @@ static char tempStr[MAX_SLAVE_NAME_SIZE];
 
 
 void createArch(Architecture* arch, int nbSlaves){
-	// Architecture Zynq
-//	arch->addSlave(0, "ARM", 0.410, 331, 0.4331, 338);
-	// TODO: Add master "ARM"
+	arch->reset();
 	for(int i=0; i<nbSlaves; i++){
 		UINT32 len = snprintf(tempStr, MAX_SLAVE_NAME_SIZE, "uBlaze%02d", i);
 		if(len > MAX_SLAVE_NAME_SIZE){
 			exitWithCode(1073);
 		}
-		arch->addSlave(1, tempStr, 0.9267, 435, 0.9252, 430);
+		arch->addSlave(0, tempStr, 0.9267, 435, 0.9252, 430);
 	}
 }
 
 int main(int argc, char* argv[]){
+#define ITER_MAX 7
 
 //	if(argc < 2){
 //		printf("Usage: %s nbSlaves\n", argv[0]);
@@ -85,27 +84,29 @@ int main(int argc, char* argv[]){
 //	setvbuf(stdout, NULL, _IONBF, 0);
 //	setvbuf(stderr, NULL, _IONBF, 0);
 	int nbSlaves = 1;
-	static Scenario 			scenario;
+//	static Scenario 			scenario;
 	static Architecture 		arch;
 	static ListScheduler 		listScheduler;
 //	static ExecutionStat 		execStat;
 	static PiSDFGraph 			piSDF;
 	static SRDAGGraph 			topDag;
 
-	UINT32 endTimes[101];
 
 	printf("Starting with %d slaves max\n", nbSlaves);
 	platform_init(nbSlaves);
 
 
+	createArch(&arch, nbSlaves);
+
 	/*
 	 * These objects should be obtained from the PREESM generator :
 	 * Architecture, Scheduling policy.
 	 */
-	createArch(&arch, nbSlaves);
-	arch.setNbActiveSlaves(nbSlaves);
 
-	for(int iter=1; iter<=100; iter++){
+	int iter=1;{
+//	for(int iter=1; iter<=ITER_MAX; iter++){
+		arch.setNbActiveSlaves(iter);
+
 		listScheduler.reset();
 		piSDF.reset();
 		topDag.reset();
@@ -114,10 +115,10 @@ int main(int argc, char* argv[]){
 
 
 		listScheduler.setArchitecture(&arch);
-		listScheduler.setScenario(&scenario);
+//		listScheduler.setScenario(&scenario);
 
 		// Getting the PiSDF graph.
-		top(&piSDF, &scenario, iter);
+		top(&piSDF, /*&scenario,*/ 480,512,10);
 
 		// Add topActor to topDag
 		SRDAGVertex* topActor = topDag.addVertex();
@@ -132,13 +133,19 @@ int main(int argc, char* argv[]){
 		platform_time_reset();
 	#endif
 
-		endTimes[iter] = PiSDFTransformer::multiStepScheduling(&arch, &piSDF, &listScheduler, &topDag);
-		printf("%d: EndTime %d\n", iter, endTimes[iter]);
+		PiSDFTransformer::multiStepScheduling(&arch, &piSDF, &listScheduler,/* &scenario,*/ &topDag, &(execStat[iter]));
+		printf("%d: EndTime %d SpeedUp %.1f\n", iter, execStat[iter].globalEndTime, execStat[1].globalEndTime/((float)execStat[iter].globalEndTime));
+		printf("Explode %d, Implode %d, RB %d\n", execStat[iter].explodeTime, execStat[iter].implodeTime, execStat[iter].roundBufferTime);
+
+		for(UINT32 k=0; k<execStat[iter].nbActor; k++){
+			printf("%s %d\n", execStat[iter].actors[k]->getName(), execStat[iter].actorTimes[k]);
+		}
 	}
 
-	FILE* f = fopen("/home/jheulot/dev/compa_times.csv", "w+");
-	for(int iter=1; iter<=100; iter++){
-		fprintf(f, "%d,%d\n", iter, endTimes[iter]);
+	FILE* f = fopen("/home/jheulot/dev/compa_res.csv", "w+");
+	fprintf(f, "nbPEs, endTime, SpeedUp, graphTransfo, Scheduling\n");
+	for(int iter=1; iter<=ITER_MAX; iter++){
+		fprintf(f, "%d,%d,%f,%d,%d\n", iter, execStat[iter].globalEndTime, execStat[1].globalEndTime/((float)execStat[iter].globalEndTime), execStat[iter].graphTransfoTime, execStat[iter].schedulingTime);
 	}
 	fclose(f);
 

@@ -96,6 +96,8 @@ class Architecture {
 		*/
 		~Architecture();
 
+		void reset();
+
 
 		/**
 		 Adding a slave of a given type

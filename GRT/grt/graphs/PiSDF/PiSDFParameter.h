@@ -42,21 +42,33 @@
 #include <platform_types.h>
 
 class PiSDFConfigVertex;
+class PiSDFGraph;
 
 class PiSDFParameter {
 private:
-	char name[MAX_PARAM_NAME_SIZE];
+	char name[MAX_NB_PiSDF_PARAM_NAME];
 	variable* var;
 	bool resolved;
+	INT32 parentId;
 	PiSDFConfigVertex* setter;
+	PiSDFGraph* graph;
 	UINT32 setterIx;
 	// Expression defining the parameter's value (in abstract_syntax_elt)
 //	abstract_syntax_elt production[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
 public:
 	PiSDFParameter(){
 		resolved = false;
+		parentId = -1;
+		setter = (PiSDFConfigVertex*)NULL;
 		var = (variable*)NULL;
 	};
+
+	void reset(){
+		resolved = false;
+		parentId = -1;
+		setter = (PiSDFConfigVertex*)NULL;
+		var = (variable*)NULL;
+	}
 
 	void setValue(UINT32 value){
 		this->var->value = value;
@@ -100,6 +112,16 @@ public:
         this->resolved = resolved;
     }
 
+    void setParameterParentID(INT32 id)
+    {
+        this->parentId = id;
+    }
+
+    INT32 getParameterParentID()
+	{
+		return this->parentId;
+	}
+
     PiSDFConfigVertex* getSetter() {
 		return setter;
 	}
@@ -114,6 +136,14 @@ public:
 
 	void setSetterIx(UINT32 setterIx) {
 		this->setterIx = setterIx;
+	}
+
+	PiSDFGraph* getGraph() {
+		return graph;
+	}
+
+	void setGraph(PiSDFGraph* graph) {
+		this->graph = graph;
 	}
 };
 

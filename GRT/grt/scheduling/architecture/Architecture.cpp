@@ -52,6 +52,12 @@ Architecture::Architecture()
 	nbSlaveTypes = 0;
 }
 
+void Architecture::reset(){
+	nbSlaves = 0;
+	nbActiveSlaves = 0;
+	nbSlaveTypes = 0;
+}
+
 /**
  Destructor
 */

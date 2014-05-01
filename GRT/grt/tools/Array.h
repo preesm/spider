@@ -137,7 +137,10 @@ inline UINT32 Array<T,SIZE>::getNb(){
 
 template <class T, int SIZE>
 inline void Array<T,SIZE>::add(T& e, int n){
-	if(!valid[n]){
+	if(n>=SIZE){
+		printf("Array: not enough elements\n");
+		abort();
+	}else if(!valid[n]){
 		valid[n] = TRUE;
 		array[n] = e;
 		nb++;

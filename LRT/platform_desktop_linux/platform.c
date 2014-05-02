@@ -39,7 +39,7 @@
 
 void platform_queue_Init();
 void platform_time_reset();
-void OS_ShMemInit();
+void platform_shMemInit();
 
 static UINT8 coreId;
 
@@ -51,5 +51,5 @@ void platform_init(UINT8 core_id){
 	coreId = core_id;
 	platform_queue_Init();
 	platform_time_reset();
-	OS_ShMemInit();
+	platform_shMemInit();
 }

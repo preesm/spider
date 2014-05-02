@@ -136,46 +136,6 @@ void PiSDFAbstractVertex::addParameter(PiSDFParameter* param)
 //}
 
 
-void PiSDFAbstractVertex::checkForExecution(){
-	// Checking if all parameters have been resolved.
-//	for (UINT32 i = 0; i < this->nbParameters; i++){
-//		if(! this->parameters[i]->getResolved()){
-////			executable = impossible;
-//			return;
-//		}
-//	}
-
-	// Checking if all predecessors are executable.
-	for (UINT32 i = 0; i < this->inputEdges.getNb(); i++)
-	{
-		PiSDFAbstractVertex* predVertex = inputEdges[i]->getSource();
-		if((predVertex != this) && (predVertex->getType() != input_vertex)){
-			if(predVertex->getExecutable() != possible)
-				// Exiting since at least one predecessor has not been marked as possible.
-				return;
-		}
-	}
-
-	executable = possible; //The vertex can be executed.
-}
-
-
-bool PiSDFAbstractVertex::checkPredecessors(){
-	// Checking if all predecessors are executable.
-	for (UINT32 i = 0; i < this->inputEdges.getNb(); i++)
-	{
-		PiSDFAbstractVertex* predVertex = inputEdges[i]->getSource();
-		if((predVertex != this) && (predVertex->getType() != input_vertex)){
-			if((predVertex->getStatus() != VxStExecutable)&&
-				(predVertex->getType() != roundBuff_vertex))
-				// Exiting since at least one predecessor has not been marked as possible.
-				return false;
-		}
-	}
-	return true;
-}
-
-
 /*
  * See the header file for comments..
  */

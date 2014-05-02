@@ -38,8 +38,9 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#define PLATFORM_FPRINTF_BUFFERSIZE 200
 static FILE* f;
-static char buffer[100];
+static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 
 void platform_fopen(const char* name){
 	f = fopen(name, "w+");
@@ -48,7 +49,10 @@ void platform_fopen(const char* name){
 void platform_fprintf(const char* fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
-	vsprintf(buffer, fmt, ap);
+	int n = vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, fmt, ap);
+	if(n >= PLATFORM_FPRINTF_BUFFERSIZE){
+		printf("PLATFORM_FPRINTF_BUFFERSIZE too small\n");
+	}
 	fprintf(f, "%s", buffer);
 }
 

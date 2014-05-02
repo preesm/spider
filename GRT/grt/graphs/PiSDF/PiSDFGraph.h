@@ -49,39 +49,18 @@
 #include <tools/ExecutionStat.h>
 
 class PiSDFGraph {
-	UINT32 nb_edges;
-	UINT32 nb_parameters;
-
-	UINT32 nb_vertices;
-	UINT32 nb_pisdf_vertices;
-	UINT32 nb_config_vertices;
-	UINT32 nb_join_vertices;
-	UINT32 nb_input_vertices;
-	UINT32 nb_broad_vertices;
-	UINT32 nb_output_vertices;
-	UINT32 nb_switch_vertices;
-	UINT32 nb_select_vertices;
-	UINT32 nb_roundB_vertices;
-
 	UINT32 baseId;
 
 	static UINT32 glbNbConfigVertices;
 
-	PiSDFEdge 		edges[MAX_NB_PiSDF_EDGES];
-	PiSDFParameter 	parameters[MAX_NB_PiSDF_PARAMS];
-//	variable* 	parameters[MAX_NB_PiSDF_PARAMS];
+	List<PiSDFEdge,MAX_NB_PiSDF_EDGES> 			edges;
+	List<PiSDFParameter,MAX_NB_PiSDF_PARAMS> 	parameters;
 
-	PiSDFAbstractVertex*	vertices[MAX_NB_PiSDF_VERTICES];
-	PiSDFVertex 			pisdf_vertices[MAX_NB_PiSDF_VERTICES];
-	PiSDFConfigVertex 		config_vertices[MAX_NB_PiSDF_CONFIG_VERTICES];
-	PiSDFAbstractVertex 	join_vertices[MAX_NB_PiSDF_JOIN_VERTICES];
-	PiSDFIfVertex			input_vertices[MAX_NB_PiSDF_INPUT_VERTICES];
-	PiSDFAbstractVertex 	broad_vertices[MAX_NB_PiSDF_BROAD_VERTICES];
-	PiSDFIfVertex			output_vertices[MAX_NB_PiSDF_OUTPUT_VERTICES];
-	PiSDFAbstractVertex 	switch_vertices[MAX_NB_PiSDF_SWITCH_VERTICES];
-	PiSDFAbstractVertex 	select_vertices[MAX_NB_PiSDF_SELECT_VERTICES];
-	PiSDFAbstractVertex 	roundB_vertices[MAX_NB_PiSDF_ROUNDB_VERTICES];
-
+	List<PiSDFAbstractVertex*,MAX_NB_PiSDF_VERTICES>		vertices;
+	List<PiSDFVertex,MAX_NB_PiSDF_VERTICES>					pisdf_vertices;
+	List<PiSDFConfigVertex,MAX_NB_PiSDF_CONFIG_VERTICES>	config_vertices;
+	List<PiSDFIfVertex,MAX_NB_PiSDF_INPUT_VERTICES>			input_vertices;
+	List<PiSDFIfVertex,MAX_NB_PiSDF_OUTPUT_VERTICES>		output_vertices;
 
 	PiSDFAbstractVertex* parentVertex;
 	PiSDFAbstractVertex* rootVertex; // Must be set while creating the graph.
@@ -92,6 +71,7 @@ class PiSDFGraph {
 	bool executable;				// True when the graph can be completely executed.
 public:
 	PiSDFGraph();
+	~PiSDFGraph(){}
 
 	void reset();
 
@@ -104,11 +84,6 @@ public:
 	PiSDFParameter*	addParameter(const char* name);
 
 	void evaluateExpressions(/*Scenario* scenario*/);
-
-	/*
-	 *  Says if Vx is an interface/round-buffer preceding a configure vx.
-	 */
-	bool isConfigVxPred(PiSDFAbstractVertex* Vx);
 
 	/*
 	 * Creates SrDAG graph including configure and input vertices.
@@ -124,9 +99,9 @@ public:
 	 * Auto-generated getters and setters.
 	 */
 
-    UINT32 getNb_parameters() const
+    UINT32 getNb_parameters()
     {
-        return nb_parameters;
+        return parameters.getNb();
     }
 
 
@@ -143,19 +118,9 @@ public:
     	return &parameters[index];
     }
 
-	UINT32 getNb_broad_vertices() const
+	UINT32 getNb_config_vertices()
 	{
-		return nb_broad_vertices;
-	}
-
-    PiSDFAbstractVertex* getBroad_vertex(UINT64 index)
-    {
-    	return &broad_vertices[index];
-	}
-
-	UINT32 getNb_config_vertices() const
-	{
-		return nb_config_vertices;
+		return config_vertices.getNb();
 	}
 
 	PiSDFConfigVertex* getConfig_vertex(UINT64 index)
@@ -168,9 +133,9 @@ public:
 //		return &config_vertices[0];
 //	}
 //
-	UINT32 getNb_input_vertices() const
+	UINT32 getNb_input_vertices()
 	{
-		return nb_input_vertices;
+		return input_vertices.getNb();
 	}
 
     PiSDFIfVertex* getInput_vertex(UINT64 index)
@@ -188,19 +153,10 @@ public:
 //    	return NULL;
 //    }
 //
-	UINT32 getNb_join_vertices() const
-	{
-		return nb_join_vertices;
-	}
 
-	PiSDFAbstractVertex* getJoin_vertex(UINT64 index)
-    {
-        return &join_vertices[index];
-    }
-
-	UINT32 getNb_output_vertices() const
+	UINT32 getNb_output_vertices()
 	{
-		return nb_output_vertices;
+		return output_vertices.getNb();
 	}
 
     PiSDFIfVertex* getOutput_vertex(UINT64 index)
@@ -208,9 +164,9 @@ public:
         return &output_vertices[index];
     }
 
-	UINT32 getNb_pisdf_vertices() const
+	UINT32 getNb_pisdf_vertices()
 	{
-		return nb_pisdf_vertices;
+		return pisdf_vertices.getNb();
 	}
 
     PiSDFVertex* getPiSDFVertex(UINT64 index)
@@ -218,9 +174,9 @@ public:
         return &pisdf_vertices[index];
     }
 
-	UINT32 getNb_edges() const
+	UINT32 getNb_edges()
 	{
-		return nb_edges;
+		return edges.getNb();
 	}
 
 	PiSDFEdge* getEdge(UINT64 index)
@@ -233,48 +189,12 @@ public:
         this->rootVertex = rootVertex;
     }
 
-	UINT32 getNbRoundBVertices() const {
-		return nb_roundB_vertices;
-	}
-
-	void setNbRoundBVertices(UINT32 nbRoundBVertices) {
-		nb_roundB_vertices = nbRoundBVertices;
-	}
-
-	UINT32 getNbSelectVertices() const {
-		return nb_select_vertices;
-	}
-
-	void setNbSelectVertices(UINT32 nbSelectVertices) {
-		nb_select_vertices = nbSelectVertices;
-	}
-
-	UINT32 getNbSwitchVertices() const {
-		return nb_switch_vertices;
-	}
-
-	void setNbSwitchVertices(UINT32 nbSwitchVertices) {
-		nb_switch_vertices = nbSwitchVertices;
-	}
-
-	PiSDFAbstractVertex* getRoundBVertex(UINT32 index) {
-		return &roundB_vertices[index];
-	}
-
-	PiSDFAbstractVertex* getSelectVertex(UINT32 index) {
-		return &select_vertices[index];
-	}
-
-	PiSDFAbstractVertex* getSwitchVertex(UINT32 index) {
-		return &switch_vertices[index];
-	}
-
 	PiSDFAbstractVertex* getRootVertex() {
 		return rootVertex;
 	}
 
 	UINT32 getNbVertices() {
-		return nb_vertices;
+		return vertices.getNb();
 	}
 
 	PiSDFAbstractVertex* getVertex(UINT32 id){

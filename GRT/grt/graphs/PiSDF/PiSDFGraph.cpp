@@ -40,60 +40,44 @@
 #include "debuggingOptions.h"
 
 PiSDFGraph::PiSDFGraph() {
-	nb_edges = 0;
-	nb_parameters = 0;
-
-	nb_vertices = 0;
-	nb_pisdf_vertices = 0;
-	nb_config_vertices = 0;
-	nb_join_vertices = 0;
-	nb_input_vertices = 0;
-	nb_broad_vertices = 0;
-	nb_output_vertices = 0;
-	nb_select_vertices = 0;
-	nb_switch_vertices = 0;
-	nb_roundB_vertices = 0;
-
 	rootVertex = NULL;
+	parentVertex = NULL;
+
+	baseId=0;
 
 	nbExecVertices = 0;
 	nbDiscardVertices = 0;
 	executable = false;
+
+	edges.reset();
+	parameters.reset();
+	vertices.reset();
+
+	pisdf_vertices.reset();
+	config_vertices.reset();
+	input_vertices.reset();
+	output_vertices.reset();
 }
 
 void PiSDFGraph::reset() {
-	nb_edges = 0;
-	nb_parameters = 0;
-
-	nb_vertices = 0;
-	nb_pisdf_vertices = 0;
-	nb_config_vertices = 0;
-	nb_join_vertices = 0;
-	nb_input_vertices = 0;
-	nb_broad_vertices = 0;
-	nb_output_vertices = 0;
-	nb_select_vertices = 0;
-	nb_switch_vertices = 0;
-	nb_roundB_vertices = 0;
 
 	rootVertex = NULL;
+	parentVertex = NULL;
+
+	baseId=0;
 
 	nbExecVertices = 0;
 	nbDiscardVertices = 0;
 	executable = false;
 
-	memset(edges,0,sizeof(edges));
-	memset(parameters,0,sizeof(parameters));
-	memset(vertices,0,sizeof(vertices));
-	memset(pisdf_vertices,0,sizeof(pisdf_vertices));
-	memset(config_vertices,0,sizeof(config_vertices));
-	memset(join_vertices,0,sizeof(join_vertices));
-	memset(input_vertices,0,sizeof(input_vertices));
-	memset(broad_vertices,0,sizeof(broad_vertices));
-	memset(output_vertices,0,sizeof(output_vertices));
-	memset(switch_vertices,0,sizeof(switch_vertices));
-	memset(select_vertices,0,sizeof(select_vertices));
-	memset(roundB_vertices,0,sizeof(roundB_vertices));
+	edges.reset();
+	parameters.reset();
+	vertices.reset();
+
+	pisdf_vertices.reset();
+	config_vertices.reset();
+	input_vertices.reset();
+	output_vertices.reset();
 }
 
 
@@ -103,9 +87,8 @@ PiSDFAbstractVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEX_TYPE t
 
 	switch (type) {
 		case pisdf_vertex:
-			if(nb_pisdf_vertices < MAX_NB_PiSDF_VERTICES){
-				vertex = (PiSDFAbstractVertex*)&pisdf_vertices[nb_pisdf_vertices];
-				nb_pisdf_vertices++;
+			if(pisdf_vertices.getNb() < MAX_NB_PiSDF_VERTICES){
+				vertex = pisdf_vertices.add();
 			}
 			else{
 				// Adding a vertex while the graph is already full
@@ -113,20 +96,8 @@ PiSDFAbstractVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEX_TYPE t
 			}
 			break;
 		case config_vertex:
-			if(nb_config_vertices < MAX_NB_PiSDF_CONFIG_VERTICES){
-				vertex = (PiSDFAbstractVertex*)&config_vertices[nb_config_vertices];
-				nb_config_vertices++;
-//				glbNbConfigVertices++;
-			}
-			else{
-				// Adding a vertex while the graph is already full
-				exitWithCode(1000);
-			}
-			break;
-		case join_vertex:
-			if(nb_join_vertices < MAX_NB_PiSDF_JOIN_VERTICES){
-				vertex = (PiSDFAbstractVertex*)&join_vertices[nb_join_vertices];
-				nb_join_vertices++;
+			if(config_vertices.getNb() < MAX_NB_PiSDF_CONFIG_VERTICES){
+				vertex = config_vertices.add();
 			}
 			else{
 				// Adding a vertex while the graph is already full
@@ -134,19 +105,8 @@ PiSDFAbstractVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEX_TYPE t
 			}
 			break;
 		case input_vertex:
-			if(nb_input_vertices < MAX_NB_PiSDF_INPUT_VERTICES){
-				vertex = (PiSDFAbstractVertex*)&input_vertices[nb_input_vertices];
-				nb_input_vertices++;
-			}
-			else{
-				// Adding a vertex while the graph is already full
-				exitWithCode(1000);
-			}
-			break;
-		case broad_vertex:
-			if(nb_broad_vertices < MAX_NB_PiSDF_BROAD_VERTICES){
-				vertex = (PiSDFAbstractVertex*)&broad_vertices[nb_broad_vertices];
-				nb_broad_vertices++;
+			if(input_vertices.getNb() < MAX_NB_PiSDF_INPUT_VERTICES){
+				vertex = input_vertices.add();
 			}
 			else{
 				// Adding a vertex while the graph is already full
@@ -154,39 +114,8 @@ PiSDFAbstractVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEX_TYPE t
 			}
 			break;
 		case output_vertex:
-			if(nb_output_vertices < MAX_NB_PiSDF_OUTPUT_VERTICES){
-				vertex = (PiSDFAbstractVertex*)&output_vertices[nb_output_vertices];
-				nb_output_vertices++;
-			}
-			else{
-				// Adding a vertex while the graph is already full
-				exitWithCode(1000);
-			}
-			break;
-		case switch_vertex:
-			if(nb_switch_vertices < MAX_NB_PiSDF_SWITCH_VERTICES){
-				vertex = (PiSDFAbstractVertex*)&switch_vertices[nb_switch_vertices];
-				nb_switch_vertices++;
-			}
-			else{
-				// Adding a vertex while the graph is already full
-				exitWithCode(1000);
-			}
-			break;
-		case select_vertex:
-			if(nb_select_vertices < MAX_NB_PiSDF_OUTPUT_VERTICES){
-				vertex = (PiSDFAbstractVertex*)&select_vertices[nb_select_vertices];
-				nb_select_vertices++;
-			}
-			else{
-				// Adding a vertex while the graph is already full
-				exitWithCode(1000);
-			}
-			break;
-		case roundBuff_vertex:
-			if(nb_select_vertices < MAX_NB_PiSDF_OUTPUT_VERTICES){
-				vertex = (PiSDFAbstractVertex*)&select_vertices[nb_roundB_vertices];
-				nb_roundB_vertices++;
+			if(output_vertices.getNb() < MAX_NB_PiSDF_OUTPUT_VERTICES){
+				vertex = output_vertices.add();
 			}
 			else{
 				// Adding a vertex while the graph is already full
@@ -197,12 +126,11 @@ PiSDFAbstractVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEX_TYPE t
 			break;
 	}
 
-	vertex->setId(nb_vertices);
+	vertex->setId(vertices.getNb());
 	vertex->setName(vertexName);
 	vertex->setType(type);
 	vertex->setGraph(this);
-	//		vertex->setPiSDF(this);
-	vertices[nb_vertices++] = vertex;
+	vertices.add(vertex);
 	return vertex;
 }
 
@@ -219,16 +147,15 @@ PiSDFAbstractVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEX_TYPE t
 */
 PiSDFEdge *PiSDFGraph::addEdge(PiSDFAbstractVertex* source, UINT32 sourcePortId, const char* production, PiSDFAbstractVertex* sink, UINT32 sinkPortId, const char* consumption, const char* delay){
 	PiSDFEdge* edge = NULL;
-	if(nb_edges < MAX_NB_PiSDF_EDGES){
-		edge = &edges[nb_edges];
-		edge->setId(nb_edges);
+	if(edges.getNb() < MAX_NB_PiSDF_EDGES){
+		edge = edges.add();
+		edge->setId(edges.getId(edge));
 //		edge->setPiSDF(this);
 		edge->setSource(source);
 		edge->setProduction(production);
 		edge->setSink(sink);
 		edge->setConsumption(consumption);
 		edge->setDelay(delay);
-		nb_edges++;
 
 		source->setOutputEdge(edge, sourcePortId);
 		sink->setInputEdge(edge, sinkPortId);
@@ -242,16 +169,15 @@ PiSDFEdge *PiSDFGraph::addEdge(PiSDFAbstractVertex* source, UINT32 sourcePortId,
 
 PiSDFEdge *PiSDFGraph::addEdge(PiSDFAbstractVertex* source, UINT32 sourcePortId, abstract_syntax_elt* production, PiSDFAbstractVertex* sink, UINT32 sinkPortId, abstract_syntax_elt* consumption, abstract_syntax_elt* delay){
 	PiSDFEdge* edge = NULL;
-	if(nb_edges < MAX_NB_PiSDF_EDGES){
-		edge = &edges[nb_edges];
-		edge->setId(nb_edges);
+	if(edges.getNb() < MAX_NB_PiSDF_EDGES){
+		edge = edges.add();
+		edge->setId(edges.getId(edge));
 //		edge->setPiSDF(this);
 		edge->setSource(source);
 		edge->setProduction(production);
 		edge->setSink(sink);
 		edge->setConsumption(consumption);
 		edge->setDelay(delay);
-		nb_edges++;
 
 		source->setOutputEdge(edge, sourcePortId);
 		sink->setInputEdge(edge, sinkPortId);
@@ -267,9 +193,9 @@ PiSDFEdge *PiSDFGraph::addEdge(PiSDFAbstractVertex* source, UINT32 sourcePortId,
 PiSDFParameter* PiSDFGraph::addParameter(const char *name)
 {
 	PiSDFParameter* param = NULL;
-	if(nb_parameters < MAX_NB_PiSDF_PARAMS - 1)
+	if(parameters.getNb() < MAX_NB_PiSDF_PARAMS)
 	{
-		param = &parameters[nb_parameters++];
+		param = parameters.add();
 		param->reset();
 		param->setName(name);
 		param->setGraph(this);
@@ -287,7 +213,7 @@ PiSDFParameter* PiSDFGraph::addParameter(const char *name)
 void PiSDFGraph::evaluateExpressions(/*Scenario* scenario*/)
 {
 	int value;
-	for (UINT32 i = 0; i < nb_edges; i++){
+	for (UINT32 i = 0; i < edges.getNb(); i++){
 		PiSDFEdge* edge = this->getEdge(i);
 
 		if(!edge->getEvaluated()){
@@ -305,7 +231,7 @@ void PiSDFGraph::evaluateExpressions(/*Scenario* scenario*/)
 		}
 	}
 
-	for(UINT32 i = 0; i < nb_pisdf_vertices; i++){
+	for(UINT32 i = 0; i < pisdf_vertices.getNb(); i++){
 		PiSDFVertex* vertex = this->getPiSDFVertex(i);
 		if(!vertex->hasSubGraph()){
 			globalParser.interpret(/*scenario->*/vertex->getTiming(0), &value);
@@ -313,16 +239,6 @@ void PiSDFGraph::evaluateExpressions(/*Scenario* scenario*/)
 		}else
 			vertex->setExecTime(0);
 	}
-}
-
-/*
- * Says if Vx is an interface/round-buffer preceding a configure vx.
- */
-bool PiSDFGraph::isConfigVxPred(PiSDFAbstractVertex* Vx){
-	if((Vx->getType() == input_vertex) || (Vx->getType() == roundBuff_vertex))
-		return (Vx->getOutputEdge(0)->getSink()->getType() == config_vertex);
-	else
-		return false;
 }
 
 void PiSDFGraph::updateDAGStates(SRDAGGraph* dag){

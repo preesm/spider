@@ -8,6 +8,7 @@
 #ifndef LIST_H_
 #define LIST_H_
 
+#include <typeinfo>
 #include "SchedulingError.h"
 /**
  * Generic List Class
@@ -100,9 +101,9 @@ inline T& List<T,SIZE>::operator [](int n){
 	if(n>=0 && n<wrNb)
 		return array[n];
 	else{
-		printf("List: Accesing unitialized element\n");
-		exitWithCode(1057);
-		return array[0];
+		printf("List: Accesing unitialized element %s\n", typeid(T).name());
+		exitWithCode(1099);
+		return array[n];
 	}
 }
 

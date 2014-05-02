@@ -38,9 +38,9 @@
 //#include "DoubleLoop/PiSDFDoubleLoop.h"
 //#include "SimpleLoop/PiSDFSimpleLoop.h"
 //#include "MedianSobel/PiSDFMedianSobel.h"
-#include "SimpleLoop/PiSDFSimpleLoop.h"
 //#include "generatedC++/doubleLoop_gen.h"
-//#include "MedianSobelDL/PiSDFMedianSobelDL.h"
+#include "MedianSobelDL/PiSDFMedianSobelDL.h"
+//#include "GNURadio/GNURadio.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Scenario/Scenario.h>
 #include <scheduling/ListScheduler/ListScheduler.h>
@@ -86,14 +86,14 @@ int main(int argc, char* argv[]){
 //
 //	setvbuf(stdout, NULL, _IONBF, 0);
 //	setvbuf(stderr, NULL, _IONBF, 0);
-	int nbSlaves = 7;
+	int nbSlaves = 1;
 //	static Scenario 			scenario;
 	static Architecture 		arch;
 	static ListScheduler 		listScheduler;
 	static ExecutionStat 		execStat[ITER_MAX+1];
-	static PiSDFGraph 			piSDF;
 	static SRDAGGraph 			topDag;
-
+	static PiSDFGraph 			pisdfGraphs[MAX_NB_PiSDF_GRAPHS];
+	static PiSDFGraph 			*topPisdf;
 
 	printf("Starting with %d slaves max\n", nbSlaves);
 	platform_init(nbSlaves);
@@ -111,9 +111,7 @@ int main(int argc, char* argv[]){
 		arch.setNbActiveSlaves(iter);
 
 		listScheduler.reset();
-		piSDF.reset();
 		topDag.reset();
-		clearAllGraphs();
 		Launcher::init();
 
 
@@ -121,11 +119,11 @@ int main(int argc, char* argv[]){
 //		listScheduler.setScenario(&scenario);
 
 		// Getting the PiSDF graph.
-		top(&piSDF, /*&scenario,*/ 480,512,10);
+		topPisdf = initPisdf_MedianSobelDL(pisdfGraphs, 480, 512, 10);
 
 		// Add topActor to topDag
 		SRDAGVertex* topActor = topDag.addVertex();
-		topActor->setReference(piSDF.getRootVertex());
+		topActor->setReference(topPisdf->getRootVertex());
 		topActor->setReferenceIndex(0);
 		topActor->setIterationIndex(0);
 
@@ -136,11 +134,11 @@ int main(int argc, char* argv[]){
 		platform_time_reset();
 	#endif
 
-		PiSDFTransformer::multiStepScheduling(&arch, &piSDF, &listScheduler,/* &scenario,*/ &topDag, &(execStat[iter]));
+		PiSDFTransformer::multiStepScheduling(&arch, topPisdf, &listScheduler,/* &scenario,*/ &topDag, &(execStat[iter]));
 		printf("%d: EndTime %d SpeedUp %.1f\n", iter, execStat[iter].globalEndTime, execStat[1].globalEndTime/((float)execStat[iter].globalEndTime));
 		printf("Explode %d, Implode %d, RB %d\n", execStat[iter].explodeTime, execStat[iter].implodeTime, execStat[iter].roundBufferTime);
 
-		for(UINT32 k=0; k<execStat[iter].nbActor; k++){
+		for(int k=0; k<execStat[iter].nbActor; k++){
 			printf("%s %d\n", execStat[iter].actors[k]->getName(), execStat[iter].actorTimes[k]);
 		}
 	}

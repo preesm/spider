@@ -149,7 +149,7 @@ void DotWriter::write(PiSDFGraph* graph, const char* path, char displayNames){
 	// Drawing parameters.
 	for (UINT64 i=0 ; i<graph->getNb_parameters(); i++)
 	{
-		PiSDFParameter* param = graph->getParameter(i);
+ 		PiSDFParameter* param = graph->getParameter(i);
 		if(displayNames){
 			platform_fprintf ("\t%s [label=\"%s\" shape=house];\n", param->getName(), param->getName());
 		}
@@ -196,29 +196,6 @@ void DotWriter::write(PiSDFGraph* graph, const char* path, char displayNames){
 	// Drawing Output vertices.
 	for (UINT32 i = 0; i < graph->getNb_output_vertices(); i++) {
 		draw_vertex(graph->getOutput_vertex(i), displayNames);
-	}
-
-	// Drawing switch vertices.
-	for (UINT32 i = 0; i < graph->getNbSwitchVertices(); i++) {
-		draw_vertex(graph->getSwitchVertex(i), displayNames);
-	}
-
-	// Drawing select vertices.
-	for (UINT32 i = 0; i < graph->getNbSelectVertices(); i++) {
-		draw_vertex(graph->getSelectVertex(i), displayNames);
-	}
-
-	// TODO: print round buffer vertex.
-
-
-	// Drawing Join vertices.
-	for (UINT32 i = 0; i < graph->getNb_join_vertices(); i++) {
-		draw_vertex(graph->getJoin_vertex(i), displayNames);
-	}
-
-	// Drawing Broad vertices.
-	for (UINT32 i = 0; i < graph->getNb_broad_vertices(); i++) {
-		draw_vertex(graph->getBroad_vertex(i), displayNames);
 	}
 
 	// Drawing edges.
@@ -296,7 +273,7 @@ void DotWriter::write(PiSDFAbstractVertex **schedulableVertices, UINT32 nbSchedu
 		{
 			for (UINT32 j = 0; j < vertex->getNbInputEdges(); j++) {
 				PiSDFEdge* edge = vertex->getInputEdge(j);
-				if((vertex->getType() != select_vertex) || (edge->getConsumptionInt() > 0))
+				if(edge->getConsumptionInt() > 0)
 
 //					if(edge->getConsumptionInt() != edge->getDelayInt())
 					platform_fprintf ("\t%s->%s [taillabel=\"%d\" headlabel=\"%d\"];\n",

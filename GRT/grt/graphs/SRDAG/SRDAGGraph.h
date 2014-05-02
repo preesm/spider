@@ -114,13 +114,6 @@ class SRDAGGraph {
 		*/
 		void removeLastEdge();
 
-		SRDAGVertex* findMatch(PiSDFAbstractVertex* refVx);
-
-		SRDAGVertex* findUnplugIF(VERTEX_TYPE ifType);
-
-		SRDAGVertex* findUnplug();
-
-
 		void changeEdgeSource(SRDAGEdge* edge, SRDAGVertex* vertex);
 		void changeEdgeSink(SRDAGEdge* edge, SRDAGVertex* vertex);
 
@@ -395,52 +388,6 @@ inline SRDAGVertex* SRDAGGraph::addVertex(){
 	vertex->setGraph(this);
 	vertex->setId(vertices.getId(vertex));
 	return vertex;
-}
-
-
-inline SRDAGVertex* SRDAGGraph::findMatch(PiSDFAbstractVertex* refVx){
-	for (int i = 0; i < vertices.getNb(); i++) {
-		if((vertices[i].getNbInputEdge() == 0) &&
-		   (vertices[i].getState() != SrVxStDeleted) &&
-		   (vertices[i].getReference() == refVx)){
-			return &vertices[i];
-		}
-	}
-	return (SRDAGVertex*)0;
-}
-
-inline SRDAGVertex* SRDAGGraph::findUnplugIF(VERTEX_TYPE ifType){
-	if(ifType == input_vertex) {
-		for (int i = 0; i < vertices.getNb(); i++) {
-			if((vertices[i].getNbInputEdge() == 0) &&
-			   (vertices[i].getState() != SrVxStDeleted) &&
-			   (vertices[i].getReference()->getType() == input_vertex)){
-					return &vertices[i];
-			}
-		}
-	}
-	else{
-		for (int i = 0; i < vertices.getNb(); i++) {
-			if((vertices[i].getNbOutputEdge() == 0) &&
-			   (vertices[i].getState() != SrVxStDeleted) &&
-			   (vertices[i].getReference()->getType() == output_vertex)){
-				return &vertices[i];
-			}
-		}
-	}
-	return (SRDAGVertex*)0;
-}
-
-inline SRDAGVertex* SRDAGGraph::findUnplug(){
-	for (int i = 0; i < vertices.getNb(); i++) {
-		if((vertices[i].getNbOutputEdge() == 0) &&
-		   (vertices[i].getState() != SrVxStDeleted) &&
-		   ((vertices[i].getReference()->getType() == roundBuff_vertex) ||
-			(vertices[i].getReference()->getType() == input_vertex))){
-			return &vertices[i];
-		}
-	}
-	return (SRDAGVertex*)0;
 }
 
 inline void SRDAGGraph::updateExecuted(){

@@ -50,12 +50,7 @@ typedef enum {
 	pisdf_vertex,
 	config_vertex,
 	input_vertex,
-	join_vertex,
-	broad_vertex,
 	output_vertex,
-	switch_vertex,
-	select_vertex,
-	roundBuff_vertex
 }VERTEX_TYPE;
 
 typedef enum{
@@ -115,14 +110,6 @@ public:
 	PiSDFGraph* getGraph(){
 		return graph;
 	}
-
-	/*
-	 * Marks a vertex as executable, i.e. all its parameters have been solved and
-	 * all its predecessors are executable.
-	 */
-	void checkForExecution();
-
-	bool checkPredecessors();
 
 	/*
 	 * Checks the input and output edges of the vertex. It returns true, if all the edges

@@ -59,8 +59,8 @@
 
 #else
 	#if IRREGULAR
-		#define MEDIAN_NBSLICES 9
-		static UINT8 medianSubSlices[MEDIAN_NBSLICES] = {2,1,4,2,1,4,2,1,5};
+		#define MEDIAN_NBSLICES 3
+		static UINT8 medianSubSlices[MEDIAN_NBSLICES] = {2,1,4};
 		#define SOBEL_NBSLICES 12
 		#define OUTNAME "lena_out_irregular.data"
 	#endif

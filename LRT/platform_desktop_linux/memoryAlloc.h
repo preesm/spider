@@ -34,90 +34,24 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <platform_data_queue.h>
-#include <lrt_definitions.h>
-#include <lrt_cfg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#ifndef MEMORYALLOC_H_
+#define MEMORYALLOC_H_
+
+// CACHE_L1D_LINESIZE 64
+// Monolithic Descriptor max size 65535
 
 #include <platform_types.h>
-#include <fcntl.h>
 
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <stdio.h>
+extern UINT8* shMem_sync;
+extern UINT8* shMem_data;
 
-#include <memoryAlloc.h>
-#include <platform.h>
-#include <string.h>
+#define NB_DATA_FIFO 		1024
+#define SHARED_MEM_BASE		shMem_data
+#define SHARED_MEM_LENGHT	0x00400000
 
-UINT8* shMem_sync,*shMem_data;
-
-void platform_shMemInit() {
-    int shmid;
-    key_t key = SHARED_MEM_KEY;
-
-	if(platform_getCoreId() == 0){
-		printf("Creating shared memory...\n");
-
-	    /*
-	     * Create the segment.
-	     */
-	    if ((shmid = shmget(key, SHARED_MEM_LENGHT+DATA_FIFO_REGION_SIZE, IPC_CREAT | 0666)) < 0) {
-	        perror("shmget");
-	        exit(1);
-	    }
-
-	    /*
-	     * Now we attach the segment to our data space.
-	     */
-	    if ((shMem_sync = shmat(shmid, NULL, 0)) == (UINT8 *) -1) {
-	        perror("shmat");
-	        exit(1);
-	    }
-
-	    shMem_data = shMem_sync+DATA_FIFO_REGION_SIZE;
-	    memset(shMem_sync,0,DATA_FIFO_REGION_SIZE);
-	}else{
-		 /*
-		 * Locate the segment.
-		 */
-		if ((shmid = shmget(key, SHARED_MEM_LENGHT+DATA_FIFO_REGION_SIZE, 0666)) < 0) {
-			perror("shmget");
-			exit(1);
-		}
-
-	    /*
-	     * Now we attach the segment to our data space.
-	     */
-	    if ((shMem_sync = shmat(shmid, NULL, 0)) == (UINT8 *) -1) {
-	        perror("shmat");
-	        exit(1);
-	    }
-
-	    shMem_data = shMem_sync+DATA_FIFO_REGION_SIZE;
-	}
-}
-
-void platform_flushFIFO(UINT32 id){
-	UINT8* mutex = shMem_sync+id;
-	*mutex=0;
-}
+#define DATA_FIFO_REGION_SIZE  NB_DATA_FIFO
 
 
-void platform_writeFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
-	volatile UINT8* mutex = shMem_sync+id;
+#define SHARED_MEM_KEY		8452
 
-	while(*mutex != 0);
-	*mutex=1;
-}
-
-
-void platform_readFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
-	volatile UINT8* mutex = shMem_sync+id;
-
-	while(*mutex != 1);
-	*mutex=0;
-}
+#endif /* MEMORYALLOC_H_ */

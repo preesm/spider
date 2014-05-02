@@ -39,8 +39,9 @@
 //#include "SimpleLoop/PiSDFSimpleLoop.h"
 //#include "MedianSobel/PiSDFMedianSobel.h"
 //#include "generatedC++/doubleLoop_gen.h"
-#include "MedianSobelDL/PiSDFMedianSobelDL.h"
-//#include "GNURadio/GNURadio.h"
+//#include "MedianSobelDL/PiSDFMedianSobelDL.h"
+#include "mpSched/PiSDFMpSched.h"
+
 #include <scheduling/Schedule/Schedule.h>
 #include <scheduling/Scenario/Scenario.h>
 #include <scheduling/ListScheduler/ListScheduler.h>
@@ -119,7 +120,7 @@ int main(int argc, char* argv[]){
 //		listScheduler.setScenario(&scenario);
 
 		// Getting the PiSDF graph.
-		topPisdf = initPisdf_MedianSobelDL(pisdfGraphs, 480, 512, 10);
+		topPisdf = initPisdf_mpSched(pisdfGraphs, 3);
 
 		// Add topActor to topDag
 		SRDAGVertex* topActor = topDag.addVertex();

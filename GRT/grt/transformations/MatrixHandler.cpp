@@ -78,6 +78,21 @@ void MatrixPrintMxN(int nb_rows, int nb_cols, int* pfMatr)
  * 				0 if OK.
  * 				1 otherwise.
  */
+
+static inline int compute_gcd(int a, int b){
+	int t;
+    while (b != 0){
+        t = b;
+        b = a % b;
+        a = t;
+    }
+    return a;
+}
+
+static inline int compute_lcm(int a, int b){
+	return abs(a*b)/compute_gcd(a,b);
+}
+
 int nullspace(int nb_rows, int nb_cols, int* matrix, int *results){
 	Rational ratioMatrix[MAX_NB_ROWS*MAX_NB_COLS];
 	Rational ratioResult[MAX_NB_ROWS];
@@ -144,6 +159,14 @@ int nullspace(int nb_rows, int nb_cols, int* matrix, int *results){
 			}
 			ratioResult[i] = val.getAbs() / ratioMatrix(i,i);
 		}
+	}
+
+	int lcm = 1;
+	for(int i=0; i<nb_cols; i++){
+		lcm = compute_lcm(lcm, ratioResult[i].getDenominator());
+	}
+	for(int i=0; i<nb_cols; i++){
+		ratioResult[i] = ratioResult[i]*lcm;
 	}
 
 	for (int i = 0; i < nb_cols; i++) {

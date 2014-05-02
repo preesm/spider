@@ -54,10 +54,10 @@ public:
 
 	inline Rational operator+(Rational b){
 		Rational res;
-		int gcd = compute_gcd(this->denominator, b.denominator);
-		res.denominator = gcd;
-		res.nominator = this->denominator/gcd*this->nominator
-				+ b.denominator/gcd*b.nominator;
+		int lcm = compute_lcm(this->denominator, b.denominator);
+		res.denominator = lcm;
+		res.nominator = lcm*this->nominator/this->denominator
+				+ lcm*b.nominator/b.denominator;
 		res.reduce();
 		return res;
 	}
@@ -129,6 +129,14 @@ public:
 		printf("Error conv Rational to int without denominator = 1\n");
 		abort();
 		return 0;
+	}
+
+	int getDenominator() const {
+		return denominator;
+	}
+
+	int getNominator() const {
+		return nominator;
 	}
 };
 

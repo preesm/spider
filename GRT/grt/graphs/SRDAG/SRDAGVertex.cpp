@@ -167,6 +167,9 @@ void SRDAGVertex::getName(char* name, UINT32 sizeMax){
 				exitWithCode(1075);
 			break;
 		default:
+			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"undef");
+			if(len > MAX_VERTEX_NAME_SIZE)
+				exitWithCode(1075);
 			break;
 	}
 }

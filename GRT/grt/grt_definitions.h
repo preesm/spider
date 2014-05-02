@@ -53,6 +53,8 @@
 #define MAX_SRDAG_OUTPUT_EDGES 	45	//100
 #define MAX_VERTEX_REPETITION 	100	//100 // The maximum number of repetitions for one vertex
 #define XPLODE_FUNCT_IX			13	//13	// Index of the function for implode/explode vxs.
+#define INIT_FUNCT_IX			14	//13	// Index of the function for implode/explode vxs.
+#define END_FUNCT_IX			15	//13	// Index of the function for implode/explode vxs.
 
 // PICSDF
 //#define MAX_PISDF_CONFIG_PORTS		512

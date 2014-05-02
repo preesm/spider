@@ -52,6 +52,7 @@ static char file[MAX_FILE_NAME_SIZE];
 //#endif
 
 #define MAX(a,b) ((a>b)?a:b)
+#define MIN(a,b) ((a<b)?a:b)
 
 /**
  Different SRDAG repetitions of an PiSDF vertex source to generate edges
@@ -97,63 +98,95 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 	for (UINT32 i = 0; i < currentPiSDF->getNb_edges(); i++) {
 		PiSDFEdge *edge = currentPiSDF->getEdge(i);
 
+		// Already treated edge
 		if(edge->getSink()->getType() == config_vertex)
 			continue;
 
 		UINT32 nbDelays = edge->getDelayInt();
 
 		UINT32 nbSourceRepetitions = brv[edge->getSource()->getId()];
-		UINT32 nbTargetRepetitions = brv[edge->getSink()->getId()];
+		UINT32 nbSinkRepetitions = brv[edge->getSink()->getId()];
 
-		if(nbSourceRepetitions > MAX_VERTEX_REPETITION || nbTargetRepetitions > nbTargetRepetitions){
+		if(nbSourceRepetitions > MAX_VERTEX_REPETITION || nbSinkRepetitions > nbSinkRepetitions){
 			printf("MAX_VERTEX_REPETITION too small\n");
 			abort();
 		}
 
-		// Getting the replicas of the source vertex into sourceRepetitions.
-		topDag->getVerticesFromReference(edge->getSource(), iteration, sourceRepetitions);
+		UINT32 sourceProduction = edge->getProductionInt();
+		UINT32 sinkConsumption = edge->getConsumptionInt();
 
-		// Getting the replicas of the sink vertex into sinkRepetitions.
-		topDag->getVerticesFromReference(edge->getSink(), iteration, sinkRepetitions);
+		if(edge->getSource()->getType() == input_vertex
+				|| edge->getSource()->getType() == config_vertex){
+			sourceProduction = sinkConsumption*nbSinkRepetitions;
+		}
+		if(edge->getSink()->getType() == output_vertex){
+			sinkConsumption = sourceProduction*nbSourceRepetitions;
+		}
 
-		// Total number of token exchanged (produced and consumed) for an edge.
-		UINT32 totalNbTokens = edge->getProductionInt() * nbSourceRepetitions;
+		UINT32 sourceIndex = 0;
+		UINT32 sinkIndex   = 0;
+
+		UINT32 curSourceToken;
+		UINT32 curSinkToken;
+
+		// Fill source/sink repetition list
+		if(nbDelays == 0){
+			topDag->getVerticesFromReference(edge->getSource(), iteration, sourceRepetitions);
+			topDag->getVerticesFromReference(edge->getSink(), iteration, sinkRepetitions);
+
+			curSourceToken = sourceProduction;
+			curSinkToken   = sinkConsumption;
+		}else{
+			// If there is delay, first source is an init vector and last sink is an end vector.
+
+			// Adding an init vertex.
+			SRDAGVertex *init_vertex = topDag->addVertex();
+			init_vertex->setType(Init); 	// Indicates it is an implode vertex.
+			init_vertex->setFunctIx(INIT_FUNCT_IX);
+//			init_vertex->setReference(origin_vertex->getReference());
+//			imp_vertex->setReferenceIndex(origin_vertex->getReferenceIndex());
+//			imp_vertex->setIterationIndex(origin_vertex->getIterationIndex());
+//			cntImpVxs++;
+			sourceRepetitions[0] = init_vertex;
+
+			topDag->getVerticesFromReference(edge->getSource(), iteration, sourceRepetitions+1);
+			topDag->getVerticesFromReference(edge->getSink(), iteration, sinkRepetitions);
+
+
+			SRDAGVertex *end_vertex = topDag->addVertex();
+			end_vertex->setType(End); 	// Indicates it is an implode vertex.
+			end_vertex->setFunctIx(END_FUNCT_IX);
+			sinkRepetitions[nbSinkRepetitions] = end_vertex;
+
+			nbSourceRepetitions++;
+			nbSinkRepetitions++;
+
+			curSourceToken = nbDelays;
+			curSinkToken   = sinkConsumption;
+
+		}
+
 
 		// Absolute target is the targeted consumed token among the total number of consumed/produced tokens.
-		UINT32 absoluteSource = 0;
+//		UINT32 absoluteSource = 0;
 //		UINT32 producedTokens = 0;
-		UINT32 absoluteTarget = nbDelays;
+//		UINT32 absoluteTarget = nbDelays;
 //		UINT32 availableTokens = nbDelays;
 
-		// totProd is updated to store the number of token consumed by the
-		// targets that are "satisfied" by the added edges.
-		UINT32 totProd = 0;
+
 
 		// Iterating until all consumptions are "satisfied".
-		while (totProd < totalNbTokens) {
-			/*
-			 * Computing the indexes and rates.
-			 */
-			// Index of the source vertex's instance (among all the replicas).
-			UINT32 sourceIndex = (absoluteSource / edge->getProductionInt())% nbSourceRepetitions;
-
-			// Index of the target vertex's instance (among all the replicas).
-			UINT32 targetIndex = (absoluteTarget / edge->getConsumptionInt())% nbTargetRepetitions;
-
-			// Number of token already produced/consumed by the current source/target.
-			UINT32 sourceProd = absoluteSource % edge->getProductionInt();
-			UINT32 targetCons = absoluteTarget % edge->getConsumptionInt();
-
+		while (sourceIndex < nbSourceRepetitions
+				|| sinkIndex < nbSinkRepetitions) {
 			// Production/consumption rate for the current source/target.
-			UINT32 rest =((edge->getProductionInt() - sourceProd) < (edge->getConsumptionInt() - targetCons))?
-					(edge->getProductionInt() - sourceProd):(edge->getConsumptionInt() - targetCons); // Minimum.
+			UINT32 rest = MIN(curSourceToken, curSinkToken); // Minimum.
 
 
 			/*
 			 * Adding explode/implode vertices if required.
 			 */
 
-			if (rest < edge->getProductionInt() &&
+			if (rest < curSourceToken &&
 				(sourceRepetitions[sourceIndex]->getType() != Explode)){
 
 				// Adding an explode vertex.
@@ -185,13 +218,13 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 				// Adding an edge between the source and the explode.
 				topDag->addEdge(
 						sourceVertex, sourcePortId,
-						edge->getProductionInt(),
+						sourceProduction,
 						exp_vertex, 0,
 						edge->getRefEdge());
 			}
 
-			if (rest < edge->getConsumptionInt() &&
-				(sinkRepetitions[targetIndex]->getType() != Implode)){ // Type == 0 indicates it is a normal vertex.
+			if (rest < curSinkToken &&
+				(sinkRepetitions[sinkIndex]->getType() != Implode)){ // Type == 0 indicates it is a normal vertex.
 
 				// Adding an implode vertex.
 				SRDAGVertex *imp_vertex = topDag->addVertex();
@@ -199,8 +232,8 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 				imp_vertex->setExpImpId(i); // Distinction among implode vertices for the same SRDAGVertex.
 
 				// Replacing the sink vertex by the implode vertex in the array of sources.
-				SRDAGVertex *origin_vertex = sinkRepetitions[targetIndex];//	// Adding vxs
-				sinkRepetitions[targetIndex] = imp_vertex;
+				SRDAGVertex *origin_vertex = sinkRepetitions[sinkIndex];//	// Adding vxs
+				sinkRepetitions[sinkIndex] = imp_vertex;
 
 
 				// Setting attributes from original vertex.
@@ -213,95 +246,69 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 				// Adding an edge between the implode and the sink.
 				topDag->addEdge(
 						imp_vertex, 0,
-						edge->getConsumptionInt(),
+						sinkConsumption,
 						origin_vertex, origin_vertex->getReference()->getInputEdgeId(edge),
 						edge->getRefEdge());
 			}
 
-
-
-			/**************************
-			 * Adding the edge.
-			 **************************/
-
-			// The delay.
-			// This UINT32 represent the number of iteration separating the
-			// currently indexed source and target (between which an edge is
-			// added)
-			// If this UINT32 is > to 0, this means that the added edge must
-			// have
-			// delays (with delay=prod=cons of the added edge).
-			// Warning, this integer division is not factorable
-			UINT32 iterationDiff = absoluteTarget / totalNbTokens - absoluteSource / totalNbTokens;
-
-			// If the edge has a delay and that delay still exist in the
-			// SRSDF (i.e. if the source & target do not belong to the same
-			// "iteration")
-			if (iterationDiff > 0) {
-				// TODO: Treating delays
-//					UINT32 addedDelays = iterationDiff * new_edge->getTokenRate();
-
-				// Check that there are enough delays available
-//					if (nbDelays < addedDelays) {
-					// kdesnos: I added this check, but it will most
-					// probably never happen
-//					throw new RuntimeException(
-//							"Insufficient delays on edge "
-//									+ edge.getSource().getName() + "."
-//									+ edge.getSourceInterface().getName()
-//									+ "=>" + edge.getTarget().getName()
-//									+ "."
-//									+ edge.getTargetInterface().getName()
-//									+ ". At least " + addedDelays
-//									+ " delays missing.");
-//					}
-//					new_edge->setDelay(addedDelays);
-//					nbDelays = nbDelays - addedDelays;
-			} else {
-				//Creating the new edge between normal vertices or between a normal and an explode/implode one.
-				SRDAGVertex* sourceVertex, *sinkVertex;
-				UINT32 sourcePortId, sinkPortId;
-				sourceVertex = sourceRepetitions[sourceIndex];
-				if(sourceVertex->getType() == Explode){
-					sourcePortId = sourceVertex->getNbOutputEdge();
-				}else if(edge->getSource()->getType() == config_vertex){
-					sourceVertex = sourceVertex->getOutputEdge(edge->getSource()->getOutputEdgeId(edge))->getSink();
-					sourcePortId = 0;
-				}else{
-					sourcePortId = edge->getSource()->getOutputEdgeId(edge);
-				}
-
-				sinkVertex = sinkRepetitions[targetIndex];
-				if(sinkRepetitions[targetIndex]->getType() == Implode)
-					sinkPortId = sinkVertex->getNbInputEdge();
-				else
-					sinkPortId = edge->getSink()->getInputEdgeId(edge);
-
-
-				SRDAGEdge* new_edge = topDag->addEdge(
-						sourceVertex, sourcePortId,
-						rest,
-						sinkVertex, sinkPortId,
-						edge->getRefEdge());
-				new_edge->setDelay(0);
+			//Creating the new edge between normal vertices or between a normal and an explode/implode one.
+			SRDAGVertex* sourceVertex, *sinkVertex;
+			UINT32 sourcePortId, sinkPortId;
+			sourceVertex = sourceRepetitions[sourceIndex];
+			if(sourceVertex->getType() == Explode){
+				sourcePortId = sourceVertex->getNbOutputEdge();
+			}else if(sourceVertex->getType() == Init){
+				sourcePortId = 0;
+			}else if(edge->getSource()->getType() == config_vertex){
+				sourceVertex = sourceVertex->getOutputEdge(edge->getSource()->getOutputEdgeId(edge))->getSink();
+				sourcePortId = 0;
+			}else{
+				sourcePortId = edge->getSource()->getOutputEdgeId(edge);
 			}
 
+			sinkVertex = sinkRepetitions[sinkIndex];
+			if(sinkVertex->getType() == Implode){
+				sinkPortId = sinkVertex->getNbInputEdge();
+			}else if(sinkVertex->getType() == End){
+				sinkPortId = 0;
+			}else{
+				sinkPortId = edge->getSink()->getInputEdgeId(edge);
+			}
+
+
+			SRDAGEdge* new_edge = topDag->addEdge(
+					sourceVertex, sourcePortId,
+					rest,
+					sinkVertex, sinkPortId,
+					edge->getRefEdge());
+			new_edge->setDelay(0);
+
+
 			// Update the number of token produced/consumed by the current source/target.
-			absoluteTarget += rest;
-			absoluteSource += rest;
+			curSourceToken -= rest;
+			curSinkToken -= rest;
+
+			if(curSourceToken == 0){
+				sourceIndex++;
+				curSourceToken += sourceProduction;
+			}
+
+			if(curSinkToken == 0){
+				sinkIndex++;
+				curSinkToken += sinkConsumption;
+			}
 
 			// Update the totProd for the current edge (totProd is used in the condition of the While loop)
-			totProd += rest;
 
 			// In case of a round buffer
 			// If all needed tokens were already produced
 			// but not all tokens were produced (i.e. not all source copies
 			// were considered yet)
-			if ((totProd == (edge->getConsumptionInt() * nbTargetRepetitions)) &&
-//				targetCopies.get(0) instanceof SDFInterfaceVertex &&
-				(absoluteSource / edge->getProductionInt()) < nbSourceRepetitions) {
-				totProd = 0;
-			}
+//			if ((totProd == (edge->getConsumptionInt() * nbTargetRepetitions)) &&
+////				targetCopies.get(0) instanceof SDFInterfaceVertex &&
+//				(absoluteSource / edge->getProductionInt()) < nbSourceRepetitions) {
+//				totProd = 0;
+//			}
 		}
 	}
 }
@@ -457,12 +464,12 @@ void PiSDFTransformer::computeBRV(PiSDFGraph* currentPiSDF, int* brv){
 	for(UINT32 i = 0; i < currentPiSDF->getNb_input_vertices(); i++){
 		PiSDFIfVertex* interface = currentPiSDF->getInput_vertex(i);
 		coef = MAX(coef, std::ceil((double)(interface->getOutputEdge(0)->getProductionInt())
-											/(double)(interface->getOutputEdge(0)->getConsumptionInt()*interface->getOutputEdge(0)->getSink()->getNbRepetition())));
+											/((double)(interface->getOutputEdge(0)->getConsumptionInt()*interface->getOutputEdge(0)->getSink()->getNbRepetition()))));
 	}
 	for(UINT32 i = 0; i < currentPiSDF->getNb_output_vertices(); i++){
 		PiSDFIfVertex* interface = currentPiSDF->getOutput_vertex(i);
 		coef = MAX(coef, std::ceil((double)interface->getInputEdge(0)->getConsumptionInt())
-											/(double)interface->getInputEdge(0)->getProductionInt()*interface->getInputEdge(0)->getSource()->getNbRepetition());
+											/((double)interface->getInputEdge(0)->getProductionInt()*interface->getInputEdge(0)->getSource()->getNbRepetition()));
 	}
 	/* Looking on implicit RB between CA and /CA */
 	for(UINT32 i = 0; i < currentPiSDF->getNb_edges(); i++){

@@ -64,6 +64,8 @@ typedef enum{
 	Explode,
 	Implode,
 	RoundBuffer,
+	Init,
+	End
 }SrVxTYPE;
 
 /**

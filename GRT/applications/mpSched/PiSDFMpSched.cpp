@@ -112,8 +112,8 @@ void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples){
 	graph->addEdge(vxConfig, 0, "NMAX", vxMFilter, 0, "NMAX", "0");
 	graph->addEdge(vxMFilter, 0, "N", vxUserFIRs, 0, "1", "0");
 
-	graph->addEdge(vxSrc, 0, "N*nbSamples", vxUserFIRs, 1, "nbSamples", "0");
-	graph->addEdge(vxUserFIRs, 0, "nbSamples", vxSnk, 0, "N*nbSamples", "0");
+	graph->addEdge(vxSrc, 0, "N*nbSamples*4", vxUserFIRs, 1, "nbSamples*4", "0");
+	graph->addEdge(vxUserFIRs, 0, "nbSamples*4", vxSnk, 0, "N*nbSamples*4", "0");
 
 	// Timings
 	vxConfig->setTiming(0, "1");
@@ -188,11 +188,11 @@ void mpSched_sub(PiSDFGraph* graph, UINT32 nbSamples){
 	graph->addEdge(vxM, 0, "1", vxSetM, 0, "1", "0");
 	graph->addEdge(vxInitSwitch, 0, "M", vxSwitch, 0, "1", "0");
 
-	graph->addEdge(vxIn, 0, "nbSamples2", vxSwitch, 1, "nbSamples2", "0");
-	graph->addEdge(vxBr, 1, "nbSamples2", vxSwitch, 2, "nbSamples2", "nbSamples2");
-	graph->addEdge(vxSwitch, 0, "nbSamples2", vxFIR, 0, "nbSamples2", "0");
-	graph->addEdge(vxFIR, 0, "nbSamples2", vxBr, 0, "nbSamples2", "0");
-	graph->addEdge(vxBr, 0, "nbSamples2", vxOut, 0, "nbSamples2", "0");
+	graph->addEdge(vxIn, 0, "nbSamples2*4", vxSwitch, 1, "nbSamples2*4", "0");
+	graph->addEdge(vxBr, 1, "nbSamples2*4", vxSwitch, 2, "nbSamples2*4", "nbSamples2*4");
+	graph->addEdge(vxSwitch, 0, "nbSamples2*4", vxFIR, 0, "nbSamples2*4", "0");
+	graph->addEdge(vxFIR, 0, "nbSamples2*4", vxBr, 0, "nbSamples2*4", "0");
+	graph->addEdge(vxBr, 0, "nbSamples2*4", vxOut, 0, "nbSamples2*4", "0");
 
 	// Timings
 	vxSetM->setTiming(0, "1");

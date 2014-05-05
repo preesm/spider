@@ -37,6 +37,7 @@
 #include <string.h>
 #include <platform_types.h>
 
+#include "actors.h"
 
 #define NVAL	3
 static UINT8 nValues[10] = {3,2,1};
@@ -85,12 +86,19 @@ void src(UINT8* inputFIFOs[],
 	UINT32 N = params[0];
 	UINT32 NBSAMPLES = params[1];
 
-	UINT8* out = outputFIFOs[0];
+	float* out = (float*)outputFIFOs[0];
 
-	for(i=0; i<NBSAMPLES; i++){
-		for(j=0; j<N; j++){
-			out[i+j*NBSAMPLES] = i;
-		}
+	FILE* f;
+	char file[100];
+
+	sprintf(file,"/home/jheulot/dev/mp-sched/input.dat");
+	f = fopen(file,"rb");
+	if(f == NULL){printf("cannot open %s\n", file);abort();}
+	fread(out, sizeof(float), NBSAMPLES, f);
+	fclose(f);
+
+	for(i=1; i<N; i++){
+		memcpy(out+i*NBSAMPLES, out, NBSAMPLES*sizeof(float));
 	}
 }
 
@@ -102,16 +110,27 @@ void snk(UINT8* inputFIFOs[],
 	UINT32 N = params[0];
 	UINT32 NBSAMPLES = params[1];
 
-	UINT8* in = inputFIFOs[0];
+	float* in = (float*)inputFIFOs[0];
 
 	BOOL test = TRUE;
 
-	for(i=0; i<NBSAMPLES; i++){
-		for(j=0; j<N; j++){
-			UINT8 val = i+MVALS[j];
-			if(in[i+j*NBSAMPLES] != val){
-				printf("error at (%d,%d) : get %d instead of %d\n", i,j, in[i+j*NBSAMPLES], val);
+	float* outputCheck = OSAllocWorkingMemory(NBSAMPLES*sizeof(float));
+
+	FILE* f;
+	char file[100];
+
+	for(i=0; i<N; i++){
+		sprintf(file,"/home/jheulot/dev/mp-sched/output_%d_%d.dat", NBSAMPLES, MVALS[i]);
+		f = fopen(file,"rb");
+		if(f == NULL){printf("cannot open %s\n", file);abort();}
+		fread(outputCheck, sizeof(float), NBSAMPLES, f);
+		fclose(f);
+
+		for(j=0; j<NBSAMPLES; j++){
+			if(in[j+i*NBSAMPLES] != outputCheck[j]){
+				printf("Error in (%d,%d), expected %f get %f\n",i,j,outputCheck[j],in[j]);
 				test = FALSE;
+				break;
 			}
 		}
 	}
@@ -153,19 +172,17 @@ void switchFct(UINT8* inputFIFOs[],
 		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
-	UINT32 M = params[1];
 	UINT32 NBSAMPLES = params[0];
-	UINT32 i;
 
 	UINT8 select = inputFIFOs[0][0];
-	UINT8 *in0 = inputFIFOs[1];
-	UINT8 *in1 = inputFIFOs[2];
-	UINT8 *out = outputFIFOs[0];
+	void *in0 = inputFIFOs[1];
+	void *in1 = inputFIFOs[2];
+	void *out = outputFIFOs[0];
 
 	if(select == 0)
-		memcpy(out, in0, NBSAMPLES);
+		memcpy(out, in0, NBSAMPLES*sizeof(float));
 	else
-		memcpy(out, in1, NBSAMPLES);
+		memcpy(out, in1, NBSAMPLES*sizeof(float));
 }
 
 
@@ -174,13 +191,11 @@ void FIR(UINT8* inputFIFOs[],
 		UINT32 params[])
 {
 	UINT32 NBSAMPLES = params[0];
-	UINT32 i;
 
-	UINT8* in = inputFIFOs[0];
-	UINT8* out = outputFIFOs[0];
+	float* in = (float*)inputFIFOs[0];
+	float* out = (float*)outputFIFOs[0];
 
-	for(i=0; i<NBSAMPLES; i++)
-		out[i] = in[i]+1;
+	fir(in, out, NBSAMPLES);
 }
 
 

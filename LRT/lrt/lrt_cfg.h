@@ -77,7 +77,7 @@
 #else
 #define MAX_NB_FIFO			20//100
 #define MAX_NB_PARAMETERS	20
-#define WORKING_MEMORY_SIZE 0//500*512*2//720*(400/8)
+#define WORKING_MEMORY_SIZE 64000//500*512*2//720*(400/8)
 #endif
 
 #endif

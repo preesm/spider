@@ -54,7 +54,7 @@ void broadcast(UINT8* inputFIFOs[],
 		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
-	UINT32 nbToken = params[0];
+	UINT32 nbToken = params[0]*sizeof(float);
 
 	memcpy(outputFIFOs[0], inputFIFOs[0], nbToken);
 	memcpy(outputFIFOs[1], inputFIFOs[0], nbToken);

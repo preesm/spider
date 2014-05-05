@@ -207,18 +207,34 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 
 				SRDAGVertex* sourceVertex;
 				UINT32 sourcePortId;
-				if(origin_vertex->getReference()->getType() == config_vertex){
-					sourceVertex = origin_vertex->getOutputEdge(edge->getSource()->getOutputEdgeId(edge))->getSink();
-					sourcePortId = 0;
-				}else{
+
+				switch(origin_vertex->getType()){
+				case Normal:
+				case RoundBuffer:
 					sourceVertex = origin_vertex;
 					sourcePortId = origin_vertex->getReference()->getOutputEdgeId(edge);
+					break;
+				case ConfigureActor:
+					sourceVertex = origin_vertex->getOutputEdge(edge->getSource()->getOutputEdgeId(edge))->getSink();
+					sourcePortId = 0;
+					break;
+				case Init:
+					sourceVertex = origin_vertex;
+					sourcePortId = 0;
+					break;
+				default:
+				case End:
+				case Explode:
+				case Implode:
+					printf("Unexpected case in pisdf transfo\n");
+					abort();
+					break;
 				}
 
 				// Adding an edge between the source and the explode.
 				topDag->addEdge(
 						sourceVertex, sourcePortId,
-						sourceProduction,
+						curSourceToken,
 						exp_vertex, 0,
 						edge->getRefEdge());
 			}
@@ -243,11 +259,31 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 				imp_vertex->setIterationIndex(origin_vertex->getIterationIndex());
 				cntImpVxs++;
 
+				UINT32 sinkPortId;
+
+				switch(origin_vertex->getType()){
+				case Normal:
+				case RoundBuffer:
+					sinkPortId = origin_vertex->getReference()->getInputEdgeId(edge);
+					break;
+				case End:
+					sinkPortId = 0;
+					break;
+				default:
+				case ConfigureActor:
+				case Init:
+				case Explode:
+				case Implode:
+					printf("Unexpected case in pisdf transfo\n");
+					abort();
+					break;
+				}
+
 				// Adding an edge between the implode and the sink.
 				topDag->addEdge(
 						imp_vertex, 0,
-						sinkConsumption,
-						origin_vertex, origin_vertex->getReference()->getInputEdgeId(edge),
+						curSinkToken,
+						origin_vertex, sinkPortId,
 						edge->getRefEdge());
 			}
 
@@ -295,7 +331,10 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 
 			if(curSinkToken == 0){
 				sinkIndex++;
-				curSinkToken += sinkConsumption;
+				if(sinkIndex == nbSinkRepetitions-1 && nbDelays != 0)
+					curSinkToken += nbDelays;
+				else
+					curSinkToken += sinkConsumption;
 			}
 
 			// Update the totProd for the current edge (totProd is used in the condition of the While loop)

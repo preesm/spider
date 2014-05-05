@@ -152,17 +152,27 @@ void SRDAGVertex::getName(char* name, UINT32 sizeMax){
 				exitWithCode(1075);
 			break;
 		case Explode: // Explode vertex.
-			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d_%d","Exp", expImpId, Reference->getName(), iterationIndex, referenceIndex);
+			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d","Exp", expImpId);
 			if(len > MAX_VERTEX_NAME_SIZE)
 				exitWithCode(1075);
 			break;
 		case Implode: // Implode vertex.
-			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%s_%d_%d","Imp", expImpId, Reference->getName(), iterationIndex, referenceIndex);
+			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d","Imp", expImpId);
 			if(len > MAX_VERTEX_NAME_SIZE)
 				exitWithCode(1075);
 			break;
 		case RoundBuffer: // Round buffer
 			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"RB");
+			if(len > MAX_VERTEX_NAME_SIZE)
+				exitWithCode(1075);
+			break;
+		case Init:
+			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"Init");
+			if(len > MAX_VERTEX_NAME_SIZE)
+				exitWithCode(1075);
+			break;
+		case End:
+			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"End");
 			if(len > MAX_VERTEX_NAME_SIZE)
 				exitWithCode(1075);
 			break;

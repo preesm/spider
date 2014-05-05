@@ -120,7 +120,7 @@ int main(int argc, char* argv[]){
 //		listScheduler.setScenario(&scenario);
 
 		// Getting the PiSDF graph.
-		topPisdf = initPisdf_mpSched(pisdfGraphs, 3);
+		topPisdf = initPisdf_mpSched(pisdfGraphs, 3, 500);
 
 		// Add topActor to topDag
 		SRDAGVertex* topActor = topDag.addVertex();

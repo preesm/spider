@@ -42,9 +42,12 @@
 #include <grt_definitions.h>
 #include <tools/SchedulingError.h>
 #include <tools/Array.h>
+#include <tools/List.h>
 #include <graphs/PiSDF/PiSDFEdge.h>
 #include <graphs/PiSDF/PiSDFParameter.h>
 //#include "graphs/SDF/SDFGraph.h"
+
+class SRDAGVertex;
 
 typedef enum {
 	pisdf_vertex,
@@ -76,6 +79,8 @@ class PiSDFAbstractVertex {
 	Array<PiSDFEdge*,MAX_NB_PiSDF_INPUT_EDGES> inputEdges;
 	Array<PiSDFEdge*,MAX_NB_PiSDF_OUTPUT_EDGES> outputEdges;
 
+	List<SRDAGVertex*, MAX_CHILD> childVertices;
+
 	UINT8 nbParameters;
 	PiSDFParameter* parameters[MAX_NB_PiSDF_PARAMS];
 
@@ -103,6 +108,18 @@ public:
 	void setOutputEdge(PiSDFEdge* edge, UINT32 id);
 
 	void addParameter(PiSDFParameter* param);
+
+	void addChildVertex(SRDAGVertex* vertex){
+		childVertices.add(vertex);
+	}
+
+	SRDAGVertex* getChildVertex(UINT32 id){
+		return childVertices[id];
+	}
+
+	UINT32 getChildNbVertices(){
+		return childVertices.getNb();
+	}
 
 	void setGraph(PiSDFGraph* graph_){
 		graph = graph_;

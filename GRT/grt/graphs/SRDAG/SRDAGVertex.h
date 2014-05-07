@@ -312,6 +312,7 @@ class SRDAGVertex {
 	    void setReference(PiSDFAbstractVertex *Reference)
 	    {
 	        this->Reference = Reference;
+	        Reference->addChildVertex(this);
 	    }
 
 	    void setEdgeReference(PiSDFEdge *Reference)

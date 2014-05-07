@@ -310,8 +310,8 @@ inline void SRDAGGraph::resetVisited(){
 */
 inline UINT32 SRDAGGraph::getVerticesFromReference(PiSDFAbstractVertex* ref, UINT32 iteration, SRDAGVertex** output){
 	UINT32 size = 0;
-	for(int i=0; i<vertices.getNb(); i++){
-		SRDAGVertex* vertex = &vertices[i];
+	for(int i=0; i<ref->getChildNbVertices(); i++){
+		SRDAGVertex* vertex = ref->getChildVertex(i);
 		if(vertex->getReference() == ref && vertex->getIterationIndex() == iteration){
 			output[size] = vertex;
 			size++;

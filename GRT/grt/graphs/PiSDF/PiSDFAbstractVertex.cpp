@@ -50,6 +50,7 @@ PiSDFAbstractVertex::PiSDFAbstractVertex() {
 	tempId=-1;
 	inputEdges.reset();
 	outputEdges.reset();
+	childVertices.reset();
 }
 
 PiSDFAbstractVertex::~PiSDFAbstractVertex() {
@@ -70,6 +71,7 @@ void PiSDFAbstractVertex::reset() {
 	tempId=-1;
 	inputEdges.reset();
 	outputEdges.reset();
+	childVertices.reset();
 }
 void PiSDFAbstractVertex::setInputEdge(PiSDFEdge* edge, UINT32 id){
 	inputEdges.add(edge,id);

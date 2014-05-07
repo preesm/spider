@@ -226,7 +226,7 @@ void Launcher::launchVertex(SRDAGVertex* vertex, UINT32 slave){
 void Launcher::init(){
 	nbStepsSched = nbStepsGraph = 0;
 	nbFifo = nbParamToRecv = 0;
-	memory = Memory(0x0, 0x003F8000);
+	memory = Memory(0x0, 0x003EC000);
 
 	endMem = memory.alloc(END_MEM_SIZE);
 }

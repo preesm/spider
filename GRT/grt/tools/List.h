@@ -10,6 +10,8 @@
 
 #include <typeinfo>
 #include "SchedulingError.h"
+#include <platform_types.h>
+
 /**
  * Generic List Class
  */
@@ -29,6 +31,8 @@ private:
 
 	int wrNb;
 
+	void myqsort(int p, int r, int (*comp)(T,T));
+	int myqsort_part(int p, int r, int (*comp)(T,T));
 public:
 	/**
 	 * Default Constructor.
@@ -69,6 +73,8 @@ public:
 	UINT32 getId(T* e);
 	void remove(T* e);
 	void remove(UINT32 id);
+
+	void sort(int (*comp)(T,T));
 };
 
 /**
@@ -164,6 +170,43 @@ template <class T, int SIZE>
 inline void List<T,SIZE>::remove(UINT32 id){
 	valid[id] = FALSE;
 	nb--;
+}
+
+template <class T, int SIZE>
+inline void List<T,SIZE>::sort(int (*comp)(T,T)){
+	myqsort(0,nb-1, comp);
+}
+
+template <class T, int SIZE>
+inline void List<T,SIZE>::myqsort(int p, int r, int (*comp)(T,T)){
+	int q;
+	if(p<r){
+		q = myqsort_part(p, r, comp);
+		myqsort(p, q, comp);
+		myqsort(q+1, r, comp);
+	}
+}
+
+template <class T, int SIZE>
+inline int List<T,SIZE>::myqsort_part(int p, int r, int (*comp)(T,T)){
+    T pivot = array[p];
+    int i = p-1, j = r+1;
+    T temp;
+    while (1) {
+        do
+            j--;
+        while (comp (array[j],pivot) > 0);
+        do
+            i++;
+        while (comp (array[i],pivot) < 0);
+        if (i < j) {
+            temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+        else
+            return j;
+    }
 }
 
 #endif /* LIST_H_ */

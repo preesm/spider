@@ -249,20 +249,15 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 	return bestEndTime;
 }
 
-
 #define MAX(a,b) ((a>b)?a:b)
 
 UINT32 computeSchedLevel(SRDAGVertex* vertex){
 	int level = 0;
 	if(vertex->getSchedLevel() == -1){
-		for(int i=0; i<vertex->getNbInputEdge(); i++){
-			SRDAGVertex* pred = vertex->getInputEdge(i)->getSource();
-			if(pred->getState() == SrVxStExecutable)
-				level = MAX(level, computeSchedLevel(pred)+1);
-		}
-		if(vertex->getType() != Normal && vertex->getType() != ConfigureActor){
-			if(level >= 0)
-				level--;
+		for(int i=0; i<vertex->getNbOutputEdge(); i++){
+			SRDAGVertex* succ = vertex->getOutputEdge(i)->getSink();
+			if(succ->getState() == SrVxStExecutable)
+				level = MAX(level, computeSchedLevel(succ)+succ->getExecTime());
 		}
 		vertex->setSchedLevel(level);
 		return level;
@@ -270,66 +265,118 @@ UINT32 computeSchedLevel(SRDAGVertex* vertex){
 	return vertex->getSchedLevel();
 }
 
+
+int comparSchedLevel(SRDAGVertex* a, SRDAGVertex* b){
+	return b->getSchedLevel() - a->getSchedLevel();
+}
+
 void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architecture* arch)
 {
 	// Create ScheduleList
-//	static List<SRDAGVertex*, MAX_SRDAG_VERTICES> schedList;
-	static SRDAGVertex* histo[MAX_SRDAG_VERTICES][MAX_SRDAG_VERTICES];
-	static int histoNb[MAX_SRDAG_VERTICES];
-	memset(histoNb,0,sizeof(histoNb));
-//	schedList.reset();
-
-	int nbVertices=0;
-	int level;
+	static List<SRDAGVertex*, MAX_SRDAG_VERTICES> schedList;
+	schedList.reset();
 
 	for(int i=0; i<dag->getNbVertices(); i++){
 		SRDAGVertex* vertex = dag->getVertex(i);
-		if(vertex->getScheduleIndex() == -1 &&
-		   vertex->getState() == SrVxStExecutable &&
-		   (vertex->getType() == Normal || vertex->getType() == ConfigureActor))
-		{
-			level = computeSchedLevel(vertex);
-//			printf("vx %d: lvl %d\n", vertex->getId(), level);
-			histo[level][histoNb[level]] = vertex;
-			histoNb[level]++;
-			nbVertices++;
+		if(vertex->getState() == SrVxStExecutable){
+			schedList.add(vertex);
+			vertex->setSchedLevel(-1);
 		}
 	}
 
-	level=0;
-	while(nbVertices){
-		bool stop=0;
-		while(!stop){
-			stop = 1;
-			for(int i=0; i<histoNb[level]-1; i++){
-				if(evaluateMinStartTime(schedule, arch, histo[level][i])
-						> evaluateMinStartTime(schedule, arch, histo[level][i+1])){
-					SRDAGVertex* temp = histo[level][i+1];
-					histo[level][i+1] = histo[level][i];
-					histo[level][i] = temp;
-					stop = 0;
-					break;
-				}
-			}
-		}
-//		printf("level %d :", level);
-		for(int i=0; i<histoNb[level]; i++){
-			this->schedule(schedule, arch, histo[level][i]);
-//			printf(" %d,", histo[level][i]->getId());
-		}
-//		printf("\n");
-		nbVertices-=histoNb[level];
-		level++;
+	for(int i=0; i<schedList.getNb(); i++){
+		SRDAGVertex* vertex = schedList[i];
+		computeSchedLevel(vertex);
+//		printf("%d : %d\n", i, vertex->getSchedLevel());
 	}
 
-//	// Scheduling the vertices.
+	schedList.sort(comparSchedLevel);
+
+	for(int i=0; i<schedList.getNb(); i++){
+		SRDAGVertex* vertex = schedList[i];
+//		printf("%d : %d\n", i, vertex->getSchedLevel());
+		this->schedule(schedule, arch, vertex);
+	}
+}
+//
+//UINT32 computeSchedLevel(SRDAGVertex* vertex){
+//	int level = 0;
+//	if(vertex->getSchedLevel() == -1){
+//		for(int i=0; i<vertex->getNbInputEdge(); i++){
+//			SRDAGVertex* pred = vertex->getInputEdge(i)->getSource();
+//			if(pred->getState() == SrVxStExecutable)
+//				level = MAX(level, computeSchedLevel(pred)+1);
+//		}
+//		if(vertex->getType() != Normal && vertex->getType() != ConfigureActor){
+//			if(level >= 0)
+//				level--;
+//		}
+//		vertex->setSchedLevel(level);
+//		return level;
+//	}
+//	return vertex->getSchedLevel();
+//}
+//
+//void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architecture* arch)
+//{
+//	// Create ScheduleList
+////	static List<SRDAGVertex*, MAX_SRDAG_VERTICES> schedList;
+//	static SRDAGVertex* histo[MAX_SRDAG_VERTICES][MAX_SRDAG_VERTICES];
+//	static int histoNb[MAX_SRDAG_VERTICES];
+//	memset(histoNb,0,sizeof(histoNb));
+////	schedList.reset();
+//
+//	int nbVertices=0;
+//	int level;
+//
 //	for(int i=0; i<dag->getNbVertices(); i++){
 //		SRDAGVertex* vertex = dag->getVertex(i);
-//		if((vertex->getScheduleIndex() == -1) &&
-//		   (vertex->getState() == SrVxStExecutable))
+//		if(vertex->getScheduleIndex() == -1 &&
+//		   vertex->getState() == SrVxStExecutable &&
+//		   (vertex->getType() == Normal || vertex->getType() == ConfigureActor))
 //		{
-//			this->schedule(schedule, arch, vertex);
+//			level = computeSchedLevel(vertex);
+////			printf("vx %d: lvl %d\n", vertex->getId(), level);
+//			histo[level][histoNb[level]] = vertex;
+//			histoNb[level]++;
+//			nbVertices++;
 //		}
 //	}
-}
-
+//
+//	level=0;
+//	while(nbVertices){
+//		bool stop=0;
+//		while(!stop){
+//			stop = 1;
+//			for(int i=0; i<histoNb[level]-1; i++){
+//				if(evaluateMinStartTime(schedule, arch, histo[level][i])
+//						> evaluateMinStartTime(schedule, arch, histo[level][i+1])){
+//					SRDAGVertex* temp = histo[level][i+1];
+//					histo[level][i+1] = histo[level][i];
+//					histo[level][i] = temp;
+//					stop = 0;
+//					break;
+//				}
+//			}
+//		}
+////		printf("level %d :", level);
+//		for(int i=0; i<histoNb[level]; i++){
+//			this->schedule(schedule, arch, histo[level][i]);
+////			printf(" %d,", histo[level][i]->getId());
+//		}
+////		printf("\n");
+//		nbVertices-=histoNb[level];
+//		level++;
+//	}
+//
+////	// Scheduling the vertices.
+////	for(int i=0; i<dag->getNbVertices(); i++){
+////		SRDAGVertex* vertex = dag->getVertex(i);
+////		if((vertex->getScheduleIndex() == -1) &&
+////		   (vertex->getState() == SrVxStExecutable))
+////		{
+////			this->schedule(schedule, arch, vertex);
+////		}
+////	}
+//}
+//

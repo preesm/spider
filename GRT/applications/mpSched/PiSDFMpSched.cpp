@@ -174,7 +174,7 @@ void mpSched_sub(PiSDFGraph* graph, UINT32 nbSamples){
 
 	PiSDFVertex *vxSwitch 	= (PiSDFVertex *)graph->addVertex("Switch", pisdf_vertex);
 	vxSwitch->addParameter(paramSamples);
-	vxSwitch->setFunction_index(6);
+	vxSwitch->setFunction_index(SWICTH_FUNCT_IX);
 
 	PiSDFVertex *vxFIR	= (PiSDFVertex *)graph->addVertex("FIR", pisdf_vertex);
 	vxFIR->addParameter(paramSamples);
@@ -182,7 +182,7 @@ void mpSched_sub(PiSDFGraph* graph, UINT32 nbSamples){
 
 	PiSDFVertex *vxBr	= (PiSDFVertex *)graph->addVertex("BroadCast", pisdf_vertex);
 	vxBr->addParameter(paramSamples);
-	vxBr->setFunction_index(11);
+	vxBr->setFunction_index(BROADCAST_FUNCT_IX);
 
 	// Edges.
 	graph->addEdge(vxM, 0, "1", vxSetM, 0, "1", "0");

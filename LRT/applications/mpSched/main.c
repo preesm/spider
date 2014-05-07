@@ -64,7 +64,6 @@ int main(int argc, char **argv) {
 	functions_tbl[3] = snk;
 	functions_tbl[4] = setM;
 	functions_tbl[5] = initSwitch;
-	functions_tbl[6] = switchFct;
 	functions_tbl[7] = FIR;
 
 
@@ -72,7 +71,7 @@ int main(int argc, char **argv) {
 //	functions_tbl[9] = input;
 	functions_tbl[10] = RB;
 	functions_tbl[11] = broadcast;
-//	functions_tbl[12] = output;
+	functions_tbl[12] = switchFct;
 	functions_tbl[13] = Xplode;
 	functions_tbl[14] = Init;
 	functions_tbl[15] = End;

@@ -101,7 +101,7 @@ inline T& List<T,SIZE>::operator [](int n){
 	if(n>=0 && n<wrNb)
 		return array[n];
 	else{
-		printf("List: Accesing unitialized element %s\n", typeid(T).name());
+		printf("List: Accesing unitialized element\n");
 		exitWithCode(1099);
 		return array[n];
 	}

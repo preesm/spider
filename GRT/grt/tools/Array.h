@@ -81,6 +81,8 @@ public:
 	void add(T& e, int n);
 	void remove(T& e);
 
+	void remove(int n);
+
 	/**
 	 * Get current number of element in the list.
 	 * @return number of element.
@@ -153,6 +155,17 @@ inline void Array<T,SIZE>::add(T& e, int n){
 template <class T, int SIZE>
 inline void Array<T,SIZE>::remove(T& t){
 	int n = getIdOf(t);
+	if(valid[n]){
+		valid[n] = FALSE;
+		nb--;
+	}else{
+		printf("Array: Removing uninitialized element\n");
+		abort();
+	}
+}
+
+template <class T, int SIZE>
+inline void Array<T,SIZE>::remove(int n){
 	if(valid[n]){
 		valid[n] = FALSE;
 		nb--;

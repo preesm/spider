@@ -392,6 +392,9 @@ class SRDAGVertex {
 		void removeInputEdge(SRDAGEdge* edge);
 		void removeOutputEdge(SRDAGEdge* edge);
 
+		void removeInputEdgeIx(UINT32 ix);
+		void removeOutputEdgeIx(UINT32 ix);
+
 		BOOL isHierarchical(){
 			return Reference
 					&& Reference->getType() == pisdf_vertex

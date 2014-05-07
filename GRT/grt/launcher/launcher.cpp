@@ -50,6 +50,8 @@
 #define PRINT_ACTOR_IN_DOT_FILE		0
 
 static Memory memory = Memory(0x0, 0x003F8000);
+#define END_MEM_SIZE 10000
+
 static UINT32 nbFifo;
 static UINT32 nbParamToRecv;
 
@@ -59,6 +61,8 @@ static UINT32 timeStartScheduling[MAX_PISDF_STEPS];
 static UINT32 timeEndScheduling[MAX_PISDF_STEPS];
 static UINT32 nbStepsSched=0;
 static UINT32 nbStepsGraph=0;
+
+static UINT32 endMem;
 
 void Launcher::initGraphTime(){
 	timeStartGraph[nbStepsGraph] = platform_time_getValue();
@@ -178,14 +182,29 @@ void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 //		 break;
 	 case Implode:
 	 default:
+		 if(vertex->getFunctIx() == 11){ // Broadcast
+			 for (i = 0; i < vertex->getNbOutputEdge(); i++){
+				edge = vertex->getOutputEdge(i);
+				if(edge->getFifoId() == -1){
+					edge->setFifoId(nbFifo++);
+					edge->setFifoAddress(vertex->getInputEdge(0)->getFifoAddress());
+				}
+			}
+		 }
+
 		for (i = 0; i < vertex->getNbOutputEdge(); i++){
 			edge = vertex->getOutputEdge(i);
 //			if(edge->getSink()->getType() == Implode){
 //				assignFifoVertex(edge->getSink());
 //			}
+
 			if(edge->getFifoId() == -1){
 				edge->setFifoId(nbFifo++);
-				edge->setFifoAddress(memory.alloc(edge->getTokenRate()));
+				 if(edge->getSink()->getFunctIx() == END_FUNCT_IX){
+					edge->setFifoAddress(endMem);
+				 }else{
+					 edge->setFifoAddress(memory.alloc(edge->getTokenRate()));
+				}
 			}
 		}
 		break;
@@ -203,6 +222,8 @@ void Launcher::init(){
 	nbStepsSched = nbStepsGraph = 0;
 	nbFifo = nbParamToRecv = 0;
 	memory = Memory(0x0, 0x003F8000);
+
+	endMem = memory.alloc(END_MEM_SIZE);
 }
 
 //#define PRINT_GRAPH 1

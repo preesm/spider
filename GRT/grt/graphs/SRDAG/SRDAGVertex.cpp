@@ -99,8 +99,16 @@ void SRDAGVertex::removeInputEdge(SRDAGEdge* edge){
 	inputEdges.remove(edge);
 }
 
+void SRDAGVertex::removeInputEdgeIx(UINT32 ix){
+	inputEdges.remove(ix);
+}
+
 void SRDAGVertex::removeOutputEdge(SRDAGEdge* edge){
 	outputEdges.remove(edge);
+}
+
+void SRDAGVertex::removeOutputEdgeIx(UINT32 ix){
+	outputEdges.remove(ix);
 }
 
 int SRDAGVertex::getInputEdgeId(SRDAGEdge* edge){

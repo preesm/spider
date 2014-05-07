@@ -753,6 +753,46 @@ static int removeImpExp(SRDAGGraph* topDag){
 	return 0;
 }
 
+static int removeImpRB(SRDAGGraph* topDag){
+	for(int i=0; i<topDag->getNbVertices(); i++){
+		SRDAGVertex* implode = topDag->getVertex(i);
+		if(implode->getType() == Implode && implode->getState() != SrVxStDeleted){
+			SRDAGVertex* rb = implode->getOutputEdge(0)->getSink();
+			if(rb->getType() == RoundBuffer && rb->getState() != SrVxStDeleted){
+				UINT32 rbConsumption = rb->getInputEdge(0)->getTokenRate();
+				UINT32 rbProduction = rb->getOutputEdge(0)->getTokenRate();
+				if(rbConsumption > rbProduction){
+					int ixEnd = implode->getNbInputEdge();
+					int cons=0;
+					while(cons<rbProduction){
+						cons += implode->getInputEdge(--ixEnd)->getTokenRate();
+					}
+
+					int lastEdgeIx = implode->getNbInputEdge()-1;
+					for(int j=0; j<ixEnd; j++){
+						SRDAGVertex *end_vertex = topDag->addVertex();
+						end_vertex->setType(End); 	// Indicates it is an implode vertex.
+						end_vertex->setFunctIx(END_FUNCT_IX);
+
+						end_vertex->setInputEdge(implode->getInputEdge(j), 0);
+						implode->getInputEdge(j)->setSink(end_vertex);
+
+						implode->removeInputEdgeIx(j);
+
+						if(j+ixEnd <= lastEdgeIx){
+							implode->setInputEdge(implode->getInputEdge(j+ixEnd),j);
+							implode->removeInputEdgeIx(j+ixEnd);
+						}
+					}
+					implode->getOutputEdge(0)->setTokenRate(rbProduction);
+
+					return 1;
+				}
+			}
+		}
+	}
+	return 0;
+}
 
 static int reduceExplExpl(SRDAGGraph* topDag){
 	for(int i=0; i<topDag->getNbVertices(); i++){
@@ -1104,6 +1144,8 @@ void PiSDFTransformer::multiStepScheduling(
 
 	while(removeImpExp(topDag));
 	while(reduceImplImpl(topDag));
+	while(removeImpRB(topDag));
+
 //	while(reduceExplExpl(topDag));
 	currentPiSDF->updateDAGStates(topDag);
 

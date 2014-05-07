@@ -70,6 +70,7 @@ void wait_ext_msg() {
 
 			// Popping whether the task is stopped after completion.
 	//		new_tcb->stop = RTQueuePop_UINT32(RTCtrlQueue);
+			new_tcb->stop = 1;
 
 			// Popping the AM flag.
 			new_tcb->isAM = platform_queue_pop_UINT32(PlatformCtrlQueue);

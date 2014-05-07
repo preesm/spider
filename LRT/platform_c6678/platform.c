@@ -132,7 +132,7 @@ void platform_init(UINT8 core_id){
 	CACHE_setL1DSize(CACHE_L1_32KCACHE);
 	CACHE_setL2Size (CACHE_0KCACHE);
 
-	set_MPAX(3, 0xa0000, 0x0c200, 0x14); // "translate" 256KB (0x11) from 0xa1000000 to 0x00c000000 using the MPAX number 3
+	set_MPAX(3, 0xa0000, 0x0c000, 0x15); // "translate" 256KB (0x11) from 0xa1000000 to 0x00c000000 using the MPAX number 3
 	mutex_post(MUTEX_CACHE);
 
 

@@ -56,7 +56,7 @@ void platform_flushFIFO(UINT32 id){
 }
 
 
-void platform_writeFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
+void platform_writeFifo(UINT32 id, UINT32 addr, UINT32 size, UINT8* buffer) {
 	MNAV_MonolithicPacketDescriptor *mono_pkt;
 	do{
 		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(EMPTY_DATA);
@@ -81,7 +81,7 @@ void platform_writeFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
 }
 
 
-void platform_readFifo(UINT8 id, UINT32 addr, UINT32 size, UINT8* buffer) {
+void platform_readFifo(UINT32 id, UINT32 addr, UINT32 size, UINT8* buffer) {
 	MNAV_MonolithicPacketDescriptor *mono_pkt;
 
 	do{

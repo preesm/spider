@@ -127,6 +127,7 @@ BOOL ListScheduler::checkConstraint(SRDAGVertex* vertex, Architecture* arch, UIN
 	case Explode:
 	case Implode:
 	case RoundBuffer:
+	case Broadcast:
 	default:
 		return true;
 	}
@@ -140,6 +141,7 @@ UINT32 ListScheduler::getTiming(SRDAGVertex* vertex, Architecture* arch, UINT32 
 	case Explode:
 	case Implode:
 	case RoundBuffer:
+	case Broadcast:
 	default:
 		return 10;
 	}
@@ -280,14 +282,8 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 		SRDAGVertex* vertex = dag->getVertex(i);
 		if(vertex->getState() == SrVxStExecutable){
 			schedList.add(vertex);
-			vertex->setSchedLevel(-1);
+			computeSchedLevel(vertex);
 		}
-	}
-
-	for(int i=0; i<schedList.getNb(); i++){
-		SRDAGVertex* vertex = schedList[i];
-		computeSchedLevel(vertex);
-//		printf("%d : %d\n", i, vertex->getSchedLevel());
 	}
 
 	schedList.sort(comparSchedLevel);

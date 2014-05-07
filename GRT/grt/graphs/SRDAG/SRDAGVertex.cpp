@@ -184,6 +184,11 @@ void SRDAGVertex::getName(char* name, UINT32 sizeMax){
 			if(len > MAX_VERTEX_NAME_SIZE)
 				exitWithCode(1075);
 			break;
+		case Broadcast:
+			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"Broadcast");
+			if(len > MAX_VERTEX_NAME_SIZE)
+				exitWithCode(1075);
+			break;
 		default:
 			len = snprintf(name,MAX_VERTEX_NAME_SIZE,"undef");
 			if(len > MAX_VERTEX_NAME_SIZE)

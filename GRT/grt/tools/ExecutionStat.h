@@ -53,6 +53,7 @@ typedef struct{
 	UINT32 explodeTime;
 	UINT32 implodeTime;
 	UINT32 roundBufferTime;
+	UINT32 broadcastTime;
 }ExecutionStat;
 
 //typedef enum{

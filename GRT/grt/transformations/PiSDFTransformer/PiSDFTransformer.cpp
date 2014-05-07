@@ -75,6 +75,11 @@ void PiSDFTransformer::addVertices(PiSDFVertex* vertex, UINT32 nb_repetitions, U
 	for(UINT32 j = 0; j < nb_repetitions; j++){
 		SRDAGVertex* srdag_vertex = outputGraph->addVertex();
 
+		if(vertex->getFunction_index() == BROADCAST_FUNCT_IX)
+			srdag_vertex->setType(Broadcast);
+		else
+			srdag_vertex->setType(Normal);
+
 		srdag_vertex->setFunctIx(vertex->getFunction_index());
 		srdag_vertex->setReference(vertex);
 		srdag_vertex->setReferenceIndex(j);
@@ -753,6 +758,46 @@ static int removeImpExp(SRDAGGraph* topDag){
 	return 0;
 }
 
+static int removeRBExp(SRDAGGraph* topDag){
+	for(int i=0; i<topDag->getNbVertices(); i++){
+		SRDAGVertex* rb = topDag->getVertex(i);
+		if(rb->getType() == RoundBuffer && rb->getState() != SrVxStDeleted){
+			SRDAGVertex* explode = rb->getOutputEdge(0)->getSink();
+			if(explode->getType() == Explode && rb->getState() != SrVxStDeleted){
+				UINT32 rbCons = rb->getInputEdge(0)->getTokenRate();
+				BOOL ok = TRUE;
+
+				// Check prod/cons
+				for(int j=0; j<explode->getNbOutputEdge(); j++){
+					ok &= explode->getOutputEdge(j)->getTokenRate() == rbCons;
+				}
+
+				if(ok){
+					rb->removeOutputEdgeIx(0);
+
+					SRDAGVertex* broadcast = rb;
+					broadcast->setType(Broadcast);
+					broadcast->setFunctIx(BROADCAST_FUNCT_IX);
+
+					int nbExplodeEdge = explode->getNbOutputEdge();
+
+					for(int j=0; j<nbExplodeEdge; j++){
+						SRDAGEdge* edge = explode->getOutputEdge(j);
+
+						explode->removeOutputEdgeIx(j);
+						edge->setSource(broadcast);
+						broadcast->setOutputEdge(edge,j);
+					}
+
+					topDag->removeVx(explode);
+					return 1;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 static int removeImpRB(SRDAGGraph* topDag){
 	for(int i=0; i<topDag->getNbVertices(); i++){
 		SRDAGVertex* implode = topDag->getVertex(i);
@@ -1145,6 +1190,7 @@ void PiSDFTransformer::multiStepScheduling(
 	while(removeImpExp(topDag));
 	while(reduceImplImpl(topDag));
 	while(removeImpRB(topDag));
+	while(removeRBExp(topDag));
 
 //	while(reduceExplExpl(topDag));
 	currentPiSDF->updateDAGStates(topDag);

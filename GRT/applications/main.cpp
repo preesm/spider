@@ -137,7 +137,7 @@ int main(int argc, char* argv[]){
 
 		PiSDFTransformer::multiStepScheduling(&arch, topPisdf, &listScheduler,/* &scenario,*/ &topDag, &(execStat[iter]));
 		printf("%d: EndTime %d SpeedUp %.1f\n", iter, execStat[iter].globalEndTime, execStat[1].globalEndTime/((float)execStat[iter].globalEndTime));
-		printf("Explode %d, Implode %d, RB %d\n", execStat[iter].explodeTime, execStat[iter].implodeTime, execStat[iter].roundBufferTime);
+		printf("Explode %d, Implode %d, RB %d, BR %d\n", execStat[iter].explodeTime, execStat[iter].implodeTime, execStat[iter].roundBufferTime, execStat[iter].broadcastTime);
 
 		for(int k=0; k<execStat[iter].nbActor; k++){
 			printf("%s %d\n", execStat[iter].actors[k]->getName(), execStat[iter].actorTimes[k]);

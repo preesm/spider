@@ -77,6 +77,9 @@ void inline CreateTaskMsg::send(int lrtID, SRDAGVertex* vertex){
 	case End:
 		platform_QPushUINT32(lrtID, platformCtrlQ, 1);
 		break;
+	case Broadcast:
+		platform_QPushUINT32(lrtID, platformCtrlQ, 0);
+		break;
 	default:
 		printf("CreateTaskMsg: unknown vertex type\n");
 		abort();
@@ -121,6 +124,8 @@ void inline CreateTaskMsg::send(int lrtID, SRDAGVertex* vertex){
 		break;
 	case End:
 		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getInputEdge(0)->getTokenRate());
+		break;
+	case Broadcast:
 		break;
 	default:
 		printf("CreateTaskMsg: unknown vertex type\n");

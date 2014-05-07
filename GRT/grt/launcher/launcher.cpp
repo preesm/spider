@@ -180,18 +180,17 @@ void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 //			}
 //		 }
 //		 break;
+	 case Broadcast:
+		 for (i = 0; i < vertex->getNbOutputEdge(); i++){
+			edge = vertex->getOutputEdge(i);
+			if(edge->getFifoId() == -1){
+				edge->setFifoId(nbFifo++);
+				edge->setFifoAddress(vertex->getInputEdge(0)->getFifoAddress());
+			}
+		}
+		 break;
 	 case Implode:
 	 default:
-		 if(vertex->getFunctIx() == BROADCAST_FUNCT_IX){
-			 for (i = 0; i < vertex->getNbOutputEdge(); i++){
-				edge = vertex->getOutputEdge(i);
-				if(edge->getFifoId() == -1){
-					edge->setFifoId(nbFifo++);
-					edge->setFifoAddress(vertex->getInputEdge(0)->getFifoAddress());
-				}
-			}
-		 }
-
 		 if(vertex->getFunctIx() == SWICTH_FUNCT_IX){
 			 vertex->getOutputEdge(0)->setFifoId(nbFifo++);
 			 vertex->getOutputEdge(0)->setFifoAddress(memory.alloc(vertex->getInputEdge(2)->getTokenRate()));
@@ -301,6 +300,9 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 					stat->actorTimes[stat->nbActor] = endTime - startTime;
 					stat->nbActor++;
 				}
+				break;
+			case Broadcast:
+				stat->broadcastTime += endTime - startTime;
 				break;
 			case Explode:
 				stat->explodeTime += endTime - startTime;

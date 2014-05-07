@@ -84,8 +84,8 @@ void PiSDFTransformer::addVertices(PiSDFVertex* vertex, UINT32 nb_repetitions, U
 		for(UINT32 i=0; i<vertex->getNbParameters(); i++)
 			srdag_vertex->setParamValue(i,vertex->getParameter(i)->getValue());
 
-		if(srdag_vertex->isHierarchical())
-			outputGraph->storeHierVertex(srdag_vertex);
+//		if(srdag_vertex->isHierarchical())
+//			outputGraph->storeHierVertex(srdag_vertex);
 	}
 }
 

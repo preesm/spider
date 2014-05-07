@@ -52,13 +52,13 @@ SRDAGGraph::SRDAGGraph()
 	// There is no dynamic allocation of graph members
 	vertices.reset();
 	edges.reset();
-	hierVertex.reset();
+//	hierVertex.reset();
 }
 
 void SRDAGGraph::reset(){
 	vertices.reset();
 	edges.reset();
-	hierVertex.reset();
+//	hierVertex.reset();
 }
 
 /**
@@ -66,6 +66,8 @@ void SRDAGGraph::reset(){
 */
 SRDAGGraph::~SRDAGGraph()
 {
+	printf("Nb vertices used %d\n", vertices.getNb());
+	printf("Nb edges used %d\n", edges.getNb());
 }
 
 /**

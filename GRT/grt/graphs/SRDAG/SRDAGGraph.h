@@ -56,7 +56,7 @@ class SRDAGGraph {
 
 	private :
 		List<SRDAGVertex,MAX_SRDAG_VERTICES> vertices;
-		List<SRDAGVertex*,MAX_SRDAG_VERTICES> hierVertex;
+//		List<SRDAGVertex*,MAX_SRDAG_VERTICES> hierVertex;
 		List<SRDAGEdge,MAX_SRDAG_EDGES> edges;
 
 	public : 
@@ -84,12 +84,17 @@ class SRDAGGraph {
 		SRDAGVertex* addVertex();
 
 		void storeHierVertex(SRDAGVertex* vertex){
-			hierVertex.add(vertex);
+//			hierVertex.add(vertex);
 		}
 		SRDAGVertex* getExHierVertex(){
-			for(UINT32 i=0; i<hierVertex.getNb(); i++){
-				if(hierVertex[i]->getState() == SrVxStExecutable)
-					return hierVertex[i];
+//			for(UINT32 i=0; i<hierVertex.getNb(); i++){
+//				if(hierVertex[i]->getState() == SrVxStExecutable)
+//					return hierVertex[i];
+//			}
+			for(UINT32 i=0; i<vertices.getNb(); i++){
+				if(vertices[i].isHierarchical() &&
+						vertices[i].getState() == SrVxStExecutable)
+					return &(vertices[i]);
 			}
 			return (SRDAGVertex*)NULL;
 		}

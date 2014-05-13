@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define NB_TAPS 256
+#define NB_TAPS 512
 
 void fir(float* in, float* out, int nb_sample){
 	int i, j;

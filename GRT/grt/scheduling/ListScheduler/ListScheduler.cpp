@@ -36,6 +36,7 @@
 
 #include "ListScheduler.h"
 #include <algorithm>    // std::min
+#include <grt_definitions.h>
 #include <debuggingOptions.h>
 #include <launcher/launcher.h>
 #include <string.h>
@@ -139,9 +140,12 @@ UINT32 ListScheduler::getTiming(SRDAGVertex* vertex, Architecture* arch, UINT32 
 	case ConfigureActor:
 		return vertex->getExecTime();//scenario->getTiming(vertex->getReference()->getId(), slaveType);
 	case Explode:
+	case Broadcast:
+		/* Only sync */
+		return 70;
 	case Implode:
 	case RoundBuffer:
-	case Broadcast:
+		return vertex->getOutputEdge(0)->getTokenRate()/MEMCPY_SPEED;
 	default:
 		return 10;
 	}

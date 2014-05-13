@@ -41,7 +41,7 @@
 
 #define OS_LOWEST_PRIO 				15
 #define OS_MAX_TASKS 				1
-#define OS_MAX_TASKS_TIME			80
+#define OS_MAX_TASKS_TIME			350
 #define NB_LOCAL_FUNCTIONS 			15
 #define OS_DEBUG_EN 				1
 #define CONTROL_COMM				0
@@ -75,8 +75,8 @@
 #define MAX_NB_FIFO		OS_NB_FIFO
 #define WORKING_MEMORY_SIZE 720*400*3
 #else
-#define MAX_NB_FIFO			20//100
-#define MAX_NB_PARAMETERS	20
+#define MAX_NB_FIFO			15//100
+#define MAX_NB_PARAMETERS	15
 #define WORKING_MEMORY_SIZE 64000//500*512*2//720*(400/8)
 #endif
 

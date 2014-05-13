@@ -79,7 +79,7 @@ void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples){
 	paramSamples->setValue(nbSamples);
 
 #if EXEC == 0
-	paramN->setValue(2);
+	paramN->setValue(10);
 #endif
 
 	// Configure vertices.
@@ -116,10 +116,10 @@ void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples){
 	graph->addEdge(vxUserFIRs, 0, "nbSamples*4", vxSnk, 0, "N*nbSamples*4", "0");
 
 	// Timings
-	vxConfig->setTiming(0, "1");
-	vxMFilter->setTiming(0, "1");
-	vxSrc->setTiming(0, "1");
-	vxSnk->setTiming(0, "1");
+	vxConfig->setTiming(0, "210");
+	vxMFilter->setTiming(0, "80");
+	vxSrc->setTiming(0, "70");
+	vxSnk->setTiming(0, "70");
 
 	// Subgraphs
 	PiSDFGraph *MpSched_subGraph = addGraph();
@@ -137,7 +137,7 @@ void mpSched_sub(PiSDFGraph* graph, UINT32 nbSamples){
 
 	paramSamples->setValue(nbSamples);
 #if EXEC == 0
-		paramM->setValue(2);
+		paramM->setValue(6);
 #endif
 
 	// Interface vertices.
@@ -195,9 +195,9 @@ void mpSched_sub(PiSDFGraph* graph, UINT32 nbSamples){
 	graph->addEdge(vxBr, 0, "nbSamples2*4", vxOut, 0, "nbSamples2*4", "0");
 
 	// Timings
-	vxSetM->setTiming(0, "1");
-	vxInitSwitch->setTiming(0, "1");
-	vxSwitch->setTiming(0, "1");
-	vxFIR->setTiming(0, "1000");
-	vxBr->setTiming(0, "1");
+	vxSetM->setTiming(0, "200");
+	vxInitSwitch->setTiming(0, "70");
+	vxSwitch->setTiming(0, "1600");
+	vxFIR->setTiming(0, "570000");
+	vxBr->setTiming(0, "100");
 }

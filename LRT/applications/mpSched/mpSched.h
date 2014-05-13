@@ -39,9 +39,22 @@
 
 #include "actors.h"
 
-#define NVAL	3
-static UINT8 nValues[10] = {3,2,1};
-#define MVALS	nValues
+#define NVAL	10
+#define MMAX 	12
+#define NBITER 	10
+
+static UINT8 nValues[10][10] = {
+		{6,6,6,6,6, 6, 6, 6, 6, 6},
+		{5,6,6,6,6, 6, 6, 6, 6, 7},
+		{4,5,6,6,6, 6, 6, 6, 7, 8},
+		{3,4,5,6,6, 6, 6, 7, 8, 9},
+		{2,3,4,5,6, 6, 7, 8, 9,10},
+		{1,2,3,4,5, 7, 8, 9,10,11},
+		{1,1,2,3,4, 8, 9,10,11,11},
+		{1,1,1,2,3, 9,10,11,11,11},
+		{1,1,1,1,2,10,11,11,11,11},
+		{1,1,1,1,1,11,11,11,11,11},
+	};
 
 void config(UINT8* inputFIFOs[],
 			UINT8* outputFIFOs[],
@@ -60,7 +73,7 @@ void config(UINT8* inputFIFOs[],
 	platform_queue_push_UINT32(PlatformCtrlQueue, N);
 	platform_queue_push_finalize(PlatformCtrlQueue);
 
-	memcpy(out_M, MVALS, NMAX);
+	memcpy(out_M, nValues[0], NMAX);
 }
 
 
@@ -91,15 +104,15 @@ void src(UINT8* inputFIFOs[],
 	FILE* f;
 	char file[100];
 
-	sprintf(file,"/home/jheulot/dev/mp-sched/input.dat");
-	f = fopen(file,"rb");
-	if(f == NULL){printf("cannot open %s\n", file);abort();}
-	fread(out, sizeof(float), NBSAMPLES, f);
-	fclose(f);
-
-	for(i=1; i<N; i++){
-		memcpy(out+i*NBSAMPLES, out, NBSAMPLES*sizeof(float));
-	}
+//	sprintf(file,"/home/jheulot/dev/mp-sched/input.dat");
+//	f = fopen(file,"rb");
+//	if(f == NULL){printf("cannot open %s\n", file);abort();}
+//	fread(out, sizeof(float), NBSAMPLES, f);
+//	fclose(f);
+//
+//	for(i=1; i<N; i++){
+//		memcpy(out+i*NBSAMPLES, out, NBSAMPLES*sizeof(float));
+//	}
 }
 
 void snk(UINT8* inputFIFOs[],
@@ -119,25 +132,25 @@ void snk(UINT8* inputFIFOs[],
 	FILE* f;
 	char file[100];
 
-	for(i=0; i<N; i++){
-		sprintf(file,"/home/jheulot/dev/mp-sched/output_%d_%d.dat", NBSAMPLES, MVALS[i]);
-		f = fopen(file,"rb");
-		if(f == NULL){printf("cannot open %s\n", file);abort();}
-		fread(outputCheck, sizeof(float), NBSAMPLES, f);
-		fclose(f);
+//	for(i=0; i<N; i++){
+//		sprintf(file,"/home/jheulot/dev/mp-sched/output_%d_%d.dat", NBSAMPLES, nValues[0][i]);
+//		f = fopen(file,"rb");
+//		if(f == NULL){printf("cannot open %s\n", file);abort();}
+//		fread(outputCheck, sizeof(float), NBSAMPLES, f);
+//		fclose(f);
+//
+//		for(j=0; j<NBSAMPLES; j++){
+//			if(in[j+i*NBSAMPLES] != outputCheck[j]){
+//				printf("Error in (%d,%d), expected %f get %f\n",i,j,outputCheck[j],in[j]);
+//				test = FALSE;
+//				break;
+//			}
+//		}
+//	}
 
-		for(j=0; j<NBSAMPLES; j++){
-			if(in[j+i*NBSAMPLES] != outputCheck[j]){
-				printf("Error in (%d,%d), expected %f get %f\n",i,j,outputCheck[j],in[j]);
-				test = FALSE;
-				break;
-			}
-		}
-	}
-
-	if(test){
-		printf("Passed\n");
-	}
+//	if(test){
+//		printf("Passed\n");
+//	}
 }
 
 void setM(UINT8* inputFIFOs[],
@@ -179,10 +192,11 @@ void switchFct(UINT8* inputFIFOs[],
 	void *in1 = inputFIFOs[2];
 	void *out = outputFIFOs[0];
 
-	if(select == 0)
+	if(select == 0){
 		memcpy(out, in0, NBSAMPLES*sizeof(float));
-	else
-		memcpy(out, in1, NBSAMPLES*sizeof(float));
+	}else{
+//		memcpy(out, in1, NBSAMPLES*sizeof(float));
+	}
 }
 
 

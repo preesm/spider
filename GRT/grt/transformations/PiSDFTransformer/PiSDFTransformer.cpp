@@ -798,6 +798,46 @@ static int removeRBExp(SRDAGGraph* topDag){
 	return 0;
 }
 
+static int removeBr(SRDAGGraph* topDag){
+	for(UINT32 i=0; i<topDag->getNbVertices(); i++){
+		SRDAGVertex* br = topDag->getVertex(i);
+		if(br->getType() == Broadcast && br->getState() != SrVxStDeleted){
+			for(UINT32 j=0; j<br->getNbOutputEdge(); j++){
+				if(br->getOutputEdge(j)->getSink()->getType() == End){
+					UINT32 nbOutput = br->getNbOutputEdge();
+
+					topDag->removeVx(br->getOutputEdge(j)->getSink());
+					br->removeOutputEdgeIx(j);
+					for(UINT32 k=j+1; k<nbOutput; k++){
+						br->setOutputEdge(br->getOutputEdge(k), k-1);
+						br->removeOutputEdgeIx(k);
+					}
+
+				}
+			}
+			if(br->getNbOutputEdge() == 1){
+				SRDAGEdge* edge = br->getInputEdge(0);
+				SRDAGVertex* nextVertex = br->getOutputEdge(0)->getSink();
+				UINT32 edgeIx = nextVertex->getInputEdgeId(br->getOutputEdge(0));
+
+				br->removeInputEdgeIx(0);
+				nextVertex->removeInputEdgeIx(edgeIx);
+
+				edge->setSink(nextVertex);
+				nextVertex->setInputEdge(edge, edgeIx);
+
+				topDag->removeVx(br);
+			}
+
+			if(br->getNbOutputEdge() == 0){
+				br->setType(End);
+				br->setFunctIx(END_FUNCT_IX);
+			}
+		}
+	}
+	return 0;
+}
+
 static int removeImpRB(SRDAGGraph* topDag){
 	for(int i=0; i<topDag->getNbVertices(); i++){
 		SRDAGVertex* implode = topDag->getVertex(i);

@@ -54,13 +54,11 @@ PiSDFGraph* initPisdf_mpSched(PiSDFGraph* _graphs, int NMAX, UINT32 nbSamples){
 	graphs = _graphs;
 
 	PiSDFGraph* top = addGraph();
-	top->setBaseId(0);
 
 	PiSDFVertex *vxTop = (PiSDFVertex *)top->addVertex("top", pisdf_vertex);
 	top->setRootVertex(vxTop);
 
 	PiSDFGraph* mpSchedGraph = addGraph();
-	mpSchedGraph->setBaseId(10);
 	vxTop->setSubGraph(mpSchedGraph);
 	mpSchedGraph->setParentVertex(vxTop);
 
@@ -123,7 +121,6 @@ void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples){
 
 	// Subgraphs
 	PiSDFGraph *MpSched_subGraph = addGraph();
-	MpSched_subGraph->setBaseId(20);
 	vxUserFIRs->setSubGraph(MpSched_subGraph);
 	MpSched_subGraph->setParentVertex(vxUserFIRs);
 

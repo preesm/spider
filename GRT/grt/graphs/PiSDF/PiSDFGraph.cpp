@@ -43,8 +43,6 @@ PiSDFGraph::PiSDFGraph() {
 	rootVertex = NULL;
 	parentVertex = NULL;
 
-	baseId=0;
-
 	nbExecVertices = 0;
 	nbDiscardVertices = 0;
 	executable = false;
@@ -63,8 +61,6 @@ void PiSDFGraph::reset() {
 
 	rootVertex = NULL;
 	parentVertex = NULL;
-
-	baseId=0;
 
 	nbExecVertices = 0;
 	nbDiscardVertices = 0;

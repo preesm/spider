@@ -49,8 +49,6 @@
 #include <tools/ExecutionStat.h>
 
 class PiSDFGraph {
-	UINT32 baseId;
-
 	static UINT32 glbNbConfigVertices;
 
 	List<PiSDFEdge,MAX_NB_PiSDF_EDGES> 			edges;
@@ -102,16 +100,6 @@ public:
     UINT32 getNb_parameters()
     {
         return parameters.getNb();
-    }
-
-
-    UINT32 getBaseId()
-    {
-        return baseId;
-    }
-
-    void setBaseId(UINT32 base){
-    	baseId = base;
     }
 
     PiSDFParameter* getParameter(UINT64 index){

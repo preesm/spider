@@ -61,7 +61,6 @@ class PiSDFGraph {
 	List<PiSDFIfVertex,MAX_NB_PiSDF_OUTPUT_VERTICES>		output_vertices;
 
 	PiSDFAbstractVertex* parentVertex;
-	PiSDFAbstractVertex* rootVertex; // Must be set while creating the graph.
 	UINT32 nbExecVertices; 			// Counts the number of executable vertices.
 	UINT32 nbDiscardVertices; 		// Counts the number of discarded vertices
 									// e.g. a classic vertex with 0 production on an input edge.
@@ -170,15 +169,6 @@ public:
 	PiSDFEdge* getEdge(UINT64 index)
 	{
 		return &edges[index];
-	}
-
-    void setRootVertex(PiSDFAbstractVertex *rootVertex)
-    {
-        this->rootVertex = rootVertex;
-    }
-
-	PiSDFAbstractVertex* getRootVertex() {
-		return rootVertex;
 	}
 
 	UINT32 getNbVertices() {

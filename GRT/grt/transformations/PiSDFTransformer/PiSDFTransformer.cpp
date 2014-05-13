@@ -1113,7 +1113,7 @@ void PiSDFTransformer::multiStepScheduling(
 	graphFifo.reset();
 	schedule.setNbActiveSlaves(arch->getNbActiveSlaves());
 
-	PiSDFVertex* root = (PiSDFVertex*)pisdf->getRootVertex();
+	PiSDFVertex* root = (PiSDFVertex*)pisdf->getVertex(0);
 	if(!root) exitWithCode(1070);
 	if(!root->hasSubGraph()) exitWithCode(1069);
 

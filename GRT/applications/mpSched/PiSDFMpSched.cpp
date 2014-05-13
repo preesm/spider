@@ -56,7 +56,6 @@ PiSDFGraph* initPisdf_mpSched(PiSDFGraph* _graphs, int NMAX, UINT32 nbSamples){
 	PiSDFGraph* top = addGraph();
 
 	PiSDFVertex *vxTop = (PiSDFVertex *)top->addVertex("top", pisdf_vertex);
-	top->setRootVertex(vxTop);
 
 	PiSDFGraph* mpSchedGraph = addGraph();
 	vxTop->setSubGraph(mpSchedGraph);
@@ -85,7 +84,6 @@ void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples){
 	vxConfig->setFunction_index(0);
 	vxConfig->addParameter(paramNMAX);
 	vxConfig->addRelatedParam(paramN);
-	graph->setRootVertex(vxConfig);
 
 	// Other vertices
 	PiSDFVertex *vxMFilter 	= (PiSDFVertex *)graph->addVertex("MFilter", pisdf_vertex);
@@ -162,7 +160,6 @@ void mpSched_sub(PiSDFGraph* graph, UINT32 nbSamples){
 	PiSDFConfigVertex *vxSetM = (PiSDFConfigVertex *)graph->addVertex("setM", config_vertex);
 	vxSetM->setFunction_index(4);
 	vxSetM->addRelatedParam(paramM);
-	graph->setRootVertex(vxSetM);
 
 	// Other vertices
 	PiSDFVertex *vxInitSwitch 	= (PiSDFVertex *)graph->addVertex("InitSwitch", pisdf_vertex);

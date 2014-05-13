@@ -40,7 +40,6 @@
 #include "debuggingOptions.h"
 
 PiSDFGraph::PiSDFGraph() {
-	rootVertex = NULL;
 	parentVertex = NULL;
 
 	nbExecVertices = 0;
@@ -58,8 +57,6 @@ PiSDFGraph::PiSDFGraph() {
 }
 
 void PiSDFGraph::reset() {
-
-	rootVertex = NULL;
 	parentVertex = NULL;
 
 	nbExecVertices = 0;

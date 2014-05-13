@@ -816,7 +816,7 @@ static int removeImpRB(SRDAGGraph* topDag){
 					int lastEdgeIx = implode->getNbInputEdge()-1;
 					for(int j=0; j<ixEnd; j++){
 						SRDAGVertex *end_vertex = topDag->addVertex();
-						end_vertex->setType(End); 	// Indicates it is an implode vertex.
+						end_vertex->setType(End);
 						end_vertex->setFunctIx(END_FUNCT_IX);
 
 						end_vertex->setInputEdge(implode->getInputEdge(j), 0);
@@ -830,6 +830,33 @@ static int removeImpRB(SRDAGGraph* topDag){
 						}
 					}
 					implode->getOutputEdge(0)->setTokenRate(rbProduction);
+
+					if(implode->getNbInputEdge() == 1){
+						SRDAGEdge* edge = implode->getInputEdge(0);
+						implode->removeInputEdgeIx(0);
+						rb->removeInputEdgeIx(0);
+
+						edge->setSink(rb);
+						rb->setInputEdge(edge, 0);
+
+						topDag->removeVx(implode);
+					}
+
+					if(rb->getInputEdge(0)->getTokenRate()
+						== rb->getOutputEdge(0)->getTokenRate()){
+
+						SRDAGEdge* edge = rb->getInputEdge(0);
+						SRDAGVertex* nextVertex = rb->getOutputEdge(0)->getSink();
+						UINT32 edgeIx = nextVertex->getInputEdgeId(rb->getOutputEdge(0));
+
+						rb->removeInputEdgeIx(0);
+						nextVertex->removeInputEdgeIx(edgeIx);
+
+						edge->setSink(nextVertex);
+						nextVertex->setInputEdge(edge, edgeIx);
+
+						topDag->removeVx(rb);
+					}
 
 					return 1;
 				}
@@ -1037,7 +1064,6 @@ void PiSDFTransformer::multiStepScheduling(
 	static int brv[MAX_SRDAG_VERTICES];
 	PiSDFGraph*   currentPiSDF;
 	UINT32 len;
-	UINT32 	lvlCntr = 0;
 	UINT8 	stepsCntr = 0;
 
 	Queue<PiSDFGraph*, 15> graphFifo;
@@ -1063,7 +1089,7 @@ void PiSDFTransformer::multiStepScheduling(
 		do{
 		#if PRINT_GRAPH
 			// Printing the current PiSDF graph.
-			len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", PiSDF_FILE_PATH, lvlCntr);
+			len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", PiSDF_FILE_PATH, stepsCntr);
 			if(len > MAX_FILE_NAME_SIZE){
 				exitWithCode(1072);
 			}
@@ -1127,7 +1153,7 @@ void PiSDFTransformer::multiStepScheduling(
 		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", "topDag_mid", stepsCntr);
 		if(len > MAX_FILE_NAME_SIZE)
 			exitWithCode(1072);
-		DotWriter::write(topDag, file, 1, 0);
+		DotWriter::write(topDag, file, 1, 1);
 	#endif
 
 		Launcher::endSchedulingTime();
@@ -1187,10 +1213,27 @@ void PiSDFTransformer::multiStepScheduling(
 			currentPiSDF = currHSrDagVx->getHierarchy();
 	}while(currHSrDagVx);
 
+#if PRINT_GRAPH
+	// Printing the topDag
+	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s.gv", "topDag_last_bo");
+	if(len > MAX_FILE_NAME_SIZE)
+		exitWithCode(1072);
+	DotWriter::write(topDag, file, 1, 1);
+#endif
+
 	while(removeImpExp(topDag));
 	while(reduceImplImpl(topDag));
 	while(removeImpRB(topDag));
 	while(removeRBExp(topDag));
+	while(removeBr(topDag));
+
+#if PRINT_GRAPH
+	// Printing the topDag
+	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s.gv", "topDag_last_ao");
+	if(len > MAX_FILE_NAME_SIZE)
+		exitWithCode(1072);
+	DotWriter::write(topDag, file, 1, 1);
+#endif
 
 //	while(reduceExplExpl(topDag));
 	currentPiSDF->updateDAGStates(topDag);

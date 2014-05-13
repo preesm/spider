@@ -292,12 +292,14 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 				for(k=0; k<stat->nbActor; k++){
 					if(stat->actors[k] == vertex->getReference()){
 						stat->actorTimes[k] += endTime - startTime;
+						stat->actorIterations[k]++;
 						break;
 					}
 				}
 				if(k == stat->nbActor){
 					stat->actors[stat->nbActor] = vertex->getReference();
 					stat->actorTimes[stat->nbActor] = endTime - startTime;
+					stat->actorIterations[k] = 1;
 					stat->nbActor++;
 				}
 				break;

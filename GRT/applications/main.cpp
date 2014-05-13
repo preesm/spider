@@ -140,7 +140,7 @@ int main(int argc, char* argv[]){
 		printf("Explode %d, Implode %d, RB %d, BR %d\n", execStat[iter].explodeTime, execStat[iter].implodeTime, execStat[iter].roundBufferTime, execStat[iter].broadcastTime);
 
 		for(int k=0; k<execStat[iter].nbActor; k++){
-			printf("%s %d\n", execStat[iter].actors[k]->getName(), execStat[iter].actorTimes[k]);
+			printf("%s %d (%d times) \n", execStat[iter].actors[k]->getName(), execStat[iter].actorTimes[k], execStat[iter].actorIterations[k]);
 		}
 	}
 

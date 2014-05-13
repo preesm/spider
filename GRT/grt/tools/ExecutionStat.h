@@ -47,6 +47,7 @@ typedef struct{
 	int graphTransfoTime;
 
 	UINT32 actorTimes[MAX_STATS_VERTICES];
+	UINT32 actorIterations[MAX_STATS_VERTICES];
 	PiSDFAbstractVertex* actors[MAX_STATS_VERTICES];
 	int nbActor;
 

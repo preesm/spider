@@ -130,7 +130,7 @@ void mpSched_sub(PiSDFGraph* graph, UINT32 nbSamples){
 	PiSDFParameter *paramM = graph->addParameter("M");
 	PiSDFParameter *paramSamples = graph->addParameter("nbSamples2");
 
-	paramSamples->setValue(nbSamples);
+	paramSamples->setParameterParentID(0);//->setValue(nbSamples);
 #if EXEC == 0
 		paramM->setValue(6);
 #endif

@@ -68,7 +68,7 @@ static char tempStr[MAX_SLAVE_NAME_SIZE];
 void createArch(Architecture* arch, int nbSlaves){
 	arch->reset();
 	for(int i=0; i<nbSlaves; i++){
-		UINT32 len = snprintf(tempStr, MAX_SLAVE_NAME_SIZE, "uBlaze%02d", i);
+		UINT32 len = snprintf(tempStr, MAX_SLAVE_NAME_SIZE, "PE%02d", i);
 		if(len > MAX_SLAVE_NAME_SIZE){
 			exitWithCode(1073);
 		}
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]){
 //
 //	setvbuf(stdout, NULL, _IONBF, 0);
 //	setvbuf(stderr, NULL, _IONBF, 0);
-	int nbSlaves = 1;
+	int nbSlaves = 7;
 //	static Scenario 			scenario;
 	static Architecture 		arch;
 	static ListScheduler 		listScheduler;
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]){
 
 	int iter=1;{
 //	for(int iter=1; iter<=ITER_MAX; iter++){
-		arch.setNbActiveSlaves(iter);
+		arch.setNbActiveSlaves(nbSlaves);
 
 		listScheduler.reset();
 		topDag.reset();
@@ -120,7 +120,7 @@ int main(int argc, char* argv[]){
 //		listScheduler.setScenario(&scenario);
 
 		// Getting the PiSDF graph.
-		topPisdf = initPisdf_mpSched(pisdfGraphs, 3, 16000);
+		topPisdf = initPisdf_mpSched(pisdfGraphs, 10, 4000);
 
 		// Add topActor to topDag
 		SRDAGVertex* topActor = topDag.addVertex();

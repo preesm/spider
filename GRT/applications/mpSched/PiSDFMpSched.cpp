@@ -192,6 +192,6 @@ void mpSched_sub(PiSDFGraph* graph, UINT32 nbSamples){
 	vxSetM->setTiming(0, "200");
 	vxInitSwitch->setTiming(0, "70");
 	vxSwitch->setTiming(0, "1600");
-	vxFIR->setTiming(0, "570000");
+	vxFIR->setTiming(0, "5501132/60");//"570000");
 	vxBr->setTiming(0, "100");
 }

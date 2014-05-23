@@ -147,9 +147,11 @@ void snk(UINT8* inputFIFOs[],
 //			}
 //		}
 //	}
-
+//
 //	if(test){
 //		printf("Passed\n");
+//	}else{
+//		printf("Not Passed\n");
 //	}
 }
 

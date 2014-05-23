@@ -115,21 +115,23 @@ void Xplode(UINT8* inputFIFOs[],
 //		printf("\n");
 	}else if(nbFifoOut == 1){
 		/* Implode */
-//		printf("Imploding : ");
-		nbTknOut = params[nbFifoIn + 2];
-//		data = OSAllocWorkingMemory(nbTknOut);
+		if(inputFIFOs[0] != outputFIFOs[0]){
+	//		printf("Imploding : ");
+			nbTknOut = params[nbFifoIn + 2];
+	//		data = OSAllocWorkingMemory(nbTknOut);
 
-		for(i=0; i<nbFifoIn; i++){
-			nbTknIn = params[i + 2];
-//			printf("{%d tkn}", nbTknIn);
-//			platform_readFifo(inputFIFOs[i].id, inputFIFOs[i].add, nbTknIn, data+index);
-			memcpy(outputFIFOs[0]+index, inputFIFOs[i], nbTknIn);
-			index += nbTknIn;
+			for(i=0; i<nbFifoIn; i++){
+				nbTknIn = params[i + 2];
+	//			printf("{%d tkn}", nbTknIn);
+	//			platform_readFifo(inputFIFOs[i].id, inputFIFOs[i].add, nbTknIn, data+index);
+				memcpy(outputFIFOs[0]+index, inputFIFOs[i], nbTknIn);
+				index += nbTknIn;
+			}
+	//		printf(" -> {%d tkn}", nbTknOut);
+	//		printf("\n");
+
+	//		platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, nbTknOut, data);
 		}
-//		printf(" -> {%d tkn}", nbTknOut);
-//		printf("\n");
-
-//		platform_writeFifo(outputFIFOs[0].id,outputFIFOs[0].add, nbTknOut, data);
 	}else{
 		printf("Error in Xplode\n");
 		exit(-1);

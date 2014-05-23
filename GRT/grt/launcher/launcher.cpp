@@ -192,9 +192,37 @@ void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 		 break;
 	 case Implode:
 	 default:
+
+		 for (i = 0; i < vertex->getNbOutputEdge(); i++){
+			 SRDAGVertex* implode = vertex->getOutputEdge(i)->getSink();
+			 if(implode->getType() == Implode){
+				 BOOL suitable = (implode->getOutputEdge(0)->getFifoId() == -1);
+				 for (int j=0; suitable && j < implode->getNbInputEdge(); j++){
+					 SRDAGVertex* pred = implode->getInputEdge(j)->getSource();
+					 if(pred->getType() != Normal){
+						 suitable = FALSE;
+					 }
+				 }
+				 if(suitable){
+					 edge = implode->getOutputEdge(0);
+					 UINT32 mem = memory.alloc(edge->getTokenRate());
+					 implode->getOutputEdge(0)->setFifoId(nbFifo++);
+					 implode->getOutputEdge(0)->setFifoAddress(mem);
+
+					 UINT32 offset=0;
+					 for (int j=0; j < implode->getNbInputEdge(); j++){
+						 edge = implode->getInputEdge(j);
+						 edge->setFifoId(nbFifo++);
+						 edge->setFifoAddress(mem+offset);
+						 offset += edge->getTokenRate();
+					 }
+				 }
+			 }
+		 }
+
 		 if(vertex->getFunctIx() == SWICTH_FUNCT_IX){
 			 vertex->getOutputEdge(0)->setFifoId(nbFifo++);
-			 vertex->getOutputEdge(0)->setFifoAddress(memory.alloc(vertex->getInputEdge(2)->getTokenRate()));
+			 vertex->getOutputEdge(0)->setFifoAddress(vertex->getInputEdge(2)->getFifoAddress());
 		 }
 
 		for (i = 0; i < vertex->getNbOutputEdge(); i++){

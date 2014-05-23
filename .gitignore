@@ -45,3 +45,11 @@ xtend-gen/
 /plugins/org.ietr.preesm.codegen.xtend/xtend-gen/
 *~
 *._trace
+
+# TI Compiled Files #
+#####################
+*.obj
+*.map
+*.out
+*_linkInfo.xml
+configPkg

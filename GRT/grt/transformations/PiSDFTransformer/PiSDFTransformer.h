@@ -70,7 +70,7 @@ namespace PiSDFTransformer {
 			Architecture* arch,
 			PiSDFGraph* pisdf,
 			ListScheduler* listScheduler,
-//			Scenario* scenario,
+			BaseSchedule* schedule,
 			SRDAGGraph* topDag,
 			ExecutionStat* stat);
 };

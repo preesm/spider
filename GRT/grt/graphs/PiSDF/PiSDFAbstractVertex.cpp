@@ -73,6 +73,11 @@ void PiSDFAbstractVertex::reset() {
 	outputEdges.reset();
 	childVertices.reset();
 }
+
+void PiSDFAbstractVertex::resetRefs(){
+	childVertices.reset();
+}
+
 void PiSDFAbstractVertex::setInputEdge(PiSDFEdge* edge, UINT32 id){
 	inputEdges.add(edge,id);
 }

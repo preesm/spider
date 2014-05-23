@@ -77,7 +77,6 @@ void createArch(Architecture* arch, int nbSlaves){
 }
 
 int main(int argc, char* argv[]){
-#define ITER_MAX 7
 
 //	if(argc < 2){
 //		printf("Usage: %s nbSlaves\n", argv[0]);
@@ -95,6 +94,7 @@ int main(int argc, char* argv[]){
 	static SRDAGGraph 			topDag;
 	static PiSDFGraph 			pisdfGraphs[MAX_NB_PiSDF_GRAPHS];
 	static PiSDFGraph 			*topPisdf;
+	static BaseSchedule 		schedule;
 
 	printf("Starting with %d slaves max\n", nbSlaves);
 	platform_init(nbSlaves);
@@ -107,20 +107,30 @@ int main(int argc, char* argv[]){
 	 * Architecture, Scheduling policy.
 	 */
 
-	int iter=1;{
-//	for(int iter=1; iter<=ITER_MAX; iter++){
+//	int iter=1;{
+
+	// Getting the PiSDF graph.
+	topPisdf = initPisdf_mpSched(pisdfGraphs, 10, 4000);
+	Launcher::init();
+
+#if EXEC == 1
+//	for(int i=0; i<nbSlaves; i++)
+//		ClearTimeMsg::send(i);
+	platform_time_reset();
+#endif
+	schedule.reset();
+
+	for(int iter=1; iter<=ITER_MAX; iter++){
 		arch.setNbActiveSlaves(nbSlaves);
 
 		listScheduler.reset();
 		topDag.reset();
-		Launcher::init();
-
+		Launcher::reset();
+		topPisdf->resetRefs();
 
 		listScheduler.setArchitecture(&arch);
 //		listScheduler.setScenario(&scenario);
 
-		// Getting the PiSDF graph.
-		topPisdf = initPisdf_mpSched(pisdfGraphs, 10, 4000);
 
 		// Add topActor to topDag
 		SRDAGVertex* topActor = topDag.addVertex();
@@ -129,27 +139,51 @@ int main(int argc, char* argv[]){
 		topActor->setIterationIndex(0);
 
 
-	#if EXEC == 1
-		for(int i=0; i<nbSlaves; i++)
-			ClearTimeMsg::send(i);
-		platform_time_reset();
-	#endif
+		PiSDFTransformer::multiStepScheduling(&arch, topPisdf, &listScheduler, &schedule, &topDag, &(execStat[iter]));
 
-		PiSDFTransformer::multiStepScheduling(&arch, topPisdf, &listScheduler,/* &scenario,*/ &topDag, &(execStat[iter]));
-		printf("%d: EndTime %d SpeedUp %.1f\n", iter, execStat[iter].globalEndTime, execStat[1].globalEndTime/((float)execStat[iter].globalEndTime));
-		printf("Explode %d, Implode %d, RB %d, BR %d\n", execStat[iter].explodeTime, execStat[iter].implodeTime, execStat[iter].roundBufferTime, execStat[iter].broadcastTime);
+		UINT32 time;
+		do{
+			time = platform_time_getValue();
+		}while(time < iter*PERIOD);
 
-		for(int k=0; k<execStat[iter].nbActor; k++){
-			printf("%s %d (%d times) \n", execStat[iter].actors[k]->getName(), execStat[iter].actorTimes[k], execStat[iter].actorIterations[k]);
-		}
 	}
 
-	FILE* f = fopen("/home/jheulot/dev/compa_res.csv", "w+");
-	fprintf(f, "nbPEs, endTime, SpeedUp, graphTransfo, Scheduling\n");
-	for(int iter=1; iter<=ITER_MAX; iter++){
-		fprintf(f, "%d,%d,%f,%d,%d\n", iter, execStat[iter].globalEndTime, execStat[1].globalEndTime/((float)execStat[iter].globalEndTime), execStat[iter].graphTransfoTime, execStat[iter].schedulingTime);
+#if EXEC == 1
+	Launcher::createRealTimeGantt(&arch, &topDag, "Gantt.xml", execStat);
+#endif
+
+	char file[40];
+	printf("time\n");
+	sprintf(file,"/home/jheulot/dev/mp-sched/compa_latencies.csv");
+	FILE *f = fopen(file,"w+");
+	fprintf(f, "iter, latency\n");
+	for(int iter=0; iter<ITER_MAX; iter++){
+		fprintf(f,"%d,%d\n",iter+1, execStat->latencies[iter]);
+		printf("%d: %d\n",iter+1, execStat->latencies[iter]);
 	}
 	fclose(f);
+
+//#if PRINT_REAL_GANTT
+//		UINT32 len = snprintf(file, MAX_FILE_NAME_SIZE, "Gantt_simulated.xml");
+//		if(len > MAX_FILE_NAME_SIZE)
+//			exitWithCode(1072);
+//		ScheduleWriter::write(&schedule, &topDag, &arch, file);
+//#endif
+//#endif
+
+//	printf("%d: EndTime %d SpeedUp %.1f\n", iter, execStat[iter].globalEndTime, execStat[1].globalEndTime/((float)execStat[iter].globalEndTime));
+//	printf("Explode %d, Implode %d, RB %d, BR %d\n", execStat[iter].explodeTime, execStat[iter].implodeTime, execStat[iter].roundBufferTime, execStat[iter].broadcastTime);
+//
+//	for(int k=0; k<execStat[iter].nbActor; k++){
+//		printf("%s %d (%d times) \n", execStat[iter].actors[k]->getName(), execStat[iter].actorTimes[k], execStat[iter].actorIterations[k]);
+//	}
+
+//	FILE* f = fopen("/home/jheulot/dev/compa_res.csv", "w+");
+//	fprintf(f, "nbPEs, endTime, SpeedUp, graphTransfo, Scheduling\n");
+//	for(int iter=1; iter<=ITER_MAX; iter++){
+//		fprintf(f, "%d,%d,%f,%d,%d\n", iter, execStat[iter].globalEndTime, execStat[1].globalEndTime/((float)execStat[iter].globalEndTime), execStat[iter].graphTransfoTime, execStat[iter].schedulingTime);
+//	}
+//	fclose(f);
 
 	printf("finished\n");
 }

@@ -68,7 +68,6 @@ static SRDAGVertex* sinkRepetitions[MAX_VERTEX_REPETITION];
 static UINT32 vertexId[MAX_NB_PiSDF_VERTICES];
 static int topo_matrix [MAX_NB_PiSDF_EDGES * MAX_NB_PiSDF_VERTICES];
 static int tempBrv[MAX_NB_PiSDF_VERTICES];
-static BaseSchedule schedule;
 
 void PiSDFTransformer::addVertices(PiSDFVertex* vertex, UINT32 nb_repetitions, UINT32 iteration, SRDAGGraph* outputGraph){
 	// Adding one SRDAG vertex per repetition
@@ -1098,7 +1097,7 @@ void PiSDFTransformer::multiStepScheduling(
 							Architecture* arch,
 							PiSDFGraph* pisdf,
 							ListScheduler* listScheduler,
-//							Scenario* scenario,
+							BaseSchedule* schedule,
 							SRDAGGraph* topDag,
 							ExecutionStat* execStat){
 	static int brv[MAX_SRDAG_VERTICES];
@@ -1109,9 +1108,9 @@ void PiSDFTransformer::multiStepScheduling(
 	Queue<PiSDFGraph*, 15> graphFifo;
 	Queue<SRDAGVertex*, 15> vertexFifo;
 
-	schedule.reset();
+//	schedule->reset();
 	graphFifo.reset();
-	schedule.setNbActiveSlaves(arch->getNbActiveSlaves());
+	schedule->setNbActiveSlaves(arch->getNbActiveSlaves());
 
 	PiSDFVertex* root = (PiSDFVertex*)pisdf->getVertex(0);
 	if(!root) exitWithCode(1070);
@@ -1120,7 +1119,7 @@ void PiSDFTransformer::multiStepScheduling(
 	SRDAGVertex* currHSrDagVx;
 	topDag->getVerticesFromReference(root,0,&currHSrDagVx);
 
-	platform_time_reset();
+//	platform_time_reset();
 	Launcher::initGraphTime();
 
 	root->getSubGraph(&currentPiSDF);
@@ -1179,7 +1178,7 @@ void PiSDFTransformer::multiStepScheduling(
 		Launcher::initSchedulingTime();
 
 		/* Schedule */
-		listScheduler->schedule(topDag, &schedule, arch);
+		listScheduler->schedule(topDag, schedule, arch);
 
 		// Assigning FIFO ids to executable vxs' edges.
 //		Launcher::assignFifo(topDag);
@@ -1294,30 +1293,30 @@ void PiSDFTransformer::multiStepScheduling(
 	 * Last scheduling and execution. After all hierarchical levels have been flattened,
 	 * there is one more execution to do for completing one complete execution of the model.
 	 */
-	schedule.newStep();
-	listScheduler->schedule(topDag, &schedule, arch);
+	schedule->newStep();
+	listScheduler->schedule(topDag, schedule, arch);
 
 	// Assigning FIFO ids to executable vxs' edges.
 //	Launcher::assignFifo(topDag);
 
 	Launcher::endSchedulingTime();
 
-#if EXEC == 1
+//#if EXEC == 1
 	/*
 	 * Launching the execution on LRTs. The "true" means that is the last execution
 	 * of the current iteration, so the local RTs clear the tasks table and
 	 * send back execution information.
 	 */
 //	Launcher::launch(topDag, arch, &schedule);
-	Launcher::createRealTimeGantt(arch, topDag, "Gantt.xml", execStat);
-
-#if PRINT_REAL_GANTT
-	len = snprintf(file, MAX_FILE_NAME_SIZE, "Gantt_simulated.xml");
-	if(len > MAX_FILE_NAME_SIZE)
-		exitWithCode(1072);
-	ScheduleWriter::write(&schedule, topDag, arch, file);
-#endif
-#endif
+//	Launcher::createRealTimeGantt(arch, topDag, "Gantt.xml", execStat);
+//
+//#if PRINT_REAL_GANTT
+//	len = snprintf(file, MAX_FILE_NAME_SIZE, "Gantt_simulated.xml");
+//	if(len > MAX_FILE_NAME_SIZE)
+//		exitWithCode(1072);
+//	ScheduleWriter::write(&schedule, topDag, arch, file);
+//#endif
+//#endif
 
 	// Updating states. Sets all executable vxs to executed since their execution was already launched.
 	topDag->updateExecuted();

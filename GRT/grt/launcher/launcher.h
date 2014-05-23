@@ -63,6 +63,7 @@ namespace Launcher {
 	void assignFifoVertex(SRDAGVertex* vertex);
 
 	void init();
+	void reset();
 
 	void initSchedulingTime();
 	void endSchedulingTime();

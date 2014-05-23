@@ -41,7 +41,7 @@
 
 void Monitor_init();
 void Monitor_startTask(UINT32 vertexID);
-inline void Monitor_endTask();
-inline void Monitor_sendData();
+void Monitor_endTask();
+void Monitor_sendData();
 
 #endif /* LRT_MONITOR_H_ */

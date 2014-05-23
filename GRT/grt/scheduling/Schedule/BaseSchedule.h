@@ -47,6 +47,8 @@ typedef struct SchedType{
 	UINT32	endTime;
 }SchedType;
 
+#define MAX(a,b) ((a>b)?a:b)
+
 class BaseSchedule {
 	UINT32 nbActiveSlaves;
 	UINT32 nbVertices[MAX_SLAVES];
@@ -63,7 +65,7 @@ public:
 	void newStep(){
 		UINT32 time = platform_time_getValue();
 		for(int i=0; i<nbActiveSlaves; i++){
-			slaveReadyTimes[i] = time;
+			slaveReadyTimes[i] = MAX(slaveReadyTimes[i],time);
 		}
 	}
 

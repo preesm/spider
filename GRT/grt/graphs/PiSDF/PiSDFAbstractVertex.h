@@ -102,6 +102,7 @@ public:
 	virtual ~PiSDFAbstractVertex();
 
 	void reset();
+	void resetRefs();
 
 	void setInputEdge(PiSDFEdge* edge, UINT32 id);
 

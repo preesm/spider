@@ -45,6 +45,7 @@
 #include <algorithm>
 #include <platform_file.h>
 #include <platform_time.h>
+#include <debuggingOptions.h>
 
 
 #define PRINT_ACTOR_IN_DOT_FILE		0
@@ -230,10 +231,17 @@ void Launcher::init(){
 	endMem = memory.alloc(END_MEM_SIZE);
 }
 
+void Launcher::reset(){
+	nbFifo = nbParamToRecv = 0;
+	memory = Memory(0x0, 0x003EC000);
+	endMem = memory.alloc(END_MEM_SIZE);
+}
+
 //#define PRINT_GRAPH 1
 void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName, ExecutionStat* stat){
 	// Creating the Gantt with real times.
 	memset(stat, 0, sizeof(ExecutionStat));
+	UINT32 nbIter = 0;
 
 #if PRINT_REAL_GANTT
 	platform_fopen(filePathName);
@@ -302,6 +310,10 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 					stat->actorIterations[k] = 1;
 					stat->nbActor++;
 				}
+
+				if(stat->actors[k]->getFunction_index() == 3){
+					stat->latencies[nbIter++] = endTime - nbIter*PERIOD;
+				}
 				break;
 			case Broadcast:
 				stat->broadcastTime += endTime - startTime;
@@ -320,12 +332,16 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 #if PRINT_REAL_GANTT
 			vertex->getName(name, MAX_VERTEX_NAME_SIZE);
 			platform_fprintf("\t<event\n");
-			platform_fprintf("\t\tstart=\"%u\"\n", startTime);
-			platform_fprintf("\t\tend=\"%u\"\n",	endTime);
+			platform_fprintf("\t\tstart=\"%lu\"\n", startTime);
+			platform_fprintf("\t\tend=\"%lu\"\n",	endTime);
 			platform_fprintf("\t\ttitle=\"%s\"\n", name);
 			platform_fprintf("\t\tmapping=\"%s\"\n", arch->getSlaveName(slave));
 			platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
 			platform_fprintf("\t\t>%s.</event>\n", name);
+
+			if(startTime > endTime){
+				printf("Receive bad time\n");
+			}
 #endif
 			if(stat->globalEndTime < endTime)
 				stat->globalEndTime = endTime;

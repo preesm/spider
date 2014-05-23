@@ -109,7 +109,7 @@
 #define FILE_PATH_LENGTH		50
 #define MAX_NB_AM				10
 #define MAX_FILE_NAME_SIZE		30
-#define MAX_PISDF_STEPS 		5
+#define MAX_PISDF_STEPS 		5*ITER_MAX
 
 
 

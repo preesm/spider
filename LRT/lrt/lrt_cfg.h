@@ -41,7 +41,7 @@
 
 #define OS_LOWEST_PRIO 				15
 #define OS_MAX_TASKS 				1
-#define OS_MAX_TASKS_TIME			350
+#define OS_MAX_TASKS_TIME			550
 #define NB_LOCAL_FUNCTIONS 			15
 #define OS_DEBUG_EN 				1
 #define CONTROL_COMM				0

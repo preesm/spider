@@ -45,6 +45,9 @@
 #define USE_AM							0
 #define SEE_PARAM_VAL					1
 
+#define ITER_MAX 10
+#define PERIOD 1100000
+
 #define PiSDF_FILE_PATH					"pisdf"
 #define SUB_SRDAG_FIFO_ID_FILE_PATH		"subSrDagFifoId"
 #define SUB_SDF_FILE_0_PATH				"subSDF"

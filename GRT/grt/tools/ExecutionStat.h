@@ -38,6 +38,7 @@
 #define EXECUTIONSTAT_H_
 
 #include <graphs/PiSDF/PiSDFAbstractVertex.h>
+#include <debuggingOptions.h>
 
 #define MAX_STATS_VERTICES 100
 
@@ -55,6 +56,8 @@ typedef struct{
 	UINT32 implodeTime;
 	UINT32 roundBufferTime;
 	UINT32 broadcastTime;
+
+	UINT32 latencies[ITER_MAX];
 }ExecutionStat;
 
 //typedef enum{

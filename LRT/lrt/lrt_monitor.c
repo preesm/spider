@@ -57,17 +57,17 @@ void Monitor_init(){
 	nbTaskTime = 0;
 }
 
-inline void Monitor_startTask(UINT32 vertexID){
+void Monitor_startTask(UINT32 vertexID){
+	if(nbTaskTime>=OS_MAX_TASKS_TIME-1){
+		exitWithCode(1017);
+	}
 	taskTimes[nbTaskTime].vertexID = vertexID;
 	taskTimes[nbTaskTime].start = platform_time_getValue();
 }
 
-inline void Monitor_endTask(){
+void Monitor_endTask(){
 	taskTimes[nbTaskTime].end = platform_time_getValue();
 	nbTaskTime++;
-	if(nbTaskTime>OS_MAX_TASKS_TIME){
-		exitWithCode(1017);
-	}
 }
 
 void Monitor_sendData(){
@@ -75,6 +75,7 @@ void Monitor_sendData(){
 	platform_queue_push_UINT32(PlatformCtrlQueue, nbTaskTime);
 	platform_queue_push(PlatformCtrlQueue, taskTimes, nbTaskTime*sizeof(taskTime));
 	platform_queue_push_finalize(PlatformCtrlQueue);
+	printf("nbTaskTime %d \n", nbTaskTime);
 	nbTaskTime = 0;
 //	exit(0);
 }

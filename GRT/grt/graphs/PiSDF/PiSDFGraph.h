@@ -71,6 +71,7 @@ public:
 	~PiSDFGraph(){}
 
 	void reset();
+	void resetRefs();
 
 	PiSDFEdge* 	addEdge(PiSDFAbstractVertex* source, UINT32 sourcePortId, const char* production, PiSDFAbstractVertex* sink, UINT32 sinkPortId, const char* consumption, const char* delay);
 

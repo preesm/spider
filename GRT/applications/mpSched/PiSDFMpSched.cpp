@@ -50,6 +50,10 @@ PiSDFGraph* addGraph(){
 	return graph;
 }
 
+void resetGraph(){
+	nbGraphs = 0;
+}
+
 PiSDFGraph* initPisdf_mpSched(PiSDFGraph* _graphs, int NMAX, UINT32 nbSamples){
 	graphs = _graphs;
 

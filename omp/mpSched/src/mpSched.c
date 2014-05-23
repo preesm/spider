@@ -31,17 +31,31 @@
 #define MMAX 	12
 #define NBITER 	10
 
+#define PERIOD 1100000
+
+//static UINT8 nValues[10][10] = {
+//		{6,6,6,6,6, 6, 6, 6, 6, 6},
+//		{5,6,6,6,6, 6, 6, 6, 6, 7},
+//		{4,5,6,6,6, 6, 6, 6, 7, 8},
+//		{3,4,5,6,6, 6, 6, 7, 8, 9},
+//		{2,3,4,5,6, 6, 7, 8, 9,10},
+//		{1,2,3,4,5, 7, 8, 9,10,11},
+//		{1,1,2,3,4, 8, 9,10,11,11},
+//		{1,1,1,2,3, 9,10,11,11,11},
+//		{1,1,1,1,2,10,11,11,11,11},
+//		{1,1,1,1,1,11,11,11,11,11},
+//	};
 static UINT8 nValues[10][10] = {
 		{6,6,6,6,6, 6, 6, 6, 6, 6},
-		{5,6,6,6,6, 6, 6, 6, 6, 7},
-		{4,5,6,6,6, 6, 6, 6, 7, 8},
-		{3,4,5,6,6, 6, 6, 7, 8, 9},
-		{2,3,4,5,6, 6, 7, 8, 9,10},
-		{1,2,3,4,5, 7, 8, 9,10,11},
-		{1,1,2,3,4, 8, 9,10,11,11},
-		{1,1,1,2,3, 9,10,11,11,11},
-		{1,1,1,1,2,10,11,11,11,11},
-		{1,1,1,1,1,11,11,11,11,11},
+		{6,6,6,6,6, 6, 6, 6, 6, 6},
+		{6,6,6,6,6, 6, 6, 6, 6, 6},
+		{6,6,6,6,6, 6, 6, 6, 6, 6},
+		{6,6,6,6,6, 6, 6, 6, 6, 6},
+		{6,6,6,6,6, 6, 6, 6, 6, 6},
+		{6,6,6,6,6, 6, 6, 6, 6, 6},
+		{6,6,6,6,6, 6, 6, 6, 6, 6},
+		{6,6,6,6,6, 6, 6, 6, 6, 6},
+		{6,6,6,6,6, 6, 6, 6, 6, 6},
 	};
 #define MVALS	nValues
 
@@ -70,6 +84,7 @@ void main(){
 //	UINT32 times[11];
 	static UINT32 core_endTime[15][2];
 	static UINT32 core_schedTime[15][2];
+	static UINT32 latency[NBITER];
 
 #if CHECK
 	static float input[NBSAMPLES];
@@ -108,9 +123,12 @@ void main(){
 		printf("\n");
 	}
 
+	platform_time_init();
+	Monitor_init();
+	printf("Start Stage %d\n",iter);
+	platform_time_reset();
+
 	for(iter=0; iter<NBITER; iter++){
-		platform_time_init();
-		Monitor_init();
 
 #if EXEC
 		for(i=0; i<NVAL; i++){
@@ -118,8 +136,8 @@ void main(){
 		}
 #endif
 
-		printf("Start Stage %d\n",iter);
-		platform_time_reset();
+//		printf("Start Stage %d\n",iter);
+//		platform_time_reset();
 
 		#pragma omp parallel for private(j) schedule(dynamic)
 		for(i=0; i<NVAL; i++){
@@ -148,11 +166,33 @@ void main(){
 			}
 
 		}
-		Monitor_setEndTime();
-		printf("End Stage\n");
+//		Monitor_setEndTime();
+//		printf("End Stage\n");
 
-		core_endTime[iter][0] = Monitor_printData(iter,"stage", &(core_schedTime[iter][0]));
+		latency[iter] = platform_time_getValue() - iter*PERIOD;
+
+		UINT32 time;
+		do{
+			time = platform_time_getValue();
+		}while(time < (iter+1)*PERIOD);
+
+//		core_endTime[iter][0] = Monitor_printData(iter,"stage", &(core_schedTime[iter][0]));
 	}
+	Monitor_setEndTime();
+	printf("End Stage\n");
+
+	core_endTime[iter][0] = Monitor_printData(iter,"stage", &(core_schedTime[iter][0]));
+
+	char file[40];
+	printf("time\n");
+	sprintf(file,"/home/jheulot/dev/mp-sched/openMP_latencies.csv");
+	f = fopen(file,"w+");
+	fprintf(f, "iter, latency\n");
+	for(iter=0; iter<10; iter++){
+		fprintf(f,"%d,%d\n",iter+1, latency[iter]);
+		printf("%d: %d\n",iter+1, latency[iter]);
+	}
+	fclose(f);
 
 //	for(iter=0; iter<NBITER; iter++){
 //		platform_time_init();
@@ -229,10 +269,10 @@ void main(){
 //	sprintf(file,"/home/jheulot/dev/mp-sched/openMP_times.csv");
 //	f = fopen(file,"w+");
 //	fprintf(f, "nbCores, execSL, speedUpSL, schedSL, execDL, speedupDL, schedDL\n");
-	for(iter=0; iter<10; iter++){
-//		fprintf(f,"%d,%d,%f,%d,%d,%f,%d\n",iter, core_endTime[iter][SL],((float)core_endTime[1][SL])/core_endTime[iter][SL], core_schedTime[iter][SL],
-//		                                   core_endTime[iter][DL],((float)core_endTime[1][DL])/core_endTime[iter][DL], core_schedTime[iter][DL]);
-		printf("%d: %d : %d\n",iter, core_endTime[iter][0], core_endTime[iter][1]);
-	}
+//	for(iter=0; iter<10; iter++){
+////		fprintf(f,"%d,%d,%f,%d,%d,%f,%d\n",iter, core_endTime[iter][SL],((float)core_endTime[1][SL])/core_endTime[iter][SL], core_schedTime[iter][SL],
+////		                                   core_endTime[iter][DL],((float)core_endTime[1][DL])/core_endTime[iter][DL], core_schedTime[iter][DL]);
+//		printf("%d: %d : %d\n",iter, core_endTime[iter][0], core_endTime[iter][1]);
+//	}
 //	fclose(f);
 }

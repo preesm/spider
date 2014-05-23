@@ -49,7 +49,7 @@ typedef struct{
 	UINT32 end;
 } taskTime;
 
-static taskTime taskTimes[100];
+static taskTime taskTimes[800];
 static UINT32 nbTaskTime;
 static UINT32 endTime;
 

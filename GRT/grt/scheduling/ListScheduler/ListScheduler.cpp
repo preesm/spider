@@ -248,9 +248,7 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 //		schedule->addCom(bestSlave, bestEndTime-bestComOutTime, bestEndTime);
 	vertex->setScheduleIndex(scheduleIndex);
 
-#if EXEC
 	Launcher::launchVertex(vertex, bestSlave);
-#endif
 
 	return bestEndTime;
 }
@@ -278,6 +276,8 @@ int comparSchedLevel(SRDAGVertex* a, SRDAGVertex* b){
 
 void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architecture* arch)
 {
+	Launcher::initTaskOrderingTime();
+
 	// Create ScheduleList
 	static List<SRDAGVertex*, MAX_SRDAG_VERTICES> schedList;
 	schedList.reset();
@@ -292,11 +292,18 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 
 	schedList.sort(comparSchedLevel);
 
+	Launcher::endTaskOrderingTime();
+	Launcher::initMappingTime();
+
+	Launcher::setActorsNb(schedList.getNb());
+
 	for(int i=0; i<schedList.getNb(); i++){
 		SRDAGVertex* vertex = schedList[i];
 //		printf("%d : %d\n", i, vertex->getSchedLevel());
 		this->schedule(schedule, arch, vertex);
 	}
+
+	Launcher::endMappingTime();
 }
 //
 //UINT32 computeSchedLevel(SRDAGVertex* vertex){

@@ -1175,7 +1175,6 @@ void PiSDFTransformer::multiStepScheduling(
 //		PiSDFTransformer::removeUnusedRB(topDag);
 
 		Launcher::endGraphTime();
-		Launcher::initSchedulingTime();
 
 		/* Schedule */
 		listScheduler->schedule(topDag, schedule, arch);
@@ -1184,10 +1183,10 @@ void PiSDFTransformer::multiStepScheduling(
 //		Launcher::assignFifo(topDag);
 
 	#if PRINT_GRAPH
-		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.xml", SCHED_FILE_NAME, stepsCntr);
-		if(len > MAX_FILE_NAME_SIZE)
-			exitWithCode(1072);
-		ScheduleWriter::write(&schedule, topDag, arch, file);
+//		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.xml", SCHED_FILE_NAME, stepsCntr);
+//		if(len > MAX_FILE_NAME_SIZE)
+//			exitWithCode(1072);
+//		ScheduleWriter::write(schedule, topDag, arch, file);
 
 		len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", "topDag_mid", stepsCntr);
 		if(len > MAX_FILE_NAME_SIZE)
@@ -1195,7 +1194,6 @@ void PiSDFTransformer::multiStepScheduling(
 		DotWriter::write(topDag, file, 1, 1);
 	#endif
 
-		Launcher::endSchedulingTime();
 
 
 	#if EXEC == 1
@@ -1288,7 +1286,6 @@ void PiSDFTransformer::multiStepScheduling(
 //	DotWriter::write(topDag, file, 1, 0);
 
 	Launcher::endGraphTime();
-	Launcher::initSchedulingTime();
 	/*
 	 * Last scheduling and execution. After all hierarchical levels have been flattened,
 	 * there is one more execution to do for completing one complete execution of the model.
@@ -1299,7 +1296,6 @@ void PiSDFTransformer::multiStepScheduling(
 	// Assigning FIFO ids to executable vxs' edges.
 //	Launcher::assignFifo(topDag);
 
-	Launcher::endSchedulingTime();
 
 //#if EXEC == 1
 	/*

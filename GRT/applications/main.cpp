@@ -90,7 +90,7 @@ int main(int argc, char* argv[]){
 //	static Scenario 			scenario;
 	static Architecture 		arch;
 	static ListScheduler 		listScheduler;
-	static ExecutionStat 		execStat[ITER_MAX+1];
+	static ExecutionStat 		execStat;
 	static SRDAGGraph 			topDag;
 	static PiSDFGraph 			pisdfGraphs[MAX_NB_PiSDF_GRAPHS];
 	static PiSDFGraph 			*topPisdf;
@@ -139,7 +139,7 @@ int main(int argc, char* argv[]){
 		topActor->setIterationIndex(0);
 
 
-		PiSDFTransformer::multiStepScheduling(&arch, topPisdf, &listScheduler, &schedule, &topDag, &(execStat[iter]));
+		PiSDFTransformer::multiStepScheduling(&arch, topPisdf, &listScheduler, &schedule, &topDag, &execStat);
 
 		UINT32 time;
 		do{
@@ -148,18 +148,19 @@ int main(int argc, char* argv[]){
 
 	}
 
+	printf("reporting...\n");
 #if EXEC == 1
-	Launcher::createRealTimeGantt(&arch, &topDag, "Gantt.xml", execStat);
+	Launcher::createRealTimeGantt(&arch, &topDag, "Gantt.xml", &execStat);
 #endif
 
-	char file[40];
+	char file[100];
 	printf("time\n");
 	sprintf(file,"/home/jheulot/dev/mp-sched/compa_latencies.csv");
 	FILE *f = fopen(file,"w+");
 	fprintf(f, "iter, latency\n");
 	for(int iter=0; iter<ITER_MAX; iter++){
-		fprintf(f,"%d,%d\n",iter+1, execStat->latencies[iter]);
-		printf("%d: %d\n",iter+1, execStat->latencies[iter]);
+		fprintf(f,"%d,%d\n",iter+1, execStat.latencies[iter]);
+		printf("%d: %d\n",iter+1, execStat.latencies[iter]);
 	}
 	fclose(f);
 

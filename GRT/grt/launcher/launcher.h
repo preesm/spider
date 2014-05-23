@@ -65,11 +65,14 @@ namespace Launcher {
 	void init();
 	void reset();
 
-	void initSchedulingTime();
-	void endSchedulingTime();
+	void initTaskOrderingTime();
+	void endTaskOrderingTime();
+	void initMappingTime();
+	void endMappingTime();
+	void setActorsNb(UINT32 nb);
 	void initGraphTime();
 	void endGraphTime();
 
-};
+}
 
 #endif /* LAUNCHER_H_ */

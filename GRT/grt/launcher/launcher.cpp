@@ -58,9 +58,13 @@ static UINT32 nbParamToRecv;
 
 static UINT32 timeStartGraph[MAX_PISDF_STEPS];
 static UINT32 timeEndGraph[MAX_PISDF_STEPS];
-static UINT32 timeStartScheduling[MAX_PISDF_STEPS];
-static UINT32 timeEndScheduling[MAX_PISDF_STEPS];
-static UINT32 nbStepsSched=0;
+static UINT32 timeStartTaskOrdering[MAX_PISDF_STEPS];
+static UINT32 timeEndTaskOrdering[MAX_PISDF_STEPS];
+static UINT32 timeStartMapping[MAX_PISDF_STEPS];
+static UINT32 timeEndMapping[MAX_PISDF_STEPS];
+static UINT32 actorsByStep[MAX_PISDF_STEPS];
+static UINT32 nbStepsTaskOrdering=0;
+static UINT32 nbStepsMapping=0;
 static UINT32 nbStepsGraph=0;
 
 static UINT32 endMem;
@@ -73,12 +77,25 @@ void Launcher::endGraphTime(){
 	nbStepsGraph++;
 }
 
-void Launcher::initSchedulingTime(){
-	timeStartScheduling[nbStepsSched] = platform_time_getValue();
+void Launcher::initTaskOrderingTime(){
+	timeStartTaskOrdering[nbStepsTaskOrdering] = platform_time_getValue();
 }
-void Launcher::endSchedulingTime(){
-	timeEndScheduling[nbStepsSched] = platform_time_getValue();
-	nbStepsSched++;
+void Launcher::endTaskOrderingTime(){
+	timeEndTaskOrdering[nbStepsTaskOrdering] = platform_time_getValue();
+	nbStepsTaskOrdering++;
+}
+
+void Launcher::initMappingTime(){
+	timeStartMapping[nbStepsMapping] = platform_time_getValue();
+}
+
+void Launcher::setActorsNb(UINT32 nb){
+	actorsByStep[nbStepsMapping] = nb;
+}
+
+void Launcher::endMappingTime(){
+	timeEndMapping[nbStepsMapping] = platform_time_getValue();
+	nbStepsMapping++;
 }
 
 
@@ -166,6 +183,31 @@ void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 		}
 		break;
 //	 case Implode:
+//		 for(i=0; i<vertex->getNbInputEdge(); i++){
+//			 if(vertex->getInputEdge(i)->getSource()->getType() != pisdf_vertex){
+//				 if(vertex->getFunctIx() == SWICTH_FUNCT_IX){
+//					 vertex->getOutputEdge(0)->setFifoId(nbFifo++);
+//					 vertex->getOutputEdge(0)->setFifoAddress(memory.alloc(vertex->getInputEdge(2)->getTokenRate()));
+//				 }
+//
+//				for (i = 0; i < vertex->getNbOutputEdge(); i++){
+//					edge = vertex->getOutputEdge(i);
+//		//			if(edge->getSink()->getType() == Implode){
+//		//				assignFifoVertex(edge->getSink());
+//		//			}
+//
+//					if(edge->getFifoId() == -1){
+//						edge->setFifoId(nbFifo++);
+//						 if(edge->getSink()->getFunctIx() == END_FUNCT_IX){
+//							edge->setFifoAddress(endMem);
+//						 }else{
+//							 edge->setFifoAddress(memory.alloc(edge->getTokenRate()));
+//						}
+//					}
+//				}
+//				return;
+//			 }
+//		 }
 //		 if(vertex->getOutputEdge(0)->getFifoId() == -1){
 //			 base = memory.alloc(vertex->getOutputEdge(0)->getTokenRate());
 //			 offset = 0;
@@ -246,13 +288,15 @@ void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 
 void Launcher::launchVertex(SRDAGVertex* vertex, UINT32 slave){
 	Launcher::assignFifoVertex(vertex);
+#if EXEC == 1
 	CreateTaskMsg::send(slave, vertex);
 	if(vertex->getType() == ConfigureActor)
 		nbParamToRecv += ((PiSDFConfigVertex*)(vertex->getReference()))->getNbRelatedParams();
+#endif
 }
 
 void Launcher::init(){
-	nbStepsSched = nbStepsGraph = 0;
+	nbStepsMapping = nbStepsTaskOrdering = nbStepsGraph = 0;
 	nbFifo = nbParamToRecv = 0;
 	memory = Memory(0x0, 0x003EC000);
 
@@ -281,17 +325,33 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 #endif
 
 	// Writing execution data for the master.
-	for (UINT32 j=0 ; j<nbStepsSched; j++){
+	for (UINT32 j=0 ; j<nbStepsTaskOrdering; j++){
 #if PRINT_REAL_GANTT
 		platform_fprintf("\t<event\n");
-		platform_fprintf("\t\tstart=\"%u\"\n", 	timeStartScheduling[j]);
-		platform_fprintf("\t\tend=\"%u\"\n",	timeEndScheduling[j]);
-		platform_fprintf("\t\ttitle=\"Sched_%d\"\n", j);
+		platform_fprintf("\t\tstart=\"%u\"\n", 	timeStartTaskOrdering[j]);
+		platform_fprintf("\t\tend=\"%u\"\n",	timeEndTaskOrdering[j]);
+		platform_fprintf("\t\ttitle=\"TaskOrdering_%d\"\n", j);
 		platform_fprintf("\t\tmapping=\"Master\"\n");
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
 		platform_fprintf("\t\t>Step_%d.</event>\n", j);
 #endif
-		stat->schedulingTime += timeEndScheduling[j] - timeStartScheduling[j];
+		stat->schedulingTime += timeEndTaskOrdering[j] - timeStartTaskOrdering[j];
+	}
+	for (UINT32 j=0 ; j<nbStepsMapping; j++){
+#if PRINT_REAL_GANTT
+		platform_fprintf("\t<event\n");
+		platform_fprintf("\t\tstart=\"%u\"\n", 	timeStartMapping[j]);
+		platform_fprintf("\t\tend=\"%u\"\n",	timeEndMapping[j]);
+		platform_fprintf("\t\ttitle=\"Mapping_%d\"\n", j);
+		platform_fprintf("\t\tmapping=\"Master\"\n");
+		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
+		platform_fprintf("\t\t>Step_%d.</event>\n", j);
+
+		printf("Mapped %d tasks in %d cycles (%d cycles/tasks)\n", actorsByStep[j],
+				timeEndTaskOrdering[j] - timeStartTaskOrdering[j],
+				(timeEndTaskOrdering[j] - timeStartTaskOrdering[j])/ actorsByStep[j]);
+#endif
+		stat->schedulingTime += timeEndTaskOrdering[j] - timeStartTaskOrdering[j];
 	}
 	for (UINT32 j=0 ; j<nbStepsGraph; j++){
 #if PRINT_REAL_GANTT

@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <grt_definitions.h>
+
+#if EXEC == 1
 extern "C"{
 #include <ti/dsplib/src/DSPF_sp_fir_gen/DSPF_sp_fir_gen.h>
 }
@@ -45,3 +48,8 @@ void fir(float* in, float* out, int nb_sample){
 	);
 
 }
+
+#else
+	void fir(float* in, float* out, int nb_sample){
+	}
+#endif

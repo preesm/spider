@@ -131,11 +131,11 @@ public:
 		return 0;
 	}
 
-	int getDenominator() const {
+	inline int getDenominator() const {
 		return denominator;
 	}
 
-	int getNominator() const {
+	inline int getNominator() const {
 		return nominator;
 	}
 };

@@ -44,12 +44,6 @@
 #include "grt_definitions.h"
 #include "monitor.h"
 
-typedef struct{
-	UINT32 vertexID;
-	UINT32 start;
-	UINT32 end;
-} taskTime;
-
 static taskTime taskTimes[OS_MAX_TASKS_TIME];
 static UINT32 nbTaskTime;
 
@@ -62,6 +56,7 @@ void Monitor_startTask(UINT32 vertexID){
 		exitWithCode(1017);
 	}
 	taskTimes[nbTaskTime].vertexID = vertexID;
+//	printf("start task %d vxId %d\n", nbTaskTime, vertexID);
 	taskTimes[nbTaskTime].start = platform_time_getValue();
 }
 
@@ -74,8 +69,6 @@ int Monitor_getNB(){
 	return nbTaskTime;
 }
 
-void Monitor_get(int id, UINT32* vxId, UINT32* start, UINT32 *end){
-	*start = taskTimes[id].start;
-	*end = taskTimes[id].end;
-	*vxId = taskTimes[id].vertexID;
+taskTime Monitor_get(int id){
+	return taskTimes[id];
 }

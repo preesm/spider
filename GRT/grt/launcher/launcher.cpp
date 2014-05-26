@@ -338,6 +338,8 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 #endif
 		stat->schedulingTime += timeEndTaskOrdering[j] - timeStartTaskOrdering[j];
 	}
+
+	UINT32 mappingTime = 0, mappingNb = 0;
 	for (UINT32 j=0 ; j<nbStepsMapping; j++){
 #if PRINT_REAL_GANTT
 		platform_fprintf("\t<event\n");
@@ -348,12 +350,18 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
 		platform_fprintf("\t\t>Step_%d.</event>\n", j);
 
-		printf("Mapped %d tasks in %d cycles (%d cycles/tasks)\n", actorsByStep[j],
-				timeEndTaskOrdering[j] - timeStartTaskOrdering[j],
-				(timeEndTaskOrdering[j] - timeStartTaskOrdering[j])/ actorsByStep[j]);
+		mappingTime += timeEndMapping[j] - timeStartMapping[j];
+		mappingNb += actorsByStep[j];
 #endif
 		stat->schedulingTime += timeEndTaskOrdering[j] - timeStartTaskOrdering[j];
 	}
+
+	printf("Mapped %d tasks in %d cycles (%d cycles/tasks)\n",
+			mappingNb,
+			mappingTime,
+			mappingTime/mappingNb);
+
+
 	for (UINT32 j=0 ; j<nbStepsGraph; j++){
 #if PRINT_REAL_GANTT
 		platform_fprintf("\t<event\n");
@@ -368,9 +376,10 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 	}
 
 	for(int i=0; i<Monitor_getNB(); i++){
-		UINT32 startTime, endTime, vertexId;
-		Monitor_get(i, &vertexId, &startTime, &endTime);
-		SRDAGVertex* vertex = dag->getVertex(vertexId); // data[0] contains the vertex's id.
+		taskTime t;
+		t = Monitor_get(i);
+		UINT32 execTime = t.end - t.start;
+		SRDAGVertex* vertex = dag->getVertex(t.vertexID);
 
 		UINT32 k;
 		switch(vertex->getType()){
@@ -378,52 +387,52 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		case ConfigureActor:
 			for(k=0; k<stat->nbActor; k++){
 				if(stat->actors[k] == vertex->getReference()){
-					stat->actorTimes[k] += endTime - startTime;
+					stat->actorTimes[k] += execTime;
 					stat->actorIterations[k]++;
 					break;
 				}
 			}
 			if(k == stat->nbActor){
 				stat->actors[stat->nbActor] = vertex->getReference();
-				stat->actorTimes[stat->nbActor] = endTime - startTime;
+				stat->actorTimes[stat->nbActor] = execTime;
 				stat->actorIterations[k] = 1;
 				stat->nbActor++;
 			}
 
 			if(stat->actors[k]->getFunction_index() == 3){
-				stat->latencies[nbIter++] = endTime - nbIter*PERIOD;
+				stat->latencies[nbIter++] = t.end - nbIter*PERIOD;
 			}
 			break;
 		case Broadcast:
-			stat->broadcastTime += endTime - startTime;
+			stat->broadcastTime += execTime;
 			break;
 		case Explode:
-			stat->explodeTime += endTime - startTime;
+			stat->explodeTime += execTime;
 			break;
 		case Implode:
-			stat->implodeTime += endTime - startTime;
+			stat->implodeTime += execTime;
 			break;
 		case RoundBuffer:
-			stat->roundBufferTime += endTime - startTime;
+			stat->roundBufferTime += execTime;
 			break;
 		}
 
 #if PRINT_REAL_GANTT
 		vertex->getName(name, MAX_VERTEX_NAME_SIZE);
 		platform_fprintf("\t<event\n");
-		platform_fprintf("\t\tstart=\"%lu\"\n", startTime);
-		platform_fprintf("\t\tend=\"%lu\"\n",	endTime);
+		platform_fprintf("\t\tstart=\"%lu\"\n", t.start);
+		platform_fprintf("\t\tend=\"%lu\"\n",	t.end);
 		platform_fprintf("\t\ttitle=\"%s\"\n", name);
 		platform_fprintf("\t\tmapping=\"Master\"\n");
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
 		platform_fprintf("\t\t>%s.</event>\n", name);
 
-		if(startTime > endTime){
+		if(t.start > t.end){
 			printf("Receive bad time\n");
 		}
 #endif
-		if(stat->globalEndTime < endTime)
-			stat->globalEndTime = endTime;
+		if(stat->globalEndTime < t.end)
+			stat->globalEndTime = t.end;
 	}
 
 	// Writing execution data for each slave.

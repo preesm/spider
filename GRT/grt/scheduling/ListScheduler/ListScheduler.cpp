@@ -298,7 +298,7 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 
 	schedule->newStep();
 
-	UINT32 end = platform_time_getValue() + 100*schedList.getNb();
+	UINT32 end = platform_time_getValue() + 500*schedList.getNb();
 
 	schedule->setReadyTime(0, end);
 

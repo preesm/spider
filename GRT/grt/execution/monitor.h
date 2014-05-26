@@ -39,10 +39,16 @@
 
 #include "grt_definitions.h"
 
+typedef struct{
+	UINT32 vertexID;
+	UINT32 start;
+	UINT32 end;
+} taskTime;
+
 void Monitor_init();
 void Monitor_startTask(UINT32 vertexID);
 void Monitor_endTask();
-void Monitor_get(int id, UINT32* vxId, UINT32* start, UINT32 *end);
+taskTime Monitor_get(int id);
 int Monitor_getNB();
 
 #endif /* LRT_MONITOR_H_ */

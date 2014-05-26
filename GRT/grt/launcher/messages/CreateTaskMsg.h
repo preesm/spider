@@ -47,12 +47,19 @@
 #include <grt_definitions.h>
 #include <platform_queue.h>
 #include "../launcher.h"
+#include <execution/execution.h>
 
 namespace CreateTaskMsg {
 	void send(int LRTID, SRDAGVertex* vertex);
 };
 
 void inline CreateTaskMsg::send(int lrtID, SRDAGVertex* vertex){
+
+	if(lrtID == 0){ // Master
+		pushExecution(vertex);
+		return;
+	}
+
 	platform_QPushUINT32(lrtID, platformCtrlQ, MSG_CREATE_TASK);
 	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getFunctIx());
 	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getId());

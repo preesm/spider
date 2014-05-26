@@ -59,46 +59,24 @@ void platform_shMemInit() {
     int shmid;
     key_t key = SHARED_MEM_KEY;
 
-	if(platform_getCoreId() == 0){
-		printf("Creating shared memory...\n");
-
-	    /*
-	     * Create the segment.
-	     */
-	    if ((shmid = shmget(key, SHARED_MEM_LENGHT+DATA_FIFO_REGION_SIZE, IPC_CREAT | 0666)) < 0) {
-	        perror("shmget");
-	        exit(1);
-	    }
-
-	    /*
-	     * Now we attach the segment to our data space.
-	     */
-	    if ((shMem_sync = shmat(shmid, NULL, 0)) == (UINT8 *) -1) {
-	        perror("shmat");
-	        exit(1);
-	    }
-
-	    shMem_data = shMem_sync+DATA_FIFO_REGION_SIZE;
-	    memset(shMem_sync,0,DATA_FIFO_REGION_SIZE);
-	}else{
-		 /*
-		 * Locate the segment.
-		 */
-		if ((shmid = shmget(key, SHARED_MEM_LENGHT+DATA_FIFO_REGION_SIZE, 0666)) < 0) {
-			perror("shmget");
-			exit(1);
-		}
-
-	    /*
-	     * Now we attach the segment to our data space.
-	     */
-	    if ((shMem_sync = shmat(shmid, NULL, 0)) == (UINT8 *) -1) {
-	        perror("shmat");
-	        exit(1);
-	    }
-
-	    shMem_data = shMem_sync+DATA_FIFO_REGION_SIZE;
+	 /*
+	 * Locate the segment.
+	 */
+	if ((shmid = shmget(key, SHARED_MEM_LENGHT+DATA_FIFO_REGION_SIZE, 0666)) < 0) {
+		perror("shmget");
+		exit(1);
 	}
+
+	/*
+	 * Now we attach the segment to our data space.
+	 */
+	if ((shMem_sync = shmat(shmid, NULL, 0)) == (UINT8 *) -1) {
+		perror("shmat");
+		exit(1);
+	}
+
+	shMem_data = shMem_sync+DATA_FIFO_REGION_SIZE;
+
 }
 
 void platform_flushFIFO(UINT32 id){

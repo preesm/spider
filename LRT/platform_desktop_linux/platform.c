@@ -44,7 +44,7 @@ void platform_shMemInit();
 static UINT8 coreId;
 
 UINT8 platform_getCoreId(){
-	return 0;
+	return coreId;
 }
 
 void platform_init(UINT8 core_id){

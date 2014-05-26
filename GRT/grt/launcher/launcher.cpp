@@ -46,6 +46,7 @@
 #include <platform_file.h>
 #include <platform_time.h>
 #include <debuggingOptions.h>
+#include <execution/monitor.h>
 
 
 #define PRINT_ACTOR_IN_DOT_FILE		0
@@ -366,8 +367,67 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		stat->graphTransfoTime += timeEndGraph[j] - timeStartGraph[j];
 	}
 
+	for(int i=0; i<Monitor_getNB(); i++){
+		UINT32 startTime, endTime, vertexId;
+		Monitor_get(i, &vertexId, &startTime, &endTime);
+		SRDAGVertex* vertex = dag->getVertex(vertexId); // data[0] contains the vertex's id.
+
+		UINT32 k;
+		switch(vertex->getType()){
+		case Normal:
+		case ConfigureActor:
+			for(k=0; k<stat->nbActor; k++){
+				if(stat->actors[k] == vertex->getReference()){
+					stat->actorTimes[k] += endTime - startTime;
+					stat->actorIterations[k]++;
+					break;
+				}
+			}
+			if(k == stat->nbActor){
+				stat->actors[stat->nbActor] = vertex->getReference();
+				stat->actorTimes[stat->nbActor] = endTime - startTime;
+				stat->actorIterations[k] = 1;
+				stat->nbActor++;
+			}
+
+			if(stat->actors[k]->getFunction_index() == 3){
+				stat->latencies[nbIter++] = endTime - nbIter*PERIOD;
+			}
+			break;
+		case Broadcast:
+			stat->broadcastTime += endTime - startTime;
+			break;
+		case Explode:
+			stat->explodeTime += endTime - startTime;
+			break;
+		case Implode:
+			stat->implodeTime += endTime - startTime;
+			break;
+		case RoundBuffer:
+			stat->roundBufferTime += endTime - startTime;
+			break;
+		}
+
+#if PRINT_REAL_GANTT
+		vertex->getName(name, MAX_VERTEX_NAME_SIZE);
+		platform_fprintf("\t<event\n");
+		platform_fprintf("\t\tstart=\"%lu\"\n", startTime);
+		platform_fprintf("\t\tend=\"%lu\"\n",	endTime);
+		platform_fprintf("\t\ttitle=\"%s\"\n", name);
+		platform_fprintf("\t\tmapping=\"Master\"\n");
+		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
+		platform_fprintf("\t\t>%s.</event>\n", name);
+
+		if(startTime > endTime){
+			printf("Receive bad time\n");
+		}
+#endif
+		if(stat->globalEndTime < endTime)
+			stat->globalEndTime = endTime;
+	}
+
 	// Writing execution data for each slave.
-	for(UINT32 slave=0; slave<arch->getNbActiveSlaves(); slave++){
+	for(UINT32 slave=1; slave<arch->getNbActiveSlaves(); slave++){
 		SendInfoData::send(slave);
 
 		UINT32 msgType = platform_QPopUINT32(slave, platformCtrlQ);
@@ -444,15 +504,24 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){
 	UINT32 slave = 0;
 	while(nbParamToRecv != 0){
-		UINT32 msgType;
-		if(platform_QNonBlockingPop(slave, platformCtrlQ, &msgType, sizeof(UINT32)) == sizeof(UINT32)){
-			if(msgType != MSG_PARAM_VALUE) exitWithCode(1068);
-			UINT32 vxId = platform_QPopUINT32(slave, platformCtrlQ);
-			PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(topDag->getVertex(vxId)->getReference());
-			for(UINT32 j = 0; j < refConfigVx->getNbRelatedParams(); j++){
-				topDag->getVertex(vxId)->setRelatedParamValue(j,platform_QPopUINT32(slave, platformCtrlQ));
+		if(slave == 0){
+			UINT32 vxId, value;
+			if(popParam(&vxId, &value)){
+				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(topDag->getVertex(vxId)->getReference());
+				nbParamToRecv -= refConfigVx->getNbRelatedParams();
+				topDag->getVertex(vxId)->setRelatedParamValue(0,value);
 			}
-			nbParamToRecv -= refConfigVx->getNbRelatedParams();
+		}else{
+			UINT32 msgType;
+			if(platform_QNonBlockingPop(slave, platformCtrlQ, &msgType, sizeof(UINT32)) == sizeof(UINT32)){
+				if(msgType != MSG_PARAM_VALUE) exitWithCode(1068);
+				UINT32 vxId = platform_QPopUINT32(slave, platformCtrlQ);
+				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(topDag->getVertex(vxId)->getReference());
+				for(UINT32 j = 0; j < refConfigVx->getNbRelatedParams(); j++){
+					topDag->getVertex(vxId)->setRelatedParamValue(j,platform_QPopUINT32(slave, platformCtrlQ));
+				}
+				nbParamToRecv -= refConfigVx->getNbRelatedParams();
+			}
 		}
 		slave = (slave+1)%arch->getNbActiveSlaves();
 	}

@@ -34,18 +34,69 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <platform.h>
+#include <platform_data_queue.h>
+#include <grt_definitions.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include <platform_types.h>
-#include <debuggingOptions.h>
+#include <fcntl.h>
 
-void platform_queue_Init(UINT8 nbSlaves);
-void platform_time_reset();
-void platform_shMemInit();
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <stdio.h>
 
-void platform_init(UINT8 nbSlaves){
-#if EXEC == 1
-	platform_shMemInit();
-	platform_queue_Init(nbSlaves);
-	platform_time_reset();
-#endif
+#include <memoryAlloc.h>
+#include <platform.h>
+#include <string.h>
+
+UINT8* shMem_sync,*shMem_data;
+
+void platform_shMemInit() {
+    int shmid;
+    key_t key = SHARED_MEM_KEY;
+
+	printf("Creating shared memory...\n");
+
+    /*
+     * Create the segment.
+     */
+    if ((shmid = shmget(key, SHARED_MEM_LENGHT+DATA_FIFO_REGION_SIZE, IPC_CREAT | 0666)) < 0) {
+        perror("shmget");
+        exit(1);
+    }
+
+    /*
+     * Now we attach the segment to our data space.
+     */
+    if ((shMem_sync = (UINT8*)shmat(shmid, NULL, 0)) == (UINT8 *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+
+    shMem_data = shMem_sync+DATA_FIFO_REGION_SIZE;
+    memset(shMem_sync,0,DATA_FIFO_REGION_SIZE);
+}
+
+void platform_flushFIFO(UINT32 id){
+	UINT8* mutex = shMem_sync+id;
+	*mutex=0;
+}
+
+
+void platform_writeFifo(UINT32 id, UINT32 addr, UINT32 size, UINT8* buffer) {
+	volatile UINT8* mutex = shMem_sync+id;
+
+	while(*mutex != 0);
+	*mutex=1;
+}
+
+
+void platform_readFifo(UINT32 id, UINT32 addr, UINT32 size, UINT8* buffer) {
+	volatile UINT8* mutex = shMem_sync+id;
+
+	while(*mutex != 1);
+	*mutex=0;
 }

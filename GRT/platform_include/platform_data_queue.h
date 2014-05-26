@@ -34,18 +34,15 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <platform.h>
+#ifndef DATA_QUEUES_H_
+#define DATA_QUEUES_H_
+
 #include <platform_types.h>
-#include <debuggingOptions.h>
 
-void platform_queue_Init(UINT8 nbSlaves);
-void platform_time_reset();
-void platform_shMemInit();
-
-void platform_init(UINT8 nbSlaves){
-#if EXEC == 1
-	platform_shMemInit();
-	platform_queue_Init(nbSlaves);
-	platform_time_reset();
-#endif
+extern "C"{
+void platform_flushFIFO(UINT32 id);
+void platform_writeFifo(UINT32 id, UINT32 address, UINT32 size, UINT8* buffer);
+void platform_readFifo(UINT32 id, UINT32 address, UINT32 size, UINT8* buffer);
 }
+
+#endif /* HWQUEUES_H_ */

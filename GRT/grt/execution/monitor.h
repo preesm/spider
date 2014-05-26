@@ -34,18 +34,15 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <platform.h>
-#include <platform_types.h>
-#include <debuggingOptions.h>
+#ifndef LRT_MONITOR_H_
+#define LRT_MONITOR_H_
 
-void platform_queue_Init(UINT8 nbSlaves);
-void platform_time_reset();
-void platform_shMemInit();
+#include "grt_definitions.h"
 
-void platform_init(UINT8 nbSlaves){
-#if EXEC == 1
-	platform_shMemInit();
-	platform_queue_Init(nbSlaves);
-	platform_time_reset();
-#endif
-}
+void Monitor_init();
+void Monitor_startTask(UINT32 vertexID);
+void Monitor_endTask();
+void Monitor_get(int id, UINT32* vxId, UINT32* start, UINT32 *end);
+int Monitor_getNB();
+
+#endif /* LRT_MONITOR_H_ */

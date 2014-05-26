@@ -47,6 +47,9 @@
 #define MAX_VERTEX_NAME_SIZE 50
 
 #define MEMCPY_SPEED 1.8
+#define MAX_MASTER_ACTORS		200
+#define NB_LOCAL_FUNCTIONS 20
+#define OS_MAX_TASKS_TIME 550*8
 
 // Single Rate DAG
 #define MAX_SRDAG_VERTICES 		360	//512
@@ -61,11 +64,6 @@
 #define XPLODE_FUNCT_IX			13
 #define INIT_FUNCT_IX			14
 #define END_FUNCT_IX			15
-
-// PICSDF
-//#define MAX_PISDF_CONFIG_PORTS		512
-//#define MAX_NB_CONFIG_PARAMS		10	// Maximum of parameters a configuration actor can set.
-
 
 // PiSDF
 #define MAX_NB_PiSDF_GRAPHS				3	//32
@@ -129,7 +127,7 @@
 #define MAX_NB_FIFO		100
 
 /**************** TASK's******************************/
-#define MAX_NB_ARGS		8
+#define MAX_NB_ARGS		100
 
 
 /**************** Actor machine's*********************/

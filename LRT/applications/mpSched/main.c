@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
 //		return -1;
 //	}
 //
-	platform_init(0);
+	platform_init(1);
 
 	functions_tbl[0] = config;
 	functions_tbl[1] = mFilter;

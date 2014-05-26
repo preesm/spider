@@ -34,18 +34,48 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <platform.h>
+#include <stdlib.h>
 #include <platform_types.h>
-#include <debuggingOptions.h>
+#include <platform_queue.h>
+#include <platform_time.h>
 
-void platform_queue_Init(UINT8 nbSlaves);
-void platform_time_reset();
-void platform_shMemInit();
+#include <tools/SchedulingError.h>
 
-void platform_init(UINT8 nbSlaves){
-#if EXEC == 1
-	platform_shMemInit();
-	platform_queue_Init(nbSlaves);
-	platform_time_reset();
-#endif
+#include "grt_definitions.h"
+#include "monitor.h"
+
+typedef struct{
+	UINT32 vertexID;
+	UINT32 start;
+	UINT32 end;
+} taskTime;
+
+static taskTime taskTimes[OS_MAX_TASKS_TIME];
+static UINT32 nbTaskTime;
+
+void Monitor_init(){
+	nbTaskTime = 0;
+}
+
+void Monitor_startTask(UINT32 vertexID){
+	if(nbTaskTime>=OS_MAX_TASKS_TIME-1){
+		exitWithCode(1017);
+	}
+	taskTimes[nbTaskTime].vertexID = vertexID;
+	taskTimes[nbTaskTime].start = platform_time_getValue();
+}
+
+void Monitor_endTask(){
+	taskTimes[nbTaskTime].end = platform_time_getValue();
+	nbTaskTime++;
+}
+
+int Monitor_getNB(){
+	return nbTaskTime;
+}
+
+void Monitor_get(int id, UINT32* vxId, UINT32* start, UINT32 *end){
+	*start = taskTimes[id].start;
+	*end = taskTimes[id].end;
+	*vxId = taskTimes[id].vertexID;
 }

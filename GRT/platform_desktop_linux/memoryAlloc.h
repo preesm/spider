@@ -34,18 +34,24 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <platform.h>
+#ifndef MEMORYALLOC_H_
+#define MEMORYALLOC_H_
+
+// CACHE_L1D_LINESIZE 64
+// Monolithic Descriptor max size 65535
+
 #include <platform_types.h>
-#include <debuggingOptions.h>
 
-void platform_queue_Init(UINT8 nbSlaves);
-void platform_time_reset();
-void platform_shMemInit();
+extern UINT8* shMem_sync;
+extern UINT8* shMem_data;
 
-void platform_init(UINT8 nbSlaves){
-#if EXEC == 1
-	platform_shMemInit();
-	platform_queue_Init(nbSlaves);
-	platform_time_reset();
-#endif
-}
+#define NB_DATA_FIFO 		1024
+#define SHARED_MEM_BASE		shMem_data
+#define SHARED_MEM_LENGHT	0x00400000
+
+#define DATA_FIFO_REGION_SIZE  NB_DATA_FIFO
+
+
+#define SHARED_MEM_KEY		8452
+
+#endif /* MEMORYALLOC_H_ */

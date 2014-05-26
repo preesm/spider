@@ -41,6 +41,7 @@
 #include <launcher/launcher.h>
 #include <string.h>
 
+#include <execution/execution.h>
 /**
  Constructor
 
@@ -295,6 +296,12 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 	Launcher::endTaskOrderingTime();
 	Launcher::initMappingTime();
 
+	schedule->newStep();
+
+	UINT32 end = platform_time_getValue() + 100*schedList.getNb();
+
+	schedule->setReadyTime(0, end);
+
 	Launcher::setActorsNb(schedList.getNb());
 
 	for(int i=0; i<schedList.getNb(); i++){
@@ -304,6 +311,10 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 	}
 
 	Launcher::endMappingTime();
+
+#if EXEC == 1
+	execute();
+#endif
 }
 //
 //UINT32 computeSchedLevel(SRDAGVertex* vertex){

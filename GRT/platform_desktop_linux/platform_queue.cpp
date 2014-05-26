@@ -56,7 +56,7 @@ static const char* typeName[platformNbQTypes] = {
 void platform_queue_Init(UINT8 nbSlaves){
 	int i, j, flags;
 
-	for(i=0; i<nbSlaves; i++){
+	for(i=1; i<nbSlaves; i++){
 		char tempStr[50];
 
 		for(j=0; j<platformNbQTypes; j++){

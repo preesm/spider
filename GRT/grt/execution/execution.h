@@ -34,18 +34,17 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <platform.h>
-#include <platform_types.h>
-#include <debuggingOptions.h>
+#ifndef EXECUTION_H_
+#define EXECUTION_H_
 
-void platform_queue_Init(UINT8 nbSlaves);
-void platform_time_reset();
-void platform_shMemInit();
+#include <graphs/SRDAG/SRDAGVertex.h>
 
-void platform_init(UINT8 nbSlaves){
-#if EXEC == 1
-	platform_shMemInit();
-	platform_queue_Init(nbSlaves);
-	platform_time_reset();
-#endif
-}
+void initExecution();
+
+void pushExecution(SRDAGVertex* vertex);
+void pushParam(UINT32 vertexID, UINT32 value);
+BOOL popParam(UINT32* vertexID, UINT32* value);
+
+void execute();
+
+#endif /* EXECUTION_H_ */

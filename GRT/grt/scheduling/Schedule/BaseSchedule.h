@@ -69,6 +69,11 @@ public:
 		}
 	}
 
+    void setReadyTime(UINT32 slaveId, UINT32 time)
+    {
+        slaveReadyTimes[slaveId] = time;
+    }
+
     UINT32 getReadyTime(UINT32 slaveId) const
     {
         return slaveReadyTimes[slaveId];

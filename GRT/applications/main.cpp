@@ -56,6 +56,7 @@
 #include <platform.h>
 #include <platform_time.h>
 #include <stdio.h>
+#include <execution/execution.h>
 
 #define IS_AM 					0
 #define STOP					1
@@ -67,7 +68,9 @@ static char tempStr[MAX_SLAVE_NAME_SIZE];
 
 void createArch(Architecture* arch, int nbSlaves){
 	arch->reset();
-	for(int i=0; i<nbSlaves; i++){
+	arch->addSlave(0, "Master", 0.9267, 435, 0.9252, 430);
+
+	for(int i=1; i<nbSlaves; i++){
 		UINT32 len = snprintf(tempStr, MAX_SLAVE_NAME_SIZE, "PE%02d", i);
 		if(len > MAX_SLAVE_NAME_SIZE){
 			exitWithCode(1073);
@@ -86,7 +89,7 @@ int main(int argc, char* argv[]){
 //
 //	setvbuf(stdout, NULL, _IONBF, 0);
 //	setvbuf(stderr, NULL, _IONBF, 0);
-	int nbSlaves = 7;
+	int nbSlaves = 8;
 //	static Scenario 			scenario;
 	static Architecture 		arch;
 	static ListScheduler 		listScheduler;
@@ -117,6 +120,7 @@ int main(int argc, char* argv[]){
 //	for(int i=0; i<nbSlaves; i++)
 //		ClearTimeMsg::send(i);
 	platform_time_reset();
+	initExecution();
 #endif
 	schedule.reset();
 

@@ -46,7 +46,6 @@
 #include <platform_queue.h>
 
 static int platform_QGRT[PlatformNbQueueTypes][2];
-int cpuId;
 
 static const char* typeName[3] = {
 		"CTRL",
@@ -61,14 +60,14 @@ void platform_queue_Init(){
 	int i, flags;
 
 	for(i=0; i<PlatformNbQueueTypes; i++){
-		sprintf(tempStr, "%s%s_%dtoGrt",PiSDF_PATH,typeName[i],cpuId);
+		sprintf(tempStr, "%s%s_%dtoGrt",PiSDF_PATH,typeName[i],platform_getCoreId());
 		platform_QGRT[i][PlatformOutputQueue] =  open(tempStr, O_RDWR);
 		if (platform_QGRT[i][PlatformOutputQueue] == -1) {
 			printf("Failed to open %s: creating...\n",tempStr);
 			mkfifo(tempStr, S_IRWXU);
 		}
 
-		sprintf(tempStr, "%s%s_Grtto%d",PiSDF_PATH,typeName[i],cpuId);
+		sprintf(tempStr, "%s%s_Grtto%d",PiSDF_PATH,typeName[i],platform_getCoreId());
 		platform_QGRT[i][PlatformInputQueue] = open(tempStr, O_RDWR);
 		if (platform_QGRT[i][PlatformInputQueue] == -1) {
 			printf("Failed to open %s: creating...\n",tempStr);

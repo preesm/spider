@@ -59,15 +59,15 @@
 #define MAX(a,b) (a>b?a:b)
 #define MIN(a,b) (a<b?a:b)
 
-#define CTRL_OUT(id)	(897   +id)
-#define CTRL_IN(id)		(897+ 7+id)
-#define INFO_OUT(id)	(897+14+id)
-#define INFO_IN(id)		(897+21+id)
-#define JOB_OUT(id)		(897+28+id)
-#define JOB_IN(id)		(897+35+id)
+#define CTRL_OUT(id)	(897   +id-1)
+#define CTRL_IN(id)		(897+ 7+id-1)
+#define INFO_OUT(id)	(897+14+id-1)
+#define INFO_IN(id)		(897+21+id-1)
+#define JOB_OUT(id)		(897+28+id-1)
+#define JOB_IN(id)		(897+35+id-1)
 
-static MNAV_MonolithicPacketDescriptor* cur_mono_pkt[7][3][2];
-static int cur_mono_pkt_size[7][3][2];
+static MNAV_MonolithicPacketDescriptor* cur_mono_pkt[8][3][2];
+static int cur_mono_pkt_size[8][3][2];
 
 
 typedef enum{
@@ -148,7 +148,7 @@ void __c_platform_queue_Init(UINT8 nbSlaves){
 		push_queue(EMPTY_DATA, 1, 0, (Uint32) (mono_pkt));
 	}
 
-	for(idx = 0; idx<nbSlaves; idx++){
+	for(idx = 1; idx<nbSlaves; idx++){
 		mono_pkt = (MNAV_MonolithicPacketDescriptor*)pop_queue(EMPTY_CTRL);
 
 		cache_invL1D(mono_pkt, CTRL_DESC_SIZE);

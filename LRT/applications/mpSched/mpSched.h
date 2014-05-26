@@ -166,6 +166,9 @@ void setM(UINT8* inputFIFOs[],
 	platform_queue_push_UINT32(PlatformCtrlQueue, OSTCBCur->vertexId);
 	platform_queue_push_UINT32(PlatformCtrlQueue, in_m[0]);
 	platform_queue_push_finalize(PlatformCtrlQueue);
+
+
+	//printf("Exec setM\n");
 }
 
 void initSwitch(UINT8* inputFIFOs[],

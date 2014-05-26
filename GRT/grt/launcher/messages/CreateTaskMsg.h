@@ -51,7 +51,7 @@
 
 namespace CreateTaskMsg {
 	void send(int LRTID, SRDAGVertex* vertex);
-};
+}
 
 void inline CreateTaskMsg::send(int lrtID, SRDAGVertex* vertex){
 

@@ -38,6 +38,7 @@
 #define GRT_DEFINITIONS_H_
 
 #include <platform_types.h>
+#include <debuggingOptions.h>
 
 // Architecture
 #define MAX_SLAVE_TYPES 		1	//2 	// The maximum number of slave types
@@ -57,7 +58,7 @@
 #define MAX_SRDAG_INPUT_EDGES 	12	//64
 #define MAX_SRDAG_OUTPUT_EDGES 	12	//100
 #define MAX_VERTEX_REPETITION 	50	//100 // The maximum number of repetitions for one vertex
-#define MAX_CHILD 	150
+#define MAX_CHILD 	100
 
 #define BROADCAST_FUNCT_IX			11
 #define SWICTH_FUNCT_IX			12
@@ -92,13 +93,6 @@
 
 #define MAX_PARAM 4 // Maximum number of parameters for an actor
 
-// AM
-#define AM_VERTEX_MAX_SUCCESSOR 0	//2 //10 //2
-#define AM_GRAPH_MAX_VERTEX		0	//300
-#define AM_GRAPH_MAX_COND		0	//300
-#define AM_GRAPH_MAX_ACTIONS	0	//100
-#define AM_ACTION_NAME 			0	//100
-
 // Platform
 #define NB_MAX_CTRLQ 			8
 #define MAX_NB_HW_FIFO 			300
@@ -130,122 +124,11 @@
 #define MAX_NB_ARGS		100
 
 
-/**************** Actor machine's*********************/
-#define AM_STATE_MAX_CONDITIONS	0//10
-#define AM_MAX_NB_VERTICES		0//10
-#define AM_MAX_NB_EDGES			0//10
-#define AM_MAX_NB_CONDITIONS	0//10
-#define AM_MAX_NB_SUCCESSORS	0//5
-
-// AM_CONDITION_TYPE
-#define cond_check_out_fifo		0
-#define cond_check_in_fifo		1
-
-// AM_VERTEX_TYPES
-#define vertex_state			0
-#define vertex_exec 			1
-#define vertex_wait				2
-#define vertex_test				3
-
-
 /**************** MISCELLANEOUS ************************/
 
-typedef void (*FUNCTION_TYPE)(void);						// Function of a task/vertex.
-
-
-typedef struct am_edge_struct	// Structure of an actor machine's edge.
-{
-	UINT32	am_edge_src;			// Id. of the source vertex.
-	UINT32	am_edge_sink;			// Id. of the sink vertex.
-}AM_EDGE_STRUCT;
-
-
-typedef unsigned char 		AM_CONDITION_TYPE;				// Type of AM conditions.
-
-
-typedef struct am_actor_cond_struct		//
-{
-	UINT32				id;
-	AM_CONDITION_TYPE	type;
-	UINT32				data_size;
-	UINT32				fifo_id;
-}AM_ACTOR_COND_STRUCT;
-
-
-typedef struct am_vertex_cond_struct		//
-{
-	UINT32				ix;					// Index in the actor's array of conditions.
-	BOOL				value;
-}AM_VERTEX_COND_STRUCT;
-
-
-typedef unsigned char 		AM_VERTEX_TYPE;
-
-
-typedef struct am_vertex_struct	// Structure of an actor machine's vertex.
-{
-	AM_VERTEX_TYPE			type;									// Type of vertex.
-	UINT32					id;										// Id. of the vertex.
-	UINT32					successor_ix[AM_MAX_NB_SUCCESSORS];		// Indices of the vertex' successors.
-	UINT8					nb_conditions;							// Number of conditions(State vertex).
-	AM_VERTEX_COND_STRUCT	conditions[AM_STATE_MAX_CONDITIONS];	// Conditions of a state(State vertex).
-	UINT32					cond_ix;								// Index, of the condition to be tested(Test vertex), in the actor's array of conditions.
-	UINT32					action_funct_ix;						// Index of the vertex's action function.
-	FUNCTION_TYPE			funct_ptr;								// Pointer to the vertex's function.
-}AM_VERTEX_STRUCT;
-
-
-typedef struct msg_create_task_struct 	// Structure of a create task message.
-{
-	UINT32 					task_id;
-	UINT32					function_id;
-	UINT32					fifo_direction;							// Input : 0, Output : 1.
-	UINT32					nb_fifo_in;								// Number of input FIFOs.
-	UINT32					nb_fifo_out;							// Number of output FIFOs.
-	UINT32					fifo_in_id[MAX_NB_FIFO];				// Array of input FIFO ids.
-	UINT32					fifo_out_id[MAX_NB_FIFO];				// Array of output FIFO ids.
-	UINT32					start_vextex_ix;						// Index of the starting vertex.
-	UINT32					nb_am_vertices;							// Number of vertices in the AM.
-	AM_VERTEX_STRUCT		am_vertices[AM_MAX_NB_VERTICES];		// Array of AM's vertices.
-	UINT32					nb_am_conditions;						// Number of conditions in the AM.
-	AM_ACTOR_COND_STRUCT	am_conditions[AM_MAX_NB_CONDITIONS];	// Array of the AM's conditions.
-}MSG_CREATE_TASK_STRUCT;
-
-
-typedef struct msg_create_fifo_struct	// Structure of a create FIFO message.
-{
-	UINT32 	id;
-	UINT32	size;
-	UINT32	mem_block;				// Memory block where the FIFO will be created.
-	UINT32	block_ix;				// Index of each FIFO in a single memory block.
-	UINT32	direction;				// Input : 0, Output : 1.
-	BOOL	init;					// If TRUE, the FIFO's indices are cleared, if false they are updated from the FIFO's registers.
-}MSG_CREATE_FIFO_STRUCT;
-
-
-typedef struct lrt_msg														// Message's structure
-{
-	UINT32	msg_type;
-	UINT32 	task_id;
-	UINT32	function_id;
-	UINT32	nb_args;				// Number of arguments to be passed to the function.
-	UINT32	args[MAX_NB_ARGS];		// Array of arguments to be passed to the function.
-	UINT32	fifo_id;
-	UINT32	fifo_size;
-	UINT32	fifo_direction;			// Input : 0, Output : 1.
-	UINT32	nb_fifo_in;				// Number of input FIFOs.
-	UINT32	nb_fifo_out;			// Number of output FIFOs.
-	UINT32	fifo_in[MAX_NB_FIFO];	// Array of input FIFO ids.
-	UINT32	fifo_out[MAX_NB_FIFO];	// Array of output FIFO ids.
-}LRT_MSG;
-
-/*$PAGE*/
-/*
-*********************************************************************************************************
-*                                            EXTERN DECLARATIONS
-*********************************************************************************************************
-*/
-//extern void print(char*);
+typedef void (*FUNCTION_TYPE)(UINT8* inputFIFOs[],
+							  UINT8* outputFIFOs[],
+							  UINT32 params[]);// Function of a task/vertex.
 
 
 #endif

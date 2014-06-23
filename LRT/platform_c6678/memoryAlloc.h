@@ -37,6 +37,8 @@
 #ifndef MEMORYALLOC_H_
 #define MEMORYALLOC_H_
 
+#include <platform.h>
+
 // CACHE_L1D_LINESIZE 64
 // Monolithic Descriptor max size 65535
 
@@ -52,6 +54,10 @@
 #define DATA_DESC_SIZE 	64
 #define DATA_DESC_NB 	512
 
+#ifndef ENABLE_CACHE
 #define SHARED_MEM_BASE	0xA0014000
+#else
+#define SHARED_MEM_BASE	0x0C014000
+#endif
 
 #endif /* MEMORYALLOC_H_ */

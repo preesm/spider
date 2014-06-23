@@ -20,6 +20,8 @@ void fir(float* in, float* out, int nb_sample){
 		taps[i] = 1.0/NB_TAPS;
 	}
 
+//	printf("out : %#x\n", out);
+
 //	float last[NB_TAPS];
 //
 //	int last_id = 0;

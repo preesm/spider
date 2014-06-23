@@ -36,7 +36,7 @@
 
 #include "PiSDFMpSched.h"
 
-void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples);
+void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples, UINT32 Nval);
 void mpSched_sub(PiSDFGraph* graph, UINT32 nbSamples);
 
 
@@ -54,7 +54,7 @@ void resetGraph(){
 	nbGraphs = 0;
 }
 
-PiSDFGraph* initPisdf_mpSched(PiSDFGraph* _graphs, int NMAX, UINT32 nbSamples){
+PiSDFGraph* initPisdf_mpSched(PiSDFGraph* _graphs, int NMAX, UINT32 nbSamples, UINT32 Nval){
 	graphs = _graphs;
 
 	PiSDFGraph* top = addGraph();
@@ -65,17 +65,19 @@ PiSDFGraph* initPisdf_mpSched(PiSDFGraph* _graphs, int NMAX, UINT32 nbSamples){
 	vxTop->setSubGraph(mpSchedGraph);
 	mpSchedGraph->setParentVertex(vxTop);
 
-	mpSched(mpSchedGraph, NMAX, nbSamples);
+	mpSched(mpSchedGraph, NMAX, nbSamples, Nval);
 
 	return top;
 }
 
-void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples){
+void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples, UINT32 Nval){
 	// Parameters.
 	PiSDFParameter *paramN = graph->addParameter("N");
+	PiSDFParameter *paramNVAL = graph->addParameter("N_VAL");
 	PiSDFParameter *paramNMAX = graph->addParameter("NMAX");
 	PiSDFParameter *paramSamples = graph->addParameter("nbSamples");
 
+	paramNVAL->setValue(Nval);
 	paramNMAX->setValue(NMAX);
 	paramSamples->setValue(nbSamples);
 
@@ -87,6 +89,7 @@ void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples){
 	PiSDFConfigVertex *vxConfig = (PiSDFConfigVertex *)graph->addVertex("config", config_vertex);
 	vxConfig->setFunction_index(0);
 	vxConfig->addParameter(paramNMAX);
+	vxConfig->addParameter(paramNVAL);
 	vxConfig->addRelatedParam(paramN);
 
 	// Other vertices

@@ -64,7 +64,25 @@
 static char tempStr[MAX_SLAVE_NAME_SIZE];
 
 
+void createKeystone(Architecture* arch, int nbDsps, int nbFFTC){
+	arch->reset();
 
+	for(int i=0; i<nbDsps; i++){
+		UINT32 len = snprintf(tempStr, MAX_SLAVE_NAME_SIZE, "DSP%02d", i);
+		if(len > MAX_SLAVE_NAME_SIZE){
+			exitWithCode(1073);
+		}
+		arch->addSlave(0, tempStr, 0.9267, 435, 0.9252, 430);
+	}
+
+	for(int i=0; i<nbFFTC; i++){
+		UINT32 len = snprintf(tempStr, MAX_SLAVE_NAME_SIZE, "FFTC%02d", i);
+		if(len > MAX_SLAVE_NAME_SIZE){
+			exitWithCode(1073);
+		}
+		arch->addSlave(1, tempStr, 0.9267, 435, 0.9252, 430);
+	}
+}
 
 void createArch(Architecture* arch, int nbSlaves){
 	arch->reset();

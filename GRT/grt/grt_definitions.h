@@ -45,7 +45,7 @@
 #define MAX_SLAVES 				8	//12	// The maximum number of slaves
 #define MAX_SLAVE_NAME_SIZE 	10	// The maximum number of slaves
 
-#define MAX_VERTEX_NAME_SIZE 50
+#define MAX_VERTEX_NAME_SIZE 40
 
 #define MEMCPY_SPEED 1.8
 #define MAX_MASTER_ACTORS		200
@@ -53,14 +53,14 @@
 #define OS_MAX_TASKS_TIME 350
 
 // Single Rate DAG
-#define MAX_SRDAG_VERTICES 		360	//512
-#define MAX_SRDAG_EDGES 		450	//512
+#define MAX_SRDAG_VERTICES 		475	//512
+#define MAX_SRDAG_EDGES 		680	//512
 #define MAX_SRDAG_INPUT_EDGES 	12	//64
 #define MAX_SRDAG_OUTPUT_EDGES 	12	//100
-#define MAX_VERTEX_REPETITION 	50	//100 // The maximum number of repetitions for one vertex
+#define MAX_VERTEX_REPETITION 	100	//100 // The maximum number of repetitions for one vertex
 #define MAX_CHILD 	100
 
-#define BROADCAST_FUNCT_IX			11
+#define BROADCAST_FUNCT_IX		11
 #define SWICTH_FUNCT_IX			12
 #define XPLODE_FUNCT_IX			13
 #define INIT_FUNCT_IX			14
@@ -82,13 +82,13 @@
 #define MAX_NB_PiSDF_SELECT_VERTICES	1	//32
 #define MAX_NB_PiSDF_ROUNDB_VERTICES	8	//32
 #define MAX_NB_PiSDF_CONFIG_VERTEX_PARAMS	2	//10
-#define MAX_NB_PiSDF_VERTEX_NAME	30	//10
-#define MAX_NB_PiSDF_PARAM_NAME	30	//10
+#define MAX_NB_PiSDF_VERTEX_NAME	15	//10
+#define MAX_NB_PiSDF_PARAM_NAME	15	//10
 
 // XParser
-#define VARIABLE_NAME_LEN_MAX 30
-#define MAX_VARIABLE_NUMBER 300
-#define EXPR_LEN_MAX 128
+#define VARIABLE_NAME_LEN_MAX 30 //30
+#define MAX_VARIABLE_NUMBER 300 //300
+#define EXPR_LEN_MAX 128 //128
 #define REVERSE_POLISH_STACK_MAX_ELEMENTS 20 // Max number of elements in an expression reverse polish stack
 
 #define MAX_PARAM 4 // Maximum number of parameters for an actor

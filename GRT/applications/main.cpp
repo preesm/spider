@@ -63,7 +63,7 @@
 
 static char tempStr[MAX_SLAVE_NAME_SIZE];
 
-
+void resetGraph();
 
 
 void createArch(Architecture* arch, int nbSlaves){
@@ -99,6 +99,8 @@ int main(int argc, char* argv[]){
 	static PiSDFGraph 			*topPisdf;
 	static BaseSchedule 		schedule;
 
+	static int time[17];
+
 	printf("Starting with %d slaves max\n", nbSlaves);
 	platform_init(nbSlaves);
 
@@ -113,7 +115,6 @@ int main(int argc, char* argv[]){
 //	int iter=1;{
 
 	// Getting the PiSDF graph.
-	topPisdf = initPisdf_mpSched(pisdfGraphs, 10, 4000);
 	Launcher::init();
 
 #if EXEC == 1
@@ -124,11 +125,18 @@ int main(int argc, char* argv[]){
 #endif
 	schedule.reset();
 
-	for(int iter=1; iter<=ITER_MAX; iter++){
+	for(int iter=1; iter<=11; iter++){
 		arch.setNbActiveSlaves(nbSlaves);
+		platform_time_reset();
+		initExecution();
+		Launcher::init();
+
+		resetGraph();
+		topPisdf = initPisdf_mpSched(pisdfGraphs, 20, 4000, iter);
 
 		listScheduler.reset();
 		topDag.reset();
+		schedule.reset();
 		Launcher::reset();
 		topPisdf->resetRefs();
 
@@ -145,26 +153,33 @@ int main(int argc, char* argv[]){
 
 		PiSDFTransformer::multiStepScheduling(&arch, topPisdf, &listScheduler, &schedule, &topDag, &execStat);
 
-		UINT32 time;
-		do{
-			time = platform_time_getValue();
-		}while(time < iter*PERIOD);
+//		UINT32 time;
+//		do{
+//			time = platform_time_getValue();
+//		}while(time < iter*PERIOD);
+
+		printf("reporting...\n");
+	#if EXEC == 1
+		char file[MAX_FILE_NAME_SIZE+30];
+		snprintf(file, MAX_FILE_NAME_SIZE+30, "/home/jheulot/dev/mp-sched/ederc/Gantt_compa_cache_nvar%d.xml", iter);
+		Launcher::createRealTimeGantt(&arch, &topDag, file, &execStat);
+
+		time[iter-1] = execStat.globalEndTime;
+
+//		snprintf(file, MAX_FILE_NAME_SIZE, "topDag%d.gv", iter);
+//		DotWriter::write(&topDag, file, 1, 0);
+	#endif
 
 	}
 
-	printf("reporting...\n");
-#if EXEC == 1
-	Launcher::createRealTimeGantt(&arch, &topDag, "Gantt.xml", &execStat);
-#endif
-
 	char file[100];
 	printf("time\n");
-	sprintf(file,"/home/jheulot/dev/mp-sched/compa_latencies.csv");
+	sprintf(file,"/home/jheulot/dev/mp-sched/ederc/compa_cache_nvar.csv");
 	FILE *f = fopen(file,"w+");
 	fprintf(f, "iter, latency\n");
-	for(int iter=0; iter<ITER_MAX; iter++){
-		fprintf(f,"%d,%d\n",iter+1, execStat.latencies[iter]);
-		printf("%d: %d\n",iter+1, execStat.latencies[iter]);
+	for(int iter=1; iter<=12; iter++){
+		fprintf(f,"%d,%d\n",iter, time[iter-1]);
+		printf("%d: %d\n",iter, time[iter-1]);
 	}
 	fclose(f);
 

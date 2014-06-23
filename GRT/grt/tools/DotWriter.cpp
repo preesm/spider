@@ -58,6 +58,7 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 	// Writing header
 	platform_fprintf ("digraph srDag {\n");
 	platform_fprintf ("node [color=Black];\n");
+	platform_fprintf ("rankdir=LR;\n");
 	platform_fprintf ("edge [color=Red];\n");
 //		platform_fprintf ("rankdir=LR;\n");
 
@@ -85,7 +86,7 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 			}
 
 			if(displayNames){
-				platform_fprintf ("\t%d [label=\"%d\\n%s\\n%d\\n%d\" color=\"%s\"];\n",i,i,name, vertex->getMinStartTime(), vertex->getExecTime(), color);
+				platform_fprintf ("\t%d [label=\"%d\\n%s\" color=\"%s\"];\n",i,i,name, color);
 			}
 			else{
 				platform_fprintf ("\t%d [label=\"%d\" color=\"%s\"];\n",i,i, color);

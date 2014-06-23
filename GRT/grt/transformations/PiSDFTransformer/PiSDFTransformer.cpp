@@ -1121,8 +1121,8 @@ void PiSDFTransformer::multiStepScheduling(
 	UINT32 len;
 	UINT8 	stepsCntr = 0;
 
-	Queue<PiSDFGraph*, 15> graphFifo;
-	Queue<SRDAGVertex*, 15> vertexFifo;
+	Queue<PiSDFGraph*, 20> graphFifo;
+	Queue<SRDAGVertex*, 20> vertexFifo;
 
 //	schedule->reset();
 	graphFifo.reset();

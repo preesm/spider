@@ -58,6 +58,7 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 	// Writing header
 	platform_fprintf ("digraph srDag {\n");
 	platform_fprintf ("node [color=Black];\n");
+	platform_fprintf ("rankdir=LR;\n");
 	platform_fprintf ("edge [color=Red];\n");
 //		platform_fprintf ("rankdir=LR;\n");
 

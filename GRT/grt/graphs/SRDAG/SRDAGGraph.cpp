@@ -66,8 +66,8 @@ void SRDAGGraph::reset(){
 */
 SRDAGGraph::~SRDAGGraph()
 {
-	printf("Nb vertices used %d\n", vertices.getNb());
-	printf("Nb edges used %d\n", edges.getNb());
+	printf("Nb vertices used %d\n", vertices.getWrNb());
+	printf("Nb edges used %d\n", edges.getWrNb());
 }
 
 /**

@@ -51,6 +51,11 @@ private:
 public:
 	PiSDFConfigVertex():PiSDFAbstractVertex(){nbRelatedParams = 0;};
 
+	void reset(){
+		PiSDFAbstractVertex::reset();
+		nbRelatedParams = 0;
+	}
+
     PiSDFParameter *getRelatedParam(UINT32 index) const
     {
     	if(index >= nbRelatedParams) exitWithCode(1041);

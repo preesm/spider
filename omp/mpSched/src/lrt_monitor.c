@@ -122,8 +122,11 @@ UINT32 Monitor_printData(int i, char* type, UINT32* schedTime){
 	char file[100];
 	char name[30];
 	char color[10];
-	sprintf(file, "/home/jheulot/dev/mp-sched/gantt_%d_%s.xml", i, type);
+	sprintf(file, "/home/jheulot/dev/mp-sched/ederc/gantt_%d_%s.xml", i, type);
 	FILE* f = fopen(file, "w+");
+
+	sprintf(file, "/home/jheulot/dev/mp-sched/ederc/gantt_%d_%s_latex", i, type);
+	FILE* flatex = fopen(file, "w+");
 
 	if(f == NULL){
 		printf("failed open file %s\n", file);
@@ -132,6 +135,7 @@ UINT32 Monitor_printData(int i, char* type, UINT32* schedTime){
 
 	// Writing header
 	fprintf(f,"<data>\n");
+	fprintf(flatex,"{");
 
 	// Writing execution data for each slave.
 	for(task=0; task<nbTaskTime; task++){
@@ -158,6 +162,12 @@ UINT32 Monitor_printData(int i, char* type, UINT32* schedTime){
 
 		fprintf(f,"\t\t>%s.</event>\n", name);
 
+		fprintf(flatex, "%d/", taskTimes[task].start/1000 );/*start*/
+		fprintf(flatex, "%d/", (taskTimes[task].end - taskTimes[task].start)/1000);/*duration*/
+		fprintf(flatex, "%d/",	 taskTimes[task].core);/*core index*/
+		fprintf(flatex, "%s/",   "");/*name*/
+		fprintf(flatex, "color%d,\n",taskTimes[task].vertexID%100); // color graphtransfo
+
 		removeRange(taskTimes[task].start, taskTimes[task].end);
 
 		if(globalEndTime < taskTimes[task].end)
@@ -174,7 +184,10 @@ UINT32 Monitor_printData(int i, char* type, UINT32* schedTime){
 	fprintf(f, "</data>\n");
 	fclose(f);
 
-	printf("Median %d Sobel %d\n", sumMedian, sumSobel);
+	fprintf(flatex, "}\n");
+	fclose(flatex);
+
+//	printf("Median %d Sobel %d\n", sumMedian, sumSobel);
 	return endTime;
 }
 

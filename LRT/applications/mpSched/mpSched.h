@@ -39,31 +39,26 @@
 
 #include "actors.h"
 
-#define NVAL	10
-#define MMAX 	12
-#define NBITER 	10
+//#define NVAL	20
+//#define MMAX 	20
+//#define NBITER 	10
 
-static UINT8 nValues[10][10] = {
-		{6,6,6,6,6, 6, 6, 6, 6, 6},
-		{5,6,6,6,6, 6, 6, 6, 6, 7},
-		{4,5,6,6,6, 6, 6, 6, 7, 8},
-		{3,4,5,6,6, 6, 6, 7, 8, 9},
-		{2,3,4,5,6, 6, 7, 8, 9,10},
-		{1,2,3,4,5, 7, 8, 9,10,11},
-		{1,1,2,3,4, 8, 9,10,11,11},
-		{1,1,1,2,3, 9,10,11,11,11},
-		{1,1,1,1,2,10,11,11,11,11},
-		{1,1,1,1,1,11,11,11,11,11},
-	};
+//static UINT8 nValues[NBITER][MMAX] = {
+//		{2,1},
+//	};
 
 void config(UINT8* inputFIFOs[],
 			UINT8* outputFIFOs[],
 			UINT32 params[])
 {
-	UINT32 N;
+//	UINT32 N;
 	UINT32 NMAX = params[0];
+	UINT32 N = params[1];
+	int i;
 
-	N = NVAL;
+//	N = NVAL;
+
+//	printf("Recv N=%d\n", N);
 
 	UINT8* out_M = outputFIFOs[0];
 
@@ -73,7 +68,9 @@ void config(UINT8* inputFIFOs[],
 	platform_queue_push_UINT32(PlatformCtrlQueue, N);
 	platform_queue_push_finalize(PlatformCtrlQueue);
 
-	memcpy(out_M, nValues[0], NMAX);
+//	memcpy(out_M, nValues[0], NMAX);
+	for(i=0; i<N; i++)
+		out_M[i] = 8;//-i;
 }
 
 
@@ -95,14 +92,14 @@ void src(UINT8* inputFIFOs[],
 		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
-	UINT32 i,j;
-	UINT32 N = params[0];
-	UINT32 NBSAMPLES = params[1];
-
-	float* out = (float*)outputFIFOs[0];
-
-	FILE* f;
-	char file[100];
+//	UINT32 i,j;
+//	UINT32 N = params[0];
+//	UINT32 NBSAMPLES = params[1];
+//
+//	float* out = (float*)outputFIFOs[0];
+//
+//	FILE* f;
+//	char file[100];
 
 //	sprintf(file,"/home/jheulot/dev/mp-sched/input.dat");
 //	f = fopen(file,"rb");
@@ -119,18 +116,18 @@ void snk(UINT8* inputFIFOs[],
 		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
-	UINT32 i,j;
-	UINT32 N = params[0];
-	UINT32 NBSAMPLES = params[1];
+//	UINT32 i,j;
+//	UINT32 N = params[0];
+//	UINT32 NBSAMPLES = params[1];
 
-	float* in = (float*)inputFIFOs[0];
+//	float* in = (float*)inputFIFOs[0];
+//
+//	BOOL test = TRUE;
 
-	BOOL test = TRUE;
+//	float* outputCheck = OSAllocWorkingMemory(NBSAMPLES*sizeof(float));
 
-	float* outputCheck = OSAllocWorkingMemory(NBSAMPLES*sizeof(float));
-
-	FILE* f;
-	char file[100];
+//	FILE* f;
+//	char file[100];
 
 //	for(i=0; i<N; i++){
 //		sprintf(file,"/home/jheulot/dev/mp-sched/output_%d_%d.dat", NBSAMPLES, nValues[0][i]);
@@ -194,7 +191,7 @@ void switchFct(UINT8* inputFIFOs[],
 
 	UINT8 select = inputFIFOs[0][0];
 	void *in0 = inputFIFOs[1];
-	void *in1 = inputFIFOs[2];
+//	void *in1 = inputFIFOs[2];
 	void *out = outputFIFOs[0];
 
 	if(select == 0){

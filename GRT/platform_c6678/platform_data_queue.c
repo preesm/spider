@@ -39,6 +39,7 @@
 #include <stdlib.h>
 
 #include <platform_types.h>
+#include <platform.h>
 #include <qmss_utils.h>
 #include "cache.h"
 #include "memoryAlloc.h"
@@ -75,7 +76,9 @@ void platform_writeFifo(UINT32 id, UINT32 addr, UINT32 size, UINT8* buffer) {
 //	memcpy((void*)(SHARED_MEM_BASE + addr), buffer, size);
 
 	cache_wbInvL1D(mono_pkt, DATA_DESC_SIZE);
-//	cache_wbInvL1D((void*)(SHARED_MEM_BASE + addr), size);
+#ifdef ENABLE_CACHE
+	cache_wbInvL1D((void*)(SHARED_MEM_BASE + addr), size);
+#endif
 
 	push_queue(BASE_DATA+id, 1, 0, (UINT32)mono_pkt);
 }
@@ -89,7 +92,9 @@ void platform_readFifo(UINT32 id, UINT32 addr, UINT32 size, UINT8* buffer) {
 	}while(mono_pkt == 0);
 
 	cache_invL1D(mono_pkt, DATA_DESC_SIZE);
-//	cache_invL1D((void*)(SHARED_MEM_BASE + addr), size);
+#ifdef ENABLE_CACHE
+	cache_invL1D((void*)(SHARED_MEM_BASE + addr), size);
+#endif
 //	memcpy(buffer, (void*)(SHARED_MEM_BASE + addr), size);
 
 	push_queue(EMPTY_DATA, 1, 0, (UINT32)mono_pkt);

@@ -112,3 +112,35 @@ void ScheduleWriter::write(BaseSchedule* schedule, SRDAGGraph* dag, Architecture
 	platform_fprintf ("</data>\n");
 	platform_fclose();
 }
+
+//void ScheduleWriter::writeLatexData(BaseSchedule* schedule, SRDAGGraph* dag, Architecture* archi, const char* path){
+////	// Getting sure that the timings expressions are resolved
+////	csGraph->resolveTimings(archi);
+//
+//	platform_fopen (path);
+//	char name[MAX_VERTEX_NAME_SIZE];
+//
+//	// Exporting for Latex
+//
+//	platform_fprintf("<!-- latex\n");
+//	platform_fprintf("{");
+//	for (int i=0 ; i<hGraph->getNbVertices() ; i++)
+//	{
+//			SRDAGVertex* vertex = hGraph->getVertex(i);
+//			int duration = vertex->getCsDagReference()->getIntTiming(archi->getSlaveType(vertex->getSlaveIndex()));
+//			sprintf(name,"%s-%d",vertex->getCsDagReference()->getName(),vertex->getReferenceIndex());
+//			platform_fprintf("%.3f/",        (float)(vertex->getTLevel())/1000 );/*start*/
+//			platform_fprintf("%.3f/", (float)duration/1000 );/*duration*/
+//			platform_fprintf("%d/",vertex->getSlaveIndex());/*core index*/
+//			platform_fprintf("%s/","");/*name*/
+//			platform_fprintf("color%d",vertex->getReferenceIndex());
+//			if(i!=hGraph->getNbVertices()-1){
+//					platform_fprintf(",");
+//			}
+//	}
+//	platform_fprintf("}\n");
+//	platform_fprintf("latex -->\n");
+//
+//	platform_fclose();
+//}
+

@@ -56,14 +56,14 @@
 #define OS_MAX_TASKS_TIME 350
 
 // Single Rate DAG
-#define MAX_SRDAG_VERTICES 		360	//512
-#define MAX_SRDAG_EDGES 		450	//512
+#define MAX_SRDAG_VERTICES 		475	//512
+#define MAX_SRDAG_EDGES 		680	//512
 #define MAX_SRDAG_INPUT_EDGES 	12	//64
 #define MAX_SRDAG_OUTPUT_EDGES 	12	//100
-#define MAX_VERTEX_REPETITION 	50	//100 // The maximum number of repetitions for one vertex
+#define MAX_VERTEX_REPETITION 	100	//100 // The maximum number of repetitions for one vertex
 #define MAX_CHILD 	100
 
-#define BROADCAST_FUNCT_IX			11
+#define BROADCAST_FUNCT_IX		11
 #define SWICTH_FUNCT_IX			12
 #define XPLODE_FUNCT_IX			13
 #define INIT_FUNCT_IX			14

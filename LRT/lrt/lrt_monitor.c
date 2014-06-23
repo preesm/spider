@@ -75,7 +75,7 @@ void Monitor_sendData(){
 	platform_queue_push_UINT32(PlatformCtrlQueue, nbTaskTime);
 	platform_queue_push(PlatformCtrlQueue, taskTimes, nbTaskTime*sizeof(taskTime));
 	platform_queue_push_finalize(PlatformCtrlQueue);
-	printf("nbTaskTime %d \n", nbTaskTime);
+//	printf("nbTaskTime %d \n", nbTaskTime);
 	nbTaskTime = 0;
 //	exit(0);
 }

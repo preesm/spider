@@ -50,9 +50,6 @@
 #define SCHED_POLICY_FP				0
 #define ACTOR_MACHINE				1
 
-#define OS_MAX_SH_MEM				10
-#define OS_MAX_CTRL_Q				2
-
 
 //#define AM_STATE_MAX_CONDITIONS	2
 //#define AM_MAX_NB_EDGES			100
@@ -75,8 +72,8 @@
 #define MAX_NB_FIFO		OS_NB_FIFO
 #define WORKING_MEMORY_SIZE 720*400*3
 #else
-#define MAX_NB_FIFO			15//100
-#define MAX_NB_PARAMETERS	15
+#define MAX_NB_FIFO			25//100
+#define MAX_NB_PARAMETERS	25
 #define WORKING_MEMORY_SIZE 64000//500*512*2//720*(400/8)
 #endif
 

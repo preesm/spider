@@ -139,12 +139,12 @@ UINT32 ListScheduler::getTiming(SRDAGVertex* vertex, Architecture* arch, UINT32 
 	switch(vertex->getType()){
 	case Normal:
 	case ConfigureActor:
-		return vertex->getExecTime();//scenario->getTiming(vertex->getReference()->getId(), slaveType);
+		return vertex->getExecTime(slaveType);//scenario->getTiming(vertex->getReference()->getId(), slaveType);
 	case Explode:
+	case Implode:
 	case Broadcast:
 		/* Only sync */
-		return 70;
-	case Implode:
+		return SYNC_TIME;
 	case RoundBuffer:
 		return vertex->getOutputEdge(0)->getTokenRate()/MEMCPY_SPEED;
 	default:
@@ -179,31 +179,31 @@ UINT32 ListScheduler::getMinStartTime(BaseSchedule* schedule, Architecture* arch
 	return minimumStartTime;
 }
 
-UINT32 ListScheduler::evaluateMinStartTime(BaseSchedule* schedule, Architecture* arch, SRDAGVertex* vertex){
-	UINT32 minimumStartTime = 0;
-	UINT32 precVertexEndTime;
-
-	if(vertex->getMinStartTime() != -1)
-		return vertex->getMinStartTime();
-
-	for(UINT32 i=0; i<vertex->getNbInputEdge(); i++){
-		SRDAGVertex* precVertex = vertex->getInputEdge(i)->getSource();
-		if(precVertex != vertex){ // TODO: Normally there is no cycles in a DAG, so this is check is not needed.
-			if(precVertex->getScheduleIndex() != -1)
-				// Getting the end time of the predecessor, since it has already been scheduled.
-				precVertexEndTime = schedule->getVertexEndTime(precVertex->getScheduleIndex(), precVertex);
-			else{
-				// Scheduling the precedent vertex.
-				precVertexEndTime = evaluateMinStartTime(schedule, arch, precVertex) + precVertex->getExecTime();
-//				printf("Previous Not scheduled (%d) -> (%d) !\n", precVertex->getId(), vertex->getId());
-			}
-
-			minimumStartTime = std::max(minimumStartTime, precVertexEndTime);
-//			vertex->getReference()->setScheduled(true);
-		}
-	}
-	return minimumStartTime;
-}
+//UINT32 ListScheduler::evaluateMinStartTime(BaseSchedule* schedule, Architecture* arch, SRDAGVertex* vertex){
+//	UINT32 minimumStartTime = 0;
+//	UINT32 precVertexEndTime;
+//
+//	if(vertex->getMinStartTime() != -1)
+//		return vertex->getMinStartTime();
+//
+//	for(UINT32 i=0; i<vertex->getNbInputEdge(); i++){
+//		SRDAGVertex* precVertex = vertex->getInputEdge(i)->getSource();
+//		if(precVertex != vertex){ // TODO: Normally there is no cycles in a DAG, so this is check is not needed.
+//			if(precVertex->getScheduleIndex() != -1)
+//				// Getting the end time of the predecessor, since it has already been scheduled.
+//				precVertexEndTime = schedule->getVertexEndTime(precVertex->getScheduleIndex(), precVertex);
+//			else{
+//				// Scheduling the precedent vertex.
+//				precVertexEndTime = evaluateMinStartTime(schedule, arch, precVertex) + precVertex->getExecTime();
+////				printf("Previous Not scheduled (%d) -> (%d) !\n", precVertex->getId(), vertex->getId());
+//			}
+//
+//			minimumStartTime = std::max(minimumStartTime, precVertexEndTime);
+////			vertex->getReference()->setScheduled(true);
+//		}
+//	}
+//	return minimumStartTime;
+//}
 
 UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVertex* vertex){
 //	UINT32 noSchedule = -1; // Indicates that the vertex have not been scheduled.
@@ -221,7 +221,7 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 	for(int slave=0; slave<arch->getNbActiveSlaves(); slave++){
 		int slaveType = arch->getSlaveType(slave);
 		// checking the constraints
-//		if(checkConstraint(vertex, arch, slave)){
+		if(vertex->getConstraint(slaveType)){
 			unsigned int startTime = std::max(schedule->getReadyTime(slave), minimumStartTime);
 			unsigned int waitTime = startTime-schedule->getReadyTime(slave);
 			unsigned int execTime = getTiming(vertex, arch, slaveType);
@@ -242,7 +242,7 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 //					bestComInTime = comInTime;
 //					bestComOutTime = comOutTime;
 			}
-//		}
+		}
 	}
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
 	int scheduleIndex = schedule->addSchedule(bestSlave, vertex, bestStartTime, bestEndTime);
@@ -262,7 +262,8 @@ UINT32 computeSchedLevel(SRDAGVertex* vertex){
 		for(int i=0; i<vertex->getNbOutputEdge(); i++){
 			SRDAGVertex* succ = vertex->getOutputEdge(i)->getSink();
 			if(succ->getState() == SrVxStExecutable)
-				level = MAX(level, computeSchedLevel(succ)+succ->getExecTime());
+				// TODO BETTER Careful execTime of core type 0
+				level = MAX(level, computeSchedLevel(succ)+succ->getExecTime(0));
 		}
 		vertex->setSchedLevel(level);
 		return level;
@@ -296,9 +297,9 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 	Launcher::endTaskOrderingTime();
 	Launcher::initMappingTime();
 
-	schedule->newStep();
+//	schedule->newStep();
 
-	UINT32 end = platform_time_getValue() + 500*schedList.getNb();
+	UINT32 end = platform_time_getValue() + MAPPING_TIME*schedList.getNb();
 
 	schedule->setReadyTime(0, end);
 

@@ -83,7 +83,15 @@ void PiSDFTransformer::addVertices(PiSDFVertex* vertex, UINT32 nb_repetitions, U
 		srdag_vertex->setReference(vertex);
 		srdag_vertex->setReferenceIndex(j);
 		srdag_vertex->setIterationIndex(iteration);
-		srdag_vertex->setExecTime(vertex->getExecTime());
+
+		for(int i=0; i<MAX_SLAVE_TYPES; i++){
+			if(vertex->getConstraints(i)){
+				srdag_vertex->setConstraint(i, TRUE);
+				srdag_vertex->setExecTime(i, vertex->getResolvedTiming(i));
+			}else{
+				srdag_vertex->setConstraint(i, FALSE);
+			}
+		}
 
 		for(UINT32 i=0; i<vertex->getNbParameters(); i++)
 			srdag_vertex->setParamValue(i,vertex->getParameter(i)->getValue());
@@ -151,6 +159,8 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 //			imp_vertex->setReferenceIndex(origin_vertex->getReferenceIndex());
 //			imp_vertex->setIterationIndex(origin_vertex->getIterationIndex());
 //			cntImpVxs++;
+			init_vertex->setConstraint(0, TRUE);
+			init_vertex->setExecTime(0, 0);
 			sourceRepetitions[0] = init_vertex;
 
 			topDag->getVerticesFromReference(edge->getSource(), iteration, sourceRepetitions+1);
@@ -160,6 +170,8 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 			SRDAGVertex *end_vertex = topDag->addVertex();
 			end_vertex->setType(End); 	// Indicates it is an implode vertex.
 			end_vertex->setFunctIx(END_FUNCT_IX);
+			end_vertex->setConstraint(0, TRUE);
+			end_vertex->setExecTime(0, 0);
 			sinkRepetitions[nbSinkRepetitions] = end_vertex;
 
 			nbSourceRepetitions++;
@@ -198,6 +210,8 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 				exp_vertex->setType(Explode); 			// Indicates it is an explode vx.
 //				exp_vertex->setExpImpId(nbExpVxs++);
 				exp_vertex->setExpImpId(i);
+				exp_vertex->setConstraint(0, TRUE);
+				exp_vertex->setExecTime(0, 0);
 
 				// Replacing the source vertex by the explode vertex in the array of sources.
 				SRDAGVertex *origin_vertex = sourceRepetitions[sourceIndex];
@@ -250,6 +264,8 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 				SRDAGVertex *imp_vertex = topDag->addVertex();
 				imp_vertex->setType(Implode); 	// Indicates it is an implode vertex.
 				imp_vertex->setExpImpId(i); // Distinction among implode vertices for the same SRDAGVertex.
+				imp_vertex->setConstraint(0, TRUE);
+				imp_vertex->setExecTime(0, 0);
 
 				// Replacing the sink vertex by the implode vertex in the array of sources.
 				SRDAGVertex *origin_vertex = sinkRepetitions[sinkIndex];//	// Adding vxs

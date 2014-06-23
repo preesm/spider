@@ -45,6 +45,9 @@
 #define MAX_SLAVES 				8	//12	// The maximum number of slaves
 #define MAX_SLAVE_NAME_SIZE 	10	// The maximum number of slaves
 
+#define MAPPING_TIME 500
+#define SYNC_TIME 5
+
 #define MAX_VERTEX_NAME_SIZE 50
 
 #define MEMCPY_SPEED 1.8

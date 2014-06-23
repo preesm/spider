@@ -59,7 +59,10 @@ SRDAGVertex::SRDAGVertex(){
 	parent=NULL;
 	type = Normal; // Normal type by default.
 	state = SrVxStNoExecuted;
-	execTime = 0;
+
+	for(int i=0; i<MAX_SLAVE_TYPES; i++)
+		constraint[i] = FALSE;
+
 	inputEdges.reset();
 	outputEdges.reset();
 }
@@ -82,7 +85,10 @@ void SRDAGVertex::reset(){
 	parent=NULL;
 	type = Normal; // Normal type by default.
 	state = SrVxStNoExecuted;
-	execTime = 0;
+
+	for(int i=0; i<MAX_SLAVE_TYPES; i++)
+		constraint[i] = FALSE;
+
 	inputEdges.reset();
 	outputEdges.reset();
 }

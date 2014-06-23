@@ -238,10 +238,13 @@ void PiSDFGraph::evaluateExpressions(/*Scenario* scenario*/)
 	for(UINT32 i = 0; i < pisdf_vertices.getNb(); i++){
 		PiSDFVertex* vertex = this->getPiSDFVertex(i);
 		if(!vertex->hasSubGraph()){
-			globalParser.interpret(/*scenario->*/vertex->getTiming(0), &value);
-			vertex->setExecTime(value);
-		}else
-			vertex->setExecTime(0);
+			for(int j=0; j<MAX_SLAVE_TYPES; j++){
+				if(vertex->getConstraints(j)){
+					globalParser.interpret(vertex->getTiming(j), &value);
+					vertex->setResolvedTiming(j, value);
+				}
+			}
+		}
 	}
 }
 

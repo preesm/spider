@@ -142,7 +142,9 @@ class SRDAGVertex {
 		// Distinguishes among several explode/implode vertices.
 		int expImpId;
 
-		UINT32 execTime;
+		UINT32 execTime[MAX_SLAVE_TYPES];
+		BOOL constraint[MAX_SLAVE_TYPES];
+
 		int minStartTime;
 
 		UINT32 id;
@@ -267,12 +269,20 @@ class SRDAGVertex {
 
 		int getSchedLevel();
 
-		void setExecTime(UINT32 exec){
-			execTime = exec;
+		void setExecTime(int slaveType, UINT32 exec){
+			execTime[slaveType] = exec;
 		}
 
-		UINT32 getExecTime(){
-			return execTime;
+		UINT32 getExecTime(int slaveType){
+			return execTime[slaveType];
+		}
+
+		BOOL getConstraint(int slaveType){
+			return constraint[slaveType];
+		}
+
+		void setConstraint(int slaveType, BOOL _constraint){
+			constraint[slaveType] = _constraint;
 		}
 
 		void setMinStartTime(int t){

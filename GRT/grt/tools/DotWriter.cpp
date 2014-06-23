@@ -85,7 +85,7 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 			}
 
 			if(displayNames){
-				platform_fprintf ("\t%d [label=\"%d\\n%s\\n%d\\n%d\" color=\"%s\"];\n",i,i,name, vertex->getMinStartTime(), vertex->getExecTime(), color);
+				platform_fprintf ("\t%d [label=\"%d\\n%s\" color=\"%s\"];\n",i,i,name, color);
 			}
 			else{
 				platform_fprintf ("\t%d [label=\"%d\" color=\"%s\"];\n",i,i, color);

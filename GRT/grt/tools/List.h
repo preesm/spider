@@ -104,6 +104,10 @@ public:
 	void remove(UINT32 id);
 
 	void sort(int (*comp)(T,T));
+
+	int getWrNb() const {
+		return wrNb;
+	}
 };
 
 /**

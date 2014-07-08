@@ -84,9 +84,6 @@ private :
 	int id;
 	SRDAGGraph* graph;
 
-	edgeArray inputEdges;
-	edgeArray outputEdges;
-
 	/**
 	 Integer solved parameters. Retrieved while solving the edges
 	*/
@@ -104,6 +101,11 @@ private :
 	PiSDFEdge* EdgeReference;
 
 	/**
+	 * Reference to the parent vertex.
+	 */
+	SRDAGVertex* parent;
+
+	/**
 	 The vertex top level
 	*/
 	int schedLevel;
@@ -119,11 +121,18 @@ private :
 	int referenceIndex;
 	int iterationIndex;
 
+	edgeArray outputEdges;
+	edgeArray inputEdges;
+
 	// The index of the vertex in a schedule. -1 if the vertex have not been scheduled.
 	int scheduleIndex;
 
 	SrVxSTATUS_FLAG state;
 
+		/**
+		 For graph traversal
+		*/
+		bool visited;
 
 	int mergeIx;	// Index in the merged graph.
 
@@ -133,16 +142,23 @@ private :
 	// Distinguishes among several explode/implode vertices.
 	int expImpId;
 
-	UINT32 execTime;
-	UINT32 minStartTime;
+	UINT32 execTime[MAX_SLAVE_TYPES];
+	bool constraint[MAX_SLAVE_TYPES];
+
+	int minStartTime;
 
 	// Identifies the function implementing the actor's action(s).
 	UINT64 functIx;
 public :
+	/** Constructor */
 	SRDAGVertex();
+
+	/** Destructor */
 	~SRDAGVertex();
+
 	void reset();
 
+	void setGraph(SRDAGGraph* graph);
 	SRDAGGraph* getGraph();
 
 	int getNbInputEdge();
@@ -171,8 +187,11 @@ public :
 	int getScheduleIndex() const;
 	void setScheduleIndex(int index);
 
-	int getExecTime() const;
-	void setExecTime(int time);
+	UINT32 getExecTime(int slaveType);
+	void setExecTime(int slaveType, UINT32 exec);
+
+	bool getConstraint(int slaveType);
+	void setConstraint(int slaveType, bool constr);
 
 	int getMinStartTime() const;
 	void setMinStartTime(int time);
@@ -322,6 +341,31 @@ inline
 void SRDAGVertex::setReference(PiSDFAbstractVertex *ref){
 	Reference = ref;
 	ref->addChildVertex(this);
+}
+
+inline
+void SRDAGVertex::setOutputEdge(SRDAGEdge* edge, UINT32 id){
+	outputEdges.add(edge,id);
+}
+
+inline
+UINT32 SRDAGVertex::getExecTime(int slaveType){
+	return execTime[slaveType];
+}
+
+inline
+void SRDAGVertex::setExecTime(int slaveType, UINT32 exec){
+	execTime[slaveType] = exec;
+}
+
+inline 
+bool SRDAGVertex::getConstraint(int slaveType){
+	return constraints[slaveType];
+}
+
+inline 
+void SRDAGVertex::setConstraint(int slaveType, bool constr){
+	constraints[slaveType] = constr;
 }
 
 inline

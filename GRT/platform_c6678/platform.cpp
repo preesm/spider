@@ -36,6 +36,10 @@
 
 #include <ti/csl/csl_cache.h>
 #include <ti/csl/csl_cacheAux.h>
+#include <ti/csl/csl_chipAux.h>
+#include <ti/csl/csl_xmc.h>
+#include <ti/csl/csl_xmcAux.h>
+#include <ti/csl/cslr_cgem.h>
 
 #include <platform.h>
 #include <platform_types.h>
@@ -46,11 +50,64 @@ void platform_file_init();
 void platform_time_init();
 void platform_queue_Init(UINT8 nbSlaves);
 
+void set_MPAX(int index, Uint32 bAddr, Uint32 rAddr, Uint8 segSize){
+
+    CSL_XMC_XMPAXH mpaxh;
+    mpaxh.bAddr = bAddr;
+    mpaxh.segSize =  segSize;
+
+    CSL_XMC_XMPAXL mpaxl;
+    mpaxl.rAddr = rAddr;
+    mpaxl.sr = 1;
+    mpaxl.sw = 1;
+    mpaxl.sx = 1;
+    mpaxl.ur = 1;
+    mpaxl.uw = 1;
+    mpaxl.ux = 1;
+
+    CSL_XMC_setXMPAXH(index, &mpaxh);
+    CSL_XMC_setXMPAXL(index, &mpaxl);
+}
+
+void reset_MPAX(int index){
+
+    CSL_XMC_XMPAXH mpaxh;
+    mpaxh.bAddr = 0;
+    mpaxh.segSize =  0;
+
+    CSL_XMC_XMPAXL mpaxl;
+    mpaxl.rAddr = 0;
+    mpaxl.sr = 0;
+    mpaxl.sw = 0;
+    mpaxl.sx = 0;
+    mpaxl.ur = 0;
+    mpaxl.uw = 0;
+    mpaxl.ux = 0;
+
+    CSL_XMC_setXMPAXH(index, &mpaxh);
+    CSL_XMC_setXMPAXL(index, &mpaxl);
+}
+
 void platform_init(UINT8 nbSlaves){
 	mutex_pend(MUTEX_CACHE);
+
+	for(int i=0; i<256; i++){
+		CACHE_disableCaching(i);
+//		CACHE_resetPrefetch(i);
+	}
+
+	set_MPAX(0, 0x00000, 0x00000, 0x1E);
+	set_MPAX(1, 0x80000, 0x80000, 0x1E);
+	for(int i=2; i<16; i++)
+		reset_MPAX(i);
+
 	CACHE_setL1PSize(CACHE_L1_32KCACHE);
 	CACHE_setL1DSize(CACHE_L1_32KCACHE);
 	CACHE_setL2Size (CACHE_0KCACHE);
+
+#ifndef ENABLE_CACHE
+	set_MPAX(3, 0xa0000, 0x0c000, 0x15); // "translate" 256KB (0x11) from 0xa1000000 to 0x00c000000 using the MPAX number 3
+#endif
 	mutex_post(MUTEX_CACHE);
 
 	platform_file_init();

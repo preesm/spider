@@ -39,6 +39,8 @@
 
 #include <platform_types.h>
 
+#define ENABLE_CACHE
+
 void platform_init(UINT8 nbSlaves);
 
 #endif /* PLATFORM_H_ */

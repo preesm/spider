@@ -96,12 +96,13 @@ class PiSDFAbstractVertex {
 
 	BOOL constraints [MAX_SLAVES];
 	abstract_syntax_elt timings[MAX_SLAVE_TYPES][REVERSE_POLISH_STACK_MAX_ELEMENTS+1];
+	UINT32 resolvedTimings[MAX_SLAVE_TYPES];
 
 public:
 	PiSDFAbstractVertex();
 	virtual ~PiSDFAbstractVertex();
 
-	void reset();
+	virtual void reset();
 	void resetRefs();
 
 	void setInputEdge(PiSDFEdge* edge, UINT32 id);
@@ -160,8 +161,16 @@ public:
     		abort();
     	}
     	globalParser.parse(timing, timings[slave_type]);
+    	constraints[slave_type] = TRUE;
     }
 
+    void setResolvedTiming(UINT32 slave_type, UINT32 timing){
+		resolvedTimings[slave_type] = timing;
+	}
+
+    UINT32 getResolvedTiming(UINT32 slave_type){
+		return resolvedTimings[slave_type];
+	}
 
 
 	/*

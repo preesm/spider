@@ -39,6 +39,8 @@
 
 #include <platform_types.h>
 
+#define ENABLE_CACHE
+
 UINT8 platform_getCoreId();
 void platform_init(UINT8 core_id);
 

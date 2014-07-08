@@ -64,7 +64,7 @@ namespace ScheduleWriter {
 		*/
 		void write(Schedule* schedule, SRDAGGraph* hGraph, Architecture* archi, const char* path);
 		void write(BaseSchedule* schedule, SRDAGGraph* hGraph, Architecture* archi, const char* path);
-
-};
+		void writeLatexData(BaseSchedule* schedule, SRDAGGraph* dag, Architecture* archi, const char* path);
+}
 
 #endif

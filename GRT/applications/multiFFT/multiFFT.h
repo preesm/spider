@@ -37,42 +37,48 @@
 #include <string.h>
 #include <platform_types.h>
 
+extern "C"{
+#include <dsplib.h>
+}
+
 #include "actors.h"
 
 #define NVAL	10
 #define MMAX 	12
 #define NBITER 	10
 
-//#define NVAL	20
-//#define MMAX 	20
-//#define NBITER 	10
-
 extern UINT32 curVertexId;
 
-//static UINT8 nValues[NBITER][MMAX] = {
-//		{2,1},
-//	};
+static UINT8 nValues[10][10] = {
+		{6,6,6,6,6, 6, 6, 6, 6, 6},
+		{5,6,6,6,6, 6, 6, 6, 6, 7},
+		{4,5,6,6,6, 6, 6, 6, 7, 8},
+		{3,4,5,6,6, 6, 6, 7, 8, 9},
+		{2,3,4,5,6, 6, 7, 8, 9,10},
+		{1,2,3,4,5, 7, 8, 9,10,11},
+		{1,1,2,3,4, 8, 9,10,11,11},
+		{1,1,1,2,3, 9,10,11,11,11},
+		{1,1,1,1,2,10,11,11,11,11},
+		{1,1,1,1,1,11,11,11,11,11},
+	};
 
 void config(UINT8* inputFIFOs[],
 			UINT8* outputFIFOs[],
 			UINT32 params[])
 {
-//	UINT32 N;
+	UINT32 N;
 	UINT32 NMAX = params[0];
-	UINT32 N = params[1];
-	int i;
 
-//	N = NVAL;
-	printf("Recv N=%d, vxId %d \n", N, curVertexId);
+	N = NVAL;
 
 	UINT8* out_M = outputFIFOs[0];
 
 	// Sending parameter's value.
-	pushParam(curVertexId,1,&N);
+	pushParam(curVertexId,N);
 
-//	memcpy(out_M, nValues[0], NMAX);
-	for(i=0; i<N; i++)
-		out_M[i] = 8;//-i;
+	//printf("Exec Config\n");
+
+	memcpy(out_M, nValues[0], NMAX);
 }
 
 
@@ -168,10 +174,8 @@ void setM(UINT8* inputFIFOs[],
 
 	//printf("Exec setM\n");
 
-	UINT32 M = in_m[0];
-
 	// Sending parameter's value.
-	pushParam(curVertexId,1,&M);
+	pushParam(curVertexId,in_m[0]);
 }
 
 void initSwitch(UINT8* inputFIFOs[],

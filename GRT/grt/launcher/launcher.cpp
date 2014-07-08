@@ -139,6 +139,22 @@ static char* regenerateColor(int refInd){
 	return color;
 }
 
+void Launcher::assignFifo(SRDAGGraph* graph){
+	/* Creating fifos for executable vxs.*/
+	for (UINT32 i = 0; i < graph->getNbVertices(); i++) {
+		SRDAGVertex* vx = graph->getVertex(i);
+		if(vx->getState() == SrVxStExecutable){
+			for (UINT32 j = 0; j < vx->getNbOutputEdge(); j++){
+				SRDAGEdge* edge = vx->getOutputEdge(j);
+				if(edge->getFifoId() == -1){
+					edge->setFifoId(nbFifo++);
+					edge->setFifoAddress(memory.alloc(edge->getTokenRate()));
+				}
+			}
+		}
+	}
+}
+
 void Launcher::launch(SRDAGGraph* graph, Architecture* arch, BaseSchedule* schedule){
 	/* Creating Tasks */
 	for(UINT32 slave=0; slave < arch->getNbActiveSlaves(); slave++){
@@ -307,6 +323,12 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 	platform_fprintf("<data>\n");
 
 	char name[MAX_VERTEX_NAME_SIZE];
+
+	char file[MAX_FILE_NAME_SIZE+20];
+	sprintf(file, "%s_latex", filePathName);
+	FILE* flatex = fopen(file, "w+");
+	fprintf(flatex, "<!-- latex\n");
+	fprintf(flatex, "{");
 #endif
 
 	// Writing execution data for the master.
@@ -319,6 +341,12 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		platform_fprintf("\t\tmapping=\"Master\"\n");
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
 		platform_fprintf("\t\t>Step_%d.</event>\n", j);
+
+		fprintf(flatex, "%d/", timeStartTaskOrdering[j]/1000 );/*start*/
+		fprintf(flatex, "%d/", (timeEndTaskOrdering[j] - timeStartTaskOrdering[j])/1000);/*duration*/
+		fprintf(flatex, "%d/",	 0);/*core index*/
+		fprintf(flatex, "%s/",   "");/*name*/
+		fprintf(flatex, "color%d,\n",10); // color taskordering
 #endif
 		stat->schedulingTime += timeEndTaskOrdering[j] - timeStartTaskOrdering[j];
 	}
@@ -333,6 +361,12 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		platform_fprintf("\t\tmapping=\"Master\"\n");
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
 		platform_fprintf("\t\t>Step_%d.</event>\n", j);
+
+		fprintf(flatex, "%d/", timeStartMapping[j]/1000 );/*start*/
+		fprintf(flatex, "%d/", (timeEndMapping[j] - timeStartMapping[j])/1000);/*duration*/
+		fprintf(flatex, "%d/",	 0);/*core index*/
+		fprintf(flatex, "%s/",   "");/*name*/
+		fprintf(flatex, "color%d,\n",10); // color mapping
 
 		mappingTime += timeEndMapping[j] - timeStartMapping[j];
 		mappingNb += actorsByStep[j];
@@ -355,6 +389,12 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		platform_fprintf("\t\tmapping=\"Master\"\n");
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
 		platform_fprintf("\t\t>Step_%d.</event>\n", j);
+
+		fprintf(flatex, "%d/", timeStartGraph[j]/1000 );/*start*/
+		fprintf(flatex, "%d/", (timeEndGraph[j] - timeStartGraph[j])/1000);/*duration*/
+		fprintf(flatex, "%d/",	 0);/*core index*/
+		fprintf(flatex, "%s/",   "");/*name*/
+		fprintf(flatex, "color%d,\n",10); // color graphtransfo
 #endif
 		stat->graphTransfoTime += timeEndGraph[j] - timeStartGraph[j];
 	}
@@ -384,7 +424,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 			}
 
 			if(stat->actors[k]->getFunction_index() == 3){
-				stat->latencies[nbIter++] = t.end - nbIter*PERIOD;
+				stat->latencies[t.end/PERIOD] = t.end%PERIOD + PERIOD;
 			}
 			break;
 		case Broadcast:
@@ -410,6 +450,16 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		platform_fprintf("\t\tmapping=\"Master\"\n");
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
 		platform_fprintf("\t\t>%s.</event>\n", name);
+
+		fprintf(flatex, "%d/", t.start/1000 );/*start*/
+		fprintf(flatex, "%d/", (t.end - t.start)/1000);/*duration*/
+		fprintf(flatex, "%d/",	 0);/*core index*/
+		fprintf(flatex, "%s/",   "");/*name*/
+
+		if(vertex->getFunctIx() == 7)
+			fprintf(flatex, "color%d,\n",vertex->getReferenceIndex()); // color Id
+		else
+			fprintf(flatex, "color%d,\n",10); // color Id
 
 		if(t.start > t.end){
 			printf("Receive bad time\n");
@@ -453,7 +503,9 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 				}
 
 				if(stat->actors[k]->getFunction_index() == 3){
-					stat->latencies[nbIter++] = endTime - nbIter*PERIOD;
+//					printf("latency %d %d %d\n", endTime/PERIOD, endTime, endTime%PERIOD + PERIOD);
+					stat->latencies[endTime/PERIOD] = endTime%PERIOD + PERIOD;
+//					stat->latencies[nbIter++] = endTime - nbIter*PERIOD;
 				}
 				break;
 			case Broadcast:
@@ -480,6 +532,16 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 			platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
 			platform_fprintf("\t\t>%s.</event>\n", name);
 
+			fprintf(flatex, "%d/", startTime/1000 );/*start*/
+			fprintf(flatex, "%d/", (endTime - startTime)/1000);/*duration*/
+			fprintf(flatex, "%d/",	 slave);/*core index*/
+			fprintf(flatex, "%s/",   "");/*name*/
+
+			if(vertex->getFunctIx() == 7)
+				fprintf(flatex, "color%d,\n",vertex->getReferenceIndex()); // color Id
+			else
+				fprintf(flatex, "color%d,\n",10); // color Id
+
 			if(startTime > endTime){
 				printf("Receive bad time\n");
 			}
@@ -491,18 +553,24 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 #if PRINT_REAL_GANTT
 	platform_fprintf("</data>\n");
 	platform_fclose();
+
+	fprintf(flatex, "}\n");
+	fprintf(flatex, "latex -->\n");
+	fclose(flatex);
 #endif
 }
 
 void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){
 	UINT32 slave = 0;
+	UINT32 paramValues[MAX_NB_PiSDF_PARAMS];
 	while(nbParamToRecv != 0){
 		if(slave == 0){
-			UINT32 vxId, value;
-			if(popParam(&vxId, &value)){
-				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(topDag->getVertexFromIx(vxId)->getReference());
+			UINT32 vxId, nbParam;
+			if(popParam(&vxId, &nbParam, paramValues)){
+				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(topDag->getVertex(vxId)->getReference());
 				nbParamToRecv -= refConfigVx->getNbRelatedParams();
-				topDag->getVertexFromIx(vxId)->setRelatedParamValue(0,value);
+				for(int i=0; i<nbParam; i++)
+					topDag->getVertexFromIx(vxId)->setRelatedParamValue(i,paramValues[i]);
 			}
 		}else{
 			UINT32 msgType;

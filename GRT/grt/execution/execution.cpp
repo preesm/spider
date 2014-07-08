@@ -50,7 +50,7 @@ static UINT8* outputFIFOs[MAX_NB_FIFO];
 static UINT32 args[MAX_NB_ARGS];
 static FUNCTION_TYPE functions_tbl[NB_LOCAL_FUNCTIONS];
 
-struct param{UINT32 vxId; UINT32 value;};
+struct param{UINT32 vxId; UINT32 nbParam; UINT32 value[MAX_NB_PiSDF_PARAMS];};
 static Queue<param, 50> params;
 
 UINT32 curVertexId;
@@ -78,20 +78,27 @@ void pushExecution(SRDAGVertex* vertex){
 	executionQueue.push(vertex);
 }
 
-void pushParam(UINT32 vertexID, UINT32 value){
+void pushParam(UINT32 vertexID, UINT32 nbParam, UINT32 values[MAX_NB_PiSDF_PARAMS]){
 	struct param p;
 	p.vxId = vertexID;
-	p.value = value;
+	p.nbParam = nbParam;
+	for(int i=0; i<nbParam; i++){
+		p.value[i] = values[i];
+	}
+//	p.value = value;
 	params.push(p);
 }
 
-BOOL popParam(UINT32* vertexID, UINT32* value){
+BOOL popParam(UINT32* vertexID, UINT32* nbParam, UINT32 values[MAX_NB_PiSDF_PARAMS]){
 	if(params.isEmpty())
 		return FALSE;
 
 	struct param p = params.pop();
 	*vertexID = p.vxId;
-	*value = p.value;
+	*nbParam = p.nbParam;
+	for(int i=0; i<p.nbParam; i++){
+		values[i] = p.value[i];
+	}
 	return TRUE;
 }
 

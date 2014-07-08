@@ -44,6 +44,7 @@
 SRDAGVertex::SRDAGVertex(){
 	graph=0;
 	scheduleIndex = -1;
+	visited=0;
 	mergeIx = -1;
 	referenceIndex=-1;
 	iterationIndex=-1;
@@ -54,10 +55,13 @@ SRDAGVertex::SRDAGVertex(){
 	EdgeReference = NULL;
 	id=-1;
 	functIx=-1;
+	minStartTime =-1;
+	parent=NULL;
 	type = Normal; // Normal type by default.
 	state = SrVxStNoExecuted;
-	execTime = 0;
-	minStartTime = 0;
+
+	for(int i=0; i<MAX_SLAVE_TYPES; i++)
+		constraint[i] = FALSE;
 
 	inputEdges.reset();
 	outputEdges.reset();
@@ -66,6 +70,7 @@ SRDAGVertex::SRDAGVertex(){
 void SRDAGVertex::reset(){
 	graph=0;
 	scheduleIndex = -1;
+	visited=0;
 	mergeIx = -1;
 	referenceIndex=-1;
 	iterationIndex=-1;
@@ -76,10 +81,13 @@ void SRDAGVertex::reset(){
 	EdgeReference = NULL;
 	id=-1;
 	functIx=-1;
+	minStartTime =-1;
+	parent=NULL;
 	type = Normal; // Normal type by default.
 	state = SrVxStNoExecuted;
-	execTime = 0;
-	minStartTime = 0;
+
+	for(int i=0; i<MAX_SLAVE_TYPES; i++)
+		constraint[i] = FALSE;
 
 	inputEdges.reset();
 	outputEdges.reset();

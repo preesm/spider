@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <ti/dsplib/src/DSPF_sp_fir_gen/DSPF_sp_fir_gen.h>
+//#include <ti/dsplib/src/DSPF_sp_fir_gen/DSPF_sp_fir_gen.h>
 
 #define NB_TAPS 512
 
@@ -28,6 +28,8 @@ void fir(float* in, float* out, int nb_sample){
 //		}
 //		last_id = (last_id+1)%NB_TAPS;
 //	}
+
+//	printf("out : %#x\n", out);
 
 	float input[4000+512-1];
 

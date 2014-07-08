@@ -27,11 +27,11 @@
 //		{1,1,1,5,5,5},
 //	};
 
-#define NVAL	10
+#define NVAL	15
 #define MMAX 	12
 #define NBITER 	10
 
-#define PERIOD 1100000
+#define PERIOD 600000
 
 //static UINT8 nValues[10][10] = {
 //		{6,6,6,6,6, 6, 6, 6, 6, 6},
@@ -45,18 +45,18 @@
 //		{1,1,1,1,2,10,11,11,11,11},
 //		{1,1,1,1,1,11,11,11,11,11},
 //	};
-static UINT8 nValues[10][10] = {
-		{6,6,6,6,6, 6, 6, 6, 6, 6},
-		{6,6,6,6,6, 6, 6, 6, 6, 6},
-		{6,6,6,6,6, 6, 6, 6, 6, 6},
-		{6,6,6,6,6, 6, 6, 6, 6, 6},
-		{6,6,6,6,6, 6, 6, 6, 6, 6},
-		{6,6,6,6,6, 6, 6, 6, 6, 6},
-		{6,6,6,6,6, 6, 6, 6, 6, 6},
-		{6,6,6,6,6, 6, 6, 6, 6, 6},
-		{6,6,6,6,6, 6, 6, 6, 6, 6},
-		{6,6,6,6,6, 6, 6, 6, 6, 6},
-	};
+//static UINT8 nValues[10][10] = {
+//		{6,6,6,6,6, 6, 6, 6, 6, 6},
+//		{6,6,6,6,6, 6, 6, 6, 6, 6},
+//		{6,6,6,6,6, 6, 6, 6, 6, 6},
+//		{6,6,6,6,6, 6, 6, 6, 6, 6},
+//		{6,6,6,6,6, 6, 6, 6, 6, 6},
+//		{6,6,6,6,6, 6, 6, 6, 6, 6},
+//		{6,6,6,6,6, 6, 6, 6, 6, 6},
+//		{6,6,6,6,6, 6, 6, 6, 6, 6},
+//		{6,6,6,6,6, 6, 6, 6, 6, 6},
+//		{6,6,6,6,6, 6, 6, 6, 6, 6},
+//	};
 #define MVALS	nValues
 
 #define NBSAMPLES 4000
@@ -85,6 +85,7 @@ void main(){
 	static UINT32 core_endTime[15][2];
 	static UINT32 core_schedTime[15][2];
 	static UINT32 latency[NBITER];
+	static UINT32 time[17];
 
 #if CHECK
 	static float input[NBSAMPLES];
@@ -115,20 +116,72 @@ void main(){
 
 	int iter;
 
-	for(i=0;i<10;i++){
-		printf("Vals %d : ",i);
-		for(j=0;j<10;j++){
-			printf("%d,",MVALS[i][j]);
-		}
-		printf("\n");
-	}
+//	for(i=0;i<10;i++){
+//		printf("Vals %d : ",i);
+//		for(j=0;j<10;j++){
+//			printf("%d,",MVALS[i][j]);
+//		}
+//		printf("\n");
+//	}
 
+	// Increasing N
+//	platform_time_init();
+//
+//#define MVAL 8
+//#define MAX_N 12
+//
+//	for(iter=1; iter<=MAX_N; iter++){
+//		int N = iter;
+//		printf("Start %d\n",iter);
+//		Monitor_init();
+//		platform_time_reset();
+//
+//		#pragma omp parallel for private(j) schedule(dynamic)
+//		for(i=0; i<N; i++){
+//			float *int_in, *int_out;
+//			int_in 	= tempArray(0,i);
+//			int_out = tempArray(1,i);
+//
+//			for(j=0; j<MVAL; j++){
+//				UINT32 task = Monitor_startTask(i*100+j, omp_get_thread_num());
+//
+//				fir(int_in,int_out,NBSAMPLES);
+//
+//				float *tmp = int_in;
+//				int_in = int_out;
+//				int_out = tmp;
+//
+//				Monitor_endTask(task);
+//			}
+//		}
+//		Monitor_setEndTime();
+//
+//		UINT32 schedTime;
+//		time[iter-1] = Monitor_printData(iter,"Nvar", &schedTime);
+//	}
+//	printf("End\n");
+//
+//	char file[40];
+//	printf("time\n");
+//	sprintf(file,"/home/jheulot/dev/mp-sched/ederc/openMP_nVar.csv");
+//	f = fopen(file,"w+");
+//	fprintf(f, "iter, latency\n");
+//	for(iter=0; iter<MAX_N; iter++){
+//		fprintf(f,"%d,%d\n",iter+1, time[iter]);
+//		printf("%d: %d\n",iter+1, time[iter]);
+//	}
+//	fclose(f);
+
+	/* MultiIt */
 	platform_time_init();
 	Monitor_init();
 	printf("Start Stage %d\n",iter);
 	platform_time_reset();
 
-	for(iter=0; iter<NBITER; iter++){
+	#define MVAL 8
+	#define MAX_N 12
+
+	for(iter=0; iter<2; iter++){
 
 #if EXEC
 		for(i=0; i<NVAL; i++){
@@ -140,23 +193,15 @@ void main(){
 //		platform_time_reset();
 
 		#pragma omp parallel for private(j) schedule(dynamic)
-		for(i=0; i<NVAL; i++){
+		for(i=0; i<8; i++){
 			float *int_in, *int_out;
 			int_in 	= tempArray(0,i);
 			int_out = tempArray(1,i);
 
-			for(j=0; j<MVALS[iter][i]; j++){
+			for(j=0; j<8-i; j++){
 				UINT32 task = Monitor_startTask(i*100+j, omp_get_thread_num());
 
-#if EXEC
-				if(j == MVALS[iter][i]-1){
-					fir(int_in,output[i],NBSAMPLES);
-				}else{
-					fir(int_in,int_out,NBSAMPLES);
-				}
-#else
 				fir(int_in,int_out,NBSAMPLES);
-#endif
 
 				float *tmp = int_in;
 				int_in = int_out;
@@ -181,11 +226,11 @@ void main(){
 	Monitor_setEndTime();
 	printf("End Stage\n");
 
-	core_endTime[iter][0] = Monitor_printData(iter,"stage", &(core_schedTime[iter][0]));
+	core_endTime[iter][0] = Monitor_printData(iter,"", &(core_schedTime[iter][0]));
 
 	char file[40];
 	printf("time\n");
-	sprintf(file,"/home/jheulot/dev/mp-sched/openMP_latencies.csv");
+	sprintf(file,"/home/jheulot/dev/mp-sched/ederc/openMP_latencies.csv");
 	f = fopen(file,"w+");
 	fprintf(f, "iter, latency\n");
 	for(iter=0; iter<10; iter++){

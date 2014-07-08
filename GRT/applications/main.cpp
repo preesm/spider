@@ -137,7 +137,7 @@ int main(int argc, char* argv[]){
 
 
 		// Add topActor to topDag
-		SRDAGVertex* topActor = topDag.addVertex();
+		SRDAGVertex* topActor = topDag.createVertex();
 		topActor->setReference(topPisdf->getVertex(0));
 		topActor->setReferenceIndex(0);
 		topActor->setIterationIndex(0);

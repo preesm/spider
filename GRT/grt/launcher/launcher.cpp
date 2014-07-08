@@ -139,22 +139,6 @@ static char* regenerateColor(int refInd){
 	return color;
 }
 
-void Launcher::assignFifo(SRDAGGraph* graph){
-	/* Creating fifos for executable vxs.*/
-	for (UINT32 i = 0; i < graph->getNbVertices(); i++) {
-		SRDAGVertex* vx = graph->getVertex(i);
-		if(vx->getState() == SrVxStExecutable){
-			for (UINT32 j = 0; j < vx->getNbOutputEdge(); j++){
-				SRDAGEdge* edge = vx->getOutputEdge(j);
-				if(edge->getFifoId() == -1){
-					edge->setFifoId(nbFifo++);
-					edge->setFifoAddress(memory.alloc(edge->getTokenRate()));
-				}
-			}
-		}
-	}
-}
-
 void Launcher::launch(SRDAGGraph* graph, Architecture* arch, BaseSchedule* schedule){
 	/* Creating Tasks */
 	for(UINT32 slave=0; slave < arch->getNbActiveSlaves(); slave++){
@@ -379,7 +363,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		taskTime t;
 		t = Monitor_get(i);
 		UINT32 execTime = t.end - t.start;
-		SRDAGVertex* vertex = dag->getVertex(t.vertexID);
+		SRDAGVertex* vertex = dag->getVertexFromIx(t.vertexID);
 
 		UINT32 k;
 		switch(vertex->getType()){
@@ -446,7 +430,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		UINT32 nbTasks = platform_QPopUINT32(slave, platformCtrlQ);
 
 		for (UINT32 j=0 ; j<nbTasks; j++){
-			SRDAGVertex* vertex = dag->getVertex(platform_QPopUINT32(slave, platformCtrlQ)); // data[0] contains the vertex's id.
+			SRDAGVertex* vertex = dag->getVertexFromIx(platform_QPopUINT32(slave, platformCtrlQ)); // data[0] contains the vertex's id.
 			UINT32 startTime = platform_QPopUINT32(slave, platformCtrlQ);
 			UINT32 endTime = platform_QPopUINT32(slave, platformCtrlQ);
 
@@ -516,18 +500,18 @@ void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){
 		if(slave == 0){
 			UINT32 vxId, value;
 			if(popParam(&vxId, &value)){
-				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(topDag->getVertex(vxId)->getReference());
+				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(topDag->getVertexFromIx(vxId)->getReference());
 				nbParamToRecv -= refConfigVx->getNbRelatedParams();
-				topDag->getVertex(vxId)->setRelatedParamValue(0,value);
+				topDag->getVertexFromIx(vxId)->setRelatedParamValue(0,value);
 			}
 		}else{
 			UINT32 msgType;
 			if(platform_QNonBlockingPop(slave, platformCtrlQ, &msgType, sizeof(UINT32)) == sizeof(UINT32)){
 				if(msgType != MSG_PARAM_VALUE) exitWithCode(1068);
 				UINT32 vxId = platform_QPopUINT32(slave, platformCtrlQ);
-				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(topDag->getVertex(vxId)->getReference());
+				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(topDag->getVertexFromIx(vxId)->getReference());
 				for(UINT32 j = 0; j < refConfigVx->getNbRelatedParams(); j++){
-					topDag->getVertex(vxId)->setRelatedParamValue(j,platform_QPopUINT32(slave, platformCtrlQ));
+					topDag->getVertexFromIx(vxId)->setRelatedParamValue(j,platform_QPopUINT32(slave, platformCtrlQ));
 				}
 				nbParamToRecv -= refConfigVx->getNbRelatedParams();
 			}

@@ -44,235 +44,108 @@
 #include <grt_definitions.h>
 #include <platform_types.h>
 #include "../../tools/SchedulingError.h"
+#include <tools/Pool.h>
 #include <tools/List.h>
+#include <tools/Set.h>
+#include <tools/SetIterator.h>
+
+typedef Pool<SRDAGVertex,MAX_SRDAG_VERTICES> vertexPool;
+typedef Set<SRDAGVertex, MAX_SRDAG_VERTICES> vertexSet;
+typedef SetIterator<SRDAGVertex,MAX_SRDAG_VERTICES> vertexSetIterator;
+
+typedef Pool<SRDAGEdge,MAX_SRDAG_EDGES> edgePool;
+typedef Set<SRDAGEdge, MAX_SRDAG_EDGES> edgeSet;
+typedef SetIterator<SRDAGEdge,MAX_SRDAG_EDGES> edgeSetIterator;
 
 /**
  * A SRDAG graph. It contains SRDAG vertices and edges. It has a bigger table for vertices and edges than DAG.
  * Each edge production and consumption must be equal. There is no repetition vector for the vertices.
- * 
- * @author mpelcat
  */
-class SRDAGGraph {
-
+class SRDAGGraph{
 	private :
-		List<SRDAGVertex,MAX_SRDAG_VERTICES> vertices;
-//		List<SRDAGVertex*,MAX_SRDAG_VERTICES> hierVertex;
-		List<SRDAGEdge,MAX_SRDAG_EDGES> edges;
+		int vertexIxCount, edgeIxCount;
+
+		vertexPool 	vPool;
+		edgePool	ePool;
+
+		vertexSet 	vertices;
+		edgeSet		edges;
 
 	public : 
-		/**
-		 Constructor
-		*/
 		SRDAGGraph();
-
-		/**
-		 Destructor
-		*/
 		~SRDAGGraph();
-
-		/**
-		 * Reset the graph as at initialization
-		 */
 		void reset();
 
-		/**
-		 Adding a vertex to the graph. Vertices and edges must be added in topological order.
-		 There is no initial token on edges
-		 
-		 @return the new vertex
-		*/
-		SRDAGVertex* addVertex();
+		SRDAGVertex* createVertex();
+		SRDAGEdge* createEdge(PiSDFEdge* ref);
 
-		void storeHierVertex(SRDAGVertex* vertex){
-//			hierVertex.add(vertex);
-		}
-		SRDAGVertex* getExHierVertex(){
-//			for(UINT32 i=0; i<hierVertex.getNb(); i++){
-//				if(hierVertex[i]->getState() == SrVxStExecutable)
-//					return hierVertex[i];
-//			}
-			for(UINT32 i=0; i<vertices.getNb(); i++){
-				if(vertices[i].isHierarchical() &&
-						vertices[i].getState() == SrVxStExecutable)
-					return &(vertices[i]);
+		void removeVertex(SRDAGVertex* vertex);
+
+		int getNbVertex();
+		int getNbEdge();
+
+		SRDAGVertex* getNextHierVertex();
+
+		vertexSetIterator 	getVertexIterator();
+		edgeSetIterator 	getEdgeIterator();
+
+		int getVerticesFromReference(PiSDFAbstractVertex* ref, int iteration, SRDAGVertex** output);
+
+		SRDAGVertex* getVertexFromIx(int ix){
+			vertexSetIterator iter = vertices.getIterator();
+			SRDAGVertex* vertex;
+			while((vertex = iter.next()) != NULL){
+				if(vertex->id == ix)
+					return vertex;
 			}
-			return (SRDAGVertex*)NULL;
+			return NULL;
 		}
 
-		/**
-		 Adding an edge to the graph. Vertices and edges must be added in topological order.
-		 There is no initial token on edges
-		 
-		 @param source: The source vertex of the edge
-		 @param tokenRate: number of tokens (chars) produced by the source and consumed by the sink
-		 @param sink: The sink vertex of the edge
-		 @return the created edge
-		*/
-		SRDAGEdge* addEdge(SRDAGVertex* source, UINT32 sourcePortIx, int tokenRate, SRDAGVertex* sink, UINT32 sinkPortIx, PiSDFEdge* refEdge = (PiSDFEdge*)NULL);
-
-
-		void appendAnnex(SRDAGGraph* annex);
-
-
-		/**
-		 Removes the last added edge
-		*/
-		void removeLastEdge();
-
-		void changeEdgeSource(SRDAGEdge* edge, SRDAGVertex* vertex);
-		void changeEdgeSink(SRDAGEdge* edge, SRDAGVertex* vertex);
-
-
-
-		/**
-		 Removes all edges and vertices
-		*/
-		void flush();
-
-		/**
-		 Gets the actor at the given index
-		 
-		 @param index: index of the actor in the actor list
-		 @return actor
-		*/
-		SRDAGVertex* getVertex(int index);
-
-		/**
-		 Gets the srDag vertices that share the given DAG reference
-		 
-		 @param ref: the DAG reference
-		 @param output: the output SRDAG vertices
-		 @return the number of found references
-		*/
-		UINT32 getVerticesFromReference(PiSDFAbstractVertex* ref, UINT32 iteration, SRDAGVertex** output);
-
-		/**
-		 Gets the index of the given actor
-		 
-		 @param vertex: actor vertex
-		 @return index of the actor in the actor list
-		*/
-		int getVertexIndex(SRDAGVertex* vertex);
-
-		/**
-		 Gets the index of the given edge
-		 
-		 @param edge: edge
-		 @return index of the edge in the edge list
-		*/
-		int getEdgeIndex(SRDAGEdge* edge);
-
-		/**
-		 Gets the actor number
-		 
-		 @return number of vertices
-		*/
-		UINT32 getNbVertices();
-
-		/**
-		 Gets the edge at the given index
-		 
-		 @param index: index of the edge in the edge list
-		 @return edge
-		*/
-		SRDAGEdge* getEdge(int index);
-
-		/**
-		 Gets the edge number
-		 
-		 @return number of edges
-		*/
-		int getNbEdges();
-
-		/**
-		 Reset the "visited" status of all vertices
-		*/
-		void resetVisited();
-
-		/**
-		 Gets the input edges of a given vertex. Careful!! Slow!
-		 
-		 @param vertex: input vertex
-		 @param output: table to store the edges
-		 @return the number of input edges
-		*/
-		int getInputEdges(SRDAGVertex* vertex, SRDAGEdge** output);
-
-		/**
-		 Gets the output edges of a given vertex. Careful!! Slow!
-		 
-		 @param vertex: input vertex
-		 @param output: table to store the edges
-		 @return the number of output edges
-		*/
-		int getOutputEdges(SRDAGVertex* vertex, SRDAGEdge** output);
-
-		int getMaxTime();
-
-		int getCriticalPath();
-
-		SRDAGEdge* getEdgeByRef(SRDAGVertex* srDagVx, PiSDFEdge* refEdge, VERTEX_TYPE inOut);
-
-		SRDAGVertex* getVxByRefAndIx(PiSDFAbstractVertex* reference, int refIndex);
-
-//		CSDAGVertex* getExplodeVertex();
-
-		void merge(SRDAGGraph* localDag, bool intraLevel, UINT32 level, UINT8 step);
-
-		void removeVx(SRDAGVertex* Vx);
-
-		/**
-		 Gets pointers on the edges of the graph in the order of their source or sink.
-		 Accelerates getting the input or output edges
-
-		 @param sourceOrSink: 1 for sorting in source order, 0 for sink order
-		*/
-		void sortEdges(int startIndex);
-
-		/*
-		 * Sets all the executable vx' states to executed.
-		 */
 		void updateExecuted();
 };
 
-/**
- Gets the actor at the given index
- 
- @param index: index of the actor in the actor list
- @return actor
-*/
-inline SRDAGVertex* SRDAGGraph::getVertex(int index){
-	return &vertices[index];
+inline
+SRDAGVertex* SRDAGGraph::createVertex(){
+	SRDAGVertex* vertex = vPool.alloc();
+	vertices.add(vertex);
+	vertex->reset();
+	vertex->id = vertexIxCount++;
+	vertex->graph = this;
+
+	char name[MAX_TOOL_NAME];
+	snprintf(name, MAX_TOOL_NAME, "Input Edges of vertex %d", vertex->id);
+	vertex->inputEdges.setName(name);
+
+	return vertex;
 }
 
-/**
- Gets the index of the given actor
- 
- @param vertex: actor vertex
- @return index of the actor in the actor list
-*/
-inline int SRDAGGraph::getVertexIndex(SRDAGVertex* vertex){
-	return vertices.getId(vertex);
+inline
+SRDAGEdge* SRDAGGraph::createEdge(PiSDFEdge* ref){
+	SRDAGEdge* edge = ePool.alloc();
+	edges.add(edge);
+	edge->reset();
+	edge->id = edgeIxCount++;
+	edge->graph = this;
+	edge->setRefEdge(ref);
+	return edge;
 }
 
-/**
- Gets the index of the given edge
- 
- @param edge: edge
- @return index of the edge in the edge list
-*/
-inline int SRDAGGraph::getEdgeIndex(SRDAGEdge* edge){
-	return edges.getId(edge);
+inline
+SRDAGVertex* SRDAGGraph::getNextHierVertex(){
+	vertexSetIterator iter = vertices.getIterator();
+	SRDAGVertex* vertex;
+	while((vertex = iter.next()) != NULL){
+		if(vertex->isHierarchical() &&
+				vertex->getState() == SrVxStExecutable)
+			return vertex;
+	}
+	return (SRDAGVertex*)NULL;
 }
 
-/**
- Gets the actor number
- 
- @return number of vertices
-*/
-inline UINT32 SRDAGGraph::getNbVertices(){
-	return vertices.getNb();
+inline vertexSetIterator SRDAGGraph::getVertexIterator(){
+	return vertices.getIterator();
 }
+
 
 /**
  Gets the edge at the given index
@@ -280,25 +153,8 @@ inline UINT32 SRDAGGraph::getNbVertices(){
  @param index: index of the edge in the edge list
  @return edge
 */
-inline SRDAGEdge* SRDAGGraph::getEdge(int index){
-	return &edges[index];
-}
-
-/**
- Gets the edge number
- 
- @return number of edges
-*/
-inline int SRDAGGraph::getNbEdges(){
-	return edges.getNb();
-}
-
-/**
- Reset the "visited" status of all vertices
-*/
-inline void SRDAGGraph::resetVisited(){
-	for(int i = 0; i < vertices.getNb(); i++)
-		vertices[i].setVisited(0);
+inline edgeSetIterator SRDAGGraph::getEdgeIterator(){
+	return edges.getIterator();
 }
 
 /**
@@ -308,11 +164,24 @@ inline void SRDAGGraph::resetVisited(){
  @param output: the output SRDAG vertices
  @return the number of found references
 */
-inline UINT32 SRDAGGraph::getVerticesFromReference(PiSDFAbstractVertex* ref, UINT32 iteration, SRDAGVertex** output){
-	UINT32 size = 0;
-	for(int i=0; i<ref->getChildNbVertices(); i++){
-		SRDAGVertex* vertex = ref->getChildVertex(i);
-		if(vertex->getReference() == ref && vertex->getIterationIndex() == iteration){
+//inline UINT32 SRDAGGraph::getVerticesFromReference(PiSDFAbstractVertex* ref, UINT32 iteration, SRDAGVertex** output){
+//	UINT32 size = 0;
+//	for(int i=0; i<ref->getChildNbVertices(); i++){
+//		SRDAGVertex* vertex = ref->getChildVertex(i);
+//		if(vertex != NULL && vertex->getReference() == ref && vertex->getIterationIndex() == iteration){
+//			output[size] = vertex;
+//			size++;
+//		}
+//	}
+//	return size;
+//}
+
+inline int SRDAGGraph::getVerticesFromReference(PiSDFAbstractVertex* ref, int iteration, SRDAGVertex** output){
+	int size = 0;
+	vertexSetIterator iter = vertices.getIterator();
+	SRDAGVertex* vertex;
+	while((vertex = iter.next()) != NULL){
+		if(vertex->Reference == ref && vertex->getIterationIndex() == iteration){
 			output[size] = vertex;
 			size++;
 		}
@@ -320,84 +189,20 @@ inline UINT32 SRDAGGraph::getVerticesFromReference(PiSDFAbstractVertex* ref, UIN
 	return size;
 }
 
-/**
- Gets the input edges of a given vertex. Careful!! Slow!
- 
- @param vertex: input vertex
- @param output: table to store the edges
- @return the number of input edges
-*/
-inline int SRDAGGraph::getInputEdges(SRDAGVertex* vertex, SRDAGEdge** output){
-	int nbEdges = 0;
-	for(int i=0; i<edges.getNb(); i++){
-		SRDAGEdge* edge = &edges[i];
-		SRDAGVertex* sink = edge->getSink();
-		if(sink == vertex){
-			output[nbEdges] = edge;
-			nbEdges++;
-		}
-	}
-	return nbEdges;
+inline int SRDAGGraph::getNbVertex(){
+	return vertices.getNb();
 }
 
-/**
- Gets the output edges of a given vertex. Careful!! Slow!
- 
- @param vertex: input vertex
- @param output: table to store the edges
- @return the number of output edges
-*/
-inline int SRDAGGraph::getOutputEdges(SRDAGVertex* vertex, SRDAGEdge** output){
-	int nbEdges = 0;
-	for(int i=0; i<edges.getNb(); i++){
-		SRDAGEdge* edge = &edges[i];
-		SRDAGVertex* source = edge->getSource();
-		if(source == vertex){
-			output[nbEdges] = edge;
-			nbEdges++;
-		}
-	}
-	return nbEdges;
-}
-
-
-inline SRDAGVertex* SRDAGGraph::getVxByRefAndIx(PiSDFAbstractVertex* reference, int refIndex){
-	for(int i=0; i< vertices.getNb(); i++){
-		if((vertices[i].getReference() == reference) &&
-		   (vertices[i].getState() != SrVxStDeleted) &&
-		   (vertices[i].getReferenceIndex() == refIndex))
-			return &vertices[i];
-	}
-	return (SRDAGVertex*)0;
-}
-
-
-
-/**
- Adding a vertex to the graph
- 
- @param vertexName: the name of the new vertex
-
- @return the new vertex
-*/
-inline SRDAGVertex* SRDAGGraph::addVertex(){
-	SRDAGVertex* vertex;
-#ifdef _DEBUG
-	if(nbVertices >= MAX_SRDAG_VERTICES){
-		// Adding a vertex while the graph is already full
-		exitWithCode(1000);
-	}
-#endif
-	vertex = vertices.add();
-	vertex->reset();
-	vertex->setGraph(this);
-	vertex->setId(vertices.getId(vertex));
-	return vertex;
+inline int SRDAGGraph::getNbEdge(){
+	return edges.getNb();
 }
 
 inline void SRDAGGraph::updateExecuted(){
-	for (int i = 0; i < vertices.getNb(); i++) {
-		if(vertices[i].getState() == SrVxStExecutable) vertices[i].setState(SrVxStExecuted);
+	vertexSetIterator iter = vertices.getIterator();
+	SRDAGVertex* vertex;
+	while((vertex = iter.next()) != NULL){
+		if(vertex->getState() == SrVxStExecutable)
+			vertex->setState(SrVxStExecuted);
 	}
 }
 

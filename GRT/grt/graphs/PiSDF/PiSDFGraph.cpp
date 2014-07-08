@@ -247,8 +247,10 @@ void PiSDFGraph::evaluateExpressions(/*Scenario* scenario*/)
 
 void PiSDFGraph::updateDAGStates(SRDAGGraph* dag){
 	// Updating all input, round-buffer and hierarchical vxs.
-	for (UINT32 i = 0; i < dag->getNbVertices(); i++) {
-		dag->getVertex(i)->updateState();
+	vertexSetIterator iter = dag->getVertexIterator();
+	SRDAGVertex *vertex;
+	while((vertex = iter.next()) != NULL){
+		vertex->updateState();
 	}
 }
 

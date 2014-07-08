@@ -47,140 +47,117 @@
 /**
  Constructor
 */
-SRDAGGraph::SRDAGGraph()
-{
-	// There is no dynamic allocation of graph members
+SRDAGGraph::SRDAGGraph(){
+	vertexIxCount = edgeIxCount = 0;
+	vPool.reset();
+	ePool.reset();
 	vertices.reset();
 	edges.reset();
-//	hierVertex.reset();
+
+	vPool.setName("Vertex Pool of SRDAG Graph");
+	ePool.setName("Edge Pool of SRDAG Graph");
+	vertices.setName("Vertex List of SRDAG Graph");
+	edges.setName("Edge List of SRDAG Graph");
 }
 
 void SRDAGGraph::reset(){
+	vertexIxCount = edgeIxCount = 0;
+	vPool.reset();
+	ePool.reset();
 	vertices.reset();
 	edges.reset();
-//	hierVertex.reset();
 }
 
 /**
  Destructor
 */
-SRDAGGraph::~SRDAGGraph()
-{
-	printf("Nb vertices used %d\n", vertices.getNb());
-	printf("Nb edges used %d\n", edges.getNb());
+SRDAGGraph::~SRDAGGraph(){
+	printf("Nb vertices used %d\n", getNbVertex());
+	printf("Nb edges used %d\n", getNbEdge());
 }
 
-/**
- Adding an edge to the graph
- 
- @param source: The source vertex of the edge
- @param production: number of tokens (chars) produced by the source
- @param sink: The sink vertex of the edge
- @param consumption: number of tokens (chars) consumed by the sink
- @return the created edge
-*/
-SRDAGEdge* SRDAGGraph::addEdge(SRDAGVertex* source, UINT32 sourcePortIx, int tokenRate, SRDAGVertex* sink, UINT32 sinkPortIx, PiSDFEdge* refEdge){
-	SRDAGEdge* edge;
-
-	if(source->getType() == RoundBuffer
-			&& source->getNbInputEdge() > 0
-			&& tokenRate == source->getInputEdge(0)->getTokenRate()){
-		SRDAGVertex* rb = source;
-		edge = rb->getInputEdge(0);
-
-		rb->removeInputEdge(edge);
-		edge->setSink(sink);
-		sink->setInputEdge(edge, sinkPortIx);
-		removeVx(rb);
-	}else if(sink->getType() == RoundBuffer
-			&& sink->getNbOutputEdge() > 0
-			&& tokenRate == sink->getOutputEdge(0)->getTokenRate()){
-		SRDAGVertex* rb = sink;
-		edge = rb->getOutputEdge(0);
-
-		rb->removeOutputEdge(edge);
-		edge->setSource(source);
-		source->setOutputEdge(edge, sourcePortIx);
-		removeVx(rb);
-	}else{
-		edge = edges.add();
-		edge->reset();
-		edge->setSource(source);
-		edge->setTokenRate(tokenRate);
-		edge->setSink(sink);
-		edge->setRefEdge(refEdge);
-		source->setOutputEdge(edge, sourcePortIx);
-		sink->setInputEdge(edge, sinkPortIx);
-	}
-	return edge;
+void SRDAGGraph::removeVertex(SRDAGVertex *vertex){
+	// TODO remove Edges connected to it.
+	vertices.remove(vertex);
+	vPool.free(vertex);
 }
 
-/**
- Removes the last added edge
-*/
-void SRDAGGraph::removeLastEdge(){
-	if(edges.getNb() > 0){
-		edges.remove(edges.getNb()-1);
-	}
-	else{
-		// Removing an edge from an empty graph
-		exitWithCode(1007);
-	}
-}
-
-/**
- Removes all edges and vertices
-*/
-void SRDAGGraph::flush(){
-	vertices.reset();
-	edges.reset();
-	SRDAGEdge::firstInSinkOrder = (SRDAGEdge*) NULL;
-}
-
-int SRDAGGraph::getMaxTime(){
-//	int sum=0;
-//	for(int i=0; i< vertices.getNb(); i++){
-//		sum += vertices[i].getCsDagReference()->getIntTiming(0);
+//void SRDAGGraph::removeVertex(int id){
+//	SRDAGVertex* vertex = &(vertices[id]);
+//	int i=0;
+//	while(vertex->nbInput){
+//		if(vertex->inputEdges[i] != NULL)
+//			vertex->inputEdges[i]->disconnectSink();
+//		i++;
 //	}
-//	return sum;
-	return 0;
-}
-
-
-static void iterateCriticalPath(SRDAGVertex* curVertex, int curLenght, int* max){
-//	curLenght += curVertex->getCsDagReference()->getIntTiming(0);
-//	if(curVertex->getNbOutputEdge() == 0){
-//		if(curLenght > *max) *max = curLenght;
-//		return;
+//	i=0;
+//	while(vertex->nbOutput){
+//		if(vertex->outputEdges[i] != NULL)
+//			vertex->outputEdges[i]->disconnectSource();
+//		i++;
 //	}
-//	for(int i=0; i<curVertex->getNbOutputEdge(); i++){
-//		iterateCriticalPath(curVertex->getOutputEdge(i)->getSink(), curLenght, max);
+//
+//	vertex->getReference()->removeChildVertex(vertex);
+//
+//	nbVertex--;
+//	if(nbVertex!=0){
+//		vertices[id] = vertices[nbVertex];
+//
+//		i=0;
+//		int j=0;
+//		vertex->id = id;
+//		while(j<vertex->nbInput){
+//			if(vertex->inputEdges[i] != NULL){
+//				vertex->inputEdges[i]->sink = vertex;
+//				j++;
+//			}
+//			i++;
+//		}
+//		i=j=0;
+//		while(j<vertex->nbOutput){
+//			if(vertex->outputEdges[i] != NULL){
+//				vertex->outputEdges[i]->source = vertex;
+//				j++;
+//			}
+//			i++;
+//		}
+//		vertex->getReference()->replaceChildVertex(&(vertices[nbVertex]), vertex);
 //	}
-}
+//}
 
-int SRDAGGraph::getCriticalPath(){
-	int max;
-	iterateCriticalPath(this->getVertex(0), 0, &max);
-	return max;
-}
-
-SRDAGEdge* SRDAGGraph::getEdgeByRef(SRDAGVertex* hSrDagVx, PiSDFEdge* refEdge, VERTEX_TYPE inOut){
-	if(inOut == input_vertex){
-		for (UINT32 i = 0; i < hSrDagVx->getNbInputEdge(); i++) {
-			SRDAGEdge* inSrDagEdge = hSrDagVx->getInputEdge(i);
-			if(inSrDagEdge->getRefEdge() == refEdge) return inSrDagEdge;
-		}
-	}
-	else if(inOut == output_vertex){
-		for (UINT32 i = 0; i < hSrDagVx->getNbOutputEdge(); i++) {
-			SRDAGEdge* outSrDagEdge = hSrDagVx->getOutputEdge(i);
-			if(outSrDagEdge->getRefEdge() == refEdge) return outSrDagEdge;
-		}
-	}
-	return 0;
-}
-
-void SRDAGGraph::removeVx(SRDAGVertex* Vx){
-	Vx->setState(SrVxStDeleted);
-}
+//SRDAGEdge* SRDAGGraph::addEdge(SRDAGVertex* source, UINT32 sourcePortIx, int tokenRate, SRDAGVertex* sink, UINT32 sinkPortIx, PiSDFEdge* refEdge){
+//	SRDAGEdge* edge;
+//
+//	if(source->getType() == RoundBuffer
+//			&& source->getNbInputEdge() > 0
+//			&& tokenRate == source->getInputEdge(0)->getTokenRate()){
+//		SRDAGVertex* rb = source;
+//		edge = rb->getInputEdge(0);
+//
+//		rb->removeInputEdge(edge);
+//		edge->setSink(sink);
+//		sink->setInputEdge(edge, sinkPortIx);
+//		removeVx(rb);
+//	}else if(sink->getType() == RoundBuffer
+//			&& sink->getNbOutputEdge() > 0
+//			&& tokenRate == sink->getOutputEdge(0)->getTokenRate()){
+//		SRDAGVertex* rb = sink;
+//		edge = rb->getOutputEdge(0);
+//
+//		rb->removeOutputEdge(edge);
+//		edge->setSource(source);
+//		source->setOutputEdge(edge, sourcePortIx);
+//		removeVx(rb);
+//	}else{
+//		edge = edges.add();
+//		edge->reset();
+//		edge->setSource(source);
+//		edge->setTokenRate(tokenRate);
+//		edge->setSink(sink);
+//		edge->setRefEdge(refEdge);
+//		source->setOutputEdge(edge, sourcePortIx);
+//		sink->setInputEdge(edge, sinkPortIx);
+//	}
+//	return edge;
+//}
 

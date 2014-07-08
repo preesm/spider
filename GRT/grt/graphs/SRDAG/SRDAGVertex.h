@@ -49,6 +49,7 @@ class SRDAGGraph;
 #include "../PiSDF/PiSDFVertex.h"
 #include "SRDAGEdge.h"
 #include <tools/Array.h>
+#include <graphs/AbstractGraph/AbstractVertex.h>
 
 typedef enum{
 	SrVxStExecutable,
@@ -75,392 +76,165 @@ typedef enum{
  * @author mpelcat
  */
 
-class SRDAGVertex {
-
-	private :
-		/**
-		 The PiSDF, i.e. the graph in which current vertex is included
-		*/
-		SRDAGGraph* graph;
-		
-		/**
-		 Integer solved parameters. Retrieved while solving the edges
-		*/
-		int paramValues[MAX_PARAM];
+typedef IndexedArray<SRDAGEdge*, MAX_SRDAG_IO_EDGES> edgeArray;
 
-		int relatedParamValues[MAX_PARAM];
+class SRDAGVertex{
 
-		/**
-		 The reference PiSDF vertex (if generated from a PiSDF)
-		*/
-		PiSDFAbstractVertex* Reference;
+private :
+	int id;
+	SRDAGGraph* graph;
 
-		/**
-		 * Edge Reference (for round buffer)
-		 */
-		PiSDFEdge* EdgeReference;
+	edgeArray inputEdges;
+	edgeArray outputEdges;
 
-		/**
-		 * Reference to the parent vertex.
-		 */
-		SRDAGVertex* parent;
-
-		/**
-		 The vertex top level
-		*/
-		int schedLevel;
+	/**
+	 Integer solved parameters. Retrieved while solving the edges
+	*/
+	int paramValues[MAX_PARAM];
+	int relatedParamValues[MAX_PARAM];
 
-		/**
-		 The vertex implementation slave index
-		*/
-		int slaveIndex;
+	/**
+	 The reference PiSDF vertex (if generated from a PiSDF)
+	*/
+	PiSDFAbstractVertex* Reference;
 
-		/**
-		 The duplication index of the vertex to distinguish it from other vertices created from dagReference.
-		*/
-		int referenceIndex;
-		int iterationIndex;
+	/**
+	 * Edge Reference (for round buffer)
+	 */
+	PiSDFEdge* EdgeReference;
 
-		Array<SRDAGEdge*,MAX_SRDAG_OUTPUT_EDGES> outputEdges;
-		Array<SRDAGEdge*,MAX_SRDAG_INPUT_EDGES> inputEdges;
+	/**
+	 The vertex top level
+	*/
+	int schedLevel;
 
-		// The index of the vertex in a schedule. -1 if the vertex have not been scheduled.
-		int scheduleIndex;
+	/**
+	 The vertex implementation slave index
+	*/
+	int slaveIndex;
 
-		SrVxSTATUS_FLAG state;
+	/**
+	 The duplication index of the vertex to distinguish it from other vertices created from dagReference.
+	*/
+	int referenceIndex;
+	int iterationIndex;
 
-		/**
-		 For graph traversal
-		*/
-		bool visited;
+	// The index of the vertex in a schedule. -1 if the vertex have not been scheduled.
+	int scheduleIndex;
 
-		int mergeIx;	// Index in the merged graph.
+	SrVxSTATUS_FLAG state;
 
-		// Indicates the type of vertex normal (0), explode (1) or implode (2). Normal (0) by default.
-		SrVxTYPE type;
 
-		// Distinguishes among several explode/implode vertices.
-		int expImpId;
+	int mergeIx;	// Index in the merged graph.
 
-		UINT32 execTime;
-		int minStartTime;
+	// Indicates the type of vertex normal (0), explode (1) or implode (2). Normal (0) by default.
+	SrVxTYPE type;
 
-		UINT32 id;
+	// Distinguishes among several explode/implode vertices.
+	int expImpId;
 
-//		char name[MAX_VERTEX_NAME_SIZE];
+	UINT32 execTime;
+	UINT32 minStartTime;
 
-		// Identifies the function implementing the actor's action(s).
-		UINT64 functIx;
-	public : 
-		/**
-		 Constructor
-		*/
-		SRDAGVertex();
+	// Identifies the function implementing the actor's action(s).
+	UINT64 functIx;
+public :
+	SRDAGVertex();
+	~SRDAGVertex();
+	void reset();
 
-		/**
-		 Destructor
-		*/
-		~SRDAGVertex();
+	SRDAGGraph* getGraph();
 
-		/**
-		 Setting the PiSDF, i.e. the graph in which current vertex is included
+	int getNbInputEdge();
+	int getNbOutputEdge();
 
-		 @param PiSDF: the PiSDF
-		*/
-		void setGraph(SRDAGGraph* graph);
+	int getId() const;
 
-		void reset();
+	int getParamValue(int paramIndex) const;
+	void setParamValue(int paramIndex, int value);
 
-		/**
-		 Getting the PiSDF, i.e. the graph in which current vertex is included
+	int getRelatedParamValue(int paramIndex) const;
+	void setRelatedParamValue(int paramIndex, int value);
 
-		 @param PiSDF: the PiSDF
-		*/
-		SRDAGGraph* getGraph();
+	int getReferenceIndex() const;
+	void setReferenceIndex(int index);
 
-		/**
-		 Getting the value of a parameter
+	int getGlobalIndex() const;
+	void setGlobalIndex(int index);
 
-		 @param paramIndex: the parameter index
-		 @return the parameter value
-		*/
-		int getParamValue(int paramIndex);
+	int getIterationIndex() const;
+	void setIterationIndex(int index);
 
-		/**
-		 Setting the value of a parameter
+	int getSchedLevel() const;
+	void setSchedLevel(int level);
 
-		 @param paramIndex: the parameter index
-		 @param value: the parameter value
-		*/
-		void setParamValue(int paramIndex, int value);
+	int getScheduleIndex() const;
+	void setScheduleIndex(int index);
 
-		int getRelatedParamValue(int paramIndex);
-		void setRelatedParamValue(int paramIndex, int value);
+	int getExecTime() const;
+	void setExecTime(int time);
 
-		/**
-		 Getting the duplication index of the vertex that distinguishes
-		 it from other vertices created from dagReference.
+	int getMinStartTime() const;
+	void setMinStartTime(int time);
 
-		 @return the CSDAG reference index
-		*/
-		int getReferenceIndex();
+	SrVxTYPE getType() const;
+	void setType(SrVxTYPE type);
 
-		int getGlobalIndex();
+	PiSDFAbstractVertex *getReference() const;
+	void setReference(PiSDFAbstractVertex *Reference);
 
-		/**
-		 Setting the duplication index of the vertex to distinguish 
-		 it from other vertices created from dagReference.
+	void setEdgeReference(PiSDFEdge *Reference);
+	PiSDFEdge* getEdgeReference() const;
 
-		 @param index: the vertex reference index
-		*/
-		void setReferenceIndex(int index);
+	SrVxSTATUS_FLAG getState() const;
+	void setState(SrVxSTATUS_FLAG state);
 
-		void setGlobalIndex(int index);
+	UINT64 getFunctIx() const;
+	void setFunctIx(UINT64 functIx);
 
-		void setIterationIndex(int index){
-			iterationIndex = index;
-		}
+	SRDAGEdge* getInputEdge(int id);
+	SRDAGEdge* getOutputEdge(int id);
 
-		UINT32 getIterationIndex(){
-			return iterationIndex;
-		}
+	void updateState();
 
+	BOOL isHierarchical();
+	PiSDFGraph* getHierarchy();
 
-	    int getScheduleIndex() const
-	    {
-	        return scheduleIndex;
-	    }
+	void getName(char* name, UINT32 sizeMax);
 
-	    void setScheduleIndex(int scheduleIndex)
-	    {
-	        this->scheduleIndex = scheduleIndex;
-	    }
-
-
-		/**
-		 Getting the 'visited' status of the vertex
-
-		 @return the status
-		*/
-		bool getVisited();
-
-		/**
-		 Setting the 'visited' status of the vertex
-
-		 @param value: the status
-		*/
-		void setVisited(bool value);
-
-		/**
-		 Getter of the implementation information giving the slave that will execute the vertex.
-
-		 @return the slave index
-		*/
-		int getSlaveIndex();
-
-		/**
-		 Setter of the implementation information giving the slave that will execute the vertex.
-
-		 @param slaveIndex: the slave index
-		*/
-		void setSlaveIndex(int slaveIndex);
-
-		int getSchedLevel();
-
-		void setExecTime(UINT32 exec){
-			execTime = exec;
-		}
-
-		UINT32 getExecTime(){
-			return execTime;
-		}
-
-		void setMinStartTime(int t){
-			minStartTime = t;
-		}
-
-		int getMinStartTime(){
-			return minStartTime;
-		}
-
-		void setSchedLevel(int value);
-
-
-		SRDAGEdge* getInputEdge(int id);
-		SRDAGEdge* getOutputEdge(int id);
-
-		UINT32 getNbInputEdge();
-		UINT32 getNbOutputEdge();
-
-		/*
-		 * Getter and setter for the type.
-		 */
-		SrVxTYPE getType();
-		void setType(SrVxTYPE type);
-
-		/*
-		 * Getter and setter for the expImpId.
-		 */
-		UINT32 getExpImpId();
-		void setExpImpId(UINT32 id);
-
-	    PiSDFAbstractVertex *getReference() const
-	    {
-	        return Reference;
-	    }
-
-	    void setReference(PiSDFAbstractVertex *Reference)
-	    {
-	        this->Reference = Reference;
-	        Reference->addChildVertex(this);
-	    }
-
-	    void setEdgeReference(PiSDFEdge *Reference)
-		{
-			this->EdgeReference = Reference;
-		}
-
-
-	    UINT32 getId() const
-	    {
-	        return id;
-	    }
-
-	    void setId(UINT32 id)
-	    {
-	        this->id = id;
-	    }
-
-	    SrVxSTATUS_FLAG getState() const
-	    {
-	        return state;
-	    }
-
-	    void setState(SrVxSTATUS_FLAG state)
-	    {
-	        this->state = state;
-	    }
-
-	    int getMergeIx() const
-	    {
-	        return mergeIx;
-	    }
-
-	    void setMergeIx(int ix)
-	    {
-	        this->mergeIx = ix;
-	    }
-
-	    SRDAGVertex *getParent() const
-	    {
-	        return parent;
-	    }
-
-	    void setParent(SRDAGVertex *parent)
-	    {
-	        this->parent = parent;
-	    }
-
-	    char* getName()
-	    {
-//	        return name;
-	    	return "";
-	    }
-
-	    void setName(char* name)
-	    {
-//	    	strcpy(this->name,name);
-	    }
-
-		UINT64 getFunctIx() const {
-			return functIx;
-		}
-
-		void setFunctIx(UINT64 functIx) {
-			this->functIx = functIx;
-		}
-
-
-		void setInputEdge(SRDAGEdge* edge, UINT32 id);
-		void setOutputEdge(SRDAGEdge* edge, UINT32 id);
-	    bool checkForExecution();
-
-	    void updateState();
-
-
-		int getInputEdgeId(SRDAGEdge* edge);
-		int getOutputEdgeId(SRDAGEdge* edge);
-
-		void removeInputEdge(SRDAGEdge* edge);
-		void removeOutputEdge(SRDAGEdge* edge);
-
-		void removeInputEdgeIx(UINT32 ix);
-		void removeOutputEdgeIx(UINT32 ix);
-
-		BOOL isHierarchical(){
-			return Reference
-					&& Reference->getType() == pisdf_vertex
-					&& ((PiSDFVertex*)Reference)->hasSubGraph()
-					&& type == Normal;
-		}
-
-		PiSDFGraph* getHierarchy(){
-			return ((PiSDFVertex*)Reference)->getSubGraph();
-		}
-
-		void getName(char* name, UINT32 sizeMax);
-
-
-	PiSDFEdge* getEdgeReference(){
-		return EdgeReference;
-	}
+	friend class SRDAGGraph;
+	friend class SRDAGEdge;
 };
 
-
-/**
- Setting the PiSDF, i.e. the graph in which current vertex is included
-
- @param PiSDF: the PiSDF
-*/
-inline
-void SRDAGVertex::setGraph(SRDAGGraph* graph){
-	this->graph = graph;
+inline int SRDAGVertex::getNbInputEdge(){
+	return inputEdges.getNb();
 }
 
-/**
- Getting the PiSDF, i.e. the graph in which current vertex is included
+inline int SRDAGVertex::getNbOutputEdge(){
+	return outputEdges.getNb();
+}
 
- @param PiSDF: the PiSDF
-*/
+inline int SRDAGVertex::getId() const{
+	return id;
+}
+
 inline
 SRDAGGraph* SRDAGVertex::getGraph(){
-	return this->graph;
+	return graph;
 }
 
-/**
- Getting the value of a parameter
-
- @param paramIndex: the parameter index
- @return the parameter value
-*/
 inline
-int SRDAGVertex::getParamValue(int paramIndex){
+int SRDAGVertex::getParamValue(int paramIndex) const{
 	return paramValues[paramIndex];
 }
 
-/**
- Setting the value of a parameter
-
- @param paramIndex: the parameter index
- @param value: the parameter value
-*/
 inline
 void SRDAGVertex::setParamValue(int paramIndex, int value){
 	paramValues[paramIndex] = value;
 }
 
 inline
-int SRDAGVertex::getRelatedParamValue(int paramIndex){
+int SRDAGVertex::getRelatedParamValue(int paramIndex) const{
 	return relatedParamValues[paramIndex];
 }
 
@@ -469,88 +243,115 @@ void SRDAGVertex::setRelatedParamValue(int paramIndex, int value){
 	relatedParamValues[paramIndex] = value;
 }
 
-/**
- Getting the duplication index of the vertex that distinguishes
- it from other vertices created from dagReference.
-
- @return the CSDAG reference index
-*/
 inline
-int SRDAGVertex::getReferenceIndex(){
+int SRDAGVertex::getReferenceIndex() const{
 	return referenceIndex;
 }
 
-/**
- Setting the duplication index of the vertex to distinguish 
- it from other vertices created from dagReference.
-
- @param index: the vertex reference index
-*/
 inline
 void SRDAGVertex::setReferenceIndex(int index){
 	referenceIndex = index;
 }
 
-
-/**
- Getter of the implementation information giving the slave that will execute the vertex.
-
- @return the slave index
-*/
 inline
-int SRDAGVertex::getSlaveIndex(){
-	return slaveIndex;
-}
-
-/**
- Setter of the implementation information giving the slave that will execute the vertex.
-
- @param slaveIndex: the slave index
-*/
-
-inline
-void SRDAGVertex::setSlaveIndex(int index){
-	slaveIndex = index;
+int SRDAGVertex::getIterationIndex() const{
+	return iterationIndex;
 }
 
 inline
-int SRDAGVertex::getSchedLevel(){
+void SRDAGVertex::setIterationIndex(int index){
+	iterationIndex = index;
+}
+
+inline
+int SRDAGVertex::getSchedLevel() const{
 	return schedLevel;
 }
 
 inline
-void SRDAGVertex::setSchedLevel(int value){
-	schedLevel = value;
-}
-
-/**
- Getting the 'visited' status of the vertex
-
- @return the status
-*/
-inline
-bool SRDAGVertex::getVisited(){
-	return visited;
-}
-
-/**
- Setting the 'visited' status of the vertex
-
- @param value: the status
-*/
-inline
-void SRDAGVertex::setVisited(bool value){
-	visited = value;
+void SRDAGVertex::setSchedLevel(int level){
+	schedLevel = level;
 }
 
 inline
-void SRDAGVertex::setInputEdge(SRDAGEdge* edge, UINT32 id){
-	inputEdges.add(edge,id);
+int SRDAGVertex::getScheduleIndex() const{
+	return scheduleIndex;
 }
 
 inline
-void SRDAGVertex::setOutputEdge(SRDAGEdge* edge, UINT32 id){
-	outputEdges.add(edge,id);
+void SRDAGVertex::setScheduleIndex(int index){
+	scheduleIndex = index;
+}
+
+inline
+int SRDAGVertex::getExecTime() const{
+	return execTime;
+}
+
+inline
+void SRDAGVertex::setExecTime(int time){
+	execTime = time;
+}
+
+inline
+int SRDAGVertex::getMinStartTime() const{
+	return minStartTime;
+}
+
+inline
+void SRDAGVertex::setMinStartTime(int time){
+	minStartTime = time;
+}
+
+inline
+SrVxTYPE SRDAGVertex::getType() const{
+	return type;
+}
+
+inline
+void SRDAGVertex::setType(SrVxTYPE _type){
+	type = _type;
+}
+
+inline
+PiSDFAbstractVertex *SRDAGVertex::getReference() const{
+	return Reference;
+}
+
+inline
+void SRDAGVertex::setReference(PiSDFAbstractVertex *ref){
+	Reference = ref;
+	ref->addChildVertex(this);
+}
+
+inline
+PiSDFEdge* SRDAGVertex::getEdgeReference() const{
+	return EdgeReference;
+}
+
+inline
+void SRDAGVertex::setEdgeReference(PiSDFEdge *ref){
+	EdgeReference = ref;
+}
+
+inline
+SrVxSTATUS_FLAG SRDAGVertex::getState() const{
+	return state;
+}
+
+inline
+void SRDAGVertex::setState(SrVxSTATUS_FLAG _state){
+	state = _state;
+}
+
+inline
+UINT64 SRDAGVertex::getFunctIx() const{
+	return functIx;
+}
+
+inline
+void SRDAGVertex::setFunctIx(UINT64 fIx){
+	functIx = fIx;
 }
 
 inline
@@ -564,33 +365,16 @@ SRDAGEdge* SRDAGVertex::getOutputEdge(int id){
 }
 
 inline
-UINT32 SRDAGVertex::getNbInputEdge(){
-	return inputEdges.getNb();
+BOOL SRDAGVertex::isHierarchical(){
+	return Reference
+			&& Reference->getType() == pisdf_vertex
+			&& ((PiSDFVertex*)Reference)->hasSubGraph()
+			&& type == Normal;
 }
 
 inline
-UINT32 SRDAGVertex::getNbOutputEdge(){
-	return outputEdges.getNb();
-}
-
-inline
-SrVxTYPE SRDAGVertex::getType(){
-	return type;
-}
-
-inline
-void SRDAGVertex::setType(SrVxTYPE type){
-	this->type = type;
-}
-
-inline
-UINT32 SRDAGVertex::getExpImpId(){
-	return expImpId;
-}
-
-inline
-void SRDAGVertex::setExpImpId(UINT32 id){
-	this->expImpId = id;
+PiSDFGraph* SRDAGVertex::getHierarchy(){
+	return ((PiSDFVertex*)Reference)->getSubGraph();
 }
 
 #endif

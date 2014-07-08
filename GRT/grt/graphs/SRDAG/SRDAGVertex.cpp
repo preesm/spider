@@ -44,7 +44,6 @@
 SRDAGVertex::SRDAGVertex(){
 	graph=0;
 	scheduleIndex = -1;
-	visited=0;
 	mergeIx = -1;
 	referenceIndex=-1;
 	iterationIndex=-1;
@@ -55,11 +54,11 @@ SRDAGVertex::SRDAGVertex(){
 	EdgeReference = NULL;
 	id=-1;
 	functIx=-1;
-	minStartTime =-1;
-	parent=NULL;
 	type = Normal; // Normal type by default.
 	state = SrVxStNoExecuted;
 	execTime = 0;
+	minStartTime = 0;
+
 	inputEdges.reset();
 	outputEdges.reset();
 }
@@ -67,7 +66,6 @@ SRDAGVertex::SRDAGVertex(){
 void SRDAGVertex::reset(){
 	graph=0;
 	scheduleIndex = -1;
-	visited=0;
 	mergeIx = -1;
 	referenceIndex=-1;
 	iterationIndex=-1;
@@ -78,11 +76,11 @@ void SRDAGVertex::reset(){
 	EdgeReference = NULL;
 	id=-1;
 	functIx=-1;
-	minStartTime =-1;
-	parent=NULL;
 	type = Normal; // Normal type by default.
 	state = SrVxStNoExecuted;
 	execTime = 0;
+	minStartTime = 0;
+
 	inputEdges.reset();
 	outputEdges.reset();
 }
@@ -94,31 +92,6 @@ SRDAGVertex::~SRDAGVertex()
 {
 }
 
-
-void SRDAGVertex::removeInputEdge(SRDAGEdge* edge){
-	inputEdges.remove(edge);
-}
-
-void SRDAGVertex::removeInputEdgeIx(UINT32 ix){
-	inputEdges.remove(ix);
-}
-
-void SRDAGVertex::removeOutputEdge(SRDAGEdge* edge){
-	outputEdges.remove(edge);
-}
-
-void SRDAGVertex::removeOutputEdgeIx(UINT32 ix){
-	outputEdges.remove(ix);
-}
-
-int SRDAGVertex::getInputEdgeId(SRDAGEdge* edge){
-	return inputEdges.getIdOf(edge);
-}
-
-int SRDAGVertex::getOutputEdgeId(SRDAGEdge* edge){
-	return outputEdges.getIdOf(edge);
-}
-
 void SRDAGVertex::updateState(){
 	if(state != SrVxStExecuted && state != SrVxStDeleted){
 		switch(type){
@@ -126,14 +99,14 @@ void SRDAGVertex::updateState(){
 			state = SrVxStExecutable;
 			break;
 		case RoundBuffer:
-			if(inputEdges.getNb() == 1 && outputEdges.getNb() == 1)
+			if(getNbInputEdge() == 1 && getNbOutputEdge() == 1)
 				state = SrVxStExecutable;
 			else
 				state = SrVxStNoExecuted;
 			break;
 		default:
-			for (UINT32 i = 0; i < inputEdges.getNb(); i++){
-				SRDAGVertex* predecessor = inputEdges[i]->getSource();
+			for (UINT32 i = 0; i < getNbInputEdge(); i++){
+				SRDAGVertex* predecessor = getInputEdge(i)->getSource();
 
 				if(predecessor->state == SrVxStNoExecuted)
 					predecessor->updateState();

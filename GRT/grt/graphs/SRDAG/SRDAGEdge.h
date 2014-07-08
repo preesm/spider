@@ -38,12 +38,15 @@
 #define SRDAG_EDGE
 
 #include <platform_types.h>
+#include <graphs/AbstractGraph/AbstractEdge.h>
+#include <grt_definitions.h>
 
 class SRDAGVertex;
+class SRDAGGraph;
 class PiSDFEdge;
 
 typedef struct{
-	UINT32 id;
+	int id;
 	UINT32 add;
 	UINT32 size;
 } FIFO;
@@ -56,137 +59,55 @@ typedef struct{
  * @author mpelcat
  */
 class SRDAGEdge {
+protected :
+	int id;
+	SRDAGVertex *source, *sink;
+	int sourcePortIx, sinkPortIx;
+	SRDAGGraph *graph;
 
-	protected :
-		/**
-		 Edge source
-		*/
-		SRDAGVertex* source;
-		/**
-		 Edge sink
-		*/
-		SRDAGVertex* sink;
+	PiSDFEdge* refEdge;		// Reference to PiSDF edge.
 
-		PiSDFEdge* refEdge;		// Reference to PiSDF edge.
+	int delay;				// Delay or number of initial tokens.
 
-		UINT32 delay;				// Delay or number of initial tokens.
+	FIFO fifo;
 
-		BOOL isImplemented;
-		FIFO fifo;
+public :
 
-	public : 
-		/**
-		 Constructor
-		*/
-		SRDAGEdge();
+	SRDAGEdge();
+	~SRDAGEdge();
+	void reset();
 
-		/**
-		 Destructor
-		*/
-		~SRDAGEdge();
+	UINT32 getTokenRate() const;
+	void setTokenRate(UINT32 rate);
 
-		void reset();
+	int getDelay() const;
+	void setDelay(int delay);
 
-		/**
-		 TokenRate getter
+	int getFifoId() const;
+	void setFifoId(int fifoId);
 
-		 @return production after resolving the expression
-		*/
-		UINT32 getTokenRate();
+	UINT32 getFifoAddress() const;
+	void setFifoAddress(UINT32 fifoAddress);
 
-		/**
-		 TokenRate setter
+	FIFO* getFifo();
 
-		 @param integer defining the token rate
-		*/
-		void setTokenRate(UINT32 rate);
+	PiSDFEdge *getRefEdge() const;
+	void setRefEdge(PiSDFEdge *refEdge);
 
-		/**
-		 Source getter
+	void connectSink(SRDAGVertex* nSink, int nSinkPortIx);
+	void disconnectSink();
+	void connectSource(SRDAGVertex* nSource, int nSourcePortIx);
+	void disconnectSource();
 
-		 @return the source
-		*/
-		SRDAGVertex* getSource();
+	int getId() const;
 
-		/**
-		 Sink getter
+	int getSinkPortIx() const;
+	int getSourcePortIx() const;
 
-		 @return the Sink
-		*/
-		SRDAGVertex* getSink();
+	SRDAGVertex* getSource() const;
+	SRDAGVertex* getSink() const;
 
-		/**
-		 Source setter
-
-		 @param vertex: the source
-		*/
-		void setSource(SRDAGVertex* vertex);
-
-		/**
-		 Sink setter
-
-		 @param vertex: the sink
-		*/
-		void setSink(SRDAGVertex* vertex);
-
-		/**
-		 delay getter.
-
-		 @return delay
-		*/
-		UINT32 getDelay();
-
-		/**
-		 delay setter
-		*/
-		void setDelay(const UINT32 delay);
-
-		/**
-		 *
-		 */
-		FIFO* getFifo();
-
-		// Public for performance sake
-
-	    PiSDFEdge *getRefEdge() const
-	    {
-	        return refEdge;
-	    }
-
-	    void setRefEdge(PiSDFEdge *refEdge)
-	    {
-	        this->refEdge = refEdge;
-	    }
-
-		int getFifoId() const {
-			if(isImplemented)
-				return fifo.id;
-			else
-				return -1;
-		}
-
-		void setFifoId(int fifoId) {
-			this->fifo.id = fifoId;
-			this->isImplemented = TRUE;
-		}
-
-UINT32 getFifoAddress() const {
-		return fifo.add;
-	}
-
-	void setFifoAddress(UINT32 fifoAddress) {
-		this->fifo.add = fifoAddress;
-	}
-
-		/**
-		 In order to fast access the input edges, a linked list of edges is done. The edges
-		 can then be scanned in the linked list order to get the input edges corresponding
-		 to the vertices in direct order.
-		*/
-		static SRDAGEdge* firstInSinkOrder;
-		SRDAGEdge* prevInSinkOrder;
-		SRDAGEdge* nextInSinkOrder;
-		static SRDAGEdge* lastInSinkOrder;
+	friend class SRDAGGraph;
 };
 
 /**
@@ -195,7 +116,7 @@ UINT32 getFifoAddress() const {
  @return the source
 */
 inline
-SRDAGVertex* SRDAGEdge::getSource(){
+SRDAGVertex* SRDAGEdge::getSource() const{
 	return source;
 }
 
@@ -205,28 +126,8 @@ SRDAGVertex* SRDAGEdge::getSource(){
  @return the Sink
 */
 inline
-SRDAGVertex* SRDAGEdge::getSink(){
+SRDAGVertex* SRDAGEdge::getSink() const{
 	return sink;
-}
-
-/**
- Source setter
-
- @param vertex: the source
-*/
-inline
-void SRDAGEdge::setSource(SRDAGVertex* vertex){
-	source = vertex;
-}
-
-/**
- Sink setter
-
- @param vertex: the sink
-*/
-inline
-void SRDAGEdge::setSink(SRDAGVertex* vertex){
-	sink = vertex;
 }
 
 /**
@@ -235,8 +136,7 @@ void SRDAGEdge::setSink(SRDAGVertex* vertex){
  @return production after resolving the expression
 */
 inline
-UINT32 SRDAGEdge::getTokenRate()
-{
+UINT32 SRDAGEdge::getTokenRate() const {
 	return(this->fifo.size);
 }
 
@@ -247,8 +147,7 @@ UINT32 SRDAGEdge::getTokenRate()
  @return production after resolving the expression
 */
 inline
-void SRDAGEdge::setTokenRate(const UINT32 rate)
-{
+void SRDAGEdge::setTokenRate(const UINT32 rate){
 	this->fifo.size = rate;
 }
 
@@ -256,21 +155,63 @@ void SRDAGEdge::setTokenRate(const UINT32 rate)
  delay getter.
  */
 inline
-UINT32 SRDAGEdge::getDelay(){
-	return(this->delay);
+int SRDAGEdge::getDelay() const {
+	return delay;
 }
 
 /**
  delay setter.
  */
 inline
-void SRDAGEdge::setDelay(const UINT32 delay){
-	this->delay = delay;
+void SRDAGEdge::setDelay(const int d){
+	delay = d;
 }
 
 inline
 FIFO* SRDAGEdge::getFifo(){
 	return &fifo;
+}
+
+inline
+int SRDAGEdge::getFifoId() const {
+	return fifo.id;
+}
+
+inline
+void SRDAGEdge::setFifoId(int fifoId) {
+	this->fifo.id = fifoId;
+}
+
+inline
+UINT32 SRDAGEdge::getFifoAddress() const {
+	return fifo.add;
+}
+
+inline
+void SRDAGEdge::setFifoAddress(UINT32 fifoAddress) {
+	this->fifo.add = fifoAddress;
+}
+
+inline
+PiSDFEdge *SRDAGEdge::getRefEdge() const{
+	return refEdge;
+}
+
+inline
+void SRDAGEdge::setRefEdge(PiSDFEdge *refEdge){
+	this->refEdge = refEdge;
+}
+
+inline int SRDAGEdge::getId() const {
+	return id;
+}
+
+inline int SRDAGEdge::getSinkPortIx() const {
+	return sinkPortIx;
+}
+
+inline int SRDAGEdge::getSourcePortIx() const {
+	return sourcePortIx;
 }
 
 #endif

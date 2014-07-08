@@ -283,8 +283,9 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 	static List<SRDAGVertex*, MAX_SRDAG_VERTICES> schedList;
 	schedList.reset();
 
-	for(int i=0; i<dag->getNbVertices(); i++){
-		SRDAGVertex* vertex = dag->getVertex(i);
+	SRDAGVertex* vertex;
+	vertexSetIterator iterV = dag->getVertexIterator();
+	while((vertex = iterV.next()) != NULL){
 		if(vertex->getState() == SrVxStExecutable){
 			schedList.add(vertex);
 			computeSchedLevel(vertex);

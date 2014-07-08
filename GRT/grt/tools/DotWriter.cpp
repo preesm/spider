@@ -61,9 +61,9 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 	platform_fprintf ("edge [color=Red];\n");
 //		platform_fprintf ("rankdir=LR;\n");
 
-	for (UINT32 i=0 ; i<graph->getNbVertices() ; i++)
-	{
-		SRDAGVertex* vertex = graph->getVertex(i);
+	SRDAGVertex* vertex;
+	vertexSetIterator iterV = graph->getVertexIterator();
+	while((vertex = iterV.next()) != NULL){
 		if(vertex->getState() != SrVxStDeleted){
 			vertex->getName(name, MAX_VERTEX_NAME_SIZE);
 
@@ -85,22 +85,28 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 			}
 
 			if(displayNames){
-				platform_fprintf ("\t%d [label=\"%d\\n%s\\n%d\\n%d\" color=\"%s\"];\n",i,i,name, vertex->getMinStartTime(), vertex->getExecTime(), color);
+				platform_fprintf ("\t%d [label=\"%d\\n%s\" color=\"%s\"];\n",vertex->getId(), vertex->getId(), name, color);
 			}
 			else{
-				platform_fprintf ("\t%d [label=\"%d\" color=\"%s\"];\n",i,i, color);
+				platform_fprintf ("\t%d [label=\"%d\" color=\"%s\"];\n",vertex->getId(), vertex->getId(), color);
 			}
 		}
 	}
 
-	for (int i=0 ; i<graph->getNbEdges() ; i++)
-	{
-		SRDAGEdge* edge = graph->getEdge(i);
+	SRDAGEdge* edge;
+	edgeSetIterator iterE = graph->getEdgeIterator();
+	while((edge = iterE.next()) != NULL){
 		SRDAGVertex* vxSrc = edge->getSource();
 		SRDAGVertex* vxSnk = edge->getSink();
 		if((vxSrc->getState() != SrVxStDeleted) && (vxSnk->getState() != SrVxStDeleted)){
 			if(displayRates)
-				platform_fprintf ("\t%d->%d [label=\"%d\",taillabel=\"%d\",headlabel=\"%d\"];\n", edge->getSource()->getId(), edge->getSink()->getId(), edge->getTokenRate(), edge->getSource()->getOutputEdgeId(edge), edge->getSink()->getInputEdgeId(edge));
+				platform_fprintf ("\t%d->%d [label=\"%d\",taillabel=\"%d\",headlabel=\"%d\"];\n",
+						edge->getSource()->getId(),
+						edge->getSink()->getId(),
+						edge->getTokenRate(),
+						edge->getSourcePortIx(),
+						edge->getSinkPortIx()
+						);
 			else
 				platform_fprintf ("\t%d->%d [label=\"%d: %#x\"];\n", edge->getSource()->getId(), edge->getSink()->getId(), edge->getFifoId(), edge->getFifoAddress());
 		}

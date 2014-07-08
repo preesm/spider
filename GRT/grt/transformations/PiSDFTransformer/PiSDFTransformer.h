@@ -54,7 +54,7 @@ namespace PiSDFTransformer {
 
 	void replaceHwithRB(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, SRDAGVertex* currHSrDagVx);
 
-	void addCAtoSRDAG(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, SRDAGVertex* currHSrDagVx);
+	void addCAtoSRDAG(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, int refIndex);
 
 	void computeBRV(PiSDFGraph* currentPiSDF, int* brv);
 
@@ -62,7 +62,7 @@ namespace PiSDFTransformer {
 
 	static void singleRateTransformation(
 			PiSDFGraph *currentPiSDF,
-			SRDAGVertex *currHSrDagVx,
+			int refIndex,
 			SRDAGGraph *topDag,
 			int *brv);
 

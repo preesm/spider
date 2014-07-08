@@ -36,22 +36,17 @@
 
 #include <stddef.h>
 #include "SRDAGEdge.h"
-
-SRDAGEdge* SRDAGEdge::firstInSinkOrder = NULL;
-SRDAGEdge* SRDAGEdge::lastInSinkOrder = NULL;
-
+#include "SRDAGVertex.h"
 
 /**
  Constructor
 */
-SRDAGEdge::SRDAGEdge()
-{
+SRDAGEdge::SRDAGEdge(){
 	source = sink = NULL;
-	prevInSinkOrder = NULL;
-	nextInSinkOrder = NULL;
+	graph = NULL;
+	id = sourcePortIx = sinkPortIx = -1;
 	refEdge = NULL;
-	isImplemented = FALSE;
-	fifo.id=0;
+	fifo.id=-1;
 	fifo.add= 0;
 	fifo.size=0;
 	delay = 0;
@@ -64,15 +59,44 @@ SRDAGEdge::~SRDAGEdge()
 {
 }
 
-void SRDAGEdge::reset()
-{
+void SRDAGEdge::reset(){
 	source = sink = NULL;
-	prevInSinkOrder = NULL;
-	nextInSinkOrder = NULL;
+	graph = NULL;
+	id = sourcePortIx = sinkPortIx = -1;
 	refEdge = NULL;
-	fifo.id=0;
+	fifo.id=-1;
 	fifo.add= 0;
 	fifo.size=0;
-	isImplemented = FALSE;
 	delay = 0;
+}
+
+void SRDAGEdge::connectSink(
+		SRDAGVertex *nSink,
+		int nSinkPortIx){
+	if(sink != NULL) disconnectSink();
+	sink = nSink;
+	sinkPortIx = nSinkPortIx;
+	sink->inputEdges.setValue(sinkPortIx, this);
+}
+
+void SRDAGEdge::disconnectSink(){
+	sink->inputEdges.resetValue(sinkPortIx);
+	sink = NULL;
+	sinkPortIx = -1;
+}
+
+void SRDAGEdge::connectSource(
+		SRDAGVertex *nSource,
+		int nSourcePortIx){
+	if(source != NULL) disconnectSource();
+	source = nSource;
+	sourcePortIx = nSourcePortIx;
+	source->outputEdges.setValue(nSourcePortIx, this);
+
+}
+
+void SRDAGEdge::disconnectSource(){
+	source->outputEdges.resetValue(sourcePortIx);
+	source = NULL;
+	sourcePortIx = -1;
 }

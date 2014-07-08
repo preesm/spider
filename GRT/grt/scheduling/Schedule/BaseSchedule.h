@@ -50,8 +50,8 @@ typedef struct SchedType{
 #define MAX(a,b) ((a>b)?a:b)
 
 class BaseSchedule {
-	UINT32 nbActiveSlaves;
-	UINT32 nbVertices[MAX_SLAVES];
+	int nbActiveSlaves;
+	int nbVertices[MAX_SLAVES];
 	UINT32 slaveReadyTimes[MAX_SLAVES];
 	SchedType schedules[MAX_SLAVES][MAX_SRDAG_VERTICES];
 public:
@@ -111,7 +111,7 @@ public:
 	}
 
     bool findSlaveId(UINT32 vertexIx, const void *vertex, UINT32 *slaveId){
-    	for (UINT32 i = 0; i < nbActiveSlaves; i++) {
+    	for (int i = 0; i < nbActiveSlaves; i++) {
    			if(schedules[i][vertexIx].vertex == vertex){
 				*slaveId = i;
     			return true;

@@ -45,8 +45,7 @@ class PiSDFAbstractVertex;
 
 class PiSDFEdge{
 	UINT32 id;
-	PiSDFAbstractVertex *source;
-	PiSDFAbstractVertex *sink;
+	PiSDFAbstractVertex *source, *sink;
 
 	// Expression defining the token production, consumption and delay (in abstract_syntax_elt)
 	abstract_syntax_elt production[REVERSE_POLISH_STACK_MAX_ELEMENTS+1];

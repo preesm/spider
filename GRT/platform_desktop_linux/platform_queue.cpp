@@ -75,7 +75,7 @@ void platform_queue_Init(UINT8 nbSlaves){
 
 	/* Reset all queues */
 	UINT32 c;
-	for(i=0; i<nbSlaves; i++){
+	for(i=1; i<nbSlaves; i++){
 		for(j=0; j<platformNbQTypes; j++){
 			while(platform_QNonBlockingPop(i, (platformQType)j, &c, sizeof(UINT32))==sizeof(UINT32));
 		}

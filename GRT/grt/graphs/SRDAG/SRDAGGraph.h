@@ -84,6 +84,8 @@ class SRDAGGraph{
 		edgePool	ePool;
 
 		Set<SRDAGVertexAbstract, MAX_SRDAG_VERTICES> 	vertices;
+		Set<SRDAGVertexXplode, MAX_SRDAG_VERTICES> 		implodes;
+		Set<SRDAGVertexRB, MAX_SRDAG_VERTICES> 			rbs;
 		edgeSet		edges;
 
 	public : 
@@ -103,6 +105,7 @@ class SRDAGGraph{
 		SRDAGEdge* 				createEdge(PiSDFEdge* ref);
 
 		void removeVertex(SRDAGVertexAbstract* vertex);
+		void removeEdge(SRDAGEdge* edge);
 
 		int getNbVertices();
 		int getNbEdges();
@@ -111,6 +114,9 @@ class SRDAGGraph{
 
 		vertexSetIterator 	getVertexIterator();
 		edgeSetIterator 	getEdgeIterator();
+
+		SetIterator<SRDAGVertexXplode,MAX_SRDAG_VERTICES> getImplodeIterator();
+		SetIterator<SRDAGVertexRB,MAX_SRDAG_VERTICES> getRBIterator();
 
 		int getVerticesFromReference(PiSDFAbstractVertex* ref, int iteration, SRDAGVertexAbstract** output);
 
@@ -194,6 +200,7 @@ inline SRDAGVertexRB* SRDAGGraph::createVertexRB(
 	SRDAGVertexRB* vertex = vertexRBPool.alloc();
 	*vertex = SRDAGVertexRB(vertexIxCount++, this, parent, refIx, itrIx, ref);
 	vertices.add(vertex);
+	rbs.add(vertex);
 	return vertex;
 }
 
@@ -204,6 +211,7 @@ inline SRDAGVertexXplode* SRDAGGraph::createVertexIm(
 	SRDAGVertexXplode* vertex = vertexXpPool.alloc();
 	*vertex = SRDAGVertexXplode(vertexIxCount++, this, Implode, parent, refIx, itrIx);
 	vertices.add(vertex);
+	implodes.add(vertex);
 	return vertex;
 }
 
@@ -244,6 +252,13 @@ inline vertexSetIterator SRDAGGraph::getVertexIterator(){
 	return vertices.getIterator();
 }
 
+inline SetIterator<SRDAGVertexXplode,MAX_SRDAG_VERTICES> SRDAGGraph::getImplodeIterator(){
+	return implodes.getIterator();
+}
+
+inline SetIterator<SRDAGVertexRB,MAX_SRDAG_VERTICES> SRDAGGraph::getRBIterator(){
+	return rbs.getIterator();
+}
 
 /**
  Gets the edge at the given index

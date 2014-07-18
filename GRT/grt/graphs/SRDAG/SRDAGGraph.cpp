@@ -57,6 +57,7 @@ SRDAGGraph::SRDAGGraph(){
 	vertexXpPool.reset();
 	ePool.reset();
 	vertices.reset();
+	implodes.reset();
 	edges.reset();
 
 	vertexNoPool.setName("Normal Vertex Pool of SRDAG Graph");
@@ -67,6 +68,7 @@ SRDAGGraph::SRDAGGraph(){
 	vertexXpPool.setName("Xplode Vertex Pool of SRDAG Graph");
 	ePool.setName("Edge Pool of SRDAG Graph");
 	vertices.setName("Vertex List of SRDAG Graph");
+	implodes.setName("Implode List of SRDAG Graph");
 	edges.setName("Edge List of SRDAG Graph");
 }
 
@@ -80,6 +82,7 @@ void SRDAGGraph::reset(){
 	vertexXpPool.reset();
 	ePool.reset();
 	vertices.reset();
+	implodes.reset();
 	edges.reset();
 }
 
@@ -91,9 +94,37 @@ SRDAGGraph::~SRDAGGraph(){
 	printf("Nb edges used %d\n", getNbEdges());
 }
 
+void SRDAGGraph::removeEdge(SRDAGEdge* edge){
+	if(edge->getSink())
+		edge->disconnectSink();
+	if(edge->getSource())
+		edge->disconnectSource();
+	edges.remove(edge);
+}
+
 void SRDAGGraph::removeVertex(SRDAGVertexAbstract *vertex){
 	// TODO remove Edges connected to it.
 	vertices.remove(vertex);
+	switch(vertex->getType()){
+	case Normal:
+		break;
+	case ConfigureActor:
+		break;
+	case Explode:
+		break;
+	case Implode:
+		implodes.remove((SRDAGVertexXplode*)vertex);
+		break;
+	case RoundBuffer:
+		rbs.remove((SRDAGVertexRB*)vertex);
+		break;
+	case Broadcast:
+		break;
+	case Init:
+		break;
+	case End:
+		break;
+	}
 //	vertexNoPool.free(vertex);
 }
 

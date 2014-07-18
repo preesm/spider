@@ -45,11 +45,6 @@
 
 
 namespace PiSDFTransformer {
-	/**
-	 * Adds "nb_repetitions" SRDAGVertex vertices for "vertex" to the output SRDAG graph.
-	 */
-	void addVertices(PiSDFVertex* vertex, UINT32 nb_repetitions, UINT32 iteration, SRDAGGraph* outputGraph);
-
 	void linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, SRDAGGraph* topDag, int* brv);
 
 	void replaceHwithRB(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, SRDAGVertexAbstract* currHSrDagVx);

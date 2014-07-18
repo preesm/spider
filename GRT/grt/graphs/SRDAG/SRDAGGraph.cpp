@@ -49,12 +49,22 @@
 */
 SRDAGGraph::SRDAGGraph(){
 	vertexIxCount = edgeIxCount = 0;
-	vPool.reset();
+	vertexNoPool.reset();
+	vertexBrPool.reset();
+	vertexCfPool.reset();
+	vertexIEPool.reset();
+	vertexRBPool.reset();
+	vertexXpPool.reset();
 	ePool.reset();
 	vertices.reset();
 	edges.reset();
 
-	vPool.setName("Vertex Pool of SRDAG Graph");
+	vertexNoPool.setName("Normal Vertex Pool of SRDAG Graph");
+	vertexBrPool.setName("Broadcast Vertex Pool of SRDAG Graph");
+	vertexCfPool.setName("Configure Vertex Pool of SRDAG Graph");
+	vertexIEPool.setName("InitEnd Vertex Pool of SRDAG Graph");
+	vertexRBPool.setName("RoundBuffer Vertex Pool of SRDAG Graph");
+	vertexXpPool.setName("Xplode Vertex Pool of SRDAG Graph");
 	ePool.setName("Edge Pool of SRDAG Graph");
 	vertices.setName("Vertex List of SRDAG Graph");
 	edges.setName("Edge List of SRDAG Graph");
@@ -62,7 +72,12 @@ SRDAGGraph::SRDAGGraph(){
 
 void SRDAGGraph::reset(){
 	vertexIxCount = edgeIxCount = 0;
-	vPool.reset();
+	vertexNoPool.reset();
+	vertexBrPool.reset();
+	vertexCfPool.reset();
+	vertexIEPool.reset();
+	vertexRBPool.reset();
+	vertexXpPool.reset();
 	ePool.reset();
 	vertices.reset();
 	edges.reset();
@@ -72,14 +87,14 @@ void SRDAGGraph::reset(){
  Destructor
 */
 SRDAGGraph::~SRDAGGraph(){
-	printf("Nb vertices used %d\n", getNbVertex());
-	printf("Nb edges used %d\n", getNbEdge());
+	printf("Nb vertices used %d\n", getNbVertices());
+	printf("Nb edges used %d\n", getNbEdges());
 }
 
-void SRDAGGraph::removeVertex(SRDAGVertex *vertex){
+void SRDAGGraph::removeVertex(SRDAGVertexAbstract *vertex){
 	// TODO remove Edges connected to it.
 	vertices.remove(vertex);
-	vPool.free(vertex);
+//	vertexNoPool.free(vertex);
 }
 
 //void SRDAGGraph::removeVertex(int id){

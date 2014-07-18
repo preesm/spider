@@ -48,10 +48,11 @@
 #include <debuggingOptions.h>
 #include <execution/monitor.h>
 
+#include <memoryAlloc.h>
 
 #define PRINT_ACTOR_IN_DOT_FILE		0
 
-static Memory memory = Memory(0x0, 0x003F8000);
+static Memory memory = Memory(0x0, SHARED_MEM_LENGHT);
 #define END_MEM_SIZE 10000
 
 static UINT32 nbFifo;
@@ -139,37 +140,21 @@ static char* regenerateColor(int refInd){
 	return color;
 }
 
-void Launcher::assignFifo(SRDAGGraph* graph){
-	/* Creating fifos for executable vxs.*/
-	for (UINT32 i = 0; i < graph->getNbVertices(); i++) {
-		SRDAGVertex* vx = graph->getVertex(i);
-		if(vx->getState() == SrVxStExecutable){
-			for (UINT32 j = 0; j < vx->getNbOutputEdge(); j++){
-				SRDAGEdge* edge = vx->getOutputEdge(j);
-				if(edge->getFifoId() == -1){
-					edge->setFifoId(nbFifo++);
-					edge->setFifoAddress(memory.alloc(edge->getTokenRate()));
-				}
-			}
-		}
-	}
-}
-
 void Launcher::launch(SRDAGGraph* graph, Architecture* arch, BaseSchedule* schedule){
 	/* Creating Tasks */
-	for(UINT32 slave=0; slave < arch->getNbActiveSlaves(); slave++){
-		for(UINT32 i=0; i < schedule->getNbVertices(slave); i++){
-			SRDAGVertex* vertex = (SRDAGVertex*)schedule->getVertex(slave,i);
-			if(vertex->getState() == SrVxStExecutable){
+	for(int slave=0; slave < arch->getNbActiveSlaves(); slave++){
+		for(int i=0; i < schedule->getNbVertices(slave); i++){
+			SRDAGVertexAbstract* vertex = schedule->getVertex(slave,i);
+			if(vertex->getState() == SRDAG_Executable){
 				CreateTaskMsg::send(slave, vertex);
 				if(vertex->getType() == ConfigureActor)
-					nbParamToRecv += ((PiSDFConfigVertex*)(vertex->getReference()))->getNbRelatedParams();
+					nbParamToRecv += ((PiSDFConfigVertex*)vertex)->getNbRelatedParams();
 			}
 		}
 	}
 }
 
-void Launcher::assignFifoVertex(SRDAGVertex* vertex){
+void Launcher::assignFifoVertex(SRDAGVertexAbstract* vertex){
 	UINT32 i, base, offset;
 	SRDAGEdge* edge;
 	switch(vertex->getType()){
@@ -237,11 +222,11 @@ void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 	 default:
 
 		 for (i = 0; i < vertex->getNbOutputEdge(); i++){
-			 SRDAGVertex* implode = vertex->getOutputEdge(i)->getSink();
+			 SRDAGVertexAbstract* implode = vertex->getOutputEdge(i)->getSink();
 			 if(implode->getType() == Implode){
 				 BOOL suitable = (implode->getOutputEdge(0)->getFifoId() == -1);
 				 for (int j=0; suitable && j < implode->getNbInputEdge(); j++){
-					 SRDAGVertex* pred = implode->getInputEdge(j)->getSource();
+					 SRDAGVertexAbstract* pred = implode->getInputEdge(j)->getSource();
 					 if(pred->getType() != Normal){
 						 suitable = FALSE;
 					 }
@@ -263,7 +248,7 @@ void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 			 }
 		 }
 
-		 if(vertex->getFunctIx() == SWICTH_FUNCT_IX){
+		 if(vertex->getFctIx() == SWICTH_FUNCT_IX){
 			 vertex->getOutputEdge(0)->setFifoId(nbFifo++);
 			 vertex->getOutputEdge(0)->setFifoAddress(vertex->getInputEdge(2)->getFifoAddress());
 		 }
@@ -276,7 +261,7 @@ void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 
 			if(edge->getFifoId() == -1){
 				edge->setFifoId(nbFifo++);
-				 if(edge->getSink()->getFunctIx() == END_FUNCT_IX){
+				 if(edge->getSink()->getFctIx() == END_FUNCT_IX){
 					edge->setFifoAddress(endMem);
 				 }else{
 					 edge->setFifoAddress(memory.alloc(edge->getTokenRate()));
@@ -287,26 +272,26 @@ void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 	}
 }
 
-void Launcher::launchVertex(SRDAGVertex* vertex, UINT32 slave){
+void Launcher::launchVertex(SRDAGVertexAbstract* vertex, UINT32 slave){
 	Launcher::assignFifoVertex(vertex);
 #if EXEC == 1
 	CreateTaskMsg::send(slave, vertex);
 	if(vertex->getType() == ConfigureActor)
-		nbParamToRecv += ((PiSDFConfigVertex*)(vertex->getReference()))->getNbRelatedParams();
+		nbParamToRecv += ((SRDAGVertexConfig*)vertex)->getReference()->getNbRelatedParams();
 #endif
 }
 
 void Launcher::init(){
 	nbStepsMapping = nbStepsTaskOrdering = nbStepsGraph = 0;
 	nbFifo = nbParamToRecv = 0;
-	memory = Memory(0x0, 0x003EC000);
+	memory = Memory(0x0, SHARED_MEM_LENGHT);
 
 	endMem = memory.alloc(END_MEM_SIZE);
 }
 
 void Launcher::reset(){
 	nbFifo = nbParamToRecv = 0;
-	memory = Memory(0x0, 0x003EC000);
+	memory = Memory(0x0, SHARED_MEM_LENGHT);
 	endMem = memory.alloc(END_MEM_SIZE);
 }
 
@@ -403,21 +388,43 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		taskTime t;
 		t = Monitor_get(i);
 		UINT32 execTime = t.end - t.start;
-		SRDAGVertex* vertex = dag->getVertexFromIx(t.vertexID);
+		SRDAGVertexAbstract* vertex = dag->getVertexFromIx(t.vertexID);
+		SRDAGVertexConfig* cfVertex;
+		SRDAGVertexNormal* noVertex;
 
 		UINT32 k;
 		switch(vertex->getType()){
 		case Normal:
-		case ConfigureActor:
+			noVertex = (SRDAGVertexNormal*) vertex;
 			for(k=0; k<stat->nbActor; k++){
-				if(stat->actors[k] == vertex->getReference()){
+				if(stat->actors[k] == noVertex->getReference()){
 					stat->actorTimes[k] += execTime;
 					stat->actorIterations[k]++;
 					break;
 				}
 			}
 			if(k == stat->nbActor){
-				stat->actors[stat->nbActor] = vertex->getReference();
+				stat->actors[stat->nbActor] = noVertex->getReference();
+				stat->actorTimes[stat->nbActor] = execTime;
+				stat->actorIterations[k] = 1;
+				stat->nbActor++;
+			}
+
+			if(stat->actors[k]->getFunction_index() == 3){
+				stat->latencies[t.end/PERIOD] = t.end%PERIOD + PERIOD;
+			}
+			break;
+		case ConfigureActor:
+			cfVertex = (SRDAGVertexConfig*) vertex;
+			for(k=0; k<stat->nbActor; k++){
+				if(stat->actors[k] == cfVertex->getReference()){
+					stat->actorTimes[k] += execTime;
+					stat->actorIterations[k]++;
+					break;
+				}
+			}
+			if(k == stat->nbActor){
+				stat->actors[stat->nbActor] = cfVertex->getReference();
 				stat->actorTimes[stat->nbActor] = execTime;
 				stat->actorIterations[k] = 1;
 				stat->nbActor++;
@@ -456,7 +463,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		fprintf(flatex, "%d/",	 0);/*core index*/
 		fprintf(flatex, "%s/",   "");/*name*/
 
-		if(vertex->getFunctIx() == 7)
+		if(vertex->getFctIx() == 7)
 			fprintf(flatex, "color%d,\n",vertex->getReferenceIndex()); // color Id
 		else
 			fprintf(flatex, "color%d,\n",10); // color Id
@@ -480,23 +487,47 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		UINT32 nbTasks = platform_QPopUINT32(slave, platformCtrlQ);
 
 		for (UINT32 j=0 ; j<nbTasks; j++){
-			SRDAGVertex* vertex = dag->getVertexFromIx(platform_QPopUINT32(slave, platformCtrlQ)); // data[0] contains the vertex's id.
+			SRDAGVertexAbstract* vertex = dag->getVertexFromIx(platform_QPopUINT32(slave, platformCtrlQ)); // data[0] contains the vertex's id.
 			UINT32 startTime = platform_QPopUINT32(slave, platformCtrlQ);
 			UINT32 endTime = platform_QPopUINT32(slave, platformCtrlQ);
 
+			SRDAGVertexConfig* cfVertex;
+			SRDAGVertexNormal* noVertex;
 			UINT32 k;
 			switch(vertex->getType()){
 			case Normal:
-			case ConfigureActor:
+				noVertex = (SRDAGVertexNormal*) vertex;
 				for(k=0; k<stat->nbActor; k++){
-					if(stat->actors[k] == vertex->getReference()){
+					if(stat->actors[k] == noVertex->getReference()){
 						stat->actorTimes[k] += endTime - startTime;
 						stat->actorIterations[k]++;
 						break;
 					}
 				}
 				if(k == stat->nbActor){
-					stat->actors[stat->nbActor] = vertex->getReference();
+					stat->actors[stat->nbActor] = noVertex->getReference();
+					stat->actorTimes[stat->nbActor] = endTime - startTime;
+					stat->actorIterations[k] = 1;
+					stat->nbActor++;
+				}
+
+				if(stat->actors[k]->getFunction_index() == 3){
+//					printf("latency %d %d %d\n", endTime/PERIOD, endTime, endTime%PERIOD + PERIOD);
+					stat->latencies[endTime/PERIOD] = endTime%PERIOD + PERIOD;
+//					stat->latencies[nbIter++] = endTime - nbIter*PERIOD;
+				}
+				break;
+			case ConfigureActor:
+				cfVertex = (SRDAGVertexConfig*) vertex;
+				for(k=0; k<stat->nbActor; k++){
+					if(stat->actors[k] == cfVertex->getReference()){
+						stat->actorTimes[k] += endTime - startTime;
+						stat->actorIterations[k]++;
+						break;
+					}
+				}
+				if(k == stat->nbActor){
+					stat->actors[stat->nbActor] = cfVertex->getReference();
 					stat->actorTimes[stat->nbActor] = endTime - startTime;
 					stat->actorIterations[k] = 1;
 					stat->nbActor++;
@@ -537,7 +568,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 			fprintf(flatex, "%d/",	 slave);/*core index*/
 			fprintf(flatex, "%s/",   "");/*name*/
 
-			if(vertex->getFunctIx() == 7)
+			if(vertex->getFctIx() == 7)
 				fprintf(flatex, "color%d,\n",vertex->getReferenceIndex()); // color Id
 			else
 				fprintf(flatex, "color%d,\n",10); // color Id
@@ -561,25 +592,27 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 }
 
 void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){
-	UINT32 slave = 0;
+	int slave = 0;
 	UINT32 paramValues[MAX_NB_PiSDF_PARAMS];
 	while(nbParamToRecv != 0){
 		if(slave == 0){
-			UINT32 vxId, nbParam;
+			int vxId, nbParam;
 			if(popParam(&vxId, &nbParam, paramValues)){
-				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(topDag->getVertex(vxId)->getReference());
+				SRDAGVertexConfig* cfgVertex = (SRDAGVertexConfig*)(topDag->getVertexFromIx(vxId));
+				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(cfgVertex->getReference());
 				nbParamToRecv -= refConfigVx->getNbRelatedParams();
 				for(int i=0; i<nbParam; i++)
-					topDag->getVertexFromIx(vxId)->setRelatedParamValue(i,paramValues[i]);
+					cfgVertex->setRelatedParamValue(i,paramValues[i]);
 			}
 		}else{
 			UINT32 msgType;
 			if(platform_QNonBlockingPop(slave, platformCtrlQ, &msgType, sizeof(UINT32)) == sizeof(UINT32)){
 				if(msgType != MSG_PARAM_VALUE) exitWithCode(1068);
-				UINT32 vxId = platform_QPopUINT32(slave, platformCtrlQ);
-				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(topDag->getVertexFromIx(vxId)->getReference());
+				int vxId = platform_QPopUINT32(slave, platformCtrlQ);
+				SRDAGVertexConfig* cfgVertex = (SRDAGVertexConfig*)(topDag->getVertexFromIx(vxId));
+				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(cfgVertex->getReference());
 				for(UINT32 j = 0; j < refConfigVx->getNbRelatedParams(); j++){
-					topDag->getVertexFromIx(vxId)->setRelatedParamValue(j,platform_QPopUINT32(slave, platformCtrlQ));
+					cfgVertex->setRelatedParamValue(j,platform_QPopUINT32(slave, platformCtrlQ));
 				}
 				nbParamToRecv -= refConfigVx->getNbRelatedParams();
 			}

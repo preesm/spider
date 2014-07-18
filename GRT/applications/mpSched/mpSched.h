@@ -72,7 +72,7 @@ void config(UINT8* inputFIFOs[],
 
 //	memcpy(out_M, nValues[0], NMAX);
 	for(i=0; i<N; i++)
-		out_M[i] = 8;//-i;
+		out_M[i] = 8;
 }
 
 

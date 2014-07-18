@@ -38,10 +38,9 @@
 #define SRDAG_EDGE
 
 #include <platform_types.h>
-#include <graphs/AbstractGraph/AbstractEdge.h>
 #include <grt_definitions.h>
 
-class SRDAGVertex;
+class SRDAGVertexAbstract;
 class SRDAGGraph;
 class PiSDFEdge;
 
@@ -61,7 +60,7 @@ typedef struct{
 class SRDAGEdge {
 protected :
 	int id;
-	SRDAGVertex *source, *sink;
+	SRDAGVertexAbstract *source, *sink;
 	int sourcePortIx, sinkPortIx;
 	SRDAGGraph *graph;
 
@@ -94,9 +93,9 @@ public :
 	PiSDFEdge *getRefEdge() const;
 	void setRefEdge(PiSDFEdge *refEdge);
 
-	void connectSink(SRDAGVertex* nSink, int nSinkPortIx);
+	void connectSink(SRDAGVertexAbstract* nSink, int nSinkPortIx);
 	void disconnectSink();
-	void connectSource(SRDAGVertex* nSource, int nSourcePortIx);
+	void connectSource(SRDAGVertexAbstract* nSource, int nSourcePortIx);
 	void disconnectSource();
 
 	int getId() const;
@@ -104,8 +103,8 @@ public :
 	int getSinkPortIx() const;
 	int getSourcePortIx() const;
 
-	SRDAGVertex* getSource() const;
-	SRDAGVertex* getSink() const;
+	SRDAGVertexAbstract* getSource() const;
+	SRDAGVertexAbstract* getSink() const;
 
 	friend class SRDAGGraph;
 };
@@ -116,7 +115,7 @@ public :
  @return the source
 */
 inline
-SRDAGVertex* SRDAGEdge::getSource() const{
+SRDAGVertexAbstract* SRDAGEdge::getSource() const{
 	return source;
 }
 
@@ -126,7 +125,7 @@ SRDAGVertex* SRDAGEdge::getSource() const{
  @return the Sink
 */
 inline
-SRDAGVertex* SRDAGEdge::getSink() const{
+SRDAGVertexAbstract* SRDAGEdge::getSink() const{
 	return sink;
 }
 

@@ -47,7 +47,7 @@
 #include <graphs/PiSDF/PiSDFParameter.h>
 //#include "graphs/SDF/SDFGraph.h"
 
-class SRDAGVertex;
+class SRDAGVertexAbstract;
 
 typedef enum {
 	pisdf_vertex,
@@ -71,7 +71,7 @@ typedef enum{
 class PiSDFAbstractVertex {
 	UINT32 id;
 	char name[MAX_NB_PiSDF_VERTEX_NAME];
-	UINT64 function_index;
+	int function_index;
 	VERTEX_TYPE type;
 
 	PiSDFGraph* graph;
@@ -79,7 +79,7 @@ class PiSDFAbstractVertex {
 	Array<PiSDFEdge*,MAX_NB_PiSDF_INPUT_EDGES> inputEdges;
 	Array<PiSDFEdge*,MAX_NB_PiSDF_OUTPUT_EDGES> outputEdges;
 
-	List<SRDAGVertex*, MAX_CHILD> childVertices;
+	List<SRDAGVertexAbstract*, MAX_CHILD> childVertices;
 
 	UINT8 nbParameters;
 	PiSDFParameter* parameters[MAX_NB_PiSDF_PARAMS];
@@ -111,15 +111,15 @@ public:
 
 	void addParameter(PiSDFParameter* param);
 
-	void addChildVertex(SRDAGVertex* vertex){
+	void addChildVertex(SRDAGVertexAbstract* vertex){
 		childVertices.add(vertex);
 	}
 
-	SRDAGVertex* getChildVertex(UINT32 id){
+	SRDAGVertexAbstract* getChildVertex(UINT32 id){
 		return childVertices[id];
 	}
 
-	UINT32 getChildNbVertices(){
+	int getChildNbVertices(){
 		return childVertices.getNb();
 	}
 
@@ -220,7 +220,7 @@ public:
     UINT32 getInputEdgeId(PiSDFEdge* edge);
     UINT32 getOutputEdgeId(PiSDFEdge* edge);
 
-    UINT64 getFunction_index() const
+    int getFunction_index() const
     {
         return function_index;
     }

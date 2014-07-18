@@ -41,6 +41,11 @@
 #include <string.h>
 #include <platform_file.h>
 
+#include <graphs/SRDAG/SRDAGGraph.h>
+#include <graphs/SRDAG/SRDAGEdge.h>
+#include <graphs/SRDAG/SRDAGVertexAbstract.h>
+#include <graphs/PiSDF/PiSDFGraph.h>
+
 /**
  Writes a SRDAGGraph in a file
 
@@ -62,55 +67,49 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BO
 	platform_fprintf ("edge [color=Red];\n");
 //		platform_fprintf ("rankdir=LR;\n");
 
-	SRDAGVertex* vertex;
+	SRDAGVertexAbstract* vertex;
 	vertexSetIterator iterV = graph->getVertexIterator();
 	while((vertex = iterV.next()) != NULL){
-		if(vertex->getState() != SrVxStDeleted){
-			vertex->getName(name, MAX_VERTEX_NAME_SIZE);
+		vertex->getName(name, MAX_VERTEX_NAME_SIZE);
 
-			switch (vertex->getState()) {
-				case SrVxStExecutable:
-					strcpy(color, "blue");
-					break;
-				case SrVxStExecuted:
-					strcpy(color, "gray");
-					break;
-				case SrVxStNoExecuted:
-					if(vertex->isHierarchical())
-						strcpy(color, "red");
-					else
-						strcpy(color, "black");
-					break;
-				case SrVxStDeleted:
-					break;
-			}
+		switch (vertex->getState()) {
+			case SRDAG_Executable:
+				strcpy(color, "blue");
+				break;
+			case SRDAG_Executed:
+				strcpy(color, "gray");
+				break;
+			case SRDAG_NotExecuted:
+				if(vertex->isHierarchical())
+					strcpy(color, "red");
+				else
+					strcpy(color, "black");
+				break;
+		}
 
-			if(displayNames){
-				platform_fprintf ("\t%d [label=\"%d\\n%s\" color=\"%s\"];\n",vertex->getId(), vertex->getId(), name, color);
-			}
-			else{
-				platform_fprintf ("\t%d [label=\"%d\" color=\"%s\"];\n",i,i, color);
-			}
+		if(displayNames){
+			platform_fprintf ("\t%d [label=\"%d\\n%s\" color=\"%s\"];\n",vertex->getId(), vertex->getId(), name, color);
+		}
+		else{
+			platform_fprintf ("\t%d [label=\"%d\" color=\"%s\"];\n", vertex->getId(), vertex->getId(), color);
 		}
 	}
 
 	SRDAGEdge* edge;
 	edgeSetIterator iterE = graph->getEdgeIterator();
 	while((edge = iterE.next()) != NULL){
-		SRDAGVertex* vxSrc = edge->getSource();
-		SRDAGVertex* vxSnk = edge->getSink();
-		if((vxSrc->getState() != SrVxStDeleted) && (vxSnk->getState() != SrVxStDeleted)){
-			if(displayRates)
-				platform_fprintf ("\t%d->%d [label=\"%d\",taillabel=\"%d\",headlabel=\"%d\"];\n",
-						edge->getSource()->getId(),
-						edge->getSink()->getId(),
-						edge->getTokenRate(),
-						edge->getSourcePortIx(),
-						edge->getSinkPortIx()
-						);
-			else
-				platform_fprintf ("\t%d->%d [label=\"%d: %#x\"];\n", edge->getSource()->getId(), edge->getSink()->getId(), edge->getFifoId(), edge->getFifoAddress());
-		}
+		SRDAGVertexAbstract* vxSrc = edge->getSource();
+		SRDAGVertexAbstract* vxSnk = edge->getSink();
+		if(displayRates)
+			platform_fprintf ("\t%d->%d [label=\"%d\",taillabel=\"%d\",headlabel=\"%d\"];\n",
+					edge->getSource()->getId(),
+					edge->getSink()->getId(),
+					edge->getTokenRate(),
+					edge->getSourcePortIx(),
+					edge->getSinkPortIx()
+					);
+		else
+			platform_fprintf ("\t%d->%d [label=\"%d: %#x\"];\n", edge->getSource()->getId(), edge->getSink()->getId(), edge->getFifoId(), edge->getFifoAddress());
 	}
 	platform_fprintf ("}\n");
 

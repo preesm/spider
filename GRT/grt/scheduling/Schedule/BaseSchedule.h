@@ -42,7 +42,7 @@
 #include <platform_time.h>
 
 typedef struct SchedType{
-	void* 	vertex;
+	SRDAGVertexAbstract* 	vertex;
 	UINT32	startTime;
 	UINT32	endTime;
 }SchedType;
@@ -79,12 +79,12 @@ public:
         return slaveReadyTimes[slaveId];
     }
 
-    void* getVertex(UINT32 slaveId, UINT32 vertexIx)
+    SRDAGVertexAbstract* getVertex(UINT32 slaveId, UINT32 vertexIx)
     {
     	return schedules[slaveId][vertexIx].vertex;
     }
 
-	int addSchedule(UINT32 slave_id, void* vertex, UINT32 startTime, UINT32 endTime){
+	int addSchedule(UINT32 slave_id, SRDAGVertexAbstract* vertex, UINT32 startTime, UINT32 endTime){
 		schedules[slave_id][nbVertices[slave_id]].vertex = vertex;
 		schedules[slave_id][nbVertices[slave_id]].startTime = startTime;
 		schedules[slave_id][nbVertices[slave_id]].endTime = endTime;
@@ -101,7 +101,7 @@ public:
 		return &schedules[slave_id][vertexId];
 	}
 
-	bool isPresent(UINT32 slaveId, const UINT32 vertexIx, const void* vertex){
+	bool isPresent(UINT32 slaveId, const UINT32 vertexIx, const SRDAGVertexAbstract* vertex){
 		return (schedules[slaveId][vertexIx].vertex == vertex);
 //		for(UINT32 i=0; i<nbVertices[slaveId]; i++){
 //			if(vertex->getId() == schedules[slaveId][i].vertex->getId())// &&	vertex->getReferenceIndex() == schedules[slaveId][i]->getIndex())
@@ -110,7 +110,7 @@ public:
 //		return false;
 	}
 
-    bool findSlaveId(UINT32 vertexIx, const void *vertex, UINT32 *slaveId){
+    bool findSlaveId(UINT32 vertexIx, const SRDAGVertexAbstract *vertex, UINT32 *slaveId){
     	for (int i = 0; i < nbActiveSlaves; i++) {
    			if(schedules[i][vertexIx].vertex == vertex){
 				*slaveId = i;
@@ -120,7 +120,7 @@ public:
     	return false;
     }
 
-    UINT32 getVertexEndTime(UINT32 vertexIx, const void* vertex){
+    UINT32 getVertexEndTime(UINT32 vertexIx, const SRDAGVertexAbstract* vertex){
     	UINT32 slaveId;
     	if(findSlaveId(vertexIx, vertex, &slaveId))
     		return schedules[slaveId][vertexIx].endTime;
@@ -129,7 +129,7 @@ public:
     }
 
 
-    UINT32 getVertexStartTime(UINT32 vertexIx, const void* vertex){
+    UINT32 getVertexStartTime(UINT32 vertexIx, const SRDAGVertexAbstract* vertex){
     	UINT32 slaveId;
     	if(findSlaveId(vertexIx, vertex, &slaveId))
     		return schedules[slaveId][vertexIx].startTime;
@@ -141,12 +141,12 @@ public:
     /*
      * Auto generated setters and getters.
      */
-    UINT32 getNbVertices(UINT32 slaveId) const
+    int getNbVertices(int slaveId) const
     {
         return nbVertices[slaveId];
     }
 
-	void setNbActiveSlaves(UINT32 nbActiveSlaves){
+	void setNbActiveSlaves(int nbActiveSlaves){
 		this->nbActiveSlaves = nbActiveSlaves;
 	}
 };

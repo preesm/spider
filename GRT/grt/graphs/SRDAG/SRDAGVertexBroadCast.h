@@ -34,69 +34,108 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <stddef.h>
+#ifndef SRDAG_VERTEX_BROADCAST
+#define SRDAG_VERTEX_BROADCAST
+
+class SRDAGGraph;
+#include <cstring>
+
+#include <grt_definitions.h>
+#include "../../tools/SchedulingError.h"
+#include "../PiSDF/PiSDFAbstractVertex.h"
+#include "../PiSDF/PiSDFVertex.h"
 #include "SRDAGEdge.h"
 #include "SRDAGVertexAbstract.h"
+#include <tools/IndexedArray.h>
 
-/**
- Constructor
-*/
-SRDAGEdge::SRDAGEdge(){
-	source = sink = NULL;
-	graph = NULL;
-	id = sourcePortIx = sinkPortIx = -1;
-	refEdge = NULL;
-	fifo.id=-1;
-	fifo.add= 0;
-	fifo.size=0;
-	delay = 0;
+class SRDAGVertexBroadcast : public SRDAGVertexAbstract{
+
+private :
+	IndexedArray<SRDAGEdge*, 1> inputEdges;
+	IndexedArray<SRDAGEdge*, MAX_SRDAG_XPLODE_EDGES> outputEdges;
+
+	void connectInputEdge(SRDAGEdge* edge, int ix);
+	void connectOutputEdge(SRDAGEdge* edge, int ix);
+	void disconnectInputEdge(int ix);
+	void disconnectOutputEdge(int ix);
+
+public :
+	SRDAGVertexBroadcast(){}
+	SRDAGVertexBroadcast(
+				int			 	_id,
+				SRDAGGraph* 	_graph,
+				SRDAGVertexAbstract* 	_parent,
+				int 			_refIx,
+				int 			_itrIx);
+	~SRDAGVertexBroadcast(){}
+
+	int getNbInputEdge() const;
+	int getNbOutputEdge() const;
+	SRDAGEdge* getInputEdge(int id);
+	SRDAGEdge* getOutputEdge(int id);
+
+	int getParamNb() const;
+	int getParamValue(int paramIndex);
+	UINT32 getExecTime(int slaveType) const;
+	bool getConstraint(int slaveType) const;
+
+	virtual int getFctIx() const;
+
+	BOOL isHierarchical() const;
+	PiSDFGraph* getHierarchy() const;
+
+	void getName(char* name, UINT32 sizeMax);
+};
+
+inline int SRDAGVertexBroadcast::getNbInputEdge() const
+	{return inputEdges.getNb();}
+
+inline int SRDAGVertexBroadcast::getNbOutputEdge() const
+	{return outputEdges.getNb();}
+
+inline SRDAGEdge* SRDAGVertexBroadcast::getInputEdge(int id)
+	{return inputEdges[id];}
+
+inline SRDAGEdge* SRDAGVertexBroadcast::getOutputEdge(int id)
+	{return outputEdges[id];}
+
+inline void SRDAGVertexBroadcast::connectInputEdge(SRDAGEdge* edge, int ix)
+	{inputEdges.setValue(ix, edge);}
+
+inline void SRDAGVertexBroadcast::connectOutputEdge(SRDAGEdge* edge, int ix)
+	{outputEdges.setValue(ix, edge);}
+
+inline void SRDAGVertexBroadcast::disconnectInputEdge(int ix)
+	{inputEdges.resetValue(ix);}
+
+inline void SRDAGVertexBroadcast::disconnectOutputEdge(int ix)
+	{outputEdges.resetValue(ix);}
+
+inline int SRDAGVertexBroadcast::getParamNb() const
+	{return 0;}
+
+inline int SRDAGVertexBroadcast::getParamValue(int paramIndex)
+	{return -1;}
+
+inline UINT32 SRDAGVertexBroadcast::getExecTime(int slaveType) const
+	{return SYNC_TIME;}
+
+inline bool SRDAGVertexBroadcast::getConstraint(int slaveType) const
+	{return true;}
+
+inline int SRDAGVertexBroadcast::getFctIx() const
+	{return BROADCAST_FUNCT_IX;}
+
+inline BOOL SRDAGVertexBroadcast::isHierarchical() const
+	{return false;}
+
+inline PiSDFGraph* SRDAGVertexBroadcast::getHierarchy() const
+	{return NULL;}
+
+inline void SRDAGVertexBroadcast::getName(char* name, UINT32 sizeMax){
+	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"Br_%d", id);
+	if(len > MAX_VERTEX_NAME_SIZE)
+		exitWithCode(1075);
 }
 
-/**
- Destructor
-*/
-SRDAGEdge::~SRDAGEdge()
-{
-}
-
-void SRDAGEdge::reset(){
-	source = sink = NULL;
-	graph = NULL;
-	id = sourcePortIx = sinkPortIx = -1;
-	refEdge = NULL;
-	fifo.id=-1;
-	fifo.add= 0;
-	fifo.size=0;
-	delay = 0;
-}
-
-void SRDAGEdge::connectSink(
-		SRDAGVertexAbstract *nSink,
-		int nSinkPortIx){
-	if(sink != NULL) disconnectSink();
-	sink = nSink;
-	sinkPortIx = nSinkPortIx;
-	sink->connectInputEdge(this,sinkPortIx);
-}
-
-void SRDAGEdge::disconnectSink(){
-	sink->disconnectInputEdge(sinkPortIx);
-	sink = NULL;
-	sinkPortIx = -1;
-}
-
-void SRDAGEdge::connectSource(
-		SRDAGVertexAbstract *nSource,
-		int nSourcePortIx){
-	if(source != NULL) disconnectSource();
-	source = nSource;
-	sourcePortIx = nSourcePortIx;
-	source->connectOutputEdge(this, nSourcePortIx);
-
-}
-
-void SRDAGEdge::disconnectSource(){
-	source->disconnectOutputEdge(sourcePortIx);
-	source = NULL;
-	sourcePortIx = -1;
-}
+#endif

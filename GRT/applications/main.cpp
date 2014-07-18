@@ -108,7 +108,7 @@ int main(int argc, char* argv[]){
 //
 //	setvbuf(stdout, NULL, _IONBF, 0);
 //	setvbuf(stderr, NULL, _IONBF, 0);
-	int nbSlaves = 8;
+	int nbSlaves = 1;
 //	static Scenario 			scenario;
 	static Architecture 		arch;
 	static ListScheduler 		listScheduler;
@@ -164,11 +164,7 @@ int main(int argc, char* argv[]){
 
 
 		// Add topActor to topDag
-		SRDAGVertex* topActor = topDag.createVertex();
-		topActor->setReference(topPisdf->getVertex(0));
-		topActor->setReferenceIndex(0);
-		topActor->setIterationIndex(0);
-
+		topDag.createVertexNo(NULL, 0, 0, (PiSDFVertex*)topPisdf->getVertex(0));
 
 		PiSDFTransformer::multiStepScheduling(&arch, topPisdf, &listScheduler, &schedule, &topDag, &execStat);
 
@@ -179,11 +175,11 @@ int main(int argc, char* argv[]){
 
 		printf("reporting...\n");
 	#if EXEC == 1
-		char file[MAX_FILE_NAME_SIZE+30];
-		snprintf(file, MAX_FILE_NAME_SIZE+30, "/home/jheulot/dev/mp-sched/ederc/Gantt_compa_cache_nvar%d.xml", iter);
-		Launcher::createRealTimeGantt(&arch, &topDag, file, &execStat);
-
-		time[iter-1] = execStat.globalEndTime;
+// 		char file[MAX_FILE_NAME_SIZE+30];
+// 		snprintf(file, MAX_FILE_NAME_SIZE+30, "/home/jheulot/dev/mp-sched/ederc/Gantt_compa_cache_nvar%d.xml", iter);
+// 		Launcher::createRealTimeGantt(&arch, &topDag, file, &execStat);
+// 
+// 		time[iter-1] = execStat.globalEndTime;
 
 //		snprintf(file, MAX_FILE_NAME_SIZE, "topDag%d.gv", iter);
 //		DotWriter::write(&topDag, file, 1, 0);

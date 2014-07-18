@@ -92,7 +92,7 @@ public:
 	 * Get the number of initialized element of the IndexedArray.
 	 * @return the number of element.
 	 */
-	int getNb();
+	int getNb() const;
 
 	/**
 	 * Set the value of the n-th element.
@@ -166,7 +166,7 @@ inline T& IndexedArray<T,SIZE>::operator [](int n){
  * @return number of element.
  */
 template <class T, int SIZE>
-inline int IndexedArray<T,SIZE>::getNb(){
+inline int IndexedArray<T,SIZE>::getNb() const{
 	return nb;
 }
 

@@ -37,9 +37,9 @@
 #ifndef SRDAG_GRAPH
 #define SRDAG_GRAPH
 
-#include "SRDAGVertex.h"
 #include "SRDAGEdge.h"
 #include "../PiSDF/PiSDFAbstractVertex.h"
+#include "../PiSDF/PiSDFConfigVertex.h"
 
 #include <grt_definitions.h>
 #include <platform_types.h>
@@ -48,10 +48,19 @@
 #include <tools/List.h>
 #include <tools/Set.h>
 #include <tools/SetIterator.h>
+#include <tools/DotWriter.h>
 
-typedef Pool<SRDAGVertex,MAX_SRDAG_VERTICES> vertexPool;
-typedef Set<SRDAGVertex, MAX_SRDAG_VERTICES> vertexSet;
-typedef SetIterator<SRDAGVertex,MAX_SRDAG_VERTICES> vertexSetIterator;
+#include "SRDAGVertexAbstract.h"
+#include "SRDAGVertexBroadCast.h"
+#include "SRDAGVertexConfig.h"
+#include "SRDAGVertexInitEnd.h"
+#include "SRDAGVertexNormal.h"
+#include "SRDAGVertexRB.h"
+#include "SRDAGVertexXplode.h"
+
+typedef Pool<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> vertexPool;
+typedef Set<SRDAGVertexAbstract, MAX_SRDAG_VERTICES> vertexSet;
+typedef SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> vertexSetIterator;
 
 typedef Pool<SRDAGEdge,MAX_SRDAG_EDGES> edgePool;
 typedef Set<SRDAGEdge, MAX_SRDAG_EDGES> edgeSet;
@@ -65,10 +74,16 @@ class SRDAGGraph{
 	private :
 		int vertexIxCount, edgeIxCount;
 
-		vertexPool 	vPool;
+		Pool<SRDAGVertexNormal,MAX_SRDAG_VERTICES> 		vertexNoPool;
+		Pool<SRDAGVertexBroadcast,MAX_SRDAG_VERTICES> 	vertexBrPool;
+		Pool<SRDAGVertexConfig,MAX_SRDAG_VERTICES> 		vertexCfPool;
+		Pool<SRDAGVertexInitEnd,MAX_SRDAG_VERTICES> 	vertexIEPool;
+		Pool<SRDAGVertexRB,MAX_SRDAG_VERTICES> 			vertexRBPool;
+		Pool<SRDAGVertexXplode,MAX_SRDAG_VERTICES> 		vertexXpPool;
+
 		edgePool	ePool;
 
-		vertexSet 	vertices;
+		Set<SRDAGVertexAbstract, MAX_SRDAG_VERTICES> 	vertices;
 		edgeSet		edges;
 
 	public : 
@@ -76,46 +91,129 @@ class SRDAGGraph{
 		~SRDAGGraph();
 		void reset();
 
-		SRDAGVertex* createVertex();
-		SRDAGEdge* createEdge(PiSDFEdge* ref);
+		SRDAGVertexNormal* 		createVertexNo(SRDAGVertexAbstract* parent, int refIx, int itrIx, PiSDFVertex* ref);
+		SRDAGVertexBroadcast* 	createVertexBr(SRDAGVertexAbstract* parent, int refIx, int itrIx);
+		SRDAGVertexConfig* 		createVertexCf(SRDAGVertexAbstract* parent, int refIx, int itrIx, PiSDFConfigVertex* ref);
+		SRDAGVertexInitEnd* 	createVertexIn(SRDAGVertexAbstract* parent, int refIx, int itrIx);
+		SRDAGVertexInitEnd* 	createVertexEn(SRDAGVertexAbstract* parent, int refIx, int itrIx);
+		SRDAGVertexRB* 			createVertexRB(SRDAGVertexAbstract* parent, int refIx, int itrIx, PiSDFAbstractVertex* ref);
+		SRDAGVertexXplode* 		createVertexIm(SRDAGVertexAbstract* parent, int refIx, int itrIx);
+		SRDAGVertexXplode* 		createVertexEx(SRDAGVertexAbstract* parent, int refIx, int itrIx);
 
-		void removeVertex(SRDAGVertex* vertex);
+		SRDAGEdge* 				createEdge(PiSDFEdge* ref);
 
-		int getNbVertex();
-		int getNbEdge();
+		void removeVertex(SRDAGVertexAbstract* vertex);
 
-		SRDAGVertex* getNextHierVertex();
+		int getNbVertices();
+		int getNbEdges();
+
+		SRDAGVertexAbstract* getNextHierVertex();
 
 		vertexSetIterator 	getVertexIterator();
 		edgeSetIterator 	getEdgeIterator();
 
-		int getVerticesFromReference(PiSDFAbstractVertex* ref, int iteration, SRDAGVertex** output);
+		int getVerticesFromReference(PiSDFAbstractVertex* ref, int iteration, SRDAGVertexAbstract** output);
 
-		SRDAGVertex* getVertexFromIx(int ix){
+		SRDAGVertexAbstract* getVertexFromIx(int ix){
 			vertexSetIterator iter = vertices.getIterator();
-			SRDAGVertex* vertex;
+			SRDAGVertexAbstract* vertex;
 			while((vertex = iter.next()) != NULL){
-				if(vertex->id == ix)
+				if(vertex->getId() == ix)
 					return vertex;
 			}
 			return NULL;
 		}
 
 		void updateExecuted();
+		void print(const char* name, bool displayNames, bool displayRates);
 };
 
-inline
-SRDAGVertex* SRDAGGraph::createVertex(){
-	SRDAGVertex* vertex = vPool.alloc();
+
+inline void SRDAGGraph::print(const char* name, bool displayNames, bool displayRates){
+	// Printing the topDag
+	DotWriter::write(this, name, displayNames, displayRates);
+}
+
+inline SRDAGVertexNormal* SRDAGGraph::createVertexNo(
+		SRDAGVertexAbstract* parent,
+		int refIx,
+		int itrIx,
+		PiSDFVertex* ref){
+	SRDAGVertexNormal* vertex = vertexNoPool.alloc();
+	*vertex = SRDAGVertexNormal(vertexIxCount++, this, parent, refIx, itrIx, ref);
 	vertices.add(vertex);
-	vertex->reset();
-	vertex->id = vertexIxCount++;
-	vertex->graph = this;
+	return vertex;
+}
 
-	char name[MAX_TOOL_NAME];
-	snprintf(name, MAX_TOOL_NAME, "Input Edges of vertex %d", vertex->id);
-	vertex->inputEdges.setName(name);
+inline SRDAGVertexConfig* SRDAGGraph::createVertexCf(
+		SRDAGVertexAbstract* parent,
+		int refIx,
+		int itrIx,
+		PiSDFConfigVertex* ref){
+	SRDAGVertexConfig* vertex = vertexCfPool.alloc();
+	*vertex = SRDAGVertexConfig(vertexIxCount++, this, parent, refIx, itrIx, ref);
+	vertices.add(vertex);
+	return vertex;
+}
 
+inline SRDAGVertexBroadcast* SRDAGGraph::createVertexBr(
+		SRDAGVertexAbstract* parent,
+		int refIx,
+		int itrIx){
+	SRDAGVertexBroadcast* vertex = vertexBrPool.alloc();
+	*vertex = SRDAGVertexBroadcast(vertexIxCount++, this, parent, refIx, itrIx);
+	vertices.add(vertex);
+	return vertex;
+}
+
+inline SRDAGVertexInitEnd* SRDAGGraph::createVertexIn(
+		SRDAGVertexAbstract* parent,
+		int refIx,
+		int itrIx){
+	SRDAGVertexInitEnd* vertex = vertexIEPool.alloc();
+	*vertex = SRDAGVertexInitEnd(vertexIxCount++, this, Init, parent, refIx, itrIx);
+	vertices.add(vertex);
+	return vertex;
+}
+
+inline SRDAGVertexInitEnd* SRDAGGraph::createVertexEn(
+		SRDAGVertexAbstract* parent,
+		int refIx,
+		int itrIx){
+	SRDAGVertexInitEnd* vertex = vertexIEPool.alloc();
+	*vertex = SRDAGVertexInitEnd(vertexIxCount++, this, End, parent, refIx, itrIx);
+	vertices.add(vertex);
+	return vertex;
+}
+
+inline SRDAGVertexRB* SRDAGGraph::createVertexRB(
+		SRDAGVertexAbstract* parent,
+		int refIx,
+		int itrIx,
+		PiSDFAbstractVertex* ref){
+	SRDAGVertexRB* vertex = vertexRBPool.alloc();
+	*vertex = SRDAGVertexRB(vertexIxCount++, this, parent, refIx, itrIx, ref);
+	vertices.add(vertex);
+	return vertex;
+}
+
+inline SRDAGVertexXplode* SRDAGGraph::createVertexIm(
+		SRDAGVertexAbstract* parent,
+		int refIx,
+		int itrIx){
+	SRDAGVertexXplode* vertex = vertexXpPool.alloc();
+	*vertex = SRDAGVertexXplode(vertexIxCount++, this, Implode, parent, refIx, itrIx);
+	vertices.add(vertex);
+	return vertex;
+}
+
+inline SRDAGVertexXplode* SRDAGGraph::createVertexEx(
+		SRDAGVertexAbstract* parent,
+		int refIx,
+		int itrIx){
+	SRDAGVertexXplode* vertex = vertexXpPool.alloc();
+	*vertex = SRDAGVertexXplode(vertexIxCount++, this, Explode, parent, refIx, itrIx);
+	vertices.add(vertex);
 	return vertex;
 }
 
@@ -131,15 +229,15 @@ SRDAGEdge* SRDAGGraph::createEdge(PiSDFEdge* ref){
 }
 
 inline
-SRDAGVertex* SRDAGGraph::getNextHierVertex(){
+SRDAGVertexAbstract* SRDAGGraph::getNextHierVertex(){
 	vertexSetIterator iter = vertices.getIterator();
-	SRDAGVertex* vertex;
+	SRDAGVertexAbstract* vertex;
 	while((vertex = iter.next()) != NULL){
 		if(vertex->isHierarchical() &&
-				vertex->getState() == SrVxStExecutable)
+				vertex->getState() == SRDAG_Executable)
 			return vertex;
 	}
-	return (SRDAGVertex*)NULL;
+	return (SRDAGVertexAbstract*)NULL;
 }
 
 inline vertexSetIterator SRDAGGraph::getVertexIterator(){
@@ -176,33 +274,47 @@ inline edgeSetIterator SRDAGGraph::getEdgeIterator(){
 //	return size;
 //}
 
-inline int SRDAGGraph::getVerticesFromReference(PiSDFAbstractVertex* ref, int iteration, SRDAGVertex** output){
+inline int SRDAGGraph::getVerticesFromReference(PiSDFAbstractVertex* ref, int iteration, SRDAGVertexAbstract** output){
 	int size = 0;
 	vertexSetIterator iter = vertices.getIterator();
-	SRDAGVertex* vertex;
+	SRDAGVertexAbstract* vertex;
 	while((vertex = iter.next()) != NULL){
-		if(vertex->Reference == ref && vertex->getIterationIndex() == iteration){
-			output[size] = vertex;
-			size++;
+		if(vertex->getIterationIndex() == iteration){
+			if(vertex->getType() == ConfigureActor){
+				if(((SRDAGVertexConfig*)vertex)->getReference() == ref){
+					output[size] = vertex;
+					size++;
+				}
+			}else if (vertex->getType() == Normal){
+				if(((SRDAGVertexNormal*)vertex)->getReference() == ref){
+					output[size] = vertex;
+					size++;
+				}
+			}else if(vertex->getType() == RoundBuffer){
+				if(((SRDAGVertexRB*)vertex)->getReference() == ref){
+					output[size] = vertex;
+					size++;
+				}
+			}
 		}
 	}
 	return size;
 }
 
-inline int SRDAGGraph::getNbVertex(){
+inline int SRDAGGraph::getNbVertices(){
 	return vertices.getNb();
 }
 
-inline int SRDAGGraph::getNbEdge(){
+inline int SRDAGGraph::getNbEdges(){
 	return edges.getNb();
 }
 
 inline void SRDAGGraph::updateExecuted(){
 	vertexSetIterator iter = vertices.getIterator();
-	SRDAGVertex* vertex;
+	SRDAGVertexAbstract* vertex;
 	while((vertex = iter.next()) != NULL){
-		if(vertex->getState() == SrVxStExecutable)
-			vertex->setState(SrVxStExecuted);
+		if(vertex->getState() == SRDAG_Executable)
+			vertex->setState(SRDAG_Executed);
 	}
 }
 

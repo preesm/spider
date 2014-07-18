@@ -44,7 +44,7 @@
 #include <mpSched/mpSched.h>
 #include <mpSched/baseActors.h>
 
-static Queue<SRDAGVertex*, MAX_MASTER_ACTORS> executionQueue;
+static Queue<SRDAGVertexAbstract*, MAX_MASTER_ACTORS> executionQueue;
 static UINT8* inputFIFOs[MAX_NB_FIFO];
 static UINT8* outputFIFOs[MAX_NB_FIFO];
 static UINT32 args[MAX_NB_ARGS];
@@ -74,11 +74,11 @@ void initExecution(){
 	Monitor_init();
 }
 
-void pushExecution(SRDAGVertex* vertex){
+void pushExecution(SRDAGVertexAbstract* vertex){
 	executionQueue.push(vertex);
 }
 
-void pushParam(UINT32 vertexID, UINT32 nbParam, UINT32 values[MAX_NB_PiSDF_PARAMS]){
+void pushParam(int vertexID, int nbParam, UINT32 values[MAX_NB_PiSDF_PARAMS]){
 	struct param p;
 	p.vxId = vertexID;
 	p.nbParam = nbParam;
@@ -89,7 +89,7 @@ void pushParam(UINT32 vertexID, UINT32 nbParam, UINT32 values[MAX_NB_PiSDF_PARAM
 	params.push(p);
 }
 
-BOOL popParam(UINT32* vertexID, UINT32* nbParam, UINT32 values[MAX_NB_PiSDF_PARAMS]){
+BOOL popParam(int* vertexID, int* nbParam, UINT32 values[MAX_NB_PiSDF_PARAMS]){
 	if(params.isEmpty())
 		return FALSE;
 
@@ -104,8 +104,7 @@ BOOL popParam(UINT32* vertexID, UINT32* nbParam, UINT32 values[MAX_NB_PiSDF_PARA
 
 void execute(){
 	while(!executionQueue.isEmpty()){
-		SRDAGVertex* vertex = executionQueue.pop();
-		int nbParams = 0;
+		SRDAGVertexAbstract* vertex = executionQueue.pop();
 
 		for(int i=0;i<vertex->getNbInputEdge(); i++){
 			SRDAGEdge * edge = vertex->getInputEdge(i);
@@ -116,51 +115,19 @@ void execute(){
 					0);
 			inputFIFOs[i] = (UINT8*)(SHARED_MEM_BASE + edge->getFifoAddress());
 		}
+
 		for(int i=0;i<vertex->getNbOutputEdge(); i++){
 			outputFIFOs[i] = (UINT8*)(SHARED_MEM_BASE + vertex->getOutputEdge(i)->getFifoAddress());
 		}
 
-		switch(vertex->getType()){
-		case Normal:
-		case ConfigureActor:
-			for(int i=0; i<vertex->getReference()->getNbParameters(); i++){
-				args[nbParams++] = vertex->getParamValue(i);
-			}
-			break;
-		case RoundBuffer:
-			args[nbParams++] = vertex->getInputEdge(0)->getTokenRate();
-			args[nbParams++] = vertex->getOutputEdge(0)->getTokenRate();
-			break;
-		case Explode:
-		case Implode:
-			args[nbParams++] = vertex->getNbInputEdge();
-			args[nbParams++] = vertex->getNbOutputEdge();
-
-			for(UINT32 i=0; i<vertex->getNbInputEdge(); i++){
-				args[nbParams++] = vertex->getInputEdge(i)->getTokenRate();
-			}
-			for(UINT32 i=0; i<vertex->getNbOutputEdge(); i++){
-				args[nbParams++] = vertex->getOutputEdge(i)->getTokenRate();
-			}
-			break;
-		case Init:
-			args[nbParams++] = vertex->getOutputEdge(0)->getTokenRate();
-			break;
-		case End:
-			args[nbParams++] = vertex->getInputEdge(0)->getTokenRate();
-			break;
-		case Broadcast:
-			nbParams = 0;
-			break;
-		default:
-			printf("CreateTaskMsg: unknown vertex type\n");
-			abort();
+		for(int i=0;i<vertex->getParamNb(); i++){
+			args[i] = vertex->getParamValue(i);
 		}
 
 		curVertexId = vertex->getId();
 
 		Monitor_startTask(vertex->getId());
-		functions_tbl[vertex->getFunctIx()](inputFIFOs, outputFIFOs, args);
+		functions_tbl[vertex->getFctIx()](inputFIFOs, outputFIFOs, args);
 		Monitor_endTask();
 
 

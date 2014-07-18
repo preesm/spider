@@ -52,7 +52,7 @@ namespace PiSDFTransformer {
 
 	void linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, SRDAGGraph* topDag, int* brv);
 
-	void replaceHwithRB(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, SRDAGVertex* currHSrDagVx);
+	void replaceHwithRB(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, SRDAGVertexAbstract* currHSrDagVx);
 
 	void addCAtoSRDAG(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag, int refIndex);
 

@@ -50,7 +50,7 @@
 class SRDAGVertexAbstract;
 
 typedef enum {
-	pisdf_vertex,
+	normal_vertex,
 	config_vertex,
 	input_vertex,
 	output_vertex,

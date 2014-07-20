@@ -94,7 +94,7 @@ class SRDAGGraph{
 		void reset();
 
 		SRDAGVertexNormal* 		createVertexNo(SRDAGVertexAbstract* parent, int refIx, int itrIx, PiSDFVertex* ref);
-		SRDAGVertexBroadcast* 	createVertexBr(SRDAGVertexAbstract* parent, int refIx, int itrIx);
+		SRDAGVertexBroadcast* 	createVertexBr(SRDAGVertexAbstract* parent, int refIx, int itrIx, PiSDFVertex* ref);
 		SRDAGVertexConfig* 		createVertexCf(SRDAGVertexAbstract* parent, int refIx, int itrIx, PiSDFConfigVertex* ref);
 		SRDAGVertexInitEnd* 	createVertexIn(SRDAGVertexAbstract* parent, int refIx, int itrIx);
 		SRDAGVertexInitEnd* 	createVertexEn(SRDAGVertexAbstract* parent, int refIx, int itrIx);
@@ -165,9 +165,10 @@ inline SRDAGVertexConfig* SRDAGGraph::createVertexCf(
 inline SRDAGVertexBroadcast* SRDAGGraph::createVertexBr(
 		SRDAGVertexAbstract* parent,
 		int refIx,
-		int itrIx){
+		int itrIx,
+		PiSDFVertex* ref){
 	SRDAGVertexBroadcast* vertex = vertexBrPool.alloc();
-	*vertex = SRDAGVertexBroadcast(vertexIxCount++, this, parent, refIx, itrIx);
+	*vertex = SRDAGVertexBroadcast(vertexIxCount++, this, parent, refIx, itrIx, ref);
 	vertices.add(vertex);
 	return vertex;
 }
@@ -295,21 +296,33 @@ inline int SRDAGGraph::getVerticesFromReference(PiSDFAbstractVertex* ref, int it
 	SRDAGVertexAbstract* vertex;
 	while((vertex = iter.next()) != NULL){
 		if(vertex->getIterationIndex() == iteration){
-			if(vertex->getType() == ConfigureActor){
+			switch(vertex->getType()){
+			case ConfigureActor:
 				if(((SRDAGVertexConfig*)vertex)->getReference() == ref){
 					output[size] = vertex;
 					size++;
 				}
-			}else if (vertex->getType() == Normal){
+				break;
+			case Normal:
 				if(((SRDAGVertexNormal*)vertex)->getReference() == ref){
 					output[size] = vertex;
 					size++;
 				}
-			}else if(vertex->getType() == RoundBuffer){
+				break;
+			case Broadcast:
+				if(((SRDAGVertexBroadcast*)vertex)->getReference() == ref){
+					output[size] = vertex;
+					size++;
+				}
+				break;
+			case RoundBuffer:
 				if(((SRDAGVertexRB*)vertex)->getReference() == ref){
 					output[size] = vertex;
 					size++;
 				}
+				break;
+			default:
+				break;
 			}
 		}
 	}

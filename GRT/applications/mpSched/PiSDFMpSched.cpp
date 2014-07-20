@@ -59,7 +59,7 @@ PiSDFGraph* initPisdf_mpSched(PiSDFGraph* _graphs, int NMAX, UINT32 nbSamples, U
 
 	PiSDFGraph* top = addGraph();
 
-	PiSDFVertex *vxTop = (PiSDFVertex *)top->addVertex("top", pisdf_vertex);
+	PiSDFVertex *vxTop = (PiSDFVertex *)top->addVertex("top", normal_vertex);
 
 	PiSDFGraph* mpSchedGraph = addGraph();
 	vxTop->setSubGraph(mpSchedGraph);
@@ -93,22 +93,22 @@ void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples, UINT32 Nval){
 	vxConfig->addRelatedParam(paramN);
 
 	// Other vertices
-	PiSDFVertex *vxMFilter 	= (PiSDFVertex *)graph->addVertex("MFilter", pisdf_vertex);
+	PiSDFVertex *vxMFilter 	= (PiSDFVertex *)graph->addVertex("MFilter", normal_vertex);
 	vxMFilter->addParameter(paramNMAX);
 	vxMFilter->addParameter(paramN);
 	vxMFilter->setFunction_index(1);
 
-	PiSDFVertex *vxSrc = (PiSDFVertex *)graph->addVertex("Src", pisdf_vertex);
+	PiSDFVertex *vxSrc = (PiSDFVertex *)graph->addVertex("Src", normal_vertex);
 	vxSrc->addParameter(paramN);
 	vxSrc->addParameter(paramSamples);
 	vxSrc->setFunction_index(2);
 
-	PiSDFVertex *vxSnk 	= (PiSDFVertex *)graph->addVertex("Snk", pisdf_vertex);
+	PiSDFVertex *vxSnk 	= (PiSDFVertex *)graph->addVertex("Snk", normal_vertex);
 	vxSnk->addParameter(paramN);
 	vxSnk->addParameter(paramSamples);
 	vxSnk->setFunction_index(3);
 
-	PiSDFVertex *vxUserFIRs	= (PiSDFVertex *)graph->addVertex("UserFIRs", pisdf_vertex);
+	PiSDFVertex *vxUserFIRs	= (PiSDFVertex *)graph->addVertex("UserFIRs", normal_vertex);
 	vxUserFIRs->addParameter(paramSamples);
 
 	// Edges.
@@ -169,19 +169,20 @@ void mpSched_sub(PiSDFGraph* graph, UINT32 nbSamples){
 	vxSetM->addRelatedParam(paramM);
 
 	// Other vertices
-	PiSDFVertex *vxInitSwitch 	= (PiSDFVertex *)graph->addVertex("InitSwitch", pisdf_vertex);
+	PiSDFVertex *vxInitSwitch 	= (PiSDFVertex *)graph->addVertex("InitSwitch", normal_vertex);
 	vxInitSwitch->addParameter(paramM);
 	vxInitSwitch->setFunction_index(5);
 
-	PiSDFVertex *vxSwitch 	= (PiSDFVertex *)graph->addVertex("Switch", pisdf_vertex);
+	PiSDFVertex *vxSwitch 	= (PiSDFVertex *)graph->addVertex("Switch", normal_vertex);
 	vxSwitch->addParameter(paramSamples);
 	vxSwitch->setFunction_index(SWICTH_FUNCT_IX);
 
-	PiSDFVertex *vxFIR	= (PiSDFVertex *)graph->addVertex("FIR", pisdf_vertex);
+	PiSDFVertex *vxFIR	= (PiSDFVertex *)graph->addVertex("FIR", normal_vertex);
 	vxFIR->addParameter(paramSamples);
 	vxFIR->setFunction_index(7);
 
-	PiSDFVertex *vxBr	= (PiSDFVertex *)graph->addVertex("BroadCast", pisdf_vertex);
+	PiSDFVertex *vxBr	= (PiSDFVertex *)graph->addVertex("BroadCast", normal_vertex);
+	vxBr->setSubType(SubType_Broadcast);
 	vxBr->addParameter(paramSamples);
 	vxBr->setFunction_index(BROADCAST_FUNCT_IX);
 

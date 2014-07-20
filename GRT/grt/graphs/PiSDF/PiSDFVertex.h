@@ -42,10 +42,19 @@
 
 class PiSDFGraph;
 
+typedef enum{
+	SubType_Normal,
+	SubType_Broadcast
+} PiSDF_subType;
+
 class PiSDFVertex: public PiSDFAbstractVertex {
 	PiSDFGraph *subGraph;
+	PiSDF_subType subType;
 public:
-	PiSDFVertex(){subGraph = (PiSDFGraph *)NULL;};
+	PiSDFVertex(){
+		subGraph = (PiSDFGraph *)NULL;
+		subType = SubType_Normal;
+	};
 	virtual ~PiSDFVertex(){};
 
 	bool hasSubGraph()
@@ -72,6 +81,13 @@ public:
         this->subGraph = subGraph;
     }
 
+	PiSDF_subType getSubType() const {
+		return subType;
+	}
+
+	void setSubType(PiSDF_subType subType) {
+		this->subType = subType;
+	}
 };
 
 #endif /* PISDFVERTEX_H_ */

@@ -425,7 +425,7 @@ void PiSDFTransformer::computeBRV(PiSDFGraph* currentPiSDF, int* brv){
 	int brvNbEdges=0, brvNbVertices=0;
 	for (UINT32 i = 0; i < currentPiSDF->getNbVertices(); i++) {
 		PiSDFAbstractVertex* vertex = currentPiSDF->getVertex(i);
-		if(vertex->getType() == pisdf_vertex)
+		if(vertex->getType() == normal_vertex)
 			vertexId[i] = brvNbVertices++;
 		else{
 			vertexId[i] = -1;
@@ -439,8 +439,8 @@ void PiSDFTransformer::computeBRV(PiSDFGraph* currentPiSDF, int* brv){
 	for(UINT32 i = 0; i < currentPiSDF->getNb_edges(); i++){
 		PiSDFEdge* edge = currentPiSDF->getEdge(i);
 		if((edge->getSource() != edge->getSink()) &&
-			(edge->getSource()->getType() ==  pisdf_vertex) &&
-			(edge->getSink()->getType() ==  pisdf_vertex)){ // TODO: treat cycles.
+			(edge->getSource()->getType() ==  normal_vertex) &&
+			(edge->getSink()->getType() ==  normal_vertex)){ // TODO: treat cycles.
 			if((edge->getProductionInt() <= 0) || (edge->getConsumptionInt() <= 0 )) exitWithCode(1066);
 			topo_matrix[brvNbEdges * brvNbVertices + vertexId[edge->getSource()->getId()]] = edge->getProductionInt();
 			topo_matrix[brvNbEdges * brvNbVertices + vertexId[edge->getSink()->getId()]] = -(INT64)(edge->getConsumptionInt());
@@ -463,7 +463,7 @@ void PiSDFTransformer::computeBRV(PiSDFGraph* currentPiSDF, int* brv){
 	// Setting the number of repetitions for each vertex.
 	for (UINT32 i = 0; i < currentPiSDF->getNbVertices(); i++) {
 		PiSDFAbstractVertex* vertex = currentPiSDF->getVertex(i);
-		if(vertex->getType() == pisdf_vertex)
+		if(vertex->getType() == normal_vertex)
 			vertex->setNbRepetition(tempBrv[vertexId[vertex->getId()]]);
 		else
 			vertex->setNbRepetition(1);
@@ -500,7 +500,7 @@ void PiSDFTransformer::computeBRV(PiSDFGraph* currentPiSDF, int* brv){
 	// Setting the number of repetitions for each vertex.
 	for (UINT32 i = 0; i < currentPiSDF->getNbVertices(); i++) {
 		PiSDFAbstractVertex* vertex = currentPiSDF->getVertex(i);
-		if(vertex->getType() == pisdf_vertex){
+		if(vertex->getType() == normal_vertex){
 			brv[vertex->getId()] = tempBrv[vertexId[vertex->getId()]];
 			vertex->setNbRepetition(tempBrv[vertexId[vertex->getId()]]);
 		}else{
@@ -516,7 +516,14 @@ static void PiSDFTransformer::singleRateTransformation(PiSDFGraph *currentPiSDF,
 
 		// Creating the new vertices.
 		for(UINT32 j = 0; j < brv[vertex->getId()]; j++){
-			topDag->createVertexNo(NULL, j, refIndex, vertex);
+			switch(vertex->getSubType()){
+			case SubType_Normal:
+				topDag->createVertexNo(NULL, j, refIndex, vertex);
+				break;
+			case SubType_Broadcast:
+				topDag->createVertexBr(NULL, j, refIndex, vertex);
+				break;
+			}
 			// TODO handle pisdf broadcast
 		}
 	}

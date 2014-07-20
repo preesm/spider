@@ -72,8 +72,10 @@ SRDAGVertexBroadcast::SRDAGVertexBroadcast(
 		SRDAGGraph* 	_graph,
 		SRDAGVertexAbstract* 	_parent,
 		int 			_refIx,
-		int 			_itrIx):
+		int 			_itrIx,
+		PiSDFVertex* ref):
 		SRDAGVertexAbstract(_id, _graph, Broadcast, _parent, _refIx,_itrIx){
+	Reference = ref;
 	inputEdges.reset();
 	outputEdges.reset();
 }

@@ -76,7 +76,7 @@ void PiSDFGraph::reset() {
 void PiSDFGraph::resetRefs(){
 	for(int i=0; i<vertices.getNb(); i++){
 		vertices[i]->resetRefs();
-		if(vertices[i]->getType() == pisdf_vertex &&
+		if(vertices[i]->getType() == normal_vertex &&
 				((PiSDFVertex*)vertices[i])->hasSubGraph()){
 			((PiSDFVertex*)vertices[i])->getSubGraph()->resetRefs();
 		}
@@ -89,7 +89,7 @@ PiSDFAbstractVertex* PiSDFGraph::addVertex(const char *vertexName, VERTEX_TYPE t
 	PiSDFAbstractVertex* vertex;
 
 	switch (type) {
-		case pisdf_vertex:
+		case normal_vertex:
 			if(pisdf_vertices.getNb() < MAX_NB_PiSDF_VERTICES){
 				vertex = pisdf_vertices.add();
 			}

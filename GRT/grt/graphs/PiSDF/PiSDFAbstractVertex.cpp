@@ -40,7 +40,7 @@ PiSDFAbstractVertex::PiSDFAbstractVertex() {
 	id=-1;
 	name[0] = '\0';
 	function_index = -1;
-	type=pisdf_vertex;
+	type=normal_vertex;
 	nbParameters = 0;
 	refPiSDFVertex = NULL;
 	nbRepetition = 1;
@@ -65,7 +65,7 @@ void PiSDFAbstractVertex::reset() {
 	id=-1;
 	name[0] = '\0';
 	function_index = -1;
-	type=pisdf_vertex;
+	type=normal_vertex;
 	nbParameters = 0;
 	refPiSDFVertex = NULL;
 	nbRepetition = 1;

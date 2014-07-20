@@ -140,7 +140,7 @@ inline int SRDAGVertexNormal::getFctIx() const
 
 inline BOOL SRDAGVertexNormal::isHierarchical() const{
 	return Reference
-				&& Reference->getType() == pisdf_vertex
+				&& Reference->getType() == normal_vertex
 				&& ((PiSDFVertex*)Reference)->hasSubGraph()
 				&& type == Normal;
 }

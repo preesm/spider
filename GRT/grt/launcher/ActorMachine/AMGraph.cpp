@@ -39,7 +39,6 @@
 #include "AMVertex.h"
 
 #include "graphs/SRDAG/SRDAGEdge.h"
-#include "graphs/SRDAG/SRDAGVertex.h"
 #include "graphs/SRDAG/SRDAGGraph.h"
 #include "scheduling/Schedule/Schedule.h"
 

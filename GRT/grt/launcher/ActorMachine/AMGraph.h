@@ -41,7 +41,6 @@
 #include "AMCond.h"
 #include "AMVertex.h"
 #include "AMAction.h"
-#include "graphs/SRDAG/SRDAGVertex.h"
 #include "scheduling/Schedule/Schedule.h"
 #include "scheduling/Schedule/BaseSchedule.h"
 #include "grt_definitions.h"

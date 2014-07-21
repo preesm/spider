@@ -38,7 +38,6 @@
 #define LIST_SCHEDULER
 
 #include "../../graphs/SRDAG/SRDAGGraph.h"
-#include "../../graphs/SRDAG/SRDAGVertex.h"
 #include "../../graphs/SRDAG/SRDAGEdge.h"
 #include "../../graphs/PiSDF/PiSDFVertex.h"
 //#include "../../graphs/PiSDF/PiSDFGraph.h"

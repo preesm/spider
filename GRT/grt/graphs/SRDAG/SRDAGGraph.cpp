@@ -35,7 +35,6 @@
  ****************************************************************************/
 
 #include "SRDAGGraph.h"
-#include "SRDAGVertex.h"
 #include "../PiSDF/PiSDFIfVertex.h"
 #include "SRDAGEdge.h"
 #include <cstdio>

@@ -37,7 +37,6 @@
 #ifndef BASESCHEDULE_H_
 #define BASESCHEDULE_H_
 
-#include "../../graphs/SRDAG/SRDAGVertex.h"
 #include <scheduling/architecture/Architecture.h>
 #include <platform_time.h>
 

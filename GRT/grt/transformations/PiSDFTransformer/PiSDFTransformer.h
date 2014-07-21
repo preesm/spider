@@ -40,7 +40,6 @@
 #include <graphs/PiSDF/PiSDFAbstractVertex.h>
 
 #include "../../graphs/SRDAG/SRDAGGraph.h"
-#include "../../graphs/SRDAG/SRDAGVertex.h"
 #include "../../graphs/SRDAG/SRDAGEdge.h"
 
 

@@ -38,7 +38,6 @@
 #define SCHEDULE_WRITER
 
 #include "../graphs/SRDAG/SRDAGGraph.h"
-#include "../graphs/SRDAG/SRDAGVertex.h"
 #include "../graphs/SRDAG/SRDAGEdge.h"
 #include "../scheduling/Schedule/Schedule.h"
 #include "../scheduling/Schedule/BaseSchedule.h"

@@ -37,7 +37,6 @@
 #ifndef SCHEDULE_H_
 #define SCHEDULE_H_
 
-#include "../../graphs/SRDAG/SRDAGVertex.h"
 #include "../../graphs/SRDAG/SRDAGGraph.h"
 #include <grt_definitions.h>
 #include <string.h>

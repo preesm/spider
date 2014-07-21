@@ -72,8 +72,6 @@ typedef SetIterator<SRDAGEdge,MAX_SRDAG_EDGES> edgeSetIterator;
  */
 class SRDAGGraph{
 	private :
-		int edgeIxCount;
-
 		Pool<SRDAGVertexNormal,MAX_SRDAG_VERTICES> 		vertexNoPool;
 		Pool<SRDAGVertexBroadcast,MAX_SRDAG_VERTICES> 	vertexBrPool;
 		Pool<SRDAGVertexConfig,MAX_SRDAG_VERTICES> 		vertexCfPool;
@@ -235,10 +233,7 @@ inline
 SRDAGEdge* SRDAGGraph::createEdge(PiSDFEdge* ref){
 	SRDAGEdge* edge = ePool.alloc();
 	edges.add(edge);
-	edge->reset();
-	edge->id = edgeIxCount++;
-	edge->graph = this;
-	edge->setRefEdge(ref);
+	*edge = SRDAGEdge(this);
 	return edge;
 }
 

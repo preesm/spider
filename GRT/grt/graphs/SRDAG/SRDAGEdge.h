@@ -64,15 +64,15 @@ protected :
 	int sourcePortIx, sinkPortIx;
 	SRDAGGraph *graph;
 
-	PiSDFEdge* refEdge;		// Reference to PiSDF edge.
-
 	int delay;				// Delay or number of initial tokens.
 
 	FIFO fifo;
 
-public :
+	static int creationIx;
 
+public :
 	SRDAGEdge();
+	SRDAGEdge(SRDAGGraph *graph);
 	~SRDAGEdge();
 	void reset();
 
@@ -105,8 +105,6 @@ public :
 
 	SRDAGVertexAbstract* getSource() const;
 	SRDAGVertexAbstract* getSink() const;
-
-	friend class SRDAGGraph;
 };
 
 /**
@@ -189,16 +187,6 @@ UINT32 SRDAGEdge::getFifoAddress() const {
 inline
 void SRDAGEdge::setFifoAddress(UINT32 fifoAddress) {
 	this->fifo.add = fifoAddress;
-}
-
-inline
-PiSDFEdge *SRDAGEdge::getRefEdge() const{
-	return refEdge;
-}
-
-inline
-void SRDAGEdge::setRefEdge(PiSDFEdge *refEdge){
-	this->refEdge = refEdge;
 }
 
 inline int SRDAGEdge::getId() const {

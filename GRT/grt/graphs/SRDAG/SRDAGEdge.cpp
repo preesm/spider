@@ -38,6 +38,8 @@
 #include "SRDAGEdge.h"
 #include "SRDAGVertexAbstract.h"
 
+int SRDAGEdge::creationIx = 0;
+
 /**
  Constructor
 */
@@ -45,7 +47,17 @@ SRDAGEdge::SRDAGEdge(){
 	source = sink = NULL;
 	graph = NULL;
 	id = sourcePortIx = sinkPortIx = -1;
-	refEdge = NULL;
+	fifo.id=-1;
+	fifo.add= 0;
+	fifo.size=0;
+	delay = 0;
+}
+
+SRDAGEdge::SRDAGEdge(SRDAGGraph *_graph){
+	source = sink = NULL;
+	graph = _graph;
+	id = creationIx++;
+	sourcePortIx = sinkPortIx = -1;
 	fifo.id=-1;
 	fifo.add= 0;
 	fifo.size=0;
@@ -63,7 +75,6 @@ void SRDAGEdge::reset(){
 	source = sink = NULL;
 	graph = NULL;
 	id = sourcePortIx = sinkPortIx = -1;
-	refEdge = NULL;
 	fifo.id=-1;
 	fifo.add= 0;
 	fifo.size=0;

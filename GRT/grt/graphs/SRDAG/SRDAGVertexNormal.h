@@ -66,7 +66,6 @@ private :
 public :
 	SRDAGVertexNormal(){}
 	SRDAGVertexNormal(
-		int			 	_id,
 		SRDAGGraph* 	_graph,
 		SRDAGVertexAbstract* 	_parent,
 		int 			_refIx,

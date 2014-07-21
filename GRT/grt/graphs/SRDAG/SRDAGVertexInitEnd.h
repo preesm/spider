@@ -61,7 +61,6 @@ private :
 public :
 	SRDAGVertexInitEnd(){}
 	SRDAGVertexInitEnd(
-			int			 	_id,
 			SRDAGGraph* 	_graph,
 			SRDAGVertexType _type,
 			SRDAGVertexAbstract* 	_parent,

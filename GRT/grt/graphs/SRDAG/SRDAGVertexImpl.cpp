@@ -47,6 +47,8 @@
 
 #include <graphs/PiSDF/PiSDFConfigVertex.h>
 
+int SRDAGVertexAbstract::creationIx = 0;
+
 SRDAGVertexAbstract::SRDAGVertexAbstract(){
 	id 				= -1;
 	graph 			= NULL;
@@ -63,14 +65,13 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(){
 }
 
 SRDAGVertexAbstract::SRDAGVertexAbstract(
-			int			 	_id,
 			SRDAGGraph* 	_graph,
 			SRDAGVertexType _type,
 			SRDAGVertexAbstract* 	_parent,
 			PiSDFAbstractVertex* _ref,
 			int 			_refIx,
 			int 			_itrIx){
-	id 				= _id;
+	id 				= creationIx++;
 	graph 			= _graph;
 	type 			= _type;
 	state 			= SRDAG_NotExecuted;
@@ -85,25 +86,23 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(
 }
 
 SRDAGVertexBroadcast::SRDAGVertexBroadcast(
-		int			 	_id,
 		SRDAGGraph* 	_graph,
 		SRDAGVertexAbstract* 	_parent,
 		int 			_refIx,
 		int 			_itrIx,
 		PiSDFVertex* ref):
-		SRDAGVertexAbstract(_id, _graph, Broadcast, _parent, ref, _refIx,_itrIx){
+		SRDAGVertexAbstract(_graph, Broadcast, _parent, ref, _refIx,_itrIx){
 	inputEdges.reset();
 	outputEdges.reset();
 }
 
 SRDAGVertexConfig::SRDAGVertexConfig(
-		int			 	_id,
 		SRDAGGraph* 	_graph,
 		SRDAGVertexAbstract* 	_parent,
 		int 			_refIx,
 		int 			_itrIx,
 		PiSDFConfigVertex* ref):
-		SRDAGVertexAbstract(_id, _graph, ConfigureActor, _parent, ref, _refIx,_itrIx){
+		SRDAGVertexAbstract(_graph, ConfigureActor, _parent, ref, _refIx,_itrIx){
 	inputEdges.reset();
 	outputEdges.reset();
 
@@ -121,13 +120,12 @@ SRDAGVertexConfig::SRDAGVertexConfig(
 }
 
 SRDAGVertexNormal::SRDAGVertexNormal(
-		int			 	_id,
 		SRDAGGraph* 	_graph,
 		SRDAGVertexAbstract* 	_parent,
 		int 			_refIx,
 		int 			_itrIx,
 		PiSDFVertex* ref):
-		SRDAGVertexAbstract(_id, _graph, Normal, _parent, ref, _refIx,_itrIx){
+		SRDAGVertexAbstract(_graph, Normal, _parent, ref, _refIx,_itrIx){
 	inputEdges.reset();
 	outputEdges.reset();
 
@@ -145,36 +143,33 @@ SRDAGVertexNormal::SRDAGVertexNormal(
 }
 
 SRDAGVertexInitEnd::SRDAGVertexInitEnd(
-		int			 	_id,
 		SRDAGGraph* 	_graph,
 		SRDAGVertexType _type,
 		SRDAGVertexAbstract* 	_parent,
 		int 			_refIx,
 		int 			_itrIx):
-		SRDAGVertexAbstract(_id, _graph, _type, _parent, NULL, _refIx,_itrIx){
+		SRDAGVertexAbstract(_graph, _type, _parent, NULL, _refIx,_itrIx){
 	edges.reset();
 }
 
 SRDAGVertexRB::SRDAGVertexRB(
-		int			 	_id,
 		SRDAGGraph* 	_graph,
 		SRDAGVertexAbstract* 	_parent,
 		int 			_refIx,
 		int 			_itrIx,
 		PiSDFAbstractVertex* ref):
-		SRDAGVertexAbstract(_id, _graph, RoundBuffer, _parent, ref, _refIx,_itrIx){
+		SRDAGVertexAbstract(_graph, RoundBuffer, _parent, ref, _refIx,_itrIx){
 	outputEdges.reset();
 	inputEdges.reset();
 }
 
 SRDAGVertexXplode::SRDAGVertexXplode(
-		int			 	_id,
 		SRDAGGraph* 	_graph,
 		SRDAGVertexType _type,
 		SRDAGVertexAbstract* 	_parent,
 		int 			_refIx,
 		int 			_itrIx):
-		SRDAGVertexAbstract(_id, _graph, _type, _parent, NULL, _refIx,_itrIx){
+		SRDAGVertexAbstract(_graph, _type, _parent, NULL, _refIx,_itrIx){
 	gatherEdges.reset();
 	scatterEdges.reset();
 }

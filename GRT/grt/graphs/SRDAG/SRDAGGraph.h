@@ -72,7 +72,7 @@ typedef SetIterator<SRDAGEdge,MAX_SRDAG_EDGES> edgeSetIterator;
  */
 class SRDAGGraph{
 	private :
-		int vertexIxCount, edgeIxCount;
+		int edgeIxCount;
 
 		Pool<SRDAGVertexNormal,MAX_SRDAG_VERTICES> 		vertexNoPool;
 		Pool<SRDAGVertexBroadcast,MAX_SRDAG_VERTICES> 	vertexBrPool;
@@ -150,7 +150,7 @@ inline SRDAGVertexNormal* SRDAGGraph::createVertexNo(
 		int itrIx,
 		PiSDFVertex* ref){
 	SRDAGVertexNormal* vertex = vertexNoPool.alloc();
-	*vertex = SRDAGVertexNormal(vertexIxCount++, this, parent, refIx, itrIx, ref);
+	*vertex = SRDAGVertexNormal(this, parent, refIx, itrIx, ref);
 	vertices.add(vertex);
 	return vertex;
 }
@@ -161,7 +161,7 @@ inline SRDAGVertexConfig* SRDAGGraph::createVertexCf(
 		int itrIx,
 		PiSDFConfigVertex* ref){
 	SRDAGVertexConfig* vertex = vertexCfPool.alloc();
-	*vertex = SRDAGVertexConfig(vertexIxCount++, this, parent, refIx, itrIx, ref);
+	*vertex = SRDAGVertexConfig(this, parent, refIx, itrIx, ref);
 	vertices.add(vertex);
 	return vertex;
 }
@@ -172,7 +172,7 @@ inline SRDAGVertexBroadcast* SRDAGGraph::createVertexBr(
 		int itrIx,
 		PiSDFVertex* ref){
 	SRDAGVertexBroadcast* vertex = vertexBrPool.alloc();
-	*vertex = SRDAGVertexBroadcast(vertexIxCount++, this, parent, refIx, itrIx, ref);
+	*vertex = SRDAGVertexBroadcast(this, parent, refIx, itrIx, ref);
 	vertices.add(vertex);
 	brs.add(vertex);
 	return vertex;
@@ -183,7 +183,7 @@ inline SRDAGVertexInitEnd* SRDAGGraph::createVertexIn(
 		int refIx,
 		int itrIx){
 	SRDAGVertexInitEnd* vertex = vertexIEPool.alloc();
-	*vertex = SRDAGVertexInitEnd(vertexIxCount++, this, Init, parent, refIx, itrIx);
+	*vertex = SRDAGVertexInitEnd(this, Init, parent, refIx, itrIx);
 	vertices.add(vertex);
 	return vertex;
 }
@@ -193,7 +193,7 @@ inline SRDAGVertexInitEnd* SRDAGGraph::createVertexEn(
 		int refIx,
 		int itrIx){
 	SRDAGVertexInitEnd* vertex = vertexIEPool.alloc();
-	*vertex = SRDAGVertexInitEnd(vertexIxCount++, this, End, parent, refIx, itrIx);
+	*vertex = SRDAGVertexInitEnd(this, End, parent, refIx, itrIx);
 	vertices.add(vertex);
 	return vertex;
 }
@@ -204,7 +204,7 @@ inline SRDAGVertexRB* SRDAGGraph::createVertexRB(
 		int itrIx,
 		PiSDFAbstractVertex* ref){
 	SRDAGVertexRB* vertex = vertexRBPool.alloc();
-	*vertex = SRDAGVertexRB(vertexIxCount++, this, parent, refIx, itrIx, ref);
+	*vertex = SRDAGVertexRB(this, parent, refIx, itrIx, ref);
 	vertices.add(vertex);
 	rbs.add(vertex);
 	return vertex;
@@ -215,7 +215,7 @@ inline SRDAGVertexXplode* SRDAGGraph::createVertexIm(
 		int refIx,
 		int itrIx){
 	SRDAGVertexXplode* vertex = vertexXpPool.alloc();
-	*vertex = SRDAGVertexXplode(vertexIxCount++, this, Implode, parent, refIx, itrIx);
+	*vertex = SRDAGVertexXplode(this, Implode, parent, refIx, itrIx);
 	vertices.add(vertex);
 	implodes.add(vertex);
 	return vertex;
@@ -226,7 +226,7 @@ inline SRDAGVertexXplode* SRDAGGraph::createVertexEx(
 		int refIx,
 		int itrIx){
 	SRDAGVertexXplode* vertex = vertexXpPool.alloc();
-	*vertex = SRDAGVertexXplode(vertexIxCount++, this, Explode, parent, refIx, itrIx);
+	*vertex = SRDAGVertexXplode(this, Explode, parent, refIx, itrIx);
 	vertices.add(vertex);
 	return vertex;
 }

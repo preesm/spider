@@ -48,7 +48,7 @@
  Constructor
 */
 SRDAGGraph::SRDAGGraph(){
-	vertexIxCount = edgeIxCount = 0;
+	edgeIxCount = 0;
 	vertexNoPool.reset();
 	vertexBrPool.reset();
 	vertexCfPool.reset();
@@ -74,7 +74,7 @@ SRDAGGraph::SRDAGGraph(){
 }
 
 void SRDAGGraph::reset(){
-	vertexIxCount = edgeIxCount = 0;
+	edgeIxCount = 0;
 	vertexNoPool.reset();
 	vertexBrPool.reset();
 	vertexCfPool.reset();

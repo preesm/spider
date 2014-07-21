@@ -69,7 +69,6 @@ private :
 public :
 	SRDAGVertexConfig(){}
 	SRDAGVertexConfig(
-					int			 	_id,
 					SRDAGGraph* 	_graph,
 					SRDAGVertexAbstract* 	_parent,
 					int 			_refIx,

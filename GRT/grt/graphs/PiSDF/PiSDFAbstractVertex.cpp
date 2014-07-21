@@ -38,6 +38,7 @@
 
 PiSDFAbstractVertex::PiSDFAbstractVertex() {
 	id=-1;
+	graph = NULL;
 	name[0] = '\0';
 	function_index = -1;
 	type=normal_vertex;
@@ -52,7 +53,7 @@ PiSDFAbstractVertex::PiSDFAbstractVertex() {
 	outputEdges.reset();
 	childVertices.reset();
 
-	for(int i; i<MAX_SLAVE_TYPES; i++){
+	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = FALSE;
 	}
 }
@@ -63,6 +64,7 @@ PiSDFAbstractVertex::~PiSDFAbstractVertex() {
 
 void PiSDFAbstractVertex::reset() {
 	id=-1;
+	graph = NULL;
 	name[0] = '\0';
 	function_index = -1;
 	type=normal_vertex;
@@ -77,7 +79,7 @@ void PiSDFAbstractVertex::reset() {
 	outputEdges.reset();
 	childVertices.reset();
 
-	for(int i; i<MAX_SLAVE_TYPES; i++){
+	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = FALSE;
 	}
 }

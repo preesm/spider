@@ -104,6 +104,9 @@ void SRDAGGraph::removeEdge(SRDAGEdge* edge){
 
 void SRDAGGraph::removeVertex(SRDAGVertexAbstract *vertex){
 	// TODO remove Edges connected to it.
+	if(vertex->getState() == SRDAG_Executed){
+		printf("Delete executed Vertex\n");
+	}
 	vertices.remove(vertex);
 	switch(vertex->getType()){
 	case Normal:

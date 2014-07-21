@@ -131,6 +131,8 @@ class SRDAGGraph{
 		}
 
 		void updateExecuted();
+		void updateState();
+
 		void print(const char* name, bool displayNames, bool displayRates);
 };
 
@@ -345,6 +347,16 @@ inline void SRDAGGraph::updateExecuted(){
 			vertex->setState(SRDAG_Executed);
 	}
 }
+
+inline void SRDAGGraph::updateState(){
+	// Updating all input, round-buffer and hierarchical vxs.
+	vertexSetIterator iter = this->getVertexIterator();
+	SRDAGVertexAbstract *vertex;
+	while((vertex = iter.next()) != NULL){
+		vertex->updateState();
+	}
+}
+
 
 
 #endif

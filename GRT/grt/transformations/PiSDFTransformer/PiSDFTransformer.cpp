@@ -1129,7 +1129,7 @@ void PiSDFTransformer::multiStepScheduling(
 				/* Put CA in topDag with RB between CA and /CA */
 				PiSDFTransformer::addCAtoSRDAG(currentPiSDF, topDag, refIndex);
 
-				currentPiSDF->updateDAGStates(topDag);
+				topDag->updateState();
 
 				graphFifo.push(currentPiSDF);
 				refIndexFifo.push(refIndex);
@@ -1143,7 +1143,7 @@ void PiSDFTransformer::multiStepScheduling(
 
 				PiSDFTransformer::computeBRV(currentPiSDF, brv);
 				PiSDFTransformer::singleRateTransformation(currentPiSDF, refIndex, topDag, brv);
-				currentPiSDF->updateDAGStates(topDag);
+				topDag->updateState();
 			}
 
 			currHSrDagVx = topDag->getNextHierVertex();
@@ -1220,7 +1220,7 @@ void PiSDFTransformer::multiStepScheduling(
 
 			PiSDFTransformer::singleRateTransformation(currentPiSDF, refIndex, topDag, brv);
 
-			currentPiSDF->updateDAGStates(topDag);
+			topDag->updateState();
 			stepsCntr++;
 		}
 
@@ -1255,7 +1255,7 @@ void PiSDFTransformer::multiStepScheduling(
 #endif
 
 //	while(reduceExplExpl(topDag));
-	currentPiSDF->updateDAGStates(topDag);
+	topDag->updateState();
 
 //	len = snprintf(file, MAX_FILE_NAME_SIZE, "%s_%d.gv", "topDag_afterRed", stepsCntr);
 //	if(len > MAX_FILE_NAME_SIZE)

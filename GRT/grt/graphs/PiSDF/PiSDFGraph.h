@@ -90,8 +90,6 @@ public:
 
 	void solveParameters(SRDAGGraph* dag, BaseSchedule* schedule);
 
-	void updateDAGStates(SRDAGGraph* dag);
-
 
 	/*
 	 * Auto-generated getters and setters.

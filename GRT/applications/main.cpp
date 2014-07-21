@@ -175,9 +175,9 @@ int main(int argc, char* argv[]){
 
 		printf("reporting...\n");
 	#if EXEC == 1
-// 		char file[MAX_FILE_NAME_SIZE+30];
-// 		snprintf(file, MAX_FILE_NAME_SIZE+30, "/home/jheulot/dev/mp-sched/ederc/Gantt_compa_cache_nvar%d.xml", iter);
-// 		Launcher::createRealTimeGantt(&arch, &topDag, file, &execStat);
+ 		char file[MAX_FILE_NAME_SIZE+40];
+ 		snprintf(file, MAX_FILE_NAME_SIZE+40, "/home/jheulot/dev/mp-sched/ederc/Gantt_compa_cache_nvar%d.xml", iter);
+ 		Launcher::createRealTimeGantt(&arch, &topDag, file, &execStat);
 // 
 // 		time[iter-1] = execStat.globalEndTime;
 

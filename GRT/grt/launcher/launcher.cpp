@@ -155,7 +155,8 @@ void Launcher::launch(SRDAGGraph* graph, Architecture* arch, BaseSchedule* sched
 }
 
 void Launcher::assignFifoVertex(SRDAGVertexAbstract* vertex){
-	UINT32 i, base, offset;
+	UINT32 base, offset;
+	int i;
 	SRDAGEdge* edge;
 	switch(vertex->getType()){
 	 case Explode:
@@ -277,7 +278,7 @@ void Launcher::launchVertex(SRDAGVertexAbstract* vertex, UINT32 slave){
 #if EXEC == 1
 	CreateTaskMsg::send(slave, vertex);
 	if(vertex->getType() == ConfigureActor)
-		nbParamToRecv += ((SRDAGVertexConfig*)vertex)->getReference()->getNbRelatedParams();
+		nbParamToRecv += ((PiSDFConfigVertex*)(vertex->getReference()))->getNbRelatedParams();
 #endif
 }
 
@@ -299,7 +300,6 @@ void Launcher::reset(){
 void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName, ExecutionStat* stat){
 	// Creating the Gantt with real times.
 	memset(stat, 0, sizeof(ExecutionStat));
-	UINT32 nbIter = 0;
 
 #if PRINT_REAL_GANTT
 	platform_fopen(filePathName);
@@ -309,7 +309,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 
 	char name[MAX_VERTEX_NAME_SIZE];
 
-	char file[MAX_FILE_NAME_SIZE+20];
+	char file[MAX_FILE_NAME_SIZE+50];
 	sprintf(file, "%s_latex", filePathName);
 	FILE* flatex = fopen(file, "w+");
 	fprintf(flatex, "<!-- latex\n");
@@ -408,9 +408,9 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 				stat->nbActor++;
 			}
 
-			if(stat->actors[k]->getFunction_index() == 3){
-				stat->latencies[t.end/PERIOD] = t.end%PERIOD + PERIOD;
-			}
+//			if(stat->actors[k]->getFunction_index() == 3){
+//				stat->latencies[t.end/PERIOD] = t.end%PERIOD + PERIOD;
+//			}
 			break;
 		case Broadcast:
 			stat->broadcastTime += execTime;
@@ -423,6 +423,9 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 			break;
 		case RoundBuffer:
 			stat->roundBufferTime += execTime;
+			break;
+		case Init:
+		case End:
 			break;
 		}
 
@@ -455,7 +458,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 	}
 
 	// Writing execution data for each slave.
-	for(UINT32 slave=1; slave<arch->getNbActiveSlaves(); slave++){
+	for(int slave=1; slave<arch->getNbActiveSlaves(); slave++){
 		SendInfoData::send(slave);
 
 		UINT32 msgType = platform_QPopUINT32(slave, platformCtrlQ);
@@ -487,11 +490,11 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 					stat->nbActor++;
 				}
 
-				if(stat->actors[k]->getFunction_index() == 3){
+//				if(stat->actors[k]->getFunction_index() == 3){
 //					printf("latency %d %d %d\n", endTime/PERIOD, endTime, endTime%PERIOD + PERIOD);
-					stat->latencies[endTime/PERIOD] = endTime%PERIOD + PERIOD;
+//					stat->latencies[endTime/PERIOD] = endTime%PERIOD + PERIOD;
 //					stat->latencies[nbIter++] = endTime - nbIter*PERIOD;
-				}
+//				}
 				break;
 			case Broadcast:
 				stat->broadcastTime += endTime - startTime;
@@ -504,6 +507,9 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 				break;
 			case RoundBuffer:
 				stat->roundBufferTime += endTime - startTime;
+				break;
+			case Init:
+			case End:
 				break;
 			}
 

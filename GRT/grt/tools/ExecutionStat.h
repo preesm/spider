@@ -43,9 +43,9 @@
 #define MAX_STATS_VERTICES 100
 
 typedef struct{
-	int globalEndTime;
-	int schedulingTime;
-	int graphTransfoTime;
+	UINT32 globalEndTime;
+	UINT32 schedulingTime;
+	UINT32 graphTransfoTime;
 
 	UINT32 actorTimes[MAX_STATS_VERTICES];
 	UINT32 actorIterations[MAX_STATS_VERTICES];

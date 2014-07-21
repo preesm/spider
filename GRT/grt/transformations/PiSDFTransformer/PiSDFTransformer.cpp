@@ -548,7 +548,9 @@ static int removeRB(SRDAGGraph* topDag){
 	SetIterator<SRDAGVertexRB,MAX_SRDAG_VERTICES> rbIter = topDag->getRBIterator();
 	SRDAGVertexRB *rb;
 	while((rb = rbIter.next()) != NULL){
-		if(rb->getInputEdge(0)->getTokenRate()
+		if(rb->getNbInputEdge() == 1
+				&& rb->getNbOutputEdge() == 1
+				&& rb->getInputEdge(0)->getTokenRate()
 				== rb->getOutputEdge(0)->getTokenRate()){
 			SRDAGVertexAbstract *sink = rb->getOutputEdge(0)->getSink();
 			int sinkPortIx = rb->getOutputEdge(0)->getSinkPortIx();
@@ -740,86 +742,86 @@ static int reduceImplImpl(SRDAGGraph* topDag){
 // 	}
 // 	return 0;
 // }
-// 
-// static int removeRBExp(SRDAGGraph* topDag){
-// 	for(int i=0; i<topDag->getNbVertices(); i++){
-// 		SRDAGVertex* rb = topDag->getVertex(i);
-// 		if(rb->getType() == RoundBuffer && rb->getState() != SrVxStDeleted){
-// 			SRDAGVertex* explode = rb->getOutputEdge(0)->getSink();
-// 			if(explode->getType() == Explode && rb->getState() != SrVxStDeleted){
-// 				UINT32 rbCons = rb->getInputEdge(0)->getTokenRate();
-// 				BOOL ok = TRUE;
-// 
-// 				// Check prod/cons
-// 				for(int j=0; j<explode->getNbOutputEdge(); j++){
-// 					ok &= explode->getOutputEdge(j)->getTokenRate() == rbCons;
-// 				}
-// 
-// 				if(ok){
-// 					rb->removeOutputEdgeIx(0);
-// 
-// 					SRDAGVertex* broadcast = rb;
-// 					broadcast->setType(Broadcast);
-// 					broadcast->setFunctIx(BROADCAST_FUNCT_IX);
-// 
-// 					int nbExplodeEdge = explode->getNbOutputEdge();
-// 
-// 					for(int j=0; j<nbExplodeEdge; j++){
-// 						SRDAGEdge* edge = explode->getOutputEdge(j);
-// 
-// 						explode->removeOutputEdgeIx(j);
-// 						edge->setSource(broadcast);
-// 						broadcast->setOutputEdge(edge,j);
-// 					}
-// 
-// 					topDag->removeVx(explode);
-// 					return 1;
-// 				}
-// 			}
-// 		}
-// 	}
-// 	return 0;
-// }
-// 
-// static int removeBr(SRDAGGraph* topDag){
-// 	for(UINT32 i=0; i<topDag->getNbVertices(); i++){
-// 		SRDAGVertex* br = topDag->getVertex(i);
-// 		if(br->getType() == Broadcast && br->getState() != SrVxStDeleted){
-// 			for(UINT32 j=0; j<br->getNbOutputEdge(); j++){
-// 				if(br->getOutputEdge(j)->getSink()->getType() == End){
-// 					UINT32 nbOutput = br->getNbOutputEdge();
-// 
-// 					topDag->removeVx(br->getOutputEdge(j)->getSink());
-// 					br->removeOutputEdgeIx(j);
-// 					for(UINT32 k=j+1; k<nbOutput; k++){
-// 						br->setOutputEdge(br->getOutputEdge(k), k-1);
-// 						br->removeOutputEdgeIx(k);
-// 					}
-// 
-// 				}
-// 			}
-// 			if(br->getNbOutputEdge() == 1){
-// 				SRDAGEdge* edge = br->getInputEdge(0);
-// 				SRDAGVertex* nextVertex = br->getOutputEdge(0)->getSink();
-// 				UINT32 edgeIx = nextVertex->getInputEdgeId(br->getOutputEdge(0));
-// 
-// 				br->removeInputEdgeIx(0);
-// 				nextVertex->removeInputEdgeIx(edgeIx);
-// 
-// 				edge->setSink(nextVertex);
-// 				nextVertex->setInputEdge(edge, edgeIx);
-// 
-// 				topDag->removeVx(br);
-// 			}
-// 
-// 			if(br->getNbOutputEdge() == 0){
-// 				br->setType(End);
-// 				br->setFunctIx(END_FUNCT_IX);
-// 			}
-// 		}
-// 	}
-// 	return 0;
-// }
+
+static int removeRBExp(SRDAGGraph* topDag){
+	SetIterator<SRDAGVertexRB,MAX_SRDAG_VERTICES> rbIter = topDag->getRBIterator();
+	SRDAGVertexRB *rb;
+	while((rb = rbIter.next()) != NULL){
+		if(rb->getNbInputEdge() == 1 && rb->getNbOutputEdge() == 1){
+			SRDAGVertexAbstract* explode = rb->getOutputEdge(0)->getSink();
+			if(explode->getType() == Explode){
+				int rbCons = rb->getInputEdge(0)->getTokenRate();
+				bool ok = true;
+
+				// Check prod/cons
+				for(int j=0; j<explode->getNbOutputEdge(); j++){
+					ok &= explode->getOutputEdge(j)->getTokenRate() == rbCons;
+				}
+
+				if(ok){
+					SRDAGVertexBroadcast* br = topDag->createVertexBr(NULL, 0, 0, NULL);
+					rb->getInputEdge(0)->connectSink(br, 0);
+
+					int nbExplodeEdge = explode->getNbOutputEdge();
+					for(int j=0; j<nbExplodeEdge; j++){
+						SRDAGEdge* edge = explode->getOutputEdge(j);
+						edge->connectSource(br, j);
+					}
+
+					topDag->removeEdge(rb->getOutputEdge(0));
+					topDag->removeVertex(rb);
+					topDag->removeVertex(explode);
+					return 1;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+ static int removeBr(SRDAGGraph* topDag){
+	int result = 0;
+	SRDAGVertexBroadcast* br;
+	SetIterator<SRDAGVertexBroadcast,MAX_SRDAG_VERTICES> brIter = topDag->getBrIterator();
+	while((br = brIter.next()) != NULL){
+		for(int j=0; j<br->getNbOutputEdge(); j++){
+			SRDAGVertexInitEnd* endVertex = (SRDAGVertexInitEnd*)(br->getOutputEdge(j)->getSink());
+			if(endVertex->getType() == End){
+				int nbOutput = br->getNbOutputEdge();
+
+				topDag->removeEdge(br->getOutputEdge(j));
+				topDag->removeVertex(endVertex);
+
+				for(int k=j+1; k<nbOutput; k++){
+					br->getOutputEdge(k)->connectSource(br, k-1);
+				}
+
+				result=1;
+			}
+		}
+
+		if(br->getNbOutputEdge() == 1){
+			SRDAGEdge* inEdge = br->getInputEdge(0);
+			SRDAGVertexAbstract* nextVertex = br->getOutputEdge(0)->getSink();
+			int edgeIx = br->getOutputEdge(0)->getSinkPortIx();
+
+			topDag->removeEdge(br->getOutputEdge(0));
+			inEdge->connectSink(nextVertex, edgeIx);
+			topDag->removeVertex(br);
+
+			return 1;
+		}else if(br->getNbOutputEdge() == 0){
+			SRDAGVertexInitEnd* end = topDag->createVertexEn(NULL, 0, 0);
+			br->getInputEdge(0)->connectSink(end, 0);
+			topDag->removeVertex(br);
+			return 1;
+		}
+
+		if(result)
+			return 1;
+ 	}
+ 	return result;
+ }
 
  static int removeImpRB(SRDAGGraph* topDag){
 	SetIterator<SRDAGVertexXplode,MAX_SRDAG_VERTICES> implIter = topDag->getImplodeIterator();
@@ -1063,6 +1065,20 @@ static int reduceImplImpl(SRDAGGraph* topDag){
 // 	return 0;
 // }
 
+static void optims(SRDAGGraph* topDag){
+	topDag->updateState();
+	bool changed;
+	do{
+		changed = false;
+		changed |= removeRB(topDag);
+//		changed |= removeImpExp(topDag);
+		changed |= reduceImplImpl(topDag);
+		changed |= removeImpRB(topDag);
+		changed |= removeRBExp(topDag);
+		changed |= removeBr(topDag);
+	}while(changed);
+}
+
 void PiSDFTransformer::multiStepScheduling(
 							Architecture* arch,
 							PiSDFGraph* pisdf,
@@ -1149,6 +1165,8 @@ void PiSDFTransformer::multiStepScheduling(
 
 		Launcher::endGraphTime();
 
+		optims(topDag);
+
 		/* Schedule */
 		listScheduler->schedule(topDag, schedule, arch);
 
@@ -1231,14 +1249,7 @@ void PiSDFTransformer::multiStepScheduling(
 	DotWriter::write(topDag, file, 1, 1);
 #endif
 
-	topDag->print("before.gv", true, true);
-	while(removeRB(topDag));
-//	while(removeImpExp(topDag));
-	while(reduceImplImpl(topDag));
-	while(removeImpRB(topDag));
-//	while(removeRBExp(topDag));
-//	while(removeBr(topDag));
-	topDag->print("after.gv", true, true);
+	optims(topDag);
 
 #if PRINT_GRAPH
 	// Printing the topDag

@@ -260,7 +260,7 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 	schedList.reset();
 
 	SRDAGVertexAbstract* vertex;
-	vertexSetIterator iterV = dag->getVertexIterator();
+	SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> iterV = dag->getVertexIterator();
 	while((vertex = iterV.next()) != NULL){
 		if(vertex->getState() == SRDAG_Executable){
 			schedList.add(vertex);

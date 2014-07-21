@@ -57,10 +57,18 @@
 #define OS_MAX_TASKS_TIME 500
 
 // Single Rate DAG
-#define MAX_SRDAG_VERTICES 		475	//512
-#define MAX_SRDAG_EDGES 		680	//512
+#define EDGE_POOL_SIZE			900
+#define NORMAL_POOL_SIZE		300
+#define BROADCAST_POOL_SIZE		150
+#define CONFIG_POOL_SIZE		20
+#define INITEND_POOL_SIZE		150
+#define RB_POOL_SIZE			60
+#define XPLODE_POOL_SIZE		60
+
+#define MAX_SRDAG_VERTICES 		800	//512
+#define MAX_SRDAG_EDGES 		900	//512
 #define MAX_SRDAG_IO_EDGES		12
-#define MAX_SRDAG_XPLODE_EDGES	12
+#define MAX_SRDAG_XPLODE_EDGES	20
 #define MAX_SRDAG_INPUT_EDGES 	12	//64
 #define MAX_SRDAG_OUTPUT_EDGES 	12	//100
 #define MAX_VERTEX_REPETITION 	100	//100 // The maximum number of repetitions for one vertex

@@ -58,34 +58,26 @@
 #include "SRDAGVertexRB.h"
 #include "SRDAGVertexXplode.h"
 
-typedef Pool<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> vertexPool;
-typedef Set<SRDAGVertexAbstract, MAX_SRDAG_VERTICES> vertexSet;
-typedef SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> vertexSetIterator;
-
-typedef Pool<SRDAGEdge,MAX_SRDAG_EDGES> edgePool;
-typedef Set<SRDAGEdge, MAX_SRDAG_EDGES> edgeSet;
-typedef SetIterator<SRDAGEdge,MAX_SRDAG_EDGES> edgeSetIterator;
-
 /**
  * A SRDAG graph. It contains SRDAG vertices and edges. It has a bigger table for vertices and edges than DAG.
  * Each edge production and consumption must be equal. There is no repetition vector for the vertices.
  */
 class SRDAGGraph{
 	private :
-		Pool<SRDAGVertexNormal,MAX_SRDAG_VERTICES> 		vertexNoPool;
-		Pool<SRDAGVertexBroadcast,MAX_SRDAG_VERTICES> 	vertexBrPool;
-		Pool<SRDAGVertexConfig,MAX_SRDAG_VERTICES> 		vertexCfPool;
-		Pool<SRDAGVertexInitEnd,MAX_SRDAG_VERTICES> 	vertexIEPool;
-		Pool<SRDAGVertexRB,MAX_SRDAG_VERTICES> 			vertexRBPool;
-		Pool<SRDAGVertexXplode,MAX_SRDAG_VERTICES> 		vertexXpPool;
+		Pool<SRDAGVertexNormal,NORMAL_POOL_SIZE> 		vertexNoPool;
+		Pool<SRDAGVertexBroadcast,BROADCAST_POOL_SIZE> 	vertexBrPool;
+		Pool<SRDAGVertexConfig,CONFIG_POOL_SIZE> 		vertexCfPool;
+		Pool<SRDAGVertexInitEnd,INITEND_POOL_SIZE> 		vertexIEPool;
+		Pool<SRDAGVertexRB,RB_POOL_SIZE> 				vertexRBPool;
+		Pool<SRDAGVertexXplode,XPLODE_POOL_SIZE> 		vertexXpPool;
 
-		edgePool	ePool;
+		Pool<SRDAGEdge,EDGE_POOL_SIZE> 					ePool;
 
 		Set<SRDAGVertexAbstract, MAX_SRDAG_VERTICES> 	vertices;
-		Set<SRDAGVertexXplode, MAX_SRDAG_VERTICES> 		implodes;
-		Set<SRDAGVertexRB, MAX_SRDAG_VERTICES> 			rbs;
-		Set<SRDAGVertexBroadcast, MAX_SRDAG_VERTICES>	brs;
-		edgeSet		edges;
+		Set<SRDAGVertexXplode, XPLODE_POOL_SIZE> 		implodes;
+		Set<SRDAGVertexRB, RB_POOL_SIZE> 				rbs;
+		Set<SRDAGVertexBroadcast, BROADCAST_POOL_SIZE>	brs;
+		Set<SRDAGEdge, EDGE_POOL_SIZE>					edges;
 
 	public : 
 		SRDAGGraph();
@@ -111,17 +103,17 @@ class SRDAGGraph{
 
 		SRDAGVertexAbstract* getNextHierVertex();
 
-		vertexSetIterator 	getVertexIterator();
-		edgeSetIterator 	getEdgeIterator();
+		SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES>	getVertexIterator();
+		SetIterator<SRDAGEdge, EDGE_POOL_SIZE> 				getEdgeIterator();
 
-		SetIterator<SRDAGVertexXplode,MAX_SRDAG_VERTICES> getImplodeIterator();
-		SetIterator<SRDAGVertexRB,MAX_SRDAG_VERTICES> getRBIterator();
-		SetIterator<SRDAGVertexBroadcast,MAX_SRDAG_VERTICES> getBrIterator();
+		SetIterator<SRDAGVertexXplode,XPLODE_POOL_SIZE> 	getImplodeIterator();
+		SetIterator<SRDAGVertexRB,RB_POOL_SIZE> 			getRBIterator();
+		SetIterator<SRDAGVertexBroadcast,BROADCAST_POOL_SIZE> getBrIterator();
 
 		int getVerticesFromReference(PiSDFAbstractVertex* ref, int iteration, SRDAGVertexAbstract** output);
 
 		SRDAGVertexAbstract* getVertexFromIx(int ix){
-			vertexSetIterator iter = vertices.getIterator();
+			SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> iter = vertices.getIterator();
 			SRDAGVertexAbstract* vertex;
 			while((vertex = iter.next()) != NULL){
 				if(vertex->getId() == ix)
@@ -231,7 +223,7 @@ SRDAGEdge* SRDAGGraph::createEdge(PiSDFEdge* ref){
 
 inline
 SRDAGVertexAbstract* SRDAGGraph::getNextHierVertex(){
-	vertexSetIterator iter = vertices.getIterator();
+	SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> iter = vertices.getIterator();
 	SRDAGVertexAbstract* vertex;
 	while((vertex = iter.next()) != NULL){
 		if(vertex->isHierarchical() &&
@@ -241,19 +233,19 @@ SRDAGVertexAbstract* SRDAGGraph::getNextHierVertex(){
 	return (SRDAGVertexAbstract*)NULL;
 }
 
-inline vertexSetIterator SRDAGGraph::getVertexIterator(){
+inline SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> SRDAGGraph::getVertexIterator(){
 	return vertices.getIterator();
 }
 
-inline SetIterator<SRDAGVertexXplode,MAX_SRDAG_VERTICES> SRDAGGraph::getImplodeIterator(){
+inline SetIterator<SRDAGVertexXplode,XPLODE_POOL_SIZE> SRDAGGraph::getImplodeIterator(){
 	return implodes.getIterator();
 }
 
-inline SetIterator<SRDAGVertexRB,MAX_SRDAG_VERTICES> SRDAGGraph::getRBIterator(){
+inline SetIterator<SRDAGVertexRB,RB_POOL_SIZE> SRDAGGraph::getRBIterator(){
 	return rbs.getIterator();
 }
 
-inline SetIterator<SRDAGVertexBroadcast,MAX_SRDAG_VERTICES> SRDAGGraph::getBrIterator(){
+inline SetIterator<SRDAGVertexBroadcast,BROADCAST_POOL_SIZE> SRDAGGraph::getBrIterator(){
 	return brs.getIterator();
 }
 
@@ -263,7 +255,7 @@ inline SetIterator<SRDAGVertexBroadcast,MAX_SRDAG_VERTICES> SRDAGGraph::getBrIte
  @param index: index of the edge in the edge list
  @return edge
 */
-inline edgeSetIterator SRDAGGraph::getEdgeIterator(){
+inline SetIterator<SRDAGEdge, EDGE_POOL_SIZE>  SRDAGGraph::getEdgeIterator(){
 	return edges.getIterator();
 }
 
@@ -288,7 +280,7 @@ inline edgeSetIterator SRDAGGraph::getEdgeIterator(){
 
 inline int SRDAGGraph::getVerticesFromReference(PiSDFAbstractVertex* ref, int iteration, SRDAGVertexAbstract** output){
 	int size = 0;
-	vertexSetIterator iter = vertices.getIterator();
+	SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> iter = vertices.getIterator();
 	SRDAGVertexAbstract* vertex;
 	while((vertex = iter.next()) != NULL){
 		if(vertex->getIterationIndex() == iteration
@@ -309,7 +301,7 @@ inline int SRDAGGraph::getNbEdges(){
 }
 
 inline void SRDAGGraph::updateExecuted(){
-	vertexSetIterator iter = vertices.getIterator();
+	SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> iter = vertices.getIterator();
 	SRDAGVertexAbstract* vertex;
 	while((vertex = iter.next()) != NULL){
 		if(vertex->getState() == SRDAG_Executable)
@@ -319,7 +311,7 @@ inline void SRDAGGraph::updateExecuted(){
 
 inline void SRDAGGraph::updateState(){
 	// Updating all input, round-buffer and hierarchical vxs.
-	vertexSetIterator iter = this->getVertexIterator();
+	SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> iter = this->getVertexIterator();
 	SRDAGVertexAbstract *vertex;
 	while((vertex = iter.next()) != NULL){
 		vertex->updateState();

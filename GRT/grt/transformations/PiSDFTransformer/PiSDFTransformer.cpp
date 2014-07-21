@@ -543,7 +543,7 @@ static UINT32 getValue(PiSDFParameter *param, SRDAGGraph* topDag, PiSDFAbstractV
 }
 
 static int removeRB(SRDAGGraph* topDag){
-	SetIterator<SRDAGVertexRB,MAX_SRDAG_VERTICES> rbIter = topDag->getRBIterator();
+	SetIterator<SRDAGVertexRB,RB_POOL_SIZE> rbIter = topDag->getRBIterator();
 	SRDAGVertexRB *rb;
 	while((rb = rbIter.next()) != NULL){
 		if(rb->getNbInputEdge() == 1
@@ -564,7 +564,7 @@ static int removeRB(SRDAGGraph* topDag){
 }
 
 static int reduceImplImpl(SRDAGGraph* topDag){
-	SetIterator<SRDAGVertexXplode,MAX_SRDAG_VERTICES> implIter = topDag->getImplodeIterator();
+	SetIterator<SRDAGVertexXplode,XPLODE_POOL_SIZE> implIter = topDag->getImplodeIterator();
 	SRDAGVertexXplode *implode0;
 	while((implode0 = implIter.next()) != NULL){
 		for(int j=0; j<implode0->getNbOutputEdge(); j++){
@@ -742,7 +742,7 @@ static int reduceImplImpl(SRDAGGraph* topDag){
 // }
 
 static int removeRBExp(SRDAGGraph* topDag){
-	SetIterator<SRDAGVertexRB,MAX_SRDAG_VERTICES> rbIter = topDag->getRBIterator();
+	SetIterator<SRDAGVertexRB,RB_POOL_SIZE> rbIter = topDag->getRBIterator();
 	SRDAGVertexRB *rb;
 	while((rb = rbIter.next()) != NULL){
 		if(rb->getNbInputEdge() == 1 && rb->getNbOutputEdge() == 1){
@@ -780,7 +780,7 @@ static int removeRBExp(SRDAGGraph* topDag){
  static int removeBr(SRDAGGraph* topDag){
 	int result = 0;
 	SRDAGVertexBroadcast* br;
-	SetIterator<SRDAGVertexBroadcast,MAX_SRDAG_VERTICES> brIter = topDag->getBrIterator();
+	SetIterator<SRDAGVertexBroadcast,BROADCAST_POOL_SIZE> brIter = topDag->getBrIterator();
 	while((br = brIter.next()) != NULL){
 		for(int j=0; j<br->getNbOutputEdge(); j++){
 			SRDAGVertexInitEnd* endVertex = (SRDAGVertexInitEnd*)(br->getOutputEdge(j)->getSink());
@@ -822,7 +822,7 @@ static int removeRBExp(SRDAGGraph* topDag){
  }
 
  static int removeImpRB(SRDAGGraph* topDag){
-	SetIterator<SRDAGVertexXplode,MAX_SRDAG_VERTICES> implIter = topDag->getImplodeIterator();
+	SetIterator<SRDAGVertexXplode,XPLODE_POOL_SIZE> implIter = topDag->getImplodeIterator();
 	SRDAGVertexXplode *implode;
 	while((implode = implIter.next()) != NULL){
 		SRDAGVertexAbstract* rb = implode->getOutputEdge(0)->getSink();

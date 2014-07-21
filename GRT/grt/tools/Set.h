@@ -58,6 +58,7 @@ private:
 
 	/** Number of value in the Set. */
 	int nb;
+	int max;
 
 public:
 	/** Default Constructor. */
@@ -108,11 +109,13 @@ public:
 template <class T, int SIZE>
 inline Set<T,SIZE>::Set(){
 	nb = 0;
+	max = 0;
 }
 
 /** Default Destructor. */
 template <class T, int SIZE>
 inline Set<T,SIZE>::~Set(){
+	printf("[%s]: Max alloc %d elemts\n", name, max);
 }
 
 /** Reset Set. */
@@ -165,6 +168,7 @@ inline void Set<T,SIZE>::add(T* e){
 	if(nb<SIZE){
 		array[nb]=e;
 		nb++;
+		if(nb>max)max = nb;
 	}else{
 		exitWithCode(2001, name);
 	}

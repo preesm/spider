@@ -47,9 +47,12 @@ private:
 
 	/** Array of values. */
 	T array[SIZE];
+	bool valid[SIZE];
 
 	/** Number of value in the Pool. */
 	int nb;
+	int curWrIx;
+	int max;
 
 public:
 	/** Default Constructor. */
@@ -96,18 +99,24 @@ public:
 template <class T, int SIZE>
 inline Pool<T,SIZE>::Pool(){
 	nb = 0;
+	max = 0;
+	curWrIx = 0;
+	memset(valid, false, SIZE*sizeof(bool));
 }
 
 /** Default Destructor. */
 template <class T, int SIZE>
 inline Pool<T,SIZE>::~Pool(){
-	printf("[%s]: alloc %d elemts\n", name, nb);
+	printf("[%s]: alloc %d elemts\n", name, max);
 }
 
 /** Reset Pool. */
 template <class T, int SIZE>
 inline void Pool<T,SIZE>::reset(){
 	nb = 0;
+	max = 0;
+	curWrIx = 0;
+	memset(valid, false, SIZE*sizeof(bool));
 }
 
 /**
@@ -145,10 +154,17 @@ inline int Pool<T,SIZE>::getNb(){
  */
 template <class T, int SIZE>
 inline T* Pool<T,SIZE>::alloc(){
-	// TODO: Reuse of deleted element
 	if(nb<SIZE){
+		while(1){
+			if(!valid[curWrIx]){
+				break;
+			}
+			curWrIx = (curWrIx+1)%SIZE;
+		}
 		nb++;
-		return &(array[nb-1]);
+		if(nb>max) max = nb;
+		valid[curWrIx] = true;
+		return &(array[curWrIx]);
 	}else{
 		exitWithCode(2001, name);
 		return (T*)0;
@@ -161,9 +177,9 @@ inline T* Pool<T,SIZE>::alloc(){
  */
 template <class T, int SIZE>
 inline void Pool<T,SIZE>::free(T* e){
-	// TODO: Reuse of deleted element
-//	int ix = (e-array)/sizeof(T);
-//	array[ix] = array[--nb];
+	int ix = ((long long)e-(long long)(&array[0]))/sizeof(T);
+	valid[ix] = false;
+	nb--;
 }
 
 #endif /* POOL_H_ */

@@ -99,6 +99,7 @@ void SRDAGGraph::removeEdge(SRDAGEdge* edge){
 	if(edge->getSource())
 		edge->disconnectSource();
 	edges.remove(edge);
+	ePool.free(edge);
 }
 
 void SRDAGGraph::removeVertex(SRDAGVertexAbstract *vertex){
@@ -109,23 +110,31 @@ void SRDAGGraph::removeVertex(SRDAGVertexAbstract *vertex){
 	vertices.remove(vertex);
 	switch(vertex->getType()){
 	case Normal:
+		vertexNoPool.free((SRDAGVertexNormal*)vertex);
 		break;
 	case ConfigureActor:
+		vertexCfPool.free((SRDAGVertexConfig*)vertex);
 		break;
 	case Explode:
+		vertexXpPool.free((SRDAGVertexXplode*)vertex);
 		break;
 	case Implode:
 		implodes.remove((SRDAGVertexXplode*)vertex);
+		vertexXpPool.free((SRDAGVertexXplode*)vertex);
 		break;
 	case RoundBuffer:
 		rbs.remove((SRDAGVertexRB*)vertex);
+		vertexRBPool.free((SRDAGVertexRB*)vertex);
 		break;
 	case Broadcast:
 		brs.remove((SRDAGVertexBroadcast*)vertex);
+		vertexBrPool.free((SRDAGVertexBroadcast*)vertex);
 		break;
 	case Init:
+		vertexIEPool.free((SRDAGVertexInitEnd*)vertex);
 		break;
 	case End:
+		vertexIEPool.free((SRDAGVertexInitEnd*)vertex);
 		break;
 	}
 //	vertexNoPool.free(vertex);

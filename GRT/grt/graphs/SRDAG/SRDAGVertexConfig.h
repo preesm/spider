@@ -52,8 +52,6 @@ class SRDAGGraph;
 class SRDAGVertexConfig : public SRDAGVertexAbstract{
 
 private :
-	PiSDFConfigVertex* Reference;
-
 	IndexedArray<SRDAGEdge*, MAX_SRDAG_IO_EDGES> outputEdges;
 	IndexedArray<SRDAGEdge*, MAX_SRDAG_IO_EDGES> inputEdges;
 
@@ -84,7 +82,6 @@ public :
 	SRDAGEdge* getInputEdge(int id);
 	SRDAGEdge* getOutputEdge(int id);
 
-	PiSDFConfigVertex* getReference() const;
 	int getParamNb() const;
 	int getParamValue(int paramIndex);
 	UINT32 getExecTime(int slaveType) const;
@@ -125,11 +122,8 @@ inline void SRDAGVertexConfig::disconnectInputEdge(int ix)
 inline void SRDAGVertexConfig::disconnectOutputEdge(int ix)
 	{outputEdges.resetValue(ix);}
 
-inline PiSDFConfigVertex* SRDAGVertexConfig::getReference() const
-	{return Reference;}
-
 inline int SRDAGVertexConfig::getParamNb() const
-	{return Reference->getNbParameters();}
+	{return reference->getNbParameters();}
 
 inline int SRDAGVertexConfig::getParamValue(int paramIndex)
 	{return paramValues[paramIndex];}
@@ -147,20 +141,20 @@ inline void SRDAGVertexConfig::setRelatedParamValue(int paramIndex, int value)
 	{relatedParamValues[paramIndex] = value;}
 
 inline int SRDAGVertexConfig::getFctIx() const
-	{return Reference->getFunction_index();}
+	{return reference->getFunction_index();}
 
 inline BOOL SRDAGVertexConfig::isHierarchical() const{
-	return Reference
-				&& Reference->getType() == normal_vertex
-				&& ((PiSDFVertex*)Reference)->hasSubGraph()
+	return reference
+				&& reference->getType() == normal_vertex
+				&& ((PiSDFVertex*)reference)->hasSubGraph()
 				&& type == Normal;
 }
 
 inline PiSDFGraph* SRDAGVertexConfig::getHierarchy() const
-	{return ((PiSDFVertex*)Reference)->getSubGraph();}
+	{return ((PiSDFVertex*)reference)->getSubGraph();}
 
 inline void SRDAGVertexConfig::getName(char* name, UINT32 sizeMax){
-	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%d",Reference->getName(),itrIx, refIx);
+	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%d",reference->getName(),itrIx, refIx);
 	if(len > MAX_VERTEX_NAME_SIZE)
 		exitWithCode(1075);
 }

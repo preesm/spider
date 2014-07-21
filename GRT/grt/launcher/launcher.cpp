@@ -389,42 +389,20 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		t = Monitor_get(i);
 		UINT32 execTime = t.end - t.start;
 		SRDAGVertexAbstract* vertex = dag->getVertexFromIx(t.vertexID);
-		SRDAGVertexConfig* cfVertex;
-		SRDAGVertexNormal* noVertex;
 
-		UINT32 k;
+		int k;
 		switch(vertex->getType()){
 		case Normal:
-			noVertex = (SRDAGVertexNormal*) vertex;
-			for(k=0; k<stat->nbActor; k++){
-				if(stat->actors[k] == noVertex->getReference()){
-					stat->actorTimes[k] += execTime;
-					stat->actorIterations[k]++;
-					break;
-				}
-			}
-			if(k == stat->nbActor){
-				stat->actors[stat->nbActor] = noVertex->getReference();
-				stat->actorTimes[stat->nbActor] = execTime;
-				stat->actorIterations[k] = 1;
-				stat->nbActor++;
-			}
-
-			if(stat->actors[k]->getFunction_index() == 3){
-				stat->latencies[t.end/PERIOD] = t.end%PERIOD + PERIOD;
-			}
-			break;
 		case ConfigureActor:
-			cfVertex = (SRDAGVertexConfig*) vertex;
 			for(k=0; k<stat->nbActor; k++){
-				if(stat->actors[k] == cfVertex->getReference()){
+				if(stat->actors[k] == vertex->getReference()){
 					stat->actorTimes[k] += execTime;
 					stat->actorIterations[k]++;
 					break;
 				}
 			}
 			if(k == stat->nbActor){
-				stat->actors[stat->nbActor] = cfVertex->getReference();
+				stat->actors[stat->nbActor] = vertex->getReference();
 				stat->actorTimes[stat->nbActor] = execTime;
 				stat->actorIterations[k] = 1;
 				stat->nbActor++;
@@ -491,43 +469,19 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 			UINT32 startTime = platform_QPopUINT32(slave, platformCtrlQ);
 			UINT32 endTime = platform_QPopUINT32(slave, platformCtrlQ);
 
-			SRDAGVertexConfig* cfVertex;
-			SRDAGVertexNormal* noVertex;
-			UINT32 k;
+			int k;
 			switch(vertex->getType()){
 			case Normal:
-				noVertex = (SRDAGVertexNormal*) vertex;
-				for(k=0; k<stat->nbActor; k++){
-					if(stat->actors[k] == noVertex->getReference()){
-						stat->actorTimes[k] += endTime - startTime;
-						stat->actorIterations[k]++;
-						break;
-					}
-				}
-				if(k == stat->nbActor){
-					stat->actors[stat->nbActor] = noVertex->getReference();
-					stat->actorTimes[stat->nbActor] = endTime - startTime;
-					stat->actorIterations[k] = 1;
-					stat->nbActor++;
-				}
-
-				if(stat->actors[k]->getFunction_index() == 3){
-//					printf("latency %d %d %d\n", endTime/PERIOD, endTime, endTime%PERIOD + PERIOD);
-					stat->latencies[endTime/PERIOD] = endTime%PERIOD + PERIOD;
-//					stat->latencies[nbIter++] = endTime - nbIter*PERIOD;
-				}
-				break;
 			case ConfigureActor:
-				cfVertex = (SRDAGVertexConfig*) vertex;
 				for(k=0; k<stat->nbActor; k++){
-					if(stat->actors[k] == cfVertex->getReference()){
+					if(stat->actors[k] == vertex->getReference()){
 						stat->actorTimes[k] += endTime - startTime;
 						stat->actorIterations[k]++;
 						break;
 					}
 				}
 				if(k == stat->nbActor){
-					stat->actors[stat->nbActor] = cfVertex->getReference();
+					stat->actors[stat->nbActor] = vertex->getReference();
 					stat->actorTimes[stat->nbActor] = endTime - startTime;
 					stat->actorIterations[k] = 1;
 					stat->nbActor++;

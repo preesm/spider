@@ -51,8 +51,6 @@ class SRDAGGraph;
 class SRDAGVertexRB : public SRDAGVertexAbstract{
 
 private :
-	PiSDFAbstractVertex* Reference;
-
 	IndexedArray<SRDAGEdge*, 1> inputEdges;
 	IndexedArray<SRDAGEdge*, 1> outputEdges;
 
@@ -76,8 +74,6 @@ public :
 	int getNbOutputEdge() const;
 	SRDAGEdge* getInputEdge(int id);
 	SRDAGEdge* getOutputEdge(int id);
-
-	PiSDFAbstractVertex *getReference() const;
 
 	int getParamNb() const;
 	int getParamValue(int paramIndex);
@@ -127,9 +123,6 @@ inline int SRDAGVertexRB::getParamValue(int paramIndex){
 	else
 		return -1;
 }
-
-inline PiSDFAbstractVertex *SRDAGVertexRB::getReference() const
-	{return Reference;}
 
 inline UINT32 SRDAGVertexRB::getExecTime(int slaveType) const
 	{return SYNC_TIME;}

@@ -75,6 +75,7 @@ protected :
 	SRDAGVertexState 	state;
 
 	SRDAGVertexAbstract* parent;
+	PiSDFAbstractVertex* reference;
 
 	int refIx;
 	int itrIx;
@@ -96,6 +97,7 @@ public:
 				SRDAGGraph* 	_graph,
 				SRDAGVertexType _type,
 				SRDAGVertexAbstract* _parent,
+				PiSDFAbstractVertex* _ref,
 				int 			_refIx,
 				int 			_itrIx);
 
@@ -106,6 +108,7 @@ public:
 	SRDAGVertexState getState() const;
 	void setState(SRDAGVertexState st);
 	virtual int getFctIx() const = 0;
+	PiSDFAbstractVertex* getReference() const;
 
 	virtual int getNbInputEdge()  const = 0;
 	virtual int getNbOutputEdge() const = 0;
@@ -188,6 +191,9 @@ inline void SRDAGVertexAbstract::updateState(){
 		}
 	}
 }
+
+inline PiSDFAbstractVertex* SRDAGVertexAbstract::getReference() const
+	{return reference;}
 
 inline int SRDAGVertexAbstract::getSchedLevel() const
 	{return schedLevel;}

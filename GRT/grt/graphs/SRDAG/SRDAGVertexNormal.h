@@ -51,8 +51,6 @@ class SRDAGGraph;
 class SRDAGVertexNormal : public SRDAGVertexAbstract{
 
 private :
-	PiSDFAbstractVertex* Reference;
-
 	IndexedArray<SRDAGEdge*, MAX_SRDAG_IO_EDGES> outputEdges;
 	IndexedArray<SRDAGEdge*, MAX_SRDAG_IO_EDGES> inputEdges;
 
@@ -80,8 +78,6 @@ public :
 	int getNbOutputEdge() const;
 	SRDAGEdge* getInputEdge(int id);
 	SRDAGEdge* getOutputEdge(int id);
-
-	PiSDFAbstractVertex *getReference() const;
 
 	int getParamNb() const;
 	int getParamValue(int paramIndex);
@@ -120,11 +116,8 @@ inline void SRDAGVertexNormal::disconnectInputEdge(int ix)
 inline void SRDAGVertexNormal::disconnectOutputEdge(int ix)
 	{outputEdges.resetValue(ix);}
 
-inline PiSDFAbstractVertex *SRDAGVertexNormal::getReference() const
-	{return Reference;}
-
 inline int SRDAGVertexNormal::getParamNb() const
-	{return Reference->getNbParameters();}
+	{return reference->getNbParameters();}
 
 inline int SRDAGVertexNormal::getParamValue(int paramIndex)
 	{return paramValues[paramIndex];}
@@ -136,21 +129,21 @@ inline bool SRDAGVertexNormal::getConstraint(int slaveType) const
 	{return constraints[slaveType];}
 
 inline int SRDAGVertexNormal::getFctIx() const
-	{return Reference->getFunction_index();}
+	{return reference->getFunction_index();}
 
 inline BOOL SRDAGVertexNormal::isHierarchical() const{
-	return Reference
-				&& Reference->getType() == normal_vertex
-				&& ((PiSDFVertex*)Reference)->hasSubGraph()
+	return reference
+				&& reference->getType() == normal_vertex
+				&& ((PiSDFVertex*)reference)->hasSubGraph()
 				&& type == Normal;
 }
 
 inline PiSDFGraph* SRDAGVertexNormal::getHierarchy() const{
-	return ((PiSDFVertex*)Reference)->getSubGraph();
+	return ((PiSDFVertex*)reference)->getSubGraph();
 }
 
 inline void SRDAGVertexNormal::getName(char* name, UINT32 sizeMax){
-	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%d",Reference->getName(),itrIx, refIx);
+	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%d",reference->getName(),itrIx, refIx);
 	if(len > MAX_VERTEX_NAME_SIZE)
 		exitWithCode(1075);
 }

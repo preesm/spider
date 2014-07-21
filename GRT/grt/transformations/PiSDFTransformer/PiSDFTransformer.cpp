@@ -197,13 +197,9 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 				// TODO check !!!!
 				switch(origin_vertex->getType()){
 				case Normal:
-					sourceVertex = origin_vertex;
-					sourcePortId = ((SRDAGVertexNormal*)origin_vertex)->getReference()->getOutputEdgeId(edge);
-					break;
 				case RoundBuffer:
 					sourceVertex = origin_vertex;
-					sourcePortId = ((SRDAGVertexRB*)origin_vertex)->getReference()->getOutputEdgeId(edge);
-					topDag->print("Bug.gv", true , true);
+					sourcePortId = origin_vertex->getReference()->getOutputEdgeId(edge);
 					break;
 				case ConfigureActor:
 					sourceVertex = origin_vertex->getOutputEdge(edge->getSource()->getOutputEdgeIx(edge))->getSink();
@@ -255,10 +251,8 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 
 				switch(origin_vertex->getType()){
 				case Normal:
-					sinkPortId = ((SRDAGVertexNormal*)origin_vertex)->getReference()->getInputEdgeId(edge);
-					break;
 				case RoundBuffer:
-					sinkPortId = ((SRDAGVertexRB*)origin_vertex)->getReference()->getInputEdgeId(edge);
+					sinkPortId = origin_vertex->getReference()->getInputEdgeId(edge);
 					break;
 				case End:
 					sinkPortId = 0;

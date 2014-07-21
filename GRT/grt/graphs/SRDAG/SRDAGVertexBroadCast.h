@@ -51,8 +51,6 @@ class SRDAGGraph;
 class SRDAGVertexBroadcast : public SRDAGVertexAbstract{
 
 private :
-	PiSDFAbstractVertex* Reference;
-
 	IndexedArray<SRDAGEdge*, 1> inputEdges;
 	IndexedArray<SRDAGEdge*, MAX_SRDAG_XPLODE_EDGES> outputEdges;
 
@@ -76,8 +74,6 @@ public :
 	int getNbOutputEdge() const;
 	SRDAGEdge* getInputEdge(int id);
 	SRDAGEdge* getOutputEdge(int id);
-
-	PiSDFAbstractVertex *getReference() const;
 
 	int getParamNb() const;
 	int getParamValue(int paramIndex);
@@ -115,9 +111,6 @@ inline void SRDAGVertexBroadcast::disconnectInputEdge(int ix)
 
 inline void SRDAGVertexBroadcast::disconnectOutputEdge(int ix)
 	{outputEdges.resetValue(ix);}
-
-inline PiSDFAbstractVertex *SRDAGVertexBroadcast::getReference() const
-	{return Reference;}
 
 inline int SRDAGVertexBroadcast::getParamNb() const
 	{return 0;}

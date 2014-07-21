@@ -52,12 +52,14 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(
 			SRDAGGraph* 	_graph,
 			SRDAGVertexType _type,
 			SRDAGVertexAbstract* 	_parent,
+			PiSDFAbstractVertex* _ref,
 			int 			_refIx,
 			int 			_itrIx){
 	id 				= _id;
 	graph 			= _graph;
 	type 			= _type;
 	state 			= SRDAG_NotExecuted;
+	reference		= _ref;
 	parent 			= _parent;
 	refIx 			= _refIx;
 	itrIx 			= _itrIx;
@@ -74,8 +76,7 @@ SRDAGVertexBroadcast::SRDAGVertexBroadcast(
 		int 			_refIx,
 		int 			_itrIx,
 		PiSDFVertex* ref):
-		SRDAGVertexAbstract(_id, _graph, Broadcast, _parent, _refIx,_itrIx){
-	Reference = ref;
+		SRDAGVertexAbstract(_id, _graph, Broadcast, _parent, ref, _refIx,_itrIx){
 	inputEdges.reset();
 	outputEdges.reset();
 }
@@ -87,22 +88,21 @@ SRDAGVertexConfig::SRDAGVertexConfig(
 		int 			_refIx,
 		int 			_itrIx,
 		PiSDFConfigVertex* ref):
-		SRDAGVertexAbstract(_id, _graph, ConfigureActor, _parent, _refIx,_itrIx){
-	Reference = ref;
+		SRDAGVertexAbstract(_id, _graph, ConfigureActor, _parent, ref, _refIx,_itrIx){
 	inputEdges.reset();
 	outputEdges.reset();
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
-		if(Reference->getConstraints(i)){
+		if(reference->getConstraints(i)){
 			constraints[i] = true;
-			execTime[i] =  Reference->getResolvedTiming(i);
+			execTime[i] =  reference->getResolvedTiming(i);
 		}else{
 			constraints[i] = false;
 		}
 	}
 
 	for(int i=0; i<ref->getNbParameters(); i++)
-		paramValues[i] = Reference->getParameter(i)->getValue();
+		paramValues[i] = reference->getParameter(i)->getValue();
 }
 
 SRDAGVertexNormal::SRDAGVertexNormal(
@@ -112,22 +112,21 @@ SRDAGVertexNormal::SRDAGVertexNormal(
 		int 			_refIx,
 		int 			_itrIx,
 		PiSDFVertex* ref):
-		SRDAGVertexAbstract(_id, _graph, Normal, _parent, _refIx,_itrIx){
-	Reference = ref;
+		SRDAGVertexAbstract(_id, _graph, Normal, _parent, ref, _refIx,_itrIx){
 	inputEdges.reset();
 	outputEdges.reset();
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
-		if(ref->getConstraints(i)){
+		if(reference->getConstraints(i)){
 			constraints[i] = true;
-			execTime[i] =  ref->getResolvedTiming(i);
+			execTime[i] =  reference->getResolvedTiming(i);
 		}else{
 			constraints[i] = false;
 		}
 	}
 
-	for(int i=0; i<ref->getNbParameters(); i++)
-		paramValues[i] = ref->getParameter(i)->getValue();
+	for(int i=0; i<reference->getNbParameters(); i++)
+		paramValues[i] = reference->getParameter(i)->getValue();
 }
 
 SRDAGVertexInitEnd::SRDAGVertexInitEnd(
@@ -137,7 +136,7 @@ SRDAGVertexInitEnd::SRDAGVertexInitEnd(
 		SRDAGVertexAbstract* 	_parent,
 		int 			_refIx,
 		int 			_itrIx):
-		SRDAGVertexAbstract(_id, _graph, _type, _parent, _refIx,_itrIx){
+		SRDAGVertexAbstract(_id, _graph, _type, _parent, NULL, _refIx,_itrIx){
 	edges.reset();
 }
 
@@ -148,8 +147,7 @@ SRDAGVertexRB::SRDAGVertexRB(
 		int 			_refIx,
 		int 			_itrIx,
 		PiSDFAbstractVertex* ref):
-		SRDAGVertexAbstract(_id, _graph, RoundBuffer, _parent, _refIx,_itrIx){
-	Reference = ref;
+		SRDAGVertexAbstract(_id, _graph, RoundBuffer, _parent, ref, _refIx,_itrIx){
 	outputEdges.reset();
 	inputEdges.reset();
 }
@@ -161,7 +159,7 @@ SRDAGVertexXplode::SRDAGVertexXplode(
 		SRDAGVertexAbstract* 	_parent,
 		int 			_refIx,
 		int 			_itrIx):
-		SRDAGVertexAbstract(_id, _graph, _type, _parent, _refIx,_itrIx){
+		SRDAGVertexAbstract(_id, _graph, _type, _parent, NULL, _refIx,_itrIx){
 	gatherEdges.reset();
 	scatterEdges.reset();
 }

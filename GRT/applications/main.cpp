@@ -164,7 +164,7 @@ int main(int argc, char* argv[]){
 
 
 		// Add topActor to topDag
-		topDag.createVertexNo(NULL, 0, 0, (PiSDFVertex*)topPisdf->getVertex(0));
+		topDag.createVertexNo(0, 0, (PiSDFVertex*)topPisdf->getVertex(0));
 
 		PiSDFTransformer::multiStepScheduling(&arch, topPisdf, &listScheduler, &schedule, &topDag, &execStat);
 

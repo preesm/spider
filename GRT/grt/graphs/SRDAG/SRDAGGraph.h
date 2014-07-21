@@ -92,14 +92,14 @@ class SRDAGGraph{
 		~SRDAGGraph();
 		void reset();
 
-		SRDAGVertexNormal* 		createVertexNo(SRDAGVertexAbstract* parent, int refIx, int itrIx, PiSDFVertex* ref);
-		SRDAGVertexBroadcast* 	createVertexBr(SRDAGVertexAbstract* parent, int refIx, int itrIx, PiSDFVertex* ref);
-		SRDAGVertexConfig* 		createVertexCf(SRDAGVertexAbstract* parent, int refIx, int itrIx, PiSDFConfigVertex* ref);
-		SRDAGVertexInitEnd* 	createVertexIn(SRDAGVertexAbstract* parent, int refIx, int itrIx);
-		SRDAGVertexInitEnd* 	createVertexEn(SRDAGVertexAbstract* parent, int refIx, int itrIx);
-		SRDAGVertexRB* 			createVertexRB(SRDAGVertexAbstract* parent, int refIx, int itrIx, PiSDFAbstractVertex* ref);
-		SRDAGVertexXplode* 		createVertexIm(SRDAGVertexAbstract* parent, int refIx, int itrIx);
-		SRDAGVertexXplode* 		createVertexEx(SRDAGVertexAbstract* parent, int refIx, int itrIx);
+		SRDAGVertexNormal* 		createVertexNo(int refIx, int itrIx, PiSDFVertex* ref);
+		SRDAGVertexBroadcast* 	createVertexBr(int refIx, int itrIx, PiSDFVertex* ref);
+		SRDAGVertexConfig* 		createVertexCf(int refIx, int itrIx, PiSDFConfigVertex* ref);
+		SRDAGVertexInitEnd* 	createVertexIn(int refIx, int itrIx);
+		SRDAGVertexInitEnd* 	createVertexEn(int refIx, int itrIx);
+		SRDAGVertexRB* 			createVertexRB(int refIx, int itrIx, PiSDFAbstractVertex* ref);
+		SRDAGVertexXplode* 		createVertexIm(int refIx, int itrIx);
+		SRDAGVertexXplode* 		createVertexEx(int refIx, int itrIx);
 
 		SRDAGEdge* 				createEdge(PiSDFEdge* ref);
 
@@ -143,88 +143,80 @@ inline void SRDAGGraph::print(const char* name, bool displayNames, bool displayR
 }
 
 inline SRDAGVertexNormal* SRDAGGraph::createVertexNo(
-		SRDAGVertexAbstract* parent,
 		int refIx,
 		int itrIx,
 		PiSDFVertex* ref){
 	SRDAGVertexNormal* vertex = vertexNoPool.alloc();
-	*vertex = SRDAGVertexNormal(this, parent, refIx, itrIx, ref);
+	*vertex = SRDAGVertexNormal(this, refIx, itrIx, ref);
 	vertices.add(vertex);
 	return vertex;
 }
 
 inline SRDAGVertexConfig* SRDAGGraph::createVertexCf(
-		SRDAGVertexAbstract* parent,
 		int refIx,
 		int itrIx,
 		PiSDFConfigVertex* ref){
 	SRDAGVertexConfig* vertex = vertexCfPool.alloc();
-	*vertex = SRDAGVertexConfig(this, parent, refIx, itrIx, ref);
+	*vertex = SRDAGVertexConfig(this, refIx, itrIx, ref);
 	vertices.add(vertex);
 	return vertex;
 }
 
 inline SRDAGVertexBroadcast* SRDAGGraph::createVertexBr(
-		SRDAGVertexAbstract* parent,
 		int refIx,
 		int itrIx,
 		PiSDFVertex* ref){
 	SRDAGVertexBroadcast* vertex = vertexBrPool.alloc();
-	*vertex = SRDAGVertexBroadcast(this, parent, refIx, itrIx, ref);
+	*vertex = SRDAGVertexBroadcast(this, refIx, itrIx, ref);
 	vertices.add(vertex);
 	brs.add(vertex);
 	return vertex;
 }
 
 inline SRDAGVertexInitEnd* SRDAGGraph::createVertexIn(
-		SRDAGVertexAbstract* parent,
 		int refIx,
 		int itrIx){
 	SRDAGVertexInitEnd* vertex = vertexIEPool.alloc();
-	*vertex = SRDAGVertexInitEnd(this, Init, parent, refIx, itrIx);
+	*vertex = SRDAGVertexInitEnd(this, Init, refIx, itrIx);
 	vertices.add(vertex);
 	return vertex;
 }
 
 inline SRDAGVertexInitEnd* SRDAGGraph::createVertexEn(
-		SRDAGVertexAbstract* parent,
 		int refIx,
 		int itrIx){
 	SRDAGVertexInitEnd* vertex = vertexIEPool.alloc();
-	*vertex = SRDAGVertexInitEnd(this, End, parent, refIx, itrIx);
+	*vertex = SRDAGVertexInitEnd(this, End, refIx, itrIx);
 	vertices.add(vertex);
 	return vertex;
 }
 
 inline SRDAGVertexRB* SRDAGGraph::createVertexRB(
-		SRDAGVertexAbstract* parent,
 		int refIx,
 		int itrIx,
 		PiSDFAbstractVertex* ref){
 	SRDAGVertexRB* vertex = vertexRBPool.alloc();
-	*vertex = SRDAGVertexRB(this, parent, refIx, itrIx, ref);
+	*vertex = SRDAGVertexRB(this, refIx, itrIx, ref);
 	vertices.add(vertex);
 	rbs.add(vertex);
 	return vertex;
 }
 
 inline SRDAGVertexXplode* SRDAGGraph::createVertexIm(
-		SRDAGVertexAbstract* parent,
 		int refIx,
 		int itrIx){
 	SRDAGVertexXplode* vertex = vertexXpPool.alloc();
-	*vertex = SRDAGVertexXplode(this, Implode, parent, refIx, itrIx);
+	*vertex = SRDAGVertexXplode(this, Implode, refIx, itrIx);
 	vertices.add(vertex);
 	implodes.add(vertex);
 	return vertex;
 }
 
 inline SRDAGVertexXplode* SRDAGGraph::createVertexEx(
-		SRDAGVertexAbstract* parent,
 		int refIx,
 		int itrIx){
 	SRDAGVertexXplode* vertex = vertexXpPool.alloc();
-	*vertex = SRDAGVertexXplode(this, Explode, parent, refIx, itrIx);
+	*vertex = SRDAGVertexXplode(this, Explode, refIx, itrIx);
 	vertices.add(vertex);
 	return vertex;
 }

@@ -74,7 +74,6 @@ protected :
 	SRDAGVertexType		type;
 	SRDAGVertexState 	state;
 
-	SRDAGVertexAbstract* parent;
 	PiSDFAbstractVertex* reference;
 
 	int refIx;
@@ -97,7 +96,6 @@ public:
 	SRDAGVertexAbstract(
 				SRDAGGraph* 	_graph,
 				SRDAGVertexType _type,
-				SRDAGVertexAbstract* _parent,
 				PiSDFAbstractVertex* _ref,
 				int 			_refIx,
 				int 			_itrIx);

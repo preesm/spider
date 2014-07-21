@@ -63,7 +63,6 @@ public :
 	SRDAGVertexRB(){}
 	SRDAGVertexRB(
 			SRDAGGraph* 	_graph,
-			SRDAGVertexAbstract* 	_parent,
 			int 			_refIx,
 			int 			_itrIx,
 			PiSDFAbstractVertex* ref);

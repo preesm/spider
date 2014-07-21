@@ -121,7 +121,7 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 			// If there is delay, first source is an init vector and last sink is an end vector.
 
 			// Adding an init vertex.
-			SRDAGVertexInitEnd *init_vertex = topDag->createVertexIn(NULL, 0,0);
+			SRDAGVertexInitEnd *init_vertex = topDag->createVertexIn(0, 0);
 //			init_vertex->setType(Init); 	// Indicates it is an implode vertex.
 //			init_vertex->setFunctIx(INIT_FUNCT_IX);
 //			init_vertex->setReference(origin_vertex->getReference());
@@ -136,7 +136,7 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 			topDag->getVerticesFromReference(edge->getSink(), iteration, sinkRepetitions);
 
 
-			SRDAGVertexInitEnd *end_vertex = topDag->createVertexEn(NULL, 0,0);
+			SRDAGVertexInitEnd *end_vertex = topDag->createVertexEn(0, 0);
 //			end_vertex->setType(End); 	// Indicates it is an implode vertex.
 //			end_vertex->setFunctIx(END_FUNCT_IX);
 //			end_vertex->setConstraint(0, TRUE);
@@ -175,7 +175,7 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 				(sourceRepetitions[sourceIndex]->getType() != Explode)){
 
 				// Adding an explode vertex.
-				SRDAGVertexXplode *exp_vertex = topDag->createVertexEx(NULL,0,0);
+				SRDAGVertexXplode *exp_vertex = topDag->createVertexEx(0, 0);
 //				exp_vertex->setType(Explode); 			// Indicates it is an explode vx.
 //				exp_vertex->setExpImpId(nbExpVxs++);
 //				exp_vertex->setConstraint(0, TRUE);
@@ -229,7 +229,7 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 				(sinkRepetitions[sinkIndex]->getType() != Implode)){ // Type == 0 indicates it is a normal vertex.
 
 				// Adding an implode vertex.
-				SRDAGVertexXplode *imp_vertex = topDag->createVertexIm(NULL, 0, 0);
+				SRDAGVertexXplode *imp_vertex = topDag->createVertexIm(0, 0);
 //				imp_vertex->setType(Implode); 	// Indicates it is an implode vertex.
 // 				imp_vertex->setExpImpId(i); // Distinction among implode vertices for the same SRDAGVertex.
 //				imp_vertex->setConstraint(0, TRUE);
@@ -343,7 +343,6 @@ void PiSDFTransformer::replaceHwithRB(PiSDFGraph* currentPiSDF, SRDAGGraph* topD
 	for(int i=0; i<nb; i++){
 		SRDAGEdge* edge = currHSrDagVx->getInputEdge(i);
 		SRDAGVertexRB* rb = topDag->createVertexRB(
-				NULL,
 				0,
 				currHSrDagVx->getReferenceIndex(),
 				currentPiSDF->getInput_vertex(i));
@@ -354,7 +353,6 @@ void PiSDFTransformer::replaceHwithRB(PiSDFGraph* currentPiSDF, SRDAGGraph* topD
 	for(int i=0; i<nb; i++){
 		SRDAGEdge* edge = currHSrDagVx->getOutputEdge(i);
 		SRDAGVertexRB* rb = topDag->createVertexRB(
-				NULL,
 				0,
 				currHSrDagVx->getReferenceIndex(),
 				currentPiSDF->getOutput_vertex(i));
@@ -368,7 +366,7 @@ void PiSDFTransformer::addCAtoSRDAG(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag
 	/* Put CA in topDag with RB between CA and /CA */
 	for(UINT32 i=0; i<currentPiSDF->getNb_config_vertices(); i++){
 		PiSDFConfigVertex* pi_ca = currentPiSDF->getConfig_vertex(i);
-		SRDAGVertexConfig* dag_ca = topDag->createVertexCf(NULL, 0, refIndex, pi_ca);
+		SRDAGVertexConfig* dag_ca = topDag->createVertexCf(0, refIndex, pi_ca);
 
 		for(UINT32 j=0; j<pi_ca->getNbInputEdges(); j++){
 			SRDAGVertexAbstract* refvertex[1];
@@ -403,7 +401,7 @@ void PiSDFTransformer::addCAtoSRDAG(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag
 				srdag_edge->setTokenRate(edge->getProductionInt());
 			}
 			if(edge->getSink()->getType() != config_vertex){
-				SRDAGVertexRB* rb = topDag->createVertexRB(NULL, 0, refIndex, NULL);
+				SRDAGVertexRB* rb = topDag->createVertexRB(0, refIndex, NULL);
 
 				SRDAGEdge* srdag_edge = topDag->createEdge(edge);
 				srdag_edge->connectSource(dag_ca, j);
@@ -512,10 +510,10 @@ static void PiSDFTransformer::singleRateTransformation(PiSDFGraph *currentPiSDF,
 		for(UINT32 j = 0; j < brv[vertex->getId()]; j++){
 			switch(vertex->getSubType()){
 			case SubType_Normal:
-				topDag->createVertexNo(NULL, j, refIndex, vertex);
+				topDag->createVertexNo(j, refIndex, vertex);
 				break;
 			case SubType_Broadcast:
-				topDag->createVertexBr(NULL, j, refIndex, vertex);
+				topDag->createVertexBr(j, refIndex, vertex);
 				break;
 			}
 			// TODO handle pisdf broadcast
@@ -759,7 +757,7 @@ static int removeRBExp(SRDAGGraph* topDag){
 				}
 
 				if(ok){
-					SRDAGVertexBroadcast* br = topDag->createVertexBr(NULL, 0, 0, NULL);
+					SRDAGVertexBroadcast* br = topDag->createVertexBr(0, 0, NULL);
 					rb->getInputEdge(0)->connectSink(br, 0);
 
 					int nbExplodeEdge = explode->getNbOutputEdge();
@@ -811,7 +809,7 @@ static int removeRBExp(SRDAGGraph* topDag){
 
 			return 1;
 		}else if(br->getNbOutputEdge() == 0){
-			SRDAGVertexInitEnd* end = topDag->createVertexEn(NULL, 0, 0);
+			SRDAGVertexInitEnd* end = topDag->createVertexEn(0, 0);
 			br->getInputEdge(0)->connectSink(end, 0);
 			topDag->removeVertex(br);
 			return 1;
@@ -840,7 +838,7 @@ static int removeRBExp(SRDAGGraph* topDag){
 
 				int lastEdgeIx = implode->getNbInputEdge()-1;
 				for(int j=0; j<ixEnd; j++){
-					SRDAGVertexInitEnd *end_vertex = topDag->createVertexEn(NULL, 0, 0);
+					SRDAGVertexInitEnd *end_vertex = topDag->createVertexEn(0, 0);
 					implode->getInputEdge(j)->connectSink(end_vertex, 0);
 
 					if(j+ixEnd <= lastEdgeIx){

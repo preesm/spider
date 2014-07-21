@@ -67,7 +67,6 @@ public :
 	SRDAGVertexNormal(){}
 	SRDAGVertexNormal(
 		SRDAGGraph* 	_graph,
-		SRDAGVertexAbstract* 	_parent,
 		int 			_refIx,
 		int 			_itrIx,
 		PiSDFVertex* ref);

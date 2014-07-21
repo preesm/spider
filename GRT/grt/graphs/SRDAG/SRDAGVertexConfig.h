@@ -70,7 +70,6 @@ public :
 	SRDAGVertexConfig(){}
 	SRDAGVertexConfig(
 					SRDAGGraph* 	_graph,
-					SRDAGVertexAbstract* 	_parent,
 					int 			_refIx,
 					int 			_itrIx,
 					PiSDFConfigVertex* ref);

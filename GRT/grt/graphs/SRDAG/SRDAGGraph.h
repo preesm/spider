@@ -86,6 +86,7 @@ class SRDAGGraph{
 		Set<SRDAGVertexAbstract, MAX_SRDAG_VERTICES> 	vertices;
 		Set<SRDAGVertexXplode, MAX_SRDAG_VERTICES> 		implodes;
 		Set<SRDAGVertexRB, MAX_SRDAG_VERTICES> 			rbs;
+		Set<SRDAGVertexBroadcast, MAX_SRDAG_VERTICES>	brs;
 		edgeSet		edges;
 
 	public : 
@@ -117,6 +118,7 @@ class SRDAGGraph{
 
 		SetIterator<SRDAGVertexXplode,MAX_SRDAG_VERTICES> getImplodeIterator();
 		SetIterator<SRDAGVertexRB,MAX_SRDAG_VERTICES> getRBIterator();
+		SetIterator<SRDAGVertexBroadcast,MAX_SRDAG_VERTICES> getBrIterator();
 
 		int getVerticesFromReference(PiSDFAbstractVertex* ref, int iteration, SRDAGVertexAbstract** output);
 
@@ -172,6 +174,7 @@ inline SRDAGVertexBroadcast* SRDAGGraph::createVertexBr(
 	SRDAGVertexBroadcast* vertex = vertexBrPool.alloc();
 	*vertex = SRDAGVertexBroadcast(vertexIxCount++, this, parent, refIx, itrIx, ref);
 	vertices.add(vertex);
+	brs.add(vertex);
 	return vertex;
 }
 
@@ -263,6 +266,10 @@ inline SetIterator<SRDAGVertexRB,MAX_SRDAG_VERTICES> SRDAGGraph::getRBIterator()
 	return rbs.getIterator();
 }
 
+inline SetIterator<SRDAGVertexBroadcast,MAX_SRDAG_VERTICES> SRDAGGraph::getBrIterator(){
+	return brs.getIterator();
+}
+
 /**
  Gets the edge at the given index
  
@@ -297,35 +304,10 @@ inline int SRDAGGraph::getVerticesFromReference(PiSDFAbstractVertex* ref, int it
 	vertexSetIterator iter = vertices.getIterator();
 	SRDAGVertexAbstract* vertex;
 	while((vertex = iter.next()) != NULL){
-		if(vertex->getIterationIndex() == iteration){
-			switch(vertex->getType()){
-			case ConfigureActor:
-				if(((SRDAGVertexConfig*)vertex)->getReference() == ref){
-					output[size] = vertex;
-					size++;
-				}
-				break;
-			case Normal:
-				if(((SRDAGVertexNormal*)vertex)->getReference() == ref){
-					output[size] = vertex;
-					size++;
-				}
-				break;
-			case Broadcast:
-				if(((SRDAGVertexBroadcast*)vertex)->getReference() == ref){
-					output[size] = vertex;
-					size++;
-				}
-				break;
-			case RoundBuffer:
-				if(((SRDAGVertexRB*)vertex)->getReference() == ref){
-					output[size] = vertex;
-					size++;
-				}
-				break;
-			default:
-				break;
-			}
+		if(vertex->getIterationIndex() == iteration
+				&& vertex->getReference() == ref){
+			output[size] = vertex;
+			size++;
 		}
 	}
 	return size;

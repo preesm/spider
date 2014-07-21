@@ -59,6 +59,7 @@ SRDAGGraph::SRDAGGraph(){
 	vertices.reset();
 	implodes.reset();
 	edges.reset();
+	brs.reset();
 
 	vertexNoPool.setName("Normal Vertex Pool of SRDAG Graph");
 	vertexBrPool.setName("Broadcast Vertex Pool of SRDAG Graph");
@@ -84,6 +85,7 @@ void SRDAGGraph::reset(){
 	vertices.reset();
 	implodes.reset();
 	edges.reset();
+	brs.reset();
 }
 
 /**
@@ -122,6 +124,7 @@ void SRDAGGraph::removeVertex(SRDAGVertexAbstract *vertex){
 		rbs.remove((SRDAGVertexRB*)vertex);
 		break;
 	case Broadcast:
+		brs.remove((SRDAGVertexBroadcast*)vertex);
 		break;
 	case Init:
 		break;

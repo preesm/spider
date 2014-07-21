@@ -47,6 +47,21 @@
 
 #include <graphs/PiSDF/PiSDFConfigVertex.h>
 
+SRDAGVertexAbstract::SRDAGVertexAbstract(){
+	id 				= -1;
+	graph 			= NULL;
+	type 			= Normal;
+	state 			= SRDAG_NotExecuted;
+	reference		= NULL;
+	parent 			= NULL;
+	refIx 			= -1;
+	itrIx 			= -1;
+	schedLevel 		= -1;
+	slaveIndex 		= -1;
+	scheduleIndex 	= -1;
+	minStartTime 	= -1;
+}
+
 SRDAGVertexAbstract::SRDAGVertexAbstract(
 			int			 	_id,
 			SRDAGGraph* 	_graph,

@@ -91,7 +91,7 @@ protected :
 	virtual void disconnectOutputEdge(int ix)	= 0;
 
 public:
-	SRDAGVertexAbstract(){}
+	SRDAGVertexAbstract();
 	SRDAGVertexAbstract(
 				int			 	_id,
 				SRDAGGraph* 	_graph,

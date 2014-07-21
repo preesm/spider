@@ -101,6 +101,7 @@ inline Pool<T,SIZE>::Pool(){
 /** Default Destructor. */
 template <class T, int SIZE>
 inline Pool<T,SIZE>::~Pool(){
+	printf("[%s]: alloc %d elemts\n", name, nb);
 }
 
 /** Reset Pool. */

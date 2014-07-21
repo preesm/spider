@@ -73,6 +73,8 @@
 #define INIT_FUNCT_IX			14
 #define END_FUNCT_IX			15
 
+#define MAX_XPL_IN_STEPS		17
+
 // PiSDF
 #define MAX_NB_PiSDF_GRAPHS				3	//32
 #define MAX_NB_PiSDF_EDGES				16	//32

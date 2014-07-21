@@ -36,6 +36,7 @@
 
 #include <string.h>
 #include <platform_types.h>
+#include <cmath>
 
 #include "actors.h"
 
@@ -107,15 +108,15 @@ void src(UINT8* inputFIFOs[],
 	FILE* f;
 	char file[100];
 
-//	s//printf(file,"/home/jheulot/dev/mp-sched/input.dat");
-//	f = fopen(file,"rb");
-//	if(f == NULL){//printf("cannot open %s\n", file);abort();}
-//	fread(out, sizeof(float), NBSAMPLES, f);
-//	fclose(f);
-//
-//	for(i=1; i<N; i++){
-//		memcpy(out+i*NBSAMPLES, out, NBSAMPLES*sizeof(float));
-//	}
+	sprintf(file,"/home/jheulot/dev/mp-sched/input.dat");
+	f = fopen(file,"rb");
+	if(f == NULL){printf("cannot open %s\n", file);abort();}
+	fread(out, sizeof(float), NBSAMPLES, f);
+	fclose(f);
+
+	for(i=1; i<N; i++){
+		memcpy(out+i*NBSAMPLES, out, NBSAMPLES*sizeof(float));
+	}
 }
 
 void snk(UINT8* inputFIFOs[],
@@ -132,32 +133,32 @@ void snk(UINT8* inputFIFOs[],
 
 	//printf("Exec snk\n");
 
-//	float* outputCheck = OSAllocWorkingMemory(NBSAMPLES*sizeof(float));
+	float outputCheck [NBSAMPLES];
 
 	FILE* f;
 	char file[100];
 
-//	for(i=0; i<N; i++){
-//		s//printf(file,"/home/jheulot/dev/mp-sched/output_%d_%d.dat", NBSAMPLES, nValues[0][i]);
-//		f = fopen(file,"rb");
-//		if(f == NULL){//printf("cannot open %s\n", file);abort();}
-//		fread(outputCheck, sizeof(float), NBSAMPLES, f);
-//		fclose(f);
-//
-//		for(j=0; j<NBSAMPLES; j++){
-//			if(in[j+i*NBSAMPLES] != outputCheck[j]){
-//				//printf("Error in (%d,%d), expected %f get %f\n",i,j,outputCheck[j],in[j]);
-//				test = FALSE;
-//				break;
-//			}
-//		}
-//	}
-//
-//	if(test){
-//		//printf("Passed\n");
-//	}else{
-//		//printf("Not Passed\n");
-//	}
+	for(i=0; i<N; i++){
+		sprintf(file,"/home/jheulot/dev/mp-sched/output_%d_%d.dat", NBSAMPLES, 8);
+		f = fopen(file,"rb");
+		if(f == NULL){printf("cannot open %s\n", file);abort();}
+		fread(outputCheck, sizeof(float), NBSAMPLES, f);
+		fclose(f);
+
+		for(j=0; j<NBSAMPLES; j++){
+			if(abs(in[j+i*NBSAMPLES] - outputCheck[j]) != 0){
+				printf("Error in (%d,%d), expected %f get %f\n",i,j,outputCheck[j],in[j]);
+				test = false;
+				break;
+			}
+		}
+	}
+
+	if(test){
+		//printf("Passed\n");
+	}else{
+		//printf("Not Passed\n");
+	}
 }
 
 void setM(UINT8* inputFIFOs[],
@@ -203,9 +204,11 @@ void switchFct(UINT8* inputFIFOs[],
 	//printf("Exec switchFct\n");
 
 	if(select == 0){
-		memcpy(out, in0, NBSAMPLES*sizeof(float));
+		if(out != in0)
+			memcpy(out, in0, NBSAMPLES*sizeof(float));
 	}else{
-//		memcpy(out, in1, NBSAMPLES*sizeof(float));
+		if(out != in1)
+			memcpy(out, in1, NBSAMPLES*sizeof(float));
 	}
 }
 

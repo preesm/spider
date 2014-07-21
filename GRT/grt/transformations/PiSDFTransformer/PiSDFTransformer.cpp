@@ -1089,8 +1089,8 @@ void PiSDFTransformer::multiStepScheduling(
 	UINT32 len;
 	UINT8 	stepsCntr = 0;
 
-	Queue<PiSDFGraph*, 15> graphFifo;
-	Queue<int, 15> refIndexFifo;
+	Queue<PiSDFGraph*, MAX_XPL_IN_STEPS> graphFifo;
+	Queue<int, MAX_XPL_IN_STEPS> refIndexFifo;
 
 //	schedule->reset();
 	graphFifo.reset();

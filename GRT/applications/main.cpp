@@ -144,7 +144,7 @@ int main(int argc, char* argv[]){
 #endif
 	schedule.reset();
 
-	for(int iter=1; iter<=11; iter++){
+	for(int iter=1; iter<=16; iter++){
 		arch.setNbActiveSlaves(nbSlaves);
 		platform_time_reset();
 		initExecution();

@@ -129,7 +129,7 @@ inline BOOL SRDAGVertexBroadcast::isHierarchical() const
 	{return false;}
 
 inline PiSDFGraph* SRDAGVertexBroadcast::getHierarchy() const
-	{return NULL;}
+	{return (PiSDFGraph*)NULL;}
 
 inline void SRDAGVertexBroadcast::getName(char* name, UINT32 sizeMax){
 	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"Br_%d", id);

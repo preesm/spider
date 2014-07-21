@@ -401,7 +401,7 @@ void PiSDFTransformer::addCAtoSRDAG(PiSDFGraph* currentPiSDF, SRDAGGraph* topDag
 				srdag_edge->setTokenRate(edge->getProductionInt());
 			}
 			if(edge->getSink()->getType() != config_vertex){
-				SRDAGVertexRB* rb = topDag->createVertexRB(0, refIndex, NULL);
+				SRDAGVertexRB* rb = topDag->createVertexRB(0, refIndex, (PiSDFAbstractVertex*)NULL);
 
 				SRDAGEdge* srdag_edge = topDag->createEdge(edge);
 				srdag_edge->connectSource(dag_ca, j);
@@ -757,7 +757,7 @@ static int removeRBExp(SRDAGGraph* topDag){
 				}
 
 				if(ok){
-					SRDAGVertexBroadcast* br = topDag->createVertexBr(0, 0, NULL);
+					SRDAGVertexBroadcast* br = topDag->createVertexBr(0, 0, (PiSDFVertex*)NULL);
 					rb->getInputEdge(0)->connectSink(br, 0);
 
 					int nbExplodeEdge = explode->getNbOutputEdge();
@@ -826,7 +826,9 @@ static int removeRBExp(SRDAGGraph* topDag){
 	SRDAGVertexXplode *implode;
 	while((implode = implIter.next()) != NULL){
 		SRDAGVertexAbstract* rb = implode->getOutputEdge(0)->getSink();
-		if(rb->getType() == RoundBuffer){
+		if(rb->getType() == RoundBuffer
+				&& rb->getNbInputEdge() == 1
+				&& rb->getNbOutputEdge() == 1){
 			UINT32 rbConsumption = rb->getInputEdge(0)->getTokenRate();
 			UINT32 rbProduction = rb->getOutputEdge(0)->getTokenRate();
 			if(rbConsumption > rbProduction){
@@ -1084,7 +1086,7 @@ void PiSDFTransformer::multiStepScheduling(
 							BaseSchedule* schedule,
 							SRDAGGraph* topDag,
 							ExecutionStat* execStat){
-	static int brv[MAX_SRDAG_VERTICES];
+	static int brv[MAX_NB_PiSDF_VERTICES];
 	PiSDFGraph*   currentPiSDF;
 	UINT32 len;
 	UINT8 	stepsCntr = 0;
@@ -1229,6 +1231,7 @@ void PiSDFTransformer::multiStepScheduling(
 			PiSDFTransformer::computeBRV(currentPiSDF, brv);
 
 			PiSDFTransformer::singleRateTransformation(currentPiSDF, refIndex, topDag, brv);
+			optims(topDag);
 
 			topDag->updateState();
 			stepsCntr++;

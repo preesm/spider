@@ -135,7 +135,7 @@ inline BOOL SRDAGVertexRB::isHierarchical() const
 	{return false;}
 
 inline PiSDFGraph* SRDAGVertexRB::getHierarchy() const
-	{return NULL;}
+	{return (PiSDFGraph*)NULL;}
 
 inline void SRDAGVertexRB::getName(char* name, UINT32 sizeMax){
 	int len = snprintf(name, MAX_VERTEX_NAME_SIZE, "RB_%d", id);

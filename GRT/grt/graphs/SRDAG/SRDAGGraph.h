@@ -119,7 +119,7 @@ class SRDAGGraph{
 				if(vertex->getId() == ix)
 					return vertex;
 			}
-			return NULL;
+			return (SRDAGVertexAbstract*) NULL;
 		}
 
 		void updateExecuted();

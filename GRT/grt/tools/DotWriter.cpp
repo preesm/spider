@@ -53,7 +53,7 @@
  @param path: output file path
  @param displayName: 1 if the graph should display the vertices names
 */
-void DotWriter::write(SRDAGGraph* graph, const char* path, BOOL displayNames, BOOL displayRates){
+void DotWriter::write(SRDAGGraph* graph, const char* path, bool displayNames, bool displayRates){
 	//char directory[_MAX_PATH];
 	//getcwd(directory, sizeof(directory));
 	char name[MAX_VERTEX_NAME_SIZE];

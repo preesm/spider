@@ -70,4 +70,6 @@
 #define SHARED_MEM_BASE	0x0C014000
 #endif
 
+#define SHARED_MEM_LENGHT 0x2C0000
+
 #endif /* MEMORYALLOC_H_ */

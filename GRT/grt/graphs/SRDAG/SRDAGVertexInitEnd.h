@@ -110,11 +110,11 @@ inline int SRDAGVertexInitEnd::getNbOutputEdge() const{
 inline SRDAGEdge* SRDAGVertexInitEnd::getInputEdge(int id){
 	switch(type){
 	case Init:
-		return NULL;
+		return (SRDAGEdge*)NULL;
 	case End:
 		return edges[id];
 	default:
-		return NULL;
+		return (SRDAGEdge*)NULL;
 	}
 }
 
@@ -123,9 +123,9 @@ inline SRDAGEdge* SRDAGVertexInitEnd::getOutputEdge(int id){
 	case Init:
 		return edges[id];
 	case End:
-		return NULL;
+		return (SRDAGEdge*)NULL;
 	default:
-		return NULL;
+		return (SRDAGEdge*)NULL;
 	}
 }
 
@@ -201,7 +201,7 @@ inline BOOL SRDAGVertexInitEnd::isHierarchical() const
 	{return false;}
 
 inline PiSDFGraph* SRDAGVertexInitEnd::getHierarchy() const
-	{return NULL;}
+	{return (PiSDFGraph*)NULL;}
 
 inline void SRDAGVertexInitEnd::getName(char* name, UINT32 sizeMax){
 	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d", (type == Init) ? "Init" : "End", id);

@@ -115,7 +115,7 @@ inline SRDAGEdge* SRDAGVertexXplode::getInputEdge(int id){
 	case Explode:
 		return gatherEdges[id];
 	default:
-		return NULL;
+		return (SRDAGEdge*)NULL;
 	}
 }
 
@@ -126,7 +126,7 @@ inline SRDAGEdge* SRDAGVertexXplode::getOutputEdge(int id){
 	case Explode:
 		return scatterEdges[id];
 	default:
-		return NULL;
+		return (SRDAGEdge*)NULL;
 	}
 }
 
@@ -213,7 +213,7 @@ inline BOOL SRDAGVertexXplode::isHierarchical() const{
 }
 
 inline PiSDFGraph* SRDAGVertexXplode::getHierarchy() const{
-	return NULL;
+	return (PiSDFGraph*)NULL;
 }
 
 inline void SRDAGVertexXplode::getName(char* name, UINT32 sizeMax){

@@ -93,7 +93,7 @@ inline void SetIterator<T, SIZE>::reset(){
 template <class T, int SIZE>
 inline T* SetIterator<T, SIZE>::next(){
 	if(currentIx>=set->nb)
-		return NULL;
+		return (T*)NULL;
 	return set->array[currentIx++];
 }
 

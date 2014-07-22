@@ -87,17 +87,30 @@ void mFilter(UINT8* inputFIFOs[],
 	memcpy(out_m, in_m, N);
 }
 
-
 void src(UINT8* inputFIFOs[],
 		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
-//	UINT32 i,j;
-//	UINT32 N = params[0];
-//	UINT32 NBSAMPLES = params[1];
-//
-//	float* out = (float*)outputFIFOs[0];
-//
+	UINT32 i,j;
+	UINT32 N = params[0];
+	UINT32 NBSAMPLES = params[1];
+
+	float* out = (float*)outputFIFOs[0];
+
+	for(i=0; i<N; i++){
+		srand(1000);
+		for(j=0; j<NBSAMPLES; j++){
+			out[j+i*NBSAMPLES] = 10*((float)rand())/RAND_MAX;
+		}
+	}
+
+//	for(i=1; i<N; i++){
+//		float* data = (float*)(((long long)out)+i*NBSAMPLES*sizeof(float));
+//		memcpy(data, out, NBSAMPLES*sizeof(float));
+//	}
+
+	//printf("Exec src\n");
+
 //	FILE* f;
 //	char file[100];
 
@@ -106,50 +119,79 @@ void src(UINT8* inputFIFOs[],
 //	if(f == NULL){printf("cannot open %s\n", file);abort();}
 //	fread(out, sizeof(float), NBSAMPLES, f);
 //	fclose(f);
-//
-//	for(i=1; i<N; i++){
-//		memcpy(out+i*NBSAMPLES, out, NBSAMPLES*sizeof(float));
-//	}
+
+
 }
 
 void snk(UINT8* inputFIFOs[],
 		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
-//	UINT32 i,j;
-//	UINT32 N = params[0];
-//	UINT32 NBSAMPLES = params[1];
+	UINT32 i,j;
+	UINT32 N = params[0];
+	UINT32 NBSAMPLES = params[1];
 
-//	float* in = (float*)inputFIFOs[0];
+#ifndef DSP
+	const int expectedHash[13]={
+		/*0 */ 0x1D8CCC7, 	/*1 */ 0x69D0FCD, 	/*2 */ 0x9CA48CA,
+		/*3 */ 0x95CFC62, 	/*4 */ 0x5CAE39A, 	/*5 */ 0x170030E8,
+		/*6 */ 0x16C43A1F,	/*7 */ 0x1F40E5E3,	/*8 */ 0x4D50F02B,
+		/*9 */ 0x7D6D759, 	/*10*/ 0x49638F8,	/*11*/ 0x7BD1349F,
+		/*12*/ 0x712A25F4
+	};
+#else
+	const int expectedHash[13]={
+		/*0 */ 0x06088D61,	/*1 */ 0x03902DCA,	/*2 */ 0x7BE6A549,
+		/*3 */ 0x7D008129,	/*4 */ 0x152FE04C,	/*5 */ 0x61FA4D45,
+		/*6 */ 0x762F3E52,	/*7 */ 0x1A0D6EA7,	/*8 */ 0x407294F4,
+		/*9 */ 0x28182904,	/*10*/ 0x60F32492,	/*11*/ 0x630A18F6,
+		/*12*/ 0x476BCCAB
+	};
+#endif
+
+	float* in = (float*)inputFIFOs[0];
+
+	BOOL test = TRUE;
+
+	int hash;
+	for(i=0; i<N; i++){
+		hash = 0;
+		int* data = (int*)in;
+		for(j=0; j<NBSAMPLES; j++){
+			hash = hash ^ data[j+i*NBSAMPLES];
+		}
+		if(hash != expectedHash[8])
+			printf("Bad Hash result: %#X instead of %#X\n", hash, expectedHash[8]);
+	}
+
+	//printf("Exec snk\n");
+
+//	float outputCheck [NBSAMPLES];
 //
-//	BOOL test = TRUE;
-
-//	float* outputCheck = OSAllocWorkingMemory(NBSAMPLES*sizeof(float));
-
 //	FILE* f;
 //	char file[100];
-
+//
 //	for(i=0; i<N; i++){
-//		sprintf(file,"/home/jheulot/dev/mp-sched/output_%d_%d.dat", NBSAMPLES, nValues[0][i]);
+//		sprintf(file,"/home/jheulot/dev/mp-sched/output_%d_%d.dat", NBSAMPLES, 8);
 //		f = fopen(file,"rb");
 //		if(f == NULL){printf("cannot open %s\n", file);abort();}
 //		fread(outputCheck, sizeof(float), NBSAMPLES, f);
 //		fclose(f);
 //
 //		for(j=0; j<NBSAMPLES; j++){
-//			if(in[j+i*NBSAMPLES] != outputCheck[j]){
+//			if(abs(in[j+i*NBSAMPLES] - outputCheck[j]) != 0){
 //				printf("Error in (%d,%d), expected %f get %f\n",i,j,outputCheck[j],in[j]);
-//				test = FALSE;
+//				test = false;
 //				break;
 //			}
 //		}
 //	}
-//
-//	if(test){
-//		printf("Passed\n");
-//	}else{
-//		printf("Not Passed\n");
-//	}
+
+	if(test){
+		//printf("Passed\n");
+	}else{
+		//printf("Not Passed\n");
+	}
 }
 
 void setM(UINT8* inputFIFOs[],

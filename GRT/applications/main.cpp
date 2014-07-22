@@ -108,7 +108,7 @@ int main(int argc, char* argv[]){
 //
 //	setvbuf(stdout, NULL, _IONBF, 0);
 //	setvbuf(stderr, NULL, _IONBF, 0);
-	int nbSlaves = 1;
+	int nbSlaves = 8;
 //	static Scenario 			scenario;
 	static Architecture 		arch;
 	static ListScheduler 		listScheduler;

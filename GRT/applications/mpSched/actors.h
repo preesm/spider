@@ -8,6 +8,6 @@
 #ifndef ACTORS_H_
 #define ACTORS_H_
 
-void fir(float* in, float* out, int nb_sample);
+void _fir(float* in, float* out, int nb_sample);
 
 #endif /* ACTORS_H_ */

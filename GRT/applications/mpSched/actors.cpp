@@ -6,14 +6,15 @@
 
 #include <grt_definitions.h>
 
-#if EXEC == 1
-// extern "C"{
-// #include <ti/dsplib/src/DSPF_sp_fir_gen/DSPF_sp_fir_gen.h>
-// }
+#ifdef DSP
+extern "C"{
+#include <ti/dsplib/src/DSPF_sp_fir_gen/DSPF_sp_fir_gen.h>
+}
+#endif
 
 #define NB_TAPS 512
 
-void fir(float* in, float* out, int nb_sample){
+void _fir(float* in, float* out, int nb_sample){
 	int i, j;
 	float taps[NB_TAPS];
 	for(i=0; i<NB_TAPS; i++){
@@ -21,7 +22,7 @@ void fir(float* in, float* out, int nb_sample){
 	}
 
 //	printf("out : %#x\n", out);
-
+#ifndef DSP
 	float last[NB_TAPS];
 
 	int last_id = 0;
@@ -35,23 +36,18 @@ void fir(float* in, float* out, int nb_sample){
 		}
 		last_id = (last_id+1)%NB_TAPS;
 	}
-
-// 	float input[4000+512-1];
-// 
-// 	memset(input, 0, 512-1);
-// 	memcpy(input+512-1, in, nb_sample);
-// 
-// 	DSPF_sp_fir_gen(
-// 			input,
-// 			taps,
-// 			out,
-// 			512,
-// 			nb_sample
-// 	);
-
-}
-
 #else
-	void fir(float* in, float* out, int nb_sample){
-	}
+	float input[4000+512-1];
+
+	memset(input, 0, (512-1)*sizeof(float));
+	memcpy(input+512-1, in, nb_sample*sizeof(float));
+
+	DSPF_sp_fir_gen(
+			input,
+			taps,
+			out,
+			512,
+			nb_sample
+	);
 #endif
+}

@@ -45,34 +45,37 @@
 #define MAX_SLAVES 				8	//12	// The maximum number of slaves
 #define MAX_SLAVE_NAME_SIZE 	10	// The maximum number of slaves
 
-#define MAPPING_TIME 500
-#define SYNC_TIME 5
+#define MAPPING_TIME 			500
+#define SYNC_TIME 				50
 
-#define MAX_VERTEX_NAME_SIZE 50
-#define MAX_TOOL_NAME		50
+#define MAX_VERTEX_NAME_SIZE 	50
+#define MAX_TOOL_NAME			50
 
-#define MEMCPY_SPEED 1.8
-#define MAX_MASTER_ACTORS		350
-#define NB_LOCAL_FUNCTIONS 20
-#define OS_MAX_TASKS_TIME 500
+#ifdef DSP
+	#define MAX_MASTER_ACTORS		100
+#else
+	#define MAX_MASTER_ACTORS		400
+#endif
+
+#define MEMCPY_SPEED 			1.8
+#define NB_LOCAL_FUNCTIONS 		20
+#define OS_MAX_TASKS_TIME 		350
 
 // Single Rate DAG
-#define EDGE_POOL_SIZE			900
-#define NORMAL_POOL_SIZE		300
-#define BROADCAST_POOL_SIZE		150
+#define EDGE_POOL_SIZE			600
+#define NORMAL_POOL_SIZE		275
+#define BROADCAST_POOL_SIZE		25
 #define CONFIG_POOL_SIZE		20
-#define INITEND_POOL_SIZE		150
-#define RB_POOL_SIZE			60
-#define XPLODE_POOL_SIZE		60
+#define INITEND_POOL_SIZE		25
+#define RB_POOL_SIZE			35
+#define XPLODE_POOL_SIZE		25
 
-#define MAX_SRDAG_VERTICES 		800	//512
-#define MAX_SRDAG_EDGES 		900	//512
-#define MAX_SRDAG_IO_EDGES		12
-#define MAX_SRDAG_XPLODE_EDGES	20
-#define MAX_SRDAG_INPUT_EDGES 	12	//64
-#define MAX_SRDAG_OUTPUT_EDGES 	12	//100
+#define MAX_SRDAG_VERTICES 		400	//512
+#define MAX_SRDAG_EDGES 		600	//512
+#define MAX_SRDAG_IO_EDGES		3
+#define MAX_SRDAG_XPLODE_EDGES	16
 #define MAX_VERTEX_REPETITION 	100	//100 // The maximum number of repetitions for one vertex
-#define MAX_CHILD 	100
+#define MAX_CHILD 				100
 
 #define RB_FUNCT_IX				10
 #define BROADCAST_FUNCT_IX		11

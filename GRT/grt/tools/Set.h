@@ -210,7 +210,8 @@ inline void Set<T,SIZE>::remove(T* e){
 
 		nb--;
 		array[ix] = array[nb];
-		vertex_array[ix]->setSetIx(ix);
+		if(nb!=0)
+			vertex_array[ix]->setSetIx(ix);
 	}else if(type == EDGES){
 		SRDAGEdge*  edge 		= (SRDAGEdge*) (e);
 		SRDAGEdge** edge_array 	= (SRDAGEdge**)(array);
@@ -221,7 +222,8 @@ inline void Set<T,SIZE>::remove(T* e){
 
 		nb--;
 		array[ix] = array[nb];
-		edge_array[ix]->setSetIx(ix);
+		if(nb!=0)
+			edge_array[ix]->setSetIx(ix);
 	}else{
 		int ix = -1;
 		for(int i=0; i<nb && ix == -1; i++){

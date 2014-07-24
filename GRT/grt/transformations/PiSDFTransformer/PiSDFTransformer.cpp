@@ -81,32 +81,41 @@ typedef struct{
 
 static inline void replaceWithExplode(SRDAGGraph *topDag, PiSDFEdge *edge, SRDAGVertexAbstract** vertex, int prod, vertexConnections connections){
 	/* Create explode */
-	SRDAGVertexAbstract *new_vertex;
-
 	// Replacing the source vertex by the explode vertex in the array of sources.
 	SRDAGVertexAbstract *origin_vertex = *vertex;
 
 	SRDAGVertexAbstract* sourceVertex;
+	SRDAGEdge* srdagEdge;
 	UINT32 sourcePortId;
 
 	switch(origin_vertex->getType()){
 	case Normal:
 		sourceVertex = origin_vertex;
 		sourcePortId = origin_vertex->getReference()->getOutputEdgeId(edge);
-		new_vertex = topDag->createVertexEx(0, 0);
+		*vertex = topDag->createVertexEx(0, 0);
+
+		// Adding an edge between the source and the explode.
+		srdagEdge = topDag->createEdge(edge->getRefEdge());
+		srdagEdge->connectSource(sourceVertex, sourcePortId);
+		srdagEdge->connectSink(*vertex, 0);
+		srdagEdge->setTokenRate(prod);
 		break;
 	case ConfigureActor:
 		sourceVertex = origin_vertex->getOutputEdge(edge->getSource()->getOutputEdgeIx(edge))->getSink();
 		sourcePortId = 0;
-		new_vertex = topDag->createVertexEx(0, 0);
+		*vertex = topDag->createVertexEx(0, 0);
+
+		// Adding an edge between the source and the explode.
+		srdagEdge = topDag->createEdge(edge->getRefEdge());
+		srdagEdge->connectSource(sourceVertex, sourcePortId);
+		srdagEdge->connectSink(*vertex, 0);
+		srdagEdge->setTokenRate(prod);
 		break;
 	case RoundBuffer:
 		if(origin_vertex->getInputEdge(0)->getTokenRate() == prod){
-			sourceVertex = origin_vertex->getInputEdge(0)->getSource();
-			sourcePortId = origin_vertex->getInputEdge(0)->getSourcePortIx();
-			topDag->removeEdge(origin_vertex->getInputEdge(0));
+			origin_vertex->getInputEdge(0)->connectSink(*vertex, 0);
 			topDag->removeVertex(origin_vertex);
-			new_vertex = topDag->createVertexEx(0, 0);
+			*vertex = topDag->createVertexEx(0, 0);
 		}else{
 			bool brOk = true;
 			for(int i=0; i<connections.nb; i++){
@@ -114,22 +123,33 @@ static inline void replaceWithExplode(SRDAGGraph *topDag, PiSDFEdge *edge, SRDAG
 			}
 
 			if(brOk){
-				sourceVertex = origin_vertex->getInputEdge(0)->getSource();
-				sourcePortId = origin_vertex->getInputEdge(0)->getSourcePortIx();
-				topDag->removeEdge(origin_vertex->getInputEdge(0));
+				*vertex = topDag->createVertexBr(0, 0, (PiSDFVertex*)NULL);
+
+				origin_vertex->getInputEdge(0)->connectSink(*vertex, 0);
 				topDag->removeVertex(origin_vertex);
-				new_vertex = topDag->createVertexBr(0, 0, (PiSDFVertex*)NULL);
 
 			}else{
 				sourceVertex = origin_vertex;
 				sourcePortId = 0;
-				new_vertex = topDag->createVertexEx(0, 0);
+				*vertex = topDag->createVertexEx(0, 0);
+
+				// Adding an edge between the source and the explode.
+				srdagEdge = topDag->createEdge(edge->getRefEdge());
+				srdagEdge->connectSource(sourceVertex, sourcePortId);
+				srdagEdge->connectSink(*vertex, 0);
+				srdagEdge->setTokenRate(prod);
 			}
 		}
 		break;
 	case Init:
 		sourceVertex = origin_vertex;
 		sourcePortId = 0;
+
+		// Adding an edge between the source and the explode.
+		srdagEdge = topDag->createEdge(edge->getRefEdge());
+		srdagEdge->connectSource(sourceVertex, sourcePortId);
+		srdagEdge->connectSink(*vertex, 0);
+		srdagEdge->setTokenRate(prod);
 		break;
 	default:
 	case End:
@@ -139,14 +159,6 @@ static inline void replaceWithExplode(SRDAGGraph *topDag, PiSDFEdge *edge, SRDAG
 		abort();
 		break;
 	}
-
-	*vertex = new_vertex;
-
-	// Adding an edge between the source and the explode.
-	SRDAGEdge* srdagEdge = topDag->createEdge(edge->getRefEdge());
-	srdagEdge->connectSource(sourceVertex, sourcePortId);
-	srdagEdge->connectSink(new_vertex, 0);
-	srdagEdge->setTokenRate(prod);
 }
 
 static inline void replaceWithImplode(SRDAGGraph *topDag, PiSDFEdge *edge, SRDAGVertexAbstract** vertex, int cons, vertexConnections connections){

@@ -239,6 +239,7 @@ void Launcher::launchVertex(SRDAGVertexAbstract* vertex, UINT32 slave){
 	if(vertex->getType() == ConfigureActor)
 		nbParamToRecv += ((PiSDFConfigVertex*)(vertex->getReference()))->getNbRelatedParams();
 #endif
+	vertex->setState(SRDAG_Executed);
 }
 
 void Launcher::init(){

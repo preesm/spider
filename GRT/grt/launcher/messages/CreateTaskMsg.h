@@ -77,9 +77,7 @@ void inline CreateTaskMsg::send(int lrtID, SRDAGVertexAbstract* vertex){
 		platform_QPush(lrtID, platformCtrlQ, vertex->getOutputEdge(k)->getFifo(), sizeof(FIFO));
 	}
 
-	for (int k = 0; k < vertex->getParamNb(); k++){
-		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getParamValue(k));
-	}
+	platform_QPush(lrtID, platformCtrlQ, vertex->getParamArray(), vertex->getParamNb()*sizeof(int));
 
 	platform_QPush_finalize(lrtID, platformCtrlQ);
 }

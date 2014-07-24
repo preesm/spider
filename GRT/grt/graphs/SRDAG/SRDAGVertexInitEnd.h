@@ -58,6 +58,8 @@ private :
 	void disconnectInputEdge(int ix);
 	void disconnectOutputEdge(int ix);
 
+	int param;
+
 public :
 	SRDAGVertexInitEnd(){}
 	SRDAGVertexInitEnd(
@@ -73,9 +75,7 @@ public :
 	SRDAGEdge* getOutputEdge(int id);
 
 	int getParamNb() const;
-	int getParamValue(int paramIndex);
-	UINT32 getExecTime(int slaveType) const;
-	bool getConstraint(int slaveType) const;
+	int* getParamArray();
 
 	virtual int getFctIx() const;
 
@@ -176,18 +176,10 @@ inline void SRDAGVertexInitEnd::disconnectOutputEdge(int ix){
 inline int SRDAGVertexInitEnd::getParamNb() const
 	{return 1;}
 
-inline int SRDAGVertexInitEnd::getParamValue(int paramIndex){
-	if(paramIndex == 0)
-		return edges[0]->getTokenRate();
-	else
-		return -1;
+inline int* SRDAGVertexInitEnd::getParamArray(){
+	param = edges[0]->getTokenRate();
+	return &param;
 }
-
-inline UINT32 SRDAGVertexInitEnd::getExecTime(int slaveType) const
-	{return SYNC_TIME;}
-
-inline bool SRDAGVertexInitEnd::getConstraint(int slaveType) const
-	{return true;}
 
 inline int SRDAGVertexInitEnd::getFctIx() const{
 	switch(type){

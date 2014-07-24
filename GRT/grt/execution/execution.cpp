@@ -122,9 +122,7 @@ void execute(){
 			outputFIFOs[i] = (UINT8*)(SHARED_MEM_BASE + vertex->getOutputEdge(i)->getFifoAddress());
 		}
 
-		for(int i=0;i<vertex->getParamNb(); i++){
-			args[i] = vertex->getParamValue(i);
-		}
+		memcpy(args, vertex->getParamArray(), vertex->getParamNb()*sizeof(int));
 
 		curVertexId = vertex->getId();
 

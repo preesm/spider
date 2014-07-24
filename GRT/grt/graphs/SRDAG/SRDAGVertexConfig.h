@@ -56,10 +56,7 @@ private :
 	IndexedArray<SRDAGEdge*, MAX_SRDAG_IO_EDGES> inputEdges;
 
 	int relatedParamValues[MAX_PARAM];
-
 	int paramValues[MAX_PARAM];
-	UINT32 execTime[MAX_SLAVE_TYPES];
-	bool constraints[MAX_SLAVE_TYPES];
 
 	void connectInputEdge(SRDAGEdge* edge, int ix);
 	void connectOutputEdge(SRDAGEdge* edge, int ix);
@@ -81,9 +78,7 @@ public :
 	SRDAGEdge* getOutputEdge(int id);
 
 	int getParamNb() const;
-	int getParamValue(int paramIndex);
-	UINT32 getExecTime(int slaveType) const;
-	bool getConstraint(int slaveType) const;
+	int* getParamArray();
 
 	int getRelatedParamValue(int paramIndex) const;
 	void setRelatedParamValue(int paramIndex, int value);
@@ -123,14 +118,8 @@ inline void SRDAGVertexConfig::disconnectOutputEdge(int ix)
 inline int SRDAGVertexConfig::getParamNb() const
 	{return reference->getNbParameters();}
 
-inline int SRDAGVertexConfig::getParamValue(int paramIndex)
-	{return paramValues[paramIndex];}
-
-inline UINT32 SRDAGVertexConfig::getExecTime(int slaveType) const
-	{return execTime[slaveType];}
-
-inline bool SRDAGVertexConfig::getConstraint(int slaveType) const
-	{return constraints[slaveType];}
+inline int* SRDAGVertexConfig::getParamArray()
+	{return paramValues;}
 
 inline int SRDAGVertexConfig::getRelatedParamValue(int paramIndex) const
 	{return relatedParamValues[paramIndex];}

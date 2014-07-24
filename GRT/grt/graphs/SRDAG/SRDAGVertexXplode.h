@@ -59,6 +59,7 @@ private :
 	void disconnectInputEdge(int ix);
 	void disconnectOutputEdge(int ix);
 
+	int params[3+MAX_SRDAG_XPLODE_EDGES];
 public :
 	SRDAGVertexXplode(){}
 	SRDAGVertexXplode(
@@ -74,9 +75,7 @@ public :
 	SRDAGEdge* getOutputEdge(int id);
 
 	int getParamNb() const;
-	int getParamValue(int paramIndex);
-	UINT32 getExecTime(int slaveType) const;
-	bool getConstraint(int slaveType) const;
+	int* getParamArray();
 
 	virtual int getFctIx() const;
 
@@ -186,24 +185,25 @@ inline int SRDAGVertexXplode::getParamNb() const{
 	return 2+getNbInputEdge()+getNbOutputEdge();
 }
 
-inline int SRDAGVertexXplode::getParamValue(int paramIndex){
-	if(paramIndex == 0)
-		return getNbInputEdge();
-	else if (paramIndex == 1)
-		return getNbOutputEdge();
-	else if (paramIndex < 2 + getNbInputEdge())
-		return getInputEdge(paramIndex-2)->getTokenRate();
-	else if (paramIndex < 2 + getNbInputEdge() + getNbOutputEdge())
-		return getOutputEdge(paramIndex-2-getNbInputEdge())->getTokenRate();
-	else
-		return -1;
+inline int* SRDAGVertexXplode::getParamArray(){
+	params[0] = getNbInputEdge();
+	params[1] = getNbOutputEdge();
+	switch(type){
+	case Explode:
+		params[2] = gatherEdges[0]->getTokenRate();
+		for(int i=0; i<scatterEdges.getNb(); i++){
+			params[3+i] = scatterEdges[i]->getTokenRate();
+		}
+		return params;
+	case Implode:
+		params[2] = scatterEdges[0]->getTokenRate();
+		for(int i=0; i<gatherEdges.getNb(); i++){
+			params[3+i] = gatherEdges[i]->getTokenRate();
+		}
+		return params;
+	}
+	return (int*)NULL;
 }
-
-inline UINT32 SRDAGVertexXplode::getExecTime(int slaveType) const
-	{return SYNC_TIME;}
-
-inline bool SRDAGVertexXplode::getConstraint(int slaveType) const
-	{return true;}
 
 inline int SRDAGVertexXplode::getFctIx() const
 	{return XPLODE_FUNCT_IX;}

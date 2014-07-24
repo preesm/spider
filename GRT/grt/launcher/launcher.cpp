@@ -169,47 +169,6 @@ void Launcher::assignFifoVertex(SRDAGVertexAbstract* vertex){
 			offset += edge->getTokenRate();
 		}
 		break;
-//	 case Implode:
-//		 for(i=0; i<vertex->getNbInputEdge(); i++){
-//			 if(vertex->getInputEdge(i)->getSource()->getType() != pisdf_vertex){
-//				 if(vertex->getFunctIx() == SWICTH_FUNCT_IX){
-//					 vertex->getOutputEdge(0)->setFifoId(nbFifo++);
-//					 vertex->getOutputEdge(0)->setFifoAddress(memory.alloc(vertex->getInputEdge(2)->getTokenRate()));
-//				 }
-//
-//				for (i = 0; i < vertex->getNbOutputEdge(); i++){
-//					edge = vertex->getOutputEdge(i);
-//		//			if(edge->getSink()->getType() == Implode){
-//		//				assignFifoVertex(edge->getSink());
-//		//			}
-//
-//					if(edge->getFifoId() == -1){
-//						edge->setFifoId(nbFifo++);
-//						 if(edge->getSink()->getFunctIx() == END_FUNCT_IX){
-//							edge->setFifoAddress(endMem);
-//						 }else{
-//							 edge->setFifoAddress(memory.alloc(edge->getTokenRate()));
-//						}
-//					}
-//				}
-//				return;
-//			 }
-//		 }
-//		 if(vertex->getOutputEdge(0)->getFifoId() == -1){
-//			 base = memory.alloc(vertex->getOutputEdge(0)->getTokenRate());
-//			 offset = 0;
-//			 vertex->getOutputEdge(0)->setFifoId(nbFifo++);
-//			 vertex->getOutputEdge(0)->setFifoAddress(base);
-//			for (i = 0; i < vertex->getNbInputEdge(); i++){
-//				edge = vertex->getInputEdge(i);
-//				if(edge->getFifoId() == -1){
-//					edge->setFifoId(nbFifo++);
-//					edge->setFifoAddress(base+offset);
-//				}
-//				offset += edge->getTokenRate();
-//			}
-//		 }
-//		 break;
 	 case Broadcast:
 		 for (i = 0; i < vertex->getNbOutputEdge(); i++){
 			edge = vertex->getOutputEdge(i);

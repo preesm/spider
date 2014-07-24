@@ -101,8 +101,8 @@ void ScheduleWriter::write(BaseSchedule* schedule, SRDAGGraph* dag, Architecture
 			vertex->getName(name, MAX_VERTEX_NAME_SIZE);
 
 			platform_fprintf ("\t<event\n");
-			platform_fprintf ("\t\tstart=\"%d\"\n", schedule->getVertexStartTime(vertex->getScheduleIndex(), vertex));
-			platform_fprintf ("\t\tend=\"%d\"\n",	schedule->getVertexEndTime(vertex->getScheduleIndex(), vertex));
+			platform_fprintf ("\t\tstart=\"%d\"\n", vertex->getStartTime());
+			platform_fprintf ("\t\tend=\"%d\"\n",	vertex->getEndTime());
 			platform_fprintf ("\t\ttitle=\"%s\"\n", name);
 			platform_fprintf ("\t\tmapping=\"%s\"\n", archi->getSlaveName(slave));
 			platform_fprintf ("\t\tcolor=\"%s\"\n",regenerateColor(vertex->getId()));

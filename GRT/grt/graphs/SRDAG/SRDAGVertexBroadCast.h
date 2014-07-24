@@ -74,9 +74,7 @@ public :
 	SRDAGEdge* getOutputEdge(int id);
 
 	int getParamNb() const;
-	int getParamValue(int paramIndex);
-	UINT32 getExecTime(int slaveType) const;
-	bool getConstraint(int slaveType) const;
+	int* getParamArray();
 
 	virtual int getFctIx() const;
 
@@ -113,14 +111,8 @@ inline void SRDAGVertexBroadcast::disconnectOutputEdge(int ix)
 inline int SRDAGVertexBroadcast::getParamNb() const
 	{return 0;}
 
-inline int SRDAGVertexBroadcast::getParamValue(int paramIndex)
-	{return -1;}
-
-inline UINT32 SRDAGVertexBroadcast::getExecTime(int slaveType) const
-	{return SYNC_TIME;}
-
-inline bool SRDAGVertexBroadcast::getConstraint(int slaveType) const
-	{return true;}
+inline int* SRDAGVertexBroadcast::getParamArray()
+	{return (int*)NULL;}
 
 inline int SRDAGVertexBroadcast::getFctIx() const
 	{return BROADCAST_FUNCT_IX;}

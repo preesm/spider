@@ -83,7 +83,8 @@ protected :
 	int schedLevel;
 	int slaveIndex;
 	int scheduleIndex;
-	int minStartTime;
+	UINT32 startTime;
+	UINT32 endTime;
 
 	virtual void connectInputEdge(SRDAGEdge* edge, int ix)	= 0;
 	virtual void connectOutputEdge(SRDAGEdge* edge, int ix)	= 0;
@@ -91,6 +92,9 @@ protected :
 	virtual void disconnectOutputEdge(int ix)	= 0;
 
 	static int creationIx;
+
+	UINT32 execTime[MAX_SLAVE_TYPES];
+	bool constraints[MAX_SLAVE_TYPES];
 
 	int setIx;
 
@@ -118,10 +122,10 @@ public:
 	virtual SRDAGEdge* getOutputEdge(int id) = 0;
 
 	virtual int getParamNb() const = 0;
-	virtual int getParamValue(int paramIndex) = 0;
+	virtual int* getParamArray() = 0;
 
-	virtual UINT32 getExecTime(int slaveType) const = 0;
-	virtual bool getConstraint(int slaveType) const = 0;
+	UINT32 getExecTime(int slaveType) const;
+	bool getConstraint(int slaveType) const;
 
 	int getReferenceIndex() const;
 	int getIterationIndex() const;
@@ -134,8 +138,11 @@ public:
 	int getScheduleIndex() const;
 	void setScheduleIndex(int index);
 
-	int getMinStartTime() const;
-	void setMinStartTime(UINT32 time);
+	UINT32 getStartTime() const;
+	void setStartTime(UINT32 time);
+
+	UINT32 getEndTime() const;
+	void setEndTime(UINT32 time);
 
 	virtual BOOL isHierarchical() const = 0;
 	virtual PiSDFGraph* getHierarchy() const = 0;
@@ -182,16 +189,28 @@ inline int SRDAGVertexAbstract::getScheduleIndex() const
 inline void SRDAGVertexAbstract::setScheduleIndex(int index)
 	{scheduleIndex = index;}
 
-inline int SRDAGVertexAbstract::getMinStartTime() const
-	{return minStartTime;}
-
-inline void SRDAGVertexAbstract::setMinStartTime(UINT32 time)
-	{minStartTime = time;}
-
 inline int SRDAGVertexAbstract::getSetIx() const
 	{return setIx;}
 
 inline void SRDAGVertexAbstract::setSetIx(int setIx)
 	{this->setIx = setIx;}
+
+inline UINT32 SRDAGVertexAbstract::getExecTime(int slaveType) const
+	{return execTime[slaveType];}
+
+inline bool SRDAGVertexAbstract::getConstraint(int slaveType) const
+	{return constraints[slaveType];}
+
+inline UINT32 SRDAGVertexAbstract::getStartTime() const
+	{return startTime;}
+
+inline void SRDAGVertexAbstract::setStartTime(UINT32 time)
+	{startTime = time;}
+
+inline UINT32 SRDAGVertexAbstract::getEndTime() const
+	{return endTime;}
+
+inline void SRDAGVertexAbstract::setEndTime(UINT32 time)
+	{endTime = time;}
 
 #endif

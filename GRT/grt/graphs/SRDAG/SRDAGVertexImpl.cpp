@@ -60,7 +60,6 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(){
 	schedLevel 		= -1;
 	slaveIndex 		= -1;
 	scheduleIndex 	= -1;
-	minStartTime 	= -1;
 	setIx 			= -1;
 }
 
@@ -80,7 +79,6 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(
 	schedLevel 		= -1;
 	slaveIndex 		= -1;
 	scheduleIndex 	= -1;
-	minStartTime 	= -1;
 	setIx 			= -1;
 }
 
@@ -126,6 +124,10 @@ SRDAGVertexBroadcast::SRDAGVertexBroadcast(
 		SRDAGVertexAbstract(_graph, Broadcast, ref, _refIx,_itrIx){
 	inputEdges.reset();
 	outputEdges.reset();
+	for(int i=0; i<MAX_SLAVE_TYPES; i++){
+		constraints[i] = true;
+		execTime[i] = SYNC_TIME;
+	}
 }
 
 SRDAGVertexConfig::SRDAGVertexConfig(
@@ -179,6 +181,10 @@ SRDAGVertexInitEnd::SRDAGVertexInitEnd(
 		int 			_itrIx):
 		SRDAGVertexAbstract(_graph, _type, NULL, _refIx,_itrIx){
 	edges.reset();
+	for(int i=0; i<MAX_SLAVE_TYPES; i++){
+		constraints[i] = true;
+		execTime[i] = SYNC_TIME;
+	}
 }
 
 SRDAGVertexRB::SRDAGVertexRB(
@@ -189,6 +195,10 @@ SRDAGVertexRB::SRDAGVertexRB(
 		SRDAGVertexAbstract(_graph, RoundBuffer, ref, _refIx,_itrIx){
 	outputEdges.reset();
 	inputEdges.reset();
+	for(int i=0; i<MAX_SLAVE_TYPES; i++){
+		constraints[i] = true;
+		execTime[i] = SYNC_TIME;
+	}
 }
 
 SRDAGVertexXplode::SRDAGVertexXplode(
@@ -199,4 +209,8 @@ SRDAGVertexXplode::SRDAGVertexXplode(
 		SRDAGVertexAbstract(_graph, _type, NULL, _refIx,_itrIx){
 	gatherEdges.reset();
 	scatterEdges.reset();
+	for(int i=0; i<MAX_SLAVE_TYPES; i++){
+		constraints[i] = true;
+		execTime[i] = SYNC_TIME;
+	}
 }

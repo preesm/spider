@@ -55,8 +55,6 @@ private :
 	IndexedArray<SRDAGEdge*, MAX_SRDAG_IO_EDGES> inputEdges;
 
 	int paramValues[MAX_PARAM];
-	UINT32 execTime[MAX_SLAVE_TYPES];
-	bool constraints[MAX_SLAVE_TYPES];
 
 	void connectInputEdge(SRDAGEdge* edge, int ix);
 	void connectOutputEdge(SRDAGEdge* edge, int ix);
@@ -78,9 +76,7 @@ public :
 	SRDAGEdge* getOutputEdge(int id);
 
 	int getParamNb() const;
-	int getParamValue(int paramIndex);
-	UINT32 getExecTime(int slaveType) const;
-	bool getConstraint(int slaveType) const;
+	int* getParamArray();
 
 	int getFctIx() const;
 
@@ -117,14 +113,8 @@ inline void SRDAGVertexNormal::disconnectOutputEdge(int ix)
 inline int SRDAGVertexNormal::getParamNb() const
 	{return reference->getNbParameters();}
 
-inline int SRDAGVertexNormal::getParamValue(int paramIndex)
-	{return paramValues[paramIndex];}
-
-inline UINT32 SRDAGVertexNormal::getExecTime(int slaveType) const
-	{return execTime[slaveType];}
-
-inline bool SRDAGVertexNormal::getConstraint(int slaveType) const
-	{return constraints[slaveType];}
+inline int* SRDAGVertexNormal::getParamArray()
+	{return paramValues;}
 
 inline int SRDAGVertexNormal::getFctIx() const
 	{return reference->getFunction_index();}

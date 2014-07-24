@@ -162,7 +162,7 @@ inline int SRDAGVertexAbstract::getIterationIndex() const
 	{return itrIx;}
 
 inline void SRDAGVertexAbstract::updateState(){
-	if(state != SRDAG_Executed){
+	if(state == SRDAG_NotExecuted){
 		switch(type){
 		case ConfigureActor:
 			state = SRDAG_Executable;
@@ -177,13 +177,17 @@ inline void SRDAGVertexAbstract::updateState(){
 			for (int i = 0; i < getNbInputEdge(); i++){
 				SRDAGVertexAbstract* predecessor = getInputEdge(i)->getSource();
 
-				if(predecessor->state == SRDAG_NotExecuted)
-					predecessor->updateState();
-
-				if(predecessor->state == SRDAG_NotExecuted
-						|| predecessor->isHierarchical()){
+				if(predecessor->isHierarchical()){
 					state = SRDAG_NotExecuted;
 					return;
+				}
+
+				if(predecessor->state == SRDAG_NotExecuted){
+					predecessor->updateState();
+					if(predecessor->state == SRDAG_NotExecuted){
+						state = SRDAG_NotExecuted;
+						return;
+					}
 				}
 			}
 			state = SRDAG_Executable;

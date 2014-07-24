@@ -51,6 +51,7 @@ SRDAGEdge::SRDAGEdge(){
 	fifo.add= 0;
 	fifo.size=0;
 	delay = 0;
+	setIx = -1;
 }
 
 SRDAGEdge::SRDAGEdge(SRDAGGraph *_graph){
@@ -62,6 +63,7 @@ SRDAGEdge::SRDAGEdge(SRDAGGraph *_graph){
 	fifo.add= 0;
 	fifo.size=0;
 	delay = 0;
+	setIx = -1;
 }
 
 /**

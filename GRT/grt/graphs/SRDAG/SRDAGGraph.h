@@ -220,8 +220,8 @@ inline SRDAGVertexXplode* SRDAGGraph::createVertexEx(
 inline
 SRDAGEdge* SRDAGGraph::createEdge(PiSDFEdge* ref){
 	SRDAGEdge* edge = ePool.alloc();
-	edges.add(edge);
 	*edge = SRDAGEdge(this);
+	edges.add(edge);
 	return edge;
 }
 

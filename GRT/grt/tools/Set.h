@@ -42,6 +42,7 @@
 #include <platform_types.h>
 #include <typeinfo>
 #include <graphs/SRDAG/SRDAGVertexAbstract.h>
+#include <graphs/SRDAG/SRDAGEdge.h>
 
 //#include <tools/SetIterator.h>
 
@@ -49,6 +50,7 @@ template <class T, int SIZE> class SetIterator;
 
 typedef enum {
 	ABSTRACT_VERTICES,
+	EDGES,
 	DEFAULT
 }SetType;
 
@@ -183,8 +185,9 @@ inline void Set<T,SIZE>::add(T* e){
 		if(nb>max)max = nb;
 
 		if(type == ABSTRACT_VERTICES){
-			SRDAGVertexAbstract* vertex = (SRDAGVertexAbstract*)e;
-			vertex->setSetIx(nb-1);
+			((SRDAGVertexAbstract*)e)->setSetIx(nb-1);
+		}else if(type == EDGES){
+			((SRDAGEdge*)e)->setSetIx(nb-1);
 		}
 	}else{
 		exitWithCode(2001, name);
@@ -200,9 +203,7 @@ inline void Set<T,SIZE>::remove(T* e){
 	if(type == ABSTRACT_VERTICES){
 		SRDAGVertexAbstract*  vertex 		= (SRDAGVertexAbstract*) (e);
 		SRDAGVertexAbstract** vertex_array 	= (SRDAGVertexAbstract**)(array);
-//		if(ix != vertex_array[ix]->getSetIx()){
-//			printf("Error: vx %d (setIx = %d)\n", ix, vertex_array[ix]->getSetIx());
-//		}
+
 		int ix = vertex->getSetIx();
 		if(ix == -1)
 			exitWithCode(2002, name);
@@ -210,6 +211,17 @@ inline void Set<T,SIZE>::remove(T* e){
 		nb--;
 		array[ix] = array[nb];
 		vertex_array[ix]->setSetIx(ix);
+	}else if(type == EDGES){
+		SRDAGEdge*  edge 		= (SRDAGEdge*) (e);
+		SRDAGEdge** edge_array 	= (SRDAGEdge**)(array);
+
+		int ix = edge->getSetIx();
+		if(ix == -1)
+			exitWithCode(2002, name);
+
+		nb--;
+		array[ix] = array[nb];
+		edge_array[ix]->setSetIx(ix);
 	}else{
 		int ix = -1;
 		for(int i=0; i<nb && ix == -1; i++){

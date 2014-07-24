@@ -68,6 +68,7 @@ protected :
 
 	FIFO fifo;
 
+	int setIx;
 	static int creationIx;
 
 public :
@@ -105,6 +106,9 @@ public :
 
 	SRDAGVertexAbstract* getSource() const;
 	SRDAGVertexAbstract* getSink() const;
+
+	int getSetIx() const;
+	void setSetIx(int setIx);
 };
 
 /**
@@ -200,5 +204,12 @@ inline int SRDAGEdge::getSinkPortIx() const {
 inline int SRDAGEdge::getSourcePortIx() const {
 	return sourcePortIx;
 }
+
+
+inline int SRDAGEdge::getSetIx() const
+	{return setIx;}
+
+inline void SRDAGEdge::setSetIx(int setIx)
+	{this->setIx = setIx;}
 
 #endif

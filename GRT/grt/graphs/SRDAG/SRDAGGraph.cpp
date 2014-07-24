@@ -46,7 +46,7 @@
 /**
  Constructor
 */
-SRDAGGraph::SRDAGGraph(): vertices(ABSTRACT_VERTICES), implodes(DEFAULT), edges(DEFAULT), rbs(DEFAULT), brs(DEFAULT){
+SRDAGGraph::SRDAGGraph(): vertices(ABSTRACT_VERTICES), implodes(DEFAULT), edges(EDGES), rbs(DEFAULT), brs(DEFAULT){
 	vertexNoPool.reset();
 	vertexBrPool.reset();
 	vertexCfPool.reset();

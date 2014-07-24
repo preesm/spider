@@ -58,6 +58,8 @@ public:
 	/** Default Constructor. */
 	SetIterator(Set<T,SIZE> * s);
 
+	SetIterator();
+
 	/** Default Destructor. */
 	virtual ~SetIterator();
 
@@ -77,6 +79,10 @@ template <class T, int SIZE>
 inline SetIterator<T, SIZE>::SetIterator(Set<T,SIZE> * s){
 	set = s;
 	currentIx = 0;
+}
+
+template <class T, int SIZE>
+inline SetIterator<T, SIZE>::SetIterator(){
 }
 
 /** Default Destructor. */

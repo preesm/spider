@@ -40,8 +40,8 @@ private:
 	}
 public:
 	inline Rational(){
-		nominator=0;
-		denominator=1;
+//		nominator=0;
+//		denominator=1;
 	}
 	inline Rational(int i){
 		nominator=i;

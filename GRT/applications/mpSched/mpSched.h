@@ -40,6 +40,8 @@
 
 #include "actors.h"
 
+#define TEST 1
+
 #define NVAL	10
 #define MMAX 	12
 #define NBITER 	10
@@ -64,7 +66,7 @@ void config(UINT8* inputFIFOs[],
 	int i;
 
 //	N = NVAL;
-	printf("Recv N=%d, vxId %d \n", N, curVertexId);
+//	printf("Recv N=%d, vxId %d \n", N, curVertexId);
 
 	UINT8* out_M = outputFIFOs[0];
 
@@ -102,13 +104,14 @@ void src(UINT8* inputFIFOs[],
 	UINT32 NBSAMPLES = params[1];
 
 	float* out = (float*)outputFIFOs[0];
-
+#if TEST
 	for(i=0; i<N; i++){
 		srand(1000);
 		for(j=0; j<NBSAMPLES; j++){
 			out[j+i*NBSAMPLES] = 10*((float)rand())/RAND_MAX;
 		}
 	}
+#endif
 
 //	for(i=1; i<N; i++){
 //		float* data = (float*)(((long long)out)+i*NBSAMPLES*sizeof(float));
@@ -159,6 +162,7 @@ void snk(UINT8* inputFIFOs[],
 
 	BOOL test = TRUE;
 
+#if TEST
 	int hash;
 	for(i=0; i<N; i++){
 		hash = 0;
@@ -166,9 +170,13 @@ void snk(UINT8* inputFIFOs[],
 		for(j=0; j<NBSAMPLES; j++){
 			hash = hash ^ data[j+i*NBSAMPLES];
 		}
-		if(hash != expectedHash[8])
+		if(hash != expectedHash[8]){
 			printf("Bad Hash result: %#X instead of %#X\n", hash, expectedHash[8]);
+			return;
+		}
 	}
+	printf("Result OK\n");
+#endif
 
 	//printf("Exec snk\n");
 

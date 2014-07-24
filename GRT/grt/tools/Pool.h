@@ -107,7 +107,9 @@ inline Pool<T,SIZE>::Pool(){
 /** Default Destructor. */
 template <class T, int SIZE>
 inline Pool<T,SIZE>::~Pool(){
+#if STAT
 	printf("[%s]: alloc %d elemts\n", name, max);
+#endif
 }
 
 /** Reset Pool. */

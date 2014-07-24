@@ -115,7 +115,9 @@ inline Set<T,SIZE>::Set(){
 /** Default Destructor. */
 template <class T, int SIZE>
 inline Set<T,SIZE>::~Set(){
+#if STAT
 	printf("[%s]: Max alloc %d elemts\n", name, max);
+#endif
 }
 
 /** Reset Set. */

@@ -39,6 +39,8 @@
 
 #include "actors.h"
 
+#define TEST 0
+
 //#define NVAL	20
 //#define MMAX 	20
 //#define NBITER 	10
@@ -97,12 +99,14 @@ void src(UINT8* inputFIFOs[],
 
 	float* out = (float*)outputFIFOs[0];
 
+#if TEST
 	for(i=0; i<N; i++){
 		srand(1000);
 		for(j=0; j<NBSAMPLES; j++){
 			out[j+i*NBSAMPLES] = 10*((float)rand())/RAND_MAX;
 		}
 	}
+#endif
 
 //	for(i=1; i<N; i++){
 //		float* data = (float*)(((long long)out)+i*NBSAMPLES*sizeof(float));
@@ -152,7 +156,7 @@ void snk(UINT8* inputFIFOs[],
 	float* in = (float*)inputFIFOs[0];
 
 	BOOL test = TRUE;
-
+#if TEST
 	int hash;
 	for(i=0; i<N; i++){
 		hash = 0;
@@ -163,7 +167,7 @@ void snk(UINT8* inputFIFOs[],
 		if(hash != expectedHash[8])
 			printf("Bad Hash result: %#X instead of %#X\n", hash, expectedHash[8]);
 	}
-
+#endif
 	//printf("Exec snk\n");
 
 //	float outputCheck [NBSAMPLES];

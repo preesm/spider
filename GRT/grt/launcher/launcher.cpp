@@ -359,7 +359,8 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		stat->schedulingTime += timeEndTaskOrdering[j] - timeStartTaskOrdering[j];
 	}
 
-	printf("Mapped %d tasks in %d cycles (%d cycles/tasks)\n",
+	if(mappingNb != 0)
+		printf("Mapped %d tasks in %d cycles (%d cycles/tasks)\n",
 			mappingNb,
 			mappingTime,
 			mappingTime/mappingNb);

@@ -44,6 +44,7 @@
 #define PRINT_REAL_GANTT				1
 #define USE_AM							0
 #define SEE_PARAM_VAL					0
+#define	STAT							1
 
 #define ITER_MAX 2
 #define PERIOD 600000

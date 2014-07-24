@@ -218,15 +218,19 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 					sourceRepetitions[i+1] = sourceRepetitions[i+1]->getOutputEdge(edge->getSource()->getOutputEdgeIx(edge))->getSink();
 				}
 			}
+			nbSourceRepetitions++;
 
 			for(int i=0; i<edge->getSink()->getChildNbVertices(iteration); i++)
 				sinkRepetitions[i] = edge->getSink()->getChildVertex(iteration,i);
 
-			SRDAGVertexInitEnd *end_vertex = topDag->createVertexEn(0, 0);
-			sinkRepetitions[nbSinkRepetitions] = end_vertex;
+			if(edge->getSource()->getType() == normal_vertex &&
+				((PiSDFVertex*)(edge->getSource()))->getSubType() == SubType_Broadcast){
 
-			nbSourceRepetitions++;
-			nbSinkRepetitions++;
+			}else{
+				SRDAGVertexInitEnd *end_vertex = topDag->createVertexEn(0, 0);
+				sinkRepetitions[nbSinkRepetitions] = end_vertex;
+				nbSinkRepetitions++;
+			}
 
 			curSourceToken = nbDelays;
 			curSinkToken   = sinkConsumption;
@@ -268,6 +272,10 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 				else
 					curSinkToken += sinkConsumption;
 			}
+
+			if(nbSinkRepetitions == sinkIndex
+					|| nbSourceRepetitions == sourceIndex)
+				break;
 		}
 
 //		printf("edge %d:\n\tSource:", edge->getId());
@@ -347,35 +355,68 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 							}
 						}
 
-						// Shift sink repetitions and connections
-						for(int j=nbSinkRepetitions+nbEndToAdd-1; j>=i; j--){
-							if(j-nbEndToAdd >= 0){
-								sinkRepetitions[j] = sinkRepetitions[j-nbEndToAdd];
-								edgesPerSinkVertices[j] = edgesPerSinkVertices[j-nbEndToAdd];
+						if(edge->getSource()->getType() == normal_vertex &&
+								((PiSDFVertex*)(edge->getSource()))->getSubType() == SubType_Broadcast){
+							edgesPerSinkVertices[i].nb -= nbEndToAdd;
+							edgesPerSinkVertices[i].values[0] = sourceProduction;
+
+							for(int j=0; j<nbEndToAdd; j++)
+								edgesPerSourceVertices[j].nb--;
+
+
+							if(edgesPerSinkVertices[i].values[0]
+									== origin_vertex->getOutputEdge(0)->getTokenRate()){
+								sinkRepetitions[i] = origin_vertex->getOutputEdge(0)->getSink();
+								edgesPerSinkVertices[i].portIx = origin_vertex->getOutputEdge(0)->getSinkPortIx();
+								topDag->removeEdge(origin_vertex->getOutputEdge(0));
+								topDag->removeVertex(origin_vertex);
+
+							}else
+								sinkRepetitions[i+nbEndToAdd] = origin_vertex;
+
+//							sinkVertex = origin_vertex;
+//							sinkPortId = origin_vertex->getReference()->getInputEdgeId(edge);
+//							sinkRepetitions[i] = topDag->createVertexIm(0, 0);
+//
+//							edgesPerSinkVertices[i].portIx = 0;
+//
+//							// Adding an edge between the implode and the sink.
+//							srdagEdge = topDag->createEdge(edge->getRefEdge());
+//							srdagEdge->connectSource(sinkRepetitions[i], 0);
+//							srdagEdge->connectSink(sinkVertex, sinkPortId);
+//							srdagEdge->setTokenRate(sinkConsumption);
+						}else{
+
+							// Shift sink repetitions and connections
+							for(int j=nbSinkRepetitions+nbEndToAdd-1; j>=i; j--){
+								if(j-nbEndToAdd >= 0){
+									sinkRepetitions[j] = sinkRepetitions[j-nbEndToAdd];
+									edgesPerSinkVertices[j] = edgesPerSinkVertices[j-nbEndToAdd];
+								}
 							}
-						}
-						for(int j=0; j<nbEndToAdd; j++){
-							if(j+nbEndToAdd < edgesPerSinkVertices[i+nbEndToAdd].nb)
-								edgesPerSinkVertices[i+nbEndToAdd].values[j] = edgesPerSinkVertices[i+nbEndToAdd].values[j+nbEndToAdd];
-						}
-						edgesPerSinkVertices[i+nbEndToAdd].nb -= nbEndToAdd;
+							for(int j=0; j<nbEndToAdd; j++){
+								if(j+nbEndToAdd < edgesPerSinkVertices[i+nbEndToAdd].nb)
+									edgesPerSinkVertices[i+nbEndToAdd].values[j] = edgesPerSinkVertices[i+nbEndToAdd].values[j+nbEndToAdd];
+							}
+							edgesPerSinkVertices[i+nbEndToAdd].nb -= nbEndToAdd;
 
-						for(int j=0; j<nbEndToAdd; j++){
-							edgesPerSinkVertices[i+j].nb = 1;
-							edgesPerSinkVertices[i+j].values[i] = sourceProduction;
-							sinkRepetitions[i+j] = topDag->createVertexEn(0,0);
+							for(int j=0; j<nbEndToAdd; j++){
+								edgesPerSinkVertices[i+j].nb = 1;
+								edgesPerSinkVertices[i+j].values[i] = sourceProduction;
+								sinkRepetitions[i+j] = topDag->createVertexEn(0,0);
+							}
+
+							/* Check useless RB */
+							if(edgesPerSinkVertices[i+nbEndToAdd].values[0]
+									== origin_vertex->getOutputEdge(0)->getTokenRate()){
+								sinkRepetitions[i+nbEndToAdd] = origin_vertex->getOutputEdge(0)->getSink();
+								edgesPerSinkVertices[i+nbEndToAdd].portIx = origin_vertex->getOutputEdge(0)->getSinkPortIx();
+								topDag->removeEdge(origin_vertex->getOutputEdge(0));
+								topDag->removeVertex(origin_vertex);
+
+							}else
+								sinkRepetitions[i+nbEndToAdd] = origin_vertex;
 						}
-
-						/* Check useless RB */
-						if(edgesPerSinkVertices[i+nbEndToAdd].values[0]
-								== origin_vertex->getOutputEdge(0)->getTokenRate()){
-							sinkRepetitions[i+nbEndToAdd] = origin_vertex->getOutputEdge(0)->getSink();
-							edgesPerSinkVertices[i+nbEndToAdd].portIx = origin_vertex->getOutputEdge(0)->getSinkPortIx();
-							topDag->removeEdge(origin_vertex->getOutputEdge(0));
-							topDag->removeVertex(origin_vertex);
-
-						}else
-							sinkRepetitions[i+nbEndToAdd] = origin_vertex;
 
 					}else{
 						sinkVertex = origin_vertex;
@@ -420,8 +461,10 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 				switch(sourceVertex->getType()){
 					case Normal:
 					case ConfigureActor:
-					case Broadcast:
 						sourcePortIx = edgesPerSourceVertices[sourceIndex].portIx;
+						break;
+					case Broadcast:
+						sourcePortIx = sourceVertex->getNbOutputEdge();
 						break;
 					case RoundBuffer:
 					case Init:
@@ -965,22 +1008,6 @@ static int removeRBExp(SRDAGGraph* topDag){
 	SRDAGVertexBroadcast* br;
 	SetIterator<SRDAGVertexBroadcast,BROADCAST_POOL_SIZE> brIter = topDag->getBrIterator();
 	while((br = brIter.next()) != NULL){
-		for(int j=0; j<br->getNbOutputEdge(); j++){
-			SRDAGVertexInitEnd* endVertex = (SRDAGVertexInitEnd*)(br->getOutputEdge(j)->getSink());
-			if(endVertex->getType() == End){
-				int nbOutput = br->getNbOutputEdge();
-
-				topDag->removeEdge(br->getOutputEdge(j));
-				topDag->removeVertex(endVertex);
-
-				for(int k=j+1; k<nbOutput; k++){
-					br->getOutputEdge(k)->connectSource(br, k-1);
-				}
-
-				result=1;
-			}
-		}
-
 		if(br->getNbOutputEdge() == 1){
 			SRDAGEdge* inEdge = br->getInputEdge(0);
 			SRDAGVertexAbstract* nextVertex = br->getOutputEdge(0)->getSink();

@@ -122,7 +122,6 @@ class SRDAGGraph{
 			return (SRDAGVertexAbstract*) NULL;
 		}
 
-		void updateExecuted();
 		void updateState();
 
 		void print(const char* name, bool displayNames, bool displayRates);
@@ -302,15 +301,6 @@ inline int SRDAGGraph::getNbVertices(){
 
 inline int SRDAGGraph::getNbEdges(){
 	return edges.getNb();
-}
-
-inline void SRDAGGraph::updateExecuted(){
-	SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> iter = vertices.getIterator();
-	SRDAGVertexAbstract* vertex;
-	while((vertex = iter.next()) != NULL){
-		if(vertex->getState() == SRDAG_Executable)
-			vertex->setState(SRDAG_Executed);
-	}
 }
 
 inline void SRDAGGraph::updateState(){

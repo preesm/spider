@@ -61,6 +61,7 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(){
 	slaveIndex 		= -1;
 	scheduleIndex 	= -1;
 	minStartTime 	= -1;
+	setIx 			= -1;
 }
 
 SRDAGVertexAbstract::SRDAGVertexAbstract(
@@ -80,6 +81,41 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(
 	slaveIndex 		= -1;
 	scheduleIndex 	= -1;
 	minStartTime 	= -1;
+	setIx 			= -1;
+}
+
+void SRDAGVertexAbstract::updateState(){
+	if(state == SRDAG_NotExecuted){
+		switch(type){
+		case ConfigureActor:
+			state = SRDAG_Executable;
+			break;
+		case RoundBuffer:
+			if(getNbInputEdge() == 1 && getNbOutputEdge() == 1)
+				state = SRDAG_Executable;
+			else
+				state = SRDAG_NotExecuted;
+			break;
+		default:
+			for (int i = 0; i < getNbInputEdge(); i++){
+				SRDAGVertexAbstract* predecessor = getInputEdge(i)->getSource();
+
+				if(predecessor->isHierarchical()){
+					state = SRDAG_NotExecuted;
+					return;
+				}
+
+				if(predecessor->state == SRDAG_NotExecuted){
+					predecessor->updateState();
+					if(predecessor->state == SRDAG_NotExecuted){
+						state = SRDAG_NotExecuted;
+						return;
+					}
+				}
+			}
+			state = SRDAG_Executable;
+		}
+	}
 }
 
 SRDAGVertexBroadcast::SRDAGVertexBroadcast(

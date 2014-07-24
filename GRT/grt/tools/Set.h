@@ -40,10 +40,17 @@
 #include <grt_definitions.h>
 #include "SchedulingError.h"
 #include <platform_types.h>
+#include <typeinfo>
+#include <graphs/SRDAG/SRDAGVertexAbstract.h>
 
 //#include <tools/SetIterator.h>
 
 template <class T, int SIZE> class SetIterator;
+
+typedef enum {
+	ABSTRACT_VERTICES,
+	DEFAULT
+}SetType;
 
 /**
  * Generic Set Class
@@ -60,9 +67,11 @@ private:
 	int nb;
 	int max;
 
+	SetType type;
+
 public:
 	/** Default Constructor. */
-	Set();
+	Set(SetType type);
 
 	/** Default Destructor. */
 	virtual ~Set();
@@ -107,9 +116,10 @@ public:
 
 /** Default Constructor. */
 template <class T, int SIZE>
-inline Set<T,SIZE>::Set(){
+inline Set<T,SIZE>::Set(SetType _type){
 	nb = 0;
 	max = 0;
+	type = _type;
 }
 
 /** Default Destructor. */
@@ -171,6 +181,11 @@ inline void Set<T,SIZE>::add(T* e){
 		array[nb]=e;
 		nb++;
 		if(nb>max)max = nb;
+
+		if(type == ABSTRACT_VERTICES){
+			SRDAGVertexAbstract* vertex = (SRDAGVertexAbstract*)e;
+			vertex->setSetIx(nb-1);
+		}
 	}else{
 		exitWithCode(2001, name);
 	}
@@ -182,17 +197,32 @@ inline void Set<T,SIZE>::add(T* e){
  */
 template <class T, int SIZE>
 inline void Set<T,SIZE>::remove(T* e){
-	int ix = -1;
-	for(int i=0; i<nb && ix == -1; i++){
-		if(array[i] == e){
-			ix = i;
-		}
-	}
-	if(ix != -1){
+	if(type == ABSTRACT_VERTICES){
+		SRDAGVertexAbstract*  vertex 		= (SRDAGVertexAbstract*) (e);
+		SRDAGVertexAbstract** vertex_array 	= (SRDAGVertexAbstract**)(array);
+//		if(ix != vertex_array[ix]->getSetIx()){
+//			printf("Error: vx %d (setIx = %d)\n", ix, vertex_array[ix]->getSetIx());
+//		}
+		int ix = vertex->getSetIx();
+		if(ix == -1)
+			exitWithCode(2002, name);
+
 		nb--;
 		array[ix] = array[nb];
+		vertex_array[ix]->setSetIx(ix);
 	}else{
-		exitWithCode(2002, name);
+		int ix = -1;
+		for(int i=0; i<nb && ix == -1; i++){
+			if(array[i] == e){
+				ix = i;
+			}
+		}
+		if(ix != -1){
+			nb--;
+			array[ix] = array[nb];
+		}else{
+			exitWithCode(2002, name);
+		}
 	}
 }
 

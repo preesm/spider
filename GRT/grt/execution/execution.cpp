@@ -44,6 +44,8 @@
 #include <mpSched/mpSched.h>
 #include <mpSched/baseActors.h>
 
+#include <graphs/SRDAG/SRDAGEdge.h>
+
 static Queue<SRDAGVertexAbstract*, MAX_MASTER_ACTORS> executionQueue;
 static UINT8* inputFIFOs[MAX_NB_FIFO];
 static UINT8* outputFIFOs[MAX_NB_FIFO];

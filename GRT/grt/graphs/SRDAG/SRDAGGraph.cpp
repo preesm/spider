@@ -46,7 +46,7 @@
 /**
  Constructor
 */
-SRDAGGraph::SRDAGGraph(){
+SRDAGGraph::SRDAGGraph(): vertices(ABSTRACT_VERTICES), implodes(DEFAULT), edges(DEFAULT), rbs(DEFAULT), brs(DEFAULT){
 	vertexNoPool.reset();
 	vertexBrPool.reset();
 	vertexCfPool.reset();
@@ -58,6 +58,7 @@ SRDAGGraph::SRDAGGraph(){
 	implodes.reset();
 	edges.reset();
 	brs.reset();
+	rbs.reset();
 
 	vertexNoPool.setName("Normal Vertex Pool of SRDAG Graph");
 	vertexBrPool.setName("Broadcast Vertex Pool of SRDAG Graph");
@@ -69,6 +70,8 @@ SRDAGGraph::SRDAGGraph(){
 	vertices.setName("Vertex List of SRDAG Graph");
 	implodes.setName("Implode List of SRDAG Graph");
 	edges.setName("Edge List of SRDAG Graph");
+	rbs.setName("RBs List of SRDAG Graph");
+	brs.setName("Brs List of SRDAG Graph");
 }
 
 void SRDAGGraph::reset(){

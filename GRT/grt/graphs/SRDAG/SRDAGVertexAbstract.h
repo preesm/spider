@@ -42,11 +42,12 @@ class SRDAGGraph;
 #include <cstdlib>
 
 #include <grt_definitions.h>
-#include "../../tools/SchedulingError.h"
-#include "../PiSDF/PiSDFAbstractVertex.h"
-#include "../PiSDF/PiSDFVertex.h"
-#include "SRDAGEdge.h"
+#include <tools/SchedulingError.h>
 #include <tools/IndexedArray.h>
+
+class SRDAGEdge;
+class PiSDFGraph;
+class PiSDFAbstractVertex;
 
 typedef enum{
 	SRDAG_Executable,
@@ -90,6 +91,8 @@ protected :
 	virtual void disconnectOutputEdge(int ix)	= 0;
 
 	static int creationIx;
+
+	int setIx;
 
 public:
 	SRDAGVertexAbstract();
@@ -139,6 +142,9 @@ public:
 
 	virtual void getName(char* name, UINT32 sizeMax) = 0;
 
+	int getSetIx() const;
+	void setSetIx(int setIx);
+
 //	friend class SRDAGGraph;
 	friend class SRDAGEdge;
 };
@@ -161,40 +167,6 @@ inline int SRDAGVertexAbstract::getReferenceIndex() const
 inline int SRDAGVertexAbstract::getIterationIndex() const
 	{return itrIx;}
 
-inline void SRDAGVertexAbstract::updateState(){
-	if(state == SRDAG_NotExecuted){
-		switch(type){
-		case ConfigureActor:
-			state = SRDAG_Executable;
-			break;
-		case RoundBuffer:
-			if(getNbInputEdge() == 1 && getNbOutputEdge() == 1)
-				state = SRDAG_Executable;
-			else
-				state = SRDAG_NotExecuted;
-			break;
-		default:
-			for (int i = 0; i < getNbInputEdge(); i++){
-				SRDAGVertexAbstract* predecessor = getInputEdge(i)->getSource();
-
-				if(predecessor->isHierarchical()){
-					state = SRDAG_NotExecuted;
-					return;
-				}
-
-				if(predecessor->state == SRDAG_NotExecuted){
-					predecessor->updateState();
-					if(predecessor->state == SRDAG_NotExecuted){
-						state = SRDAG_NotExecuted;
-						return;
-					}
-				}
-			}
-			state = SRDAG_Executable;
-		}
-	}
-}
-
 inline PiSDFAbstractVertex* SRDAGVertexAbstract::getReference() const
 	{return reference;}
 
@@ -215,5 +187,11 @@ inline int SRDAGVertexAbstract::getMinStartTime() const
 
 inline void SRDAGVertexAbstract::setMinStartTime(UINT32 time)
 	{minStartTime = time;}
+
+inline int SRDAGVertexAbstract::getSetIx() const
+	{return setIx;}
+
+inline void SRDAGVertexAbstract::setSetIx(int setIx)
+	{this->setIx = setIx;}
 
 #endif

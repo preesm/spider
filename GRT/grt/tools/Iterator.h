@@ -34,164 +34,30 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef POOL_H_
-#define POOL_H_
+#ifndef ITERATOR_H_
+#define ITERATOR_H_
 
 #include <grt_definitions.h>
+#include "SchedulingError.h"
+#include <platform_types.h>
 
-template <class T, int SIZE> class PoolIterator;
-
-template <class T, int SIZE> class Pool {
-private:
-	/** Name for debug */
-	char name[MAX_TOOL_NAME];
-
-	/** Array of values. */
-	T array[SIZE];
-	bool valid[SIZE];
-
-	/** Number of value in the Pool. */
-	int nb;
-	int curWrIx;
-	int max;
-
+template <class T, int SIZE> class Iterator {
 public:
 	/** Default Constructor. */
-	Pool();
+	Iterator(){};
 
 	/** Default Destructor. */
-	virtual ~Pool();
+	virtual ~Iterator(){};
 
-	/** Reset Pool. */
-	void reset();
-
-	/**
-	 * Set the IndexedArray name.
-	 * @param str the new name.
-	 */
-	void setName(const char* str);
+	/** Reset Set. */
+	virtual void reset() = 0;
 
 	/**
-	 * Get the IndexedArray name
-	 * @return its name.
+	 * Get next element.
+	 * @return next element.
 	 */
-	const char * getName();
+	virtual T* next() = 0;
 
-	/**
-	 * Get current number of element in the Pool.
-	 * @return number of element.
-	 */
-	int getNb();
-
-	/**
-	 * Allocate one element to the Pool.
-	 * @return e Allocated element .
-	 */
-	T* 	alloc();
-
-	/**
-	 * Remove an element of the Pool.
-	 * @param e Element to remove.
-	 */
-	void free(T* e);
-
-	PoolIterator<T,SIZE> getIterator();
-
-	friend class PoolIterator<T,SIZE>;
 };
 
-/** Default Constructor. */
-template <class T, int SIZE>
-inline Pool<T,SIZE>::Pool(){
-	nb = 0;
-	max = 0;
-	curWrIx = 0;
-	memset(valid, false, SIZE*sizeof(bool));
-}
-
-/** Default Destructor. */
-template <class T, int SIZE>
-inline Pool<T,SIZE>::~Pool(){
-#if STAT
-	printf("[%s]: alloc %d elemts\n", name, max);
-#endif
-}
-
-/** Reset Pool. */
-template <class T, int SIZE>
-inline void Pool<T,SIZE>::reset(){
-	nb = 0;
-	max = 0;
-	curWrIx = 0;
-	memset(valid, false, SIZE*sizeof(bool));
-}
-
-/**
- * Set the IndexedArray name.
- * @param name the new name.
- */
-template <class T, int SIZE>
-void Pool<T,SIZE>::setName(const char* str){
-	if(strlen(str) >= MAX_TOOL_NAME)
-		exitWithCode(2000, str);
-	strncpy(name, str, MAX_TOOL_NAME);
-}
-
-/**
- * Get the IndexedArray name
- * @return its name.
- */
-template <class T, int SIZE>
-const char * Pool<T,SIZE>::getName(){
-	return name;
-}
-
-/**
- * Get current number of element in the Pool.
- * @return number of element.
- */
-template <class T, int SIZE>
-inline int Pool<T,SIZE>::getNb(){
-	return nb;
-}
-
-/**
- * Allocate one element to the Pool.
- * @return e Allocated element .
- */
-template <class T, int SIZE>
-inline T* Pool<T,SIZE>::alloc(){
-	if(nb<SIZE){
-		while(1){
-			if(!valid[curWrIx]){
-				break;
-			}
-			curWrIx = (curWrIx+1)%SIZE;
-		}
-		nb++;
-		if(nb>max) max = nb;
-		valid[curWrIx] = true;
-		return &(array[curWrIx]);
-	}else{
-		exitWithCode(2001, name);
-		return (T*)0;
-	}
-}
-
-/**
- * Remove an element of the Pool.
- * @param e Element to remove.
- */
-template <class T, int SIZE>
-inline void Pool<T,SIZE>::free(T* e){
-	int ix = ((long long)e-(long long)(&array[0]))/sizeof(T);
-	valid[ix] = false;
-	nb--;
-}
-
-template <class T, int SIZE>
-PoolIterator<T,SIZE> Pool<T,SIZE>::getIterator(){
-	return PoolIterator<T,SIZE>(this);
-}
-
-#endif /* POOL_H_ */
+#endif /* ITERATOR_H_ */

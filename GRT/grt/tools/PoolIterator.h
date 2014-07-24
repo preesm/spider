@@ -34,164 +34,75 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef POOL_H_
-#define POOL_H_
+#ifndef POOL_ITERATOR_H_
+#define POOL_ITERATOR_H_
 
 #include <grt_definitions.h>
+#include "SchedulingError.h"
+#include <platform_types.h>
 
-template <class T, int SIZE> class PoolIterator;
+#include <tools/Pool.h>
+#include <tools/Iterator.h>
 
-template <class T, int SIZE> class Pool {
+template <class T, int SIZE> class PoolIterator : public Iterator<T,SIZE> {
 private:
-	/** Name for debug */
-	char name[MAX_TOOL_NAME];
+	Pool<T,SIZE> * pool;
 
-	/** Array of values. */
-	T array[SIZE];
-	bool valid[SIZE];
-
-	/** Number of value in the Pool. */
-	int nb;
-	int curWrIx;
-	int max;
+	int currentIx;
 
 public:
 	/** Default Constructor. */
-	Pool();
+	PoolIterator(Pool<T,SIZE> * p);
+
+	PoolIterator();
 
 	/** Default Destructor. */
-	virtual ~Pool();
+	virtual ~PoolIterator();
 
-	/** Reset Pool. */
+	/** Reset Set. */
 	void reset();
 
 	/**
-	 * Set the IndexedArray name.
-	 * @param str the new name.
+	 * Get next element.
+	 * @return next element.
 	 */
-	void setName(const char* str);
+	T* next();
 
-	/**
-	 * Get the IndexedArray name
-	 * @return its name.
-	 */
-	const char * getName();
-
-	/**
-	 * Get current number of element in the Pool.
-	 * @return number of element.
-	 */
-	int getNb();
-
-	/**
-	 * Allocate one element to the Pool.
-	 * @return e Allocated element .
-	 */
-	T* 	alloc();
-
-	/**
-	 * Remove an element of the Pool.
-	 * @param e Element to remove.
-	 */
-	void free(T* e);
-
-	PoolIterator<T,SIZE> getIterator();
-
-	friend class PoolIterator<T,SIZE>;
 };
 
 /** Default Constructor. */
 template <class T, int SIZE>
-inline Pool<T,SIZE>::Pool(){
-	nb = 0;
-	max = 0;
-	curWrIx = 0;
-	memset(valid, false, SIZE*sizeof(bool));
+inline PoolIterator<T, SIZE>::PoolIterator(Pool<T,SIZE> * p){
+	pool = p;
+	currentIx = 0;
+}
+
+template <class T, int SIZE>
+inline PoolIterator<T, SIZE>::PoolIterator(){
 }
 
 /** Default Destructor. */
 template <class T, int SIZE>
-inline Pool<T,SIZE>::~Pool(){
-#if STAT
-	printf("[%s]: alloc %d elemts\n", name, max);
-#endif
+inline PoolIterator<T, SIZE>::~PoolIterator(){
 }
 
-/** Reset Pool. */
+/** Reset Set. */
 template <class T, int SIZE>
-inline void Pool<T,SIZE>::reset(){
-	nb = 0;
-	max = 0;
-	curWrIx = 0;
-	memset(valid, false, SIZE*sizeof(bool));
-}
-
-/**
- * Set the IndexedArray name.
- * @param name the new name.
- */
-template <class T, int SIZE>
-void Pool<T,SIZE>::setName(const char* str){
-	if(strlen(str) >= MAX_TOOL_NAME)
-		exitWithCode(2000, str);
-	strncpy(name, str, MAX_TOOL_NAME);
-}
-
-/**
- * Get the IndexedArray name
- * @return its name.
- */
-template <class T, int SIZE>
-const char * Pool<T,SIZE>::getName(){
-	return name;
-}
-
-/**
- * Get current number of element in the Pool.
- * @return number of element.
- */
-template <class T, int SIZE>
-inline int Pool<T,SIZE>::getNb(){
-	return nb;
-}
-
-/**
- * Allocate one element to the Pool.
- * @return e Allocated element .
- */
-template <class T, int SIZE>
-inline T* Pool<T,SIZE>::alloc(){
-	if(nb<SIZE){
-		while(1){
-			if(!valid[curWrIx]){
-				break;
-			}
-			curWrIx = (curWrIx+1)%SIZE;
-		}
-		nb++;
-		if(nb>max) max = nb;
-		valid[curWrIx] = true;
-		return &(array[curWrIx]);
-	}else{
-		exitWithCode(2001, name);
-		return (T*)0;
-	}
-}
-
-/**
- * Remove an element of the Pool.
- * @param e Element to remove.
- */
-template <class T, int SIZE>
-inline void Pool<T,SIZE>::free(T* e){
-	int ix = ((long long)e-(long long)(&array[0]))/sizeof(T);
-	valid[ix] = false;
-	nb--;
+inline void PoolIterator<T, SIZE>::reset(){
+	currentIx = 0;
 }
 
 template <class T, int SIZE>
-PoolIterator<T,SIZE> Pool<T,SIZE>::getIterator(){
-	return PoolIterator<T,SIZE>(this);
+inline T* PoolIterator<T, SIZE>::next(){
+	do{
+		if(currentIx>=SIZE)
+			return (T*)NULL;
+		if(pool->valid[currentIx])
+			return &(pool->array[currentIx++]);
+		currentIx++;
+	}while(1);
+//	return set->array[currentIx++];
 }
 
-#endif /* POOL_H_ */
+
+#endif /* POOL_ITERATOR_H_ */

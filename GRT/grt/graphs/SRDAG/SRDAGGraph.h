@@ -45,6 +45,7 @@
 #include <platform_types.h>
 #include "../../tools/SchedulingError.h"
 #include <tools/Pool.h>
+#include <tools/PoolIterator.h>
 #include <tools/List.h>
 #include <tools/Set.h>
 #include <tools/SetIterator.h>
@@ -77,7 +78,7 @@ class SRDAGGraph{
 		Set<SRDAGVertexXplode, XPLODE_POOL_SIZE> 		implodes;
 		Set<SRDAGVertexRB, RB_POOL_SIZE> 				rbs;
 		Set<SRDAGVertexBroadcast, BROADCAST_POOL_SIZE>	brs;
-		Set<SRDAGEdge, EDGE_POOL_SIZE>					edges;
+//		Set<SRDAGEdge, EDGE_POOL_SIZE>					edges;
 
 	public : 
 		SRDAGGraph();
@@ -104,7 +105,7 @@ class SRDAGGraph{
 		SRDAGVertexAbstract* getNextHierVertex();
 
 		SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES>	getVertexIterator();
-		SetIterator<SRDAGEdge, EDGE_POOL_SIZE> 				getEdgeIterator();
+		PoolIterator<SRDAGEdge, EDGE_POOL_SIZE> 				getEdgeIterator();
 
 		SetIterator<SRDAGVertexXplode,XPLODE_POOL_SIZE> 	getImplodeIterator();
 		SetIterator<SRDAGVertexRB,RB_POOL_SIZE> 			getRBIterator();
@@ -220,7 +221,7 @@ inline
 SRDAGEdge* SRDAGGraph::createEdge(PiSDFEdge* ref){
 	SRDAGEdge* edge = ePool.alloc();
 	*edge = SRDAGEdge(this);
-	edges.add(edge);
+//	edges.add(edge);
 	return edge;
 }
 
@@ -258,8 +259,8 @@ inline SetIterator<SRDAGVertexBroadcast,BROADCAST_POOL_SIZE> SRDAGGraph::getBrIt
  @param index: index of the edge in the edge list
  @return edge
 */
-inline SetIterator<SRDAGEdge, EDGE_POOL_SIZE>  SRDAGGraph::getEdgeIterator(){
-	return edges.getIterator();
+inline PoolIterator<SRDAGEdge, EDGE_POOL_SIZE>  SRDAGGraph::getEdgeIterator(){
+	return ePool.getIterator();
 }
 
 /**
@@ -300,7 +301,8 @@ inline int SRDAGGraph::getNbVertices(){
 }
 
 inline int SRDAGGraph::getNbEdges(){
-	return edges.getNb();
+//	return edges.getNb();
+	return ePool.getNb();
 }
 
 inline void SRDAGGraph::updateState(){

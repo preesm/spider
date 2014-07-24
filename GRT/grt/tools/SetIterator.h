@@ -42,13 +42,12 @@
 #include <platform_types.h>
 
 #include <tools/Set.h>
-
-
+#include <tools/Iterator.h>
 
 /**
  * Generic SetIterator Class
  */
-template <class T, int SIZE> class SetIterator {
+template <class T, int SIZE> class SetIterator : public Iterator<T,SIZE>{
 private:
 	Set<T,SIZE> * set;
 

@@ -46,7 +46,7 @@
 /**
  Constructor
 */
-SRDAGGraph::SRDAGGraph(): vertices(ABSTRACT_VERTICES), implodes(DEFAULT), edges(EDGES), rbs(DEFAULT), brs(DEFAULT){
+SRDAGGraph::SRDAGGraph(): vertices(ABSTRACT_VERTICES), implodes(DEFAULT), /*edges(EDGES), */rbs(DEFAULT), brs(DEFAULT){
 	vertexNoPool.reset();
 	vertexBrPool.reset();
 	vertexCfPool.reset();
@@ -56,7 +56,7 @@ SRDAGGraph::SRDAGGraph(): vertices(ABSTRACT_VERTICES), implodes(DEFAULT), edges(
 	ePool.reset();
 	vertices.reset();
 	implodes.reset();
-	edges.reset();
+//	edges.reset();
 	brs.reset();
 	rbs.reset();
 
@@ -69,7 +69,7 @@ SRDAGGraph::SRDAGGraph(): vertices(ABSTRACT_VERTICES), implodes(DEFAULT), edges(
 	ePool.setName("Edge Pool of SRDAG Graph");
 	vertices.setName("Vertex List of SRDAG Graph");
 	implodes.setName("Implode List of SRDAG Graph");
-	edges.setName("Edge List of SRDAG Graph");
+//	edges.setName("Edge List of SRDAG Graph");
 	rbs.setName("RBs List of SRDAG Graph");
 	brs.setName("Brs List of SRDAG Graph");
 }
@@ -84,7 +84,7 @@ void SRDAGGraph::reset(){
 	ePool.reset();
 	vertices.reset();
 	implodes.reset();
-	edges.reset();
+//	edges.reset();
 	brs.reset();
 }
 
@@ -101,7 +101,7 @@ void SRDAGGraph::removeEdge(SRDAGEdge* edge){
 		edge->disconnectSink();
 	if(edge->getSource())
 		edge->disconnectSource();
-	edges.remove(edge);
+//	edges.remove(edge);
 	ePool.free(edge);
 }
 

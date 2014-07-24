@@ -1408,6 +1408,10 @@ void PiSDFTransformer::multiStepScheduling(
 		DotWriter::write(topDag, file, 1, 1);
 	#endif
 
+
+		// Updating states. Sets all executable vxs to executed since their execution was already launched.
+		topDag->updateExecuted();
+
 		/*
 		 * Resolving parameters. If the actors' execution is disabled, the parameters
 		 * should had been set at compile time.
@@ -1516,6 +1520,8 @@ void PiSDFTransformer::multiStepScheduling(
 //#endif
 //#endif
 
+	// Updating states. Sets all executable vxs to executed since their execution was already launched.
+	topDag->updateExecuted();
 
 #if PRINT_GRAPH
 	// Printing the final dag.

@@ -51,7 +51,9 @@ PiSDFAbstractVertex::PiSDFAbstractVertex() {
 	tempId=-1;
 	inputEdges.reset();
 	outputEdges.reset();
-	childVertices.reset();
+
+	for(int i=0; i<MAX_VERTEX_REPETITION; i++)
+		childVertices[i].reset();
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = FALSE;
@@ -77,7 +79,8 @@ void PiSDFAbstractVertex::reset() {
 	tempId=-1;
 	inputEdges.reset();
 	outputEdges.reset();
-	childVertices.reset();
+	for(int i=0; i<MAX_VERTEX_REPETITION; i++)
+		childVertices[i].reset();
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = FALSE;
@@ -85,7 +88,8 @@ void PiSDFAbstractVertex::reset() {
 }
 
 void PiSDFAbstractVertex::resetRefs(){
-	childVertices.reset();
+	for(int i=0; i<MAX_VERTEX_REPETITION; i++)
+		childVertices[i].reset();
 }
 
 void PiSDFAbstractVertex::setInputEdge(PiSDFEdge* edge, UINT32 id){

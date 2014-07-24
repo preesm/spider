@@ -140,6 +140,7 @@ inline SRDAGVertexNormal* SRDAGGraph::createVertexNo(
 		PiSDFVertex* ref){
 	SRDAGVertexNormal* vertex = vertexNoPool.alloc();
 	*vertex = SRDAGVertexNormal(this, refIx, itrIx, ref);
+	if(ref != NULL)	ref->addChildVertex(vertex, itrIx);
 	vertices.add(vertex);
 	return vertex;
 }
@@ -150,6 +151,7 @@ inline SRDAGVertexConfig* SRDAGGraph::createVertexCf(
 		PiSDFConfigVertex* ref){
 	SRDAGVertexConfig* vertex = vertexCfPool.alloc();
 	*vertex = SRDAGVertexConfig(this, refIx, itrIx, ref);
+	if(ref != NULL)	ref->addChildVertex(vertex, itrIx);
 	vertices.add(vertex);
 	return vertex;
 }
@@ -160,6 +162,7 @@ inline SRDAGVertexBroadcast* SRDAGGraph::createVertexBr(
 		PiSDFVertex* ref){
 	SRDAGVertexBroadcast* vertex = vertexBrPool.alloc();
 	*vertex = SRDAGVertexBroadcast(this, refIx, itrIx, ref);
+	if(ref != NULL)	ref->addChildVertex(vertex, itrIx);
 	vertices.add(vertex);
 	brs.add(vertex);
 	return vertex;
@@ -189,6 +192,7 @@ inline SRDAGVertexRB* SRDAGGraph::createVertexRB(
 		PiSDFAbstractVertex* ref){
 	SRDAGVertexRB* vertex = vertexRBPool.alloc();
 	*vertex = SRDAGVertexRB(this, refIx, itrIx, ref);
+	if(ref != NULL)	ref->addChildVertex(vertex, itrIx);
 	vertices.add(vertex);
 	rbs.add(vertex);
 	return vertex;

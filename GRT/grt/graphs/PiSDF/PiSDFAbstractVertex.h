@@ -42,6 +42,8 @@
 #include <grt_definitions.h>
 #include <tools/SchedulingError.h>
 #include <tools/Array.h>
+#include <tools/Set.h>
+#include <tools/SetIterator.h>
 #include <tools/List.h>
 #include <graphs/PiSDF/PiSDFEdge.h>
 #include <graphs/PiSDF/PiSDFParameter.h>
@@ -79,7 +81,7 @@ class PiSDFAbstractVertex {
 	Array<PiSDFEdge*,MAX_NB_PiSDF_INPUT_EDGES> inputEdges;
 	Array<PiSDFEdge*,MAX_NB_PiSDF_OUTPUT_EDGES> outputEdges;
 
-	List<SRDAGVertexAbstract*, MAX_CHILD> childVertices;
+	List<SRDAGVertexAbstract*, MAX_VERTEX_REPETITION> childVertices[MAX_VERTEX_REPETITION];
 
 	UINT8 nbParameters;
 	PiSDFParameter* parameters[MAX_NB_PiSDF_PARAMS];
@@ -111,16 +113,16 @@ public:
 
 	void addParameter(PiSDFParameter* param);
 
-	void addChildVertex(SRDAGVertexAbstract* vertex){
-		childVertices.add(vertex);
+	void addChildVertex(SRDAGVertexAbstract* vertex, int refIx){
+		childVertices[refIx].add(vertex);
 	}
 
-	SRDAGVertexAbstract* getChildVertex(UINT32 id){
-		return childVertices[id];
+	SRDAGVertexAbstract* getChildVertex(int refIx, int id){
+		return childVertices[refIx][id];
 	}
 
-	int getChildNbVertices(){
-		return childVertices.getNb();
+	int getChildNbVertices(int refIx){
+		return childVertices[refIx].getNb();
 	}
 
 	void setGraph(PiSDFGraph* graph_){

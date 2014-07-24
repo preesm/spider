@@ -56,6 +56,7 @@ static const char* errorString[MAX_ERROR_COUNT] = {
 	/* 2004*/ "Access not set element",
 	/* 2005*/ "Set already set element",
 	/* 2006*/ "Reset not set element",
+	/* 2007*/ "Bad vertex repetition"
 
 //	/* 0*/ "Adding a vertex while the graph is already full",
 //	/* 1*/ "Adding an edge while the graph is already full",

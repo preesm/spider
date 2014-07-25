@@ -43,8 +43,7 @@ class SRDAGGraph;
 
 #include <grt_definitions.h>
 #include <tools/SchedulingError.h>
-
-#include "SRDAGEdgeArray.h"
+#include <tools/FitedArray.h>
 
 class SRDAGEdge;
 class PiSDFGraph;
@@ -99,7 +98,7 @@ protected :
 
 	int setIx;
 
-	SRDAGEdgeArray inputs, outputs;
+	FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY> inputs, outputs;
 
 public:
 	SRDAGVertexAbstract();

@@ -34,7 +34,8 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "SRDAGEdgeArray.h"
+#include "FitedArray.h"
 
-SRDAGEdge* SRDAGEdgeArray::array[MAX_EDGE_ARRAY];
-int SRDAGEdgeArray::wrIx;
+
+template<> int FitedArray<SRDAGEdge*, MAX_EDGE_ARRAY>::wrIx = 0;
+template<> SRDAGEdge* FitedArray<SRDAGEdge*, MAX_EDGE_ARRAY>::array[MAX_EDGE_ARRAY] = {(SRDAGEdge*)NULL};

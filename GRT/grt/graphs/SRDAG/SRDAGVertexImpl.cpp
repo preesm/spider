@@ -127,8 +127,8 @@ SRDAGVertexBroadcast::SRDAGVertexBroadcast(
 		PiSDFVertex* ref):
 		SRDAGVertexAbstract(_graph, Broadcast, ref, _refIx,_itrIx){
 	fctIx = BROADCAST_FUNCT_IX;
-	inputs = SRDAGEdgeArray(1);
-	outputs = SRDAGEdgeArray(MAX_SRDAG_XPLODE_EDGES);
+	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
+	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_XPLODE_EDGES);
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = true;
 		execTime[i] = SYNC_TIME;
@@ -141,8 +141,8 @@ SRDAGVertexConfig::SRDAGVertexConfig(
 		int 			_itrIx,
 		PiSDFConfigVertex* ref):
 		SRDAGVertexAbstract(_graph, ConfigureActor, ref, _refIx,_itrIx){
-	inputs = SRDAGEdgeArray(MAX_SRDAG_IO_EDGES);
-	outputs = SRDAGEdgeArray(MAX_SRDAG_IO_EDGES);
+	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
+	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
 	fctIx = reference->getFunction_index();
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
@@ -164,8 +164,8 @@ SRDAGVertexNormal::SRDAGVertexNormal(
 		int 			_itrIx,
 		PiSDFVertex* ref):
 		SRDAGVertexAbstract(_graph, Normal, ref, _refIx,_itrIx){
-	inputs = SRDAGEdgeArray(MAX_SRDAG_IO_EDGES);
-	outputs = SRDAGEdgeArray(MAX_SRDAG_IO_EDGES);
+	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
+	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
 	fctIx = reference->getFunction_index();
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
@@ -189,11 +189,11 @@ SRDAGVertexInitEnd::SRDAGVertexInitEnd(
 		SRDAGVertexAbstract(_graph, _type, NULL, _refIx,_itrIx){
 	switch(type){
 	case Init:
-		outputs = SRDAGEdgeArray(1);
+		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
 		fctIx = INIT_FUNCT_IX;
 		break;
 	case End:
-		inputs = SRDAGEdgeArray(1);
+		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
 		fctIx = END_FUNCT_IX;
 		break;
 	default:
@@ -212,8 +212,8 @@ SRDAGVertexRB::SRDAGVertexRB(
 		int 			_itrIx,
 		PiSDFAbstractVertex* ref):
 		SRDAGVertexAbstract(_graph, RoundBuffer, ref, _refIx,_itrIx){
-	inputs = SRDAGEdgeArray(1);
-	outputs = SRDAGEdgeArray(1);
+	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
+	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
 	fctIx = RB_FUNCT_IX;
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
@@ -229,11 +229,11 @@ SRDAGVertexXplode::SRDAGVertexXplode(
 		int 			_itrIx):
 		SRDAGVertexAbstract(_graph, _type, NULL, _refIx,_itrIx){
 	if(type == Explode){
-		inputs = SRDAGEdgeArray(1);
-		outputs = SRDAGEdgeArray(MAX_SRDAG_XPLODE_EDGES);
+		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
+		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_XPLODE_EDGES);
 	}else{
-		inputs = SRDAGEdgeArray(MAX_SRDAG_XPLODE_EDGES);
-		outputs = SRDAGEdgeArray(1);
+		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_XPLODE_EDGES);
+		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
 	}
 	fctIx = XPLODE_FUNCT_IX;
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){

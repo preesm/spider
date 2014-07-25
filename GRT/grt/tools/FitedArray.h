@@ -34,8 +34,8 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef SRDAG_EDGE_ARRAY_H_
-#define SRDAG_EDGE_ARRAY_H_
+#ifndef FITED_ARRAY_H_
+#define FITED_ARRAY_H_
 
 #include <grt_definitions.h>
 #include <tools/SchedulingError.h>
@@ -48,25 +48,25 @@ class SRDAGEdge;
  * Indexed array generic class.
  * An indexed array is an array with a validity check of accesses.
  */
-class SRDAGEdgeArray {
+template <class T, int POOLSIZE> class FitedArray {
 private:
 	/** Name for debug */
 	char name[MAX_TOOL_NAME];
 
-	SRDAGEdge** base;
+	T* base;
 	int nb;
 	int size;
 
-	static SRDAGEdge* array[MAX_EDGE_ARRAY];
+	static T array[POOLSIZE];
 	static int wrIx;
 
 public:
 	/** Default Constructor */
-	SRDAGEdgeArray();
-	SRDAGEdgeArray(int _size);
+	FitedArray();
+	FitedArray(int _size);
 
 	/** Default Destructor */
-	virtual ~SRDAGEdgeArray();
+	virtual ~FitedArray();
 
 	/** Reset the array */
 	void reset();
@@ -88,7 +88,7 @@ public:
 	 * @param n Index of the element.
 	 * @return the element.
 	 */
-	SRDAGEdge* operator [](int n);
+	T operator [](int n);
 
 	/**
 	 * Get the number of initialized element of the IndexedArray.
@@ -101,7 +101,7 @@ public:
 	 * @param n Index of the element.
 	 * @param e Value of the element.
 	 */
-	void setValue(int n, SRDAGEdge* e);
+	void setValue(int n, T e);
 
 	/**
 	 * Reset the value of the n-th element.
@@ -111,13 +111,15 @@ public:
 };
 
 /** Default Constructor */
-inline SRDAGEdgeArray::SRDAGEdgeArray(){
+template <class T, int POOLSIZE>
+inline FitedArray<T,POOLSIZE>::FitedArray(){
 	nb = size = 0;
 	base = (SRDAGEdge**)NULL;
 }
 
-inline SRDAGEdgeArray::SRDAGEdgeArray(int _size){
-	if(wrIx +_size < MAX_EDGE_ARRAY){
+template <class T, int POOLSIZE>
+inline FitedArray<T,POOLSIZE>::FitedArray(int _size){
+	if(wrIx +_size < POOLSIZE){
 		size = _size;
 		nb = 0;
 		base = &(array[wrIx]);
@@ -129,11 +131,13 @@ inline SRDAGEdgeArray::SRDAGEdgeArray(int _size){
 }
 
 /** Default Destructor */
-inline SRDAGEdgeArray::~SRDAGEdgeArray(){
+template <class T, int POOLSIZE>
+inline FitedArray<T,POOLSIZE>::~FitedArray(){
 }
 
 /** Reset the array */
-inline void SRDAGEdgeArray::reset(){
+template <class T, int POOLSIZE>
+inline void FitedArray<T,POOLSIZE>::reset(){
 	nb = size = 0;
 	base = (SRDAGEdge**)NULL;
 }
@@ -142,7 +146,8 @@ inline void SRDAGEdgeArray::reset(){
  * Set the IndexedArray name.
  * @param name the new name.
  */
-inline void SRDAGEdgeArray::setName(const char* str){
+template <class T, int POOLSIZE>
+inline void FitedArray<T,POOLSIZE>::setName(const char* str){
 	if(strlen(str) >= MAX_TOOL_NAME)
 		exitWithCode(2000, str);
 	strncpy(name, str, MAX_TOOL_NAME);
@@ -152,7 +157,8 @@ inline void SRDAGEdgeArray::setName(const char* str){
  * Get the IndexedArray name
  * @return its name.
  */
-inline const char * SRDAGEdgeArray::getName(){
+template <class T, int POOLSIZE>
+inline const char * FitedArray<T,POOLSIZE>::getName(){
 	return name;
 }
 
@@ -161,7 +167,8 @@ inline const char * SRDAGEdgeArray::getName(){
  * @param n Rank of the element.
  * @return Element of rank n.
  */
-inline SRDAGEdge* SRDAGEdgeArray::operator [](int n){
+template <class T, int POOLSIZE>
+inline T FitedArray<T,POOLSIZE>::operator [](int n){
 #if DEBUG
 	if(n >= size)
 		exitWithCode(2003, name);
@@ -175,7 +182,8 @@ inline SRDAGEdge* SRDAGEdgeArray::operator [](int n){
  * Get current number of element in the list.
  * @return number of element.
  */
-inline int SRDAGEdgeArray::getNb() const{
+template <class T, int POOLSIZE>
+inline int FitedArray<T,POOLSIZE>::getNb() const{
 	return nb;
 }
 
@@ -184,7 +192,8 @@ inline int SRDAGEdgeArray::getNb() const{
  * @param n Index of the element.
  * @param e Value of the element.
  */
-inline void SRDAGEdgeArray::setValue(int n, SRDAGEdge* e){
+template <class T, int POOLSIZE>
+inline void FitedArray<T,POOLSIZE>::setValue(int n, T e){
 #if DEBUG
 	if(n >= size)
 		exitWithCode(2003, name);
@@ -198,7 +207,8 @@ inline void SRDAGEdgeArray::setValue(int n, SRDAGEdge* e){
  * Reset the value of the n-th element.
  * @param n Index of the element.
  */
-inline void SRDAGEdgeArray::resetValue(int n){
+template <class T, int POOLSIZE>
+inline void FitedArray<T,POOLSIZE>::resetValue(int n){
 #if DEBUG
 	if(n >= size)
 		exitWithCode(2003, name);
@@ -209,4 +219,4 @@ inline void SRDAGEdgeArray::resetValue(int n){
 	nb--;
 }
 
-#endif /* SRDAG_EDGE_ARRAY_H_ */
+#endif /* FITED_ARRAY_H_ */

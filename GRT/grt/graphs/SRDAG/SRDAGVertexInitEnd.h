@@ -65,8 +65,6 @@ public :
 	int getParamNb() const;
 	int* getParamArray();
 
-	virtual int getFctIx() const;
-
 	BOOL isHierarchical() const;
 	PiSDFGraph* getHierarchy() const;
 
@@ -82,14 +80,6 @@ inline int* SRDAGVertexInitEnd::getParamArray(){
 	else if(type == End)
 		param = inputs[0]->getTokenRate();
 	return &param;
-}
-
-inline int SRDAGVertexInitEnd::getFctIx() const{
-	switch(type){
-	case Init: return INIT_FUNCT_IX;
-	case End:  return END_FUNCT_IX;
-	default: return -1;
-	}
 }
 
 inline BOOL SRDAGVertexInitEnd::isHierarchical() const

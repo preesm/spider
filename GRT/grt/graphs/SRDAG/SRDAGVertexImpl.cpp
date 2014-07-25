@@ -62,6 +62,7 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(){
 	setIx 			= -1;
 	startTime		= -1;
 	endTime			= -1;
+	fctIx 			= -1;
 }
 
 SRDAGVertexAbstract::SRDAGVertexAbstract(
@@ -82,6 +83,7 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(
 	setIx 			= -1;
 	startTime		= -1;
 	endTime			= -1;
+	fctIx 			= -1;
 }
 
 void SRDAGVertexAbstract::updateState(){
@@ -124,6 +126,7 @@ SRDAGVertexBroadcast::SRDAGVertexBroadcast(
 		int 			_itrIx,
 		PiSDFVertex* ref):
 		SRDAGVertexAbstract(_graph, Broadcast, ref, _refIx,_itrIx){
+	fctIx = BROADCAST_FUNCT_IX;
 	inputs = SRDAGEdgeArray(1);
 	outputs = SRDAGEdgeArray(MAX_SRDAG_XPLODE_EDGES);
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
@@ -140,6 +143,7 @@ SRDAGVertexConfig::SRDAGVertexConfig(
 		SRDAGVertexAbstract(_graph, ConfigureActor, ref, _refIx,_itrIx){
 	inputs = SRDAGEdgeArray(MAX_SRDAG_IO_EDGES);
 	outputs = SRDAGEdgeArray(MAX_SRDAG_IO_EDGES);
+	fctIx = reference->getFunction_index();
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		if(reference->getConstraints(i)){
@@ -162,6 +166,7 @@ SRDAGVertexNormal::SRDAGVertexNormal(
 		SRDAGVertexAbstract(_graph, Normal, ref, _refIx,_itrIx){
 	inputs = SRDAGEdgeArray(MAX_SRDAG_IO_EDGES);
 	outputs = SRDAGEdgeArray(MAX_SRDAG_IO_EDGES);
+	fctIx = reference->getFunction_index();
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		if(reference->getConstraints(i)){
@@ -185,9 +190,11 @@ SRDAGVertexInitEnd::SRDAGVertexInitEnd(
 	switch(type){
 	case Init:
 		outputs = SRDAGEdgeArray(1);
+		fctIx = INIT_FUNCT_IX;
 		break;
 	case End:
 		inputs = SRDAGEdgeArray(1);
+		fctIx = END_FUNCT_IX;
 		break;
 	default:
 		return;
@@ -207,6 +214,7 @@ SRDAGVertexRB::SRDAGVertexRB(
 		SRDAGVertexAbstract(_graph, RoundBuffer, ref, _refIx,_itrIx){
 	inputs = SRDAGEdgeArray(1);
 	outputs = SRDAGEdgeArray(1);
+	fctIx = RB_FUNCT_IX;
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = true;
@@ -227,6 +235,7 @@ SRDAGVertexXplode::SRDAGVertexXplode(
 		inputs = SRDAGEdgeArray(MAX_SRDAG_XPLODE_EDGES);
 		outputs = SRDAGEdgeArray(1);
 	}
+	fctIx = XPLODE_FUNCT_IX;
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = true;
 		execTime[i] = SYNC_TIME;

@@ -65,8 +65,6 @@ public :
 	int getParamNb() const;
 	int* getParamArray();
 
-	virtual int getFctIx() const;
-
 	BOOL isHierarchical() const;
 	PiSDFGraph* getHierarchy() const;
 
@@ -97,9 +95,6 @@ inline int* SRDAGVertexXplode::getParamArray(){
 		return (int*)NULL;
 	}
 }
-
-inline int SRDAGVertexXplode::getFctIx() const
-	{return XPLODE_FUNCT_IX;}
 
 inline BOOL SRDAGVertexXplode::isHierarchical() const{
 	return false;

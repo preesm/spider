@@ -78,6 +78,7 @@ protected :
 	SRDAGVertexState 	state;
 
 	PiSDFAbstractVertex* reference;
+	int fctIx;
 
 	int refIx;
 	int itrIx;
@@ -116,7 +117,7 @@ public:
 	SRDAGVertexType  getType()  const;
 	SRDAGVertexState getState() const;
 	void setState(SRDAGVertexState st);
-	virtual int getFctIx() const = 0;
+	int getFctIx() const;
 	PiSDFAbstractVertex* getReference() const;
 
 	int getNbInputEdge() const;
@@ -182,6 +183,9 @@ inline SRDAGVertexState SRDAGVertexAbstract::getState() const
 
 inline void SRDAGVertexAbstract::setState(SRDAGVertexState st)
 	{state = st;}
+
+inline int SRDAGVertexAbstract::getFctIx() const
+	{return fctIx;}
 
 inline int SRDAGVertexAbstract::getReferenceIndex() const
 	{return refIx;}

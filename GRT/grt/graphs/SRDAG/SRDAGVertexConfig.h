@@ -70,8 +70,6 @@ public :
 	int getRelatedParamValue(int paramIndex) const;
 	void setRelatedParamValue(int paramIndex, int value);
 
-	virtual int getFctIx() const;
-
 	BOOL isHierarchical() const;
 	PiSDFGraph* getHierarchy() const;
 
@@ -89,9 +87,6 @@ inline int SRDAGVertexConfig::getRelatedParamValue(int paramIndex) const
 
 inline void SRDAGVertexConfig::setRelatedParamValue(int paramIndex, int value)
 	{relatedParamValues[paramIndex] = value;}
-
-inline int SRDAGVertexConfig::getFctIx() const
-	{return reference->getFunction_index();}
 
 inline BOOL SRDAGVertexConfig::isHierarchical() const{
 	return reference

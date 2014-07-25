@@ -65,8 +65,6 @@ public :
 	int getParamNb() const;
 	int* getParamArray();
 
-	int getFctIx() const;
-
 	BOOL isHierarchical() const;
 	PiSDFGraph* getHierarchy() const;
 
@@ -78,9 +76,6 @@ inline int SRDAGVertexNormal::getParamNb() const
 
 inline int* SRDAGVertexNormal::getParamArray()
 	{return paramValues;}
-
-inline int SRDAGVertexNormal::getFctIx() const
-	{return reference->getFunction_index();}
 
 inline BOOL SRDAGVertexNormal::isHierarchical() const{
 	return reference

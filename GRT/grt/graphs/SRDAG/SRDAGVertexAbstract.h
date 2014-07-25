@@ -43,7 +43,6 @@ class SRDAGGraph;
 
 #include <grt_definitions.h>
 #include <tools/SchedulingError.h>
-#include <tools/IndexedArray.h>
 
 #include "SRDAGEdgeArray.h"
 

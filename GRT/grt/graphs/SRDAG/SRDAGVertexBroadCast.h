@@ -46,7 +46,6 @@ class SRDAGGraph;
 #include "../PiSDF/PiSDFVertex.h"
 #include "SRDAGEdge.h"
 #include "SRDAGVertexAbstract.h"
-#include <tools/IndexedArray.h>
 
 class SRDAGVertexBroadcast : public SRDAGVertexAbstract{
 

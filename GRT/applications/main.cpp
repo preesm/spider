@@ -177,8 +177,14 @@ int main(int argc, char* argv[]){
 	#if EXEC == 1
  		char file[MAX_FILE_NAME_SIZE+40];
  		snprintf(file, MAX_FILE_NAME_SIZE+40, "/home/jheulot/dev/mp-sched/ederc/Gantt_compa_cache_nvar%d.xml", iter);
- 		Launcher::createRealTimeGantt(&arch, &topDag, file, &execStat);
-// 
+ 		Launcher::createRealTimeGantt(&arch, &topDag, file, &execStat, false);
+
+ 		printf("GraphTime:   %d\n", execStat.graphTransfoTime);
+ 		printf("MappingTime: %d\n", execStat.mappingTime);
+ 		printf("TaskOrdTime: %d\n", execStat.taskOrderingTime);
+
+ 		printf("\nEndTime: %d\n", execStat.globalEndTime);
+
 // 		time[iter-1] = execStat.globalEndTime;
 
 //		snprintf(file, MAX_FILE_NAME_SIZE, "topDag%d.gv", iter);

@@ -44,7 +44,9 @@
 
 typedef struct{
 	UINT32 globalEndTime;
-	UINT32 schedulingTime;
+
+	UINT32 taskOrderingTime;
+	UINT32 mappingTime;
 	UINT32 graphTransfoTime;
 
 	UINT32 actorTimes[MAX_STATS_VERTICES];

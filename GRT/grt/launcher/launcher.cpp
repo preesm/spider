@@ -256,23 +256,26 @@ void Launcher::reset(){
 }
 
 //#define PRINT_GRAPH 1
-void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName, ExecutionStat* stat){
+void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName, ExecutionStat* stat, bool latex){
 	// Creating the Gantt with real times.
 	memset(stat, 0, sizeof(ExecutionStat));
 
 #if PRINT_REAL_GANTT
 	platform_fopen(filePathName);
+	FILE* flatex;
 
 	// Writing header
 	platform_fprintf("<data>\n");
 
 	char name[MAX_VERTEX_NAME_SIZE];
 
-	char file[MAX_FILE_NAME_SIZE+50];
-	sprintf(file, "%s_latex", filePathName);
-	FILE* flatex = fopen(file, "w+");
-	fprintf(flatex, "<!-- latex\n");
-	fprintf(flatex, "{");
+	if(latex){
+		char file[MAX_FILE_NAME_SIZE+50];
+		sprintf(file, "%s_latex", filePathName);
+		flatex = fopen(file, "w+");
+		fprintf(flatex, "<!-- latex\n");
+		fprintf(flatex, "{");
+	}
 #endif
 
 	// Writing execution data for the master.
@@ -286,13 +289,15 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
 		platform_fprintf("\t\t>Step_%d.</event>\n", j);
 
-		fprintf(flatex, "%d/", timeStartTaskOrdering[j]/1000 );/*start*/
-		fprintf(flatex, "%d/", (timeEndTaskOrdering[j] - timeStartTaskOrdering[j])/1000);/*duration*/
-		fprintf(flatex, "%d/",	 0);/*core index*/
-		fprintf(flatex, "%s/",   "");/*name*/
-		fprintf(flatex, "color%d,\n",10); // color taskordering
+		if(latex){
+			fprintf(flatex, "%d/", timeStartTaskOrdering[j]/1000 );/*start*/
+			fprintf(flatex, "%d/", (timeEndTaskOrdering[j] - timeStartTaskOrdering[j])/1000);/*duration*/
+			fprintf(flatex, "%d/",	 0);/*core index*/
+			fprintf(flatex, "%s/",   "");/*name*/
+			fprintf(flatex, "color%d,\n",10); // color taskordering
+		}
 #endif
-		stat->schedulingTime += timeEndTaskOrdering[j] - timeStartTaskOrdering[j];
+		stat->taskOrderingTime += timeEndTaskOrdering[j] - timeStartTaskOrdering[j];
 	}
 
 	UINT32 mappingTime = 0, mappingNb = 0;
@@ -306,16 +311,18 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
 		platform_fprintf("\t\t>Step_%d.</event>\n", j);
 
-		fprintf(flatex, "%d/", timeStartMapping[j]/1000 );/*start*/
-		fprintf(flatex, "%d/", (timeEndMapping[j] - timeStartMapping[j])/1000);/*duration*/
-		fprintf(flatex, "%d/",	 0);/*core index*/
-		fprintf(flatex, "%s/",   "");/*name*/
-		fprintf(flatex, "color%d,\n",10); // color mapping
+		if(latex){
+			fprintf(flatex, "%d/", timeStartMapping[j]/1000 );/*start*/
+			fprintf(flatex, "%d/", (timeEndMapping[j] - timeStartMapping[j])/1000);/*duration*/
+			fprintf(flatex, "%d/",	 0);/*core index*/
+			fprintf(flatex, "%s/",   "");/*name*/
+			fprintf(flatex, "color%d,\n",10); // color mapping
+		}
 
 		mappingTime += timeEndMapping[j] - timeStartMapping[j];
 		mappingNb += actorsByStep[j];
 #endif
-		stat->schedulingTime += timeEndTaskOrdering[j] - timeStartTaskOrdering[j];
+		stat->mappingTime += timeEndMapping[j] - timeStartMapping[j];
 	}
 
 	if(mappingNb != 0)
@@ -335,11 +342,13 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
 		platform_fprintf("\t\t>Step_%d.</event>\n", j);
 
-		fprintf(flatex, "%d/", timeStartGraph[j]/1000 );/*start*/
-		fprintf(flatex, "%d/", (timeEndGraph[j] - timeStartGraph[j])/1000);/*duration*/
-		fprintf(flatex, "%d/",	 0);/*core index*/
-		fprintf(flatex, "%s/",   "");/*name*/
-		fprintf(flatex, "color%d,\n",10); // color graphtransfo
+		if(latex){
+			fprintf(flatex, "%d/", timeStartGraph[j]/1000 );/*start*/
+			fprintf(flatex, "%d/", (timeEndGraph[j] - timeStartGraph[j])/1000);/*duration*/
+			fprintf(flatex, "%d/",	 0);/*core index*/
+			fprintf(flatex, "%s/",   "");/*name*/
+			fprintf(flatex, "color%d,\n",10); // color graphtransfo
+		}
 #endif
 		stat->graphTransfoTime += timeEndGraph[j] - timeStartGraph[j];
 	}
@@ -399,15 +408,17 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
 		platform_fprintf("\t\t>%s.</event>\n", name);
 
-		fprintf(flatex, "%d/", t.start/1000 );/*start*/
-		fprintf(flatex, "%d/", (t.end - t.start)/1000);/*duration*/
-		fprintf(flatex, "%d/",	 0);/*core index*/
-		fprintf(flatex, "%s/",   "");/*name*/
+		if(latex){
+			fprintf(flatex, "%d/", t.start/1000 );/*start*/
+			fprintf(flatex, "%d/", (t.end - t.start)/1000);/*duration*/
+			fprintf(flatex, "%d/",	 0);/*core index*/
+			fprintf(flatex, "%s/",   "");/*name*/
 
-		if(vertex->getFctIx() == 7)
-			fprintf(flatex, "color%d,\n",vertex->getReferenceIndex()); // color Id
-		else
-			fprintf(flatex, "color%d,\n",10); // color Id
+			if(vertex->getFctIx() == 7)
+				fprintf(flatex, "color%d,\n",vertex->getReferenceIndex()); // color Id
+			else
+				fprintf(flatex, "color%d,\n",10); // color Id
+		}
 
 		if(t.start > t.end){
 			printf("Receive bad time\n");
@@ -418,6 +429,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 	}
 
 	// Writing execution data for each slave.
+#if EXEC
 	for(int slave=1; slave<arch->getNbActiveSlaves(); slave++){
 		SendInfoData::send(slave);
 
@@ -483,15 +495,17 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 			platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(vertex->getId()));
 			platform_fprintf("\t\t>%s.</event>\n", name);
 
-			fprintf(flatex, "%d/", startTime/1000 );/*start*/
-			fprintf(flatex, "%d/", (endTime - startTime)/1000);/*duration*/
-			fprintf(flatex, "%d/",	 slave);/*core index*/
-			fprintf(flatex, "%s/",   "");/*name*/
+			if(latex){
+				fprintf(flatex, "%d/", startTime/1000 );/*start*/
+				fprintf(flatex, "%d/", (endTime - startTime)/1000);/*duration*/
+				fprintf(flatex, "%d/",	 slave);/*core index*/
+				fprintf(flatex, "%s/",   "");/*name*/
 
-			if(vertex->getFctIx() == 7)
-				fprintf(flatex, "color%d,\n",vertex->getReferenceIndex()); // color Id
-			else
-				fprintf(flatex, "color%d,\n",10); // color Id
+				if(vertex->getFctIx() == 7)
+					fprintf(flatex, "color%d,\n",vertex->getReferenceIndex()); // color Id
+				else
+					fprintf(flatex, "color%d,\n",10); // color Id
+			}
 
 			if(startTime > endTime){
 				printf("Receive bad time\n");
@@ -501,13 +515,16 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 				stat->globalEndTime = endTime;
 		}
 	}
+#endif
 #if PRINT_REAL_GANTT
 	platform_fprintf("</data>\n");
 	platform_fclose();
 
-	fprintf(flatex, "}\n");
-	fprintf(flatex, "latex -->\n");
-	fclose(flatex);
+	if(latex){
+		fprintf(flatex, "}\n");
+		fprintf(flatex, "latex -->\n");
+		fclose(flatex);
+	}
 #endif
 }
 

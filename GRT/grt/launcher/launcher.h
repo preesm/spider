@@ -56,7 +56,7 @@ typedef struct {
 namespace Launcher {
 	void assignFifo(SRDAGGraph* graph);
 	void launch(SRDAGGraph* graph, Architecture* arch, BaseSchedule* schedule);
-	void createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName, ExecutionStat* stat);
+	void createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName, ExecutionStat* stat, bool latex);
 	void resolveParameters(Architecture *arch, SRDAGGraph* topDag);
 
 	void launchVertex(SRDAGVertexAbstract* vertex, UINT32 slave);

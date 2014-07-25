@@ -40,7 +40,11 @@
 
 #include "actors.h"
 
+#ifdef DSP
+#define TEST 0
+#else
 #define TEST 1
+#endif
 
 #define NVAL	10
 #define MMAX 	12

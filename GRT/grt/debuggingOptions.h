@@ -39,13 +39,26 @@
 
 
 // File names for graph's printing
+#ifdef DSP
+
 #define EXEC							1
 #define PRINT_GRAPH						0
+#define	STAT							0
 #define PRINT_REAL_GANTT				1
 #define DEBUG							0
+
+#else
+
+#define EXEC							1
+#define PRINT_GRAPH						1
+#define	STAT							1
+#define PRINT_REAL_GANTT				0
+#define DEBUG							1
+
+#endif
+
 #define USE_AM							0
 #define SEE_PARAM_VAL					0
-#define	STAT							1
 
 #define ITER_MAX 2
 #define PERIOD 600000

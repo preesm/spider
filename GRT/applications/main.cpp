@@ -108,7 +108,11 @@ int main(int argc, char* argv[]){
 //
 //	setvbuf(stdout, NULL, _IONBF, 0);
 //	setvbuf(stderr, NULL, _IONBF, 0);
+#ifdef DSP
 	int nbSlaves = 8;
+#else
+	int nbSlaves = 1;
+#endif
 //	static Scenario 			scenario;
 	static Architecture 		arch;
 	static ListScheduler 		listScheduler;
@@ -144,7 +148,9 @@ int main(int argc, char* argv[]){
 #endif
 	schedule.reset();
 
-	for(int iter=1; iter<=16; iter++){
+	for(int iter=8; iter<=8; iter++){
+		printf("N=%d\n", iter);
+
 		arch.setNbActiveSlaves(nbSlaves);
 		platform_time_reset();
 		initExecution();
@@ -174,10 +180,11 @@ int main(int argc, char* argv[]){
 //		}while(time < iter*PERIOD);
 
 		printf("reporting...\n");
-	#if EXEC == 1
  		char file[MAX_FILE_NAME_SIZE+40];
  		snprintf(file, MAX_FILE_NAME_SIZE+40, "/home/jheulot/dev/mp-sched/ederc/Gantt_compa_cache_nvar%d.xml", iter);
  		Launcher::createRealTimeGantt(&arch, &topDag, file, &execStat, false);
+ 		snprintf(file, MAX_FILE_NAME_SIZE+40, "/home/jheulot/dev/mp-sched/ederc/simu%d.xml", iter);
+ 		ScheduleWriter::write(&schedule, &topDag, &arch, file);
 
  		printf("GraphTime:   %d\n", execStat.graphTransfoTime);
  		printf("MappingTime: %d\n", execStat.mappingTime);
@@ -189,20 +196,19 @@ int main(int argc, char* argv[]){
 
 //		snprintf(file, MAX_FILE_NAME_SIZE, "topDag%d.gv", iter);
 //		DotWriter::write(&topDag, file, 1, 0);
-	#endif
 
 	}
 
-	char file[100];
-	printf("time\n");
-	sprintf(file,"/home/jheulot/dev/mp-sched/ederc/compa_cache_nvar.csv");
-	FILE *f = fopen(file,"w+");
-	fprintf(f, "iter, latency\n");
-	for(int iter=1; iter<=12; iter++){
-		fprintf(f,"%d,%d\n",iter, time[iter-1]);
-		printf("%d: %d\n",iter, time[iter-1]);
-	}
-	fclose(f);
+//	char file[100];
+//	printf("time\n");
+//	sprintf(file,"/home/jheulot/dev/mp-sched/ederc/compa_cache_nvar.csv");
+//	FILE *f = fopen(file,"w+");
+//	fprintf(f, "iter, latency\n");
+//	for(int iter=1; iter<=12; iter++){
+//		fprintf(f,"%d,%d\n",iter, time[iter-1]);
+//		printf("%d: %d\n",iter, time[iter-1]);
+//	}
+//	fclose(f);
 
 //#if PRINT_REAL_GANTT
 //		UINT32 len = snprintf(file, MAX_FILE_NAME_SIZE, "Gantt_simulated.xml");

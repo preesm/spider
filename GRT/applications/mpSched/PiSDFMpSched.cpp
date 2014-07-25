@@ -82,7 +82,7 @@ void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples, UINT32 Nval){
 	paramSamples->setValue(nbSamples);
 
 #if EXEC == 0
-	paramN->setValue(10);
+	paramN->setValue(8);
 #endif
 
 	// Configure vertices.
@@ -139,7 +139,7 @@ void mpSched_sub(PiSDFGraph* graph, UINT32 nbSamples){
 
 	paramSamples->setParameterParentID(0);//->setValue(nbSamples);
 #if EXEC == 0
-		paramM->setValue(6);
+		paramM->setValue(8);
 #endif
 
 	// Interface vertices.

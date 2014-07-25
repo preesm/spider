@@ -124,8 +124,8 @@ SRDAGVertexBroadcast::SRDAGVertexBroadcast(
 		int 			_itrIx,
 		PiSDFVertex* ref):
 		SRDAGVertexAbstract(_graph, Broadcast, ref, _refIx,_itrIx){
-	inputEdges.reset();
-	outputEdges.reset();
+	inputs = SRDAGEdgeArray(1);
+	outputs = SRDAGEdgeArray(MAX_SRDAG_XPLODE_EDGES);
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = true;
 		execTime[i] = SYNC_TIME;
@@ -138,8 +138,8 @@ SRDAGVertexConfig::SRDAGVertexConfig(
 		int 			_itrIx,
 		PiSDFConfigVertex* ref):
 		SRDAGVertexAbstract(_graph, ConfigureActor, ref, _refIx,_itrIx){
-	inputEdges.reset();
-	outputEdges.reset();
+	inputs = SRDAGEdgeArray(MAX_SRDAG_IO_EDGES);
+	outputs = SRDAGEdgeArray(MAX_SRDAG_IO_EDGES);
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		if(reference->getConstraints(i)){
@@ -160,8 +160,8 @@ SRDAGVertexNormal::SRDAGVertexNormal(
 		int 			_itrIx,
 		PiSDFVertex* ref):
 		SRDAGVertexAbstract(_graph, Normal, ref, _refIx,_itrIx){
-	inputEdges.reset();
-	outputEdges.reset();
+	inputs = SRDAGEdgeArray(MAX_SRDAG_IO_EDGES);
+	outputs = SRDAGEdgeArray(MAX_SRDAG_IO_EDGES);
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		if(reference->getConstraints(i)){
@@ -182,7 +182,17 @@ SRDAGVertexInitEnd::SRDAGVertexInitEnd(
 		int 			_refIx,
 		int 			_itrIx):
 		SRDAGVertexAbstract(_graph, _type, NULL, _refIx,_itrIx){
-	edges.reset();
+	switch(type){
+	case Init:
+		outputs = SRDAGEdgeArray(1);
+		break;
+	case End:
+		inputs = SRDAGEdgeArray(1);
+		break;
+	default:
+		return;
+	}
+
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = true;
 		execTime[i] = SYNC_TIME;
@@ -195,8 +205,9 @@ SRDAGVertexRB::SRDAGVertexRB(
 		int 			_itrIx,
 		PiSDFAbstractVertex* ref):
 		SRDAGVertexAbstract(_graph, RoundBuffer, ref, _refIx,_itrIx){
-	outputEdges.reset();
-	inputEdges.reset();
+	inputs = SRDAGEdgeArray(1);
+	outputs = SRDAGEdgeArray(1);
+
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = true;
 		execTime[i] = SYNC_TIME;
@@ -209,8 +220,13 @@ SRDAGVertexXplode::SRDAGVertexXplode(
 		int 			_refIx,
 		int 			_itrIx):
 		SRDAGVertexAbstract(_graph, _type, NULL, _refIx,_itrIx){
-	gatherEdges.reset();
-	scatterEdges.reset();
+	if(type == Explode){
+		inputs = SRDAGEdgeArray(1);
+		outputs = SRDAGEdgeArray(MAX_SRDAG_XPLODE_EDGES);
+	}else{
+		inputs = SRDAGEdgeArray(MAX_SRDAG_XPLODE_EDGES);
+		outputs = SRDAGEdgeArray(1);
+	}
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = true;
 		execTime[i] = SYNC_TIME;

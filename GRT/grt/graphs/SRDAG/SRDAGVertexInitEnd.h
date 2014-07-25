@@ -51,13 +51,6 @@ class SRDAGGraph;
 class SRDAGVertexInitEnd : public SRDAGVertexAbstract{
 
 private :
-	IndexedArray<SRDAGEdge*, 1> edges;
-
-	void connectInputEdge(SRDAGEdge* edge, int ix);
-	void connectOutputEdge(SRDAGEdge* edge, int ix);
-	void disconnectInputEdge(int ix);
-	void disconnectOutputEdge(int ix);
-
 	int param;
 
 public :
@@ -68,11 +61,6 @@ public :
 			int 			_refIx,
 			int 			_itrIx);
 	~SRDAGVertexInitEnd(){}
-
-	int getNbInputEdge() const;
-	int getNbOutputEdge() const;
-	SRDAGEdge* getInputEdge(int id);
-	SRDAGEdge* getOutputEdge(int id);
 
 	int getParamNb() const;
 	int* getParamArray();
@@ -85,99 +73,14 @@ public :
 	void getName(char* name, UINT32 sizeMax);
 };
 
-inline int SRDAGVertexInitEnd::getNbInputEdge() const{
-	switch(type){
-	case Init:
-		return 0;
-	case End:
-		return edges.getNb();
-	default:
-		return 0;
-	}
-}
-
-inline int SRDAGVertexInitEnd::getNbOutputEdge() const{
-	switch(type){
-	case Init:
-		return edges.getNb();
-	case End:
-		return 0;
-	default:
-		return 0;
-	}
-}
-
-inline SRDAGEdge* SRDAGVertexInitEnd::getInputEdge(int id){
-	switch(type){
-	case Init:
-		return (SRDAGEdge*)NULL;
-	case End:
-		return edges[id];
-	default:
-		return (SRDAGEdge*)NULL;
-	}
-}
-
-inline SRDAGEdge* SRDAGVertexInitEnd::getOutputEdge(int id){
-	switch(type){
-	case Init:
-		return edges[id];
-	case End:
-		return (SRDAGEdge*)NULL;
-	default:
-		return (SRDAGEdge*)NULL;
-	}
-}
-
-inline void SRDAGVertexInitEnd::connectInputEdge(SRDAGEdge* edge, int ix){
-	switch(type){
-	case Init:
-		return edges.setValue(-1, edge);
-	case End:
-		return edges.setValue(ix, edge);
-	default:
-		return;
-	}
-}
-
-inline void SRDAGVertexInitEnd::connectOutputEdge(SRDAGEdge* edge, int ix){
-	switch(type){
-	case Init:
-		return edges.setValue(ix, edge);
-	case End:
-		return edges.setValue(-1, edge);
-	default:
-		return;
-	}
-}
-
-inline void SRDAGVertexInitEnd::disconnectInputEdge(int ix){
-	switch(type){
-	case Init:
-		return edges.resetValue(-1);
-	case End:
-		return edges.resetValue(ix);
-	default:
-		return;
-	}
-}
-
-inline void SRDAGVertexInitEnd::disconnectOutputEdge(int ix){
-	switch(type){
-	case Init:
-		return edges.resetValue(ix);
-	case End:
-		return edges.resetValue(-1);
-	default:
-		return;
-	}
-}
-
 inline int SRDAGVertexInitEnd::getParamNb() const
 	{return 1;}
 
 inline int* SRDAGVertexInitEnd::getParamArray(){
-	param = edges[0]->getTokenRate();
+	if(type == Init)
+		param = outputs[0]->getTokenRate();
+	else if(type == End)
+		param = inputs[0]->getTokenRate();
 	return &param;
 }
 

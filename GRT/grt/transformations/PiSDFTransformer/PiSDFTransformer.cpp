@@ -47,6 +47,7 @@
 #include <platform_time.h>
 
 #include <graphs/SRDAG/SRDAGEdge.h>
+#include <graphs/SRDAG/SRDAGEdgeArray.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/SRDAG/SRDAGVertexAbstract.h>
 

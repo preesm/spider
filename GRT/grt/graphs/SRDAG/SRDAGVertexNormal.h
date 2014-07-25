@@ -51,15 +51,7 @@ class SRDAGGraph;
 class SRDAGVertexNormal : public SRDAGVertexAbstract{
 
 private :
-	IndexedArray<SRDAGEdge*, MAX_SRDAG_IO_EDGES> outputEdges;
-	IndexedArray<SRDAGEdge*, MAX_SRDAG_IO_EDGES> inputEdges;
-
 	int paramValues[MAX_PARAM];
-
-	void connectInputEdge(SRDAGEdge* edge, int ix);
-	void connectOutputEdge(SRDAGEdge* edge, int ix);
-	void disconnectInputEdge(int ix);
-	void disconnectOutputEdge(int ix);
 
 public :
 	SRDAGVertexNormal(){}
@@ -69,11 +61,6 @@ public :
 		int 			_itrIx,
 		PiSDFVertex* ref);
 	~SRDAGVertexNormal(){}
-
-	int getNbInputEdge() const;
-	int getNbOutputEdge() const;
-	SRDAGEdge* getInputEdge(int id);
-	SRDAGEdge* getOutputEdge(int id);
 
 	int getParamNb() const;
 	int* getParamArray();
@@ -85,30 +72,6 @@ public :
 
 	void getName(char* name, UINT32 sizeMax);
 };
-
-inline int SRDAGVertexNormal::getNbInputEdge() const
-	{return inputEdges.getNb();}
-
-inline int SRDAGVertexNormal::getNbOutputEdge() const
-	{return outputEdges.getNb();}
-
-inline SRDAGEdge* SRDAGVertexNormal::getInputEdge(int id)
-	{return inputEdges[id];}
-
-inline SRDAGEdge* SRDAGVertexNormal::getOutputEdge(int id)
-	{return outputEdges[id];}
-
-inline void SRDAGVertexNormal::connectInputEdge(SRDAGEdge* edge, int ix)
-	{inputEdges.setValue(ix, edge);}
-
-inline void SRDAGVertexNormal::connectOutputEdge(SRDAGEdge* edge, int ix)
-	{outputEdges.setValue(ix, edge);}
-
-inline void SRDAGVertexNormal::disconnectInputEdge(int ix)
-	{inputEdges.resetValue(ix);}
-
-inline void SRDAGVertexNormal::disconnectOutputEdge(int ix)
-	{outputEdges.resetValue(ix);}
 
 inline int SRDAGVertexNormal::getParamNb() const
 	{return reference->getNbParameters();}

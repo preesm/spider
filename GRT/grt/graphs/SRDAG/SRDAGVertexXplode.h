@@ -51,15 +51,8 @@ class SRDAGGraph;
 class SRDAGVertexXplode : public SRDAGVertexAbstract{
 
 private :
-	IndexedArray<SRDAGEdge*, 1> gatherEdges;
-	IndexedArray<SRDAGEdge*, MAX_SRDAG_XPLODE_EDGES> scatterEdges;
-
-	void connectInputEdge(SRDAGEdge* edge, int ix);
-	void connectOutputEdge(SRDAGEdge* edge, int ix);
-	void disconnectInputEdge(int ix);
-	void disconnectOutputEdge(int ix);
-
 	int params[3+MAX_SRDAG_XPLODE_EDGES];
+
 public :
 	SRDAGVertexXplode(){}
 	SRDAGVertexXplode(
@@ -68,11 +61,6 @@ public :
 			int 			_refIx,
 			int 			_itrIx);
 	~SRDAGVertexXplode(){}
-
-	int getNbInputEdge() const;
-	int getNbOutputEdge() const;
-	SRDAGEdge* getInputEdge(int id);
-	SRDAGEdge* getOutputEdge(int id);
 
 	int getParamNb() const;
 	int* getParamArray();
@@ -85,102 +73,6 @@ public :
 	void getName(char* name, UINT32 sizeMax);
 };
 
-inline int SRDAGVertexXplode::getNbInputEdge() const{
-	switch(type){
-	case Implode:
-		return scatterEdges.getNb();
-	case Explode:
-		return gatherEdges.getNb();
-	default:
-		return 0;
-	}
-}
-
-inline int SRDAGVertexXplode::getNbOutputEdge() const{
-	switch(type){
-	case Implode:
-		return gatherEdges.getNb();
-	case Explode:
-		return scatterEdges.getNb();
-	default:
-		return 0;
-	}
-}
-
-inline SRDAGEdge* SRDAGVertexXplode::getInputEdge(int id){
-	switch(type){
-	case Implode:
-		return scatterEdges[id];
-	case Explode:
-		return gatherEdges[id];
-	default:
-		return (SRDAGEdge*)NULL;
-	}
-}
-
-inline SRDAGEdge* SRDAGVertexXplode::getOutputEdge(int id){
-	switch(type){
-	case Implode:
-		return gatherEdges[id];
-	case Explode:
-		return scatterEdges[id];
-	default:
-		return (SRDAGEdge*)NULL;
-	}
-}
-
-inline void SRDAGVertexXplode::connectInputEdge(SRDAGEdge* edge, int ix){
-	switch(type){
-	case Implode:
-		scatterEdges.setValue(ix, edge);
-		break;
-	case Explode:
-		gatherEdges.setValue(ix, edge);
-		break;
-	default:
-		return;
-	}
-}
-
-inline void SRDAGVertexXplode::connectOutputEdge(SRDAGEdge* edge, int ix){
-	switch(type){
-	case Implode:
-		gatherEdges.setValue(ix, edge);
-		break;
-	case Explode:
-		scatterEdges.setValue(ix, edge);
-		break;
-	default:
-		return;
-	}
-}
-
-inline void SRDAGVertexXplode::disconnectInputEdge(int ix){
-	switch(type){
-	case Implode:
-		scatterEdges.resetValue(ix);
-		break;
-	case Explode:
-		gatherEdges.resetValue(ix);
-		break;
-	default:
-		return;
-	}
-}
-
-inline void SRDAGVertexXplode::disconnectOutputEdge(int ix){
-	switch(type){
-	case Implode:
-		gatherEdges.resetValue(ix);
-		break;
-	case Explode:
-		scatterEdges.resetValue(ix);
-		break;
-	default:
-		return;
-	}
-}
-
 inline int SRDAGVertexXplode::getParamNb() const{
 	return 2+getNbInputEdge()+getNbOutputEdge();
 }
@@ -190,19 +82,20 @@ inline int* SRDAGVertexXplode::getParamArray(){
 	params[1] = getNbOutputEdge();
 	switch(type){
 	case Explode:
-		params[2] = gatherEdges[0]->getTokenRate();
-		for(int i=0; i<scatterEdges.getNb(); i++){
-			params[3+i] = scatterEdges[i]->getTokenRate();
+		params[2] = inputs[0]->getTokenRate();
+		for(int i=0; i<outputs.getNb(); i++){
+			params[3+i] = outputs[i]->getTokenRate();
 		}
 		return params;
 	case Implode:
-		params[2] = scatterEdges[0]->getTokenRate();
-		for(int i=0; i<gatherEdges.getNb(); i++){
-			params[3+i] = gatherEdges[i]->getTokenRate();
+		params[2] = outputs[0]->getTokenRate();
+		for(int i=0; i<inputs.getNb(); i++){
+			params[3+i] = inputs[i]->getTokenRate();
 		}
 		return params;
+	default:
+		return (int*)NULL;
 	}
-	return (int*)NULL;
 }
 
 inline int SRDAGVertexXplode::getFctIx() const

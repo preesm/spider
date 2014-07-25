@@ -45,6 +45,8 @@ class SRDAGGraph;
 #include <tools/SchedulingError.h>
 #include <tools/IndexedArray.h>
 
+#include "SRDAGEdgeArray.h"
+
 class SRDAGEdge;
 class PiSDFGraph;
 class PiSDFAbstractVertex;
@@ -85,10 +87,10 @@ protected :
 	UINT32 startTime;
 	UINT32 endTime;
 
-	virtual void connectInputEdge(SRDAGEdge* edge, int ix)	= 0;
-	virtual void connectOutputEdge(SRDAGEdge* edge, int ix)	= 0;
-	virtual void disconnectInputEdge(int ix)	= 0;
-	virtual void disconnectOutputEdge(int ix)	= 0;
+	void connectInputEdge(SRDAGEdge* edge, int ix);
+	void connectOutputEdge(SRDAGEdge* edge, int ix);
+	void disconnectInputEdge(int ix);
+	void disconnectOutputEdge(int ix);
 
 	static int creationIx;
 
@@ -96,6 +98,8 @@ protected :
 	bool constraints[MAX_SLAVE_TYPES];
 
 	int setIx;
+
+	SRDAGEdgeArray inputs, outputs;
 
 public:
 	SRDAGVertexAbstract();
@@ -115,10 +119,10 @@ public:
 	virtual int getFctIx() const = 0;
 	PiSDFAbstractVertex* getReference() const;
 
-	virtual int getNbInputEdge()  const = 0;
-	virtual int getNbOutputEdge() const = 0;
-	virtual SRDAGEdge* getInputEdge(int id)  = 0;
-	virtual SRDAGEdge* getOutputEdge(int id) = 0;
+	int getNbInputEdge() const;
+	int getNbOutputEdge() const;
+	SRDAGEdge* getInputEdge(int id);
+	SRDAGEdge* getOutputEdge(int id);
 
 	virtual int getParamNb() const = 0;
 	virtual int* getParamArray() = 0;
@@ -155,6 +159,18 @@ public:
 	friend class SRDAGEdge;
 };
 
+inline void SRDAGVertexAbstract::connectInputEdge(SRDAGEdge* edge, int ix)
+	{inputs.setValue(ix, edge);}
+
+inline void SRDAGVertexAbstract::connectOutputEdge(SRDAGEdge* edge, int ix)
+	{outputs.setValue(ix, edge);}
+
+inline void SRDAGVertexAbstract::disconnectInputEdge(int ix)
+	{inputs.resetValue(ix);}
+
+inline void SRDAGVertexAbstract::disconnectOutputEdge(int ix)
+	{outputs.resetValue(ix);}
+
 inline int SRDAGVertexAbstract::getId() const
 	{return id;}
 
@@ -175,6 +191,18 @@ inline int SRDAGVertexAbstract::getIterationIndex() const
 
 inline PiSDFAbstractVertex* SRDAGVertexAbstract::getReference() const
 	{return reference;}
+
+inline int SRDAGVertexAbstract::getNbInputEdge() const
+	{return inputs.getNb();}
+
+inline int SRDAGVertexAbstract::getNbOutputEdge() const
+	{return outputs.getNb();}
+
+inline SRDAGEdge* SRDAGVertexAbstract::getInputEdge(int id)
+	{return inputs[id];}
+
+inline SRDAGEdge* SRDAGVertexAbstract::getOutputEdge(int id)
+	{return outputs[id];}
 
 inline int SRDAGVertexAbstract::getSchedLevel() const
 	{return schedLevel;}

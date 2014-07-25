@@ -161,7 +161,12 @@ inline int Pool<T,SIZE>::getNb(){
  */
 template <class T, int SIZE>
 inline T* Pool<T,SIZE>::alloc(){
-	if(nb<SIZE){
+#if DEBUG
+	if(nb>=SIZE){
+		exitWithCode(2001, name);
+		return (T*)0;
+	}else{
+#endif
 		while(1){
 			if(!valid[curWrIx]){
 				break;
@@ -172,10 +177,9 @@ inline T* Pool<T,SIZE>::alloc(){
 		if(nb>max) max = nb;
 		valid[curWrIx] = true;
 		return &(array[curWrIx]);
-	}else{
-		exitWithCode(2001, name);
-		return (T*)0;
+#if DEBUG
 	}
+#endif
 }
 
 /**

@@ -42,6 +42,7 @@
 #define EXEC							1
 #define PRINT_GRAPH						0
 #define PRINT_REAL_GANTT				1
+#define DEBUG							0
 #define USE_AM							0
 #define SEE_PARAM_VAL					0
 #define	STAT							1

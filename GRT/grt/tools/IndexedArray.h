@@ -154,10 +154,12 @@ const char * IndexedArray<T,SIZE>::getName(){
  */
 template <class T, int SIZE>
 inline T& IndexedArray<T,SIZE>::operator [](int n){
+#if DEBUG
 	if(n >= SIZE)
 		exitWithCode(2003, name);
 	if(!valid[n])
 		exitWithCode(2004, name);
+#endif
 	return array[n];
 }
 
@@ -177,11 +179,12 @@ inline int IndexedArray<T,SIZE>::getNb() const{
  */
 template <class T, int SIZE>
 inline void IndexedArray<T,SIZE>::setValue(int n, T e){
+#if DEBUG
 	if(n >= SIZE)
 		exitWithCode(2003, name);
 	if(valid[n])
 		exitWithCode(2005, name);
-
+#endif
 	valid[n] = true;
 	array[n] = e;
 	nb++;
@@ -193,11 +196,12 @@ inline void IndexedArray<T,SIZE>::setValue(int n, T e){
  */
 template <class T, int SIZE>
 inline void IndexedArray<T,SIZE>::resetValue(int n){
+#if DEBUG
 	if(n >= SIZE)
 		exitWithCode(2003, name);
 	if(!valid[n])
 		exitWithCode(2006, name);
-
+#endif
 	valid[n] = false;
 	nb--;
 }

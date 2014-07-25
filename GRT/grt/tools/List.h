@@ -137,13 +137,14 @@ inline void List<T,SIZE>::reset(){
  */
 template <class T, int SIZE>
 inline T& List<T,SIZE>::operator [](int n){
-	if(n>=0 && n<wrNb)
-		return array[n];
-	else{
+#if DEBUG
+	if(n<0 && n>=wrNb){
 		printf("List: Accesing unitialized element\n");
 		exitWithCode(1099);
 		return array[n];
 	}
+#endif
+	return array[n];
 }
 
 /**
@@ -161,15 +162,16 @@ inline int List<T,SIZE>::getNb(){
  */
 template <class T, int SIZE>
 inline T* List<T,SIZE>::add(T e){
-	if(nb<SIZE){
-		array[wrNb]=e;
-		valid[wrNb]=TRUE;
-		nb++;
-		return &(array[wrNb++]);
-	}else{
+#if DEBUG
+	if(nb>=SIZE){
 		exitWithCode(1058);
 		return (T*)0;
 	}
+#endif
+	array[wrNb]=e;
+	valid[wrNb]=TRUE;
+	nb++;
+	return &(array[wrNb++]);
 }
 
 /**
@@ -178,14 +180,15 @@ inline T* List<T,SIZE>::add(T e){
  */
 template <class T, int SIZE>
 inline T* List<T,SIZE>::add(){
-	if(wrNb<SIZE){
-		valid[wrNb]=TRUE;
-		nb++;
-		return &(array[wrNb++]);
-	}else{
+#if DEBUG
+	if(wrNb>=SIZE){
 		exitWithCode(1058);
 		return (T*)0;
 	}
+#endif
+	valid[wrNb]=TRUE;
+	nb++;
+	return &(array[wrNb++]);
 }
 
 template <class T, int SIZE>

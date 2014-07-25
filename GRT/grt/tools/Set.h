@@ -179,7 +179,11 @@ SetIterator<T,SIZE> Set<T,SIZE>::getIterator(){
  */
 template <class T, int SIZE>
 inline void Set<T,SIZE>::add(T* e){
-	if(nb<SIZE){
+#if DEBUG
+	if(nb>=SIZE){
+		exitWithCode(2001, name);
+	}else{
+#endif
 		array[nb]=e;
 		nb++;
 		if(nb>max)max = nb;
@@ -189,9 +193,9 @@ inline void Set<T,SIZE>::add(T* e){
 		}else if(type == EDGES){
 			((SRDAGEdge*)e)->setSetIx(nb-1);
 		}
-	}else{
-		exitWithCode(2001, name);
+#if DEBUG
 	}
+#endif
 }
 
 /**
@@ -205,8 +209,10 @@ inline void Set<T,SIZE>::remove(T* e){
 		SRDAGVertexAbstract** vertex_array 	= (SRDAGVertexAbstract**)(array);
 
 		int ix = vertex->getSetIx();
+#if DEBUG
 		if(ix == -1)
 			exitWithCode(2002, name);
+#endif
 
 		nb--;
 		array[ix] = array[nb];
@@ -217,8 +223,10 @@ inline void Set<T,SIZE>::remove(T* e){
 		SRDAGEdge** edge_array 	= (SRDAGEdge**)(array);
 
 		int ix = edge->getSetIx();
+#if DEBUG
 		if(ix == -1)
 			exitWithCode(2002, name);
+#endif
 
 		nb--;
 		array[ix] = array[nb];
@@ -231,12 +239,13 @@ inline void Set<T,SIZE>::remove(T* e){
 				ix = i;
 			}
 		}
-		if(ix != -1){
-			nb--;
-			array[ix] = array[nb];
-		}else{
+#if DEBUG
+		if(ix == -1)
 			exitWithCode(2002, name);
-		}
+#endif
+
+		nb--;
+		array[ix] = array[nb];
 	}
 }
 

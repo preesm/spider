@@ -50,9 +50,9 @@ class BaseSchedule {
 public:
 
 	void reset(){
-		memset(nbVertices, 0, sizeof(nbVertices));
-		memset(slaveReadyTimes, 0, sizeof(slaveReadyTimes));
-		memset(schedules, 0, sizeof(schedules));
+		memset(nbVertices, 0, MAX_SLAVES*sizeof(int));
+		memset(slaveReadyTimes, 0, MAX_SLAVES*sizeof(UINT32));
+		memset(schedules, 0, MAX_SLAVES*MAX_SRDAG_VERTICES*sizeof(SRDAGVertexAbstract*));
 	}
 
 	void newStep(){
@@ -77,7 +77,7 @@ public:
     	return schedules[slaveId][vertexIx];
     }
 
-	int addSchedule(UINT32 slave_id, SRDAGVertexAbstract* vertex, UINT32 startTime, UINT32 endTime){
+	void addSchedule(UINT32 slave_id, SRDAGVertexAbstract* vertex, UINT32 startTime, UINT32 endTime){
 		schedules[slave_id][nbVertices[slave_id]] = vertex;
 
 		vertex->setStartTime(startTime);
@@ -85,10 +85,7 @@ public:
 
 		slaveReadyTimes[slave_id] = endTime;
 
-		int index = nbVertices[slave_id];
 		(nbVertices[slave_id])++;
-
-		return index;
     }
 
     /*

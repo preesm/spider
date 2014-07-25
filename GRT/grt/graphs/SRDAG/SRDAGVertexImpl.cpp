@@ -59,8 +59,9 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(){
 	itrIx 			= -1;
 	schedLevel 		= -1;
 	slaveIndex 		= -1;
-	scheduleIndex 	= -1;
 	setIx 			= -1;
+	startTime		= -1;
+	endTime			= -1;
 }
 
 SRDAGVertexAbstract::SRDAGVertexAbstract(
@@ -78,8 +79,9 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(
 	itrIx 			= _itrIx;
 	schedLevel 		= -1;
 	slaveIndex 		= -1;
-	scheduleIndex 	= -1;
 	setIx 			= -1;
+	startTime		= -1;
+	endTime			= -1;
 }
 
 void SRDAGVertexAbstract::updateState(){

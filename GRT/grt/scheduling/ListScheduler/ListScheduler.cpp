@@ -147,12 +147,8 @@ int ListScheduler::getThroughput(SRDAGGraph* srDag){
 //	return minimumStartTime;
 //}
 
-UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVertexAbstract* vertex){
-//	UINT32 noSchedule = -1; // Indicates that the vertex have not been scheduled.
-	if(vertex->getScheduleIndex() != -1)
-		return vertex->getEndTime();
-
-	UINT32 minimumStartTime;
+void ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVertexAbstract* vertex){
+	UINT32 minimumStartTime=0;
 
 	for(int i=0; i<vertex->getNbInputEdge(); i++){
 		minimumStartTime = std::max(minimumStartTime,
@@ -193,18 +189,10 @@ UINT32 ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAG
 		}
 	}
 	
-	if(bestSlave != 0){
-	  int i=0;
-	  i++;
-	}
-	
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
-	int scheduleIndex = schedule->addSchedule(bestSlave, vertex, bestStartTime, bestEndTime);
-	vertex->setScheduleIndex(scheduleIndex);
+	schedule->addSchedule(bestSlave, vertex, bestStartTime, bestEndTime);
 
 	Launcher::launchVertex(vertex, bestSlave);
-
-	return bestEndTime;
 }
 
 #define MAX(a,b) ((a>b)?a:b)
@@ -251,8 +239,7 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 	Launcher::endTaskOrderingTime();
 	Launcher::initMappingTime();
 
-//	schedule->newStep();
-
+	schedule->newStep();
 	UINT32 end = platform_time_getValue() + MAPPING_TIME*schedList.getNb();
 
 	schedule->setReadyTime(0, end);

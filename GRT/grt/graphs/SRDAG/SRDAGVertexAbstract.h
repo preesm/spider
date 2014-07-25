@@ -82,7 +82,6 @@ protected :
 
 	int schedLevel;
 	int slaveIndex;
-	int scheduleIndex;
 	UINT32 startTime;
 	UINT32 endTime;
 
@@ -182,12 +181,6 @@ inline int SRDAGVertexAbstract::getSchedLevel() const
 
 inline void SRDAGVertexAbstract::setSchedLevel(int level)
 	{schedLevel = level;}
-
-inline int SRDAGVertexAbstract::getScheduleIndex() const
-	{return scheduleIndex;}
-
-inline void SRDAGVertexAbstract::setScheduleIndex(int index)
-	{scheduleIndex = index;}
 
 inline int SRDAGVertexAbstract::getSetIx() const
 	{return setIx;}

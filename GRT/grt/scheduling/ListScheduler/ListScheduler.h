@@ -124,7 +124,7 @@ class ListScheduler {
 		/*
 		 * Schedules a vertex and returns the end time.
 		 */
-		UINT32 schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVertexAbstract* vertex);
+		void schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVertexAbstract* vertex);
 
 		/**
 		 Scheduling a SRDAG

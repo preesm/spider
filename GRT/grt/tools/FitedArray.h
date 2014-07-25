@@ -43,7 +43,6 @@
 
 class SRDAGEdge;
 
-#define MAX_EDGE_ARRAY 10000
 /**
  * Indexed array generic class.
  * An indexed array is an array with a validity check of accesses.
@@ -108,13 +107,15 @@ public:
 	 * @param n Index of the element.
 	 */
 	void resetValue(int n);
+
+	T* getArray();
 };
 
 /** Default Constructor */
 template <class T, int POOLSIZE>
 inline FitedArray<T,POOLSIZE>::FitedArray(){
 	nb = size = 0;
-	base = (SRDAGEdge**)NULL;
+	base = (T*)NULL;
 }
 
 template <class T, int POOLSIZE>
@@ -217,6 +218,11 @@ inline void FitedArray<T,POOLSIZE>::resetValue(int n){
 #endif
 //	valid[n] = false;
 	nb--;
+}
+
+template <class T, int POOLSIZE>
+inline T* FitedArray<T,POOLSIZE>::getArray(){
+	return base;
 }
 
 #endif /* FITED_ARRAY_H_ */

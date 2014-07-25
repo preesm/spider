@@ -61,20 +61,11 @@ public :
 		PiSDFVertex* ref);
 	~SRDAGVertexNormal(){}
 
-	int getParamNb() const;
-	int* getParamArray();
-
 	BOOL isHierarchical() const;
 	PiSDFGraph* getHierarchy() const;
 
 	void getName(char* name, UINT32 sizeMax);
 };
-
-inline int SRDAGVertexNormal::getParamNb() const
-	{return reference->getNbParameters();}
-
-inline int* SRDAGVertexNormal::getParamArray()
-	{return paramValues;}
 
 inline BOOL SRDAGVertexNormal::isHierarchical() const{
 	return reference

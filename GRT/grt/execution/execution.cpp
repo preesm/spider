@@ -122,7 +122,41 @@ void execute(){
 			outputFIFOs[i] = (UINT8*)(SHARED_MEM_BASE + vertex->getOutputEdge(i)->getFifoAddress());
 		}
 
-		memcpy(args, vertex->getParamArray(), vertex->getParamNb()*sizeof(int));
+		switch(vertex->getType()){
+		case Normal:
+		case ConfigureActor:
+			memcpy(args, vertex->getParamArray(), vertex->getParamNb()*sizeof(int));
+			break;
+		case Explode:
+			args[0] = vertex->getNbInputEdge();
+			args[1] = vertex->getNbOutputEdge();
+			args[2] = vertex->getInputEdge(0)->getTokenRate();
+			for(int i=0; i<vertex->getNbOutputEdge(); i++){
+				args[3+i] = vertex->getOutputEdge(i)->getTokenRate();
+			}
+			break;
+		case Implode:
+			args[0] = vertex->getNbInputEdge();
+			args[1] = vertex->getNbOutputEdge();
+			args[2] = vertex->getOutputEdge(0)->getTokenRate();
+			for(int i=0; i<vertex->getNbInputEdge(); i++){
+				args[3+i] = vertex->getInputEdge(i)->getTokenRate();
+			}
+			break;
+			break;
+		case RoundBuffer:
+			args[0] = vertex->getInputEdge(0)->getTokenRate();
+			args[1] = vertex->getOutputEdge(0)->getTokenRate();
+			break;
+		case Broadcast:
+			break;
+		case Init:
+			args[0] = vertex->getOutputEdge(0)->getTokenRate();
+			break;
+		case End:
+			args[0] = vertex->getInputEdge(0)->getTokenRate();
+			break;
+		}
 
 		curVertexId = vertex->getId();
 

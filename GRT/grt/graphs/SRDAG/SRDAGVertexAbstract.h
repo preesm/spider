@@ -99,6 +99,7 @@ protected :
 	int setIx;
 
 	FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY> inputs, outputs;
+	FitedArray<int,MAX_PARAM_ARRAY> params;
 
 public:
 	SRDAGVertexAbstract();
@@ -123,8 +124,8 @@ public:
 	SRDAGEdge* getInputEdge(int id);
 	SRDAGEdge* getOutputEdge(int id);
 
-	virtual int getParamNb() const = 0;
-	virtual int* getParamArray() = 0;
+	int getParamNb() const;
+	int* getParamArray();
 
 	UINT32 getExecTime(int slaveType) const;
 	bool getConstraint(int slaveType) const;
@@ -217,6 +218,12 @@ inline int SRDAGVertexAbstract::getSetIx() const
 
 inline void SRDAGVertexAbstract::setSetIx(int setIx)
 	{this->setIx = setIx;}
+
+inline int SRDAGVertexAbstract::getParamNb() const
+	{return params.getNb();}
+
+inline int* SRDAGVertexAbstract::getParamArray()
+	{return params.getArray();}
 
 inline UINT32 SRDAGVertexAbstract::getExecTime(int slaveType) const
 	{return execTime[slaveType];}

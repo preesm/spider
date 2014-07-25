@@ -48,10 +48,6 @@ class SRDAGGraph;
 #include "SRDAGVertexAbstract.h"
 
 class SRDAGVertexInitEnd : public SRDAGVertexAbstract{
-
-private :
-	int param;
-
 public :
 	SRDAGVertexInitEnd(){}
 	SRDAGVertexInitEnd(
@@ -61,25 +57,11 @@ public :
 			int 			_itrIx);
 	~SRDAGVertexInitEnd(){}
 
-	int getParamNb() const;
-	int* getParamArray();
-
 	BOOL isHierarchical() const;
 	PiSDFGraph* getHierarchy() const;
 
 	void getName(char* name, UINT32 sizeMax);
 };
-
-inline int SRDAGVertexInitEnd::getParamNb() const
-	{return 1;}
-
-inline int* SRDAGVertexInitEnd::getParamArray(){
-	if(type == Init)
-		param = outputs[0]->getTokenRate();
-	else if(type == End)
-		param = inputs[0]->getTokenRate();
-	return &param;
-}
 
 inline BOOL SRDAGVertexInitEnd::isHierarchical() const
 	{return false;}

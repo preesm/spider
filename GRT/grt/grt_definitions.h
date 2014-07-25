@@ -75,6 +75,7 @@
 #define MAX_SRDAG_IO_EDGES		3
 #define MAX_SRDAG_XPLODE_EDGES	16
 #define MAX_EDGE_ARRAY 			10000
+#define MAX_PARAM_ARRAY 		1000
 
 #define MAX_VERTEX_REPETITION 	17	//100 // The maximum number of repetitions for one vertex
 

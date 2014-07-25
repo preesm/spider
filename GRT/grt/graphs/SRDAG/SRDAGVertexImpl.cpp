@@ -126,9 +126,9 @@ SRDAGVertexBroadcast::SRDAGVertexBroadcast(
 		int 			_itrIx,
 		PiSDFVertex* ref):
 		SRDAGVertexAbstract(_graph, Broadcast, ref, _refIx,_itrIx){
-	fctIx = BROADCAST_FUNCT_IX;
 	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
 	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_XPLODE_EDGES);
+	fctIx = BROADCAST_FUNCT_IX;
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = true;
 		execTime[i] = SYNC_TIME;
@@ -143,6 +143,7 @@ SRDAGVertexConfig::SRDAGVertexConfig(
 		SRDAGVertexAbstract(_graph, ConfigureActor, ref, _refIx,_itrIx){
 	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
 	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
+	params = FitedArray<int,MAX_PARAM_ARRAY>(MAX_PARAM);
 	fctIx = reference->getFunction_index();
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
@@ -155,7 +156,7 @@ SRDAGVertexConfig::SRDAGVertexConfig(
 	}
 
 	for(int i=0; i<ref->getNbParameters(); i++)
-		paramValues[i] = reference->getParameter(i)->getValue();
+		params.setValue(i, reference->getParameter(i)->getValue());
 }
 
 SRDAGVertexNormal::SRDAGVertexNormal(
@@ -166,6 +167,7 @@ SRDAGVertexNormal::SRDAGVertexNormal(
 		SRDAGVertexAbstract(_graph, Normal, ref, _refIx,_itrIx){
 	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
 	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
+	params = FitedArray<int,MAX_PARAM_ARRAY>(MAX_PARAM);
 	fctIx = reference->getFunction_index();
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
@@ -178,7 +180,7 @@ SRDAGVertexNormal::SRDAGVertexNormal(
 	}
 
 	for(int i=0; i<reference->getNbParameters(); i++)
-		paramValues[i] = reference->getParameter(i)->getValue();
+		params.setValue(i, reference->getParameter(i)->getValue());
 }
 
 SRDAGVertexInitEnd::SRDAGVertexInitEnd(

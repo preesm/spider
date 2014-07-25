@@ -60,20 +60,11 @@ public :
 				PiSDFVertex* ref);
 	~SRDAGVertexBroadcast(){}
 
-	int getParamNb() const;
-	int* getParamArray();
-
 	BOOL isHierarchical() const;
 	PiSDFGraph* getHierarchy() const;
 
 	void getName(char* name, UINT32 sizeMax);
 };
-
-inline int SRDAGVertexBroadcast::getParamNb() const
-	{return 0;}
-
-inline int* SRDAGVertexBroadcast::getParamArray()
-	{return (int*)NULL;}
 
 inline BOOL SRDAGVertexBroadcast::isHierarchical() const
 	{return false;}

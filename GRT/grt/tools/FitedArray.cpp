@@ -39,3 +39,6 @@
 
 template<> int FitedArray<SRDAGEdge*, MAX_EDGE_ARRAY>::wrIx = 0;
 template<> SRDAGEdge* FitedArray<SRDAGEdge*, MAX_EDGE_ARRAY>::array[MAX_EDGE_ARRAY] = {(SRDAGEdge*)NULL};
+
+template<> int FitedArray<int, MAX_PARAM_ARRAY>::wrIx = 0;
+template<> int FitedArray<int, MAX_PARAM_ARRAY>::array[MAX_PARAM_ARRAY] = {0};

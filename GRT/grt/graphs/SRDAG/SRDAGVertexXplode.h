@@ -48,10 +48,6 @@ class SRDAGGraph;
 #include "SRDAGVertexAbstract.h"
 
 class SRDAGVertexXplode : public SRDAGVertexAbstract{
-
-private :
-	int params[3+MAX_SRDAG_XPLODE_EDGES];
-
 public :
 	SRDAGVertexXplode(){}
 	SRDAGVertexXplode(
@@ -61,39 +57,11 @@ public :
 			int 			_itrIx);
 	~SRDAGVertexXplode(){}
 
-	int getParamNb() const;
-	int* getParamArray();
-
 	BOOL isHierarchical() const;
 	PiSDFGraph* getHierarchy() const;
 
 	void getName(char* name, UINT32 sizeMax);
 };
-
-inline int SRDAGVertexXplode::getParamNb() const{
-	return 2+getNbInputEdge()+getNbOutputEdge();
-}
-
-inline int* SRDAGVertexXplode::getParamArray(){
-	params[0] = getNbInputEdge();
-	params[1] = getNbOutputEdge();
-	switch(type){
-	case Explode:
-		params[2] = inputs[0]->getTokenRate();
-		for(int i=0; i<outputs.getNb(); i++){
-			params[3+i] = outputs[i]->getTokenRate();
-		}
-		return params;
-	case Implode:
-		params[2] = outputs[0]->getTokenRate();
-		for(int i=0; i<inputs.getNb(); i++){
-			params[3+i] = inputs[i]->getTokenRate();
-		}
-		return params;
-	default:
-		return (int*)NULL;
-	}
-}
 
 inline BOOL SRDAGVertexXplode::isHierarchical() const{
 	return false;

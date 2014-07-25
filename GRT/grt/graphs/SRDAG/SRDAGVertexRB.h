@@ -48,10 +48,6 @@ class SRDAGGraph;
 #include "SRDAGVertexAbstract.h"
 
 class SRDAGVertexRB : public SRDAGVertexAbstract{
-
-private :
-	int params[2];
-
 public :
 	SRDAGVertexRB(){}
 	SRDAGVertexRB(
@@ -61,23 +57,11 @@ public :
 			PiSDFAbstractVertex* ref);
 	~SRDAGVertexRB(){}
 
-	int getParamNb() const;
-	int* getParamArray();
-
 	BOOL isHierarchical() const;
 	PiSDFGraph* getHierarchy() const;
 
 	void getName(char* name, UINT32 sizeMax);
 };
-
-inline int SRDAGVertexRB::getParamNb() const
-	{return 2;}
-
-inline int* SRDAGVertexRB::getParamArray(){
-	params[0] = inputs[0]->getTokenRate();
-	params[1] = outputs[0]->getTokenRate();
-	return params;
-}
 
 inline BOOL SRDAGVertexRB::isHierarchical() const
 	{return false;}

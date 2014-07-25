@@ -52,7 +52,6 @@ class SRDAGVertexConfig : public SRDAGVertexAbstract{
 
 private :
 	int relatedParamValues[MAX_PARAM];
-	int paramValues[MAX_PARAM];
 
 public :
 	SRDAGVertexConfig(){}
@@ -63,9 +62,6 @@ public :
 					PiSDFConfigVertex* ref);
 	~SRDAGVertexConfig(){}
 
-	int getParamNb() const;
-	int* getParamArray();
-
 	int getRelatedParamValue(int paramIndex) const;
 	void setRelatedParamValue(int paramIndex, int value);
 
@@ -74,12 +70,6 @@ public :
 
 	void getName(char* name, UINT32 sizeMax);
 };
-
-inline int SRDAGVertexConfig::getParamNb() const
-	{return reference->getNbParameters();}
-
-inline int* SRDAGVertexConfig::getParamArray()
-	{return paramValues;}
 
 inline int SRDAGVertexConfig::getRelatedParamValue(int paramIndex) const
 	{return relatedParamValues[paramIndex];}

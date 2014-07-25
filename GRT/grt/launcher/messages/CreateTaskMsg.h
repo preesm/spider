@@ -67,7 +67,27 @@ void inline CreateTaskMsg::send(int lrtID, SRDAGVertexAbstract* vertex){
 
 	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getNbInputEdge());
 	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getNbOutputEdge());
-	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getParamNb());
+
+	switch(vertex->getType()){
+	case Normal:
+	case ConfigureActor:
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getParamNb());
+		break;
+	case Explode:
+	case Implode:
+		platform_QPushUINT32(lrtID, platformCtrlQ, 2+vertex->getNbInputEdge()+vertex->getNbOutputEdge());
+		break;
+	case RoundBuffer:
+		platform_QPushUINT32(lrtID, platformCtrlQ, 2);
+		break;
+	case Broadcast:
+		platform_QPushUINT32(lrtID, platformCtrlQ, 0);
+		break;
+	case Init:
+	case End:
+		platform_QPushUINT32(lrtID, platformCtrlQ, 1);
+		break;
+	}
 
 	for (int k = 0; k < vertex->getNbInputEdge(); k++){
 		platform_QPush(lrtID, platformCtrlQ, vertex->getInputEdge(k)->getFifo(), sizeof(FIFO));
@@ -77,7 +97,41 @@ void inline CreateTaskMsg::send(int lrtID, SRDAGVertexAbstract* vertex){
 		platform_QPush(lrtID, platformCtrlQ, vertex->getOutputEdge(k)->getFifo(), sizeof(FIFO));
 	}
 
-	platform_QPush(lrtID, platformCtrlQ, vertex->getParamArray(), vertex->getParamNb()*sizeof(int));
+	switch(vertex->getType()){
+	case Normal:
+	case ConfigureActor:
+		platform_QPush(lrtID, platformCtrlQ, vertex->getParamArray(), vertex->getParamNb()*sizeof(int));
+		break;
+	case Explode:
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getNbInputEdge());
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getNbOutputEdge());
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getInputEdge(0)->getTokenRate());
+		for(int i=0; i<vertex->getNbOutputEdge(); i++){
+			platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getOutputEdge(i)->getTokenRate());
+		}
+		break;
+	case Implode:
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getNbInputEdge());
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getNbOutputEdge());
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getOutputEdge(0)->getTokenRate());
+		for(int i=0; i<vertex->getNbInputEdge(); i++){
+			platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getInputEdge(i)->getTokenRate());
+		}
+		break;
+		break;
+	case RoundBuffer:
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getInputEdge(0)->getTokenRate());
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getOutputEdge(0)->getTokenRate());
+		break;
+	case Broadcast:
+		break;
+	case Init:
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getOutputEdge(0)->getTokenRate());
+		break;
+	case End:
+		platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getInputEdge(0)->getTokenRate());
+		break;
+	}
 
 	platform_QPush_finalize(lrtID, platformCtrlQ);
 }

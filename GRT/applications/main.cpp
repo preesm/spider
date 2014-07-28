@@ -157,7 +157,11 @@ int main(int argc, char* argv[]){
 		Launcher::init();
 
 		resetGraph();
-		topPisdf = initPisdf_mpSched(pisdfGraphs, 20, 4000, iter);
+#ifdef DSP
+		topPisdf = initPisdf_mpSched(pisdfGraphs, 20, 4000, iter, 0);
+#else
+		topPisdf = initPisdf_mpSched(pisdfGraphs, 20, 4000, iter, 1);
+#endif
 
 		listScheduler.reset();
 		topDag.reset();

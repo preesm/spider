@@ -38,4 +38,4 @@
 #include <graphs/PiSDF/PiSDFGraph.h>
 #include "debuggingOptions.h"
 
-PiSDFGraph* initPisdf_mpSched(PiSDFGraph* graphs, int MMAX, UINT32 nbSamples, UINT32 Nval);
+PiSDFGraph* initPisdf_mpSched(PiSDFGraph* graphs, int MMAX, UINT32 nbSamples, UINT32 Nval, UINT32 test);

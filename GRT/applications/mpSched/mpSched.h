@@ -40,12 +40,6 @@
 
 #include "actors.h"
 
-#ifdef DSP
-#define TEST 0
-#else
-#define TEST 1
-#endif
-
 #define NVAL	10
 #define MMAX 	12
 #define NBITER 	10
@@ -106,34 +100,18 @@ void src(UINT8* inputFIFOs[],
 	UINT32 i,j;
 	UINT32 N = params[0];
 	UINT32 NBSAMPLES = params[1];
+	UINT32 TEST = params[2];
 
 	float* out = (float*)outputFIFOs[0];
-#if TEST
-	for(i=0; i<N; i++){
-		srand(1000);
-		for(j=0; j<NBSAMPLES; j++){
-			out[j+i*NBSAMPLES] = 10*((float)rand())/RAND_MAX;
+
+	if(TEST){
+		for(i=0; i<N; i++){
+			srand(1000);
+			for(j=0; j<NBSAMPLES; j++){
+				out[j+i*NBSAMPLES] = 10*((float)rand())/RAND_MAX;
+			}
 		}
 	}
-#endif
-
-//	for(i=1; i<N; i++){
-//		float* data = (float*)(((long long)out)+i*NBSAMPLES*sizeof(float));
-//		memcpy(data, out, NBSAMPLES*sizeof(float));
-//	}
-
-	//printf("Exec src\n");
-
-//	FILE* f;
-//	char file[100];
-
-//	sprintf(file,"/home/jheulot/dev/mp-sched/input.dat");
-//	f = fopen(file,"rb");
-//	if(f == NULL){printf("cannot open %s\n", file);abort();}
-//	fread(out, sizeof(float), NBSAMPLES, f);
-//	fclose(f);
-
-
 }
 
 void snk(UINT8* inputFIFOs[],
@@ -143,6 +121,7 @@ void snk(UINT8* inputFIFOs[],
 	UINT32 i,j;
 	UINT32 N = params[0];
 	UINT32 NBSAMPLES = params[1];
+	UINT32 TEST = params[2];
 
 #ifndef DSP
 	const int expectedHash[13]={
@@ -166,49 +145,20 @@ void snk(UINT8* inputFIFOs[],
 
 	BOOL test = TRUE;
 
-#if TEST
-	int hash;
-	for(i=0; i<N; i++){
-		hash = 0;
-		int* data = (int*)in;
-		for(j=0; j<NBSAMPLES; j++){
-			hash = hash ^ data[j+i*NBSAMPLES];
+	if(TEST){
+		int hash;
+		for(i=0; i<N; i++){
+			hash = 0;
+			int* data = (int*)in;
+			for(j=0; j<NBSAMPLES; j++){
+				hash = hash ^ data[j+i*NBSAMPLES];
+			}
+			if(hash != expectedHash[8]){
+				printf("Bad Hash result: %#X instead of %#X\n", hash, expectedHash[8]);
+				return;
+			}
 		}
-		if(hash != expectedHash[8]){
-			printf("Bad Hash result: %#X instead of %#X\n", hash, expectedHash[8]);
-			return;
-		}
-	}
-	printf("Result OK\n");
-#endif
-
-	//printf("Exec snk\n");
-
-//	float outputCheck [NBSAMPLES];
-//
-//	FILE* f;
-//	char file[100];
-//
-//	for(i=0; i<N; i++){
-//		sprintf(file,"/home/jheulot/dev/mp-sched/output_%d_%d.dat", NBSAMPLES, 8);
-//		f = fopen(file,"rb");
-//		if(f == NULL){printf("cannot open %s\n", file);abort();}
-//		fread(outputCheck, sizeof(float), NBSAMPLES, f);
-//		fclose(f);
-//
-//		for(j=0; j<NBSAMPLES; j++){
-//			if(abs(in[j+i*NBSAMPLES] - outputCheck[j]) != 0){
-//				printf("Error in (%d,%d), expected %f get %f\n",i,j,outputCheck[j],in[j]);
-//				test = false;
-//				break;
-//			}
-//		}
-//	}
-
-	if(test){
-		//printf("Passed\n");
-	}else{
-		//printf("Not Passed\n");
+		printf("Result OK\n");
 	}
 }
 

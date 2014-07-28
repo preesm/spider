@@ -36,7 +36,7 @@
 
 #include "PiSDFMpSched.h"
 
-void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples, UINT32 Nval);
+void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples, UINT32 Nval, UINT32 test);
 void mpSched_sub(PiSDFGraph* graph, UINT32 nbSamples);
 
 
@@ -54,7 +54,7 @@ void resetGraph(){
 	nbGraphs = 0;
 }
 
-PiSDFGraph* initPisdf_mpSched(PiSDFGraph* _graphs, int NMAX, UINT32 nbSamples, UINT32 Nval){
+PiSDFGraph* initPisdf_mpSched(PiSDFGraph* _graphs, int NMAX, UINT32 nbSamples, UINT32 Nval, UINT32 test){
 	graphs = _graphs;
 
 	PiSDFGraph* top = addGraph();
@@ -65,21 +65,23 @@ PiSDFGraph* initPisdf_mpSched(PiSDFGraph* _graphs, int NMAX, UINT32 nbSamples, U
 	vxTop->setSubGraph(mpSchedGraph);
 	mpSchedGraph->setParentVertex(vxTop);
 
-	mpSched(mpSchedGraph, NMAX, nbSamples, Nval);
+	mpSched(mpSchedGraph, NMAX, nbSamples, Nval, test);
 
 	return top;
 }
 
-void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples, UINT32 Nval){
+void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples, UINT32 Nval, UINT32 test){
 	// Parameters.
 	PiSDFParameter *paramN = graph->addParameter("N");
 	PiSDFParameter *paramNVAL = graph->addParameter("N_VAL");
 	PiSDFParameter *paramNMAX = graph->addParameter("NMAX");
 	PiSDFParameter *paramSamples = graph->addParameter("nbSamples");
+	PiSDFParameter *paramTest = graph->addParameter("test");
 
 	paramNVAL->setValue(Nval);
 	paramNMAX->setValue(NMAX);
 	paramSamples->setValue(nbSamples);
+	paramTest->setValue(test);
 
 #if EXEC == 0
 	paramN->setValue(8);
@@ -101,11 +103,13 @@ void mpSched(PiSDFGraph* graph, int NMAX, UINT32 nbSamples, UINT32 Nval){
 	PiSDFVertex *vxSrc = (PiSDFVertex *)graph->addVertex("Src", normal_vertex);
 	vxSrc->addParameter(paramN);
 	vxSrc->addParameter(paramSamples);
+	vxSrc->addParameter(paramTest);
 	vxSrc->setFunction_index(2);
 
 	PiSDFVertex *vxSnk 	= (PiSDFVertex *)graph->addVertex("Snk", normal_vertex);
 	vxSnk->addParameter(paramN);
 	vxSnk->addParameter(paramSamples);
+	vxSnk->addParameter(paramTest);
 	vxSnk->setFunction_index(3);
 
 	PiSDFVertex *vxUserFIRs	= (PiSDFVertex *)graph->addVertex("UserFIRs", normal_vertex);

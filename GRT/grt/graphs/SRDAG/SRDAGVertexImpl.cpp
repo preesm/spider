@@ -88,6 +88,11 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(
 	fctIx 			= -1;
 	haveSubGraph	= false;
 	subGraph		= NULL;
+
+	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>();
+	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>();
+	params = FitedArray<int,MAX_PARAM_ARRAY>();
+	relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>();
 }
 
 void SRDAGVertexAbstract::updateState(){

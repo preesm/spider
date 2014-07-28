@@ -87,7 +87,7 @@ public:
 	 * @param n Index of the element.
 	 * @return the element.
 	 */
-	T operator [](int n);
+	T operator [](int n) const;
 
 	/**
 	 * Get the number of initialized element of the IndexedArray.
@@ -169,7 +169,7 @@ inline const char * FitedArray<T,POOLSIZE>::getName(){
  * @return Element of rank n.
  */
 template <class T, int POOLSIZE>
-inline T FitedArray<T,POOLSIZE>::operator [](int n){
+inline T FitedArray<T,POOLSIZE>::operator [](int n) const{
 #if DEBUG
 	if(n >= size)
 		exitWithCode(2003, name);

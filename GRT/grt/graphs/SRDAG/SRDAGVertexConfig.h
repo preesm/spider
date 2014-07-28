@@ -51,7 +51,6 @@ class SRDAGGraph;
 class SRDAGVertexConfig : public SRDAGVertexAbstract{
 
 private :
-	int relatedParamValues[MAX_PARAM];
 
 public :
 	SRDAGVertexConfig(){}
@@ -61,15 +60,8 @@ public :
 					int 			_itrIx,
 					PiSDFConfigVertex* ref);
 	~SRDAGVertexConfig(){}
-
-	int getRelatedParamValue(int paramIndex) const;
-	void setRelatedParamValue(int paramIndex, int value);
 };
 
-inline int SRDAGVertexConfig::getRelatedParamValue(int paramIndex) const
-	{return relatedParamValues[paramIndex];}
 
-inline void SRDAGVertexConfig::setRelatedParamValue(int paramIndex, int value)
-	{relatedParamValues[paramIndex] = value;}
 
 #endif

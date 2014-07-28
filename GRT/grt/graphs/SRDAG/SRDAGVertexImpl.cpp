@@ -179,6 +179,7 @@ SRDAGVertexConfig::SRDAGVertexConfig(
 	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
 	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
 	params = FitedArray<int,MAX_PARAM_ARRAY>(MAX_PARAM);
+	relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>(MAX_PARAM);
 	fctIx = reference->getFunction_index();
 	haveSubGraph	= false;
 

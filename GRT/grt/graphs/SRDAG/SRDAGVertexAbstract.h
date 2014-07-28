@@ -100,6 +100,7 @@ protected :
 
 	FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY> inputs, outputs;
 	FitedArray<int,MAX_PARAM_ARRAY> params;
+	FitedArray<int,MAX_PARAM_ARRAY> relatedParamValues;
 
 	bool haveSubGraph;
 	PiSDFGraph* subGraph;
@@ -156,6 +157,9 @@ public:
 
 	int getSetIx() const;
 	void setSetIx(int setIx);
+
+	int getRelatedParamValue(int paramIndex) const;
+	void setRelatedParamValue(int paramIndex, int value);
 
 //	friend class SRDAGGraph;
 	friend class SRDAGEdge;
@@ -250,5 +254,11 @@ inline bool SRDAGVertexAbstract::isHierarchical() const
 
 inline PiSDFGraph* SRDAGVertexAbstract::getHierarchy() const
 	{return subGraph;}
+
+inline int SRDAGVertexAbstract::getRelatedParamValue(int paramIndex) const
+	{return relatedParamValues[paramIndex];}
+
+inline void SRDAGVertexAbstract::setRelatedParamValue(int paramIndex, int value)
+	{relatedParamValues.setValue(paramIndex, value);}
 
 #endif

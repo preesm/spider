@@ -20,6 +20,11 @@
 *.tar
 *.zip
 
+# Result Files #
+################
+*.gv
+*.xml
+
 # Logs and databases #
 ######################
 *.log

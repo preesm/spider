@@ -61,22 +61,8 @@ public :
 		PiSDFVertex* ref);
 	~SRDAGVertexNormal(){}
 
-	BOOL isHierarchical() const;
-	PiSDFGraph* getHierarchy() const;
-
 	void getName(char* name, UINT32 sizeMax);
 };
-
-inline BOOL SRDAGVertexNormal::isHierarchical() const{
-	return reference
-				&& reference->getType() == normal_vertex
-				&& ((PiSDFVertex*)reference)->hasSubGraph()
-				&& type == Normal;
-}
-
-inline PiSDFGraph* SRDAGVertexNormal::getHierarchy() const{
-	return ((PiSDFVertex*)reference)->getSubGraph();
-}
 
 inline void SRDAGVertexNormal::getName(char* name, UINT32 sizeMax){
 	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%d",reference->getName(),itrIx, refIx);

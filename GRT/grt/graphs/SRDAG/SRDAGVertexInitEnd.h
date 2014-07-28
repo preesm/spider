@@ -57,17 +57,8 @@ public :
 			int 			_itrIx);
 	~SRDAGVertexInitEnd(){}
 
-	BOOL isHierarchical() const;
-	PiSDFGraph* getHierarchy() const;
-
 	void getName(char* name, UINT32 sizeMax);
 };
-
-inline BOOL SRDAGVertexInitEnd::isHierarchical() const
-	{return false;}
-
-inline PiSDFGraph* SRDAGVertexInitEnd::getHierarchy() const
-	{return (PiSDFGraph*)NULL;}
 
 inline void SRDAGVertexInitEnd::getName(char* name, UINT32 sizeMax){
 	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d", (type == Init) ? "Init" : "End", id);

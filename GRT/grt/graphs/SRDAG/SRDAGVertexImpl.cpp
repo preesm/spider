@@ -63,6 +63,8 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(){
 	startTime		= -1;
 	endTime			= -1;
 	fctIx 			= -1;
+	haveSubGraph	= false;
+	subGraph		= NULL;
 }
 
 SRDAGVertexAbstract::SRDAGVertexAbstract(
@@ -84,6 +86,8 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(
 	startTime		= -1;
 	endTime			= -1;
 	fctIx 			= -1;
+	haveSubGraph	= false;
+	subGraph		= NULL;
 }
 
 void SRDAGVertexAbstract::updateState(){
@@ -129,6 +133,7 @@ SRDAGVertexBroadcast::SRDAGVertexBroadcast(
 	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
 	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_XPLODE_EDGES);
 	fctIx = BROADCAST_FUNCT_IX;
+	haveSubGraph	= false;
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = true;
 		execTime[i] = SYNC_TIME;
@@ -145,6 +150,7 @@ SRDAGVertexConfig::SRDAGVertexConfig(
 	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
 	params = FitedArray<int,MAX_PARAM_ARRAY>(MAX_PARAM);
 	fctIx = reference->getFunction_index();
+	haveSubGraph	= false;
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		if(reference->getConstraints(i)){
@@ -169,6 +175,14 @@ SRDAGVertexNormal::SRDAGVertexNormal(
 	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
 	params = FitedArray<int,MAX_PARAM_ARRAY>(MAX_PARAM);
 	fctIx = reference->getFunction_index();
+
+	haveSubGraph = reference
+			&& reference->getType() == normal_vertex
+			&& ((PiSDFVertex*)reference)->hasSubGraph()
+			&& type == Normal;
+
+	if(haveSubGraph)
+		subGraph = ((PiSDFVertex*)reference)->getSubGraph();
 
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		if(reference->getConstraints(i)){
@@ -202,6 +216,7 @@ SRDAGVertexInitEnd::SRDAGVertexInitEnd(
 		return;
 	}
 
+	haveSubGraph	= false;
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = true;
 		execTime[i] = SYNC_TIME;
@@ -218,6 +233,7 @@ SRDAGVertexRB::SRDAGVertexRB(
 	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
 	fctIx = RB_FUNCT_IX;
 
+	haveSubGraph	= false;
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = true;
 		execTime[i] = SYNC_TIME;
@@ -238,6 +254,7 @@ SRDAGVertexXplode::SRDAGVertexXplode(
 		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
 	}
 	fctIx = XPLODE_FUNCT_IX;
+	haveSubGraph	= false;
 	for(int i=0; i<MAX_SLAVE_TYPES; i++){
 		constraints[i] = true;
 		execTime[i] = SYNC_TIME;

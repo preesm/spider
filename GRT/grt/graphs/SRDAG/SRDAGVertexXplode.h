@@ -57,19 +57,8 @@ public :
 			int 			_itrIx);
 	~SRDAGVertexXplode(){}
 
-	BOOL isHierarchical() const;
-	PiSDFGraph* getHierarchy() const;
-
 	void getName(char* name, UINT32 sizeMax);
 };
-
-inline BOOL SRDAGVertexXplode::isHierarchical() const{
-	return false;
-}
-
-inline PiSDFGraph* SRDAGVertexXplode::getHierarchy() const{
-	return (PiSDFGraph*)NULL;
-}
 
 inline void SRDAGVertexXplode::getName(char* name, UINT32 sizeMax){
 	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d", (type == Implode) ? "Imp" : "Exp", id);

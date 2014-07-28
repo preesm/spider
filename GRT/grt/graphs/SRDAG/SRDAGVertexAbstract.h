@@ -101,6 +101,8 @@ protected :
 	FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY> inputs, outputs;
 	FitedArray<int,MAX_PARAM_ARRAY> params;
 
+	bool haveSubGraph;
+	PiSDFGraph* subGraph;
 public:
 	SRDAGVertexAbstract();
 	SRDAGVertexAbstract(
@@ -147,8 +149,8 @@ public:
 	UINT32 getEndTime() const;
 	void setEndTime(UINT32 time);
 
-	virtual BOOL isHierarchical() const = 0;
-	virtual PiSDFGraph* getHierarchy() const = 0;
+	bool isHierarchical() const;
+	PiSDFGraph* getHierarchy() const;
 
 	virtual void getName(char* name, UINT32 sizeMax) = 0;
 
@@ -242,5 +244,11 @@ inline UINT32 SRDAGVertexAbstract::getEndTime() const
 
 inline void SRDAGVertexAbstract::setEndTime(UINT32 time)
 	{endTime = time;}
+
+inline bool SRDAGVertexAbstract::isHierarchical() const
+	{return haveSubGraph;}
+
+inline PiSDFGraph* SRDAGVertexAbstract::getHierarchy() const
+	{return subGraph;}
 
 #endif

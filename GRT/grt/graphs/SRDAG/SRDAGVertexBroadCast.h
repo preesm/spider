@@ -60,17 +60,8 @@ public :
 				PiSDFVertex* ref);
 	~SRDAGVertexBroadcast(){}
 
-	BOOL isHierarchical() const;
-	PiSDFGraph* getHierarchy() const;
-
 	void getName(char* name, UINT32 sizeMax);
 };
-
-inline BOOL SRDAGVertexBroadcast::isHierarchical() const
-	{return false;}
-
-inline PiSDFGraph* SRDAGVertexBroadcast::getHierarchy() const
-	{return (PiSDFGraph*)NULL;}
 
 inline void SRDAGVertexBroadcast::getName(char* name, UINT32 sizeMax){
 	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"Br_%d", id);

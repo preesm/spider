@@ -57,17 +57,8 @@ public :
 			PiSDFAbstractVertex* ref);
 	~SRDAGVertexRB(){}
 
-	BOOL isHierarchical() const;
-	PiSDFGraph* getHierarchy() const;
-
 	void getName(char* name, UINT32 sizeMax);
 };
-
-inline BOOL SRDAGVertexRB::isHierarchical() const
-	{return false;}
-
-inline PiSDFGraph* SRDAGVertexRB::getHierarchy() const
-	{return (PiSDFGraph*)NULL;}
 
 inline void SRDAGVertexRB::getName(char* name, UINT32 sizeMax){
 	int len = snprintf(name, MAX_VERTEX_NAME_SIZE, "RB_%d", id);

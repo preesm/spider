@@ -42,7 +42,6 @@
 #include "../../graphs/SRDAG/SRDAGEdge.h"
 #include "../../graphs/PiSDF/PiSDFEdge.h"
 #include "../../graphs/PiSDF/PiSDFConfigVertex.h"
-#include "../ActorMachine/AMGraph.h"
 #include <scheduling/Schedule/Schedule.h>
 #include <grt_definitions.h>
 #include <platform_queue.h>

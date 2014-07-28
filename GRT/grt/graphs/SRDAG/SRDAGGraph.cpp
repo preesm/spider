@@ -42,40 +42,45 @@
 #include <cstring>
 #include "debuggingOptions.h"
 #include <tools/DotWriter.h>
+#include <grt_definitions.h>
 
 /**
  Constructor
 */
 SRDAGGraph::SRDAGGraph(): vertices(ABSTRACT_VERTICES), implodes(DEFAULT), /*edges(EDGES), */rbs(DEFAULT), brs(DEFAULT){
-	ePool.reset();
+	edgePool.reset();
+	vertexPool.reset();
+
 	vertices.reset();
 	implodes.reset();
-//	edges.reset();
 	brs.reset();
 	rbs.reset();
 
-	ePool.setName("Edge Pool of SRDAG Graph");
+#if DEBUG
+	edgePool.setName("Edge Pool of SRDAG Graph");
+	vertexPool.setName("Vertex Pool of SRDAG Graph");
 	vertices.setName("Vertex List of SRDAG Graph");
 	implodes.setName("Implode List of SRDAG Graph");
 //	edges.setName("Edge List of SRDAG Graph");
 	rbs.setName("RBs List of SRDAG Graph");
 	brs.setName("Brs List of SRDAG Graph");
+#endif
 }
 
 void SRDAGGraph::reset(){
-	ePool.reset();
+	edgePool.reset();
+	vertexPool.reset();
+
 	vertices.reset();
 	implodes.reset();
-//	edges.reset();
 	brs.reset();
+	rbs.reset();
 }
 
 /**
  Destructor
 */
 SRDAGGraph::~SRDAGGraph(){
-	printf("Nb vertices used %d\n", getNbVertices());
-	printf("Nb edges used %d\n", getNbEdges());
 }
 
 void SRDAGGraph::removeEdge(SRDAGEdge* edge){
@@ -84,7 +89,7 @@ void SRDAGGraph::removeEdge(SRDAGEdge* edge){
 	if(edge->getSource())
 		edge->disconnectSource();
 //	edges.remove(edge);
-	ePool.free(edge);
+	edgePool.free(edge);
 }
 
 void SRDAGGraph::removeVertex(SRDAGVertex *vertex){

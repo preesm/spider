@@ -62,16 +62,13 @@
 #define OS_MAX_TASKS_TIME 		350
 
 // Single Rate DAG
-#define EDGE_POOL_SIZE			360 // 600
-#define NORMAL_POOL_SIZE		140 // 275
-#define BROADCAST_POOL_SIZE		75 // 25
-#define CONFIG_POOL_SIZE		10 // 20
-#define INITEND_POOL_SIZE		10 // 25
-#define RB_POOL_SIZE			20 // 35
-#define XPLODE_POOL_SIZE		15 // 25
 
-#define MAX_SRDAG_VERTICES 		430 // 400
+#define MAX_SRDAG_VERTICES 		200 // 400
 #define MAX_SRDAG_EDGES 		310 // 600
+#define MAX_SRDAG_BROADCASTS	20 // 25
+#define MAX_SRDAG_RBS			20 // 35
+#define MAX_SRDAG_IMPLODES		15 // 25
+
 #define MAX_SRDAG_IO_EDGES		3
 #define MAX_SRDAG_XPLODE_EDGES	16
 #define MAX_EDGE_ARRAY 			10000

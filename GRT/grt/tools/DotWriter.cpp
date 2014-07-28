@@ -96,7 +96,7 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, bool displayNames, bo
 	}
 
 	SRDAGEdge* edge;
-	PoolIterator<SRDAGEdge, EDGE_POOL_SIZE> iterE = graph->getEdgeIterator();
+	PoolIterator<SRDAGEdge, MAX_SRDAG_EDGES> iterE = graph->getEdgeIterator();
 	while((edge = iterE.next()) != NULL){
 		SRDAGVertex* vxSrc = edge->getSource();
 		SRDAGVertex* vxSnk = edge->getSink();

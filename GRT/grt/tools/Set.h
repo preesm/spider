@@ -59,8 +59,10 @@ typedef enum {
  */
 template <class T, int SIZE> class Set {
 private:
+#if DEBUG
 	/** Name for debug */
 	char name[MAX_TOOL_NAME];
+#endif
 
 	/** Array of values. */
 	T* array[SIZE];
@@ -81,6 +83,7 @@ public:
 	/** Reset Set. */
 	void reset();
 
+#if DEBUG
 	/**
 	 * Set the IndexedArray name.
 	 * @param str the new name.
@@ -92,6 +95,7 @@ public:
 	 * @return its name.
 	 */
 	const char * getName();
+#endif
 
 	/**
 	 * Get current number of element in the Set.
@@ -127,7 +131,7 @@ inline Set<T,SIZE>::Set(SetType _type){
 /** Default Destructor. */
 template <class T, int SIZE>
 inline Set<T,SIZE>::~Set(){
-#if STAT
+#if STAT && DEBUG
 	printf("[%s]: Max alloc %d elemts\n", name, max);
 #endif
 }
@@ -138,6 +142,7 @@ inline void Set<T,SIZE>::reset(){
 	nb = 0;
 }
 
+#if DEBUG
 /**
  * Set the IndexedArray name.
  * @param name the new name.
@@ -157,6 +162,7 @@ template <class T, int SIZE>
 const char * Set<T,SIZE>::getName(){
 	return name;
 }
+#endif
 
 
 /**

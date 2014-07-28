@@ -781,7 +781,7 @@ static UINT32 getValue(PiSDFParameter *param, SRDAGGraph* topDag, PiSDFAbstractV
 }
 
 static int removeRB(SRDAGGraph* topDag){
-	SetIterator<SRDAGVertex,RB_POOL_SIZE> rbIter = topDag->getRBIterator();
+	SetIterator<SRDAGVertex,MAX_SRDAG_RBS> rbIter = topDag->getRBIterator();
 	SRDAGVertex *rb;
 	while((rb = rbIter.next()) != NULL){
 		if(rb->getNbInputEdge() == 1
@@ -802,7 +802,7 @@ static int removeRB(SRDAGGraph* topDag){
 }
 
 static int reduceImplImpl(SRDAGGraph* topDag){
-	SetIterator<SRDAGVertex,XPLODE_POOL_SIZE> implIter = topDag->getImplodeIterator();
+	SetIterator<SRDAGVertex,MAX_SRDAG_IMPLODES> implIter = topDag->getImplodeIterator();
 	SRDAGVertex *implode0;
 	while((implode0 = implIter.next()) != NULL){
 		for(int j=0; j<implode0->getNbOutputEdge(); j++){
@@ -980,7 +980,7 @@ static int reduceImplImpl(SRDAGGraph* topDag){
 // }
 
 static int removeRBExp(SRDAGGraph* topDag){
-	SetIterator<SRDAGVertex,RB_POOL_SIZE> rbIter = topDag->getRBIterator();
+	SetIterator<SRDAGVertex,MAX_SRDAG_RBS> rbIter = topDag->getRBIterator();
 	SRDAGVertex *rb;
 	while((rb = rbIter.next()) != NULL){
 		if(rb->getNbInputEdge() == 1 && rb->getNbOutputEdge() == 1){
@@ -1018,7 +1018,7 @@ static int removeRBExp(SRDAGGraph* topDag){
  static int removeBr(SRDAGGraph* topDag){
 	int result = 0;
 	SRDAGVertex* br;
-	SetIterator<SRDAGVertex,BROADCAST_POOL_SIZE> brIter = topDag->getBrIterator();
+	SetIterator<SRDAGVertex,MAX_SRDAG_BROADCASTS> brIter = topDag->getBrIterator();
 	while((br = brIter.next()) != NULL){
 		if(br->getNbOutputEdge() == 1){
 			SRDAGEdge* inEdge = br->getInputEdge(0);
@@ -1044,7 +1044,7 @@ static int removeRBExp(SRDAGGraph* topDag){
  }
 
  static int removeImpRB(SRDAGGraph* topDag){
-	SetIterator<SRDAGVertex,XPLODE_POOL_SIZE> implIter = topDag->getImplodeIterator();
+	SetIterator<SRDAGVertex,MAX_SRDAG_IMPLODES> implIter = topDag->getImplodeIterator();
 	SRDAGVertex *implode;
 	while((implode = implIter.next()) != NULL){
 		SRDAGVertex* rb = implode->getOutputEdge(0)->getSink();

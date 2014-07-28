@@ -60,32 +60,29 @@
  */
 class SRDAGGraph{
 	private :
-
-		Pool<SRDAGVertex,VERTEX_POOL_SIZE> 		vertexPool;
-
-		Pool<SRDAGEdge,EDGE_POOL_SIZE> 					ePool;
+		Pool<SRDAGVertex,MAX_SRDAG_VERTICES>	vertexPool;
+		Pool<SRDAGEdge,MAX_SRDAG_EDGES>			edgePool;
 
 		Set<SRDAGVertex, MAX_SRDAG_VERTICES> 	vertices;
-		Set<SRDAGVertex, XPLODE_POOL_SIZE> 		implodes;
-		Set<SRDAGVertex, RB_POOL_SIZE> 			rbs;
-		Set<SRDAGVertex, BROADCAST_POOL_SIZE>	brs;
-//		Set<SRDAGEdge, EDGE_POOL_SIZE>					edges;
+		Set<SRDAGVertex, MAX_SRDAG_IMPLODES>	implodes;
+		Set<SRDAGVertex, MAX_SRDAG_RBS>			rbs;
+		Set<SRDAGVertex, MAX_SRDAG_BROADCASTS>	brs;
 
 	public : 
 		SRDAGGraph();
 		~SRDAGGraph();
 		void reset();
 
-		SRDAGVertex* 		createVertexNo(int refIx, int itrIx, PiSDFVertex* ref);
+		SRDAGVertex* 	createVertexNo(int refIx, int itrIx, PiSDFVertex* ref);
 		SRDAGVertex* 	createVertexBr(int refIx, int itrIx, PiSDFVertex* ref);
-		SRDAGVertex* 		createVertexCf(int refIx, int itrIx, PiSDFConfigVertex* ref);
+		SRDAGVertex* 	createVertexCf(int refIx, int itrIx, PiSDFConfigVertex* ref);
 		SRDAGVertex* 	createVertexIn(int refIx, int itrIx);
 		SRDAGVertex* 	createVertexEn(int refIx, int itrIx);
-		SRDAGVertex* 			createVertexRB(int refIx, int itrIx, PiSDFAbstractVertex* ref);
-		SRDAGVertex* 		createVertexIm(int refIx, int itrIx);
-		SRDAGVertex* 		createVertexEx(int refIx, int itrIx);
+		SRDAGVertex* 	createVertexRB(int refIx, int itrIx, PiSDFAbstractVertex* ref);
+		SRDAGVertex* 	createVertexIm(int refIx, int itrIx);
+		SRDAGVertex* 	createVertexEx(int refIx, int itrIx);
 
-		SRDAGEdge* 				createEdge(PiSDFEdge* ref);
+		SRDAGEdge* 		createEdge(PiSDFEdge* ref);
 
 		void removeVertex(SRDAGVertex* vertex);
 		void removeEdge(SRDAGEdge* edge);
@@ -95,12 +92,12 @@ class SRDAGGraph{
 
 		SRDAGVertex* getNextHierVertex();
 
-		SetIterator<SRDAGVertex,MAX_SRDAG_VERTICES>	getVertexIterator();
-		PoolIterator<SRDAGEdge, EDGE_POOL_SIZE> 				getEdgeIterator();
+		SetIterator<SRDAGVertex,MAX_SRDAG_VERTICES>		getVertexIterator();
+		PoolIterator<SRDAGEdge, MAX_SRDAG_EDGES> 		getEdgeIterator();
 
-		SetIterator<SRDAGVertex,XPLODE_POOL_SIZE> 	getImplodeIterator();
-		SetIterator<SRDAGVertex,RB_POOL_SIZE> 			getRBIterator();
-		SetIterator<SRDAGVertex,BROADCAST_POOL_SIZE> getBrIterator();
+		SetIterator<SRDAGVertex,MAX_SRDAG_IMPLODES>		getImplodeIterator();
+		SetIterator<SRDAGVertex,MAX_SRDAG_RBS> 			getRBIterator();
+		SetIterator<SRDAGVertex,MAX_SRDAG_BROADCASTS> 	getBrIterator();
 
 		int getVerticesFromReference(PiSDFAbstractVertex* ref, int iteration, SRDAGVertex** output);
 
@@ -210,7 +207,7 @@ inline SRDAGVertex* SRDAGGraph::createVertexEx(
 
 inline
 SRDAGEdge* SRDAGGraph::createEdge(PiSDFEdge* ref){
-	SRDAGEdge* edge = ePool.alloc();
+	SRDAGEdge* edge = edgePool.alloc();
 	*edge = SRDAGEdge(this);
 //	edges.add(edge);
 	return edge;
@@ -232,15 +229,15 @@ inline SetIterator<SRDAGVertex,MAX_SRDAG_VERTICES> SRDAGGraph::getVertexIterator
 	return vertices.getIterator();
 }
 
-inline SetIterator<SRDAGVertex,XPLODE_POOL_SIZE> SRDAGGraph::getImplodeIterator(){
+inline SetIterator<SRDAGVertex,MAX_SRDAG_IMPLODES> SRDAGGraph::getImplodeIterator(){
 	return implodes.getIterator();
 }
 
-inline SetIterator<SRDAGVertex,RB_POOL_SIZE> SRDAGGraph::getRBIterator(){
+inline SetIterator<SRDAGVertex,MAX_SRDAG_RBS> SRDAGGraph::getRBIterator(){
 	return rbs.getIterator();
 }
 
-inline SetIterator<SRDAGVertex,BROADCAST_POOL_SIZE> SRDAGGraph::getBrIterator(){
+inline SetIterator<SRDAGVertex,MAX_SRDAG_BROADCASTS> SRDAGGraph::getBrIterator(){
 	return brs.getIterator();
 }
 
@@ -250,8 +247,8 @@ inline SetIterator<SRDAGVertex,BROADCAST_POOL_SIZE> SRDAGGraph::getBrIterator(){
  @param index: index of the edge in the edge list
  @return edge
 */
-inline PoolIterator<SRDAGEdge, EDGE_POOL_SIZE>  SRDAGGraph::getEdgeIterator(){
-	return ePool.getIterator();
+inline PoolIterator<SRDAGEdge, MAX_SRDAG_EDGES>  SRDAGGraph::getEdgeIterator(){
+	return edgePool.getIterator();
 }
 
 /**
@@ -293,7 +290,7 @@ inline int SRDAGGraph::getNbVertices(){
 
 inline int SRDAGGraph::getNbEdges(){
 //	return edges.getNb();
-	return ePool.getNb();
+	return edgePool.getNb();
 }
 
 inline void SRDAGGraph::updateState(){

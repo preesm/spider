@@ -45,7 +45,7 @@
 #include <algorithm>
 #include <platform_file.h>
 #include <platform_time.h>
-#include <debuggingOptions.h>
+#include <grt_definitions.h>
 #include <execution/monitor.h>
 
 #include <memoryAlloc.h>

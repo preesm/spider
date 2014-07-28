@@ -38,7 +38,7 @@
 #define EXECUTIONSTAT_H_
 
 #include <graphs/PiSDF/PiSDFAbstractVertex.h>
-#include <debuggingOptions.h>
+#include <grt_definitions.h>
 
 #define MAX_STATS_VERTICES 100
 

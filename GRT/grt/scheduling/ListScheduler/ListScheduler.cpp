@@ -37,7 +37,6 @@
 #include "ListScheduler.h"
 #include <algorithm>    // std::min
 #include <grt_definitions.h>
-#include <debuggingOptions.h>
 #include <launcher/launcher.h>
 #include <string.h>
 

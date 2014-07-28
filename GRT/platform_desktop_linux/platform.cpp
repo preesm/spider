@@ -36,7 +36,7 @@
 
 #include <platform.h>
 #include <platform_types.h>
-#include <debuggingOptions.h>
+#include <grt_definitions.h>
 
 void platform_queue_Init(UINT8 nbSlaves);
 void platform_time_reset();

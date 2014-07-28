@@ -39,7 +39,7 @@
 #include "PiSDFTransformer.h"
 
 #include <cmath>
-#include <debuggingOptions.h>
+#include <grt_definitions.h>
 #include <tools/DotWriter.h>
 #include <tools/ScheduleWriter.h>
 #include <tools/Queue.h>

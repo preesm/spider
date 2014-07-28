@@ -40,7 +40,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "debuggingOptions.h"
+#include <grt_definitions.h>
 #include <tools/DotWriter.h>
 #include <grt_definitions.h>
 

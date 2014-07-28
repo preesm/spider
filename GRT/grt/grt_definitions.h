@@ -38,7 +38,41 @@
 #define GRT_DEFINITIONS_H_
 
 #include <platform_types.h>
-#include <debuggingOptions.h>
+
+// File names for graph's printing
+#ifdef DSP
+
+#define EXEC							1
+#define PRINT_GRAPH						0
+#define	STAT							0
+#define PRINT_REAL_GANTT				1
+#define DEBUG							0
+
+#else
+
+#define EXEC							1
+#define PRINT_GRAPH						1
+#define	STAT							1
+#define PRINT_REAL_GANTT				0
+#define DEBUG							1
+
+#endif
+
+#define USE_AM							0
+#define SEE_PARAM_VAL					0
+
+#define ITER_MAX 2
+#define PERIOD 600000
+
+#define PiSDF_FILE_PATH					"pisdf"
+#define SUB_SRDAG_FIFO_ID_FILE_PATH		"subSrDagFifoId"
+#define SUB_SDF_FILE_0_PATH				"subSDF"
+#define SRDAG_FILE_PATH					"srDag"
+#define PRE_SRDAG_FILE_NAME				"preSrDag"
+#define SUB_SRDAG_FILE_NAME				"subSrDag"
+#define POST_SRDAG_FILE_NAME			"postSrDag"
+#define SRDAG_FIFO_ID_FILE_PATH			"srDagFifoId"
+#define SCHED_FILE_NAME					"test"
 
 // Architecture
 #define MAX_SLAVE_TYPES 		1	//2 	// The maximum number of slave types

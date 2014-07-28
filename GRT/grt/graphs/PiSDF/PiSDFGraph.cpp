@@ -37,7 +37,7 @@
 #include <tools/SchedulingError.h>
 #include "PiSDFGraph.h"
 #include <transformations/PiSDFTransformer/PiSDFTransformer.h>
-#include "debuggingOptions.h"
+#include <grt_definitions.h>
 
 PiSDFGraph::PiSDFGraph() {
 	parentVertex = NULL;

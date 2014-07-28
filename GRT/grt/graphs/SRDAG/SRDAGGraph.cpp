@@ -47,12 +47,6 @@
  Constructor
 */
 SRDAGGraph::SRDAGGraph(): vertices(ABSTRACT_VERTICES), implodes(DEFAULT), /*edges(EDGES), */rbs(DEFAULT), brs(DEFAULT){
-	vertexNoPool.reset();
-	vertexBrPool.reset();
-	vertexCfPool.reset();
-	vertexIEPool.reset();
-	vertexRBPool.reset();
-	vertexXpPool.reset();
 	ePool.reset();
 	vertices.reset();
 	implodes.reset();
@@ -60,12 +54,6 @@ SRDAGGraph::SRDAGGraph(): vertices(ABSTRACT_VERTICES), implodes(DEFAULT), /*edge
 	brs.reset();
 	rbs.reset();
 
-	vertexNoPool.setName("Normal Vertex Pool of SRDAG Graph");
-	vertexBrPool.setName("Broadcast Vertex Pool of SRDAG Graph");
-	vertexCfPool.setName("Configure Vertex Pool of SRDAG Graph");
-	vertexIEPool.setName("InitEnd Vertex Pool of SRDAG Graph");
-	vertexRBPool.setName("RoundBuffer Vertex Pool of SRDAG Graph");
-	vertexXpPool.setName("Xplode Vertex Pool of SRDAG Graph");
 	ePool.setName("Edge Pool of SRDAG Graph");
 	vertices.setName("Vertex List of SRDAG Graph");
 	implodes.setName("Implode List of SRDAG Graph");
@@ -75,12 +63,6 @@ SRDAGGraph::SRDAGGraph(): vertices(ABSTRACT_VERTICES), implodes(DEFAULT), /*edge
 }
 
 void SRDAGGraph::reset(){
-	vertexNoPool.reset();
-	vertexBrPool.reset();
-	vertexCfPool.reset();
-	vertexIEPool.reset();
-	vertexRBPool.reset();
-	vertexXpPool.reset();
 	ePool.reset();
 	vertices.reset();
 	implodes.reset();
@@ -112,35 +94,23 @@ void SRDAGGraph::removeVertex(SRDAGVertexAbstract *vertex){
 	}
 	vertices.remove(vertex);
 	switch(vertex->getType()){
-	case Normal:
-		vertexNoPool.free((SRDAGVertexNormal*)vertex);
-		break;
-	case ConfigureActor:
-		vertexCfPool.free((SRDAGVertexConfig*)vertex);
-		break;
-	case Explode:
-		vertexXpPool.free((SRDAGVertexXplode*)vertex);
-		break;
 	case Implode:
-		implodes.remove((SRDAGVertexXplode*)vertex);
-		vertexXpPool.free((SRDAGVertexXplode*)vertex);
+		implodes.remove(vertex);
 		break;
 	case RoundBuffer:
-		rbs.remove((SRDAGVertexRB*)vertex);
-		vertexRBPool.free((SRDAGVertexRB*)vertex);
+		rbs.remove(vertex);
 		break;
 	case Broadcast:
-		brs.remove((SRDAGVertexBroadcast*)vertex);
-		vertexBrPool.free((SRDAGVertexBroadcast*)vertex);
+		brs.remove(vertex);
 		break;
+	case Normal:
+	case ConfigureActor:
+	case Explode:
 	case Init:
-		vertexIEPool.free((SRDAGVertexInitEnd*)vertex);
-		break;
 	case End:
-		vertexIEPool.free((SRDAGVertexInitEnd*)vertex);
 		break;
 	}
-//	vertexNoPool.free(vertex);
+	vertexPool.free(vertex);
 }
 
 //void SRDAGGraph::removeVertex(int id){

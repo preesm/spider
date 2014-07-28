@@ -536,7 +536,7 @@ void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){
 		if(slave == 0){
 			int vxId, nbParam;
 			if(popParam(&vxId, &nbParam, paramValues)){
-				SRDAGVertexConfig* cfgVertex = (SRDAGVertexConfig*)(topDag->getVertexFromIx(vxId));
+				SRDAGVertexAbstract* cfgVertex = (SRDAGVertexAbstract*)(topDag->getVertexFromIx(vxId));
 				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(cfgVertex->getReference());
 				nbParamToRecv -= refConfigVx->getNbRelatedParams();
 				for(int i=0; i<nbParam; i++)
@@ -547,7 +547,7 @@ void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){
 			if(platform_QNonBlockingPop(slave, platformCtrlQ, &msgType, sizeof(UINT32)) == sizeof(UINT32)){
 				if(msgType != MSG_PARAM_VALUE) exitWithCode(1068);
 				int vxId = platform_QPopUINT32(slave, platformCtrlQ);
-				SRDAGVertexConfig* cfgVertex = (SRDAGVertexConfig*)(topDag->getVertexFromIx(vxId));
+				SRDAGVertexAbstract* cfgVertex = (SRDAGVertexAbstract*)(topDag->getVertexFromIx(vxId));
 				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(cfgVertex->getReference());
 				for(UINT32 j = 0; j < refConfigVx->getNbRelatedParams(); j++){
 					cfgVertex->setRelatedParamValue(j,platform_QPopUINT32(slave, platformCtrlQ));

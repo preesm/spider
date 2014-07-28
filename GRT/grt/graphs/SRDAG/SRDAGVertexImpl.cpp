@@ -38,14 +38,9 @@
 #include <cstring>
 
 #include "SRDAGVertexAbstract.h"
-#include "SRDAGVertexBroadCast.h"
-#include "SRDAGVertexConfig.h"
-#include "SRDAGVertexInitEnd.h"
-#include "SRDAGVertexNormal.h"
-#include "SRDAGVertexRB.h"
-#include "SRDAGVertexXplode.h"
 
 #include <graphs/PiSDF/PiSDFConfigVertex.h>
+#include <graphs/PiSDF/PiSDFVertex.h>
 
 int SRDAGVertexAbstract::creationIx = 0;
 
@@ -93,6 +88,114 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(
 	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>();
 	params = FitedArray<int,MAX_PARAM_ARRAY>();
 	relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>();
+
+	switch(type){
+	case Normal:
+		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
+		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
+		params = FitedArray<int,MAX_PARAM_ARRAY>(MAX_PARAM);
+		fctIx = reference->getFunction_index();
+
+		haveSubGraph = reference
+				&& reference->getType() == normal_vertex
+				&& ((PiSDFVertex*)reference)->hasSubGraph()
+				&& type == Normal;
+
+		if(haveSubGraph)
+			subGraph = ((PiSDFVertex*)reference)->getSubGraph();
+
+		for(int i=0; i<MAX_SLAVE_TYPES; i++){
+			if(reference->getConstraints(i)){
+				constraints[i] = true;
+				execTime[i] =  reference->getResolvedTiming(i);
+			}else{
+				constraints[i] = false;
+			}
+		}
+
+		for(int i=0; i<reference->getNbParameters(); i++)
+			params.setValue(i, reference->getParameter(i)->getValue());
+		break;
+	case ConfigureActor:
+		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
+		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
+		params = FitedArray<int,MAX_PARAM_ARRAY>(MAX_PARAM);
+		relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>(MAX_PARAM);
+		fctIx = reference->getFunction_index();
+		haveSubGraph	= false;
+
+		for(int i=0; i<MAX_SLAVE_TYPES; i++){
+			if(reference->getConstraints(i)){
+				constraints[i] = true;
+				execTime[i] =  reference->getResolvedTiming(i);
+			}else{
+				constraints[i] = false;
+			}
+		}
+
+		for(int i=0; i<reference->getNbParameters(); i++)
+			params.setValue(i, reference->getParameter(i)->getValue());
+		break;
+	case Explode:
+		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
+		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_XPLODE_EDGES);
+		fctIx = XPLODE_FUNCT_IX;
+		haveSubGraph	= false;
+		for(int i=0; i<MAX_SLAVE_TYPES; i++){
+			constraints[i] = true;
+			execTime[i] = SYNC_TIME;
+		}
+		break;
+	case Implode:
+		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_XPLODE_EDGES);
+		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
+		fctIx = XPLODE_FUNCT_IX;
+		haveSubGraph	= false;
+		for(int i=0; i<MAX_SLAVE_TYPES; i++){
+			constraints[i] = true;
+			execTime[i] = SYNC_TIME;
+		}
+		break;
+	case RoundBuffer:
+		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
+		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
+		fctIx = RB_FUNCT_IX;
+
+		haveSubGraph	= false;
+		for(int i=0; i<MAX_SLAVE_TYPES; i++){
+			constraints[i] = true;
+			execTime[i] = SYNC_TIME;
+		}
+		break;
+	case Broadcast:
+		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
+		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_XPLODE_EDGES);
+		fctIx = BROADCAST_FUNCT_IX;
+		haveSubGraph	= false;
+		for(int i=0; i<MAX_SLAVE_TYPES; i++){
+			constraints[i] = true;
+			execTime[i] = SYNC_TIME;
+		}
+		break;
+	case Init:
+		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
+		fctIx = INIT_FUNCT_IX;
+		haveSubGraph	= false;
+		for(int i=0; i<MAX_SLAVE_TYPES; i++){
+			constraints[i] = true;
+			execTime[i] = SYNC_TIME;
+		}
+		break;
+	case End:
+		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
+		fctIx = END_FUNCT_IX;
+		haveSubGraph	= false;
+		for(int i=0; i<MAX_SLAVE_TYPES; i++){
+			constraints[i] = true;
+			execTime[i] = SYNC_TIME;
+		}
+		break;
+	}
 }
 
 void SRDAGVertexAbstract::updateState(){
@@ -157,142 +260,4 @@ void SRDAGVertexAbstract::getName(char* name, UINT32 sizeMax){
 	}
 	if(len > MAX_VERTEX_NAME_SIZE)
 		exitWithCode(1075);
-}
-
-SRDAGVertexBroadcast::SRDAGVertexBroadcast(
-		SRDAGGraph* 	_graph,
-		int 			_refIx,
-		int 			_itrIx,
-		PiSDFVertex* ref):
-		SRDAGVertexAbstract(_graph, Broadcast, ref, _refIx,_itrIx){
-	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
-	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_XPLODE_EDGES);
-	fctIx = BROADCAST_FUNCT_IX;
-	haveSubGraph	= false;
-	for(int i=0; i<MAX_SLAVE_TYPES; i++){
-		constraints[i] = true;
-		execTime[i] = SYNC_TIME;
-	}
-}
-
-SRDAGVertexConfig::SRDAGVertexConfig(
-		SRDAGGraph* 	_graph,
-		int 			_refIx,
-		int 			_itrIx,
-		PiSDFConfigVertex* ref):
-		SRDAGVertexAbstract(_graph, ConfigureActor, ref, _refIx,_itrIx){
-	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
-	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
-	params = FitedArray<int,MAX_PARAM_ARRAY>(MAX_PARAM);
-	relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>(MAX_PARAM);
-	fctIx = reference->getFunction_index();
-	haveSubGraph	= false;
-
-	for(int i=0; i<MAX_SLAVE_TYPES; i++){
-		if(reference->getConstraints(i)){
-			constraints[i] = true;
-			execTime[i] =  reference->getResolvedTiming(i);
-		}else{
-			constraints[i] = false;
-		}
-	}
-
-	for(int i=0; i<ref->getNbParameters(); i++)
-		params.setValue(i, reference->getParameter(i)->getValue());
-}
-
-SRDAGVertexNormal::SRDAGVertexNormal(
-		SRDAGGraph* 	_graph,
-		int 			_refIx,
-		int 			_itrIx,
-		PiSDFVertex* ref):
-		SRDAGVertexAbstract(_graph, Normal, ref, _refIx,_itrIx){
-	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
-	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_IO_EDGES);
-	params = FitedArray<int,MAX_PARAM_ARRAY>(MAX_PARAM);
-	fctIx = reference->getFunction_index();
-
-	haveSubGraph = reference
-			&& reference->getType() == normal_vertex
-			&& ((PiSDFVertex*)reference)->hasSubGraph()
-			&& type == Normal;
-
-	if(haveSubGraph)
-		subGraph = ((PiSDFVertex*)reference)->getSubGraph();
-
-	for(int i=0; i<MAX_SLAVE_TYPES; i++){
-		if(reference->getConstraints(i)){
-			constraints[i] = true;
-			execTime[i] =  reference->getResolvedTiming(i);
-		}else{
-			constraints[i] = false;
-		}
-	}
-
-	for(int i=0; i<reference->getNbParameters(); i++)
-		params.setValue(i, reference->getParameter(i)->getValue());
-}
-
-SRDAGVertexInitEnd::SRDAGVertexInitEnd(
-		SRDAGGraph* 	_graph,
-		SRDAGVertexType _type,
-		int 			_refIx,
-		int 			_itrIx):
-		SRDAGVertexAbstract(_graph, _type, NULL, _refIx,_itrIx){
-	switch(type){
-	case Init:
-		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
-		fctIx = INIT_FUNCT_IX;
-		break;
-	case End:
-		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
-		fctIx = END_FUNCT_IX;
-		break;
-	default:
-		return;
-	}
-
-	haveSubGraph	= false;
-	for(int i=0; i<MAX_SLAVE_TYPES; i++){
-		constraints[i] = true;
-		execTime[i] = SYNC_TIME;
-	}
-}
-
-SRDAGVertexRB::SRDAGVertexRB(
-		SRDAGGraph* 	_graph,
-		int 			_refIx,
-		int 			_itrIx,
-		PiSDFAbstractVertex* ref):
-		SRDAGVertexAbstract(_graph, RoundBuffer, ref, _refIx,_itrIx){
-	inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
-	outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
-	fctIx = RB_FUNCT_IX;
-
-	haveSubGraph	= false;
-	for(int i=0; i<MAX_SLAVE_TYPES; i++){
-		constraints[i] = true;
-		execTime[i] = SYNC_TIME;
-	}
-}
-
-SRDAGVertexXplode::SRDAGVertexXplode(
-		SRDAGGraph* 	_graph,
-		SRDAGVertexType _type,
-		int 			_refIx,
-		int 			_itrIx):
-		SRDAGVertexAbstract(_graph, _type, NULL, _refIx,_itrIx){
-	if(type == Explode){
-		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
-		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_XPLODE_EDGES);
-	}else{
-		inputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(MAX_SRDAG_XPLODE_EDGES);
-		outputs = FitedArray<SRDAGEdge*,MAX_EDGE_ARRAY>(1);
-	}
-	fctIx = XPLODE_FUNCT_IX;
-	haveSubGraph	= false;
-	for(int i=0; i<MAX_SLAVE_TYPES; i++){
-		constraints[i] = true;
-		execTime[i] = SYNC_TIME;
-	}
 }

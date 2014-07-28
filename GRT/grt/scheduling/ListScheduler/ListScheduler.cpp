@@ -147,7 +147,7 @@ int ListScheduler::getThroughput(SRDAGGraph* srDag){
 //	return minimumStartTime;
 //}
 
-void ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVertexAbstract* vertex){
+void ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVertex* vertex){
 	UINT32 minimumStartTime=0;
 
 	for(int i=0; i<vertex->getNbInputEdge(); i++){
@@ -197,11 +197,11 @@ void ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVe
 
 #define MAX(a,b) ((a>b)?a:b)
 
-UINT32 computeSchedLevel(SRDAGVertexAbstract* vertex){
+UINT32 computeSchedLevel(SRDAGVertex* vertex){
 	int level = 0;
 	if(vertex->getSchedLevel() == -1){
 		for(int i=0; i<vertex->getNbOutputEdge(); i++){
-			SRDAGVertexAbstract* succ = vertex->getOutputEdge(i)->getSink();
+			SRDAGVertex* succ = vertex->getOutputEdge(i)->getSink();
 			if(succ->getState() == SRDAG_Executable)
 				// TODO BETTER Careful execTime of core type 0
 				level = MAX(level, computeSchedLevel(succ)+succ->getExecTime(0));
@@ -213,7 +213,7 @@ UINT32 computeSchedLevel(SRDAGVertexAbstract* vertex){
 }
 
 
-int comparSchedLevel(SRDAGVertexAbstract* a, SRDAGVertexAbstract* b){
+int comparSchedLevel(SRDAGVertex* a, SRDAGVertex* b){
 	return b->getSchedLevel() - a->getSchedLevel();
 }
 
@@ -222,11 +222,11 @@ void ListScheduler::schedule(SRDAGGraph* dag, BaseSchedule* schedule, Architectu
 	Launcher::initTaskOrderingTime();
 
 	// Create ScheduleList
-	static List<SRDAGVertexAbstract*, MAX_SRDAG_VERTICES> schedList;
+	static List<SRDAGVertex*, MAX_SRDAG_VERTICES> schedList;
 	schedList.reset();
 
-	SRDAGVertexAbstract* vertex;
-	SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> iterV = dag->getVertexIterator();
+	SRDAGVertex* vertex;
+	SetIterator<SRDAGVertex,MAX_SRDAG_VERTICES> iterV = dag->getVertexIterator();
 	while((vertex = iterV.next()) != NULL){
 		if(vertex->getState() == SRDAG_Executable){
 			schedList.add(vertex);

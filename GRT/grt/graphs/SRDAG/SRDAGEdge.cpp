@@ -36,7 +36,7 @@
 
 #include <stddef.h>
 #include "SRDAGEdge.h"
-#include "SRDAGVertexAbstract.h"
+#include "SRDAGVertex.h"
 
 int SRDAGEdge::creationIx = 0;
 
@@ -84,7 +84,7 @@ void SRDAGEdge::reset(){
 }
 
 void SRDAGEdge::connectSink(
-		SRDAGVertexAbstract *nSink,
+		SRDAGVertex *nSink,
 		int nSinkPortIx){
 	if(sink != NULL) disconnectSink();
 	sink = nSink;
@@ -99,7 +99,7 @@ void SRDAGEdge::disconnectSink(){
 }
 
 void SRDAGEdge::connectSource(
-		SRDAGVertexAbstract *nSource,
+		SRDAGVertex *nSource,
 		int nSourcePortIx){
 	if(source != NULL) disconnectSource();
 	source = nSource;

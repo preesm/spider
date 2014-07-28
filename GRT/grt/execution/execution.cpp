@@ -46,7 +46,7 @@
 
 #include <graphs/SRDAG/SRDAGEdge.h>
 
-static Queue<SRDAGVertexAbstract*, MAX_MASTER_ACTORS> executionQueue;
+static Queue<SRDAGVertex*, MAX_MASTER_ACTORS> executionQueue;
 static UINT8* inputFIFOs[MAX_NB_FIFO];
 static UINT8* outputFIFOs[MAX_NB_FIFO];
 static UINT32 args[MAX_NB_ARGS];
@@ -76,7 +76,7 @@ void initExecution(){
 	Monitor_init();
 }
 
-void pushExecution(SRDAGVertexAbstract* vertex){
+void pushExecution(SRDAGVertex* vertex){
 	executionQueue.push(vertex);
 }
 
@@ -106,7 +106,7 @@ BOOL popParam(int* vertexID, int* nbParam, UINT32 values[MAX_NB_PiSDF_PARAMS]){
 
 void execute(){
 	while(!executionQueue.isEmpty()){
-		SRDAGVertexAbstract* vertex = executionQueue.pop();
+		SRDAGVertex* vertex = executionQueue.pop();
 
 		for(int i=0;i<vertex->getNbInputEdge(); i++){
 			SRDAGEdge * edge = vertex->getInputEdge(i);

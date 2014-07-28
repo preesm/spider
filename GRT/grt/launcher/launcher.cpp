@@ -144,7 +144,7 @@ void Launcher::launch(SRDAGGraph* graph, Architecture* arch, BaseSchedule* sched
 	/* Creating Tasks */
 	for(int slave=0; slave < arch->getNbActiveSlaves(); slave++){
 		for(int i=0; i < schedule->getNbVertices(slave); i++){
-			SRDAGVertexAbstract* vertex = schedule->getVertex(slave,i);
+			SRDAGVertex* vertex = schedule->getVertex(slave,i);
 			if(vertex->getState() == SRDAG_Executable){
 				CreateTaskMsg::send(slave, vertex);
 				if(vertex->getType() == ConfigureActor)
@@ -154,7 +154,7 @@ void Launcher::launch(SRDAGGraph* graph, Architecture* arch, BaseSchedule* sched
 	}
 }
 
-void Launcher::assignFifoVertex(SRDAGVertexAbstract* vertex){
+void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 	UINT32 base, offset;
 	int i;
 	SRDAGEdge* edge;
@@ -182,11 +182,11 @@ void Launcher::assignFifoVertex(SRDAGVertexAbstract* vertex){
 	 default:
 
 		 for (i = 0; i < vertex->getNbOutputEdge(); i++){
-			 SRDAGVertexAbstract* implode = vertex->getOutputEdge(i)->getSink();
+			 SRDAGVertex* implode = vertex->getOutputEdge(i)->getSink();
 			 if(implode->getType() == Implode){
 				 BOOL suitable = (implode->getOutputEdge(0)->getFifoId() == -1);
 				 for (int j=0; suitable && j < implode->getNbInputEdge(); j++){
-					 SRDAGVertexAbstract* pred = implode->getInputEdge(j)->getSource();
+					 SRDAGVertex* pred = implode->getInputEdge(j)->getSource();
 					 if(pred->getType() != Normal){
 						 suitable = FALSE;
 					 }
@@ -232,7 +232,7 @@ void Launcher::assignFifoVertex(SRDAGVertexAbstract* vertex){
 	}
 }
 
-void Launcher::launchVertex(SRDAGVertexAbstract* vertex, UINT32 slave){
+void Launcher::launchVertex(SRDAGVertex* vertex, UINT32 slave){
 	Launcher::assignFifoVertex(vertex);
 #if EXEC == 1
 	CreateTaskMsg::send(slave, vertex);
@@ -358,7 +358,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		taskTime t;
 		t = Monitor_get(i);
 		UINT32 execTime = t.end - t.start;
-		SRDAGVertexAbstract* vertex = dag->getVertexFromIx(t.vertexID);
+		SRDAGVertex* vertex = dag->getVertexFromIx(t.vertexID);
 
 		int k;
 		switch(vertex->getType()){
@@ -441,7 +441,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 		UINT32 nbTasks = platform_QPopUINT32(slave, platformCtrlQ);
 
 		for (UINT32 j=0 ; j<nbTasks; j++){
-			SRDAGVertexAbstract* vertex = dag->getVertexFromIx(platform_QPopUINT32(slave, platformCtrlQ)); // data[0] contains the vertex's id.
+			SRDAGVertex* vertex = dag->getVertexFromIx(platform_QPopUINT32(slave, platformCtrlQ)); // data[0] contains the vertex's id.
 			UINT32 startTime = platform_QPopUINT32(slave, platformCtrlQ);
 			UINT32 endTime = platform_QPopUINT32(slave, platformCtrlQ);
 
@@ -536,7 +536,7 @@ void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){
 		if(slave == 0){
 			int vxId, nbParam;
 			if(popParam(&vxId, &nbParam, paramValues)){
-				SRDAGVertexAbstract* cfgVertex = (SRDAGVertexAbstract*)(topDag->getVertexFromIx(vxId));
+				SRDAGVertex* cfgVertex = (SRDAGVertex*)(topDag->getVertexFromIx(vxId));
 				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(cfgVertex->getReference());
 				nbParamToRecv -= refConfigVx->getNbRelatedParams();
 				for(int i=0; i<nbParam; i++)
@@ -547,7 +547,7 @@ void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){
 			if(platform_QNonBlockingPop(slave, platformCtrlQ, &msgType, sizeof(UINT32)) == sizeof(UINT32)){
 				if(msgType != MSG_PARAM_VALUE) exitWithCode(1068);
 				int vxId = platform_QPopUINT32(slave, platformCtrlQ);
-				SRDAGVertexAbstract* cfgVertex = (SRDAGVertexAbstract*)(topDag->getVertexFromIx(vxId));
+				SRDAGVertex* cfgVertex = (SRDAGVertex*)(topDag->getVertexFromIx(vxId));
 				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(cfgVertex->getReference());
 				for(UINT32 j = 0; j < refConfigVx->getNbRelatedParams(); j++){
 					cfgVertex->setRelatedParamValue(j,platform_QPopUINT32(slave, platformCtrlQ));

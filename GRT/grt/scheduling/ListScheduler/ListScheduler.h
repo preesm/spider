@@ -63,21 +63,21 @@ class ListScheduler {
 		/**
 		 Temporary storage for the vertex executed last on each slave
 		*/
-		SRDAGVertexAbstract* lastVertexOfSlave[MAX_SLAVES];
+		SRDAGVertex* lastVertexOfSlave[MAX_SLAVES];
 
-		BOOL checkConstraint(SRDAGVertexAbstract* vertex, Architecture* arch, UINT32 slave);
+		BOOL checkConstraint(SRDAGVertex* vertex, Architecture* arch, UINT32 slave);
 
-		UINT32 getTiming(SRDAGVertexAbstract* vertex, Architecture* arch, UINT32 slaveType);
+		UINT32 getTiming(SRDAGVertex* vertex, Architecture* arch, UINT32 slaveType);
 
 		inline void scheduleVertex(
 				SRDAGGraph* hGraph,
-				SRDAGVertexAbstract* vertex,
+				SRDAGVertex* vertex,
 				Schedule* schedule,
 				Architecture* arch);
 
-		UINT32 getMinStartTime(BaseSchedule* schedule, Architecture* arch, SRDAGVertexAbstract* vertex);
+		UINT32 getMinStartTime(BaseSchedule* schedule, Architecture* arch, SRDAGVertex* vertex);
 
-		UINT32 evaluateMinStartTime(BaseSchedule* schedule, Architecture* arch, SRDAGVertexAbstract* vertex);
+		UINT32 evaluateMinStartTime(BaseSchedule* schedule, Architecture* arch, SRDAGVertex* vertex);
 	public : 
 		/**
 		 Constructor
@@ -100,7 +100,7 @@ class ListScheduler {
 
 		 @return the incremented first input edge
 		*/
-		SRDAGEdge* recomputeTLevel(SRDAGVertexAbstract* vertex, SRDAGEdge* firstInputEdge, SRDAGEdge* precedenceEdge);
+		SRDAGEdge* recomputeTLevel(SRDAGVertex* vertex, SRDAGEdge* firstInputEdge, SRDAGEdge* precedenceEdge);
 
 		/**
 		 Sets the slave architecture
@@ -124,7 +124,7 @@ class ListScheduler {
 		/*
 		 * Schedules a vertex and returns the end time.
 		 */
-		void schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVertexAbstract* vertex);
+		void schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVertex* vertex);
 
 		/**
 		 Scheduling a SRDAG

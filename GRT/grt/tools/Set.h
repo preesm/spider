@@ -41,7 +41,7 @@
 #include "SchedulingError.h"
 #include <platform_types.h>
 #include <typeinfo>
-#include <graphs/SRDAG/SRDAGVertexAbstract.h>
+#include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/SRDAG/SRDAGEdge.h>
 
 //#include <tools/SetIterator.h>
@@ -189,7 +189,7 @@ inline void Set<T,SIZE>::add(T* e){
 		if(nb>max)max = nb;
 
 		if(type == ABSTRACT_VERTICES){
-			((SRDAGVertexAbstract*)e)->setSetIx(nb-1);
+			((SRDAGVertex*)e)->setSetIx(nb-1);
 		}else if(type == EDGES){
 			((SRDAGEdge*)e)->setSetIx(nb-1);
 		}
@@ -205,8 +205,8 @@ inline void Set<T,SIZE>::add(T* e){
 template <class T, int SIZE>
 inline void Set<T,SIZE>::remove(T* e){
 	if(type == ABSTRACT_VERTICES){
-		SRDAGVertexAbstract*  vertex 		= (SRDAGVertexAbstract*) (e);
-		SRDAGVertexAbstract** vertex_array 	= (SRDAGVertexAbstract**)(array);
+		SRDAGVertex*  vertex 		= (SRDAGVertex*) (e);
+		SRDAGVertex** vertex_array 	= (SRDAGVertex**)(array);
 
 		int ix = vertex->getSetIx();
 #if DEBUG

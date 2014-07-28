@@ -48,7 +48,7 @@ typedef struct communication{
 
 class Schedule {
 private:
-	SRDAGVertexAbstract* schedule[MAX_SLAVES][MAX_SRDAG_VERTICES];
+	SRDAGVertex* schedule[MAX_SLAVES][MAX_SRDAG_VERTICES];
 	communication coms[MAX_SLAVES][MAX_SRDAG_VERTICES*2];
 	int nbVertex[MAX_SLAVES];
 	int nbComs[MAX_SLAVES];
@@ -58,7 +58,7 @@ private:
 
 public:
 	Schedule(){
-		memset(schedule, 0, MAX_SLAVES*MAX_SRDAG_VERTICES*sizeof(SRDAGVertexAbstract*));
+		memset(schedule, 0, MAX_SLAVES*MAX_SRDAG_VERTICES*sizeof(SRDAGVertex*));
 		memset(nbVertex, 0, MAX_SLAVES*sizeof(int));
 		memset(readyTime, 0, MAX_SLAVES*sizeof(int));
 		memset(vertexStartTime, 0, MAX_SLAVES*sizeof(int));
@@ -69,11 +69,11 @@ public:
 
 	virtual ~Schedule(){};
 
-	SRDAGVertexAbstract* getVertex(int slave, int scheduleIndex){
+	SRDAGVertex* getVertex(int slave, int scheduleIndex){
 		return schedule[slave][scheduleIndex];
 	}
 
-	void addVertex(int slave, SRDAGVertexAbstract* vertex, int startTime, int endTime){
+	void addVertex(int slave, SRDAGVertex* vertex, int startTime, int endTime){
 		schedule[slave][nbVertex[slave]++] = vertex;
 		readyTime[slave] = endTime;
 		vertexStartTime[vertex->getId()] = startTime;
@@ -86,7 +86,7 @@ public:
 		nbComs[slave]++;
 	}
 
-	bool isPresent(int slave, SRDAGVertexAbstract* vertex){
+	bool isPresent(int slave, SRDAGVertex* vertex){
 //		for(int i=0; i<nbVertex[slave]; i++){
 //			if(vertex->getCsDagReference() == schedule[slave][i]->getCsDagReference() &&
 //					vertex->getReferenceIndex() == schedule[slave][i]->getReferenceIndex())

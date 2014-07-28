@@ -43,7 +43,7 @@
 
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/SRDAG/SRDAGEdge.h>
-#include <graphs/SRDAG/SRDAGVertexAbstract.h>
+#include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/PiSDF/PiSDFGraph.h>
 
 /**
@@ -67,8 +67,8 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, bool displayNames, bo
 	platform_fprintf ("edge [color=Red];\n");
 //		platform_fprintf ("rankdir=LR;\n");
 
-	SRDAGVertexAbstract* vertex;
-	SetIterator<SRDAGVertexAbstract,MAX_SRDAG_VERTICES> iterV = graph->getVertexIterator();
+	SRDAGVertex* vertex;
+	SetIterator<SRDAGVertex,MAX_SRDAG_VERTICES> iterV = graph->getVertexIterator();
 	while((vertex = iterV.next()) != NULL){
 		vertex->getName(name, MAX_VERTEX_NAME_SIZE);
 
@@ -98,8 +98,8 @@ void DotWriter::write(SRDAGGraph* graph, const char* path, bool displayNames, bo
 	SRDAGEdge* edge;
 	PoolIterator<SRDAGEdge, EDGE_POOL_SIZE> iterE = graph->getEdgeIterator();
 	while((edge = iterE.next()) != NULL){
-		SRDAGVertexAbstract* vxSrc = edge->getSource();
-		SRDAGVertexAbstract* vxSnk = edge->getSink();
+		SRDAGVertex* vxSrc = edge->getSource();
+		SRDAGVertex* vxSnk = edge->getSink();
 		if(displayRates)
 			platform_fprintf ("\t%d->%d [label=\"%d\",taillabel=\"%d\",headlabel=\"%d\"];\n",
 					edge->getSource()->getId(),

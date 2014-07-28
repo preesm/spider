@@ -86,7 +86,7 @@ public:
 	/*
 	 * Creates SrDAG graph including configure and input vertices.
 	 */
-	void createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertexAbstract* hSrDagVx);
+	void createSrDAGInputConfigVxs(SRDAGGraph* outSrDAG, SRDAGVertex* hSrDagVx);
 
 	void solveParameters(SRDAGGraph* dag, BaseSchedule* schedule);
 

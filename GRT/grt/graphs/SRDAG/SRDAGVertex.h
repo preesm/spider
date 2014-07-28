@@ -37,7 +37,6 @@
 #ifndef SRDAG_VERTEX_ABSTRACT
 #define SRDAG_VERTEX_ABSTRACT
 
-class SRDAGGraph;
 #include <cstring>
 #include <cstdlib>
 
@@ -45,7 +44,9 @@ class SRDAGGraph;
 #include <tools/SchedulingError.h>
 #include <tools/FitedArray.h>
 
+class SRDAGGraph;
 class SRDAGEdge;
+class SRDAGVertex;
 class PiSDFGraph;
 class PiSDFAbstractVertex;
 
@@ -67,7 +68,7 @@ typedef enum{
 	End
 }SRDAGVertexType;
 
-class SRDAGVertexAbstract{
+class SRDAGVertex{
 protected :
 	int id;
 	SRDAGGraph* graph;
@@ -105,15 +106,15 @@ protected :
 	bool haveSubGraph;
 	PiSDFGraph* subGraph;
 public:
-	SRDAGVertexAbstract();
-	SRDAGVertexAbstract(
+	SRDAGVertex();
+	SRDAGVertex(
 				SRDAGGraph* 	_graph,
 				SRDAGVertexType _type,
 				PiSDFAbstractVertex* _ref,
 				int 			_refIx,
 				int 			_itrIx);
 
-	virtual ~SRDAGVertexAbstract(){}
+	virtual ~SRDAGVertex(){}
 
 	int getId() const;
 	SRDAGVertexType  getType()  const;
@@ -165,100 +166,100 @@ public:
 	friend class SRDAGEdge;
 };
 
-inline void SRDAGVertexAbstract::connectInputEdge(SRDAGEdge* edge, int ix)
+inline void SRDAGVertex::connectInputEdge(SRDAGEdge* edge, int ix)
 	{inputs.setValue(ix, edge);}
 
-inline void SRDAGVertexAbstract::connectOutputEdge(SRDAGEdge* edge, int ix)
+inline void SRDAGVertex::connectOutputEdge(SRDAGEdge* edge, int ix)
 	{outputs.setValue(ix, edge);}
 
-inline void SRDAGVertexAbstract::disconnectInputEdge(int ix)
+inline void SRDAGVertex::disconnectInputEdge(int ix)
 	{inputs.resetValue(ix);}
 
-inline void SRDAGVertexAbstract::disconnectOutputEdge(int ix)
+inline void SRDAGVertex::disconnectOutputEdge(int ix)
 	{outputs.resetValue(ix);}
 
-inline int SRDAGVertexAbstract::getId() const
+inline int SRDAGVertex::getId() const
 	{return id;}
 
-inline SRDAGVertexType  SRDAGVertexAbstract::getType() const
+inline SRDAGVertexType  SRDAGVertex::getType() const
 	{return type;}
 
-inline SRDAGVertexState SRDAGVertexAbstract::getState() const
+inline SRDAGVertexState SRDAGVertex::getState() const
 	{return state;}
 
-inline void SRDAGVertexAbstract::setState(SRDAGVertexState st)
+inline void SRDAGVertex::setState(SRDAGVertexState st)
 	{state = st;}
 
-inline int SRDAGVertexAbstract::getFctIx() const
+inline int SRDAGVertex::getFctIx() const
 	{return fctIx;}
 
-inline int SRDAGVertexAbstract::getReferenceIndex() const
+inline int SRDAGVertex::getReferenceIndex() const
 	{return refIx;}
 
-inline int SRDAGVertexAbstract::getIterationIndex() const
+inline int SRDAGVertex::getIterationIndex() const
 	{return itrIx;}
 
-inline PiSDFAbstractVertex* SRDAGVertexAbstract::getReference() const
+inline PiSDFAbstractVertex* SRDAGVertex::getReference() const
 	{return reference;}
 
-inline int SRDAGVertexAbstract::getNbInputEdge() const
+inline int SRDAGVertex::getNbInputEdge() const
 	{return inputs.getNb();}
 
-inline int SRDAGVertexAbstract::getNbOutputEdge() const
+inline int SRDAGVertex::getNbOutputEdge() const
 	{return outputs.getNb();}
 
-inline SRDAGEdge* SRDAGVertexAbstract::getInputEdge(int id)
+inline SRDAGEdge* SRDAGVertex::getInputEdge(int id)
 	{return inputs[id];}
 
-inline SRDAGEdge* SRDAGVertexAbstract::getOutputEdge(int id)
+inline SRDAGEdge* SRDAGVertex::getOutputEdge(int id)
 	{return outputs[id];}
 
-inline int SRDAGVertexAbstract::getSchedLevel() const
+inline int SRDAGVertex::getSchedLevel() const
 	{return schedLevel;}
 
-inline void SRDAGVertexAbstract::setSchedLevel(int level)
+inline void SRDAGVertex::setSchedLevel(int level)
 	{schedLevel = level;}
 
-inline int SRDAGVertexAbstract::getSetIx() const
+inline int SRDAGVertex::getSetIx() const
 	{return setIx;}
 
-inline void SRDAGVertexAbstract::setSetIx(int setIx)
+inline void SRDAGVertex::setSetIx(int setIx)
 	{this->setIx = setIx;}
 
-inline int SRDAGVertexAbstract::getParamNb() const
+inline int SRDAGVertex::getParamNb() const
 	{return params.getNb();}
 
-inline int* SRDAGVertexAbstract::getParamArray()
+inline int* SRDAGVertex::getParamArray()
 	{return params.getArray();}
 
-inline UINT32 SRDAGVertexAbstract::getExecTime(int slaveType) const
+inline UINT32 SRDAGVertex::getExecTime(int slaveType) const
 	{return execTime[slaveType];}
 
-inline bool SRDAGVertexAbstract::getConstraint(int slaveType) const
+inline bool SRDAGVertex::getConstraint(int slaveType) const
 	{return constraints[slaveType];}
 
-inline UINT32 SRDAGVertexAbstract::getStartTime() const
+inline UINT32 SRDAGVertex::getStartTime() const
 	{return startTime;}
 
-inline void SRDAGVertexAbstract::setStartTime(UINT32 time)
+inline void SRDAGVertex::setStartTime(UINT32 time)
 	{startTime = time;}
 
-inline UINT32 SRDAGVertexAbstract::getEndTime() const
+inline UINT32 SRDAGVertex::getEndTime() const
 	{return endTime;}
 
-inline void SRDAGVertexAbstract::setEndTime(UINT32 time)
+inline void SRDAGVertex::setEndTime(UINT32 time)
 	{endTime = time;}
 
-inline bool SRDAGVertexAbstract::isHierarchical() const
+inline bool SRDAGVertex::isHierarchical() const
 	{return haveSubGraph;}
 
-inline PiSDFGraph* SRDAGVertexAbstract::getHierarchy() const
+inline PiSDFGraph* SRDAGVertex::getHierarchy() const
 	{return subGraph;}
 
-inline int SRDAGVertexAbstract::getRelatedParamValue(int paramIndex) const
+inline int SRDAGVertex::getRelatedParamValue(int paramIndex) const
 	{return relatedParamValues[paramIndex];}
 
-inline void SRDAGVertexAbstract::setRelatedParamValue(int paramIndex, int value)
+inline void SRDAGVertex::setRelatedParamValue(int paramIndex, int value)
 	{relatedParamValues.setValue(paramIndex, value);}
 
 #endif

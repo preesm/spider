@@ -87,7 +87,7 @@ void SRDAGGraph::removeEdge(SRDAGEdge* edge){
 	ePool.free(edge);
 }
 
-void SRDAGGraph::removeVertex(SRDAGVertexAbstract *vertex){
+void SRDAGGraph::removeVertex(SRDAGVertex *vertex){
 	// TODO remove Edges connected to it.
 	if(vertex->getState() == SRDAG_Executed){
 		printf("Delete executed Vertex\n");

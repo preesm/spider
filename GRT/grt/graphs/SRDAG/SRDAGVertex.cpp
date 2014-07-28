@@ -37,14 +37,14 @@
 #include <cstdio>
 #include <cstring>
 
-#include "SRDAGVertexAbstract.h"
+#include "SRDAGVertex.h"
 
 #include <graphs/PiSDF/PiSDFConfigVertex.h>
 #include <graphs/PiSDF/PiSDFVertex.h>
 
-int SRDAGVertexAbstract::creationIx = 0;
+int SRDAGVertex::creationIx = 0;
 
-SRDAGVertexAbstract::SRDAGVertexAbstract(){
+SRDAGVertex::SRDAGVertex(){
 	id 				= -1;
 	graph 			= NULL;
 	type 			= Normal;
@@ -62,7 +62,7 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(){
 	subGraph		= NULL;
 }
 
-SRDAGVertexAbstract::SRDAGVertexAbstract(
+SRDAGVertex::SRDAGVertex(
 			SRDAGGraph* 	_graph,
 			SRDAGVertexType _type,
 			PiSDFAbstractVertex* _ref,
@@ -198,7 +198,7 @@ SRDAGVertexAbstract::SRDAGVertexAbstract(
 	}
 }
 
-void SRDAGVertexAbstract::updateState(){
+void SRDAGVertex::updateState(){
 	if(state == SRDAG_NotExecuted){
 		switch(type){
 		case ConfigureActor:
@@ -212,7 +212,7 @@ void SRDAGVertexAbstract::updateState(){
 			break;
 		default:
 			for (int i = 0; i < getNbInputEdge(); i++){
-				SRDAGVertexAbstract* predecessor = getInputEdge(i)->getSource();
+				SRDAGVertex* predecessor = getInputEdge(i)->getSource();
 
 				if(predecessor->isHierarchical()){
 					state = SRDAG_NotExecuted;
@@ -232,7 +232,7 @@ void SRDAGVertexAbstract::updateState(){
 	}
 }
 
-void SRDAGVertexAbstract::getName(char* name, UINT32 sizeMax){
+void SRDAGVertex::getName(char* name, UINT32 sizeMax){
 	int len;
 	switch(type){
 	case Normal:

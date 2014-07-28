@@ -50,10 +50,10 @@
 #include <execution/execution.h>
 
 namespace CreateTaskMsg {
-	void send(int LRTID, SRDAGVertexAbstract* vertex);
+	void send(int LRTID, SRDAGVertex* vertex);
 }
 
-void inline CreateTaskMsg::send(int lrtID, SRDAGVertexAbstract* vertex){
+void inline CreateTaskMsg::send(int lrtID, SRDAGVertex* vertex){
 
 	if(lrtID == 0){ // Master
 		pushExecution(vertex);

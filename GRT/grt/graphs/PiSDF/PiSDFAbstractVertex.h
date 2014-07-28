@@ -49,7 +49,7 @@
 #include <graphs/PiSDF/PiSDFParameter.h>
 //#include "graphs/SDF/SDFGraph.h"
 
-class SRDAGVertexAbstract;
+class SRDAGVertex;
 
 typedef enum {
 	normal_vertex,
@@ -81,7 +81,7 @@ class PiSDFAbstractVertex {
 	Array<PiSDFEdge*,MAX_NB_PiSDF_INPUT_EDGES> inputEdges;
 	Array<PiSDFEdge*,MAX_NB_PiSDF_OUTPUT_EDGES> outputEdges;
 
-	List<SRDAGVertexAbstract*, MAX_VERTEX_REPETITION> childVertices[MAX_VERTEX_REPETITION];
+	List<SRDAGVertex*, MAX_VERTEX_REPETITION> childVertices[MAX_VERTEX_REPETITION];
 
 	UINT8 nbParameters;
 	PiSDFParameter* parameters[MAX_NB_PiSDF_PARAMS];
@@ -113,11 +113,11 @@ public:
 
 	void addParameter(PiSDFParameter* param);
 
-	void addChildVertex(SRDAGVertexAbstract* vertex, int refIx){
+	void addChildVertex(SRDAGVertex* vertex, int refIx){
 		childVertices[refIx].add(vertex);
 	}
 
-	SRDAGVertexAbstract* getChildVertex(int refIx, int id){
+	SRDAGVertex* getChildVertex(int refIx, int id){
 		return childVertices[refIx][id];
 	}
 

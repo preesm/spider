@@ -90,7 +90,7 @@ void ScheduleWriter::write(BaseSchedule* schedule, SRDAGGraph* dag, Architecture
 	// Exporting for gantt display
 	for(int slave=0; slave<archi->getNbActiveSlaves(); slave++){
 		for (UINT32 i=0 ; i<schedule->getNbVertices(slave); i++){
-			SRDAGVertexAbstract* vertex = schedule->getVertex(slave, i);
+			SRDAGVertex* vertex = schedule->getVertex(slave, i);
 			if(vertex == NULL){
 				continue;
 			}

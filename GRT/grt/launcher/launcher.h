@@ -59,8 +59,8 @@ namespace Launcher {
 	void createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const char *filePathName, ExecutionStat* stat, bool latex);
 	void resolveParameters(Architecture *arch, SRDAGGraph* topDag);
 
-	void launchVertex(SRDAGVertexAbstract* vertex, UINT32 slave);
-	void assignFifoVertex(SRDAGVertexAbstract* vertex);
+	void launchVertex(SRDAGVertex* vertex, UINT32 slave);
+	void assignFifoVertex(SRDAGVertex* vertex);
 
 	void init();
 	void reset();

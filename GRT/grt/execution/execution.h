@@ -37,11 +37,11 @@
 #ifndef EXECUTION_H_
 #define EXECUTION_H_
 
-#include <graphs/SRDAG/SRDAGVertexAbstract.h>
+#include <graphs/SRDAG/SRDAGVertex.h>
 
 void initExecution();
 
-void pushExecution(SRDAGVertexAbstract* vertex);
+void pushExecution(SRDAGVertex* vertex);
 void pushParam(int vertexID, int nbParam, UINT32 values[MAX_NB_PiSDF_PARAMS]);
 BOOL popParam(int* vertexID, int* nbParam, UINT32 values[MAX_NB_PiSDF_PARAMS]);
 

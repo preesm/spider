@@ -56,14 +56,6 @@ public :
 			int 			_itrIx,
 			PiSDFAbstractVertex* ref);
 	~SRDAGVertexRB(){}
-
-	void getName(char* name, UINT32 sizeMax);
 };
-
-inline void SRDAGVertexRB::getName(char* name, UINT32 sizeMax){
-	int len = snprintf(name, MAX_VERTEX_NAME_SIZE, "RB_%d", id);
-	if(len > MAX_VERTEX_NAME_SIZE)
-		exitWithCode(1075);
-}
 
 #endif

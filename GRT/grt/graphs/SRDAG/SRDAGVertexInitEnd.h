@@ -56,14 +56,5 @@ public :
 			int 			_refIx,
 			int 			_itrIx);
 	~SRDAGVertexInitEnd(){}
-
-	void getName(char* name, UINT32 sizeMax);
 };
-
-inline void SRDAGVertexInitEnd::getName(char* name, UINT32 sizeMax){
-	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d", (type == Init) ? "Init" : "End", id);
-	if(len > MAX_VERTEX_NAME_SIZE)
-		exitWithCode(1075);
-}
-
 #endif

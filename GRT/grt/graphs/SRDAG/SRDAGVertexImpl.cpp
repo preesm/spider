@@ -124,6 +124,36 @@ void SRDAGVertexAbstract::updateState(){
 	}
 }
 
+void SRDAGVertexAbstract::getName(char* name, UINT32 sizeMax){
+	int len;
+	switch(type){
+	case Normal:
+	case ConfigureActor:
+		len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%d",reference->getName(),itrIx, refIx);
+		break;
+	case Explode:
+		len = snprintf(name,MAX_VERTEX_NAME_SIZE,"Exp_%d", id);
+		break;
+	case Implode:
+		len = snprintf(name,MAX_VERTEX_NAME_SIZE,"Imp_%d", id);
+		break;
+	case RoundBuffer:
+		len = snprintf(name,MAX_VERTEX_NAME_SIZE,"RB_%d", id);
+		break;
+	case Broadcast:
+		len = snprintf(name,MAX_VERTEX_NAME_SIZE,"BR_%d", id);
+		break;
+	case Init:
+		len = snprintf(name,MAX_VERTEX_NAME_SIZE,"Init_%d", id);
+		break;
+	case End:
+		len = snprintf(name,MAX_VERTEX_NAME_SIZE,"End_%d", id);
+		break;
+	}
+	if(len > MAX_VERTEX_NAME_SIZE)
+		exitWithCode(1075);
+}
+
 SRDAGVertexBroadcast::SRDAGVertexBroadcast(
 		SRDAGGraph* 	_graph,
 		int 			_refIx,

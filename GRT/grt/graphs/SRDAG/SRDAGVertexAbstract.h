@@ -152,7 +152,7 @@ public:
 	bool isHierarchical() const;
 	PiSDFGraph* getHierarchy() const;
 
-	virtual void getName(char* name, UINT32 sizeMax) = 0;
+	void getName(char* name, UINT32 sizeMax);
 
 	int getSetIx() const;
 	void setSetIx(int setIx);

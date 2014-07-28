@@ -56,14 +56,6 @@ public :
 			int 			_refIx,
 			int 			_itrIx);
 	~SRDAGVertexXplode(){}
-
-	void getName(char* name, UINT32 sizeMax);
 };
-
-inline void SRDAGVertexXplode::getName(char* name, UINT32 sizeMax){
-	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d", (type == Implode) ? "Imp" : "Exp", id);
-	if(len > MAX_VERTEX_NAME_SIZE)
-		exitWithCode(1075);
-}
 
 #endif

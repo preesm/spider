@@ -59,14 +59,6 @@ public :
 				int 			_itrIx,
 				PiSDFVertex* ref);
 	~SRDAGVertexBroadcast(){}
-
-	void getName(char* name, UINT32 sizeMax);
 };
-
-inline void SRDAGVertexBroadcast::getName(char* name, UINT32 sizeMax){
-	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"Br_%d", id);
-	if(len > MAX_VERTEX_NAME_SIZE)
-		exitWithCode(1075);
-}
 
 #endif

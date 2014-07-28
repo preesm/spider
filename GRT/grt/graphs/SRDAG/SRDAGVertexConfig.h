@@ -64,8 +64,6 @@ public :
 
 	int getRelatedParamValue(int paramIndex) const;
 	void setRelatedParamValue(int paramIndex, int value);
-
-	void getName(char* name, UINT32 sizeMax);
 };
 
 inline int SRDAGVertexConfig::getRelatedParamValue(int paramIndex) const
@@ -73,11 +71,5 @@ inline int SRDAGVertexConfig::getRelatedParamValue(int paramIndex) const
 
 inline void SRDAGVertexConfig::setRelatedParamValue(int paramIndex, int value)
 	{relatedParamValues[paramIndex] = value;}
-
-inline void SRDAGVertexConfig::getName(char* name, UINT32 sizeMax){
-	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%d",reference->getName(),itrIx, refIx);
-	if(len > MAX_VERTEX_NAME_SIZE)
-		exitWithCode(1075);
-}
 
 #endif

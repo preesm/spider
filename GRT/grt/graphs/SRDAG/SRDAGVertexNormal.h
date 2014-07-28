@@ -60,14 +60,6 @@ public :
 		int 			_itrIx,
 		PiSDFVertex* ref);
 	~SRDAGVertexNormal(){}
-
-	void getName(char* name, UINT32 sizeMax);
 };
-
-inline void SRDAGVertexNormal::getName(char* name, UINT32 sizeMax){
-	int len = snprintf(name,MAX_VERTEX_NAME_SIZE,"%s_%d_%d",reference->getName(),itrIx, refIx);
-	if(len > MAX_VERTEX_NAME_SIZE)
-		exitWithCode(1075);
-}
 
 #endif

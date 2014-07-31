@@ -115,7 +115,7 @@ void LRTStartCurrTask() {
 	for(i=0;i<OSTCBCur->actor.nbOutputFifos; i++){
 		outputFIFOs[i] = (UINT8*)(SHARED_MEM_BASE + OSTCBCur->actor.outputFifo[i].add);
 	}
-	Monitor_startTask(OSTCBCur->vertexId);
+	Monitor_startTask();
 	OSTCBCur->task_func(inputFIFOs,
 						outputFIFOs,
 						OSTCBCur->actor.params);

@@ -40,7 +40,7 @@
 #include "lrt_definitions.h"
 
 void Monitor_init();
-void Monitor_startTask(UINT32 vertexID);
+void Monitor_startTask();
 void Monitor_endTask();
 void Monitor_sendData();
 

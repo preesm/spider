@@ -34,49 +34,94 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <stdlib.h>
-#include <platform_types.h>
-#include <platform_queue.h>
-#include <platform_time.h>
-
-#include <tools/SchedulingError.h>
-
-#include "grt_definitions.h"
-#include "monitor.h"
-#include <graphs/SRDAG/SRDAGVertex.h>
 #include <spider.h>
+#include <grt_definitions.h>
+#include "mpSched.h"
 
-static taskTime taskTimes[MAX_SRDAG_VERTICES*ITER_MAX];
-static UINT32 nbTaskTime;
+void resetGraph();
 
-void Monitor_init(){
-	nbTaskTime = 0;
-}
+int main(int argc, char* argv[]){
+#ifdef DSP
+	int nbSlaves = 8;
+#else
+	int nbSlaves = 1;
+#endif
 
-void Monitor_startTask(SRDAGVertex* vertex){
-	if(nbTaskTime>=MAX_SRDAG_VERTICES*ITER_MAX-1){
-		exitWithCode(1017);
+	static Architecture 		arch;
+	static ExecutionStat 		execStat;
+	static PiSDFGraph 			pisdfGraphs[MAX_NB_PiSDF_GRAPHS];
+	static PiSDFGraph 			*topPisdf;
+
+	static int end;
+
+	printf("Starting with %d slaves max\n", nbSlaves);
+
+	/* Create the architecture */
+	arch.reset();
+	arch.addSlave(0, "Master", 0.9267, 435, 0.9252, 430);
+	char tempStr[MAX_SLAVE_NAME_SIZE];
+
+	for(int i=1; i<nbSlaves; i++){
+		UINT32 len = snprintf(tempStr, MAX_SLAVE_NAME_SIZE, "PE%02d", i);
+		if(len > MAX_SLAVE_NAME_SIZE){
+			exitWithCode(1073);
+		}
+		arch.addSlave(0, tempStr, 0.9267, 435, 0.9252, 430);
 	}
-	taskTimes[nbTaskTime].srdagIx = vertex->getId();
-	taskTimes[nbTaskTime].globalIx = getGlobalIteration();
-	taskTimes[nbTaskTime].type = vertex->getType();
-	taskTimes[nbTaskTime].pisdfVertex = vertex->getReference();
-	taskTimes[nbTaskTime].iter = vertex->getIterationIndex();
-	taskTimes[nbTaskTime].repet = vertex->getReferenceIndex();
+	arch.setNbActiveSlaves(nbSlaves);
 
-//	printf("start task %d vxId %d\n", nbTaskTime, vertexID);
-	taskTimes[nbTaskTime].start = platform_time_getValue();
-}
+	setFctPtr(0, config);
+	setFctPtr(1, mFilter);
+	setFctPtr(2, src);
+	setFctPtr(3, snk);
+	setFctPtr(4, setM);
+	setFctPtr(5, initSwitch);
+	setFctPtr(7, FIR);
 
-void Monitor_endTask(){
-	taskTimes[nbTaskTime].end = platform_time_getValue();
-	nbTaskTime++;
-}
+	/*
+	 * These objects should be obtained from the PREESM generator :
+	 * Architecture, Scheduling policy.
+	 */
 
-int Monitor_getNB(){
-	return nbTaskTime;
-}
+	SPIDER_init(&arch);
 
-taskTime Monitor_get(int id){
-	return taskTimes[id];
+	resetGraph();
+#ifdef DSP
+	topPisdf = initPisdf_mpSched(pisdfGraphs, 20, 4000, 8, 0);
+#else
+	topPisdf = initPisdf_mpSched(pisdfGraphs, 20, 4000, 8, 1);
+#endif
+
+	SPIDER_reset();
+
+	for(int iter=1; iter<=2; iter++){
+		SPIDER_launch(&arch, topPisdf);
+		UINT32 time;
+		do{
+			time = platform_time_getValue();
+		}while(time < iter*PERIOD);
+	}
+
+	SPIDER_report(&arch, topPisdf, &execStat, 0);
+
+	printf("GraphTime:   %d\n", execStat.graphTransfoTime);
+	printf("MappingTime: %d\n", execStat.mappingTime);
+	printf("TaskOrdTime: %d\n", execStat.taskOrderingTime);
+
+	printf("\nEndTime: %d\n", execStat.globalEndTime);
+
+	end = execStat.globalEndTime;
+
+	char file[100];
+	printf("time\n");
+	sprintf(file,"/home/jheulot/dev/mp-sched/ederc/spider_nocache_lat.csv");
+	FILE *f = fopen(file,"w+");
+	fprintf(f, "iter, latency\n");
+	for(int iter=1; iter<=10; iter++){
+		fprintf(f,"%d,%d\n",iter, execStat.endTime[iter-1]-PERIOD*(iter-1));
+		printf("%d: %d\n",iter, execStat.endTime[iter-1]-PERIOD*(iter-1));
+	}
+	fclose(f);
+
+	printf("finished\n");
 }

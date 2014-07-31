@@ -65,8 +65,7 @@ namespace PiSDFTransformer {
 			PiSDFGraph* pisdf,
 			ListScheduler* listScheduler,
 			BaseSchedule* schedule,
-			SRDAGGraph* topDag,
-			ExecutionStat* stat);
+			SRDAGGraph* topDag);
 }
 
 #endif /* PISDFTRANSFORMER_H_ */

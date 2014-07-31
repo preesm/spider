@@ -34,49 +34,29 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
+#include "FitedArrayPool.h"
+
+#include <grt_definitions.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <platform_types.h>
-#include <platform_queue.h>
-#include <platform_time.h>
 
-#include <tools/SchedulingError.h>
+static int wrIx;
+static void* array[MAX_EDGE_ARRAY];
 
-#include "grt_definitions.h"
-#include "monitor.h"
-#include <graphs/SRDAG/SRDAGVertex.h>
-#include <spider.h>
-
-static taskTime taskTimes[MAX_SRDAG_VERTICES*ITER_MAX];
-static UINT32 nbTaskTime;
-
-void Monitor_init(){
-	nbTaskTime = 0;
+void resetAlloc(){
+	wrIx = 0;
 }
 
-void Monitor_startTask(SRDAGVertex* vertex){
-	if(nbTaskTime>=MAX_SRDAG_VERTICES*ITER_MAX-1){
-		exitWithCode(1017);
+void printAlloc(){
+	printf("%d/%d allocated\n", wrIx, MAX_EDGE_ARRAY);
+}
+
+void allocPtrs(void** base, int length) {
+	if(length+wrIx >= MAX_EDGE_ARRAY){
+		printf("Error cannot allocate memory\n");
+		abort();
 	}
-	taskTimes[nbTaskTime].srdagIx = vertex->getId();
-	taskTimes[nbTaskTime].globalIx = getGlobalIteration();
-	taskTimes[nbTaskTime].type = vertex->getType();
-	taskTimes[nbTaskTime].pisdfVertex = vertex->getReference();
-	taskTimes[nbTaskTime].iter = vertex->getIterationIndex();
-	taskTimes[nbTaskTime].repet = vertex->getReferenceIndex();
-
-//	printf("start task %d vxId %d\n", nbTaskTime, vertexID);
-	taskTimes[nbTaskTime].start = platform_time_getValue();
+	*base = &(array[wrIx]);
+	wrIx += length;
 }
 
-void Monitor_endTask(){
-	taskTimes[nbTaskTime].end = platform_time_getValue();
-	nbTaskTime++;
-}
-
-int Monitor_getNB(){
-	return nbTaskTime;
-}
-
-taskTime Monitor_get(int id){
-	return taskTimes[id];
-}

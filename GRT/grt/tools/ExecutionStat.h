@@ -44,6 +44,7 @@
 
 typedef struct{
 	UINT32 globalEndTime;
+	UINT32 endTime[ITER_MAX];
 
 	UINT32 taskOrderingTime;
 	UINT32 mappingTime;

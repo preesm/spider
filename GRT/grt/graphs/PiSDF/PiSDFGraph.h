@@ -174,7 +174,7 @@ public:
 		return vertices.getNb();
 	}
 
-	PiSDFAbstractVertex* getVertex(UINT32 id){
+	PiSDFAbstractVertex* getVertex(int id){
 		return vertices[id];
 	}
 

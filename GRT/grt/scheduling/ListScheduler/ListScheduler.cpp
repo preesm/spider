@@ -56,7 +56,6 @@ void ListScheduler::reset()
 {
 	archi = (Architecture*)NULL;
 //	scenario = (Scenario*)NULL;
-	memset(lastVertexOfSlave,0,sizeof(lastVertexOfSlave));
 }
 
 

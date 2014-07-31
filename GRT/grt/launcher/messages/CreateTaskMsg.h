@@ -47,11 +47,29 @@
 #include <platform_queue.h>
 #include "../launcher.h"
 #include <execution/execution.h>
+#include <spider.h>
 
 namespace CreateTaskMsg {
 	void send(int LRTID, SRDAGVertex* vertex);
 }
 
+/*
+ * Create Message :
+ * 		- CreateMsg ID
+ * 		- Fonction ID
+ * 		- SRDAG ID
+ * 		- Type
+ * 		- Global Iteration ID
+ * 		- PiSDF ID
+ * 		- iteration ID
+ * 		- repetition ID
+ * 		- Nb Inputs
+ * 		- Nb Outputs
+ * 		- Nb Params
+ * 		- Inputs
+ * 		- Outputs
+ * 		- Params
+ */
 void inline CreateTaskMsg::send(int lrtID, SRDAGVertex* vertex){
 
 	if(lrtID == 0){ // Master
@@ -62,7 +80,11 @@ void inline CreateTaskMsg::send(int lrtID, SRDAGVertex* vertex){
 	platform_QPushUINT32(lrtID, platformCtrlQ, MSG_CREATE_TASK);
 	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getFctIx());
 	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getId());
-	platform_QPushUINT32(lrtID, platformCtrlQ, 0); // Not an actor machine.
+	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getType());
+	platform_QPushUINT32(lrtID, platformCtrlQ, getGlobalIteration());
+	platform_QPushUINT32(lrtID, platformCtrlQ, (long long)(vertex->getReference()));
+	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getIterationIndex());
+	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getReferenceIndex());
 
 	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getNbInputEdge());
 	platform_QPushUINT32(lrtID, platformCtrlQ, vertex->getNbOutputEdge());

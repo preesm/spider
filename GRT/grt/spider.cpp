@@ -34,49 +34,63 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <stdlib.h>
-#include <platform_types.h>
-#include <platform_queue.h>
-#include <platform_time.h>
+#include "spider.h"
 
-#include <tools/SchedulingError.h>
+#include <platform.h>
+#include <execution/execution.h>
+#include <transformations/PiSDFTransformer/PiSDFTransformer.h>
+#include <tools/ScheduleWriter.h>
+#include <grt_definitions.h>
 
-#include "grt_definitions.h"
-#include "monitor.h"
-#include <graphs/SRDAG/SRDAGVertex.h>
-#include <spider.h>
+static SRDAGGraph 			topDag;
+static BaseSchedule 		schedule;
+static int iteration = 0;
 
-static taskTime taskTimes[MAX_SRDAG_VERTICES*ITER_MAX];
-static UINT32 nbTaskTime;
-
-void Monitor_init(){
-	nbTaskTime = 0;
+void SPIDER_init(Architecture* arch){
+	platform_init(arch->getNbSlaves());
 }
 
-void Monitor_startTask(SRDAGVertex* vertex){
-	if(nbTaskTime>=MAX_SRDAG_VERTICES*ITER_MAX-1){
-		exitWithCode(1017);
-	}
-	taskTimes[nbTaskTime].srdagIx = vertex->getId();
-	taskTimes[nbTaskTime].globalIx = getGlobalIteration();
-	taskTimes[nbTaskTime].type = vertex->getType();
-	taskTimes[nbTaskTime].pisdfVertex = vertex->getReference();
-	taskTimes[nbTaskTime].iter = vertex->getIterationIndex();
-	taskTimes[nbTaskTime].repet = vertex->getReferenceIndex();
-
-//	printf("start task %d vxId %d\n", nbTaskTime, vertexID);
-	taskTimes[nbTaskTime].start = platform_time_getValue();
+void SPIDER_reset(){
+	iteration = 0;
+	initExecution();
+	platform_time_reset();
+	Launcher::init();
+	schedule.reset();
 }
 
-void Monitor_endTask(){
-	taskTimes[nbTaskTime].end = platform_time_getValue();
-	nbTaskTime++;
+int getGlobalIteration(){
+	return iteration;
 }
 
-int Monitor_getNB(){
-	return nbTaskTime;
+void SPIDER_launch(Architecture* arch, PiSDFGraph* topPisdf){
+	static ListScheduler 		listScheduler;
+
+	listScheduler.reset();
+	topDag.reset();
+	Launcher::reset();
+	topPisdf->resetRefs();
+
+	listScheduler.setArchitecture(arch);
+
+	// Add topActor to topDag
+	topDag.createVertexNo(0, 0, (PiSDFVertex*)topPisdf->getVertex(0));
+
+	PiSDFTransformer::multiStepScheduling(arch, topPisdf, &listScheduler, &schedule, &topDag);
+
+	iteration++;
 }
 
-taskTime Monitor_get(int id){
-	return taskTimes[id];
+
+void SPIDER_report(Architecture* arch, PiSDFGraph* topPisdf, ExecutionStat* execStat, int iter){
+	memset(execStat, 0, sizeof(ExecutionStat));
+
+	char file[MAX_FILE_NAME_SIZE+40];
+		snprintf(file, MAX_FILE_NAME_SIZE+40, "/home/jheulot/dev/mp-sched/ederc/Gantt_spider_cache_nvar9.xml");
+		Launcher::createRealTimeGantt(arch, &topDag, file, execStat, true);
+	//	snprintf(file, MAX_FILE_NAME_SIZE+40, "/home/jheulot/dev/mp-sched/ederc/simu%d.xml", iter);
+	//	ScheduleWriter::write(&schedule, &topDag, arch, file);
+	#if STAT
+		printAlloc();
+	#endif
 }
+

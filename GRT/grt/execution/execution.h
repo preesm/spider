@@ -41,6 +41,8 @@
 
 void initExecution();
 
+void setFctPtr(int n, FUNCTION_TYPE f);
+
 void pushExecution(SRDAGVertex* vertex);
 void pushParam(int vertexID, int nbParam, UINT32 values[MAX_NB_PiSDF_PARAMS]);
 BOOL popParam(int* vertexID, int* nbParam, UINT32 values[MAX_NB_PiSDF_PARAMS]);

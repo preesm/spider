@@ -88,7 +88,7 @@ public:
 	UINT32 alloc(UINT32 sectionSize){
 		UINT32 start;
 		if(last+sectionSize >= size){
-			printf("Can't allocate, not enough shared memory\n");
+			printf("Can't allocate, not enough shared memory: %#X missing\n", sectionSize-(size-last));
 			return (UINT32)-1;
 		}
 		start = last+base;

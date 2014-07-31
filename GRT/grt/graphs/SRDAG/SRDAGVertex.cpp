@@ -89,13 +89,13 @@ SRDAGVertex::SRDAGVertex(
 		relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>();
 
 		fctIx = reference->getFunction_index();
-		haveSubGraph = reference
+
+		if(reference
 				&& reference->getType() == normal_vertex
 				&& ((PiSDFVertex*)reference)->hasSubGraph()
-				&& type == Normal;
-
-		if(haveSubGraph)
+				&& type == Normal)
 			subGraph = ((PiSDFVertex*)reference)->getSubGraph();
+		else subGraph = (PiSDFGraph*) NULL;
 
 		for(int i=0; i<MAX_SLAVE_TYPES; i++){
 			if(reference->getConstraints(i)){
@@ -116,7 +116,7 @@ SRDAGVertex::SRDAGVertex(
 		relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>(((PiSDFConfigVertex*)reference)->getNbRelatedParams());
 
 		fctIx = reference->getFunction_index();
-		haveSubGraph	= false;
+		subGraph = (PiSDFGraph*) NULL;
 
 		for(int i=0; i<MAX_SLAVE_TYPES; i++){
 			if(reference->getConstraints(i)){
@@ -137,7 +137,7 @@ SRDAGVertex::SRDAGVertex(
 		relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>();
 
 		fctIx = XPLODE_FUNCT_IX;
-		haveSubGraph	= false;
+		subGraph = (PiSDFGraph*) NULL;
 
 		for(int i=0; i<MAX_SLAVE_TYPES; i++){
 			constraints[i] = true;
@@ -151,7 +151,7 @@ SRDAGVertex::SRDAGVertex(
 		relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>();
 
 		fctIx = XPLODE_FUNCT_IX;
-		haveSubGraph	= false;
+		subGraph = (PiSDFGraph*) NULL;
 
 		for(int i=0; i<MAX_SLAVE_TYPES; i++){
 			constraints[i] = true;
@@ -165,7 +165,7 @@ SRDAGVertex::SRDAGVertex(
 		relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>();
 
 		fctIx = RB_FUNCT_IX;
-		haveSubGraph	= false;
+		subGraph = (PiSDFGraph*) NULL;
 
 		for(int i=0; i<MAX_SLAVE_TYPES; i++){
 			constraints[i] = true;
@@ -179,7 +179,7 @@ SRDAGVertex::SRDAGVertex(
 		relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>();
 
 		fctIx = BROADCAST_FUNCT_IX;
-		haveSubGraph	= false;
+		subGraph = (PiSDFGraph*) NULL;
 
 		for(int i=0; i<MAX_SLAVE_TYPES; i++){
 			constraints[i] = true;
@@ -193,7 +193,7 @@ SRDAGVertex::SRDAGVertex(
 		relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>();
 
 		fctIx = INIT_FUNCT_IX;
-		haveSubGraph	= false;
+		subGraph = (PiSDFGraph*) NULL;
 
 		for(int i=0; i<MAX_SLAVE_TYPES; i++){
 			constraints[i] = true;
@@ -207,7 +207,7 @@ SRDAGVertex::SRDAGVertex(
 		relatedParamValues = FitedArray<int,MAX_PARAM_ARRAY>();
 
 		fctIx = END_FUNCT_IX;
-		haveSubGraph	= false;
+		subGraph = (PiSDFGraph*) NULL;
 
 		for(int i=0; i<MAX_SLAVE_TYPES; i++){
 			constraints[i] = true;

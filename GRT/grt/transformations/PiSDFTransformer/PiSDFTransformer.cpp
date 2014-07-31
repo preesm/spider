@@ -51,9 +51,9 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 
 
-//#if PRINT_GRAPH
+#if PRINT_GRAPH
 static char file[MAX_FILE_NAME_SIZE];
-//#endif
+#endif
 
 #define MAX(a,b) ((a>b)?a:b)
 #define MIN(a,b) ((a<b)?a:b)
@@ -316,9 +316,27 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 			}
 		}
 
-		/* Replace multiple input sink vertex with implode */
+
 		for(int i=0; i<nbSinkRepetitions; i++){
-			if(edgesPerSinkVertices[i].nb > 1){
+			/* Remove unused RB */
+			if(edgesPerSinkVertices[i].nb == 1
+					&& sinkRepetitions[i]->getType() == RoundBuffer
+					&& sinkRepetitions[i]->getOutputEdge(0)->getTokenRate() == sinkConsumption){
+				SRDAGVertex* sinkVertex;
+				SRDAGVertex* origin_vertex = sinkRepetitions[i];
+				SRDAGEdge* srdagEdge;
+				UINT32 sinkPortId;
+
+				sinkVertex = origin_vertex->getOutputEdge(0)->getSink();
+				sinkPortId = origin_vertex->getOutputEdge(0)->getSinkPortIx();
+				topDag->removeEdge(origin_vertex->getOutputEdge(0));
+				topDag->removeVertex(origin_vertex);
+
+				sinkRepetitions[i] = sinkVertex;
+				edgesPerSinkVertices[i].portIx = sinkPortId;
+			}
+			/* Replace multiple input sink vertex with implode */
+			else if(edgesPerSinkVertices[i].nb > 1) {
 				// Replacing the sink vertex by the implode vertex in the array of sources.
 				SRDAGVertex *origin_vertex = sinkRepetitions[i];//	// Adding vxs
 
@@ -347,7 +365,7 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 						sinkPortId = origin_vertex->getOutputEdge(0)->getSinkPortIx();
 						topDag->removeEdge(origin_vertex->getOutputEdge(0));
 						topDag->removeVertex(origin_vertex);
-						sinkRepetitions[i] = topDag->createVertexEx(0, 0);
+						sinkRepetitions[i] = topDag->createVertexIm(0, 0);
 
 						edgesPerSinkVertices[i].portIx = 0;
 
@@ -1305,8 +1323,7 @@ void PiSDFTransformer::multiStepScheduling(
 							PiSDFGraph* pisdf,
 							ListScheduler* listScheduler,
 							BaseSchedule* schedule,
-							SRDAGGraph* topDag,
-							ExecutionStat* execStat){
+							SRDAGGraph* topDag){
 	static int brv[MAX_NB_PiSDF_VERTICES];
 	PiSDFGraph*   currentPiSDF;
 	UINT32 len;

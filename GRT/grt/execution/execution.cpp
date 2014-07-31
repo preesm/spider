@@ -41,8 +41,7 @@
 #include <platform_data_queue.h>
 #include <memoryAlloc.h>
 
-#include <mpSched/mpSched.h>
-#include <mpSched/baseActors.h>
+#include "baseActors.h"
 
 #include <graphs/SRDAG/SRDAGEdge.h>
 
@@ -57,15 +56,11 @@ static Queue<param, 50> params;
 
 UINT32 curVertexId;
 
-void initExecution(){
-	functions_tbl[0] = config;
-	functions_tbl[1] = mFilter;
-	functions_tbl[2] = src;
-	functions_tbl[3] = snk;
-	functions_tbl[4] = setM;
-	functions_tbl[5] = initSwitch;
-	functions_tbl[7] = FIR;
+void setFctPtr(int n, FUNCTION_TYPE f){
+	functions_tbl[n] = f;
+}
 
+void initExecution(){
 	functions_tbl[10] = RB;
 	functions_tbl[11] = broadcast;
 	functions_tbl[12] = switchFct;
@@ -160,7 +155,7 @@ void execute(){
 
 		curVertexId = vertex->getId();
 
-		Monitor_startTask(vertex->getId());
+		Monitor_startTask(vertex);
 		functions_tbl[vertex->getFctIx()](inputFIFOs, outputFIFOs, args);
 		Monitor_endTask();
 

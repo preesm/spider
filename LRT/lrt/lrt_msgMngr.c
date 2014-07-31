@@ -66,14 +66,19 @@ void wait_ext_msg() {
 			new_tcb->functionId = platform_queue_pop_UINT32(PlatformCtrlQueue);
 
 			// Popping the id of the vx in the current SrDAG on the GRT.
-			new_tcb->vertexId = platform_queue_pop_UINT32(PlatformCtrlQueue);
+			new_tcb->srdagId = platform_queue_pop_UINT32(PlatformCtrlQueue);
+			new_tcb->type =  platform_queue_pop_UINT32(PlatformCtrlQueue);
+			new_tcb->globalIx = platform_queue_pop_UINT32(PlatformCtrlQueue);
+			new_tcb->pisdfVertex = platform_queue_pop_UINT32(PlatformCtrlQueue);
+			new_tcb->iterIx = platform_queue_pop_UINT32(PlatformCtrlQueue);
+			new_tcb->refIx = platform_queue_pop_UINT32(PlatformCtrlQueue);
 
 			// Popping whether the task is stopped after completion.
 	//		new_tcb->stop = RTQueuePop_UINT32(RTCtrlQueue);
 			new_tcb->stop = 1;
 
 			// Popping the AM flag.
-			new_tcb->isAM = platform_queue_pop_UINT32(PlatformCtrlQueue);
+//			new_tcb->isAM = platform_queue_pop_UINT32(PlatformCtrlQueue);
 
 			if(new_tcb->isAM){
 #if USE_AM

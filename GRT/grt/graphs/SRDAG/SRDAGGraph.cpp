@@ -42,6 +42,7 @@
 #include <cstring>
 #include <grt_definitions.h>
 #include <tools/DotWriter.h>
+#include <tools/FitedArrayPool.h>
 #include <grt_definitions.h>
 
 /**
@@ -55,6 +56,8 @@ SRDAGGraph::SRDAGGraph(): vertices(ABSTRACT_VERTICES), implodes(DEFAULT), /*edge
 	implodes.reset();
 	brs.reset();
 	rbs.reset();
+
+	resetAlloc();
 
 #if DEBUG
 	edgePool.setName("Edge Pool of SRDAG Graph");
@@ -75,6 +78,8 @@ void SRDAGGraph::reset(){
 	implodes.reset();
 	brs.reset();
 	rbs.reset();
+
+	resetAlloc();
 }
 
 /**

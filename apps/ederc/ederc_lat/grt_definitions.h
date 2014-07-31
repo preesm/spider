@@ -61,8 +61,8 @@
 #define USE_AM							0
 #define SEE_PARAM_VAL					0
 
-#define ITER_MAX 2
-#define PERIOD 600000
+#define ITER_MAX 10
+#define PERIOD 700000
 
 #define PiSDF_FILE_PATH					"pisdf"
 #define SUB_SRDAG_FIFO_ID_FILE_PATH		"subSrDagFifoId"
@@ -88,27 +88,27 @@
 #ifdef DSP
 	#define MAX_MASTER_ACTORS		100
 #else
-	#define MAX_MASTER_ACTORS		400
+	#define MAX_MASTER_ACTORS		550
 #endif
 
 #define MEMCPY_SPEED 			1.8
 #define NB_LOCAL_FUNCTIONS 		20
-#define OS_MAX_TASKS_TIME 		350
 
 // Single Rate DAG
 
-#define MAX_SRDAG_VERTICES 		200 // 400
-#define MAX_SRDAG_EDGES 		310 // 600
-#define MAX_SRDAG_BROADCASTS	20 // 25
+#define MAX_SRDAG_VERTICES 		260 // 400
+#define MAX_SRDAG_EDGES 		440 // 600
+#define MAX_SRDAG_BROADCASTS	22 // 25
 #define MAX_SRDAG_RBS			20 // 35
-#define MAX_SRDAG_IMPLODES		15 // 25
+#define MAX_SRDAG_IMPLODES		20 // 25
 
 #define MAX_SRDAG_IO_EDGES		3
-#define MAX_SRDAG_XPLODE_EDGES	16
-#define MAX_EDGE_ARRAY 			10000
-#define MAX_PARAM_ARRAY 		1000
+#define MAX_SRDAG_XPLODE_EDGES	20
+#define MAX_EDGE_ARRAY 			2000
+#define MAX_PARAM_ARRAY 		500
 
-#define MAX_VERTEX_REPETITION 	17	//100 // The maximum number of repetitions for one vertex
+#define MAX_VERTEX_REPETITION 	20	//100 // The maximum number of repetitions for one vertex
+#define MAX_XPL_IN_STEPS		20
 
 #define RB_FUNCT_IX				10
 #define BROADCAST_FUNCT_IX		11
@@ -117,12 +117,11 @@
 #define INIT_FUNCT_IX			14
 #define END_FUNCT_IX			15
 
-#define MAX_XPL_IN_STEPS		17
 
 // PiSDF
 #define MAX_NB_PiSDF_GRAPHS				3	//32
-#define MAX_NB_PiSDF_EDGES				16	//32
-#define MAX_NB_PiSDF_PARAMS				8	//32
+#define MAX_NB_PiSDF_EDGES				8	//32
+#define MAX_NB_PiSDF_PARAMS				5	//32
 #define MAX_NB_PiSDF_VERTICES			8	//32
 #define MAX_NB_PiSDF_CONFIG_VERTICES	2	//32
 #define MAX_NB_PiSDF_JOIN_VERTICES		1	//32
@@ -135,11 +134,11 @@
 #define MAX_NB_PiSDF_SELECT_VERTICES	1	//32
 #define MAX_NB_PiSDF_ROUNDB_VERTICES	1	//32
 #define MAX_NB_PiSDF_CONFIG_VERTEX_PARAMS	2	//10
-#define MAX_NB_PiSDF_VERTEX_NAME	30	//10
-#define MAX_NB_PiSDF_PARAM_NAME	30	//10
+#define MAX_NB_PiSDF_VERTEX_NAME		20	//10
+#define MAX_NB_PiSDF_PARAM_NAME			20	//10
 
 // XParser
-#define VARIABLE_NAME_LEN_MAX 30
+#define VARIABLE_NAME_LEN_MAX 20
 #define MAX_VARIABLE_NUMBER 300
 #define EXPR_LEN_MAX 128
 #define REVERSE_POLISH_STACK_MAX_ELEMENTS 20 // Max number of elements in an expression reverse polish stack

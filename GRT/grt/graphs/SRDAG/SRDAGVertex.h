@@ -103,7 +103,6 @@ protected :
 	FitedArray<int,MAX_PARAM_ARRAY> params;
 	FitedArray<int,MAX_PARAM_ARRAY> relatedParamValues;
 
-	bool haveSubGraph;
 	PiSDFGraph* subGraph;
 public:
 	SRDAGVertex();
@@ -251,7 +250,7 @@ inline void SRDAGVertex::setEndTime(UINT32 time)
 	{endTime = time;}
 
 inline bool SRDAGVertex::isHierarchical() const
-	{return haveSubGraph;}
+	{return subGraph != (PiSDFGraph*)NULL;}
 
 inline PiSDFGraph* SRDAGVertex::getHierarchy() const
 	{return subGraph;}

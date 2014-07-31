@@ -45,7 +45,13 @@
 #include "lrt_debug.h"
 
 typedef struct{
-	UINT32 vertexID;
+	UINT32 srdagIx;
+	UINT32 globalIx;
+	UINT32 type;
+	UINT32 pisdfVertex;
+	UINT32 iter;
+	UINT32 repet;
+
 	UINT32 start;
 	UINT32 end;
 } taskTime;
@@ -57,11 +63,17 @@ void Monitor_init(){
 	nbTaskTime = 0;
 }
 
-void Monitor_startTask(UINT32 vertexID){
+void Monitor_startTask(){
 	if(nbTaskTime>=OS_MAX_TASKS_TIME-1){
 		exitWithCode(1017);
 	}
-	taskTimes[nbTaskTime].vertexID = vertexID;
+	taskTimes[nbTaskTime].srdagIx		= OSTCBCur->srdagId;
+	taskTimes[nbTaskTime].globalIx		= OSTCBCur->globalIx;
+	taskTimes[nbTaskTime].type			= OSTCBCur->type;
+	taskTimes[nbTaskTime].pisdfVertex	= OSTCBCur->pisdfVertex;
+	taskTimes[nbTaskTime].iter			= OSTCBCur->iterIx;
+	taskTimes[nbTaskTime].repet			= OSTCBCur->refIx;
+
 	taskTimes[nbTaskTime].start = platform_time_getValue();
 }
 

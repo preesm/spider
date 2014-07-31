@@ -40,6 +40,7 @@
 #include <grt_definitions.h>
 #include <tools/SchedulingError.h>
 #include <platform_types.h>
+#include "FitedArrayPool.h"
 
 class SRDAGEdge;
 
@@ -55,9 +56,6 @@ private:
 	T* base;
 	int nb;
 	int size;
-
-	static T array[POOLSIZE];
-	static int wrIx;
 
 public:
 	/** Default Constructor */
@@ -120,15 +118,9 @@ inline FitedArray<T,POOLSIZE>::FitedArray(){
 
 template <class T, int POOLSIZE>
 inline FitedArray<T,POOLSIZE>::FitedArray(int _size){
-	if(wrIx +_size < POOLSIZE){
-		size = _size;
-		nb = 0;
-		base = &(array[wrIx]);
-		wrIx += _size;
-	}else{
-		printf("Error in SRDAGEdgeArray, not enough memory\n");
-		abort();
-	}
+	size = _size;
+	allocPtrs((void**)&base, size);
+	nb = 0;
 }
 
 /** Default Destructor */

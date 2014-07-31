@@ -38,15 +38,32 @@
 #define LRT_MONITOR_H_
 
 #include "grt_definitions.h"
+#include <graphs/SRDAG/SRDAGVertex.h>
+#include <graphs/PiSDF/PiSDFVertex.h>
 
+/*
+ * TaskTime :
+ * 		- SRDAG ID
+ * 		- Global Iteration ID
+ * 		- vertex Type
+ * 		- PiSDF ID
+ * 		- iteration ID
+ * 		- repetition ID
+ */
 typedef struct{
-	UINT32 vertexID;
+	int srdagIx;
+	int globalIx;
+	SRDAGVertexType type;
+	PiSDFAbstractVertex* pisdfVertex;
+	int iter;
+	int repet;
+
 	UINT32 start;
 	UINT32 end;
 } taskTime;
 
 void Monitor_init();
-void Monitor_startTask(UINT32 vertexID);
+void Monitor_startTask(SRDAGVertex* vertex);
 void Monitor_endTask();
 taskTime Monitor_get(int id);
 int Monitor_getNB();

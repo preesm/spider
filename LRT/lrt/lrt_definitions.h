@@ -226,11 +226,18 @@ typedef struct lrtActor{
 
 typedef struct os_tcb {
     UINT16			OSTCBId;
-    UINT32			vertexId;	// Id of the SrDAG vertex on the GRT.
     UINT8           OSTCBState;
     struct os_tcb   *OSTCBNext;
     UINT32			functionId;
     FUNCTION_TYPE	task_func;
+
+    UINT32			srdagId;	// Id of the SrDAG vertex on the GRT.
+    UINT32 			type;
+    UINT32			globalIx;
+    UINT32			pisdfVertex;
+    UINT32			iterIx;
+    UINT32			refIx;
+
     BOOL			isAM;
 	BOOL 		stop;		// Whether the task must be deleted after completion.
 #if USE_AM

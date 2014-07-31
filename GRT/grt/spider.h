@@ -34,49 +34,19 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <stdlib.h>
-#include <platform_types.h>
-#include <platform_queue.h>
-#include <platform_time.h>
+#ifndef PIDER_H_
+#define PIDER_H_
 
-#include <tools/SchedulingError.h>
+#include <scheduling/architecture/Architecture.h>
+#include <graphs/PiSDF/PiSDFGraph.h>
+#include <tools/ExecutionStat.h>
+#include <execution/execution.h>
 
-#include "grt_definitions.h"
-#include "monitor.h"
-#include <graphs/SRDAG/SRDAGVertex.h>
-#include <spider.h>
+void SPIDER_init(Architecture* arch);
+void SPIDER_reset();
+void SPIDER_launch(Architecture* arch, PiSDFGraph* topPisdf);
+void SPIDER_report(Architecture* arch, PiSDFGraph* topPisdf, ExecutionStat* execStat, int iter);
 
-static taskTime taskTimes[MAX_SRDAG_VERTICES*ITER_MAX];
-static UINT32 nbTaskTime;
+int getGlobalIteration();
 
-void Monitor_init(){
-	nbTaskTime = 0;
-}
-
-void Monitor_startTask(SRDAGVertex* vertex){
-	if(nbTaskTime>=MAX_SRDAG_VERTICES*ITER_MAX-1){
-		exitWithCode(1017);
-	}
-	taskTimes[nbTaskTime].srdagIx = vertex->getId();
-	taskTimes[nbTaskTime].globalIx = getGlobalIteration();
-	taskTimes[nbTaskTime].type = vertex->getType();
-	taskTimes[nbTaskTime].pisdfVertex = vertex->getReference();
-	taskTimes[nbTaskTime].iter = vertex->getIterationIndex();
-	taskTimes[nbTaskTime].repet = vertex->getReferenceIndex();
-
-//	printf("start task %d vxId %d\n", nbTaskTime, vertexID);
-	taskTimes[nbTaskTime].start = platform_time_getValue();
-}
-
-void Monitor_endTask(){
-	taskTimes[nbTaskTime].end = platform_time_getValue();
-	nbTaskTime++;
-}
-
-int Monitor_getNB(){
-	return nbTaskTime;
-}
-
-taskTime Monitor_get(int id){
-	return taskTimes[id];
-}
+#endif /* PIDER_H_ */

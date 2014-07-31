@@ -22,7 +22,9 @@
 
 MEMORY
 {
-    SHRAM:           o = 0x0C000000 l = 0x00400000   /* 4MB Multicore shared Memmory */
+	SHRAM_qmss:		 o = 0x0C000000 l = 0x00030000
+	SHRAM_pider:	 o = 0x0C030000 l = 0x003B0000
+    SHRAM:           o = 0x0C3E0000 l = 0x00020000   /* 4MB Multicore shared Memmory */
   
     LOCAL_L1P_SRAM: o = 0x00E00000 l = 0x00008000   /* 32kB LOCAL L1P/SRAM */
     LOCAL_L1D_SRAM: o = 0x00F00000 l = 0x00008000   /* 32kB LOCAL L1D/SRAM */
@@ -45,7 +47,7 @@ MEMORY
  
 SECTIONS
 {
-    .text          >  LOCAL_L2_SRAM
+    .text          >  SHRAM
     .stack         >  LOCAL_L2_SRAM
     .bss           >  LOCAL_L2_SRAM
     .cio           >  LOCAL_L2_SRAM

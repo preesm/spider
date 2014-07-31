@@ -36,12 +36,24 @@
 
 #include <string.h>
 #include <platform_types.h>
+#include <cmath>
+#include <cstdlib>
 
-#include "actors.h"
+#include <grt_definitions.h>
+#include <execution/execution.h>
+#include "mpSched.h"
 
-//#define NVAL	20
-//#define MMAX 	20
-//#define NBITER 	10
+#ifdef DSP
+extern "C"{
+#include <ti/dsplib/src/DSPF_sp_fir_gen/DSPF_sp_fir_gen.h>
+}
+#endif
+
+#define NVAL	10
+#define MMAX 	12
+#define NBITER 	10
+
+extern UINT32 curVertexId;
 
 //static UINT8 nValues[NBITER][MMAX] = {
 //		{2,1},
@@ -57,20 +69,16 @@ void config(UINT8* inputFIFOs[],
 	int i;
 
 //	N = NVAL;
-
-//	printf("Recv N=%d\n", N);
+//	printf("Recv N=%d, vxId %d \n", N, curVertexId);
 
 	UINT8* out_M = outputFIFOs[0];
 
 	// Sending parameter's value.
-	platform_queue_push_UINT32(PlatformCtrlQueue, MSG_PARAM_VALUE);
-	platform_queue_push_UINT32(PlatformCtrlQueue, OSTCBCur->srdagId);
-	platform_queue_push_UINT32(PlatformCtrlQueue, N);
-	platform_queue_push_finalize(PlatformCtrlQueue);
+	pushParam(curVertexId,1,&N);
 
 //	memcpy(out_M, nValues[0], NMAX);
 	for(i=0; i<N; i++)
-		out_M[i] = 8-i;//12;//8-i;
+		out_M[i] = 12;
 }
 
 
@@ -84,8 +92,12 @@ void mFilter(UINT8* inputFIFOs[],
 	UINT8* in_m = inputFIFOs[0];
 	UINT8* out_m = outputFIFOs[0];
 
+	//printf("Exec mFilter\n");
+
 	memcpy(out_m, in_m, N);
 }
+
+
 void src(UINT8* inputFIFOs[],
 		UINT8* outputFIFOs[],
 		UINT32 params[])
@@ -146,8 +158,8 @@ void snk(UINT8* inputFIFOs[],
 			for(j=0; j<NBSAMPLES; j++){
 				hash = hash ^ data[j+i*NBSAMPLES];
 			}
-			if(hash != expectedHash[8]){
-				printf("Bad Hash result: %#X instead of %#X\n", hash, expectedHash[8]);
+			if(hash != expectedHash[12]){
+				printf("Bad Hash result: %#X instead of %#X\n", hash, expectedHash[12]);
 				return;
 			}
 		}
@@ -161,14 +173,12 @@ void setM(UINT8* inputFIFOs[],
 {
 	UINT8* in_m = inputFIFOs[0];
 
-	// Sending parameter's value.
-	platform_queue_push_UINT32(PlatformCtrlQueue, MSG_PARAM_VALUE);
-	platform_queue_push_UINT32(PlatformCtrlQueue, OSTCBCur->srdagId);
-	platform_queue_push_UINT32(PlatformCtrlQueue, in_m[0]);
-	platform_queue_push_finalize(PlatformCtrlQueue);
-
-
 	//printf("Exec setM\n");
+
+	UINT32 M = in_m[0];
+
+	// Sending parameter's value.
+	pushParam(curVertexId,1,&M);
 }
 
 void initSwitch(UINT8* inputFIFOs[],
@@ -186,35 +196,52 @@ void initSwitch(UINT8* inputFIFOs[],
 	}
 }
 
-void switchFct(UINT8* inputFIFOs[],
-		UINT8* outputFIFOs[],
-		UINT32 params[])
-{
-	UINT32 NBSAMPLES = params[0];
-
-	UINT8 select = inputFIFOs[0][0];
-	void *in0 = inputFIFOs[1];
-//	void *in1 = inputFIFOs[2];
-	void *out = outputFIFOs[0];
-
-	if(select == 0){
-		memcpy(out, in0, NBSAMPLES*sizeof(float));
-	}else{
-//		memcpy(out, in1, NBSAMPLES*sizeof(float));
-	}
-}
-
-
 void FIR(UINT8* inputFIFOs[],
 		UINT8* outputFIFOs[],
 		UINT32 params[])
 {
 	UINT32 NBSAMPLES = params[0];
+	
+#define NB_TAPS 512
 
 	float* in = (float*)inputFIFOs[0];
 	float* out = (float*)outputFIFOs[0];
+	
+		int i, j;
+	float taps[NB_TAPS];
+	for(i=0; i<NB_TAPS; i++){
+		taps[i] = 1.0/NB_TAPS;
+	}
 
-	fir(in, out, NBSAMPLES);
+//	printf("out : %#x\n", out);
+#ifndef DSP
+	float last[NB_TAPS];
+
+	int last_id = 0;
+	memset(last,0,NB_TAPS*sizeof(float));
+
+	for(i=0; i<NBSAMPLES; i++){
+		out[i] = 0;
+		last[last_id] = in[i];
+		for(j=0; j<NB_TAPS; j++){
+			out[i] += taps[j]*last[(last_id+j)%NB_TAPS];
+		}
+		last_id = (last_id+1)%NB_TAPS;
+	}
+#else
+	float input[4000+512-1];
+
+	memset(input, 0, (512-1)*sizeof(float));
+	memcpy(input+512-1, in, NBSAMPLES*sizeof(float));
+
+	DSPF_sp_fir_gen(
+			input,
+			taps,
+			out,
+			512,
+			NBSAMPLES
+	);
+#endif	
 }
 
 

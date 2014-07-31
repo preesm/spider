@@ -63,7 +63,6 @@ class ListScheduler {
 		/**
 		 Temporary storage for the vertex executed last on each slave
 		*/
-		SRDAGVertex* lastVertexOfSlave[MAX_SLAVES];
 
 		BOOL checkConstraint(SRDAGVertex* vertex, Architecture* arch, UINT32 slave);
 

@@ -40,8 +40,6 @@
 #include <scheduling/architecture/Architecture.h>
 #include <platform_time.h>
 
-#define MAX(a,b) ((a>b)?a:b)
-
 class BaseSchedule {
 	int nbActiveSlaves;
 	int nbVertices[MAX_SLAVES];

@@ -193,8 +193,6 @@ void ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVe
 	Launcher::launchVertex(vertex, bestSlave);
 }
 
-#define MAX(a,b) ((a>b)?a:b)
-
 UINT32 computeSchedLevel(SRDAGVertex* vertex){
 	int level = 0;
 	if(vertex->getSchedLevel() == -1){

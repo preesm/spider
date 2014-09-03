@@ -159,8 +159,8 @@ void  LrtTaskDeleteCur(){
 }
 
 void  OSTaskDel (){
-	UINT8 taskId   = platform_queue_pop_UINT32(PlatformCtrlQueue);
-	UINT8 vectorId = platform_queue_pop_UINT32(PlatformCtrlQueue);
+	UINT8 taskId   = platform_queue_pop_UINT32();
+	UINT8 vectorId = platform_queue_pop_UINT32();
     OS_TCB       *ptcb = &OSTCBTbl[taskId];
     ptcb->stop = TRUE;
 #if USE_AM

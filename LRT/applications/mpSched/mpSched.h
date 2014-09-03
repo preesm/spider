@@ -63,14 +63,14 @@ void config(UINT8* inputFIFOs[],
 	UINT8* out_M = outputFIFOs[0];
 
 	// Sending parameter's value.
-	platform_queue_push_UINT32(PlatformCtrlQueue, MSG_PARAM_VALUE);
-	platform_queue_push_UINT32(PlatformCtrlQueue, OSTCBCur->srdagId);
-	platform_queue_push_UINT32(PlatformCtrlQueue, N);
-	platform_queue_push_finalize(PlatformCtrlQueue);
+	platform_queue_push_UINT32(MSG_PARAM_VALUE);
+	platform_queue_push_UINT32(OSTCBCur->srdagId);
+	platform_queue_push_UINT32(N);
+	platform_queue_push_finalize();
 
 //	memcpy(out_M, nValues[0], NMAX);
 	for(i=0; i<N; i++)
-		out_M[i] = 8-i;//12;//8-i;
+		out_M[i] = 12;//8-i;
 }
 
 
@@ -146,7 +146,7 @@ void snk(UINT8* inputFIFOs[],
 			for(j=0; j<NBSAMPLES; j++){
 				hash = hash ^ data[j+i*NBSAMPLES];
 			}
-			if(hash != expectedHash[8]){
+			if(hash != expectedHash[12]){
 				printf("Bad Hash result: %#X instead of %#X\n", hash, expectedHash[8]);
 				return;
 			}
@@ -162,10 +162,10 @@ void setM(UINT8* inputFIFOs[],
 	UINT8* in_m = inputFIFOs[0];
 
 	// Sending parameter's value.
-	platform_queue_push_UINT32(PlatformCtrlQueue, MSG_PARAM_VALUE);
-	platform_queue_push_UINT32(PlatformCtrlQueue, OSTCBCur->srdagId);
-	platform_queue_push_UINT32(PlatformCtrlQueue, in_m[0]);
-	platform_queue_push_finalize(PlatformCtrlQueue);
+	platform_queue_push_UINT32(MSG_PARAM_VALUE);
+	platform_queue_push_UINT32(OSTCBCur->srdagId);
+	platform_queue_push_UINT32(in_m[0]);
+	platform_queue_push_finalize();
 
 
 	//printf("Exec setM\n");

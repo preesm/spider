@@ -56,40 +56,40 @@ void wait_ext_msg() {
 	OS_TCB *new_tcb;
 
 	/* Popping the first incoming word i.e. the message type. */
-	if (platform_queue_NBPop_UINT32(PlatformCtrlQueue, &msg_type)) {
+	if (platform_queue_NBPop_UINT32(&msg_type)) {
 		switch (msg_type) {
 		case MSG_CREATE_TASK:
 			// TODO: Reuse a previous TCB...
 			new_tcb = LrtTaskCreate();
 
 			// Popping the task function id.
-			new_tcb->functionId = platform_queue_pop_UINT32(PlatformCtrlQueue);
+			new_tcb->functionId = platform_queue_pop_UINT32();
 
 			// Popping the id of the vx in the current SrDAG on the GRT.
-			new_tcb->srdagId = platform_queue_pop_UINT32(PlatformCtrlQueue);
-			new_tcb->type =  platform_queue_pop_UINT32(PlatformCtrlQueue);
-			new_tcb->globalIx = platform_queue_pop_UINT32(PlatformCtrlQueue);
-			new_tcb->pisdfVertex = platform_queue_pop_UINT32(PlatformCtrlQueue);
-			new_tcb->iterIx = platform_queue_pop_UINT32(PlatformCtrlQueue);
-			new_tcb->refIx = platform_queue_pop_UINT32(PlatformCtrlQueue);
+			new_tcb->srdagId = platform_queue_pop_UINT32();
+			new_tcb->type =  platform_queue_pop_UINT32();
+			new_tcb->globalIx = platform_queue_pop_UINT32();
+			new_tcb->pisdfVertex = platform_queue_pop_UINT32();
+			new_tcb->iterIx = platform_queue_pop_UINT32();
+			new_tcb->refIx = platform_queue_pop_UINT32();
 
 			// Popping whether the task is stopped after completion.
 	//		new_tcb->stop = RTQueuePop_UINT32(RTCtrlQueue);
 			new_tcb->stop = 1;
 
 			// Popping the AM flag.
-//			new_tcb->isAM = platform_queue_pop_UINT32(PlatformCtrlQueue);
+//			new_tcb->isAM = platform_queue_pop_UINT32();
 
 			if(new_tcb->isAM){
 #if USE_AM
 				// Creating an actor machine.
 				// Popping the actor machine's info.
-				new_tcb->am.nbVertices 	= platform_queue_pop_UINT32(PlatformCtrlQueue);
-				new_tcb->am.nbConds 	= platform_queue_pop_UINT32(PlatformCtrlQueue);
-				new_tcb->am.nbActions	= platform_queue_pop_UINT32(PlatformCtrlQueue);
+				new_tcb->am.nbVertices 	= platform_queue_pop_UINT32();
+				new_tcb->am.nbConds 	= platform_queue_pop_UINT32();
+				new_tcb->am.nbActions	= platform_queue_pop_UINT32();
 
 				// Popping the starting vertex of the AM.
-				new_tcb->am.currVertexId = platform_queue_pop_UINT32(PlatformCtrlQueue);
+				new_tcb->am.currVertexId = platform_queue_pop_UINT32();
 				new_tcb->task_func = amTaskStart; // An AM task's function is predefined.
 				new_tcb->stop = FALSE;
 				// Creating the AM.
@@ -99,9 +99,9 @@ void wait_ext_msg() {
 			else
 			{
 				// Creating a single actor.
-				new_tcb->actor.nbInputFifos = platform_queue_pop_UINT32(PlatformCtrlQueue);
-				new_tcb->actor.nbOutputFifos = platform_queue_pop_UINT32(PlatformCtrlQueue);
-				new_tcb->actor.nbParams = platform_queue_pop_UINT32(PlatformCtrlQueue);
+				new_tcb->actor.nbInputFifos = platform_queue_pop_UINT32();
+				new_tcb->actor.nbOutputFifos = platform_queue_pop_UINT32();
+				new_tcb->actor.nbParams = platform_queue_pop_UINT32();
 
 				if(new_tcb->actor.nbInputFifos > MAX_NB_FIFO || new_tcb->actor.nbOutputFifos > MAX_NB_FIFO){
 					printf("Too many FIFOs (increase MAX_NB_FIFO > %d or %d)\n",new_tcb->actor.nbInputFifos, new_tcb->actor.nbOutputFifos);
@@ -111,9 +111,9 @@ void wait_ext_msg() {
 					printf("Too many Parameters (increase MAX_NB_PARAMETERS > %d)\n",new_tcb->actor.nbParams);
 				}
 
-				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor.inputFifo, new_tcb->actor.nbInputFifos*sizeof(FIFO));
-				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor.outputFifo, new_tcb->actor.nbOutputFifos*sizeof(FIFO));
-				platform_queue_pop(PlatformCtrlQueue, new_tcb->actor.params, new_tcb->actor.nbParams*sizeof(UINT32));
+				platform_queue_pop(new_tcb->actor.inputFifo, new_tcb->actor.nbInputFifos*sizeof(FIFO));
+				platform_queue_pop(new_tcb->actor.outputFifo, new_tcb->actor.nbOutputFifos*sizeof(FIFO));
+				platform_queue_pop(new_tcb->actor.params, new_tcb->actor.nbParams*sizeof(UINT32));
 
 				new_tcb->task_func = functions_tbl[new_tcb->functionId];
 				new_tcb->stop = TRUE;

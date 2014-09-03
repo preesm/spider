@@ -39,24 +39,12 @@
 
 #include <platform_types.h>
 
-typedef enum{
-	PlatformCtrlQueue,
-	PlatformInfoQueue,
-	PlatformJobQueue,
-	PlatformNbQueueTypes
-} PlatformQueueType;
+UINT32 platform_queue_push(void* data, int size);
+UINT32 platform_queue_push_UINT32(UINT32 value);
+UINT32 platform_queue_pop(void* data, int size);
+UINT32 platform_queue_pop_UINT32();
+BOOL   platform_queue_NBPop_UINT32(UINT32* data);
 
-typedef enum{
-	PlatformInputQueue,
-	PlatformOutputQueue
-} PlatformQueueDir;
-
-UINT32 platform_queue_push(PlatformQueueType queueType, void* data, int size);
-UINT32 platform_queue_push_UINT32(PlatformQueueType queueType, UINT32 value);
-UINT32 platform_queue_pop(PlatformQueueType queueType, void* data, int size);
-UINT32 platform_queue_pop_UINT32(PlatformQueueType queueType);
-BOOL   platform_queue_NBPop_UINT32(PlatformQueueType queueType, UINT32* data);
-
-void platform_queue_push_finalize(PlatformQueueType queueType);
+void platform_queue_push_finalize();
 
 #endif /* HWQUEUES_H_ */

@@ -83,10 +83,10 @@ void Monitor_endTask(){
 }
 
 void Monitor_sendData(){
-	platform_queue_push_UINT32(PlatformCtrlQueue, MSG_EXEC_TIMES);
-	platform_queue_push_UINT32(PlatformCtrlQueue, nbTaskTime);
-	platform_queue_push(PlatformCtrlQueue, taskTimes, nbTaskTime*sizeof(taskTime));
-	platform_queue_push_finalize(PlatformCtrlQueue);
+	platform_queue_push_UINT32(MSG_EXEC_TIMES);
+	platform_queue_push_UINT32(nbTaskTime);
+	platform_queue_push(taskTimes, nbTaskTime*sizeof(taskTime));
+	platform_queue_push_finalize();
 //	printf("nbTaskTime %d \n", nbTaskTime);
 	nbTaskTime = 0;
 //	exit(0);

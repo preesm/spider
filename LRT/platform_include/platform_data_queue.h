@@ -43,4 +43,7 @@ void platform_flushFIFO(UINT32 id);
 void platform_writeFifo(UINT32 id, UINT32 address, UINT32 size, UINT8* buffer);
 void platform_readFifo(UINT32 id, UINT32 address, UINT32 size, UINT8* buffer);
 
+void* platform_getDataMemAdd();
+int platform_getDataMemSize();
+
 #endif /* HWQUEUES_H_ */

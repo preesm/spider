@@ -49,8 +49,6 @@
 #include <platform_gpio.h>
 #include <platform_time.h>
 
-#include <memoryAlloc.h>
-
 #include "lrt_core.h"
 
 /* GLOBAL VARIABLES */
@@ -110,10 +108,10 @@ void LRTStartCurrTask() {
 				OSTCBCur->actor.inputFifo[i].add,
 				OSTCBCur->actor.inputFifo[i].size,
 				0);
-		inputFIFOs[i] = (UINT8*)(SHARED_MEM_BASE + OSTCBCur->actor.inputFifo[i].add);
+		inputFIFOs[i] = (UINT8*)platform_getDataMemAdd() + OSTCBCur->actor.inputFifo[i].add;
 	}
 	for(i=0;i<OSTCBCur->actor.nbOutputFifos; i++){
-		outputFIFOs[i] = (UINT8*)(SHARED_MEM_BASE + OSTCBCur->actor.outputFifo[i].add);
+		outputFIFOs[i] = (UINT8*)platform_getDataMemAdd() + OSTCBCur->actor.outputFifo[i].add;
 	}
 	Monitor_startTask();
 	OSTCBCur->task_func(inputFIFOs,

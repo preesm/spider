@@ -51,4 +51,7 @@ typedef platform_UINT64	UINT64;
 
 typedef platform_BOOL		BOOL;
 
+#define MAX(a,b) (a>b?a:b)
+#define MIN(a,b) (a<b?a:b)
+
 #endif /* platform_TYPES_H_ */

@@ -40,7 +40,6 @@
 #include <platform.h>
 #include "lrt_taskMngr.h"
 #include "lrt_debug.h"
-#include "lrt_amMngr.h"
 #include "lrt_cfg.h"
 
 

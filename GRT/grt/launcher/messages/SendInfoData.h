@@ -45,8 +45,8 @@ namespace SendInfoData {
 };
 
 void inline SendInfoData::send(int LRTID){
-	platform_QPushUINT32(LRTID, platformCtrlQ, MSG_SEND_INFO_DATA);
-	platform_QPush_finalize(LRTID, platformCtrlQ);
+	platform_QPushUINT32(LRTID, MSG_SEND_INFO_DATA);
+	platform_QPush_finalize(LRTID);
 }
 
 #endif /* CLEARFIFOMSG_H_ */

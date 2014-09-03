@@ -51,11 +51,11 @@ typedef enum{
 	platformQOut
 } platformQDir;
 
-UINT32 platform_QPush(UINT8 slaveId, platformQType queueType, void* data, int size);
-UINT32 platform_QPushUINT32(UINT8 slaveId, platformQType queueType, UINT32 data);
-void platform_QPush_finalize(UINT8 slaveId, platformQType queueType);
-UINT32 platform_QPop(UINT8 slaveId, platformQType queueType, void* data, int size);
-UINT32 platform_QPopUINT32(UINT8 slaveId, platformQType queueType);
-UINT32 platform_QNonBlockingPop(UINT8 slaveId, platformQType queueType, void* data, int size);
+UINT32 platform_QPush(UINT8 slaveId, void* data, int size);
+UINT32 platform_QPushUINT32(UINT8 slaveId, UINT32 data);
+void platform_QPush_finalize(UINT8 slaveId);
+UINT32 platform_QPop(UINT8 slaveId, void* data, int size);
+UINT32 platform_QPopUINT32(UINT8 slaveId);
+UINT32 platform_QNonBlockingPop(UINT8 slaveId, void* data, int size);
 
 #endif /* platform_QUEUES_H_ */

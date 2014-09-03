@@ -400,10 +400,10 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 
 		if(slave !=0){
 			SendInfoData::send(slave);
-			UINT32 msgType = platform_QPopUINT32(slave, platformCtrlQ);
+			UINT32 msgType = platform_QPopUINT32(slave);
 			if(msgType != MSG_EXEC_TIMES)
 				exitWithCode(1068);
-			nbTasks = platform_QPopUINT32(slave, platformCtrlQ);
+			nbTasks = platform_QPopUINT32(slave);
 		}else{
 			nbTasks = Monitor_getNB();
 		}
@@ -413,7 +413,7 @@ void Launcher::createRealTimeGantt(Architecture *arch, SRDAGGraph *dag, const ch
 			UINT32 execTime;
 
 			if(slave !=0){
-				platform_QPop(slave, platformCtrlQ, &task, sizeof(taskTime));
+				platform_QPop(slave, &task, sizeof(taskTime));
 			}else{
 				task = Monitor_get(j);
 			}
@@ -523,13 +523,13 @@ void Launcher::resolveParameters(Architecture *arch, SRDAGGraph* topDag){
 			}
 		}else{
 			UINT32 msgType;
-			if(platform_QNonBlockingPop(slave, platformCtrlQ, &msgType, sizeof(UINT32)) == sizeof(UINT32)){
+			if(platform_QNonBlockingPop(slave, &msgType, sizeof(UINT32)) == sizeof(UINT32)){
 				if(msgType != MSG_PARAM_VALUE) exitWithCode(1068);
-				int vxId = platform_QPopUINT32(slave, platformCtrlQ);
+				int vxId = platform_QPopUINT32(slave);
 				SRDAGVertex* cfgVertex = (SRDAGVertex*)(topDag->getVertexFromIx(vxId));
 				PiSDFConfigVertex* refConfigVx = (PiSDFConfigVertex*)(cfgVertex->getReference());
 				for(UINT32 j = 0; j < refConfigVx->getNbRelatedParams(); j++){
-					cfgVertex->setRelatedParamValue(j,platform_QPopUINT32(slave, platformCtrlQ));
+					cfgVertex->setRelatedParamValue(j,platform_QPopUINT32(slave));
 				}
 				nbParamToRecv -= refConfigVx->getNbRelatedParams();
 			}

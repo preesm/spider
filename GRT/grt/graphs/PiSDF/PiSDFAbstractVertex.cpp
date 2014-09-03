@@ -104,6 +104,7 @@ void PiSDFAbstractVertex::setOutputEdge(PiSDFEdge* edge, UINT32 id){
 UINT32 PiSDFAbstractVertex::getInputEdgeId(PiSDFEdge* edge){
 	return inputEdges.getIdOf(edge);
 }
+
 UINT32 PiSDFAbstractVertex::getOutputEdgeId(PiSDFEdge* edge){
 	return outputEdges.getIdOf(edge);
 }

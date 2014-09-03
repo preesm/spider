@@ -39,7 +39,6 @@
 #include <tools/Queue.h>
 #include <grt_definitions.h>
 #include <platform_data_queue.h>
-#include <memoryAlloc.h>
 
 #include "baseActors.h"
 
@@ -110,11 +109,11 @@ void execute(){
 					edge->getFifoAddress(),
 					edge->getTokenRate(),
 					0);
-			inputFIFOs[i] = (UINT8*)(SHARED_MEM_BASE + edge->getFifoAddress());
+			inputFIFOs[i] = (UINT8*)((UINT8*)platform_getDataMemAdd() + edge->getFifoAddress());
 		}
 
 		for(int i=0;i<vertex->getNbOutputEdge(); i++){
-			outputFIFOs[i] = (UINT8*)(SHARED_MEM_BASE + vertex->getOutputEdge(i)->getFifoAddress());
+			outputFIFOs[i] = (UINT8*)((UINT8*)platform_getDataMemAdd() + vertex->getOutputEdge(i)->getFifoAddress());
 		}
 
 		switch(vertex->getType()){

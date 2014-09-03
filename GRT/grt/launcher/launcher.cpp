@@ -48,11 +48,11 @@
 #include <grt_definitions.h>
 #include <execution/monitor.h>
 
-#include <memoryAlloc.h>
+#include <platform_data_queue.h>
 
 #define PRINT_ACTOR_IN_DOT_FILE		0
 
-static Memory memory = Memory(0x0, SHARED_MEM_LENGHT);
+static Memory memory = Memory(0x0, 0);
 #define END_MEM_SIZE 10000
 
 static UINT32 nbFifo;
@@ -251,7 +251,7 @@ void Launcher::launchVertex(SRDAGVertex* vertex, UINT32 slave){
 void Launcher::init(){
 	nbStepsMapping = nbStepsTaskOrdering = nbStepsGraph = 0;
 	nbFifo = nbParamToRecv = 0;
-	memory = Memory(0x0, SHARED_MEM_LENGHT);
+	memory = Memory(0x0, platform_getDataMemSize());
 
 	endMem = memory.alloc(END_MEM_SIZE);
 	nbFifo = 0;
@@ -259,7 +259,7 @@ void Launcher::init(){
 
 void Launcher::reset(){
 	nbParamToRecv = 0;
-	memory = Memory(0x0, SHARED_MEM_LENGHT);
+	memory = Memory(0x0, platform_getDataMemSize());
 	endMem = memory.alloc(END_MEM_SIZE);
 }
 

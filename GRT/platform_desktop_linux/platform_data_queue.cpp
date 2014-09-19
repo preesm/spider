@@ -54,6 +54,14 @@
 
 UINT8* shMem_sync,*shMem_data;
 
+void* platform_getDataMemAdd(){
+	return shMem_data;
+}
+
+int platform_getDataMemSize(){
+	return SHARED_MEM_LENGHT;
+}
+
 void platform_shMemInit() {
     int shmid;
     key_t key = SHARED_MEM_KEY;

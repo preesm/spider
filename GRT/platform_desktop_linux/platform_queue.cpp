@@ -43,7 +43,7 @@
 #include <platform_queue.h>
 #include <grt_definitions.h>
 
-static int platform_QLRT[NB_MAX_CTRLQ][platformNbQTypes][2];
+static int platform_QLRT[NB_MAX_CTRLQ][2];
 
 static const char* typeName[platformNbQTypes] = {
 		"CTRL",
@@ -59,31 +59,27 @@ void platform_queue_Init(UINT8 nbSlaves){
 	for(i=1; i<nbSlaves; i++){
 		char tempStr[50];
 
-		for(j=0; j<platformNbQTypes; j++){
-			sprintf(tempStr, "%s%s_%dtoGrt",BASE_PATH,typeName[j],i);
-			platform_QLRT[i][j][platformQIn] =  open(tempStr, O_RDWR);
-			if (platform_QLRT[i][j][platformQIn] == -1) {printf("Failed to open %s\n",tempStr); abort();}
+		sprintf(tempStr, "%s%dtoGrt",BASE_PATH,i);
+		platform_QLRT[i][platformQIn] =  open(tempStr, O_RDWR);
+		if (platform_QLRT[i][platformQIn] == -1) {printf("Failed to open %s\n",tempStr); abort();}
 
-			sprintf(tempStr, "%s%s_Grtto%d",BASE_PATH,typeName[j],i);
-			platform_QLRT[i][j][platformQOut] = open(tempStr, O_RDWR);
-			if (platform_QLRT[i][j][platformQOut] == -1) {printf("Failed to open %s\n",tempStr); abort();}
+		sprintf(tempStr, "%sGrtto%d",BASE_PATH,i);
+		platform_QLRT[i][platformQOut] = open(tempStr, O_RDWR);
+		if (platform_QLRT[i][platformQOut] == -1) {printf("Failed to open %s\n",tempStr); abort();}
 
-			flags = fcntl(platform_QLRT[i][j][platformQIn], F_GETFL, 0);
-			fcntl(platform_QLRT[i][j][platformQIn], F_SETFL, flags | O_NONBLOCK);
-		}
+		flags = fcntl(platform_QLRT[i][platformQIn], F_GETFL, 0);
+		fcntl(platform_QLRT[i][platformQIn], F_SETFL, flags | O_NONBLOCK);
 	}
 
 	/* Reset all queues */
 	UINT32 c;
 	for(i=1; i<nbSlaves; i++){
-		for(j=0; j<platformNbQTypes; j++){
-			while(platform_QNonBlockingPop(i, (platformQType)j, &c, sizeof(UINT32))==sizeof(UINT32));
-		}
+		while(platform_QNonBlockingPop(i, &c, sizeof(UINT32))==sizeof(UINT32));
 	}
 }
 
-UINT32 platform_QPush(UINT8 slaveId, platformQType queueType, void* data, int size){
-	int file = platform_QLRT[slaveId][queueType][platformQOut];
+UINT32 platform_QPush(UINT8 slaveId, void* data, int size){
+	int file = platform_QLRT[slaveId][platformQOut];
 
 	int i=0;
 	while(i < size){
@@ -93,16 +89,16 @@ UINT32 platform_QPush(UINT8 slaveId, platformQType queueType, void* data, int si
 	return i;
 }
 
-UINT32 platform_QPushUINT32(UINT8 slaveId, platformQType queueType, UINT32 data){
-	return platform_QPush(slaveId, queueType, &data, sizeof(unsigned int));
+UINT32 platform_QPushUINT32(UINT8 slaveId, UINT32 data){
+	return platform_QPush(slaveId, &data, sizeof(unsigned int));
 }
 
-void platform_QPush_finalize(UINT8 slaveId, platformQType queueType){
+void platform_QPush_finalize(UINT8 slaveId){
 
 }
 
-UINT32 platform_QPop(UINT8 slaveId, platformQType queueType, void* data, int size){
-	int file = platform_QLRT[slaveId][queueType][platformQIn];
+UINT32 platform_QPop(UINT8 slaveId, void* data, int size){
+	int file = platform_QLRT[slaveId][platformQIn];
 
 	int i=0;
 	while(i < size){
@@ -112,14 +108,14 @@ UINT32 platform_QPop(UINT8 slaveId, platformQType queueType, void* data, int siz
 	return i;
 }
 
-UINT32 platform_QPopUINT32(UINT8 slaveId, platformQType queueType){
+UINT32 platform_QPopUINT32(UINT8 slaveId){
 	UINT32 data;
-	platform_QPop(slaveId, queueType, &data, sizeof(UINT32));
+	platform_QPop(slaveId, &data, sizeof(UINT32));
 	return data;
 }
 
-UINT32 platform_QNonBlockingPop(UINT8 slaveId, platformQType queueType, void* data, int size){
-	int file = platform_QLRT[slaveId][queueType][platformQIn];
+UINT32 platform_QNonBlockingPop(UINT8 slaveId, void* data, int size){
+	int file = platform_QLRT[slaveId][platformQIn];
 
 	return read(file, (char*)data, size);
 }

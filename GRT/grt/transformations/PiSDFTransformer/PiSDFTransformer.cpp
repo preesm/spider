@@ -90,6 +90,7 @@ static inline void replaceWithExplode(SRDAGGraph *topDag, PiSDFEdge *edge, SRDAG
 
 	switch(origin_vertex->getType()){
 	case Normal:
+	case Broadcast:
 		sourceVertex = origin_vertex;
 		sourcePortId = origin_vertex->getReference()->getOutputEdgeId(edge);
 		*vertex = topDag->createVertexEx(0, 0);
@@ -321,6 +322,7 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 			/* Remove unused RB */
 			if(edgesPerSinkVertices[i].nb == 1
 					&& sinkRepetitions[i]->getType() == RoundBuffer
+					&& sinkRepetitions[i]->getNbOutputEdge() == 1
 					&& sinkRepetitions[i]->getOutputEdge(0)->getTokenRate() == sinkConsumption){
 				SRDAGVertex* sinkVertex;
 				SRDAGVertex* origin_vertex = sinkRepetitions[i];
@@ -761,7 +763,7 @@ static void PiSDFTransformer::singleRateTransformation(PiSDFGraph *currentPiSDF,
 		PiSDFVertex* vertex = currentPiSDF->getPiSDFVertex(i);
 
 		// Creating the new vertices.
-		for(UINT32 j = 0; j < brv[vertex->getId()]; j++){
+		for(int j = 0; j < brv[vertex->getId()]; j++){
 			switch(vertex->getSubType()){
 			case SubType_Normal:
 				topDag->createVertexNo(j, refIndex, vertex);
@@ -769,8 +771,9 @@ static void PiSDFTransformer::singleRateTransformation(PiSDFGraph *currentPiSDF,
 			case SubType_Broadcast:
 				topDag->createVertexBr(j, refIndex, vertex);
 				break;
+			case SubType_RoundBuffer: // Todo handle RBs
+				topDag->createVertexRB(j, refIndex, vertex);
 			}
-			// TODO handle pisdf broadcast
 		}
 	}
 

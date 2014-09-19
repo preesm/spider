@@ -44,7 +44,8 @@ class PiSDFGraph;
 
 typedef enum{
 	SubType_Normal,
-	SubType_Broadcast
+	SubType_Broadcast,
+	SubType_RoundBuffer
 } PiSDF_subType;
 
 class PiSDFVertex: public PiSDFAbstractVertex {

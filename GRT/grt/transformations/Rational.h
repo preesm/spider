@@ -12,8 +12,8 @@
 
 class Rational {
 private:
-	int nominator;
-	int denominator;
+	long long nominator;
+	long long denominator;
 
 	static inline int compute_gcd(int a, int b){
 		int t;
@@ -64,10 +64,10 @@ public:
 
 	inline Rational operator-(Rational b){
 		Rational res;
-		int gcd = compute_gcd(this->denominator, b.denominator);
-		res.denominator = gcd;
-		res.nominator = this->denominator/gcd*this->nominator
-				- b.denominator/gcd*b.nominator;
+		int lcm = compute_lcm(this->denominator, b.denominator);
+		res.denominator = lcm;
+		res.nominator = this->nominator*lcm/this->denominator
+				- b.nominator*lcm/b.denominator;
 		res.reduce();
 		return res;
 	}

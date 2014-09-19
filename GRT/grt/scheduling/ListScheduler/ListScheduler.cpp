@@ -154,7 +154,7 @@ void ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVe
 	}
 
 
-	UINT32 bestSlave;
+	UINT32 bestSlave = -1;
 	UINT32 bestStartTime = 0;
 	UINT32 bestWaitTime = 0;
 	UINT32 bestEndTime = (UINT32)-1; // Very high value.
@@ -187,6 +187,10 @@ void ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVe
 		}
 	}
 	
+	if(bestSlave){
+		printf("No slave found to execute one actor\n");
+		abort();
+	}
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
 	schedule->addSchedule(bestSlave, vertex, bestStartTime, bestEndTime);
 

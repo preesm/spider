@@ -162,11 +162,11 @@ void stereo_top(
 
 	PiSDFVertex *vxRGB2Gray_L = (PiSDFVertex *)graph->addVertex("RGB2Gray_L", normal_vertex);
 	vxRGB2Gray_L->addParameter(paramSize);
-	vxRGB2Gray_L->setFunction_index(2);
+	vxRGB2Gray_L->setFunction_index(1);
 
 	PiSDFVertex *vxRGB2Gray_R = (PiSDFVertex *)graph->addVertex("RGB2Gray_L", normal_vertex);
 	vxRGB2Gray_R->addParameter(paramSize);
-	vxRGB2Gray_R->setFunction_index(2);
+	vxRGB2Gray_R->setFunction_index(1);
 
 	PiSDFVertex *vxBr1	= (PiSDFVertex *)graph->addVertex("BroadCast1", normal_vertex);
 	vxBr1->setSubType(SubType_Broadcast);
@@ -181,12 +181,12 @@ void stereo_top(
 	PiSDFVertex *vxCensus_L = (PiSDFVertex *)graph->addVertex("Census_L", normal_vertex);
 	vxCensus_L->addParameter(paramWidth);
 	vxCensus_L->addParameter(paramHeight);
-	vxCensus_L->setFunction_index(3);
+	vxCensus_L->setFunction_index(2);
 
 	PiSDFVertex *vxCensus_R = (PiSDFVertex *)graph->addVertex("Census_R", normal_vertex);
 	vxCensus_R->addParameter(paramWidth);
 	vxCensus_R->addParameter(paramHeight);
-	vxCensus_R->setFunction_index(3);
+	vxCensus_R->setFunction_index(2);
 
 	PiSDFVertex *vxCost_Parallel_Work = (PiSDFVertex *)graph->addVertex("Cost_Parallel_Work", normal_vertex);
 	vxCost_Parallel_Work->addParameter(paramTruncValue);
@@ -202,18 +202,19 @@ void stereo_top(
 	vxSplit->addParameter(paramNbSlice);
 	vxSplit->addParameter(paramWidth);
 	vxSplit->addParameter(paramHeight);
-	vxSplit->setFunction_index(4);
+	vxSplit->setFunction_index(3);
 
 	PiSDFVertex *vxMedian_Filter = (PiSDFVertex *)graph->addVertex("Median_Filter", normal_vertex);
 	vxMedian_Filter->addParameter(paramHeight);
 	vxMedian_Filter->addParameter(paramWidth);
+	vxMedian_Filter->addParameter(paramNbSlice);
 	vxMedian_Filter->addParameter(paramOverlap);
-	vxMedian_Filter->setFunction_index(5);
+	vxMedian_Filter->setFunction_index(4);
 
 	PiSDFVertex *vxWritePPM = (PiSDFVertex *)graph->addVertex("WritePPM", normal_vertex);
 	vxWritePPM->addParameter(paramWidth);
 	vxWritePPM->addParameter(paramHeight);
-	vxWritePPM->setFunction_index(6);
+	vxWritePPM->setFunction_index(5);
 
 	// Edges.
 	graph->addEdge(vxRead_PPM0, 0, "Height*Width*3", vxBr0, 0, "3*Size", "0");
@@ -386,36 +387,36 @@ void stereo_costParallel(
 
 	PiSDFVertex *vxOffsetGen = (PiSDFVertex *)graph->addVertex("OffsetGen", normal_vertex);
 	vxOffsetGen->addParameter(paramNbIter);
-	vxOffsetGen->setFunction_index(7);
+	vxOffsetGen->setFunction_index(6);
 
 	PiSDFVertex *vxDispGen = (PiSDFVertex *)graph->addVertex("DispGen", normal_vertex);
 	vxDispGen->addParameter(paramMinDisp);
 	vxDispGen->addParameter(paramMaxDisp);
-	vxDispGen->setFunction_index(8);
+	vxDispGen->setFunction_index(7);
 
 	PiSDFVertex *vxCompVertWeight = (PiSDFVertex *)graph->addVertex("CompVertWeight", normal_vertex);
 	vxCompVertWeight->addParameter(paramVert);
 	vxCompVertWeight->addParameter(paramWidth);
 	vxCompVertWeight->addParameter(paramHeight);
-	vxOffsetGen->setFunction_index(9);
+	vxCompVertWeight->setFunction_index(8);
 
 	PiSDFVertex *vxCompHorWeight = (PiSDFVertex *)graph->addVertex("CompHorWeight", normal_vertex);
 	vxCompHorWeight->addParameter(paramHor);
 	vxCompHorWeight->addParameter(paramWidth);
 	vxCompHorWeight->addParameter(paramHeight);
-	vxCompHorWeight->setFunction_index(9);
+	vxCompHorWeight->setFunction_index(8);
 
 	PiSDFVertex *vxCostConstr = (PiSDFVertex *)graph->addVertex("CostConst", normal_vertex);
 	vxCostConstr->addParameter(paramTruncValue);
 	vxCostConstr->addParameter(paramWidth);
 	vxCostConstr->addParameter(paramHeight);
-	vxCostConstr->setFunction_index(10);
+	vxCostConstr->setFunction_index(9);
 
 	PiSDFVertex *vxAggregateCost = (PiSDFVertex *)graph->addVertex("AggregateCost", normal_vertex);
 	vxAggregateCost->addParameter(paramWidth);
 	vxAggregateCost->addParameter(paramHeight);
 	vxAggregateCost->addParameter(paramNbIter);
-	vxAggregateCost->setFunction_index(11);
+	vxAggregateCost->setFunction_index(10);
 
 	PiSDFVertex *vxDispSelect = (PiSDFVertex *)graph->addVertex("DispSelect", normal_vertex);
 	vxDispSelect->addParameter(paramScale);
@@ -423,7 +424,7 @@ void stereo_costParallel(
 	vxDispSelect->addParameter(paramHeight);
 	vxDispSelect->addParameter(paramMinDisp);
 	vxDispSelect->addParameter(paramNbDisp);
-	vxDispSelect->setFunction_index(12);
+	vxDispSelect->setFunction_index(11);
 
 	/* Edges */
 	graph->addEdge(ifRgbL, 0, "Size2*3", vxBr1, 0, "Size2*3", "0");
@@ -444,22 +445,22 @@ void stereo_costParallel(
 	graph->addEdge(vxBr1, 0, "Width2*Height2*3", vxCompVertWeight, 1, "Width2*Height2*3", "0");
 	graph->addEdge(vxBr1, 1, "Width2*Height2*3", vxCompHorWeight, 1, "Width2*Height2*3", "0");
 
-	graph->addEdge(vxCompVertWeight, 0, "Width2*Height2*3", vxRb2, 0, "Size2*3*NbIter2", "0");
-	graph->addEdge(vxCompHorWeight, 0, "Width2*Height2*3", vxRb3, 0, "Size2*3*NbIter2", "0");
+	graph->addEdge(vxCompVertWeight, 0, "Width2*Height2*3 *4", vxRb2, 0, "Size2*3*NbIter2 *4", "0");
+	graph->addEdge(vxCompHorWeight, 0, "Width2*Height2*3 *4", vxRb3, 0, "Size2*3*NbIter2 *4", "0");
 
-	graph->addEdge(vxRb2, 0, "Size2*3*NbIter2*NbDisp2", vxAggregateCost, 1, "Height2*Width2*3*NbIter2", "0");
+	graph->addEdge(vxRb2, 0, "Size2*3*NbIter2*NbDisp2 *4", vxAggregateCost, 1, "Height2*Width2*3*NbIter2 *4", "0");
 
-	graph->addEdge(vxRb3, 0, "Size2*3*NbIter2*NbDisp2", vxAggregateCost, 2, "Height2*Width2*3*NbIter2", "0");
+	graph->addEdge(vxRb3, 0, "Size2*3*NbIter2*NbDisp2 *4", vxAggregateCost, 2, "Height2*Width2*3*NbIter2 *4", "0");
 
 	graph->addEdge(vxBr4, 0, "NbDisp2", vxCostConstr, 4, "1", "0");
 	graph->addEdge(vxBr4, 1, "NbDisp2", vxDispSelect, 1, "1", "0");
 
-	graph->addEdge(vxCostConstr, 0, "Height2*Width2", vxAggregateCost, 3, "Height2*Width2", "0");
+	graph->addEdge(vxCostConstr, 0, "Height2*Width2 *4", vxAggregateCost, 3, "Height2*Width2 *4", "0");
 
-	graph->addEdge(vxAggregateCost, 0, "Height2*Width2", vxDispSelect, 0, "Height2*Width2", "0");
+	graph->addEdge(vxAggregateCost, 0, "Height2*Width2 *4", vxDispSelect, 0, "Height2*Width2 *4", "0");
 
 	graph->addEdge(vxDispSelect, 0, "Height2*Width2", vxBr5, 0, "Size2", "0");
-	graph->addEdge(vxDispSelect, 1, "Height2*Width2+1", vxDispSelect, 3, "Height2*Width2+1", "Height2*Width2+1");
+	graph->addEdge(vxDispSelect, 1, "(Height2*Width2+1) *4", vxDispSelect, 3, "(Height2*Width2+1) *4", "(Height2*Width2+1) *4");
 
 	graph->addEdge(vxBr5, 0, "Size2", ifRawD, 0, "Size2", "0");
 	graph->addEdge(vxBr5, 1, "Size2", vxDispSelect, 2, "Size2", "Size2");

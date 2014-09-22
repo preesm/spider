@@ -51,10 +51,10 @@
 
 #else
 
-#define EXEC							0
+#define EXEC							1
 #define PRINT_GRAPH						1
 #define	STAT							1
-#define PRINT_REAL_GANTT				0
+#define PRINT_REAL_GANTT				1
 #define DEBUG							1
 #define SEE_PARAM_VAL					1
 
@@ -93,7 +93,7 @@
 #endif
 
 #define MEMCPY_SPEED 			1.8
-#define NB_LOCAL_FUNCTIONS 		20
+#define NB_LOCAL_FUNCTIONS 		30
 
 // Single Rate DAG
 
@@ -111,12 +111,12 @@
 #define MAX_VERTEX_REPETITION 	800	//100 // The maximum number of repetitions for one vertex
 #define MAX_XPL_IN_STEPS		100
 
-#define RB_FUNCT_IX				10
-#define BROADCAST_FUNCT_IX		11
-#define SWICTH_FUNCT_IX			12
-#define XPLODE_FUNCT_IX			13
-#define INIT_FUNCT_IX			14
-#define END_FUNCT_IX			15
+#define RB_FUNCT_IX				20
+#define BROADCAST_FUNCT_IX		21
+#define SWICTH_FUNCT_IX			22
+#define XPLODE_FUNCT_IX			23
+#define INIT_FUNCT_IX			24
+#define END_FUNCT_IX			25
 
 
 // PiSDF

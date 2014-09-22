@@ -60,13 +60,6 @@ void setFctPtr(int n, FUNCTION_TYPE f){
 }
 
 void initExecution(){
-	functions_tbl[10] = RB;
-	functions_tbl[11] = broadcast;
-	functions_tbl[12] = switchFct;
-	functions_tbl[13] = Xplode;
-	functions_tbl[14] = InitVx;
-	functions_tbl[15] = EndVx;
-
 	Monitor_init();
 }
 

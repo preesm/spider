@@ -362,6 +362,21 @@ void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, 
 					break;
 				case End:
 				case RoundBuffer:
+					if(origin_vertex->getNbOutputEdge() == 0){
+						sinkVertex = origin_vertex;
+						sinkPortId = origin_vertex->getReference()->getInputEdgeId(edge);
+						sinkRepetitions[i] = topDag->createVertexIm(0, 0);
+
+						edgesPerSinkVertices[i].portIx = 0;
+
+						// Adding an edge between the implode and the sink.
+						srdagEdge = topDag->createEdge(edge->getRefEdge());
+						srdagEdge->connectSource(sinkRepetitions[i], 0);
+						srdagEdge->connectSink(sinkVertex, sinkPortId);
+						srdagEdge->setTokenRate(sinkConsumption);
+						break;
+					}
+
 					if(origin_vertex->getOutputEdge(0)->getTokenRate() == sinkConsumption){
 						sinkVertex = origin_vertex->getOutputEdge(0)->getSink();
 						sinkPortId = origin_vertex->getOutputEdge(0)->getSinkPortIx();

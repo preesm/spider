@@ -188,8 +188,7 @@ void ListScheduler::schedule(BaseSchedule* schedule, Architecture* arch, SRDAGVe
 	}
 	
 	if(bestSlave){
-		printf("No slave found to execute one actor\n");
-		abort();
+		printf("No slave found to execute one actor %s\n", vertex->getReference()->getName());
 	}
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
 	schedule->addSchedule(bestSlave, vertex, bestStartTime, bestEndTime);

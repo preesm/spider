@@ -53,7 +53,7 @@
 #define PRINT_ACTOR_IN_DOT_FILE		0
 
 static Memory memory = Memory(0x0, 0);
-#define END_MEM_SIZE 10000
+#define END_MEM_SIZE 0x50000
 
 static UINT32 nbFifo;
 static UINT32 nbParamToRecv;
@@ -182,7 +182,6 @@ void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 		 break;
 	 case Implode:
 	 default:
-
 		 for (i = 0; i < vertex->getNbOutputEdge(); i++){
 			 SRDAGVertex* implode = vertex->getOutputEdge(i)->getSink();
 			 if(implode->getType() == Implode){
@@ -228,6 +227,8 @@ void Launcher::assignFifoVertex(SRDAGVertex* vertex){
 				edge->setFifoId(nbFifo);
 				nbFifo = (nbFifo+1)%3000;
 				 if(edge->getSink()->getFctIx() == END_FUNCT_IX){
+					 if(edge->getTokenRate() > END_MEM_SIZE)
+						 printf("Error: End memory to small %#x\n", edge->getTokenRate());
 					edge->setFifoAddress(endMem);
 				 }else{
 					 edge->setFifoAddress(memory.alloc(edge->getTokenRate()));
@@ -261,6 +262,7 @@ void Launcher::reset(){
 	nbParamToRecv = 0;
 	memory = Memory(0x0, platform_getDataMemSize());
 	endMem = memory.alloc(END_MEM_SIZE);
+	nbFifo = 0;
 }
 
 static void getVertexName(char* name, UINT32 sizeMax, taskTime task){

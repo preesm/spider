@@ -54,15 +54,4 @@ void aggregateH(
 	uint8_t* weight,
 	uint8_t* cost_out);
 
-void medianFilter (
-	int height , int width,
-	uint8_t* input,
-	uint8_t *output);
-
-void split(
-	int height, int width,
-	int nbSlice,
-	uint8_t* input,
-	uint8_t* output);
-
 #endif /* STEREOMATCH_H_ */

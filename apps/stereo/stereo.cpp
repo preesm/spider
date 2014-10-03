@@ -37,54 +37,434 @@
 #include "stereo.h"
 
 extern "C"{
-#include "include/aggregateCost.h"
-#include "include/census.h"
-#include "include/clock.h"
-#include "include/communication.h"
-#include "include/computeWeights.h"
-#include "include/costConstruction.h"
-#include "include/disparityGen.h"
-#include "include/disparitySelect.h"
-#include "include/displayRGB.h"
-#include "include/medianFilter.h"
-#include "include/offsetGen.h"
-#include "include/ppm.h"
-#include "include/rgb2Gray.h"
-#include "include/sink.h"
-#include "include/splitMerge.h"
-#include "include/yuv2RGB.h"
-#include "include/yuvRead.h"
+#include "src/v4l2uvc.h"
+#include "src/compute_stereo.h"
+#include "src/stereomatch.h"
+#include "image/image.h"
 }
+
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
+
+#include <stdio.h>
+#define PRINT 1
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include <platform_types.h>
 
-void readPPM(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+#define clamp(x) (x>255)? 255 : ((x<0)? 0 : x);
+void yuyv_to_bgr (struct vdIn *vd, char* bgr){
+	int i;
+	unsigned char *ptrIn = vd->framebuffer;
+
+	for (i = 0;  i < vd->height*vd->width;  i+=2){
+	    int c = ptrIn[0] - 16;
+	    int d = ptrIn[1] - 128;
+	    int e = ptrIn[3] - 128;
+
+	    bgr[i*3+0] = clamp(( 298 * c + 516 * d + 128) >> 8); // blue
+	    bgr[i*3+1] = clamp(( 298 * c - 100 * d - 208 * e + 128) >> 8); // green
+	    bgr[i*3+2] = clamp(( 298 * c + 409 * e + 128) >> 8); // red
+
+	    c = ptrIn[2] - 16;
+	    bgr[i*3+3] = clamp(( 298 * c + 516 * d + 128) >> 8); // blue
+	    bgr[i*3+4] = clamp(( 298 * c - 100 * d - 208 * e + 128) >> 8); // green
+	    bgr[i*3+5] = clamp(( 298 * c + 409 * e + 128) >> 8); // red
+
+	    ptrIn += 4;
+	}
+}
+
+void yuyv_to_rgb (struct vdIn *vd, unsigned char* r, unsigned char* g, unsigned char* b){
+	int i;
+	unsigned char *ptrIn = vd->framebuffer;
+
+	for (i = 0;  i < vd->height*vd->width;  i+=2){
+	    int c = ptrIn[0] - 16;
+	    int d = ptrIn[1] - 128;
+	    int e = ptrIn[3] - 128;
+
+	    r[i] = clamp(( 298 * c + 409 * e + 128) >> 8); // red
+	    g[i] = clamp(( 298 * c - 100 * d - 208 * e + 128) >> 8); // green
+	    b[i] = clamp(( 298 * c + 516 * d + 128) >> 8); // blue
+
+	    c = ptrIn[2] - 16;
+	    r[i+1] = clamp(( 298 * c + 409 * e + 128) >> 8); // red
+	    g[i+1] = clamp(( 298 * c - 100 * d - 208 * e + 128) >> 8); // green
+	    b[i+1] = clamp(( 298 * c + 516 * d + 128) >> 8); // blue
+
+	    ptrIn += 4;
+	}
+}
+
+
+char* paths[] = {"./im0.ppm","./im1.ppm"};
+static FILE * ptfile[2];
+long imageStartPosition[2];
+
+void readPPMInit(int id,int height, int width) {
+    char magicNumber[3];
+    int readWidth;
+    int readHeight;
+    int maxRGBValue;
+	int fsize;
+
+	printf("readPPMInit()\n");
+    if((ptfile[id] = fopen(paths[id], "rb")) == NULL )
+    {
+        fprintf(stderr,"ERROR: Task read cannot open ppm_file '%s'\n", paths[id]);
+        system("PAUSE");
+        return;
+    }
+
+    // Read ppm file header
+    // 1. Magic Numper
+    fread(magicNumber, sizeof(char),2, ptfile[id]);
+    magicNumber[2] = '\0';
+    if(strcmp(magicNumber,"P6")){
+        fprintf(stderr,"ERROR: PPM_file '%s' is not a valid PPM file.\n", paths[id]);
+        system("PAUSE");
+        return;
+    }
+    fseek(ptfile[id],1,SEEK_CUR); // skip space or EOL character
+
+
+    // 2. Width and Height
+    fscanf(ptfile[id],"%d", &readWidth);
+    fscanf(ptfile[id],"%d", &readHeight);
+    if(readWidth!=width || readHeight!= height){
+        fprintf(stderr,"ERROR: PPM_file '%s' has an incorrect resolution.\nExpected: %dx%d\t Read: %dx%d\n", paths[id], width, height, readWidth,readHeight);
+        system("PAUSE");
+        return;
+    }
+    fseek(ptfile[id],1,SEEK_CUR); // skip space or EOL character
+
+    // 3. Max RGB value
+    fscanf(ptfile[id],"%d", &maxRGBValue);
+    if(maxRGBValue > 255){
+        fprintf(stderr,"ERROR: PPM_file '%s' has is coded with 32bits values, 8bits values are expected.\n", paths[id]);
+        system("PAUSE");
+        return;
+    }
+    fseek(ptfile[id],1,SEEK_CUR); // skip space or EOL character
+
+    // Register the position of the file pointer
+    imageStartPosition[id] = ftell(ptfile[id]);
+
+    // check file size:
+    fseek (ptfile[id] , 0 , SEEK_END);
+    fsize = ftell (ptfile[id]) - imageStartPosition[id];
+    fseek(ptfile[id],imageStartPosition[id], SEEK_SET);
+
+    if(fsize != height*width*3)
+    {
+        fprintf(stderr,"ERROR: PPM_file has incorrect data size.\n\nExpected: %d\t Read: %d\n",height*width*3, fsize);
+        system("PAUSE");
+        return;
+    }
+}
+
+void file(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	/* Params */
-	int height = params[0];
-	int width = params[1];
+	int width = params[0];
+	int height = params[1];
 	int id = params[2];
 
 	/* Inputs */
 
 	/* Outputs */
-	UINT8* rgb = outputFIFOs[0];
+	UINT8* r = outputFIFOs[0];
+	UINT8* g = outputFIFOs[1];
+	UINT8* b = outputFIFOs[2];
 
-	/* Fct Call */
-	readPPM(id, height, width, rgb);
+//	char rgb[3*800*600];
+
+#if PRINT
+	printf("file %d %d %d\n", width, height, id);
+#endif
+
+	/* Fct */
+//	if(ptfile[id] == NULL)
+//		readPPMInit(id, height, width);
+
+//	fseek(ptfile[id],imageStartPosition[id], SEEK_SET);
+
+//	fread(rgb,sizeof(char), 3*width*height, ptfile[id]);
+
+//    IplImage* image = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+
+    int imageWidth = 450;
+
+    char name[10] = "im0.ppm";
+    name[2] = '0'+id;
+
+    int f = open(name, O_RDWR);
+    lseek(f, 16, SEEK_SET);
+
+    for(int i=0; i<height; i++){
+//        lseek(f, 16+3*i*imageWidth,  SEEK_SET);
+//        read(f, image->imageData+3*i*width, 3*width);
+
+        lseek(f, 15+3*i*imageWidth,  SEEK_SET);
+        for(int j=0; j<width; j++){
+        	read(f, &r[i*width+j], 1);
+        	read(f, &g[i*width+j], 1);
+        	read(f, &b[i*width+j], 1);
+        }
+//    	fread(image->imageData+i*3*width,sizeof(char), 3*width, ptfile[id]);
+//    	fgetc(ptfile[id]);
+//    	fgetc(ptfile[id]);
+//    	fgetc(ptfile[id]);
+    }
+//    read(f, image->imageData, image->imageSize);
+    close(f);
+
+//    cvConvertImage(image, image, 4);
+//	cvShowImage( "base", image);
+//	cvWaitKey(100);
+//	cvReleaseImage(&image);
+
+//	for(int i=0; i<width*height; i++){
+//		r[i] = rgb[3*i+0];
+//		g[i] = rgb[3*i+1];
+//		b[i] = rgb[3*i+2];
+//	}
 }
 
-void rgb2gray(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+void cam(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	static struct vdIn *videoInL = NULL, *videoInR = NULL;
+
 	/* Params */
-	int size = params[0];
+	int width = params[0];
+	int height = params[1];
+	int id = params[2];
 
 	/* Inputs */
-	UINT8* in = inputFIFOs[0];
+
+	/* Outputs */
+	UINT8* r = outputFIFOs[0];
+	UINT8* g = outputFIFOs[1];
+	UINT8* b = outputFIFOs[2];
+
+#if PRINT
+	printf("cam %d %d %d\n", width, height, id);
+#endif
+
+	/* Fct Call */
+	if(id == 0){
+		if(videoInL == NULL){
+			videoInL = (struct vdIn *) calloc (1, sizeof (struct vdIn));
+			init_videoIn(videoInL, "/dev/video2", width, height, V4L2_PIX_FMT_YUYV, 1);
+		}
+
+//	    IplImage* imageL = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+//	    IplImage* imageLRect = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+
+	    if (uvcGrab (videoInL) < 0) {
+			fprintf (stderr, "Error grabbing\n");
+			close_v4l2 (videoInL);
+			exit (1);
+		}
+
+	    yuyv_to_rgb(videoInL, r,g,b);
+
+//	    yuyv_to_bgr(videoInL, imageLRect->imageData);
+
+//		CvMat *mx = (CvMat*) cvLoad("mx1.xml", NULL, NULL, NULL);
+//		CvMat *my = (CvMat*) cvLoad("my1.xml", NULL, NULL, NULL);
+//
+//		cvRemap(imageL, imageLRect, mx, my, CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS, cvScalarAll(0));
+//
+//		for(int j=0; j<width*height; j++){
+//			b[j] = imageLRect->imageData[3*j+0];
+//			g[j] = imageLRect->imageData[3*j+1];
+//			r[j] = imageLRect->imageData[3*j+2];
+//		}
+
+//		cvReleaseImage(&imageL);
+//		cvReleaseImage(&imageLRect);
+//		cvReleaseData(&mx);
+//		cvReleaseData(&my);
+	}else{
+		if(videoInR == NULL){
+			videoInR = (struct vdIn *) calloc (1, sizeof (struct vdIn));
+			init_videoIn(videoInR, "/dev/video1", width, height, V4L2_PIX_FMT_YUYV, 1);
+		}
+
+//	    IplImage* imageR = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+//	    IplImage* imageRRect = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+
+	    if (uvcGrab (videoInR) < 0) {
+			fprintf (stderr, "Error grabbing\n");
+			close_v4l2 (videoInL);
+			exit (1);
+		}
+	    yuyv_to_rgb(videoInR, r,g,b);
+
+//	    yuyv_to_bgr(videoInR, imageRRect->imageData);
+
+//		CvMat *mx = (CvMat*) cvLoad("mx2.xml", NULL, NULL, NULL);
+//		CvMat *my = (CvMat*) cvLoad("my2.xml", NULL, NULL, NULL);
+
+//		cvRemap(imageR, imageRRect, mx, my, CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS, cvScalarAll(0));
+
+//		for(int j=0; j<width*height; j++){
+//			b[j] = imageRRect->imageData[3*j+0];
+//			g[j] = imageRRect->imageData[3*j+1];
+//			r[j] = imageRRect->imageData[3*j+2];
+//		}
+
+//		cvReleaseImage(&imageR);
+//		cvReleaseImage(&imageRRect);
+//		cvReleaseData(&mx);
+//		cvReleaseData(&my);
+	}
+}
+void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	/* Params */
+	int width = params[0];
+	int height = params[1];
+	int nbDisp = params[2];
+
+	/* Inputs */
+	UINT8* Lr = inputFIFOs[0];
+	UINT8* Lg = inputFIFOs[1];
+	UINT8* Lb = inputFIFOs[2];
+	UINT8* Rr = inputFIFOs[3];
+	UINT8* Rg = inputFIFOs[4];
+	UINT8* Rb = inputFIFOs[5];
+	UINT8* disp = inputFIFOs[6];
+	UINT8* mono = inputFIFOs[7];
+
+	/* Outputs */
+
+#if PRINT
+	printf("display %d %d %d\n", width, height, nbDisp);
+#endif
+
+	/* Fct */
+	for(int i=0; i<width*height; i++){
+		if(disp[i] != mono[i]){
+			printf("Check failed\n");
+			break;
+		}
+	}
+
+    IplImage* imageL = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+    IplImage* imageR = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+    IplImage* imageDisp = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
+    IplImage* imageMono = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
+    IplImage* imageDiff = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
+
+    for(int i=0; i<width*height; i++){
+    	imageL->imageData[3*i+0] = Lb[i];
+    	imageL->imageData[3*i+1] = Lg[i];
+    	imageL->imageData[3*i+2] = Lr[i];
+
+    	imageR->imageData[3*i+0] = Rb[i];
+    	imageR->imageData[3*i+1] = Rg[i];
+    	imageR->imageData[3*i+2] = Rr[i];
+    }
+
+    int scale = 256/nbDisp;
+    for(int i=0; i<width*height; i++){
+    	disp[i]*=scale;
+    	mono[i]*=scale;
+    }
+
+	for(int i=0; i<width*height; i++){
+		if(disp[i] != mono[i])
+			imageDiff->imageData[i] = 255;
+		else
+			imageDiff->imageData[i] = 0;
+	}
+
+    memcpy(imageDisp->imageData, disp, width*height);
+    memcpy(imageMono->imageData, mono, width*height);
+
+	cvShowImage( "Left", imageL);
+	cvShowImage( "Right", imageR);
+	cvShowImage( "Disp", imageDisp);
+	cvShowImage( "Mono", imageMono);
+	cvShowImage( "Diff", imageDiff);
+	cvWaitKey(100);
+
+    cvReleaseImage(&imageL);
+    cvReleaseImage(&imageR);
+    cvReleaseImage(&imageDisp);
+    cvReleaseImage(&imageMono);
+    cvReleaseImage(&imageDiff);
+}
+
+void stereoMono(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	/* Params */
+	int width = params[0];
+	int height = params[1];
+	int nbDisp = params[2];
+	int nbIter = params[3];
+	int nbSlices = params[4];
+
+	/* Inputs */
+	UINT8* Lr = inputFIFOs[0];
+	UINT8* Lg = inputFIFOs[1];
+	UINT8* Lb = inputFIFOs[2];
+	UINT8* Rr = inputFIFOs[3];
+	UINT8* Rg = inputFIFOs[4];
+	UINT8* Rb = inputFIFOs[5];
 
 	/* Outputs */
 	UINT8* out = outputFIFOs[0];
 
-	/* Fct Call */
-	rgb2Gray(size, in, out);
+#if PRINT
+	printf("stereoMono %d %d %d %d\n", width, height, nbDisp, nbIter);
+#endif
+
+	/* Fct */
+	struct str_image_rgb imcl, imcr;
+	struct str_image_gray disp;
+
+	image_rgb_init(&imcl, width, height);
+	image_rgb_init(&imcr, width, height);
+	image_gray_init(&disp, width, height);
+
+	memcpy(imcl.r, Lr, width*height);
+	memcpy(imcl.g, Lg, width*height);
+	memcpy(imcl.b, Lb, width*height);
+
+	memcpy(imcr.r, Rr, width*height);
+	memcpy(imcr.g, Rg, width*height);
+	memcpy(imcr.b, Rb, width*height);
+
+	stereoMatch(&imcl, &imcr, nbDisp, &disp);
+
+	memcpy(out, disp.g, width*height);
+}
+
+void rgb2Gray(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	/* Params */
+	int width = params[0];
+	int height = params[1];
+
+	/* Inputs */
+	UINT8* r = inputFIFOs[0];
+	UINT8* g = inputFIFOs[1];
+	UINT8* b = inputFIFOs[2];
+
+	/* Outputs */
+	UINT8* gray = outputFIFOs[0];
+
+#if PRINT
+	printf("rgb2gray %d %d\n", width, height);
+#endif
+
+	for(int i=0; i<width*height; i++){
+		gray[i] = ((int)r[i] + (int)g[i] + (int)b[i])/3;
+	}
 }
 
 void census(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
@@ -93,165 +473,130 @@ void census(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	int height = params[1];
 
 	/* Inputs */
-	UINT8* in = inputFIFOs[0];
+	UINT8* gray = inputFIFOs[0];
 
 	/* Outputs */
-	UINT8* out = outputFIFOs[0];
+	UINT8* cens = outputFIFOs[0];
 
-	/* Fct Call */
-	census(height, width, in, out);
+#if PRINT
+	printf("census %d %d\n", width, height);
+#endif
+
+	census(height, width, gray, cens);
 }
 
-void split(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
-	/* Params */
-	int overlap = params[0];
-	int nbSlice = params[1];
-	int width = params[2];
-	int height = params[3];
-
-	/* Inputs */
-	UINT8* in = inputFIFOs[0];
-
-	/* Outputs */
-	UINT8* out = outputFIFOs[0];
-
-	/* Fct Call */
-	split(nbSlice, width, height, in, out);
-}
-
-void median(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
-	/* Params */
-	int height = params[0];
-	int width = params[1];
-	int nbSlice = params[2];
-	int overlap = params[3];
-
-	/* Inputs */
-	UINT8* in = inputFIFOs[0];
-
-	/* Outputs */
-	UINT8* out = outputFIFOs[0];
-
-	/* Fct Call */
-	medianFilter(height/nbSlice+2*overlap, width, overlap, in, out);
-}
-
-void writePPM(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
-	/* Params */
-	int width = params[0];
-	int height = params[1];
-
-	/* Inputs */
-	UINT8* in = inputFIFOs[0];
-
-	/* Outputs */
-
-	/* Fct Call */
-	writePPM(height, width, in);
-}
-
-void offsetGen(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+void genDelta(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	/* Params */
 	int nbIter = params[0];
 
 	/* Inputs */
 
 	/* Outputs */
-	UINT8* offsets = outputFIFOs[0];
+	UINT8* out_deltas = outputFIFOs[0];
 
-	/* Fct Call */
-	offsetGen(nbIter, offsets);
-}
 
-void dispGen(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
-	/* Params */
-	int minDisp = params[0];
-	int maxDisp = params[1];
+#if PRINT
+	printf("genDelta %d\n", nbIter);
+#endif
 
-	/* Inputs */
+	static const int deltas[] = {1, 4, 9, 16, 25, 3};
 
-	/* Outputs */
-	UINT8* disps= outputFIFOs[0];
-
-	/* Fct Call */
-	disparityGen(minDisp, maxDisp, disps);
+	for(int i=0; i<nbIter; i++)
+		out_deltas[i] = deltas[i];
 }
 
 void compWeight(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	/* Params */
-	int horOrVert = params[0];
-	int width = params[1];
-	int height = params[2];
+	int width = params[0];
+	int height = params[1];
+	int horV = params[2];
 
 	/* Inputs */
-	UINT8* offset= inputFIFOs[0];
-	UINT8* rgbL= inputFIFOs[1];
+	UINT8* r = inputFIFOs[0];
+	UINT8* g = inputFIFOs[1];
+	UINT8* b = inputFIFOs[2];
+	UINT8* delta = inputFIFOs[3];
 
 	/* Outputs */
-	UINT8* weights= outputFIFOs[0];
+	UINT8* out = outputFIFOs[0];
 
-	/* Fct Call */
-	computeWeights(height, width, horOrVert, offset, rgbL, (float*)weights);
+#if PRINT
+	printf("compWeight %d %d %d del%d\n", width,  height, horV, *delta);
+#endif
+
+	if(horV == 0){
+		compute_hweigth(height, width, *delta, r, g, b, out);
+	}else{
+		compute_vweigth(height, width, *delta, r, g, b, out);
+	}
 }
 
-void costConstr(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
-	/* Params */
-	int truncValue = params[0];
-	int width = params[1];
-	int height = params[2];
+void null(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 
-	/* Inputs */
-	UINT8* grayL= inputFIFOs[0];
-	UINT8* grayR= inputFIFOs[1];
-	UINT8* cenL= inputFIFOs[2];
-	UINT8* cenR= inputFIFOs[3];
-	UINT8* disp= inputFIFOs[4];
-
-	/* Outputs */
-	UINT8* dispError= outputFIFOs[0];
-
-	/* Fct Call */
-	costConstruction(height, width, truncValue, disp, grayL, grayR, cenL, cenR, (float*) dispError);
 }
 
-void aggregateCost(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+void disp(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	/* Params */
 	int width = params[0];
 	int height = params[1];
-	int nbIter = params[2];
+	int nbDisp = params[2];
+	int nbIter = params[3];
 
 	/* Inputs */
-	UINT8* offsets= inputFIFOs[0];
-	UINT8* vWeights= inputFIFOs[1];
-	UINT8* hWeights= inputFIFOs[2];
-	UINT8* dispError= inputFIFOs[3];
+	UINT8* Lg = inputFIFOs[0];
+	UINT8* Lcen = inputFIFOs[1];
+	UINT8* Rg = inputFIFOs[2];
+	UINT8* Rcen = inputFIFOs[3];
+	UINT8* hw = inputFIFOs[4];
+	UINT8* vw = inputFIFOs[5];
+	UINT8* deltas = inputFIFOs[6];
 
 	/* Outputs */
-	UINT8* aggDisp= outputFIFOs[0];
+	UINT8* out = outputFIFOs[0];
 
-	/* Fct Call */
-	aggregateCost(height, width, nbIter, (float*)dispError, offsets, (float*)hWeights, (float*)vWeights, (float*)aggDisp);
-}
 
-void dispSelect(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
-	/* Params */
-	int scale = params[0];
-	int width = params[1];
-	int height = params[2];
-	int minDisp = params[3];
-	int nbDisp = params[4];
+#if PRINT
+	printf("disp %d %d %d %d\n", width,  height, nbDisp, nbIter);
+#endif
 
-	/* Inputs */
-	UINT8* aggDisp= inputFIFOs[0];
-	UINT8* disp= inputFIFOs[1];
-	UINT8* currentRes= inputFIFOs[2];
-	UINT8* bestCost= inputFIFOs[3];
+	unsigned char cost1[450*375];
+	unsigned char cost2[450*375];
+	unsigned char buffval[450*375];
 
-	/* Outputs */
-	UINT8* result= outputFIFOs[0];
-	UINT8* backBestCost= outputFIFOs[1];
+	for(int d=0; d<nbDisp; d++){
+		/*cost construction*/
+		cost_construction(
+				height, width, d,
+				Rg, Lg, Rcen, Lcen,
+				cost1);
 
-	/* Fct Call */
-	disparitySelect(height, width, nbDisp, scale, minDisp, disp, (float*)aggDisp, (float*)bestCost, currentRes, result, (float*)backBestCost);
+		/*recursive aggregation*/
+		for(int i=0; i<nbIter; i++)
+		{
+			aggregateV(height, width, deltas[i], cost1, vw+i*height*width, cost2);
+			aggregateH(height, width, deltas[i], cost2, hw+i*height*width, cost1);
+		}
+
+		/*disparity is argmin of cost*/
+		if(d == 0)
+		{
+			/*first iteration*/
+			memset(out, 0, height*width*sizeof(uint8_t));
+			memcpy(buffval, cost1, height*width*sizeof(uint8_t));
+		}
+		else
+		{
+			/*select disparity to minimize cost*/
+			for(int i=0; i<height*width; i++)
+			{
+				/*buffval contains the current minimum cost*/
+				if(cost1[i] < buffval[i])
+				{
+					buffval[i] = cost1[i];	/*buffval = min(cost)*/
+					out[i] = d;				/*out = argmin(cost)*/
+				}
+			}
+		}
+	}
 }
 

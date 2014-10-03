@@ -73,18 +73,24 @@ int main(){
 	}
 	arch.setNbActiveSlaves(nbSlaves);
 
-	setFctPtr(0, readPPM);
-	setFctPtr(1, rgb2gray);
-	setFctPtr(2, census);
-	setFctPtr(3, split);
-	setFctPtr(4, median);
-	setFctPtr(5, writePPM);
-	setFctPtr(6, offsetGen);
-	setFctPtr(7, dispGen);
-	setFctPtr(8, compWeight);
-	setFctPtr(9, costConstr);
-	setFctPtr(10, aggregateCost);
-	setFctPtr(11, dispSelect);
+	setFctPtr(0, file);
+	setFctPtr(1, display);
+	setFctPtr(2, rgb2Gray);
+	setFctPtr(3, census);
+	setFctPtr(4, genDelta);
+	setFctPtr(5, compWeight);
+	setFctPtr(6, disp);
+//	setFctPtr(2, rgb2Gray);
+//	setFctPtr(3, census);
+//	setFctPtr(4, genDelta);
+//	setFctPtr(5, compWeight);
+//	setFctPtr(6, disp);
+//	setFctPtr(7, dispGen);
+//	setFctPtr(8, compWeight);
+//	setFctPtr(9, costConstr);
+//	setFctPtr(10, aggregateCost);
+//	setFctPtr(11, dispSelect);
+	setFctPtr(12, stereoMono);
 
 	setFctPtr(RB_FUNCT_IX, RB);
 	setFctPtr(BROADCAST_FUNCT_IX, broadcast);
@@ -100,7 +106,7 @@ int main(){
 
 	SPIDER_init(&arch);
 
-	for(int iter=9; iter<=9; iter++){
+	for(int iter=0; iter<=100; iter++){
 		printf("N=%d\n", iter);
 
 		resetGraph();
@@ -108,7 +114,7 @@ int main(){
 		topPisdf = initPisdf_mpSched(pisdfGraphs, 20, 4000, iter, 0);
 #else
 		topPisdf = initPisdf_stereo(pisdfGraphs,
-				375, 450, 50, 0, 5, 5, 12, 15, 1);
+				400, 375, 60, 6, 1);
 #endif
 		SPIDER_reset();
 
@@ -119,6 +125,14 @@ int main(){
  		printf("GraphTime:   %d\n", execStat.graphTransfoTime);
  		printf("MappingTime: %d\n", execStat.mappingTime);
  		printf("TaskOrdTime: %d\n", execStat.taskOrderingTime);
+
+ 		for(int i=0; i<execStat.nbActor; i++){
+ 			printf("%15s : %d x %d (%.2f%%)\n",
+ 					execStat.actors[i]->getName(),
+ 					execStat.actorTimes[i]/execStat.actorIterations[i],
+ 					execStat.actorIterations[i],
+ 					100.0*execStat.actorTimes[i]/execStat.globalEndTime);
+ 		}
 
  		printf("\nEndTime: %d\n", execStat.globalEndTime);
 

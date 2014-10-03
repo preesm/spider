@@ -40,25 +40,21 @@
 #include <platform_types.h>
 #include <spider.h>
 
-void readPPM(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
-void rgb2gray(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void file(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void cam(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void stereoMono(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void rgb2Gray(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void census(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
-void split(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
-void median(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
-void writePPM(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
-void offsetGen(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
-void dispGen(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void genDelta(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void compWeight(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
-void costConstr(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
-void aggregateCost(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
-void dispSelect(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void disp(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void null(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 
 PiSDFGraph* initPisdf_stereo(
 		PiSDFGraph* _graphs,
-		int height, int width,
-		int maxDisp, int minDisp,
-		int nbIter, int scale,
-		int truncValue, int nbSlice,
-		int overlap);
+		int width, int height,
+		int nbDisp, int nbIter,
+		int nbSlice);
 
 #endif /* STEREO_H_ */

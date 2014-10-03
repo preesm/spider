@@ -40,19 +40,15 @@
 
 void stereo_top(
 		PiSDFGraph* _graphs,
-		int height, int width,
-		int maxDisp, int minDisp,
-		int nbIter, int scale,
-		int truncValue, int nbSlice,
-		int overlap);
+		int width, int height,
+		int nbDisp, int nbIter,
+		int nbSlice);
 
-void stereo_costParallel(
+void stereo_stereo(
 		PiSDFGraph* graph,
-		int height, int width,
-		int maxDisp, int minDisp,
-		int nbIter, int scale,
-		int truncValue, int nbSlice,
-		int overlap);
+		int width, int height,
+		int nbDisp, int nbIter,
+		int nbSlices);
 
 static PiSDFGraph* graphs;
 static int nbGraphs = 0;
@@ -70,11 +66,9 @@ void resetGraph(){
 
 PiSDFGraph* initPisdf_stereo(
 		PiSDFGraph* _graphs,
-		int height, int width,
-		int maxDisp, int minDisp,
-		int nbIter, int scale,
-		int truncValue, int nbSlice,
-		int overlap){
+		int width, int height,
+		int nbDisp, int nbIter,
+		int nbSlice){
 	graphs = _graphs;
 
 	PiSDFGraph* top = addGraph();
@@ -86,54 +80,36 @@ PiSDFGraph* initPisdf_stereo(
 	mpSchedGraph->setParentVertex(vxTop);
 
 	stereo_top(mpSchedGraph,
-			height, width,
-			maxDisp, minDisp,
-			nbIter, scale,
-			truncValue, nbSlice,
-			overlap);
+			width, height,
+			nbDisp, nbIter,
+			nbSlice);
 
 	return top;
 }
 
 void stereo_top(
 		PiSDFGraph* graph,
-		int height, int width,
-		int maxDisp, int minDisp,
-		int nbIter, int scale,
-		int truncValue, int nbSlice,
-		int overlap){
-	// Parameters.
-	PiSDFParameter *paramHeight = graph->addParameter("Height");
-	paramHeight->setValue(height);
-	PiSDFParameter *paramWidth = graph->addParameter("Width");
-	paramWidth->setValue(width);
-	PiSDFParameter *paramSize = graph->addParameter("Size");
-	paramSize->setValue(height*width);
+		int width, int height,
+		int nbDisp, int nbIter,
+		int nbSlices){
 
-	PiSDFParameter *paramZero = graph->addParameter("Zero");
+	// Parameters.
+	PiSDFParameter *paramHeight = graph->addParameter("height");
+	paramHeight->setValue(height);
+	PiSDFParameter *paramWidth = graph->addParameter("width");
+	paramWidth->setValue(width);
+
+	PiSDFParameter *paramZero = graph->addParameter("0");
 	paramZero->setValue(0);
-	PiSDFParameter *paramOne = graph->addParameter("One");
+	PiSDFParameter *paramOne = graph->addParameter("1");
 	paramOne->setValue(1);
 
-	PiSDFParameter *paramMaxDisp = graph->addParameter("MaxDisp");
-	paramMaxDisp->setValue(maxDisp);
-	PiSDFParameter *paramMinDisp = graph->addParameter("MinDisp");
-	paramMinDisp->setValue(minDisp);
-
-	PiSDFParameter *paramNbIter = graph->addParameter("NbIter");
+	PiSDFParameter *paramNbDisp = graph->addParameter("nbDisp");
+	paramNbDisp->setValue(nbDisp);
+	PiSDFParameter *paramNbIter = graph->addParameter("nbIter");
 	paramNbIter->setValue(nbIter);
-	PiSDFParameter *paramScale = graph->addParameter("Scale");
-	paramScale->setValue(scale);
-
-	PiSDFParameter *paramTruncValue = graph->addParameter("TruncValue");
-	paramTruncValue->setValue(truncValue);
-	PiSDFParameter *paramNbSlice = graph->addParameter("NbSlice");
-	paramNbSlice->setValue(nbSlice);
-
-	PiSDFParameter *paramOverlap = graph->addParameter("Overlap");
-	paramOverlap->setValue(overlap);
-	PiSDFParameter *paramSliceHeight = graph->addParameter("SliceHeight");
-	paramSliceHeight->setValue(height/nbSlice+2*overlap);
+	PiSDFParameter *paramNbSlices = graph->addParameter("nbSlices");
+	paramNbSlices->setValue(nbSlices);
 
 	// Configure vertices.
 //	PiSDFConfigVertex *vxConfig = (PiSDFConfigVertex *)graph->addVertex("config", config_vertex);
@@ -142,342 +118,351 @@ void stereo_top(
 //	vxConfig->addParameter(paramNVAL);
 //	vxConfig->addRelatedParam(paramN);
 
+	// Special vertices
+	PiSDFVertex *vxBr_Lr = (PiSDFVertex *)graph->addVertex("Br_Lr", normal_vertex);
+	vxBr_Lr->setSubType(SubType_Broadcast);
+	vxBr_Lr->setFunction_index(BROADCAST_FUNCT_IX);
+
+	PiSDFVertex *vxBr_Lg = (PiSDFVertex *)graph->addVertex("Br_Lg", normal_vertex);
+	vxBr_Lg->setSubType(SubType_Broadcast);
+	vxBr_Lg->setFunction_index(BROADCAST_FUNCT_IX);
+
+	PiSDFVertex *vxBr_Lb = (PiSDFVertex *)graph->addVertex("Br_Lb", normal_vertex);
+	vxBr_Lb->setSubType(SubType_Broadcast);
+	vxBr_Lb->setFunction_index(BROADCAST_FUNCT_IX);
+
+	PiSDFVertex *vxBr_Rr = (PiSDFVertex *)graph->addVertex("Br_Rr", normal_vertex);
+	vxBr_Rr->setSubType(SubType_Broadcast);
+	vxBr_Rr->setFunction_index(BROADCAST_FUNCT_IX);
+
+	PiSDFVertex *vxBr_Rg = (PiSDFVertex *)graph->addVertex("Br_Rg", normal_vertex);
+	vxBr_Rg->setSubType(SubType_Broadcast);
+	vxBr_Rg->setFunction_index(BROADCAST_FUNCT_IX);
+
+	PiSDFVertex *vxBr_Rb = (PiSDFVertex *)graph->addVertex("Br_Rb", normal_vertex);
+	vxBr_Rb->setSubType(SubType_Broadcast);
+	vxBr_Rb->setFunction_index(BROADCAST_FUNCT_IX);
+
 	// Other vertices
-	PiSDFVertex *vxRead_PPM0 = (PiSDFVertex *)graph->addVertex("Read_PPM0", normal_vertex);
-	vxRead_PPM0->addParameter(paramHeight);
-	vxRead_PPM0->addParameter(paramWidth);
-	vxRead_PPM0->addParameter(paramZero);
-	vxRead_PPM0->setFunction_index(0);
+	PiSDFVertex *vxCam_L = (PiSDFVertex *)graph->addVertex("Cam_L", normal_vertex);
+	vxCam_L->addParameter(paramWidth);
+	vxCam_L->addParameter(paramHeight);
+	vxCam_L->addParameter(paramZero);
+	vxCam_L->setFunction_index(0);
 
-	PiSDFVertex *vxRead_PPM1 = (PiSDFVertex *)graph->addVertex("Read_PPM1", normal_vertex);
-	vxRead_PPM1->addParameter(paramHeight);
-	vxRead_PPM1->addParameter(paramWidth);
-	vxRead_PPM1->addParameter(paramOne);
-	vxRead_PPM1->setFunction_index(0);
+	PiSDFVertex *vxCam_R = (PiSDFVertex *)graph->addVertex("Cam_R", normal_vertex);
+	vxCam_R->addParameter(paramWidth);
+	vxCam_R->addParameter(paramHeight);
+	vxCam_R->addParameter(paramOne);
+	vxCam_R->setFunction_index(0);
 
-	PiSDFVertex *vxBr0	= (PiSDFVertex *)graph->addVertex("BroadCast0", normal_vertex);
-	vxBr0->setSubType(SubType_Broadcast);
-	vxBr0->addParameter(paramSize);
-	vxBr0->setFunction_index(BROADCAST_FUNCT_IX);
+	PiSDFVertex *vxStereoTop = (PiSDFVertex *)graph->addVertex("StereoTop", normal_vertex);
+	vxStereoTop->addParameter(paramWidth);
+	vxStereoTop->addParameter(paramHeight);
+	vxStereoTop->addParameter(paramNbDisp);
+	vxStereoTop->addParameter(paramNbIter);
+	vxStereoTop->addParameter(paramNbSlices);
 
-	PiSDFVertex *vxRGB2Gray_L = (PiSDFVertex *)graph->addVertex("RGB2Gray_L", normal_vertex);
-	vxRGB2Gray_L->addParameter(paramSize);
-	vxRGB2Gray_L->setFunction_index(1);
+	PiSDFVertex *vxStereoMono = (PiSDFVertex *)graph->addVertex("vxStereoMono", normal_vertex);
+	vxStereoMono->addParameter(paramWidth);
+	vxStereoMono->addParameter(paramHeight);
+	vxStereoMono->addParameter(paramNbDisp);
+	vxStereoMono->addParameter(paramNbIter);
+	vxStereoMono->addParameter(paramNbSlices);
+	vxStereoMono->setFunction_index(12);
 
-	PiSDFVertex *vxRGB2Gray_R = (PiSDFVertex *)graph->addVertex("RGB2Gray_L", normal_vertex);
-	vxRGB2Gray_R->addParameter(paramSize);
-	vxRGB2Gray_R->setFunction_index(1);
-
-	PiSDFVertex *vxBr1	= (PiSDFVertex *)graph->addVertex("BroadCast1", normal_vertex);
-	vxBr1->setSubType(SubType_Broadcast);
-	vxBr1->addParameter(paramSize);
-	vxBr1->setFunction_index(BROADCAST_FUNCT_IX);
-
-	PiSDFVertex *vxBr2	= (PiSDFVertex *)graph->addVertex("BroadCast2", normal_vertex);
-	vxBr2->setSubType(SubType_Broadcast);
-	vxBr2->addParameter(paramSize);
-	vxBr2->setFunction_index(BROADCAST_FUNCT_IX);
-
-	PiSDFVertex *vxCensus_L = (PiSDFVertex *)graph->addVertex("Census_L", normal_vertex);
-	vxCensus_L->addParameter(paramWidth);
-	vxCensus_L->addParameter(paramHeight);
-	vxCensus_L->setFunction_index(2);
-
-	PiSDFVertex *vxCensus_R = (PiSDFVertex *)graph->addVertex("Census_R", normal_vertex);
-	vxCensus_R->addParameter(paramWidth);
-	vxCensus_R->addParameter(paramHeight);
-	vxCensus_R->setFunction_index(2);
-
-	PiSDFVertex *vxCost_Parallel_Work = (PiSDFVertex *)graph->addVertex("Cost_Parallel_Work", normal_vertex);
-	vxCost_Parallel_Work->addParameter(paramTruncValue);
-	vxCost_Parallel_Work->addParameter(paramScale);
-	vxCost_Parallel_Work->addParameter(paramNbIter);
-	vxCost_Parallel_Work->addParameter(paramMinDisp);
-	vxCost_Parallel_Work->addParameter(paramMaxDisp);
-	vxCost_Parallel_Work->addParameter(paramWidth);
-	vxCost_Parallel_Work->addParameter(paramHeight);
-
-	PiSDFVertex *vxSplit = (PiSDFVertex *)graph->addVertex("Split", normal_vertex);
-	vxSplit->addParameter(paramOverlap);
-	vxSplit->addParameter(paramNbSlice);
-	vxSplit->addParameter(paramWidth);
-	vxSplit->addParameter(paramHeight);
-	vxSplit->setFunction_index(3);
-
-	PiSDFVertex *vxMedian_Filter = (PiSDFVertex *)graph->addVertex("Median_Filter", normal_vertex);
-	vxMedian_Filter->addParameter(paramHeight);
-	vxMedian_Filter->addParameter(paramWidth);
-	vxMedian_Filter->addParameter(paramNbSlice);
-	vxMedian_Filter->addParameter(paramOverlap);
-	vxMedian_Filter->setFunction_index(4);
-
-	PiSDFVertex *vxWritePPM = (PiSDFVertex *)graph->addVertex("WritePPM", normal_vertex);
-	vxWritePPM->addParameter(paramWidth);
-	vxWritePPM->addParameter(paramHeight);
-	vxWritePPM->setFunction_index(5);
+	PiSDFVertex *vxDisplay = (PiSDFVertex *)graph->addVertex("Display", normal_vertex);
+	vxDisplay->addParameter(paramWidth);
+	vxDisplay->addParameter(paramHeight);
+	vxDisplay->addParameter(paramNbDisp);
+	vxDisplay->setFunction_index(1);
 
 	// Edges.
-	graph->addEdge(vxRead_PPM0, 0, "Height*Width*3", vxBr0, 0, "3*Size", "0");
-	graph->addEdge(vxBr0, 0, "3*Size", vxRGB2Gray_L, 0, "3*Size", "0");
-	graph->addEdge(vxRead_PPM1, 0, "Height*Width*3", vxRGB2Gray_R, 0, "3*Size", "0");
+	graph->addEdge(vxCam_L, 0, "height*width", vxBr_Lr, 0, "height*width", "0");
+	graph->addEdge(vxCam_L, 1, "height*width", vxBr_Lg, 0, "height*width", "0");
+	graph->addEdge(vxCam_L, 2, "height*width", vxBr_Lb, 0, "height*width", "0");
 
-	graph->addEdge(vxRGB2Gray_L, 0, "Size", vxBr1, 0, "Size", "0");
-	graph->addEdge(vxBr1, 0, "Size", vxCensus_L, 0, "Height*Width", "0");
+	graph->addEdge(vxCam_R, 0, "height*width", vxBr_Rr, 0, "height*width", "0");
+	graph->addEdge(vxCam_R, 1, "height*width", vxBr_Rg, 0, "height*width", "0");
+	graph->addEdge(vxCam_R, 2, "height*width", vxBr_Rb, 0, "height*width", "0");
 
-	graph->addEdge(vxRGB2Gray_R, 0, "Size", vxBr2, 0, "Size", "0");
-	graph->addEdge(vxBr2, 0, "Size", vxCensus_R, 0, "Height*Width", "0");
+	graph->addEdge(vxBr_Lr, 0, "height*width", vxStereoTop, 0, "height*width", "0");
+	graph->addEdge(vxBr_Lg, 0, "height*width", vxStereoTop, 1, "height*width", "0");
+	graph->addEdge(vxBr_Lb, 0, "height*width", vxStereoTop, 2, "height*width", "0");
+	graph->addEdge(vxBr_Rr, 0, "height*width", vxStereoTop, 3, "height*width", "0");
+	graph->addEdge(vxBr_Rg, 0, "height*width", vxStereoTop, 4, "height*width", "0");
+	graph->addEdge(vxBr_Rb, 0, "height*width", vxStereoTop, 5, "height*width", "0");
 
-	graph->addEdge(vxCensus_L,  0, "Height*Width", 	vxCost_Parallel_Work, 0, "Height*Width", "0");
-	graph->addEdge(vxBr1, 		1, "Size",		   	vxCost_Parallel_Work, 1, "Height*Width", "0");
-	graph->addEdge(vxBr0, 		1, "3*Size",	   	vxCost_Parallel_Work, 2, "3*Height*Width", "0");
-	graph->addEdge(vxCensus_R,	0, "Height*Width",	vxCost_Parallel_Work, 3, "Height*Width", "0");
-	graph->addEdge(vxBr2,		1, "Height*Width",	vxCost_Parallel_Work, 4, "Height*Width", "0");
+	graph->addEdge(vxBr_Lr, 1, "height*width", vxStereoMono, 0, "height*width", "0");
+	graph->addEdge(vxBr_Lg, 1, "height*width", vxStereoMono, 1, "height*width", "0");
+	graph->addEdge(vxBr_Lb, 1, "height*width", vxStereoMono, 2, "height*width", "0");
+	graph->addEdge(vxBr_Rr, 1, "height*width", vxStereoMono, 3, "height*width", "0");
+	graph->addEdge(vxBr_Rg, 1, "height*width", vxStereoMono, 4, "height*width", "0");
+	graph->addEdge(vxBr_Rb, 1, "height*width", vxStereoMono, 5, "height*width", "0");
 
-	graph->addEdge(vxCost_Parallel_Work, 0, "Height*Width",	vxSplit, 0, "Height*Width", "0");
-	graph->addEdge(vxSplit, 0, "NbSlice*(Height*Width/NbSlice+2*Overlap*Width)", vxMedian_Filter, 0, "Width*SliceHeight", "0");
-	graph->addEdge(vxMedian_Filter, 0, "Width*SliceHeight-2*Overlap*Width", vxWritePPM, 0, "Width*Height", "0");
+	graph->addEdge(vxBr_Lr, 2, "height*width", vxDisplay, 0, "height*width", "0");
+	graph->addEdge(vxBr_Lg, 2, "height*width", vxDisplay, 1, "height*width", "0");
+	graph->addEdge(vxBr_Lb, 2, "height*width", vxDisplay, 2, "height*width", "0");
+	graph->addEdge(vxBr_Rr, 2, "height*width", vxDisplay, 3, "height*width", "0");
+	graph->addEdge(vxBr_Rg, 2, "height*width", vxDisplay, 4, "height*width", "0");
+	graph->addEdge(vxBr_Rb, 2, "height*width", vxDisplay, 5, "height*width", "0");
+	graph->addEdge(vxStereoTop, 0, "height*width", vxDisplay, 6, "height*width", "0");
+	graph->addEdge(vxStereoMono, 0, "height*width", vxDisplay, 7, "height*width", "0");
 
 	// Timings
-	vxRead_PPM0->setTiming(0,"100");
-	vxRead_PPM1->setTiming(0,"100");
-	vxBr0->setTiming(0,"100")	;
-	vxRGB2Gray_L->setTiming(0,"100") ;
-	vxRGB2Gray_R->setTiming(0,"100") ;
-	vxBr1->setTiming(0,"100")	;
-	vxBr2->setTiming(0,"100")	;
-	vxCensus_L->setTiming(0,"100");
-	vxCensus_R->setTiming(0,"100") ;
-	vxSplit->setTiming(0,"100") ;
-	vxMedian_Filter->setTiming(0,"100");
-	vxWritePPM->setTiming(0,"100");
+	vxBr_Lr->setTiming(0, "100");
+	vxBr_Lg->setTiming(0, "100");
+	vxBr_Lb->setTiming(0, "100");
+	vxBr_Rr->setTiming(0, "100");
+	vxBr_Rg->setTiming(0, "100");
+	vxBr_Rb->setTiming(0, "100");
+	vxCam_L->setTiming(0, "100");
+	vxCam_R->setTiming(0, "100");
+	vxStereoTop->setTiming(0, "100");
+	vxStereoMono->setTiming(0, "100");
+	vxDisplay->setTiming(0, "100");
 
 	// Subgraphs
-	PiSDFGraph *Stereo_costParallel = addGraph();
-	vxCost_Parallel_Work->setSubGraph(Stereo_costParallel);
-	Stereo_costParallel->setParentVertex(vxCost_Parallel_Work);
+	PiSDFGraph *Stereo_sub = addGraph();
+	vxStereoTop->setSubGraph(Stereo_sub);
+	Stereo_sub->setParentVertex(vxStereoTop);
 
-	stereo_costParallel(Stereo_costParallel,
-			height, width,
-			maxDisp, minDisp,
-			nbIter, scale,
-			truncValue, nbSlice,
-			overlap);
+	stereo_stereo(Stereo_sub,
+			width, height,
+			nbDisp, nbIter,
+			nbSlices);
 }
 
 
-void stereo_costParallel(
+void stereo_stereo(
 		PiSDFGraph* graph,
-		int height, int width,
-		int maxDisp, int minDisp,
-		int nbIter, int scale,
-		int truncValue, int nbSlice,
-		int overlap){
+		int width, int height,
+		int nbDisp, int nbIter,
+		int nbSlices){
 	/* Parameters */
-	PiSDFParameter *paramHeight = graph->addParameter("Height2");
+	PiSDFParameter *paramHeight = graph->addParameter("height2");
 	paramHeight->setValue(height);
-	PiSDFParameter *paramWidth = graph->addParameter("Width2");
+	PiSDFParameter *paramWidth = graph->addParameter("width2");
 	paramWidth->setValue(width);
-	PiSDFParameter *paramSize = graph->addParameter("Size2");
-	paramSize->setValue(height*width);
 
-	PiSDFParameter *paramZero = graph->addParameter("Zero2");
+	PiSDFParameter *paramZero = graph->addParameter("0");
 	paramZero->setValue(0);
-	PiSDFParameter *paramOne = graph->addParameter("One2");
+	PiSDFParameter *paramOne = graph->addParameter("1");
 	paramOne->setValue(1);
 
-	PiSDFParameter *paramMaxDisp = graph->addParameter("MaxDisp2");
-	paramMaxDisp->setValue(maxDisp);
-	PiSDFParameter *paramMinDisp = graph->addParameter("MinDisp2");
-	paramMinDisp->setValue(minDisp);
-
-	PiSDFParameter *paramNbIter = graph->addParameter("NbIter2");
+	PiSDFParameter *paramNbDisp = graph->addParameter("nbDisp2");
+	paramNbDisp->setValue(nbDisp);
+	PiSDFParameter *paramNbIter = graph->addParameter("nbIter2");
 	paramNbIter->setValue(nbIter);
-	PiSDFParameter *paramScale = graph->addParameter("Scale2");
-	paramScale->setValue(scale);
-
-	PiSDFParameter *paramTruncValue = graph->addParameter("TruncValue2");
-	paramTruncValue->setValue(truncValue);
-
-	PiSDFParameter *paramNbDisp = graph->addParameter("NbDisp2");
-	paramNbDisp->setValue(maxDisp-minDisp);
-
-	PiSDFParameter *paramVert = graph->addParameter("Vert2");
-	paramVert->setValue(1);
-	PiSDFParameter *paramHor = graph->addParameter("Hor2");
-	paramHor->setValue(0);
+	PiSDFParameter *paramNbSlices = graph->addParameter("nbSlices2");
+	paramNbSlices->setValue(nbSlices);
 
 	/* Interfaces */
-	PiSDFIfVertex *ifCenL = (PiSDFIfVertex*)graph->addVertex("cenL", input_vertex);
-	ifCenL->setDirection(0);
-	ifCenL->setParentVertex(graph->getParentVertex());
-	ifCenL->setParentEdge(graph->getParentVertex()->getInputEdge(0));
-	ifCenL->setFunction_index(RB_FUNCT_IX);
+	PiSDFIfVertex *ifLr = (PiSDFIfVertex*)graph->addVertex("ifLr", input_vertex);
+	ifLr->setDirection(0);
+	ifLr->setParentVertex(graph->getParentVertex());
+	ifLr->setParentEdge(graph->getParentVertex()->getInputEdge(0));
+	ifLr->setFunction_index(RB_FUNCT_IX);
 
-	PiSDFIfVertex *ifGrayL = (PiSDFIfVertex*)graph->addVertex("grayL", input_vertex);
-	ifGrayL->setDirection(0);
-	ifGrayL->setParentVertex(graph->getParentVertex());
-	ifGrayL->setParentEdge(graph->getParentVertex()->getInputEdge(1));
-	ifGrayL->setFunction_index(RB_FUNCT_IX);
+	PiSDFIfVertex *ifLg = (PiSDFIfVertex*)graph->addVertex("ifLg", input_vertex);
+	ifLg->setDirection(0);
+	ifLg->setParentVertex(graph->getParentVertex());
+	ifLg->setParentEdge(graph->getParentVertex()->getInputEdge(1));
+	ifLg->setFunction_index(RB_FUNCT_IX);
 
-	PiSDFIfVertex *ifRgbL = (PiSDFIfVertex*)graph->addVertex("rgbL", input_vertex);
-	ifRgbL->setDirection(0);
-	ifRgbL->setParentVertex(graph->getParentVertex());
-	ifRgbL->setParentEdge(graph->getParentVertex()->getInputEdge(2));
-	ifRgbL->setFunction_index(RB_FUNCT_IX);
+	PiSDFIfVertex *ifLb = (PiSDFIfVertex*)graph->addVertex("ifLb", input_vertex);
+	ifLb->setDirection(0);
+	ifLb->setParentVertex(graph->getParentVertex());
+	ifLb->setParentEdge(graph->getParentVertex()->getInputEdge(2));
+	ifLb->setFunction_index(RB_FUNCT_IX);
 
-	PiSDFIfVertex *ifCenR = (PiSDFIfVertex*)graph->addVertex("cenR", input_vertex);
-	ifCenR->setDirection(0);
-	ifCenR->setParentVertex(graph->getParentVertex());
-	ifCenR->setParentEdge(graph->getParentVertex()->getInputEdge(3));
-	ifCenR->setFunction_index(RB_FUNCT_IX);
+	PiSDFIfVertex *ifRr = (PiSDFIfVertex*)graph->addVertex("ifRr", input_vertex);
+	ifRr->setDirection(0);
+	ifRr->setParentVertex(graph->getParentVertex());
+	ifRr->setParentEdge(graph->getParentVertex()->getInputEdge(3));
+	ifRr->setFunction_index(RB_FUNCT_IX);
 
-	PiSDFIfVertex *ifGrayR = (PiSDFIfVertex*)graph->addVertex("grayR", input_vertex);
-	ifGrayR->setDirection(0);
-	ifGrayR->setParentVertex(graph->getParentVertex());
-	ifGrayR->setParentEdge(graph->getParentVertex()->getInputEdge(4));
-	ifGrayR->setFunction_index(RB_FUNCT_IX);
+	PiSDFIfVertex *ifRg = (PiSDFIfVertex*)graph->addVertex("ifRg", input_vertex);
+	ifRg->setDirection(0);
+	ifRg->setParentVertex(graph->getParentVertex());
+	ifRg->setParentEdge(graph->getParentVertex()->getInputEdge(4));
+	ifRg->setFunction_index(RB_FUNCT_IX);
 
-	PiSDFIfVertex *ifRawD = (PiSDFIfVertex*)graph->addVertex("rawDisp", output_vertex);
-	ifRawD->setDirection(1);
-	ifRawD->setParentVertex(graph->getParentVertex());
-	ifRawD->setParentEdge(graph->getParentVertex()->getInputEdge(0));
-	ifRawD->setFunction_index(RB_FUNCT_IX);
+	PiSDFIfVertex *ifRb = (PiSDFIfVertex*)graph->addVertex("ifRb", input_vertex);
+	ifRb->setDirection(0);
+	ifRb->setParentVertex(graph->getParentVertex());
+	ifRb->setParentEdge(graph->getParentVertex()->getInputEdge(5));
+	ifRb->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFIfVertex *ifOut = (PiSDFIfVertex*)graph->addVertex("ifOut", output_vertex);
+	ifOut->setDirection(1);
+	ifOut->setParentVertex(graph->getParentVertex());
+	ifOut->setParentEdge(graph->getParentVertex()->getOutputEdge(0));
+	ifOut->setFunction_index(RB_FUNCT_IX);
+
+	// Special vertices
+	PiSDFVertex *vxBr_Lr = (PiSDFVertex *)graph->addVertex("Br_Lr", normal_vertex);
+	vxBr_Lr->setSubType(SubType_Broadcast);
+	vxBr_Lr->setFunction_index(BROADCAST_FUNCT_IX);
+
+	PiSDFVertex *vxBr_Lg = (PiSDFVertex *)graph->addVertex("Br_Lg", normal_vertex);
+	vxBr_Lg->setSubType(SubType_Broadcast);
+	vxBr_Lg->setFunction_index(BROADCAST_FUNCT_IX);
+
+	PiSDFVertex *vxBr_Lb = (PiSDFVertex *)graph->addVertex("Br_Lb", normal_vertex);
+	vxBr_Lb->setSubType(SubType_Broadcast);
+	vxBr_Lb->setFunction_index(BROADCAST_FUNCT_IX);
+
+	PiSDFVertex *vxBr_Lgr = (PiSDFVertex *)graph->addVertex("Br_Lgr", normal_vertex);
+	vxBr_Lgr->setSubType(SubType_Broadcast);
+	vxBr_Lgr->setFunction_index(BROADCAST_FUNCT_IX);
+
+	PiSDFVertex *vxBr_Rgr = (PiSDFVertex *)graph->addVertex("Br_Rgr", normal_vertex);
+	vxBr_Rgr->setSubType(SubType_Broadcast);
+	vxBr_Rgr->setFunction_index(BROADCAST_FUNCT_IX);
+
+	PiSDFVertex *vxBr_Del = (PiSDFVertex *)graph->addVertex("vxBr_Del", normal_vertex);
+	vxBr_Del->setSubType(SubType_Broadcast);
+	vxBr_Del->setFunction_index(BROADCAST_FUNCT_IX);
+
+	PiSDFVertex *vxRb_Hr = (PiSDFVertex *)graph->addVertex("Rb_Hr", normal_vertex);
+	vxRb_Hr->setSubType(SubType_RoundBuffer);
+	vxRb_Hr->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFVertex *vxRb_Hg = (PiSDFVertex *)graph->addVertex("Rb_Hg", normal_vertex);
+	vxRb_Hg->setSubType(SubType_RoundBuffer);
+	vxRb_Hg->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFVertex *vxRb_Hb = (PiSDFVertex *)graph->addVertex("Rb_Hb", normal_vertex);
+	vxRb_Hb->setSubType(SubType_RoundBuffer);
+	vxRb_Hb->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFVertex *vxRb_Vr = (PiSDFVertex *)graph->addVertex("Rb_Vr", normal_vertex);
+	vxRb_Vr->setSubType(SubType_RoundBuffer);
+	vxRb_Vr->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFVertex *vxRb_Vg = (PiSDFVertex *)graph->addVertex("Rb_Vg", normal_vertex);
+	vxRb_Vg->setSubType(SubType_RoundBuffer);
+	vxRb_Vg->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFVertex *vxRb_Vb = (PiSDFVertex *)graph->addVertex("Rb_Vb", normal_vertex);
+	vxRb_Vb->setSubType(SubType_RoundBuffer);
+	vxRb_Vb->setFunction_index(RB_FUNCT_IX);
 
 	/* Vertices */
-	PiSDFVertex *vxRb0	= (PiSDFVertex *)graph->addVertex("RoundBuffer0", normal_vertex);
-	vxRb0->setSubType(SubType_RoundBuffer);
-	vxRb0->addParameter(paramNbDisp);
-	vxRb0->addParameter(paramNbIter);
-	vxRb0->setFunction_index(RB_FUNCT_IX);
+	PiSDFVertex *vxRGB2Gray_L = (PiSDFVertex *)graph->addVertex("RGB2Gray_L", normal_vertex);
+	vxRGB2Gray_L->addParameter(paramWidth);
+	vxRGB2Gray_L->addParameter(paramHeight);
+	vxRGB2Gray_L->setFunction_index(2);
 
-	PiSDFVertex *vxBr0	= (PiSDFVertex *)graph->addVertex("BroadCast0", normal_vertex);
-	vxBr0->setSubType(SubType_Broadcast);
-	vxBr0->addParameter(paramNbDisp);
-	vxBr0->addParameter(paramNbIter);
-	vxBr0->setFunction_index(BROADCAST_FUNCT_IX);
+	PiSDFVertex *vxRGB2Gray_R = (PiSDFVertex *)graph->addVertex("RGB2Gray_R", normal_vertex);
+	vxRGB2Gray_R->addParameter(paramWidth);
+	vxRGB2Gray_R->addParameter(paramHeight);
+	vxRGB2Gray_R->setFunction_index(2);
 
-	PiSDFVertex *vxBr1	= (PiSDFVertex *)graph->addVertex("BroadCast1", normal_vertex);
-	vxBr1->setSubType(SubType_Broadcast);
-	vxBr1->addParameter(paramSize);
-	vxBr1->setFunction_index(BROADCAST_FUNCT_IX);
+	PiSDFVertex *vxCen_L = (PiSDFVertex *)graph->addVertex("Cen_L", normal_vertex);
+	vxCen_L->addParameter(paramWidth);
+	vxCen_L->addParameter(paramHeight);
+	vxCen_L->setFunction_index(3);
 
-	PiSDFVertex *vxRb2	= (PiSDFVertex *)graph->addVertex("RoundBuffer2", normal_vertex);
-	vxRb2->setSubType(SubType_RoundBuffer);
-	vxRb2->addParameter(paramNbDisp);
-	vxRb2->addParameter(paramSize);
-	vxRb2->addParameter(paramNbIter);
-	vxRb2->setFunction_index(RB_FUNCT_IX);
+	PiSDFVertex *vxCen_R = (PiSDFVertex *)graph->addVertex("Cen_R", normal_vertex);
+	vxCen_R->addParameter(paramWidth);
+	vxCen_R->addParameter(paramHeight);
+	vxCen_R->setFunction_index(3);
 
-	PiSDFVertex *vxRb3	= (PiSDFVertex *)graph->addVertex("RoundBuffer3", normal_vertex);
-	vxRb3->setSubType(SubType_RoundBuffer);
-	vxRb3->addParameter(paramNbDisp);
-	vxRb3->addParameter(paramSize);
-	vxRb3->addParameter(paramNbIter);
-	vxRb3->setFunction_index(RB_FUNCT_IX);
+	PiSDFVertex *vxGen_D = (PiSDFVertex *)graph->addVertex("Gen_D", normal_vertex);
+	vxGen_D->addParameter(paramNbIter);
+	vxGen_D->setFunction_index(4);
 
-	PiSDFVertex *vxBr4	= (PiSDFVertex *)graph->addVertex("BroadCast4", normal_vertex);
-	vxBr4->setSubType(SubType_Broadcast);
-	vxBr4->addParameter(paramNbDisp);
-	vxBr4->setFunction_index(BROADCAST_FUNCT_IX);
+	PiSDFVertex *vxHweight = (PiSDFVertex *)graph->addVertex("HCost", normal_vertex);
+	vxHweight->addParameter(paramWidth);
+	vxHweight->addParameter(paramHeight);
+	vxHweight->addParameter(paramZero);
+	vxHweight->setFunction_index(5);
 
-	PiSDFVertex *vxBr5	= (PiSDFVertex *)graph->addVertex("BroadCast5", normal_vertex);
-	vxBr5->setSubType(SubType_Broadcast);
-	vxBr5->addParameter(paramSize);
-	vxBr5->setFunction_index(BROADCAST_FUNCT_IX);
+	PiSDFVertex *vxVweight = (PiSDFVertex *)graph->addVertex("VCost", normal_vertex);
+	vxVweight->addParameter(paramWidth);
+	vxVweight->addParameter(paramHeight);
+	vxVweight->addParameter(paramOne);
+	vxVweight->setFunction_index(5);
 
-	PiSDFVertex *vxOffsetGen = (PiSDFVertex *)graph->addVertex("OffsetGen", normal_vertex);
-	vxOffsetGen->addParameter(paramNbIter);
-	vxOffsetGen->setFunction_index(6);
+	PiSDFVertex *vxDispTop = (PiSDFVertex *)graph->addVertex("DispTop", normal_vertex);
+	vxDispTop->addParameter(paramWidth);
+	vxDispTop->addParameter(paramHeight);
+	vxDispTop->addParameter(paramNbDisp);
+	vxDispTop->addParameter(paramNbIter);
+	vxDispTop->setFunction_index(6);
 
-	PiSDFVertex *vxDispGen = (PiSDFVertex *)graph->addVertex("DispGen", normal_vertex);
-	vxDispGen->addParameter(paramMinDisp);
-	vxDispGen->addParameter(paramMaxDisp);
-	vxDispGen->setFunction_index(7);
-
-	PiSDFVertex *vxCompVertWeight = (PiSDFVertex *)graph->addVertex("CompVertWeight", normal_vertex);
-	vxCompVertWeight->addParameter(paramVert);
-	vxCompVertWeight->addParameter(paramWidth);
-	vxCompVertWeight->addParameter(paramHeight);
-	vxCompVertWeight->setFunction_index(8);
-
-	PiSDFVertex *vxCompHorWeight = (PiSDFVertex *)graph->addVertex("CompHorWeight", normal_vertex);
-	vxCompHorWeight->addParameter(paramHor);
-	vxCompHorWeight->addParameter(paramWidth);
-	vxCompHorWeight->addParameter(paramHeight);
-	vxCompHorWeight->setFunction_index(8);
-
-	PiSDFVertex *vxCostConstr = (PiSDFVertex *)graph->addVertex("CostConst", normal_vertex);
-	vxCostConstr->addParameter(paramTruncValue);
-	vxCostConstr->addParameter(paramWidth);
-	vxCostConstr->addParameter(paramHeight);
-	vxCostConstr->setFunction_index(9);
-
-	PiSDFVertex *vxAggregateCost = (PiSDFVertex *)graph->addVertex("AggregateCost", normal_vertex);
-	vxAggregateCost->addParameter(paramWidth);
-	vxAggregateCost->addParameter(paramHeight);
-	vxAggregateCost->addParameter(paramNbIter);
-	vxAggregateCost->setFunction_index(10);
-
-	PiSDFVertex *vxDispSelect = (PiSDFVertex *)graph->addVertex("DispSelect", normal_vertex);
-	vxDispSelect->addParameter(paramScale);
-	vxDispSelect->addParameter(paramWidth);
-	vxDispSelect->addParameter(paramHeight);
-	vxDispSelect->addParameter(paramMinDisp);
-	vxDispSelect->addParameter(paramNbDisp);
-	vxDispSelect->setFunction_index(11);
 
 	/* Edges */
-	graph->addEdge(ifRgbL, 0, "Size2*3", vxBr1, 0, "Size2*3", "0");
-	graph->addEdge(ifGrayL, 0, "Size2", vxCostConstr, 0, "Size2", "0");
-	graph->addEdge(ifGrayR, 0, "Size2", vxCostConstr, 1, "Size2", "0");
-	graph->addEdge(ifCenL, 0, "Size2", vxCostConstr, 2, "Size2", "0");
-	graph->addEdge(ifCenR, 0, "Size2", vxCostConstr, 3, "Size2", "0");
+	graph->addEdge(ifLr, 0, "height2*width2", vxBr_Lr, 0, "height2*width2", "0");
+	graph->addEdge(ifLg, 0, "height2*width2", vxBr_Lg, 0, "height2*width2", "0");
+	graph->addEdge(ifLb, 0, "height2*width2", vxBr_Lb, 0, "height2*width2", "0");
 
-	graph->addEdge(vxOffsetGen, 0, "NbIter2", vxBr0, 0, "NbIter2", "0");
+	graph->addEdge(vxBr_Lr, 0, "height2*width2", vxRGB2Gray_L, 0, "height2*width2", "0");
+	graph->addEdge(vxBr_Lg, 0, "height2*width2", vxRGB2Gray_L, 1, "height2*width2", "0");
+	graph->addEdge(vxBr_Lb, 0, "height2*width2", vxRGB2Gray_L, 2, "height2*width2", "0");
 
-	graph->addEdge(vxDispGen, 0, "NbDisp2", vxBr4, 0, "NbDisp2", "0");
+	graph->addEdge(vxRGB2Gray_L, 0, "height2*width2", vxBr_Lgr, 0, "height2*width2", "0");
 
-	graph->addEdge(vxBr0, 0, "NbIter2", vxRb0, 0, "NbIter2", "0");
-	graph->addEdge(vxRb0, 0, "NbIter2*NbDisp2", vxAggregateCost, 0, "NbIter2", "0");
-	graph->addEdge(vxBr0, 1, "NbIter2", vxCompVertWeight, 0, "1", "0");
-	graph->addEdge(vxBr0, 2, "NbIter2", vxCompHorWeight, 0, "1", "0");
+	graph->addEdge(ifRr, 0, "height2*width2", vxRGB2Gray_R, 0, "height2*width2", "0");
+	graph->addEdge(ifRg, 0, "height2*width2", vxRGB2Gray_R, 1, "height2*width2", "0");
+	graph->addEdge(ifRb, 0, "height2*width2", vxRGB2Gray_R, 2, "height2*width2", "0");
 
-	graph->addEdge(vxBr1, 0, "Width2*Height2*3", vxCompVertWeight, 1, "Width2*Height2*3", "0");
-	graph->addEdge(vxBr1, 1, "Width2*Height2*3", vxCompHorWeight, 1, "Width2*Height2*3", "0");
+	graph->addEdge(vxRGB2Gray_R, 0, "height2*width2", vxBr_Rgr, 0, "height2*width2", "0");
 
-	graph->addEdge(vxCompVertWeight, 0, "Width2*Height2*3 *4", vxRb2, 0, "Size2*3*NbIter2 *4", "0");
-	graph->addEdge(vxCompHorWeight, 0, "Width2*Height2*3 *4", vxRb3, 0, "Size2*3*NbIter2 *4", "0");
+	graph->addEdge(vxBr_Lgr, 0, "height2*width2", vxCen_L, 0, "height2*width2", "0");
+	graph->addEdge(vxBr_Rgr, 0, "height2*width2", vxCen_R, 0, "height2*width2", "0");
 
-	graph->addEdge(vxRb2, 0, "Size2*3*NbIter2*NbDisp2 *4", vxAggregateCost, 1, "Height2*Width2*3*NbIter2 *4", "0");
+	graph->addEdge(vxBr_Lr, 1, "height2*width2", vxRb_Hr, 0, "height2*width2", "0");
+	graph->addEdge(vxBr_Lg, 1, "height2*width2", vxRb_Hg, 0, "height2*width2", "0");
+	graph->addEdge(vxBr_Lb, 1, "height2*width2", vxRb_Hb, 0, "height2*width2", "0");
+	graph->addEdge(vxBr_Lr, 2, "height2*width2", vxRb_Vr, 0, "height2*width2", "0");
+	graph->addEdge(vxBr_Lg, 2, "height2*width2", vxRb_Vg, 0, "height2*width2", "0");
+	graph->addEdge(vxBr_Lb, 2, "height2*width2", vxRb_Vb, 0, "height2*width2", "0");
 
-	graph->addEdge(vxRb3, 0, "Size2*3*NbIter2*NbDisp2 *4", vxAggregateCost, 2, "Height2*Width2*3*NbIter2 *4", "0");
+	graph->addEdge(vxRb_Hr, 0, "nbIter2*height2*width2", vxHweight, 0, "height2*width2", "0");
+	graph->addEdge(vxRb_Hg, 0, "nbIter2*height2*width2", vxHweight, 1, "height2*width2", "0");
+	graph->addEdge(vxRb_Hb, 0, "nbIter2*height2*width2", vxHweight, 2, "height2*width2", "0");
+	graph->addEdge(vxRb_Vr, 0, "nbIter2*height2*width2", vxVweight, 0, "height2*width2", "0");
+	graph->addEdge(vxRb_Vg, 0, "nbIter2*height2*width2", vxVweight, 1, "height2*width2", "0");
+	graph->addEdge(vxRb_Vb, 0, "nbIter2*height2*width2", vxVweight, 2, "height2*width2", "0");
 
-	graph->addEdge(vxBr4, 0, "NbDisp2", vxCostConstr, 4, "1", "0");
-	graph->addEdge(vxBr4, 1, "NbDisp2", vxDispSelect, 1, "1", "0");
+	graph->addEdge(vxGen_D, 0, "nbIter2", vxBr_Del, 0, "nbIter2", "0");
+	graph->addEdge(vxBr_Del, 0, "nbIter2", vxHweight, 3, "1", "0");
+	graph->addEdge(vxBr_Del, 1, "nbIter2", vxVweight, 3, "1", "0");
 
-	graph->addEdge(vxCostConstr, 0, "Height2*Width2 *4", vxAggregateCost, 3, "Height2*Width2 *4", "0");
+	graph->addEdge(vxBr_Lgr, 1, "height2*width2", vxDispTop, 0, "height2*width2", "0");
+	graph->addEdge(vxCen_L,  0, "height2*width2", vxDispTop, 1, "height2*width2", "0");
+	graph->addEdge(vxBr_Rgr, 1, "height2*width2", vxDispTop, 2, "height2*width2", "0");
+	graph->addEdge(vxCen_R,  0, "height2*width2", vxDispTop, 3, "height2*width2", "0");
+	graph->addEdge(vxHweight,0, "height2*width2", vxDispTop, 4, "nbIter2*height2*width2", "0");
+	graph->addEdge(vxVweight,0, "height2*width2", vxDispTop, 5, "nbIter2*height2*width2", "0");
+	graph->addEdge(vxBr_Del, 2, "nbIter2", vxDispTop, 6, "nbIter2", "0");
 
-	graph->addEdge(vxAggregateCost, 0, "Height2*Width2 *4", vxDispSelect, 0, "Height2*Width2 *4", "0");
-
-	graph->addEdge(vxDispSelect, 0, "Height2*Width2", vxBr5, 0, "Size2", "0");
-	graph->addEdge(vxDispSelect, 1, "(Height2*Width2+1) *4", vxDispSelect, 3, "(Height2*Width2+1) *4", "(Height2*Width2+1) *4");
-
-	graph->addEdge(vxBr5, 0, "Size2", ifRawD, 0, "Size2", "0");
-	graph->addEdge(vxBr5, 1, "Size2", vxDispSelect, 2, "Size2", "Size2");
+	graph->addEdge(vxDispTop, 0, "height2*width2", ifOut, 0, "height2*width2", "0");
 
 	/* Timings */
-	vxOffsetGen->setTiming(0,"100");
-	vxDispGen->setTiming(0,"100");
-	vxCompVertWeight->setTiming(0,"100");
-	vxCompHorWeight->setTiming(0,"100");
-	vxCostConstr->setTiming(0,"100");
-	vxAggregateCost->setTiming(0,"100");
-	vxDispSelect->setTiming(0,"100");
-
-
-	vxRb0->setTiming(0,"100");
-	vxRb2->setTiming(0,"100");
-	vxRb3->setTiming(0,"100");
+	vxBr_Lr->setTiming(0, "100");
+	vxBr_Lg->setTiming(0, "100");
+	vxBr_Lb->setTiming(0, "100");
+	vxBr_Lgr->setTiming(0, "100");
+	vxBr_Rgr->setTiming(0, "100");
+	vxBr_Del->setTiming(0, "100");
+	vxRb_Hr->setTiming(0, "100");
+	vxRb_Hg->setTiming(0, "100");
+	vxRb_Hb->setTiming(0, "100");
+	vxRb_Vr->setTiming(0, "100");
+	vxRb_Vg->setTiming(0, "100");
+	vxRb_Vb->setTiming(0, "100");
+	vxRGB2Gray_L->setTiming(0, "100");
+	vxRGB2Gray_R->setTiming(0, "100");
+	vxCen_L->setTiming(0, "100");
+	vxCen_R->setTiming(0, "100");
+	vxGen_D->setTiming(0, "100");
+	vxHweight->setTiming(0, "100");
+	vxVweight->setTiming(0, "100");
+	vxDispTop->setTiming(0, "100");
 
 }
 

@@ -1400,6 +1400,15 @@ void PiSDFTransformer::multiStepScheduling(
 				graphFifo.push(currentPiSDF);
 				refIndexFifo.push(refIndex);
 			}else{
+				// Update parameters' values.
+				for(UINT32 i=0; i<currentPiSDF->getNb_parameters(); i++){
+					PiSDFParameter *param = currentPiSDF->getParameter(i);
+					if(param->getParameterParentID() != -1){
+						PiSDFParameter *topParam = currentPiSDF->getParentVertex()->getParameter(param->getParameterParentID());
+						param->setValue(topParam->getValue());
+					}
+				}
+
 				/* Resolve */
 				currentPiSDF->evaluateExpressions(/*scenario*/);
 

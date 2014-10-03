@@ -44,11 +44,7 @@ void stereo_top(
 		int nbDisp, int nbIter,
 		int nbSlice);
 
-void stereo_stereo(
-		PiSDFGraph* graph,
-		int width, int height,
-		int nbDisp, int nbIter,
-		int nbSlices);
+void stereo_stereo(PiSDFGraph* graph);
 
 static PiSDFGraph* graphs;
 static int nbGraphs = 0;
@@ -227,23 +223,16 @@ void stereo_top(
 	vxStereoTop->setSubGraph(Stereo_sub);
 	Stereo_sub->setParentVertex(vxStereoTop);
 
-	stereo_stereo(Stereo_sub,
-			width, height,
-			nbDisp, nbIter,
-			nbSlices);
+	stereo_stereo(Stereo_sub);
 }
 
 
-void stereo_stereo(
-		PiSDFGraph* graph,
-		int width, int height,
-		int nbDisp, int nbIter,
-		int nbSlices){
+void stereo_stereo(PiSDFGraph* graph){
 	/* Parameters */
-	PiSDFParameter *paramHeight = graph->addParameter("height2");
-	paramHeight->setValue(height);
 	PiSDFParameter *paramWidth = graph->addParameter("width2");
-	paramWidth->setValue(width);
+	paramWidth->setParameterParentID(0);
+	PiSDFParameter *paramHeight = graph->addParameter("height2");
+	paramHeight->setParameterParentID(1);
 
 	PiSDFParameter *paramZero = graph->addParameter("0");
 	paramZero->setValue(0);
@@ -251,11 +240,11 @@ void stereo_stereo(
 	paramOne->setValue(1);
 
 	PiSDFParameter *paramNbDisp = graph->addParameter("nbDisp2");
-	paramNbDisp->setValue(nbDisp);
+	paramNbDisp->setParameterParentID(2);
 	PiSDFParameter *paramNbIter = graph->addParameter("nbIter2");
-	paramNbIter->setValue(nbIter);
+	paramNbIter->setParameterParentID(3);
 	PiSDFParameter *paramNbSlices = graph->addParameter("nbSlices2");
-	paramNbSlices->setValue(nbSlices);
+	paramNbSlices->setParameterParentID(0);
 
 	/* Interfaces */
 	PiSDFIfVertex *ifLr = (PiSDFIfVertex*)graph->addVertex("ifLr", input_vertex);

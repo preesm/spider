@@ -136,6 +136,8 @@ void execute(){
 			args[1] = vertex->getOutputEdge(0)->getTokenRate();
 			break;
 		case Broadcast:
+			args[0] = vertex->getInputEdge(0)->getTokenRate();
+			args[1] = vertex->getNbOutputEdge();
 			break;
 		case Init:
 			args[0] = vertex->getOutputEdge(0)->getTokenRate();

@@ -102,7 +102,7 @@ void inline CreateTaskMsg::send(int lrtID, SRDAGVertex* vertex){
 		platform_QPushUINT32(lrtID, 2);
 		break;
 	case Broadcast:
-		platform_QPushUINT32(lrtID, 0);
+		platform_QPushUINT32(lrtID, 2);
 		break;
 	case Init:
 	case End:
@@ -145,6 +145,8 @@ void inline CreateTaskMsg::send(int lrtID, SRDAGVertex* vertex){
 		platform_QPushUINT32(lrtID, vertex->getOutputEdge(0)->getTokenRate());
 		break;
 	case Broadcast:
+		platform_QPushUINT32(lrtID, vertex->getInputEdge(0)->getTokenRate());
+		platform_QPushUINT32(lrtID, vertex->getNbOutputEdge());
 		break;
 	case Init:
 		platform_QPushUINT32(lrtID, vertex->getOutputEdge(0)->getTokenRate());

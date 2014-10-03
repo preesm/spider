@@ -108,11 +108,10 @@ void stereo_top(
 	paramNbSlices->setValue(nbSlices);
 
 	// Configure vertices.
-//	PiSDFConfigVertex *vxConfig = (PiSDFConfigVertex *)graph->addVertex("config", config_vertex);
-//	vxConfig->setFunction_index(0);
-//	vxConfig->addParameter(paramNMAX);
-//	vxConfig->addParameter(paramNVAL);
-//	vxConfig->addRelatedParam(paramN);
+	PiSDFConfigVertex *vxConfig = (PiSDFConfigVertex *)graph->addVertex("config", config_vertex);
+	vxConfig->setFunction_index(15);
+	vxConfig->addRelatedParam(paramNbDisp);
+	vxConfig->addRelatedParam(paramNbIter);
 
 	// Special vertices
 	PiSDFVertex *vxBr_Lr = (PiSDFVertex *)graph->addVertex("Br_Lr", normal_vertex);
@@ -206,6 +205,7 @@ void stereo_top(
 	graph->addEdge(vxStereoMono, 0, "height*width", vxDisplay, 7, "height*width", "0");
 
 	// Timings
+	vxConfig->setTiming(0, "100");
 	vxBr_Lr->setTiming(0, "100");
 	vxBr_Lg->setTiming(0, "100");
 	vxBr_Lb->setTiming(0, "100");

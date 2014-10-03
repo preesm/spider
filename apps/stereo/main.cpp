@@ -91,6 +91,7 @@ int main(){
 //	setFctPtr(10, aggregateCost);
 //	setFctPtr(11, dispSelect);
 	setFctPtr(12, stereoMono);
+	setFctPtr(15, config);
 
 	setFctPtr(RB_FUNCT_IX, RB);
 	setFctPtr(BROADCAST_FUNCT_IX, broadcast);

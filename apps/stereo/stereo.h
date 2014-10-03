@@ -40,6 +40,8 @@
 #include <platform_types.h>
 #include <spider.h>
 
+void config(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+
 void file(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void cam(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void stereoMono(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);

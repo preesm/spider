@@ -49,4 +49,6 @@ BOOL popParam(int* vertexID, int* nbParam, UINT32 values[MAX_NB_PiSDF_PARAMS]);
 
 void execute();
 
+extern UINT32 curVertexId;
+
 #endif /* EXECUTION_H_ */

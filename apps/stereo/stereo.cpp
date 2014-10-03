@@ -46,6 +46,8 @@ extern "C"{
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
+#include <execution/execution.h>
+
 #include <stdio.h>
 #define PRINT 1
 
@@ -532,6 +534,19 @@ void compWeight(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 }
 
 void null(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+
+}
+
+void config(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	static int it=0;
+
+	int nbIter = 6-it;
+	int nbDisp = 10+10*it;
+	it = (it+1)%6;
+
+	unsigned int outParams[2] = {nbDisp, nbIter};
+
+	pushParam(curVertexId,2,outParams);
 
 }
 

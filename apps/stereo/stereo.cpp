@@ -615,3 +615,113 @@ void disp(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	}
 }
 
+void costConst(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	/* Params */
+	int width = params[0];
+	int height = params[1];
+
+	/* Inputs */
+	UINT8* Lg = inputFIFOs[0];
+	UINT8* Lcen = inputFIFOs[1];
+	UINT8* Rg = inputFIFOs[2];
+	UINT8* Rcen = inputFIFOs[3];
+	UINT8* disp = inputFIFOs[4];
+
+	/* Outputs */
+	UINT8* out = outputFIFOs[0];
+
+
+#if PRINT
+	printf("costConst %d %d\n", width,  height);
+#endif
+	cost_construction(height, width, *disp,
+				Rg, Lg, Rcen, Lcen,
+				out);
+}
+
+void aggregate(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	/* Params */
+	int width = params[0];
+	int height = params[1];
+	int nbIter = params[2];
+
+	/* Inputs */
+	UINT8* vweight = inputFIFOs[0];
+	UINT8* hweight = inputFIFOs[1];
+	UINT8* deltas = inputFIFOs[2];
+	UINT8* input = inputFIFOs[3];
+
+	/* Outputs */
+	UINT8* out = outputFIFOs[0];
+
+
+#if PRINT
+	printf("aggregate %d %d %d\n", width,  height, nbIter);
+#endif
+
+	unsigned char tmp[450*375];
+
+	memcpy(out, input, width*height);
+	/*recursive aggregation*/
+	for(int i=0; i<nbIter; i++){
+		aggregateV(height, width, deltas[i], out, vweight+i*height*width, tmp);
+		aggregateH(height, width, deltas[i], tmp, hweight+i*height*width, out);
+	}
+}
+
+void select(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	/* Params */
+	int width = params[0];
+	int height = params[1];
+
+	/* Inputs */
+	UINT8* val_in = inputFIFOs[0];
+	UINT8* disp_in = inputFIFOs[1];
+	UINT8* input = inputFIFOs[2];
+	UINT8* disp = inputFIFOs[3];
+
+	/* Outputs */
+	UINT8* val_out = outputFIFOs[0];
+	UINT8* disp_out = outputFIFOs[1];
+
+
+#if PRINT
+	printf("select %d %d\n", width,  height);
+#endif
+	/* disparity is argmin of cost */
+	if(*disp == 0){
+		/* first iteration */
+		memset(disp_out, 0, height*width);
+		memcpy(val_out, input, height*width);
+	}else{
+		/* select disparity to minimize cost */
+		for(int i=0; i<height*width; i++){
+			/* buffval contains the current minimum cost */
+			if(input[i] < val_in[i]){
+				val_out[i] = input[i];	/*buffval = min(cost)*/
+				disp_out[i] = *disp;				/*out = argmin(cost)*/
+			}else{
+				val_out[i] = val_in[i];	/*buffval = min(cost)*/
+				disp_out[i] = disp_in[i];
+			}
+		}
+	}
+}
+
+void genDisp(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	/* Params */
+	int nbDisp = params[0];
+
+	/* Inputs */
+
+	/* Outputs */
+	UINT8* out = outputFIFOs[0];
+
+
+#if PRINT
+	printf("genDisp %d\n", nbDisp);
+#endif
+	for(int i=0; i<nbDisp; i++){
+		out[i] = i;
+	}
+}

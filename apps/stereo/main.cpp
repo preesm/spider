@@ -80,10 +80,10 @@ int main(){
 	setFctPtr(4, genDelta);
 	setFctPtr(5, compWeight);
 	setFctPtr(6, disp);
-//	setFctPtr(2, rgb2Gray);
-//	setFctPtr(3, census);
-//	setFctPtr(4, genDelta);
-//	setFctPtr(5, compWeight);
+	setFctPtr(7, costConst);
+	setFctPtr(8, aggregate);
+	setFctPtr(9, select);
+	setFctPtr(10, genDisp);
 //	setFctPtr(6, disp);
 //	setFctPtr(7, dispGen);
 //	setFctPtr(8, compWeight);

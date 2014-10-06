@@ -120,7 +120,7 @@
 
 
 // PiSDF
-#define MAX_NB_PiSDF_GRAPHS				3	//32
+#define MAX_NB_PiSDF_GRAPHS				4	//32
 #define MAX_NB_PiSDF_EDGES				100	//32
 #define MAX_NB_PiSDF_PARAMS				20	//32
 #define MAX_NB_PiSDF_VERTICES			40	//32

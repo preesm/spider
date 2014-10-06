@@ -45,6 +45,7 @@ void stereo_top(
 		int nbSlice);
 
 void stereo_stereo(PiSDFGraph* graph);
+void stereo_topDisp(PiSDFGraph* graph);
 
 static PiSDFGraph* graphs;
 static int nbGraphs = 0;
@@ -453,6 +454,132 @@ void stereo_stereo(PiSDFGraph* graph){
 	vxVweight->setTiming(0, "100");
 	vxDispTop->setTiming(0, "100");
 
+	// Subgraphs
+	PiSDFGraph *Stereo_topDisp = addGraph();
+	vxDispTop->setSubGraph(Stereo_topDisp);
+	Stereo_topDisp->setParentVertex(vxDispTop);
+
+	stereo_topDisp(Stereo_topDisp);
 }
 
+void stereo_topDisp(PiSDFGraph* graph){
+	/* Parameters */
+	PiSDFParameter *paramWidth = graph->addParameter("width3");
+	paramWidth->setParameterParentID(0);
+	PiSDFParameter *paramHeight = graph->addParameter("height3");
+	paramHeight->setParameterParentID(1);
 
+	PiSDFParameter *paramNbDisp = graph->addParameter("nbDisp3");
+	paramNbDisp->setParameterParentID(2);
+	PiSDFParameter *paramNbIter = graph->addParameter("nbIter3");
+	paramNbIter->setParameterParentID(3);
+
+	/* Interfaces */
+	PiSDFIfVertex *ifLgray = (PiSDFIfVertex*)graph->addVertex("ifLgray", input_vertex);
+	ifLgray->setDirection(0);
+	ifLgray->setParentVertex(graph->getParentVertex());
+	ifLgray->setParentEdge(graph->getParentVertex()->getInputEdge(0));
+	ifLgray->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFIfVertex *ifLcen = (PiSDFIfVertex*)graph->addVertex("ifLcen", input_vertex);
+	ifLcen->setDirection(0);
+	ifLcen->setParentVertex(graph->getParentVertex());
+	ifLcen->setParentEdge(graph->getParentVertex()->getInputEdge(1));
+	ifLcen->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFIfVertex *ifRgray = (PiSDFIfVertex*)graph->addVertex("ifRgray", input_vertex);
+	ifRgray->setDirection(0);
+	ifRgray->setParentVertex(graph->getParentVertex());
+	ifRgray->setParentEdge(graph->getParentVertex()->getInputEdge(2));
+	ifRgray->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFIfVertex *ifRcen = (PiSDFIfVertex*)graph->addVertex("ifRcen", input_vertex);
+	ifRcen->setDirection(0);
+	ifRcen->setParentVertex(graph->getParentVertex());
+	ifRcen->setParentEdge(graph->getParentVertex()->getInputEdge(3));
+	ifRcen->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFIfVertex *ifHWeight = (PiSDFIfVertex*)graph->addVertex("ifHWeight", input_vertex);
+	ifHWeight->setDirection(0);
+	ifHWeight->setParentVertex(graph->getParentVertex());
+	ifHWeight->setParentEdge(graph->getParentVertex()->getInputEdge(4));
+	ifHWeight->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFIfVertex *ifVWeight = (PiSDFIfVertex*)graph->addVertex("ifVWeight", input_vertex);
+	ifVWeight->setDirection(0);
+	ifVWeight->setParentVertex(graph->getParentVertex());
+	ifVWeight->setParentEdge(graph->getParentVertex()->getInputEdge(5));
+	ifVWeight->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFIfVertex *ifDeltas = (PiSDFIfVertex*)graph->addVertex("ifDeltas", input_vertex);
+	ifDeltas->setDirection(0);
+	ifDeltas->setParentVertex(graph->getParentVertex());
+	ifDeltas->setParentEdge(graph->getParentVertex()->getInputEdge(6));
+	ifDeltas->setFunction_index(RB_FUNCT_IX);
+
+	PiSDFIfVertex *ifOut = (PiSDFIfVertex*)graph->addVertex("ifOut", output_vertex);
+	ifOut->setDirection(1);
+	ifOut->setParentVertex(graph->getParentVertex());
+	ifOut->setParentEdge(graph->getParentVertex()->getOutputEdge(0));
+	ifOut->setFunction_index(RB_FUNCT_IX);
+
+	// Special vertices
+	PiSDFVertex *vxBr_Disp = (PiSDFVertex *)graph->addVertex("Br_Disp", normal_vertex);
+	vxBr_Disp->setSubType(SubType_Broadcast);
+	vxBr_Disp->setFunction_index(BROADCAST_FUNCT_IX);
+
+	PiSDFVertex *vxBr_Out = (PiSDFVertex *)graph->addVertex("Br_Out", normal_vertex);
+	vxBr_Out->setSubType(SubType_Broadcast);
+	vxBr_Out->setFunction_index(BROADCAST_FUNCT_IX);
+
+	/* Vertices */
+	PiSDFVertex *vxCostConst = (PiSDFVertex *)graph->addVertex("CostConst", normal_vertex);
+	vxCostConst->addParameter(paramWidth);
+	vxCostConst->addParameter(paramHeight);
+	vxCostConst->setFunction_index(7);
+
+	PiSDFVertex *vxAggregateTop = (PiSDFVertex *)graph->addVertex("AggregateTop", normal_vertex);
+	vxAggregateTop->addParameter(paramWidth);
+	vxAggregateTop->addParameter(paramHeight);
+	vxAggregateTop->addParameter(paramNbIter);
+	vxAggregateTop->setFunction_index(8);
+
+	PiSDFVertex *vxSelect = (PiSDFVertex *)graph->addVertex("Select", normal_vertex);
+	vxSelect->addParameter(paramWidth);
+	vxSelect->addParameter(paramHeight);
+	vxSelect->setFunction_index(9);
+
+	PiSDFVertex *vxDispGen = (PiSDFVertex *)graph->addVertex("DispGen", normal_vertex);
+	vxDispGen->addParameter(paramNbDisp);
+	vxDispGen->setFunction_index(10);
+
+	/* Edges */
+	graph->addEdge(ifLgray, 0, "height3*width3", vxCostConst, 0, "height3*width3", "0");
+	graph->addEdge(ifLcen,  0, "height3*width3", vxCostConst, 1, "height3*width3", "0");
+	graph->addEdge(ifRgray, 0, "height3*width3", vxCostConst, 2, "height3*width3", "0");
+	graph->addEdge(ifRcen,  0, "height3*width3", vxCostConst, 3, "height3*width3", "0");
+
+	graph->addEdge(vxDispGen,  0, "nbDisp3", vxBr_Disp, 0, "nbDisp3", "0");
+	graph->addEdge(vxBr_Disp,  0, "nbDisp3", vxCostConst, 4, "1", "0");
+
+	graph->addEdge(ifVWeight,  0, "height3*width3*nbIter3", vxAggregateTop, 0, "height3*width3*nbIter3", "0");
+	graph->addEdge(ifHWeight,  0, "height3*width3*nbIter3", vxAggregateTop, 1, "height3*width3*nbIter3", "0");
+	graph->addEdge(ifDeltas,   0, "nbIter3", vxAggregateTop, 2, "nbIter3", "0");
+	graph->addEdge(vxCostConst, 0, "height3*width3", vxAggregateTop, 3, "height3*width3", "0");
+
+	graph->addEdge(vxSelect, 0, "height3*width3", vxSelect, 0, "height3*width3", "height3*width3");
+	graph->addEdge(vxBr_Out, 1, "height3*width3", vxSelect, 1, "height3*width3", "height3*width3");
+	graph->addEdge(vxAggregateTop, 0, "height3*width3", vxSelect, 2, "height3*width3", "0");
+	graph->addEdge(vxBr_Disp, 1, "nbDisp3", vxSelect, 3, "1", "0");
+
+	graph->addEdge(vxSelect, 1, "height3*width3", vxBr_Out, 0, "height3*width3", "0");
+	graph->addEdge(vxBr_Out, 0, "height3*width3", ifOut, 0, "height3*width3", "0");
+
+	/* Timings */
+	vxBr_Disp->setTiming(0, "100");
+	vxBr_Out->setTiming(0, "100");
+	vxCostConst->setTiming(0, "100");
+	vxAggregateTop->setTiming(0, "100");
+	vxSelect->setTiming(0, "100");
+	vxDispGen->setTiming(0, "100");
+}

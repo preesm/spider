@@ -51,6 +51,10 @@ void census(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void genDelta(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void compWeight(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void disp(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void costConst(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void aggregate(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void select(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void genDisp(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void null(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 
 PiSDFGraph* initPisdf_stereo(

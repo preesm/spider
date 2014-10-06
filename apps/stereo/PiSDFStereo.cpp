@@ -244,7 +244,7 @@ void stereo_stereo(PiSDFGraph* graph){
 	PiSDFParameter *paramNbIter = graph->addParameter("nbIter2");
 	paramNbIter->setParameterParentID(3);
 	PiSDFParameter *paramNbSlices = graph->addParameter("nbSlices2");
-	paramNbSlices->setParameterParentID(0);
+	paramNbSlices->setParameterParentID(4);
 
 	/* Interfaces */
 	PiSDFIfVertex *ifLr = (PiSDFIfVertex*)graph->addVertex("ifLr", input_vertex);

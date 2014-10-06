@@ -87,6 +87,8 @@ void SPIDER_report(Architecture* arch, PiSDFGraph* topPisdf, ExecutionStat* exec
 	char file[MAX_FILE_NAME_SIZE+40];
 		snprintf(file, MAX_FILE_NAME_SIZE+40, "/home/jheulot/dev/mp-sched/ederc/Gantt_spider_cache_nvar9.xml");
 		Launcher::createRealTimeGantt(arch, &topDag, file, execStat, true);
+		execStat->SRDAGVertices = topDag.getNbVertices();
+		execStat->SRDAGEdges = topDag.getNbEdges();
 	//	snprintf(file, MAX_FILE_NAME_SIZE+40, "/home/jheulot/dev/mp-sched/ederc/simu%d.xml", iter);
 	//	ScheduleWriter::write(&schedule, &topDag, arch, file);
 	#if STAT

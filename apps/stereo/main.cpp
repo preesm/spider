@@ -123,6 +123,8 @@ int main(){
 
 		SPIDER_report(&arch, topPisdf, &execStat, iter);
 
+		printf("SRDAG Graph %d vertices %d edges\n", execStat.SRDAGVertices, execStat.SRDAGEdges);
+
  		printf("GraphTime:   %d\n", execStat.graphTransfoTime);
  		printf("MappingTime: %d\n", execStat.mappingTime);
  		printf("TaskOrdTime: %d\n", execStat.taskOrderingTime);

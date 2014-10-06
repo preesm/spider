@@ -60,6 +60,9 @@ typedef struct{
 	UINT32 roundBufferTime;
 	UINT32 broadcastTime;
 
+	int SRDAGVertices;
+	int SRDAGEdges;
+
 	UINT32 latencies[ITER_MAX];
 }ExecutionStat;
 

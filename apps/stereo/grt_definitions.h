@@ -97,15 +97,15 @@
 
 // Single Rate DAG
 
-#define MAX_SRDAG_VERTICES 		10000 // 400
-#define MAX_SRDAG_EDGES 		10000 // 600
-#define MAX_SRDAG_BROADCASTS	10000 // 25
-#define MAX_SRDAG_RBS			10000 // 35
-#define MAX_SRDAG_IMPLODES		10000 // 25
+#define MAX_SRDAG_VERTICES 		400 // 400
+#define MAX_SRDAG_EDGES 		1100 // 600
+#define MAX_SRDAG_BROADCASTS	100 // 25
+#define MAX_SRDAG_RBS			20 // 35
+#define MAX_SRDAG_IMPLODES		5 // 25
 
-#define MAX_SRDAG_IO_EDGES		1000
-#define MAX_SRDAG_XPLODE_EDGES	1000
-#define MAX_EDGE_ARRAY 			1000000
+#define MAX_SRDAG_IO_EDGES		10
+#define MAX_SRDAG_XPLODE_EDGES	100
+#define MAX_EDGE_ARRAY 			100000
 #define MAX_PARAM_ARRAY 		100
 
 #define MAX_VERTEX_REPETITION 	800	//100 // The maximum number of repetitions for one vertex

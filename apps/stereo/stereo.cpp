@@ -350,18 +350,22 @@ void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 #endif
 
 	/* Fct */
+	bool ok=true;
 	for(int i=0; i<width*height; i++){
 		if(disp[i] != mono[i]){
 			printf("Check failed\n");
+			ok = false;
 			break;
 		}
 	}
+
+	if(ok)
+		printf("Check Ok ! \n");
 
     IplImage* imageL = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
     IplImage* imageR = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
     IplImage* imageDisp = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
     IplImage* imageMono = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-    IplImage* imageDiff = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
 
     for(int i=0; i<width*height; i++){
     	imageL->imageData[3*i+0] = Lb[i];
@@ -379,12 +383,17 @@ void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
     	mono[i]*=scale;
     }
 
-	for(int i=0; i<width*height; i++){
-		if(disp[i] != mono[i])
-			imageDiff->imageData[i] = 255;
-		else
-			imageDiff->imageData[i] = 0;
-	}
+    if(!ok){
+		IplImage* imageDiff = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
+		for(int i=0; i<width*height; i++){
+			if(disp[i] != mono[i])
+				imageDiff->imageData[i] = 255;
+			else
+				imageDiff->imageData[i] = 0;
+		}
+		cvShowImage( "Diff", imageDiff);
+		cvReleaseImage(&imageDiff);
+    }
 
     memcpy(imageDisp->imageData, disp, width*height);
     memcpy(imageMono->imageData, mono, width*height);
@@ -393,14 +402,12 @@ void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	cvShowImage( "Right", imageR);
 	cvShowImage( "Disp", imageDisp);
 	cvShowImage( "Mono", imageMono);
-	cvShowImage( "Diff", imageDiff);
 	cvWaitKey(100);
 
     cvReleaseImage(&imageL);
     cvReleaseImage(&imageR);
     cvReleaseImage(&imageDisp);
     cvReleaseImage(&imageMono);
-    cvReleaseImage(&imageDiff);
 }
 
 void stereoMono(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){

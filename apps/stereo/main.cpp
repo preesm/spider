@@ -84,13 +84,16 @@ int main(){
 	setFctPtr(8, aggregate);
 	setFctPtr(9, select);
 	setFctPtr(10, genDisp);
+	setFctPtr(11, split);
+	setFctPtr(12, medianSlice);
+	setFctPtr(13, null);
 //	setFctPtr(6, disp);
 //	setFctPtr(7, dispGen);
 //	setFctPtr(8, compWeight);
 //	setFctPtr(9, costConstr);
 //	setFctPtr(10, aggregateCost);
 //	setFctPtr(11, dispSelect);
-	setFctPtr(12, stereoMono);
+	setFctPtr(16, stereoMono);
 	setFctPtr(15, config);
 
 	setFctPtr(RB_FUNCT_IX, RB);
@@ -115,7 +118,7 @@ int main(){
 		topPisdf = initPisdf_mpSched(pisdfGraphs, 20, 4000, iter, 0);
 #else
 		topPisdf = initPisdf_stereo(pisdfGraphs,
-				400, 375, 60, 6, 1);
+				400, 375, 60, 6, 5);
 #endif
 		SPIDER_reset();
 

@@ -732,3 +732,121 @@ void genDisp(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 		out[i] = i;
 	}
 }
+
+static inline void swap(unsigned char *a, unsigned char *b){
+	unsigned char buf = *a;
+	*a=*b;
+	*b=buf;
+}
+
+static void quickSortPartition(int startIdx, int endIdx, int *pivotIdx, unsigned char *values){
+	int idx;
+	int swapIdx = startIdx;
+	swap(values+*pivotIdx,values+endIdx);
+	for(idx = startIdx; idx < endIdx; idx++){
+		if(values[idx]<=values[endIdx]){
+			swap(values+swapIdx,values+idx);
+			swapIdx++;
+		}
+	}
+	swap(values+swapIdx, values+endIdx);
+	*pivotIdx = swapIdx;
+}
+
+
+static void quickSort(int startIdx, int endIdx, unsigned char *values){
+	if(startIdx<endIdx){
+		int pivotIdx = startIdx;
+		quickSortPartition(startIdx, endIdx, &pivotIdx, values);
+		quickSort(startIdx,pivotIdx-1,values);
+		quickSort(pivotIdx+1,endIdx,values);
+	}
+}
+
+void medianSlice(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	/* Params */
+	int width = params[0];
+	int height = params[1];
+	int nbSlices = params[2];
+
+	int subHeight = height/nbSlices+2;
+
+	/* Inputs */
+	UINT8* in = inputFIFOs[0];
+
+	/* Outputs */
+	UINT8* out = outputFIFOs[0];
+
+
+#if PRINT
+	printf("median %d %d %d\n", width, height, nbSlices);
+#endif
+
+	int k,l;
+	// Process pixels one by one
+	for(int j=0; j<height/nbSlices; j++){
+		out[j*width] = 0;
+		for(int i=1;i<width-1;i++){
+			unsigned char pixels[9];
+			// output pixel is the median of a 3x3 window
+			// Get the 9 pixels
+			int k=0;
+			for(int y=j-1;y<=j+1;y++){
+				for(int x=i-1;x<=i+1;x++){
+					pixels[k++] = in[y*width+x];
+				}
+			}
+
+			// Sort the 9 values
+			quickSort(0, 8, pixels);
+			out[j*width+i] = pixels[9/2];
+		}
+		out[j*width+width-1] = 0;
+	}
+}
+
+void split(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	/* Params */
+	int width = params[0];
+	int height = params[1];
+	int nbSlices = params[2];
+
+	int subHeight = height/nbSlices+2;
+	int sliceSize = subHeight*width;
+
+	/* Inputs */
+	UINT8* in = inputFIFOs[0];
+
+	/* Outputs */
+	UINT8* out = outputFIFOs[0];
+
+
+#if PRINT
+	printf("split %d %d %d\n", width, height, nbSlices);
+#endif
+
+	int i;
+
+	// Fill first and last line with 0
+	memset(out,0,width);
+	// First Slice
+	memcpy(out+width, in, sliceSize);
+	// Copy next line if several slice
+	if (nbSlices > 1){
+		memcpy(out +  width + sliceSize , in + sliceSize, width);
+	}
+	// Slice other than first and last
+	for(i=1; i<nbSlices-1; i++){
+		int destIndex = i*(sliceSize+2*width);
+		memcpy(out + destIndex, in+i*sliceSize-width, sliceSize+2*width);
+	}
+	// Last Slice
+	i = nbSlices-1;
+	if(nbSlices > 1){
+		// we have i = nbSlice -1;
+		int destIndex = i*(sliceSize+2*width);
+		memcpy(out + destIndex, in+i*sliceSize-width, sliceSize+width);
+	}
+	// Last line
+	memset(out + (height+nbSlices*2-1)*width,0,width);
+}

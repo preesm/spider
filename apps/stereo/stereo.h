@@ -55,6 +55,8 @@ void costConst(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void aggregate(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void select(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void genDisp(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void medianSlice(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void split(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void null(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 
 PiSDFGraph* initPisdf_stereo(

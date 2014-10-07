@@ -341,7 +341,7 @@ void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	UINT8* Rg = inputFIFOs[4];
 	UINT8* Rb = inputFIFOs[5];
 	UINT8* disp = inputFIFOs[6];
-	UINT8* mono = inputFIFOs[7];
+//	UINT8* mono = inputFIFOs[7];
 
 	/* Outputs */
 

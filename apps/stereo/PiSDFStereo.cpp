@@ -159,13 +159,13 @@ void stereo_top(
 	vxStereoTop->addParameter(paramNbIter);
 	vxStereoTop->addParameter(paramNbSlices);
 
-	PiSDFVertex *vxStereoMono = (PiSDFVertex *)graph->addVertex("vxStereoMono", normal_vertex);
-	vxStereoMono->addParameter(paramWidth);
-	vxStereoMono->addParameter(paramHeight);
-	vxStereoMono->addParameter(paramNbDisp);
-	vxStereoMono->addParameter(paramNbIter);
-	vxStereoMono->addParameter(paramNbSlices);
-	vxStereoMono->setFunction_index(16);
+//	PiSDFVertex *vxStereoMono = (PiSDFVertex *)graph->addVertex("vxStereoMono", normal_vertex);
+//	vxStereoMono->addParameter(paramWidth);
+//	vxStereoMono->addParameter(paramHeight);
+//	vxStereoMono->addParameter(paramNbDisp);
+//	vxStereoMono->addParameter(paramNbIter);
+//	vxStereoMono->addParameter(paramNbSlices);
+//	vxStereoMono->setFunction_index(16);
 
 	PiSDFVertex *vxSplit = (PiSDFVertex *)graph->addVertex("vxSplit", normal_vertex);
 	vxSplit->addParameter(paramWidth);
@@ -201,20 +201,20 @@ void stereo_top(
 	graph->addEdge(vxBr_Rg, 0, "height*width", vxStereoTop, 4, "height*width", "0");
 	graph->addEdge(vxBr_Rb, 0, "height*width", vxStereoTop, 5, "height*width", "0");
 
-	graph->addEdge(vxBr_Lr, 1, "height*width", vxStereoMono, 0, "height*width", "0");
-	graph->addEdge(vxBr_Lg, 1, "height*width", vxStereoMono, 1, "height*width", "0");
-	graph->addEdge(vxBr_Lb, 1, "height*width", vxStereoMono, 2, "height*width", "0");
-	graph->addEdge(vxBr_Rr, 1, "height*width", vxStereoMono, 3, "height*width", "0");
-	graph->addEdge(vxBr_Rg, 1, "height*width", vxStereoMono, 4, "height*width", "0");
-	graph->addEdge(vxBr_Rb, 1, "height*width", vxStereoMono, 5, "height*width", "0");
+//	graph->addEdge(vxBr_Lr, 1, "height*width", vxStereoMono, 0, "height*width", "0");
+//	graph->addEdge(vxBr_Lg, 1, "height*width", vxStereoMono, 1, "height*width", "0");
+//	graph->addEdge(vxBr_Lb, 1, "height*width", vxStereoMono, 2, "height*width", "0");
+//	graph->addEdge(vxBr_Rr, 1, "height*width", vxStereoMono, 3, "height*width", "0");
+//	graph->addEdge(vxBr_Rg, 1, "height*width", vxStereoMono, 4, "height*width", "0");
+//	graph->addEdge(vxBr_Rb, 1, "height*width", vxStereoMono, 5, "height*width", "0");
 
-	graph->addEdge(vxBr_Lr, 2, "height*width", vxDisplay, 0, "height*width", "0");
-	graph->addEdge(vxBr_Lg, 2, "height*width", vxDisplay, 1, "height*width", "0");
-	graph->addEdge(vxBr_Lb, 2, "height*width", vxDisplay, 2, "height*width", "0");
-	graph->addEdge(vxBr_Rr, 2, "height*width", vxDisplay, 3, "height*width", "0");
-	graph->addEdge(vxBr_Rg, 2, "height*width", vxDisplay, 4, "height*width", "0");
-	graph->addEdge(vxBr_Rb, 2, "height*width", vxDisplay, 5, "height*width", "0");
-	graph->addEdge(vxStereoMono, 0, "height*width", vxDisplay, 7, "height*width", "0");
+	graph->addEdge(vxBr_Lr, 1, "height*width", vxDisplay, 0, "height*width", "0");
+	graph->addEdge(vxBr_Lg, 1, "height*width", vxDisplay, 1, "height*width", "0");
+	graph->addEdge(vxBr_Lb, 1, "height*width", vxDisplay, 2, "height*width", "0");
+	graph->addEdge(vxBr_Rr, 1, "height*width", vxDisplay, 3, "height*width", "0");
+	graph->addEdge(vxBr_Rg, 1, "height*width", vxDisplay, 4, "height*width", "0");
+	graph->addEdge(vxBr_Rb, 1, "height*width", vxDisplay, 5, "height*width", "0");
+//	graph->addEdge(vxStereoMono, 0, "height*width", vxDisplay, 7, "height*width", "0");
 
 	graph->addEdge(vxStereoTop, 0, "height*width", vxSplit, 0, "height*width", "0");
 	graph->addEdge(vxSplit, 0, "(height+2*nbSlices)*width", vxMedianSlice, 0, "(2+height/nbSlices)*width", "0");
@@ -231,7 +231,7 @@ void stereo_top(
 	vxCam_L->setTiming(0, "100");
 	vxCam_R->setTiming(0, "100");
 	vxStereoTop->setTiming(0, "100");
-	vxStereoMono->setTiming(0, "100");
+//	vxStereoMono->setTiming(0, "100");
 	vxSplit->setTiming(0, "100");
 	vxMedianSlice->setTiming(0, "100");
 	vxDisplay->setTiming(0, "100");

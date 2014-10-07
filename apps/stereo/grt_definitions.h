@@ -108,7 +108,7 @@
 #define MAX_EDGE_ARRAY 			100000
 #define MAX_PARAM_ARRAY 		100
 
-#define MAX_VERTEX_REPETITION 	800	//100 // The maximum number of repetitions for one vertex
+#define MAX_VERTEX_REPETITION 	200	//100 // The maximum number of repetitions for one vertex
 #define MAX_XPL_IN_STEPS		100
 
 #define RB_FUNCT_IX				20

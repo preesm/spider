@@ -47,7 +47,7 @@ int main(){
 #ifdef DSP
 	int nbSlaves = 8;
 #else
-	int nbSlaves = 1;
+	int nbSlaves = 2;
 #endif
 
 	static Architecture 		arch;
@@ -110,7 +110,7 @@ int main(){
 
 	SPIDER_init(&arch);
 
-	for(int iter=0; iter<=100; iter++){
+	for(int iter=0; iter<=1; iter++){
 		printf("N=%d\n", iter);
 
 		resetGraph();

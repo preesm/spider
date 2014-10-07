@@ -575,7 +575,9 @@ void config(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	int nbDisp = 10+10*it;
 	it = (it+1)%6;
 
-	unsigned int outParams[2] = {nbDisp, nbIter};
+//	unsigned int outParams[2] = {nbDisp, nbIter};
+
+	unsigned int outParams[2] = {60, 6};
 
 	pushParam(curVertexId,2,outParams);
 

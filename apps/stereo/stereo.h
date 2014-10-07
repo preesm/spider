@@ -45,6 +45,7 @@ void config(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void file(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void cam(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void stereoMono(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void writeFile(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void rgb2Gray(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void census(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);

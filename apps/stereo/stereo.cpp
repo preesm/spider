@@ -327,7 +327,8 @@ void cam(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 //		cvReleaseData(&my);
 	}
 }
-void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+
+void writeFile(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	/* Params */
 	int width = params[0];
 	int height = params[1];
@@ -348,67 +349,90 @@ void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 #if PRINT
 	printf("display %d %d %d\n", width, height, nbDisp);
 #endif
-
-	/* Fct */
-	bool ok=true;
-	for(int i=0; i<width*height; i++){
-		if(disp[i] != mono[i]){
-			printf("Check failed\n");
-			ok = false;
-			break;
-		}
-	}
-
-	if(ok)
-		printf("Check Ok ! \n");
-
-    IplImage* imageL = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
-    IplImage* imageR = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
-    IplImage* imageDisp = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-    IplImage* imageMono = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-
-    for(int i=0; i<width*height; i++){
-    	imageL->imageData[3*i+0] = Lb[i];
-    	imageL->imageData[3*i+1] = Lg[i];
-    	imageL->imageData[3*i+2] = Lr[i];
-
-    	imageR->imageData[3*i+0] = Rb[i];
-    	imageR->imageData[3*i+1] = Rg[i];
-    	imageR->imageData[3*i+2] = Rr[i];
-    }
-
-    int scale = 256/nbDisp;
-    for(int i=0; i<width*height; i++){
-    	disp[i]*=scale;
-    	mono[i]*=scale;
-    }
-
-    if(!ok){
-		IplImage* imageDiff = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-		for(int i=0; i<width*height; i++){
-			if(disp[i] != mono[i])
-				imageDiff->imageData[i] = 255;
-			else
-				imageDiff->imageData[i] = 0;
-		}
-		cvShowImage( "Diff", imageDiff);
-		cvReleaseImage(&imageDiff);
-    }
-
-    memcpy(imageDisp->imageData, disp, width*height);
-    memcpy(imageMono->imageData, mono, width*height);
-
-	cvShowImage( "Left", imageL);
-	cvShowImage( "Right", imageR);
-	cvShowImage( "Disp", imageDisp);
-	cvShowImage( "Mono", imageMono);
-	cvWaitKey(100);
-
-    cvReleaseImage(&imageL);
-    cvReleaseImage(&imageR);
-    cvReleaseImage(&imageDisp);
-    cvReleaseImage(&imageMono);
 }
+
+//void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+//	/* Params */
+//	int width = params[0];
+//	int height = params[1];
+//	int nbDisp = params[2];
+//
+//	/* Inputs */
+//	UINT8* Lr = inputFIFOs[0];
+//	UINT8* Lg = inputFIFOs[1];
+//	UINT8* Lb = inputFIFOs[2];
+//	UINT8* Rr = inputFIFOs[3];
+//	UINT8* Rg = inputFIFOs[4];
+//	UINT8* Rb = inputFIFOs[5];
+//	UINT8* disp = inputFIFOs[6];
+//	UINT8* mono = inputFIFOs[7];
+//
+//	/* Outputs */
+//
+//#if PRINT
+//	printf("display %d %d %d\n", width, height, nbDisp);
+//#endif
+//
+//	/* Fct */
+//	bool ok=true;
+//	for(int i=0; i<width*height; i++){
+//		if(disp[i] != mono[i]){
+//			printf("Check failed\n");
+//			ok = false;
+//			break;
+//		}
+//	}
+//
+//	if(ok)
+//		printf("Check Ok ! \n");
+//
+//    IplImage* imageL = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+//    IplImage* imageR = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+//    IplImage* imageDisp = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
+//    IplImage* imageMono = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
+//
+//    for(int i=0; i<width*height; i++){
+//    	imageL->imageData[3*i+0] = Lb[i];
+//    	imageL->imageData[3*i+1] = Lg[i];
+//    	imageL->imageData[3*i+2] = Lr[i];
+//
+//    	imageR->imageData[3*i+0] = Rb[i];
+//    	imageR->imageData[3*i+1] = Rg[i];
+//    	imageR->imageData[3*i+2] = Rr[i];
+//    }
+//
+//    int scale = 256/nbDisp;
+//    for(int i=0; i<width*height; i++){
+//    	disp[i]*=scale;
+//    	mono[i]*=scale;
+//    }
+//
+//    if(!ok){
+//		IplImage* imageDiff = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
+//		for(int i=0; i<width*height; i++){
+//			if(disp[i] != mono[i])
+//				imageDiff->imageData[i] = 255;
+//			else
+//				imageDiff->imageData[i] = 0;
+//		}
+//		cvShowImage( "Diff", imageDiff);
+//		cvReleaseImage(&imageDiff);
+//    }
+//
+//    memcpy(imageDisp->imageData, disp, width*height);
+//    memcpy(imageMono->imageData, mono, width*height);
+//
+//	cvShowImage( "Left", imageL);
+//	cvShowImage( "Right", imageR);
+//	cvShowImage( "Disp", imageDisp);
+//	cvShowImage( "Mono", imageMono);
+//	cvWaitKey(100);
+//
+//    cvReleaseImage(&imageL);
+//    cvReleaseImage(&imageR);
+//    cvReleaseImage(&imageDisp);
+//    cvReleaseImage(&imageMono);
+//}
 
 void stereoMono(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	/* Params */

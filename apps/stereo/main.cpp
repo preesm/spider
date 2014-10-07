@@ -74,7 +74,7 @@ int main(){
 	arch.setNbActiveSlaves(nbSlaves);
 
 	setFctPtr(0, file);
-	setFctPtr(1, display);
+	setFctPtr(1, writeFile);
 	setFctPtr(2, rgb2Gray);
 	setFctPtr(3, census);
 	setFctPtr(4, genDelta);

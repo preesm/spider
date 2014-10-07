@@ -75,7 +75,7 @@ typedef struct {
 
 #define QMSS_DESC_BASE	0x0C000000
 #define QMSS_DESC_END	0x0C600000
-#define DATA_BASE		0x80000000
+#define DATA_BASE		0x90000000
 #define DATA_END		0xA0000000
 
 #define EMPTY_CTRL 	896

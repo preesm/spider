@@ -347,8 +347,27 @@ void writeFile(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	/* Outputs */
 
 #if PRINT
-	printf("display %d %d %d\n", width, height, nbDisp);
+	printf("writeFile %d %d %d\n", width, height, nbDisp);
 #endif
+
+	FILE * outFile;
+	int i;
+	if((outFile = fopen("result.ppm", "wb+")) == NULL )
+    {
+        fprintf(stderr,"ERROR: Task read cannot create/open ppm_file 'result.ppm'\n");
+        return;
+    }
+
+	fprintf(outFile,"P6\n");
+	fprintf(outFile,"%d %d\n",width,height);
+	fprintf(outFile,"255\n");
+	for(i=0; i<height*width;i++){
+		fwrite(disp+i,sizeof(char),1,outFile);
+		fwrite(disp+i,sizeof(char),1,outFile);
+		fwrite(disp+i,sizeof(char),1,outFile);
+	}
+
+	fclose(outFile);
 }
 
 //void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){

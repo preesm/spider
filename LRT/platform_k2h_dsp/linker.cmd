@@ -9,7 +9,6 @@
  */
 
 
--l"/home/jheulot/workspace_k2/test1/Debug/configPkg/package/cfg/test_pe66.oe66"
 -l"/opt/ti_k2/xdctools_3_25_06_96/packages/ti/targets/rts6000/lib/ti.targets.rts6000.ae66"
 -l"/opt/ti_k2/xdctools_3_25_06_96/packages/ti/targets/rts6000/lib/boot.ae66"
 

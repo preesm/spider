@@ -39,11 +39,14 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 extern "C"{
 #include <ti/drv/qmss/qmss_drv.h>
+#include <ti/csl/device/k2h/src/cslr_device.h>
+#include <ti/csl/device/k2h/src/csl_qm_queue.h>
 #include <ti/drv/qmss/device/k2h/src/qmss_device.c>
 }
 
@@ -222,11 +225,16 @@ static void sysInit (){
 		abort();
 	}
 
+	dat_mem = mmap(0, DATA_END-DATA_BASE, (PROT_READ|PROT_WRITE), MAP_SHARED, memFile, (off_t)DATA_BASE);
+	if(dat_mem == (void *) -1){
+		printf("fw_memMap: Failed to mmap \"dev/mem\" err=%s\n", strerror(errno));
+		abort();
+	}
+	dat_mem_size = (DATA_END-DATA_BASE);
+
 	/* Descriptors */
 	ctrl_desc = descriptors;
 	data_desc = (void*)(align((int)descriptors + CTRL_DESC_POOL_SIZE) + 0x300000);
-	dat_mem  = (void*)(align((int)descriptors + DATA_DESC_POOL_SIZE) + CACHE_LINESZ);
-	dat_mem_size = (QMSS_DESC_END-QMSS_DESC_BASE) - ((int)dat_mem-(int)descriptors);
 
     /* Setup memory region for Ctrl descriptors */
     memset(&regionCfg, 0, sizeof(regionCfg));

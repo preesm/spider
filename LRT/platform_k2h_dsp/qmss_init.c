@@ -131,11 +131,11 @@ int platform_getDataMemSize(){
 }
 
 static void sysInit (){
-	int i;
+//	int i;
 
 	/* Data memory */
-	data_mem  = (void*)(align(QMSS_DESC_BASE + DATA_DESC_POOL_SIZE + CTRL_DESC_POOL_SIZE) + CACHE_LINESZ);
-	data_mem_size = (QMSS_DESC_END-QMSS_DESC_BASE) - ((int)data_mem-QMSS_DESC_BASE);
+	data_mem  = (void*)DATA_BASE;
+	data_mem_size = DATA_END - DATA_BASE;
 }
 
 static void sysExit (void){

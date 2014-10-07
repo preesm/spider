@@ -69,7 +69,7 @@ int main(){
 		if(len > MAX_SLAVE_NAME_SIZE){
 			exitWithCode(1073);
 		}
-		arch.addSlave(0, tempStr, 0.9267, 435, 0.9252, 430);
+		arch.addSlave(1, tempStr, 0.9267, 435, 0.9252, 430);
 	}
 	arch.setNbActiveSlaves(nbSlaves);
 

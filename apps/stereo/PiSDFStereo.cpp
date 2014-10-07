@@ -230,11 +230,19 @@ void stereo_top(
 	vxBr_Rb->setTiming(0, "100");
 	vxCam_L->setTiming(0, "100");
 	vxCam_R->setTiming(0, "100");
-	vxStereoTop->setTiming(0, "100");
-//	vxStereoMono->setTiming(0, "100");
 	vxSplit->setTiming(0, "100");
 	vxMedianSlice->setTiming(0, "100");
 	vxDisplay->setTiming(0, "100");
+
+	vxConfig->setTiming(1, "100");
+	vxBr_Lr->setTiming(1, "100");
+	vxBr_Lg->setTiming(1, "100");
+	vxBr_Lb->setTiming(1, "100");
+	vxBr_Rr->setTiming(1, "100");
+	vxBr_Rg->setTiming(1, "100");
+	vxBr_Rb->setTiming(1, "100");
+	vxSplit->setTiming(1, "100");
+	vxMedianSlice->setTiming(1, "100");
 
 	// Subgraphs
 	PiSDFGraph *Stereo_sub = addGraph();
@@ -471,6 +479,27 @@ void stereo_stereo(PiSDFGraph* graph){
 	vxVweight->setTiming(0, "100");
 	vxDispTop->setTiming(0, "100");
 
+	vxBr_Lr->setTiming(1, "100");
+	vxBr_Lg->setTiming(1, "100");
+	vxBr_Lb->setTiming(1, "100");
+	vxBr_Lgr->setTiming(1, "100");
+	vxBr_Rgr->setTiming(1, "100");
+	vxBr_Del->setTiming(1, "100");
+	vxRb_Hr->setTiming(1, "100");
+	vxRb_Hg->setTiming(1, "100");
+	vxRb_Hb->setTiming(1, "100");
+	vxRb_Vr->setTiming(1, "100");
+	vxRb_Vg->setTiming(1, "100");
+	vxRb_Vb->setTiming(1, "100");
+	vxRGB2Gray_L->setTiming(1, "100");
+	vxRGB2Gray_R->setTiming(1, "100");
+	vxCen_L->setTiming(1, "100");
+	vxCen_R->setTiming(1, "100");
+	vxGen_D->setTiming(1, "100");
+	vxHweight->setTiming(1, "100");
+	vxVweight->setTiming(1, "100");
+	vxDispTop->setTiming(1, "100");
+
 	// Subgraphs
 	PiSDFGraph *Stereo_topDisp = addGraph();
 	vxDispTop->setSubGraph(Stereo_topDisp);
@@ -599,4 +628,11 @@ void stereo_topDisp(PiSDFGraph* graph){
 	vxAggregateTop->setTiming(0, "100");
 	vxSelect->setTiming(0, "100");
 	vxDispGen->setTiming(0, "100");
+
+	vxBr_Disp->setTiming(1, "100");
+	vxBr_Out->setTiming(1, "100");
+	vxCostConst->setTiming(1, "100");
+	vxAggregateTop->setTiming(1, "100");
+	vxSelect->setTiming(1, "100");
+	vxDispGen->setTiming(1, "100");
 }

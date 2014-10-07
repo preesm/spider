@@ -76,7 +76,7 @@
 #define SCHED_FILE_NAME					"test"
 
 // Architecture
-#define MAX_SLAVE_TYPES 		1	//2 	// The maximum number of slave types
+#define MAX_SLAVE_TYPES 		2	//2 	// The maximum number of slave types
 #define MAX_SLAVES 				9	//12	// The maximum number of slaves
 #define MAX_SLAVE_NAME_SIZE 	10	// The maximum number of slaves
 

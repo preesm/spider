@@ -6,7 +6,6 @@
  */
 
 #include "../image/image.h"
-#include "../image/image_png.h"
 
 #include "stereomatch.h"
 #include "compute_stereo.h"

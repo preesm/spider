@@ -49,7 +49,7 @@ extern "C"{
 #include <execution/execution.h>
 
 #include <stdio.h>
-#define PRINT 1
+#define PRINT 0
 
 #include <stdlib.h>
 #include <string.h>
@@ -104,71 +104,13 @@ void yuyv_to_rgb (struct vdIn *vd, unsigned char* r, unsigned char* g, unsigned 
 	}
 }
 
+void mixInput(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	int source = params[3];
 
-char* paths[] = {"./im0.ppm","./im1.ppm"};
-static FILE * ptfile[2];
-long imageStartPosition[2];
-
-void readPPMInit(int id,int height, int width) {
-    char magicNumber[3];
-    int readWidth;
-    int readHeight;
-    int maxRGBValue;
-	int fsize;
-
-	printf("readPPMInit()\n");
-    if((ptfile[id] = fopen(paths[id], "rb")) == NULL )
-    {
-        fprintf(stderr,"ERROR: Task read cannot open ppm_file '%s'\n", paths[id]);
-        system("PAUSE");
-        return;
-    }
-
-    // Read ppm file header
-    // 1. Magic Numper
-    fread(magicNumber, sizeof(char),2, ptfile[id]);
-    magicNumber[2] = '\0';
-    if(strcmp(magicNumber,"P6")){
-        fprintf(stderr,"ERROR: PPM_file '%s' is not a valid PPM file.\n", paths[id]);
-        system("PAUSE");
-        return;
-    }
-    fseek(ptfile[id],1,SEEK_CUR); // skip space or EOL character
-
-
-    // 2. Width and Height
-    fscanf(ptfile[id],"%d", &readWidth);
-    fscanf(ptfile[id],"%d", &readHeight);
-    if(readWidth!=width || readHeight!= height){
-        fprintf(stderr,"ERROR: PPM_file '%s' has an incorrect resolution.\nExpected: %dx%d\t Read: %dx%d\n", paths[id], width, height, readWidth,readHeight);
-        system("PAUSE");
-        return;
-    }
-    fseek(ptfile[id],1,SEEK_CUR); // skip space or EOL character
-
-    // 3. Max RGB value
-    fscanf(ptfile[id],"%d", &maxRGBValue);
-    if(maxRGBValue > 255){
-        fprintf(stderr,"ERROR: PPM_file '%s' has is coded with 32bits values, 8bits values are expected.\n", paths[id]);
-        system("PAUSE");
-        return;
-    }
-    fseek(ptfile[id],1,SEEK_CUR); // skip space or EOL character
-
-    // Register the position of the file pointer
-    imageStartPosition[id] = ftell(ptfile[id]);
-
-    // check file size:
-    fseek (ptfile[id] , 0 , SEEK_END);
-    fsize = ftell (ptfile[id]) - imageStartPosition[id];
-    fseek(ptfile[id],imageStartPosition[id], SEEK_SET);
-
-    if(fsize != height*width*3)
-    {
-        fprintf(stderr,"ERROR: PPM_file has incorrect data size.\n\nExpected: %d\t Read: %d\n",height*width*3, fsize);
-        system("PAUSE");
-        return;
-    }
+	if(source == 0)
+		file(inputFIFOs, outputFIFOs, params);
+	else
+		cam(inputFIFOs, outputFIFOs, params);
 }
 
 void file(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
@@ -376,6 +318,128 @@ void writeFile(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	fclose(outFile);
 }
 
+
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define BUFLEN 32*1024
+#define PORT 9930
+#define SERVER "127.0.0.1"
+
+#define SOF	0x01
+#define DAT	0x10
+#define EOF	0x21
+
+typedef struct{
+	int imageIx;
+	int width;
+	int height;
+	int nbChannels;
+	int nbSlices;
+} SOF_msg;
+
+typedef struct{
+	int imageIx;
+	int sliceIx;
+	char data;
+} DAT_msg;
+
+void err(const char *s){
+    perror(s);
+    exit(1);
+}
+
+static struct sockaddr_in serv_addr;
+static int sockfd, i, slen=sizeof(serv_addr);
+static char buf[BUFLEN];
+static int imageIx = 0;
+
+void netDisplay_Init(){
+
+	if ((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1)
+		err("socket");
+
+	bzero(&serv_addr, sizeof(serv_addr));
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_port = htons(PORT);
+	if (inet_aton(SERVER, &serv_addr.sin_addr)==0)
+	{
+		fprintf(stderr, "inet_aton() failed\n");
+		exit(1);
+	}
+}
+
+void netDisplay(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
+	/* Params */
+	int width = params[0];
+	int height = params[1];
+	int nbDisp = params[2];
+
+	/* Inputs */
+	UINT8* Lr = inputFIFOs[0];
+	UINT8* Lg = inputFIFOs[1];
+	UINT8* Lb = inputFIFOs[2];
+	UINT8* Rr = inputFIFOs[3];
+	UINT8* Rg = inputFIFOs[4];
+	UINT8* Rb = inputFIFOs[5];
+	UINT8* disp = inputFIFOs[6];
+//	UINT8* mono = inputFIFOs[7];
+
+	/* Outputs */
+
+#if PRINT
+	printf("netDisplay %d %d %d\n", width, height, nbDisp);
+#endif
+
+	int nbSlices = 5;
+	int imageSize = width*height;//frame.rows*frame.cols;
+	int sliceSize = imageSize/nbSlices;
+
+// 		printf("frame type : %d\n", frame.type());
+// 		printf("frame lenght : %ld\n", frame.dataend-frame.datastart);
+// 		printf("frame size : %dx%d\n", frame.cols, frame.rows);
+
+	int scale = 3;
+	for(int j=0; j<imageSize; j++){
+		disp[j] *= scale;
+	}
+
+	buf[0] = SOF;
+	SOF_msg* msg_sof = (SOF_msg*)(buf+1);
+	msg_sof->imageIx 	= imageIx;
+	msg_sof->width 		= width;
+	msg_sof->height 	= height;
+	msg_sof->nbChannels	= 1;
+	msg_sof->nbSlices 	= nbSlices;
+
+	if (sendto(sockfd, buf, BUFLEN/*1+sizeof(SOF_msg)*/, 0, (struct sockaddr*)&serv_addr, slen)==-1)
+		err("sendto()");
+
+	for(int i=0; i<nbSlices; i++){
+		buf[0] = DAT;
+		DAT_msg* msg_dat = (DAT_msg*)(buf+1);
+		msg_dat->imageIx = imageIx;
+		msg_dat->sliceIx = i;
+
+
+		memcpy(&(msg_dat->data), disp+i*sliceSize, sliceSize);
+
+		if (sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&serv_addr, slen)==-1)
+			err("sendto()");
+	}
+
+	buf[0] = EOF;
+	if (sendto(sockfd, buf, BUFLEN/*1+sizeof(SOF_msg)*/, 0, (struct sockaddr*)&serv_addr, slen)==-1)
+		err("sendto()");
+
+	imageIx++;
+}
 //void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 //	/* Params */
 //	int width = params[0];
@@ -592,17 +656,23 @@ void null(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 }
 
 void config(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
-	static int it=0;
-
-	int nbIter = 6-it;
-	int nbDisp = 10+10*it;
-	it = (it+1)%6;
 
 //	unsigned int outParams[2] = {nbDisp, nbIter};
+	FILE* f = fopen("params", "r");
 
-	unsigned int outParams[2] = {60, 6};
+	int source, nbDisp, nbIter, nbSlices;
+	fscanf(f, "%d %d %d %d", &source, &nbDisp, &nbIter, &nbSlices);
 
-	pushParam(curVertexId,2,outParams);
+	fclose(f);
+
+	if(source == 0){
+		unsigned int outParams_file[6] = {400, 375, nbDisp, nbIter, nbSlices, 0};
+		pushParam(curVertexId,6,outParams_file);
+	}else{
+		unsigned int outParams_cam[6] = {320, 240, nbDisp, nbIter, nbSlices, 1};
+		pushParam(curVertexId,6,outParams_cam);
+	}
+
 
 }
 

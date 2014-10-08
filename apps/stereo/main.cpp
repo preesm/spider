@@ -43,6 +43,8 @@ void resetGraph();
 
 #include "stereo.h"
 
+void netDisplay_Init();
+
 int main(){
 #ifdef DSP
 	int nbSlaves = 8;
@@ -73,8 +75,8 @@ int main(){
 	}
 	arch.setNbActiveSlaves(nbSlaves);
 
-	setFctPtr(0, file);
-	setFctPtr(1, writeFile);
+	setFctPtr(0, mixInput);
+	setFctPtr(1, netDisplay);
 	setFctPtr(2, rgb2Gray);
 	setFctPtr(3, census);
 	setFctPtr(4, genDelta);
@@ -108,18 +110,16 @@ int main(){
 	 * Architecture, Scheduling policy.
 	 */
 
+	netDisplay_Init();
+
 	SPIDER_init(&arch);
 
 	for(int iter=0; iter<=1; iter++){
 		printf("N=%d\n", iter);
 
 		resetGraph();
-#ifdef DSP
-		topPisdf = initPisdf_mpSched(pisdfGraphs, 20, 4000, iter, 0);
-#else
-		topPisdf = initPisdf_stereo(pisdfGraphs,
-				400, 375, 60, 6, 5);
-#endif
+		topPisdf = initPisdf_stereo(pisdfGraphs);
+
 		SPIDER_reset();
 
 		SPIDER_launch(&arch, topPisdf);

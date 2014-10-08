@@ -44,8 +44,10 @@ void config(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 
 void file(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void cam(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void mixInput(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void stereoMono(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void writeFile(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
+void netDisplay(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void display(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void rgb2Gray(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void census(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
@@ -60,10 +62,6 @@ void medianSlice(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void split(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 void null(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]);
 
-PiSDFGraph* initPisdf_stereo(
-		PiSDFGraph* _graphs,
-		int width, int height,
-		int nbDisp, int nbIter,
-		int nbSlice);
+PiSDFGraph* initPisdf_stereo(PiSDFGraph* _graphs);
 
 #endif /* STEREO_H_ */

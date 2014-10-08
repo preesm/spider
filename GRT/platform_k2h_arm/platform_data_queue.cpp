@@ -40,6 +40,8 @@
 
 #include <platform_types.h>
 #include <platform.h>
+#include <platform_data_queue.h>
+#include <sys/mman.h>
 #include "qmss.h"
 
 #include <stdint.h>
@@ -79,8 +81,10 @@ void platform_writeFifo(UINT32 id, UINT32 addr, UINT32 size, UINT8* buffer) {
 //	memcpy((void*)(SHARED_MEM_BASE + addr), buffer, size);
 
 //	cache_wbInvL1D(mono_pkt, DATA_DESC_SIZE);
+	msync(mono_pkt, DATA_DESC_SIZE, MS_SYNC);
 #ifdef ENABLE_CACHE
 //	cache_wbInvL1D((void*)(SHARED_MEM_BASE + addr), size);
+	msync(platform_getDataMemAdd()+addr, size, MS_SYNC);
 #endif
 
 	Qmss_queuePushDesc(queueId, mono_pkt);
@@ -102,8 +106,10 @@ void platform_readFifo(UINT32 id, UINT32 addr, UINT32 size, UINT8* buffer) {
 	}while(mono_pkt == 0);
 
 //	cache_invL1D(mono_pkt, DATA_DESC_SIZE);
+	msync(mono_pkt, DATA_DESC_SIZE, MS_SYNC);
 #ifdef ENABLE_CACHE
 //	cache_invL1D((void*)(SHARED_MEM_BASE + addr), size);
+	msync(platform_getDataMemAdd()+addr, size, MS_SYNC);
 #endif
 //	memcpy(buffer, (void*)(SHARED_MEM_BASE + addr), size);
 

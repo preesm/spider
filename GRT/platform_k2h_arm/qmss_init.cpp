@@ -116,7 +116,7 @@ static void initQmss(){
     int i;
 
 	/* Open mem device */
-	if((memFile = open("/dev/mem", (O_RDWR | O_SYNC))) == -1){
+	if((memFile = open("/dev/mem", (O_RDWR /*| O_SYNC*/))) == -1){
 		printf("fw_memAllocInit: Failed to open \"dev/mem\" err=%s\n", strerror(errno));
 		abort();
 	}

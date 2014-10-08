@@ -43,6 +43,8 @@
 #include <stdio.h>
 #include "qmss.h"
 
+#include <sys/mman.h>
+
 #include <stdint.h>
 #include <unistd.h>
 #include <ti/drv/qmss/qmss_drv.h>
@@ -93,6 +95,7 @@ void platform_QPush_finalize(UINT8 slaveId){
 		/* Send the descriptor */
 		cur_mono_pkt_out[slaveId]->packet_length = cur_mono_pkt_out_size[slaveId]+PACKET_HEADER;
 
+		msync(cur_mono_pkt_out[slaveId], CTRL_DESC_SIZE, MS_SYNC);
 //		cache_wbInvL1D(cur_mono_pkt[slaveId][queueType][0], CTRL_DESC_SIZE);
 
 		Qmss_queuePushDesc(CTRL_OUT(slaveId), cur_mono_pkt_out[slaveId]);
@@ -135,6 +138,7 @@ UINT32 platform_QNBPop_data(UINT8 slaveId, void* data, UINT32 size){
 			return 0;
 		}
 
+		msync(cur_mono_pkt_in[slaveId], CTRL_DESC_SIZE, MS_SYNC);
 //		cache_invL1D(cur_mono_pkt[slaveId][queueType][1], CTRL_DESC_SIZE);
 	}
 

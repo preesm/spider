@@ -21,11 +21,11 @@ void compute_vweigth(
 	int heigth, int width,
 	int delta,
 	/*input buffer*/
-	const uint8_t* imr,
-	const uint8_t* img,
-	const uint8_t* imb,
+	const uint8_t* restrict imr,
+	const uint8_t* restrict img,
+	const uint8_t* restrict imb,
 	/*output buffer*/
-	uint8_t* out)
+	uint8_t* restrict out)
 {
 
 	/*index variables*/
@@ -93,7 +93,7 @@ void compute_vweigth(
 
 
 			/*store results*/
-			out[idx] = temp;
+			out[idx] = temp>>2;
 
 			idx++;
 			idxp++;
@@ -115,11 +115,11 @@ void compute_hweigth(
 	int heigth, int width,
 	int delta,
 	/*input buffer*/
-	const uint8_t* imr,
-	const uint8_t* img,
-	const uint8_t* imb,
+	const uint8_t* restrict imr,
+	const uint8_t* restrict img,
+	const uint8_t* restrict imb,
 	/*output buffer*/
-	uint8_t* out)
+	uint8_t* restrict out)
 {
 
 	/*index variables*/
@@ -184,7 +184,7 @@ void compute_hweigth(
 			temp = exp(constdistance - acc)*255.;
 #endif
 
-			out[idx] = temp;
+			out[idx] = temp >> 2;
 
 			idx++;
 			idxp++;

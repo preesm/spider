@@ -97,7 +97,7 @@
 
 // Single Rate DAG
 
-#define MAX_SRDAG_VERTICES 		400 // 400
+#define MAX_SRDAG_VERTICES 		600 // 400
 #define MAX_SRDAG_EDGES 		1100 // 600
 #define MAX_SRDAG_BROADCASTS	100 // 25
 #define MAX_SRDAG_RBS			20 // 35

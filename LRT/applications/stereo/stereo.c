@@ -149,10 +149,9 @@ void genDelta(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 	printf("genDelta %d\n", nbIter);
 #endif
 	int i;
-	static const int deltas[] = {1, 4, 9, 16, 25, 3};
 
 	for(i=0; i<nbIter; i++)
-		out_deltas[i] = deltas[i];
+		out_deltas[i] = ((i+1)*(i+1))%33;
 }
 
 void compWeight(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){

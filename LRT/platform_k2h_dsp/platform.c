@@ -136,6 +136,11 @@ void platform_init(UINT8 core_id){
 
 #ifndef ENABLE_CACHE
 	set_MPAX(3, 0xa0000, 0x0c000, 0x15); // "translate" 256KB (0x11) from 0xa1000000 to 0x00c000000 using the MPAX number 3
+#else
+	for(i=144; i<160; i++){
+		CACHE_enableCaching(i);
+//		CACHE_resetPrefetch(i);
+	}
 #endif
 	mutex_post(MUTEX_CACHE);
 

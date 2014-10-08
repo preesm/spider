@@ -38,12 +38,7 @@
 
 #include <spider.h>
 
-void stereo_top(
-		PiSDFGraph* _graphs,
-		int width, int height,
-		int nbDisp, int nbIter,
-		int nbSlice);
-
+void stereo_top(PiSDFGraph* _graphs);
 void stereo_stereo(PiSDFGraph* graph);
 void stereo_topDisp(PiSDFGraph* graph);
 
@@ -61,11 +56,7 @@ void resetGraph(){
 	nbGraphs = 0;
 }
 
-PiSDFGraph* initPisdf_stereo(
-		PiSDFGraph* _graphs,
-		int width, int height,
-		int nbDisp, int nbIter,
-		int nbSlice){
+PiSDFGraph* initPisdf_stereo(PiSDFGraph* _graphs){
 	graphs = _graphs;
 
 	PiSDFGraph* top = addGraph();
@@ -76,25 +67,16 @@ PiSDFGraph* initPisdf_stereo(
 	vxTop->setSubGraph(mpSchedGraph);
 	mpSchedGraph->setParentVertex(vxTop);
 
-	stereo_top(mpSchedGraph,
-			width, height,
-			nbDisp, nbIter,
-			nbSlice);
+	stereo_top(mpSchedGraph);
 
 	return top;
 }
 
-void stereo_top(
-		PiSDFGraph* graph,
-		int width, int height,
-		int nbDisp, int nbIter,
-		int nbSlices){
+void stereo_top(PiSDFGraph* graph){
 
 	// Parameters.
 	PiSDFParameter *paramHeight = graph->addParameter("height");
-	paramHeight->setValue(height);
 	PiSDFParameter *paramWidth = graph->addParameter("width");
-	paramWidth->setValue(width);
 
 	PiSDFParameter *paramZero = graph->addParameter("0");
 	paramZero->setValue(0);
@@ -102,17 +84,20 @@ void stereo_top(
 	paramOne->setValue(1);
 
 	PiSDFParameter *paramNbDisp = graph->addParameter("nbDisp");
-	paramNbDisp->setValue(nbDisp);
 	PiSDFParameter *paramNbIter = graph->addParameter("nbIter");
-	paramNbIter->setValue(nbIter);
 	PiSDFParameter *paramNbSlices = graph->addParameter("nbSlices");
-	paramNbSlices->setValue(nbSlices);
+
+	PiSDFParameter *paramVideoInput = graph->addParameter("videoInput");
 
 	// Configure vertices.
 	PiSDFConfigVertex *vxConfig = (PiSDFConfigVertex *)graph->addVertex("config", config_vertex);
 	vxConfig->setFunction_index(15);
+	vxConfig->addRelatedParam(paramWidth);
+	vxConfig->addRelatedParam(paramHeight);
 	vxConfig->addRelatedParam(paramNbDisp);
 	vxConfig->addRelatedParam(paramNbIter);
+	vxConfig->addRelatedParam(paramNbSlices);
+	vxConfig->addRelatedParam(paramVideoInput);
 
 	// Special vertices
 	PiSDFVertex *vxBr_Lr = (PiSDFVertex *)graph->addVertex("Br_Lr", normal_vertex);
@@ -144,12 +129,14 @@ void stereo_top(
 	vxCam_L->addParameter(paramWidth);
 	vxCam_L->addParameter(paramHeight);
 	vxCam_L->addParameter(paramZero);
+	vxCam_L->addParameter(paramVideoInput);
 	vxCam_L->setFunction_index(0);
 
 	PiSDFVertex *vxCam_R = (PiSDFVertex *)graph->addVertex("Cam_R", normal_vertex);
 	vxCam_R->addParameter(paramWidth);
 	vxCam_R->addParameter(paramHeight);
 	vxCam_R->addParameter(paramOne);
+	vxCam_R->addParameter(paramVideoInput);
 	vxCam_R->setFunction_index(0);
 
 	PiSDFVertex *vxStereoTop = (PiSDFVertex *)graph->addVertex("StereoTop", normal_vertex);
@@ -389,13 +376,13 @@ void stereo_stereo(PiSDFGraph* graph){
 	vxGen_D->addParameter(paramNbIter);
 	vxGen_D->setFunction_index(4);
 
-	PiSDFVertex *vxHweight = (PiSDFVertex *)graph->addVertex("HCost", normal_vertex);
+	PiSDFVertex *vxHweight = (PiSDFVertex *)graph->addVertex("HWeight", normal_vertex);
 	vxHweight->addParameter(paramWidth);
 	vxHweight->addParameter(paramHeight);
 	vxHweight->addParameter(paramZero);
 	vxHweight->setFunction_index(5);
 
-	PiSDFVertex *vxVweight = (PiSDFVertex *)graph->addVertex("VCost", normal_vertex);
+	PiSDFVertex *vxVweight = (PiSDFVertex *)graph->addVertex("VWeight", normal_vertex);
 	vxVweight->addParameter(paramWidth);
 	vxVweight->addParameter(paramHeight);
 	vxVweight->addParameter(paramOne);

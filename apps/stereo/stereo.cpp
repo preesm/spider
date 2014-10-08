@@ -202,21 +202,24 @@ void file(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
 
     int imageWidth = 450;
 
+    static char tmp[450*3];
+
     char name[10] = "im0.ppm";
     name[2] = '0'+id;
 
     int f = open(name, O_RDWR);
-    lseek(f, 16, SEEK_SET);
+    lseek(f, 15, SEEK_SET);
 
     for(int i=0; i<height; i++){
 //        lseek(f, 16+3*i*imageWidth,  SEEK_SET);
 //        read(f, image->imageData+3*i*width, 3*width);
 
-        lseek(f, 15+3*i*imageWidth,  SEEK_SET);
+    	read(f, tmp, imageWidth*3);
+
         for(int j=0; j<width; j++){
-        	read(f, &r[i*width+j], 1);
-        	read(f, &g[i*width+j], 1);
-        	read(f, &b[i*width+j], 1);
+        	r[i*width+j] = tmp[3*j+0];
+        	g[i*width+j] = tmp[3*j+1];
+        	b[i*width+j] = tmp[3*j+2];
         }
 //    	fread(image->imageData+i*3*width,sizeof(char), 3*width, ptfile[id]);
 //    	fgetc(ptfile[id]);
@@ -358,13 +361,16 @@ void writeFile(UINT8* inputFIFOs[], UINT8* outputFIFOs[], UINT32 params[]){
         return;
     }
 
+	int scale = 256/nbDisp;
+
 	fprintf(outFile,"P6\n");
 	fprintf(outFile,"%d %d\n",width,height);
 	fprintf(outFile,"255\n");
 	for(i=0; i<height*width;i++){
-		fwrite(disp+i,sizeof(char),1,outFile);
-		fwrite(disp+i,sizeof(char),1,outFile);
-		fwrite(disp+i,sizeof(char),1,outFile);
+		unsigned char value = (*(disp+i))*scale;
+		fwrite(&value,sizeof(char),1,outFile);
+		fwrite(&value,sizeof(char),1,outFile);
+		fwrite(&value,sizeof(char),1,outFile);
 	}
 
 	fclose(outFile);

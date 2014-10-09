@@ -162,10 +162,6 @@ static inline void replaceWithExplode(SRDAGGraph *topDag, PiSDFEdge *edge, SRDAG
 	}
 }
 
-static inline void replaceWithImplode(SRDAGGraph *topDag, PiSDFEdge *edge, SRDAGVertex** vertex, int cons, vertexConnections connections){
-
-}
-
 void PiSDFTransformer::linkvertices(PiSDFGraph* currentPiSDF, UINT32 iteration, SRDAGGraph* topDag, int* brv){
 	UINT32 cntExpVxs = 0;
 	UINT32 cntImpVxs = 0;
@@ -1327,11 +1323,11 @@ static void optims(SRDAGGraph* topDag){
 	bool changed;
 	do{
 		changed = false;
-//		changed |= removeRB(topDag);
+		changed |= removeRB(topDag);
 //		changed |= removeImpExp(topDag);
-//		changed |= reduceImplImpl(topDag);
-//		changed |= removeImpRB(topDag);
-//		changed |= removeRBExp(topDag);
+		changed |= reduceImplImpl(topDag);
+		changed |= removeImpRB(topDag);
+		changed |= removeRBExp(topDag);
 		changed |= removeBr(topDag);
 	}while(changed);
 }

@@ -40,12 +40,8 @@
 
 void resetGraph();
 
-int main(int argc, char* argv[]){
-#ifdef DSP
-	int nbSlaves = 8;
-#else
-	int nbSlaves = 1;
-#endif
+int main(){
+	int nbSlaves = 9;
 
 	static Architecture 		arch;
 	static ExecutionStat 		execStat;
@@ -111,7 +107,7 @@ int main(int argc, char* argv[]){
 
 	char file[100];
 	printf("time\n");
-	sprintf(file,"/home/jheulot/dev/mp-sched/ederc/spider_cache_nvar.csv");
+	sprintf(file,"spider_cache_nvar.csv");
 	FILE *f = fopen(file,"w+");
 	fprintf(f, "iter, latency\n");
 	for(int iter=1; iter<=18; iter++){

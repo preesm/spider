@@ -45,9 +45,9 @@
 extern UINT8* shMem_sync;
 extern UINT8* shMem_data;
 
-#define NB_DATA_FIFO 		1024
+#define NB_DATA_FIFO 		2048
 #define SHARED_MEM_BASE		shMem_data
-#define SHARED_MEM_LENGHT	0x00400000
+#define SHARED_MEM_LENGHT	0x0FF00000
 
 #define DATA_FIFO_REGION_SIZE  NB_DATA_FIFO
 

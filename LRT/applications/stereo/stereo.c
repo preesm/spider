@@ -40,7 +40,7 @@
 
 
 #include <stdio.h>
-#define PRINT 1
+#define PRINT 0
 
 #include <stdlib.h>
 #include <string.h>

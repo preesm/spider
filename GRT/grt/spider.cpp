@@ -85,7 +85,7 @@ void SPIDER_report(Architecture* arch, PiSDFGraph* topPisdf, ExecutionStat* exec
 	memset(execStat, 0, sizeof(ExecutionStat));
 
 	char file[MAX_FILE_NAME_SIZE+40];
-		snprintf(file, MAX_FILE_NAME_SIZE+40, "/home/jheulot/dev/mp-sched/ederc/Gantt_spider_cache_nvar9.xml");
+		snprintf(file, MAX_FILE_NAME_SIZE+40, "Gantt_spider_cache_nvar9.xml");
 		Launcher::createRealTimeGantt(arch, &topDag, file, execStat, true);
 		execStat->SRDAGVertices = topDag.getNbVertices();
 		execStat->SRDAGEdges = topDag.getNbEdges();

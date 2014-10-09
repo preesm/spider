@@ -46,11 +46,7 @@ void resetGraph();
 void netDisplay_Init();
 
 int main(){
-#ifdef DSP
-	int nbSlaves = 8;
-#else
-	int nbSlaves = 2;
-#endif
+	int nbSlaves = 1;
 
 	static Architecture 		arch;
 	static ExecutionStat 		execStat;
@@ -76,7 +72,7 @@ int main(){
 	arch.setNbActiveSlaves(nbSlaves);
 
 	setFctPtr(0, mixInput);
-	setFctPtr(1, netDisplay);
+	setFctPtr(1, display);
 	setFctPtr(2, rgb2Gray);
 	setFctPtr(3, census);
 	setFctPtr(4, genDelta);
@@ -114,7 +110,8 @@ int main(){
 
 	SPIDER_init(&arch);
 
-	for(int iter=0; iter<=1; iter++){
+	while(1){int iter= 0;
+//	for(int iter=0; iter<=100; iter++){
 		printf("N=%d\n", iter);
 
 		resetGraph();
@@ -133,16 +130,18 @@ int main(){
  		printf("TaskOrdTime: %d\n", execStat.taskOrderingTime);
 
  		for(int i=0; i<execStat.nbActor; i++){
- 			printf("%15s : %d x %d (%.2f%%)\n",
+ 			printf("%15s : %u x %d (%.2f%%)\n",
  					execStat.actors[i]->getName(),
  					execStat.actorTimes[i]/execStat.actorIterations[i],
  					execStat.actorIterations[i],
  					100.0*execStat.actorTimes[i]/execStat.globalEndTime);
  		}
 
- 		printf("\nEndTime: %d\n", execStat.globalEndTime);
+ 		printf("\nEndTime: %u\n", execStat.globalEndTime);
 
  		time[iter-1] = execStat.globalEndTime;
+
+// 		printf("Executed\n");
 	}
 
 	printf("finished\n");

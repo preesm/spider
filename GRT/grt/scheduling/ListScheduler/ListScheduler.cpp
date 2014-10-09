@@ -201,9 +201,15 @@ UINT32 computeSchedLevel(SRDAGVertex* vertex){
 	if(vertex->getSchedLevel() == -1){
 		for(int i=0; i<vertex->getNbOutputEdge(); i++){
 			SRDAGVertex* succ = vertex->getOutputEdge(i)->getSink();
-			if(succ->getState() == SRDAG_Executable)
-				// TODO BETTER Careful execTime of core type 0
-				level = MAX(level, computeSchedLevel(succ)+succ->getExecTime(0));
+			if(succ->getState() == SRDAG_Executable){
+				unsigned int minExecTime = -1;
+				for(int j=0; j<MAX_SLAVE_TYPES; j++){
+					if(succ->getConstraint(j)){
+						minExecTime = MIN(minExecTime, succ->getExecTime(j));
+					}
+				}
+				level = MAX(level, computeSchedLevel(succ)+minExecTime);
+			}
 		}
 		vertex->setSchedLevel(level);
 		return level;

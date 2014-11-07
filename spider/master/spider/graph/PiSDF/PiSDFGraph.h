@@ -93,6 +93,9 @@ public:
 	inline PiSDFVertex* getInputIf(int ix);
 	inline PiSDFVertex* getOutputIf(int ix);
 
+	inline const PiSDFParam* const * getParams() const;
+	inline int getNParam() const;
+
 	/** General getters */
 	inline PiSDFVertex* getParentVertex();
 
@@ -161,6 +164,13 @@ inline PiSDFVertex* PiSDFGraph::getInputIf(int ix){
 }
 inline PiSDFVertex* PiSDFGraph::getOutputIf(int ix){
 	return outputIfs_[ix];
+}
+
+inline const PiSDFParam* const * PiSDFGraph::getParams() const {
+	return params_.getArray();
+}
+inline int PiSDFGraph::getNParam() const{
+	return params_.getN();
 }
 
 /** General getters */

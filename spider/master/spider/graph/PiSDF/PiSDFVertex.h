@@ -55,6 +55,8 @@ public:
 	inline int getNOutParam() const;
 	inline const PiSDFParam* getInParam(int ix) const;
 	inline const PiSDFParam* getOutParam(int ix) const;
+	inline const PiSDFParam* const * getInParams() const;
+	inline const PiSDFParam* const * getOutParams() const;
 
 	/** Data edge getters */
 	inline int getNInEdge() const;
@@ -133,6 +135,12 @@ inline const PiSDFParam* PiSDFVertex::getOutParam(int ix) const{
 	else
 		throw "PiSDFVertex: Bad ix in getOutParam";
 #endif
+}
+inline const PiSDFParam* const * PiSDFVertex::getInParams() const{
+	return inParams_;
+}
+inline const PiSDFParam* const * PiSDFVertex::getOutParams() const{
+	return outParams_;
 }
 
 /** Data edge getters */

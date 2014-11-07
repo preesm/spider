@@ -53,6 +53,7 @@ public:
 	inline TYPE operator[](int ix);
 
 	inline int getN() const;
+	inline TYPE const * const getArray() const;
 
 	inline SetIterator<TYPE> getIterator();
 
@@ -100,6 +101,11 @@ inline TYPE Set<TYPE>::operator[] (int ix){
 template <typename TYPE>
 inline SetIterator<TYPE> Set<TYPE>::getIterator(){
 	return SetIterator<TYPE>(this);
+}
+
+template <typename TYPE>
+inline TYPE const * const Set<TYPE>::getArray() const{
+	return array;
 }
 
 #endif // SET_H

@@ -78,32 +78,25 @@ PiSDFEdge::PiSDFEdge(
 //	}
 }
 
-void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod){
+void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod, Stack* stack){
 	if(src_ != 0)
 		throw "PiSDFEdge: try to connect to an already connected edge";
 	src_ = src;
 	srcPortIx_ = srcPortId;
-//	Parser_InitVariable(&prod, src->getParamArray(), _prod, stack);
+	prod_ = Parser::Expression(prod, src->getInParams(), src->getNInParam(), stack);
 }
 
-void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons){
+void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons, Stack* stack){
 	if(snk_ != 0)
 		throw "PiSDFEdge: try to connect to an already connected edge";
 	snk_ = snk;
 	snkPortIx_ = snkPortId;
+	cons_ = Parser::Expression(cons, snk->getInParams(), snk->getNInParam(), stack);
 //	Parser_InitVariable(&cons, snk->getParams(), _cons, stack);
 }
 
-int PiSDFEdge::resolveProd(){
-
-}
-
-int PiSDFEdge::resolveCons(){
-
-}
-
 int PiSDFEdge::resolveDelay(){
-
+	return 0;
 }
 
 

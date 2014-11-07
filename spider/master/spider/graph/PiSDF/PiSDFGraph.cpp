@@ -177,8 +177,8 @@ PiSDFEdge* PiSDFGraph::connect(
 		PiSDFVertex* snk, int snkPortId, const char* cons,
 		const char* delay, int nParam){
 	PiSDFEdge* edge = this->addEdge(nParam);
-	edge->connectSrc(src, srcPortId, prod);
-	edge->connectSnk(snk, snkPortId, cons);
+	edge->connectSrc(src, srcPortId, prod, stack_);
+	edge->connectSnk(snk, snkPortId, cons, stack_);
 	src->connectOutEdge(srcPortId, edge);
 	snk->connectInEdge(snkPortId, edge);
 	return edge;
@@ -295,8 +295,11 @@ void PiSDFGraph::print(const char *path){
 	// Drawing edges.
 	platform_fprintf (file, "\t# Edges\n");
 	for (edgeIt.first(); edgeIt.finished(); edgeIt.next()) {
-//		char shortenedPExpr[EXPR_LEN_MAX];
-//		char shortenedCExpr[EXPR_LEN_MAX];
+		char prodExpr[100];
+		char consExpr[100];
+
+		edgeIt.current()->getProdExpr(prodExpr, 100);
+		edgeIt.current()->getConsExpr(consExpr, 100);
 
 //		Parser_toString(&(edge->production), &(graph->params), shortenedPExpr);
 //		Parser_toString(&(edge->consumption), &(graph->params), shortenedCExpr);
@@ -312,9 +315,13 @@ void PiSDFGraph::print(const char *path){
 //			edge->sinkPortIx,
 //			shortenedCExpr);
 		//labelDistance = 3 + labelDistance%(3*4); // Oscillating the label distance to keep visibility
-		platform_fprintf (file, "\t%s->%s [];\n",
+		platform_fprintf (file, "\t%s->%s [taillabel=\"(%d):%s\" headlabel=\"(%d):%s\"];\n",
 			edgeIt.current()->getSrc()->getName(),
-			edgeIt.current()->getSnk()->getName());
+			edgeIt.current()->getSnk()->getName(),
+			edgeIt.current()->getSrcPortIx(),
+			prodExpr,
+			edgeIt.current()->getSnkPortIx(),
+			consExpr);
 	}
 
 	platform_fprintf (file, "}\n");

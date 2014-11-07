@@ -38,6 +38,9 @@
 #define PISDF_EDGE_H
 
 #include "PiSDFCommon.h"
+#include "PiSDFVertex.h"
+#include "PiSDFGraph.h"
+#include <parser/Expression.h>
 
 class PiSDFEdge {
 public:
@@ -59,16 +62,19 @@ public:
 	inline void setDelay(const char* delay);
 
 	/** Connections Fcts */
-	void connectSrc(PiSDFVertex* src, int srcPortId, const char* prod);
-	void connectSnk(PiSDFVertex* snk, int snkPortId, const char* cons);
+	void connectSrc(PiSDFVertex* src, int srcPortId, const char* prod, Stack* stack);
+	void connectSnk(PiSDFVertex* snk, int snkPortId, const char* cons, Stack* stack);
 
 	/** Add Param Fcts */
 	inline void addInParam(int ix, PiSDFParam* param);
 
 	/** Compute Fcts */
-	int resolveProd();
-	int resolveCons();
+	inline int resolveProd(const int* paramValues, int nParam);
+	inline int resolveCons(const int* paramValues, int nParam);
 	int resolveDelay();
+
+	inline void getProdExpr(char* out, int sizeOut);
+	inline void getConsExpr(char* out, int sizeOut);
 
 private:
 	static int globalId;
@@ -86,8 +92,8 @@ private:
 	PiSDFParam **inParams_;
 
 	/* Production and Consumption */
-//	variable prod;
-//	variable cons;
+	Parser::Expression prod_;
+	Parser::Expression cons_;
 
 	/* Parameterized Delays */
 //	variable delay;
@@ -112,6 +118,20 @@ inline int PiSDFEdge::getSnkPortIx() const {
 //inline void PiSDFEdge::setDelay(const char* d) {
 //	delay = d;
 //}
+
+inline int PiSDFEdge::resolveProd(const int* paramValues, int nParam){
+	return prod_.evaluate(paramValues, nParam);
+}
+inline int PiSDFEdge::resolveCons(const int* paramValues, int nParam){
+	return cons_.evaluate(paramValues, nParam);
+}
+
+inline void PiSDFEdge::getProdExpr(char* out, int sizeOut){
+	prod_.toString(src_->getGraph()->getParams(), src_->getGraph()->getNParam(), out, sizeOut);
+}
+inline void PiSDFEdge::getConsExpr(char* out, int sizeOut){
+	cons_.toString(snk_->getGraph()->getParams(), snk_->getGraph()->getNParam(), out, sizeOut);
+}
 
 /** Add Param Fcts */
 inline void PiSDFEdge::addInParam(int ix, PiSDFParam* param){

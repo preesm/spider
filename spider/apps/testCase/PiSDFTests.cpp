@@ -82,7 +82,6 @@ PiSDFGraph* test0(Stack* stack){
 			/*Src*/ vxA, /*SrcPrt*/ 0, /*Prod*/ "1",
 			/*Snk*/ vxB, /*SnkPrt*/ 0, /*Cons*/ "N",
 			/*Delay*/ "0", 0);
-//	edge->addInputParam(paramN);
 
 	// Timings
 //	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);

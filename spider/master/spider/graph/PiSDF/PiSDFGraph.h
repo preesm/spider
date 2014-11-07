@@ -1,0 +1,174 @@
+/****************************************************************************
+ * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ *                                                                          *
+ * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
+ *                                                                          *
+ * This software is a computer program whose purpose is to execute          *
+ * parallel applications.                                                   *
+ *                                                                          *
+ * This software is governed by the CeCILL-C license under French law and   *
+ * abiding by the rules of distribution of free software.  You can  use,    *
+ * modify and/ or redistribute the software under the terms of the CeCILL-C *
+ * license as circulated by CEA, CNRS and INRIA at the following URL        *
+ * "http://www.cecill.info".                                                *
+ *                                                                          *
+ * As a counterpart to the access to the source code and  rights to copy,   *
+ * modify and redistribute granted by the license, users are provided only  *
+ * with a limited warranty  and the software's author,  the holder of the   *
+ * economic rights,  and the successive licensors  have only  limited       *
+ * liability.                                                               *
+ *                                                                          *
+ * In this respect, the user's attention is drawn to the risks associated   *
+ * with loading,  using,  modifying and/or developing or reproducing the    *
+ * software by the user in light of its specific status of free software,   *
+ * that may mean  that it is complicated to manipulate,  and  that  also    *
+ * therefore means  that it is reserved for developers  and  experienced    *
+ * professionals having in-depth computer knowledge. Users are therefore    *
+ * encouraged to load and test the software's suitability as regards their  *
+ * requirements in conditions enabling the security of their systems and/or *
+ * data to be ensured and,  more generally, to use and operate it in the    *
+ * same conditions as regards security.                                     *
+ *                                                                          *
+ * The fact that you are presently reading this means that you have had     *
+ * knowledge of the CeCILL-C license and that you accept its terms.         *
+ ****************************************************************************/
+
+#ifndef PISDF_GRAPH_H
+#define PISDF_GRAPH_H
+
+#include "PiSDFCommon.h"
+
+class PiSDFGraph {
+public:
+	PiSDFGraph();
+	PiSDFGraph(
+			int nEdges, int nParams,
+			int nInputIf, int nOutputIf,
+			int nConfig, int nBody,
+			Stack *stack);
+	virtual ~PiSDFGraph();
+
+	PiSDFVertex* addBodyVertex(
+			const char* vertexName, int fctId,
+			PiSDFSubType subType,
+			int nInEdge, int nOutEdge,
+			int nInParam);
+
+	PiSDFVertex* addConfigVertex(
+			const char* vertexName, int fctId,
+			PiSDFSubType subType,
+			int nInEdge, int nOutEdge,
+			int nInParam, int nOutParam);
+
+	PiSDFVertex* addInputIf(
+			const char* name,
+			int nInParam);
+
+	PiSDFVertex* addOutputIf(
+			const char* name,
+			int nInParam);
+
+	PiSDFParam* addStaticParam(const char* name, const char* expr);
+
+	PiSDFParam* addStaticParam(const char* name, int value);
+
+	PiSDFParam* addHeritedParam(const char* name);
+
+	PiSDFParam* addDynamicParam(const char* name);
+
+	/** Iterator getters */
+	inline PiSDFEdgeIterator getEdgeIterator();
+	inline PiSDFParamIterator getParamIterator();
+	inline PiSDFVertexIterator getBodyIterator();
+	inline PiSDFVertexIterator getConfigIterator();
+	inline PiSDFVertexIterator getInputIfIterator();
+	inline PiSDFVertexIterator getOutputIfIterator();
+
+	/** Element getters */
+	inline PiSDFEdge* getEdge(int ix);
+	inline PiSDFParam* getParam(int ix);
+	inline PiSDFVertex* getBody(int ix);
+	inline PiSDFVertex* getConfig(int ix);
+	inline PiSDFVertex* getInputIf(int ix);
+	inline PiSDFVertex* getOutputIf(int ix);
+
+	/** General getters */
+	inline PiSDFVertex* getParentVertex();
+
+	/** General setters */
+	inline void setParentVertex(PiSDFVertex* parent);
+
+	/** Print Fct */
+	void print(const char *path);
+
+	/** Connect Fct */
+	PiSDFEdge* connect(
+			PiSDFVertex* source, int sourcePortId, const char* production,
+			PiSDFVertex* sink, int sinkPortId, const char* consumption,
+			const char* delay, int nParam);
+
+private:
+	PiSDFVertex* parent_;
+
+	PiSDFEdgeSet edges_;
+	PiSDFParamSet params_;
+	PiSDFVertexSet bodies_;
+	PiSDFVertexSet configs_;
+	PiSDFVertexSet inputIfs_;
+	PiSDFVertexSet outputIfs_;
+	Stack* stack_;
+
+	PiSDFEdge* addEdge(int nInParam);
+};
+
+/** Inline Fcts */
+/** Iterator getters */
+inline PiSDFEdgeIterator PiSDFGraph::getEdgeIterator(){
+	return edges_.getIterator();
+}
+inline PiSDFParamIterator PiSDFGraph::getParamIterator(){
+	return params_.getIterator();
+}
+inline PiSDFVertexIterator PiSDFGraph::getBodyIterator(){
+	return bodies_.getIterator();
+}
+inline PiSDFVertexIterator PiSDFGraph::getConfigIterator(){
+	return configs_.getIterator();
+}
+inline PiSDFVertexIterator PiSDFGraph::getInputIfIterator(){
+	return inputIfs_.getIterator();
+}
+inline PiSDFVertexIterator PiSDFGraph::getOutputIfIterator(){
+	return outputIfs_.getIterator();
+}
+
+/** Element getters */
+inline PiSDFEdge* PiSDFGraph::getEdge(int ix){
+	return edges_[ix];
+}
+inline PiSDFParam* PiSDFGraph::getParam(int ix){
+	return params_[ix];
+}
+inline PiSDFVertex* PiSDFGraph::getBody(int ix){
+	return bodies_[ix];
+}
+inline PiSDFVertex* PiSDFGraph::getConfig(int ix){
+	return configs_[ix];
+}
+inline PiSDFVertex* PiSDFGraph::getInputIf(int ix){
+	return inputIfs_[ix];
+}
+inline PiSDFVertex* PiSDFGraph::getOutputIf(int ix){
+	return outputIfs_[ix];
+}
+
+/** General getters */
+inline PiSDFVertex* PiSDFGraph::getParentVertex(){
+	return parent_;
+}
+inline void PiSDFGraph::setParentVertex(PiSDFVertex* parent){
+	parent_ = parent;
+}
+
+#endif/*PISDF_GRAPH_H*/

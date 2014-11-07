@@ -58,8 +58,7 @@ public:
 	inline int getSnkPortIx() const;
 
 	/** Setters */
-	inline void setParam(int ix, PiSDFParam* param);
-	inline void setDelay(const char* delay);
+	inline void setDelay(const char* delay, Stack* stack);
 
 	/** Connections Fcts */
 	void connectSrc(PiSDFVertex* src, int srcPortId, const char* prod, Stack* stack);
@@ -71,10 +70,11 @@ public:
 	/** Compute Fcts */
 	inline int resolveProd(const int* paramValues, int nParam);
 	inline int resolveCons(const int* paramValues, int nParam);
-	int resolveDelay();
+	inline int resolveDelay(const int* paramValues, int nParam);
 
 	inline void getProdExpr(char* out, int sizeOut);
 	inline void getConsExpr(char* out, int sizeOut);
+	inline void getDelayExpr(char* out, int sizeOut);
 
 private:
 	static int globalId;
@@ -88,16 +88,12 @@ private:
 	PiSDFVertex* snk_;
 	int snkPortIx_;
 
-	int nInParam_;
-	PiSDFParam **inParams_;
-
 	/* Production and Consumption */
 	Parser::Expression prod_;
 	Parser::Expression cons_;
 
 	/* Parameterized Delays */
-//	variable delay;
-//	PiSDFParamPorts params;
+	Parser::Expression delay_;
 };
 
 inline PiSDFVertex* PiSDFEdge::getSrc() const {
@@ -112,18 +108,19 @@ inline int PiSDFEdge::getSrcPortIx() const {
 inline int PiSDFEdge::getSnkPortIx() const {
 	return snkPortIx_;
 }
-//inline void PiSDFEdge::setParam(int ix, PiSDFParam& param) {
-//	params.set(ix, param);
-//}
-//inline void PiSDFEdge::setDelay(const char* d) {
-//	delay = d;
-//}
+
+inline void PiSDFEdge::setDelay(const char* expr, Stack* stack){
+	delay_ = Parser::Expression(expr, graph_->getParams(), graph_->getNParam(), stack);
+}
 
 inline int PiSDFEdge::resolveProd(const int* paramValues, int nParam){
 	return prod_.evaluate(paramValues, nParam);
 }
 inline int PiSDFEdge::resolveCons(const int* paramValues, int nParam){
 	return cons_.evaluate(paramValues, nParam);
+}
+inline int PiSDFEdge::resolveDelay(const int* paramValues, int nParam){
+	return delay_.evaluate(paramValues, nParam);
 }
 
 inline void PiSDFEdge::getProdExpr(char* out, int sizeOut){
@@ -132,17 +129,8 @@ inline void PiSDFEdge::getProdExpr(char* out, int sizeOut){
 inline void PiSDFEdge::getConsExpr(char* out, int sizeOut){
 	cons_.toString(snk_->getGraph()->getParams(), snk_->getGraph()->getNParam(), out, sizeOut);
 }
-
-/** Add Param Fcts */
-inline void PiSDFEdge::addInParam(int ix, PiSDFParam* param){
-#if	DEBUG
-	if(ix > nInParam_ && ix < 0)
-		throw "PiSDFEdge: Bad ix in addInParam";
-	else if(inParams_[ix] != 0)
-		throw "PiSDFEdge: Try to erase already connected input param";
-	else
-#endif
-		inParams_[ix] = param;
+inline void PiSDFEdge::getDelayExpr(char* out, int sizeOut){
+	delay_.toString(graph_->getParams(), graph_->getNParam(), out, sizeOut);
 }
 
 #endif/*PISDF_EDGE_H*/

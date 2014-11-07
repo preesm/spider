@@ -50,10 +50,7 @@ PiSDFEdge::PiSDFEdge(){
 	snk_ = 0; snkPortIx_ = -1;
 
 	/* Production and Consumption */
-
 	/* Parameterized Delays */
-	inParams_ = 0;
-	nInParam_ = 0;
 }
 
 PiSDFEdge::PiSDFEdge(
@@ -67,15 +64,7 @@ PiSDFEdge::PiSDFEdge(
 	snk_ = 0; snkPortIx_ = -1;
 
 	/* Production and Consumption */
-
 	/* Parameterized Delays */
-	nInParam_ = nParam;
-	inParams_ = (PiSDFParam**) stack->alloc(nInParam_*sizeof(PiSDFParam*));
-	memset(inParams_, 0, nInParam_*sizeof(PiSDFParam*));
-//	memcpy(inParams_, inParams, nInParam_*sizeof(PiSDFParam*));
-//	for(int i=0; i<nInParam_; i++){
-//		inParams_[i] = inParams[i];
-//	}
 }
 
 void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod, Stack* stack){
@@ -92,11 +81,6 @@ void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons, St
 	snk_ = snk;
 	snkPortIx_ = snkPortId;
 	cons_ = Parser::Expression(cons, snk->getInParams(), snk->getNInParam(), stack);
-//	Parser_InitVariable(&cons, snk->getParams(), _cons, stack);
-}
-
-int PiSDFEdge::resolveDelay(){
-	return 0;
 }
 
 

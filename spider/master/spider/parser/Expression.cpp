@@ -25,7 +25,7 @@ static int precedence[4] = {
 	3  //OP_DIV
 };
 
-static char* operatorSign[4] = {
+static const char* operatorSign[4] = {
 	"+", //OP_ADD
 	"-", //OP_SUB
 	"*", //OP_MUL

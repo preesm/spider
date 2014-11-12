@@ -42,9 +42,15 @@
 
 template<typename TYPE> class Set {
 public:
-	Set(): nbMax(0), nb(0), array(0){}
-	Set(int nbmax, Stack *stack): nbMax(nbmax), nb(0){
+	Set(){
+		array = 0;
+		nbMax = 0;
+		nb    = 0;
+	}
+	Set(int nbmax, Stack *stack){
 		array = (TYPE*) stack->alloc(nbmax*sizeof(TYPE));
+		nbMax = nbmax;
+		nb    = 0;
 	}
 
 	inline void add(TYPE value);
@@ -73,7 +79,7 @@ inline int Set<TYPE>::getN() const{
 template <typename TYPE>
 inline void Set<TYPE>::add(TYPE value){
 	if(nb >= nbMax)
-		throw "Not enought space in Set\n";
+		throw "Not enough space in Set\n";
 	array[nb++] = value;
 }
 

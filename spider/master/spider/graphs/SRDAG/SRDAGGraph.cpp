@@ -34,11 +34,10 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <graph/SRDAG/SRDAGGraph.h>
-#include "SRDAGCommon.h"
-#include "SRDAGVertex.h"
-#include "SRDAGEdge.h"
-
+#include <graphs/SRDAG/SRDAGCommon.h>
+#include <graphs/SRDAG/SRDAGEdge.h>
+#include <graphs/SRDAG/SRDAGGraph.h>
+#include <graphs/SRDAG/SRDAGVertex.h>
 #include <tools/Set.h>
 #include <platform_file.h>
 

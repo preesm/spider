@@ -34,67 +34,73 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
+#ifndef PISDF_PARAM_H
+#define PISDF_PARAM_H
 
-#include "PiSDFVertex.h"
+#include <graphs/PiSDF/PiSDFCommon.h>
 
-#include <cstring>
+class PiSDFParam{
+public:
+	/** Constructor */
+	PiSDFParam();
+	PiSDFParam(
+			const char* name,
+			PiSDFGraph* graph,
+			PiSDFParamType type);
 
-/** Static Var def */
-int PiSDFVertex::globalId = 0;
+	/** Getters */
+	inline int getIx() const;
+	inline const char* getName() const;
+	inline PiSDFParamType getType() const;
 
-/** Constructor */
-PiSDFVertex::PiSDFVertex(){
-	id_ = -1;
-	fctId_ = -1;
-	name_ = 0;
+	/** Setters */
+	inline void setValue(int value);
+	inline void setParentId(int parentId);
+	inline void setSetter(PiSDFVertex* setter, int portIx);
 
-	type_ = PISDF_TYPE_BODY;
-	subType_ = PISDF_SUBTYPE_NORMAL;
+//	const PiSDFGraph* getGraph() const;
 
-	graph_ = 0;
-	subGraph_ = 0;
+private:
+	static int globalIx;
 
-	nInEdge_ = nOutEdge_ = 0;
-	inEdges_ = outEdges_ = 0;
+	int id_;
+	const char* name_;
+	PiSDFGraph* graph_;
+	PiSDFParamType type_;
 
-	nInParam_ = nOutParam_ = 0;
-	inParams_ = outParams_ = 0;
+	// STATIC
+	int value_;
+
+	// HERITED
+	int parentId_;
+
+	// DYNAMIC
+	PiSDFVertex* setter_;
+	int portIx_;
+};
+
+/** Inline Fcts */
+/** Getters */
+inline int PiSDFParam::getIx() const{
+	return id_;
+}
+inline const char* PiSDFParam::getName() const{
+	return name_;
+}
+inline PiSDFParamType PiSDFParam::getType() const{
+	return type_;
 }
 
-PiSDFVertex::PiSDFVertex(
-		const char* name, int fctId,
-		PiSDFType type, PiSDFSubType subType,
-		PiSDFGraph* graph, PiSDFGraph* subGraph,
-		int nInEdge, int nOutEdge,
-		int nInParam, int nOutParam,
-		Stack* stack){
-
-	id_ = globalId++;
-	fctId_ = fctId;
-	type_ = type;
-	name_ = name;
-
-	subType_ = subType;
-	graph_ = graph;
-	subGraph_ = subGraph;
-
-	nInEdge_ = nInEdge;
-	inEdges_ = sAlloc(stack, nInEdge_, PiSDFEdge*);
-	memset(inEdges_, 0, nInEdge_*sizeof(PiSDFEdge*));
-
-	nOutEdge_ = nOutEdge;
-	outEdges_ = sAlloc(stack, nOutEdge_, PiSDFEdge*);
-	memset(outEdges_, 0, nOutEdge_*sizeof(PiSDFEdge*));
-
-	nInParam_ = nInParam;
-	inParams_ = sAlloc(stack, nInParam, PiSDFParam*);
-//	memcpy(inParams_, inParams, nInParam*sizeof(PiSDFParam*));
-	memset(inParams_, 0, nInParam*sizeof(PiSDFParam*));
-
-	nOutParam_ = nOutParam;
-	outParams_ = sAlloc(stack, nOutParam, PiSDFParam*);
-//	memcpy(outParams_, outParams, nOutParam*sizeof(PiSDFParam*));
-	memset(outParams_, 0, nOutParam*sizeof(PiSDFParam*));
-
-//	memset(constraints, false, MAX_SLAVES*sizeof(bool));
+/** Setters */
+inline void PiSDFParam::setValue(int value){
+	value_ = value;
 }
+inline void PiSDFParam::setParentId(int parentId){
+	parentId_ = parentId;
+}
+inline void PiSDFParam::setSetter(PiSDFVertex* setter, int portIx){
+	setter_ = setter;
+	portIx_ = portIx;
+}
+
+#endif/*PISDF_PARAM_H*/

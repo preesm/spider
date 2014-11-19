@@ -8,8 +8,8 @@
 #ifndef PARSER_EXPRESSION_H
 #define PARSER_EXPRESSION_H
 
+#include <graphs/PiSDF/PiSDFParam.h>
 #include <tools/Stack.h>
-#include <graph/PiSDF/PiSDFParam.h>
 #include "Token.h"
 
 namespace Parser {

@@ -34,61 +34,103 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef SRDAG_GRAPH_H
-#define SRDAG_GRAPH_H
+#ifndef PISDF_EDGE_H
+#define PISDF_EDGE_H
 
-#include "SRDAGCommon.h"
-#include <graph/PiSDF/PiSDFVertex.h>
+#include <graphs/PiSDF/PiSDFCommon.h>
+#include <graphs/PiSDF/PiSDFGraph.h>
+#include <graphs/PiSDF/PiSDFVertex.h>
+#include <parser/Expression.h>
 
-class SRDAGGraph {
+class PiSDFEdge {
 public:
-	SRDAGGraph();
-	SRDAGGraph(Stack *stack);
-	virtual ~SRDAGGraph();
+	/** Constructors */
+	PiSDFEdge();
+	PiSDFEdge(
+			PiSDFGraph* graph,
+			int nParam,
+			Stack *stack);
 
-	SRDAGVertex* addVertex(PiSDFVertex* reference);
-	SRDAGVertex* addBroadcast(int nOutput);
-	SRDAGVertex* addFork(int nOutput);
-	SRDAGVertex* addJoin(int nInput);
-	SRDAGVertex* addInit();
-	SRDAGVertex* addEnd();
+	/** Getters */
+	inline PiSDFVertex* getSrc() const;
+	inline PiSDFVertex* getSnk() const;
+	inline int getSrcPortIx() const;
+	inline int getSnkPortIx() const;
 
-	SRDAGEdge* addEdge();
+	/** Setters */
+	inline void setDelay(const char* delay, Stack* stack);
 
+	/** Connections Fcts */
+	void connectSrc(PiSDFVertex* src, int srcPortId, const char* prod, Stack* stack);
+	void connectSnk(PiSDFVertex* snk, int snkPortId, const char* cons, Stack* stack);
 
-	/** Iterator getters */
-	inline SRDAGEdgeIterator getEdgeIterator();
-	inline SRDAGVertexIterator getVertexIterator();
+	/** Add Param Fcts */
+	inline void addInParam(int ix, PiSDFParam* param);
 
-	/** Element getters */
-	inline SRDAGEdge* getEdge(int ix);
-	inline SRDAGVertex* getVertex(int ix);
+	/** Compute Fcts */
+	inline int resolveProd(const int* paramValues, int nParam);
+	inline int resolveCons(const int* paramValues, int nParam);
+	inline int resolveDelay(const int* paramValues, int nParam);
 
-	/** Print Fct */
-	void print(const char *path);
-	bool check();
+	inline void getProdExpr(char* out, int sizeOut);
+	inline void getConsExpr(char* out, int sizeOut);
+	inline void getDelayExpr(char* out, int sizeOut);
 
 private:
-	SRDAGEdgeSet edges_;
-	SRDAGVertexSet vertices_;
-	Stack* stack_;
+	static int globalId;
+
+	int id_;
+	PiSDFGraph* graph_;
+//	Stack *stack_;
+
+	PiSDFVertex* src_;
+	int srcPortIx_;
+	PiSDFVertex* snk_;
+	int snkPortIx_;
+
+	/* Production and Consumption */
+	Parser::Expression prod_;
+	Parser::Expression cons_;
+
+	/* Parameterized Delays */
+	Parser::Expression delay_;
 };
 
-/** Inline Fcts */
-/** Iterator getters */
-inline SRDAGEdgeIterator SRDAGGraph::getEdgeIterator(){
-	return edges_.getIterator();
+inline PiSDFVertex* PiSDFEdge::getSrc() const {
+	return src_;
 }
-inline SRDAGVertexIterator SRDAGGraph::getVertexIterator(){
-	return vertices_.getIterator();
+inline PiSDFVertex* PiSDFEdge::getSnk() const {
+	return snk_;
 }
-
-/** Element getters */
-inline SRDAGEdge* SRDAGGraph::getEdge(int ix){
-	return edges_[ix];
+inline int PiSDFEdge::getSrcPortIx() const {
+	return srcPortIx_;
 }
-inline SRDAGVertex* SRDAGGraph::getVertex(int ix){
-	return vertices_[ix];
+inline int PiSDFEdge::getSnkPortIx() const {
+	return snkPortIx_;
 }
 
-#endif/*SRDAG_GRAPH_H*/
+inline void PiSDFEdge::setDelay(const char* expr, Stack* stack){
+	delay_ = Parser::Expression(expr, graph_->getParams(), graph_->getNParam(), stack);
+}
+
+inline int PiSDFEdge::resolveProd(const int* paramValues, int nParam){
+	return prod_.evaluate(paramValues, nParam);
+}
+inline int PiSDFEdge::resolveCons(const int* paramValues, int nParam){
+	return cons_.evaluate(paramValues, nParam);
+}
+inline int PiSDFEdge::resolveDelay(const int* paramValues, int nParam){
+	return delay_.evaluate(paramValues, nParam);
+}
+
+inline void PiSDFEdge::getProdExpr(char* out, int sizeOut){
+	prod_.toString(src_->getGraph()->getParams(), src_->getGraph()->getNParam(), out, sizeOut);
+}
+inline void PiSDFEdge::getConsExpr(char* out, int sizeOut){
+	cons_.toString(snk_->getGraph()->getParams(), snk_->getGraph()->getNParam(), out, sizeOut);
+}
+inline void PiSDFEdge::getDelayExpr(char* out, int sizeOut){
+	delay_.toString(graph_->getParams(), graph_->getNParam(), out, sizeOut);
+}
+
+#endif/*PISDF_EDGE_H*/

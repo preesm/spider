@@ -34,80 +34,32 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef SRDAG_EDGE_H
-#define SRDAG_EDGE_H
+#include <graphs/PiSDF/PiSDFCommon.h>
+#include <graphs/PiSDF/PiSDFParam.h>
 
-#include "SRDAGCommon.h"
-//#include "SRDAGVertex.h"
-//#include "SRDAGGraph.h"
-//#include <parser/Expression.h>
+/** Static Var def */
+int PiSDFParam::globalIx = 0;
 
-class SRDAGEdge {
-public:
-	/** Constructors */
-	SRDAGEdge();
-	SRDAGEdge(SRDAGGraph* graph);
-
-	/** Getters */
-	inline int getId() const;
-	inline SRDAGVertex* getSrc() const;
-	inline SRDAGVertex* getSnk() const;
-	inline int getSrcPortIx() const;
-	inline int getSnkPortIx() const;
-	inline int getRate() const;
-	inline int getDelay() const;
-
-	/** Setters */
-	inline void setRate(int rate);
-	inline void setDelay(int delay);
-
-	/** Connections Fcts */
-	void connectSrc(SRDAGVertex* src, int srcPortId);
-	void connectSnk(SRDAGVertex* snk, int snkPortId);
-
-private:
-	static int globalId;
-
-	int id_;
-	SRDAGGraph* graph_;
-
-	SRDAGVertex* src_;
-	int srcPortIx_;
-	SRDAGVertex* snk_;
-	int snkPortIx_;
-
-	int rate_;
-	int delay_;
-};
-
-inline int SRDAGEdge::getId() const {
-	return id_;
-}
-inline SRDAGVertex* SRDAGEdge::getSrc() const {
-	return src_;
-}
-inline SRDAGVertex* SRDAGEdge::getSnk() const {
-	return snk_;
-}
-inline int SRDAGEdge::getSrcPortIx() const {
-	return srcPortIx_;
-}
-inline int SRDAGEdge::getSnkPortIx() const {
-	return snkPortIx_;
-}
-inline int SRDAGEdge::getRate() const{
-	return rate_;
-}
-inline int SRDAGEdge::getDelay() const{
-	return delay_;
+PiSDFParam::PiSDFParam(){
+	id_ = -1;
+	name_ = 0;
+	graph_ = 0;
+	type_ = PISDF_PARAM_STATIC;
+	value_ = -1;
+	parentId_ = -1;
+	setter_ = 0;
+	portIx_ = -1;
 }
 
-inline void SRDAGEdge::setRate(int rate){
-	rate_ = rate;
+PiSDFParam::PiSDFParam(const char* name,
+		PiSDFGraph* graph,
+		PiSDFParamType type){
+	id_ = globalIx++;
+	name_ = name;
+	graph_ = graph;
+	type_ = type;
+	value_ = -1;
+	parentId_ = -1;
+	setter_ = 0;
+	portIx_ = -1;
 }
-inline void SRDAGEdge::setDelay(int delay){
-	delay_ = delay;
-}
-
-
-#endif/*SRDAG_EDGE_H*/

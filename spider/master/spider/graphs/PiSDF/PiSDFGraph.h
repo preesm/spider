@@ -37,7 +37,7 @@
 #ifndef PISDF_GRAPH_H
 #define PISDF_GRAPH_H
 
-#include "PiSDFCommon.h"
+#include <graphs/PiSDF/PiSDFCommon.h>
 
 class PiSDFGraph {
 public:

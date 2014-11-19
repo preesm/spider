@@ -34,32 +34,57 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "PiSDFParam.h"
-#include "PiSDFCommon.h"
+#include <graphs/PiSDF/PiSDFCommon.h>
+#include <graphs/PiSDF/PiSDFEdge.h>
+#include <cstring>
 
 /** Static Var def */
-int PiSDFParam::globalIx = 0;
+int PiSDFEdge::globalId = 0;
 
-PiSDFParam::PiSDFParam(){
+PiSDFEdge::PiSDFEdge(){
 	id_ = -1;
-	name_ = 0;
 	graph_ = 0;
-	type_ = PISDF_PARAM_STATIC;
-	value_ = -1;
-	parentId_ = -1;
-	setter_ = 0;
-	portIx_ = -1;
+
+	src_ = 0; srcPortIx_ = -1;
+	snk_ = 0; snkPortIx_ = -1;
+
+	/* Production and Consumption */
+	/* Parameterized Delays */
 }
 
-PiSDFParam::PiSDFParam(const char* name,
+PiSDFEdge::PiSDFEdge(
 		PiSDFGraph* graph,
-		PiSDFParamType type){
-	id_ = globalIx++;
-	name_ = name;
+		int nParam,
+		Stack* stack){
+	id_ = globalId++;
 	graph_ = graph;
-	type_ = type;
-	value_ = -1;
-	parentId_ = -1;
-	setter_ = 0;
-	portIx_ = -1;
+
+	src_ = 0; srcPortIx_ = -1;
+	snk_ = 0; snkPortIx_ = -1;
+
+	/* Production and Consumption */
+	/* Parameterized Delays */
 }
+
+void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod, Stack* stack){
+	if(src_ != 0)
+		throw "PiSDFEdge: try to connect to an already connected edge";
+	src_ = src;
+	srcPortIx_ = srcPortId;
+	prod_ = Parser::Expression(prod, src->getInParams(), src->getNInParam(), stack);
+}
+
+void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons, Stack* stack){
+	if(snk_ != 0)
+		throw "PiSDFEdge: try to connect to an already connected edge";
+	snk_ = snk;
+	snkPortIx_ = snkPortId;
+	cons_ = Parser::Expression(cons, snk->getInParams(), snk->getNInParam(), stack);
+}
+
+
+
+
+
+
+

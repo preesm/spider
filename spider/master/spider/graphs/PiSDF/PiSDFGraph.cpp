@@ -34,12 +34,11 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "PiSDFCommon.h"
-#include "PiSDFParam.h"
-#include "PiSDFGraph.h"
-#include "PiSDFVertex.h"
-#include "PiSDFEdge.h"
-
+#include <graphs/PiSDF/PiSDFCommon.h>
+#include <graphs/PiSDF/PiSDFEdge.h>
+#include <graphs/PiSDF/PiSDFGraph.h>
+#include <graphs/PiSDF/PiSDFParam.h>
+#include <graphs/PiSDF/PiSDFVertex.h>
 #include <tools/Set.h>
 #include <platform_file.h>
 

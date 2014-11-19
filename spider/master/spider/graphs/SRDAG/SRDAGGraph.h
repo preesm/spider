@@ -34,85 +34,61 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
+#ifndef SRDAG_GRAPH_H
+#define SRDAG_GRAPH_H
 
-#include <graph/SRDAG/SRDAGVertex.h>
-#include <cstdio>
-#include <cstring>
+#include <graphs/PiSDF/PiSDFVertex.h>
+#include <graphs/SRDAG/SRDAGCommon.h>
 
-/** Static Var def */
-int SRDAGVertex::globalId = 0;
+class SRDAGGraph {
+public:
+	SRDAGGraph();
+	SRDAGGraph(Stack *stack);
+	virtual ~SRDAGGraph();
 
-/** Constructor */
-SRDAGVertex::SRDAGVertex(){
-	id_ = -1;
+	SRDAGVertex* addVertex(PiSDFVertex* reference);
+	SRDAGVertex* addBroadcast(int nOutput);
+	SRDAGVertex* addFork(int nOutput);
+	SRDAGVertex* addJoin(int nInput);
+	SRDAGVertex* addInit();
+	SRDAGVertex* addEnd();
 
-	type_ = SRDAG_NORMAL;
-	state_ = SRDAG_NEXEC;
-	graph_ = 0;
-	reference_ = 0;
+	SRDAGEdge* addEdge();
 
-	nInEdge_ = nOutEdge_ = 0;
-	inEdges_ = outEdges_ = 0;
 
-	nInParam_ = nOutParam_ = 0;
-	inParams_ = 0;
-	outParams_ = 0;
+	/** Iterator getters */
+	inline SRDAGEdgeIterator getEdgeIterator();
+	inline SRDAGVertexIterator getVertexIterator();
+
+	/** Element getters */
+	inline SRDAGEdge* getEdge(int ix);
+	inline SRDAGVertex* getVertex(int ix);
+
+	/** Print Fct */
+	void print(const char *path);
+	bool check();
+
+private:
+	SRDAGEdgeSet edges_;
+	SRDAGVertexSet vertices_;
+	Stack* stack_;
+};
+
+/** Inline Fcts */
+/** Iterator getters */
+inline SRDAGEdgeIterator SRDAGGraph::getEdgeIterator(){
+	return edges_.getIterator();
+}
+inline SRDAGVertexIterator SRDAGGraph::getVertexIterator(){
+	return vertices_.getIterator();
 }
 
-SRDAGVertex::SRDAGVertex(
-		SRDAGType type,	SRDAGGraph* graph,
-		PiSDFVertex* reference,
-		int nInEdge, int nOutEdge,
-		int nInParam, int nOutParam,
-		Stack* stack){
-	id_ = globalId++;
-
-	type_ = type;
-	state_ = SRDAG_NEXEC;
-	graph_ = graph;
-	reference_ = reference;
-
-	nInEdge_ = nInEdge;
-	inEdges_ = sAlloc(stack, nInEdge_, SRDAGEdge*);
-	memset(inEdges_, 0, nInEdge_*sizeof(SRDAGEdge*));
-
-	nOutEdge_ = nOutEdge;
-	outEdges_ = sAlloc(stack, nOutEdge_, SRDAGEdge*);
-	memset(outEdges_, 0, nOutEdge_*sizeof(SRDAGEdge*));
-
-	nInParam_ = nInParam;
-	inParams_ = sAlloc(stack, nInParam, int);
-	memset(inParams_, 0, nInParam*sizeof(int));
-
-	nOutParam_ = nOutParam;
-	outParams_ = sAlloc(stack, nOutParam, const int*);
-	memset(outParams_, 0, nOutParam*sizeof(int**));
-
-//	memset(constraints, false, MAX_SLAVES*sizeof(bool));
+/** Element getters */
+inline SRDAGEdge* SRDAGGraph::getEdge(int ix){
+	return edges_[ix];
+}
+inline SRDAGVertex* SRDAGGraph::getVertex(int ix){
+	return vertices_[ix];
 }
 
-void SRDAGVertex::toString(char* name, int sizeMax) const{
-	switch(type_){
-	case SRDAG_NORMAL:
-		snprintf(name, sizeMax, "%s_%d", reference_->getName(), id_);
-		break;
-	case SRDAG_FORK:
-		snprintf(name, sizeMax, "Fork_%d", id_);
-		break;
-	case SRDAG_JOIN:
-		snprintf(name, sizeMax, "Join_%d", id_);
-		break;
-	case SRDAG_ROUNDBUFFER:
-		snprintf(name, sizeMax, "RB_%d", id_);
-		break;
-	case SRDAG_BROADCAST:
-		snprintf(name, sizeMax, "BR_%d", id_);
-		break;
-	case SRDAG_INIT:
-		snprintf(name, sizeMax, "Init_%d", id_);
-		break;
-	case SRDAG_END:
-		snprintf(name, sizeMax, "End_%d", id_);
-		break;
-	}
-}
+#endif/*SRDAG_GRAPH_H*/

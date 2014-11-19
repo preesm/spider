@@ -34,51 +34,85 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "SRDAGCommon.h"
-#include "SRDAGEdge.h"
+
+#include <graphs/SRDAG/SRDAGVertex.h>
+#include <cstdio>
+#include <cstring>
 
 /** Static Var def */
-int SRDAGEdge::globalId = 0;
+int SRDAGVertex::globalId = 0;
 
-SRDAGEdge::SRDAGEdge(){
+/** Constructor */
+SRDAGVertex::SRDAGVertex(){
 	id_ = -1;
+
+	type_ = SRDAG_NORMAL;
+	state_ = SRDAG_NEXEC;
 	graph_ = 0;
+	reference_ = 0;
 
-	src_ = 0; srcPortIx_ = -1;
-	snk_ = 0; snkPortIx_ = -1;
+	nInEdge_ = nOutEdge_ = 0;
+	inEdges_ = outEdges_ = 0;
 
-	rate_ = 0;
-	delay_ = 0;
+	nInParam_ = nOutParam_ = 0;
+	inParams_ = 0;
+	outParams_ = 0;
 }
 
-SRDAGEdge::SRDAGEdge(SRDAGGraph* graph){
-	id_ = -1;
-	graph_ = 0;
+SRDAGVertex::SRDAGVertex(
+		SRDAGType type,	SRDAGGraph* graph,
+		PiSDFVertex* reference,
+		int nInEdge, int nOutEdge,
+		int nInParam, int nOutParam,
+		Stack* stack){
+	id_ = globalId++;
 
-	src_ = 0; srcPortIx_ = -1;
-	snk_ = 0; snkPortIx_ = -1;
+	type_ = type;
+	state_ = SRDAG_NEXEC;
+	graph_ = graph;
+	reference_ = reference;
 
-	rate_ = 0;
-	delay_ = 0;
+	nInEdge_ = nInEdge;
+	inEdges_ = sAlloc(stack, nInEdge_, SRDAGEdge*);
+	memset(inEdges_, 0, nInEdge_*sizeof(SRDAGEdge*));
+
+	nOutEdge_ = nOutEdge;
+	outEdges_ = sAlloc(stack, nOutEdge_, SRDAGEdge*);
+	memset(outEdges_, 0, nOutEdge_*sizeof(SRDAGEdge*));
+
+	nInParam_ = nInParam;
+	inParams_ = sAlloc(stack, nInParam, int);
+	memset(inParams_, 0, nInParam*sizeof(int));
+
+	nOutParam_ = nOutParam;
+	outParams_ = sAlloc(stack, nOutParam, const int*);
+	memset(outParams_, 0, nOutParam*sizeof(int**));
+
+//	memset(constraints, false, MAX_SLAVES*sizeof(bool));
 }
 
-void SRDAGEdge::connectSrc(SRDAGVertex *src, int srcPortId){
-	if(src_ != 0)
-		throw "SRDAGEdge: try to connect to an already connected edge";
-	src_ = src;
-	srcPortIx_ = srcPortId;
+void SRDAGVertex::toString(char* name, int sizeMax) const{
+	switch(type_){
+	case SRDAG_NORMAL:
+		snprintf(name, sizeMax, "%s_%d", reference_->getName(), id_);
+		break;
+	case SRDAG_FORK:
+		snprintf(name, sizeMax, "Fork_%d", id_);
+		break;
+	case SRDAG_JOIN:
+		snprintf(name, sizeMax, "Join_%d", id_);
+		break;
+	case SRDAG_ROUNDBUFFER:
+		snprintf(name, sizeMax, "RB_%d", id_);
+		break;
+	case SRDAG_BROADCAST:
+		snprintf(name, sizeMax, "BR_%d", id_);
+		break;
+	case SRDAG_INIT:
+		snprintf(name, sizeMax, "Init_%d", id_);
+		break;
+	case SRDAG_END:
+		snprintf(name, sizeMax, "End_%d", id_);
+		break;
+	}
 }
-
-void SRDAGEdge::connectSnk(SRDAGVertex *snk, int snkPortId){
-	if(snk_ != 0)
-		throw "SRDAGEdge: try to connect to an already connected edge";
-	snk_ = snk;
-	snkPortIx_ = snkPortId;
-}
-
-
-
-
-
-
-

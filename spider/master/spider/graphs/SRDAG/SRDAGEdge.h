@@ -34,58 +34,80 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "PiSDFCommon.h"
-#include "PiSDFEdge.h"
+#ifndef SRDAG_EDGE_H
+#define SRDAG_EDGE_H
 
-#include <cstring>
+#include <graphs/SRDAG/SRDAGCommon.h>
+//#include "SRDAGVertex.h"
+//#include "SRDAGGraph.h"
+//#include <parser/Expression.h>
 
-/** Static Var def */
-int PiSDFEdge::globalId = 0;
+class SRDAGEdge {
+public:
+	/** Constructors */
+	SRDAGEdge();
+	SRDAGEdge(SRDAGGraph* graph);
 
-PiSDFEdge::PiSDFEdge(){
-	id_ = -1;
-	graph_ = 0;
+	/** Getters */
+	inline int getId() const;
+	inline SRDAGVertex* getSrc() const;
+	inline SRDAGVertex* getSnk() const;
+	inline int getSrcPortIx() const;
+	inline int getSnkPortIx() const;
+	inline int getRate() const;
+	inline int getDelay() const;
 
-	src_ = 0; srcPortIx_ = -1;
-	snk_ = 0; snkPortIx_ = -1;
+	/** Setters */
+	inline void setRate(int rate);
+	inline void setDelay(int delay);
 
-	/* Production and Consumption */
-	/* Parameterized Delays */
+	/** Connections Fcts */
+	void connectSrc(SRDAGVertex* src, int srcPortId);
+	void connectSnk(SRDAGVertex* snk, int snkPortId);
+
+private:
+	static int globalId;
+
+	int id_;
+	SRDAGGraph* graph_;
+
+	SRDAGVertex* src_;
+	int srcPortIx_;
+	SRDAGVertex* snk_;
+	int snkPortIx_;
+
+	int rate_;
+	int delay_;
+};
+
+inline int SRDAGEdge::getId() const {
+	return id_;
+}
+inline SRDAGVertex* SRDAGEdge::getSrc() const {
+	return src_;
+}
+inline SRDAGVertex* SRDAGEdge::getSnk() const {
+	return snk_;
+}
+inline int SRDAGEdge::getSrcPortIx() const {
+	return srcPortIx_;
+}
+inline int SRDAGEdge::getSnkPortIx() const {
+	return snkPortIx_;
+}
+inline int SRDAGEdge::getRate() const{
+	return rate_;
+}
+inline int SRDAGEdge::getDelay() const{
+	return delay_;
 }
 
-PiSDFEdge::PiSDFEdge(
-		PiSDFGraph* graph,
-		int nParam,
-		Stack* stack){
-	id_ = globalId++;
-	graph_ = graph;
-
-	src_ = 0; srcPortIx_ = -1;
-	snk_ = 0; snkPortIx_ = -1;
-
-	/* Production and Consumption */
-	/* Parameterized Delays */
+inline void SRDAGEdge::setRate(int rate){
+	rate_ = rate;
 }
-
-void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod, Stack* stack){
-	if(src_ != 0)
-		throw "PiSDFEdge: try to connect to an already connected edge";
-	src_ = src;
-	srcPortIx_ = srcPortId;
-	prod_ = Parser::Expression(prod, src->getInParams(), src->getNInParam(), stack);
-}
-
-void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons, Stack* stack){
-	if(snk_ != 0)
-		throw "PiSDFEdge: try to connect to an already connected edge";
-	snk_ = snk;
-	snkPortIx_ = snkPortId;
-	cons_ = Parser::Expression(cons, snk->getInParams(), snk->getNInParam(), stack);
+inline void SRDAGEdge::setDelay(int delay){
+	delay_ = delay;
 }
 
 
-
-
-
-
-
+#endif/*SRDAG_EDGE_H*/

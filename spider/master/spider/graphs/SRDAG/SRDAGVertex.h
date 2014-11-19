@@ -37,8 +37,8 @@
 #ifndef SRDAG_VERTEX_H
 #define SRDAG_VERTEX_H
 
-#include "SRDAGCommon.h"
-#include <graph/PiSDF/PiSDFVertex.h>
+#include <graphs/PiSDF/PiSDFVertex.h>
+#include <graphs/SRDAG/SRDAGCommon.h>
 
 class SRDAGVertex {
 public:

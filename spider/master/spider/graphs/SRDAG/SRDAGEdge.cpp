@@ -34,103 +34,51 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PISDF_EDGE_H
-#define PISDF_EDGE_H
+#include <graphs/SRDAG/SRDAGCommon.h>
+#include <graphs/SRDAG/SRDAGEdge.h>
 
-#include "PiSDFCommon.h"
-#include "PiSDFVertex.h"
-#include "PiSDFGraph.h"
-#include <parser/Expression.h>
+/** Static Var def */
+int SRDAGEdge::globalId = 0;
 
-class PiSDFEdge {
-public:
-	/** Constructors */
-	PiSDFEdge();
-	PiSDFEdge(
-			PiSDFGraph* graph,
-			int nParam,
-			Stack *stack);
+SRDAGEdge::SRDAGEdge(){
+	id_ = -1;
+	graph_ = 0;
 
-	/** Getters */
-	inline PiSDFVertex* getSrc() const;
-	inline PiSDFVertex* getSnk() const;
-	inline int getSrcPortIx() const;
-	inline int getSnkPortIx() const;
+	src_ = 0; srcPortIx_ = -1;
+	snk_ = 0; snkPortIx_ = -1;
 
-	/** Setters */
-	inline void setDelay(const char* delay, Stack* stack);
-
-	/** Connections Fcts */
-	void connectSrc(PiSDFVertex* src, int srcPortId, const char* prod, Stack* stack);
-	void connectSnk(PiSDFVertex* snk, int snkPortId, const char* cons, Stack* stack);
-
-	/** Add Param Fcts */
-	inline void addInParam(int ix, PiSDFParam* param);
-
-	/** Compute Fcts */
-	inline int resolveProd(const int* paramValues, int nParam);
-	inline int resolveCons(const int* paramValues, int nParam);
-	inline int resolveDelay(const int* paramValues, int nParam);
-
-	inline void getProdExpr(char* out, int sizeOut);
-	inline void getConsExpr(char* out, int sizeOut);
-	inline void getDelayExpr(char* out, int sizeOut);
-
-private:
-	static int globalId;
-
-	int id_;
-	PiSDFGraph* graph_;
-//	Stack *stack_;
-
-	PiSDFVertex* src_;
-	int srcPortIx_;
-	PiSDFVertex* snk_;
-	int snkPortIx_;
-
-	/* Production and Consumption */
-	Parser::Expression prod_;
-	Parser::Expression cons_;
-
-	/* Parameterized Delays */
-	Parser::Expression delay_;
-};
-
-inline PiSDFVertex* PiSDFEdge::getSrc() const {
-	return src_;
-}
-inline PiSDFVertex* PiSDFEdge::getSnk() const {
-	return snk_;
-}
-inline int PiSDFEdge::getSrcPortIx() const {
-	return srcPortIx_;
-}
-inline int PiSDFEdge::getSnkPortIx() const {
-	return snkPortIx_;
+	rate_ = 0;
+	delay_ = 0;
 }
 
-inline void PiSDFEdge::setDelay(const char* expr, Stack* stack){
-	delay_ = Parser::Expression(expr, graph_->getParams(), graph_->getNParam(), stack);
+SRDAGEdge::SRDAGEdge(SRDAGGraph* graph){
+	id_ = -1;
+	graph_ = 0;
+
+	src_ = 0; srcPortIx_ = -1;
+	snk_ = 0; snkPortIx_ = -1;
+
+	rate_ = 0;
+	delay_ = 0;
 }
 
-inline int PiSDFEdge::resolveProd(const int* paramValues, int nParam){
-	return prod_.evaluate(paramValues, nParam);
-}
-inline int PiSDFEdge::resolveCons(const int* paramValues, int nParam){
-	return cons_.evaluate(paramValues, nParam);
-}
-inline int PiSDFEdge::resolveDelay(const int* paramValues, int nParam){
-	return delay_.evaluate(paramValues, nParam);
+void SRDAGEdge::connectSrc(SRDAGVertex *src, int srcPortId){
+	if(src_ != 0)
+		throw "SRDAGEdge: try to connect to an already connected edge";
+	src_ = src;
+	srcPortIx_ = srcPortId;
 }
 
-inline void PiSDFEdge::getProdExpr(char* out, int sizeOut){
-	prod_.toString(src_->getGraph()->getParams(), src_->getGraph()->getNParam(), out, sizeOut);
-}
-inline void PiSDFEdge::getConsExpr(char* out, int sizeOut){
-	cons_.toString(snk_->getGraph()->getParams(), snk_->getGraph()->getNParam(), out, sizeOut);
-}
-inline void PiSDFEdge::getDelayExpr(char* out, int sizeOut){
-	delay_.toString(graph_->getParams(), graph_->getNParam(), out, sizeOut);
+void SRDAGEdge::connectSnk(SRDAGVertex *snk, int snkPortId){
+	if(snk_ != 0)
+		throw "SRDAGEdge: try to connect to an already connected edge";
+	snk_ = snk;
+	snkPortIx_ = snkPortId;
 }
 
-#endif/*PISDF_EDGE_H*/
+
+
+
+
+
+

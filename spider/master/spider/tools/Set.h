@@ -87,7 +87,7 @@ template <typename TYPE>
 inline void Set<TYPE>::del(TYPE value){
 	SetIterator<TYPE> iter = this->getIterator();
 	for(iter.first(); iter.finished(); iter.next()){
-		if(iter.currentIx() == value){
+		if(iter.current() == value){
 			array[iter.currentIx()] = array[--nb];
 			return;
 		}

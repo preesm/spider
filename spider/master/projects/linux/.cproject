@@ -34,7 +34,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_linux}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/spider}&quot;"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.pic.725021182" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.other.pic.725021182" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1925082292" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.so.debug.1430782144" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.so.debug">
@@ -54,6 +54,25 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.so.debug.1272883559" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.so.debug">
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1111714813" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+					<folderInfo id="cdt.managedbuild.config.gnu.so.debug.2107493073.766465069" name="/" resourcePath="spider">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.so.debug.1075944419" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.so.debug" unusedChildren="">
+							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1426847881" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base.1469129450"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.1386081058" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.2110071839">
+								<option id="gnu.cpp.compiler.option.preprocessor.def.1076610837" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG=1"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.667453378" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.so.debug.656401853" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.so.debug.1430782144">
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.693701430" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.so.debug.912351332" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.so.debug.1952339960"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.so.debug.323621360" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.so.debug.1187248212"/>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.so.debug.737165637" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.so.debug.1272883559">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.820647282" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
 					</folderInfo>

@@ -37,7 +37,7 @@
 #ifndef STACK_H
 #define STACK_H
 
-#define sAlloc(stack, size, type) ((type*)stack->alloc(size*sizeof(type)))
+#define sAlloc(stack, size, type) ((type*)(stack)->alloc((size)*sizeof(type)))
 
 class Stack{
 public:

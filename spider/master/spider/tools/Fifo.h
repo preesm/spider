@@ -101,6 +101,7 @@ inline TYPE Fifo<TYPE>::pop(){
 	first_ = first_->next;
 	if(first_ == 0)
 		last_ = 0;
+	return val;
 }
 
 #endif/*FIFO_H*/

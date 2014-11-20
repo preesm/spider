@@ -144,6 +144,20 @@ SRDAGVertex* SRDAGGraph::addEnd(){
 	return vertex;
 }
 
+SRDAGVertex* SRDAGGraph::addRoundBuffer(){
+	SRDAGVertex* vertex = sAlloc(stack_, 1, SRDAGVertex);
+	*vertex = SRDAGVertex(
+			SRDAG_ROUNDBUFFER, this,
+			0 /*Ref*/,
+			1 /*nInEdge*/,
+			1 /*nOutEdge*/,
+			0 /*nInParam*/,
+			0 /*nOutParam*/,
+			stack_);
+	vertices_.add(vertex);
+	return vertex;
+}
+
 SRDAGEdge* SRDAGGraph::addEdge() {
 	SRDAGEdge* edge = sAlloc(stack_, 1, SRDAGEdge);
 	*edge = SRDAGEdge(this);

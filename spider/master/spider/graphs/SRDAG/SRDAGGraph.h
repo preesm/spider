@@ -52,6 +52,7 @@ public:
 	SRDAGVertex* addJoin(int nInput);
 	SRDAGVertex* addInit();
 	SRDAGVertex* addEnd();
+	SRDAGVertex* addRoundBuffer();
 
 	SRDAGEdge* addEdge();
 

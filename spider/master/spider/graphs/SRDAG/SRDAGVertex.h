@@ -88,6 +88,9 @@ protected:
 	/** Connect Fcts */
 	inline void connectInEdge(SRDAGEdge* edge, int ix);
 	inline void connectOutEdge(SRDAGEdge* edge, int ix);
+	inline void disconnectInEdge(int ix);
+	inline void disconnectOutEdge(int ix);
+
 private:
 	static int globalId;
 
@@ -191,6 +194,26 @@ inline void SRDAGVertex::connectOutEdge(SRDAGEdge* edge, int ix){
 	else
 #endif
 		outEdges_[ix] = edge;
+}
+inline void SRDAGVertex::disconnectInEdge(int ix){
+#if	DEBUG
+	if(ix >= nInEdge_ && ix < 0)
+		throw "SRDAGVertex: Bad ix in disconnectInEdge";
+	else if(inEdges_[ix] == 0)
+		throw "SRDAGVertex: Try to disconnect empty input edge";
+	else
+#endif
+		inEdges_[ix] = 0;
+}
+inline void SRDAGVertex::disconnectOutEdge(int ix){
+#if	DEBUG
+	if(ix >= nOutEdge_ && ix < 0)
+		throw "SRDAGVertex: Bad ix in disconnectOutEdge";
+	else if(outEdges_[ix] == 0)
+		throw "SRDAGVertex: Try to disconnect empty output edge";
+	else
+#endif
+		outEdges_[ix] = 0;
 }
 
 /** Add Param Fcts */

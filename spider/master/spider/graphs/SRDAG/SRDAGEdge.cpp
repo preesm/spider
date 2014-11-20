@@ -79,6 +79,22 @@ void SRDAGEdge::connectSnk(SRDAGVertex *snk, int snkPortId){
 	snk_->connectInEdge(this, snkPortIx_);
 }
 
+void SRDAGEdge::disconnectSrc(){
+	if(src_ == 0)
+		throw "SRDAGEdge: try to disconnect a not connected edge";
+	src_->disconnectOutEdge(srcPortIx_);
+	src_ = 0;
+	srcPortIx_ = -1;
+}
+
+void SRDAGEdge::disconnectSnk(){
+	if(snk_ == 0)
+		throw "SRDAGEdge: try to disconnect a not connected edge";
+	snk_->disconnectOutEdge(snkPortIx_);
+	snk_ = 0;
+	snkPortIx_ = -1;
+}
+
 
 
 

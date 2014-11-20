@@ -64,6 +64,8 @@ public:
 	/** Connections Fcts */
 	void connectSrc(SRDAGVertex* src, int srcPortId);
 	void connectSnk(SRDAGVertex* snk, int snkPortId);
+	void disconnectSrc();
+	void disconnectSnk();
 
 private:
 	static int globalId;

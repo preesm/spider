@@ -94,25 +94,25 @@ SRDAGVertex::SRDAGVertex(
 void SRDAGVertex::toString(char* name, int sizeMax) const{
 	switch(type_){
 	case SRDAG_NORMAL:
-		snprintf(name, sizeMax, "%s_%d", reference_->getName(), id_);
+		snprintf(name, sizeMax, "%s", reference_->getName());
 		break;
 	case SRDAG_FORK:
-		snprintf(name, sizeMax, "Fork_%d", id_);
+		snprintf(name, sizeMax, "Fork");
 		break;
 	case SRDAG_JOIN:
-		snprintf(name, sizeMax, "Join_%d", id_);
+		snprintf(name, sizeMax, "Join");
 		break;
 	case SRDAG_ROUNDBUFFER:
-		snprintf(name, sizeMax, "RB_%d", id_);
+		snprintf(name, sizeMax, "RB");
 		break;
 	case SRDAG_BROADCAST:
-		snprintf(name, sizeMax, "BR_%d", id_);
+		snprintf(name, sizeMax, "BR");
 		break;
 	case SRDAG_INIT:
-		snprintf(name, sizeMax, "Init_%d", id_);
+		snprintf(name, sizeMax, "Init");
 		break;
 	case SRDAG_END:
-		snprintf(name, sizeMax, "End_%d", id_);
+		snprintf(name, sizeMax, "End");
 		break;
 	}
 }

@@ -59,9 +59,10 @@
 					</folderInfo>
 					<folderInfo id="cdt.managedbuild.config.gnu.so.debug.2107493073.766465069" name="/" resourcePath="spider">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.so.debug.1075944419" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.so.debug" unusedChildren="">
+							<targetPlatform id="cdt.managedbuild.target.gnu.platform.so.debug" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.so.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1426847881" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base.1469129450"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.1386081058" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.2110071839">
-								<option id="gnu.cpp.compiler.option.preprocessor.def.1076610837" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
+								<option id="gnu.cpp.compiler.option.preprocessor.def.1076610837" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG=1"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.667453378" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>

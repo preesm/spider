@@ -37,7 +37,7 @@
 #ifndef PISDF_VERTEX_H
 #define PISDF_VERTEX_H
 
-#include "PiSDFCommon.h"
+#include <graphs/PiSDF/PiSDFCommon.h>
 
 class PiSDFVertex {
 public:

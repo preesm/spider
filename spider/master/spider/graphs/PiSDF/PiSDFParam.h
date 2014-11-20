@@ -52,11 +52,15 @@ public:
 	inline int getIx() const;
 	inline const char* getName() const;
 	inline PiSDFParamType getType() const;
+	inline int getStaticValue() const;
+	inline int getParentId() const;
 
 	/** Setters */
 	inline void setValue(int value);
 	inline void setParentId(int parentId);
 	inline void setSetter(PiSDFVertex* setter, int portIx);
+
+	int evaluate(const int * paramValues);
 
 //	const PiSDFGraph* getGraph() const;
 
@@ -89,6 +93,16 @@ inline const char* PiSDFParam::getName() const{
 }
 inline PiSDFParamType PiSDFParam::getType() const{
 	return type_;
+}
+inline int PiSDFParam::getStaticValue() const{
+	if(type_ != PISDF_PARAM_STATIC)
+		throw "Error: Not Static param used as Static param\n";
+	return value_;
+}
+inline int PiSDFParam::getParentId() const{
+	if(type_ != PISDF_PARAM_HERITED)
+		throw "Error: Not Herited param used as Herited param\n";
+	return value_;
 }
 
 /** Setters */

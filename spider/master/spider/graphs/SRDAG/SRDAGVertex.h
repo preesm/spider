@@ -78,6 +78,7 @@ public:
 	inline SRDAGState getState() const;
 	inline SRDAGGraph *getGraph() const;
 	inline PiSDFGraph *getSubGraph() const;
+	inline PiSDFVertex *getReference() const;
 	inline bool isHierarchical() const;
 
 	inline void setState(SRDAGState state);
@@ -283,6 +284,9 @@ inline PiSDFGraph *SRDAGVertex::getSubGraph() const{
 		return reference_->getSubGraph();
 	else
 		return 0;
+}
+inline PiSDFVertex *SRDAGVertex::getReference() const{
+	return reference_;
 }
 inline bool SRDAGVertex::isHierarchical() const{
 	return type_ == SRDAG_NORMAL && reference_->isHierarchical();

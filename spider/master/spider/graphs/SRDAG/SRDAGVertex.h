@@ -42,6 +42,8 @@
 
 class SRDAGVertex {
 public:
+	friend class SRDAGEdge;
+
 	SRDAGVertex();
 	SRDAGVertex(
 			SRDAGType type, SRDAGGraph* graph,
@@ -64,9 +66,6 @@ public:
 	inline const SRDAGEdge* getInEdge(int ix) const;
 	inline const SRDAGEdge* getOutEdge(int ix) const;
 
-	/** Connect Fcts */
-	inline void connectInEdge(int ix, SRDAGEdge* edge);
-	inline void connectOutEdge(int ix, SRDAGEdge* edge);
 
 	/** Add Param Fcts */
 	inline void addInParam(int ix, int param);
@@ -85,6 +84,10 @@ public:
 
 	void toString(char* name, int sizeMax) const;
 
+protected:
+	/** Connect Fcts */
+	inline void connectInEdge(SRDAGEdge* edge, int ix);
+	inline void connectOutEdge(SRDAGEdge* edge, int ix);
 private:
 	static int globalId;
 
@@ -169,22 +172,22 @@ inline const SRDAGEdge* SRDAGVertex::getOutEdge(int ix) const{
 }
 
 /** Connect Fcts */
-inline void SRDAGVertex::connectInEdge(int ix, SRDAGEdge* edge){
+inline void SRDAGVertex::connectInEdge(SRDAGEdge* edge, int ix){
 #if	DEBUG
 	if(ix >= nInEdge_ && ix < 0)
 		throw "SRDAGVertex: Bad ix in connectInEdge";
 	else if(inEdges_[ix] != 0)
-		throw "SRDAGVertex: Try to erase already connected input edge";
+		throw "SRDAGVertex: Try to overwrite already connected input edge";
 	else
 #endif
 		inEdges_[ix] = edge;
 }
-inline void SRDAGVertex::connectOutEdge(int ix, SRDAGEdge* edge){
+inline void SRDAGVertex::connectOutEdge(SRDAGEdge* edge, int ix){
 #if	DEBUG
 	if(ix >= nOutEdge_ && ix < 0)
 		throw "SRDAGVertex: Bad ix in connectOutEdge";
 	else if(outEdges_[ix] != 0)
-		throw "SRDAGVertex: Try to erase already connected output edge";
+		throw "SRDAGVertex: Try to overwrite already connected output edge";
 	else
 #endif
 		outEdges_[ix] = edge;

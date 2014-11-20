@@ -35,6 +35,7 @@
  ****************************************************************************/
 
 #include <graphs/SRDAG/SRDAGCommon.h>
+#include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/SRDAG/SRDAGEdge.h>
 
 /** Static Var def */
@@ -67,6 +68,7 @@ void SRDAGEdge::connectSrc(SRDAGVertex *src, int srcPortId){
 		throw "SRDAGEdge: try to connect to an already connected edge";
 	src_ = src;
 	srcPortIx_ = srcPortId;
+	src_->connectOutEdge(this, srcPortIx_);
 }
 
 void SRDAGEdge::connectSnk(SRDAGVertex *snk, int snkPortId){
@@ -74,6 +76,7 @@ void SRDAGEdge::connectSnk(SRDAGVertex *snk, int snkPortId){
 		throw "SRDAGEdge: try to connect to an already connected edge";
 	snk_ = snk;
 	snkPortIx_ = snkPortId;
+	snk_->connectInEdge(this, snkPortIx_);
 }
 
 

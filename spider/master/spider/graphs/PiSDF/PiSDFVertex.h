@@ -62,8 +62,8 @@ public:
 	/** Data edge getters */
 	inline int getNInEdge() const;
 	inline int getNOutEdge() const;
-	inline const PiSDFEdge* getInEdge(int ix) const;
-	inline const PiSDFEdge* getOutEdge(int ix) const;
+	inline PiSDFEdge* getInEdge(int ix);
+	inline PiSDFEdge* getOutEdge(int ix);
 
 	/** Connect Fcts */
 	inline void connectInEdge(int ix, PiSDFEdge* edge);
@@ -153,7 +153,7 @@ inline int PiSDFVertex::getNInEdge() const{
 inline int PiSDFVertex::getNOutEdge() const{
 	return nOutEdge_;
 }
-inline const PiSDFEdge* PiSDFVertex::getInEdge(int ix) const{
+inline PiSDFEdge* PiSDFVertex::getInEdge(int ix){
 #if	DEBUG
 	if(ix < nInEdge_ && ix >= 0)
 #endif
@@ -163,7 +163,7 @@ inline const PiSDFEdge* PiSDFVertex::getInEdge(int ix) const{
 		throw "PiSDFVertex: Bad ix in getInEdge";
 #endif
 }
-inline const PiSDFEdge* PiSDFVertex::getOutEdge(int ix) const{
+inline PiSDFEdge* PiSDFVertex::getOutEdge(int ix){
 #if	DEBUG
 	if(ix < nOutEdge_ && ix >= 0)
 #endif

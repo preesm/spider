@@ -63,9 +63,10 @@ public:
 	/** Data edge getters */
 	inline int getNInEdge() const;
 	inline int getNOutEdge() const;
-	inline const SRDAGEdge* getInEdge(int ix) const;
-	inline const SRDAGEdge* getOutEdge(int ix) const;
-
+	inline SRDAGEdge* getInEdge(int ix);
+	inline SRDAGEdge* getOutEdge(int ix);
+	inline SRDAGEdge* const * getInEdges();
+	inline SRDAGEdge* const * getOutEdges();
 
 	/** Add Param Fcts */
 	inline void addInParam(int ix, int param);
@@ -154,7 +155,7 @@ inline int SRDAGVertex::getNInEdge() const{
 inline int SRDAGVertex::getNOutEdge() const{
 	return nOutEdge_;
 }
-inline const SRDAGEdge* SRDAGVertex::getInEdge(int ix) const{
+inline SRDAGEdge* SRDAGVertex::getInEdge(int ix){
 #if	DEBUG
 	if(ix < nInEdge_ && ix >= 0)
 #endif
@@ -164,7 +165,7 @@ inline const SRDAGEdge* SRDAGVertex::getInEdge(int ix) const{
 		throw "SRDAGVertex: Bad ix in getInEdge";
 #endif
 }
-inline const SRDAGEdge* SRDAGVertex::getOutEdge(int ix) const{
+inline SRDAGEdge* SRDAGVertex::getOutEdge(int ix){
 #if	DEBUG
 	if(ix < nOutEdge_ && ix >= 0)
 #endif
@@ -174,6 +175,13 @@ inline const SRDAGEdge* SRDAGVertex::getOutEdge(int ix) const{
 		throw "SRDAGVertex: Bad ix in getOutEdge";
 #endif
 }
+inline SRDAGEdge* const * SRDAGVertex::getInEdges(){
+	return inEdges_;
+}
+inline SRDAGEdge* const * SRDAGVertex::getOutEdges(){
+	return outEdges_;
+}
+
 
 /** Connect Fcts */
 inline void SRDAGVertex::connectInEdge(SRDAGEdge* edge, int ix){

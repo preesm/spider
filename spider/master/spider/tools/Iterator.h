@@ -37,6 +37,8 @@
 #ifndef ITERATORINTERFACE_H
 #define ITERATORINTERFACE_H
 
+#define FOR_IT(iterator) for(iterator.first(); iterator.finished(); iterator.next())
+
 template <class TYPE> class Iterator{
 public:
 	virtual void first() = 0;

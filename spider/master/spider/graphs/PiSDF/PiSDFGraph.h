@@ -95,6 +95,8 @@ public:
 
 	inline const PiSDFParam* const * getParams() const;
 	inline int getNParam() const;
+	inline int getNConfig() const;
+	inline int getNBody() const;
 
 	/** General getters */
 	inline PiSDFVertex* getParentVertex();
@@ -171,6 +173,12 @@ inline const PiSDFParam* const * PiSDFGraph::getParams() const {
 }
 inline int PiSDFGraph::getNParam() const{
 	return params_.getN();
+}
+inline int PiSDFGraph::getNConfig() const{
+	return configs_.getN();
+}
+inline int PiSDFGraph::getNBody() const{
+	return bodies_.getN();
 }
 
 /** General getters */

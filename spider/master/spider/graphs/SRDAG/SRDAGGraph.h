@@ -55,6 +55,8 @@ public:
 
 	SRDAGEdge* addEdge();
 
+	void delVertex(SRDAGVertex* vertex);
+	void delEdge(SRDAGEdge* edge);
 
 	/** Iterator getters */
 	inline SRDAGEdgeIterator getEdgeIterator();

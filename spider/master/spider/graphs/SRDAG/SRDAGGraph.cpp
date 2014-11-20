@@ -151,6 +151,14 @@ SRDAGEdge* SRDAGGraph::addEdge() {
 	return edge;
 }
 
+void SRDAGGraph::delVertex(SRDAGVertex* vertex){
+	vertices_.del(vertex);
+}
+
+void SRDAGGraph::delEdge(SRDAGEdge* edge){
+	edges_.del(edge);
+}
+
 /** Print Fct */
 void SRDAGGraph::print(const char *path){
 

@@ -75,6 +75,7 @@ PiSDFVertex* PiSDFGraph::addBodyVertex(
 		int nInParam){
 	PiSDFVertex* body = sAlloc(stack_, 1, PiSDFVertex);
 	*body = PiSDFVertex(vertexName, fctId,
+			bodies_.getN(),
 			PISDF_TYPE_BODY, subType,
 			this, 0,
 			nInEdge, nOutEdge,
@@ -91,6 +92,7 @@ PiSDFVertex* PiSDFGraph::addConfigVertex(
 		int nInParam, int nOutParam){
 	PiSDFVertex* config = sAlloc(stack_, 1, PiSDFVertex);
 	*config = PiSDFVertex(vertexName, fctId,
+			configs_.getN(),
 			PISDF_TYPE_CONFIG, subType,
 			this, 0,
 			nInEdge, nOutEdge,
@@ -106,6 +108,7 @@ PiSDFVertex* PiSDFGraph::addInputIf(
 		int nInParam){
 	PiSDFVertex* inIf = sAlloc(stack_, 1, PiSDFVertex);
 	*inIf = PiSDFVertex(name, -1,
+			inputIfs_.getN(),
 			PISDF_TYPE_IF, PISDF_SUBTYPE_INPUT_IF,
 			this, 0,
 			0, 1,
@@ -120,6 +123,7 @@ PiSDFVertex* PiSDFGraph::addOutputIf(
 		int nInParam){
 	PiSDFVertex* outIf = sAlloc(stack_, 1, PiSDFVertex);
 	*outIf = PiSDFVertex(name, -1,
+			outputIfs_.getN(),
 			PISDF_TYPE_IF, PISDF_SUBTYPE_OUTPUT_IF,
 			this, 0,
 			1, 0,

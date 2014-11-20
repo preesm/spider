@@ -44,6 +44,7 @@ int PiSDFVertex::globalId = 0;
 /** Constructor */
 PiSDFVertex::PiSDFVertex(){
 	id_ = -1;
+	typeId_ = -1;
 	fctId_ = -1;
 	name_ = 0;
 
@@ -62,6 +63,7 @@ PiSDFVertex::PiSDFVertex(){
 
 PiSDFVertex::PiSDFVertex(
 		const char* name, int fctId,
+		int typeId,
 		PiSDFType type, PiSDFSubType subType,
 		PiSDFGraph* graph, PiSDFGraph* subGraph,
 		int nInEdge, int nOutEdge,
@@ -69,6 +71,7 @@ PiSDFVertex::PiSDFVertex(
 		Stack* stack){
 
 	id_ = globalId++;
+	typeId_ = typeId;
 	fctId_ = fctId;
 	type_ = type;
 	name_ = name;

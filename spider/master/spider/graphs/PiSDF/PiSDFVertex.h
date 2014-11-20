@@ -44,6 +44,7 @@ public:
 	PiSDFVertex();
 	PiSDFVertex(
 			const char* name, int fctId,
+			int typeId,
 			PiSDFType type, PiSDFSubType subType,
 			PiSDFGraph* graph, PiSDFGraph* subGraph,
 			int nInEdge, int nOutEdge,
@@ -74,6 +75,7 @@ public:
 
 	/** General getters */
 	inline int getId() const;
+	inline int getTypeId() const;
 	inline int getFctId() const;
 	inline const char* getName() const;
 	inline PiSDFType getType() const;
@@ -89,6 +91,7 @@ private:
 	static int globalId;
 
 	int id_;
+	int typeId_;
 	int fctId_;
 	const char* name_;
 
@@ -218,6 +221,9 @@ inline void PiSDFVertex::addOutParam(int ix, PiSDFParam* param){
 /** General getters */
 inline int PiSDFVertex::getId() const{
 	return id_;
+}
+inline int PiSDFVertex::getTypeId() const{
+	return typeId_;
 }
 inline const char* PiSDFVertex::getName() const{
 	return name_;

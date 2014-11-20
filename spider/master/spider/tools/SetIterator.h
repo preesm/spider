@@ -44,6 +44,7 @@ template <typename TYPE> class Set;
 template <typename TYPE> class SetIterator : public Iterator<TYPE>{
 public:
 	SetIterator(Set<TYPE>* set) :set(set), curIx(0){}
+	SetIterator():set(0), curIx(0){}
 	virtual ~SetIterator(){}
 
 	virtual inline void first();

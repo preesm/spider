@@ -52,6 +52,7 @@ public:
 			Stack *stack);
 
 	/** Getters */
+	inline int getId() const;
 	inline PiSDFVertex* getSrc() const;
 	inline PiSDFVertex* getSnk() const;
 	inline int getSrcPortIx() const;
@@ -96,6 +97,9 @@ private:
 	Parser::Expression delay_;
 };
 
+inline int PiSDFEdge::getId() const{
+	return id_;
+}
 inline PiSDFVertex* PiSDFEdge::getSrc() const {
 	return src_;
 }

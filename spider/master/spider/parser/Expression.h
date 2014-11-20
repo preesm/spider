@@ -20,7 +20,7 @@ public:
 	Expression(const char* expr, const PiSDFParam* const * params, int nParam, Stack* stack);
 	virtual ~Expression();
 
-	int evaluate(const int* paramValues, int nParam);
+	int evaluate(const int* paramValues, int nParam) const;
 	void toString(
 			const PiSDFParam * const * params, int nParam,
 			char* out, int outSizeMax);

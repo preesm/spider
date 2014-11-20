@@ -68,8 +68,8 @@ public:
 	inline void addInParam(int ix, PiSDFParam* param);
 
 	/** Compute Fcts */
-	inline int resolveProd(const int* paramValues, int nParam);
-	inline int resolveCons(const int* paramValues, int nParam);
+	inline int resolveProd(const int* paramValues, int nParam) const;
+	inline int resolveCons(const int* paramValues, int nParam) const;
 	inline int resolveDelay(const int* paramValues, int nParam);
 
 	inline void getProdExpr(char* out, int sizeOut);
@@ -113,10 +113,10 @@ inline void PiSDFEdge::setDelay(const char* expr, Stack* stack){
 	delay_ = Parser::Expression(expr, graph_->getParams(), graph_->getNParam(), stack);
 }
 
-inline int PiSDFEdge::resolveProd(const int* paramValues, int nParam){
+inline int PiSDFEdge::resolveProd(const int* paramValues, int nParam) const {
 	return prod_.evaluate(paramValues, nParam);
 }
-inline int PiSDFEdge::resolveCons(const int* paramValues, int nParam){
+inline int PiSDFEdge::resolveCons(const int* paramValues, int nParam) const {
 	return cons_.evaluate(paramValues, nParam);
 }
 inline int PiSDFEdge::resolveDelay(const int* paramValues, int nParam){

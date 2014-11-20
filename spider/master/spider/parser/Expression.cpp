@@ -95,10 +95,10 @@ Expression::Expression(
 Expression::~Expression() {
 }
 
-int Expression::evaluate(const int* paramValues, int nParam){
+int Expression::evaluate(const int* paramValues, int nParam) const{
 	int stack[MAX_NVAR_ELEMENTS];
 	int* stackPtr = stack;
-	Token* inputPtr = stack_;
+	const Token* inputPtr = stack_;
 
 	while(stack_+nElt_ > inputPtr) {
 		switch(inputPtr->getType()){

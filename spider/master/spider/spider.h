@@ -5,5 +5,6 @@
 #include <graphs/PiSDF/PiSDFGraph.h>
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <tools/StaticStack.h>
+#include <graphTransfo/GraphTransfo.h>
 
 #endif//SPIDER_H

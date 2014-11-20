@@ -1,4 +1,4 @@
-/****************************************************************************
+ /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
  * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
  *                                                                          *
@@ -34,33 +34,13 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <spider.h>
-#include "Tests.h"
+#ifndef LINK_VERTICES
+#define LINK_VERTICES
 
-#include <cstdio>
-#include <cstdlib>
+#include <graphs/SRDAG/SRDAGGraph.h>
+#include "GraphTransfo.h"
 
-#define STACK_SIZE (1024*1024)
+void linkCAVertices(SRDAGGraph *topDag, transfoJob *job);
+void linkSRVertices(SRDAGGraph *topDag, transfoJob *job, int *brv);
 
-int main(int argc, char* argv[]){
-	PiSDFGraph *topPisdf;
-	void* memory = malloc(STACK_SIZE);
-	StaticStack stack = StaticStack(memory,STACK_SIZE);
-
-	printf("Start\n");
-
-//	try{
-		topPisdf = initPisdf_test0(&stack);
-		topPisdf->print("top.gv");
-		jit_ms(topPisdf);
-
-
-//	}catch(const char* s){
-//		printf("Exception : %s\n", s);
-//	}
-	printf("finished\n");
-
-	free(memory);
-
-	return 0;
-}
+#endif//LINK_VERTICES

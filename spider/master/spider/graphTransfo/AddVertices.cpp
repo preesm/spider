@@ -1,4 +1,4 @@
-/****************************************************************************
+ /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
  * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
  *                                                                          *
@@ -34,33 +34,54 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <spider.h>
-#include "Tests.h"
+#include "AddVertices.h"
+#include "GraphTransfo.h"
 
-#include <cstdio>
-#include <cstdlib>
+#include <graphs/PiSDF/PiSDFGraph.h>
+#include <graphs/PiSDF/PiSDFVertex.h>
+#include <graphs/PiSDF/PiSDFEdge.h>
 
-#define STACK_SIZE (1024*1024)
+#include <graphs/SRDAG/SRDAGGraph.h>
+#include <graphs/SRDAG/SRDAGVertex.h>
+#include <graphs/SRDAG/SRDAGEdge.h>
 
-int main(int argc, char* argv[]){
-	PiSDFGraph *topPisdf;
-	void* memory = malloc(STACK_SIZE);
-	StaticStack stack = StaticStack(memory,STACK_SIZE);
+void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stack){
+    job->bodies = sAlloc(stack, job->graph->getNBody(), SRDAGVertex**);
+	PiSDFVertexIterator bodyIt = job->graph->getBodyIterator();
+	FOR_IT(bodyIt){
+        job->bodies[bodyIt.currentIx()] = sAlloc(stack, brv[bodyIt.currentIx()], SRDAGVertex*);;
+		PiSDFVertex* pi_vertex = job->graph->getBody(bodyIt.currentIx());
+		switch(pi_vertex->getSubType()){
+		case PISDF_SUBTYPE_NORMAL:
+			for(int j=0; j<brv[bodyIt.currentIx()]; j++){
+				job->bodies[bodyIt.currentIx()][j] = topSrdag->addVertex(pi_vertex);
+			}
+			break;
+		case PISDF_SUBTYPE_BROADCAST:
+			for(int j=0; j<brv[bodyIt.currentIx()]; j++){
+				job->bodies[bodyIt.currentIx()][j] = topSrdag->addBroadcast(pi_vertex->getNOutEdge());
+			}
+			break;
+		case PISDF_SUBTYPE_JOIN:
+			for(int j=0; j<brv[bodyIt.currentIx()]; j++){
+				job->bodies[bodyIt.currentIx()][j] = topSrdag->addJoin(pi_vertex->getNInEdge());
+			}
+			break;
+		case PISDF_SUBTYPE_FORK:
+			for(int j=0; j<brv[bodyIt.currentIx()]; j++){
+				job->bodies[bodyIt.currentIx()][j] = topSrdag->addFork(pi_vertex->getNOutEdge());
+			}
+			break;
+		default:
+			throw "Unexpected Interface vertex in AddVertices\n";
+		}
+	}
+}
 
-	printf("Start\n");
-
-//	try{
-		topPisdf = initPisdf_test0(&stack);
-		topPisdf->print("top.gv");
-		jit_ms(topPisdf);
-
-
-//	}catch(const char* s){
-//		printf("Exception : %s\n", s);
-//	}
-	printf("finished\n");
-
-	free(memory);
-
-	return 0;
+void addCAVertices(SRDAGGraph *topSrdag, transfoJob *job, Stack* stack){
+    job->configs = sAlloc(stack, job->graph->getNConfig(), SRDAGVertex*);
+	PiSDFVertexIterator configIt = job->graph->getConfigIterator();
+    FOR_IT(configIt){
+		job->configs[configIt.currentIx()] = topSrdag->addVertex(configIt.current());
+	}
 }

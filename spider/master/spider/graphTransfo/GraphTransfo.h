@@ -34,33 +34,24 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <spider.h>
-#include "Tests.h"
+#ifndef GRAPH_TRANSFO_H
+#define GRAPH_TRANSFO_H
 
-#include <cstdio>
-#include <cstdlib>
+#include <graphs/PiSDF/PiSDFGraph.h>
 
-#define STACK_SIZE (1024*1024)
+#include <graphs/SRDAG/SRDAGGraph.h>
+#include <graphs/SRDAG/SRDAGEdge.h>
+#include <graphs/SRDAG/SRDAGVertex.h>
 
-int main(int argc, char* argv[]){
-	PiSDFGraph *topPisdf;
-	void* memory = malloc(STACK_SIZE);
-	StaticStack stack = StaticStack(memory,STACK_SIZE);
+typedef struct transfoJob{
+	PiSDFGraph* graph;
+	int* paramValues;
+	SRDAGEdge* const * inputIfs;
+	SRDAGEdge* const * outputIfs;
+	SRDAGVertex** configs;
+	SRDAGVertex*** bodies;
+} transfoJob;
 
-	printf("Start\n");
+void jit_ms(PiSDFGraph* topPisdf);
 
-//	try{
-		topPisdf = initPisdf_test0(&stack);
-		topPisdf->print("top.gv");
-		jit_ms(topPisdf);
-
-
-//	}catch(const char* s){
-//		printf("Exception : %s\n", s);
-//	}
-	printf("finished\n");
-
-	free(memory);
-
-	return 0;
-}
+#endif/*GRAPH_TRANSFO_H*/

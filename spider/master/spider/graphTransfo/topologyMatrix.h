@@ -34,33 +34,11 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <spider.h>
-#include "Tests.h"
+#ifndef TOPOLOGY_MATRIX_H
+#define TOPOLOGY_MATRIX_H
 
-#include <cstdio>
-#include <cstdlib>
+#include <tools/Stack.h>
 
-#define STACK_SIZE (1024*1024)
+int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices, Stack *stack);
 
-int main(int argc, char* argv[]){
-	PiSDFGraph *topPisdf;
-	void* memory = malloc(STACK_SIZE);
-	StaticStack stack = StaticStack(memory,STACK_SIZE);
-
-	printf("Start\n");
-
-//	try{
-		topPisdf = initPisdf_test0(&stack);
-		topPisdf->print("top.gv");
-		jit_ms(topPisdf);
-
-
-//	}catch(const char* s){
-//		printf("Exception : %s\n", s);
-//	}
-	printf("finished\n");
-
-	free(memory);
-
-	return 0;
-}
+#endif

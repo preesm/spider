@@ -136,7 +136,7 @@ PiSDFVertex* PiSDFGraph::addOutputIf(
 
 PiSDFParam* PiSDFGraph::addStaticParam(const char* name, const char* expr){
 	PiSDFParam* param = sAlloc(stack_, 1, PiSDFParam);
-	*param = PiSDFParam(name, this, PISDF_PARAM_STATIC);
+	*param = PiSDFParam(name, params_.getN(), this, PISDF_PARAM_STATIC);
 
 	// TODO set value
 
@@ -146,7 +146,7 @@ PiSDFParam* PiSDFGraph::addStaticParam(const char* name, const char* expr){
 
 PiSDFParam* PiSDFGraph::addStaticParam(const char* name, int value){
 	PiSDFParam* param = sAlloc(stack_, 1, PiSDFParam);
-	*param = PiSDFParam(name, this, PISDF_PARAM_STATIC);
+	*param = PiSDFParam(name, params_.getN(), this, PISDF_PARAM_STATIC);
 	param->setValue(value);
 	params_.add(param);
 	return param;
@@ -154,14 +154,14 @@ PiSDFParam* PiSDFGraph::addStaticParam(const char* name, int value){
 
 PiSDFParam* PiSDFGraph::addHeritedParam(const char* name){
 	PiSDFParam* param = sAlloc(stack_, 1, PiSDFParam);
-	*param = PiSDFParam(name, this, PISDF_PARAM_HERITED);
+	*param = PiSDFParam(name, params_.getN(), this, PISDF_PARAM_HERITED);
 	params_.add(param);
 	return param;
 }
 
 PiSDFParam* PiSDFGraph::addDynamicParam(const char* name){
 	PiSDFParam* param = sAlloc(stack_, 1, PiSDFParam);
-	*param = PiSDFParam(name, this, PISDF_PARAM_DYNAMIC);
+	*param = PiSDFParam(name, params_.getN(), this, PISDF_PARAM_DYNAMIC);
 	params_.add(param);
 	return param;
 }

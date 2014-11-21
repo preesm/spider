@@ -42,6 +42,7 @@ int PiSDFParam::globalIx = 0;
 
 PiSDFParam::PiSDFParam(){
 	id_ = -1;
+	typeIx_ = -1;
 	name_ = 0;
 	graph_ = 0;
 	type_ = PISDF_PARAM_STATIC;
@@ -51,10 +52,13 @@ PiSDFParam::PiSDFParam(){
 	portIx_ = -1;
 }
 
-PiSDFParam::PiSDFParam(const char* name,
+PiSDFParam::PiSDFParam(
+		const char* name,
+		int typeIx,
 		PiSDFGraph* graph,
 		PiSDFParamType type){
 	id_ = globalIx++;
+	typeIx_ = typeIx;
 	name_ = name;
 	graph_ = graph;
 	type_ = type;

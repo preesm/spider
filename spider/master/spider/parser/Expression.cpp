@@ -288,7 +288,7 @@ bool Expression::getNextToken(
 			token->setType(Token::PARAMETER);
 			for(int i=0; i<nParam; i++){
 				if(strncmp(params[i]->getName(), name, nb) == 0){
-					token->setParamIx(params[i]->getIx());
+					token->setParamIx(params[i]->getTypeIx());
 					return true;
 				}
 			}

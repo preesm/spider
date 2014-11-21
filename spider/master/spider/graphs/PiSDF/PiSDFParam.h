@@ -45,11 +45,13 @@ public:
 	PiSDFParam();
 	PiSDFParam(
 			const char* name,
+			int typeIx,
 			PiSDFGraph* graph,
 			PiSDFParamType type);
 
 	/** Getters */
 	inline int getIx() const;
+	inline int getTypeIx() const;
 	inline const char* getName() const;
 	inline PiSDFParamType getType() const;
 	inline int getStaticValue() const;
@@ -68,6 +70,7 @@ private:
 	static int globalIx;
 
 	int id_;
+	int typeIx_;
 	const char* name_;
 	PiSDFGraph* graph_;
 	PiSDFParamType type_;
@@ -87,6 +90,9 @@ private:
 /** Getters */
 inline int PiSDFParam::getIx() const{
 	return id_;
+}
+inline int PiSDFParam::getTypeIx() const{
+	return typeIx_;
 }
 inline const char* PiSDFParam::getName() const{
 	return name_;

@@ -129,7 +129,7 @@ PiSDFVertex* PiSDFGraph::addOutputIf(
 			1, 0,
 			nInParam, 0,
 			stack_);
-	inputIfs_.add(outIf);
+	outputIfs_.add(outIf);
 	return outIf;
 }
 

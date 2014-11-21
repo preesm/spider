@@ -53,8 +53,8 @@ SRDAGEdge::SRDAGEdge(){
 }
 
 SRDAGEdge::SRDAGEdge(SRDAGGraph* graph){
-	id_ = -1;
-	graph_ = 0;
+	id_ = globalId++;
+	graph_ = graph;
 
 	src_ = 0; srcPortIx_ = -1;
 	snk_ = 0; snkPortIx_ = -1;
@@ -90,7 +90,7 @@ void SRDAGEdge::disconnectSrc(){
 void SRDAGEdge::disconnectSnk(){
 	if(snk_ == 0)
 		throw "SRDAGEdge: try to disconnect a not connected edge";
-	snk_->disconnectOutEdge(snkPortIx_);
+	snk_->disconnectInEdge(snkPortIx_);
 	snk_ = 0;
 	snkPortIx_ = -1;
 }

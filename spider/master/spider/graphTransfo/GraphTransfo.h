@@ -43,6 +43,8 @@
 #include <graphs/SRDAG/SRDAGEdge.h>
 #include <graphs/SRDAG/SRDAGVertex.h>
 
+#include <spider.h>
+
 typedef struct transfoJob{
 	PiSDFGraph* graph;
 	int* paramValues;
@@ -52,6 +54,6 @@ typedef struct transfoJob{
 	SRDAGVertex*** bodies;
 } transfoJob;
 
-void jit_ms(PiSDFGraph* topPisdf);
+void jit_ms(PiSDFGraph* topPisdf, SpiderConfig* config);
 
 #endif/*GRAPH_TRANSFO_H*/

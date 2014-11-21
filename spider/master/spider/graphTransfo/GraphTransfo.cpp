@@ -99,7 +99,7 @@ static SRDAGVertex* getNextHierVx(SRDAGGraph *topDag){
 	return 0;
 }
 
-void jit_ms(PiSDFGraph* topPisdf){
+void jit_ms(PiSDFGraph* topPisdf, SpiderConfig* config){
 	StaticStack transfoStack = StaticStack(malloc(TRANSFO_STACK_SIZE), TRANSFO_STACK_SIZE);
 
 	/* Initialize topDag */
@@ -181,7 +181,8 @@ void jit_ms(PiSDFGraph* topPisdf){
 //        printf("Finish one iter\n");
 	}while(1);
 
-	topSrdag->print("topSrdag.gv");
+	if(config->printSrdag)
+		topSrdag->print(config->srdagfile);
 
 	/* Schedule and launch execution */
 }

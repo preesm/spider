@@ -46,13 +46,18 @@ int main(int argc, char* argv[]){
 	PiSDFGraph *topPisdf;
 	void* memory = malloc(STACK_SIZE);
 	StaticStack stack = StaticStack(memory,STACK_SIZE);
+	SpiderConfig cfg;
+
+	cfg.printSrdag = true;
 
 	printf("Start\n");
 
 //	try{
+		stack.free();
 		topPisdf = initPisdf_test0(&stack);
 		topPisdf->print("top.gv");
-		jit_ms(topPisdf);
+		cfg.srdagfile = "test0.gv";
+		jit_ms(topPisdf, &cfg);
 
 
 //	}catch(const char* s){

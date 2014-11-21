@@ -48,8 +48,8 @@
 typedef struct transfoJob{
 	PiSDFGraph* graph;
 	int* paramValues;
-	SRDAGEdge* const * inputIfs;
-	SRDAGEdge* const * outputIfs;
+	SRDAGEdge** inputIfs;
+	SRDAGEdge** outputIfs;
 	SRDAGVertex** configs;
 	SRDAGVertex*** bodies;
 } transfoJob;

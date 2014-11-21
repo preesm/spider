@@ -56,6 +56,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 
 #define TRANSFO_STACK_SIZE 1024*1024*1024
 
@@ -84,8 +85,10 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 	}
 
 	/* Add edge interfaces in job */
-	job->inputIfs = nextHierVx->getInEdges();
-	job->outputIfs = nextHierVx->getOutEdges();
+	job->inputIfs = sAlloc(stack, nextHierVx->getNInEdge(), SRDAGEdge*);
+	memcpy(job->inputIfs, nextHierVx->getInEdges(), nextHierVx->getNInEdge()*sizeof(SRDAGEdge*));
+	job->outputIfs = sAlloc(stack, nextHierVx->getNOutEdge(), SRDAGEdge*);
+	memcpy(job->outputIfs, nextHierVx->getOutEdges(), nextHierVx->getNInEdge()*sizeof(SRDAGEdge*));
 
 }
 

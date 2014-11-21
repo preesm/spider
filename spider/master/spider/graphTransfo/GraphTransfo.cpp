@@ -146,9 +146,15 @@ void jit_ms(PiSDFGraph* topPisdf, SpiderConfig* config){
 
 				jobFifo.push(job);
 			}else{
-				// todo handle fast configuration
-				printf("Fast implementation not implemented\n");
-				abort();
+				int* brv = sAlloc(&transfoStack, job->graph->getNBody(), int);
+				computeBRV(topSrdag, job, brv, &transfoStack);
+
+				addSRVertices(topSrdag, job, brv, &transfoStack);
+
+				linkSRVertices(topSrdag, job, brv);
+//				// todo handle fast configuration
+//				printf("Fast implementation not implemented\n");
+//				abort();
 			}
 
 			/* Find next hierarchical vertex */

@@ -166,6 +166,12 @@ SRDAGEdge* SRDAGGraph::addEdge() {
 }
 
 void SRDAGGraph::delVertex(SRDAGVertex* vertex){
+	for(int i=0; i<vertex->getNInEdge(); i++)
+		if(vertex->getInEdge(i) != 0)
+			vertex->getInEdge(i)->disconnectSnk();
+	for(int i=0; i<vertex->getNOutEdge(); i++)
+		if(vertex->getOutEdge(i) != 0)
+			vertex->getOutEdge(i)->disconnectSrc();
 	vertices_.del(vertex);
 }
 

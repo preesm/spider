@@ -107,111 +107,583 @@ PiSDFGraph* initPisdf_test0(Stack* stack){
 	return top;
 }
 
-///*******************************************************************************/
-///****************************     TEST 1     ***********************************/
-///*******************************************************************************/
-//
-//PiSDFGraph* test1(Stack* stack, int N){
-//	// Graph
-//	PiSDFGraph* graph = PiSDFCreateGraph(
-//			/*Edges*/ 	1,
-//			/*Params*/	1,
-//			/*InIf*/	0,
-//			/*OutIf*/	0,
-//			/*Config*/	1,
-//			/*Normal*/	1);
-//
-//	// Parameters.
-////	PiSDFParam *paramN = PiSDFGraphAddDynamicParam(graph, "N");
-//	PiSDFParam *paramN = PiSDFGraphAddStaticParamValue(graph, "N", N);
-//
-//	// Configure vertices.
-//	PiSDFVertex *vxC = PiSDFGraphAddConfigVertex(graph, /*Fct*/ 0, "C", PiSDFSub_Normal, /*In*/ 0, /*Out*/ 1, /*Par*/ 0, /*Cfg*/ 1);
-////	PiSDFVertex_AddOutputParam(vxC, paramN);
-//
-//	// Other vertices
-//	PiSDFVertex *vxA = PiSDFGraphAddNormalVertex(graph, /*Fct*/ 1, "A", PiSDFSub_Normal, /*In*/ 1, /*Out*/ 0, /*Par*/ 1);
-//	PiSDFVertex_AddParam(vxA, paramN);
-//
-//	// Edges.
-//	PiSDFGraphAddEdge( /*Graph*/ graph,
-//			/*Src*/ vxC, /*SrcPrt*/ 0, /*Prod*/ "3",
-//			/*Snk*/ vxA, /*SnkPrt*/ 0, /*Cons*/ "N", /*Delay*/ 0);
-//
-//	// Timings
+/*******************************************************************************/
+/****************************     TEST 1     ***********************************/
+/*******************************************************************************/
+
+PiSDFGraph* test1(Stack* stack, int N){
+	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
+
+	// Graph
+	*graph = PiSDFGraph(
+			/*Edges*/ 	1,
+			/*Params*/	1,
+			/*InIf*/	0,
+			/*OutIf*/	0,
+			/*Config*/	1,
+			/*Normal*/	1,
+			stack);
+
+	// Parameters.
+//	PiSDFParam *paramN = PiSDFGraphAddDynamicParam(graph, "N");
+	PiSDFParam *paramN = graph->addStaticParam("N", N);
+
+	// Configure vertices.
+	PiSDFVertex *vxC = graph->addConfigVertex(
+			"C", /*Fct*/ 0,
+			PISDF_SUBTYPE_NORMAL,
+			/*In*/ 0,  /*Out*/ 1,
+			/*Par*/ 0, /*Cfg*/ 0);
+
+	// Other vertices
+	PiSDFVertex *vxA = graph->addBodyVertex(
+			"A", /*Fct*/ 1, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 1, /*Out*/ 0,
+			/*Par*/ 1);
+	vxA->addInParam(0, paramN);
+
+	// Edges.
+	PiSDFEdge* edge;
+	edge = graph->connect(
+			/*Src*/ vxC, /*SrcPrt*/ 0, /*Prod*/ "3",
+			/*Snk*/ vxA, /*SnkPrt*/ 0, /*Cons*/ "N",
+			/*Delay*/ "0", 0);
+
+	// Timings
 //	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);
 //	Parser_InitVariable(&vxA->timings[0], &vxA->params,  "10", pisdfAlloc);
-//
-//	// Subgraphs
-//
-//	return graph;
-//}
-//
-//PiSDFGraph* initPisdf_test1(Stack* stack, int N){
-//	PiSDFGraph* top = PiSDFCreateGraph(0,0,0,0,0,1);
-//
-//	PiSDFVertex *vxTop = PiSDFGraphAddNormalVertex(top, -1, "top", PiSDFSub_Normal, 0, 0, 0);
-//
-//	vxTop->subGraph = test1(N);
-//	vxTop->subGraph->parentVertex = vxTop;
-//
-//	return top;
-//}
-//
-///*******************************************************************************/
-///****************************     TEST 2     ***********************************/
-///*******************************************************************************/
-//
-//PiSDFGraph* test2(Stack* stack, int N){
-//	// Graph
-//	PiSDFGraph* graph = PiSDFCreateGraph(
-//			/*Edges*/ 	2,
-//			/*Params*/	1,
-//			/*InIf*/	0,
-//			/*OutIf*/	0,
-//			/*Config*/	1,
-//			/*Normal*/	2);
-//
-//	// Parameters.
-////	PiSDFParam *paramN = PiSDFGraphAddDynamicParam(graph, "N");
-//	PiSDFParam *paramN = PiSDFGraphAddStaticParamValue(graph, "N", N);
-//
-//	// Configure vertices.
-//	PiSDFVertex *vxC = PiSDFGraphAddConfigVertex(graph, /*Fct*/ 0, "C", PiSDFSub_Normal, /*In*/ 0, /*Out*/ 1, /*Par*/ 0, /*Cfg*/ 1);
-////	PiSDFVertex_AddOutputParam(vxC, paramN);
-//
-//	// Other vertices
-//	PiSDFVertex *vxA = PiSDFGraphAddNormalVertex(graph, /*Fct*/ 1, "A", PiSDFSub_Normal, /*In*/ 0, /*Out*/ 1, /*Par*/ 1);
-//	PiSDFVertex_AddParam(vxA, paramN);
-//
-//	PiSDFVertex *vxB = PiSDFGraphAddNormalVertex(graph, /*Fct*/ 1, "B", PiSDFSub_Normal, /*In*/ 2, /*Out*/ 0, /*Par*/ 0);
-//
-//	// Edges.
-//	PiSDFGraphAddEdge( /*Graph*/ graph,
-//			/*Src*/ vxC, /*SrcPrt*/ 0, /*Prod*/ "1",
-//			/*Snk*/ vxB, /*SnkPrt*/ 1, /*Cons*/ "1", /*Delay*/ 0);
-//
-//	PiSDFGraphAddEdge( /*Graph*/ graph,
-//			/*Src*/ vxA, /*SrcPrt*/ 0, /*Prod*/ "N",
-//			/*Snk*/ vxB, /*SnkPrt*/ 0, /*Cons*/ "1", /*Delay*/ 0);
-//
-//	// Timings
+
+	// Subgraphs
+
+	return graph;
+}
+
+PiSDFGraph* initPisdf_test1(Stack* stack, int N){
+	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
+	*top = PiSDFGraph(0,0,0,0,0,1, stack);
+
+	PiSDFVertex *vxTop = top->addBodyVertex(
+			"top", -1, PISDF_SUBTYPE_NORMAL,
+			0, 0, 0);
+
+	vxTop->setSubGraph(test1(stack, N));
+	vxTop->getSubGraph()->setParentVertex(vxTop);
+
+	return top;
+}
+
+/*******************************************************************************/
+/****************************     TEST 2     ***********************************/
+/*******************************************************************************/
+
+PiSDFGraph* test2(Stack* stack, int N){
+	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
+
+	// Graph
+	*graph = PiSDFGraph(
+			/*Edges*/ 	2,
+			/*Params*/	1,
+			/*InIf*/	0,
+			/*OutIf*/	0,
+			/*Config*/	1,
+			/*Normal*/	2,
+			stack);
+
+	// Parameters.
+//	PiSDFParam *paramN = PiSDFGraphAddDynamicParam(graph, "N");
+	PiSDFParam *paramN = graph->addStaticParam("N", N);
+
+	// Configure vertices.
+	PiSDFVertex *vxC = graph->addConfigVertex(
+			"C", /*Fct*/ 0,
+			PISDF_SUBTYPE_NORMAL,
+			/*In*/ 0,  /*Out*/ 1,
+			/*Par*/ 0, /*Cfg*/ 0);
+
+	// Other vertices
+	PiSDFVertex *vxA = graph->addBodyVertex(
+			"A", /*Fct*/ 1, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 0, /*Out*/ 1,
+			/*Par*/ 1);
+	vxA->addInParam(0, paramN);
+
+	PiSDFVertex *vxB = graph->addBodyVertex(
+			"B", /*Fct*/ 2, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 2, /*Out*/ 0,
+			/*Par*/ 0);
+
+	// Edges.
+	graph->connect(
+			/*Src*/ vxC, /*SrcPrt*/ 0, /*Prod*/ "1",
+			/*Snk*/ vxB, /*SnkPrt*/ 1, /*Cons*/ "1",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxA, /*SrcPrt*/ 0, /*Prod*/ "N",
+			/*Snk*/ vxB, /*SnkPrt*/ 0, /*Cons*/ "1",
+			/*Delay*/ "0", 0);
+
+	// Timings
 //	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);
 //	Parser_InitVariable(&vxA->timings[0], &vxA->params,  "10", pisdfAlloc);
 //	Parser_InitVariable(&vxB->timings[0], &vxA->params,  "10", pisdfAlloc);
-//
-//	// Subgraphs
-//
-//	return graph;
-//}
-//
-//PiSDFGraph* initPisdf_test2(Stack* stack, int N){
-//	PiSDFGraph* top = PiSDFCreateGraph(0,0,0,0,0,1);
-//
-//	PiSDFVertex *vxTop = PiSDFGraphAddNormalVertex(top, -1, "top", PiSDFSub_Normal, 0, 0, 0);
-//
-//	vxTop->subGraph = test2(N);
-//	vxTop->subGraph->parentVertex = vxTop;
-//
-//	return top;
-//}
+
+	// Subgraphs
+
+	return graph;
+}
+
+PiSDFGraph* initPisdf_test2(Stack* stack, int N){
+	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
+	*top = PiSDFGraph(0,0,0,0,0,1, stack);
+
+	PiSDFVertex *vxTop = top->addBodyVertex(
+			"top", -1, PISDF_SUBTYPE_NORMAL,
+			0, 0, 0);
+
+	vxTop->setSubGraph(test2(stack, N));
+	vxTop->getSubGraph()->setParentVertex(vxTop);
+
+	return top;
+}
+
+/*******************************************************************************/
+/****************************     TEST 3     ***********************************/
+/*******************************************************************************/
+
+PiSDFGraph* test3(Stack* stack){
+	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
+
+	// Graph
+	*graph = PiSDFGraph(
+			/*Edges*/ 	3,
+			/*Params*/	0,
+			/*InIf*/	0,
+			/*OutIf*/	0,
+			/*Config*/	0,
+			/*Normal*/	4,
+			stack);
+
+	// Parameters.
+
+	// Configure vertices
+
+	// Other vertices
+	PiSDFVertex *vxA = graph->addBodyVertex(
+			"A", /*Fct*/ 0, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 0, /*Out*/ 1,
+			/*Par*/ 0);
+	PiSDFVertex *vxB = graph->addBodyVertex(
+			"B", /*Fct*/ 1, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 1, /*Out*/ 0,
+			/*Par*/ 0);
+	PiSDFVertex *vxC = graph->addBodyVertex(
+			"C", /*Fct*/ 2, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 1, /*Out*/ 0,
+			/*Par*/ 0);
+	PiSDFVertex *vxF = graph->addBodyVertex(
+			"F", /*Fct*/ -1, PISDF_SUBTYPE_FORK,
+			/*In*/ 1, /*Out*/ 2,
+			/*Par*/ 0);
+
+	// Edges.
+	graph->connect(
+			/*Src*/ vxA, /*SrcPrt*/ 0, /*Prod*/ "4",
+			/*Snk*/ vxF, /*SnkPrt*/ 0, /*Cons*/ "2",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxF, /*SrcPrt*/ 0, /*Prod*/ "1",
+			/*Snk*/ vxB, /*SnkPrt*/ 0, /*Cons*/ "1",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxF, /*SrcPrt*/ 1, /*Prod*/ "1",
+			/*Snk*/ vxC, /*SnkPrt*/ 0, /*Cons*/ "1",
+			/*Delay*/ "0", 0);
+
+	// Timings
+//	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);
+//	Parser_InitVariable(&vxA->timings[0], &vxA->params,  "10", pisdfAlloc);
+//	Parser_InitVariable(&vxB->timings[0], &vxA->params,  "10", pisdfAlloc);
+
+	// Subgraphs
+
+	return graph;
+}
+
+PiSDFGraph* initPisdf_test3(Stack* stack){
+	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
+	*top = PiSDFGraph(0,0,0,0,0,1, stack);
+
+	PiSDFVertex *vxTop = top->addBodyVertex(
+			"top", -1, PISDF_SUBTYPE_NORMAL,
+			0, 0, 0);
+
+	vxTop->setSubGraph(test3(stack));
+	vxTop->getSubGraph()->setParentVertex(vxTop);
+
+	return top;
+}
+
+/*******************************************************************************/
+/****************************     TEST 4     ***********************************/
+/*******************************************************************************/
+
+PiSDFGraph* test4(Stack* stack){
+	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
+
+	// Graph
+	*graph = PiSDFGraph(
+			/*Edges*/ 	3,
+			/*Params*/	0,
+			/*InIf*/	0,
+			/*OutIf*/	0,
+			/*Config*/	0,
+			/*Normal*/	4,
+			stack);
+
+	// Parameters.
+
+	// Configure vertices
+
+	// Other vertices
+	PiSDFVertex *vxA = graph->addBodyVertex(
+			"A", /*Fct*/ 0, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 0, /*Out*/ 1,
+			/*Par*/ 0);
+	PiSDFVertex *vxB = graph->addBodyVertex(
+			"B", /*Fct*/ 1, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 0, /*Out*/ 1,
+			/*Par*/ 0);
+	PiSDFVertex *vxC = graph->addBodyVertex(
+			"C", /*Fct*/ 2, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 1, /*Out*/ 0,
+			/*Par*/ 0);
+	PiSDFVertex *vxJ = graph->addBodyVertex(
+			"J", /*Fct*/ -1, PISDF_SUBTYPE_JOIN,
+			/*In*/ 2, /*Out*/ 1,
+			/*Par*/ 0);
+
+	// Edges.
+	graph->connect(
+			/*Src*/ vxA, /*SrcPrt*/ 0, /*Prod*/ "1",
+			/*Snk*/ vxJ, /*SnkPrt*/ 0, /*Cons*/ "2",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxB, /*SrcPrt*/ 0, /*Prod*/ "1",
+			/*Snk*/ vxJ, /*SnkPrt*/ 1, /*Cons*/ "2",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxJ, /*SrcPrt*/ 0, /*Prod*/ "4",
+			/*Snk*/ vxC, /*SnkPrt*/ 0, /*Cons*/ "4",
+			/*Delay*/ "0", 0);
+
+	// Timings
+//	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);
+//	Parser_InitVariable(&vxA->timings[0], &vxA->params,  "10", pisdfAlloc);
+//	Parser_InitVariable(&vxB->timings[0], &vxA->params,  "10", pisdfAlloc);
+
+	// Subgraphs
+
+	return graph;
+}
+
+PiSDFGraph* initPisdf_test4(Stack* stack){
+	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
+	*top = PiSDFGraph(0,0,0,0,0,1, stack);
+
+	PiSDFVertex *vxTop = top->addBodyVertex(
+			"top", -1, PISDF_SUBTYPE_NORMAL,
+			0, 0, 0);
+
+	vxTop->setSubGraph(test4(stack));
+	vxTop->getSubGraph()->setParentVertex(vxTop);
+
+	return top;
+}
+
+/*******************************************************************************/
+/****************************     TEST 5     ***********************************/
+/*******************************************************************************/
+
+PiSDFGraph* test5(Stack* stack){
+	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
+
+	// Graph
+	*graph = PiSDFGraph(
+			/*Edges*/ 	3,
+			/*Params*/	0,
+			/*InIf*/	0,
+			/*OutIf*/	0,
+			/*Config*/	0,
+			/*Normal*/	4,
+			stack);
+
+	// Parameters.
+
+	// Configure vertices
+
+	// Other vertices
+	PiSDFVertex *vxA = graph->addBodyVertex(
+			"A", /*Fct*/ 0, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 0, /*Out*/ 1,
+			/*Par*/ 0);
+	PiSDFVertex *vxB = graph->addBodyVertex(
+			"B", /*Fct*/ 1, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 1, /*Out*/ 0,
+			/*Par*/ 0);
+	PiSDFVertex *vxC = graph->addBodyVertex(
+			"C", /*Fct*/ 2, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 1, /*Out*/ 0,
+			/*Par*/ 0);
+	PiSDFVertex *vxF = graph->addBodyVertex(
+			"F", /*Fct*/ -1, PISDF_SUBTYPE_FORK,
+			/*In*/ 1, /*Out*/ 2,
+			/*Par*/ 0);
+
+	// Edges.
+	graph->connect(
+			/*Src*/ vxA, /*SrcPrt*/ 0, /*Prod*/ "4",
+			/*Snk*/ vxF, /*SnkPrt*/ 0, /*Cons*/ "4",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxF, /*SrcPrt*/ 0, /*Prod*/ "2",
+			/*Snk*/ vxB, /*SnkPrt*/ 0, /*Cons*/ "1",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxF, /*SrcPrt*/ 1, /*Prod*/ "2",
+			/*Snk*/ vxC, /*SnkPrt*/ 0, /*Cons*/ "1",
+			/*Delay*/ "0", 0);
+
+	// Timings
+//	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);
+//	Parser_InitVariable(&vxA->timings[0], &vxA->params,  "10", pisdfAlloc);
+//	Parser_InitVariable(&vxB->timings[0], &vxA->params,  "10", pisdfAlloc);
+
+	// Subgraphs
+
+	return graph;
+}
+
+PiSDFGraph* initPisdf_test5(Stack* stack){
+	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
+	*top = PiSDFGraph(0,0,0,0,0,1, stack);
+
+	PiSDFVertex *vxTop = top->addBodyVertex(
+			"top", -1, PISDF_SUBTYPE_NORMAL,
+			0, 0, 0);
+
+	vxTop->setSubGraph(test5(stack));
+	vxTop->getSubGraph()->setParentVertex(vxTop);
+
+	return top;
+}
+
+/*******************************************************************************/
+/****************************     TEST 6     ***********************************/
+/*******************************************************************************/
+
+PiSDFGraph* test6(Stack* stack){
+	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
+
+	// Graph
+	*graph = PiSDFGraph(
+			/*Edges*/ 	3,
+			/*Params*/	0,
+			/*InIf*/	0,
+			/*OutIf*/	0,
+			/*Config*/	0,
+			/*Normal*/	4,
+			stack);
+
+	// Parameters.
+
+	// Configure vertices
+
+	// Other vertices
+	PiSDFVertex *vxA = graph->addBodyVertex(
+			"A", /*Fct*/ 0, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 0, /*Out*/ 1,
+			/*Par*/ 0);
+	PiSDFVertex *vxB = graph->addBodyVertex(
+			"B", /*Fct*/ 1, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 0, /*Out*/ 1,
+			/*Par*/ 0);
+	PiSDFVertex *vxC = graph->addBodyVertex(
+			"C", /*Fct*/ 2, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 1, /*Out*/ 0,
+			/*Par*/ 0);
+	PiSDFVertex *vxJ = graph->addBodyVertex(
+			"J", /*Fct*/ -1, PISDF_SUBTYPE_JOIN,
+			/*In*/ 2, /*Out*/ 1,
+			/*Par*/ 0);
+
+	// Edges.
+	graph->connect(
+			/*Src*/ vxA, /*SrcPrt*/ 0, /*Prod*/ "1",
+			/*Snk*/ vxJ, /*SnkPrt*/ 0, /*Cons*/ "1",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxB, /*SrcPrt*/ 0, /*Prod*/ "1",
+			/*Snk*/ vxJ, /*SnkPrt*/ 1, /*Cons*/ "1",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxJ, /*SrcPrt*/ 0, /*Prod*/ "2",
+			/*Snk*/ vxC, /*SnkPrt*/ 0, /*Cons*/ "4",
+			/*Delay*/ "0", 0);
+
+	// Timings
+//	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);
+//	Parser_InitVariable(&vxA->timings[0], &vxA->params,  "10", pisdfAlloc);
+//	Parser_InitVariable(&vxB->timings[0], &vxA->params,  "10", pisdfAlloc);
+
+	// Subgraphs
+
+	return graph;
+}
+
+PiSDFGraph* initPisdf_test6(Stack* stack){
+	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
+	*top = PiSDFGraph(0,0,0,0,0,1, stack);
+
+	PiSDFVertex *vxTop = top->addBodyVertex(
+			"top", -1, PISDF_SUBTYPE_NORMAL,
+			0, 0, 0);
+
+	vxTop->setSubGraph(test6(stack));
+	vxTop->getSubGraph()->setParentVertex(vxTop);
+
+	return top;
+}
+
+
+/*******************************************************************************/
+/****************************     TEST 7     ***********************************/
+/*******************************************************************************/
+
+PiSDFGraph* test7_sub(Stack* stack){
+	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
+
+	// Graph
+	*graph = PiSDFGraph(
+			/*Edges*/ 	2,
+			/*Params*/	0,
+			/*InIf*/	1,
+			/*OutIf*/	1,
+			/*Config*/	0,
+			/*Normal*/	1,
+			stack);
+
+	// Parameters.
+
+	// Configure vertices
+
+	// Interfaces
+	PiSDFVertex *ifIn = graph->addInputIf(
+			"in",
+			0 /*Par*/);
+	PiSDFVertex *ifOut = graph->addOutputIf(
+			"out",
+			0 /*Par*/);
+
+	// Other vertices
+	PiSDFVertex *vxH = graph->addBodyVertex(
+			"H", /*Fct*/ -1, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 1, /*Out*/ 1,
+			/*Par*/ 0);
+
+	// Edges.
+	graph->connect(
+			/*Src*/ ifIn, /*SrcPrt*/ 0, /*Prod*/ "2",
+			/*Snk*/ vxH, /*SnkPrt*/ 0, /*Cons*/ "4",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxH, /*SrcPrt*/ 0, /*Prod*/ "4",
+			/*Snk*/ ifOut, /*SnkPrt*/ 0, /*Cons*/ "2",
+			/*Delay*/ "0", 0);
+
+	// Timings
+//	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);
+//	Parser_InitVariable(&vxA->timings[0], &vxA->params,  "10", pisdfAlloc);
+//	Parser_InitVariable(&vxB->timings[0], &vxA->params,  "10", pisdfAlloc);
+
+	// Subgraphs
+
+	return graph;
+}
+
+PiSDFGraph* test7(Stack* stack){
+	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
+
+	// Graph
+	*graph = PiSDFGraph(
+			/*Edges*/ 	2,
+			/*Params*/	0,
+			/*InIf*/	0,
+			/*OutIf*/	0,
+			/*Config*/	0,
+			/*Normal*/	3,
+			stack);
+
+	// Parameters.
+
+	// Configure vertices
+
+	// Other vertices
+	PiSDFVertex *vxA = graph->addBodyVertex(
+			"A", /*Fct*/ 0, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 0, /*Out*/ 1,
+			/*Par*/ 0);
+	PiSDFVertex *vxB = graph->addBodyVertex(
+			"B", /*Fct*/ 1, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 1, /*Out*/ 0,
+			/*Par*/ 0);
+	PiSDFVertex *vxH = graph->addBodyVertex(
+			"H_top", /*Fct*/ -1, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 1, /*Out*/ 1,
+			/*Par*/ 0);
+	vxH->setSubGraph(test7_sub(stack));
+	vxH->getSubGraph()->setParentVertex(vxH);
+
+	// Edges.
+	graph->connect(
+			/*Src*/ vxA, /*SrcPrt*/ 0, /*Prod*/ "1",
+			/*Snk*/ vxH, /*SnkPrt*/ 0, /*Cons*/ "2",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxH, /*SrcPrt*/ 0, /*Prod*/ "2",
+			/*Snk*/ vxB, /*SnkPrt*/ 0, /*Cons*/ "1",
+			/*Delay*/ "0", 0);
+
+	// Timings
+//	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);
+//	Parser_InitVariable(&vxA->timings[0], &vxA->params,  "10", pisdfAlloc);
+//	Parser_InitVariable(&vxB->timings[0], &vxA->params,  "10", pisdfAlloc);
+
+	// Subgraphs
+
+	return graph;
+}
+
+PiSDFGraph* initPisdf_test7(Stack* stack){
+	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
+	*top = PiSDFGraph(0,0,0,0,0,1, stack);
+
+	PiSDFVertex *vxTop = top->addBodyVertex(
+			"top", -1, PISDF_SUBTYPE_NORMAL,
+			0, 0, 0);
+
+	vxTop->setSubGraph(test7(stack));
+	vxTop->getSubGraph()->setParentVertex(vxTop);
+
+	return top;
+}

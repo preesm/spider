@@ -42,6 +42,11 @@
 PiSDFGraph* initPisdf_test0(Stack* stack);
 PiSDFGraph* initPisdf_test1(Stack* stack, int N);
 PiSDFGraph* initPisdf_test2(Stack* stack, int N);
+PiSDFGraph* initPisdf_test3(Stack* stack);
+PiSDFGraph* initPisdf_test4(Stack* stack);
+PiSDFGraph* initPisdf_test5(Stack* stack);
+PiSDFGraph* initPisdf_test6(Stack* stack);
+PiSDFGraph* initPisdf_test7(Stack* stack);
 
 //void test_0_A(int* out);
 //void test_0_B(int* in, int N);

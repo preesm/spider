@@ -40,7 +40,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#define STACK_SIZE (1024*1024)
+#define STACK_SIZE (6*1024*1024)
 
 int main(int argc, char* argv[]){
 	PiSDFGraph *topPisdf;
@@ -55,11 +55,55 @@ int main(int argc, char* argv[]){
 //	try{
 		stack.free();
 		topPisdf = initPisdf_test0(&stack);
-		topPisdf->print("top.gv");
+//		topPisdf->print("top.gv");
 		cfg.srdagfile = "test0.gv";
 		jit_ms(topPisdf, &cfg);
 
 
+		for(int i=1; i<=3; i++){
+			char name[20];
+			sprintf(name, "test1_%d.gv", i);
+			stack.free();
+			topPisdf = initPisdf_test1(&stack, i);
+			cfg.srdagfile = name;
+			jit_ms(topPisdf, &cfg);
+		}
+
+		for(int i=1; i<=3; i++){
+			char name[20];
+			sprintf(name, "test2_%d.gv", i);
+			stack.free();
+			topPisdf = initPisdf_test2(&stack, i);
+			cfg.srdagfile = name;
+			jit_ms(topPisdf, &cfg);
+		}
+
+		stack.free();
+		topPisdf = initPisdf_test3(&stack);
+		cfg.srdagfile = "test3.gv";
+		jit_ms(topPisdf, &cfg);
+
+		stack.free();
+		topPisdf = initPisdf_test4(&stack);
+		cfg.srdagfile = "test4.gv";
+		jit_ms(topPisdf, &cfg);
+
+		stack.free();
+		topPisdf = initPisdf_test5(&stack);
+		cfg.srdagfile = "test5.gv";
+		jit_ms(topPisdf, &cfg);
+
+		stack.free();
+		topPisdf = initPisdf_test6(&stack);
+		cfg.srdagfile = "test6.gv";
+		jit_ms(topPisdf, &cfg);
+
+		stack.free();
+		topPisdf = initPisdf_test7(&stack);
+		topPisdf->print("test_pi.gv");
+		cfg.srdagfile = "test7.gv";
+		jit_ms(topPisdf, &cfg);
+//
 //	}catch(const char* s){
 //		printf("Exception : %s\n", s);
 //	}

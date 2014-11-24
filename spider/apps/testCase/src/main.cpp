@@ -53,11 +53,14 @@ int main(int argc, char* argv[]){
 	printf("Start\n");
 
 //	try{
-		stack.free();
-		topPisdf = initPisdf_test0(&stack);
-//		topPisdf->print("top.gv");
-		cfg.srdagfile = "test0.gv";
-		jit_ms(topPisdf, &cfg);
+		for(int i=1; i<=3; i++){
+			char name[20];
+			sprintf(name, "test0_%d.gv", i);
+			stack.free();
+			topPisdf = initPisdf_test0(&stack, i);
+			cfg.srdagfile = name;
+			jit_ms(topPisdf, &cfg);
+		}
 
 
 		for(int i=1; i<=3; i++){
@@ -100,9 +103,23 @@ int main(int argc, char* argv[]){
 
 		stack.free();
 		topPisdf = initPisdf_test7(&stack);
-		topPisdf->print("test_pi.gv");
 		cfg.srdagfile = "test7.gv";
 		jit_ms(topPisdf, &cfg);
+
+		stack.free();
+		topPisdf = initPisdf_test8(&stack);
+		cfg.srdagfile = "test8.gv";
+		jit_ms(topPisdf, &cfg);
+
+	stack.free();
+	topPisdf = initPisdf_test9(&stack);
+	cfg.srdagfile = "test9.gv";
+	jit_ms(topPisdf, &cfg);
+
+	stack.free();
+	topPisdf = initPisdf_testA(&stack);
+	cfg.srdagfile = "testA.gv";
+	jit_ms(topPisdf, &cfg);
 //
 //	}catch(const char* s){
 //		printf("Exception : %s\n", s);

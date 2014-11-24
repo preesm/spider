@@ -114,7 +114,7 @@ static inline Rational Rational_getAbs(Rational a){
 }
 
 static inline float Rational_compSup(Rational a, Rational b){
-	return Rational_getVal(Rational_Sub(a, b));
+	return Rational_getVal(Rational_Sub(a, b)) > 0;
 }
 
 static inline bool Rational_isNull(Rational a){
@@ -133,11 +133,10 @@ int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices, Stack *st
 	}
 
 	for (i=0; i < nbVertices; i++) {
-		int t;
-		Rational pivotMax = {0,1};
+		Rational pivotMax = Rational_getAbs(ratioMatrix[i*nbVertices+i]);
 		int maxIndex = i;
-		for (t = i; t < nbEdges; t++) {
-			Rational abs = Rational_getAbs(ratioMatrix[i*nbVertices+t]);
+		for (int t = i+1; t < nbEdges; t++) {
+			Rational abs = Rational_getAbs(ratioMatrix[t*nbVertices+i]);
 			if (Rational_compSup(abs, pivotMax)) {
 				maxIndex = t;
 				pivotMax = abs;
@@ -147,7 +146,7 @@ int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices, Stack *st
 		if (!Rational_isNull(pivotMax) && maxIndex != i) {
 			/* Switch Rows */
 			Rational tmp;
-			for (t = 0; t < nbVertices; t++) {
+			for (int t = 0; t < nbVertices; t++) {
 				tmp = ratioMatrix[maxIndex*nbVertices+t];
 				ratioMatrix[maxIndex*nbVertices+t] = ratioMatrix[i*nbVertices+t];
 				ratioMatrix[i*nbVertices+t] = tmp;
@@ -159,7 +158,7 @@ int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices, Stack *st
 		}
 
 		Rational odlPivot = ratioMatrix[i*nbVertices+i];
-		for (t = i; t < nbVertices; t++) {
+		for (int t = i; t < nbVertices; t++) {
 			ratioMatrix[i*nbVertices+t] = Rational_Div(ratioMatrix[i*nbVertices+t],odlPivot);
 		}
 
@@ -190,8 +189,7 @@ int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices, Stack *st
 		}
 		if (!Rational_isNull(val)) {
 			if(Rational_isNull(ratioMatrix[i*nbVertices+i])){
-				printf("elt diagonal zero\n");
-				return 1;
+				throw "elt diagonal zero\n";
 			}
 			ratioResult[i] = Rational_Div(Rational_getAbs(val), ratioMatrix[i*nbVertices+i]);
 		}

@@ -207,10 +207,11 @@ void SRDAGGraph::print(const char *path){
 	for (vertexIt.first(); vertexIt.finished(); vertexIt.next()){
 		char name[100];
 		vertexIt.current()->toString(name, 100);
-		platform_fprintf (file, "\t%d [shape=ellipse,label=\"%d\\n%s",
+		platform_fprintf (file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)",
 				vertexIt.current()->getId(),
 				vertexIt.current()->getId(),
-				name);
+				name,
+				vertexIt.current()->getFctId());
 		platform_fprintf (file, "\",color=");
 		switch (vertexIt.current()->getState()){
 			case SRDAG_EXEC:

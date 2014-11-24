@@ -63,6 +63,8 @@ public:
 	/** Data edge getters */
 	inline int getNInEdge() const;
 	inline int getNOutEdge() const;
+	inline int getNConnectedInEdge() const;
+	inline int getNConnectedOutEdge() const;
 	inline SRDAGEdge* getInEdge(int ix);
 	inline SRDAGEdge* getOutEdge(int ix);
 	inline SRDAGEdge* const * getInEdges();
@@ -154,6 +156,20 @@ inline int SRDAGVertex::getNInEdge() const{
 }
 inline int SRDAGVertex::getNOutEdge() const{
 	return nOutEdge_;
+}
+inline int SRDAGVertex::getNConnectedInEdge() const{
+	int nb=0;
+	for(int i=0; i<nInEdge_; i++)
+		if(inEdges_[i] != 0)
+			nb++;
+	return nb;
+}
+inline int SRDAGVertex::getNConnectedOutEdge() const{
+	int nb=0;
+	for(int i=0; i<nOutEdge_; i++)
+		if(outEdges_[i] != 0)
+			nb++;
+	return nb;
 }
 inline SRDAGEdge* SRDAGVertex::getInEdge(int ix){
 #if	DEBUG

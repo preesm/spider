@@ -66,13 +66,14 @@ PiSDFGraph* testA_sub(Stack* stack){
 
 	// Configure vertices
 	PiSDFVertex *cfC = graph->addConfigVertex(
-			"C", /*Fct*/ 3, PISDF_SUBTYPE_NORMAL,
+			"C", /*Fct*/ 3,
+			/*Type*/ PISDF_SUBTYPE_NORMAL,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 0, /*OutPar*/ 0);
 
 	// Other vertices
 	PiSDFVertex *vxH = graph->addBodyVertex(
-			"H", /*Fct*/ 4, PISDF_SUBTYPE_NORMAL,
+			"H", /*Fct*/ 4,
 			/*In*/ 2, /*Out*/ 1,
 			/*Par*/ 0);
 
@@ -121,27 +122,26 @@ PiSDFGraph* testA(Stack* stack){
 
 	// Other vertices
 	PiSDFVertex *vxA = graph->addBodyVertex(
-			"A", /*Fct*/ 0, PISDF_SUBTYPE_NORMAL,
+			"A", /*Fct*/ 0,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 0);
 	PiSDFVertex *vxB = graph->addBodyVertex(
-			"B", /*Fct*/ 1, PISDF_SUBTYPE_NORMAL,
+			"B", /*Fct*/ 1,
 			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 0);
 	PiSDFVertex *vxC = graph->addBodyVertex(
-			"C", /*Fct*/ 2, PISDF_SUBTYPE_NORMAL,
+			"C", /*Fct*/ 2,
 			/*In*/ 2, /*Out*/ 0,
 			/*Par*/ 0);
-	PiSDFVertex *vxBr = graph->addBodyVertex(
-			"Br", /*Fct*/ -1, PISDF_SUBTYPE_BROADCAST,
+	PiSDFVertex *vxBr = graph->addSpecialVertex(
+			/*Type*/ PISDF_SUBTYPE_BROADCAST,
 			/*In*/ 1, /*Out*/ 2,
 			/*Par*/ 0);
-	PiSDFVertex *vxH = graph->addBodyVertex(
-			"H_top", /*Fct*/ -1, PISDF_SUBTYPE_NORMAL,
+	PiSDFVertex *vxH = graph->addHierVertex(
+			"H_top",
+			/*SubGraph*/ testA_sub(stack),
 			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 0);
-	vxH->setSubGraph(testA_sub(stack));
-	vxH->getSubGraph()->setParentVertex(vxH);
 
 	// Edges.
 	graph->connect(
@@ -183,12 +183,9 @@ PiSDFGraph* initPisdf_testA(Stack* stack){
 	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
 	*top = PiSDFGraph(0,0,0,0,0,1, stack);
 
-	PiSDFVertex *vxTop = top->addBodyVertex(
-			"top", -1, PISDF_SUBTYPE_NORMAL,
+	top->addHierVertex(
+			"top", testA(stack),
 			0, 0, 0);
-
-	vxTop->setSubGraph(testA(stack));
-	vxTop->getSubGraph()->setParentVertex(vxTop);
 
 	return top;
 }

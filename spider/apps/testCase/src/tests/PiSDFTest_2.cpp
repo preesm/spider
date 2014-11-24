@@ -67,13 +67,13 @@ PiSDFGraph* test2(Stack* stack, int N){
 
 	// Other vertices
 	PiSDFVertex *vxA = graph->addBodyVertex(
-			"A", /*Fct*/ 1, PISDF_SUBTYPE_NORMAL,
+			"A", /*Fct*/ 1,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 1);
 	vxA->addInParam(0, paramN);
 
 	PiSDFVertex *vxB = graph->addBodyVertex(
-			"B", /*Fct*/ 2, PISDF_SUBTYPE_NORMAL,
+			"B", /*Fct*/ 2,
 			/*In*/ 2, /*Out*/ 0,
 			/*Par*/ 0);
 
@@ -102,12 +102,9 @@ PiSDFGraph* initPisdf_test2(Stack* stack, int N){
 	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
 	*top = PiSDFGraph(0,0,0,0,0,1, stack);
 
-	PiSDFVertex *vxTop = top->addBodyVertex(
-			"top", -1, PISDF_SUBTYPE_NORMAL,
+	top->addHierVertex(
+			"top", test2(stack, N),
 			0, 0, 0);
-
-	vxTop->setSubGraph(test2(stack, N));
-	vxTop->getSubGraph()->setParentVertex(vxTop);
 
 	return top;
 }

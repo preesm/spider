@@ -70,13 +70,47 @@ PiSDFGraph::~PiSDFGraph() {
 
 PiSDFVertex* PiSDFGraph::addBodyVertex(
 		const char* vertexName, int fctId,
-		PiSDFSubType subType,
 		int nInEdge, int nOutEdge,
 		int nInParam){
 	PiSDFVertex* body = sAlloc(stack_, 1, PiSDFVertex);
 	*body = PiSDFVertex(vertexName, fctId,
 			bodies_.getN(),
-			PISDF_TYPE_BODY, subType,
+			PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
+			this, 0,
+			nInEdge, nOutEdge,
+			nInParam, 0,
+			stack_);
+	bodies_.add(body);
+	return body;
+}
+
+PiSDFVertex* PiSDFGraph::addHierVertex(
+		const char* vertexName,
+		PiSDFGraph* graph,
+		int nInEdge, int nOutEdge,
+		int nInParam){
+	PiSDFVertex* body = sAlloc(stack_, 1, PiSDFVertex);
+	*body = PiSDFVertex(vertexName, -1,
+			bodies_.getN(),
+			PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
+			this, 0,
+			nInEdge, nOutEdge,
+			nInParam, 0,
+			stack_);
+	body->setSubGraph(graph);
+	graph->setParentVertex(body);
+	bodies_.add(body);
+	return body;
+}
+
+PiSDFVertex* PiSDFGraph::addSpecialVertex(
+		PiSDFSubType type,
+		int nInEdge, int nOutEdge,
+		int nInParam){
+	PiSDFVertex* body = sAlloc(stack_, 1, PiSDFVertex);
+	*body = PiSDFVertex(0, -1,
+			bodies_.getN(),
+			PISDF_TYPE_BODY, type,
 			this, 0,
 			nInEdge, nOutEdge,
 			nInParam, 0,

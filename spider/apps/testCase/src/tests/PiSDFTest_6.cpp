@@ -60,19 +60,19 @@ PiSDFGraph* test6(Stack* stack){
 
 	// Other vertices
 	PiSDFVertex *vxA = graph->addBodyVertex(
-			"A", /*Fct*/ 0, PISDF_SUBTYPE_NORMAL,
+			"A", /*Fct*/ 0,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 0);
 	PiSDFVertex *vxB = graph->addBodyVertex(
-			"B", /*Fct*/ 1, PISDF_SUBTYPE_NORMAL,
+			"B", /*Fct*/ 1,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 0);
 	PiSDFVertex *vxC = graph->addBodyVertex(
-			"C", /*Fct*/ 2, PISDF_SUBTYPE_NORMAL,
+			"C", /*Fct*/ 2,
 			/*In*/ 1, /*Out*/ 0,
 			/*Par*/ 0);
-	PiSDFVertex *vxJ = graph->addBodyVertex(
-			"J", /*Fct*/ -1, PISDF_SUBTYPE_JOIN,
+	PiSDFVertex *vxJ = graph->addSpecialVertex(
+			/*Type*/ PISDF_SUBTYPE_JOIN,
 			/*In*/ 2, /*Out*/ 1,
 			/*Par*/ 0);
 
@@ -106,12 +106,9 @@ PiSDFGraph* initPisdf_test6(Stack* stack){
 	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
 	*top = PiSDFGraph(0,0,0,0,0,1, stack);
 
-	PiSDFVertex *vxTop = top->addBodyVertex(
-			"top", -1, PISDF_SUBTYPE_NORMAL,
+	top->addHierVertex(
+			"top", test6(stack),
 			0, 0, 0);
-
-	vxTop->setSubGraph(test6(stack));
-	vxTop->getSubGraph()->setParentVertex(vxTop);
 
 	return top;
 }

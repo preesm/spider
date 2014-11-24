@@ -67,14 +67,13 @@ PiSDFGraph* test1(Stack* stack, int N){
 
 	// Other vertices
 	PiSDFVertex *vxA = graph->addBodyVertex(
-			"A", /*Fct*/ 1, PISDF_SUBTYPE_NORMAL,
+			"A", /*Fct*/ 1,
 			/*In*/ 1, /*Out*/ 0,
 			/*Par*/ 1);
 	vxA->addInParam(0, paramN);
 
 	// Edges.
-	PiSDFEdge* edge;
-	edge = graph->connect(
+	graph->connect(
 			/*Src*/ vxC, /*SrcPrt*/ 0, /*Prod*/ "3",
 			/*Snk*/ vxA, /*SnkPrt*/ 0, /*Cons*/ "N",
 			/*Delay*/ "0", 0);
@@ -92,12 +91,9 @@ PiSDFGraph* initPisdf_test1(Stack* stack, int N){
 	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
 	*top = PiSDFGraph(0,0,0,0,0,1, stack);
 
-	PiSDFVertex *vxTop = top->addBodyVertex(
-			"top", -1, PISDF_SUBTYPE_NORMAL,
+	top->addHierVertex(
+			"top", test1(stack, N),
 			0, 0, 0);
-
-	vxTop->setSubGraph(test1(stack, N));
-	vxTop->getSubGraph()->setParentVertex(vxTop);
 
 	return top;
 }

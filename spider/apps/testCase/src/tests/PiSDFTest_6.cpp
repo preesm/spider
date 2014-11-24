@@ -34,25 +34,85 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef TESTS_H
-#define TESTS_H
-
+#include "../Tests.h"
 #include <spider.h>
 
-PiSDFGraph* initPisdf_test0(Stack* stack, int N);
-PiSDFGraph* initPisdf_test1(Stack* stack, int N);
-PiSDFGraph* initPisdf_test2(Stack* stack, int N);
-PiSDFGraph* initPisdf_test3(Stack* stack);
-PiSDFGraph* initPisdf_test4(Stack* stack);
-PiSDFGraph* initPisdf_test5(Stack* stack);
-PiSDFGraph* initPisdf_test6(Stack* stack);
-PiSDFGraph* initPisdf_test7(Stack* stack);
-PiSDFGraph* initPisdf_test8(Stack* stack);
-PiSDFGraph* initPisdf_test9(Stack* stack);
-PiSDFGraph* initPisdf_testA(Stack* stack);
+/*******************************************************************************/
+/****************************     TEST 6     ***********************************/
+/*******************************************************************************/
 
-//void test_0_A(int* out);
-//void test_0_B(int* in, int N);
-//void test_0_C(int* outP);
+PiSDFGraph* test6(Stack* stack){
+	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
 
-#endif//TESTS_H
+	// Graph
+	*graph = PiSDFGraph(
+			/*Edges*/ 	3,
+			/*Params*/	0,
+			/*InIf*/	0,
+			/*OutIf*/	0,
+			/*Config*/	0,
+			/*Normal*/	4,
+			stack);
+
+	// Parameters.
+
+	// Configure vertices
+
+	// Other vertices
+	PiSDFVertex *vxA = graph->addBodyVertex(
+			"A", /*Fct*/ 0, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 0, /*Out*/ 1,
+			/*Par*/ 0);
+	PiSDFVertex *vxB = graph->addBodyVertex(
+			"B", /*Fct*/ 1, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 0, /*Out*/ 1,
+			/*Par*/ 0);
+	PiSDFVertex *vxC = graph->addBodyVertex(
+			"C", /*Fct*/ 2, PISDF_SUBTYPE_NORMAL,
+			/*In*/ 1, /*Out*/ 0,
+			/*Par*/ 0);
+	PiSDFVertex *vxJ = graph->addBodyVertex(
+			"J", /*Fct*/ -1, PISDF_SUBTYPE_JOIN,
+			/*In*/ 2, /*Out*/ 1,
+			/*Par*/ 0);
+
+	// Edges.
+	graph->connect(
+			/*Src*/ vxA, /*SrcPrt*/ 0, /*Prod*/ "1",
+			/*Snk*/ vxJ, /*SnkPrt*/ 0, /*Cons*/ "1",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxB, /*SrcPrt*/ 0, /*Prod*/ "1",
+			/*Snk*/ vxJ, /*SnkPrt*/ 1, /*Cons*/ "1",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxJ, /*SrcPrt*/ 0, /*Prod*/ "2",
+			/*Snk*/ vxC, /*SnkPrt*/ 0, /*Cons*/ "4",
+			/*Delay*/ "0", 0);
+
+	// Timings
+//	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);
+//	Parser_InitVariable(&vxA->timings[0], &vxA->params,  "10", pisdfAlloc);
+//	Parser_InitVariable(&vxB->timings[0], &vxA->params,  "10", pisdfAlloc);
+
+	// Subgraphs
+
+	return graph;
+}
+
+PiSDFGraph* initPisdf_test6(Stack* stack){
+	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
+	*top = PiSDFGraph(0,0,0,0,0,1, stack);
+
+	PiSDFVertex *vxTop = top->addBodyVertex(
+			"top", -1, PISDF_SUBTYPE_NORMAL,
+			0, 0, 0);
+
+	vxTop->setSubGraph(test6(stack));
+	vxTop->getSubGraph()->setParentVertex(vxTop);
+
+	return top;
+}
+

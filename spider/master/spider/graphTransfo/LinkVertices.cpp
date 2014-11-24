@@ -579,15 +579,21 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 	SRDAGVertexIterator vertexIt = topSrdag->getVertexIterator();
 	FOR_IT(vertexIt){
 		SRDAGVertex *vertex = vertexIt.current();
-		if(vertex->getType() == SRDAG_BROADCAST && vertex->getNOutEdge() == 1){
+		if(vertex->getType() == SRDAG_BROADCAST && vertex->getNConnectedOutEdge() == 1){
 			/* Remove Broadcast */
 			/* TODO check if kill BR can cause troubles for other edges */
 			SRDAGEdge *edge_in  = vertex->getInEdge(0);
-			SRDAGEdge *edge_out = vertex->getOutEdge(0);
+			SRDAGEdge *edge_out = 0;
+			for(int i=0; i<vertex->getNOutEdge(); i++){
+				if(vertex->getOutEdge(i) != 0){
+					edge_out = vertex->getOutEdge(i);
+				}
+			}
 			SRDAGVertex *out = edge_out->getSnk();
 			int outPrt = edge_out->getSnkPortIx();
 
 			edge_out->disconnectSnk();
+			edge_in->disconnectSnk();
 			edge_in->connectSnk(out, outPrt);
 
 			edge_out->disconnectSrc();

@@ -473,47 +473,44 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 			switch(snkNode->type){
 			case EDGE: /* Only Interface */
 				if(snkNode->nb == 1){
+					/* Direct link */
 					snkVertices[nbSnkVertices].vertex = snkNode->edge->getSnk();
 					snkVertices[nbSnkVertices].port = snkNode->edge->getSnkPortIx();
 					snkNode->edge->disconnectSnk();
 					topSrdag->delEdge(snkNode->edge);
 					nbSnkVertices++;
 				}else{
-					int k;
 					int outCons = snkNode->edge->getRate();
 					int outProd = 0;
-					for(k = 0; k<snkNode->nb; k++){
+					for(int k = 0; k<snkNode->nb; k++){
 						outProd += snkNode->rates[k];
 					}
 
 					/* Remove some edges as they are not needed (or put End) */
-					k=0;
-					if(2*outCons <= outProd){
-						do{
-							snkVertices[nbSnkVertices].vertex = NULL;
-							snkVertices[nbSnkVertices].port = -1;
-							nbSnkVertices++;
-							outProd -= snkNode->rates[k++];
-						}while(2*outCons <= outProd);
-					}
-
 					if(outCons < outProd){
-						/* Normal join scheme */
-						int start;
+						// To musch data keep last (only RB for now)
+						SRDAGVertex *rb = topSrdag->addRoundBuffer();
 						SRDAGVertex *join = topSrdag->addJoin(MAX_IO_EDGES);
-						snkNode->edge->connectSrc(join, 0);
-						for(start=0; start+k<snkNode->nb; start++){
+						SRDAGEdge* rb_edge = topSrdag->addEdge();
+						rb_edge->connectSnk(rb, 0);
+						rb_edge->connectSrc(join, 0);
+						rb_edge->setRate(outProd);
+						snkNode->edge->connectSrc(rb, 0);
+						for(int start=0; start<snkNode->nb; start++){
 							snkVertices[nbSnkVertices].vertex = join;
 							snkVertices[nbSnkVertices].port = start;
 							nbSnkVertices++;
 						}
+//						throw "Unhandled case in Snk Resolution\n"; // todo
 					}else if(outCons == outProd){
-						/* Direct link */
-						snkVertices[nbSnkVertices].vertex = snkNode->edge->getSnk();
-						snkVertices[nbSnkVertices].port = snkNode->edge->getSnkPortIx();
-						snkNode->edge->disconnectSnk();
-						topSrdag->delEdge(snkNode->edge);
-						nbSnkVertices++;
+						/* Normal join scheme */
+						SRDAGVertex *join = topSrdag->addJoin(MAX_IO_EDGES);
+						snkNode->edge->connectSrc(join, 0);
+						for(int start=0; start<snkNode->nb; start++){
+							snkVertices[nbSnkVertices].vertex = join;
+							snkVertices[nbSnkVertices].port = start;
+							nbSnkVertices++;
+						}
 					}else{
 						throw "Unexpected case in Snk Resolution\n";
 					}
@@ -558,7 +555,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 					int portIx = srcEdges[j]->getSrcPortIx();
 					srcEdges[j]->disconnectSrc();
 					topSrdag->delEdge(srcEdges[j]);
-					for(k=portIx; k<br->getNOutEdge(); k++){
+					for(k=portIx; k<br->getNOutEdge()-1; k++){
 						SRDAGEdge *edge = br->getOutEdge(k+1);
 						edge->disconnectSrc();
 						edge->connectSrc(br, k);

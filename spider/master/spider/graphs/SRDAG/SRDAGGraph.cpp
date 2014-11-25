@@ -165,6 +165,21 @@ SRDAGEdge* SRDAGGraph::addEdge() {
 	return edge;
 }
 
+SRDAGEdge* SRDAGGraph::addEdge(
+		SRDAGVertex* src, int srcPortIx,
+		SRDAGVertex* snk, int snkPortIx,
+		int rate) {
+	SRDAGEdge* edge = sAlloc(stack_, 1, SRDAGEdge);
+	*edge = SRDAGEdge(this);
+	edges_.add(edge);
+
+	edge->connectSrc(src, srcPortIx);
+	edge->connectSnk(snk, snkPortIx);
+	edge->setRate(rate);
+
+	return edge;
+}
+
 void SRDAGGraph::delVertex(SRDAGVertex* vertex){
 	for(int i=0; i<vertex->getNInEdge(); i++)
 		if(vertex->getInEdge(i) != 0)

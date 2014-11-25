@@ -55,6 +55,10 @@ public:
 	SRDAGVertex* addRoundBuffer();
 
 	SRDAGEdge* addEdge();
+	SRDAGEdge* addEdge(
+			SRDAGVertex* src, int srcPortIx,
+			SRDAGVertex* snk, int snkPortIx,
+			int rate);
 
 	void delVertex(SRDAGVertex* vertex);
 	void delEdge(SRDAGEdge* edge);

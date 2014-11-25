@@ -344,29 +344,29 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 					curSnkTk += pi_cons;
 			}
 		}
-		printf("edge %d:\n\tSource:", pi_edge->getId());
-		for(j=0; j<nbSrcs; j++){
-			int k;
-			printf(" { ");
-			for(k=0; k<srcConnections[j].nb; k++){
-				printf("%d(%c) ",
-						srcConnections[j].rates[k],
-						(srcConnections[j].type == EDGE)?'E':'V');
-			}
-			printf("}");
-		}
-		printf("\n\tSink:  ");
-		for(j=0; j<nbSnks; j++){
-			int k;
-			printf(" { ");
-			for(k=0; k<snkConnections[j].nb; k++){
-				printf("%d(%c) ",
-						snkConnections[j].rates[k],
-						(snkConnections[j].type == EDGE)?'E':'V');
-			}
-			printf("}");
-		}
-		printf("\n");
+//		printf("edge %d:\n\tSource:", pi_edge->getId());
+//		for(j=0; j<nbSrcs; j++){
+//			int k;
+//			printf(" { ");
+//			for(k=0; k<srcConnections[j].nb; k++){
+//				printf("%d(%c) ",
+//						srcConnections[j].rates[k],
+//						(srcConnections[j].type == EDGE)?'E':'V');
+//			}
+//			printf("}");
+//		}
+//		printf("\n\tSink:  ");
+//		for(j=0; j<nbSnks; j++){
+//			int k;
+//			printf(" { ");
+//			for(k=0; k<snkConnections[j].nb; k++){
+//				printf("%d(%c) ",
+//						snkConnections[j].rates[k],
+//						(snkConnections[j].type == EDGE)?'E':'V');
+//			}
+//			printf("}");
+//		}
+//		printf("\n");
 
 		/* Transform all src nodes to src edges.
 		 * Basicaly create edges and maybe Im/Ex/Rb/Br

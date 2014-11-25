@@ -89,14 +89,14 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 		}
 	}
 
-	printf("topoMatrix:\n");
-	for(i=0; i<nbEdges; i++){
-		int j;
-		for(j=0; j<nbVertices; j++){
-			printf("%4d ", topo_matrix[i*nbVertices+j]);
-		}
-		printf("\n");
-	}
+//	printf("topoMatrix:\n");
+//	for(i=0; i<nbEdges; i++){
+//		int j;
+//		for(j=0; j<nbVertices; j++){
+//			printf("%4d ", topo_matrix[i*nbVertices+j]);
+//		}
+//		printf("\n");
+//	}
 
 	/* Compute nullSpace */
 	nullSpace(topo_matrix, brv, nbEdges, nbVertices, stack);
@@ -146,9 +146,9 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 		brv[i] *= coef;
 	}
 
-	printf("brv:\n");
-	for(i=0; i<nbVertices; i++){
-		printf("%4d ", brv[i]);
-	}
-	printf("\n");
+//	printf("brv:\n");
+//	for(i=0; i<nbVertices; i++){
+//		printf("%4d ", brv[i]);
+//	}
+//	printf("\n");
 }

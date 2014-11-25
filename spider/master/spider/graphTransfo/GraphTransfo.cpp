@@ -81,7 +81,7 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 			job->paramValues[paramIt.currentIx()] = -1;
 			break;
 		}
-		printf("%s <= %d\n", paramIt.current()->getName(), job->paramValues[paramIt.currentIx()]);
+//		printf("%s <= %d\n", paramIt.current()->getName(), job->paramValues[paramIt.currentIx()]);
 	}
 
 	/* Add edge interfaces in job */

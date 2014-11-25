@@ -39,6 +39,7 @@
 
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <graphs/SRDAG/SRDAGCommon.h>
+#include <graphs/SRDAG/SRDAGEdge.h>
 
 class SRDAGVertex {
 public:
@@ -85,6 +86,10 @@ public:
 	inline bool isHierarchical() const;
 
 	inline void setState(SRDAGState state);
+
+	/** Comparison fcts */
+	inline bool isEqual(SRDAGVertex* v2);
+	inline bool match(SRDAGVertex* v2);
 
 	void toString(char* name, int sizeMax) const;
 
@@ -318,6 +323,39 @@ inline bool SRDAGVertex::isHierarchical() const{
 
 inline void SRDAGVertex::setState(SRDAGState state){
 	state_ = state;
+}
+
+inline bool SRDAGVertex::isEqual(SRDAGVertex* v2){
+	bool equal = true;
+	equal = equal && (this->type_ == v2->type_);
+	equal = equal && (this->getFctId() == v2->getFctId());
+
+	equal = equal && (this->nInParam_ == v2->nInParam_);
+	for(int i=0; i<this->nInParam_; i++)
+		equal = equal && (this->inParams_[i] == v2->inParams_[i]);
+
+	equal = equal && (this->nInEdge_ == v2->nInEdge_);
+	for(int i=0; i<this->nInEdge_; i++)
+		equal = equal && (this->inEdges_[i]->getRate()  == v2->inEdges_[i]->getRate())
+		 	 	 	  && (this->inEdges_[i]->getDelay() == v2->inEdges_[i]->getDelay());
+
+	equal = equal && (this->nOutEdge_ == v2->nOutEdge_);
+	for(int i=0; i<this->nOutEdge_; i++)
+		equal = equal && (this->outEdges_[i]->getRate()  == v2->outEdges_[i]->getRate())
+		 	 	 	  && (this->outEdges_[i]->getDelay() == v2->outEdges_[i]->getDelay());
+
+	return equal;
+}
+inline bool SRDAGVertex::match(SRDAGVertex* v2){
+	bool match = this->isEqual(v2);
+
+	for(int i=0; i<this->nInEdge_; i++)
+		match = match && this->inEdges_[i]->getSrc()->isEqual(v2->inEdges_[i]->getSrc());
+
+	for(int i=0; i<this->nOutEdge_; i++)
+		match = match && this->outEdges_[i]->getSnk()->isEqual(v2->outEdges_[i]->getSnk());
+
+	return match;
 }
 
 #endif/*SRDAG_VERTEX_H*/

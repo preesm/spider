@@ -129,8 +129,8 @@ PiSDFGraph* testA(Stack* stack){
 			"B", /*Fct*/ 1,
 			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 0);
-	PiSDFVertex *vxC = graph->addBodyVertex(
-			"C", /*Fct*/ 2,
+	PiSDFVertex *vxD = graph->addBodyVertex(
+			"D", /*Fct*/ 2,
 			/*In*/ 2, /*Out*/ 0,
 			/*Par*/ 0);
 	PiSDFVertex *vxBr = graph->addSpecialVertex(
@@ -161,12 +161,12 @@ PiSDFGraph* testA(Stack* stack){
 
 	graph->connect(
 			/*Src*/ vxH, /*SrcPrt*/ 0, /*Prod*/ "1",
-			/*Snk*/ vxC, /*SnkPrt*/ 0, /*Cons*/ "1",
+			/*Snk*/ vxD, /*SnkPrt*/ 0, /*Cons*/ "1",
 			/*Delay*/ "0", 0);
 
 	graph->connect(
 			/*Src*/ vxB, /*SrcPrt*/ 0, /*Prod*/ "1",
-			/*Snk*/ vxC, /*SnkPrt*/ 1, /*Cons*/ "1",
+			/*Snk*/ vxD, /*SnkPrt*/ 1, /*Cons*/ "1",
 			/*Delay*/ "0", 0);
 
 	// Timings
@@ -188,4 +188,82 @@ PiSDFGraph* initPisdf_testA(Stack* stack){
 			0, 0, 0);
 
 	return top;
+}
+
+
+SRDAGGraph* result_TestA(PiSDFGraph* pisdf, Stack* stack){
+	SRDAGGraph* srdag = sAlloc(stack, 1, SRDAGGraph);
+	*srdag = SRDAGGraph(stack);
+
+	PiSDFGraph* topPisdf = pisdf->getBody(0)->getSubGraph();
+	SRDAGVertex* vxA  = srdag->addVertex(topPisdf->getBody(0));
+	SRDAGVertex* vxB  = srdag->addVertex(topPisdf->getBody(1));
+	SRDAGVertex* vxD  = srdag->addVertex(topPisdf->getBody(2));
+	SRDAGVertex* vxC  = srdag->addVertex(topPisdf->getBody(4)->getSubGraph()->getConfig(0));
+	SRDAGVertex* vxH0 = srdag->addVertex(topPisdf->getBody(4)->getSubGraph()->getBody(0));
+	SRDAGVertex* vxH1 = srdag->addVertex(topPisdf->getBody(4)->getSubGraph()->getBody(0));
+	SRDAGVertex* vxH2 = srdag->addVertex(topPisdf->getBody(4)->getSubGraph()->getBody(0));
+	SRDAGVertex* vxF  = srdag->addFork(3);
+	SRDAGVertex* vxBr = srdag->addBroadcast(4);
+	SRDAGVertex* vxE0 = srdag->addEnd();
+	SRDAGVertex* vxE1 = srdag->addEnd();
+
+	srdag->addEdge(
+			vxA , 0,
+			vxBr, 0,
+			1);
+	srdag->addEdge(
+			vxBr, 0,
+			vxH0, 0,
+			1);
+	srdag->addEdge(
+			vxBr, 1,
+			vxH1, 0,
+			1);
+	srdag->addEdge(
+			vxBr, 2,
+			vxH2, 0,
+			1);
+	srdag->addEdge(
+			vxBr, 3,
+			vxB , 0,
+			1);
+	srdag->addEdge(
+			vxB, 0,
+			vxD, 1,
+			1);
+	srdag->addEdge(
+			vxH0, 0,
+			vxE0, 0,
+			1);
+	srdag->addEdge(
+			vxH1, 0,
+			vxE1, 0,
+			1);
+	srdag->addEdge(
+			vxH2, 0,
+			vxD , 0,
+			1);
+	srdag->addEdge(
+			vxC, 0,
+			vxF, 0,
+			3);
+	srdag->addEdge(
+			vxF , 0,
+			vxH0, 1,
+			1);
+	srdag->addEdge(
+			vxF , 1,
+			vxH1, 1,
+			1);
+	srdag->addEdge(
+			vxF , 2,
+			vxH2, 1,
+			1);
+	return srdag;
+}
+
+
+void test_TestA(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack){
+	BipartiteGraph::compareGraphs(srdag, result_TestA(pisdf, stack), stack, "TestA");
 }

@@ -62,82 +62,76 @@ int main(int argc, char* argv[]){
 			srdag = SRDAGGraph(&stack);
 			topPisdf = initPisdf_test0(&stack, i);
 			jit_ms(topPisdf, &cfg);
-			srdag.print(name);
-
-			printf("Test0 N=%d : ", i);
-			if(test_Test0(topPisdf, &srdag, i, &stack))
-				printf("Passed\n");
-			else
-				printf("Failed\n");
+			test_Test0(topPisdf, &srdag, i, &stack);
 		}
 
-		for(int i=1; i<=3; i++){
+		for(int i=1; i<=2; i++){
 			char name[20];
 			sprintf(name, "test1_%d.gv", i);
 			stack.free();
 			srdag = SRDAGGraph(&stack);
 			topPisdf = initPisdf_test1(&stack, i);
 			jit_ms(topPisdf, &cfg);
-			srdag.print(name);
+			test_Test1(topPisdf, &srdag, i, &stack);
 		}
 
-		for(int i=1; i<=3; i++){
+		for(int i=1; i<=2; i++){
 			char name[20];
 			sprintf(name, "test2_%d.gv", i);
 			stack.free();
 			srdag = SRDAGGraph(&stack);
 			topPisdf = initPisdf_test2(&stack, i);
 			jit_ms(topPisdf, &cfg);
-			srdag.print(name);
+			test_Test2(topPisdf, &srdag, i, &stack);
 		}
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test3(&stack);
 		jit_ms(topPisdf, &cfg);
-		srdag.print("test3.gv");
+		test_Test3(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test4(&stack);
 		jit_ms(topPisdf, &cfg);
-		srdag.print("test4.gv");
+		test_Test4(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test5(&stack);
 		jit_ms(topPisdf, &cfg);
-		srdag.print("test5.gv");
+		test_Test5(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test6(&stack);
 		jit_ms(topPisdf, &cfg);
-		srdag.print("test6.gv");
+		test_Test6(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test7(&stack);
 		jit_ms(topPisdf, &cfg);
-		srdag.print("test7.gv");
+		test_Test7(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test8(&stack);
 		jit_ms(topPisdf, &cfg);
-		srdag.print("test8.gv");
+		test_Test8(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test9(&stack);
 		jit_ms(topPisdf, &cfg);
-		srdag.print("test9.gv");
+		test_Test9(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_testA(&stack);
 		jit_ms(topPisdf, &cfg);
-		srdag.print("testA.gv");
+		test_TestA(topPisdf, &srdag, &stack);
 //
 //	}catch(const char* s){
 //		printf("Exception : %s\n", s);

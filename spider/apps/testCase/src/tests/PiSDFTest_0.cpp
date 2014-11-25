@@ -36,6 +36,7 @@
 
 #include "../Tests.h"
 #include <spider.h>
+#include <cstdio>
 
 /*******************************************************************************/
 /****************************     TEST 0     ***********************************/
@@ -200,6 +201,8 @@ static SRDAGGraph* (*result_Test0[]) (PiSDFGraph* pisdf, Stack* stack) = {
 		result_Test0_3
 };
 
-bool test_Test0(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack){
-	return BipartiteGraph::compareGraphs(srdag, result_Test0[N-1](pisdf, stack), stack);
+void test_Test0(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack){
+	char name[100];
+	snprintf(name, 100, "Test0_%d", N);
+	BipartiteGraph::compareGraphs(srdag, result_Test0[N-1](pisdf, stack), stack, name);
 }

@@ -36,6 +36,7 @@
 
 #include "../Tests.h"
 #include <spider.h>
+#include <cstdio>
 
 /*******************************************************************************/
 /****************************     TEST 2     ***********************************/
@@ -107,4 +108,75 @@ PiSDFGraph* initPisdf_test2(Stack* stack, int N){
 			0, 0, 0);
 
 	return top;
+}
+
+SRDAGGraph* result_Test2_1(PiSDFGraph* pisdf, Stack* stack){
+	SRDAGGraph* srdag = sAlloc(stack, 1, SRDAGGraph);
+	*srdag = SRDAGGraph(stack);
+
+	PiSDFGraph* topPisdf = pisdf->getBody(0)->getSubGraph();
+	SRDAGVertex* vxC = srdag->addVertex(topPisdf->getConfig(0));
+	SRDAGVertex* vxA = srdag->addVertex(topPisdf->getBody(0));
+	SRDAGVertex* vxB = srdag->addVertex(topPisdf->getBody(1));
+
+	srdag->addEdge(
+			vxC, 0,
+			vxB, 1,
+			1);
+	srdag->addEdge(
+			vxA, 0,
+			vxB, 0,
+			1);
+
+	return srdag;
+}
+
+SRDAGGraph* result_Test2_2(PiSDFGraph* pisdf, Stack* stack){
+	SRDAGGraph* srdag = sAlloc(stack, 1, SRDAGGraph);
+	*srdag = SRDAGGraph(stack);
+
+	PiSDFGraph* topPisdf = pisdf->getBody(0)->getSubGraph();
+	SRDAGVertex* vxC = srdag->addVertex(topPisdf->getConfig(0));
+	SRDAGVertex* vxA = srdag->addVertex(topPisdf->getBody(0));
+	SRDAGVertex* vxB0 = srdag->addVertex(topPisdf->getBody(1));
+	SRDAGVertex* vxB1 = srdag->addVertex(topPisdf->getBody(1));
+	SRDAGVertex* vxF  = srdag->addFork(2);
+	SRDAGVertex* vxBr = srdag->addBroadcast(2);
+
+	srdag->addEdge(
+			vxC, 0,
+			vxBr, 0,
+			1);
+	srdag->addEdge(
+			vxBr, 0,
+			vxB0, 1,
+			1);
+	srdag->addEdge(
+			vxBr, 1,
+			vxB1, 1,
+			1);
+	srdag->addEdge(
+			vxA, 0,
+			vxF, 0,
+			2);
+	srdag->addEdge(
+			vxF, 0,
+			vxB0, 0,
+			1);
+	srdag->addEdge(
+			vxF, 1,
+			vxB1, 0,
+			1);
+	return srdag;
+}
+
+static SRDAGGraph* (*result_Test2[]) (PiSDFGraph* pisdf, Stack* stack) = {
+		result_Test2_1,
+		result_Test2_2
+};
+
+void test_Test2(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack){
+	char name[100];
+	snprintf(name, 100, "Test2_%d", N);
+	BipartiteGraph::compareGraphs(srdag, result_Test2[N-1](pisdf, stack), stack, name);
 }

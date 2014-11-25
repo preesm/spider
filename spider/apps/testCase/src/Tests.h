@@ -40,7 +40,6 @@
 #include <spider.h>
 
 PiSDFGraph* initPisdf_test0(Stack* stack, int N);
-bool test_Test0(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack);
 PiSDFGraph* initPisdf_test1(Stack* stack, int N);
 PiSDFGraph* initPisdf_test2(Stack* stack, int N);
 PiSDFGraph* initPisdf_test3(Stack* stack);
@@ -51,6 +50,18 @@ PiSDFGraph* initPisdf_test7(Stack* stack);
 PiSDFGraph* initPisdf_test8(Stack* stack);
 PiSDFGraph* initPisdf_test9(Stack* stack);
 PiSDFGraph* initPisdf_testA(Stack* stack);
+
+void test_Test0(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack);
+void test_Test1(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack);
+void test_Test2(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack);
+void test_Test3(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
+void test_Test4(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
+void test_Test5(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
+void test_Test6(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
+void test_Test7(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
+void test_Test8(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
+void test_Test9(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
+void test_TestA(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
 
 //void test_0_A(int* out);
 //void test_0_B(int* in, int N);

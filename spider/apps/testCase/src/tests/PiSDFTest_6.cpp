@@ -113,3 +113,43 @@ PiSDFGraph* initPisdf_test6(Stack* stack){
 	return top;
 }
 
+
+SRDAGGraph* result_Test6(PiSDFGraph* pisdf, Stack* stack){
+	SRDAGGraph* srdag = sAlloc(stack, 1, SRDAGGraph);
+	*srdag = SRDAGGraph(stack);
+
+	PiSDFGraph* topPisdf = pisdf->getBody(0)->getSubGraph();
+	SRDAGVertex* vxA0 = srdag->addVertex(topPisdf->getBody(0));
+	SRDAGVertex* vxA1 = srdag->addVertex(topPisdf->getBody(0));
+	SRDAGVertex* vxB0 = srdag->addVertex(topPisdf->getBody(1));
+	SRDAGVertex* vxB1 = srdag->addVertex(topPisdf->getBody(1));
+	SRDAGVertex* vxC  = srdag->addVertex(topPisdf->getBody(2));
+	SRDAGVertex* vxJ  = srdag->addJoin(4);
+
+	srdag->addEdge(
+			vxA0, 0,
+			vxJ, 0,
+			1);
+	srdag->addEdge(
+			vxB0, 0,
+			vxJ, 1,
+			1);
+	srdag->addEdge(
+			vxA1, 0,
+			vxJ, 2,
+			1);
+	srdag->addEdge(
+			vxB1, 0,
+			vxJ, 3,
+			1);
+	srdag->addEdge(
+			vxJ, 0,
+			vxC, 0,
+			4);
+	return srdag;
+}
+
+
+void test_Test6(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack){
+	BipartiteGraph::compareGraphs(srdag, result_Test6(pisdf, stack), stack, "Test6");
+}

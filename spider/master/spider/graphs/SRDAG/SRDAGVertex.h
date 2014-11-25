@@ -334,26 +334,28 @@ inline bool SRDAGVertex::isEqual(SRDAGVertex* v2){
 	for(int i=0; i<this->nInParam_; i++)
 		equal = equal && (this->inParams_[i] == v2->inParams_[i]);
 
-	equal = equal && (this->nInEdge_ == v2->nInEdge_);
-	for(int i=0; i<this->nInEdge_; i++)
-		equal = equal && (this->inEdges_[i]->getRate()  == v2->inEdges_[i]->getRate())
-		 	 	 	  && (this->inEdges_[i]->getDelay() == v2->inEdges_[i]->getDelay());
+	equal = equal && (this->getNConnectedInEdge() == v2->getNConnectedInEdge());
+	for(int i=0; i<this->getNConnectedInEdge(); i++)
+		equal = equal && (this->getInEdge(i)->getRate()  == v2->getInEdge(i)->getRate());
 
-	equal = equal && (this->nOutEdge_ == v2->nOutEdge_);
-	for(int i=0; i<this->nOutEdge_; i++)
-		equal = equal && (this->outEdges_[i]->getRate()  == v2->outEdges_[i]->getRate())
-		 	 	 	  && (this->outEdges_[i]->getDelay() == v2->outEdges_[i]->getDelay());
+	equal = equal && (this->getNConnectedOutEdge() == v2->getNConnectedOutEdge());
+	for(int i=0; i<this->getNConnectedOutEdge(); i++)
+		equal = equal && (this->getOutEdge(i)->getRate()  == v2->getOutEdge(i)->getRate());
 
 	return equal;
 }
 inline bool SRDAGVertex::match(SRDAGVertex* v2){
 	bool match = this->isEqual(v2);
 
-	for(int i=0; i<this->nInEdge_; i++)
-		match = match && this->inEdges_[i]->getSrc()->isEqual(v2->inEdges_[i]->getSrc());
+	for(int i=0; i<this->getNConnectedInEdge(); i++)
+		match = match && this->getInEdge(i)->getSrc()->isEqual(v2->getInEdge(i)->getSrc())
+						&& (this->getInEdge(i)->getSrcPortIx() == v2->getInEdge(i)->getSrcPortIx()
+								|| this->getInEdge(i)->getSrc()->getType() == SRDAG_BROADCAST);
 
-	for(int i=0; i<this->nOutEdge_; i++)
-		match = match && this->outEdges_[i]->getSnk()->isEqual(v2->outEdges_[i]->getSnk());
+	for(int i=0; i<this->getNConnectedOutEdge(); i++)
+		match = match && this->getOutEdge(i)->getSnk()->isEqual(v2->getOutEdge(i)->getSnk())
+						&& (this->getOutEdge(i)->getSnkPortIx() == v2->getOutEdge(i)->getSnkPortIx()
+								|| this->getOutEdge(i)->getSnk()->getType() == SRDAG_BROADCAST);
 
 	return match;
 }

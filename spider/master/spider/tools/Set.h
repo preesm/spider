@@ -61,6 +61,8 @@ public:
 	inline int getN() const;
 	inline TYPE const * const getArray() const;
 
+	inline int getIxOf(TYPE val);
+
 	inline SetIterator<TYPE> getIterator();
 
 private:
@@ -112,6 +114,18 @@ inline SetIterator<TYPE> Set<TYPE>::getIterator(){
 template <typename TYPE>
 inline TYPE const * const Set<TYPE>::getArray() const{
 	return array;
+}
+
+template <typename TYPE>
+inline int Set<TYPE>::getIxOf(TYPE val){
+	int ix = -1;
+	for(int i=0; i<this->nb; i++){
+		if(val == array[ix]){
+			ix = i;
+			break;
+		}
+	}
+	return ix;
 }
 
 #endif // SET_H

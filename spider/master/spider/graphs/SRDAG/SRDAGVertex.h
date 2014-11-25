@@ -334,14 +334,6 @@ inline bool SRDAGVertex::isEqual(SRDAGVertex* v2){
 	for(int i=0; i<this->nInParam_; i++)
 		equal = equal && (this->inParams_[i] == v2->inParams_[i]);
 
-	equal = equal && (this->getNConnectedInEdge() == v2->getNConnectedInEdge());
-	for(int i=0; i<this->getNConnectedInEdge(); i++)
-		equal = equal && (this->getInEdge(i)->getRate()  == v2->getInEdge(i)->getRate());
-
-	equal = equal && (this->getNConnectedOutEdge() == v2->getNConnectedOutEdge());
-	for(int i=0; i<this->getNConnectedOutEdge(); i++)
-		equal = equal && (this->getOutEdge(i)->getRate()  == v2->getOutEdge(i)->getRate());
-
 	return equal;
 }
 inline bool SRDAGVertex::match(SRDAGVertex* v2){
@@ -349,11 +341,13 @@ inline bool SRDAGVertex::match(SRDAGVertex* v2){
 
 	for(int i=0; i<this->getNConnectedInEdge(); i++)
 		match = match && this->getInEdge(i)->getSrc()->isEqual(v2->getInEdge(i)->getSrc())
+						&& this->getInEdge(i)->getRate() == v2->getInEdge(i)->getRate()
 						&& (this->getInEdge(i)->getSrcPortIx() == v2->getInEdge(i)->getSrcPortIx()
 								|| this->getInEdge(i)->getSrc()->getType() == SRDAG_BROADCAST);
 
 	for(int i=0; i<this->getNConnectedOutEdge(); i++)
 		match = match && this->getOutEdge(i)->getSnk()->isEqual(v2->getOutEdge(i)->getSnk())
+						&& this->getOutEdge(i)->getRate()  == v2->getOutEdge(i)->getRate()
 						&& (this->getOutEdge(i)->getSnkPortIx() == v2->getOutEdge(i)->getSnkPortIx()
 								|| this->getOutEdge(i)->getSnk()->getType() == SRDAG_BROADCAST);
 

@@ -120,7 +120,7 @@ template <typename TYPE>
 inline int Set<TYPE>::getIxOf(TYPE val){
 	int ix = -1;
 	for(int i=0; i<this->nb; i++){
-		if(val == array[ix]){
+		if(val == array[i]){
 			ix = i;
 			break;
 		}

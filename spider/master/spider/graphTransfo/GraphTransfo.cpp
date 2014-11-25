@@ -194,9 +194,6 @@ void jit_ms(PiSDFGraph* topPisdf, SpiderConfig* config){
 //        printf("Finish one iter\n");
 	}while(1);
 
-	if(config->printSrdag)
-		topSrdag->print(config->srdagfile);
-
 	/* Schedule and launch execution */
 
 //	transfoStack.free();

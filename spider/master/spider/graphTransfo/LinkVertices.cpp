@@ -398,7 +398,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 					bool needRB = sum > srcNode->edge->getRate();
 
 					if(isBroadcast){
-						SRDAGVertex *br = topSrdag->addBroadcast(MAX_IO_EDGES);
+						SRDAGVertex *br = topSrdag->addBroadcast(srcNode->nb);
 						srcNode->edge->connectSnk(br, 0);
 						for(k=0; k<srcNode->nb; k++){
 							SRDAGEdge* edge = topSrdag->addEdge();
@@ -411,7 +411,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 
 					if(needRB){
 						SRDAGVertex *rb = topSrdag->addRoundBuffer();
-						SRDAGVertex *fork = topSrdag->addFork(MAX_IO_EDGES);
+						SRDAGVertex *fork = topSrdag->addFork(srcNode->nb);
 						SRDAGEdge *rb_edge = topSrdag->addEdge();
 						srcNode->edge->connectSnk(rb, 0);
 						rb_edge->connectSrc(rb, 0);
@@ -424,15 +424,15 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 							rb_edge->setRate(rb_edge->getRate()+edge->getRate());
 							srcEdges[nbSrcEdges++] = edge;
 						}
-						break;
-					}
-					SRDAGVertex *fork = topSrdag->addFork(MAX_IO_EDGES);
-					srcNode->edge->connectSnk(fork, 0);
-					for(k=0; k<srcNode->nb; k++){
-						SRDAGEdge* edge = topSrdag->addEdge();
-						edge->connectSrc(fork, k);
-						edge->setRate(srcNode->rates[k]);
-						srcEdges[nbSrcEdges++] = edge;
+					}else{
+						SRDAGVertex *fork = topSrdag->addFork(srcNode->nb);
+						srcNode->edge->connectSnk(fork, 0);
+						for(k=0; k<srcNode->nb; k++){
+							SRDAGEdge* edge = topSrdag->addEdge();
+							edge->connectSrc(fork, k);
+							edge->setRate(srcNode->rates[k]);
+							srcEdges[nbSrcEdges++] = edge;
+						}
 					}
 					break;
 				}
@@ -446,7 +446,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 				}else{
 					int k;
 					/* Todo complicate this */
-					SRDAGVertex *fork = topSrdag->addFork(MAX_IO_EDGES);
+					SRDAGVertex *fork = topSrdag->addFork(srcNode->nb);
 					SRDAGEdge* edge_fork = topSrdag->addEdge();
 					edge_fork->connectSrc(srcNode->vertex.ptr, srcNode->vertex.portIx);
 					edge_fork->connectSnk(fork, 0);
@@ -490,7 +490,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 					if(outCons < outProd){
 						// To musch data keep last (only RB for now)
 						SRDAGVertex *rb = topSrdag->addRoundBuffer();
-						SRDAGVertex *join = topSrdag->addJoin(MAX_IO_EDGES);
+						SRDAGVertex *join = topSrdag->addJoin(snkNode->nb);
 						SRDAGEdge* rb_edge = topSrdag->addEdge();
 						rb_edge->connectSnk(rb, 0);
 						rb_edge->connectSrc(join, 0);
@@ -504,7 +504,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 //						throw "Unhandled case in Snk Resolution\n"; // todo
 					}else if(outCons == outProd){
 						/* Normal join scheme */
-						SRDAGVertex *join = topSrdag->addJoin(MAX_IO_EDGES);
+						SRDAGVertex *join = topSrdag->addJoin(snkNode->nb);
 						snkNode->edge->connectSrc(join, 0);
 						for(int start=0; start<snkNode->nb; start++){
 							snkVertices[nbSnkVertices].vertex = join;
@@ -524,7 +524,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 				}else{
 					int k;
 					/* Todo complicate this */
-					SRDAGVertex *join = topSrdag->addJoin(MAX_IO_EDGES);
+					SRDAGVertex *join = topSrdag->addJoin(snkNode->nb);
 					SRDAGEdge* edge_join = topSrdag->addEdge();
 					edge_join->connectSrc(join, 0);
 					edge_join->connectSnk(snkNode->vertex.ptr, snkNode->vertex.portIx);

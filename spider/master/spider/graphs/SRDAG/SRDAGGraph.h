@@ -67,6 +67,13 @@ public:
 	inline SRDAGEdge* getEdge(int ix);
 	inline SRDAGVertex* getVertex(int ix);
 
+	inline int getIxOfEdge(SRDAGEdge* edge);
+	inline int getIxOfVertex(SRDAGVertex* vertex);
+
+	/** Size getters */
+	inline int getNEdge();
+	inline int getNVertex();
+
 	/** Print Fct */
 	void print(const char *path);
 	bool check();
@@ -92,6 +99,21 @@ inline SRDAGEdge* SRDAGGraph::getEdge(int ix){
 }
 inline SRDAGVertex* SRDAGGraph::getVertex(int ix){
 	return vertices_[ix];
+}
+
+inline int SRDAGGraph::getIxOfEdge(SRDAGEdge* edge){
+	return edges_.getIxOf(edge);
+}
+inline int SRDAGGraph::getIxOfVertex(SRDAGVertex* vertex){
+	return vertices_.getIxOf(vertex);
+}
+
+/** Size getters */
+inline int SRDAGGraph::getNEdge(){
+	return edges_.getN();
+}
+inline int SRDAGGraph::getNVertex(){
+	return vertices_.getN();
 }
 
 #endif/*SRDAG_GRAPH_H*/

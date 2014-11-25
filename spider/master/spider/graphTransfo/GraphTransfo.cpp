@@ -104,10 +104,14 @@ static SRDAGVertex* getNextHierVx(SRDAGGraph *topDag){
 
 void jit_ms(PiSDFGraph* topPisdf, SpiderConfig* config){
 	StaticStack transfoStack = StaticStack(malloc(TRANSFO_STACK_SIZE), TRANSFO_STACK_SIZE);
+	SRDAGGraph *topSrdag;
 
 	/* Initialize topDag */
-	SRDAGGraph *topSrdag = sAlloc(&transfoStack, 1, SRDAGGraph);
-	*topSrdag = SRDAGGraph(&transfoStack);
+	if(config->createSrdag){
+		topSrdag = sAlloc(&transfoStack, 1, SRDAGGraph);
+		*topSrdag = SRDAGGraph(&transfoStack);
+	}else
+		topSrdag = config->srdag;
 
 	/* Add initial top actor */
 	PiSDFVertex* root = topPisdf->getBody(0);
@@ -194,4 +198,6 @@ void jit_ms(PiSDFGraph* topPisdf, SpiderConfig* config){
 		topSrdag->print(config->srdagfile);
 
 	/* Schedule and launch execution */
+
+//	transfoStack.free();
 }

@@ -47,8 +47,11 @@ int main(int argc, char* argv[]){
 	void* memory = malloc(STACK_SIZE);
 	StaticStack stack = StaticStack(memory,STACK_SIZE);
 	SpiderConfig cfg;
+	SRDAGGraph srdag;
 
 	cfg.printSrdag = true;
+	cfg.createSrdag = false;
+	cfg.srdag = &srdag;
 
 	printf("Start\n");
 
@@ -57,6 +60,7 @@ int main(int argc, char* argv[]){
 			char name[20];
 			sprintf(name, "test0_%d.gv", i);
 			stack.free();
+			srdag = SRDAGGraph(&stack);
 			topPisdf = initPisdf_test0(&stack, i);
 			cfg.srdagfile = name;
 			jit_ms(topPisdf, &cfg);
@@ -67,6 +71,7 @@ int main(int argc, char* argv[]){
 			char name[20];
 			sprintf(name, "test1_%d.gv", i);
 			stack.free();
+			srdag = SRDAGGraph(&stack);
 			topPisdf = initPisdf_test1(&stack, i);
 			cfg.srdagfile = name;
 			jit_ms(topPisdf, &cfg);
@@ -76,50 +81,59 @@ int main(int argc, char* argv[]){
 			char name[20];
 			sprintf(name, "test2_%d.gv", i);
 			stack.free();
+			srdag = SRDAGGraph(&stack);
 			topPisdf = initPisdf_test2(&stack, i);
 			cfg.srdagfile = name;
 			jit_ms(topPisdf, &cfg);
 		}
 
 		stack.free();
+		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test3(&stack);
 		cfg.srdagfile = "test3.gv";
 		jit_ms(topPisdf, &cfg);
 
 		stack.free();
+		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test4(&stack);
 		cfg.srdagfile = "test4.gv";
 		jit_ms(topPisdf, &cfg);
 
 		stack.free();
+		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test5(&stack);
 		cfg.srdagfile = "test5.gv";
 		jit_ms(topPisdf, &cfg);
 
 		stack.free();
+		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test6(&stack);
 		cfg.srdagfile = "test6.gv";
 		jit_ms(topPisdf, &cfg);
 
 		stack.free();
+		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test7(&stack);
 		cfg.srdagfile = "test7.gv";
 		jit_ms(topPisdf, &cfg);
 
 		stack.free();
+		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test8(&stack);
 		cfg.srdagfile = "test8.gv";
 		jit_ms(topPisdf, &cfg);
 
-	stack.free();
-	topPisdf = initPisdf_test9(&stack);
-	cfg.srdagfile = "test9.gv";
-	jit_ms(topPisdf, &cfg);
+		stack.free();
+		srdag = SRDAGGraph(&stack);
+		topPisdf = initPisdf_test9(&stack);
+		cfg.srdagfile = "test9.gv";
+		jit_ms(topPisdf, &cfg);
 
-	stack.free();
-	topPisdf = initPisdf_testA(&stack);
-	cfg.srdagfile = "testA.gv";
-	jit_ms(topPisdf, &cfg);
+		stack.free();
+		srdag = SRDAGGraph(&stack);
+		topPisdf = initPisdf_testA(&stack);
+		cfg.srdagfile = "testA.gv";
+		jit_ms(topPisdf, &cfg);
 //
 //	}catch(const char* s){
 //		printf("Exception : %s\n", s);

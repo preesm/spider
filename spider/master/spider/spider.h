@@ -38,12 +38,15 @@
 #define SPIDER_H
 
 #include <graphs/PiSDF/PiSDFCommon.h>
+#include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/PiSDF/PiSDFGraph.h>
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <tools/StaticStack.h>
 
 typedef struct{
 	bool printSrdag;
+	bool createSrdag;
+	SRDAGGraph* srdag;
 	const char* srdagfile;
 } SpiderConfig;
 

@@ -42,12 +42,7 @@
 
 class BipartiteGraph {
 public:
-	BipartiteGraph();
-	BipartiteGraph(SRDAGGraph g1, SRDAGGraph g2, Stack* stack);
-
-	virtual ~BipartiteGraph();
-
-	bool match();
+	static bool compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack);
 
 private:
 	int* graph_;
@@ -55,8 +50,17 @@ private:
 	int* nConnections_;
 	Stack* stack_;
 
+	BipartiteGraph();
+	BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack);
+
+	virtual ~BipartiteGraph();
+
+	bool hasPerfectMatch();
+
 	static int maxMatching(BipartiteGraph* graph);
 	static bool findPath(BipartiteGraph* graph, int u1, int* matching, bool* vis);
+
+	void print(const char* name);
 
 };
 

@@ -40,6 +40,8 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 
 #include <cstring>
+#include <cstdio>
+#include <platform_file.h>
 
 BipartiteGraph::BipartiteGraph() {
 	graph_ = 0;
@@ -48,24 +50,24 @@ BipartiteGraph::BipartiteGraph() {
 	stack_ = 0;
 }
 
-BipartiteGraph::BipartiteGraph(SRDAGGraph g1, SRDAGGraph g2, Stack* stack){
-	nVertices_ = g1.getNVertex();
-	int nVerticesG2 = g2.getNVertex();
+BipartiteGraph::BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack){
+	nVertices_ = g1->getNVertex();
+	int nVerticesG2 = g2->getNVertex();
 	graph_ = sAlloc(stack, nVertices_*nVerticesG2, int);
 	nConnections_ = sAlloc(stack, nVertices_, int);
 	memset(nConnections_, 0, nVertices_*sizeof(int));
 	stack_ = stack;
 
-	SRDAGVertexIterator vertexItG1 = g1.getVertexIterator();
+	SRDAGVertexIterator vertexItG1 = g1->getVertexIterator();
 	FOR_IT(vertexItG1){
 		SRDAGVertex* vertexG1 = vertexItG1.current();
-		SRDAGVertexIterator vertexItG2 = g2.getVertexIterator();
+		int ixG1 = g1->getIxOfVertex(vertexG1);
+		SRDAGVertexIterator vertexItG2 = g2->getVertexIterator();
 		FOR_IT(vertexItG2){
 			SRDAGVertex* vertexG2 = vertexItG2.current();
+			int ixG2 = g2->getIxOfVertex(vertexG2);
 			if(vertexG1->match(vertexG2)){
-				int ixG1 = g1.getIxOfVertex(vertexG1);
-				int ixG2 = g2.getIxOfVertex(vertexG2);
-				graph_[ixG1 + nConnections_[ixG1]] = ixG2;
+				graph_[ixG1*nVertices_ + nConnections_[ixG1]] = ixG2;
 				nConnections_[ixG1]++;
 			}
 		}
@@ -75,17 +77,17 @@ BipartiteGraph::BipartiteGraph(SRDAGGraph g1, SRDAGGraph g2, Stack* stack){
 BipartiteGraph::~BipartiteGraph() {
 }
 
-int BipartiteGraph::maxMatching(BipartiteGraph* graph) {
-    int* matching = sAlloc(graph->stack_, graph->nVertices_, int);
-    memset(matching, -1, graph->nVertices_*sizeof(int));
+bool BipartiteGraph::hasPerfectMatch() {
+    int* matching = sAlloc(stack_, nVertices_, int);
+    memset(matching, -1, nVertices_*sizeof(int));
     int matches = 0;
-    bool* visited = sAlloc(graph->stack_, graph->nVertices_, bool);
-    for (int u = 0; u < graph->nVertices_; u++) {
-        memset(visited, false, graph->nVertices_*sizeof(bool));
-      if (findPath(graph, u, matching, visited))
-        ++matches;
+    bool* visited = sAlloc(stack_, nVertices_, bool);
+    for (int u = 0; u < nVertices_; u++) {
+        memset(visited, false, nVertices_*sizeof(bool));
+      if (!findPath(this, u, matching, visited))
+        return false;
     }
-    return matches;
+    return true;
   }
 
  bool BipartiteGraph::findPath(BipartiteGraph* graph, int u1, int* matching, bool* vis) {
@@ -101,6 +103,59 @@ int BipartiteGraph::maxMatching(BipartiteGraph* graph) {
     return false;
   }
 
-bool BipartiteGraph::match(){
-	return maxMatching(this) == nVertices_;
+bool BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack){
+	if(g1->getNVertex() != g2->getNVertex()
+			|| g1->getNEdge() != g2->getNEdge())
+		return false;
+
+	BipartiteGraph* bipartite = sAlloc(stack, 1, BipartiteGraph);
+	*bipartite = BipartiteGraph(g1, g2, stack);
+//	bipartite->print("bipart.gv");
+
+//	g1->print("g1.gv");
+//	g2->print("g2.gv");
+
+	return bipartite->hasPerfectMatch();
+}
+
+void BipartiteGraph::print(const char* path){
+	int maxId;
+	int file = platform_fopen (path);
+	if(file == -1){
+		printf("cannot open %s\n", path);
+		return;
+	}
+
+	// Writing header
+	platform_fprintf (file, "digraph csdag {\n");
+	platform_fprintf (file, "\tnode [color=\"#433D63\"];\n");
+	platform_fprintf (file, "\tedge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
+	platform_fprintf (file, "\trankdir=LR;\n\n");
+
+	// Drawing vertices.
+	platform_fprintf (file, "\t# Vertices\n");
+
+	platform_fprintf (file, "\tsubgraph cluster_0 {\nlabel = \"Graph 1\";\n");
+	for (int i=0; i<nVertices_; i++){
+		platform_fprintf (file, "\t\tg1_%d [shape=ellipse,label=\"g1_%d\"];\n", i, i);
+	}
+	platform_fprintf (file, "\t}\n");
+
+	platform_fprintf (file, "\tsubgraph cluster_1 {\nlabel = \"Graph 2\";\n");
+	for (int i=0; i<nVertices_; i++){
+		platform_fprintf (file, "\t\tg2_%d [shape=ellipse,label=\"g2_%d\"];\n", i, i);
+	}
+	platform_fprintf (file, "\t}\n");
+
+	// Drawing edges.
+	platform_fprintf (file, "\t# Edges\n");
+	for (int i=0; i<nVertices_; i++) {
+		for (int j=0; j<nConnections_[i]; j++) {
+			int snkIx, srcIx;
+			platform_fprintf (file, "\tg1_%d->g2_%d;\n", i, graph_[i*nVertices_+j]);
+		}
+	}
+
+	platform_fprintf (file, "}\n");
+	platform_fclose(file);
 }

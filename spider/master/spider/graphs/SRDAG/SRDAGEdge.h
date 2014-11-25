@@ -55,11 +55,9 @@ public:
 	inline int getSrcPortIx() const;
 	inline int getSnkPortIx() const;
 	inline int getRate() const;
-	inline int getDelay() const;
 
 	/** Setters */
 	inline void setRate(int rate);
-	inline void setDelay(int delay);
 
 	/** Connections Fcts */
 	void connectSrc(SRDAGVertex* src, int srcPortId);
@@ -79,7 +77,6 @@ private:
 	int snkPortIx_;
 
 	int rate_;
-	int delay_;
 };
 
 inline int SRDAGEdge::getId() const {
@@ -100,15 +97,9 @@ inline int SRDAGEdge::getSnkPortIx() const {
 inline int SRDAGEdge::getRate() const{
 	return rate_;
 }
-inline int SRDAGEdge::getDelay() const{
-	return delay_;
-}
 
 inline void SRDAGEdge::setRate(int rate){
 	rate_ = rate;
-}
-inline void SRDAGEdge::setDelay(int delay){
-	delay_ = delay;
 }
 
 

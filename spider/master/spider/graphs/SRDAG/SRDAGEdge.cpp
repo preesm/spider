@@ -49,7 +49,6 @@ SRDAGEdge::SRDAGEdge(){
 	snk_ = 0; snkPortIx_ = -1;
 
 	rate_ = 0;
-	delay_ = 0;
 }
 
 SRDAGEdge::SRDAGEdge(SRDAGGraph* graph){
@@ -60,7 +59,6 @@ SRDAGEdge::SRDAGEdge(SRDAGGraph* graph){
 	snk_ = 0; snkPortIx_ = -1;
 
 	rate_ = 0;
-	delay_ = 0;
 }
 
 void SRDAGEdge::connectSrc(SRDAGVertex *src, int srcPortId){

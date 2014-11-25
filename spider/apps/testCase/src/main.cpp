@@ -63,8 +63,13 @@ int main(int argc, char* argv[]){
 			topPisdf = initPisdf_test0(&stack, i);
 			jit_ms(topPisdf, &cfg);
 			srdag.print(name);
-		}
 
+			printf("Test0 N=%d : ", i);
+			if(test_Test0(topPisdf, &srdag, i, &stack))
+				printf("Passed\n");
+			else
+				printf("Failed\n");
+		}
 
 		for(int i=1; i<=3; i++){
 			char name[20];

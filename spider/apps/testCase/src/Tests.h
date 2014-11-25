@@ -40,6 +40,7 @@
 #include <spider.h>
 
 PiSDFGraph* initPisdf_test0(Stack* stack, int N);
+bool test_Test0(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack);
 PiSDFGraph* initPisdf_test1(Stack* stack, int N);
 PiSDFGraph* initPisdf_test2(Stack* stack, int N);
 PiSDFGraph* initPisdf_test3(Stack* stack);

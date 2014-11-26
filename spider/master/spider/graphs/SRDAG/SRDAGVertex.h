@@ -41,6 +41,8 @@
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/SRDAG/SRDAGEdge.h>
 
+#include <platform.h>
+
 class SRDAGVertex {
 public:
 	friend class SRDAGEdge;
@@ -84,8 +86,12 @@ public:
 	inline PiSDFGraph *getSubGraph() const;
 	inline PiSDFVertex *getReference() const;
 	inline bool isHierarchical() const;
+	inline Time getStartTime() const;
+	inline Time getEndTime() const;
 
 	inline void setState(SRDAGState state);
+	inline void setStartTime(Time start);
+	inline void setEndTime(Time end);
 
 	/** Comparison fcts */
 	inline bool isEqual(SRDAGVertex* v2);
@@ -115,6 +121,8 @@ private:
 	int nInParam_, nOutParam_;
 	int *inParams_;
 	const int **outParams_;
+
+	Time start_, end_;
 
 //	BOOL constraints[MAX_SLAVES];
 //	variable timings[MAX_SLAVE_TYPES];
@@ -320,9 +328,21 @@ inline PiSDFVertex *SRDAGVertex::getReference() const{
 inline bool SRDAGVertex::isHierarchical() const{
 	return type_ == SRDAG_NORMAL && reference_->isHierarchical();
 }
+inline Time SRDAGVertex::getStartTime() const{
+	return start_;
+}
+inline Time SRDAGVertex::getEndTime() const{
+	return end_;
+}
 
 inline void SRDAGVertex::setState(SRDAGState state){
 	state_ = state;
+}
+inline void SRDAGVertex::setStartTime(Time start){
+	start_ = start;
+}
+inline void SRDAGVertex::setEndTime(Time end){
+	end_ = end;
 }
 
 inline bool SRDAGVertex::isEqual(SRDAGVertex* v2){

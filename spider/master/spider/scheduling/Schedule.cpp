@@ -35,6 +35,9 @@
  ****************************************************************************/
 
 #include "Schedule.h"
+#include <platform_file.h>
+#include <cstring>
+#include <cstdio>
 
 Schedule::Schedule(){
 	nPE_ = 0;
@@ -53,7 +56,86 @@ Schedule::Schedule(int nPE, int nJobMax, Stack *stack){
 }
 
 void Schedule::addJob(int pe, SRDAGVertex* job, Time start, Time end){
+	if(pe < 0 || pe >= nPE_)
+		throw "Schedule: Accessing bad PE\n";
+	if(nJobPerPE_[pe] >= nJobMax_)
+		throw "Schedule: too much jobs\n";
+
+	schedules_[pe*nJobMax_+nJobPerPE_[pe]] = job;;
+	nJobPerPE_[pe]++;
 }
 
 void Schedule::print(const char* path){
+	int file = platform_fopen (path);
+	char name[100];
+
+	// Writing header
+	platform_fprintf (file, "<data>\n");
+
+	// Exporting for gantt display
+	for(int pe=0; pe < nPE_; pe++){
+		for (int job=0 ; job < nJobPerPE_[pe]; job++){
+			SRDAGVertex* vertex = getJob(pe, job);
+
+			vertex->toString(name, 100);
+			platform_fprintf (file, "\t<event\n");
+			platform_fprintf (file, "\t\tstart=\"%d\"\n", vertex->getStartTime());
+			platform_fprintf (file, "\t\tend=\"%d\"\n",	vertex->getEndTime());
+			platform_fprintf (file, "\t\ttitle=\"%s\"\n", name);
+			platform_fprintf (file, "\t\tmapping=\"PE%d\"\n", pe);
+
+			int ired = (vertex->getId() & 0x3)*50 + 100;
+			int igreen = ((vertex->getId() >> 2) & 0x3)*50 + 100;
+			int iblue = ((vertex->getId() >> 4) & 0x3)*50 + 100;
+			platform_fprintf (file, "\t\tcolor=\"#%02x%02x%02x\"\n", ired, igreen, iblue);
+
+
+			platform_fprintf (file, "\t\t>%s.</event>\n", name);
+		}
+	}
+	platform_fprintf (file, "</data>\n");
+	platform_fclose(file);
+}
+
+bool Schedule::check(){
+	bool result = true;
+
+	/* Check core concurrency */
+	for(int pe=0; pe<nPE_ && result; pe++){
+		for(int i=0; i<nJobPerPE_[pe]-1 && result; i++){
+			SRDAGVertex* vertex = getJob(pe, i);
+			SRDAGVertex* nextVertex = getJob(pe, i+1);
+
+			if(vertex->getEndTime() > nextVertex->getStartTime()){
+				result = false;
+				char name[100];
+				vertex->toString(name, 100);
+				printf("Schedule: Superposition: task %s ", name);
+				nextVertex->toString(name, 100);
+				printf("and %s\n", name);
+			}
+		}
+	}
+
+	/* Check Communications */
+	for(int pe=0; pe<nPE_ && result; pe++){
+		for(int i=0; i<nJobPerPE_[pe]-1 && result; i++){
+			SRDAGVertex* vertex = getJob(pe, i);
+
+			for(int i=0; i<vertex->getNInEdge() && result; i++){
+				SRDAGVertex* precVertex = vertex->getInEdge(i)->getSrc();
+
+				if(vertex->getStartTime() < precVertex->getEndTime()){
+					result = false;
+					char name[100];
+					vertex->toString(name, 100);
+					printf("Schedule: Communication: task %s ", name);
+					precVertex->toString(name, 100);
+					printf("and %s\n", name);
+				}
+			}
+		}
+	}
+
+	return result;
 }

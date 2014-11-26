@@ -34,4 +34,55 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-typedef unsigned int Time;
+#ifndef SCHEDULE_H
+#define SCHEDULE_H
+
+#include <platform.h>
+#include <tools/Stack.h>
+#include <graphs/SRDAG/SRDAGVertex.h>
+
+class Schedule {
+public:
+	Schedule();
+	Schedule(int nPE, int nJobMax, Stack* stack);
+
+	inline void setAllMinReadyTime(Time time);
+    inline void setReadyTime(int pe, Time time);
+    inline Time getReadyTime(int pe) const;
+
+	void addJob(int pe, SRDAGVertex* job, Time start, Time end);
+
+	void print(const char* path);
+
+private:
+	int nPE_;
+	int nJobMax_;
+	int* nJobPerPE_;
+	Time* readyTime_;
+	SRDAGVertex* schedules_;
+
+    inline int getNJobs(int pe) const;
+	inline SRDAGVertex* getJob(int pe, int ix);
+};
+
+inline void Schedule::setAllMinReadyTime(Time time){
+	for(int i=0; i<nPE_; i++){
+		readyTime_[i] = std::min(time, readyTime_[i]);
+	}
+}
+inline void Schedule::setReadyTime(int pe, Time time){
+	readyTime_[pe] = time;
+}
+inline Time Schedule::getReadyTime(int pe) const{
+	return readyTime_[pe];
+}
+
+inline int Schedule::getNJobs(int pe) const{
+	return nJobPerPE_[pe];
+}
+inline SRDAGVertex* Schedule::getJob(int pe, int ix){
+	// todo check ix
+	return schedules_[pe*nJobs_+ix];
+}
+
+#endif/*SCHEDULE_H*/

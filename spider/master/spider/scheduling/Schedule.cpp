@@ -34,4 +34,26 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-typedef unsigned int Time;
+#include "Schedule.h"
+
+Schedule::Schedule(){
+	nPE_ = 0;
+	nJobMax_ = 0;
+	nJobPerPE_ = 0;
+	readyTime_ = 0;
+	schedules_ = 0;
+}
+
+Schedule::Schedule(int nPE, int nJobMax, Stack *stack){
+	nPE_ = nPE;
+	nJobMax_ = nJobMax;
+	nJobPerPE_ = sAlloc(stack, nPE_, int);
+	readyTime_ = sAlloc(stack, nPE_, Time);
+	schedules_ = sAlloc(stack, nPE_*nJobMax_, SRDAGVertex*);
+}
+
+void Schedule::addJob(int pe, SRDAGVertex* job, Time start, Time end){
+}
+
+void Schedule::print(const char* path){
+}

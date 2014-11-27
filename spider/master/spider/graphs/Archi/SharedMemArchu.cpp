@@ -34,25 +34,20 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef ARCHI_H
-#define ARCHI_H
+#include "SharedMemArchi.h"
+#include <tools/Stack.h>
 
-#include <platform.h>
+SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType) {
+	nPE_ = nPE;
+	nPEType_ = nPEType;
+	peType_ = sAlloc(stack, nPE_, int);
+	peName_ = sAlloc(stack, nPE_, const char*);
+	peTypeASend_ = sAlloc(stack, nPEType_, float);
+	peTypeBSend_ = sAlloc(stack, nPEType_, float);
+	peTypeARecv_ = sAlloc(stack, nPEType_, float);
+	peTypeBRecv_ = sAlloc(stack, nPEType_, float);
+}
 
-class Archi {
-private:
-	Archi(){}
-	virtual ~Archi(){}
+SharedMemArchi::~SharedMemArchi() {
+}
 
-public:
-	virtual inline int  getNPE() const = 0;
-	virtual inline const char* getPEName(int ix) const = 0;
-
-	virtual inline int getNPETypes() const = 0;
-	virtual inline int getPEType(int ix) const = 0;
-
-	virtual inline Time getTimeSend(int src, int dest, int size) const = 0;
-	virtual inline Time getTimeRecv(int src, int dest, int size) const = 0;
-};
-
-#endif/*ARCHI_H*/

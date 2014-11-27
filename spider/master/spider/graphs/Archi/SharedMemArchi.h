@@ -34,25 +34,69 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef ARCHI_H
-#define ARCHI_H
+#ifndef SHARED_MEM_ARCH_H
+#define SHARED_MEM_ARCH_H
 
-#include <platform.h>
+#include "Archi.h"
+#include <tools/Stack.h>
 
-class Archi {
-private:
-	Archi(){}
-	virtual ~Archi(){}
-
+class SharedMemArchi: public Archi {
 public:
-	virtual inline int  getNPE() const = 0;
-	virtual inline const char* getPEName(int ix) const = 0;
+	SharedMemArchi(Stack* s, int nPE, int nPEType);
+	virtual ~SharedMemArchi();
 
-	virtual inline int getNPETypes() const = 0;
-	virtual inline int getPEType(int ix) const = 0;
+	virtual inline int  getNPE() const;
+	virtual inline const char* getPEName(int ix) const;
 
-	virtual inline Time getTimeSend(int src, int dest, int size) const = 0;
-	virtual inline Time getTimeRecv(int src, int dest, int size) const = 0;
+	virtual inline int getNPETypes() const;
+	virtual inline int getPEType(int ix) const;
+
+	virtual inline Time getTimeSend(int src, int dest, int size) const;
+	virtual inline Time getTimeRecv(int src, int dest, int size) const;
+
+	inline void setPETypeSendSpeed(int type, float a, float b);
+	inline void setPETypeRecvSpeed(int type, float a, float b);
+
+private:
+	int nPE_;
+	int nPEType_;
+	int* peType_;
+	const char ** peName_;
+	float* peTypeASend_;
+	float* peTypeBSend_;
+	float* peTypeARecv_;
+	float* peTypeBRecv_;
+
 };
 
-#endif/*ARCHI_H*/
+virtual inline int  SharedMemArchi::getNPE() const{
+	return nPE_;
+}
+virtual inline const char* SharedMemArchi::getPEName(int ix) const{
+	return peName_[ix];
+}
+
+virtual inline int SharedMemArchi::getNPETypes() const{
+	return nPEType_;
+}
+virtual inline int SharedMemArchi::getPEType(int ix) const{
+	return peType_[ix];
+}
+
+virtual inline Time SharedMemArchi::getTimeSend(int src, int dest, int size) const{
+	return peTypeASend_[peType_[src]]*size + peTypeASend_[peType_[src]];
+}
+virtual inline Time SharedMemArchi::getTimeRecv(int src, int dest, int size) const{
+	return peTypeARecv_[peType_[dest]]*size + peTypeARecv_[peType_[dest]];
+}
+
+inline void SharedMemArchi::setPETypeSendSpeed(int type, float a, float b){
+	peTypeASend_[type] = a;
+	peTypeBSend_[type] = b;
+}
+inline void SharedMemArchi::setPETypeRecvSpeed(int type, float a, float b){
+	peTypeARecv_[type] = a;
+	peTypeBRecv_[type] = b;
+}
+
+#endif/*SHARED_MEM_ARCH_H*/

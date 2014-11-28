@@ -94,7 +94,8 @@ public:
 
 	/** Constraints/timings */
 	inline bool canExecuteOn(int pe);
-	inline Time getTimingOnType(int peType, const int* paramValues, int nParam);
+	inline Time getTimingOnType(int peType, const int* vertexParamValues, int nParam);
+	inline const bool* getConstraints() const;
 
 	inline void setTimingOnType(int peType, const char* timing, Stack *stack);
 	inline void isExecutableOnAllPE();
@@ -271,10 +272,13 @@ inline bool PiSDFVertex::canExecuteOn(int pe){
 		throw "PiSDFVertex: accessing bad PE ix\n";
 	return constraints_[pe];
 }
-inline Time PiSDFVertex::getTimingOnType(int peType, const int* paramValues, int nParam){
+inline Time PiSDFVertex::getTimingOnType(int peType, const int* vertexParamValues, int nParam){
 	if(peType < 0 || peType >= nPeTypeMax_)
 		throw "PiSDFVertex: accessing bad PE type ix\n";
-	return timings_[peType].evaluate(paramValues, nParam);
+	return timings_[peType].evaluate(vertexParamValues, nParam);
+}
+inline const bool* PiSDFVertex::getConstraints() const{
+	return constraints_;
 }
 
 inline void PiSDFVertex::setTimingOnType(int peType, const char* timing, Stack *stack){

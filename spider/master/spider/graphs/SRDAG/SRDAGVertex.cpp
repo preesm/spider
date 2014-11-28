@@ -87,8 +87,6 @@ SRDAGVertex::SRDAGVertex(
 	nOutParam_ = nOutParam;
 	outParams_ = sAlloc(stack, nOutParam, const int*);
 	memset(outParams_, 0, nOutParam*sizeof(int**));
-
-//	memset(constraints, false, MAX_SLAVES*sizeof(bool));
 }
 
 void SRDAGVertex::toString(char* name, int sizeMax) const{

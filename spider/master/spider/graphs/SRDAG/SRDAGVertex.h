@@ -99,6 +99,10 @@ public:
 
 	void toString(char* name, int sizeMax) const;
 
+	/** Constraints/Timings Fcts */
+	inline bool isExecutableOn(int pe) const;
+	inline Time executionTimeOn(int peType) const;
+
 protected:
 	/** Connect Fcts */
 	inline void connectInEdge(SRDAGEdge* edge, int ix);
@@ -123,9 +127,6 @@ private:
 	const int **outParams_;
 
 	Time start_, end_;
-
-//	BOOL constraints[MAX_SLAVES];
-//	variable timings[MAX_SLAVE_TYPES];
 };
 
 /** Inlines Fcts */
@@ -372,6 +373,13 @@ inline bool SRDAGVertex::match(SRDAGVertex* v2){
 								|| this->getOutEdge(i)->getSnk()->getType() == SRDAG_BROADCAST);
 
 	return match;
+}
+
+inline bool SRDAGVertex::isExecutableOn(int pe) const{
+	return reference_->canExecuteOn(pe);
+}
+inline Time SRDAGVertex::executionTimeOn(int peType) const{
+	return reference_->getTimingOnType(peType, inParams_, nInParam_);
 }
 
 #endif/*SRDAG_VERTEX_H*/

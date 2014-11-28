@@ -78,8 +78,8 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job){
 			}else{
 				PiSDFEdge* pi_edge = pi_ca->getInEdge(inEdgeIx);
 				PiSDFVertex* pi_src = pi_edge->getSrc();
-				int cons = pi_edge->resolveCons(job->paramValues, job->graph->getNConfig());
-				int prod = pi_edge->resolveProd(job->paramValues, job->graph->getNConfig());
+				int cons = pi_edge->resolveCons(job);
+				int prod = pi_edge->resolveProd(job);
 
 				switch(pi_src->getType()){
 				case PISDF_TYPE_IF:{
@@ -126,8 +126,8 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job){
 			}else{
 				PiSDFEdge* pi_edge = pi_ca->getOutEdge(outEdgeIx);
 				PiSDFVertex* pi_snk = pi_edge->getSnk();
-				int cons = pi_edge->resolveCons(job->paramValues, job->graph->getNConfig());
-				int prod = pi_edge->resolveProd(job->paramValues, job->graph->getNConfig());
+				int cons = pi_edge->resolveCons(job);
+				int prod = pi_edge->resolveProd(job);
 
 				switch(pi_snk->getType()){
 				case PISDF_TYPE_IF:{
@@ -187,9 +187,9 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 		int srcIx = 0, snkIx = 0;
 		int curSrcTk, curSnkTk;
 
-		int pi_cons = pi_edge->resolveCons(job->paramValues, job->graph->getNParam());
-		int pi_prod = pi_edge->resolveProd(job->paramValues, job->graph->getNParam());
-		int delay = pi_edge->resolveDelay(job->paramValues, job->graph->getNParam());
+		int pi_cons = pi_edge->resolveCons(job);
+		int pi_prod = pi_edge->resolveProd(job);
+		int delay = pi_edge->resolveDelay(job);
 
 		typedef struct{
 			SRDAGVertex *vertex;

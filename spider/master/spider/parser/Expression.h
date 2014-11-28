@@ -41,6 +41,8 @@
 #include <tools/Stack.h>
 #include "Token.h"
 
+struct transfoJob;
+
 namespace Parser {
 
 class Expression {
@@ -49,7 +51,8 @@ public:
 	Expression(const char* expr, const PiSDFParam* const * params, int nParam, Stack* stack);
 	virtual ~Expression();
 
-	int evaluate(const int* paramValues, int nParam) const;
+	int evaluate(const PiSDFParam* const * paramList, transfoJob* job) const;
+	int evaluate(const int* vertexParamValues, int nParam) const;
 	void toString(
 			const PiSDFParam * const * params, int nParam,
 			char* out, int outSizeMax);

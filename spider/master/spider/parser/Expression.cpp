@@ -36,6 +36,7 @@
 
 #include <parser/Expression.h>
 #include <tools/Stack.h>
+#include <graphTransfo/GraphTransfo.h>
 
 #include <cctype>
 #include <cstring>
@@ -124,7 +125,7 @@ Expression::Expression(
 Expression::~Expression() {
 }
 
-int Expression::evaluate(const int* paramValues, int nParam) const{
+int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job) const{
 	int stack[MAX_NVAR_ELEMENTS];
 	int* stackPtr = stack;
 	const Token* inputPtr = stack_;
@@ -164,7 +165,58 @@ int Expression::evaluate(const int* paramValues, int nParam) const{
 			stackPtr++;
 			break;
 		case Token::PARAMETER:
-			*stackPtr = paramValues[inputPtr->getParamIx()];
+			*stackPtr = job->paramValues[paramList[inputPtr->getParamIx()]->getTypeIx()];
+			stackPtr++;
+			break;
+		default:
+			throw "Error: Parenthesis in evaluated var\n";
+		}
+		inputPtr++;
+	}
+	return stack[0];
+}
+
+int Expression::evaluate(const int* vertexParamValues, int nParam) const{
+	int stack[MAX_NVAR_ELEMENTS];
+	int* stackPtr = stack;
+	const Token* inputPtr = stack_;
+
+	while(stack_+nElt_ > inputPtr) {
+		switch(inputPtr->getType()){
+		case Token::OPERATOR:
+			switch(inputPtr->getOpType()){
+			case Token::ADD:
+				if(stackPtr-stack >= 2){
+					stackPtr--;
+					*(stackPtr-1) += *stackPtr;
+				}
+				break;
+			case Token::SUB:
+				if(stackPtr-stack >= 2){
+					stackPtr--;
+					*(stackPtr-1) -= *stackPtr;
+				}
+				break;
+			case Token::MUL:
+				if(stackPtr-stack >= 2){
+					stackPtr--;
+					*(stackPtr-1) *= *stackPtr;
+				}
+				break;
+			case Token::DIV:
+				if(stackPtr-stack >= 2){
+					stackPtr--;
+					*(stackPtr-1) /= *stackPtr;
+				}
+				break;
+			}
+			break;
+		case Token::VALUE:
+			*stackPtr = inputPtr->getValue();
+			stackPtr++;
+			break;
+		case Token::PARAMETER:
+			*stackPtr = vertexParamValues[inputPtr->getParamIx()];
 			stackPtr++;
 			break;
 		default:
@@ -317,7 +369,7 @@ bool Expression::getNextToken(
 			token->setType(Token::PARAMETER);
 			for(int i=0; i<nParam; i++){
 				if(strncmp(params[i]->getName(), name, nb) == 0){
-					token->setParamIx(params[i]->getTypeIx());
+					token->setParamIx(i/*params[i]->getTypeIx()*/);
 					return true;
 				}
 			}

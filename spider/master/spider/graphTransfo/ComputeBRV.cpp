@@ -77,8 +77,8 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 		if(edgeIt.current()->getSrc() != edgeIt.current()->getSnk()
 			&& edgeIt.current()->getSrc()->getType() ==  PISDF_TYPE_BODY
 			&& edgeIt.current()->getSnk()->getType() ==  PISDF_TYPE_BODY){
-			int prod = edgeIt.current()->resolveProd(job->paramValues, job->graph->getNParam());
-			int cons = edgeIt.current()->resolveCons(job->paramValues, job->graph->getNParam());
+			int prod = edgeIt.current()->resolveProd(job);
+			int cons = edgeIt.current()->resolveCons(job);
 
 			if(prod <= 0 || cons <= 0 )
 				throw "Error Bad prod/cons resolved\n";
@@ -110,8 +110,8 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 		PiSDFEdge* edge = vertexIt.current()->getOutEdge(0);
 		/* Only if IF<->Body edge */
 		if(edge->getSnk()->getType() == PISDF_TYPE_BODY){
-			float prod = edge->resolveProd(job->paramValues, job->graph->getNParam());
-			float cons = edge->resolveCons(job->paramValues, job->graph->getNParam());
+			float prod = edge->resolveProd(job);
+			float cons = edge->resolveCons(job);
 			float nbRepet = brv[edge->getSnk()->getTypeId()];
 			coef = std::max(coef, (int)std::ceil(prod/(cons*nbRepet)));
 		}
@@ -121,8 +121,8 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 		PiSDFEdge* edge = vertexIt.current()->getInEdge(0);
 		/* Only if IF<->Body edge */
 		if(edge->getSrc()->getType() == PISDF_TYPE_BODY){
-			float prod = edge->resolveProd(job->paramValues, job->graph->getNParam());
-			float cons = edge->resolveCons(job->paramValues, job->graph->getNParam());
+			float prod = edge->resolveProd(job);
+			float cons = edge->resolveCons(job);
 			float nbRepet = brv[edge->getSrc()->getTypeId()];
 			coef = std::max(coef, (int)std::ceil(cons/(prod*nbRepet)));
 		}
@@ -134,8 +134,8 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 			PiSDFEdge* edge = vertexIt.current()->getOutEdge(i);
 			/* Only if Config<->Body edge */
 			if(edge->getSnk()->getType() == PISDF_TYPE_BODY){
-				float prod = edge->resolveProd(job->paramValues, job->graph->getNParam());
-				float cons = edge->resolveCons(job->paramValues, job->graph->getNParam());
+				float prod = edge->resolveProd(job);
+				float cons = edge->resolveCons(job);
 				float nbRepet = brv[edge->getSnk()->getTypeId()];
 				coef = std::max(coef, (int)std::ceil(prod/(cons*nbRepet)));
 			}

@@ -59,6 +59,10 @@ PiSDFVertex::PiSDFVertex(){
 
 	nInParam_ = nOutParam_ = 0;
 	inParams_ = outParams_ = 0;
+
+	nPeMax_ = nPeTypeMax_ = 0;
+	constraints_ = 0;
+	timings_ = 0;
 }
 
 PiSDFVertex::PiSDFVertex(
@@ -68,6 +72,7 @@ PiSDFVertex::PiSDFVertex(
 		PiSDFGraph* graph, PiSDFGraph* subGraph,
 		int nInEdge, int nOutEdge,
 		int nInParam, int nOutParam,
+		Archi* archi,
 		Stack* stack){
 
 	id_ = globalId++;
@@ -90,13 +95,15 @@ PiSDFVertex::PiSDFVertex(
 
 	nInParam_ = nInParam;
 	inParams_ = sAlloc(stack, nInParam, PiSDFParam*);
-//	memcpy(inParams_, inParams, nInParam*sizeof(PiSDFParam*));
 	memset(inParams_, 0, nInParam*sizeof(PiSDFParam*));
 
 	nOutParam_ = nOutParam;
 	outParams_ = sAlloc(stack, nOutParam, PiSDFParam*);
-//	memcpy(outParams_, outParams, nOutParam*sizeof(PiSDFParam*));
 	memset(outParams_, 0, nOutParam*sizeof(PiSDFParam*));
 
-//	memset(constraints, false, MAX_SLAVES*sizeof(bool));
+	nPeMax_ = archi->getNPE();
+	nPeTypeMax_ = archi->getNPETypes();
+	constraints_ = sAlloc(stack, nPeMax_, bool);
+	memset(constraints_, false, nPeMax_*sizeof(bool));
+	timings_ = sAlloc(stack, nPeMax_, Parser::Expression);
 }

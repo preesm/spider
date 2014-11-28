@@ -47,15 +47,18 @@
 PiSDFGraph::PiSDFGraph() {
 	stack_ = 0;
 	parent_ = 0;
+	archi_ = 0;
 }
 
 PiSDFGraph::PiSDFGraph(
 		int nEdges, int nParams,
 		int nInputIf, int nOutputIf,
 		int nConfig, int nBody,
+		Archi *archi,
 		Stack *stack){
 	stack_ = stack;
 	parent_ = 0;
+	archi_ = archi;
 
 	edges_ = PiSDFEdgeSet(nEdges, stack);
 	params_ = PiSDFParamSet(nParams, stack);
@@ -79,6 +82,7 @@ PiSDFVertex* PiSDFGraph::addBodyVertex(
 			this, 0,
 			nInEdge, nOutEdge,
 			nInParam, 0,
+			archi_,
 			stack_);
 	bodies_.add(body);
 	return body;
@@ -96,6 +100,7 @@ PiSDFVertex* PiSDFGraph::addHierVertex(
 			this, 0,
 			nInEdge, nOutEdge,
 			nInParam, 0,
+			archi_,
 			stack_);
 	body->setSubGraph(graph);
 	graph->setParentVertex(body);
@@ -114,6 +119,7 @@ PiSDFVertex* PiSDFGraph::addSpecialVertex(
 			this, 0,
 			nInEdge, nOutEdge,
 			nInParam, 0,
+			archi_,
 			stack_);
 	bodies_.add(body);
 	return body;
@@ -131,6 +137,7 @@ PiSDFVertex* PiSDFGraph::addConfigVertex(
 			this, 0,
 			nInEdge, nOutEdge,
 			nInParam, nOutParam,
+			archi_,
 			stack_);
 	configs_.add(config);
 	return config;
@@ -147,6 +154,7 @@ PiSDFVertex* PiSDFGraph::addInputIf(
 			this, 0,
 			0, 1,
 			nInParam, 0,
+			archi_,
 			stack_);
 	inputIfs_.add(inIf);
 	return inIf;
@@ -162,6 +170,7 @@ PiSDFVertex* PiSDFGraph::addOutputIf(
 			this, 0,
 			1, 0,
 			nInParam, 0,
+			archi_,
 			stack_);
 	outputIfs_.add(outIf);
 	return outIf;

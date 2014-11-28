@@ -38,6 +38,7 @@
 #define PISDF_GRAPH_H
 
 #include <graphs/PiSDF/PiSDFCommon.h>
+#include <graphs/Archi/Archi.h>
 
 class PiSDFGraph {
 public:
@@ -46,6 +47,7 @@ public:
 			int nEdges, int nParams,
 			int nInputIf, int nOutputIf,
 			int nConfig, int nBody,
+			Archi *archi,
 			Stack *stack);
 	virtual ~PiSDFGraph();
 
@@ -132,6 +134,7 @@ private:
 	PiSDFVertexSet configs_;
 	PiSDFVertexSet inputIfs_;
 	PiSDFVertexSet outputIfs_;
+	Archi* archi_;
 	Stack* stack_;
 
 	PiSDFEdge* addEdge(int nInParam);

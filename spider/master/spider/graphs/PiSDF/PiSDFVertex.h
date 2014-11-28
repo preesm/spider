@@ -38,6 +38,10 @@
 #define PISDF_VERTEX_H
 
 #include <graphs/PiSDF/PiSDFCommon.h>
+#include <graphs/Archi/Archi.h>
+#include <parser/Expression.h>
+
+#include <cstring>
 
 class PiSDFVertex {
 public:
@@ -49,6 +53,7 @@ public:
 			PiSDFGraph* graph, PiSDFGraph* subGraph,
 			int nInEdge, int nOutEdge,
 			int nInParam, int nOutParam,
+			Archi* archi,
 			Stack* stack);
 
 	/** Parameters getters */
@@ -87,6 +92,14 @@ public:
 	/** General setter */
 	inline void setSubGraph(PiSDFGraph* subGraph);
 
+	/** Constraints/timings */
+	inline bool canExecuteOn(int pe);
+	inline Time getTimingOnType(int peType, const int* paramValues, int nParam);
+
+	inline void setTimingOnType(int peType, const char* timing, Stack *stack);
+	inline void isExecutableOnAllPE();
+	inline void isExecutableOnPE(int pe);
+
 private:
 	static int globalId;
 
@@ -107,8 +120,9 @@ private:
 	int nInParam_, nOutParam_;
 	PiSDFParam **inParams_, **outParams_;
 
-//	BOOL constraints[MAX_SLAVES];
-//	variable timings[MAX_SLAVE_TYPES];
+	int nPeMax_, nPeTypeMax_;
+	bool* constraints_;
+	Parser::Expression* timings_;
 };
 
 /** Inlines Fcts */
@@ -249,6 +263,32 @@ inline bool PiSDFVertex::isHierarchical() const{
 
 inline void PiSDFVertex::setSubGraph(PiSDFGraph* subGraph){
 	subGraph_ = subGraph;
+}
+
+/** Constraints/timings */
+inline bool PiSDFVertex::canExecuteOn(int pe){
+	if(pe < 0 || pe >= nPeMax_)
+		throw "PiSDFVertex: accessing bad PE ix\n";
+	return constraints_[pe];
+}
+inline Time PiSDFVertex::getTimingOnType(int peType, const int* paramValues, int nParam){
+	if(peType < 0 || peType >= nPeTypeMax_)
+		throw "PiSDFVertex: accessing bad PE type ix\n";
+	return timings_[peType].evaluate(paramValues, nParam);
+}
+
+inline void PiSDFVertex::setTimingOnType(int peType, const char* timing, Stack *stack){
+	if(peType < 0 || peType >= nPeTypeMax_)
+		throw "PiSDFVertex: accessing bad PE type ix\n";
+	timings_[peType] = Parser::Expression(timing, this->getInParams(), this->getNInParam(), stack);
+}
+inline void PiSDFVertex::isExecutableOnAllPE(){
+	memset(constraints_, true, nPeMax_*sizeof(bool));
+}
+inline void PiSDFVertex::isExecutableOnPE(int pe){
+	if(pe < 0 || pe >= nPeMax_)
+		throw "PiSDFVertex: accessing bad PE ix\n";
+	constraints_[pe] = true;
 }
 
 #endif/*PISDF_VERTEX_H*/

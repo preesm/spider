@@ -34,79 +34,28 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef SRDAG_EDGE_H
-#define SRDAG_EDGE_H
+#include "DummyMemAlloc.h"
 
 #include <graphs/SRDAG/SRDAGCommon.h>
-//#include "SRDAGVertex.h"
-//#include "SRDAGGraph.h"
-//#include <parser/Expression.h>
+#include <graphs/SRDAG/SRDAGGraph.h>
+#include <graphs/SRDAG/SRDAGVertex.h>
 
-class SRDAGEdge {
-public:
-	/** Constructors */
-	SRDAGEdge();
-	SRDAGEdge(SRDAGGraph* graph);
-
-	/** Getters */
-	inline int getId() const;
-	inline SRDAGVertex* getSrc() const;
-	inline SRDAGVertex* getSnk() const;
-	inline int getSrcPortIx() const;
-	inline int getSnkPortIx() const;
-	inline int getRate() const;
-	inline int getAlloc() const;
-
-	/** Setters */
-	inline void setRate(int rate);
-	inline void setAlloc(int rate);
-
-	/** Connections Fcts */
-	void connectSrc(SRDAGVertex* src, int srcPortId);
-	void connectSnk(SRDAGVertex* snk, int snkPortId);
-	void disconnectSrc();
-	void disconnectSnk();
-
-private:
-	static int globalId;
-
-	int id_;
-	SRDAGGraph* graph_;
-
-	SRDAGVertex* src_;
-	int srcPortIx_;
-	SRDAGVertex* snk_;
-	int snkPortIx_;
-
-	int rate_;
-	int alloc_;
-};
-
-inline int SRDAGEdge::getId() const {
-	return id_;
-}
-inline SRDAGVertex* SRDAGEdge::getSrc() const {
-	return src_;
-}
-inline SRDAGVertex* SRDAGEdge::getSnk() const {
-	return snk_;
-}
-inline int SRDAGEdge::getSrcPortIx() const {
-	return srcPortIx_;
-}
-inline int SRDAGEdge::getSnkPortIx() const {
-	return snkPortIx_;
-}
-inline int SRDAGEdge::getRate() const{
-	return rate_;
-}
-inline int SRDAGEdge::getAlloc() const{
-	return alloc_;
+void DummyMemAlloc::reset(){
+	currentMem_ = this->memStart_;
 }
 
-inline void SRDAGEdge::setAlloc(int alloc){
-	alloc_ = alloc;
+void DummyMemAlloc::alloc(SRDAGGraph* graph){
+	SRDAGVertexIterator vertexIt = graph->getVertexIterator();
+	FOR_IT(vertexIt){
+		SRDAGVertex* vertex = vertexIt.current();
+		if(vertex->getState() == SRDAG_EXEC){
+			for(int i=0; i<vertex->getNOutEdge(); i++){
+				SRDAGEdge* edge = vertex->getOutEdge(i);
+				if(edge->getAlloc() == -1){
+					edge->setAlloc(currentMem_);
+					currentMem_ += edge->getRate();
+				}
+			}
+		}
+	}
 }
-
-
-#endif/*SRDAG_EDGE_H*/

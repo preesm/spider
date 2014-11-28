@@ -34,79 +34,25 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef SRDAG_EDGE_H
-#define SRDAG_EDGE_H
+#ifndef DUMMY_MEM_ALLOC_H
+#define DUMMY_MEM_ALLOC_H
 
-#include <graphs/SRDAG/SRDAGCommon.h>
-//#include "SRDAGVertex.h"
-//#include "SRDAGGraph.h"
-//#include <parser/Expression.h>
+#include "../MemAlloc.h"
 
-class SRDAGEdge {
+class DummyMemAlloc : public MemAlloc {
 public:
-	/** Constructors */
-	SRDAGEdge();
-	SRDAGEdge(SRDAGGraph* graph);
+	DummyMemAlloc(int start, int size):
+		MemAlloc(start, size),
+		currentMem_(start){}
 
-	/** Getters */
-	inline int getId() const;
-	inline SRDAGVertex* getSrc() const;
-	inline SRDAGVertex* getSnk() const;
-	inline int getSrcPortIx() const;
-	inline int getSnkPortIx() const;
-	inline int getRate() const;
-	inline int getAlloc() const;
+	~DummyMemAlloc(){}
 
-	/** Setters */
-	inline void setRate(int rate);
-	inline void setAlloc(int rate);
+	virtual void reset();
+	virtual void alloc(SRDAGGraph* graph);
 
-	/** Connections Fcts */
-	void connectSrc(SRDAGVertex* src, int srcPortId);
-	void connectSnk(SRDAGVertex* snk, int snkPortId);
-	void disconnectSrc();
-	void disconnectSnk();
+protected:
+	int currentMem_;
 
-private:
-	static int globalId;
-
-	int id_;
-	SRDAGGraph* graph_;
-
-	SRDAGVertex* src_;
-	int srcPortIx_;
-	SRDAGVertex* snk_;
-	int snkPortIx_;
-
-	int rate_;
-	int alloc_;
 };
 
-inline int SRDAGEdge::getId() const {
-	return id_;
-}
-inline SRDAGVertex* SRDAGEdge::getSrc() const {
-	return src_;
-}
-inline SRDAGVertex* SRDAGEdge::getSnk() const {
-	return snk_;
-}
-inline int SRDAGEdge::getSrcPortIx() const {
-	return srcPortIx_;
-}
-inline int SRDAGEdge::getSnkPortIx() const {
-	return snkPortIx_;
-}
-inline int SRDAGEdge::getRate() const{
-	return rate_;
-}
-inline int SRDAGEdge::getAlloc() const{
-	return alloc_;
-}
-
-inline void SRDAGEdge::setAlloc(int alloc){
-	alloc_ = alloc;
-}
-
-
-#endif/*SRDAG_EDGE_H*/
+#endif/*DUMMY_MEM_ALLOC_H*/

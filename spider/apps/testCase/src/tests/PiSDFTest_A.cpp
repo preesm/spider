@@ -41,7 +41,7 @@
 /****************************     TEST 9     ***********************************/
 /*******************************************************************************/
 
-PiSDFGraph* testA_sub(Stack* stack){
+PiSDFGraph* testA_sub(Archi* archi, Stack* stack){
 	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
 
 	// Graph
@@ -52,6 +52,7 @@ PiSDFGraph* testA_sub(Stack* stack){
 			/*OutIf*/	1,
 			/*Config*/	1,
 			/*Normal*/	1,
+			archi,
 			stack);
 
 	// Parameters.
@@ -103,7 +104,7 @@ PiSDFGraph* testA_sub(Stack* stack){
 	return graph;
 }
 
-PiSDFGraph* testA(Stack* stack){
+PiSDFGraph* testA(Archi* archi, Stack* stack){
 	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
 
 	// Graph
@@ -114,6 +115,7 @@ PiSDFGraph* testA(Stack* stack){
 			/*OutIf*/	0,
 			/*Config*/	0,
 			/*Normal*/	5,
+			archi,
 			stack);
 
 	// Parameters.
@@ -139,7 +141,7 @@ PiSDFGraph* testA(Stack* stack){
 			/*Par*/ 0);
 	PiSDFVertex *vxH = graph->addHierVertex(
 			"H_top",
-			/*SubGraph*/ testA_sub(stack),
+			/*SubGraph*/ testA_sub(archi, stack),
 			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 0);
 
@@ -179,12 +181,12 @@ PiSDFGraph* testA(Stack* stack){
 	return graph;
 }
 
-PiSDFGraph* initPisdf_testA(Stack* stack){
+PiSDFGraph* initPisdf_testA(Archi* archi, Stack* stack){
 	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
-	*top = PiSDFGraph(0,0,0,0,0,1, stack);
+	*top = PiSDFGraph(0,0,0,0,0,1, archi, stack);
 
 	top->addHierVertex(
-			"top", testA(stack),
+			"top", testA(archi, stack),
 			0, 0, 0);
 
 	return top;

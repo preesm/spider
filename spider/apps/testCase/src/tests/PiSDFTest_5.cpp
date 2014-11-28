@@ -41,7 +41,7 @@
 /****************************     TEST 5     ***********************************/
 /*******************************************************************************/
 
-PiSDFGraph* test5(Stack* stack){
+PiSDFGraph* test5(Archi* archi, Stack* stack){
 	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
 
 	// Graph
@@ -52,6 +52,7 @@ PiSDFGraph* test5(Stack* stack){
 			/*OutIf*/	0,
 			/*Config*/	0,
 			/*Normal*/	4,
+			archi,
 			stack);
 
 	// Parameters.
@@ -102,12 +103,12 @@ PiSDFGraph* test5(Stack* stack){
 	return graph;
 }
 
-PiSDFGraph* initPisdf_test5(Stack* stack){
+PiSDFGraph* initPisdf_test5(Archi* archi, Stack* stack){
 	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
-	*top = PiSDFGraph(0,0,0,0,0,1, stack);
+	*top = PiSDFGraph(0,0,0,0,0,1, archi, stack);
 
 	top->addHierVertex(
-			"top", test5(stack),
+			"top", test5(archi, stack),
 			0, 0, 0);
 
 	return top;

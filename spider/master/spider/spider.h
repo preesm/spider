@@ -45,6 +45,9 @@
 #include <graphs/Bipartite/BipartiteGraph.h>
 #include <tools/StaticStack.h>
 
+#include <graphs/Archi/Archi.h>
+#include <graphs/Archi/SharedMemArchi.h>
+
 typedef struct{
 	bool createSrdag;
 	SRDAGGraph* srdag;

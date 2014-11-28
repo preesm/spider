@@ -127,7 +127,6 @@ void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack,
 }
 
 void BipartiteGraph::print(const char* path, SRDAGGraph* g1, SRDAGGraph* g2){
-	int maxId;
 	int file = platform_fopen (path);
 	if(file == -1){
 		printf("cannot open %s\n", path);
@@ -163,7 +162,6 @@ void BipartiteGraph::print(const char* path, SRDAGGraph* g1, SRDAGGraph* g2){
 	platform_fprintf (file, "\t# Edges\n");
 	for (int i=0; i<nVerticesG1_; i++) {
 		for (int j=0; j<nConnections_[i]; j++) {
-			int snkIx, srcIx;
 			platform_fprintf (file, "\tg1_%d->g2_%d;\n", i, graph_[i*nVerticesG1_+j]);
 		}
 	}

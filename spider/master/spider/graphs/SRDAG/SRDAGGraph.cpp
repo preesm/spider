@@ -198,7 +198,7 @@ void SRDAGGraph::delEdge(SRDAGEdge* edge){
 void SRDAGGraph::print(const char *path){
 
 	if(!check())
-		throw "Errors in the SRDAG Graph\n";
+		printf("Errors in the SRDAG Graph\n");
 
 	int maxId;
 	int file = platform_fopen (path);

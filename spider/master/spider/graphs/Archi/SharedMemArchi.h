@@ -45,7 +45,7 @@ public:
 	SharedMemArchi(Stack* s, int nPE, int nPEType);
 	virtual ~SharedMemArchi();
 
-	virtual inline int  getNPE() const;
+	virtual int  getNPE() const;
 	virtual inline const char* getPEName(int ix) const;
 
 	virtual inline int getNPETypes() const;
@@ -56,6 +56,8 @@ public:
 
 	inline void setPETypeSendSpeed(int type, float a, float b);
 	inline void setPETypeRecvSpeed(int type, float a, float b);
+
+	inline void setName(int pe, const char* name);
 
 private:
 	int nPE_;
@@ -69,24 +71,21 @@ private:
 
 };
 
-virtual inline int  SharedMemArchi::getNPE() const{
-	return nPE_;
-}
-virtual inline const char* SharedMemArchi::getPEName(int ix) const{
+inline const char* SharedMemArchi::getPEName(int ix) const{
 	return peName_[ix];
 }
 
-virtual inline int SharedMemArchi::getNPETypes() const{
+inline int SharedMemArchi::getNPETypes() const{
 	return nPEType_;
 }
-virtual inline int SharedMemArchi::getPEType(int ix) const{
+inline int SharedMemArchi::getPEType(int ix) const{
 	return peType_[ix];
 }
 
-virtual inline Time SharedMemArchi::getTimeSend(int src, int dest, int size) const{
+inline Time SharedMemArchi::getTimeSend(int src, int dest, int size) const{
 	return peTypeASend_[peType_[src]]*size + peTypeASend_[peType_[src]];
 }
-virtual inline Time SharedMemArchi::getTimeRecv(int src, int dest, int size) const{
+inline Time SharedMemArchi::getTimeRecv(int src, int dest, int size) const{
 	return peTypeARecv_[peType_[dest]]*size + peTypeARecv_[peType_[dest]];
 }
 
@@ -98,5 +97,7 @@ inline void SharedMemArchi::setPETypeRecvSpeed(int type, float a, float b){
 	peTypeARecv_[type] = a;
 	peTypeBRecv_[type] = b;
 }
-
+inline void SharedMemArchi::setName(int pe, const char* name){
+	peName_[pe] = name;
+}
 #endif/*SHARED_MEM_ARCH_H*/

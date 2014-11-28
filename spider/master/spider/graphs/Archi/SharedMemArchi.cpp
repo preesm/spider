@@ -51,3 +51,7 @@ SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType) {
 SharedMemArchi::~SharedMemArchi() {
 }
 
+
+int SharedMemArchi::getNPE() const{
+	return nPE_;
+}

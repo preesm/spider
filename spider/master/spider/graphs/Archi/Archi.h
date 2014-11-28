@@ -40,12 +40,12 @@
 #include <platform.h>
 
 class Archi {
-private:
+protected:
 	Archi(){}
 	virtual ~Archi(){}
 
 public:
-	virtual inline int  getNPE() const = 0;
+	virtual int  getNPE() const = 0;
 	virtual inline const char* getPEName(int ix) const = 0;
 
 	virtual inline int getNPETypes() const = 0;

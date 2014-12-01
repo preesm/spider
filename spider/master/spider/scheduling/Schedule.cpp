@@ -63,6 +63,8 @@ void Schedule::addJob(int pe, SRDAGVertex* job, Time start, Time end){
 
 	schedules_[pe*nJobMax_+nJobPerPE_[pe]] = job;;
 	nJobPerPE_[pe]++;
+	job->setStartTime(start);
+	job->setEndTime(end);
 }
 
 void Schedule::print(const char* path){

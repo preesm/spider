@@ -38,6 +38,7 @@
 
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
+#include <launcher/Launcher.h>
 
 #include <platform_time.h>
 
@@ -169,6 +170,5 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
 	schedule_->addJob(bestSlave, vertex, bestStartTime, bestEndTime);
 
-//	Launcher::launchVertex(vertex, bestSlave);
-	vertex->setState(SRDAG_RUN);
+	Launcher::get()->launchVertex(vertex, bestSlave);
 }

@@ -54,6 +54,11 @@
 #include <tools/Stack.h>
 #include <tools/StaticStack.h>
 
+#include <scheduling/MemAlloc.h>
+#include <scheduling/MemAlloc/DummyMemAlloc.h>
+#include <scheduling/Scheduler.h>
+#include <scheduling/Scheduler/ListScheduler.h>
+
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -102,7 +107,7 @@ static SRDAGVertex* getNextHierVx(SRDAGGraph *topDag){
 	return 0;
 }
 
-void jit_ms(PiSDFGraph* topPisdf, SpiderConfig* config){
+void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 	StaticStack transfoStack = StaticStack(malloc(TRANSFO_STACK_SIZE), TRANSFO_STACK_SIZE);
 	SRDAGGraph *topSrdag;
 
@@ -112,6 +117,11 @@ void jit_ms(PiSDFGraph* topPisdf, SpiderConfig* config){
 		*topSrdag = SRDAGGraph(&transfoStack);
 	}else
 		topSrdag = config->srdag;
+
+	config->memAlloc->reset();
+
+	Schedule* schedule = sAlloc(&transfoStack, 1, Schedule);
+	*schedule = Schedule(archi->getNPE(), 1000, &transfoStack);
 
 	/* Add initial top actor */
 	PiSDFVertex* root = topPisdf->getBody(0);
@@ -156,19 +166,20 @@ void jit_ms(PiSDFGraph* topPisdf, SpiderConfig* config){
 				addSRVertices(topSrdag, job, brv, &transfoStack);
 
 				linkSRVertices(topSrdag, job, brv);
-//				// todo handle fast configuration
-//				printf("Fast implementation not implemented\n");
-//				abort();
 			}
 
 			/* Find next hierarchical vertex */
 			nextHierVx = getNextHierVx(topSrdag);
 		}while(nextHierVx);
 
-		//topDag->updateState();
+		topSrdag->updateState();
+
 //		SRDAGWrite(topDag, "topDag_ca.gv", DataRates);
 
 		/* Schedule and launch execution */
+		config->memAlloc->alloc(topSrdag);
+		config->scheduler->schedule(topSrdag, schedule, archi, &transfoStack);
+
 
 		/* Resolve params must be done by itself */
 
@@ -194,7 +205,11 @@ void jit_ms(PiSDFGraph* topPisdf, SpiderConfig* config){
 //        printf("Finish one iter\n");
 	}while(1);
 
+	topSrdag->updateState();
+
 	/* Schedule and launch execution */
+	config->memAlloc->alloc(topSrdag);
+	config->scheduler->schedule(topSrdag, schedule, archi, &transfoStack);
 
 //	transfoStack.free();
 }

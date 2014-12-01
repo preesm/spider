@@ -54,6 +54,6 @@ typedef struct transfoJob{
 	SRDAGVertex*** bodies;
 } transfoJob;
 
-void jit_ms(PiSDFGraph* topPisdf, SpiderConfig* config);
+void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config);
 
 #endif/*GRAPH_TRANSFO_H*/

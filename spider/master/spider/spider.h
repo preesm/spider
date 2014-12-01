@@ -48,9 +48,17 @@
 #include <graphs/Archi/Archi.h>
 #include <graphs/Archi/SharedMemArchi.h>
 
+#include <scheduling/MemAlloc.h>
+#include <scheduling/MemAlloc/DummyMemAlloc.h>
+#include <scheduling/Scheduler.h>
+#include <scheduling/Scheduler/ListScheduler.h>
+
 typedef struct{
 	bool createSrdag;
 	SRDAGGraph* srdag;
+
+	MemAlloc* memAlloc;
+	Scheduler* scheduler;
 } SpiderConfig;
 
 #include <graphTransfo/GraphTransfo.h>

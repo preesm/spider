@@ -90,6 +90,7 @@ public:
 	inline Time getEndTime() const;
 
 	inline void setState(SRDAGState state);
+	void updateState();
 	inline void setStartTime(Time start);
 	inline void setEndTime(Time end);
 
@@ -99,9 +100,12 @@ public:
 
 	void toString(char* name, int sizeMax) const;
 
+
 	/** Constraints/Timings Fcts */
 	inline bool isExecutableOn(int pe) const;
 	inline Time executionTimeOn(int peType) const;
+	inline int getSchedLvl() const;
+	void setSchedLvl(int schedLvl);
 
 protected:
 	/** Connect Fcts */
@@ -127,6 +131,8 @@ private:
 	const int **outParams_;
 
 	Time start_, end_;
+	int schedLvl_;
+
 };
 
 /** Inlines Fcts */
@@ -376,10 +382,40 @@ inline bool SRDAGVertex::match(SRDAGVertex* v2){
 }
 
 inline bool SRDAGVertex::isExecutableOn(int pe) const{
-	return reference_->canExecuteOn(pe);
+	switch(type_){
+	case SRDAG_NORMAL:
+		return reference_->canExecuteOn(pe);
+	case SRDAG_BROADCAST:
+	case SRDAG_JOIN:
+	case SRDAG_FORK:
+	case SRDAG_ROUNDBUFFER:
+	case SRDAG_INIT:
+	case SRDAG_END:
+		return true;
+	default:
+		throw "Unhandled case in SRDAGVertex::isExecutableOn\n";
+	}
 }
 inline Time SRDAGVertex::executionTimeOn(int peType) const{
-	return reference_->getTimingOnType(peType, inParams_, nInParam_);
+	switch(type_){
+	case SRDAG_NORMAL:
+		return reference_->getTimingOnType(peType, inParams_, nInParam_);
+	case SRDAG_BROADCAST:
+	case SRDAG_JOIN:
+	case SRDAG_FORK:
+	case SRDAG_ROUNDBUFFER:
+	case SRDAG_INIT:
+	case SRDAG_END:
+		return 1;
+	default:
+		throw "Unhandled case in SRDAGVertex::isExecutableOn\n";
+	}
+}
+inline int SRDAGVertex::getSchedLvl() const {
+	return schedLvl_;
+}
+inline void SRDAGVertex::setSchedLvl(int schedLvl) {
+	schedLvl_ = schedLvl;
 }
 
 #endif/*SRDAG_VERTEX_H*/

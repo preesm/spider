@@ -57,6 +57,9 @@ SRDAGVertex::SRDAGVertex(){
 	nInParam_ = nOutParam_ = 0;
 	inParams_ = 0;
 	outParams_ = 0;
+
+	start_ = end_ = -1;
+	schedLvl_ = -1;
 }
 
 SRDAGVertex::SRDAGVertex(
@@ -87,6 +90,9 @@ SRDAGVertex::SRDAGVertex(
 	nOutParam_ = nOutParam;
 	outParams_ = sAlloc(stack, nOutParam, const int*);
 	memset(outParams_, 0, nOutParam*sizeof(int**));
+
+	start_ = end_ = -1;
+	schedLvl_ = -1;
 }
 
 void SRDAGVertex::toString(char* name, int sizeMax) const{
@@ -112,5 +118,28 @@ void SRDAGVertex::toString(char* name, int sizeMax) const{
 	case SRDAG_END:
 		snprintf(name, sizeMax, "End");
 		break;
+	}
+}
+
+void SRDAGVertex::updateState(){
+	if(state_ == SRDAG_NEXEC){
+		/* Check Input Edges */
+		for (int i = 0; i < getNInEdge(); i++){
+			SRDAGVertex* predecessor = getInEdge(i)->getSrc();
+
+			if(!predecessor || predecessor->isHierarchical()){
+				state_ = SRDAG_NEXEC;
+				return;
+			}
+
+			if(predecessor->state_ == SRDAG_NEXEC){
+				predecessor->updateState();
+				if(predecessor->state_ == SRDAG_NEXEC){
+					state_ = SRDAG_NEXEC;
+					return;
+				}
+			}
+		}
+		state_ = SRDAG_EXEC;
 	}
 }

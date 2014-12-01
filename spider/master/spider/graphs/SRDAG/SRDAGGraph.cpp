@@ -194,6 +194,22 @@ void SRDAGGraph::delEdge(SRDAGEdge* edge){
 	edges_.del(edge);
 }
 
+int SRDAGGraph::getNExecVertex(){
+	int n=0;
+	SRDAGVertexIterator vIt = getVertexIterator();
+	FOR_IT(vIt){
+		if(vIt.current()->getState() == SRDAG_EXEC)
+			n++;
+	}
+	return n;
+}
+
+void SRDAGGraph::updateState(){
+	SRDAGVertexIterator vIt = getVertexIterator();
+	FOR_IT(vIt)
+		vIt.current()->updateState();
+}
+
 /** Print Fct */
 void SRDAGGraph::print(const char *path){
 
@@ -267,9 +283,10 @@ void SRDAGGraph::print(const char *path){
 
 //		switch(mode){
 //		case DataRates:
-			platform_fprintf (file, "\t%d->%d [label=\"%d\",taillabel=\"%d\",headlabel=\"%d\"];\n",
+			platform_fprintf (file, "\t%d->%d [label=\"%d\n%d\",taillabel=\"%d\",headlabel=\"%d\"];\n",
 					srcIx, snkIx,
 					edgeIt.current()->getRate(),
+					edgeIt.current()->getAlloc(),
 					edgeIt.current()->getSrcPortIx(),
 					edgeIt.current()->getSnkPortIx());
 //			break;

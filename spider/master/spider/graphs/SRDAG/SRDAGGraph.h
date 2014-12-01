@@ -77,10 +77,13 @@ public:
 	/** Size getters */
 	inline int getNEdge();
 	inline int getNVertex();
+	int getNExecVertex();
 
 	/** Print Fct */
 	void print(const char *path);
 	bool check();
+
+	void updateState();
 
 private:
 	SRDAGEdgeSet edges_;

@@ -345,7 +345,7 @@ bool Expression::getNextToken(
 		int value = 0;
 		while (isdigit(**ptr)){
 			value *= 10;
-			value = **ptr - '0';
+			value += **ptr - '0';
 			(*ptr)++;
 		}
 		if(token != 0){

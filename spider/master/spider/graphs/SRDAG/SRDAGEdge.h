@@ -104,6 +104,9 @@ inline int SRDAGEdge::getAlloc() const{
 	return alloc_;
 }
 
+inline void SRDAGEdge::setRate(int rate){
+	rate_ = rate;
+}
 inline void SRDAGEdge::setAlloc(int alloc){
 	alloc_ = alloc;
 }

@@ -48,7 +48,8 @@ SRDAGEdge::SRDAGEdge(){
 	src_ = 0; srcPortIx_ = -1;
 	snk_ = 0; snkPortIx_ = -1;
 
-	rate_ = 0;
+	rate_ = -1;
+	alloc_ = -1;
 }
 
 SRDAGEdge::SRDAGEdge(SRDAGGraph* graph){
@@ -58,7 +59,8 @@ SRDAGEdge::SRDAGEdge(SRDAGGraph* graph){
 	src_ = 0; srcPortIx_ = -1;
 	snk_ = 0; snkPortIx_ = -1;
 
-	rate_ = 0;
+	rate_ = -1;
+	alloc_ = -1;
 }
 
 void SRDAGEdge::connectSrc(SRDAGVertex *src, int srcPortId){

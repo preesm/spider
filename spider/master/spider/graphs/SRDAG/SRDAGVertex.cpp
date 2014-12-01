@@ -88,7 +88,7 @@ SRDAGVertex::SRDAGVertex(
 	memset(inParams_, 0, nInParam*sizeof(int));
 
 	nOutParam_ = nOutParam;
-	outParams_ = sAlloc(stack, nOutParam, const int*);
+	outParams_ = sAlloc(stack, nOutParam, int*);
 	memset(outParams_, 0, nOutParam*sizeof(int**));
 
 	start_ = end_ = -1;

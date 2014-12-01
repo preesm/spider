@@ -59,7 +59,7 @@ public:
 	inline int getNInParam() const;
 	inline int getNOutParam() const;
 	inline int getInParam(int ix) const;
-	inline const int* getOutParam(int ix) const;
+	inline int* getOutParam(int ix);
 	inline const int * getInParams() const;
 	inline const int * const * getOutParams() const;
 
@@ -75,7 +75,7 @@ public:
 
 	/** Add Param Fcts */
 	inline void addInParam(int ix, int param);
-	inline void addOutParam(int ix, const int* param);
+	inline void addOutParam(int ix, int* param);
 
 	/** General getters */
 	inline int getId() const;
@@ -128,7 +128,7 @@ private:
 
 	int nInParam_, nOutParam_;
 	int *inParams_;
-	const int **outParams_;
+	int ** outParams_;
 
 	Time start_, end_;
 	int schedLvl_;
@@ -153,7 +153,7 @@ inline int SRDAGVertex::getInParam(int ix) const{
 		throw "SRDAGVertex: Bad ix in getInParam";
 #endif
 }
-inline const int* SRDAGVertex::getOutParam(int ix) const{
+inline int* SRDAGVertex::getOutParam(int ix){
 #if	DEBUG
 	if(ix < nOutParam_ && ix >= 0)
 #endif
@@ -272,7 +272,7 @@ inline void SRDAGVertex::addInParam(int ix, int param){
 #endif
 		inParams_[ix] = param;
 }
-inline void SRDAGVertex::addOutParam(int ix, const int* param){
+inline void SRDAGVertex::addOutParam(int ix, int* param){
 #if	DEBUG
 	if(ix >= nOutParam_ && ix < 0)
 		throw "SRDAGVertex: Bad ix in addOutParam";

@@ -85,9 +85,8 @@ PiSDFGraph* test8_sub(Archi* archi, Stack* stack){
 			/*Delay*/ "0", 0);
 
 	// Timings
-//	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);
-//	Parser_InitVariable(&vxA->timings[0], &vxA->params,  "10", pisdfAlloc);
-//	Parser_InitVariable(&vxB->timings[0], &vxA->params,  "10", pisdfAlloc);
+	vxH->isExecutableOnAllPE();
+	vxH->setTimingOnType(0, "10", stack);
 
 	// Subgraphs
 
@@ -139,9 +138,10 @@ PiSDFGraph* test8(Archi* archi, Stack* stack){
 			/*Delay*/ "0", 0);
 
 	// Timings
-//	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);
-//	Parser_InitVariable(&vxA->timings[0], &vxA->params,  "10", pisdfAlloc);
-//	Parser_InitVariable(&vxB->timings[0], &vxA->params,  "10", pisdfAlloc);
+	vxA->isExecutableOnAllPE();
+	vxA->setTimingOnType(0, "10", stack);
+	vxB->isExecutableOnAllPE();
+	vxB->setTimingOnType(0, "10", stack);
 
 	// Subgraphs
 

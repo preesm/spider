@@ -58,12 +58,17 @@ int main(int argc, char* argv[]){
 			/* Nb PE */		1,
 			/* Nb PE Type*/ 1);
 
+	DummyMemAlloc memAlloc = DummyMemAlloc(1000, 1000);
+	ListScheduler scheduler = ListScheduler();
+
 	archi.setPETypeRecvSpeed(0, 1, 10);
 	archi.setPETypeSendSpeed(0, 1, 10);
 	archi.setName(0, "PE0");
 
 	cfg.createSrdag = false;
 	cfg.srdag = &srdag;
+	cfg.memAlloc = &memAlloc;
+	cfg.scheduler = &scheduler;
 
 	printf("Start\n");
 
@@ -74,8 +79,9 @@ int main(int argc, char* argv[]){
 			stack.free();
 			srdag = SRDAGGraph(&stack);
 			topPisdf = initPisdf_test0(&archi, &stack, i);
-			jit_ms(topPisdf, &cfg);
+			jit_ms(topPisdf, &archi, &cfg);
 			test_Test0(topPisdf, &srdag, i, &stack);
+			srdag.print("test0.gv");
 		}
 
 		for(int i=1; i<=2; i++){
@@ -84,7 +90,7 @@ int main(int argc, char* argv[]){
 			stack.free();
 			srdag = SRDAGGraph(&stack);
 			topPisdf = initPisdf_test1(&archi, &stack, i);
-			jit_ms(topPisdf, &cfg);
+			jit_ms(topPisdf, &archi, &cfg);
 			test_Test1(topPisdf, &srdag, i, &stack);
 		}
 
@@ -94,56 +100,56 @@ int main(int argc, char* argv[]){
 			stack.free();
 			srdag = SRDAGGraph(&stack);
 			topPisdf = initPisdf_test2(&archi, &stack, i);
-			jit_ms(topPisdf, &cfg);
+			jit_ms(topPisdf, &archi, &cfg);
 			test_Test2(topPisdf, &srdag, i, &stack);
 		}
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test3(&archi, &stack);
-		jit_ms(topPisdf, &cfg);
+		jit_ms(topPisdf, &archi, &cfg);
 		test_Test3(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test4(&archi, &stack);
-		jit_ms(topPisdf, &cfg);
+		jit_ms(topPisdf, &archi, &cfg);
 		test_Test4(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test5(&archi, &stack);
-		jit_ms(topPisdf, &cfg);
+		jit_ms(topPisdf, &archi, &cfg);
 		test_Test5(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test6(&archi, &stack);
-		jit_ms(topPisdf, &cfg);
+		jit_ms(topPisdf, &archi, &cfg);
 		test_Test6(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test7(&archi, &stack);
-		jit_ms(topPisdf, &cfg);
+		jit_ms(topPisdf, &archi, &cfg);
 		test_Test7(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test8(&archi, &stack);
-		jit_ms(topPisdf, &cfg);
+		jit_ms(topPisdf, &archi, &cfg);
 		test_Test8(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_test9(&archi, &stack);
-		jit_ms(topPisdf, &cfg);
+		jit_ms(topPisdf, &archi, &cfg);
 		test_Test9(topPisdf, &srdag, &stack);
 
 		stack.free();
 		srdag = SRDAGGraph(&stack);
 		topPisdf = initPisdf_testA(&archi, &stack);
-		jit_ms(topPisdf, &cfg);
+		jit_ms(topPisdf, &archi, &cfg);
 		test_TestA(topPisdf, &srdag, &stack);
 //
 //	}catch(const char* s){

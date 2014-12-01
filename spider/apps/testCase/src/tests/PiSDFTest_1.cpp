@@ -81,8 +81,10 @@ PiSDFGraph* test1(Archi* archi, Stack* stack, int N){
 			/*Delay*/ "0", 0);
 
 	// Timings
-//	Parser_InitVariable(&vxC->timings[0], &vxC->params,  "10", &pisdfAlloc);
-//	Parser_InitVariable(&vxA->timings[0], &vxA->params,  "10", pisdfAlloc);
+	vxA->isExecutableOnAllPE();
+	vxA->setTimingOnType(0, "10", stack);
+	vxC->isExecutableOnAllPE();
+	vxC->setTimingOnType(0, "10", stack);
 
 	// Subgraphs
 

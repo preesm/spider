@@ -34,4 +34,5 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-typedef unsigned int Time;
+typedef unsigned long 	Time;
+typedef long 			Param;

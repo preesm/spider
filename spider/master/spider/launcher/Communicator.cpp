@@ -34,14 +34,78 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PLATFORM_CTRLQ_H
-#define PLATFORM_CTRLQ_H
+#include "Communicator.h"
 
-int platform_QPush(int slaveId, void* data, int size);
-int platform_QPushInt(int slaveId, int data);
-void platform_QPush_finalize(int slaveId);
-int platform_QPop(int slaveId, void* data, int size);
-int platform_QPopInt(int slaveId);
-int platform_QNonBlockingPop(int slaveId, void* data, int size);
+Communicator Communicator::instance_;
 
-#endif/*PLATFORM_CTRLQ_H*/
+Communicator* Communicator::get(){
+	return &instance_;
+}
+
+Communicator::Communicator(){
+	isAlloc_ = false;
+	minSize_ = -1;
+	maxSize_ = -1;
+	align_ = -1;
+	alloc_ = 0;
+	sendAlloc_ = 0;
+	sendNoAlloc_ = 0;
+}
+
+Communicator::~Communicator(){
+
+}
+
+void Communicator::configure(
+		int minSize,
+		int maxSize,
+		int align,
+		void* (*alloc)(int size),
+		void (*send)(int lrtIx)){
+	isAlloc_ = true;
+	minSize_ = minSize;
+	maxSize_ = maxSize;
+	align_ = align;
+	alloc_ = alloc;
+	sendAlloc_ = send;
+	sendNoAlloc_ = 0;
+}
+
+void Communicator::configure(
+		int minSize,
+		int maxSize,
+		int align,
+		void (*send)(void* data, int size)){
+	isAlloc_ = false;
+	minSize_ = minSize;
+	maxSize_ = maxSize;
+	align_ = align;
+	alloc_ = 0;
+	sendAlloc_ = 0;
+	sendNoAlloc_ = send;
+}
+
+void* Communicator::alloc(int size){
+	if(isAlloc_){
+		if(size > maxSize_)
+			throw "Communicator cannot allocate msg\n";
+
+		return alloc_(size);
+	}else{
+		/** TODO Group internally */
+		throw "Communicator not Implemented\n";
+//		sendNoAlloc_(data, size);
+	}
+
+}
+
+void Communicator::send(int lrtIx){
+	if(isAlloc_){
+		sendAlloc_(lrtIx);
+	}else{
+		throw "Communicator not Implemented\n";
+	}
+}
+
+
+

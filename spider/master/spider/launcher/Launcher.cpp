@@ -35,6 +35,7 @@
  ****************************************************************************/
 
 #include "Launcher.h"
+#include "Communicator.h"
 
 #include <graphs/Archi/Archi.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
@@ -46,7 +47,6 @@
 #include <platform.h>
 #include <platform_file.h>
 #include <platform_time.h>
-#include <platform_ctrlQ.h>
 
 Launcher Launcher::instance_;
 
@@ -64,114 +64,119 @@ void Launcher::launchVertex(SRDAGVertex* vertex, int slave){
 }
 
 void Launcher::send_ClearTimeMsg(int lrtIx){
-	platform_QPushInt(lrtIx, MSG_CLEAR_TIME);
-	platform_QPush_finalize(lrtIx);
+	ClearTimeMsg* msg = (ClearTimeMsg*)Communicator::get()->alloc(sizeof(ClearTimeMsg));
+	msg->msgIx = MSG_CLEAR_TIME;
+	Communicator::get()->send(lrtIx);
 }
 
 void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
-	/*
-	 * Create Message :
-	 * 		- CreateMsg ID
-	 * 		- Fonction ID
-	 * 		- SRDAG ID
-	 * 		- Type
-	 * 		# Global Iteration ID
-	 * 		# PiSDF ID
-	 * 		# iteration ID
-	 * 		# repetition ID
-	 * 		- Nb Inputs
-	 * 		- Inputs
-	 * 		- Nb Outputs
-	 * 		- Outputs
-	 * 		- Nb Params
-	 * 		- Params
-	 */
-
-//	if(lrtIx == 0){ // Master
-//		pushExecution(vertex);
-//		return;
-//	}
-
-	platform_QPushInt(lrtIx, MSG_START_JOB);
-	platform_QPushInt(lrtIx, vertex->getFctId());
-	platform_QPushInt(lrtIx, vertex->getId());
-	platform_QPushInt(lrtIx, vertex->getType());
-//	platform_QPushInt(lrtIx, getGlobalIteration());
-//	platform_QPushInt(lrtIx, (long long)(vertex->getReference()));
-//	platform_QPushInt(lrtIx, vertex->getIterationIndex());
-//	platform_QPushInt(lrtIx, vertex->getReferenceIndex());
-
-	platform_QPushInt(lrtIx, vertex->getNInEdge());
-	for (int k = 0; k < vertex->getNInEdge(); k++){
-		platform_QPushInt(lrtIx, vertex->getInEdge(k)->getAllocIx());
-		platform_QPushInt(lrtIx, vertex->getInEdge(k)->getRate());
-		platform_QPushInt(lrtIx, vertex->getInEdge(k)->getAlloc());
+	/** retreive Infos for msg */
+	int nParams;
+	switch(vertex->getType()){
+	case SRDAG_NORMAL:
+		nParams = vertex->getNInParam();
+		break;
+	case SRDAG_FORK:
+	case SRDAG_JOIN:
+		nParams = 2+vertex->getNInEdge()+vertex->getNOutEdge();
+		break;
+	case SRDAG_ROUNDBUFFER:
+	case SRDAG_BROADCAST:
+		nParams = 2;
+		break;
+	case SRDAG_INIT:
+	case SRDAG_END:
+		nParams = 1;
+		break;
 	}
 
-	platform_QPushInt(lrtIx, vertex->getNOutEdge());
-	for (int k = 0; k < vertex->getNOutEdge(); k++){
-		platform_QPushInt(lrtIx, vertex->getOutEdge(k)->getAllocIx());
-		platform_QPushInt(lrtIx, vertex->getOutEdge(k)->getRate());
-		platform_QPushInt(lrtIx, vertex->getOutEdge(k)->getAlloc());
+	long msgAdd = (long) Communicator::get()->alloc(
+			1*sizeof(StartJobMsg)
+			+ vertex->getNInEdge()*sizeof(Fifo)
+			+ vertex->getNOutEdge()*sizeof(Fifo)
+			+ nParams*sizeof(Param));
+
+	StartJobMsg* msg = (StartJobMsg*) msgAdd;
+	Fifo *inFifos = (Fifo*) (msgAdd + 1*sizeof(StartJobMsg));
+	Fifo *outFifos = (Fifo*) (inFifos + vertex->getNInEdge()*sizeof(Fifo));
+	Param *inParams = (Param*) (outFifos + vertex->getNOutEdge()*sizeof(Fifo));
+
+	msg->msgIx = MSG_START_JOB;
+	msg->srdagIx = vertex->getId();
+	msg->fctIx = vertex->getFctId();
+
+	msg->nbInEdge = vertex->getNInEdge();
+	msg->nbOutEdge = vertex->getNOutEdge();
+	msg->nbInParam = nParams;
+	msg->nbOutParam = vertex->getNOutParam();
+
+	for(int i=0; i<vertex->getNInEdge(); i++){
+		SRDAGEdge* edge = vertex->getInEdge(i);
+		inFifos[i].id = edge->getAllocIx();
+		inFifos[i].alloc = edge->getAlloc();
+		inFifos[i].size = edge->getAlloc();
+		inFifos[i].ntoken = 1;
+	}
+
+	for(int i=0; i<vertex->getNOutEdge(); i++){
+		SRDAGEdge* edge = vertex->getOutEdge(i);
+		outFifos[i].id = edge->getAllocIx();
+		outFifos[i].alloc = edge->getAlloc();
+		outFifos[i].size = edge->getAlloc();
+		outFifos[i].ntoken = 1;
 	}
 
 	switch(vertex->getType()){
 	case SRDAG_NORMAL:
-		platform_QPushInt(lrtIx, vertex->getNInParam());
-		platform_QPush(lrtIx, (void*)vertex->getInParams(), vertex->getNInParam()*sizeof(int));
+		memcpy(inParams, vertex->getInParams(), nParams*sizeof(Param));
 		break;
 	case SRDAG_FORK:
-		platform_QPushInt(lrtIx, 2+vertex->getNInEdge()+vertex->getNOutEdge());
-		platform_QPushInt(lrtIx, vertex->getNInEdge());
-		platform_QPushInt(lrtIx, vertex->getNOutEdge());
-		platform_QPushInt(lrtIx, vertex->getInEdge(0)->getRate());
+		inParams[0] = vertex->getNInEdge();
+		inParams[1] = vertex->getNOutEdge();
+		inParams[2] = vertex->getInEdge(0)->getRate();
 		for(int i=0; i<vertex->getNOutEdge(); i++){
-			platform_QPushInt(lrtIx, vertex->getOutEdge(i)->getRate());
+			inParams[3+i] = vertex->getOutEdge(i)->getRate();
 		}
 		break;
 	case SRDAG_JOIN:
-		platform_QPushInt(lrtIx, 2+vertex->getNInEdge()+vertex->getNOutEdge());
-		platform_QPushInt(lrtIx, vertex->getNInEdge());
-		platform_QPushInt(lrtIx, vertex->getNOutEdge());
-		platform_QPushInt(lrtIx, vertex->getOutEdge(0)->getRate());
+		inParams[0] = vertex->getNInEdge();
+		inParams[1] = vertex->getNOutEdge();
+		inParams[2] = vertex->getOutEdge(0)->getRate();
 		for(int i=0; i<vertex->getNInEdge(); i++){
-			platform_QPushInt(lrtIx, vertex->getInEdge(i)->getRate());
+			inParams[3+i] = vertex->getInEdge(i)->getRate();
 		}
 		break;
 	case SRDAG_ROUNDBUFFER:
-		platform_QPushInt(lrtIx, 2);
-		platform_QPushInt(lrtIx, vertex->getInEdge(0)->getRate());
-		platform_QPushInt(lrtIx, vertex->getOutEdge(0)->getRate());
+		inParams[0] = vertex->getInEdge(0)->getRate();
+		inParams[1] = vertex->getOutEdge(0)->getRate();
 		break;
 	case SRDAG_BROADCAST:
-		platform_QPushInt(lrtIx, 2);
-		platform_QPushInt(lrtIx, vertex->getInEdge(0)->getRate());
-		platform_QPushInt(lrtIx, vertex->getNOutEdge());
+		inParams[0] = vertex->getInEdge(0)->getRate();
+		inParams[1] = vertex->getNOutEdge();
 		break;
 	case SRDAG_INIT:
-		platform_QPushInt(lrtIx, 1);
-		platform_QPushInt(lrtIx, vertex->getOutEdge(0)->getRate());
+		inParams[0] = vertex->getOutEdge(0)->getRate();
 		break;
 	case SRDAG_END:
-		platform_QPushInt(lrtIx, 1);
-		platform_QPushInt(lrtIx, vertex->getInEdge(0)->getRate());
+		inParams[0] = vertex->getInEdge(0)->getRate();
 		break;
 	}
-	platform_QPush_finalize(lrtIx);
+
+	Communicator::get()->send(lrtIx);
 }
 
 void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 	int slave = 0;
 	while(curNParam_ != 0){
-		int msgType;
-		if(platform_QNonBlockingPop(slave, &msgType, sizeof(int)) == sizeof(int)){
-			if(msgType != MSG_PARAM_VALUE)
+		ParamValueMsg* msg;
+		if(Communicator::get()->recv(slave, (void**)(&msg))){
+			if(msg->msgIx != MSG_PARAM_VALUE)
 				throw "Unexpected Msg received\n";
-			int vxId = platform_QPopInt(slave);
-			SRDAGVertex* cfgVertex = topDag->getVertex(vxId);
+			SRDAGVertex* cfgVertex = topDag->getVertex(msg->srdagIx);
+			long* params = (long*) (msg+1);
 			for(int j = 0; j < cfgVertex->getNOutParam(); j++){
 				int* param = cfgVertex->getOutParam(j);
-				*param = platform_QPopInt(slave);
+				*param = params[j];
 			}
 			curNParam_ -= cfgVertex->getNOutParam();
 		}

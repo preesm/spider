@@ -34,61 +34,53 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef LAUNCHER_H
-#define LAUNCHER_H
+#ifndef COMMUNICATOR_H
+#define COMMUNICATOR_H
 
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/Archi/Archi.h>
 
-class Launcher {
+class Communicator {
 public:
-	static Launcher* get();
+	void configure(
+			int minSize,
+			int maxSize,
+			int align,
+			void* (*alloc)(int size),
+			void (*send)(int lrtIx));
+	void configure(
+			int minSize,
+			int maxSize,
+			int align,
+			void (*send)(void* data, int size));
 
-	void launchVertex(SRDAGVertex* vertex, int slave);
-	void resolveParams(Archi* archi, SRDAGGraph* topDag);
+	void* alloc(int size);
+	void send(int lrtIx);
+
+	int recv(int lrtIx, void** data);
+	void release();
+
+	static Communicator* get();
 
 protected:
-	Launcher();
+	Communicator();
+	virtual ~Communicator();
 
-private:
-	int curNParam_;
-	static Launcher instance_;
+	static Communicator instance_;
 
-	void send_ClearTimeMsg(int lrtIx);
-	void send_StartJobMsg(int lrtIx, SRDAGVertex* vertex);
+	/** Common attributes */
+	int minSize_;
+	int maxSize_;
+	int align_;
 
-	typedef enum{
-		MSG_START_JOB=1,
-		MSG_PARAM_VALUE=2,
-		MSG_CLEAR_TIME=3
-	}MsgType;
+	bool isAlloc_;
 
-	typedef struct {
-		unsigned char msgIx:2;
-		unsigned long  srdagIx:30;
-		unsigned short fctIx:16;
-		unsigned char nbInEdge:8;
-		unsigned char nbOutEdge:8;
-		unsigned char nbInParam:8;
-		unsigned char nbOutParam:8;
-	}StartJobMsg;
+	/** Alloc attributes*/
+	void* (*alloc_)(int size);
+	void (*sendAlloc_)(int lrtIx);
 
-	typedef struct Fifo{
-		unsigned long id:32;
-		unsigned long alloc:32;
-		unsigned short size:16;
-		unsigned short ntoken:16;
-	} Fifo;
-
-	typedef struct {
-		unsigned char msgIx:2;
-		unsigned long srdagIx:30;
-	}ParamValueMsg;
-
-	typedef struct {
-		unsigned char msgIx:2;
-		unsigned char reserved:6;
-	}ClearTimeMsg;
+	/** NoAlloc attributes*/
+	void (*sendNoAlloc_)(void* data, int size);
 };
 
-#endif/*LAUNCHER_H*/
+#endif/*COMMUNICATOR_H*/

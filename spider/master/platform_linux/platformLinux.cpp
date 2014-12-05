@@ -34,20 +34,35 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
+#include <platformLinux.h>
+
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <sys/time.h>
+#include <time.h>
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
-static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 
-int platform_fopen(const char* name){
+static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
+static struct timespec start;
+
+PlatformLinux::PlatformLinux(){
+
+}
+
+PlatformLinux::~PlatformLinux(){
+
+}
+
+/** File Handling */
+int PlatformLinux::fopen(const char* name){
 	return open(name, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH | S_IWOTH);
 }
 
-void platform_fprintf(int id, const char* fmt, ...){
+void PlatformLinux::fprintf(int id, const char* fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
 	int n = vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, fmt, ap);
@@ -56,7 +71,21 @@ void platform_fprintf(int id, const char* fmt, ...){
 	}
 	write(id, buffer, n);
 }
-
-void platform_fclose(int id){
+void PlatformLinux::fclose(int id){
 	close(id);
 }
+
+/** Time Handling */
+void PlatformLinux::rstTime(){
+	clock_gettime(CLOCK_MONOTONIC, &start);
+}
+
+Time PlatformLinux::getTime(){
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	long long val = ts.tv_sec - start.tv_sec;
+	val *= 1000000000;
+	val += ts.tv_nsec - start.tv_nsec;
+	return val;
+}
+

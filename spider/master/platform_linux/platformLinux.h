@@ -34,21 +34,25 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <platform_time.h>
-#include <sys/time.h>
-#include <time.h>
+#ifndef PLATFORM_LINUX_H
+#define PLATFORM_LINUX_H
 
-static struct timespec start;
+#include <platform.h>
 
-void platform_time_reset(){
-	clock_gettime(CLOCK_MONOTONIC, &start);
-}
+class PlatformLinux: public Platform{
+public:
+	/** File Handling */
+	virtual int fopen(const char* name);
+	virtual void fprintf(int id, const char* fmt, ...);
+	virtual void fclose(int id);
 
-Time platform_time_getValue(){
-	struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC, &ts);
-	long long val = ts.tv_sec - start.tv_sec;
-	val *= 1000000000;
-	val += ts.tv_nsec - start.tv_nsec;
-	return val;
-}
+	/** Time Handling */
+	virtual void rstTime();
+	virtual Time getTime();
+
+	PlatformLinux();
+	virtual ~PlatformLinux();
+private:
+};
+
+#endif/*PLATFORM_LINUX_H*/

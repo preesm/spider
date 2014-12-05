@@ -34,12 +34,44 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef TIME_H
-#define TIME_H
+#ifndef PLATFORM_H
+#define PLATFORM_H
 
-#include <platform.h>
+typedef unsigned long 	Time;
+typedef long 			Param;
 
-void platform_time_reset();
-Time platform_time_getValue();
+class Platform{
+public:
+	/** File Handling */
+	virtual int fopen(const char* name) = 0;
+	virtual void fprintf(int id, const char* fmt, ...) = 0;
+	virtual void fclose(int id) = 0;
 
-#endif/*TIME_H*/
+	/** Time Handling */
+	virtual void rstTime() = 0;
+	virtual Time getTime() = 0;
+
+	/** Platform getter/setter */
+	static inline Platform* get();
+	static inline void set(Platform* platform);
+
+protected:
+	Platform();
+	virtual ~Platform();
+
+private:
+	static Platform* platform_;
+};
+
+
+inline Platform* Platform::get(){
+	if(platform_)
+		return platform_;
+	else
+		throw "Error undefined platform\n";
+}
+inline void Platform::set(Platform* platform){
+	platform_ = platform;
+}
+
+#endif/*PLATFORM_H*/

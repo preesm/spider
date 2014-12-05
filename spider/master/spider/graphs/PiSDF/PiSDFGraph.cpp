@@ -40,7 +40,6 @@
 #include <graphs/PiSDF/PiSDFParam.h>
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <tools/Set.h>
-#include <platform_file.h>
 
 #include <cstdio>
 
@@ -233,17 +232,17 @@ PiSDFEdge* PiSDFGraph::connect(
 
 /** Print Fct */
 void PiSDFGraph::print(const char *path){
-	int file = platform_fopen (path);
+	int file = Platform::get()->fopen(path);
 	if(file == -1){
 		printf("cannot open %s\n", path);
 		return;
 	}
 
 	// Writing header
-	platform_fprintf (file, "digraph csdag {\n");
-	platform_fprintf (file, "\tnode [color=\"#433D63\"];\n");
-	platform_fprintf (file, "\tedge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
-	platform_fprintf (file, "\trankdir=LR;\n\n");
+	Platform::get()->fprintf(file, "digraph csdag {\n");
+	Platform::get()->fprintf(file, "\tnode [color=\"#433D63\"];\n");
+	Platform::get()->fprintf(file, "\tedge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
+	Platform::get()->fprintf(file, "\trankdir=LR;\n\n");
 
 	/** Declare Iterator */
 	PiSDFEdgeIterator edgeIt 	= edges_.getIterator();
@@ -255,38 +254,38 @@ void PiSDFGraph::print(const char *path){
 
 
 	// Drawing parameters.
-	platform_fprintf (file, "\t# Parameters\n");
+	Platform::get()->fprintf(file, "\t# Parameters\n");
 	for (paramIt.first(); paramIt.finished(); paramIt.next()){
-		platform_fprintf (file, "\t%s [label=\"%s\" shape=house];\n",
+		Platform::get()->fprintf(file, "\t%s [label=\"%s\" shape=house];\n",
 				paramIt.current()->getName(),
 				paramIt.current()->getName());
 	}
 
 	// Drawing Config PiSDF vertices.
-	platform_fprintf (file, "\n\t# Configs\n");
+	Platform::get()->fprintf(file, "\n\t# Configs\n");
 	for (configIt.first(); configIt.finished(); configIt.next()){
-		platform_fprintf (file, "\t%s [shape=doubleoctagon,label=\"%s\"];\n",
+		Platform::get()->fprintf(file, "\t%s [shape=doubleoctagon,label=\"%s\"];\n",
 				configIt.current()->getName(),
 				configIt.current()->getName());
 
 		// Drawing lines : vertex -> parameters.
 		for (int j = 0; j < configIt.current()->getNOutParam(); j++) {
-			platform_fprintf(file, "\t%s->%s [style=dotted];\n",
+			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
 					configIt.current()->getName(),
 					configIt.current()->getOutParam(j)->getName());
 		}
 
 		// Drawing lines : parameter -> vertex.
 		for (int j = 0; j < configIt.current()->getNInParam(); j++) {
-			platform_fprintf(file, "\t%s->%s [style=dotted];\n",
+			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
 					configIt.current()->getInParam(j)->getName(),
 					configIt.current()->getName());
 		}
-		platform_fprintf (file, "\n");
+		Platform::get()->fprintf(file, "\n");
 	}
 
 	// Drawing Body PiSDF vertices.
-	platform_fprintf (file, "\t# Body Vertices\n");
+	Platform::get()->fprintf(file, "\t# Body Vertices\n");
 	for (bodyIt.first(); bodyIt.finished(); bodyIt.next()){
 		if(bodyIt.current()->isHierarchical()){
 			char name[100];
@@ -294,53 +293,53 @@ void PiSDFGraph::print(const char *path){
 			bodyIt.current()->getSubGraph()->print(name);
 		}
 
-		platform_fprintf (file, "\t%s [label=\"%s\"];\n",
+		Platform::get()->fprintf(file, "\t%s [label=\"%s\"];\n",
 			bodyIt.current()->getName(),
 			bodyIt.current()->getName());
 
 		// Drawing lines : parameter -> vertex.
 		for (int j = 0; j < bodyIt.current()->getNInParam(); j++) {
-			platform_fprintf(file, "\t%s->%s [style=dotted];\n",
+			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
 				bodyIt.current()->getInParam(j)->getName(),
 				bodyIt.current()->getName());
 		}
-		platform_fprintf (file, "\n");
+		Platform::get()->fprintf(file, "\n");
 	}
 
 	// Drawing Input vertices.
-	platform_fprintf (file, "\t# Input Ifs\n");
+	Platform::get()->fprintf(file, "\t# Input Ifs\n");
 	for (inIfIt.first(); inIfIt.finished(); inIfIt.next()) {
-		platform_fprintf (file, "\t%s [shape=cds,label=\"%s\"];\n",
+		Platform::get()->fprintf(file, "\t%s [shape=cds,label=\"%s\"];\n",
 				inIfIt.current()->getName(),
 				inIfIt.current()->getName());
 
 		// Drawing lines : parameter -> vertex.
 		for (int j = 0; j < inIfIt.current()->getNInParam(); j++) {
-			platform_fprintf(file, "\t%s->%s [style=dotted];\n",
+			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
 				inIfIt.current()->getInParam(j)->getName(),
 				inIfIt.current()->getName());
 		}
-		platform_fprintf (file, "\n");
+		Platform::get()->fprintf(file, "\n");
 	}
 
 	// Drawing Output vertices.
-	platform_fprintf (file, "\t# Output Ifs\n");
+	Platform::get()->fprintf(file, "\t# Output Ifs\n");
 	for (outIfIt.first(); outIfIt.finished(); outIfIt.next()) {
-		platform_fprintf (file, "\t%s [shape=cds,label=\"%s\"];\n",
+		Platform::get()->fprintf(file, "\t%s [shape=cds,label=\"%s\"];\n",
 				outIfIt.current()->getName(),
 				outIfIt.current()->getName());
 
 		// Drawing lines : parameter -> vertex.
 		for (int j = 0; j < outIfIt.current()->getNInParam(); j++) {
-			platform_fprintf(file, "\t%s->%s [style=dotted];\n",
+			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
 				outIfIt.current()->getInParam(j)->getName(),
 				outIfIt.current()->getName());
 		}
-		platform_fprintf (file, "\n");
+		Platform::get()->fprintf(file, "\n");
 	}
 
 	// Drawing edges.
-	platform_fprintf (file, "\t# Edges\n");
+	Platform::get()->fprintf(file, "\t# Edges\n");
 	for (edgeIt.first(); edgeIt.finished(); edgeIt.next()) {
 		char prodExpr[100];
 		char consExpr[100];
@@ -353,10 +352,10 @@ void PiSDFGraph::print(const char *path){
 //		Parser_toString(&(edge->production), &(graph->params), shortenedPExpr);
 //		Parser_toString(&(edge->consumption), &(graph->params), shortenedCExpr);
 
-		/*platform_fprintf ("\t%s->%s [taillabel=\"%s\" headlabel=\"%s\" labeldistance=%d labelangle=50];\n",
+		/*Platform::get()->fprintf("\t%s->%s [taillabel=\"%s\" headlabel=\"%s\" labeldistance=%d labelangle=50];\n",
 			edge->getSource()->getName(),edge->getSink()->getName(),
 			shortenedPExpr,shortenedCExpr,labelDistance);*/
-//		platform_fprintf (file, "\t%s->%s [taillabel=\"(%d):%s\" headlabel=\"(%d):%s\"];\n",
+//		Platform::get()->fprintf(file, "\t%s->%s [taillabel=\"(%d):%s\" headlabel=\"(%d):%s\"];\n",
 //			edge->source->name,
 //			edge->sink->name,
 //			edge->sourcePortIx,
@@ -364,7 +363,7 @@ void PiSDFGraph::print(const char *path){
 //			edge->sinkPortIx,
 //			shortenedCExpr);
 		//labelDistance = 3 + labelDistance%(3*4); // Oscillating the label distance to keep visibility
-		platform_fprintf (file, "\t%s->%s [taillabel=\"(%d):%s\" headlabel=\"(%d):%s\" label=\"%s\"];\n",
+		Platform::get()->fprintf(file, "\t%s->%s [taillabel=\"(%d):%s\" headlabel=\"(%d):%s\" label=\"%s\"];\n",
 			edgeIt.current()->getSrc()->getName(),
 			edgeIt.current()->getSnk()->getName(),
 			edgeIt.current()->getSrcPortIx(),
@@ -374,6 +373,6 @@ void PiSDFGraph::print(const char *path){
 			delayExpr);
 	}
 
-	platform_fprintf (file, "}\n");
-	platform_fclose(file);
+	Platform::get()->fprintf(file, "}\n");
+	Platform::get()->fclose(file);
 }

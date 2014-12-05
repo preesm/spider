@@ -34,12 +34,14 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef platform_FILE_H_
-#define platform_FILE_H_
+#include <platform.h>
 
-/* Allow to write a file on the target or on a remote device */
-int platform_fopen(const char* name);
-void platform_fprintf(int id, const char* fmt, ...);
-void platform_fclose(int id);
+Platform* Platform::platform_ = 0;
 
-#endif /* platform_FILE_H_ */
+Platform::Platform(){
+
+}
+Platform::~Platform(){
+
+}
+

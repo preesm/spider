@@ -45,8 +45,6 @@
 #include <algorithm>
 
 #include <platform.h>
-#include <platform_file.h>
-#include <platform_time.h>
 
 Launcher Launcher::instance_;
 

@@ -39,7 +39,6 @@
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <tools/Set.h>
-#include <platform_file.h>
 
 #include <cstdio>
 
@@ -217,73 +216,73 @@ void SRDAGGraph::print(const char *path){
 		printf("Errors in the SRDAG Graph\n");
 
 	int maxId;
-	int file = platform_fopen (path);
+	int file = Platform::get()->fopen(path);
 	if(file == -1){
 		printf("cannot open %s\n", path);
 		return;
 	}
 
 	// Writing header
-	platform_fprintf (file, "digraph csdag {\n");
-	platform_fprintf (file, "\tnode [color=\"#433D63\"];\n");
-	platform_fprintf (file, "\tedge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
-	platform_fprintf (file, "\trankdir=LR;\n\n");
+	Platform::get()->fprintf(file, "digraph csdag {\n");
+	Platform::get()->fprintf(file, "\tnode [color=\"#433D63\"];\n");
+	Platform::get()->fprintf(file, "\tedge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
+	Platform::get()->fprintf(file, "\trankdir=LR;\n\n");
 
 	/** Declare Iterator */
 	SRDAGEdgeIterator edgeIt		= edges_.getIterator();
 	SRDAGVertexIterator vertexIt	= vertices_.getIterator();
 
 	// Drawing vertices.
-	platform_fprintf (file, "\t# Vertices\n");
+	Platform::get()->fprintf(file, "\t# Vertices\n");
 	for (vertexIt.first(); vertexIt.finished(); vertexIt.next()){
 		char name[100];
 		vertexIt.current()->toString(name, 100);
-		platform_fprintf (file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)",
+		Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)",
 				vertexIt.current()->getId(),
 				vertexIt.current()->getId(),
 				name,
 				vertexIt.current()->getFctId());
-		platform_fprintf (file, "\",color=");
+		Platform::get()->fprintf(file, "\",color=");
 		switch (vertexIt.current()->getState()){
 			case SRDAG_EXEC:
-				platform_fprintf (file, "blue");
+				Platform::get()->fprintf(file, "blue");
 				break;
 			case SRDAG_RUN:
-				platform_fprintf (file, "gray");
+				Platform::get()->fprintf(file, "gray");
 				break;
 			case SRDAG_NEXEC:
 				if(vertexIt.current()->isHierarchical())
-					platform_fprintf (file, "red");
+					Platform::get()->fprintf(file, "red");
 				else
-					platform_fprintf (file, "black");
+					Platform::get()->fprintf(file, "black");
 				break;
 		}
-		platform_fprintf (file, "];\n");
+		Platform::get()->fprintf(file, "];\n");
 
 		maxId = (vertexIt.current()->getId() > maxId) ? vertexIt.current()->getId() : maxId;
 	}
 
 	// Drawing edges.
-	platform_fprintf (file, "\t# Edges\n");
+	Platform::get()->fprintf(file, "\t# Edges\n");
 	for (edgeIt.first(); edgeIt.finished(); edgeIt.next()) {
 		int snkIx, srcIx;
 
 		if(edgeIt.current()->getSrc())
 			srcIx = edgeIt.current()->getSrc()->getId();
 		else{
-			platform_fprintf (file, "\t%d [shape=point];\n", ++maxId);
+			Platform::get()->fprintf(file, "\t%d [shape=point];\n", ++maxId);
 			srcIx = maxId;
 		}
 		if(edgeIt.current()->getSnk())
 			snkIx = edgeIt.current()->getSnk()->getId();
 		else{
-			platform_fprintf (file, "\t%d [shape=point];\n", ++maxId);
+			Platform::get()->fprintf(file, "\t%d [shape=point];\n", ++maxId);
 			snkIx = maxId;
 		}
 
 //		switch(mode){
 //		case DataRates:
-			platform_fprintf (file, "\t%d->%d [label=\"%d\n%d\",taillabel=\"%d\",headlabel=\"%d\"];\n",
+			Platform::get()->fprintf(file, "\t%d->%d [label=\"%d\n%d\",taillabel=\"%d\",headlabel=\"%d\"];\n",
 					srcIx, snkIx,
 					edgeIt.current()->getRate(),
 					edgeIt.current()->getAlloc(),
@@ -291,7 +290,7 @@ void SRDAGGraph::print(const char *path){
 					edgeIt.current()->getSnkPortIx());
 //			break;
 //		case Allocation:
-//			platform_fprintf (file, "\t%d->%d [label=\"%d: %#x (%#x)\"];\n",
+//			Platform::get()->fprintf(file, "\t%d->%d [label=\"%d: %#x (%#x)\"];\n",
 //					srcIx, snkIx,
 //					edgeIt.current()->fifo.id,
 //					edgeIt.current()->fifo.add,
@@ -302,8 +301,8 @@ void SRDAGGraph::print(const char *path){
 	}
 
 
-	platform_fprintf (file, "}\n");
-	platform_fclose(file);
+	Platform::get()->fprintf(file, "}\n");
+	Platform::get()->fclose(file);
 }
 
 bool SRDAGGraph::check(){

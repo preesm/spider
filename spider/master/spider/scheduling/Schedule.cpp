@@ -35,7 +35,6 @@
  ****************************************************************************/
 
 #include "Schedule.h"
-#include <platform_file.h>
 #include <cstring>
 #include <cstdio>
 
@@ -68,11 +67,11 @@ void Schedule::addJob(int pe, SRDAGVertex* job, Time start, Time end){
 }
 
 void Schedule::print(const char* path){
-	int file = platform_fopen (path);
+	int file = Platform::get()->fopen(path);
 	char name[100];
 
 	// Writing header
-	platform_fprintf (file, "<data>\n");
+	Platform::get()->fprintf(file, "<data>\n");
 
 	// Exporting for gantt display
 	for(int pe=0; pe < nPE_; pe++){
@@ -80,23 +79,22 @@ void Schedule::print(const char* path){
 			SRDAGVertex* vertex = getJob(pe, job);
 
 			vertex->toString(name, 100);
-			platform_fprintf (file, "\t<event\n");
-			platform_fprintf (file, "\t\tstart=\"%d\"\n", vertex->getStartTime());
-			platform_fprintf (file, "\t\tend=\"%d\"\n",	vertex->getEndTime());
-			platform_fprintf (file, "\t\ttitle=\"%s\"\n", name);
-			platform_fprintf (file, "\t\tmapping=\"PE%d\"\n", pe);
+			Platform::get()->fprintf(file, "\t<event\n");
+			Platform::get()->fprintf(file, "\t\tstart=\"%d\"\n", vertex->getStartTime());
+			Platform::get()->fprintf(file, "\t\tend=\"%d\"\n",	vertex->getEndTime());
+			Platform::get()->fprintf(file, "\t\ttitle=\"%s\"\n", name);
+			Platform::get()->fprintf(file, "\t\tmapping=\"PE%d\"\n", pe);
 
 			int ired = (vertex->getId() & 0x3)*50 + 100;
 			int igreen = ((vertex->getId() >> 2) & 0x3)*50 + 100;
 			int iblue = ((vertex->getId() >> 4) & 0x3)*50 + 100;
-			platform_fprintf (file, "\t\tcolor=\"#%02x%02x%02x\"\n", ired, igreen, iblue);
+			Platform::get()->fprintf(file, "\t\tcolor=\"#%02x%02x%02x\"\n", ired, igreen, iblue);
 
-
-			platform_fprintf (file, "\t\t>%s.</event>\n", name);
+			Platform::get()->fprintf(file, "\t\t>%s.</event>\n", name);
 		}
 	}
-	platform_fprintf (file, "</data>\n");
-	platform_fclose(file);
+	Platform::get()->fprintf(file, "</data>\n");
+	Platform::get()->fclose(file);
 }
 
 bool Schedule::check(){

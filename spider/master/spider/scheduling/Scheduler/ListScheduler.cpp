@@ -40,8 +40,6 @@
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <launcher/Launcher.h>
 
-#include <platform_time.h>
-
 #include <algorithm>
 #include <cstdio>
 
@@ -81,8 +79,8 @@ void ListScheduler::schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi
 //	Launcher::endTaskOrderingTime();
 //	Launcher::initMappingTime();
 
-	schedule_->setAllMinReadyTime(platform_time_getValue());
-	schedule_->setReadyTime(0, platform_time_getValue() + MAPPING_TIME*list_.getNb());
+	schedule_->setAllMinReadyTime(Platform::get()->getTime());
+	schedule_->setReadyTime(0, Platform::get()->getTime() + MAPPING_TIME*list_.getNb());
 
 //	Launcher::setActorsNb(schedList.getNb());
 

@@ -41,7 +41,7 @@
 
 #include <cstring>
 #include <cstdio>
-#include <platform_file.h>
+#include <platform.h>
 
 BipartiteGraph::BipartiteGraph() {
 	graph_ = 0;
@@ -127,45 +127,45 @@ void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack,
 }
 
 void BipartiteGraph::print(const char* path, SRDAGGraph* g1, SRDAGGraph* g2){
-	int file = platform_fopen (path);
+	int file = Platform::get()->fopen(path);
 	if(file == -1){
 		printf("cannot open %s\n", path);
 		return;
 	}
 
 	// Writing header
-	platform_fprintf (file, "digraph csdag {\n");
-	platform_fprintf (file, "\tnode [color=\"#433D63\"];\n");
-	platform_fprintf (file, "\tedge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
-	platform_fprintf (file, "\trankdir=LR;\n\n");
+	Platform::get()->fprintf (file, "digraph csdag {\n");
+	Platform::get()->fprintf (file, "\tnode [color=\"#433D63\"];\n");
+	Platform::get()->fprintf (file, "\tedge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
+	Platform::get()->fprintf (file, "\trankdir=LR;\n\n");
 
 	// Drawing vertices.
-	platform_fprintf (file, "\t# Vertices\n");
+	Platform::get()->fprintf (file, "\t# Vertices\n");
 
-	platform_fprintf (file, "\tsubgraph cluster_0 {\nlabel = \"Get\";\n");
+	Platform::get()->fprintf (file, "\tsubgraph cluster_0 {\nlabel = \"Get\";\n");
 	for (int i=0; i<nVerticesG1_; i++){
 		char name[100];
 		g1->getVertex(i)->toString(name, 100);
-		platform_fprintf (file, "\t\tg1_%d [shape=ellipse,label=\"%s\"];\n", i, name);
+		Platform::get()->fprintf (file, "\t\tg1_%d [shape=ellipse,label=\"%s\"];\n", i, name);
 	}
-	platform_fprintf (file, "\t}\n");
+	Platform::get()->fprintf (file, "\t}\n");
 
-	platform_fprintf (file, "\tsubgraph cluster_1 {\nlabel = \"Model\";\n");
+	Platform::get()->fprintf (file, "\tsubgraph cluster_1 {\nlabel = \"Model\";\n");
 	for (int i=0; i<nVerticesG2_; i++){
 		char name[100];
 		g2->getVertex(i)->toString(name, 100);
-		platform_fprintf (file, "\t\tg2_%d [shape=ellipse,label=\"%s\"];\n", i, name);
+		Platform::get()->fprintf (file, "\t\tg2_%d [shape=ellipse,label=\"%s\"];\n", i, name);
 	}
-	platform_fprintf (file, "\t}\n");
+	Platform::get()->fprintf (file, "\t}\n");
 
 	// Drawing edges.
-	platform_fprintf (file, "\t# Edges\n");
+	Platform::get()->fprintf (file, "\t# Edges\n");
 	for (int i=0; i<nVerticesG1_; i++) {
 		for (int j=0; j<nConnections_[i]; j++) {
-			platform_fprintf (file, "\tg1_%d->g2_%d;\n", i, graph_[i*nVerticesG1_+j]);
+			Platform::get()->fprintf (file, "\tg1_%d->g2_%d;\n", i, graph_[i*nVerticesG1_+j]);
 		}
 	}
 
-	platform_fprintf (file, "}\n");
-	platform_fclose(file);
+	Platform::get()->fprintf (file, "}\n");
+	Platform::get()->fclose(file);
 }

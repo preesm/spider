@@ -35,7 +35,8 @@
  ****************************************************************************/
 
 #include "Launcher.h"
-#include "Communicator.h"
+#include <Communicator.h>
+#include <Message.h>
 
 #include <graphs/Archi/Archi.h>
 #include <graphs/SRDAG/SRDAGGraph.h>

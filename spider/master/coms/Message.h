@@ -34,29 +34,45 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef LAUNCHER_H
-#define LAUNCHER_H
+#ifndef MESSAGE_H
+#define MESSAGE_H
 
-#include <graphs/SRDAG/SRDAGCommon.h>
-#include <graphs/Archi/Archi.h>
+typedef enum{
+	MSG_START_JOB=1,
+	MSG_PARAM_VALUE=2,
+	MSG_CLEAR_TIME=3
+}MsgType;
 
-class Launcher {
-public:
-	static Launcher* get();
+typedef struct {
+	unsigned char msgIx:2;
+	unsigned char reserved:6;
+}UndefinedMsg;
 
-	void launchVertex(SRDAGVertex* vertex, int slave);
-	void resolveParams(Archi* archi, SRDAGGraph* topDag);
+typedef struct {
+	unsigned char msgIx:2;
+	unsigned long  srdagIx:30;
+	unsigned short fctIx:16;
+	unsigned char nbInEdge:8;
+	unsigned char nbOutEdge:8;
+	unsigned char nbInParam:8;
+	unsigned char nbOutParam:8;
+}StartJobMsg;
 
-protected:
-	Launcher();
+typedef struct Fifo{
+	unsigned long id:32;
+	unsigned long alloc:32;
+	unsigned short size:16;
+	unsigned short ntoken:16;
+} Fifo;
 
-private:
-	int curNParam_;
-	static Launcher instance_;
+typedef struct {
+	unsigned char msgIx:2;
+	unsigned long srdagIx:30;
+}ParamValueMsg;
 
-	void send_ClearTimeMsg(int lrtIx);
-	void send_StartJobMsg(int lrtIx, SRDAGVertex* vertex);
+typedef struct {
+	unsigned char msgIx:2;
+	unsigned char reserved:6;
+}ClearTimeMsg;
 
-};
-
-#endif/*LAUNCHER_H*/
+#endif/*MESSAGE_H*/

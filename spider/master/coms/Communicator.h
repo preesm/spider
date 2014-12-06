@@ -40,6 +40,8 @@
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/Archi/Archi.h>
 
+#include <Message.h>
+
 class Communicator {
 public:
 	void configure(
@@ -59,6 +61,9 @@ public:
 
 	int recv(int lrtIx, void** data);
 	void release();
+
+	void sendData(Fifo* f);
+	void recvData(Fifo* f);
 
 	static Communicator* get();
 

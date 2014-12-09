@@ -34,22 +34,22 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef FIFO_H
-#define FIFO_H
+#ifndef QUEUE_H
+#define QUEUE_H
 
 #include <cstdio>
 #include <cstdlib>
 
 #include "Stack.h"
 
-template<typename TYPE> class Fifo{
+template<typename TYPE> class Queue{
 public:
-	Fifo(){
+	Queue(){
 		stack_ 	= 0;
 		first_ 	= 0;
 		last_ 	= 0;
 	}
-	Fifo(Stack *stack){
+	Queue(Stack *stack){
 		stack_ 	= stack;
 		first_ 	= 0;
 		last_ 	= 0;
@@ -62,25 +62,25 @@ public:
 
 
 private:
-	struct fifoItem{
+	struct QueueItem{
 		TYPE cur;
-		struct fifoItem* next;
+		struct QueueItem* next;
 	};
 
 	Stack* stack_;
-	struct fifoItem* first_;
-	struct fifoItem* last_;
+	struct QueueItem* first_;
+	struct QueueItem* last_;
 };
 
 
 template<typename TYPE>
-inline bool Fifo<TYPE>::isEmpty() const{
+inline bool Queue<TYPE>::isEmpty() const{
 	return first_ == 0;
 }
 
 template<typename TYPE>
-inline void Fifo<TYPE>::push(TYPE value){
-	struct fifoItem* newItem = sAlloc(stack_, 1, struct fifoItem);
+inline void Queue<TYPE>::push(TYPE value){
+	struct QueueItem* newItem = sAlloc(stack_, 1, struct QueueItem);
 	newItem->cur 	= value;
 	newItem->next 	= 0;
 
@@ -93,9 +93,9 @@ inline void Fifo<TYPE>::push(TYPE value){
 }
 
 template<typename TYPE>
-inline TYPE Fifo<TYPE>::pop(){
+inline TYPE Queue<TYPE>::pop(){
 	if(first_ == 0)
-		throw "Try to pop an empty Fifo\n";
+		throw "Try to pop an empty Queue\n";
 
 	TYPE val = first_->cur;
 	first_ = first_->next;
@@ -104,4 +104,4 @@ inline TYPE Fifo<TYPE>::pop(){
 	return val;
 }
 
-#endif/*FIFO_H*/
+#endif/*QUEUE_H*/

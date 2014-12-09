@@ -50,7 +50,7 @@
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <graphs/PiSDF/PiSDFEdge.h>
 
-#include <tools/Fifo.h>
+#include <tools/Queue.h>
 #include <tools/Stack.h>
 #include <tools/StaticStack.h>
 
@@ -131,7 +131,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 	}
 	topSrdag->addVertex(root);
 
-	Fifo<transfoJob*> jobFifo = Fifo<transfoJob*>(&transfoStack);
+	Queue<transfoJob*> jobQueue = Queue<transfoJob*>(&transfoStack);
 
 	// Check nb of config //
 
@@ -158,7 +158,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 				/* Link CA in topDag */
 				linkCAVertices(topSrdag, job);
 
-				jobFifo.push(job);
+				jobQueue.push(job);
 			}else{
 				int* brv = sAlloc(&transfoStack, job->graph->getNBody(), int);
 				computeBRV(topSrdag, job, brv, &transfoStack);
@@ -183,9 +183,9 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 
 		/* Resolve params must be done by itself */
 
-		while(! jobFifo.isEmpty()){
+		while(! jobQueue.isEmpty()){
 			/* Pop job from queue */
-			transfoJob* job = jobFifo.pop();
+			transfoJob* job = jobQueue.pop();
 
 			/* Compute BRV */
 			int* brv = sAlloc(&transfoStack, job->graph->getNBody(), int);

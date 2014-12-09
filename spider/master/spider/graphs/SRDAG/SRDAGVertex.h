@@ -296,10 +296,10 @@ inline int SRDAGVertex::getFctId() const{
 		return BROADCAST_F_IX;
 		break;
 	case SRDAG_JOIN:
-		return IMPLODE_F_IX;
+		return JOIN_F_IX;
 		break;
 	case SRDAG_FORK:
-		return EXPLODE_F_IX;
+		return FORK_F_IX;
 		break;
 	case SRDAG_ROUNDBUFFER:
 		return ROUNDBUFFER_F_IX;

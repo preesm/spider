@@ -46,8 +46,8 @@ class SRDAGGraph;
 class SRDAGVertex;
 
 #define BROADCAST_F_IX 		0
-#define IMPLODE_F_IX 		1
-#define EXPLODE_F_IX 		2
+#define FORK_F_IX 			1
+#define JOIN_F_IX 			2
 #define ROUNDBUFFER_F_IX 	3
 #define INIT_F_IX 			4
 #define END_F_IX 			5

@@ -34,28 +34,65 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PLATFORM_LINUX_H
-#define PLATFORM_LINUX_H
+#include "LinuxLrtCommunicator.h"
 
-#include <platform.h>
-#include <tools/Stack.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-class PlatformLinux: public Platform{
-public:
-	void init(int nLrt, Stack *stack);
+LinuxLrtCommunicator::LinuxLrtCommunicator(int msgSizeMax, int fIn, int fOut, void* shMem, int nFifo, Stack* s){
+	fIn_ = fIn;
+	fOut_ = fOut;
+	msgSizeMax_ = msgSizeMax;
+	msgBuffer_ = s->alloc(msgSizeMax);
+	curMsgSize_ = 0;
+	nbFifos_ = nFifo;
+	fifos_ = (unsigned long*)shMem;
+	shMem_ = (unsigned char*)((long)shMem + nFifo*sizeof(unsigned long));
+}
+LinuxLrtCommunicator::~LinuxLrtCommunicator(){
 
-	/** File Handling */
-	virtual int fopen(const char* name);
-	virtual void fprintf(int id, const char* fmt, ...);
-	virtual void fclose(int id);
+}
 
-	/** Time Handling */
-	virtual void rstTime();
-	virtual Time getTime();
+void* LinuxLrtCommunicator::alloc(int size){
+	curMsgSize_ = size;
+	return msgBuffer_;
+}
+void LinuxLrtCommunicator::send(int lrtIx){
+	unsigned long size = curMsgSize_;
+	write(fOut_, &size, sizeof(unsigned long));
+	write(fOut_, msgBuffer_, curMsgSize_);
+	curMsgSize_ = 0;
+}
 
-	PlatformLinux();
-	virtual ~PlatformLinux();
-private:
-};
+int LinuxLrtCommunicator::recv(int lrtIx, void** data){
+	unsigned long size;
+	int nb = read(fIn_, &size, sizeof(unsigned long));
+	if(nb<0) return 0;
+	if(size > msgSizeMax_)
+		throw "Msg too big\n";
+	read(fIn_, msgBuffer_, size);
+	curMsgSize_ = size;
+	*data = msgBuffer_;
+	return size;
+}
 
-#endif/*PLATFORM_LINUX_H*/
+void LinuxLrtCommunicator::release(){
+	curMsgSize_ = 0;
+}
+
+void LinuxLrtCommunicator::sendData(Fifo* f){
+	volatile unsigned long *mutex = fifos_ + f->id;
+	// TODO protect mutex !
+	// TODO cache memory
+	*mutex += f->ntoken;
+}
+long LinuxLrtCommunicator::recvData(Fifo* f){
+	volatile unsigned long *mutex = fifos_ + f->id;
+	while(*mutex < f->ntoken);
+	*mutex -= f->ntoken;
+	return (long)(shMem_+f->alloc);
+}
+
+long LinuxLrtCommunicator::pre_sendData(Fifo* f){
+	return (long)(shMem_+f->alloc);
+}

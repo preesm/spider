@@ -34,28 +34,38 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PLATFORM_LINUX_H
-#define PLATFORM_LINUX_H
+#ifndef LINUX_SPIDER_COMMUNICATOR_H
+#define LINUX_SPIDER_COMMUNICATOR_H
 
-#include <platform.h>
-#include <tools/Stack.h>
+#include <graphs/SRDAG/SRDAGCommon.h>
+#include <graphs/Archi/Archi.h>
 
-class PlatformLinux: public Platform{
+#include <Message.h>
+#include <Communicator.h>
+
+class LinuxSpiderCommunicator: public Communicator{
 public:
-	void init(int nLrt, Stack *stack);
+	LinuxSpiderCommunicator(int msgSizeMax, int nLrt, Stack* s);
+	~LinuxSpiderCommunicator();
 
-	/** File Handling */
-	virtual int fopen(const char* name);
-	virtual void fprintf(int id, const char* fmt, ...);
-	virtual void fclose(int id);
+	void setLrtCom(int lrtIx, int fIn, int fOut);
 
-	/** Time Handling */
-	virtual void rstTime();
-	virtual Time getTime();
+	void* alloc(int size);
+	void send(int lrtIx);
 
-	PlatformLinux();
-	virtual ~PlatformLinux();
+	int recv(int lrtIx, void** data);
+	void release();
+
+	void sendData(Fifo* f);
+	long recvData(Fifo* f);
+
+	long pre_sendData(Fifo* f);
+
 private:
+	int *fIn_, *fOut_;
+	int msgSizeMax_;
+	void* msgBuffer_;
+	int curMsgSize_;
 };
 
-#endif/*PLATFORM_LINUX_H*/
+#endif/*LINUX_SPIDER_COMMUNICATOR_H*/

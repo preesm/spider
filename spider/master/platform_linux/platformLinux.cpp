@@ -43,19 +43,86 @@
 #include <stdarg.h>
 #include <sys/time.h>
 #include <time.h>
+#include <sys/shm.h>
+#include <cstring>
+
+#include <tools/Stack.h>
+
+#include <lrt.h>
+#include <spider.h>
+#include <LinuxLrtCommunicator.h>
+#include <LinuxSpiderCommunicator.h>
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
+#define SHARED_MEM_KEY		8452
 
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
 
 PlatformLinux::PlatformLinux(){
-
 }
 
 PlatformLinux::~PlatformLinux(){
-
 }
+
+void PlatformLinux::init(int nLrt, Stack *stack){
+	LRT* lrt = sAlloc(stack, 1, LRT);
+	LinuxSpiderCommunicator* spiderCom = sAlloc(stack, 1, LinuxSpiderCommunicator);
+	LinuxLrtCommunicator* lrtCom = sAlloc(stack, 1, LinuxLrtCommunicator);
+
+	int pipeSpidertoLRT[2];
+	int pipeLRTtoSpider[2];
+
+	/** Open Pipes */
+	if (pipe2(pipeSpidertoLRT, O_NONBLOCK | O_CLOEXEC) == -1
+			|| pipe2(pipeLRTtoSpider, O_NONBLOCK | O_CLOEXEC) == -1) {
+		perror("pipe");
+		exit(EXIT_FAILURE);
+	}
+
+	/** Open Shared Memory */
+    int shmid;
+    void* shMem;
+    key_t key = SHARED_MEM_KEY;
+
+	printf("Creating shared memory...\n");
+
+    /*
+     * Create the segment.
+     */
+    if ((shmid = shmget(key, 1024*1024, IPC_CREAT | 0666)) < 0) {
+        perror("shmget");
+        exit(1);
+    }
+
+    /*
+     * Now we attach the segment to our data space.
+     */
+    if ((shMem = (void*)shmat(shmid, NULL, 0)) == (void *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+
+    memset(shMem,0,1024*1024);
+
+
+	/** Initialize LRT and Communicators */
+//	*spiderCom = LinuxSpiderCommunicator(120, 1, stack);
+	spiderCom = new LinuxSpiderCommunicator(280, 1, stack);
+	spiderCom->setLrtCom(0, pipeLRTtoSpider[0], pipeSpidertoLRT[1]);
+
+	lrtCom = new LinuxLrtCommunicator(280, pipeSpidertoLRT[0], pipeLRTtoSpider[1], shMem, 10000, stack);
+	lrt = new LRT(lrtCom);
+//	*lrtCom = LinuxLrtCommunicator(120, pipeSpidertoLRT[0], pipeLRTtoSpider[1], shMem, 10000, stack);
+//	*lrt = LRT(lrtCom);
+
+	setLrt(lrt);
+	setSpiderCommunicator(spiderCom);
+
+	Platform::set(this);
+	this->rstTime();
+}
+
 
 /** File Handling */
 int PlatformLinux::fopen(const char* name){
@@ -81,6 +148,7 @@ void PlatformLinux::rstTime(){
 }
 
 Time PlatformLinux::getTime(){
+	return 0;
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	long long val = ts.tv_sec - start.tv_sec;

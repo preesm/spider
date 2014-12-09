@@ -34,28 +34,40 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PLATFORM_LINUX_H
-#define PLATFORM_LINUX_H
+#ifndef LINUX_LRT_COMMUNICATOR_H
+#define LINUX_LRT_COMMUNICATOR_H
 
-#include <platform.h>
-#include <tools/Stack.h>
+#include <graphs/SRDAG/SRDAGCommon.h>
+#include <graphs/Archi/Archi.h>
 
-class PlatformLinux: public Platform{
+#include <Communicator.h>
+#include <Message.h>
+
+class LinuxLrtCommunicator: public Communicator{
 public:
-	void init(int nLrt, Stack *stack);
+	LinuxLrtCommunicator(int msgSizeMax, int fIn, int fOut, void* shMem, int nbFifos, Stack* s);
+	~LinuxLrtCommunicator();
 
-	/** File Handling */
-	virtual int fopen(const char* name);
-	virtual void fprintf(int id, const char* fmt, ...);
-	virtual void fclose(int id);
+	void* alloc(int size);
+	void send(int lrtIx);
 
-	/** Time Handling */
-	virtual void rstTime();
-	virtual Time getTime();
+	int recv(int lrtIx, void** data);
+	void release();
 
-	PlatformLinux();
-	virtual ~PlatformLinux();
+	void sendData(Fifo* f);
+	long recvData(Fifo* f);
+
+	long pre_sendData(Fifo* f);
+
 private:
+	int fIn_, fOut_;
+	int msgSizeMax_;
+	void* msgBuffer_;
+	int curMsgSize_;
+	int nbFifos_;
+	unsigned long* fifos_;
+	unsigned char* shMem_;
+
 };
 
-#endif/*PLATFORM_LINUX_H*/
+#endif/*LINUX_LRT_COMMUNICATOR_H*/

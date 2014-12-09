@@ -34,28 +34,61 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PLATFORM_LINUX_H
-#define PLATFORM_LINUX_H
+#include "LinuxSpiderCommunicator.h"
 
-#include <platform.h>
-#include <tools/Stack.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-class PlatformLinux: public Platform{
-public:
-	void init(int nLrt, Stack *stack);
+LinuxSpiderCommunicator::LinuxSpiderCommunicator(int msgSizeMax, int nLrt, Stack* s){
+	fIn_ = sAlloc(s, nLrt, int);
+	fOut_ = sAlloc(s, nLrt, int);
+	msgSizeMax_ = msgSizeMax;
+	msgBuffer_ = s->alloc(msgSizeMax);
+	curMsgSize_ = 0;
+}
+LinuxSpiderCommunicator::~LinuxSpiderCommunicator(){
 
-	/** File Handling */
-	virtual int fopen(const char* name);
-	virtual void fprintf(int id, const char* fmt, ...);
-	virtual void fclose(int id);
+}
 
-	/** Time Handling */
-	virtual void rstTime();
-	virtual Time getTime();
+void LinuxSpiderCommunicator::setLrtCom(int lrtIx, int fIn, int fOut){
+	fIn_[lrtIx] = fIn;
+	fOut_[lrtIx] = fOut;
+}
 
-	PlatformLinux();
-	virtual ~PlatformLinux();
-private:
-};
+void* LinuxSpiderCommunicator::alloc(int size){
+	curMsgSize_ = size;
+	return msgBuffer_;
+}
+void LinuxSpiderCommunicator::send(int lrtIx){
+	unsigned long size = curMsgSize_;
+	write(fOut_[lrtIx], &size, sizeof(unsigned long));
+	write(fOut_[lrtIx], msgBuffer_, curMsgSize_);
+	curMsgSize_ = 0;
+}
 
-#endif/*PLATFORM_LINUX_H*/
+int LinuxSpiderCommunicator::recv(int lrtIx, void** data){
+	unsigned long size;
+	read(fIn_[lrtIx], &size, sizeof(unsigned long));
+	read(fIn_[lrtIx], msgBuffer_, size);
+	curMsgSize_ = size;
+	*data = msgBuffer_;
+	return size;
+}
+
+void LinuxSpiderCommunicator::release(){
+	curMsgSize_ = 0;
+}
+
+void LinuxSpiderCommunicator::sendData(Fifo* f){
+	throw "Spider Communicator should not use Data Fifos\n";
+}
+long LinuxSpiderCommunicator::recvData(Fifo* f){
+	throw "Spider Communicator should not use Data Fifos\n";
+	return 0;
+}
+
+long LinuxSpiderCommunicator::pre_sendData(Fifo* f){
+	throw "Spider Communicator should not use Data Fifos\n";
+	return 0;
+}
+

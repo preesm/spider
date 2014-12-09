@@ -34,35 +34,21 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef LRT_H
-#define LRT_H
+#include "spider.h"
 
-#include <platform.h>
-#include <Communicator.h>
+static Communicator* spiderCom = 0;
+static LRT* lrt = 0;
 
-typedef void (*lrtFct)(
-		void* inputFIFOs[],
-		void* outputFIFOs[],
-		Param inParams[],
-		Param outParams[]);
+void setSpiderCommunicator(Communicator* com){
+	spiderCom = com;
+}
+Communicator* getSpiderCommunicator(){
+	return spiderCom;
+}
 
-class LRT{
-public:
-	LRT(Communicator* com);
-	virtual ~LRT();
-
-	void setFctTbl(const lrtFct fct[], int nFct);
-
-	int  runOneJob();
-	void runUntilNoMoreJobs();
-	void runInfinitly();
-
-protected:
-
-private:
-	int nFct_;
-	const lrtFct* fcts_;
-	Communicator* com_;
-};
-
-#endif/*LRT_H*/
+void setLrt(LRT* l){
+	lrt = l;
+}
+LRT* getLrt(){
+	return lrt;
+}

@@ -53,6 +53,9 @@
 #include <scheduling/Scheduler.h>
 #include <scheduling/Scheduler/ListScheduler.h>
 
+#include <Communicator.h>
+#include <lrt.h>
+
 typedef struct{
 	bool createSrdag;
 	SRDAGGraph* srdag;
@@ -62,5 +65,11 @@ typedef struct{
 } SpiderConfig;
 
 #include <graphTransfo/GraphTransfo.h>
+
+void setSpiderCommunicator(Communicator* com);
+Communicator* getSpiderCommunicator();
+
+void setLrt(LRT* com);
+LRT* getLrt();
 
 #endif//SPIDER_H

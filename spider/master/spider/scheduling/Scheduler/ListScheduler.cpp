@@ -131,7 +131,7 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 	int bestSlave = -1;
 	Time bestStartTime = 0;
 	Time bestWaitTime = 0;
-	Time bestEndTime = (unsigned int)-1; // Very high value.
+	Time bestEndTime = (unsigned long)-1; // Very high value.
 
 	// Getting a slave for the vertex.
 	for(int pe = 0; pe < archi_->getNPE(); pe++){

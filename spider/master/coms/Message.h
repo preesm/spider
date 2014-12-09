@@ -44,18 +44,28 @@ typedef enum{
 }MsgType;
 
 typedef struct {
-	unsigned char msgIx:2;
-	unsigned char reserved:6;
+	unsigned long msgIx;
+//	unsigned char msgIx:2;
+//	unsigned char reserved:6;
 }UndefinedMsg;
 
 typedef struct {
-	unsigned char msgIx:2;
-	unsigned long  srdagIx:30;
-	unsigned short fctIx:16;
-	unsigned char nbInEdge:8;
-	unsigned char nbOutEdge:8;
-	unsigned char nbInParam:8;
-	unsigned char nbOutParam:8;
+//	unsigned char msgIx:2;
+//	unsigned long  srdagIx:29;
+//	unsigned char  specialActor:1;
+//	unsigned short fctIx:16;
+//	unsigned char nbInEdge:8;
+//	unsigned char nbOutEdge:8;
+//	unsigned char nbInParam:8;
+//	unsigned char nbOutParam:8;
+	unsigned long msgIx;
+	unsigned long srdagIx;
+	unsigned long specialActor;
+	unsigned long fctIx;
+	unsigned long nbInEdge;
+	unsigned long nbOutEdge;
+	unsigned long nbInParam;
+	unsigned long nbOutParam;
 }StartJobMsg;
 
 typedef struct Fifo{
@@ -66,13 +76,16 @@ typedef struct Fifo{
 } Fifo;
 
 typedef struct {
-	unsigned char msgIx:2;
-	unsigned long srdagIx:30;
+	unsigned long msgIx;
+	unsigned long srdagIx;
+//	unsigned char msgIx:2;
+//	unsigned long srdagIx:30;
 }ParamValueMsg;
 
 typedef struct {
-	unsigned char msgIx:2;
-	unsigned char reserved:6;
+	unsigned long msgIx;
+//	unsigned char msgIx:2;
+//	unsigned char reserved:6;
 }ClearTimeMsg;
 
 #endif/*MESSAGE_H*/

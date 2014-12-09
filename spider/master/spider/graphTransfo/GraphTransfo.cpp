@@ -63,6 +63,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <launcher/Launcher.h>
+
 #define TRANSFO_STACK_SIZE 1024*1024*1024
 
 static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
@@ -179,9 +181,10 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 		/* Schedule and launch execution */
 		config->memAlloc->alloc(topSrdag);
 		config->scheduler->schedule(topSrdag, schedule, archi, &transfoStack);
-
+		getLrt()->runUntilNoMoreJobs();
 
 		/* Resolve params must be done by itself */
+		Launcher::get()->resolveParams(archi, topSrdag);
 
 		while(! jobQueue.isEmpty()){
 			/* Pop job from queue */
@@ -210,6 +213,8 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 	/* Schedule and launch execution */
 	config->memAlloc->alloc(topSrdag);
 	config->scheduler->schedule(topSrdag, schedule, archi, &transfoStack);
+
+	getLrt()->runUntilNoMoreJobs();
 
 //	transfoStack.free();
 }

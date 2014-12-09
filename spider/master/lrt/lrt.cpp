@@ -39,14 +39,30 @@
 
 #include <cstring>
 
-LRT::LRT(Communicator* com, const lrtFct* fcts, int nFct){
+#include "specialActors/specialActors.h"
+
+static lrtFct specialActors[6] = {
+		&saBroadcast,
+		&saFork,
+		&saJoin,
+		&saRoundbuffer,
+		&saInit,
+		&saEnd
+};
+
+LRT::LRT(Communicator* com){
 	com_ = com;
-	fcts_ = fcts;
-	nFct_ = nFct;
 	/* TODO add some heapMemory */
+	fcts_ = 0;
+	nFct_ = 0;
 }
 LRT::~LRT(){
 
+}
+
+void LRT::setFctTbl(const lrtFct fct[], int nFct){
+	fcts_ = fct;
+	nFct_ = nFct;
 }
 
 int LRT::runOneJob(){
@@ -55,9 +71,9 @@ int LRT::runOneJob(){
 		switch(((UndefinedMsg*) msg)->msgIx){
 		case MSG_START_JOB:{
 			StartJobMsg* jobMsg = (StartJobMsg*) msg;
-			Fifo *inFifos = (Fifo*) (jobMsg + 1*sizeof(StartJobMsg));
-			Fifo *outFifos = (Fifo*) (inFifos + jobMsg->nbInEdge*sizeof(Fifo));
-			Param *inParams = (Param*) (outFifos + jobMsg->nbOutEdge*sizeof(Fifo));
+			Fifo *inFifos = (Fifo*) ((char*)jobMsg + 1*sizeof(StartJobMsg));
+			Fifo *outFifos = (Fifo*) ((char*)inFifos + jobMsg->nbInEdge*sizeof(Fifo));
+			Param *inParams = (Param*) ((char*)outFifos + jobMsg->nbOutEdge*sizeof(Fifo));
 
 			{
 				void* inFifosAlloc[jobMsg->nbInEdge];
@@ -65,15 +81,19 @@ int LRT::runOneJob(){
 				Param outParams[jobMsg->nbOutParam];
 
 				for(int i=0; i<jobMsg->nbInEdge; i++){
-					com_->recvData(&inFifos[i]);
-					inFifosAlloc[i] = (void*) (long)(inFifos[i].alloc);
+					inFifosAlloc[i] = (void*) com_->recvData(&inFifos[i]);
 				}
 
 				for(int i=0; i<jobMsg->nbOutEdge; i++){
-					outFifosAlloc[i] = (void*) (long)(outFifos[i].alloc);
+					outFifosAlloc[i] = (void*) com_->pre_sendData(&outFifos[i]);
 				}
 
-				fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
+				if(jobMsg->specialActor && jobMsg->fctIx < 6)
+					specialActors[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
+				else if(jobMsg->fctIx < nFct_)
+					fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
+				else
+					throw "Cannot find actor function\n";
 
 				for(int i=0; i<jobMsg->nbOutEdge; i++){
 					com_->sendData(&outFifos[i]);

@@ -44,48 +44,20 @@
 
 class Communicator {
 public:
-	void configure(
-			int minSize,
-			int maxSize,
-			int align,
-			void* (*alloc)(int size),
-			void (*send)(int lrtIx));
-	void configure(
-			int minSize,
-			int maxSize,
-			int align,
-			void (*send)(void* data, int size));
+	virtual void* alloc(int size) = 0;
+	virtual void send(int lrtIx) = 0;
 
-	void* alloc(int size);
-	void send(int lrtIx);
+	virtual int recv(int lrtIx, void** data) = 0;
+	virtual void release() = 0;
 
-	int recv(int lrtIx, void** data);
-	void release();
+	virtual void sendData(Fifo* f) = 0;
+	virtual long recvData(Fifo* f) = 0;
 
-	void sendData(Fifo* f);
-	void recvData(Fifo* f);
-
-	static Communicator* get();
+	virtual long pre_sendData(Fifo* f) = 0;
 
 protected:
-	Communicator();
-	virtual ~Communicator();
-
-	static Communicator instance_;
-
-	/** Common attributes */
-	int minSize_;
-	int maxSize_;
-	int align_;
-
-	bool isAlloc_;
-
-	/** Alloc attributes*/
-	void* (*alloc_)(int size);
-	void (*sendAlloc_)(int lrtIx);
-
-	/** NoAlloc attributes*/
-	void (*sendNoAlloc_)(void* data, int size);
+	Communicator(){}
+	virtual ~Communicator(){}
 };
 
 #endif/*COMMUNICATOR_H*/

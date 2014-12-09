@@ -35,6 +35,7 @@
  ****************************************************************************/
 
 #include <spider.h>
+#include <platformLinux.h>
 #include "Tests.h"
 
 #include <cstdio>
@@ -44,6 +45,7 @@
 #define ARCHI_STACK_SIZE (1024)
 
 int main(int argc, char* argv[]){
+	PlatformLinux platform;
 	PiSDFGraph *topPisdf;
 	SpiderConfig cfg;
 	SRDAGGraph srdag;
@@ -53,6 +55,8 @@ int main(int argc, char* argv[]){
 
 	void* archiMem = malloc(ARCHI_STACK_SIZE);
 	StaticStack archiStack = StaticStack(archiMem,ARCHI_STACK_SIZE);
+
+	platform.init(1, &archiStack);
 
 	SharedMemArchi archi = SharedMemArchi(&archiStack,
 			/* Nb PE */		1,
@@ -78,6 +82,7 @@ int main(int argc, char* argv[]){
 			sprintf(name, "test0_%d.gv", i);
 			stack.free();
 			srdag = SRDAGGraph(&stack);
+			getLrt()->setFctTbl(test0_fcts, 3);
 			topPisdf = initPisdf_test0(&archi, &stack, i);
 			jit_ms(topPisdf, &archi, &cfg);
 			test_Test0(topPisdf, &srdag, i, &stack);

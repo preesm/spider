@@ -42,6 +42,24 @@
 /****************************     TEST 0     ***********************************/
 /*******************************************************************************/
 
+/** Actors */
+
+void C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	printf("Execute C\n");
+}
+
+void A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	printf("Execute A\n");
+}
+
+void B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	printf("Execute B\n");
+}
+
+lrtFct test0_fcts[3] = {&C, &A, &B};
+
+/** PISDF Graphs **/
+
 PiSDFGraph* test0(Archi* archi, Stack* stack, int N){
 	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
 	// Graph

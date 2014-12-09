@@ -25,13 +25,21 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.374471987" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.2136144404" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/spider}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/platform}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/coms}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/lrt}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/platform_linux}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1697857320" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1239255214" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.1867853715" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.611288675" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.include.paths.376976361" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/spider}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/coms}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/lrt}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/platform_linux}&quot;"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1304308309" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1036230414" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>

@@ -45,15 +45,28 @@
 /** Actors */
 
 void C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	static int i=1;
 	printf("Execute C\n");
+	outParams[0] = i++;
 }
 
 void A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	char* out = (char*)outputFIFOs[0];
+
 	printf("Execute A\n");
+	out[0] = 1;
+	out[1] = 2;
 }
 
 void B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	printf("Execute B\n");
+	Param N = inParams[0];
+	char* in = (char*)inputFIFOs[0];
+
+	printf("Execute B: ");
+	for(int i=0;i<N; i++){
+		printf("%d ", in[i]);
+	}
+	printf("\n");
 }
 
 lrtFct test0_fcts[3] = {&C, &A, &B};
@@ -74,15 +87,15 @@ PiSDFGraph* test0(Archi* archi, Stack* stack, int N){
 			stack);
 
 	// Parameters.
-//	PiSDFParam *paramN = PiSDFGraphAddDynamicParam(graph, "N");
-	PiSDFParam *paramN = graph->addStaticParam("N", N);
+	PiSDFParam *paramN = graph->addDynamicParam("N");
 
 	// Configure vertices.
 	PiSDFVertex *vxC = graph->addConfigVertex(
 			"C", /*Fct*/ 0,
 			PISDF_SUBTYPE_NORMAL,
 			/*In*/ 0,  /*Out*/ 0,
-			/*Par*/ 0, /*Cfg*/ 0);
+			/*Par*/ 0, /*Cfg*/ 1);
+	vxC->addOutParam(0, paramN);
 
 	// Other vertices
 	PiSDFVertex *vxA = graph->addBodyVertex(
@@ -137,6 +150,9 @@ SRDAGGraph* result_Test0_1(PiSDFGraph* pisdf, Stack* stack){
 	SRDAGVertex* vxB1 = srdag->addVertex(topPisdf->getBody(1));
 	SRDAGVertex* vxF = srdag->addFork(2);
 
+	vxB0->addInParam(0, 1);
+	vxB1->addInParam(0, 1);
+
 	srdag->addEdge(
 			vxA, 0,
 			vxF, 0,
@@ -162,6 +178,8 @@ SRDAGGraph* result_Test0_2(PiSDFGraph* pisdf, Stack* stack){
 	SRDAGVertex* vxA = srdag->addVertex(topPisdf->getBody(0));
 	SRDAGVertex* vxB = srdag->addVertex(topPisdf->getBody(1));
 
+	vxB->addInParam(0, 2);
+
 	srdag->addEdge(
 			vxA, 0,
 			vxB, 0,
@@ -184,6 +202,9 @@ SRDAGGraph* result_Test0_3(PiSDFGraph* pisdf, Stack* stack){
 	SRDAGVertex* vxF = srdag->addFork(2);
 	SRDAGVertex* vxJ0 = srdag->addJoin(2);
 	SRDAGVertex* vxJ1 = srdag->addJoin(2);
+
+	vxB0->addInParam(0, 3);
+	vxB1->addInParam(0, 3);
 
 	srdag->addEdge(
 			vxA0, 0,

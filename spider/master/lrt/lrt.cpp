@@ -99,7 +99,7 @@ int LRT::runOneJob(){
 					com_->sendData(&outFifos[i]);
 				}
 				for(int i=0; i<jobMsg->nbOutParam; i++){
-					ParamValueMsg* msgParam = (ParamValueMsg*) com_->alloc(sizeof(ParamValueMsg));
+					ParamValueMsg* msgParam = (ParamValueMsg*) com_->alloc(sizeof(ParamValueMsg)+jobMsg->nbOutParam*sizeof(Param));
 					Param* params = (Param*)(msgParam+1);
 
 					msgParam->msgIx = MSG_PARAM_VALUE;

@@ -100,7 +100,7 @@ inline void Set<TYPE>::del(TYPE value){
 
 template <typename TYPE>
 inline TYPE Set<TYPE>::operator[] (int ix){
-	if(ix < 0 && ix >= nb)
+	if(ix < 0 || ix >= nb)
 		throw "Set: operator[] get bad ix";
 	else
 		return array[ix];

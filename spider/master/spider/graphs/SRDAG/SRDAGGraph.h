@@ -39,6 +39,7 @@
 
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <graphs/SRDAG/SRDAGCommon.h>
+#include <graphs/SRDAG/SRDAGVertex.h>
 
 class SRDAGGraph {
 public:
@@ -70,6 +71,7 @@ public:
 	/** Element getters */
 	inline SRDAGEdge* getEdge(int ix);
 	inline SRDAGVertex* getVertex(int ix);
+	inline SRDAGVertex* getVertexFromIx(int ix);
 
 	inline int getIxOfEdge(SRDAGEdge* edge);
 	inline int getIxOfVertex(SRDAGVertex* vertex);
@@ -106,6 +108,13 @@ inline SRDAGEdge* SRDAGGraph::getEdge(int ix){
 }
 inline SRDAGVertex* SRDAGGraph::getVertex(int ix){
 	return vertices_[ix];
+}
+inline SRDAGVertex* SRDAGGraph::getVertexFromIx(int ix){
+	for(int i=0; i< vertices_.getN(); i++){
+		if(vertices_[i]->getId() == ix)
+			return vertices_[i];
+	}
+	throw "Vertex not found\n";
 }
 
 inline int SRDAGGraph::getIxOfEdge(SRDAGEdge* edge){

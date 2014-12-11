@@ -134,7 +134,10 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 
 	switch(vertex->getType()){
 	case SRDAG_NORMAL:
-		memcpy(inParams, vertex->getInParams(), nParams*sizeof(Param));
+		for(int i=0; i<nParams; i++){
+			inParams[i] = vertex->getInParam(i);
+		}
+//		memcpy(inParams, vertex->getInParams(), nParams*sizeof(Param));
 		break;
 	case SRDAG_FORK:
 		inParams[0] = vertex->getNInEdge();
@@ -168,6 +171,8 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		break;
 	}
 
+	curNParam_ += vertex->getNOutParam();
+
 	getSpiderCommunicator()->send(lrtIx);
 }
 
@@ -178,8 +183,8 @@ void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 		if(getSpiderCommunicator()->recv(slave, (void**)(&msg))){
 			if(msg->msgIx != MSG_PARAM_VALUE)
 				throw "Unexpected Msg received\n";
-			SRDAGVertex* cfgVertex = topDag->getVertex(msg->srdagIx);
-			long* params = (long*) (msg+1);
+			SRDAGVertex* cfgVertex = topDag->getVertexFromIx(msg->srdagIx);
+			Param* params = (Param*) (msg+1);
 			for(int j = 0; j < cfgVertex->getNOutParam(); j++){
 				int* param = cfgVertex->getOutParam(j);
 				*param = params[j];

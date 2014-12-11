@@ -55,6 +55,10 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stack
 		case PISDF_SUBTYPE_NORMAL:
 			for(int j=0; j<brv[bodyIt.currentIx()]; j++){
 				job->bodies[bodyIt.currentIx()][j] = topSrdag->addVertex(pi_vertex);
+
+				for(int i=0; i<bodyIt.current()->getNInParam(); i++){
+					job->bodies[bodyIt.currentIx()][j]->addInParam(i, job->paramValues[pi_vertex->getInParam(i)->getTypeIx()]);
+				}
 			}
 			break;
 		case PISDF_SUBTYPE_BROADCAST:
@@ -83,5 +87,10 @@ void addCAVertices(SRDAGGraph *topSrdag, transfoJob *job, Stack* stack){
 	PiSDFVertexIterator configIt = job->graph->getConfigIterator();
     FOR_IT(configIt){
 		job->configs[configIt.currentIx()] = topSrdag->addVertex(configIt.current());
+		if(configIt.current()->getType() == PISDF_TYPE_CONFIG){
+			for(int i=0; i<configIt.current()->getNOutParam(); i++){
+				job->configs[configIt.currentIx()]->addOutParam(i, &(job->paramValues[configIt.current()->getOutParam(i)->getTypeIx()]));
+			}
+		}
 	}
 }

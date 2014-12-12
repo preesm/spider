@@ -58,6 +58,7 @@ public:
 	inline void setPETypeRecvSpeed(int type, float a, float b);
 
 	inline void setName(int pe, const char* name);
+	inline void setPEType(int pe, int type);
 
 private:
 	int nPE_;
@@ -100,4 +101,8 @@ inline void SharedMemArchi::setPETypeRecvSpeed(int type, float a, float b){
 inline void SharedMemArchi::setName(int pe, const char* name){
 	peName_[pe] = name;
 }
+inline void SharedMemArchi::setPEType(int pe, int type){
+	peType_[pe] = type;
+}
+
 #endif/*SHARED_MEM_ARCH_H*/

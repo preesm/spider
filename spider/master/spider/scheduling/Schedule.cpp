@@ -52,6 +52,9 @@ Schedule::Schedule(int nPE, int nJobMax, Stack *stack){
 	nJobPerPE_ = sAlloc(stack, nPE_, int);
 	readyTime_ = sAlloc(stack, nPE_, Time);
 	schedules_ = sAlloc(stack, nPE_*nJobMax_, SRDAGVertex*);
+
+	memset(nJobPerPE_, 0, nPE_*sizeof(int));
+	memset(readyTime_, 0, nPE_*sizeof(Time));
 }
 
 void Schedule::addJob(int pe, SRDAGVertex* job, Time start, Time end){

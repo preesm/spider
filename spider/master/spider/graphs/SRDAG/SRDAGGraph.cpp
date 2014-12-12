@@ -214,7 +214,7 @@ void SRDAGGraph::print(const char *path){
 	if(!check())
 		printf("Errors in the SRDAG Graph\n");
 
-	int maxId;
+	int maxId = -1;
 	int file = Platform::get()->fopen(path);
 	if(file == -1){
 		printf("cannot open %s\n", path);
@@ -255,7 +255,7 @@ void SRDAGGraph::print(const char *path){
 		}
 		Platform::get()->fprintf(file, "];\n");
 
-		maxId = (vertex->getId() > maxId) ?vertex->getId() : maxId;
+		maxId = (vertex->getId() > maxId) ? vertex->getId() : maxId;
 	}
 
 	// Drawing edges.

@@ -49,6 +49,14 @@ SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType) {
 }
 
 SharedMemArchi::~SharedMemArchi() {
+	nPE_ = 0;
+	nPEType_ = 0;
+	peType_ = 0;
+	peName_ = 0;
+	peTypeASend_ = 0;
+	peTypeBSend_ = 0;
+	peTypeARecv_ = 0;
+	peTypeBRecv_ = 0;
 }
 
 

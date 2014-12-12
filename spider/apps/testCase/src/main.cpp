@@ -67,6 +67,7 @@ int main(int argc, char* argv[]){
 
 	archi.setPETypeRecvSpeed(0, 1, 10);
 	archi.setPETypeSendSpeed(0, 1, 10);
+	archi.setPEType(0, 0);
 	archi.setName(0, "PE0");
 
 	cfg.createSrdag = false;

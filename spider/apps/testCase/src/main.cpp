@@ -162,6 +162,9 @@ int main(int argc, char* argv[]){
 //	}
 	printf("finished\n");
 
+	stack.printStat();
+	archiStack.printStat();
+
 	free(memory);
 
 	return 0;

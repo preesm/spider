@@ -44,6 +44,8 @@ public:
 	virtual void* alloc(int size) = 0;
 	virtual void free() = 0;
 
+	virtual void printStat() = 0;
+
 protected:
 	Stack(){}
 	virtual ~Stack(){}

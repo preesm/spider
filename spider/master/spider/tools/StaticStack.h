@@ -47,10 +47,15 @@ public:
 	virtual void* alloc(int size);
 	virtual void free();
 
+	virtual void printStat();
+
 private:
 	int size_;
 	char* stack_;
 	char* curPtr_;
+	int used_;
+
+	int maxUsed_;
 };
 
 #endif//STATIC_STACK_H

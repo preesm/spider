@@ -70,25 +70,23 @@
 static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 	job->graph = nextHierVx->getSubGraph();
 
-	/** Declare Iterator */
-	PiSDFParamIterator paramIt = job->graph->getParamIterator();
-
 	/* Add Static and Herited parameter values */
 	job->paramValues = sAlloc(stack, job->graph->getNParam(), int);
-	for(paramIt.first(); paramIt.finished(); paramIt.next()){
-		switch(paramIt.current()->getType()){
+	for(int paramIx=0; paramIx<job->graph->getNParam(); paramIx++){
+		PiSDFParam* param = job->graph->getParam(paramIx);
+		switch(param->getType()){
 		case PISDF_PARAM_STATIC:
-			job->paramValues[paramIt.currentIx()] = paramIt.current()->getStaticValue();
+			job->paramValues[paramIx] = param->getStaticValue();
 			break;
 		case PISDF_PARAM_HERITED:
-			job->paramValues[paramIt.currentIx()] = nextHierVx->getInParam(paramIt.current()->getParentId());
+			job->paramValues[paramIx] = nextHierVx->getInParam(param->getParentId());
 			break;
 		case PISDF_PARAM_DYNAMIC:
 			// Do nothing, cannot be evaluated yet
-			job->paramValues[paramIt.currentIx()] = -1;
+			job->paramValues[paramIx] = -1;
 			break;
 		}
-//		printf("%s <= %d\n", paramIt.current()->getName(), job->paramValues[paramIt.currentIx()]);
+//		printf("%s <= %d\n", param->getName(), job->paramValues[paramIx]);
 	}
 
 	/* Add edge interfaces in job */
@@ -100,10 +98,10 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 }
 
 static SRDAGVertex* getNextHierVx(SRDAGGraph *topDag){
-	SRDAGVertexIterator vertexIt = topDag->getVertexIterator();
-	for(vertexIt.first(); vertexIt.finished(); vertexIt.next()){ // todo check executable
-		if(vertexIt.current()->isHierarchical()){
-			return vertexIt.current();
+	for(int i=0; i<topDag->getNVertex(); i++){ // todo check executable
+		SRDAGVertex* vertex = topDag->getVertex(i);
+		if(vertex->isHierarchical()){
+			return vertex;
 		}
 	}
 	return 0;

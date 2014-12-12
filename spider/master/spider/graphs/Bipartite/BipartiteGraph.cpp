@@ -59,14 +59,10 @@ BipartiteGraph::BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack){
 	memset(nConnections_, 0, nVerticesG1_*sizeof(int));
 	stack_ = stack;
 
-	SRDAGVertexIterator vertexItG1 = g1->getVertexIterator();
-	FOR_IT(vertexItG1){
-		SRDAGVertex* vertexG1 = vertexItG1.current();
-		int ixG1 = g1->getIxOfVertex(vertexG1);
-		SRDAGVertexIterator vertexItG2 = g2->getVertexIterator();
-		FOR_IT(vertexItG2){
-			SRDAGVertex* vertexG2 = vertexItG2.current();
-			int ixG2 = g2->getIxOfVertex(vertexG2);
+	for (int ixG1=0; ixG1<g1->getNVertex(); ixG1++) {
+		SRDAGVertex* vertexG1 = g1->getVertex(ixG1);
+		for (int ixG2=0; ixG2<g2->getNVertex(); ixG2++) {
+			SRDAGVertex* vertexG2 = g2->getVertex(ixG2);
 			if(vertexG1->match(vertexG2)){
 				graph_[ixG1*nVerticesG1_ + nConnections_[ixG1]] = ixG2;
 				nConnections_[ixG1]++;

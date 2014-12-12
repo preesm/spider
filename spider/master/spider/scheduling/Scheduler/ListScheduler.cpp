@@ -67,11 +67,11 @@ void ListScheduler::schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi
 
 //	Launcher::initTaskOrderingTime();
 
-	SRDAGVertexIterator vIt = srdag_->getVertexIterator();
-	FOR_IT(vIt){
-		if(vIt.current()->getState() == SRDAG_EXEC){
-			list_.add(vIt.current());
-			computeSchedLevel(vIt.current());
+	for(int i=0; i<srdag_->getNVertex(); i++){
+		SRDAGVertex *vertex = srdag_->getVertex(i);
+		if(vertex->getState() == SRDAG_EXEC){
+			list_.add(vertex);
+			computeSchedLevel(vertex);
 		}
 	}
 	list_.sort(compareSchedLevel);

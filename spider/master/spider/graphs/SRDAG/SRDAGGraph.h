@@ -64,10 +64,6 @@ public:
 	void delVertex(SRDAGVertex* vertex);
 	void delEdge(SRDAGEdge* edge);
 
-	/** Iterator getters */
-	inline SRDAGEdgeIterator getEdgeIterator();
-	inline SRDAGVertexIterator getVertexIterator();
-
 	/** Element getters */
 	inline SRDAGEdge* getEdge(int ix);
 	inline SRDAGVertex* getVertex(int ix);
@@ -94,13 +90,6 @@ private:
 };
 
 /** Inline Fcts */
-/** Iterator getters */
-inline SRDAGEdgeIterator SRDAGGraph::getEdgeIterator(){
-	return edges_.getIterator();
-}
-inline SRDAGVertexIterator SRDAGGraph::getVertexIterator(){
-	return vertices_.getIterator();
-}
 
 /** Element getters */
 inline SRDAGEdge* SRDAGGraph::getEdge(int ix){

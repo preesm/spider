@@ -38,7 +38,6 @@
 #define SET_H
 
 #include <tools/Stack.h>
-#include "SetIterator.h"
 
 template<typename TYPE> class Set {
 public:
@@ -63,8 +62,6 @@ public:
 
 	inline int getIxOf(TYPE val);
 
-	inline SetIterator<TYPE> getIterator();
-
 private:
 	TYPE* array;
 	int nb;
@@ -87,10 +84,9 @@ inline void Set<TYPE>::add(TYPE value){
 
 template <typename TYPE>
 inline void Set<TYPE>::del(TYPE value){
-	SetIterator<TYPE> iter = this->getIterator();
-	for(iter.first(); iter.finished(); iter.next()){
-		if(iter.current() == value){
-			array[iter.currentIx()] = array[--nb];
+	for(int i=0; i<nb; i++){
+		if(array[i] == value){
+			array[i] = array[--nb];
 			return;
 		}
 	}
@@ -104,11 +100,6 @@ inline TYPE Set<TYPE>::operator[] (int ix){
 		throw "Set: operator[] get bad ix";
 	else
 		return array[ix];
-}
-
-template <typename TYPE>
-inline SetIterator<TYPE> Set<TYPE>::getIterator(){
-	return SetIterator<TYPE>(this);
 }
 
 template <typename TYPE>

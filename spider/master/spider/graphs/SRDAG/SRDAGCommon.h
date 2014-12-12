@@ -38,7 +38,6 @@
 #define SRDAG_COMMON_H
 
 #include <tools/Set.h>
-#include <tools/Iterator.h>
 
 class SRDAGEdge;
 class SRDAGParam;
@@ -71,9 +70,5 @@ typedef enum SRDAGState {
 /** Set types */
 typedef Set<SRDAGEdge*> SRDAGEdgeSet;
 typedef Set<SRDAGVertex*> SRDAGVertexSet;
-
-/** Iterators types */
-typedef SetIterator<SRDAGEdge*> SRDAGEdgeIterator;
-typedef SetIterator<SRDAGVertex*> SRDAGVertexIterator;
 
 #endif/*SRDAG_COMMON_H*/

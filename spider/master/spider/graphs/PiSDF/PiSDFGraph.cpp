@@ -244,110 +244,108 @@ void PiSDFGraph::print(const char *path){
 	Platform::get()->fprintf(file, "\tedge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
 	Platform::get()->fprintf(file, "\trankdir=LR;\n\n");
 
-	/** Declare Iterator */
-	PiSDFEdgeIterator edgeIt 	= edges_.getIterator();
-	PiSDFParamIterator paramIt 	= params_.getIterator();
-	PiSDFVertexIterator bodyIt 	= bodies_.getIterator();
-	PiSDFVertexIterator inIfIt	 = inputIfs_.getIterator();
-	PiSDFVertexIterator configIt = configs_.getIterator();
-	PiSDFVertexIterator outIfIt = outputIfs_.getIterator();
-
 
 	// Drawing parameters.
 	Platform::get()->fprintf(file, "\t# Parameters\n");
-	for (paramIt.first(); paramIt.finished(); paramIt.next()){
+	for(int i=0; i<params_.getN(); i++){
+		PiSDFParam *param = params_[i];
 		Platform::get()->fprintf(file, "\t%s [label=\"%s\" shape=house];\n",
-				paramIt.current()->getName(),
-				paramIt.current()->getName());
+				param->getName(),
+				param->getName());
 	}
 
 	// Drawing Config PiSDF vertices.
 	Platform::get()->fprintf(file, "\n\t# Configs\n");
-	for (configIt.first(); configIt.finished(); configIt.next()){
+	for(int i=0; i<configs_.getN(); i++){
+		PiSDFVertex *config = configs_[i];
 		Platform::get()->fprintf(file, "\t%s [shape=doubleoctagon,label=\"%s\"];\n",
-				configIt.current()->getName(),
-				configIt.current()->getName());
+				config->getName(),
+				config->getName());
 
 		// Drawing lines : vertex -> parameters.
-		for (int j = 0; j < configIt.current()->getNOutParam(); j++) {
+		for (int j = 0; j < config->getNOutParam(); j++) {
 			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
-					configIt.current()->getName(),
-					configIt.current()->getOutParam(j)->getName());
+					config->getName(),
+					config->getOutParam(j)->getName());
 		}
 
 		// Drawing lines : parameter -> vertex.
-		for (int j = 0; j < configIt.current()->getNInParam(); j++) {
+		for (int j = 0; j < config->getNInParam(); j++) {
 			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
-					configIt.current()->getInParam(j)->getName(),
-					configIt.current()->getName());
+					config->getInParam(j)->getName(),
+					config->getName());
 		}
 		Platform::get()->fprintf(file, "\n");
 	}
 
 	// Drawing Body PiSDF vertices.
 	Platform::get()->fprintf(file, "\t# Body Vertices\n");
-	for (bodyIt.first(); bodyIt.finished(); bodyIt.next()){
-		if(bodyIt.current()->isHierarchical()){
+	for(int i=0; i<bodies_.getN(); i++){
+		PiSDFVertex *body = bodies_[i];
+		if(body->isHierarchical()){
 			char name[100];
-			sprintf(name, "%s_sub.gv", bodyIt.current()->getName());
-			bodyIt.current()->getSubGraph()->print(name);
+			sprintf(name, "%s_sub.gv", body->getName());
+			body->getSubGraph()->print(name);
 		}
 
 		Platform::get()->fprintf(file, "\t%s [label=\"%s\"];\n",
-			bodyIt.current()->getName(),
-			bodyIt.current()->getName());
+			body->getName(),
+			body->getName());
 
 		// Drawing lines : parameter -> vertex.
-		for (int j = 0; j < bodyIt.current()->getNInParam(); j++) {
+		for (int j = 0; j < body->getNInParam(); j++) {
 			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
-				bodyIt.current()->getInParam(j)->getName(),
-				bodyIt.current()->getName());
+				body->getInParam(j)->getName(),
+				body->getName());
 		}
 		Platform::get()->fprintf(file, "\n");
 	}
 
 	// Drawing Input vertices.
 	Platform::get()->fprintf(file, "\t# Input Ifs\n");
-	for (inIfIt.first(); inIfIt.finished(); inIfIt.next()) {
+	for(int i=0; i<inputIfs_.getN(); i++){
+		PiSDFVertex *inIf = inputIfs_[i];
 		Platform::get()->fprintf(file, "\t%s [shape=cds,label=\"%s\"];\n",
-				inIfIt.current()->getName(),
-				inIfIt.current()->getName());
+				inIf->getName(),
+				inIf->getName());
 
 		// Drawing lines : parameter -> vertex.
-		for (int j = 0; j < inIfIt.current()->getNInParam(); j++) {
+		for (int j = 0; j < inIf->getNInParam(); j++) {
 			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
-				inIfIt.current()->getInParam(j)->getName(),
-				inIfIt.current()->getName());
+				inIf->getInParam(j)->getName(),
+				inIf->getName());
 		}
 		Platform::get()->fprintf(file, "\n");
 	}
 
 	// Drawing Output vertices.
 	Platform::get()->fprintf(file, "\t# Output Ifs\n");
-	for (outIfIt.first(); outIfIt.finished(); outIfIt.next()) {
+	for(int i=0; i<outputIfs_.getN(); i++){
+		PiSDFVertex *outIf = outputIfs_[i];
 		Platform::get()->fprintf(file, "\t%s [shape=cds,label=\"%s\"];\n",
-				outIfIt.current()->getName(),
-				outIfIt.current()->getName());
+				outIf->getName(),
+				outIf->getName());
 
 		// Drawing lines : parameter -> vertex.
-		for (int j = 0; j < outIfIt.current()->getNInParam(); j++) {
+		for (int j = 0; j < outIf->getNInParam(); j++) {
 			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
-				outIfIt.current()->getInParam(j)->getName(),
-				outIfIt.current()->getName());
+				outIf->getInParam(j)->getName(),
+				outIf->getName());
 		}
 		Platform::get()->fprintf(file, "\n");
 	}
 
 	// Drawing edges.
 	Platform::get()->fprintf(file, "\t# Edges\n");
-	for (edgeIt.first(); edgeIt.finished(); edgeIt.next()) {
+	for(int i=0; i<edges_.getN(); i++){
+		PiSDFEdge *edge = edges_[i];
 		char prodExpr[100];
 		char consExpr[100];
 		char delayExpr[100];
 
-		edgeIt.current()->getProdExpr(prodExpr, 100);
-		edgeIt.current()->getConsExpr(consExpr, 100);
-		edgeIt.current()->getDelayExpr(delayExpr, 100);
+		edge->getProdExpr(prodExpr, 100);
+		edge->getConsExpr(consExpr, 100);
+		edge->getDelayExpr(delayExpr, 100);
 
 //		Parser_toString(&(edge->production), &(graph->params), shortenedPExpr);
 //		Parser_toString(&(edge->consumption), &(graph->params), shortenedCExpr);
@@ -364,11 +362,11 @@ void PiSDFGraph::print(const char *path){
 //			shortenedCExpr);
 		//labelDistance = 3 + labelDistance%(3*4); // Oscillating the label distance to keep visibility
 		Platform::get()->fprintf(file, "\t%s->%s [taillabel=\"(%d):%s\" headlabel=\"(%d):%s\" label=\"%s\"];\n",
-			edgeIt.current()->getSrc()->getName(),
-			edgeIt.current()->getSnk()->getName(),
-			edgeIt.current()->getSrcPortIx(),
+			edge->getSrc()->getName(),
+			edge->getSnk()->getName(),
+			edge->getSrcPortIx(),
 			prodExpr,
-			edgeIt.current()->getSnkPortIx(),
+			edge->getSnkPortIx(),
 			consExpr,
 			delayExpr);
 	}

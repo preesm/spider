@@ -89,14 +89,6 @@ public:
 
 	PiSDFParam* addDynamicParam(const char* name);
 
-	/** Iterator getters */
-	inline PiSDFEdgeIterator getEdgeIterator();
-	inline PiSDFParamIterator getParamIterator();
-	inline PiSDFVertexIterator getBodyIterator();
-	inline PiSDFVertexIterator getConfigIterator();
-	inline PiSDFVertexIterator getInputIfIterator();
-	inline PiSDFVertexIterator getOutputIfIterator();
-
 	/** Element getters */
 	inline PiSDFEdge* getEdge(int ix);
 	inline PiSDFParam* getParam(int ix);
@@ -107,6 +99,9 @@ public:
 
 	inline const PiSDFParam* const * getParams() const;
 	inline int getNParam() const;
+	inline int getNEdge() const;
+	inline int getNInIf() const;
+	inline int getNOutIf() const;
 	inline int getNConfig() const;
 	inline int getNBody() const;
 
@@ -141,25 +136,6 @@ private:
 };
 
 /** Inline Fcts */
-/** Iterator getters */
-inline PiSDFEdgeIterator PiSDFGraph::getEdgeIterator(){
-	return edges_.getIterator();
-}
-inline PiSDFParamIterator PiSDFGraph::getParamIterator(){
-	return params_.getIterator();
-}
-inline PiSDFVertexIterator PiSDFGraph::getBodyIterator(){
-	return bodies_.getIterator();
-}
-inline PiSDFVertexIterator PiSDFGraph::getConfigIterator(){
-	return configs_.getIterator();
-}
-inline PiSDFVertexIterator PiSDFGraph::getInputIfIterator(){
-	return inputIfs_.getIterator();
-}
-inline PiSDFVertexIterator PiSDFGraph::getOutputIfIterator(){
-	return outputIfs_.getIterator();
-}
 
 /** Element getters */
 inline PiSDFEdge* PiSDFGraph::getEdge(int ix){
@@ -186,6 +162,15 @@ inline const PiSDFParam* const * PiSDFGraph::getParams() const {
 }
 inline int PiSDFGraph::getNParam() const{
 	return params_.getN();
+}
+inline int PiSDFGraph::getNEdge() const{
+	return edges_.getN();
+}
+inline int PiSDFGraph::getNInIf() const{
+	return inputIfs_.getN();
+}
+inline int PiSDFGraph::getNOutIf() const{
+	return outputIfs_.getN();
 }
 inline int PiSDFGraph::getNConfig() const{
 	return configs_.getN();

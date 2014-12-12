@@ -45,12 +45,11 @@ void DummyMemAlloc::reset(){
 }
 
 void DummyMemAlloc::alloc(SRDAGGraph* graph){
-	SRDAGVertexIterator vertexIt = graph->getVertexIterator();
-	FOR_IT(vertexIt){
-		SRDAGVertex* vertex = vertexIt.current();
+	for(int i=0; i<graph->getNVertex(); i++){
+		SRDAGVertex* vertex = graph->getVertex(i);
 		if(vertex->getState() == SRDAG_EXEC){
-			for(int i=0; i<vertex->getNOutEdge(); i++){
-				SRDAGEdge* edge = vertex->getOutEdge(i);
+			for(int j=0; j<vertex->getNOutEdge(); j++){
+				SRDAGEdge* edge = vertex->getOutEdge(j);
 				if(edge->getAlloc() == -1){
 					edge->setAlloc(currentMem_);
 					currentMem_ += edge->getRate();

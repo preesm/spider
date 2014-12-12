@@ -66,10 +66,8 @@ typedef struct node{
 } node;
 
 void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job){
-	PiSDFVertexIterator vertexIt = job->graph->getConfigIterator();
-
-	FOR_IT(vertexIt){
-		SRDAGVertex *sr_ca = job->configs[vertexIt.currentIx()];
+	for(int sr_ca_Ix=0; sr_ca_Ix<job->graph->getNConfig(); sr_ca_Ix++){
+		SRDAGVertex *sr_ca = job->configs[sr_ca_Ix];
 		PiSDFVertex *pi_ca = sr_ca->getReference();
 
 		for(int inEdgeIx=0; inEdgeIx<pi_ca->getNInEdge(); inEdgeIx++){
@@ -177,10 +175,8 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job){
 }
 
 void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
-	PiSDFEdgeIterator edgeIt = job->graph->getEdgeIterator();
-	FOR_IT(edgeIt){
-		int j;
-		PiSDFEdge *pi_edge  = edgeIt.current();
+	for(int i=0; i<job->graph->getNEdge(); i++){
+		PiSDFEdge *pi_edge  = job->graph->getEdge(i);
 		PiSDFVertex *pi_src = pi_edge->getSrc();
 		PiSDFVertex *pi_snk = pi_edge->getSnk();
 		int nbSrcs, nbSnks;
@@ -258,7 +254,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 		node srcConnections[MAX_VERTEX_REPETITION];
 		node snkConnections[MAX_VERTEX_REPETITION];
 
-		for(j=0; j<MAX_VERTEX_REPETITION; j++){
+		for(int j=0; j<MAX_VERTEX_REPETITION; j++){
 			srcConnections[j].nb = 0;
 			snkConnections[j].nb = 0;
 		}
@@ -371,7 +367,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 		/* Transform all src nodes to src edges.
 		 * Basicaly create edges and maybe Im/Ex/Rb/Br
 		 */
-		for(j=0; j<nbSrcs; j++){
+		for(int j=0; j<nbSrcs; j++){
 			node* srcNode = &(srcConnections[j]);
 			switch(srcNode->type){
 			case EDGE: /* Interfaces and Config */
@@ -468,7 +464,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 		 * but not critical as they are not allocated yet
 		 * as they are snk edges of a hierarchical graph.
 		 */
-		for(j=0; j<nbSnks; j++){
+		for(int j=0; j<nbSnks; j++){
 			node* snkNode = &(snkConnections[j]);
 			switch(snkNode->type){
 			case EDGE: /* Only Interface */
@@ -545,7 +541,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 			throw "Nb src and snk connections mismatch\n";
 		}
 
-		for(j=0; j<nbSrcEdges; j++){
+		for(int j=0; j<nbSrcEdges; j++){
 			if(snkVertices[j].vertex == 0){
 				if(srcEdges[j]->getSrc()->getType() == SRDAG_BROADCAST){
 					int k;
@@ -573,17 +569,16 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 
 	/* Optimizations */
 	/* Remove Unused broadcasts */
-	SRDAGVertexIterator vertexIt = topSrdag->getVertexIterator();
-	FOR_IT(vertexIt){
-		SRDAGVertex *vertex = vertexIt.current();
+	for(int i=0; i<topSrdag->getNVertex(); i++){
+		SRDAGVertex *vertex = topSrdag->getVertex(i);
 		if(vertex->getType() == SRDAG_BROADCAST && vertex->getNConnectedOutEdge() == 1){
 			/* Remove Broadcast */
 			/* TODO check if kill BR can cause troubles for other edges */
 			SRDAGEdge *edge_in  = vertex->getInEdge(0);
 			SRDAGEdge *edge_out = 0;
-			for(int i=0; i<vertex->getNOutEdge(); i++){
-				if(vertex->getOutEdge(i) != 0){
-					edge_out = vertex->getOutEdge(i);
+			for(int j=0; j<vertex->getNOutEdge(); j++){
+				if(vertex->getOutEdge(j) != 0){
+					edge_out = vertex->getOutEdge(j);
 				}
 			}
 			SRDAGVertex *out = edge_out->getSnk();
@@ -597,7 +592,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 			topSrdag->delEdge(edge_out);
 			topSrdag->delVertex(vertex);
 
-			vertexIt.first(); // minus 1 can be enough
+			i = 0; // minus 1 can be enough
 		}
 	}
 }

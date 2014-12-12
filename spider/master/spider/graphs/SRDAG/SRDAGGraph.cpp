@@ -195,18 +195,17 @@ void SRDAGGraph::delEdge(SRDAGEdge* edge){
 
 int SRDAGGraph::getNExecVertex(){
 	int n=0;
-	SRDAGVertexIterator vIt = getVertexIterator();
-	FOR_IT(vIt){
-		if(vIt.current()->getState() == SRDAG_EXEC)
+	for(int i=0; i<vertices_.getN(); i++){
+		if(vertices_[i]->getState() == SRDAG_EXEC)
 			n++;
 	}
 	return n;
 }
 
 void SRDAGGraph::updateState(){
-	SRDAGVertexIterator vIt = getVertexIterator();
-	FOR_IT(vIt)
-		vIt.current()->updateState();
+	for(int i=0; i<vertices_.getN(); i++){
+		vertices_[i]->updateState();
+	}
 }
 
 /** Print Fct */
@@ -228,22 +227,19 @@ void SRDAGGraph::print(const char *path){
 	Platform::get()->fprintf(file, "\tedge [color=\"#9262B6\" arrowhead=\"empty\"];\n");
 	Platform::get()->fprintf(file, "\trankdir=LR;\n\n");
 
-	/** Declare Iterator */
-	SRDAGEdgeIterator edgeIt		= edges_.getIterator();
-	SRDAGVertexIterator vertexIt	= vertices_.getIterator();
-
 	// Drawing vertices.
 	Platform::get()->fprintf(file, "\t# Vertices\n");
-	for (vertexIt.first(); vertexIt.finished(); vertexIt.next()){
+	for (int i=0; i<vertices_.getN(); i++){
 		char name[100];
-		vertexIt.current()->toString(name, 100);
+		SRDAGVertex* vertex = vertices_[i];
+		vertex->toString(name, 100);
 		Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)",
-				vertexIt.current()->getId(),
-				vertexIt.current()->getId(),
+				vertex->getId(),
+				vertex->getId(),
 				name,
-				vertexIt.current()->getFctId());
+				vertex->getFctId());
 		Platform::get()->fprintf(file, "\",color=");
-		switch (vertexIt.current()->getState()){
+		switch (vertex->getState()){
 			case SRDAG_EXEC:
 				Platform::get()->fprintf(file, "blue");
 				break;
@@ -251,7 +247,7 @@ void SRDAGGraph::print(const char *path){
 				Platform::get()->fprintf(file, "gray");
 				break;
 			case SRDAG_NEXEC:
-				if(vertexIt.current()->isHierarchical())
+				if(vertex->isHierarchical())
 					Platform::get()->fprintf(file, "red");
 				else
 					Platform::get()->fprintf(file, "black");
@@ -259,22 +255,23 @@ void SRDAGGraph::print(const char *path){
 		}
 		Platform::get()->fprintf(file, "];\n");
 
-		maxId = (vertexIt.current()->getId() > maxId) ? vertexIt.current()->getId() : maxId;
+		maxId = (vertex->getId() > maxId) ?vertex->getId() : maxId;
 	}
 
 	// Drawing edges.
 	Platform::get()->fprintf(file, "\t# Edges\n");
-	for (edgeIt.first(); edgeIt.finished(); edgeIt.next()) {
+	for (int i=0; i<edges_.getN(); i++) {
+		SRDAGEdge* edge = edges_[i];
 		int snkIx, srcIx;
 
-		if(edgeIt.current()->getSrc())
-			srcIx = edgeIt.current()->getSrc()->getId();
+		if(edge->getSrc())
+			srcIx = edge->getSrc()->getId();
 		else{
 			Platform::get()->fprintf(file, "\t%d [shape=point];\n", ++maxId);
 			srcIx = maxId;
 		}
-		if(edgeIt.current()->getSnk())
-			snkIx = edgeIt.current()->getSnk()->getId();
+		if(edge->getSnk())
+			snkIx = edge->getSnk()->getId();
 		else{
 			Platform::get()->fprintf(file, "\t%d [shape=point];\n", ++maxId);
 			snkIx = maxId;
@@ -284,17 +281,17 @@ void SRDAGGraph::print(const char *path){
 //		case DataRates:
 			Platform::get()->fprintf(file, "\t%d->%d [label=\"%d\n%d\",taillabel=\"%d\",headlabel=\"%d\"];\n",
 					srcIx, snkIx,
-					edgeIt.current()->getRate(),
-					edgeIt.current()->getAlloc(),
-					edgeIt.current()->getSrcPortIx(),
-					edgeIt.current()->getSnkPortIx());
+					edge->getRate(),
+					edge->getAlloc(),
+					edge->getSrcPortIx(),
+					edge->getSnkPortIx());
 //			break;
 //		case Allocation:
 //			Platform::get()->fprintf(file, "\t%d->%d [label=\"%d: %#x (%#x)\"];\n",
 //					srcIx, snkIx,
-//					edgeIt.current()->fifo.id,
-//					edgeIt.current()->fifo.add,
-//					edgeIt.current()->fifo.size);
+//					edge->fifo.id,
+//					edge->fifo.add,
+//					edge->fifo.size);
 //			break;
 //		}
 
@@ -308,34 +305,31 @@ void SRDAGGraph::print(const char *path){
 bool SRDAGGraph::check(){
 	bool result = true;
 
-	/** Declare Iterator */
-	SRDAGEdgeIterator edgeIt		= edges_.getIterator();
-	SRDAGVertexIterator vertexIt	= vertices_.getIterator();
-
 	/* Check vertices */
-	for (vertexIt.first(); vertexIt.finished(); vertexIt.next()){
+	for (int i=0; i<vertices_.getN(); i++){
+		SRDAGVertex* vertex = vertices_[i];
 		int j;
 
 		// Check input edges
-		for(j=0; j<vertexIt.current()->getNInEdge(); j++){
-			const SRDAGEdge* edge = vertexIt.current()->getInEdge(j);
+		for(j=0; j<vertex->getNInEdge(); j++){
+			const SRDAGEdge* edge = vertex->getInEdge(j);
 			if(edge == NULL){
-				printf("V%d Input%d: not connected\n", vertexIt.current()->getId(), j);
+				printf("V%d Input%d: not connected\n", vertex->getId(), j);
 				result = false;
-			}else if(edge->getSnk() != vertexIt.current()){
-				printf("V%d E%d: connection mismatch\n", vertexIt.current()->getId(), edge->getId());
+			}else if(edge->getSnk() != vertex){
+				printf("V%d E%d: connection mismatch\n", vertex->getId(), edge->getId());
 				result = false;
 			}
 		}
 
 		// Check output edges
-		for(j=0; j<vertexIt.current()->getNOutEdge(); j++){
-			const SRDAGEdge* edge = vertexIt.current()->getOutEdge(j);
+		for(j=0; j<vertex->getNOutEdge(); j++){
+			const SRDAGEdge* edge = vertex->getOutEdge(j);
 			if(edge == NULL){
-				printf("V%d Output%d: not connected\n", vertexIt.current()->getId(), j);
+				printf("V%d Output%d: not connected\n", vertex->getId(), j);
 				result = false;
-			}else if(edge->getSrc() != vertexIt.current()){
-				printf("V%d E%d: connection mismatch\n", vertexIt.current()->getId(), edge->getId());
+			}else if(edge->getSrc() != vertex){
+				printf("V%d E%d: connection mismatch\n", vertex->getId(), edge->getId());
 				result = false;
 			}
 		}

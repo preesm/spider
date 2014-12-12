@@ -47,33 +47,32 @@
 
 void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stack){
     job->bodies = sAlloc(stack, job->graph->getNBody(), SRDAGVertex**);
-	PiSDFVertexIterator bodyIt = job->graph->getBodyIterator();
-	FOR_IT(bodyIt){
-        job->bodies[bodyIt.currentIx()] = sAlloc(stack, brv[bodyIt.currentIx()], SRDAGVertex*);;
-		PiSDFVertex* pi_vertex = job->graph->getBody(bodyIt.currentIx());
+    for(int bodyIx=0; bodyIx<job->graph->getNBody(); bodyIx++){
+		PiSDFVertex* pi_vertex = job->graph->getBody(bodyIx);
+        job->bodies[bodyIx] = sAlloc(stack, brv[bodyIx], SRDAGVertex*);
 		switch(pi_vertex->getSubType()){
 		case PISDF_SUBTYPE_NORMAL:
-			for(int j=0; j<brv[bodyIt.currentIx()]; j++){
-				job->bodies[bodyIt.currentIx()][j] = topSrdag->addVertex(pi_vertex);
+			for(int j=0; j<brv[bodyIx]; j++){
+				job->bodies[bodyIx][j] = topSrdag->addVertex(pi_vertex);
 
-				for(int i=0; i<bodyIt.current()->getNInParam(); i++){
-					job->bodies[bodyIt.currentIx()][j]->addInParam(i, job->paramValues[pi_vertex->getInParam(i)->getTypeIx()]);
+				for(int i=0; i<pi_vertex->getNInParam(); i++){
+					job->bodies[bodyIx][j]->addInParam(i, job->paramValues[pi_vertex->getInParam(i)->getTypeIx()]);
 				}
 			}
 			break;
 		case PISDF_SUBTYPE_BROADCAST:
-			for(int j=0; j<brv[bodyIt.currentIx()]; j++){
-				job->bodies[bodyIt.currentIx()][j] = topSrdag->addBroadcast(pi_vertex->getNOutEdge());
+			for(int j=0; j<brv[bodyIx]; j++){
+				job->bodies[bodyIx][j] = topSrdag->addBroadcast(pi_vertex->getNOutEdge());
 			}
 			break;
 		case PISDF_SUBTYPE_JOIN:
-			for(int j=0; j<brv[bodyIt.currentIx()]; j++){
-				job->bodies[bodyIt.currentIx()][j] = topSrdag->addJoin(pi_vertex->getNInEdge());
+			for(int j=0; j<brv[bodyIx]; j++){
+				job->bodies[bodyIx][j] = topSrdag->addJoin(pi_vertex->getNInEdge());
 			}
 			break;
 		case PISDF_SUBTYPE_FORK:
-			for(int j=0; j<brv[bodyIt.currentIx()]; j++){
-				job->bodies[bodyIt.currentIx()][j] = topSrdag->addFork(pi_vertex->getNOutEdge());
+			for(int j=0; j<brv[bodyIx]; j++){
+				job->bodies[bodyIx][j] = topSrdag->addFork(pi_vertex->getNOutEdge());
 			}
 			break;
 		default:
@@ -84,12 +83,12 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stack
 
 void addCAVertices(SRDAGGraph *topSrdag, transfoJob *job, Stack* stack){
     job->configs = sAlloc(stack, job->graph->getNConfig(), SRDAGVertex*);
-	PiSDFVertexIterator configIt = job->graph->getConfigIterator();
-    FOR_IT(configIt){
-		job->configs[configIt.currentIx()] = topSrdag->addVertex(configIt.current());
-		if(configIt.current()->getType() == PISDF_TYPE_CONFIG){
-			for(int i=0; i<configIt.current()->getNOutParam(); i++){
-				job->configs[configIt.currentIx()]->addOutParam(i, &(job->paramValues[configIt.current()->getOutParam(i)->getTypeIx()]));
+    for(int configIx=0; configIx<job->graph->getNConfig(); configIx++){
+    	PiSDFVertex* config = job->graph->getConfig(configIx);
+		job->configs[configIx] = topSrdag->addVertex(config);
+		if(config->getType() == PISDF_TYPE_CONFIG){
+			for(int i=0; i<config->getNOutParam(); i++){
+				job->configs[configIx]->addOutParam(i, &(job->paramValues[config->getOutParam(i)->getTypeIx()]));
 			}
 		}
 	}

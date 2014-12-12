@@ -38,7 +38,6 @@
 #define PISDF_COMMON_H
 
 #include <tools/Set.h>
-#include <tools/Iterator.h>
 
 class PiSDFEdge;
 class PiSDFParam;
@@ -66,10 +65,5 @@ typedef enum PiSDFSubType {
 typedef Set<PiSDFEdge*> PiSDFEdgeSet;
 typedef Set<PiSDFParam*> PiSDFParamSet;
 typedef Set<PiSDFVertex*> PiSDFVertexSet;
-
-/** Iterators types */
-typedef SetIterator<PiSDFEdge*> PiSDFEdgeIterator;
-typedef SetIterator<PiSDFParam*> PiSDFParamIterator;
-typedef SetIterator<PiSDFVertex*> PiSDFVertexIterator;
 
 #endif/*PISDF_COMMON_H*/

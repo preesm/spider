@@ -52,18 +52,15 @@
 #include <algorithm>
 
 void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
-	int i;
 	int nbVertices = job->graph->getNBody();
-
-	PiSDFEdgeIterator edgeIt = job->graph->getEdgeIterator();
-	PiSDFVertexIterator vertexIt;
 
 	/* Compute nbEdges */
 	int nbEdges = 0;
-	FOR_IT(edgeIt){
-		if(edgeIt.current()->getSrc() != edgeIt.current()->getSnk()
-			&& edgeIt.current()->getSrc()->getType() ==  PISDF_TYPE_BODY
-			&& edgeIt.current()->getSnk()->getType() ==  PISDF_TYPE_BODY){
+	for(int i=0; i<job->graph->getNEdge(); i++){
+		PiSDFEdge* edge = job->graph->getEdge(i);
+		if(edge->getSrc() != edge->getSnk()
+			&& edge->getSrc()->getType() ==  PISDF_TYPE_BODY
+			&& edge->getSnk()->getType() ==  PISDF_TYPE_BODY){
 			nbEdges++;
 		}
 	}
@@ -73,18 +70,19 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 
 	/* Fill the topology matrix(nbEdges x nbVertices) */
 	nbEdges = 0; // todo do better with the nbEdges var
-	FOR_IT(edgeIt){
-		if(edgeIt.current()->getSrc() != edgeIt.current()->getSnk()
-			&& edgeIt.current()->getSrc()->getType() ==  PISDF_TYPE_BODY
-			&& edgeIt.current()->getSnk()->getType() ==  PISDF_TYPE_BODY){
-			int prod = edgeIt.current()->resolveProd(job);
-			int cons = edgeIt.current()->resolveCons(job);
+	for(int i=0; i < job->graph->getNEdge(); i++){
+		PiSDFEdge* edge = job->graph->getEdge(i);
+		if(edge->getSrc() != edge->getSnk()
+			&& edge->getSrc()->getType() ==  PISDF_TYPE_BODY
+			&& edge->getSnk()->getType() ==  PISDF_TYPE_BODY){
+			int prod = edge->resolveProd(job);
+			int cons = edge->resolveCons(job);
 
 			if(prod <= 0 || cons <= 0 )
 				throw "Error Bad prod/cons resolved\n";
 
-			topo_matrix[nbEdges*nbVertices + edgeIt.current()->getSrc()->getTypeId()] = prod;
-			topo_matrix[nbEdges*nbVertices + edgeIt.current()->getSnk()->getTypeId()] = -cons;
+			topo_matrix[nbEdges*nbVertices + edge->getSrc()->getTypeId()] = prod;
+			topo_matrix[nbEdges*nbVertices + edge->getSnk()->getTypeId()] = -cons;
 			nbEdges++;
 		}
 	}
@@ -105,9 +103,9 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 	int coef=1;
 
 	/* Looking on interfaces */
-	vertexIt = job->graph->getInputIfIterator();
-	FOR_IT(vertexIt){
-		PiSDFEdge* edge = vertexIt.current()->getOutEdge(0);
+	for(int i=0; job->graph->getNInIf(); i++){
+		PiSDFVertex* inIf = job->graph->getInputIf(i);
+		PiSDFEdge* edge = inIf->getOutEdge(0);
 		/* Only if IF<->Body edge */
 		if(edge->getSnk()->getType() == PISDF_TYPE_BODY){
 			float prod = edge->resolveProd(job);
@@ -116,9 +114,9 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 			coef = std::max(coef, (int)std::ceil(prod/(cons*nbRepet)));
 		}
 	}
-	vertexIt = job->graph->getOutputIfIterator();
-	FOR_IT(vertexIt){
-		PiSDFEdge* edge = vertexIt.current()->getInEdge(0);
+	for(int i=0; job->graph->getNOutIf(); i++){
+		PiSDFVertex* outIf = job->graph->getOutputIf(i);
+		PiSDFEdge* edge = outIf->getInEdge(0);
 		/* Only if IF<->Body edge */
 		if(edge->getSrc()->getType() == PISDF_TYPE_BODY){
 			float prod = edge->resolveProd(job);
@@ -128,10 +126,10 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 		}
 	}
 	/* Looking on implicit RB between Config and Body */
-	vertexIt = job->graph->getConfigIterator();
-	FOR_IT(vertexIt){
-		for(int i=0; i<vertexIt.current()->getNOutEdge(); i++){
-			PiSDFEdge* edge = vertexIt.current()->getOutEdge(i);
+	for(int i=0; i < job->graph->getNConfig(); i++){
+		PiSDFVertex* config = job->graph->getConfig(i);
+		for(int i=0; i<config->getNOutEdge(); i++){
+			PiSDFEdge* edge = config->getOutEdge(i);
 			/* Only if Config<->Body edge */
 			if(edge->getSnk()->getType() == PISDF_TYPE_BODY){
 				float prod = edge->resolveProd(job);
@@ -142,7 +140,7 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 		}
 	}
 
-	for(i=0; i<nbVertices; i++){
+	for(int i=0; i<nbVertices; i++){
 		brv[i] *= coef;
 	}
 

@@ -120,7 +120,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		SRDAGEdge* edge = vertex->getInEdge(i);
 		inFifos[i].id = edge->getAllocIx();
 		inFifos[i].alloc = edge->getAlloc();
-		inFifos[i].size = edge->getAlloc();
+		inFifos[i].size = edge->getRate();
 		inFifos[i].ntoken = 1;
 	}
 
@@ -128,7 +128,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		SRDAGEdge* edge = vertex->getOutEdge(i);
 		outFifos[i].id = edge->getAllocIx();
 		outFifos[i].alloc = edge->getAlloc();
-		outFifos[i].size = edge->getAlloc();
+		outFifos[i].size = edge->getRate();
 		outFifos[i].ntoken = 1;
 	}
 

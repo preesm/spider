@@ -49,7 +49,7 @@ typedef struct {
 //	unsigned char reserved:6;
 }UndefinedMsg;
 
-typedef struct {
+typedef struct __attribute__ ((__packed__)){
 //	unsigned char msgIx:2;
 //	unsigned long  srdagIx:29;
 //	unsigned char  specialActor:1;
@@ -68,21 +68,21 @@ typedef struct {
 	unsigned long nbOutParam;
 }StartJobMsg;
 
-typedef struct Fifo{
+typedef struct __attribute__ ((__packed__)){
 	unsigned long id:32;
 	unsigned long alloc:32;
 	unsigned short size:16;
 	unsigned short ntoken:16;
 } Fifo;
 
-typedef struct {
+typedef struct __attribute__ ((__packed__)){
 	unsigned long msgIx;
 	unsigned long srdagIx;
 //	unsigned char msgIx:2;
 //	unsigned long srdagIx:30;
 }ParamValueMsg;
 
-typedef struct {
+typedef struct __attribute__ ((__packed__)){
 	unsigned long msgIx;
 //	unsigned char msgIx:2;
 //	unsigned char reserved:6;

@@ -38,14 +38,10 @@
 #include "GraphTransfo.h"
 
 #include <tools/Stack.h>
+#include <tools/Rational.h>
 
 #include <stdio.h>
 #include <stdlib.h>
-
-typedef struct{
-	int nom;
-	int den;
-} Rational;
 
 static inline int compute_gcd(int a, int b){
 	int t;
@@ -62,88 +58,46 @@ static inline int compute_lcm(int a, int b){
 	return abs(a*b)/compute_gcd(a,b);
 }
 
-static inline void reduce(Rational* r){
-	int gcd = compute_gcd(r->nom, r->den);
-	r->nom /= gcd;
-	r->den /= gcd;
-}
-
-static inline Rational Rational_Add(Rational a, Rational b){
-	Rational res;
-	int lcm = compute_lcm(a.den, b.den);
-	res.den = lcm;
-	res.nom = lcm*a.nom/a.den + lcm*b.nom/b.den;
-	reduce(&res);
-	return res;
-}
-
-static inline Rational Rational_Sub(Rational a, Rational b){
-	Rational res;
-	int lcm = compute_lcm(a.den, b.den);
-	res.den = lcm;
-	res.nom = lcm*a.nom/a.den - lcm*b.nom/b.den;
-	reduce(&res);
-	return res;
-}
-
-static inline Rational Rational_Mul(Rational a, Rational b){
-	Rational res;
-	res.nom = a.nom*b.nom;
-	res.den = a.den*b.den;
-	reduce(&res);
-	return res;
-}
-
-static inline Rational Rational_Div(Rational a, Rational b){
-	Rational res;
-	res.nom = a.nom*b.den;
-	res.den = a.den*b.nom;
-	reduce(&res);
-	return res;
-}
-
-static inline float Rational_getVal(Rational a){
-	return ((float)a.nom)/a.den;
-}
-
-static inline Rational Rational_getAbs(Rational a){
-	Rational r;
-	r.nom = abs(a.nom);
-	r.den = abs(a.den);
-	return r;
-}
-
-static inline float Rational_compSup(Rational a, Rational b){
-	return Rational_getVal(Rational_Sub(a, b)) > 0;
-}
-
-static inline bool Rational_isNull(Rational a){
-	return a.nom == 0;
-}
-
 int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices, Stack *stack){
 	Rational* ratioMatrix = sAlloc(stack, nbVertices*nbEdges, Rational);
 	Rational* ratioResult = sAlloc(stack, nbVertices, Rational);
-	int i;
 
-	/* Copy matrix into ratioMatrix */
-	for(i=0; i<nbEdges*nbVertices; i++){
-		ratioMatrix[i].nom = topo_matrix[i];
-		ratioMatrix[i].den = 1;
+	printf("Topo Matrix:\n");
+	for(int i=0; i<nbEdges; i++){
+		for(int j=0; j<nbVertices; j++){
+			printf("%d : ", topo_matrix[i*nbVertices+j]);
+		}
+//		printf("\033[2D");
+		printf("\n");
 	}
 
-	for (i=0; i < nbVertices; i++) {
-		Rational pivotMax = Rational_getAbs(ratioMatrix[i*nbVertices+i]);
+	/* Copy matrix into ratioMatrix */
+	for(int i=0; i<nbEdges*nbVertices; i++){
+		ratioMatrix[i] = topo_matrix[i];
+	}
+
+	printf("Topo Matrix: Rational\n");
+	for(int i=0; i<nbEdges; i++){
+		for(int j=0; j<nbVertices; j++){
+			printf("%d,%d : ", ratioMatrix[i*nbVertices+j].getNominator(), ratioMatrix[i*nbVertices+j].getDenominator());
+		}
+//		printf("\033[2D");
+		printf("\n");
+	}
+
+	for (int i=0; i < nbEdges; i++) {
+		Rational pivotMax = ratioMatrix[i*nbVertices+i].getAbs();
 		int maxIndex = i;
+
 		for (int t = i+1; t < nbEdges; t++) {
-			Rational abs = Rational_getAbs(ratioMatrix[t*nbVertices+i]);
-			if (Rational_compSup(abs, pivotMax)) {
+			Rational abs = ratioMatrix[t*nbVertices+i].getAbs();
+			if (abs > pivotMax) {
 				maxIndex = t;
 				pivotMax = abs;
 			}
 		}
 
-		if (!Rational_isNull(pivotMax) && maxIndex != i) {
+		if ((pivotMax == 0) && maxIndex != i) {
 			/* Switch Rows */
 			Rational tmp;
 			for (int t = 0; t < nbVertices; t++) {
@@ -151,7 +105,7 @@ int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices, Stack *st
 				ratioMatrix[maxIndex*nbVertices+t] = ratioMatrix[i*nbVertices+t];
 				ratioMatrix[i*nbVertices+t] = tmp;
 			}
-		} else if (maxIndex == i && !Rational_isNull(pivotMax)) {
+		} else if (maxIndex == i && (pivotMax != 0)) {
 			/* Do nothing */
 		} else {
 			break;
@@ -159,48 +113,45 @@ int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices, Stack *st
 
 		Rational odlPivot = ratioMatrix[i*nbVertices+i];
 		for (int t = i; t < nbVertices; t++) {
-			ratioMatrix[i*nbVertices+t] = Rational_Div(ratioMatrix[i*nbVertices+t],odlPivot);
+			ratioMatrix[i*nbVertices+t] = ratioMatrix[i*nbVertices+t] / odlPivot;
 		}
 
-		int j;
-		for (j = i + 1; j < nbEdges; j++) {
-			if (!Rational_isNull(ratioMatrix[j*nbVertices+i])) {
+		for (int j = i + 1; j < nbEdges; j++) {
+			if (ratioMatrix[j*nbVertices+i] != 0) {
 				Rational oldji = ratioMatrix[j*nbVertices+i];
-				int k;
-				for (k = 0; k < nbVertices; k++) {
+
+				for (int k = 0; k < nbVertices; k++) {
 					ratioMatrix[j*nbVertices+k] =
-							Rational_Sub(ratioMatrix[j*nbVertices+k],
-									Rational_Mul(oldji,ratioMatrix[i*nbVertices+k]));
+							ratioMatrix[j*nbVertices+k] - (oldji * ratioMatrix[i*nbVertices+k]);
 				}
 			}
 		}
 	}
 
-	for (i = 0; i < nbVertices; i++) {
-		ratioResult[i].nom=1;
-		ratioResult[i].den=1;
+	for (int i = 0; i < nbVertices; i++) {
+		ratioResult[i] = 1;
 	}
 
-	for(i = nbEdges-1; i >= 0; i--){
-		int k;
-		Rational val = {0,1};
-		for (k = i + 1; k < nbVertices; k++) {
-			val = Rational_Add(val, Rational_Mul(ratioMatrix[i*nbVertices+k], ratioResult[k]));
+	for(int i = nbEdges-1; i >= 0; i--){
+		Rational val = 0;
+
+		for (int k = i + 1; k < nbVertices; k++) {
+			val = val + (ratioMatrix[i*nbVertices+k] * ratioResult[k]);
 		}
-		if (!Rational_isNull(val)) {
-			if(Rational_isNull(ratioMatrix[i*nbVertices+i])){
+		if (val != 0) {
+			if(ratioMatrix[i*nbVertices+i] == 0){
 				throw "elt diagonal zero\n";
 			}
-			ratioResult[i] = Rational_Div(Rational_getAbs(val), ratioMatrix[i*nbVertices+i]);
+			ratioResult[i] = val.getAbs() / ratioMatrix[i*nbVertices+i];
 		}
 	}
 
 	int lcm = 1;
-	for(i=0; i<nbVertices; i++){
-		lcm = compute_lcm(lcm, ratioResult[i].den);
+	for(int i=0; i<nbVertices; i++){
+		lcm = compute_lcm(lcm, ratioResult[i].getDenominator());
 	}
-	for(i=0; i<nbVertices; i++){
-		brv[i] = abs(ratioResult[i].nom * lcm / ratioResult[i].den);
+	for(int i=0; i<nbVertices; i++){
+		brv[i] = abs(ratioResult[i].getNominator() * lcm / ratioResult[i].getDenominator());
 	}
 	return 0;
 }

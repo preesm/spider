@@ -44,6 +44,7 @@
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <graphs/Bipartite/BipartiteGraph.h>
 #include <tools/StaticStack.h>
+#include <tools/DynStack.h>
 
 #include <graphs/Archi/Archi.h>
 #include <graphs/Archi/SharedMemArchi.h>

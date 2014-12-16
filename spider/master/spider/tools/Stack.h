@@ -42,7 +42,8 @@
 class Stack{
 public:
 	virtual void* alloc(int size) = 0;
-	virtual void free() = 0;
+	virtual void free(void* var) = 0;
+	virtual void freeAll() = 0;
 
 	virtual void printStat() = 0;
 

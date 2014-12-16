@@ -45,7 +45,8 @@ public:
 	StaticStack(void* ptr, int size);
 
 	virtual void* alloc(int size);
-	virtual void free();
+	virtual void free(void* var);
+	virtual void freeAll();
 
 	virtual void printStat();
 

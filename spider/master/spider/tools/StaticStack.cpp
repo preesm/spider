@@ -64,7 +64,10 @@ void *StaticStack::alloc(int size){
 	return res;
 }
 
-void StaticStack::free(){
+void StaticStack::free(void* var){
+}
+
+void StaticStack::freeAll(){
 	maxUsed_ = std::max(maxUsed_, used_);
 	curPtr_ = stack_;
 	used_ = 0;

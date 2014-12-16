@@ -74,22 +74,6 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<folderInfo id="cdt.managedbuild.config.gnu.so.debug.2107493073.1500142251" name="/" resourcePath="lrt">
-						<toolChain id="cdt.managedbuild.toolchain.gnu.so.debug.66071847" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.so.debug" unusedChildren="">
-							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1390032209" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base.1469129450"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.1283267596" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.2110071839">
-								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.762260136" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
-							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.c.compiler.so.debug.729880343" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.so.debug.1430782144">
-								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1846134813" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
-							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.c.linker.so.debug.1738628234" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.so.debug.1952339960"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.so.debug.1784548481" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.so.debug.1187248212"/>
-							<tool id="cdt.managedbuild.tool.gnu.assembler.so.debug.416058425" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.so.debug.1272883559">
-								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1248369830" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
-							</tool>
-						</toolChain>
-					</folderInfo>
 					<folderInfo id="cdt.managedbuild.config.gnu.so.debug.2107493073.766465069" name="/" resourcePath="spider">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.so.debug.1075944419" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.so.debug" unusedChildren="">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.so.debug" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.so.debug"/>

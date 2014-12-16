@@ -29,16 +29,22 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/lrt}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/platform_linux}&quot;"/>
 								</option>
+								<option id="gnu.cpp.compiler.option.preprocessor.def.236620304" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG=1"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1697857320" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1239255214" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.1867853715" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.611288675" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
-								<option id="gnu.c.compiler.option.include.paths.376976361" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+								<option id="gnu.c.compiler.option.include.paths.376976361" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/spider}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/coms}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/lrt}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/platform_linux}&quot;"/>
+								</option>
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1592601260" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG=1"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1304308309" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>

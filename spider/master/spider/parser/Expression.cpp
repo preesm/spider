@@ -74,52 +74,50 @@ Expression::Expression(
 	nElt_ = evaluateNTokens(expr);
 	stack_ = sAlloc(stackAlloc, nElt_, Token);
 
+	Token* output = stack_;
 	Token stack[MAX_NVAR_ELEMENTS];
+	int ixOutput = 0;
+	int ixStack = 0;
 
 	const char *ptr = expr;
 	Token t;
-	Token* outputPtr = stack_;
-	Token* stackPtr = stack;
+
 	while(getNextToken(&t, &ptr, params, nParam)){
-		switch(t.getType()){
-		case Token::VALUE:
-		case Token::PARAMETER:
-			*outputPtr = t;
-			outputPtr++;
+		switch(t.type){
+		case VALUE:
+		case PARAMETER:
+			output[ixOutput++] = t;
 			break;
-		case Token::OPERATOR:
-			while((stackPtr-1)->getType() == Token::OPERATOR
-					&& precedence[t.getOpType()] <= precedence[(stackPtr-1)->getOpType()]){
-				stackPtr--;
-				*outputPtr = *stackPtr;
-				outputPtr++;
+		case OPERATOR:
+			while(ixStack > 0
+					&& stack[ixStack-1].type == OPERATOR
+					&& precedence[t.opType] <= precedence[stack[ixStack-1].opType]){
+				ixStack--;
+				output[ixOutput++] = stack[ixStack];
 			}
-			*stackPtr = t;
-			stackPtr++;
+			stack[ixStack++] = t;
 			break;
-		case Token::LEFT_PAR:
-			*stackPtr = t;
-			stackPtr++;
+		case LEFT_PAR:
+			stack[ixStack++] = t;
 			break;
-		case Token::RIGHT_PAR:
-			while(stackPtr >= stack && (stackPtr-1)->getType() != Token::LEFT_PAR){
-				stackPtr--;
-				*outputPtr = *stackPtr;
-				outputPtr++;
+		case RIGHT_PAR:
+			while(ixStack > 0 && stack[ixStack-1].type != LEFT_PAR){
+				ixStack--;
+				output[ixOutput++] = stack[ixStack];
 			}
-			if(stackPtr < stack){
+			if(ixStack == 0){
 				throw "Parsing Error missing left parenthesis\n";
 			}
-			stackPtr--;
+			ixStack--;
 			break;
 		}
 	}
 
-	while(stackPtr >= stack){
-		stackPtr--;
-		*outputPtr = *stackPtr;
-		outputPtr++;
+	while(ixStack > 0){
+		ixStack--;
+		output[ixOutput++] = stack[ixStack];
 	}
+	nElt_ = ixOutput;
 }
 
 Expression::~Expression() {
@@ -131,28 +129,28 @@ int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job) c
 	const Token* inputPtr = stack_;
 
 	while(stack_+nElt_ > inputPtr) {
-		switch(inputPtr->getType()){
-		case Token::OPERATOR:
-			switch(inputPtr->getOpType()){
-			case Token::ADD:
+		switch(inputPtr->type){
+		case OPERATOR:
+			switch(inputPtr->opType){
+			case ADD:
 				if(stackPtr-stack >= 2){
 					stackPtr--;
 					*(stackPtr-1) += *stackPtr;
 				}
 				break;
-			case Token::SUB:
+			case SUB:
 				if(stackPtr-stack >= 2){
 					stackPtr--;
 					*(stackPtr-1) -= *stackPtr;
 				}
 				break;
-			case Token::MUL:
+			case MUL:
 				if(stackPtr-stack >= 2){
 					stackPtr--;
 					*(stackPtr-1) *= *stackPtr;
 				}
 				break;
-			case Token::DIV:
+			case DIV:
 				if(stackPtr-stack >= 2){
 					stackPtr--;
 					*(stackPtr-1) /= *stackPtr;
@@ -160,12 +158,12 @@ int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job) c
 				break;
 			}
 			break;
-		case Token::VALUE:
-			*stackPtr = inputPtr->getValue();
+		case VALUE:
+			*stackPtr = inputPtr->value;
 			stackPtr++;
 			break;
-		case Token::PARAMETER:
-			*stackPtr = job->paramValues[paramList[inputPtr->getParamIx()]->getTypeIx()];
+		case PARAMETER:
+			*stackPtr = job->paramValues[paramList[inputPtr->paramIx]->getTypeIx()];
 			stackPtr++;
 			break;
 		default:
@@ -182,28 +180,28 @@ int Expression::evaluate(const int* vertexParamValues, int nParam) const{
 	const Token* inputPtr = stack_;
 
 	while(stack_+nElt_ > inputPtr) {
-		switch(inputPtr->getType()){
-		case Token::OPERATOR:
-			switch(inputPtr->getOpType()){
-			case Token::ADD:
+		switch(inputPtr->type){
+		case OPERATOR:
+			switch(inputPtr->opType){
+			case ADD:
 				if(stackPtr-stack >= 2){
 					stackPtr--;
 					*(stackPtr-1) += *stackPtr;
 				}
 				break;
-			case Token::SUB:
+			case SUB:
 				if(stackPtr-stack >= 2){
 					stackPtr--;
 					*(stackPtr-1) -= *stackPtr;
 				}
 				break;
-			case Token::MUL:
+			case MUL:
 				if(stackPtr-stack >= 2){
 					stackPtr--;
 					*(stackPtr-1) *= *stackPtr;
 				}
 				break;
-			case Token::DIV:
+			case DIV:
 				if(stackPtr-stack >= 2){
 					stackPtr--;
 					*(stackPtr-1) /= *stackPtr;
@@ -211,12 +209,12 @@ int Expression::evaluate(const int* vertexParamValues, int nParam) const{
 				break;
 			}
 			break;
-		case Token::VALUE:
-			*stackPtr = inputPtr->getValue();
+		case VALUE:
+			*stackPtr = inputPtr->value;
 			stackPtr++;
 			break;
-		case Token::PARAMETER:
-			*stackPtr = vertexParamValues[inputPtr->getParamIx()];
+		case PARAMETER:
+			*stackPtr = vertexParamValues[inputPtr->paramIx];
 			stackPtr++;
 			break;
 		default:
@@ -237,23 +235,23 @@ void Expression::toString(
 	//While there are input tokens left
 	int i;
 	for(i=0; i<nElt_; i++){
-		switch(stack_[i].getType()){
-		case Token::OPERATOR:
+		switch(stack_[i].type){
+		case OPERATOR:
 			// pop out 2
 			sprintf(out, "( %s %s %s )",
 					outputStack[outputStackSize-1],
-					operatorSign[stack_[i].getOpType()],
+					operatorSign[stack_[i].opType],
 					outputStack[outputStackSize-2]);
 			strcpy(outputStack[outputStackSize-2], out);
 			outputStackSize--;
 			break;
-		case Token::VALUE:
+		case VALUE:
 			// Push value to output stack
-			sprintf(outputStack[outputStackSize++], "%d", stack_[i].getValue());
+			sprintf(outputStack[outputStackSize++], "%d", stack_[i].value);
 			break;
-		case Token::PARAMETER:
+		case PARAMETER:
 			// Push parameter name to output stack
-			sprintf(outputStack[outputStackSize++], "%s", params[stack_[i].getParamIx()]->getName());
+			sprintf(outputStack[outputStackSize++], "%s", params[stack_[i].paramIx]->getName());
 			break;
 		default:
 			throw "Error: Parenthesis in evaluated var\n";
@@ -287,8 +285,8 @@ bool Expression::getNextToken(
 	// check for minus
 	if (**ptr == '-'){
 		if(token != 0){
-			token->setType(Token::OPERATOR);
-			token->setOpType(Token::SUB);
+			token->type = OPERATOR;
+			token->opType = SUB;
 		}
 		(*ptr)++;
 		return true;
@@ -297,8 +295,8 @@ bool Expression::getNextToken(
 	// check for plus
 	if (**ptr == '+'){
 		if(token != 0){
-			token->setType(Token::OPERATOR);
-			token->setOpType(Token::ADD);
+			token->type = OPERATOR;
+			token->opType = ADD;
 		}
 		(*ptr)++;
 		return true;
@@ -307,8 +305,8 @@ bool Expression::getNextToken(
 	// check for mult
 	if (**ptr == '*'){
 		if(token != 0){
-			token->setType(Token::OPERATOR);
-			token->setOpType(Token::MUL);
+			token->type = OPERATOR;
+			token->opType = MUL;
 		}
 		(*ptr)++;
 		return true;
@@ -317,8 +315,8 @@ bool Expression::getNextToken(
 	// check for div
 	if (**ptr == '/'){
 		if(token != 0){
-			token->setType(Token::OPERATOR);
-			token->setOpType(Token::DIV);
+			token->type = OPERATOR;
+			token->opType = DIV;
 		}
 		(*ptr)++;
 		return true;
@@ -327,14 +325,14 @@ bool Expression::getNextToken(
 	// check for parentheses
 	if (**ptr == '('){
 		if(token != 0){
-			token->setType(Token::LEFT_PAR);
+			token->type = LEFT_PAR;
 		}
 		(*ptr)++;
 		return true;
 	}
 	if (**ptr == ')'){
 		if(token != 0){
-			token->setType(Token::RIGHT_PAR);
+			token->type = RIGHT_PAR;
 		}
 		(*ptr)++;
 		return true;
@@ -349,8 +347,8 @@ bool Expression::getNextToken(
 			(*ptr)++;
 		}
 		if(token != 0){
-			token->setType(Token::VALUE);
-			token->setValue(value);
+			token->type  = VALUE;
+			token->value = value;
 		}
 		return true;
 	}
@@ -366,10 +364,10 @@ bool Expression::getNextToken(
 		}
 
 		if(token != 0){
-			token->setType(Token::PARAMETER);
+			token->type = PARAMETER;
 			for(int i=0; i<nParam; i++){
 				if(strncmp(params[i]->getName(), name, nb) == 0){
-					token->setParamIx(i/*params[i]->getTypeIx()*/);
+					token->paramIx = i/*params[i]->getTypeIx()*/;
 					return true;
 				}
 			}

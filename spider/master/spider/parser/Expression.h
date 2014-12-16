@@ -39,7 +39,6 @@
 
 #include <graphs/PiSDF/PiSDFParam.h>
 #include <tools/Stack.h>
-#include "Token.h"
 
 struct transfoJob;
 
@@ -58,6 +57,28 @@ public:
 			char* out, int outSizeMax);
 
 private:
+	typedef enum{
+		OPERATOR,
+		VALUE,
+		PARAMETER,
+		LEFT_PAR,
+		RIGHT_PAR
+	} Type;
+
+	typedef enum{
+		ADD,
+		SUB,
+		MUL,
+		DIV
+	} OpType;
+
+	typedef struct{
+		Type 	type;
+		OpType 	opType;
+		int 	value;
+		int 	paramIx;
+	} Token;
+
 	Token* stack_;
 	int nElt_;
 

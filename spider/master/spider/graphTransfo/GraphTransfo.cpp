@@ -71,7 +71,7 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 	job->graph = nextHierVx->getSubGraph();
 
 	/* Add Static and Herited parameter values */
-	job->paramValues = sAlloc(stack, job->graph->getNParam(), int);
+	job->paramValues = CREATE_MUL(stack, job->graph->getNParam(), int);
 	for(int paramIx=0; paramIx<job->graph->getNParam(); paramIx++){
 		PiSDFParam* param = job->graph->getParam(paramIx);
 		switch(param->getType()){
@@ -90,9 +90,10 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 	}
 
 	/* Add edge interfaces in job */
-	job->inputIfs = sAlloc(stack, nextHierVx->getNInEdge(), SRDAGEdge*);
+	job->inputIfs = CREATE_MUL(stack, nextHierVx->getNInEdge(), SRDAGEdge*);
+	job->outputIfs = CREATE_MUL(stack, nextHierVx->getNOutEdge(), SRDAGEdge*);
+
 	memcpy(job->inputIfs, nextHierVx->getInEdges(), nextHierVx->getNInEdge()*sizeof(SRDAGEdge*));
-	job->outputIfs = sAlloc(stack, nextHierVx->getNOutEdge(), SRDAGEdge*);
 	memcpy(job->outputIfs, nextHierVx->getOutEdges(), nextHierVx->getNInEdge()*sizeof(SRDAGEdge*));
 
 }
@@ -108,20 +109,19 @@ static SRDAGVertex* getNextHierVx(SRDAGGraph *topDag){
 }
 
 void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
-	StaticStack transfoStack = StaticStack(malloc(TRANSFO_STACK_SIZE), TRANSFO_STACK_SIZE);
+	StaticStack transfoStack(malloc(TRANSFO_STACK_SIZE), TRANSFO_STACK_SIZE);
 	SRDAGGraph *topSrdag;
 
 	/* Initialize topDag */
 	if(config->createSrdag){
-		topSrdag = sAlloc(&transfoStack, 1, SRDAGGraph);
-		*topSrdag = SRDAGGraph(&transfoStack);
+		topSrdag = CREATE(&transfoStack, SRDAGGraph)(&transfoStack);
 	}else
 		topSrdag = config->srdag;
 
 	config->memAlloc->reset();
 
-	Schedule* schedule = sAlloc(&transfoStack, 1, Schedule);
-	*schedule = Schedule(archi->getNPE(), 1000, &transfoStack);
+	Schedule* schedule = CREATE(&transfoStack, Schedule)(
+			archi->getNPE(), 1000, &transfoStack);
 
 	/* Add initial top actor */
 	PiSDFVertex* root = topPisdf->getBody(0);
@@ -131,7 +131,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 	}
 	topSrdag->addVertex(root);
 
-	Queue<transfoJob*> jobQueue = Queue<transfoJob*>(&transfoStack);
+	Queue<transfoJob*> jobQueue(&transfoStack);
 
 	// Check nb of config //
 
@@ -145,7 +145,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 
 		do{
 			/* Fill the transfoJob data */
-			transfoJob* job = sAlloc(&transfoStack, 1, transfoJob);
+			transfoJob* job = CREATE(&transfoStack, transfoJob);
 			initJob(job, nextHierVx, &transfoStack);
 
 			/* Remove Hierachical vertex */
@@ -160,7 +160,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 
 				jobQueue.push(job);
 			}else{
-				int* brv = sAlloc(&transfoStack, job->graph->getNBody(), int);
+				int* brv = CREATE_MUL(&transfoStack, job->graph->getNBody(), int);
 				computeBRV(topSrdag, job, brv, &transfoStack);
 
 				addSRVertices(topSrdag, job, brv, &transfoStack);
@@ -189,7 +189,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 			transfoJob* job = jobQueue.pop();
 
 			/* Compute BRV */
-			int* brv = sAlloc(&transfoStack, job->graph->getNBody(), int);
+			int* brv = CREATE_MUL(&transfoStack, job->graph->getNBody(), int);
 			computeBRV(topSrdag, job, brv, &transfoStack);
 
 			/* Add vertices */

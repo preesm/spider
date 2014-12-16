@@ -60,8 +60,7 @@ SRDAGGraph::~SRDAGGraph() {
 }
 
 SRDAGVertex* SRDAGGraph::addVertex(PiSDFVertex* reference){
-	SRDAGVertex* vertex = sAlloc(stack_, 1, SRDAGVertex);
-	*vertex = SRDAGVertex(
+	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_NORMAL, this,
 			reference,
 			reference->getNInEdge(),
@@ -74,8 +73,7 @@ SRDAGVertex* SRDAGGraph::addVertex(PiSDFVertex* reference){
 }
 
 SRDAGVertex* SRDAGGraph::addBroadcast(int nOutput){
-	SRDAGVertex* vertex = sAlloc(stack_, 1, SRDAGVertex);
-	*vertex = SRDAGVertex(
+	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_BROADCAST, this,
 			0 /*Ref*/,
 			1 /*nInEdge*/,
@@ -88,8 +86,7 @@ SRDAGVertex* SRDAGGraph::addBroadcast(int nOutput){
 }
 
 SRDAGVertex* SRDAGGraph::addFork(int nOutput){
-	SRDAGVertex* vertex = sAlloc(stack_, 1, SRDAGVertex);
-	*vertex = SRDAGVertex(
+	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_FORK, this,
 			0 /*Ref*/,
 			1 /*nInEdge*/,
@@ -102,8 +99,7 @@ SRDAGVertex* SRDAGGraph::addFork(int nOutput){
 }
 
 SRDAGVertex* SRDAGGraph::addJoin(int nInput){
-	SRDAGVertex* vertex = sAlloc(stack_, 1, SRDAGVertex);
-	*vertex = SRDAGVertex(
+	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_JOIN, this,
 			0 /*Ref*/,
 			nInput /*nInEdge*/,
@@ -116,8 +112,7 @@ SRDAGVertex* SRDAGGraph::addJoin(int nInput){
 }
 
 SRDAGVertex* SRDAGGraph::addInit(){
-	SRDAGVertex* vertex = sAlloc(stack_, 1, SRDAGVertex);
-	*vertex = SRDAGVertex(
+	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_INIT, this,
 			0 /*Ref*/,
 			0 /*nInEdge*/,
@@ -130,8 +125,7 @@ SRDAGVertex* SRDAGGraph::addInit(){
 }
 
 SRDAGVertex* SRDAGGraph::addEnd(){
-	SRDAGVertex* vertex = sAlloc(stack_, 1, SRDAGVertex);
-	*vertex = SRDAGVertex(
+	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_END, this,
 			0 /*Ref*/,
 			1 /*nInEdge*/,
@@ -144,8 +138,7 @@ SRDAGVertex* SRDAGGraph::addEnd(){
 }
 
 SRDAGVertex* SRDAGGraph::addRoundBuffer(){
-	SRDAGVertex* vertex = sAlloc(stack_, 1, SRDAGVertex);
-	*vertex = SRDAGVertex(
+	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_ROUNDBUFFER, this,
 			0 /*Ref*/,
 			1 /*nInEdge*/,
@@ -158,8 +151,7 @@ SRDAGVertex* SRDAGGraph::addRoundBuffer(){
 }
 
 SRDAGEdge* SRDAGGraph::addEdge() {
-	SRDAGEdge* edge = sAlloc(stack_, 1, SRDAGEdge);
-	*edge = SRDAGEdge(this);
+	SRDAGEdge* edge = CREATE(stack_, SRDAGEdge)(this);
 	edges_.add(edge);
 	return edge;
 }
@@ -168,8 +160,7 @@ SRDAGEdge* SRDAGGraph::addEdge(
 		SRDAGVertex* src, int srcPortIx,
 		SRDAGVertex* snk, int snkPortIx,
 		int rate) {
-	SRDAGEdge* edge = sAlloc(stack_, 1, SRDAGEdge);
-	*edge = SRDAGEdge(this);
+	SRDAGEdge* edge = CREATE(stack_, SRDAGEdge)(this);
 	edges_.add(edge);
 
 	edge->connectSrc(src, srcPortIx);

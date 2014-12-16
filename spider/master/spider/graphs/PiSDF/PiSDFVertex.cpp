@@ -86,24 +86,24 @@ PiSDFVertex::PiSDFVertex(
 	subGraph_ = subGraph;
 
 	nInEdge_ = nInEdge;
-	inEdges_ = sAlloc(stack, nInEdge_, PiSDFEdge*);
+	inEdges_ = CREATE_MUL(stack, nInEdge_, PiSDFEdge*);
 	memset(inEdges_, 0, nInEdge_*sizeof(PiSDFEdge*));
 
 	nOutEdge_ = nOutEdge;
-	outEdges_ = sAlloc(stack, nOutEdge_, PiSDFEdge*);
+	outEdges_ = CREATE_MUL(stack, nOutEdge_, PiSDFEdge*);
 	memset(outEdges_, 0, nOutEdge_*sizeof(PiSDFEdge*));
 
 	nInParam_ = nInParam;
-	inParams_ = sAlloc(stack, nInParam, PiSDFParam*);
+	inParams_ = CREATE_MUL(stack, nInParam, PiSDFParam*);
 	memset(inParams_, 0, nInParam*sizeof(PiSDFParam*));
 
 	nOutParam_ = nOutParam;
-	outParams_ = sAlloc(stack, nOutParam, PiSDFParam*);
+	outParams_ = CREATE_MUL(stack, nOutParam, PiSDFParam*);
 	memset(outParams_, 0, nOutParam*sizeof(PiSDFParam*));
 
 	nPeMax_ = archi->getNPE();
 	nPeTypeMax_ = archi->getNPETypes();
-	constraints_ = sAlloc(stack, nPeMax_, bool);
+	constraints_ = CREATE_MUL(stack, nPeMax_, bool);
 	memset(constraints_, false, nPeMax_*sizeof(bool));
-	timings_ = sAlloc(stack, nPeMax_, Parser::Expression);
+	timings_ = CREATE_MUL(stack, nPeMax_, Parser::Expression);
 }

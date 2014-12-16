@@ -66,10 +66,6 @@ PlatformLinux::~PlatformLinux(){
 }
 
 void PlatformLinux::init(int nLrt, Stack *stack){
-	LRT* lrt = sAlloc(stack, 1, LRT);
-	LinuxSpiderCommunicator* spiderCom = sAlloc(stack, 1, LinuxSpiderCommunicator);
-	LinuxLrtCommunicator* lrtCom = sAlloc(stack, 1, LinuxLrtCommunicator);
-
 	int pipeSpidertoLRT[2];
 	int pipeLRTtoSpider[2];
 
@@ -107,14 +103,11 @@ void PlatformLinux::init(int nLrt, Stack *stack){
 
 
 	/** Initialize LRT and Communicators */
-//	*spiderCom = LinuxSpiderCommunicator(120, 1, stack);
-	spiderCom = new LinuxSpiderCommunicator(280, 1, stack);
+    LinuxSpiderCommunicator* spiderCom = CREATE(stack, LinuxSpiderCommunicator)(280, 1, stack);
 	spiderCom->setLrtCom(0, pipeLRTtoSpider[0], pipeSpidertoLRT[1]);
 
-	lrtCom = new LinuxLrtCommunicator(280, pipeSpidertoLRT[0], pipeLRTtoSpider[1], shMem, 10000, stack);
-	lrt = new LRT(lrtCom);
-//	*lrtCom = LinuxLrtCommunicator(120, pipeSpidertoLRT[0], pipeLRTtoSpider[1], shMem, 10000, stack);
-//	*lrt = LRT(lrtCom);
+	LinuxLrtCommunicator* lrtCom = CREATE(stack, LinuxLrtCommunicator)(280, pipeSpidertoLRT[0], pipeLRTtoSpider[1], shMem, 10000, stack);
+	LRT* lrt = CREATE(stack, LRT)(lrtCom);
 
 	setLrt(lrt);
 	setSpiderCommunicator(spiderCom);

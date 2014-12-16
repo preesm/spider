@@ -40,8 +40,8 @@
 #include <unistd.h>
 
 LinuxSpiderCommunicator::LinuxSpiderCommunicator(int msgSizeMax, int nLrt, Stack* s){
-	fIn_ = sAlloc(s, nLrt, int);
-	fOut_ = sAlloc(s, nLrt, int);
+	fIn_ = CREATE_MUL(s, nLrt, int);
+	fOut_ = CREATE_MUL(s, nLrt, int);
 	msgSizeMax_ = msgSizeMax;
 	msgBuffer_ = s->alloc(msgSizeMax);
 	curMsgSize_ = 0;

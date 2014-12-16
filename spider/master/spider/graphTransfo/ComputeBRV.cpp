@@ -65,7 +65,7 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 		}
 	}
 
-    int* topo_matrix = sAlloc(stack, nbEdges*nbVertices, int);
+    int* topo_matrix = CREATE_MUL(stack, nbEdges*nbVertices, int);
 	memset(topo_matrix, 0, nbEdges*nbVertices*sizeof(int));
 
 	/* Fill the topology matrix(nbEdges x nbVertices) */

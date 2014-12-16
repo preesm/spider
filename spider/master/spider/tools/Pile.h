@@ -77,7 +77,7 @@ inline bool Pile<TYPE>::isEmpty() const{
 
 template<typename TYPE>
 inline void Pile<TYPE>::push(TYPE value){
-	struct PileItem* newItem = sAlloc(stack_, 1, struct QueueItem);
+	struct PileItem* newItem = CREATE(stack_, struct QueueItem);
 	newItem->cur 	= value;
 	newItem->next 	= first_;
 	first_ = newItem;

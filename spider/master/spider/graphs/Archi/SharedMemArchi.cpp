@@ -40,12 +40,12 @@
 SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType) {
 	nPE_ = nPE;
 	nPEType_ = nPEType;
-	peType_ = sAlloc(stack, nPE_, int);
-	peName_ = sAlloc(stack, nPE_, const char*);
-	peTypeASend_ = sAlloc(stack, nPEType_, float);
-	peTypeBSend_ = sAlloc(stack, nPEType_, float);
-	peTypeARecv_ = sAlloc(stack, nPEType_, float);
-	peTypeBRecv_ = sAlloc(stack, nPEType_, float);
+	peType_ = CREATE_MUL(stack, nPE_, int);
+	peName_ = CREATE_MUL(stack, nPE_, const char*);
+	peTypeASend_ = CREATE_MUL(stack, nPEType_, float);
+	peTypeBSend_ = CREATE_MUL(stack, nPEType_, float);
+	peTypeARecv_ = CREATE_MUL(stack, nPEType_, float);
+	peTypeBRecv_ = CREATE_MUL(stack, nPEType_, float);
 }
 
 SharedMemArchi::~SharedMemArchi() {

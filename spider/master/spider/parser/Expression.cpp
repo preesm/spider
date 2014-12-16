@@ -72,7 +72,7 @@ Expression::Expression(
 		const PiSDFParam* const * params, int nParam,
 		Stack* stackAlloc){
 	nElt_ = evaluateNTokens(expr);
-	stack_ = sAlloc(stackAlloc, nElt_, Token);
+	stack_ = CREATE_MUL(stackAlloc, nElt_, Token);
 
 	Token* output = stack_;
 	Token stack[MAX_NVAR_ELEMENTS];

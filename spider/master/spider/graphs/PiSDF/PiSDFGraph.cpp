@@ -74,8 +74,8 @@ PiSDFVertex* PiSDFGraph::addBodyVertex(
 		const char* vertexName, int fctId,
 		int nInEdge, int nOutEdge,
 		int nInParam){
-	PiSDFVertex* body = sAlloc(stack_, 1, PiSDFVertex);
-	*body = PiSDFVertex(vertexName, fctId,
+	PiSDFVertex* body = CREATE(stack_, PiSDFVertex)(
+			vertexName, fctId,
 			bodies_.getN(),
 			PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
 			this, 0,
@@ -92,8 +92,8 @@ PiSDFVertex* PiSDFGraph::addHierVertex(
 		PiSDFGraph* graph,
 		int nInEdge, int nOutEdge,
 		int nInParam){
-	PiSDFVertex* body = sAlloc(stack_, 1, PiSDFVertex);
-	*body = PiSDFVertex(vertexName, -1,
+	PiSDFVertex* body = CREATE(stack_, PiSDFVertex)(
+			vertexName, -1,
 			bodies_.getN(),
 			PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
 			this, 0,
@@ -111,8 +111,8 @@ PiSDFVertex* PiSDFGraph::addSpecialVertex(
 		PiSDFSubType type,
 		int nInEdge, int nOutEdge,
 		int nInParam){
-	PiSDFVertex* body = sAlloc(stack_, 1, PiSDFVertex);
-	*body = PiSDFVertex(0, -1,
+	PiSDFVertex* body = CREATE(stack_, PiSDFVertex)(
+			0, -1,
 			bodies_.getN(),
 			PISDF_TYPE_BODY, type,
 			this, 0,
@@ -129,8 +129,8 @@ PiSDFVertex* PiSDFGraph::addConfigVertex(
 		PiSDFSubType subType,
 		int nInEdge, int nOutEdge,
 		int nInParam, int nOutParam){
-	PiSDFVertex* config = sAlloc(stack_, 1, PiSDFVertex);
-	*config = PiSDFVertex(vertexName, fctId,
+	PiSDFVertex* config = CREATE(stack_, PiSDFVertex)(
+			vertexName, fctId,
 			configs_.getN(),
 			PISDF_TYPE_CONFIG, subType,
 			this, 0,
@@ -146,8 +146,8 @@ PiSDFVertex* PiSDFGraph::addConfigVertex(
 PiSDFVertex* PiSDFGraph::addInputIf(
 		const char* name,
 		int nInParam){
-	PiSDFVertex* inIf = sAlloc(stack_, 1, PiSDFVertex);
-	*inIf = PiSDFVertex(name, -1,
+	PiSDFVertex* inIf = CREATE(stack_, PiSDFVertex)(
+			name, -1,
 			inputIfs_.getN(),
 			PISDF_TYPE_IF, PISDF_SUBTYPE_INPUT_IF,
 			this, 0,
@@ -162,8 +162,8 @@ PiSDFVertex* PiSDFGraph::addInputIf(
 PiSDFVertex* PiSDFGraph::addOutputIf(
 		const char* name,
 		int nInParam){
-	PiSDFVertex* outIf = sAlloc(stack_, 1, PiSDFVertex);
-	*outIf = PiSDFVertex(name, -1,
+	PiSDFVertex* outIf = CREATE(stack_, PiSDFVertex)(
+			name, -1,
 			outputIfs_.getN(),
 			PISDF_TYPE_IF, PISDF_SUBTYPE_OUTPUT_IF,
 			this, 0,
@@ -177,8 +177,9 @@ PiSDFVertex* PiSDFGraph::addOutputIf(
 
 
 PiSDFParam* PiSDFGraph::addStaticParam(const char* name, const char* expr){
-	PiSDFParam* param = sAlloc(stack_, 1, PiSDFParam);
-	*param = PiSDFParam(name, params_.getN(), this, PISDF_PARAM_STATIC);
+	PiSDFParam* param = CREATE(stack_, PiSDFParam)(
+			name, params_.getN(),
+			this, PISDF_PARAM_STATIC);
 
 	// TODO set value
 
@@ -187,32 +188,33 @@ PiSDFParam* PiSDFGraph::addStaticParam(const char* name, const char* expr){
 }
 
 PiSDFParam* PiSDFGraph::addStaticParam(const char* name, int value){
-	PiSDFParam* param = sAlloc(stack_, 1, PiSDFParam);
-	*param = PiSDFParam(name, params_.getN(), this, PISDF_PARAM_STATIC);
+	PiSDFParam* param = CREATE(stack_, PiSDFParam)(
+			name, params_.getN(),
+			this, PISDF_PARAM_STATIC);
 	param->setValue(value);
 	params_.add(param);
 	return param;
 }
 
 PiSDFParam* PiSDFGraph::addHeritedParam(const char* name){
-	PiSDFParam* param = sAlloc(stack_, 1, PiSDFParam);
-	*param = PiSDFParam(name, params_.getN(), this, PISDF_PARAM_HERITED);
+	PiSDFParam* param = CREATE(stack_, PiSDFParam)(
+			name, params_.getN(),
+			this, PISDF_PARAM_HERITED);
 	params_.add(param);
 	return param;
 }
 
 PiSDFParam* PiSDFGraph::addDynamicParam(const char* name){
-	PiSDFParam* param = sAlloc(stack_, 1, PiSDFParam);
-	*param = PiSDFParam(name, params_.getN(), this, PISDF_PARAM_DYNAMIC);
+	PiSDFParam* param = CREATE(stack_, PiSDFParam)(
+			name, params_.getN(),
+			this, PISDF_PARAM_DYNAMIC);
 	params_.add(param);
 	return param;
 }
 
 PiSDFEdge* PiSDFGraph::addEdge(int nParam) {
-	PiSDFEdge* edge = sAlloc(stack_, 1, PiSDFEdge);
-	*edge = PiSDFEdge(this,
-			nParam,
-			stack_);
+	PiSDFEdge* edge = CREATE(stack_, PiSDFEdge)(
+			this, nParam, stack_);
 	edges_.add(edge);
 	return edge;
 }

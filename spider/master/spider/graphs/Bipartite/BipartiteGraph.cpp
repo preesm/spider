@@ -54,8 +54,8 @@ BipartiteGraph::BipartiteGraph() {
 BipartiteGraph::BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack){
 	nVerticesG1_ = g1->getNVertex();
 	nVerticesG2_ = g2->getNVertex();
-	graph_ = sAlloc(stack, nVerticesG1_*nVerticesG2_, int);
-	nConnections_ = sAlloc(stack, nVerticesG1_, int);
+	graph_ = CREATE_MUL(stack, nVerticesG1_*nVerticesG2_, int);
+	nConnections_ = CREATE_MUL(stack, nVerticesG1_, int);
 	memset(nConnections_, 0, nVerticesG1_*sizeof(int));
 	stack_ = stack;
 
@@ -75,16 +75,19 @@ BipartiteGraph::~BipartiteGraph() {
 }
 
 bool BipartiteGraph::hasPerfectMatch() {
-    int* matching = sAlloc(stack_, nVerticesG1_, int);
-    memset(matching, -1, nVerticesG1_*sizeof(int));
-    bool* visited = sAlloc(stack_, nVerticesG1_, bool);
-    for (int u = 0; u < nVerticesG1_; u++) {
-        memset(visited, false, nVerticesG1_*sizeof(bool));
-      if (!findPath(this, u, matching, visited))
-        return false;
-    }
-    return true;
-  }
+	int* matching = CREATE_MUL(stack_, nVerticesG1_, int);
+	bool* visited = CREATE_MUL(stack_, nVerticesG1_, bool);
+
+	memset(matching, -1, nVerticesG1_*sizeof(int));
+
+	for (int u = 0; u < nVerticesG1_; u++) {
+		memset(visited, false, nVerticesG1_*sizeof(bool));
+		if (!findPath(this, u, matching, visited)){
+			return false;
+		}
+	}
+	return true;
+}
 
  bool BipartiteGraph::findPath(BipartiteGraph* graph, int u1, int* matching, bool* vis) {
     vis[u1] = true;
@@ -100,8 +103,7 @@ bool BipartiteGraph::hasPerfectMatch() {
   }
 
 void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack, const char* testName){
-	BipartiteGraph* bipartite = sAlloc(stack, 1, BipartiteGraph);
-	*bipartite = BipartiteGraph(g1, g2, stack);
+	BipartiteGraph* bipartite = CREATE(stack, BipartiteGraph)(g1, g2, stack);
 
 	printf("%s : ", testName);
 	if(g1->getNVertex() == g2->getNVertex()

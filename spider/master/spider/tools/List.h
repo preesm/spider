@@ -67,7 +67,7 @@ template <class T>
 inline List<T>::List(Stack* stack, int size){
 	nb = 0;
 	nbMax = size;
-	array = sAlloc(stack, size, T);
+	array = CREATE_MUL(stack, size, T);
 }
 
 template <class T>

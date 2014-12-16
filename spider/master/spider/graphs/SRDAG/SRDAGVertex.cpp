@@ -76,19 +76,19 @@ SRDAGVertex::SRDAGVertex(
 	reference_ = reference;
 
 	nInEdge_ = nInEdge;
-	inEdges_ = sAlloc(stack, nInEdge_, SRDAGEdge*);
+	inEdges_ = CREATE_MUL(stack, nInEdge_, SRDAGEdge*);
 	memset(inEdges_, 0, nInEdge_*sizeof(SRDAGEdge*));
 
 	nOutEdge_ = nOutEdge;
-	outEdges_ = sAlloc(stack, nOutEdge_, SRDAGEdge*);
+	outEdges_ = CREATE_MUL(stack, nOutEdge_, SRDAGEdge*);
 	memset(outEdges_, 0, nOutEdge_*sizeof(SRDAGEdge*));
 
 	nInParam_ = nInParam;
-	inParams_ = sAlloc(stack, nInParam, int);
+	inParams_ = CREATE_MUL(stack, nInParam_, int);
 	memset(inParams_, 0, nInParam*sizeof(int));
 
 	nOutParam_ = nOutParam;
-	outParams_ = sAlloc(stack, nOutParam, int*);
+	outParams_ = CREATE_MUL(stack, nOutParam_, int*);
 	memset(outParams_, 0, nOutParam*sizeof(int**));
 
 	start_ = end_ = -1;

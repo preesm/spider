@@ -37,7 +37,10 @@
 #ifndef STACK_H
 #define STACK_H
 
-#define sAlloc(stack, size, type) ((type*)(stack)->alloc((size)*sizeof(type)))
+#include <new>
+
+#define CREATE(stack, type) new((stack)->alloc(sizeof(type))) type
+#define CREATE_MUL(stack, size, type) new((stack)->alloc(size*sizeof(type))) type[size]
 
 class Stack{
 public:

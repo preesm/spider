@@ -80,7 +80,7 @@ inline bool Queue<TYPE>::isEmpty() const{
 
 template<typename TYPE>
 inline void Queue<TYPE>::push(TYPE value){
-	struct QueueItem* newItem = sAlloc(stack_, 1, struct QueueItem);
+	struct QueueItem* newItem = CREATE(stack_, struct QueueItem);
 	newItem->cur 	= value;
 	newItem->next 	= 0;
 

@@ -111,9 +111,7 @@ lrtFct test0_fcts[4] = {&C, &A, &B, &Check};
 /** PISDF Graphs **/
 
 PiSDFGraph* test0(Archi* archi, Stack* stack, int N){
-	PiSDFGraph* graph = sAlloc(stack, 1, PiSDFGraph);
-	// Graph
-	*graph = PiSDFGraph(
+	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
 			/*Edges*/ 	2,
 			/*Params*/	1,
 			/*InIf*/	0,
@@ -178,8 +176,8 @@ PiSDFGraph* test0(Archi* archi, Stack* stack, int N){
 }
 
 PiSDFGraph* initPisdf_test0(Archi* archi, Stack* stack, int N){
-	PiSDFGraph* top = sAlloc(stack, 1, PiSDFGraph);
-	*top = PiSDFGraph(0,0,0,0,0,1, archi, stack);
+	PiSDFGraph* top = CREATE(stack, PiSDFGraph)(
+			0,0,0,0,0,1, archi, stack);
 
 	top->addHierVertex(
 			"top", test0(archi, stack, N),
@@ -189,8 +187,7 @@ PiSDFGraph* initPisdf_test0(Archi* archi, Stack* stack, int N){
 }
 
 SRDAGGraph* result_Test0_1(PiSDFGraph* pisdf, Stack* stack){
-	SRDAGGraph* srdag = sAlloc(stack, 1, SRDAGGraph);
-	*srdag = SRDAGGraph(stack);
+	SRDAGGraph* srdag = CREATE(stack, SRDAGGraph)(stack);
 
 	PiSDFGraph* topPisdf = pisdf->getBody(0)->getSubGraph();
 	SRDAGVertex* vxC = srdag->addVertex(topPisdf->getConfig(0));
@@ -234,8 +231,7 @@ SRDAGGraph* result_Test0_1(PiSDFGraph* pisdf, Stack* stack){
 }
 
 SRDAGGraph* result_Test0_2(PiSDFGraph* pisdf, Stack* stack){
-	SRDAGGraph* srdag = sAlloc(stack, 1, SRDAGGraph);
-	*srdag = SRDAGGraph(stack);
+	SRDAGGraph* srdag = CREATE(stack, SRDAGGraph)(stack);
 
 	PiSDFGraph* topPisdf = pisdf->getBody(0)->getSubGraph();
 	SRDAGVertex* vxC = srdag->addVertex(topPisdf->getConfig(0));
@@ -259,8 +255,7 @@ SRDAGGraph* result_Test0_2(PiSDFGraph* pisdf, Stack* stack){
 }
 
 SRDAGGraph* result_Test0_3(PiSDFGraph* pisdf, Stack* stack){
-	SRDAGGraph* srdag = sAlloc(stack, 1, SRDAGGraph);
-	*srdag = SRDAGGraph(stack);
+	SRDAGGraph* srdag = CREATE(stack, SRDAGGraph)(stack);
 
 	PiSDFGraph* topPisdf = pisdf->getBody(0)->getSubGraph();
 	SRDAGVertex* vxC = srdag->addVertex(topPisdf->getConfig(0));

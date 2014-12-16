@@ -49,9 +49,9 @@ Schedule::Schedule(){
 Schedule::Schedule(int nPE, int nJobMax, Stack *stack){
 	nPE_ = nPE;
 	nJobMax_ = nJobMax;
-	nJobPerPE_ = sAlloc(stack, nPE_, int);
-	readyTime_ = sAlloc(stack, nPE_, Time);
-	schedules_ = sAlloc(stack, nPE_*nJobMax_, SRDAGVertex*);
+	nJobPerPE_ = CREATE_MUL(stack, nPE_, int);
+	readyTime_ = CREATE_MUL(stack, nPE_, Time);
+	schedules_ = CREATE_MUL(stack, nPE_*nJobMax_, SRDAGVertex*);
 
 	memset(nJobPerPE_, 0, nPE_*sizeof(int));
 	memset(readyTime_, 0, nPE_*sizeof(Time));

@@ -50,6 +50,7 @@ SRDAGEdge::SRDAGEdge(){
 
 	rate_ = -1;
 	alloc_ = -1;
+	allocIx_ = -1;
 }
 
 SRDAGEdge::SRDAGEdge(SRDAGGraph* graph){
@@ -61,6 +62,7 @@ SRDAGEdge::SRDAGEdge(SRDAGGraph* graph){
 
 	rate_ = -1;
 	alloc_ = -1;
+	allocIx_ = -1;
 }
 
 void SRDAGEdge::connectSrc(SRDAGVertex *src, int srcPortId){

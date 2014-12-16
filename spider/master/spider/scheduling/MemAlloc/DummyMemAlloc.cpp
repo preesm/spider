@@ -42,6 +42,7 @@
 
 void DummyMemAlloc::reset(){
 	currentMem_ = this->memStart_;
+	nbFifos_ = 0;
 }
 
 void DummyMemAlloc::alloc(SRDAGGraph* graph){
@@ -52,6 +53,7 @@ void DummyMemAlloc::alloc(SRDAGGraph* graph){
 				SRDAGEdge* edge = vertex->getOutEdge(j);
 				if(edge->getAlloc() == -1){
 					edge->setAlloc(currentMem_);
+					edge->setAllocIx(nbFifos_++);
 					currentMem_ += edge->getRate();
 				}
 			}

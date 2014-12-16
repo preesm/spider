@@ -54,7 +54,6 @@ protected:
 
 	int memStart_;
 	int memSize_;
-
 };
 
 #endif/*MEM_ALLOC_H*/

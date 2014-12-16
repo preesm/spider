@@ -43,7 +43,9 @@ class DummyMemAlloc : public MemAlloc {
 public:
 	DummyMemAlloc(int start, int size):
 		MemAlloc(start, size),
-		currentMem_(start){}
+		currentMem_(start),
+		nbFifos_(0){}
+
 
 	~DummyMemAlloc(){}
 
@@ -52,6 +54,7 @@ public:
 
 protected:
 	int currentMem_;
+	int nbFifos_;
 
 };
 

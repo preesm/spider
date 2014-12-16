@@ -44,7 +44,9 @@ void saFork(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 	char *data;
 	int nbTknIn, nbTknOut;
 
+#if VERBOSE
 	printf("Fork\n");
+#endif
 
 	nbFifoIn = inParams[0];
 	nbFifoOut = inParams[1];

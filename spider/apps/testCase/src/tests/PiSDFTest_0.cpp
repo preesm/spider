@@ -43,17 +43,23 @@
 /*******************************************************************************/
 
 /** Actors */
+#define VERBOSE 0
 
 void C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	static int i=1;
+#if VERBOSE
 	printf("Execute C\n");
+#endif
 	outParams[0] = i++;
 }
 
 void A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	char* out = (char*)outputFIFOs[0];
 
+#if VERBOSE
 	printf("Execute A\n");
+#endif
+
 	out[0] = 1;
 	out[1] = 2;
 }
@@ -61,12 +67,17 @@ void A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParam
 void B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	Param N = inParams[0];
 	char* in = (char*)inputFIFOs[0];
+	char* out = (char*)outputFIFOs[0];
 
+#if VERBOSE
 	printf("Execute B: ");
 	for(int i=0;i<N; i++){
 		printf("%d ", in[i]);
 	}
 	printf("\n");
+#endif
+
+	memcpy(out, in, N);
 }
 
 void Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){

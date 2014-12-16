@@ -42,6 +42,9 @@
 void saInit(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	Param nbTokens = inParams[0];
 	memset(outputFIFOs[0], 0, nbTokens);
+
+#if VERBOSE
 	printf("Init\n");
+#endif
 }
 

@@ -43,7 +43,9 @@ void saBroadcast(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Para
 	int nbToken = inParams[0];
 	int nbOut = inParams[1];
 
+#if VERBOSE
 	printf("Broadcast\n");
+#endif
 
 	for(int i=0; i<nbOut; i++){
 		if(outputFIFOs[i] != inputFIFOs[0])

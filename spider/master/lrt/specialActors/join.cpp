@@ -44,6 +44,9 @@ void saJoin(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 	void *data;
 	int nbTknIn, nbTknOut;
 
+#if VERBOSE
+	printf("Join\n");
+#endif
 
 	nbFifoIn = inParams[0];
 	nbFifoOut = inParams[1];
@@ -52,7 +55,6 @@ void saJoin(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 	if(nbFifoOut == 1){
 		/* Join */
 		if(inputFIFOs[0] != outputFIFOs[0]){
-			printf("Join\n");
 			nbTknOut = inParams[nbFifoIn + 2];
 
 			for(i=0; i<nbFifoIn; i++){

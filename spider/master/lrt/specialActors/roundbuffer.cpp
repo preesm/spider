@@ -49,7 +49,9 @@ void saRoundbuffer(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Pa
 
 	data = (char*)inputFIFOs[0];
 
-	printf("RoundBuffer\n");
+#if VERBOSE
+	printf("Roundbuffer\n");
+#endif
 
 	if(nbTknIn == nbTknOut){
 		memcpy(outputFIFOs[0], inputFIFOs[0], nbTknIn);

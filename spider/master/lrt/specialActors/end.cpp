@@ -40,6 +40,9 @@
 
 void saEnd(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	Param nbTokens = inParams[0];
-	printf("end\n");
+
+#if VERBOSE
+	printf("End\n");
+#endif
 }
 

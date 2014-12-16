@@ -50,11 +50,14 @@ int main(int argc, char* argv[]){
 	SpiderConfig cfg;
 	SRDAGGraph srdag;
 
-	void* memory = malloc(STACK_SIZE);
-	StaticStack stack = StaticStack(memory,STACK_SIZE);
+//	void* memory = malloc(STACK_SIZE);
+//	StaticStack stack = StaticStack(memory,STACK_SIZE);
+//
+//	void* archiMem = malloc(ARCHI_STACK_SIZE);
+//	StaticStack archiStack = StaticStack(archiMem,ARCHI_STACK_SIZE);
 
-	void* archiMem = malloc(ARCHI_STACK_SIZE);
-	StaticStack archiStack = StaticStack(archiMem,ARCHI_STACK_SIZE);
+	DynStack stack;
+	DynStack archiStack;
 
 	platform.init(1, &archiStack);
 
@@ -166,7 +169,8 @@ int main(int argc, char* argv[]){
 	stack.printStat();
 	archiStack.printStat();
 
-	free(memory);
+//	free(memory);
+//	free(archiMem);
 
 	return 0;
 }

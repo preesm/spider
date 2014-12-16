@@ -83,7 +83,7 @@ int main(int argc, char* argv[]){
 			sprintf(name, "test0_%d.gv", i);
 			stack.freeAll();
 			srdag = SRDAGGraph(&stack);
-			getLrt()->setFctTbl(test0_fcts, 3);
+			getLrt()->setFctTbl(test0_fcts, 4);
 			topPisdf = initPisdf_test0(&archi, &stack, i);
 			jit_ms(topPisdf, &archi, &cfg);
 			test_Test0(topPisdf, &srdag, i, &stack);

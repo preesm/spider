@@ -63,7 +63,7 @@ void test_Test8(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
 void test_Test9(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
 void test_TestA(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
 
-extern lrtFct test0_fcts[3];
+extern lrtFct test0_fcts[4];
 
 //void test_0_A(int* out);
 //void test_0_B(int* in, int N);

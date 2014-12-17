@@ -329,5 +329,6 @@ static SRDAGGraph* (*result_Test0[]) (PiSDFGraph* pisdf, Stack* stack) = {
 void test_Test0(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack){
 	char name[100];
 	snprintf(name, 100, "Test0_%d", N);
-	BipartiteGraph::compareGraphs(srdag, result_Test0[N-1](pisdf, stack), stack, name);
+	SRDAGGraph* model = result_Test0[N-1](pisdf, stack);
+	BipartiteGraph::compareGraphs(srdag, model, stack, name);
 }

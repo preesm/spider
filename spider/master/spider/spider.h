@@ -43,6 +43,7 @@
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <graphs/Bipartite/BipartiteGraph.h>
+
 #include <tools/StaticStack.h>
 #include <tools/DynStack.h>
 

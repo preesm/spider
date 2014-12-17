@@ -41,7 +41,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#define STACK_SIZE (6*1024*1024)
+#define STACK_SIZE (600*1024)
 #define ARCHI_STACK_SIZE (1024)
 
 int main(int argc, char* argv[]){
@@ -88,6 +88,7 @@ int main(int argc, char* argv[]){
 			srdag = SRDAGGraph(&stack);
 			getLrt()->setFctTbl(test0_fcts, 4);
 			topPisdf = initPisdf_test0(&archi, &stack, i);
+			topPisdf->print("pi.gv");
 			jit_ms(topPisdf, &archi, &cfg);
 			test_Test0(topPisdf, &srdag, i, &stack);
 			srdag.print("test0.gv");

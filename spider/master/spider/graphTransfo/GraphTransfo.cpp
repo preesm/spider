@@ -217,5 +217,6 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 
 	transfoStack.printStat();
 
+//	free(memTransfo);
 //	transfoStack.free();
 }

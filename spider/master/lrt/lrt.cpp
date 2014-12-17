@@ -108,6 +108,7 @@ int LRT::runOneJob(){
 
 					com_->send(0);
 				}
+				com_->end_recv();
 			}
 			break;
 		}

@@ -75,7 +75,7 @@ int LinuxSpiderCommunicator::recv(int lrtIx, void** data){
 	return size;
 }
 
-void LinuxSpiderCommunicator::release(){
+void LinuxSpiderCommunicator::end_recv(){
 	curMsgSize_ = 0;
 }
 

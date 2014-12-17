@@ -48,7 +48,7 @@ public:
 	virtual void send(int lrtIx) = 0;
 
 	virtual int recv(int lrtIx, void** data) = 0;
-	virtual void release() = 0;
+	virtual void end_recv() = 0;
 
 	virtual void sendData(Fifo* f) = 0;
 	virtual long recvData(Fifo* f) = 0;

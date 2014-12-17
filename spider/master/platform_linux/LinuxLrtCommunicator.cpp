@@ -76,7 +76,7 @@ int LinuxLrtCommunicator::recv(int lrtIx, void** data){
 	return size;
 }
 
-void LinuxLrtCommunicator::release(){
+void LinuxLrtCommunicator::end_recv(){
 	curMsgSize_ = 0;
 }
 

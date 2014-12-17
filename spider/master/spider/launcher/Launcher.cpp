@@ -190,6 +190,7 @@ void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 				*param = params[j];
 			}
 			curNParam_ -= cfgVertex->getNOutParam();
+			getSpiderCommunicator()->end_recv();
 		}
 		slave = (slave+1)%archi->getNPE();
 	}

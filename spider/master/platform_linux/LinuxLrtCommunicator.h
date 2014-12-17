@@ -52,7 +52,7 @@ public:
 	void send(int lrtIx);
 
 	int recv(int lrtIx, void** data);
-	void release();
+	void end_recv();
 
 	void sendData(Fifo* f);
 	long recvData(Fifo* f);

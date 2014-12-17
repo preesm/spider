@@ -97,8 +97,10 @@ inline TYPE Queue<TYPE>::pop(){
 	if(first_ == 0)
 		throw "Try to pop an empty Queue\n";
 
+	struct QueueItem* old = first_;
 	TYPE val = first_->cur;
 	first_ = first_->next;
+	stack_->free(old);
 	if(first_ == 0)
 		last_ = 0;
 	return val;

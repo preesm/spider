@@ -59,15 +59,12 @@
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
 
-PlatformLinux::PlatformLinux(){
-}
+PlatformLinux::PlatformLinux(int nLrt, Stack *stack){
 
-PlatformLinux::~PlatformLinux(){
-}
-
-void PlatformLinux::init(int nLrt, Stack *stack){
 	int pipeSpidertoLRT[2];
 	int pipeLRTtoSpider[2];
+
+	stack_ = stack;
 
 	/** Open Pipes */
 	if (pipe2(pipeSpidertoLRT, O_NONBLOCK | O_CLOEXEC) == -1
@@ -116,6 +113,19 @@ void PlatformLinux::init(int nLrt, Stack *stack){
 	this->rstTime();
 }
 
+PlatformLinux::~PlatformLinux(){
+	LRT* lrt = getLrt();
+	LinuxSpiderCommunicator* spiderCom = (LinuxSpiderCommunicator*)getSpiderCommunicator();
+	LinuxLrtCommunicator* lrtCom = (LinuxLrtCommunicator*)lrt->getCom();
+
+	lrt->~LRT();
+	spiderCom->~LinuxSpiderCommunicator();
+	lrtCom->~LinuxLrtCommunicator();
+
+	stack_->free(lrt);
+	stack_->free(spiderCom);
+	stack_->free(lrtCom);
+}
 
 /** File Handling */
 int PlatformLinux::fopen(const char* name){

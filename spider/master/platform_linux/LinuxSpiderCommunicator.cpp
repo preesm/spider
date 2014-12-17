@@ -40,14 +40,17 @@
 #include <unistd.h>
 
 LinuxSpiderCommunicator::LinuxSpiderCommunicator(int msgSizeMax, int nLrt, Stack* s){
+	stack_ = s;
 	fIn_ = CREATE_MUL(s, nLrt, int);
 	fOut_ = CREATE_MUL(s, nLrt, int);
 	msgSizeMax_ = msgSizeMax;
-	msgBuffer_ = s->alloc(msgSizeMax);
+	msgBuffer_ = (void*) CREATE_MUL(s, msgSizeMax, char);
 	curMsgSize_ = 0;
 }
 LinuxSpiderCommunicator::~LinuxSpiderCommunicator(){
-
+	stack_->free(fIn_);
+	stack_->free(fOut_);
+	stack_->free(msgBuffer_);
 }
 
 void LinuxSpiderCommunicator::setLrtCom(int lrtIx, int fIn, int fOut){

@@ -62,6 +62,7 @@ public:
 	long pre_sendData(Fifo* f);
 
 private:
+	Stack* stack_;
 	int *fIn_, *fOut_;
 	int msgSizeMax_;
 	void* msgBuffer_;

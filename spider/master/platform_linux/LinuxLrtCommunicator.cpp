@@ -40,17 +40,18 @@
 #include <unistd.h>
 
 LinuxLrtCommunicator::LinuxLrtCommunicator(int msgSizeMax, int fIn, int fOut, void* shMem, int nFifo, Stack* s){
+	stack_ = s;
 	fIn_ = fIn;
 	fOut_ = fOut;
 	msgSizeMax_ = msgSizeMax;
-	msgBuffer_ = s->alloc(msgSizeMax);
+	msgBuffer_ = (void*) CREATE_MUL(s, msgSizeMax, char);
 	curMsgSize_ = 0;
 	nbFifos_ = nFifo;
 	fifos_ = (unsigned long*)shMem;
 	shMem_ = (unsigned char*)((long)shMem + nFifo*sizeof(unsigned long));
 }
 LinuxLrtCommunicator::~LinuxLrtCommunicator(){
-
+	stack_->free(msgBuffer_);
 }
 
 void* LinuxLrtCommunicator::alloc(int size){

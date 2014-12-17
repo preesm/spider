@@ -43,7 +43,6 @@
 
 class SRDAGGraph {
 public:
-	SRDAGGraph();
 	SRDAGGraph(Stack *stack);
 	virtual ~SRDAGGraph();
 

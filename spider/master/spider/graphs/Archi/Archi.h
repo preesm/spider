@@ -45,6 +45,7 @@ protected:
 	virtual ~Archi(){}
 
 public:
+
 	virtual int  getNPE() const = 0;
 	virtual inline const char* getPEName(int ix) const = 0;
 

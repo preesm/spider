@@ -45,10 +45,8 @@
 #define ARCHI_STACK_SIZE (1024)
 
 int main(int argc, char* argv[]){
-	PlatformLinux platform;
 	PiSDFGraph *topPisdf;
 	SpiderConfig cfg;
-	SRDAGGraph srdag;
 
 //	void* memory = malloc(STACK_SIZE);
 //	StaticStack stack = StaticStack(memory,STACK_SIZE);
@@ -61,9 +59,10 @@ int main(int argc, char* argv[]){
 	DynStack testStack("TestStack");
 	DynStack archiStack("ArchiStack");
 
-	platform.init(1, &archiStack);
+	PlatformLinux platform(1, &archiStack);
 
-	SharedMemArchi archi = SharedMemArchi(&archiStack,
+	SharedMemArchi archi(
+			/* Stack */  	&archiStack,
 			/* Nb PE */		1,
 			/* Nb PE Type*/ 1);
 
@@ -75,10 +74,6 @@ int main(int argc, char* argv[]){
 	archi.setPEType(0, 0);
 	archi.setName(0, "PE0");
 
-	cfg.createSrdag = false;
-	cfg.srdag = &srdag;
-	cfg.memAlloc = &memAlloc;
-	cfg.scheduler = &scheduler;
 
 	printf("Start\n");
 
@@ -91,13 +86,17 @@ int main(int argc, char* argv[]){
 			pisdfStack.freeAll();
 			testStack.freeAll();
 
-			srdag = SRDAGGraph(&stack);
+
+			SRDAGGraph srdag(&srdagStack);
+
+			cfg.createSrdag = false;
+			cfg.srdag = &srdag;
+			cfg.memAlloc = &memAlloc;
+			cfg.scheduler = &scheduler;
 			getLrt()->setFctTbl(test0_fcts, 4);
-			topPisdf = initPisdf_test0(&archi, &stack, i);
+
+			topPisdf = initPisdf_test0(&archi, &pisdfStack, i);
 			topPisdf->print("pi.gv");
-			jit_ms(topPisdf, &archi, &cfg);
-			test_Test0(topPisdf, &srdag, i, &stack);
-			srdag.print("test0.gv");
 		}
 
 		for(int i=1; i<=2; i++){
@@ -110,6 +109,8 @@ int main(int argc, char* argv[]){
 			test_Test1(topPisdf, &srdag, i, &stack);
 		}
 
+			test_Test0(topPisdf, &srdag, i, &testStack);
+			srdag.print("test0.gv");
 		for(int i=1; i<=2; i++){
 			char name[20];
 			sprintf(name, "test2_%d.gv", i);

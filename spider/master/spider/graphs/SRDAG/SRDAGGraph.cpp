@@ -45,15 +45,11 @@
 #define MAX_VERTEX 10000
 #define MAX_EDGE 10000
 
-SRDAGGraph::SRDAGGraph() {
-	stack_ = 0;
-}
-
 SRDAGGraph::SRDAGGraph(Stack *stack){
 	stack_ = stack;
 
-	edges_ = SRDAGEdgeSet(MAX_EDGE, stack);
-	vertices_ = SRDAGVertexSet(MAX_VERTEX, stack);
+	edges_ = SRDAGEdgeSet(MAX_EDGE, stack_);
+	vertices_ = SRDAGVertexSet(MAX_VERTEX, stack_);
 }
 
 SRDAGGraph::~SRDAGGraph() {

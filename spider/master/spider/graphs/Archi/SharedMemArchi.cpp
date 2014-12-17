@@ -38,6 +38,7 @@
 #include <tools/Stack.h>
 
 SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType) {
+	stack_ = stack;
 	nPE_ = nPE;
 	nPEType_ = nPEType;
 	peType_ = CREATE_MUL(stack, nPE_, int);
@@ -49,6 +50,15 @@ SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType) {
 }
 
 SharedMemArchi::~SharedMemArchi() {
+	/** Free allocated arrays **/
+	stack_->free(peType_);
+	stack_->free(peName_);
+	stack_->free(peTypeASend_);
+	stack_->free(peTypeBSend_);
+	stack_->free(peTypeARecv_);
+	stack_->free(peTypeBRecv_);
+
+	/** Reset values **/
 	nPE_ = 0;
 	nPEType_ = 0;
 	peType_ = 0;

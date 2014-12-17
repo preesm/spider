@@ -57,7 +57,7 @@ LRT::LRT(Communicator* com){
 	nFct_ = 0;
 }
 LRT::~LRT(){
-
+	/* Nothing to Unalloc */
 }
 
 void LRT::setFctTbl(const lrtFct fct[], int nFct){

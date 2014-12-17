@@ -61,6 +61,7 @@ public:
 	inline void setPEType(int pe, int type);
 
 private:
+	Stack* stack_;
 	int nPE_;
 	int nPEType_;
 	int* peType_;

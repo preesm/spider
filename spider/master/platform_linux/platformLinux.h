@@ -42,8 +42,6 @@
 
 class PlatformLinux: public Platform{
 public:
-	void init(int nLrt, Stack *stack);
-
 	/** File Handling */
 	virtual int fopen(const char* name);
 	virtual void fprintf(int id, const char* fmt, ...);
@@ -53,9 +51,11 @@ public:
 	virtual void rstTime();
 	virtual Time getTime();
 
-	PlatformLinux();
+	PlatformLinux(int nLrt, Stack *stack);
 	virtual ~PlatformLinux();
 private:
+
+	Stack* stack_;
 };
 
 #endif/*PLATFORM_LINUX_H*/

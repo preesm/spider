@@ -53,6 +53,8 @@ public:
 
 	void setFctTbl(const lrtFct fct[], int nFct);
 
+	inline Communicator* getCom();
+
 	int  runOneJob();
 	void runUntilNoMoreJobs();
 	void runInfinitly();
@@ -64,5 +66,9 @@ private:
 	const lrtFct* fcts_;
 	Communicator* com_;
 };
+
+inline Communicator* LRT::getCom(){
+	return com_;
+}
 
 #endif/*LRT_H*/

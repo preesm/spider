@@ -44,6 +44,8 @@
 
 class Communicator {
 public:
+	virtual ~Communicator(){}
+
 	virtual void* alloc(int size) = 0;
 	virtual void send(int lrtIx) = 0;
 
@@ -57,7 +59,6 @@ public:
 
 protected:
 	Communicator(){}
-	virtual ~Communicator(){}
 };
 
 #endif/*COMMUNICATOR_H*/

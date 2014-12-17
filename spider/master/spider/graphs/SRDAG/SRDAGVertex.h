@@ -357,6 +357,11 @@ inline bool SRDAGVertex::isEqual(SRDAGVertex* v2){
 	equal = equal && (this->type_ == v2->type_);
 	equal = equal && (this->getFctId() == v2->getFctId());
 
+	equal = equal && (this->getNInEdge() == v2->getNInEdge());
+	equal = equal && (this->getNConnectedInEdge() == v2->getNConnectedInEdge());
+	equal = equal && (this->getNOutEdge() == v2->getNOutEdge());
+	equal = equal && (this->getNConnectedOutEdge() == v2->getNConnectedOutEdge());
+
 	equal = equal && (this->nInParam_ == v2->nInParam_);
 	for(int i=0; i<this->nInParam_; i++)
 		equal = equal && (this->inParams_[i] == v2->inParams_[i]);

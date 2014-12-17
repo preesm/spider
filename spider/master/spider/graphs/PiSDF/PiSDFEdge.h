@@ -128,10 +128,10 @@ inline int PiSDFEdge::resolveDelay(transfoJob* job){
 }
 
 inline void PiSDFEdge::getProdExpr(char* out, int sizeOut){
-	prod_.toString(src_->getGraph()->getParams(), src_->getGraph()->getNParam(), out, sizeOut);
+	prod_.toString(src_->getInParams(), src_->getNInParam(), out, sizeOut);
 }
 inline void PiSDFEdge::getConsExpr(char* out, int sizeOut){
-	cons_.toString(snk_->getGraph()->getParams(), snk_->getGraph()->getNParam(), out, sizeOut);
+	cons_.toString(snk_->getInParams(), snk_->getNInParam(), out, sizeOut);
 }
 inline void PiSDFEdge::getDelayExpr(char* out, int sizeOut){
 	delay_.toString(graph_->getParams(), graph_->getNParam(), out, sizeOut);

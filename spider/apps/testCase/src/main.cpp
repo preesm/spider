@@ -56,8 +56,10 @@ int main(int argc, char* argv[]){
 //	void* archiMem = malloc(ARCHI_STACK_SIZE);
 //	StaticStack archiStack = StaticStack(archiMem,ARCHI_STACK_SIZE);
 
-	DynStack stack;
-	DynStack archiStack;
+	DynStack srdagStack("SrdagStack");
+	DynStack pisdfStack("PisdfStack");
+	DynStack testStack("TestStack");
+	DynStack archiStack("ArchiStack");
 
 	platform.init(1, &archiStack);
 
@@ -84,7 +86,11 @@ int main(int argc, char* argv[]){
 		for(int i=1; i<=3; i++){
 			char name[20];
 			sprintf(name, "test0_%d.gv", i);
-			stack.freeAll();
+
+			srdagStack.freeAll();
+			pisdfStack.freeAll();
+			testStack.freeAll();
+
 			srdag = SRDAGGraph(&stack);
 			getLrt()->setFctTbl(test0_fcts, 4);
 			topPisdf = initPisdf_test0(&archi, &stack, i);
@@ -166,9 +172,6 @@ int main(int argc, char* argv[]){
 //		printf("Exception : %s\n", s);
 //	}
 	printf("finished\n");
-
-	stack.printStat();
-	archiStack.printStat();
 
 //	free(memory);
 //	free(archiMem);

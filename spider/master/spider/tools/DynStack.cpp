@@ -41,10 +41,14 @@
 #include <cstdlib>
 #include <malloc.h>
 
-DynStack::DynStack(){
+DynStack::DynStack(const char* name): Stack(name){
 	curUsedSize_ = 0;
 	maxSize_ = 0;
 	nb_ = 0;
+}
+
+DynStack::~DynStack(){
+	printStat();
 }
 
 void *DynStack::alloc(int size){
@@ -55,6 +59,9 @@ void *DynStack::alloc(int size){
 }
 
 void DynStack::freeAll(){
+	if(nb_ != 0){
+		printf("DynStack Warning (%s): FreeAll called with %d allocated item\n", getName(), nb_);
+	}
 }
 
 void DynStack::free(void* var){
@@ -65,5 +72,16 @@ void DynStack::free(void* var){
 }
 
 void DynStack::printStat(){
-	printf("Memory used: %#x, %d still in use\n", maxSize_, nb_);
+	printf("%s: ", getName());
+
+	if(maxSize_ < 1024)
+		printf("\t%lld B, ", maxSize_);
+	else if(maxSize_ < 1024*1024)
+		printf("\t%.1f KB, ", maxSize_/1024.);
+	else if(maxSize_ < 1024*1024*1024)
+		printf("\t%.1f MB, ", maxSize_/1024./1024.);
+	else
+		printf("\t%.1f GB, ", maxSize_/1024./1024./1024.);
+
+	printf("\t%d still in use\n", nb_);
 }

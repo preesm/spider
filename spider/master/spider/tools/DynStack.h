@@ -41,7 +41,8 @@
 
 class DynStack : public Stack{
 public:
-	DynStack();
+	DynStack(const char* name);
+	virtual ~DynStack();
 
 	virtual void* alloc(int size);
 	virtual void free(void* var);

@@ -50,9 +50,17 @@ public:
 
 	virtual void printStat() = 0;
 
+	inline const char* getName() const;
+
 protected:
-	Stack(){}
+	Stack(const char* name): name_(name){}
 	virtual ~Stack(){}
+
+private:
+	const char* name_;
 };
 
+inline const char* Stack::getName() const{
+	return name_;
+}
 #endif // STACKINTERFACE_H

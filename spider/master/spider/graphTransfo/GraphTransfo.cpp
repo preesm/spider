@@ -110,7 +110,7 @@ static SRDAGVertex* getNextHierVx(SRDAGGraph *topDag){
 
 void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 //	StaticStack transfoStack(malloc(TRANSFO_STACK_SIZE), TRANSFO_STACK_SIZE);
-	DynStack transfoStack;
+	DynStack transfoStack("TransfoStack");
 	SRDAGGraph *topSrdag;
 
 	/* Initialize topDag */
@@ -214,8 +214,6 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 	config->scheduler->schedule(topSrdag, schedule, archi, &transfoStack);
 
 	getLrt()->runUntilNoMoreJobs();
-
-	transfoStack.printStat();
 
 //	free(memTransfo);
 //	transfoStack.free();

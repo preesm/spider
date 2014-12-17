@@ -38,15 +38,8 @@
 #include <cstdio>
 #include <algorithm>
 
-StaticStack::StaticStack(){
-	size_ = 0;
-	stack_ = 0;
-	curPtr_ = 0;
-	maxUsed_ = 0;
-	used_ = 0;
-}
-
-StaticStack::StaticStack(void* ptr, int size){
+StaticStack::StaticStack(const char* name, void* ptr, int size):
+		Stack(name) {
 	size_ = size;
 	stack_ = (char*)ptr;
 	curPtr_ = (char*)ptr;
@@ -76,5 +69,5 @@ void StaticStack::freeAll(){
 
 void StaticStack::printStat(){
 	maxUsed_ = std::max(maxUsed_, used_);
-	printf("Memory used: %#x / %#x (%.2f %%)\n", maxUsed_, size_, maxUsed_*100./size_);
+	printf("%s: %#x / %#x (%.2f %%)\n", getName(), maxUsed_, size_, maxUsed_*100./size_);
 }

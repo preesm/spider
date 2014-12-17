@@ -41,8 +41,7 @@
 
 class StaticStack : public Stack{
 public:
-	StaticStack();
-	StaticStack(void* ptr, int size);
+	StaticStack(const char* name, void* ptr, int size);
 
 	virtual void* alloc(int size);
 	virtual void free(void* var);

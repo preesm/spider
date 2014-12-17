@@ -46,10 +46,14 @@ public:
 		nbMax = 0;
 		nb    = 0;
 	}
+
 	Set(int nbmax, Stack *stack){
-		array = (TYPE*) stack->alloc(nbmax*sizeof(TYPE));
+		array = CREATE_MUL(stack, nbmax, TYPE);
 		nbMax = nbmax;
 		nb    = 0;
+	}
+
+	~Set(){
 	}
 
 	inline void add(TYPE value);

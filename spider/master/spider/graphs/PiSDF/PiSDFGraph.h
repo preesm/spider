@@ -42,7 +42,6 @@
 
 class PiSDFGraph {
 public:
-	PiSDFGraph();
 	PiSDFGraph(
 			int nEdges, int nParams,
 			int nInputIf, int nOutputIf,
@@ -119,6 +118,10 @@ public:
 			PiSDFVertex* source, int sourcePortId, const char* production,
 			PiSDFVertex* sink, int sinkPortId, const char* consumption,
 			const char* delay, int nParam);
+
+	void delVertex(PiSDFVertex* vertex);
+	void delParam(PiSDFParam* param);
+	void delEdge(PiSDFEdge* edge);
 
 private:
 	PiSDFVertex* parent_;

@@ -45,14 +45,20 @@
 #define MAX_VERTEX 10000
 #define MAX_EDGE 10000
 
-SRDAGGraph::SRDAGGraph(Stack *stack){
+SRDAGGraph::SRDAGGraph(Stack *stack):
+		edges_(MAX_EDGE, stack),
+		vertices_(MAX_VERTEX, stack)
+	{
 	stack_ = stack;
-
-	edges_ = SRDAGEdgeSet(MAX_EDGE, stack_);
-	vertices_ = SRDAGVertexSet(MAX_VERTEX, stack_);
 }
 
 SRDAGGraph::~SRDAGGraph() {
+	while(edges_.getN()){
+		delEdge(edges_[0]);
+	}
+	while(vertices_.getN()){
+		delVertex(vertices_[0]);
+	}
 }
 
 SRDAGVertex* SRDAGGraph::addVertex(PiSDFVertex* reference){
@@ -173,11 +179,22 @@ void SRDAGGraph::delVertex(SRDAGVertex* vertex){
 	for(int i=0; i<vertex->getNOutEdge(); i++)
 		if(vertex->getOutEdge(i) != 0)
 			vertex->getOutEdge(i)->disconnectSrc();
+
 	vertices_.del(vertex);
+	vertex->~SRDAGVertex();
+	stack_->free(vertex);
 }
 
 void SRDAGGraph::delEdge(SRDAGEdge* edge){
+	if(edge->getSrc() != 0){
+		edge->disconnectSrc();
+	}
+	if(edge->getSnk() != 0){
+		edge->disconnectSnk();
+	}
 	edges_.del(edge);
+	edge->~SRDAGEdge();
+	stack_->free(edge);
 }
 
 int SRDAGGraph::getNExecVertex(){

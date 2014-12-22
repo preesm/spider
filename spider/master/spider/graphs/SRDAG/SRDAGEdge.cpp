@@ -65,6 +65,10 @@ SRDAGEdge::SRDAGEdge(SRDAGGraph* graph){
 	allocIx_ = -1;
 }
 
+SRDAGEdge::~SRDAGEdge(){
+
+}
+
 void SRDAGEdge::connectSrc(SRDAGVertex *src, int srcPortId){
 	if(src_ != 0)
 		throw "SRDAGEdge: try to connect to an already connected edge";

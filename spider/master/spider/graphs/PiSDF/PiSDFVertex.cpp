@@ -42,29 +42,6 @@
 int PiSDFVertex::globalId = 0;
 
 /** Constructor */
-PiSDFVertex::PiSDFVertex(){
-	id_ = -1;
-	typeId_ = -1;
-	fctId_ = -1;
-	name_ = 0;
-
-	type_ = PISDF_TYPE_BODY;
-	subType_ = PISDF_SUBTYPE_NORMAL;
-
-	graph_ = 0;
-	subGraph_ = 0;
-
-	nInEdge_ = nOutEdge_ = 0;
-	inEdges_ = outEdges_ = 0;
-
-	nInParam_ = nOutParam_ = 0;
-	inParams_ = outParams_ = 0;
-
-	nPeMax_ = nPeTypeMax_ = 0;
-	constraints_ = 0;
-	timings_ = 0;
-}
-
 PiSDFVertex::PiSDFVertex(
 		const char* name, int fctId,
 		int typeId,
@@ -76,6 +53,7 @@ PiSDFVertex::PiSDFVertex(
 		Stack* stack){
 
 	id_ = globalId++;
+	stack_ = stack;
 	typeId_ = typeId;
 	fctId_ = fctId;
 	type_ = type;
@@ -103,7 +81,27 @@ PiSDFVertex::PiSDFVertex(
 
 	nPeMax_ = archi->getNPE();
 	nPeTypeMax_ = archi->getNPETypes();
+
 	constraints_ = CREATE_MUL(stack, nPeMax_, bool);
 	memset(constraints_, false, nPeMax_*sizeof(bool));
-	timings_ = CREATE_MUL(stack, nPeMax_, Parser::Expression);
+
+	timings_ = CREATE_MUL(stack, nPeMax_, Parser::Expression*);
+	memset(timings_, 0, nPeMax_*sizeof(Parser::Expression*));
+}
+
+PiSDFVertex::~PiSDFVertex(){
+	stack_->free(inEdges_);
+	stack_->free(outEdges_);
+	stack_->free(inParams_);
+	stack_->free(outParams_);
+	stack_->free(constraints_);
+
+	for(int i=0; i<nPeMax_; i++){
+		if(timings_[i]){
+			timings_[i]->~Expression();
+			stack_->free(timings_[i]);
+			timings_[i] = 0;
+		}
+	}
+	stack_->free(timings_);
 }

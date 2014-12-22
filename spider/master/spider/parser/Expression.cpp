@@ -62,17 +62,13 @@ static const char* operatorSign[4] = {
 	"/" //OP_DIV
 };
 
-Expression::Expression() {
-	nElt_ = 0;
-	stack_ = 0;
-}
-
 Expression::Expression(
 		const char* expr,
 		const PiSDFParam* const * params, int nParam,
 		Stack* stackAlloc){
 	nElt_ = evaluateNTokens(expr);
 	stack_ = CREATE_MUL(stackAlloc, nElt_, Token);
+	stackAlloc_ = stackAlloc;
 
 	Token* output = stack_;
 	Token stack[MAX_NVAR_ELEMENTS];
@@ -121,6 +117,7 @@ Expression::Expression(
 }
 
 Expression::~Expression() {
+	stackAlloc_->free(stack_);
 }
 
 int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job) const{

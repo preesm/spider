@@ -144,6 +144,8 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 		brv[i] *= coef;
 	}
 
+	stack->free(topo_matrix);
+
 //	printf("brv:\n");
 //	for(i=0; i<nbVertices; i++){
 //		printf("%4d ", brv[i]);

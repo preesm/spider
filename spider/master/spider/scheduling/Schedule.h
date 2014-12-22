@@ -47,6 +47,7 @@ class Schedule {
 public:
 	Schedule();
 	Schedule(int nPE, int nJobMax, Stack* stack);
+	~Schedule();
 
 	inline void setAllMinReadyTime(Time time);
     inline void setReadyTime(int pe, Time time);
@@ -63,6 +64,8 @@ private:
 	int* nJobPerPE_;
 	Time* readyTime_;
 	SRDAGVertex** schedules_;
+
+	Stack* stack_;
 
     inline int getNJobs(int pe) const;
 	inline SRDAGVertex* getJob(int pe, int ix) const;

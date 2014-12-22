@@ -45,7 +45,7 @@
 class ListScheduler : public Scheduler {
 public:
 	ListScheduler();
-	virtual ~ListScheduler(){}
+	virtual ~ListScheduler();
 
 	void schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi, Stack* stack);
 
@@ -54,7 +54,7 @@ private:
 	Schedule* schedule_;
 	Archi* archi_;
 
-	List<SRDAGVertex*> list_;
+	List<SRDAGVertex*>* list_;
 
 	int computeSchedLevel(SRDAGVertex* vertex);
 	void scheduleVertex(SRDAGVertex* vertex);

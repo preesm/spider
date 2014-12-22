@@ -38,15 +38,8 @@
 #include <cstring>
 #include <cstdio>
 
-Schedule::Schedule(){
-	nPE_ = 0;
-	nJobMax_ = 0;
-	nJobPerPE_ = 0;
-	readyTime_ = 0;
-	schedules_ = 0;
-}
-
 Schedule::Schedule(int nPE, int nJobMax, Stack *stack){
+	stack_ = stack;
 	nPE_ = nPE;
 	nJobMax_ = nJobMax;
 	nJobPerPE_ = CREATE_MUL(stack, nPE_, int);
@@ -55,6 +48,12 @@ Schedule::Schedule(int nPE, int nJobMax, Stack *stack){
 
 	memset(nJobPerPE_, 0, nPE_*sizeof(int));
 	memset(readyTime_, 0, nPE_*sizeof(Time));
+}
+
+Schedule::~Schedule(){
+	stack_->free(nJobPerPE_);
+	stack_->free(readyTime_);
+	stack_->free(schedules_);
 }
 
 void Schedule::addJob(int pe, SRDAGVertex* job, Time start, Time end){

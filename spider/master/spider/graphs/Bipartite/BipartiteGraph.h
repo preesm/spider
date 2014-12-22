@@ -51,9 +51,7 @@ private:
 	int* nConnections_;
 	Stack* stack_;
 
-	BipartiteGraph();
 	BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack);
-
 	virtual ~BipartiteGraph();
 
 	bool hasPerfectMatch();

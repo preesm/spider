@@ -43,31 +43,43 @@
 
 #include <cstdio>
 
-PiSDFGraph::PiSDFGraph() {
-	stack_ = 0;
-	parent_ = 0;
-	archi_ = 0;
-}
-
 PiSDFGraph::PiSDFGraph(
 		int nEdges, int nParams,
 		int nInputIf, int nOutputIf,
 		int nConfig, int nBody,
 		Archi *archi,
-		Stack *stack){
+		Stack *stack):
+
+		edges_(nEdges, stack),
+		params_(nParams, stack),
+		bodies_(nBody, stack),
+		configs_(nConfig, stack),
+		inputIfs_(nInputIf, stack),
+		outputIfs_(nInputIf, stack)
+		{
 	stack_ = stack;
 	parent_ = 0;
 	archi_ = archi;
-
-	edges_ = PiSDFEdgeSet(nEdges, stack);
-	params_ = PiSDFParamSet(nParams, stack);
-	bodies_ = PiSDFVertexSet(nBody, stack);
-	configs_ = PiSDFVertexSet(nConfig, stack);
-	inputIfs_ = PiSDFVertexSet(nInputIf, stack);
-	outputIfs_ = PiSDFVertexSet(nOutputIf, stack);
 }
 
 PiSDFGraph::~PiSDFGraph() {
+	while(edges_.getN() > 0)
+		delEdge(edges_[0]);
+	while(bodies_.getN() > 0){
+		if(bodies_[0]->isHierarchical()){
+			bodies_[0]->getSubGraph()->~PiSDFGraph();
+			stack_->free(bodies_[0]->getSubGraph());
+		}
+		delVertex(bodies_[0]);
+	}
+	while(configs_.getN() > 0)
+		delVertex(configs_[0]);
+	while(inputIfs_.getN() > 0)
+		delVertex(inputIfs_[0]);
+	while(outputIfs_.getN() > 0)
+		delVertex(outputIfs_[0]);
+	while(params_.getN() > 0)
+		delParam(params_[0]);
 }
 
 PiSDFVertex* PiSDFGraph::addBodyVertex(
@@ -230,6 +242,38 @@ PiSDFEdge* PiSDFGraph::connect(
 	src->connectOutEdge(srcPortId, edge);
 	snk->connectInEdge(snkPortId, edge);
 	return edge;
+}
+
+
+void PiSDFGraph::delVertex(PiSDFVertex* vertex){
+	switch(vertex->getType()){
+	case PISDF_TYPE_BODY:
+		bodies_.del(vertex);
+		break;
+	case PISDF_TYPE_CONFIG:
+		configs_.del(vertex);
+		break;
+	case PISDF_TYPE_IF:
+		if(vertex->getSubType() == PISDF_SUBTYPE_INPUT_IF)
+			inputIfs_.del(vertex);
+		else
+			outputIfs_.del(vertex);
+		break;
+	}
+	vertex->~PiSDFVertex();
+	stack_->free(vertex);
+}
+
+void PiSDFGraph::delParam(PiSDFParam* param){
+	params_.del(param);
+	param->~PiSDFParam();
+	stack_->free(param);
+}
+
+void PiSDFGraph::delEdge(PiSDFEdge* edge){
+	edges_.del(edge);
+	edge->~PiSDFEdge();
+	stack_->free(edge);
 }
 
 /** Print Fct */

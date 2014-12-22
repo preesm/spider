@@ -43,25 +43,6 @@
 int SRDAGVertex::globalId = 0;
 
 /** Constructor */
-SRDAGVertex::SRDAGVertex(){
-	id_ = -1;
-
-	type_ = SRDAG_NORMAL;
-	state_ = SRDAG_NEXEC;
-	graph_ = 0;
-	reference_ = 0;
-
-	nInEdge_ = nOutEdge_ = 0;
-	inEdges_ = outEdges_ = 0;
-
-	nInParam_ = nOutParam_ = 0;
-	inParams_ = 0;
-	outParams_ = 0;
-
-	start_ = end_ = -1;
-	schedLvl_ = -1;
-}
-
 SRDAGVertex::SRDAGVertex(
 		SRDAGType type,	SRDAGGraph* graph,
 		PiSDFVertex* reference,
@@ -70,6 +51,7 @@ SRDAGVertex::SRDAGVertex(
 		Stack* stack){
 	id_ = globalId++;
 
+	stack_ = stack;
 	type_ = type;
 	state_ = SRDAG_NEXEC;
 	graph_ = graph;
@@ -93,6 +75,13 @@ SRDAGVertex::SRDAGVertex(
 
 	start_ = end_ = -1;
 	schedLvl_ = -1;
+}
+
+SRDAGVertex::~SRDAGVertex(){
+	stack_->free(inEdges_);
+	stack_->free(outEdges_);
+	stack_->free(inParams_);
+	stack_->free(outParams_);
 }
 
 void SRDAGVertex::toString(char* name, int sizeMax) const{

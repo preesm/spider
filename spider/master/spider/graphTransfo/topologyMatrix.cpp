@@ -153,5 +153,9 @@ int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices, Stack *st
 	for(int i=0; i<nbVertices; i++){
 		brv[i] = abs(ratioResult[i].getNominator() * lcm / ratioResult[i].getDenominator());
 	}
+
+	stack->free(ratioMatrix);
+	stack->free(ratioResult);
+
 	return 0;
 }

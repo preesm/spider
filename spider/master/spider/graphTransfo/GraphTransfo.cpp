@@ -98,6 +98,24 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 
 }
 
+static void freeJob(transfoJob *job, Stack* stack){
+	if(job->configs != 0)
+		stack->free(job->configs);
+
+	if(job->bodies != 0){
+		for(int i=0; i<job->graph->getNBody(); i++){
+			if(job->bodies[i] != 0){
+				stack->free(job->bodies[i]);
+			}
+		}
+		stack->free(job->bodies);
+	}
+
+	stack->free(job->paramValues);
+	stack->free(job->inputIfs);
+	stack->free(job->outputIfs);
+}
+
 static SRDAGVertex* getNextHierVx(SRDAGGraph *topDag){
 	for(int i=0; i<topDag->getNVertex(); i++){ // todo check executable
 		SRDAGVertex* vertex = topDag->getVertex(i);
@@ -200,6 +218,11 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 			linkSRVertices(topSrdag, job, brv);
 //			SRDAGWrite(topDag, "topDag_link.gv", DataRates);
 //			SRDAGCheck(topDag);
+
+			freeJob(job, config->transfoStack);
+
+			config->transfoStack->free(brv);
+			config->transfoStack->free(job);
 		}
 
 //        printf("Finish one iter\n");
@@ -212,6 +235,9 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 	config->scheduler->schedule(topSrdag, schedule, archi, config->transfoStack);
 
 	getLrt()->runUntilNoMoreJobs();
+
+	schedule->~Schedule();
+	config->transfoStack->free(schedule);
 
 	config->transfoStack->freeAll();
 }

@@ -47,6 +47,7 @@ public:
 	/** Constructors */
 	SRDAGEdge();
 	SRDAGEdge(SRDAGGraph* graph);
+	~SRDAGEdge();
 
 	/** Getters */
 	inline int getId() const;

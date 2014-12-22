@@ -45,11 +45,11 @@
 class PiSDFEdge {
 public:
 	/** Constructors */
-	PiSDFEdge();
 	PiSDFEdge(
 			PiSDFGraph* graph,
 			int nParam,
 			Stack *stack);
+	~PiSDFEdge();
 
 	/** Getters */
 	inline int getId() const;
@@ -82,7 +82,7 @@ private:
 
 	int id_;
 	PiSDFGraph* graph_;
-//	Stack *stack_;
+	Stack *stack_;
 
 	PiSDFVertex* src_;
 	int srcPortIx_;
@@ -90,11 +90,11 @@ private:
 	int snkPortIx_;
 
 	/* Production and Consumption */
-	Parser::Expression prod_;
-	Parser::Expression cons_;
+	Parser::Expression* prod_;
+	Parser::Expression* cons_;
 
 	/* Parameterized Delays */
-	Parser::Expression delay_;
+	Parser::Expression* delay_;
 };
 
 inline int PiSDFEdge::getId() const{
@@ -114,27 +114,34 @@ inline int PiSDFEdge::getSnkPortIx() const {
 }
 
 inline void PiSDFEdge::setDelay(const char* expr, Stack* stack){
-	delay_ = Parser::Expression(expr, graph_->getParams(), graph_->getNParam(), stack);
+	if(delay_ != 0){
+		delay_->~Expression();
+		stack->free(delay_);
+		delay_ = 0;
+	}
+	delay_ = CREATE(stack, Parser::Expression)(expr, graph_->getParams(), graph_->getNParam(), stack);
 }
 
 inline int PiSDFEdge::resolveProd(transfoJob* job) const {
-	return prod_.evaluate(src_->getInParams(), job);
+	return prod_->evaluate(src_->getInParams(), job);
 }
 inline int PiSDFEdge::resolveCons(transfoJob* job) const {
-	return cons_.evaluate(snk_->getInParams(), job);
+	return cons_->evaluate(snk_->getInParams(), job);
 }
 inline int PiSDFEdge::resolveDelay(transfoJob* job){
-	return delay_.evaluate(graph_->getParams(), job);
+	return delay_->evaluate(graph_->getParams(), job);
 }
 
+/** TODO take care of prod_ cons_ delay_ != 0 */
+
 inline void PiSDFEdge::getProdExpr(char* out, int sizeOut){
-	prod_.toString(src_->getInParams(), src_->getNInParam(), out, sizeOut);
+	prod_->toString(src_->getInParams(), src_->getNInParam(), out, sizeOut);
 }
 inline void PiSDFEdge::getConsExpr(char* out, int sizeOut){
-	cons_.toString(snk_->getInParams(), snk_->getNInParam(), out, sizeOut);
+	cons_->toString(snk_->getInParams(), snk_->getNInParam(), out, sizeOut);
 }
 inline void PiSDFEdge::getDelayExpr(char* out, int sizeOut){
-	delay_.toString(graph_->getParams(), graph_->getNParam(), out, sizeOut);
+	delay_->toString(graph_->getParams(), graph_->getNParam(), out, sizeOut);
 }
 
 #endif/*PISDF_EDGE_H*/

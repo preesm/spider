@@ -42,12 +42,12 @@
 class PiSDFParam{
 public:
 	/** Constructor */
-	PiSDFParam();
 	PiSDFParam(
 			const char* name,
 			int typeIx,
 			PiSDFGraph* graph,
 			PiSDFParamType type);
+	~PiSDFParam();
 
 	/** Getters */
 	inline int getIx() const;

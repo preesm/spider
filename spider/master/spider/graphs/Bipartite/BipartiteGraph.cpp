@@ -43,14 +43,6 @@
 #include <cstdio>
 #include <platform.h>
 
-BipartiteGraph::BipartiteGraph() {
-	graph_ = 0;
-	nVerticesG1_ = 0;
-	nVerticesG2_ = 0;
-	nConnections_ = 0;
-	stack_ = 0;
-}
-
 BipartiteGraph::BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack){
 	nVerticesG1_ = g1->getNVertex();
 	nVerticesG2_ = g2->getNVertex();
@@ -72,6 +64,8 @@ BipartiteGraph::BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack){
 }
 
 BipartiteGraph::~BipartiteGraph() {
+	stack_->free(graph_);
+	stack_->free(nConnections_);
 }
 
 bool BipartiteGraph::hasPerfectMatch() {
@@ -83,9 +77,13 @@ bool BipartiteGraph::hasPerfectMatch() {
 	for (int u = 0; u < nVerticesG1_; u++) {
 		memset(visited, false, nVerticesG1_*sizeof(bool));
 		if (!findPath(this, u, matching, visited)){
+			stack_->free(matching);
+			stack_->free(visited);
 			return false;
 		}
 	}
+	stack_->free(matching);
+	stack_->free(visited);
 	return true;
 }
 
@@ -122,6 +120,9 @@ void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack,
 		snprintf(name, 100, "%s_model.gv", testName);
 		g2->print(name);
 	}
+
+	bipartite->~BipartiteGraph();
+	stack->free(bipartite);
 }
 
 void BipartiteGraph::print(const char* path, SRDAGGraph* g1, SRDAGGraph* g2){

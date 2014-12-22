@@ -40,18 +40,6 @@
 /** Static Var def */
 int PiSDFParam::globalIx = 0;
 
-PiSDFParam::PiSDFParam(){
-	id_ = -1;
-	typeIx_ = -1;
-	name_ = 0;
-	graph_ = 0;
-	type_ = PISDF_PARAM_STATIC;
-	value_ = -1;
-	parentId_ = -1;
-	setter_ = 0;
-	portIx_ = -1;
-}
-
 PiSDFParam::PiSDFParam(
 		const char* name,
 		int typeIx,
@@ -66,4 +54,7 @@ PiSDFParam::PiSDFParam(
 	parentId_ = -1;
 	setter_ = 0;
 	portIx_ = -1;
+}
+
+PiSDFParam::~PiSDFParam(){
 }

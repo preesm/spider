@@ -40,7 +40,7 @@
 template <class T> class List {
 public:
 	List(Stack* stack, int size);
-	List();
+	~List();
 	T& operator [](int n);
 	int getNb();
 	void add(T e);
@@ -48,6 +48,7 @@ public:
 	void sort(int (*comp)(T,T));
 
 private:
+	Stack* stack_;
 	T* array;
 	int nb;
 	int nbMax;
@@ -57,17 +58,19 @@ private:
 };
 
 template <class T>
-inline List<T>::List(){
+inline List<T>::List(Stack* stack, int size){
+	stack_ = stack;
 	nb = 0;
-	nbMax = 0;
-	array = 0;
+	nbMax = size;
+	if(size == 0)
+		array = 0;
+	else
+		array = CREATE_MUL(stack, size, T);
 }
 
 template <class T>
-inline List<T>::List(Stack* stack, int size){
-	nb = 0;
-	nbMax = size;
-	array = CREATE_MUL(stack, size, T);
+inline List<T>::~List(){
+	stack_->free(array);
 }
 
 template <class T>

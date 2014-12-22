@@ -41,19 +41,20 @@
 
 template<typename TYPE> class Set {
 public:
-	Set(){
-		array = 0;
-		nbMax = 0;
-		nb    = 0;
-	}
-
 	Set(int nbmax, Stack *stack){
-		array = CREATE_MUL(stack, nbmax, TYPE);
-		nbMax = nbmax;
+		if(nbmax > 0){
+			array = CREATE_MUL(stack, nbmax, TYPE);
+		}else{
+			array = 0;
+		}
 		nb    = 0;
+		nbMax = nbmax;
+		stack_ = stack;
 	}
 
 	~Set(){
+		if(nbMax != 0)
+			stack_->free(array);
 	}
 
 	inline void add(TYPE value);
@@ -67,6 +68,7 @@ public:
 	inline int getIxOf(TYPE val);
 
 private:
+	Stack* stack_;
 	TYPE* array;
 	int nb;
 	int nbMax;

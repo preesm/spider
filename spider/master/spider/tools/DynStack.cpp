@@ -65,8 +65,12 @@ void DynStack::freeAll(){
 }
 
 void DynStack::free(void* var){
+	int size = malloc_usable_size (var);
 	maxSize_ = std::max(maxSize_, curUsedSize_);
-	curUsedSize_ -= malloc_usable_size (var);
+	curUsedSize_ -= size;
+	if(size == 0){
+		printf("Error %s free'd already free'd memory\n", getName());
+	}
 	std::free(var);
 	nb_--;
 }
@@ -75,13 +79,16 @@ void DynStack::printStat(){
 	printf("%s: ", getName());
 
 	if(maxSize_ < 1024)
-		printf("\t%lld B, ", maxSize_);
+		printf("\t%lld B", maxSize_);
 	else if(maxSize_ < 1024*1024)
-		printf("\t%.1f KB, ", maxSize_/1024.);
+		printf("\t%.1f KB", maxSize_/1024.);
 	else if(maxSize_ < 1024*1024*1024)
-		printf("\t%.1f MB, ", maxSize_/1024./1024.);
+		printf("\t%.1f MB", maxSize_/1024./1024.);
 	else
-		printf("\t%.1f GB, ", maxSize_/1024./1024./1024.);
+		printf("\t%.1f GB", maxSize_/1024./1024./1024.);
 
-	printf("\t%d still in use\n", nb_);
+	if(nb_)
+		printf(", \t%d still in use", nb_);
+
+	printf("\n");
 }

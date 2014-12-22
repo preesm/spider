@@ -41,17 +41,6 @@
 /** Static Var def */
 int PiSDFEdge::globalId = 0;
 
-PiSDFEdge::PiSDFEdge(){
-	id_ = -1;
-	graph_ = 0;
-
-	src_ = 0; srcPortIx_ = -1;
-	snk_ = 0; snkPortIx_ = -1;
-
-	/* Production and Consumption */
-	/* Parameterized Delays */
-}
-
 PiSDFEdge::PiSDFEdge(
 		PiSDFGraph* graph,
 		int nParam,
@@ -62,8 +51,31 @@ PiSDFEdge::PiSDFEdge(
 	src_ = 0; srcPortIx_ = -1;
 	snk_ = 0; snkPortIx_ = -1;
 
+	prod_ = cons_ = delay_ = 0;
+
+	stack_ = stack;
+
 	/* Production and Consumption */
 	/* Parameterized Delays */
+}
+
+PiSDFEdge::~PiSDFEdge(){
+	if(delay_ != 0){
+		delay_->~Expression();
+		stack_->free(delay_);
+		delay_ = 0;
+	}
+	if(prod_ != 0){
+		prod_->~Expression();
+		stack_->free(prod_);
+		prod_ = 0;
+	}
+	if(cons_ != 0){
+		cons_->~Expression();
+		stack_->free(cons_);
+		cons_ = 0;
+	}
+
 }
 
 void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod, Stack* stack){
@@ -71,7 +83,13 @@ void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod, St
 		throw "PiSDFEdge: try to connect to an already connected edge";
 	src_ = src;
 	srcPortIx_ = srcPortId;
-	prod_ = Parser::Expression(prod, src->getInParams(), src->getNInParam(), stack);
+
+	if(prod_ != 0){
+		prod_->~Expression();
+		stack->free(prod_);
+		prod_ = 0;
+	}
+	prod_ = CREATE(stack, Parser::Expression)(prod, src->getInParams(), src->getNInParam(), stack);
 }
 
 void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons, Stack* stack){
@@ -79,7 +97,13 @@ void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons, St
 		throw "PiSDFEdge: try to connect to an already connected edge";
 	snk_ = snk;
 	snkPortIx_ = snkPortId;
-	cons_ = Parser::Expression(cons, snk->getInParams(), snk->getNInParam(), stack);
+
+	if(cons_ != 0){
+		cons_->~Expression();
+		stack->free(cons_);
+		cons_ = 0;
+	}
+	cons_ = CREATE(stack, Parser::Expression)(cons, snk->getInParams(), snk->getNInParam(), stack);
 }
 
 

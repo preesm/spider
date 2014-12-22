@@ -46,7 +46,6 @@ namespace Parser {
 
 class Expression {
 public:
-	Expression();
 	Expression(const char* expr, const PiSDFParam* const * params, int nParam, Stack* stack);
 	virtual ~Expression();
 
@@ -81,6 +80,7 @@ private:
 
 	Token* stack_;
 	int nElt_;
+	Stack* stackAlloc_;
 
 	bool getNextToken(
 			Token* token,

@@ -64,6 +64,8 @@ typedef struct{
 
 	MemAlloc* memAlloc;
 	Scheduler* scheduler;
+
+	Stack* transfoStack;
 } SpiderConfig;
 
 #include <graphTransfo/GraphTransfo.h>

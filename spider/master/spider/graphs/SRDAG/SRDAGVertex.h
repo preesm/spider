@@ -47,13 +47,13 @@ class SRDAGVertex {
 public:
 	friend class SRDAGEdge;
 
-	SRDAGVertex();
 	SRDAGVertex(
 			SRDAGType type, SRDAGGraph* graph,
 			PiSDFVertex* reference,
 			int nInEdge, int nOutEdge,
 			int nInParam, int nOutParam,
 			Stack* stack);
+	~SRDAGVertex();
 
 	/** Parameters getters */
 	inline int getNInParam() const;
@@ -118,6 +118,7 @@ private:
 	static int globalId;
 
 	int id_;
+	Stack* stack_;
 	SRDAGType type_;
 	SRDAGState state_;
 	SRDAGGraph* graph_;
@@ -264,7 +265,7 @@ inline void SRDAGVertex::disconnectOutEdge(int ix){
 /** Add Param Fcts */
 inline void SRDAGVertex::addInParam(int ix, int param){
 #if	DEBUG
-	if(ix >= nInParam_ && ix < 0)
+	if(ix >= nInParam_ || ix < 0)
 		throw "SRDAGVertex: Bad ix in addInParam";
 	else if(inParams_[ix] != 0)
 		throw "SRDAGVertex: Try to erase already connected input param";

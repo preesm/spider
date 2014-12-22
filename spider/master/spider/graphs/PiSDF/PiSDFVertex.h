@@ -45,7 +45,6 @@
 
 class PiSDFVertex {
 public:
-	PiSDFVertex();
 	PiSDFVertex(
 			const char* name, int fctId,
 			int typeId,
@@ -55,6 +54,7 @@ public:
 			int nInParam, int nOutParam,
 			Archi* archi,
 			Stack* stack);
+	~PiSDFVertex();
 
 	/** Parameters getters */
 	inline int getNInParam() const;
@@ -104,6 +104,8 @@ public:
 private:
 	static int globalId;
 
+	Stack* stack_;
+
 	int id_;
 	int typeId_;
 	int fctId_;
@@ -123,7 +125,7 @@ private:
 
 	int nPeMax_, nPeTypeMax_;
 	bool* constraints_;
-	Parser::Expression* timings_;
+	Parser::Expression** timings_;
 };
 
 /** Inlines Fcts */
@@ -275,7 +277,7 @@ inline bool PiSDFVertex::canExecuteOn(int pe){
 inline Time PiSDFVertex::getTimingOnType(int peType, const int* vertexParamValues, int nParam){
 	if(peType < 0 || peType >= nPeTypeMax_)
 		throw "PiSDFVertex: accessing bad PE type ix\n";
-	return timings_[peType].evaluate(vertexParamValues, nParam);
+	return timings_[peType]->evaluate(vertexParamValues, nParam);
 }
 inline const bool* PiSDFVertex::getConstraints() const{
 	return constraints_;
@@ -284,7 +286,13 @@ inline const bool* PiSDFVertex::getConstraints() const{
 inline void PiSDFVertex::setTimingOnType(int peType, const char* timing, Stack *stack){
 	if(peType < 0 || peType >= nPeTypeMax_)
 		throw "PiSDFVertex: accessing bad PE type ix\n";
-	timings_[peType] = Parser::Expression(timing, this->getInParams(), this->getNInParam(), stack);
+
+	if(timings_[peType] != 0){
+		timings_[peType]->~Expression();
+		stack->free(timings_[peType]);
+		timings_[peType] = 0;
+	}
+	timings_[peType] = CREATE(stack, Parser::Expression)(timing, this->getInParams(), this->getNInParam(), stack);
 }
 inline void PiSDFVertex::isExecutableOnAllPE(){
 	memset(constraints_, true, nPeMax_*sizeof(bool));

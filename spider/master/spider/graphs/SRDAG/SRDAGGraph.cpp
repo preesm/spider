@@ -45,6 +45,12 @@
 #define MAX_VERTEX 10000
 #define MAX_EDGE 10000
 
+static const char* stateStrings[3] = {
+		"NOT_EXEC",
+		"EXEC",
+		"RUN"
+};
+
 SRDAGGraph::SRDAGGraph(Stack *stack):
 		edges_(MAX_EDGE, stack),
 		vertices_(MAX_VERTEX, stack)
@@ -237,11 +243,12 @@ void SRDAGGraph::print(const char *path){
 		char name[100];
 		SRDAGVertex* vertex = vertices_[i];
 		vertex->toString(name, 100);
-		Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)",
+		Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)\n%s",
 				vertex->getId(),
 				vertex->getId(),
 				name,
-				vertex->getFctId());
+				vertex->getFctId(),
+				stateStrings[vertex->getState()]);
 		Platform::get()->fprintf(file, "\",color=");
 		switch (vertex->getState()){
 			case SRDAG_EXEC:
@@ -283,10 +290,11 @@ void SRDAGGraph::print(const char *path){
 
 //		switch(mode){
 //		case DataRates:
-			Platform::get()->fprintf(file, "\t%d->%d [label=\"%d\n%d\",taillabel=\"%d\",headlabel=\"%d\"];\n",
+			Platform::get()->fprintf(file, "\t%d->%d [label=\"%d\n%#x (%d)\",taillabel=\"%d\",headlabel=\"%d\"];\n",
 					srcIx, snkIx,
 					edge->getRate(),
 					edge->getAlloc(),
+					edge->getAllocIx(),
 					edge->getSrcPortIx(),
 					edge->getSnkPortIx());
 //			break;

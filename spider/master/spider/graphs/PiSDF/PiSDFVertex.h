@@ -194,7 +194,7 @@ inline PiSDFEdge* PiSDFVertex::getOutEdge(int ix){
 /** Connect Fcts */
 inline void PiSDFVertex::connectInEdge(int ix, PiSDFEdge* edge){
 #if	DEBUG
-	if(ix >= nInEdge_ && ix < 0)
+	if(ix >= nInEdge_ || ix < 0)
 		throw "PiSDFVertex: Bad ix in connectInEdge";
 	else if(inEdges_[ix] != 0)
 		throw "PiSDFVertex: Try to erase already connected input edge";
@@ -204,7 +204,7 @@ inline void PiSDFVertex::connectInEdge(int ix, PiSDFEdge* edge){
 }
 inline void PiSDFVertex::connectOutEdge(int ix, PiSDFEdge* edge){
 #if	DEBUG
-	if(ix >= nOutEdge_ && ix < 0)
+	if(ix >= nOutEdge_ || ix < 0)
 		throw "PiSDFVertex: Bad ix in connectOutEdge";
 	else if(outEdges_[ix] != 0)
 		throw "PiSDFVertex: Try to erase already connected output edge";
@@ -216,7 +216,7 @@ inline void PiSDFVertex::connectOutEdge(int ix, PiSDFEdge* edge){
 /** Add Param Fcts */
 inline void PiSDFVertex::addInParam(int ix, PiSDFParam* param){
 #if	DEBUG
-	if(ix >= nInParam_ && ix < 0)
+	if(ix >= nInParam_ || ix < 0)
 		throw "PiSDFVertex: Bad ix in addInParam";
 	else if(inParams_[ix] != 0)
 		throw "PiSDFVertex: Try to erase already connected input param";
@@ -226,7 +226,7 @@ inline void PiSDFVertex::addInParam(int ix, PiSDFParam* param){
 }
 inline void PiSDFVertex::addOutParam(int ix, PiSDFParam* param){
 #if	DEBUG
-	if(ix >= nOutParam_ && ix < 0)
+	if(ix >= nOutParam_ || ix < 0)
 		throw "PiSDFVertex: Bad ix in addOutParam";
 	else if(outParams_[ix] != 0)
 		throw "PiSDFVertex: Try to erase already connected output param";

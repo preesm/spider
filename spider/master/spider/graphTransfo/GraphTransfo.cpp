@@ -68,6 +68,7 @@
 #define TRANSFO_STACK_SIZE 1024*1024*1024
 
 static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
+	memset(job, 0, sizeof(transfoJob));
 	job->graph = nextHierVx->getSubGraph();
 
 	/* Add Static and Herited parameter values */
@@ -183,6 +184,11 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 				addSRVertices(topSrdag, job, brv, config->transfoStack);
 
 				linkSRVertices(topSrdag, job, brv);
+
+				freeJob(job, config->transfoStack);
+
+				config->transfoStack->free(brv);
+				config->transfoStack->free(job);
 			}
 
 			/* Find next hierarchical vertex */

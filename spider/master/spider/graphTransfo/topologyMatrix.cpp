@@ -90,14 +90,14 @@ int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices, Stack *st
 		int maxIndex = i;
 
 		for (int t = i+1; t < nbEdges; t++) {
-			Rational abs = ratioMatrix[t*nbVertices+i].getAbs();
-			if (abs > pivotMax) {
+			Rational newPivot = ratioMatrix[t*nbVertices+i].getAbs();
+			if (newPivot > pivotMax) {
 				maxIndex = t;
-				pivotMax = abs;
+				pivotMax = newPivot;
 			}
 		}
 
-		if ((pivotMax == 0) && maxIndex != i) {
+		if (pivotMax != 0 && maxIndex != i) {
 			/* Switch Rows */
 			Rational tmp;
 			for (int t = 0; t < nbVertices; t++) {

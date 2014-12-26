@@ -70,7 +70,8 @@ inline List<T>::List(Stack* stack, int size){
 
 template <class T>
 inline List<T>::~List(){
-	stack_->free(array);
+	if(array != 0)
+		stack_->free(array);
 }
 
 template <class T>

@@ -42,14 +42,70 @@
 /****************************     TEST 1     ***********************************/
 /*******************************************************************************/
 
+#define VERBOSE 0
+
+void test1_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	static int i=1;
+	char* out = (char*)outputFIFOs[0];
+
+#if VERBOSE
+	printf("Execute C\n");
+#endif
+
+	out[0] = 1;
+	out[1] = 2;
+	out[2] = 3;
+	outParams[0] = i++;
+}
+
+void test1_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param N = inParams[0];
+	char* in = (char*)inputFIFOs[0];
+	char* out = (char*)outputFIFOs[0];
+
+#if VERBOSE
+	printf("Execute A\n");
+#endif
+
+	memcpy(out, in, N);
+}
+
+void test1_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param N = inParams[0];
+	char* in = (char*)inputFIFOs[0];
+
+	char expected[6] = {1,2,3,1};
+	int nb;
+	switch(N){
+	case 1:
+	case 3:
+		nb = 3;
+		break;
+	case 2:
+		nb = 4;
+		break;
+	}
+
+	printf("Test: ");
+	for(int i=0; i<nb; i++){
+		if(in[i] != expected[i]){
+			printf("FAILED\n");
+			return;
+		}
+	}
+	printf("PASSED\n");
+}
+
+lrtFct test1_fcts[NB_FCT_TEST1] = {&test1_C, &test1_A, &test1_Check};
+
 PiSDFGraph* test1(Archi* archi, Stack* stack, int N){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
-			/*Edges*/ 	1,
+			/*Edges*/ 	2,
 			/*Params*/	1,
 			/*InIf*/	0,
 			/*OutIf*/	0,
 			/*Config*/	1,
-			/*Normal*/	1,
+			/*Normal*/	2,
 			archi,
 			stack);
 
@@ -67,9 +123,15 @@ PiSDFGraph* test1(Archi* archi, Stack* stack, int N){
 	// Other vertices
 	PiSDFVertex *vxA = graph->addBodyVertex(
 			"A", /*Fct*/ 1,
-			/*In*/ 1, /*Out*/ 0,
+			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 1);
 	vxA->addInParam(0, paramN);
+
+	PiSDFVertex *vxCheck = graph->addBodyVertex(
+			"Check", /*Fct*/ 2,
+			/*In*/ 1, /*Out*/ 0,
+			/*Par*/ 1);
+	vxCheck->addInParam(0, paramN);
 
 	// Edges.
 	graph->connect(
@@ -77,11 +139,18 @@ PiSDFGraph* test1(Archi* archi, Stack* stack, int N){
 			/*Snk*/ vxA, /*SnkPrt*/ 0, /*Cons*/ "N",
 			/*Delay*/ "0", 0);
 
+	graph->connect(
+			/*Src*/ vxA, /*SrcPrt*/ 0, /*Prod*/ "N",
+			/*Snk*/ vxCheck, /*SnkPrt*/ 0, /*Cons*/ "3-(N/3)+(N/2)",
+			/*Delay*/ "0", 0);
+
 	// Timings
 	vxA->isExecutableOnAllPE();
 	vxA->setTimingOnType(0, "10", stack);
 	vxC->isExecutableOnAllPE();
 	vxC->setTimingOnType(0, "10", stack);
+	vxCheck->isExecutableOnAllPE();
+	vxCheck->setTimingOnType(0, "10", stack);
 
 	// Subgraphs
 
@@ -109,6 +178,14 @@ SRDAGGraph* result_Test1_1(PiSDFGraph* pisdf, Stack* stack){
 	SRDAGVertex* vxA2 = srdag->addVertex(topPisdf->getBody(0));
 	SRDAGVertex* vxF  = srdag->addFork(3);
 
+	SRDAGVertex* vxCheck = srdag->addVertex(topPisdf->getBody(1));
+	SRDAGVertex* vxJ  = srdag->addJoin(3);
+
+	vxA0->addInParam(0, 1);
+	vxA1->addInParam(0, 1);
+	vxA2->addInParam(0, 1);
+	vxCheck->addInParam(0, 1);
+
 	srdag->addEdge(
 			vxC, 0,
 			vxF, 0,
@@ -126,6 +203,23 @@ SRDAGGraph* result_Test1_1(PiSDFGraph* pisdf, Stack* stack){
 			vxA2, 0,
 			1);
 
+	srdag->addEdge(
+			vxA0, 0,
+			vxJ , 0,
+			1);
+	srdag->addEdge(
+			vxA1, 0,
+			vxJ , 1,
+			1);
+	srdag->addEdge(
+			vxA2, 0,
+			vxJ,  2,
+			1);
+	srdag->addEdge(
+			vxJ, 0,
+			vxCheck,  0,
+			3);
+
 	return srdag;
 }
 
@@ -141,6 +235,13 @@ SRDAGGraph* result_Test1_2(PiSDFGraph* pisdf, Stack* stack){
 	SRDAGVertex* vxJ  = srdag->addJoin(2);
 	SRDAGVertex* vxE  = srdag->addEnd();
 	SRDAGVertex* vxBr = srdag->addBroadcast(2);
+
+	SRDAGVertex* vxCheck  = srdag->addVertex(topPisdf->getBody(1));
+	SRDAGVertex* vxJCheck = srdag->addJoin(2);
+
+	vxA0->addInParam(0, 2);
+	vxA1->addInParam(0, 2);
+	vxCheck->addInParam(0, 2);
 
 	srdag->addEdge(
 			vxC, 0,
@@ -175,6 +276,19 @@ SRDAGGraph* result_Test1_2(PiSDFGraph* pisdf, Stack* stack){
 			vxE, 0,
 			2);
 
+	srdag->addEdge(
+			vxA0, 0,
+			vxJCheck, 0,
+			2);
+	srdag->addEdge(
+			vxA1, 0,
+			vxJCheck, 1,
+			2);
+	srdag->addEdge(
+			vxJCheck, 0,
+			vxCheck, 0,
+			4);
+
 	return srdag;
 }
 
@@ -185,9 +299,19 @@ SRDAGGraph* result_Test1_3(PiSDFGraph* pisdf, Stack* stack){
 	SRDAGVertex* vxC = srdag->addVertex(topPisdf->getConfig(0));
 	SRDAGVertex* vxA = srdag->addVertex(topPisdf->getBody(0));
 
+	SRDAGVertex* vxCheck  = srdag->addVertex(topPisdf->getBody(1));
+
+	vxA->addInParam(0, 3);
+	vxCheck->addInParam(0, 3);
+
 	srdag->addEdge(
 			vxC, 0,
 			vxA, 0,
+			3);
+
+	srdag->addEdge(
+			vxA, 0,
+			vxCheck, 0,
 			3);
 
 	return srdag;
@@ -202,5 +326,8 @@ static SRDAGGraph* (*result_Test1[]) (PiSDFGraph* pisdf, Stack* stack) = {
 void test_Test1(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack){
 	char name[100];
 	snprintf(name, 100, "Test1_%d", N);
-	BipartiteGraph::compareGraphs(srdag, result_Test1[N-1](pisdf, stack), stack, name);
+	SRDAGGraph* model = result_Test1[N-1](pisdf, stack);
+	BipartiteGraph::compareGraphs(srdag, model, stack, name);
+	model->~SRDAGGraph();
+	stack->free(model);
 }

@@ -48,8 +48,6 @@ PiSDFGraph* initPisdf_test5(Archi* archi, Stack* stack);
 PiSDFGraph* initPisdf_test6(Archi* archi, Stack* stack);
 PiSDFGraph* initPisdf_test7(Archi* archi, Stack* stack);
 PiSDFGraph* initPisdf_test8(Archi* archi, Stack* stack);
-PiSDFGraph* initPisdf_test9(Archi* archi, Stack* stack);
-PiSDFGraph* initPisdf_testA(Archi* archi, Stack* stack);
 
 void test_Test0(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack);
 void test_Test1(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack);
@@ -60,13 +58,25 @@ void test_Test5(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
 void test_Test6(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
 void test_Test7(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
 void test_Test8(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
-void test_Test9(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
-void test_TestA(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack);
 
-extern lrtFct test0_fcts[4];
+#define NB_FCT_TEST0 4
+#define NB_FCT_TEST1 3
+#define NB_FCT_TEST2 4
+#define NB_FCT_TEST3 4
+#define NB_FCT_TEST4 4
+#define NB_FCT_TEST5 4
+#define NB_FCT_TEST6 3
+#define NB_FCT_TEST7 5
+#define NB_FCT_TEST8 6
 
-//void test_0_A(int* out);
-//void test_0_B(int* in, int N);
-//void test_0_C(int* outP);
+extern lrtFct test0_fcts[NB_FCT_TEST0];
+extern lrtFct test1_fcts[NB_FCT_TEST1];
+extern lrtFct test2_fcts[NB_FCT_TEST2];
+extern lrtFct test3_fcts[NB_FCT_TEST3];
+extern lrtFct test4_fcts[NB_FCT_TEST4];
+extern lrtFct test5_fcts[NB_FCT_TEST5];
+extern lrtFct test6_fcts[NB_FCT_TEST6];
+extern lrtFct test7_fcts[NB_FCT_TEST7];
+extern lrtFct test8_fcts[NB_FCT_TEST8];
 
 #endif//TESTS_H

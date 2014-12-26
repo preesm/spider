@@ -36,19 +36,112 @@
 
 #include "../Tests.h"
 #include <spider.h>
+#include <cstdio>
 
 /*******************************************************************************/
 /****************************     TEST 6     ***********************************/
 /*******************************************************************************/
+#define VERBOSE 0
+
+void test6_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	char* out = (char*)outputFIFOs[0];
+
+#if VERBOSE
+	printf("Execute A\n");
+#endif
+
+	out[0] = 1;
+	out[1] = 2;
+	out[2] = 3;
+	out[3] = 4;
+}
+
+void test6_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	char* in = (char*)inputFIFOs[0];
+
+	char expected[4] = {2,3,4,5};
+	int nb = 4;
+
+	printf("Test: ");
+	for(int i=0; i<nb; i++){
+		if(in[i] != expected[i]){
+			printf("FAILED\n");
+			return;
+		}
+	}
+	printf("PASSED\n");
+}
+
+void test6_H(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	char* in  = (char*)inputFIFOs[0];
+	char* out = (char*)outputFIFOs[0];
+
+#if VERBOSE
+	printf("Execute C\n");
+#endif
+
+	out[0] = in[0]+1;
+}
+
+lrtFct test6_fcts[NB_FCT_TEST6] = {&test6_A, &test6_Check, &test6_H};
+
+PiSDFGraph* test6_sub(Archi* archi, Stack* stack){
+	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
+			/*Edges*/ 	2,
+			/*Params*/	0,
+			/*InIf*/	1,
+			/*OutIf*/	1,
+			/*Config*/	0,
+			/*Normal*/	1,
+			archi,
+			stack);
+
+	// Parameters.
+
+	// Configure vertices
+
+	// Interfaces
+	PiSDFVertex *ifIn = graph->addInputIf(
+			"in",
+			0 /*Par*/);
+	PiSDFVertex *ifOut = graph->addOutputIf(
+			"out",
+			0 /*Par*/);
+
+	// Other vertices
+	PiSDFVertex *vxH = graph->addBodyVertex(
+			"H", /*Fct*/ 2,
+			/*In*/ 1, /*Out*/ 1,
+			/*Par*/ 0);
+
+	// Edges.
+	graph->connect(
+			/*Src*/ ifIn, /*SrcPrt*/ 0, /*Prod*/ "2",
+			/*Snk*/ vxH, /*SnkPrt*/ 0, /*Cons*/ "1",
+			/*Delay*/ "0", 0);
+
+	graph->connect(
+			/*Src*/ vxH, /*SrcPrt*/ 0, /*Prod*/ "1",
+			/*Snk*/ ifOut, /*SnkPrt*/ 0, /*Cons*/ "2",
+			/*Delay*/ "0", 0);
+
+	// Timings
+	vxH->isExecutableOnAllPE();
+	vxH->setTimingOnType(0, "10", stack);
+
+	// Subgraphs
+
+	return graph;
+}
 
 PiSDFGraph* test6(Archi* archi, Stack* stack){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
-			/*Edges*/ 	3,
+			/*Edges*/ 	2,
 			/*Params*/	0,
 			/*InIf*/	0,
 			/*OutIf*/	0,
 			/*Config*/	0,
-			/*Normal*/	4,
+			/*Normal*/	3,
 			archi,
 			stack);
 
@@ -61,42 +154,32 @@ PiSDFGraph* test6(Archi* archi, Stack* stack){
 			"A", /*Fct*/ 0,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 0);
-	PiSDFVertex *vxB = graph->addBodyVertex(
-			"B", /*Fct*/ 1,
-			/*In*/ 0, /*Out*/ 1,
-			/*Par*/ 0);
-	PiSDFVertex *vxC = graph->addBodyVertex(
-			"C", /*Fct*/ 2,
+	PiSDFVertex *vxCheck = graph->addBodyVertex(
+			"Check", /*Fct*/ 1,
 			/*In*/ 1, /*Out*/ 0,
 			/*Par*/ 0);
-	PiSDFVertex *vxJ = graph->addSpecialVertex(
-			/*Type*/ PISDF_SUBTYPE_JOIN,
-			/*In*/ 2, /*Out*/ 1,
+	PiSDFVertex *vxH = graph->addHierVertex(
+			"H_top",
+			/*SubGraph*/ test6_sub(archi, stack),
+			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 0);
 
 	// Edges.
 	graph->connect(
-			/*Src*/ vxA, /*SrcPrt*/ 0, /*Prod*/ "1",
-			/*Snk*/ vxJ, /*SnkPrt*/ 0, /*Cons*/ "1",
+			/*Src*/ vxA, /*SrcPrt*/ 0, /*Prod*/ "4",
+			/*Snk*/ vxH, /*SnkPrt*/ 0, /*Cons*/ "2",
 			/*Delay*/ "0", 0);
 
 	graph->connect(
-			/*Src*/ vxB, /*SrcPrt*/ 0, /*Prod*/ "1",
-			/*Snk*/ vxJ, /*SnkPrt*/ 1, /*Cons*/ "1",
-			/*Delay*/ "0", 0);
-
-	graph->connect(
-			/*Src*/ vxJ, /*SrcPrt*/ 0, /*Prod*/ "2",
-			/*Snk*/ vxC, /*SnkPrt*/ 0, /*Cons*/ "4",
+			/*Src*/ vxH, /*SrcPrt*/ 0, /*Prod*/ "2",
+			/*Snk*/ vxCheck, /*SnkPrt*/ 0, /*Cons*/ "4",
 			/*Delay*/ "0", 0);
 
 	// Timings
 	vxA->isExecutableOnAllPE();
 	vxA->setTimingOnType(0, "10", stack);
-	vxB->isExecutableOnAllPE();
-	vxB->setTimingOnType(0, "10", stack);
-	vxC->isExecutableOnAllPE();
-	vxC->setTimingOnType(0, "10", stack);
+	vxCheck->isExecutableOnAllPE();
+	vxCheck->setTimingOnType(0, "10", stack);
 
 	// Subgraphs
 
@@ -114,42 +197,66 @@ PiSDFGraph* initPisdf_test6(Archi* archi, Stack* stack){
 	return top;
 }
 
-
 SRDAGGraph* result_Test6(PiSDFGraph* pisdf, Stack* stack){
 	SRDAGGraph* srdag = CREATE(stack, SRDAGGraph)(stack);
 
 	PiSDFGraph* topPisdf = pisdf->getBody(0)->getSubGraph();
-	SRDAGVertex* vxA0 = srdag->addVertex(topPisdf->getBody(0));
-	SRDAGVertex* vxA1 = srdag->addVertex(topPisdf->getBody(0));
-	SRDAGVertex* vxB0 = srdag->addVertex(topPisdf->getBody(1));
-	SRDAGVertex* vxB1 = srdag->addVertex(topPisdf->getBody(1));
-	SRDAGVertex* vxC  = srdag->addVertex(topPisdf->getBody(2));
+	SRDAGVertex* vxA  = srdag->addVertex(topPisdf->getBody(0));
+	SRDAGVertex* vxB  = srdag->addVertex(topPisdf->getBody(1));
+	SRDAGVertex* vxH0 = srdag->addVertex(topPisdf->getBody(2)->getSubGraph()->getBody(0));
+	SRDAGVertex* vxH1 = srdag->addVertex(topPisdf->getBody(2)->getSubGraph()->getBody(0));
+	SRDAGVertex* vxH2 = srdag->addVertex(topPisdf->getBody(2)->getSubGraph()->getBody(0));
+	SRDAGVertex* vxH3 = srdag->addVertex(topPisdf->getBody(2)->getSubGraph()->getBody(0));
 	SRDAGVertex* vxJ  = srdag->addJoin(4);
+	SRDAGVertex* vxF  = srdag->addFork(4);
 
 	srdag->addEdge(
-			vxA0, 0,
+			vxA, 0,
+			vxF, 0,
+			4);
+	srdag->addEdge(
+			vxF , 0,
+			vxH0, 0,
+			1);
+	srdag->addEdge(
+			vxF , 1,
+			vxH1, 0,
+			1);
+	srdag->addEdge(
+			vxF , 2,
+			vxH2, 0,
+			1);
+	srdag->addEdge(
+			vxF , 3,
+			vxH3, 0,
+			1);
+	srdag->addEdge(
+			vxH0, 0,
+			vxJ , 0,
+			1);
+	srdag->addEdge(
+			vxH1, 0,
+			vxJ , 1,
+			1);
+	srdag->addEdge(
+			vxH2, 0,
+			vxJ , 2,
+			1);
+	srdag->addEdge(
+			vxH3, 0,
+			vxJ , 3,
+			1);
+	srdag->addEdge(
 			vxJ, 0,
-			1);
-	srdag->addEdge(
-			vxB0, 0,
-			vxJ, 1,
-			1);
-	srdag->addEdge(
-			vxA1, 0,
-			vxJ, 2,
-			1);
-	srdag->addEdge(
-			vxB1, 0,
-			vxJ, 3,
-			1);
-	srdag->addEdge(
-			vxJ, 0,
-			vxC, 0,
+			vxB, 0,
 			4);
 	return srdag;
 }
 
 
 void test_Test6(PiSDFGraph* pisdf, SRDAGGraph* srdag, Stack* stack){
-	BipartiteGraph::compareGraphs(srdag, result_Test6(pisdf, stack), stack, "Test6");
+	SRDAGGraph* model = result_Test6(pisdf, stack);
+	BipartiteGraph::compareGraphs(srdag, model, stack, "Test6");
+	model->~SRDAGGraph();
+	stack->free(model);
 }

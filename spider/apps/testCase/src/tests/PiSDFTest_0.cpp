@@ -45,7 +45,7 @@
 /** Actors */
 #define VERBOSE 0
 
-void C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+void test0_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	static int i=1;
 #if VERBOSE
 	printf("Execute C\n");
@@ -53,7 +53,7 @@ void C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParam
 	outParams[0] = i++;
 }
 
-void A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+void test0_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	char* out = (char*)outputFIFOs[0];
 
 #if VERBOSE
@@ -64,7 +64,7 @@ void A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParam
 	out[1] = 2;
 }
 
-void B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+void test0_B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	Param N = inParams[0];
 	char* in = (char*)inputFIFOs[0];
 	char* out = (char*)outputFIFOs[0];
@@ -80,7 +80,7 @@ void B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParam
 	memcpy(out, in, N);
 }
 
-void Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+void test0_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	Param N = inParams[0];
 	char* in = (char*)inputFIFOs[0];
 
@@ -106,7 +106,7 @@ void Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outP
 	printf("PASSED\n");
 }
 
-lrtFct test0_fcts[4] = {&C, &A, &B, &Check};
+lrtFct test0_fcts[4] = {&test0_C, &test0_A, &test0_B, &test0_Check};
 
 /** PISDF Graphs **/
 

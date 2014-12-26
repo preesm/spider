@@ -51,12 +51,12 @@ BipartiteGraph::BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack){
 	memset(nConnections_, 0, nVerticesG1_*sizeof(int));
 	stack_ = stack;
 
-	for (int ixG1=0; ixG1<g1->getNVertex(); ixG1++) {
+	for (int ixG1=0; ixG1 < nVerticesG1_; ixG1++) {
 		SRDAGVertex* vertexG1 = g1->getVertex(ixG1);
-		for (int ixG2=0; ixG2<g2->getNVertex(); ixG2++) {
+		for (int ixG2=0; ixG2 < nVerticesG2_; ixG2++) {
 			SRDAGVertex* vertexG2 = g2->getVertex(ixG2);
 			if(vertexG1->match(vertexG2)){
-				graph_[ixG1*nVerticesG1_ + nConnections_[ixG1]] = ixG2;
+				graph_[ixG1*nVerticesG2_ + nConnections_[ixG1]] = ixG2;
 				nConnections_[ixG1]++;
 			}
 		}
@@ -161,7 +161,7 @@ void BipartiteGraph::print(const char* path, SRDAGGraph* g1, SRDAGGraph* g2){
 	Platform::get()->fprintf (file, "\t# Edges\n");
 	for (int i=0; i<nVerticesG1_; i++) {
 		for (int j=0; j<nConnections_[i]; j++) {
-			Platform::get()->fprintf (file, "\tg1_%d->g2_%d;\n", i, graph_[i*nVerticesG1_+j]);
+			Platform::get()->fprintf (file, "\tg1_%d->g2_%d;\n", i, graph_[i*nVerticesG2_+j]);
 		}
 	}
 

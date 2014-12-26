@@ -55,10 +55,10 @@ void saJoin(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 	if(nbFifoOut == 1){
 		/* Join */
 		if(inputFIFOs[0] != outputFIFOs[0]){
-			nbTknOut = inParams[nbFifoIn + 2];
+			nbTknOut = inParams[2];
 
 			for(i=0; i<nbFifoIn; i++){
-				nbTknIn = inParams[i + 2];
+				nbTknIn = inParams[i + 3];
 				memcpy(((char*)outputFIFOs[0])+index, inputFIFOs[i], nbTknIn);
 				index += nbTknIn;
 			}
@@ -66,5 +66,8 @@ void saJoin(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 	}else{
 		throw "Error in Join\n";
 	}
+
+	if(index != nbTknOut)
+		printf("Error: Remaining tokens in Join");
 }
 

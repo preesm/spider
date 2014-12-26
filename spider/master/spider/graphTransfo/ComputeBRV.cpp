@@ -88,9 +88,8 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 	}
 
 //	printf("topoMatrix:\n");
-//	for(i=0; i<nbEdges; i++){
-//		int j;
-//		for(j=0; j<nbVertices; j++){
+//	for(int i=0; i<nbEdges; i++){
+//		for(int j=0; j<nbVertices; j++){
 //			printf("%4d ", topo_matrix[i*nbVertices+j]);
 //		}
 //		printf("\n");
@@ -103,7 +102,7 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 	int coef=1;
 
 	/* Looking on interfaces */
-	for(int i=0; job->graph->getNInIf(); i++){
+	for(int i=0; i < job->graph->getNInIf(); i++){
 		PiSDFVertex* inIf = job->graph->getInputIf(i);
 		PiSDFEdge* edge = inIf->getOutEdge(0);
 		/* Only if IF<->Body edge */
@@ -114,7 +113,7 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 			coef = std::max(coef, (int)std::ceil(prod/(cons*nbRepet)));
 		}
 	}
-	for(int i=0; job->graph->getNOutIf(); i++){
+	for(int i=0; i < job->graph->getNOutIf(); i++){
 		PiSDFVertex* outIf = job->graph->getOutputIf(i);
 		PiSDFEdge* edge = outIf->getInEdge(0);
 		/* Only if IF<->Body edge */
@@ -147,7 +146,7 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 	stack->free(topo_matrix);
 
 //	printf("brv:\n");
-//	for(i=0; i<nbVertices; i++){
+//	for(int i=0; i<nbVertices; i++){
 //		printf("%4d ", brv[i]);
 //	}
 //	printf("\n");

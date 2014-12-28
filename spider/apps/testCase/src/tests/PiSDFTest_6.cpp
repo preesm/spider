@@ -197,6 +197,11 @@ PiSDFGraph* initPisdf_test6(Archi* archi, Stack* stack){
 	return top;
 }
 
+void freePisdf_test6(PiSDFGraph* top, Stack* stack){
+	top->~PiSDFGraph();
+	stack->free(top);
+}
+
 SRDAGGraph* result_Test6(PiSDFGraph* pisdf, Stack* stack){
 	SRDAGGraph* srdag = CREATE(stack, SRDAGGraph)(stack);
 

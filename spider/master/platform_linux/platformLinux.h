@@ -39,6 +39,8 @@
 
 #include <platform.h>
 #include <tools/Stack.h>
+#include <graphs/Archi/Archi.h>
+#include <graphs/Archi/SharedMemArchi.h>
 
 class PlatformLinux: public Platform{
 public:
@@ -51,11 +53,14 @@ public:
 	virtual void rstTime();
 	virtual Time getTime();
 
+	SharedMemArchi* getArchi();
+
 	PlatformLinux(int nLrt, Stack *stack);
 	virtual ~PlatformLinux();
 private:
 
 	Stack* stack_;
+	SharedMemArchi* archi_;
 };
 
 #endif/*PLATFORM_LINUX_H*/

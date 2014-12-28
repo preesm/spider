@@ -39,6 +39,105 @@
 static Communicator* spiderCom = 0;
 static LRT* lrt = 0;
 
+static Stack* srdagStack = 0;
+static Stack* transfoStack = 0;
+
+static SRDAGGraph* srdag = 0;
+
+static MemAlloc* memAlloc;
+static Scheduler* scheduler;
+
+void spider_init(SpiderConfig cfg){
+	spider_setMemAllocType(cfg.memAllocType, (long)cfg.memAllocStart, cfg.memAllocSize);
+	spider_setSchedulerType(cfg.schedulerType);
+	spider_setSrdagStack(cfg.srdagStack);
+	spider_setTransfoStack(cfg.transfoStack);
+}
+
+void spider_free(){
+	if(srdag != 0)
+		delete srdag;
+	if(memAlloc != 0)
+		delete memAlloc;
+	if(scheduler != 0)
+		delete scheduler;
+	if(srdagStack != 0)
+		delete srdagStack;
+	if(transfoStack != 0)
+		delete transfoStack;
+}
+
+void spider_launch(
+		Archi* archi,
+		PiSDFGraph* pisdf){
+	delete srdag;
+	srdagStack->freeAll();
+	memAlloc->reset();
+
+	srdag = new SRDAGGraph(srdagStack);
+
+	jit_ms(pisdf, archi, srdag, transfoStack, memAlloc, scheduler);
+
+}
+
+void spider_setLrtFcts(lrtFct* lrtFcts, int nLrtFcts){
+	getLrt()->setFctTbl(lrtFcts, nLrtFcts);
+}
+
+void spider_setMemAllocType(MemAllocType type, int start, int size){
+	if(memAlloc != 0){
+		delete memAlloc;
+	}
+	switch(type){
+	case MEMALLOC_DUMMY:
+		memAlloc = new DummyMemAlloc(start, size);
+		break;
+	}
+}
+
+void spider_setSchedulerType(SchedulerType type){
+	if(scheduler != 0){
+		delete scheduler;
+	}
+	switch(type){
+	case SCHEDULER_LIST:
+		scheduler = new ListScheduler();
+		break;
+	}
+}
+
+void spider_setSrdagStack(StackConfig cfg){
+	if(srdagStack != 0){
+		delete srdagStack;
+	}
+	switch(cfg.type){
+	case STACK_DYNAMIC:
+		srdagStack = new DynStack(cfg.name);
+		break;
+	case STACK_STATIC:
+		srdagStack = new StaticStack(cfg.name, cfg.start, cfg.size);
+		break;
+	}
+}
+
+void spider_setTransfoStack(StackConfig cfg){
+	if(transfoStack != 0){
+		delete transfoStack;
+	}
+	switch(cfg.type){
+	case STACK_DYNAMIC:
+		transfoStack = new DynStack(cfg.name);
+		break;
+	case STACK_STATIC:
+		transfoStack = new StaticStack(cfg.name, cfg.start, cfg.size);
+		break;
+	}
+}
+
+SRDAGGraph* spider_getLastSRDAG(){
+	return srdag;
+}
+
 void setSpiderCommunicator(Communicator* com){
 	spiderCom = com;
 }

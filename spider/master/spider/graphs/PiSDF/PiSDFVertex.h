@@ -243,7 +243,19 @@ inline int PiSDFVertex::getTypeId() const{
 	return typeId_;
 }
 inline const char* PiSDFVertex::getName() const{
-	return name_;
+	switch(subType_){
+	case PISDF_SUBTYPE_NORMAL:
+		return name_;
+	case PISDF_SUBTYPE_BROADCAST:
+		return "Broadcast";
+	case PISDF_SUBTYPE_FORK:
+		return "Fork";
+	case PISDF_SUBTYPE_JOIN:
+		return "Join";
+	case PISDF_SUBTYPE_INPUT_IF:
+	case PISDF_SUBTYPE_OUTPUT_IF:
+		return "Interface";
+	}
 }
 inline int PiSDFVertex::getFctId() const{
 	return fctId_;

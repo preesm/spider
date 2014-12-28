@@ -55,20 +55,41 @@
 #include <scheduling/Scheduler.h>
 #include <scheduling/Scheduler/ListScheduler.h>
 
+#include <graphTransfo/GraphTransfo.h>
+
 #include <Communicator.h>
 #include <lrt.h>
 
 typedef struct{
-	bool createSrdag;
-	SRDAGGraph* srdag;
+	StackType type;
+	const char* name;
 
-	MemAlloc* memAlloc;
-	Scheduler* scheduler;
+	void* start;
+	int size;
+} StackConfig;
 
-	Stack* transfoStack;
+typedef struct{
+	MemAllocType memAllocType;
+	void* memAllocStart;
+	int memAllocSize;
+
+	SchedulerType schedulerType;
+
+	StackConfig srdagStack;
+	StackConfig transfoStack;
 } SpiderConfig;
 
-#include <graphTransfo/GraphTransfo.h>
+void spider_init(SpiderConfig cfg);
+void spider_launch(Archi* archi, PiSDFGraph* pisdf);
+void spider_free();
+
+void spider_setLrtFcts(lrtFct* lrtFcts, int nLrtFcts);
+void spider_setMemAllocType(MemAllocType type, int start, int size);
+void spider_setSchedulerType(SchedulerType type);
+void spider_setSrdagStack(StackConfig cfg);
+void spider_setTransfoStack(StackConfig cfg);
+
+SRDAGGraph* spider_getLastSRDAG();
 
 void setSpiderCommunicator(Communicator* com);
 Communicator* getSpiderCommunicator();

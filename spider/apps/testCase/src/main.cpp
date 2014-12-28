@@ -41,274 +41,164 @@
 #include <cstdio>
 #include <cstdlib>
 
-#define STACK_SIZE (600*1024)
-#define ARCHI_STACK_SIZE (1024)
-
 int main(int argc, char* argv[]){
 	SpiderConfig cfg;
 
-	DynStack srdagStack("SrdagStack");
 	DynStack pisdfStack("PisdfStack");
-	DynStack testStack("TestStack");
 	DynStack archiStack("ArchiStack");
-	DynStack transfoStack("TransfoStack");
+	DynStack testStack("TestStack");
 
 	PlatformLinux platform(1, &archiStack);
+	Archi* archi = platform.getArchi();
 
-	SharedMemArchi archi(
-			/* Stack */  	&archiStack,
-			/* Nb PE */		1,
-			/* Nb PE Type*/ 1);
+	cfg.memAllocType = MEMALLOC_DUMMY;
+	cfg.memAllocStart = (void*)1000;
+	cfg.memAllocSize = 1000;
 
-	DummyMemAlloc memAlloc = DummyMemAlloc(1000, 1000);
-	ListScheduler scheduler = ListScheduler();
+	cfg.schedulerType = SCHEDULER_LIST;
 
-	archi.setPETypeRecvSpeed(0, 1, 10);
-	archi.setPETypeSendSpeed(0, 1, 10);
-	archi.setPEType(0, 0);
-	archi.setName(0, "PE0");
+	cfg.srdagStack = {STACK_DYNAMIC, "SrdagStack", 0, 0};
+	cfg.transfoStack = {STACK_DYNAMIC, "TransfoStack", 0, 0};
+
+	spider_init(cfg);
 
 	printf("Start\n");
 
 //	try{
 		for(int i=1; i<=3; i++){
-			srdagStack.freeAll();
 			pisdfStack.freeAll();
 			testStack.freeAll();
-			memAlloc.reset();
 
-			SRDAGGraph srdag(&srdagStack);
+			spider_setLrtFcts(test0_fcts, NB_FCT_TEST0);
 
-			cfg.createSrdag = false;
-			cfg.srdag = &srdag;
-			cfg.memAlloc = &memAlloc;
-			cfg.scheduler = &scheduler;
-			cfg.transfoStack = &transfoStack;
-			getLrt()->setFctTbl(test0_fcts, 4);
-
-			PiSDFGraph *topPisdf = initPisdf_test0(&archi, &pisdfStack, i);
+			PiSDFGraph *topPisdf = initPisdf_test0(archi, &pisdfStack, i);
 			topPisdf->print("pi.gv");
 
-			jit_ms(topPisdf, &archi, &cfg);
+			spider_launch(archi, topPisdf);
 
-			test_Test0(topPisdf, &srdag, i, &testStack);
+			test_Test0(topPisdf, spider_getLastSRDAG(), i, &testStack);
 
-			topPisdf->~PiSDFGraph();
-			pisdfStack.free(topPisdf);
+			freePisdf_test0(topPisdf, &pisdfStack);
 		}
 
 		for(int i=1; i<=3; i++){
-			srdagStack.freeAll();
 			pisdfStack.freeAll();
 			testStack.freeAll();
-			memAlloc.reset();
 
-			SRDAGGraph srdag(&srdagStack);
+			spider_setLrtFcts(test1_fcts, NB_FCT_TEST1);
 
-			cfg.createSrdag = false;
-			cfg.srdag = &srdag;
-			cfg.memAlloc = &memAlloc;
-			cfg.scheduler = &scheduler;
-			cfg.transfoStack = &transfoStack;
-			getLrt()->setFctTbl(test1_fcts, NB_FCT_TEST1);
-
-			PiSDFGraph *topPisdf = initPisdf_test1(&archi, &pisdfStack, i);
+			PiSDFGraph *topPisdf = initPisdf_test1(archi, &pisdfStack, i);
 			topPisdf->print("pi.gv");
 
-			jit_ms(topPisdf, &archi, &cfg);
+			spider_launch(archi, topPisdf);
 
-			test_Test1(topPisdf, &srdag, i, &testStack);
+			test_Test1(topPisdf, spider_getLastSRDAG(), i, &testStack);
 
-			topPisdf->~PiSDFGraph();
-			pisdfStack.free(topPisdf);
+			freePisdf_test1(topPisdf, &pisdfStack);
 		}
 
 		for(int i=1; i<=2; i++){
-			srdagStack.freeAll();
 			pisdfStack.freeAll();
 			testStack.freeAll();
-			memAlloc.reset();
 
-			SRDAGGraph srdag(&srdagStack);
+			spider_setLrtFcts(test2_fcts, NB_FCT_TEST2);
 
-			cfg.createSrdag = false;
-			cfg.srdag = &srdag;
-			cfg.memAlloc = &memAlloc;
-			cfg.scheduler = &scheduler;
-			cfg.transfoStack = &transfoStack;
-			getLrt()->setFctTbl(test2_fcts, NB_FCT_TEST2);
-
-			PiSDFGraph *topPisdf = initPisdf_test2(&archi, &pisdfStack, i);
+			PiSDFGraph *topPisdf = initPisdf_test2(archi, &pisdfStack, i);
 			topPisdf->print("pi.gv");
 
-			jit_ms(topPisdf, &archi, &cfg);
+			spider_launch(archi, topPisdf);
 
-			test_Test2(topPisdf, &srdag, i, &testStack);
+			test_Test2(topPisdf, spider_getLastSRDAG(), i, &testStack);
 
-			topPisdf->~PiSDFGraph();
-			pisdfStack.free(topPisdf);
+			freePisdf_test2(topPisdf, &pisdfStack);
 		}
 
 	{
-		srdagStack.freeAll();
 		pisdfStack.freeAll();
 		testStack.freeAll();
-		memAlloc.reset();
 
-		SRDAGGraph srdag(&srdagStack);
+		spider_setLrtFcts(test3_fcts, NB_FCT_TEST3);
 
-		cfg.createSrdag = false;
-		cfg.srdag = &srdag;
-		cfg.memAlloc = &memAlloc;
-		cfg.scheduler = &scheduler;
-		cfg.transfoStack = &transfoStack;
-		getLrt()->setFctTbl(test3_fcts, NB_FCT_TEST3);
-
-		PiSDFGraph *topPisdf = initPisdf_test3(&archi, &pisdfStack);
+		PiSDFGraph *topPisdf = initPisdf_test3(archi, &pisdfStack);
 		topPisdf->print("pi.gv");
 
-		jit_ms(topPisdf, &archi, &cfg);
+		spider_launch(archi, topPisdf);
 
-		test_Test3(topPisdf, &srdag, &testStack);
+		test_Test3(topPisdf, spider_getLastSRDAG(), &testStack);
 
-		topPisdf->~PiSDFGraph();
-		pisdfStack.free(topPisdf);
+		freePisdf_test3(topPisdf, &pisdfStack);
 	}
 
 	{
-		srdagStack.freeAll();
 		pisdfStack.freeAll();
 		testStack.freeAll();
-		memAlloc.reset();
 
-		SRDAGGraph srdag(&srdagStack);
+		spider_setLrtFcts(test4_fcts, NB_FCT_TEST4);
 
-		cfg.createSrdag = false;
-		cfg.srdag = &srdag;
-		cfg.memAlloc = &memAlloc;
-		cfg.scheduler = &scheduler;
-		cfg.transfoStack = &transfoStack;
-		getLrt()->setFctTbl(test4_fcts, NB_FCT_TEST4);
-
-		PiSDFGraph *topPisdf = initPisdf_test4(&archi, &pisdfStack);
+		PiSDFGraph *topPisdf = initPisdf_test4(archi, &pisdfStack);
 		topPisdf->print("pi.gv");
 
-		jit_ms(topPisdf, &archi, &cfg);
+		spider_launch(archi, topPisdf);
 
-		test_Test4(topPisdf, &srdag, &testStack);
+		test_Test4(topPisdf, spider_getLastSRDAG(), &testStack);
 
-		topPisdf->~PiSDFGraph();
-		pisdfStack.free(topPisdf);
+		freePisdf_test4(topPisdf, &pisdfStack);
 	}
 
 	{
-		srdagStack.freeAll();
 		pisdfStack.freeAll();
 		testStack.freeAll();
-		memAlloc.reset();
 
-		SRDAGGraph srdag(&srdagStack);
+		spider_setLrtFcts(test5_fcts, NB_FCT_TEST5);
 
-		cfg.createSrdag = false;
-		cfg.srdag = &srdag;
-		cfg.memAlloc = &memAlloc;
-		cfg.scheduler = &scheduler;
-		cfg.transfoStack = &transfoStack;
-		getLrt()->setFctTbl(test5_fcts, NB_FCT_TEST5);
-
-		PiSDFGraph *topPisdf = initPisdf_test5(&archi, &pisdfStack);
+		PiSDFGraph *topPisdf = initPisdf_test5(archi, &pisdfStack);
 		topPisdf->print("pi.gv");
 
-		jit_ms(topPisdf, &archi, &cfg);
+		spider_launch(archi, topPisdf);
 
-		test_Test5(topPisdf, &srdag, &testStack);
+		test_Test5(topPisdf, spider_getLastSRDAG(), &testStack);
 
-		topPisdf->~PiSDFGraph();
-		pisdfStack.free(topPisdf);
+		freePisdf_test5(topPisdf, &pisdfStack);
 	}
 
 	{
-		srdagStack.freeAll();
 		pisdfStack.freeAll();
 		testStack.freeAll();
-		memAlloc.reset();
 
-		SRDAGGraph srdag(&srdagStack);
+		spider_setLrtFcts(test6_fcts, NB_FCT_TEST6);
 
-		cfg.createSrdag = false;
-		cfg.srdag = &srdag;
-		cfg.memAlloc = &memAlloc;
-		cfg.scheduler = &scheduler;
-		cfg.transfoStack = &transfoStack;
-		getLrt()->setFctTbl(test6_fcts, NB_FCT_TEST6);
-
-		PiSDFGraph *topPisdf = initPisdf_test6(&archi, &pisdfStack);
+		PiSDFGraph *topPisdf = initPisdf_test6(archi, &pisdfStack);
 		topPisdf->print("pi.gv");
 
-		jit_ms(topPisdf, &archi, &cfg);
+		spider_launch(archi, topPisdf);
 
-		test_Test6(topPisdf, &srdag, &testStack);
+		test_Test6(topPisdf, spider_getLastSRDAG(), &testStack);
 
-		topPisdf->~PiSDFGraph();
-		pisdfStack.free(topPisdf);
+		freePisdf_test6(topPisdf, &pisdfStack);
 	}
 
 	{
-		srdagStack.freeAll();
 		pisdfStack.freeAll();
 		testStack.freeAll();
-		memAlloc.reset();
 
-		SRDAGGraph srdag(&srdagStack);
+		spider_setLrtFcts(test7_fcts, NB_FCT_TEST7);
 
-		cfg.createSrdag = false;
-		cfg.srdag = &srdag;
-		cfg.memAlloc = &memAlloc;
-		cfg.scheduler = &scheduler;
-		cfg.transfoStack = &transfoStack;
-		getLrt()->setFctTbl(test7_fcts, NB_FCT_TEST7);
-
-		PiSDFGraph *topPisdf = initPisdf_test7(&archi, &pisdfStack);
+		PiSDFGraph *topPisdf = initPisdf_test7(archi, &pisdfStack);
 		topPisdf->print("pi.gv");
 
-		jit_ms(topPisdf, &archi, &cfg);
+		spider_launch(archi, topPisdf);
 
-		test_Test7(topPisdf, &srdag, &testStack);
+		test_Test7(topPisdf, spider_getLastSRDAG(), &testStack);
 
-		topPisdf->~PiSDFGraph();
-		pisdfStack.free(topPisdf);
-	}
-
-	{
-		srdagStack.freeAll();
-		pisdfStack.freeAll();
-		testStack.freeAll();
-		memAlloc.reset();
-
-		SRDAGGraph srdag(&srdagStack);
-
-		cfg.createSrdag = false;
-		cfg.srdag = &srdag;
-		cfg.memAlloc = &memAlloc;
-		cfg.scheduler = &scheduler;
-		cfg.transfoStack = &transfoStack;
-		getLrt()->setFctTbl(test8_fcts, NB_FCT_TEST8);
-
-		PiSDFGraph *topPisdf = initPisdf_test8(&archi, &pisdfStack);
-		topPisdf->print("pi.gv");
-
-		jit_ms(topPisdf, &archi, &cfg);
-
-		test_Test8(topPisdf, &srdag, &testStack);
-
-		topPisdf->~PiSDFGraph();
-		pisdfStack.free(topPisdf);
+		freePisdf_test7(topPisdf, &pisdfStack);
 	}
 
 //	}catch(const char* s){
 //		printf("Exception : %s\n", s);
 //	}
 	printf("finished\n");
+
+	spider_free();
 
 	return 0;
 }

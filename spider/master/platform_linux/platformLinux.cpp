@@ -109,6 +109,17 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack){
 	setLrt(lrt);
 	setSpiderCommunicator(spiderCom);
 
+	/** Create Archi */
+	archi_ = CREATE(stack, SharedMemArchi)(
+				/* Stack */  	stack,
+				/* Nb PE */		1,
+				/* Nb PE Type*/ 1);
+
+	archi_->setPETypeRecvSpeed(0, 1, 10);
+	archi_->setPETypeSendSpeed(0, 1, 10);
+	archi_->setPEType(0, 0);
+	archi_->setName(0, "PE0");
+
 	Platform::set(this);
 	this->rstTime();
 }
@@ -121,10 +132,12 @@ PlatformLinux::~PlatformLinux(){
 	lrt->~LRT();
 	spiderCom->~LinuxSpiderCommunicator();
 	lrtCom->~LinuxLrtCommunicator();
+	archi_->~SharedMemArchi();
 
 	stack_->free(lrt);
 	stack_->free(spiderCom);
 	stack_->free(lrtCom);
+	stack_->free(archi_);
 }
 
 /** File Handling */
@@ -158,5 +171,9 @@ Time PlatformLinux::getTime(){
 	val *= 1000000000;
 	val += ts.tv_nsec - start.tv_nsec;
 	return val;
+}
+
+SharedMemArchi* PlatformLinux::getArchi(){
+	return archi_;
 }
 

@@ -49,6 +49,16 @@ PiSDFGraph* initPisdf_test6(Archi* archi, Stack* stack);
 PiSDFGraph* initPisdf_test7(Archi* archi, Stack* stack);
 PiSDFGraph* initPisdf_test8(Archi* archi, Stack* stack);
 
+void freePisdf_test0(PiSDFGraph* top, Stack* stack);
+void freePisdf_test1(PiSDFGraph* top, Stack* stack);
+void freePisdf_test2(PiSDFGraph* top, Stack* stack);
+void freePisdf_test3(PiSDFGraph* top, Stack* stack);
+void freePisdf_test4(PiSDFGraph* top, Stack* stack);
+void freePisdf_test5(PiSDFGraph* top, Stack* stack);
+void freePisdf_test6(PiSDFGraph* top, Stack* stack);
+void freePisdf_test7(PiSDFGraph* top, Stack* stack);
+void freePisdf_test8(PiSDFGraph* top, Stack* stack);
+
 void test_Test0(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack);
 void test_Test1(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack);
 void test_Test2(PiSDFGraph* pisdf, SRDAGGraph* srdag, int N, Stack* stack);

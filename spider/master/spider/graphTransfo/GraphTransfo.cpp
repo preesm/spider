@@ -127,19 +127,12 @@ static SRDAGVertex* getNextHierVx(SRDAGGraph *topDag){
 	return 0;
 }
 
-void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
-	SRDAGGraph *topSrdag;
+void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* transfoSTack, MemAlloc* memAlloc, Scheduler* scheduler){
 
 	/* Initialize topDag */
-	if(config->createSrdag){
-		topSrdag = CREATE(config->transfoStack, SRDAGGraph)(config->transfoStack);
-	}else
-		topSrdag = config->srdag;
 
-	config->memAlloc->reset();
-
-	Schedule* schedule = CREATE(config->transfoStack, Schedule)(
-			archi->getNPE(), 1000, config->transfoStack);
+	Schedule* schedule = CREATE(transfoSTack, Schedule)(
+			archi->getNPE(), 1000, transfoSTack);
 
 	/* Add initial top actor */
 	PiSDFVertex* root = topPisdf->getBody(0);
@@ -149,7 +142,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 	}
 	topSrdag->addVertex(root);
 
-	Queue<transfoJob*> jobQueue(config->transfoStack);
+	Queue<transfoJob*> jobQueue(transfoSTack);
 
 	// Check nb of config //
 
@@ -163,32 +156,32 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 
 		do{
 			/* Fill the transfoJob data */
-			transfoJob* job = CREATE(config->transfoStack, transfoJob);
-			initJob(job, nextHierVx, config->transfoStack);
+			transfoJob* job = CREATE(transfoSTack, transfoJob);
+			initJob(job, nextHierVx, transfoSTack);
 
 			/* Remove Hierachical vertex */
 			topSrdag->delVertex(nextHierVx);
 
 			if(job->graph->getNConfig() > 0){
 				/* Put CA in topDag */
-				addCAVertices(topSrdag, job, config->transfoStack);
+				addCAVertices(topSrdag, job, transfoSTack);
 
 				/* Link CA in topDag */
 				linkCAVertices(topSrdag, job);
 
 				jobQueue.push(job);
 			}else{
-				int* brv = CREATE_MUL(config->transfoStack, job->graph->getNBody(), int);
-				computeBRV(topSrdag, job, brv, config->transfoStack);
+				int* brv = CREATE_MUL(transfoSTack, job->graph->getNBody(), int);
+				computeBRV(topSrdag, job, brv, transfoSTack);
 
-				addSRVertices(topSrdag, job, brv, config->transfoStack);
+				addSRVertices(topSrdag, job, brv, transfoSTack);
 
 				linkSRVertices(topSrdag, job, brv);
 
-				freeJob(job, config->transfoStack);
+				freeJob(job, transfoSTack);
 
-				config->transfoStack->free(brv);
-				config->transfoStack->free(job);
+				transfoSTack->free(brv);
+				transfoSTack->free(job);
 			}
 
 			/* Find next hierarchical vertex */
@@ -200,8 +193,8 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 //		SRDAGWrite(topDag, "topDag_ca.gv", DataRates);
 
 		/* Schedule and launch execution */
-		config->memAlloc->alloc(topSrdag);
-		config->scheduler->schedule(topSrdag, schedule, archi, config->transfoStack);
+		memAlloc->alloc(topSrdag);
+		scheduler->schedule(topSrdag, schedule, archi, transfoSTack);
 		getLrt()->runUntilNoMoreJobs();
 
 		/* Resolve params must be done by itself */
@@ -212,11 +205,11 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 			transfoJob* job = jobQueue.pop();
 
 			/* Compute BRV */
-			int* brv = CREATE_MUL(config->transfoStack, job->graph->getNBody(), int);
-			computeBRV(topSrdag, job, brv, config->transfoStack);
+			int* brv = CREATE_MUL(transfoSTack, job->graph->getNBody(), int);
+			computeBRV(topSrdag, job, brv, transfoSTack);
 
 			/* Add vertices */
-			addSRVertices(topSrdag, job, brv, config->transfoStack);
+			addSRVertices(topSrdag, job, brv, transfoSTack);
 //			SRDAGWrite(topDag, "topDag_add.gv", DataRates);
 //			SRDAGCheck(topDag);
 
@@ -225,10 +218,10 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 //			SRDAGWrite(topDag, "topDag_link.gv", DataRates);
 //			SRDAGCheck(topDag);
 
-			freeJob(job, config->transfoStack);
+			freeJob(job, transfoSTack);
 
-			config->transfoStack->free(brv);
-			config->transfoStack->free(job);
+			transfoSTack->free(brv);
+			transfoSTack->free(job);
 		}
 
 //        printf("Finish one iter\n");
@@ -236,14 +229,16 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SpiderConfig* config){
 
 	topSrdag->updateState();
 
+	topSrdag->print("tmp.gv");
+
 	/* Schedule and launch execution */
-	config->memAlloc->alloc(topSrdag);
-	config->scheduler->schedule(topSrdag, schedule, archi, config->transfoStack);
+	memAlloc->alloc(topSrdag);
+	scheduler->schedule(topSrdag, schedule, archi, transfoSTack);
 
 	getLrt()->runUntilNoMoreJobs();
 
 	schedule->~Schedule();
-	config->transfoStack->free(schedule);
+	transfoSTack->free(schedule);
 
-	config->transfoStack->freeAll();
+	transfoSTack->freeAll();
 }

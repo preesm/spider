@@ -41,6 +41,10 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/Archi/Archi.h>
 
+typedef enum{
+	SCHEDULER_LIST
+}SchedulerType;
+
 class Scheduler {
 public:
 	Scheduler(){}

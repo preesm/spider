@@ -43,15 +43,19 @@
 
 #include <algorithm>
 
+typedef enum{
+	MEMALLOC_DUMMY
+}MemAllocType;
+
 class MemAlloc {
 public:
 	virtual void reset() = 0;
 	virtual void alloc(SRDAGGraph* graph) = 0;
 
-protected:
 	MemAlloc(int start, int size): memStart_(start), memSize_(size){}
 	virtual ~MemAlloc(){}
 
+protected:
 	int memStart_;
 	int memSize_;
 };

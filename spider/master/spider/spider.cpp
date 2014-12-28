@@ -80,10 +80,6 @@ void spider_launch(
 
 }
 
-void spider_setLrtFcts(lrtFct* lrtFcts, int nLrtFcts){
-	getLrt()->setFctTbl(lrtFcts, nLrtFcts);
-}
-
 void spider_setMemAllocType(MemAllocType type, int start, int size){
 	if(memAlloc != 0){
 		delete memAlloc;

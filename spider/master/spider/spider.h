@@ -83,7 +83,6 @@ void spider_init(SpiderConfig cfg);
 void spider_launch(Archi* archi, PiSDFGraph* pisdf);
 void spider_free();
 
-void spider_setLrtFcts(lrtFct* lrtFcts, int nLrtFcts);
 void spider_setMemAllocType(MemAllocType type, int start, int size);
 void spider_setSchedulerType(SchedulerType type);
 void spider_setSrdagStack(StackConfig cfg);

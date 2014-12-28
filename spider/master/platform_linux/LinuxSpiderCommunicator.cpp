@@ -71,11 +71,23 @@ void LinuxSpiderCommunicator::send(int lrtIx){
 
 int LinuxSpiderCommunicator::recv(int lrtIx, void** data){
 	unsigned long size;
-	read(fIn_[lrtIx], &size, sizeof(unsigned long));
-	read(fIn_[lrtIx], msgBuffer_, size);
+	int nb = read(fIn_[lrtIx], &size, sizeof(unsigned long));
+
+	if(nb<0) return 0;
+
+	if(size > msgSizeMax_)
+		throw "Msg too big\n";
+
 	curMsgSize_ = size;
+
+	while(size){
+		int recv = read(fIn_[lrtIx], msgBuffer_, size);
+		if(recv > 0)
+			size -= recv;
+	}
+
 	*data = msgBuffer_;
-	return size;
+	return curMsgSize_;
 }
 
 void LinuxSpiderCommunicator::end_recv(){

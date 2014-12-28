@@ -41,60 +41,6 @@
 /*******************************************************************************/
 /****************************     TEST 4     ***********************************/
 /*******************************************************************************/
-#define VERBOSE 0
-
-void test4_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute A\n");
-#endif
-
-	out[0] = 1;
-	out[1] = 2;
-	out[2] = 3;
-	out[3] = 4;
-}
-
-void test4_B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in  = (char*)inputFIFOs[0];
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute B\n");
-#endif
-
-	out[0] = in[0]+1;
-}
-
-void test4_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in  = (char*)inputFIFOs[0];
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute C\n");
-#endif
-
-	out[0] = in[0]+2;
-}
-
-void test4_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in = (char*)inputFIFOs[0];
-
-	char expected[4] = {2,3,5,6};
-	int nb = 4;
-
-	printf("Test: ");
-	for(int i=0; i<nb; i++){
-		if(in[i] != expected[i]){
-			printf("FAILED\n");
-			return;
-		}
-	}
-	printf("PASSED\n");
-}
-
-lrtFct test4_fcts[NB_FCT_TEST4] = {&test4_A, &test4_B, &test4_C, &test4_Check};
 
 PiSDFGraph* test4(Archi* archi, Stack* stack){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
@@ -113,19 +59,19 @@ PiSDFGraph* test4(Archi* archi, Stack* stack){
 
 	// Other vertices
 	PiSDFVertex *vxA = graph->addBodyVertex(
-			"A", /*Fct*/ 0,
+			"A", /*Fct*/ 15,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 0);
 	PiSDFVertex *vxB = graph->addBodyVertex(
-			"B", /*Fct*/ 1,
+			"B", /*Fct*/ 16,
 			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 0);
 	PiSDFVertex *vxC = graph->addBodyVertex(
-			"C", /*Fct*/ 2,
+			"C", /*Fct*/ 17,
 			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 0);
 	PiSDFVertex *vxCheck = graph->addBodyVertex(
-			"Check", /*Fct*/ 3,
+			"Check", /*Fct*/ 18,
 			/*In*/ 1, /*Out*/ 0,
 			/*Par*/ 0);
 	PiSDFVertex *vxF = graph->addSpecialVertex(

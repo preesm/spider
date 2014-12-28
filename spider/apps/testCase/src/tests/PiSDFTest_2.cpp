@@ -41,64 +41,6 @@
 /*******************************************************************************/
 /****************************     TEST 2     ***********************************/
 /*******************************************************************************/
-
-#define VERBOSE 0
-
-void test2_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	static int i=1;
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute C\n");
-#endif
-
-	out[0] = 1;
-	outParams[0] = i++;
-}
-
-void test2_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param N = inParams[0];
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute A\n");
-#endif
-
-	for(int i=0; i<N; i++)
-		out[i] = i+1;
-}
-
-void test2_B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in0 = (char*)inputFIFOs[0];
-	char* in1 = (char*)inputFIFOs[1];
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute B\n");
-#endif
-
-	out[0] = in0[0] + in1[0];
-}
-
-void test2_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param N = inParams[0];
-	char* in = (char*)inputFIFOs[0];
-
-	char expected[2] = {2,3};
-	int nb = N;
-
-	printf("Test: ");
-	for(int i=0; i<nb; i++){
-		if(in[i] != expected[i]){
-			printf("FAILED\n");
-			return;
-		}
-	}
-	printf("PASSED\n");
-}
-
-lrtFct test2_fcts[NB_FCT_TEST2] = {&test2_C, &test2_A, &test2_B, &test2_Check};
-
 PiSDFGraph* test2(Archi* archi, Stack* stack, int N){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
 			/*Edges*/ 	3,
@@ -115,7 +57,7 @@ PiSDFGraph* test2(Archi* archi, Stack* stack, int N){
 
 	// Configure vertices.
 	PiSDFVertex *vxC = graph->addConfigVertex(
-			"C", /*Fct*/ 0,
+			"C", /*Fct*/ 9,
 			PISDF_SUBTYPE_NORMAL,
 			/*In*/ 0,  /*Out*/ 1,
 			/*Par*/ 0, /*Cfg*/ 1);
@@ -123,18 +65,18 @@ PiSDFGraph* test2(Archi* archi, Stack* stack, int N){
 
 	// Other vertices
 	PiSDFVertex *vxA = graph->addBodyVertex(
-			"A", /*Fct*/ 1,
+			"A", /*Fct*/ 7,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 1);
 	vxA->addInParam(0, paramN);
 
 	PiSDFVertex *vxB = graph->addBodyVertex(
-			"B", /*Fct*/ 2,
+			"B", /*Fct*/ 8,
 			/*In*/ 2, /*Out*/ 1,
 			/*Par*/ 0);
 
 	PiSDFVertex *vxCheck = graph->addBodyVertex(
-			"Check", /*Fct*/ 3,
+			"Check", /*Fct*/ 10,
 			/*In*/ 1, /*Out*/ 0,
 			/*Par*/ 1);
 	vxCheck->addInParam(0, paramN);

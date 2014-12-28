@@ -58,53 +58,85 @@
 
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
+static void* shMem;
 
-PlatformLinux::PlatformLinux(int nLrt, Stack *stack){
-
-	int pipeSpidertoLRT[2];
-	int pipeLRTtoSpider[2];
-
-	stack_ = stack;
-
-	/** Open Pipes */
-	if (pipe2(pipeSpidertoLRT, O_NONBLOCK | O_CLOEXEC) == -1
-			|| pipe2(pipeLRTtoSpider, O_NONBLOCK | O_CLOEXEC) == -1) {
-		perror("pipe");
-		exit(EXIT_FAILURE);
-	}
-
+static void initShMem(){
 	/** Open Shared Memory */
     int shmid;
-    void* shMem;
     key_t key = SHARED_MEM_KEY;
 
 	printf("Creating shared memory...\n");
 
-    /*
-     * Create the segment.
-     */
+    /** Get the segment. */
     if ((shmid = shmget(key, 1024*1024, IPC_CREAT | 0666)) < 0) {
         perror("shmget");
         exit(1);
     }
 
-    /*
-     * Now we attach the segment to our data space.
-     */
+    /** Now we attach the segment to our data space. */
     if ((shMem = (void*)shmat(shmid, NULL, 0)) == (void *) -1) {
         perror("shmat");
         exit(1);
     }
+}
 
+PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts){
+	int pipeSpidertoLRT[2*nLrt];
+	int pipeLRTtoSpider[2*nLrt];
+
+	stack_ = stack;
+
+	for(int i=0; i<nLrt; i++){
+		/** Open Pipes */
+		if (pipe2(pipeSpidertoLRT+2*i, O_NONBLOCK) == -1
+				|| pipe2(pipeLRTtoSpider+2*i, O_NONBLOCK) == -1) {
+			perror("pipe");
+			exit(EXIT_FAILURE);
+		}
+		printf("Pipe Spider=>LRT %d: %d <= %d\n", i, pipeSpidertoLRT[2*i], pipeSpidertoLRT[2*i+1]);
+		printf("Pipe LRT=>Spider %d: %d <= %d\n", i, pipeLRTtoSpider[2*i], pipeLRTtoSpider[2*i+1]);
+	}
+
+	for(int i=1; i<nLrt; i++){
+        pid_t cpid = fork();
+        if (cpid == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
+
+        if (cpid == 0) { /* Child */
+        	/** Close unused pipe */
+
+        	/** Initialize shared memory */
+        	initShMem();
+
+        	/** Create LRT */
+        	LinuxLrtCommunicator* lrtCom = CREATE(stack, LinuxLrtCommunicator)(280, pipeSpidertoLRT[2*i], pipeLRTtoSpider[2*i+1], shMem, 10000, stack);
+        	LRT* lrt = CREATE(stack, LRT)(lrtCom);
+        	lrt->setFctTbl(fcts, nLrtFcts);
+
+        	/** launch LRT */
+        	lrt->runInfinitly();
+        } else { /* Parent */
+
+        }
+	}
+
+	/** Close unused pipe */
+
+	/** Initialize shared memory */
+	initShMem();
     memset(shMem,0,1024*1024);
-
 
 	/** Initialize LRT and Communicators */
     LinuxSpiderCommunicator* spiderCom = CREATE(stack, LinuxSpiderCommunicator)(280, 1, stack);
-	spiderCom->setLrtCom(0, pipeLRTtoSpider[0], pipeSpidertoLRT[1]);
+
+    for(int i=0; i<nLrt; i++)
+    	spiderCom->setLrtCom(i, pipeLRTtoSpider[2*i], pipeSpidertoLRT[2*i+1]);
 
 	LinuxLrtCommunicator* lrtCom = CREATE(stack, LinuxLrtCommunicator)(280, pipeSpidertoLRT[0], pipeLRTtoSpider[1], shMem, 10000, stack);
 	LRT* lrt = CREATE(stack, LRT)(lrtCom);
+	lrt->setFctTbl(fcts, nLrtFcts);
 
 	setLrt(lrt);
 	setSpiderCommunicator(spiderCom);
@@ -112,13 +144,18 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack){
 	/** Create Archi */
 	archi_ = CREATE(stack, SharedMemArchi)(
 				/* Stack */  	stack,
-				/* Nb PE */		1,
+				/* Nb PE */		nLrt,
 				/* Nb PE Type*/ 1);
 
 	archi_->setPETypeRecvSpeed(0, 1, 10);
 	archi_->setPETypeSendSpeed(0, 1, 10);
 	archi_->setPEType(0, 0);
-	archi_->setName(0, "PE0");
+
+	for(int i=0; i<nLrt; i++){
+		char name[5];
+		sprintf(name, "PE%d", nLrt);
+		archi_->setName(0, name);
+	}
 
 	Platform::set(this);
 	this->rstTime();

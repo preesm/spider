@@ -41,6 +41,7 @@
 #include <tools/Stack.h>
 #include <graphs/Archi/Archi.h>
 #include <graphs/Archi/SharedMemArchi.h>
+#include <lrt.h>
 
 class PlatformLinux: public Platform{
 public:
@@ -55,7 +56,7 @@ public:
 
 	SharedMemArchi* getArchi();
 
-	PlatformLinux(int nLrt, Stack *stack);
+	PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts);
 	virtual ~PlatformLinux();
 private:
 

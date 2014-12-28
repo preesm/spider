@@ -48,7 +48,7 @@ int main(int argc, char* argv[]){
 	DynStack archiStack("ArchiStack");
 	DynStack testStack("TestStack");
 
-	PlatformLinux platform(1, &archiStack);
+	PlatformLinux platform(2, &archiStack, test_fcts, NB_FCT_TEST);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_DUMMY;
@@ -69,8 +69,6 @@ int main(int argc, char* argv[]){
 			pisdfStack.freeAll();
 			testStack.freeAll();
 
-			spider_setLrtFcts(test0_fcts, NB_FCT_TEST0);
-
 			PiSDFGraph *topPisdf = initPisdf_test0(archi, &pisdfStack, i);
 			topPisdf->print("pi.gv");
 
@@ -84,8 +82,6 @@ int main(int argc, char* argv[]){
 		for(int i=1; i<=3; i++){
 			pisdfStack.freeAll();
 			testStack.freeAll();
-
-			spider_setLrtFcts(test1_fcts, NB_FCT_TEST1);
 
 			PiSDFGraph *topPisdf = initPisdf_test1(archi, &pisdfStack, i);
 			topPisdf->print("pi.gv");
@@ -101,8 +97,6 @@ int main(int argc, char* argv[]){
 			pisdfStack.freeAll();
 			testStack.freeAll();
 
-			spider_setLrtFcts(test2_fcts, NB_FCT_TEST2);
-
 			PiSDFGraph *topPisdf = initPisdf_test2(archi, &pisdfStack, i);
 			topPisdf->print("pi.gv");
 
@@ -116,8 +110,6 @@ int main(int argc, char* argv[]){
 	{
 		pisdfStack.freeAll();
 		testStack.freeAll();
-
-		spider_setLrtFcts(test3_fcts, NB_FCT_TEST3);
 
 		PiSDFGraph *topPisdf = initPisdf_test3(archi, &pisdfStack);
 		topPisdf->print("pi.gv");
@@ -133,8 +125,6 @@ int main(int argc, char* argv[]){
 		pisdfStack.freeAll();
 		testStack.freeAll();
 
-		spider_setLrtFcts(test4_fcts, NB_FCT_TEST4);
-
 		PiSDFGraph *topPisdf = initPisdf_test4(archi, &pisdfStack);
 		topPisdf->print("pi.gv");
 
@@ -148,8 +138,6 @@ int main(int argc, char* argv[]){
 	{
 		pisdfStack.freeAll();
 		testStack.freeAll();
-
-		spider_setLrtFcts(test5_fcts, NB_FCT_TEST5);
 
 		PiSDFGraph *topPisdf = initPisdf_test5(archi, &pisdfStack);
 		topPisdf->print("pi.gv");
@@ -165,8 +153,6 @@ int main(int argc, char* argv[]){
 		pisdfStack.freeAll();
 		testStack.freeAll();
 
-		spider_setLrtFcts(test6_fcts, NB_FCT_TEST6);
-
 		PiSDFGraph *topPisdf = initPisdf_test6(archi, &pisdfStack);
 		topPisdf->print("pi.gv");
 
@@ -180,8 +166,6 @@ int main(int argc, char* argv[]){
 	{
 		pisdfStack.freeAll();
 		testStack.freeAll();
-
-		spider_setLrtFcts(test7_fcts, NB_FCT_TEST7);
 
 		PiSDFGraph *topPisdf = initPisdf_test7(archi, &pisdfStack);
 		topPisdf->print("pi.gv");

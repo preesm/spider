@@ -42,62 +42,6 @@
 /****************************     TEST 1     ***********************************/
 /*******************************************************************************/
 
-#define VERBOSE 0
-
-void test1_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	static int i=1;
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute C\n");
-#endif
-
-	out[0] = 1;
-	out[1] = 2;
-	out[2] = 3;
-	outParams[0] = i++;
-}
-
-void test1_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param N = inParams[0];
-	char* in = (char*)inputFIFOs[0];
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute A\n");
-#endif
-
-	memcpy(out, in, N);
-}
-
-void test1_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param N = inParams[0];
-	char* in = (char*)inputFIFOs[0];
-
-	char expected[6] = {1,2,3,1};
-	int nb;
-	switch(N){
-	case 1:
-	case 3:
-		nb = 3;
-		break;
-	case 2:
-		nb = 4;
-		break;
-	}
-
-	printf("Test: ");
-	for(int i=0; i<nb; i++){
-		if(in[i] != expected[i]){
-			printf("FAILED\n");
-			return;
-		}
-	}
-	printf("PASSED\n");
-}
-
-lrtFct test1_fcts[NB_FCT_TEST1] = {&test1_C, &test1_A, &test1_Check};
-
 PiSDFGraph* test1(Archi* archi, Stack* stack, int N){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
 			/*Edges*/ 	2,
@@ -115,20 +59,20 @@ PiSDFGraph* test1(Archi* archi, Stack* stack, int N){
 
 	// Configure vertices.
 	PiSDFVertex *vxC = graph->addConfigVertex(
-			"C", /*Fct*/ 0,
+			"C", /*Fct*/ 5,
 			PISDF_SUBTYPE_NORMAL,
 			/*In*/ 0,  /*Out*/ 1,
 			/*Par*/ 0, /*Cfg*/ 0);
 
 	// Other vertices
 	PiSDFVertex *vxA = graph->addBodyVertex(
-			"A", /*Fct*/ 1,
+			"A", /*Fct*/ 4,
 			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 1);
 	vxA->addInParam(0, paramN);
 
 	PiSDFVertex *vxCheck = graph->addBodyVertex(
-			"Check", /*Fct*/ 2,
+			"Check", /*Fct*/ 6,
 			/*In*/ 1, /*Out*/ 0,
 			/*Par*/ 1);
 	vxCheck->addInParam(0, paramN);

@@ -68,13 +68,22 @@ void LinuxLrtCommunicator::send(int lrtIx){
 int LinuxLrtCommunicator::recv(int lrtIx, void** data){
 	unsigned long size;
 	int nb = read(fIn_, &size, sizeof(unsigned long));
+
 	if(nb<0) return 0;
+
 	if(size > msgSizeMax_)
 		throw "Msg too big\n";
-	read(fIn_, msgBuffer_, size);
+
 	curMsgSize_ = size;
+
+	while(size){
+		int recv = read(fIn_, msgBuffer_, size);
+		if(recv > 0)
+			size -= recv;
+	}
+
 	*data = msgBuffer_;
-	return size;
+	return curMsgSize_;
 }
 
 void LinuxLrtCommunicator::end_recv(){

@@ -41,49 +41,6 @@
 /*******************************************************************************/
 /****************************     TEST 6     ***********************************/
 /*******************************************************************************/
-#define VERBOSE 0
-
-void test6_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute A\n");
-#endif
-
-	out[0] = 1;
-	out[1] = 2;
-	out[2] = 3;
-	out[3] = 4;
-}
-
-void test6_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in = (char*)inputFIFOs[0];
-
-	char expected[4] = {2,3,4,5};
-	int nb = 4;
-
-	printf("Test: ");
-	for(int i=0; i<nb; i++){
-		if(in[i] != expected[i]){
-			printf("FAILED\n");
-			return;
-		}
-	}
-	printf("PASSED\n");
-}
-
-void test6_H(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in  = (char*)inputFIFOs[0];
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute C\n");
-#endif
-
-	out[0] = in[0]+1;
-}
-
-lrtFct test6_fcts[NB_FCT_TEST6] = {&test6_A, &test6_Check, &test6_H};
 
 PiSDFGraph* test6_sub(Archi* archi, Stack* stack){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
@@ -110,7 +67,7 @@ PiSDFGraph* test6_sub(Archi* archi, Stack* stack){
 
 	// Other vertices
 	PiSDFVertex *vxH = graph->addBodyVertex(
-			"H", /*Fct*/ 2,
+			"H", /*Fct*/ 24,
 			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 0);
 
@@ -151,11 +108,11 @@ PiSDFGraph* test6(Archi* archi, Stack* stack){
 
 	// Other vertices
 	PiSDFVertex *vxA = graph->addBodyVertex(
-			"A", /*Fct*/ 0,
+			"A", /*Fct*/ 23,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 0);
 	PiSDFVertex *vxCheck = graph->addBodyVertex(
-			"Check", /*Fct*/ 1,
+			"Check", /*Fct*/ 25,
 			/*In*/ 1, /*Out*/ 0,
 			/*Par*/ 0);
 	PiSDFVertex *vxH = graph->addHierVertex(

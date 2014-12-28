@@ -41,59 +41,6 @@
 /*******************************************************************************/
 /****************************     TEST 5     ***********************************/
 /*******************************************************************************/
-#define VERBOSE 0
-
-void test5_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute A\n");
-#endif
-
-	out[0] = 1;
-}
-
-void test5_B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in  = (char*)inputFIFOs[0];
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute B\n");
-#endif
-
-	out[0] = in[0]+1;
-}
-
-void test5_H(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in  = (char*)inputFIFOs[0];
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute C\n");
-#endif
-
-	for(int i=0; i<4; i++){
-		out[i] = in[i]+1;
-	}
-}
-
-void test5_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in = (char*)inputFIFOs[0];
-
-	char expected[4] = {3,3};
-	int nb = 2;
-
-	printf("Test: ");
-	for(int i=0; i<nb; i++){
-		if(in[i] != expected[i]){
-			printf("FAILED\n");
-			return;
-		}
-	}
-	printf("PASSED\n");
-}
-
-lrtFct test5_fcts[NB_FCT_TEST5] = {&test5_A, &test5_B, &test5_H, &test5_Check};
 
 PiSDFGraph* test5_sub(Archi* archi, Stack* stack){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
@@ -120,7 +67,7 @@ PiSDFGraph* test5_sub(Archi* archi, Stack* stack){
 
 	// Other vertices
 	PiSDFVertex *vxH = graph->addBodyVertex(
-			"H", /*Fct*/ 2,
+			"H", /*Fct*/ 21,
 			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 0);
 
@@ -159,15 +106,15 @@ PiSDFGraph* test5(Archi* archi, Stack* stack){
 
 	// Other vertices
 	PiSDFVertex *vxA = graph->addBodyVertex(
-			"A", /*Fct*/ 0,
+			"A", /*Fct*/ 19,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 0);
 	PiSDFVertex *vxB = graph->addBodyVertex(
-			"B", /*Fct*/ 1,
+			"B", /*Fct*/ 20,
 			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 0);
 	PiSDFVertex *vxCheck = graph->addBodyVertex(
-			"Check", /*Fct*/ 3,
+			"Check", /*Fct*/ 22,
 			/*In*/ 1, /*Out*/ 0,
 			/*Par*/ 0);
 	PiSDFVertex *vxH = graph->addHierVertex(

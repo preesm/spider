@@ -41,68 +41,6 @@
 /*******************************************************************************/
 /****************************     TEST 8     ***********************************/
 /*******************************************************************************/
-#define VERBOSE 0
-
-void test8_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute A\n");
-#endif
-
-	out[0] = 1;
-}
-
-void test8_B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in  = (char*)inputFIFOs[0];
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute B\n");
-#endif
-
-	out[0] = in[0]+2;
-}
-
-void test8_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in  = (char*)inputFIFOs[0];
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute C\n");
-#endif
-
-	out[0] = 2;
-	out[1] = 3;
-	out[2] = 4;
-}
-
-void test8_H(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in0  = (char*)inputFIFOs[0];
-	char* in1  = (char*)inputFIFOs[1];
-	char* out = (char*)outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute H\n");
-#endif
-
-	out[0] = in0[0] + in1[0];
-}
-
-void test8_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	char* in0 = (char*)inputFIFOs[0];
-	char* in1 = (char*)inputFIFOs[0];
-
-	printf("Test: ");
-	if(		in0[0] == 3
-		&& 	in1[0] == 5){
-		printf("FAILED\n");
-		return;
-	}
-	printf("PASSED\n");
-}
-
-lrtFct test8_fcts[NB_FCT_TEST8] = {&test8_A, &test8_B, &test8_C, &test8_H, &test8_Check};
 
 PiSDFGraph* test8_sub(Archi* archi, Stack* stack){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
@@ -127,14 +65,14 @@ PiSDFGraph* test8_sub(Archi* archi, Stack* stack){
 
 	// Configure vertices
 	PiSDFVertex *cfC = graph->addConfigVertex(
-			"C", /*Fct*/ 2,
+			"C", /*Fct*/ 33,
 			/*Type*/ PISDF_SUBTYPE_NORMAL,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 0, /*OutPar*/ 0);
 
 	// Other vertices
 	PiSDFVertex *vxH = graph->addBodyVertex(
-			"H", /*Fct*/ 3,
+			"H", /*Fct*/ 34,
 			/*In*/ 2, /*Out*/ 1,
 			/*Par*/ 0);
 
@@ -180,15 +118,15 @@ PiSDFGraph* test8(Archi* archi, Stack* stack){
 
 	// Other vertices
 	PiSDFVertex *vxA = graph->addBodyVertex(
-			"A", /*Fct*/ 0,
+			"A", /*Fct*/ 31,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 0);
 	PiSDFVertex *vxB = graph->addBodyVertex(
-			"B", /*Fct*/ 1,
+			"B", /*Fct*/ 32,
 			/*In*/ 1, /*Out*/ 1,
 			/*Par*/ 0);
 	PiSDFVertex *vxCheck = graph->addBodyVertex(
-			"Check", /*Fct*/ 4,
+			"Check", /*Fct*/ 35,
 			/*In*/ 2, /*Out*/ 0,
 			/*Par*/ 0);
 	PiSDFVertex *vxBr = graph->addSpecialVertex(

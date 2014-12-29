@@ -50,7 +50,7 @@ static lrtFct specialActors[6] = {
 		&saEnd
 };
 
-LRT::LRT(Communicator* com){
+LRT::LRT(LrtCommunicator* com){
 	com_ = com;
 	/* TODO add some heapMemory */
 	fcts_ = 0;
@@ -67,7 +67,7 @@ void LRT::setFctTbl(const lrtFct fct[], int nFct){
 
 int LRT::runOneJob(){
 	void* msg;
-	if(com_->recv(0, &msg)){
+	if(com_->ctrl_start_recv(&msg)){
 		switch(((UndefinedMsg*) msg)->msgIx){
 		case MSG_START_JOB:{
 			StartJobMsg* jobMsg = (StartJobMsg*) msg;
@@ -81,11 +81,11 @@ int LRT::runOneJob(){
 				Param outParams[jobMsg->nbOutParam];
 
 				for(int i=0; i<jobMsg->nbInEdge; i++){
-					inFifosAlloc[i] = (void*) com_->recvData(&inFifos[i]);
+					inFifosAlloc[i] = (void*) com_->data_recv(&inFifos[i]);
 				}
 
 				for(int i=0; i<jobMsg->nbOutEdge; i++){
-					outFifosAlloc[i] = (void*) com_->pre_sendData(&outFifos[i]);
+					outFifosAlloc[i] = (void*) com_->data_start_send(&outFifos[i]);
 				}
 
 				if(jobMsg->specialActor && jobMsg->fctIx < 6)
@@ -96,19 +96,19 @@ int LRT::runOneJob(){
 					throw "Cannot find actor function\n";
 
 				for(int i=0; i<jobMsg->nbOutEdge; i++){
-					com_->sendData(&outFifos[i]);
+					com_->data_end_send(&outFifos[i]);
 				}
 				for(int i=0; i<jobMsg->nbOutParam; i++){
-					ParamValueMsg* msgParam = (ParamValueMsg*) com_->alloc(sizeof(ParamValueMsg)+jobMsg->nbOutParam*sizeof(Param));
+					ParamValueMsg* msgParam = (ParamValueMsg*) com_->ctrl_start_send(sizeof(ParamValueMsg)+jobMsg->nbOutParam*sizeof(Param));
 					Param* params = (Param*)(msgParam+1);
 
 					msgParam->msgIx = MSG_PARAM_VALUE;
 					msgParam->srdagIx = jobMsg->srdagIx;
 					memcpy(params, outParams, jobMsg->nbOutParam*sizeof(Param));
 
-					com_->send(0);
+					com_->ctrl_end_send(0);
 				}
-				com_->end_recv();
+				com_->ctrl_end_recv();
 			}
 			break;
 		}

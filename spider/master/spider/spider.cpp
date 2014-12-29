@@ -36,7 +36,7 @@
 
 #include "spider.h"
 
-static Communicator* spiderCom = 0;
+static SpiderCommunicator* spiderCom = 0;
 static LRT* lrt = 0;
 
 static Stack* srdagStack = 0;
@@ -134,10 +134,11 @@ SRDAGGraph* spider_getLastSRDAG(){
 	return srdag;
 }
 
-void setSpiderCommunicator(Communicator* com){
+void setSpiderCommunicator(SpiderCommunicator* com){
 	spiderCom = com;
 }
-Communicator* getSpiderCommunicator(){
+
+SpiderCommunicator* getSpiderCommunicator(){
 	return spiderCom;
 }
 

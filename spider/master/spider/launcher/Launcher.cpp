@@ -35,7 +35,7 @@
  ****************************************************************************/
 
 #include "Launcher.h"
-#include <Communicator.h>
+#include <SpiderCommunicator.h>
 #include <Message.h>
 
 #include <graphs/Archi/Archi.h>
@@ -56,7 +56,7 @@ Launcher::Launcher(){
 
 void Launcher::launchVertex(SRDAGVertex* vertex, int slave){
 #if EXEC == 1
-	CreateTaskMsg::send(slave, vertex);
+	CreateTaskMsg::ctrl_end_send(slave, vertex);
 	if(vertex->getType() == ConfigureActor)
 		nbParamToRecv += ((PiSDFConfigVertex*)(vertex->getReference()))->getNbRelatedParams();
 #endif
@@ -69,9 +69,9 @@ Launcher* Launcher::get(){
 }
 
 void Launcher::send_ClearTimeMsg(int lrtIx){
-	ClearTimeMsg* msg = (ClearTimeMsg*)getSpiderCommunicator()->alloc(sizeof(ClearTimeMsg));
+	ClearTimeMsg* msg = (ClearTimeMsg*)getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(ClearTimeMsg));
 	msg->msgIx = MSG_CLEAR_TIME;
-	getSpiderCommunicator()->send(lrtIx);
+	getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMsg));
 }
 
 void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
@@ -95,11 +95,14 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		break;
 	}
 
-	long msgAdd = (long) getSpiderCommunicator()->alloc(
-			1*sizeof(StartJobMsg)
-			+ vertex->getNInEdge()*sizeof(Fifo)
-			+ vertex->getNOutEdge()*sizeof(Fifo)
-			+ nParams*sizeof(Param));
+	int size = 1*sizeof(StartJobMsg)
+					+ vertex->getNInEdge()*sizeof(Fifo)
+					+ vertex->getNOutEdge()*sizeof(Fifo)
+					+ nParams*sizeof(Param);
+	long msgAdd = (long) getSpiderCommunicator()->ctrl_start_send(
+			lrtIx,
+			size
+			);
 
 	StartJobMsg* msg = (StartJobMsg*) msgAdd;
 	Fifo *inFifos = (Fifo*) ((char*)msgAdd + 1*sizeof(StartJobMsg));
@@ -173,14 +176,14 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 
 	curNParam_ += vertex->getNOutParam();
 
-	getSpiderCommunicator()->send(lrtIx);
+	getSpiderCommunicator()->ctrl_end_send(lrtIx, size);
 }
 
 void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 	int slave = 0;
 	while(curNParam_ != 0){
 		ParamValueMsg* msg;
-		if(getSpiderCommunicator()->recv(slave, (void**)(&msg))){
+		if(getSpiderCommunicator()->ctrl_start_recv(slave, (void**)(&msg))){
 			if(msg->msgIx != MSG_PARAM_VALUE)
 				throw "Unexpected Msg received\n";
 			SRDAGVertex* cfgVertex = topDag->getVertexFromIx(msg->srdagIx);
@@ -190,7 +193,7 @@ void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 				*param = params[j];
 			}
 			curNParam_ -= cfgVertex->getNOutParam();
-			getSpiderCommunicator()->end_recv();
+			getSpiderCommunicator()->ctrl_end_recv(slave);
 		}
 		slave = (slave+1)%archi->getNPE();
 	}

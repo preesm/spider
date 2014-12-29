@@ -38,7 +38,7 @@
 #define LRT_H
 
 #include <platform.h>
-#include <Communicator.h>
+#include <LrtCommunicator.h>
 
 typedef void (*lrtFct)(
 		void* inputFIFOs[],
@@ -48,12 +48,12 @@ typedef void (*lrtFct)(
 
 class LRT{
 public:
-	LRT(Communicator* com);
+	LRT(LrtCommunicator* com);
 	virtual ~LRT();
 
 	void setFctTbl(const lrtFct fct[], int nFct);
 
-	inline Communicator* getCom();
+	inline LrtCommunicator* getCom();
 
 	int  runOneJob();
 	void runUntilNoMoreJobs();
@@ -64,10 +64,10 @@ protected:
 private:
 	int nFct_;
 	const lrtFct* fcts_;
-	Communicator* com_;
+	LrtCommunicator* com_;
 };
 
-inline Communicator* LRT::getCom(){
+inline LrtCommunicator* LRT::getCom(){
 	return com_;
 }
 

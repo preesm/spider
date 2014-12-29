@@ -37,6 +37,8 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#include <platform.h>
+
 typedef enum{
 	MSG_START_JOB=1,
 	MSG_PARAM_VALUE=2,
@@ -67,6 +69,13 @@ typedef struct __attribute__ ((__packed__)){
 	unsigned long nbInParam;
 	unsigned long nbOutParam;
 }StartJobMsg;
+
+typedef struct __attribute__ ((__packed__)){
+	unsigned long srdagIx;
+	unsigned long lrtIx;
+	Time start;
+	Time stop;
+}JobTraceMsg;
 
 typedef struct __attribute__ ((__packed__)){
 	unsigned long id:32;

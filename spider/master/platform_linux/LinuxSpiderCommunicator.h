@@ -37,36 +37,45 @@
 #ifndef LINUX_SPIDER_COMMUNICATOR_H
 #define LINUX_SPIDER_COMMUNICATOR_H
 
-#include <graphs/SRDAG/SRDAGCommon.h>
-#include <graphs/Archi/Archi.h>
-
 #include <Message.h>
-#include <Communicator.h>
+#include <SpiderCommunicator.h>
+#include <tools/Stack.h>
+#include <semaphore.h>
 
-class LinuxSpiderCommunicator: public Communicator{
+class LinuxSpiderCommunicator: public SpiderCommunicator{
 public:
-	LinuxSpiderCommunicator(int msgSizeMax, int nLrt, Stack* s);
+	LinuxSpiderCommunicator(int msgSizeMax, int nLrt, sem_t* semTrace, int fTraceWr, int fTraceRd, Stack* s);
 	~LinuxSpiderCommunicator();
 
 	void setLrtCom(int lrtIx, int fIn, int fOut);
 
-	void* alloc(int size);
-	void send(int lrtIx);
+	void* ctrl_start_send(int lrtIx, int size);
+	void ctrl_end_send(int lrtIx, int size);
 
-	int recv(int lrtIx, void** data);
-	void end_recv();
+	int ctrl_start_recv(int lrtIx, void** data);
+	void ctrl_end_recv(int lrtIx);
 
-	void sendData(Fifo* f);
-	long recvData(Fifo* f);
+	void* trace_start_send(int size);
+	void trace_end_send(int size);
 
-	long pre_sendData(Fifo* f);
+	int trace_start_recv(void** data);
+	void trace_end_recv();
 
 private:
 	Stack* stack_;
+
 	int *fIn_, *fOut_;
+
+	int fTraceRd_;
+	int fTraceWr_;
+	sem_t* semTrace_;
+
 	int msgSizeMax_;
-	void* msgBuffer_;
-	int curMsgSize_;
+
+	void* msgBufferRecv_;
+	int curMsgSizeRecv_;
+	void* msgBufferSend_;
+	int curMsgSizeSend_;
 };
 
 #endif/*LINUX_SPIDER_COMMUNICATOR_H*/

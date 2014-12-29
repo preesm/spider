@@ -34,31 +34,29 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef COMMUNICATOR_H
-#define COMMUNICATOR_H
-
-#include <graphs/SRDAG/SRDAGCommon.h>
-#include <graphs/Archi/Archi.h>
+#ifndef SPIDER_COMMUNICATOR_H
+#define SPIDER_COMMUNICATOR_H
 
 #include <Message.h>
 
-class Communicator {
+class SpiderCommunicator {
 public:
-	virtual ~Communicator(){}
+	virtual ~SpiderCommunicator(){}
 
-	virtual void* alloc(int size) = 0;
-	virtual void send(int lrtIx) = 0;
+	virtual void* ctrl_start_send(int lrtIx, int size) = 0;
+	virtual void ctrl_end_send(int lrtIx, int size) = 0;
 
-	virtual int recv(int lrtIx, void** data) = 0;
-	virtual void end_recv() = 0;
+	virtual int ctrl_start_recv(int lrtIx, void** data) = 0;
+	virtual void ctrl_end_recv(int lrtIx) = 0;
 
-	virtual void sendData(Fifo* f) = 0;
-	virtual long recvData(Fifo* f) = 0;
+	virtual void* trace_start_send(int size) = 0;
+	virtual void trace_end_send(int size) = 0;
 
-	virtual long pre_sendData(Fifo* f) = 0;
+	virtual int trace_start_recv(void** data) = 0;
+	virtual void trace_end_recv() = 0;
 
 protected:
-	Communicator(){}
+	SpiderCommunicator(){}
 };
 
-#endif/*COMMUNICATOR_H*/
+#endif/*SPIDER_COMMUNICATOR_H*/

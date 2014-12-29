@@ -38,19 +38,37 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-LinuxSpiderCommunicator::LinuxSpiderCommunicator(int msgSizeMax, int nLrt, Stack* s){
+LinuxSpiderCommunicator::LinuxSpiderCommunicator(
+		int msgSizeMax,
+		int nLrt,
+		sem_t* semTrace,
+		int fTraceWr,
+		int fTraceRd,
+		Stack* s){
 	stack_ = s;
+
 	fIn_ = CREATE_MUL(s, nLrt, int);
 	fOut_ = CREATE_MUL(s, nLrt, int);
+	fTraceRd_ = fTraceRd;
+	fTraceWr_ = fTraceWr;
+	semTrace_ = semTrace;
+
 	msgSizeMax_ = msgSizeMax;
-	msgBuffer_ = (void*) CREATE_MUL(s, msgSizeMax, char);
-	curMsgSize_ = 0;
+
+	msgBufferRecv_ = (void*) CREATE_MUL(s, msgSizeMax, char);
+	curMsgSizeRecv_ = 0;
+	msgBufferSend_ = (void*) CREATE_MUL(s, msgSizeMax, char);
+	curMsgSizeSend_ = 0;
 }
+
 LinuxSpiderCommunicator::~LinuxSpiderCommunicator(){
 	stack_->free(fIn_);
 	stack_->free(fOut_);
-	stack_->free(msgBuffer_);
+	stack_->free(msgBufferRecv_);
+	stack_->free(msgBufferSend_);
 }
 
 void LinuxSpiderCommunicator::setLrtCom(int lrtIx, int fIn, int fOut){
@@ -58,18 +76,21 @@ void LinuxSpiderCommunicator::setLrtCom(int lrtIx, int fIn, int fOut){
 	fOut_[lrtIx] = fOut;
 }
 
-void* LinuxSpiderCommunicator::alloc(int size){
-	curMsgSize_ = size;
-	return msgBuffer_;
-}
-void LinuxSpiderCommunicator::send(int lrtIx){
-	unsigned long size = curMsgSize_;
-	write(fOut_[lrtIx], &size, sizeof(unsigned long));
-	write(fOut_[lrtIx], msgBuffer_, curMsgSize_);
-	curMsgSize_ = 0;
+void* LinuxSpiderCommunicator::ctrl_start_send(int lrtIx, int size){
+	if(curMsgSizeSend_)
+		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
+	curMsgSizeSend_ = size;
+	return msgBufferSend_;
 }
 
-int LinuxSpiderCommunicator::recv(int lrtIx, void** data){
+void LinuxSpiderCommunicator::ctrl_end_send(int lrtIx, int size){
+	unsigned long s = curMsgSizeSend_;
+	write(fOut_[lrtIx], &s, sizeof(unsigned long));
+	write(fOut_[lrtIx], msgBufferSend_, curMsgSizeSend_);
+	curMsgSizeSend_ = 0;
+}
+
+int LinuxSpiderCommunicator::ctrl_start_recv(int lrtIx, void** data){
 	unsigned long size;
 	int nb = read(fIn_[lrtIx], &size, sizeof(unsigned long));
 
@@ -78,32 +99,62 @@ int LinuxSpiderCommunicator::recv(int lrtIx, void** data){
 	if(size > msgSizeMax_)
 		throw "Msg too big\n";
 
-	curMsgSize_ = size;
+	curMsgSizeRecv_ = size;
 
 	while(size){
-		int recv = read(fIn_[lrtIx], msgBuffer_, size);
+		int recv = read(fIn_[lrtIx], msgBufferRecv_, size);
 		if(recv > 0)
 			size -= recv;
 	}
 
-	*data = msgBuffer_;
-	return curMsgSize_;
+	*data = msgBufferRecv_;
+	return curMsgSizeRecv_;
 }
 
-void LinuxSpiderCommunicator::end_recv(){
-	curMsgSize_ = 0;
+void LinuxSpiderCommunicator::ctrl_end_recv(int lrtIx){
+	curMsgSizeRecv_ = 0;
 }
 
-void LinuxSpiderCommunicator::sendData(Fifo* f){
-	throw "Spider Communicator should not use Data Fifos\n";
-}
-long LinuxSpiderCommunicator::recvData(Fifo* f){
-	throw "Spider Communicator should not use Data Fifos\n";
-	return 0;
+void* LinuxSpiderCommunicator::trace_start_send(int size){
+	curMsgSizeSend_ = size;
+	return msgBufferSend_;
 }
 
-long LinuxSpiderCommunicator::pre_sendData(Fifo* f){
-	throw "Spider Communicator should not use Data Fifos\n";
-	return 0;
+void LinuxSpiderCommunicator::trace_end_send(int size){
+	unsigned long s = curMsgSizeSend_;
+
+	int err = sem_wait(semTrace_);
+	if(err != 0){
+		perror("LinuxLrtCommunicator::trace_end_send");
+		exit(-1);
+	}
+
+	write(fTraceWr_, &s, sizeof(unsigned long));
+	write(fTraceWr_, msgBufferSend_, curMsgSizeSend_);
+	curMsgSizeSend_ = 0;
 }
 
+int LinuxSpiderCommunicator::trace_start_recv(void** data){
+	unsigned long size;
+	int nb = read(fTraceRd_, &size, sizeof(unsigned long));
+
+	if(nb<0) return 0;
+
+	if(size > msgSizeMax_)
+		throw "Msg too big\n";
+
+	curMsgSizeRecv_ = size;
+
+	while(size){
+		int recv = read(fTraceRd_, msgBufferRecv_, size);
+		if(recv > 0)
+			size -= recv;
+	}
+
+	*data = msgBufferRecv_;
+	return curMsgSizeRecv_;
+}
+
+void LinuxSpiderCommunicator::trace_end_recv(){
+	curMsgSizeRecv_ = 0;
+}

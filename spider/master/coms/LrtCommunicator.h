@@ -34,61 +34,32 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef LINUX_LRT_COMMUNICATOR_H
-#define LINUX_LRT_COMMUNICATOR_H
+#ifndef LRT_COMMUNICATOR_H
+#define LRT_COMMUNICATOR_H
 
-#include <LrtCommunicator.h>
-#include <semaphore.h>
 #include <Message.h>
-#include <tools/Stack.h>
 
-class LinuxLrtCommunicator: public LrtCommunicator{
+class LrtCommunicator {
 public:
-	LinuxLrtCommunicator(
-			int msgSizeMax,
-			int fIn,
-			int fOut,
-			int fTrace,
-			sem_t *semTrace,
-			void* shMem,
-			int nbFifos,
-			Stack* s
-		);
+	virtual ~LrtCommunicator(){}
 
-	~LinuxLrtCommunicator();
+	virtual void* ctrl_start_send(int size) = 0;
+	virtual void ctrl_end_send(int size) = 0;
 
-	void* ctrl_start_send(int size);
-	void ctrl_end_send(int size);
+	virtual int ctrl_start_recv(void** data) = 0;
+	virtual void ctrl_end_recv() = 0;
 
-	int ctrl_start_recv(void** data);
-	void ctrl_end_recv();
+	virtual void* trace_start_send(int size) = 0;
+	virtual void trace_end_send(int size) = 0;
 
-	void* trace_start_send(int size);
-	void trace_end_send(int size);
+	virtual long data_start_send(Fifo* f) = 0;
+	virtual void data_end_send(Fifo* f) = 0;
 
-	long data_start_send(Fifo* f);
-	void data_end_send(Fifo* f);
+	virtual long data_recv(Fifo* f) = 0;
 
-	long data_recv(Fifo* f);
 
-private:
-	Stack* stack_;
-
-	int fIn_, fOut_, fTrace_;
-	sem_t* semTrace_;
-
-	int msgSizeMax_;
-
-	void* msgBufferSend_;
-	int curMsgSizeSend_;
-
-	void* msgBufferRecv_;
-	int curMsgSizeRecv_;
-
-	int nbFifos_;
-	unsigned long* fifos_;
-	unsigned char* shMem_;
-
+protected:
+	LrtCommunicator(){}
 };
 
-#endif/*LINUX_LRT_COMMUNICATOR_H*/
+#endif/*LRT_COMMUNICATOR_H*/

@@ -57,7 +57,7 @@
 
 #include <graphTransfo/GraphTransfo.h>
 
-#include <Communicator.h>
+#include <SpiderCommunicator.h>
 #include <lrt.h>
 
 typedef struct{
@@ -90,8 +90,8 @@ void spider_setTransfoStack(StackConfig cfg);
 
 SRDAGGraph* spider_getLastSRDAG();
 
-void setSpiderCommunicator(Communicator* com);
-Communicator* getSpiderCommunicator();
+void setSpiderCommunicator(SpiderCommunicator* com);
+SpiderCommunicator* getSpiderCommunicator();
 
 void setLrt(LRT* com);
 LRT* getLrt();

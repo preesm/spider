@@ -44,6 +44,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <sys/shm.h>
+#include <sys/stat.h>
 #include <cstring>
 
 #include <tools/Stack.h>
@@ -83,8 +84,19 @@ static void initShMem(){
 PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts){
 	int pipeSpidertoLRT[2*nLrt];
 	int pipeLRTtoSpider[2*nLrt];
+	int pipeTrace[2];
+	sem_t* semTrace;
 
 	stack_ = stack;
+
+	semTrace = sem_open("spider_trace", O_CREAT, ACCESSPERMS, 1);
+
+	if (pipe2(pipeTrace, O_NONBLOCK) == -1) {
+		perror("pipe");
+		exit(EXIT_FAILURE);
+	}
+
+	printf("Pipe Trace: %d <= %d\n", pipeTrace[0], pipeTrace[1]);
 
 	for(int i=0; i<nLrt; i++){
 		/** Open Pipes */
@@ -111,7 +123,15 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
         	initShMem();
 
         	/** Create LRT */
-        	LinuxLrtCommunicator* lrtCom = CREATE(stack, LinuxLrtCommunicator)(280, pipeSpidertoLRT[2*i], pipeLRTtoSpider[2*i+1], shMem, 10000, stack);
+        	LinuxLrtCommunicator* lrtCom = CREATE(stack, LinuxLrtCommunicator)(
+        			280,
+					pipeSpidertoLRT[2*i],
+					pipeLRTtoSpider[2*i+1],
+					pipeTrace[1],
+					semTrace,
+					shMem,
+					10000,
+					stack);
         	LRT* lrt = CREATE(stack, LRT)(lrtCom);
         	lrt->setFctTbl(fcts, nLrtFcts);
 
@@ -129,12 +149,26 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
     memset(shMem,0,1024*1024);
 
 	/** Initialize LRT and Communicators */
-    LinuxSpiderCommunicator* spiderCom = CREATE(stack, LinuxSpiderCommunicator)(280, 1, stack);
+    LinuxSpiderCommunicator* spiderCom = CREATE(stack, LinuxSpiderCommunicator)(
+    		280,
+			1,
+			semTrace,
+			pipeTrace[1],
+			pipeTrace[0],
+			stack);
 
     for(int i=0; i<nLrt; i++)
     	spiderCom->setLrtCom(i, pipeLRTtoSpider[2*i], pipeSpidertoLRT[2*i+1]);
 
-	LinuxLrtCommunicator* lrtCom = CREATE(stack, LinuxLrtCommunicator)(280, pipeSpidertoLRT[0], pipeLRTtoSpider[1], shMem, 10000, stack);
+	LinuxLrtCommunicator* lrtCom = CREATE(stack, LinuxLrtCommunicator)(
+			280,
+			pipeSpidertoLRT[0],
+			pipeLRTtoSpider[1],
+			pipeTrace[1],
+			semTrace,
+			shMem,
+			10000,
+			stack);
 	LRT* lrt = CREATE(stack, LRT)(lrtCom);
 	lrt->setFctTbl(fcts, nLrtFcts);
 

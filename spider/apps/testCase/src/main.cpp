@@ -43,6 +43,7 @@
 
 int main(int argc, char* argv[]){
 	SpiderConfig cfg;
+	ExecutionStat stat;
 
 	DynStack pisdfStack("PisdfStack");
 	DynStack archiStack("ArchiStack");
@@ -66,17 +67,24 @@ int main(int argc, char* argv[]){
 
 //	try{
 		for(int i=1; i<=3; i++){
+			char path[10];
+			sprintf(path, "test0_%d.xml", i);
+
 			pisdfStack.freeAll();
 			testStack.freeAll();
 
 			PiSDFGraph *topPisdf = initPisdf_test0(archi, &pisdfStack, i);
 			topPisdf->print("pi.gv");
 
+			Platform::get()->rstTime();
+
 			spider_launch(archi, topPisdf);
 
 			test_Test0(topPisdf, spider_getLastSRDAG(), i, &testStack);
 
 			freePisdf_test0(topPisdf, &pisdfStack);
+
+			spider_printGantt(archi, spider_getLastSRDAG(), path, "latex.tex", &stat);
 		}
 
 		for(int i=1; i<=3; i++){

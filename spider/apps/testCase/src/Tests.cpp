@@ -37,13 +37,19 @@
 #include "Tests.h"
 
 #include <cstdio>
+#include <unistd.h>
 
 #define VERBOSE 0
+#define SLEEP 1
+#define SLEEP_TIME 1
 
 void test0_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	static int i=1;
 #if VERBOSE
 	printf("Execute C\n");
+#endif
+#if SLEEP
+	usleep(SLEEP_TIME);
 #endif
 	outParams[0] = i++;
 }
@@ -53,6 +59,9 @@ void test0_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 
 #if VERBOSE
 	printf("Execute A\n");
+#endif
+#if SLEEP
+	usleep(SLEEP_TIME);
 #endif
 
 	out[0] = 1;
@@ -70,6 +79,9 @@ void test0_B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 		printf("%d ", in[i]);
 	}
 	printf("\n");
+#endif
+#if SLEEP
+	usleep(SLEEP_TIME);
 #endif
 
 	memcpy(out, in, N);
@@ -91,6 +103,10 @@ void test0_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Para
 		break;
 	}
 
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
+
 	printf("Test: ");
 	for(int i=0; i<nb; i++){
 		if(in[i] != expected[i]){
@@ -108,6 +124,9 @@ void test1_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute C\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = 1;
 	out[1] = 2;
@@ -122,6 +141,9 @@ void test1_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 
 #if VERBOSE
 	printf("Execute A\n");
+#endif
+#if SLEEP
+	usleep(SLEEP_TIME);
 #endif
 
 	memcpy(out, in, N);
@@ -143,6 +165,10 @@ void test1_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Para
 		break;
 	}
 
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
+
 	printf("Test: ");
 	for(int i=0; i<nb; i++){
 		if(in[i] != expected[i]){
@@ -161,6 +187,9 @@ void test2_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute C\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = 1;
 	outParams[0] = i++;
@@ -172,6 +201,9 @@ void test2_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 
 #if VERBOSE
 	printf("Execute A\n");
+#endif
+#if SLEEP
+	usleep(SLEEP_TIME);
 #endif
 
 	for(int i=0; i<N; i++)
@@ -186,6 +218,9 @@ void test2_B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute B\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = in0[0] + in1[0];
 }
@@ -196,6 +231,10 @@ void test2_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Para
 
 	char expected[2] = {2,3};
 	int nb = N;
+
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	printf("Test: ");
 	for(int i=0; i<nb; i++){
@@ -213,6 +252,9 @@ void test3_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute A\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = 1;
 	out[1] = 2;
@@ -227,6 +269,9 @@ void test3_B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute B\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = in[0]+1;
 }
@@ -238,6 +283,9 @@ void test3_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute C\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = in[0]+2;
 }
@@ -247,6 +295,10 @@ void test3_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Para
 
 	char expected[4] = {2,4,4,6};
 	int nb = 4;
+
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	printf("Test: ");
 	for(int i=0; i<nb; i++){
@@ -265,6 +317,9 @@ void test4_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute A\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = 1;
 	out[1] = 2;
@@ -279,6 +334,9 @@ void test4_B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute B\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = in[0]+1;
 }
@@ -290,6 +348,9 @@ void test4_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute C\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = in[0]+2;
 }
@@ -299,6 +360,10 @@ void test4_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Para
 
 	char expected[4] = {2,3,5,6};
 	int nb = 4;
+
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	printf("Test: ");
 	for(int i=0; i<nb; i++){
@@ -316,6 +381,9 @@ void test5_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute A\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = 1;
 }
@@ -326,6 +394,9 @@ void test5_B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 
 #if VERBOSE
 	printf("Execute B\n");
+#endif
+#if SLEEP
+	usleep(SLEEP_TIME);
 #endif
 
 	out[0] = in[0]+1;
@@ -338,6 +409,9 @@ void test5_H(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute C\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	for(int i=0; i<4; i++){
 		out[i] = in[i]+1;
@@ -349,6 +423,10 @@ void test5_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Para
 
 	char expected[4] = {3,3};
 	int nb = 2;
+
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	printf("Test: ");
 	for(int i=0; i<nb; i++){
@@ -366,6 +444,9 @@ void test6_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute A\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = 1;
 	out[1] = 2;
@@ -378,6 +459,10 @@ void test6_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Para
 
 	char expected[4] = {2,3,4,5};
 	int nb = 4;
+
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	printf("Test: ");
 	for(int i=0; i<nb; i++){
@@ -396,6 +481,9 @@ void test6_H(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute C\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = in[0]+1;
 }
@@ -406,6 +494,9 @@ void test7_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 
 #if VERBOSE
 	printf("Execute A\n");
+#endif
+#if SLEEP
+	usleep(SLEEP_TIME);
 #endif
 
 	out[0] = 1;
@@ -421,6 +512,9 @@ void test7_B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute B\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = in[0]+2;
 	out[1] = in[1]+2;
@@ -432,6 +526,9 @@ void test7_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 
 #if VERBOSE
 	printf("Execute C\n");
+#endif
+#if SLEEP
+	usleep(SLEEP_TIME);
 #endif
 
 	out[0] = in[0]+1;
@@ -445,6 +542,9 @@ void test7_H(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute H\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = in0[0] + in1[0];
 }
@@ -454,6 +554,10 @@ void test7_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Para
 
 	char expected[4] = {5,9,4,8};
 	int nb = 4;
+
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	printf("Test: ");
 	for(int i=0; i<nb; i++){
@@ -471,6 +575,9 @@ void test8_A(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute A\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = 1;
 }
@@ -482,6 +589,9 @@ void test8_B(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute B\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = in[0]+2;
 }
@@ -492,6 +602,9 @@ void test8_C(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 
 #if VERBOSE
 	printf("Execute C\n");
+#endif
+#if SLEEP
+	usleep(SLEEP_TIME);
 #endif
 
 	out[0] = 2;
@@ -507,6 +620,9 @@ void test8_H(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 #if VERBOSE
 	printf("Execute H\n");
 #endif
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	out[0] = in0[0] + in1[0];
 }
@@ -514,6 +630,10 @@ void test8_H(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 void test8_Check(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	char* in0 = (char*)inputFIFOs[0];
 	char* in1 = (char*)inputFIFOs[0];
+
+#if SLEEP
+	usleep(SLEEP_TIME);
+#endif
 
 	printf("Test: ");
 	if(		in0[0] == 3

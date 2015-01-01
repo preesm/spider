@@ -43,7 +43,12 @@ typedef enum{
 	MSG_START_JOB=1,
 	MSG_PARAM_VALUE=2,
 	MSG_CLEAR_TIME=3
-}MsgType;
+}CtrlMsgType;
+
+typedef enum{
+	TRACE_JOB=1,
+	TRACE_SPIDER=2,
+}TraceMsgType;
 
 typedef struct {
 	unsigned long msgIx;
@@ -71,11 +76,13 @@ typedef struct __attribute__ ((__packed__)){
 }StartJobMsg;
 
 typedef struct __attribute__ ((__packed__)){
+	unsigned long msgIx;
+	unsigned long spiderTask;
 	unsigned long srdagIx;
 	unsigned long lrtIx;
 	Time start;
-	Time stop;
-}JobTraceMsg;
+	Time end;
+}TraceMsg;
 
 typedef struct __attribute__ ((__packed__)){
 	unsigned long id:32;

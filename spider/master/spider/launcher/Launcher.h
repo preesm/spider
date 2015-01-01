@@ -47,10 +47,14 @@ public:
 	void launchVertex(SRDAGVertex* vertex, int slave);
 	void resolveParams(Archi* archi, SRDAGGraph* topDag);
 
+	int getNLaunched();
+	void rstNLaunched();
+
 protected:
 	Launcher();
 
 private:
+	int nLaunched_;
 	int curNParam_;
 	static Launcher instance_;
 

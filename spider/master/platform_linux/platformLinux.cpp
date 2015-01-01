@@ -85,9 +85,12 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
 	int pipeSpidertoLRT[2*nLrt];
 	int pipeLRTtoSpider[2*nLrt];
 	int pipeTrace[2];
+	int cpIds[nLrt];
 	sem_t* semTrace;
 
 	stack_ = stack;
+
+	cpIds[0] = getpid();
 
 	semTrace = sem_open("spider_trace", O_CREAT, ACCESSPERMS, 1);
 
@@ -132,13 +135,16 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
 					shMem,
 					10000,
 					stack);
-        	LRT* lrt = CREATE(stack, LRT)(lrtCom);
+        	LRT* lrt = CREATE(stack, LRT)(i, lrtCom);
         	lrt->setFctTbl(fcts, nLrtFcts);
+
+        	Platform::set(this);
+        	this->rstTime();
 
         	/** launch LRT */
         	lrt->runInfinitly();
         } else { /* Parent */
-
+        	cpIds[i] = cpid;
         }
 	}
 
@@ -151,7 +157,7 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
 	/** Initialize LRT and Communicators */
     LinuxSpiderCommunicator* spiderCom = CREATE(stack, LinuxSpiderCommunicator)(
     		280,
-			1,
+			nLrt,
 			semTrace,
 			pipeTrace[1],
 			pipeTrace[0],
@@ -169,7 +175,7 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
 			shMem,
 			10000,
 			stack);
-	LRT* lrt = CREATE(stack, LRT)(lrtCom);
+	LRT* lrt = CREATE(stack, LRT)(0, lrtCom);
 	lrt->setFctTbl(fcts, nLrtFcts);
 
 	setLrt(lrt);
@@ -185,10 +191,12 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
 	archi_->setPETypeSendSpeed(0, 1, 10);
 	archi_->setPEType(0, 0);
 
-	for(int i=0; i<nLrt; i++){
-		char name[5];
-		sprintf(name, "PE%d", nLrt);
-		archi_->setName(0, name);
+	char name[10];
+	sprintf(name, "PID %d (Spider)", cpIds[0]);
+	archi_->setName(0, name);
+	for(int i=1; i<nLrt; i++){
+		sprintf(name, "PID %d (LRT %d)", cpIds[i], i);
+		archi_->setName(i, name);
 	}
 
 	Platform::set(this);
@@ -235,7 +243,6 @@ void PlatformLinux::rstTime(){
 }
 
 Time PlatformLinux::getTime(){
-	return 0;
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	long long val = ts.tv_sec - start.tv_sec;

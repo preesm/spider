@@ -52,6 +52,7 @@ Launcher Launcher::instance_;
 
 Launcher::Launcher(){
 	curNParam_ = 0;
+	nLaunched_ = 0;
 }
 
 void Launcher::launchVertex(SRDAGVertex* vertex, int slave){
@@ -61,6 +62,7 @@ void Launcher::launchVertex(SRDAGVertex* vertex, int slave){
 		nbParamToRecv += ((PiSDFConfigVertex*)(vertex->getReference()))->getNbRelatedParams();
 #endif
 	send_StartJobMsg(slave, vertex);
+	nLaunched_++;
 	vertex->setState(SRDAG_RUN);
 }
 
@@ -197,4 +199,12 @@ void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 		}
 		slave = (slave+1)%archi->getNPE();
 	}
+}
+
+int Launcher::getNLaunched(){
+	return nLaunched_;
+}
+
+void Launcher::rstNLaunched(){
+	nLaunched_ = 0;
 }

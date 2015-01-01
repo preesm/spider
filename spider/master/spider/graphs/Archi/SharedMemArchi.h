@@ -39,6 +39,7 @@
 
 #include "Archi.h"
 #include <tools/Stack.h>
+#include <cstring>
 
 class SharedMemArchi: public Archi {
 public:
@@ -65,7 +66,7 @@ private:
 	int nPE_;
 	int nPEType_;
 	int* peType_;
-	const char ** peName_;
+	char ** peName_;
 	float* peTypeASend_;
 	float* peTypeBSend_;
 	float* peTypeARecv_;
@@ -100,7 +101,10 @@ inline void SharedMemArchi::setPETypeRecvSpeed(int type, float a, float b){
 	peTypeBRecv_[type] = b;
 }
 inline void SharedMemArchi::setName(int pe, const char* name){
-	peName_[pe] = name;
+	int size = strlen(name)+1;
+	char* newName = CREATE_MUL(stack_, size, char);
+	peName_[pe] = newName;
+	strcpy(newName, name);
 }
 inline void SharedMemArchi::setPEType(int pe, int type){
 	peType_[pe] = type;

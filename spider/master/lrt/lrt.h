@@ -48,7 +48,7 @@ typedef void (*lrtFct)(
 
 class LRT{
 public:
-	LRT(LrtCommunicator* com);
+	LRT(int ix, LrtCommunicator* com);
 	virtual ~LRT();
 
 	void setFctTbl(const lrtFct fct[], int nFct);
@@ -60,8 +60,10 @@ public:
 	void runInfinitly();
 
 protected:
+	void sendTrace(int srdagIx, Time start, Time end);
 
 private:
+	int ix_;
 	int nFct_;
 	const lrtFct* fcts_;
 	LrtCommunicator* com_;

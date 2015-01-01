@@ -60,6 +60,8 @@
 #include <SpiderCommunicator.h>
 #include <lrt.h>
 
+#define MAX_STATS_VERTICES 1000
+
 typedef struct{
 	StackType type;
 	const char* name;
@@ -79,6 +81,30 @@ typedef struct{
 	StackConfig transfoStack;
 } SpiderConfig;
 
+typedef struct{
+	Time globalEndTime;
+	Time endTime;
+
+	Time taskOrderingTime;
+	Time mappingTime;
+	Time graphTransfoTime;
+
+	Time actorTimes[MAX_STATS_VERTICES];
+	Time actorIterations[MAX_STATS_VERTICES];
+	PiSDFVertex* actors[MAX_STATS_VERTICES];
+	int nbActor;
+
+	Time explodeTime;
+	Time implodeTime;
+	Time roundBufferTime;
+	Time broadcastTime;
+
+	int SRDAGVertices;
+	int SRDAGEdges;
+
+	Time latencies;
+}ExecutionStat;
+
 void spider_init(SpiderConfig cfg);
 void spider_launch(Archi* archi, PiSDFGraph* pisdf);
 void spider_free();
@@ -87,6 +113,8 @@ void spider_setMemAllocType(MemAllocType type, int start, int size);
 void spider_setSchedulerType(SchedulerType type);
 void spider_setSrdagStack(StackConfig cfg);
 void spider_setTransfoStack(StackConfig cfg);
+
+void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, const char* latexPath, ExecutionStat* stat);
 
 SRDAGGraph* spider_getLastSRDAG();
 

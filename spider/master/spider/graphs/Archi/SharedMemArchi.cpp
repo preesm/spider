@@ -42,7 +42,7 @@ SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType) {
 	nPE_ = nPE;
 	nPEType_ = nPEType;
 	peType_ = CREATE_MUL(stack, nPE_, int);
-	peName_ = CREATE_MUL(stack, nPE_, const char*);
+	peName_ = CREATE_MUL(stack, nPE_, char*);
 	peTypeASend_ = CREATE_MUL(stack, nPEType_, float);
 	peTypeBSend_ = CREATE_MUL(stack, nPEType_, float);
 	peTypeARecv_ = CREATE_MUL(stack, nPEType_, float);
@@ -50,6 +50,9 @@ SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType) {
 }
 
 SharedMemArchi::~SharedMemArchi() {
+	for(int i=0; i<nPE_; i++)
+		stack_->free(peName_[i]);
+
 	/** Free allocated arrays **/
 	stack_->free(peType_);
 	stack_->free(peName_);

@@ -116,6 +116,8 @@ void LinuxSpiderCommunicator::ctrl_end_recv(int lrtIx){
 }
 
 void* LinuxSpiderCommunicator::trace_start_send(int size){
+	if(curMsgSizeSend_)
+		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
 	curMsgSizeSend_ = size;
 	return msgBufferSend_;
 }
@@ -124,6 +126,7 @@ void LinuxSpiderCommunicator::trace_end_send(int size){
 	unsigned long s = curMsgSizeSend_;
 
 	int err = sem_wait(semTrace_);
+
 	if(err != 0){
 		perror("LinuxLrtCommunicator::trace_end_send");
 		exit(-1);
@@ -131,6 +134,9 @@ void LinuxSpiderCommunicator::trace_end_send(int size){
 
 	write(fTraceWr_, &s, sizeof(unsigned long));
 	write(fTraceWr_, msgBufferSend_, curMsgSizeSend_);
+
+	sem_post(semTrace_);
+
 	curMsgSizeSend_ = 0;
 }
 

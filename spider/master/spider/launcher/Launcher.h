@@ -40,12 +40,16 @@
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/Archi/Archi.h>
 
+#include <Message.h>
+
 class Launcher {
 public:
 	static Launcher* get();
 
 	void launchVertex(SRDAGVertex* vertex, int slave);
 	void resolveParams(Archi* archi, SRDAGGraph* topDag);
+
+	void sendTraceSpider(TraceSpiderType type, Time start, Time end);
 
 	int getNLaunched();
 	void rstNLaunched();

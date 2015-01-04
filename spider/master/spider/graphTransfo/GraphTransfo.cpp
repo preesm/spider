@@ -148,6 +148,8 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 	/* Look for hierrachical actor in topDag */
 
+	spider_startMonitoring();
+
 	do{
 		SRDAGVertex* nextHierVx = getNextHierVx(topSrdag);
 
@@ -186,21 +188,33 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 			/* Find next hierarchical vertex */
 			nextHierVx = getNextHierVx(topSrdag);
+
 		}while(nextHierVx);
 
 		topSrdag->updateState();
 
+		spider_endMonitoring(TRACE_SPIDER_GRAPH);
+
 //		SRDAGWrite(topDag, "topDag_ca.gv", DataRates);
 
 		/* Schedule and launch execution */
+		spider_startMonitoring();
 		memAlloc->alloc(topSrdag);
+		spider_endMonitoring(TRACE_SPIDER_ALLOC);
+
+		spider_startMonitoring();
 		scheduler->schedule(topSrdag, schedule, archi, transfoSTack);
+		spider_endMonitoring(TRACE_SPIDER_SCHED);
+
 		getLrt()->runUntilNoMoreJobs();
 
 		/* Resolve params must be done by itself */
 		Launcher::get()->resolveParams(archi, topSrdag);
 
+		spider_startMonitoring();
+
 		while(! jobQueue.isEmpty()){
+
 			/* Pop job from queue */
 			transfoJob* job = jobQueue.pop();
 
@@ -222,6 +236,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 			transfoSTack->free(brv);
 			transfoSTack->free(job);
+
 		}
 
 //        printf("Finish one iter\n");
@@ -229,11 +244,18 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 	topSrdag->updateState();
 
+	spider_endMonitoring(TRACE_SPIDER_GRAPH);
+
 	topSrdag->print("tmp.gv");
 
 	/* Schedule and launch execution */
+	spider_startMonitoring();
 	memAlloc->alloc(topSrdag);
+	spider_endMonitoring(TRACE_SPIDER_ALLOC);
+
+	spider_startMonitoring();
 	scheduler->schedule(topSrdag, schedule, archi, transfoSTack);
+	spider_endMonitoring(TRACE_SPIDER_SCHED);
 
 	getLrt()->runUntilNoMoreJobs();
 

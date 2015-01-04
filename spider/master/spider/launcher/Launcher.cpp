@@ -201,6 +201,19 @@ void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 	}
 }
 
+void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end){
+	TraceMsg* msgTrace = (TraceMsg*) getSpiderCommunicator()->trace_start_send(sizeof(TraceMsg));
+
+	msgTrace->msgIx = TRACE_SPIDER;
+	msgTrace->spiderTask = type;
+	msgTrace->start = start;
+	msgTrace->end = end;
+	msgTrace->lrtIx = 0;
+
+	getSpiderCommunicator()->trace_end_send(sizeof(TraceMsgType));
+	nLaunched_++;
+}
+
 int Launcher::getNLaunched(){
 	return nLaunched_;
 }

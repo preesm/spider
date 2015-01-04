@@ -50,6 +50,12 @@ typedef enum{
 	TRACE_SPIDER=2,
 }TraceMsgType;
 
+typedef enum{
+	TRACE_SPIDER_GRAPH=1,
+	TRACE_SPIDER_ALLOC=2,
+	TRACE_SPIDER_SCHED=3,
+}TraceSpiderType;
+
 typedef struct {
 	unsigned long msgIx;
 //	unsigned char msgIx:2;
@@ -98,7 +104,7 @@ typedef struct __attribute__ ((__packed__)){
 //	unsigned long srdagIx:30;
 }ParamValueMsg;
 
-typedef struct __attribute__ ((__packed__)){
+typedef struct __attribute__ ((__packed__)) ClearTimeMsg{
 	unsigned long msgIx;
 //	unsigned char msgIx:2;
 //	unsigned char reserved:6;

@@ -114,6 +114,9 @@ void spider_setSchedulerType(SchedulerType type);
 void spider_setSrdagStack(StackConfig cfg);
 void spider_setTransfoStack(StackConfig cfg);
 
+void spider_startMonitoring();
+void spider_endMonitoring(TraceSpiderType type);
+
 void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, const char* latexPath, ExecutionStat* stat);
 
 SRDAGGraph* spider_getLastSRDAG();

@@ -137,6 +137,21 @@ SRDAGGraph* spider_getLastSRDAG(){
 	return srdag;
 }
 
+static Time start = 0;
+
+void spider_startMonitoring(){
+	if(start != 0)
+		throw "Try to monitor 2 different things in the same time";
+	start = Platform::get()->getTime();
+}
+
+void spider_endMonitoring(TraceSpiderType type){
+	if(start == 0)
+		throw "End monitor with no starting point";
+	Launcher::get()->sendTraceSpider(type, start, Platform::get()->getTime());
+	start = 0;
+}
+
 void setSpiderCommunicator(SpiderCommunicator* com){
 	spiderCom = com;
 }
@@ -207,6 +222,13 @@ static inline void printGrantt_SRDAGVertex(int file, Archi* archi, SRDAGVertex* 
 
 }
 
+static const char* spiderTaskName[4] = {
+		"",
+		"Graph handling",
+		"Memory Allocation",
+		"Task Scheduling"
+};
+
 void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, const char* latexPath, ExecutionStat* stat){
 	int ganttFile = Platform::get()->fopen(ganttPath);
 	int latexFile = Platform::get()->fopen(latexPath);
@@ -232,12 +254,22 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 							traceMsg->end,
 							traceMsg->lrtIx);
 					getSpiderCommunicator()->trace_end_recv();
-					n--;
 					break;
+				case TRACE_SPIDER:{
+					static int i=0;
+					Platform::get()->fprintf(ganttFile, "\t<event\n");
+					Platform::get()->fprintf(ganttFile, "\t\tstart=\"%u\"\n", 	traceMsg->start);
+					Platform::get()->fprintf(ganttFile, "\t\tend=\"%u\"\n",		traceMsg->end);
+					Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n", 	spiderTaskName[traceMsg->spiderTask]);
+					Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi->getPEName(traceMsg->lrtIx));
+					Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", 	regenerateColor(i++));
+					Platform::get()->fprintf(ganttFile, "\t\t>Step_%d.</event>\n", spiderTaskName[traceMsg->spiderTask]);
+					break;}
 				default:
 					throw "Unhandled trace msg";
 					break;
 			}
+			n--;
 		}
 	}
 	Launcher::get()->rstNLaunched();

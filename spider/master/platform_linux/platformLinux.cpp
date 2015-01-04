@@ -46,6 +46,7 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 #include <cstring>
+#include <sched.h>
 
 #include <tools/Stack.h>
 
@@ -78,6 +79,19 @@ static void initShMem(){
     if ((shMem = (void*)shmat(shmid, NULL, 0)) == (void *) -1) {
         perror("shmat");
         exit(1);
+    }
+}
+
+static void setAffinity(int cpuId){
+    cpu_set_t mask;
+    int status;
+
+    CPU_ZERO(&mask);
+    CPU_SET(cpuId, &mask);
+    status = sched_setaffinity(0, sizeof(mask), &mask);
+    if (status != 0)
+    {
+        perror("sched_setaffinity");
     }
 }
 
@@ -136,6 +150,7 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
 					10000,
 					stack);
         	LRT* lrt = CREATE(stack, LRT)(i, lrtCom);
+        	setAffinity(i);
         	lrt->setFctTbl(fcts, nLrtFcts);
 
         	Platform::set(this);
@@ -175,6 +190,7 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
 			10000,
 			stack);
 	LRT* lrt = CREATE(stack, LRT)(0, lrtCom);
+	setAffinity(0);
 	lrt->setFctTbl(fcts, nLrtFcts);
 
 	setLrt(lrt);

@@ -139,7 +139,6 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
         	lrt->setFctTbl(fcts, nLrtFcts);
 
         	Platform::set(this);
-        	this->rstTime();
 
         	/** launch LRT */
         	lrt->runInfinitly();
@@ -238,8 +237,24 @@ void PlatformLinux::fclose(int id){
 }
 
 /** Time Handling */
+void PlatformLinux::rstTime(ClearTimeMsg* msg){
+	struct timespec* ts = (struct timespec*)(msg+1);
+	start = *ts;
+}
+
 void PlatformLinux::rstTime(){
 	clock_gettime(CLOCK_MONOTONIC, &start);
+
+	for(int lrt=1; lrt<archi_->getNPE(); lrt++){
+		int size = sizeof(ClearTimeMsg)+sizeof(struct timespec);
+		ClearTimeMsg* msg = (ClearTimeMsg*) getSpiderCommunicator()->ctrl_start_send(lrt, size);
+		struct timespec* ts = (struct timespec*)(msg+1);
+
+		msg->msgIx = MSG_CLEAR_TIME;
+		*ts = start;
+
+		getSpiderCommunicator()->ctrl_end_send(lrt, size);
+	}
 }
 
 Time PlatformLinux::getTime(){

@@ -132,9 +132,10 @@ int LRT::runOneJob(){
 			}
 			break;
 		}
-		case MSG_CLEAR_TIME:
-			Platform::get()->rstTime();
-			break;
+		case MSG_CLEAR_TIME:{
+			ClearTimeMsg* timeMsg = (ClearTimeMsg*) msg;
+			Platform::get()->rstTime(timeMsg);
+			break;}
 		case MSG_PARAM_VALUE:
 		default:
 			throw "Unexpected message received\n";

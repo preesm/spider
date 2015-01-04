@@ -34,35 +34,10 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PLATFORM_LINUX_H
-#define PLATFORM_LINUX_H
+#ifndef TYPE_H
+#define TYPE_H
 
-#include <platform.h>
-#include <tools/Stack.h>
-#include <graphs/Archi/Archi.h>
-#include <graphs/Archi/SharedMemArchi.h>
-#include <lrt.h>
+typedef unsigned long 	Time;
+typedef long 			Param;
 
-class PlatformLinux: public Platform{
-public:
-	/** File Handling */
-	virtual int fopen(const char* name);
-	virtual void fprintf(int id, const char* fmt, ...);
-	virtual void fclose(int id);
-
-	/** Time Handling */
-	virtual void rstTime();
-	virtual void rstTime(ClearTimeMsg* msg);
-	virtual Time getTime();
-
-	SharedMemArchi* getArchi();
-
-	PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts);
-	virtual ~PlatformLinux();
-private:
-
-	Stack* stack_;
-	SharedMemArchi* archi_;
-};
-
-#endif/*PLATFORM_LINUX_H*/
+#endif/*TYPE_H*/

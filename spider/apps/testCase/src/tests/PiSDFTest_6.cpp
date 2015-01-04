@@ -135,7 +135,7 @@ PiSDFGraph* test6(Archi* archi, Stack* stack){
 	// Timings
 	vxA->isExecutableOnAllPE();
 	vxA->setTimingOnType(0, "10", stack);
-	vxCheck->isExecutableOnAllPE();
+	vxCheck->isExecutableOnPE(0);
 	vxCheck->setTimingOnType(0, "10", stack);
 
 	// Subgraphs

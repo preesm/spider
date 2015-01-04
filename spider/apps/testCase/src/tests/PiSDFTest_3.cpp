@@ -122,7 +122,7 @@ PiSDFGraph* test3(Archi* archi, Stack* stack){
 	vxB->setTimingOnType(0, "10", stack);
 	vxC->isExecutableOnAllPE();
 	vxC->setTimingOnType(0, "10", stack);
-	vxCheck->isExecutableOnAllPE();
+	vxCheck->isExecutableOnPE(0);
 	vxCheck->setTimingOnType(0, "10", stack);
 
 	// Subgraphs

@@ -45,6 +45,8 @@
 #include <time.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <cstring>
 #include <sched.h>
 
@@ -219,6 +221,17 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
 }
 
 PlatformLinux::~PlatformLinux(){
+	for(int lrt=1; lrt<archi_->getNPE(); lrt++){
+		int size = sizeof(StopLrtMsg);
+		StopLrtMsg* msg = (StopLrtMsg*) getSpiderCommunicator()->ctrl_start_send(lrt, size);
+
+		msg->msgIx = MSG_STOP_LRT;
+
+		getSpiderCommunicator()->ctrl_end_send(lrt, size);
+	}
+
+	wait(0);
+
 	LRT* lrt = getLrt();
 	LinuxSpiderCommunicator* spiderCom = (LinuxSpiderCommunicator*)getSpiderCommunicator();
 	LinuxLrtCommunicator* lrtCom = (LinuxLrtCommunicator*)lrt->getCom();

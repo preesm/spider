@@ -48,7 +48,7 @@ public:
 	virtual void fclose(int id) = 0;
 
 	/** Time Handling */
-	virtual void rstTime(struct ClearTimeMsg* msg) = 0;
+	virtual void rstTime(ClearTimeMsg* msg) = 0;
 	virtual void rstTime() = 0;
 	virtual Time getTime() = 0;
 

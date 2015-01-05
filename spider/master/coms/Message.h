@@ -37,12 +37,13 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-#include <platform.h>
+#include <type.h>
 
 typedef enum{
 	MSG_START_JOB=1,
 	MSG_PARAM_VALUE=2,
-	MSG_CLEAR_TIME=3
+	MSG_CLEAR_TIME=3,
+	MSG_STOP_LRT=4
 }CtrlMsgType;
 
 typedef enum{
@@ -104,10 +105,16 @@ typedef struct __attribute__ ((__packed__)){
 //	unsigned long srdagIx:30;
 }ParamValueMsg;
 
-typedef struct __attribute__ ((__packed__)) ClearTimeMsg{
+typedef struct __attribute__ ((__packed__)){
 	unsigned long msgIx;
 //	unsigned char msgIx:2;
 //	unsigned char reserved:6;
 }ClearTimeMsg;
+
+typedef struct __attribute__ ((__packed__)){
+	unsigned long msgIx;
+//	unsigned char msgIx:2;
+//	unsigned char reserved:6;
+}StopLrtMsg;
 
 #endif/*MESSAGE_H*/

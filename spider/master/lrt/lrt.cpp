@@ -38,6 +38,7 @@
 #include <Message.h>
 
 #include <cstring>
+#include <cstdlib>
 
 #include "specialActors/specialActors.h"
 
@@ -136,6 +137,9 @@ int LRT::runOneJob(){
 			ClearTimeMsg* timeMsg = (ClearTimeMsg*) msg;
 			Platform::get()->rstTime(timeMsg);
 			break;}
+		case MSG_STOP_LRT:
+			exit(EXIT_SUCCESS);
+			break;
 		case MSG_PARAM_VALUE:
 		default:
 			throw "Unexpected message received\n";

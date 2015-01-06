@@ -52,6 +52,8 @@ void DummyMemAlloc::alloc(SRDAGGraph* graph){
 			for(int j=0; j<vertex->getNConnectedOutEdge(); j++){
 				SRDAGEdge* edge = vertex->getOutEdge(j);
 				if(edge->getAlloc() == -1){
+					if(currentMem_+edge->getRate() > memStart_ + memSize_)
+						throw "Not Enough Shared Memory\n";
 					edge->setAlloc(currentMem_);
 					edge->setAllocIx(nbFifos_++);
 					currentMem_ += edge->getRate();

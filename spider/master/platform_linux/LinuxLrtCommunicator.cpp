@@ -41,6 +41,7 @@
 #include <semaphore.h>
 #include <cstdlib>
 #include <cstdio>
+#include <platform.h>
 
 LinuxLrtCommunicator::LinuxLrtCommunicator(
 		int msgSizeMax,
@@ -149,9 +150,9 @@ long LinuxLrtCommunicator::data_recv(Fifo* f){
 	volatile unsigned long *mutex = fifos_ + f->id;
 	while(*mutex < f->ntoken);
 	*mutex -= f->ntoken;
-	return (long)(shMem_+f->alloc);
+	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
 }
 
 long LinuxLrtCommunicator::data_start_send(Fifo* f){
-	return (long)(shMem_+f->alloc);
+	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
 }

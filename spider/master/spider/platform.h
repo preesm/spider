@@ -47,6 +47,9 @@ public:
 	virtual void fprintf(int id, const char* fmt, ...) = 0;
 	virtual void fclose(int id) = 0;
 
+	/** Shared Memory Handling */
+	virtual void* virt_to_phy(void* address) = 0;
+
 	/** Time Handling */
 	virtual void rstTime(ClearTimeMsg* msg) = 0;
 	virtual void rstTime() = 0;

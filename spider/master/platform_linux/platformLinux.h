@@ -50,6 +50,9 @@ public:
 	virtual void fprintf(int id, const char* fmt, ...);
 	virtual void fclose(int id);
 
+	/** Shared Memory Handling */
+	virtual void* virt_to_phy(void* address);
+
 	/** Time Handling */
 	virtual void rstTime();
 	virtual void rstTime(ClearTimeMsg* msg);
@@ -57,7 +60,7 @@ public:
 
 	SharedMemArchi* getArchi();
 
-	PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts);
+	PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts);
 	virtual ~PlatformLinux();
 private:
 

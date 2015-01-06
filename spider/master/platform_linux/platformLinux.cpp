@@ -66,7 +66,7 @@ static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
 static void* shMem;
 
-static void initShMem(){
+static void initShMem(int shMemSize){
 	/** Open Shared Memory */
     int shmid;
     key_t key = SHARED_MEM_KEY;
@@ -74,7 +74,7 @@ static void initShMem(){
 	printf("Creating shared memory...\n");
 
     /** Get the segment. */
-    if ((shmid = shmget(key, 1024*1024, IPC_CREAT | 0666)) < 0) {
+    if ((shmid = shmget(key, shMemSize, IPC_CREAT | 0666)) < 0) {
         perror("shmget");
         exit(1);
     }
@@ -99,7 +99,7 @@ static void setAffinity(int cpuId){
     }
 }
 
-PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts){
+PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts){
 	int pipeSpidertoLRT[2*nLrt];
 	int pipeLRTtoSpider[2*nLrt];
 	int pipeTrace[2];
@@ -141,7 +141,7 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
         	/** Close unused pipe */
 
         	/** Initialize shared memory */
-        	initShMem();
+        	initShMem(shMemSize);
 
         	/** Create LRT */
         	LinuxLrtCommunicator* lrtCom = CREATE(stack, LinuxLrtCommunicator)(
@@ -169,8 +169,8 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
 	/** Close unused pipe */
 
 	/** Initialize shared memory */
-	initShMem();
-    memset(shMem,0,1024*1024);
+	initShMem(shMemSize);
+    memset(shMem,0,shMemSize);
 
 	/** Initialize LRT and Communicators */
     LinuxSpiderCommunicator* spiderCom = CREATE(stack, LinuxSpiderCommunicator)(
@@ -266,6 +266,10 @@ void PlatformLinux::fprintf(int id, const char* fmt, ...){
 }
 void PlatformLinux::fclose(int id){
 	close(id);
+}
+
+void* PlatformLinux::virt_to_phy(void* address){
+	return (void*)((long)shMem + (long)address);
 }
 
 /** Time Handling */

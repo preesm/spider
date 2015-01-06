@@ -137,24 +137,16 @@ inline int PiSDFVertex::getNOutParam() const{
 	return nOutParam_;
 }
 inline const PiSDFParam* PiSDFVertex::getInParam(int ix) const{
-#if	DEBUG
 	if(ix < nInParam_ && ix >= 0)
-#endif
 		return inParams_[ix];
-#if	DEBUG
 	else
 		throw "PiSDFVertex: Bad ix in getInParam";
-#endif
 }
 inline const PiSDFParam* PiSDFVertex::getOutParam(int ix) const{
-#if	DEBUG
 	if(ix < nOutParam_ && ix >= 0)
-#endif
 		return outParams_[ix];
-#if	DEBUG
 	else
 		throw "PiSDFVertex: Bad ix in getOutParam";
-#endif
 }
 inline const PiSDFParam* const * PiSDFVertex::getInParams() const{
 	return inParams_;
@@ -171,67 +163,51 @@ inline int PiSDFVertex::getNOutEdge() const{
 	return nOutEdge_;
 }
 inline PiSDFEdge* PiSDFVertex::getInEdge(int ix){
-#if	DEBUG
 	if(ix < nInEdge_ && ix >= 0)
-#endif
 		return inEdges_[ix];
-#if	DEBUG
 	else
 		throw "PiSDFVertex: Bad ix in getInEdge";
-#endif
 }
 inline PiSDFEdge* PiSDFVertex::getOutEdge(int ix){
-#if	DEBUG
 	if(ix < nOutEdge_ && ix >= 0)
-#endif
 		return outEdges_[ix];
-#if	DEBUG
 	else
 		throw "PiSDFVertex: Bad ix in getOutEdge";
-#endif
 }
 
 /** Connect Fcts */
 inline void PiSDFVertex::connectInEdge(int ix, PiSDFEdge* edge){
-#if	DEBUG
 	if(ix >= nInEdge_ || ix < 0)
 		throw "PiSDFVertex: Bad ix in connectInEdge";
 	else if(inEdges_[ix] != 0)
 		throw "PiSDFVertex: Try to erase already connected input edge";
 	else
-#endif
 		inEdges_[ix] = edge;
 }
 inline void PiSDFVertex::connectOutEdge(int ix, PiSDFEdge* edge){
-#if	DEBUG
 	if(ix >= nOutEdge_ || ix < 0)
 		throw "PiSDFVertex: Bad ix in connectOutEdge";
 	else if(outEdges_[ix] != 0)
 		throw "PiSDFVertex: Try to erase already connected output edge";
 	else
-#endif
 		outEdges_[ix] = edge;
 }
 
 /** Add Param Fcts */
 inline void PiSDFVertex::addInParam(int ix, PiSDFParam* param){
-#if	DEBUG
 	if(ix >= nInParam_ || ix < 0)
 		throw "PiSDFVertex: Bad ix in addInParam";
 	else if(inParams_[ix] != 0)
 		throw "PiSDFVertex: Try to erase already connected input param";
 	else
-#endif
 		inParams_[ix] = param;
 }
 inline void PiSDFVertex::addOutParam(int ix, PiSDFParam* param){
-#if	DEBUG
 	if(ix >= nOutParam_ || ix < 0)
 		throw "PiSDFVertex: Bad ix in addOutParam";
 	else if(outParams_[ix] != 0)
 		throw "PiSDFVertex: Try to erase already connected output param";
 	else
-#endif
 		outParams_[ix] = param;
 }
 
@@ -244,6 +220,8 @@ inline int PiSDFVertex::getTypeId() const{
 }
 inline const char* PiSDFVertex::getName() const{
 	switch(subType_){
+	case PISDF_SUBTYPE_INPUT_IF:
+	case PISDF_SUBTYPE_OUTPUT_IF:
 	case PISDF_SUBTYPE_NORMAL:
 		return name_;
 	case PISDF_SUBTYPE_BROADCAST:
@@ -252,9 +230,6 @@ inline const char* PiSDFVertex::getName() const{
 		return "Fork";
 	case PISDF_SUBTYPE_JOIN:
 		return "Join";
-	case PISDF_SUBTYPE_INPUT_IF:
-	case PISDF_SUBTYPE_OUTPUT_IF:
-		return "Interface";
 	}
 }
 inline int PiSDFVertex::getFctId() const{

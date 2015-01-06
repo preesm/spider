@@ -304,22 +304,22 @@ void PiSDFGraph::print(const char *path){
 	Platform::get()->fprintf(file, "\n\t# Configs\n");
 	for(int i=0; i<configs_.getN(); i++){
 		PiSDFVertex *config = configs_[i];
-		Platform::get()->fprintf(file, "\t%s [shape=doubleoctagon,label=\"%s\"];\n",
-				config->getName(),
+		Platform::get()->fprintf(file, "\t%d [shape=doubleoctagon,label=\"%s\"];\n",
+				config->getId(),
 				config->getName());
 
 		// Drawing lines : vertex -> parameters.
 		for (int j = 0; j < config->getNOutParam(); j++) {
-			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
-					config->getName(),
+			Platform::get()->fprintf(file, "\t%d->%s [style=dotted];\n",
+					config->getId(),
 					config->getOutParam(j)->getName());
 		}
 
 		// Drawing lines : parameter -> vertex.
 		for (int j = 0; j < config->getNInParam(); j++) {
-			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
+			Platform::get()->fprintf(file, "\t%s->%d [style=dotted];\n",
 					config->getInParam(j)->getName(),
-					config->getName());
+					config->getId());
 		}
 		Platform::get()->fprintf(file, "\n");
 	}
@@ -334,15 +334,15 @@ void PiSDFGraph::print(const char *path){
 			body->getSubGraph()->print(name);
 		}
 
-		Platform::get()->fprintf(file, "\t%s [label=\"%s\"];\n",
-			body->getName(),
+		Platform::get()->fprintf(file, "\t%d [label=\"%s\"];\n",
+			body->getId(),
 			body->getName());
 
 		// Drawing lines : parameter -> vertex.
 		for (int j = 0; j < body->getNInParam(); j++) {
-			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
+			Platform::get()->fprintf(file, "\t%s->%d [style=dotted];\n",
 				body->getInParam(j)->getName(),
-				body->getName());
+				body->getId());
 		}
 		Platform::get()->fprintf(file, "\n");
 	}
@@ -351,15 +351,15 @@ void PiSDFGraph::print(const char *path){
 	Platform::get()->fprintf(file, "\t# Input Ifs\n");
 	for(int i=0; i<inputIfs_.getN(); i++){
 		PiSDFVertex *inIf = inputIfs_[i];
-		Platform::get()->fprintf(file, "\t%s [shape=cds,label=\"%s\"];\n",
-				inIf->getName(),
+		Platform::get()->fprintf(file, "\t%d [shape=cds,label=\"%s\"];\n",
+				inIf->getId(),
 				inIf->getName());
 
 		// Drawing lines : parameter -> vertex.
 		for (int j = 0; j < inIf->getNInParam(); j++) {
-			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
+			Platform::get()->fprintf(file, "\t%s->%d [style=dotted];\n",
 				inIf->getInParam(j)->getName(),
-				inIf->getName());
+				inIf->getId());
 		}
 		Platform::get()->fprintf(file, "\n");
 	}
@@ -368,15 +368,15 @@ void PiSDFGraph::print(const char *path){
 	Platform::get()->fprintf(file, "\t# Output Ifs\n");
 	for(int i=0; i<outputIfs_.getN(); i++){
 		PiSDFVertex *outIf = outputIfs_[i];
-		Platform::get()->fprintf(file, "\t%s [shape=cds,label=\"%s\"];\n",
-				outIf->getName(),
+		Platform::get()->fprintf(file, "\t%d [shape=cds,label=\"%s\"];\n",
+				outIf->getId(),
 				outIf->getName());
 
 		// Drawing lines : parameter -> vertex.
 		for (int j = 0; j < outIf->getNInParam(); j++) {
-			Platform::get()->fprintf(file, "\t%s->%s [style=dotted];\n",
+			Platform::get()->fprintf(file, "\t%s->%d [style=dotted];\n",
 				outIf->getInParam(j)->getName(),
-				outIf->getName());
+				outIf->getId());
 		}
 		Platform::get()->fprintf(file, "\n");
 	}
@@ -407,9 +407,9 @@ void PiSDFGraph::print(const char *path){
 //			edge->sinkPortIx,
 //			shortenedCExpr);
 		//labelDistance = 3 + labelDistance%(3*4); // Oscillating the label distance to keep visibility
-		Platform::get()->fprintf(file, "\t%s->%s [taillabel=\"(%d):%s\" headlabel=\"(%d):%s\" label=\"%s\"];\n",
-			edge->getSrc()->getName(),
-			edge->getSnk()->getName(),
+		Platform::get()->fprintf(file, "\t%d->%d [taillabel=\"(%d):%s\" headlabel=\"(%d):%s\" label=\"%s\"];\n",
+			edge->getSrc()->getId(),
+			edge->getSnk()->getId(),
 			edge->getSrcPortIx(),
 			prodExpr,
 			edge->getSnkPortIx(),

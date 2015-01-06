@@ -60,6 +60,8 @@
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
 #define SHARED_MEM_KEY		8452
 
+#define MAX_MSG_SIZE 10*1024
+
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
 static void* shMem;
@@ -143,7 +145,7 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
 
         	/** Create LRT */
         	LinuxLrtCommunicator* lrtCom = CREATE(stack, LinuxLrtCommunicator)(
-        			280,
+        			MAX_MSG_SIZE,
 					pipeSpidertoLRT[2*i],
 					pipeLRTtoSpider[2*i+1],
 					pipeTrace[1],
@@ -172,7 +174,7 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
 
 	/** Initialize LRT and Communicators */
     LinuxSpiderCommunicator* spiderCom = CREATE(stack, LinuxSpiderCommunicator)(
-    		280,
+    		MAX_MSG_SIZE,
 			nLrt,
 			semTrace,
 			pipeTrace[1],
@@ -183,7 +185,7 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
     	spiderCom->setLrtCom(i, pipeLRTtoSpider[2*i], pipeSpidertoLRT[2*i+1]);
 
 	LinuxLrtCommunicator* lrtCom = CREATE(stack, LinuxLrtCommunicator)(
-			280,
+			MAX_MSG_SIZE,
 			pipeSpidertoLRT[0],
 			pipeLRTtoSpider[1],
 			pipeTrace[1],

@@ -179,10 +179,10 @@ SRDAGEdge* SRDAGGraph::addEdge(
 }
 
 void SRDAGGraph::delVertex(SRDAGVertex* vertex){
-	for(int i=0; i<vertex->getNInEdge(); i++)
+	for(int i=0; i<vertex->getNConnectedInEdge(); i++)
 		if(vertex->getInEdge(i) != 0)
 			vertex->getInEdge(i)->disconnectSnk();
-	for(int i=0; i<vertex->getNOutEdge(); i++)
+	for(int i=0; i<vertex->getNConnectedOutEdge(); i++)
 		if(vertex->getOutEdge(i) != 0)
 			vertex->getOutEdge(i)->disconnectSrc();
 
@@ -290,9 +290,10 @@ void SRDAGGraph::print(const char *path){
 
 //		switch(mode){
 //		case DataRates:
-			Platform::get()->fprintf(file, "\t%d->%d [label=\"%d\n%#x (%d)\",taillabel=\"%d\",headlabel=\"%d\"];\n",
+			Platform::get()->fprintf(file, "\t%d->%d [label=\"%d (ID%d)\n%#x (%d)\",taillabel=\"%d\",headlabel=\"%d\"];\n",
 					srcIx, snkIx,
 					edge->getRate(),
+					edge->getId(),
 					edge->getAlloc(),
 					edge->getAllocIx(),
 					edge->getSrcPortIx(),
@@ -323,25 +324,31 @@ bool SRDAGGraph::check(){
 		int j;
 
 		// Check input edges
-		for(j=0; j<vertex->getNInEdge(); j++){
+		for(j=0; j<vertex->getNConnectedInEdge(); j++){
 			const SRDAGEdge* edge = vertex->getInEdge(j);
-			if(edge == NULL){
-				printf("V%d Input%d: not connected\n", vertex->getId(), j);
+			if(vertex->getType() == SRDAG_JOIN
+					&& edge == NULL){
+				printf("Warning V%d Input%d: not connected\n", vertex->getId(), j);
+			}else if(edge == NULL){
+				printf("Error V%d Input%d: not connected\n", vertex->getId(), j);
 				result = false;
 			}else if(edge->getSnk() != vertex){
-				printf("V%d E%d: connection mismatch\n", vertex->getId(), edge->getId());
+				printf("Error V%d E%d: connection mismatch\n", vertex->getId(), edge->getId());
 				result = false;
 			}
 		}
 
 		// Check output edges
-		for(j=0; j<vertex->getNOutEdge(); j++){
+		for(j=0; j<vertex->getNConnectedOutEdge(); j++){
 			const SRDAGEdge* edge = vertex->getOutEdge(j);
-			if(edge == NULL){
-				printf("V%d Output%d: not connected\n", vertex->getId(), j);
+			if(vertex->getType() == SRDAG_FORK
+					&& edge == NULL){
+				printf("Warning V%d Output%d: not connected\n", vertex->getId(), j);
+			}else if(edge == NULL){
+				printf("Error V%d Output%d: not connected\n", vertex->getId(), j);
 				result = false;
 			}else if(edge->getSrc() != vertex){
-				printf("V%d E%d: connection mismatch\n", vertex->getId(), edge->getId());
+				printf("Error V%d E%d: connection mismatch\n", vertex->getId(), edge->getId());
 				result = false;
 			}
 		}

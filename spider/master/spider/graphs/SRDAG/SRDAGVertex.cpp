@@ -113,7 +113,7 @@ void SRDAGVertex::toString(char* name, int sizeMax) const{
 void SRDAGVertex::updateState(){
 	if(state_ == SRDAG_NEXEC){
 		/* Check Input Edges */
-		for (int i = 0; i < getNInEdge(); i++){
+		for (int i = 0; i < getNConnectedInEdge(); i++){
 			SRDAGVertex* predecessor = getInEdge(i)->getSrc();
 
 			if(!predecessor || predecessor->isHierarchical()){

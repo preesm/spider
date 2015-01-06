@@ -49,7 +49,7 @@ void DummyMemAlloc::alloc(SRDAGGraph* graph){
 	for(int i=0; i<graph->getNVertex(); i++){
 		SRDAGVertex* vertex = graph->getVertex(i);
 		if(vertex->getState() == SRDAG_EXEC){
-			for(int j=0; j<vertex->getNOutEdge(); j++){
+			for(int j=0; j<vertex->getNConnectedOutEdge(); j++){
 				SRDAGEdge* edge = vertex->getOutEdge(j);
 				if(edge->getAlloc() == -1){
 					edge->setAlloc(currentMem_);

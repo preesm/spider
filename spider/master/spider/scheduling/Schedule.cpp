@@ -125,7 +125,7 @@ bool Schedule::check(){
 		for(int i=0; i<nJobPerPE_[pe]-1 && result; i++){
 			SRDAGVertex* vertex = getJob(pe, i);
 
-			for(int i=0; i<vertex->getNInEdge() && result; i++){
+			for(int i=0; i<vertex->getNConnectedInEdge() && result; i++){
 				SRDAGVertex* precVertex = vertex->getInEdge(i)->getSrc();
 
 				if(vertex->getStartTime() < precVertex->getEndTime()){

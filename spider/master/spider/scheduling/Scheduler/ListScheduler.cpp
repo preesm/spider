@@ -105,7 +105,7 @@ void ListScheduler::schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi
 int ListScheduler::computeSchedLevel(SRDAGVertex* vertex){
 	int lvl = 0;
 	if(vertex->getSchedLvl() == -1){
-		for(int i=0; i<vertex->getNOutEdge(); i++){
+		for(int i=0; i<vertex->getNConnectedOutEdge(); i++){
 			SRDAGVertex* succ = vertex->getOutEdge(i)->getSnk();
 			if(succ && succ->getState() == SRDAG_EXEC){
 				Time minExecTime = (unsigned int)-1;
@@ -129,7 +129,7 @@ int ListScheduler::computeSchedLevel(SRDAGVertex* vertex){
 void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 	Time minimumStartTime=0;
 
-	for(int i=0; i<vertex->getNInEdge(); i++){
+	for(int i=0; i<vertex->getNConnectedInEdge(); i++){
 		minimumStartTime = std::max(minimumStartTime,
 				vertex->getInEdge(i)->getSrc()->getEndTime());
 	}

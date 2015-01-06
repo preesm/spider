@@ -64,17 +64,17 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stack
 			break;
 		case PISDF_SUBTYPE_BROADCAST:
 			for(int j=0; j<brv[bodyIx]; j++){
-				job->bodies[bodyIx][j] = topSrdag->addBroadcast(pi_vertex->getNOutEdge());
+				job->bodies[bodyIx][j] = topSrdag->addBroadcast(MAX_IO_EDGES);
 			}
 			break;
 		case PISDF_SUBTYPE_JOIN:
 			for(int j=0; j<brv[bodyIx]; j++){
-				job->bodies[bodyIx][j] = topSrdag->addJoin(pi_vertex->getNInEdge());
+				job->bodies[bodyIx][j] = topSrdag->addJoin(MAX_IO_EDGES);
 			}
 			break;
 		case PISDF_SUBTYPE_FORK:
 			for(int j=0; j<brv[bodyIx]; j++){
-				job->bodies[bodyIx][j] = topSrdag->addFork(pi_vertex->getNOutEdge());
+				job->bodies[bodyIx][j] = topSrdag->addFork(MAX_IO_EDGES);
 			}
 			break;
 		default:

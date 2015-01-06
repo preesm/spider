@@ -85,7 +85,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		break;
 	case SRDAG_FORK:
 	case SRDAG_JOIN:
-		nParams = 2+vertex->getNInEdge()+vertex->getNOutEdge();
+		nParams = 2+vertex->getNConnectedInEdge()+vertex->getNConnectedOutEdge();
 		break;
 	case SRDAG_ROUNDBUFFER:
 	case SRDAG_BROADCAST:
@@ -98,8 +98,8 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 	}
 
 	int size = 1*sizeof(StartJobMsg)
-					+ vertex->getNInEdge()*sizeof(Fifo)
-					+ vertex->getNOutEdge()*sizeof(Fifo)
+					+ vertex->getNConnectedInEdge()*sizeof(Fifo)
+					+ vertex->getNConnectedOutEdge()*sizeof(Fifo)
 					+ nParams*sizeof(Param);
 	long msgAdd = (long) getSpiderCommunicator()->ctrl_start_send(
 			lrtIx,
@@ -108,20 +108,20 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 
 	StartJobMsg* msg = (StartJobMsg*) msgAdd;
 	Fifo *inFifos = (Fifo*) ((char*)msgAdd + 1*sizeof(StartJobMsg));
-	Fifo *outFifos = (Fifo*) ((char*)inFifos + vertex->getNInEdge()*sizeof(Fifo));
-	Param *inParams = (Param*) ((char*)outFifos + vertex->getNOutEdge()*sizeof(Fifo));
+	Fifo *outFifos = (Fifo*) ((char*)inFifos + vertex->getNConnectedInEdge()*sizeof(Fifo));
+	Param *inParams = (Param*) ((char*)outFifos + vertex->getNConnectedOutEdge()*sizeof(Fifo));
 
 	msg->msgIx = MSG_START_JOB;
 	msg->srdagIx = vertex->getId();
 	msg->specialActor = vertex->getType() != SRDAG_NORMAL;
 	msg->fctIx = vertex->getFctId();
 
-	msg->nbInEdge = vertex->getNInEdge();
-	msg->nbOutEdge = vertex->getNOutEdge();
+	msg->nbInEdge = vertex->getNConnectedInEdge();
+	msg->nbOutEdge = vertex->getNConnectedOutEdge();
 	msg->nbInParam = nParams;
 	msg->nbOutParam = vertex->getNOutParam();
 
-	for(int i=0; i<vertex->getNInEdge(); i++){
+	for(int i=0; i<vertex->getNConnectedInEdge(); i++){
 		SRDAGEdge* edge = vertex->getInEdge(i);
 		inFifos[i].id = edge->getAllocIx();
 		inFifos[i].alloc = edge->getAlloc();
@@ -129,7 +129,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		inFifos[i].ntoken = 1;
 	}
 
-	for(int i=0; i<vertex->getNOutEdge(); i++){
+	for(int i=0; i<vertex->getNConnectedOutEdge(); i++){
 		SRDAGEdge* edge = vertex->getOutEdge(i);
 		outFifos[i].id = edge->getAllocIx();
 		outFifos[i].alloc = edge->getAlloc();
@@ -145,18 +145,18 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 //		memcpy(inParams, vertex->getInParams(), nParams*sizeof(Param));
 		break;
 	case SRDAG_FORK:
-		inParams[0] = vertex->getNInEdge();
-		inParams[1] = vertex->getNOutEdge();
+		inParams[0] = vertex->getNConnectedInEdge();
+		inParams[1] = vertex->getNConnectedOutEdge();
 		inParams[2] = vertex->getInEdge(0)->getRate();
-		for(int i=0; i<vertex->getNOutEdge(); i++){
+		for(int i=0; i<vertex->getNConnectedOutEdge(); i++){
 			inParams[3+i] = vertex->getOutEdge(i)->getRate();
 		}
 		break;
 	case SRDAG_JOIN:
-		inParams[0] = vertex->getNInEdge();
-		inParams[1] = vertex->getNOutEdge();
+		inParams[0] = vertex->getNConnectedInEdge();
+		inParams[1] = vertex->getNConnectedOutEdge();
 		inParams[2] = vertex->getOutEdge(0)->getRate();
-		for(int i=0; i<vertex->getNInEdge(); i++){
+		for(int i=0; i<vertex->getNConnectedInEdge(); i++){
 			inParams[3+i] = vertex->getInEdge(i)->getRate();
 		}
 		break;
@@ -166,7 +166,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		break;
 	case SRDAG_BROADCAST:
 		inParams[0] = vertex->getInEdge(0)->getRate();
-		inParams[1] = vertex->getNOutEdge();
+		inParams[1] = vertex->getNConnectedOutEdge();
 		break;
 	case SRDAG_INIT:
 		inParams[0] = vertex->getOutEdge(0)->getRate();

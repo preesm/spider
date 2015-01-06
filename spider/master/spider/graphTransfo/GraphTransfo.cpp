@@ -91,11 +91,11 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 	}
 
 	/* Add edge interfaces in job */
-	job->inputIfs = CREATE_MUL(stack, nextHierVx->getNInEdge(), SRDAGEdge*);
-	job->outputIfs = CREATE_MUL(stack, nextHierVx->getNOutEdge(), SRDAGEdge*);
+	job->inputIfs = CREATE_MUL(stack, nextHierVx->getNConnectedInEdge(), SRDAGEdge*);
+	job->outputIfs = CREATE_MUL(stack, nextHierVx->getNConnectedOutEdge(), SRDAGEdge*);
 
-	memcpy(job->inputIfs, nextHierVx->getInEdges(), nextHierVx->getNInEdge()*sizeof(SRDAGEdge*));
-	memcpy(job->outputIfs, nextHierVx->getOutEdges(), nextHierVx->getNInEdge()*sizeof(SRDAGEdge*));
+	memcpy(job->inputIfs, nextHierVx->getInEdges(), nextHierVx->getNConnectedInEdge()*sizeof(SRDAGEdge*));
+	memcpy(job->outputIfs, nextHierVx->getOutEdges(), nextHierVx->getNConnectedInEdge()*sizeof(SRDAGEdge*));
 
 }
 
@@ -178,7 +178,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 				addSRVertices(topSrdag, job, brv, transfoSTack);
 
-				linkSRVertices(topSrdag, job, brv);
+				linkSRVertices(topSrdag, job, brv, transfoSTack);
 
 				freeJob(job, transfoSTack);
 
@@ -228,7 +228,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 //			SRDAGCheck(topDag);
 
 			/* Link vertices */
-			linkSRVertices(topSrdag, job, brv);
+			linkSRVertices(topSrdag, job, brv, transfoSTack);
 //			SRDAGWrite(topDag, "topDag_link.gv", DataRates);
 //			SRDAGCheck(topDag);
 

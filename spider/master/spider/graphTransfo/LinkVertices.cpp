@@ -358,13 +358,15 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 			break;
 		case PISDF_TYPE_BODY:
 			if(nbDelays == 0){
-				if(sinkNeedEnd)
+				if(sinkNeedEnd){
+					snkRepetitions = CREATE_MUL(stack, nbSinkRepetitions+1, SRDAGVertex*);
+					memcpy(snkRepetitions, job->bodies[edge->getSnk()->getTypeId()], nbSinkRepetitions*sizeof(SRDAGVertex*));
+					snkRepetitions[nbSinkRepetitions] = topSrdag->addEnd();
 					nbSinkRepetitions++;
-				snkRepetitions = CREATE_MUL(stack, nbSinkRepetitions, SRDAGVertex*);
-
-				memcpy(snkRepetitions, job->bodies[edge->getSnk()->getTypeId()], nbSinkRepetitions*sizeof(SRDAGVertex*));
-				if(sinkNeedEnd)
-					snkRepetitions[nbSinkRepetitions-1] = topSrdag->addEnd();
+				}else{
+					snkRepetitions = CREATE_MUL(stack, nbSinkRepetitions, SRDAGVertex*);
+					memcpy(snkRepetitions, job->bodies[edge->getSnk()->getTypeId()], nbSinkRepetitions*sizeof(SRDAGVertex*));
+				}
 
 				curSinkToken   = sinkConsumption;
 				beforelastCons = sinkConsumption;

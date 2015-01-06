@@ -72,6 +72,7 @@ void LRT::sendTrace(int srdagIx, Time start, Time end){
 
 	msgTrace->msgIx = TRACE_JOB;
 	msgTrace->srdagIx = srdagIx;
+	msgTrace->spiderTask = -1;
 	msgTrace->start = start;
 	msgTrace->end = end;
 	msgTrace->lrtIx = ix_;

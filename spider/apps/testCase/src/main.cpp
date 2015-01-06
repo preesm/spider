@@ -82,9 +82,9 @@ int main(int argc, char* argv[]){
 
 			test_Test0(topPisdf, spider_getLastSRDAG(), i, &testStack);
 
-			freePisdf_test0(topPisdf, &pisdfStack);
-
 			spider_printGantt(archi, spider_getLastSRDAG(), path, "latex.tex", &stat);
+
+			freePisdf_test0(topPisdf, &pisdfStack);
 		}
 
 		for(int i=1; i<=3; i++){

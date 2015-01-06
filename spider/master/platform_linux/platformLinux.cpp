@@ -215,6 +215,7 @@ PlatformLinux::PlatformLinux(int nLrt, Stack *stack, lrtFct* fcts, int nLrtFcts)
 	archi_->setName(0, name);
 	for(int i=1; i<nLrt; i++){
 		sprintf(name, "PID %d (LRT %d)", cpIds[i], i);
+		archi_->setPEType(i, 0);
 		archi_->setName(i, name);
 	}
 

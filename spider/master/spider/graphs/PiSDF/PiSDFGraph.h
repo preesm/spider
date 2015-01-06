@@ -84,7 +84,7 @@ public:
 
 	PiSDFParam* addStaticParam(const char* name, int value);
 
-	PiSDFParam* addHeritedParam(const char* name);
+	PiSDFParam* addHeritedParam(const char* name, int parentId);
 
 	PiSDFParam* addDynamicParam(const char* name);
 

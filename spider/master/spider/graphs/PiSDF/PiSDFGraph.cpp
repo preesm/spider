@@ -208,10 +208,11 @@ PiSDFParam* PiSDFGraph::addStaticParam(const char* name, int value){
 	return param;
 }
 
-PiSDFParam* PiSDFGraph::addHeritedParam(const char* name){
+PiSDFParam* PiSDFGraph::addHeritedParam(const char* name, int parentId){
 	PiSDFParam* param = CREATE(stack_, PiSDFParam)(
 			name, params_.getN(),
 			this, PISDF_PARAM_HERITED);
+	param->setParentId(parentId);
 	params_.add(param);
 	return param;
 }

@@ -108,7 +108,7 @@ inline int PiSDFParam::getStaticValue() const{
 inline int PiSDFParam::getParentId() const{
 	if(type_ != PISDF_PARAM_HERITED)
 		throw "Error: Not Herited param used as Herited param\n";
-	return value_;
+	return parentId_;
 }
 
 /** Setters */

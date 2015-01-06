@@ -41,6 +41,7 @@
 #include <tools/Set.h>
 
 #include <cstdio>
+#include <algorithm>
 
 #define MAX_VERTEX 10000
 #define MAX_EDGE 10000
@@ -179,10 +180,13 @@ SRDAGEdge* SRDAGGraph::addEdge(
 }
 
 void SRDAGGraph::delVertex(SRDAGVertex* vertex){
-	for(int i=0; i<vertex->getNConnectedInEdge(); i++)
+	int nInEdge = vertex->getNConnectedInEdge();
+	int nOutEdge = vertex->getNConnectedOutEdge();
+
+	for(int i=0; i<nInEdge; i++)
 		if(vertex->getInEdge(i) != 0)
 			vertex->getInEdge(i)->disconnectSnk();
-	for(int i=0; i<vertex->getNConnectedOutEdge(); i++)
+	for(int i=0; i<nOutEdge; i++)
 		if(vertex->getOutEdge(i) != 0)
 			vertex->getOutEdge(i)->disconnectSrc();
 
@@ -266,7 +270,7 @@ void SRDAGGraph::print(const char *path){
 		}
 		Platform::get()->fprintf(file, "];\n");
 
-		maxId = (vertex->getId() > maxId) ? vertex->getId() : maxId;
+		maxId = std::max(vertex->getId(),maxId);
 	}
 
 	// Drawing edges.
@@ -278,13 +282,15 @@ void SRDAGGraph::print(const char *path){
 		if(edge->getSrc())
 			srcIx = edge->getSrc()->getId();
 		else{
-			Platform::get()->fprintf(file, "\t%d [shape=point];\n", ++maxId);
+			maxId++;
+			Platform::get()->fprintf(file, "\t%d [shape=point];\n", maxId);
 			srcIx = maxId;
 		}
 		if(edge->getSnk())
 			snkIx = edge->getSnk()->getId();
 		else{
-			Platform::get()->fprintf(file, "\t%d [shape=point];\n", ++maxId);
+			maxId++;
+			Platform::get()->fprintf(file, "\t%d [shape=point];\n", maxId);
 			snkIx = maxId;
 		}
 

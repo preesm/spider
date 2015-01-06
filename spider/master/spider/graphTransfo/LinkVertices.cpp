@@ -220,6 +220,10 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		int beforelastCons;
 		int lastCons;
 
+		int brIx = -1;
+		int forkIx = -1;
+		int joinIx = -1;
+
 		// Fill source/sink repetition list
 		switch(edge->getSrc()->getType()){
 		case PISDF_TYPE_CONFIG:
@@ -240,6 +244,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
 					SRDAGEdge* configEdge = job->configs[edge->getSrc()->getTypeId()]->getOutEdge(piSrcIx);
 
+					brIx = broadcast->getId();
 					configEdge->connectSnk(broadcast, 0);
 
 					srcRepetitions = CREATE_MUL(stack, nBr, SRDAGVertex*);
@@ -252,6 +257,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
 					SRDAGEdge* configEdge = job->configs[edge->getSrc()->getTypeId()]->getOutEdge(piSrcIx);
 
+					brIx = broadcast->getId();
 					configEdge->connectSnk(broadcast, 0);
 
 					srcRepetitions = CREATE_MUL(stack, nBr, SRDAGVertex*);
@@ -280,6 +286,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
 					SRDAGEdge* interfaceEdge = job->inputIfs[edge->getSrc()->getTypeId()];
 					piSrcIx = job->inputIfs[edge->getSrc()->getTypeId()]->getSrcPortIx();
+					brIx = broadcast->getId();
 
 					interfaceEdge->connectSnk(broadcast, 0);
 
@@ -293,6 +300,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
 					SRDAGEdge* interfaceEdge = job->inputIfs[edge->getSrc()->getTypeId()];
 					piSrcIx = job->inputIfs[edge->getSrc()->getTypeId()]->getSrcPortIx();
+					brIx = broadcast->getId();
 
 					interfaceEdge->connectSnk(broadcast, 0);
 
@@ -385,9 +393,6 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 			break;
 		}
 
-		int forkIx = -1;
-		int joinIx = -1;
-
 		// Iterating until all consumptions are "satisfied".
 		while (sourceIndex < nbSourceRepetitions
 				|| sinkIndex < nbSinkRepetitions) {
@@ -426,8 +431,13 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					sourcePortId = 0;
 					break;
 				case SRDAG_BROADCAST:
-					sourceVertex = origin_vertex;
-					sourcePortId = origin_vertex->getNConnectedOutEdge();
+					if(origin_vertex->getId() == brIx){
+						sourceVertex = origin_vertex;
+						sourcePortId = origin_vertex->getNConnectedOutEdge();
+					}else{
+						sourceVertex = origin_vertex;
+						sourcePortId = piSrcIx;
+					}
 					break;
 				case SRDAG_INIT:
 					sourceVertex = origin_vertex;
@@ -495,7 +505,11 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 			sourceVertex = srcRepetitions[sourceIndex];
 			switch(sourceVertex->getType()){
 			case SRDAG_BROADCAST:
-				sourcePortId = sourceVertex->getNConnectedOutEdge();
+				if(sourceVertex->getId() == brIx){
+					sourcePortId = sourceVertex->getNConnectedOutEdge();
+				}else{
+					sourcePortId = piSrcIx;
+				}
 				break;
 			case SRDAG_FORK:
 				if(sourceVertex->getId() == forkIx)

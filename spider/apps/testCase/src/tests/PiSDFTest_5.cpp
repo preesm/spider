@@ -220,11 +220,11 @@ SRDAGGraph* result_Test5(PiSDFGraph* pisdf, Stack* stack){
 	srdag->addEdge(
 			vxF , 1,
 			vxB0 , 0,
-			2);
+			1);
 	srdag->addEdge(
 			vxF , 2,
 			vxB1 , 0,
-			2);
+			1);
 
 	srdag->addEdge(
 			vxB0 , 0,

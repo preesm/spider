@@ -39,6 +39,7 @@
 #include "LinkVertices.h"
 #include "AddVertices.h"
 #include "ComputeBRV.h"
+#include "Optims.h"
 
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/SRDAG/SRDAGVertex.h>
@@ -193,6 +194,8 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 		topSrdag->updateState();
 
+		optims(topSrdag, transfoSTack);
+
 		spider_endMonitoring(TRACE_SPIDER_GRAPH);
 
 //		SRDAGWrite(topDag, "topDag_ca.gv", DataRates);
@@ -243,6 +246,8 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 	}while(1);
 
 	topSrdag->updateState();
+
+	optims(topSrdag, transfoSTack);
 
 	spider_endMonitoring(TRACE_SPIDER_GRAPH);
 

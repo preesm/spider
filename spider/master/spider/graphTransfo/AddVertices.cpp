@@ -93,10 +93,12 @@ void addCAVertices(SRDAGGraph *topSrdag, transfoJob *job, Stack* stack){
     for(int configIx=0; configIx<job->graph->getNConfig(); configIx++){
     	PiSDFVertex* config = job->graph->getConfig(configIx);
 		job->configs[configIx] = topSrdag->addVertex(config);
-		if(config->getType() == PISDF_TYPE_CONFIG){
-			for(int i=0; i<config->getNOutParam(); i++){
-				job->configs[configIx]->addOutParam(i, &(job->paramValues[config->getOutParam(i)->getTypeIx()]));
-			}
+
+		for(int i=0; i<config->getNInParam(); i++){
+			job->configs[configIx]->addInParam(i, job->paramValues[config->getInParam(i)->getTypeIx()]);
+		}
+		for(int i=0; i<config->getNOutParam(); i++){
+			job->configs[configIx]->addOutParam(i, &(job->paramValues[config->getOutParam(i)->getTypeIx()]));
 		}
 	}
 }

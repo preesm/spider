@@ -363,7 +363,8 @@ bool Expression::getNextToken(
 		if(token != 0){
 			token->type = PARAMETER;
 			for(int i=0; i<nParam; i++){
-				if(strncmp(params[i]->getName(), name, nb) == 0){
+				if(nb == strlen(params[i]->getName())
+						&& strncmp(params[i]->getName(), name, nb) == 0){
 					token->paramIx = i/*params[i]->getTypeIx()*/;
 					return true;
 				}

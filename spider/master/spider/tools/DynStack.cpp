@@ -79,13 +79,13 @@ void DynStack::printStat(){
 	printf("%s: ", getName());
 
 	if(maxSize_ < 1024)
-		printf("\t%lld B", maxSize_);
+		printf("\t%5.1f B", maxSize_/1.);
 	else if(maxSize_ < 1024*1024)
-		printf("\t%.1f KB", maxSize_/1024.);
+		printf("\t%5.1f KB", maxSize_/1024.);
 	else if(maxSize_ < 1024*1024*1024)
-		printf("\t%.1f MB", maxSize_/1024./1024.);
+		printf("\t%5.1f MB", maxSize_/1024./1024.);
 	else
-		printf("\t%.1f GB", maxSize_/1024./1024./1024.);
+		printf("\t%5.1f GB", maxSize_/1024./1024./1024.);
 
 	if(nb_)
 		printf(", \t%d still in use", nb_);

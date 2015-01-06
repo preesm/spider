@@ -77,6 +77,11 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stack
 				job->bodies[bodyIx][j] = topSrdag->addFork(MAX_IO_EDGES);
 			}
 			break;
+		case PISDF_SUBTYPE_END:
+			for(int j=0; j<brv[bodyIx]; j++){
+				job->bodies[bodyIx][j] = topSrdag->addEnd();
+			}
+			break;
 		default:
 			throw "Unexpected Interface vertex in AddVertices\n";
 		}

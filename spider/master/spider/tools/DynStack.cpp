@@ -40,6 +40,8 @@
 
 #include <cstdlib>
 #include <malloc.h>
+#include <unistd.h>
+#include <cmath>
 
 DynStack::DynStack(const char* name): Stack(name){
 	curUsedSize_ = 0;
@@ -51,11 +53,16 @@ DynStack::~DynStack(){
 	printStat();
 }
 
+static inline int getAlignSize(int size){
+	return std::ceil(size/1.0/getpagesize())*getpagesize();
+}
+
 void *DynStack::alloc(int size){
+	size = getAlignSize(size);
 	curUsedSize_ += size;
 	maxSize_ = std::max(maxSize_, curUsedSize_);
 	nb_++;
-	return std::malloc(size);
+	return memalign(getpagesize(),size);
 }
 
 void DynStack::freeAll(){

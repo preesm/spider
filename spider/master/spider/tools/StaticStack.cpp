@@ -37,6 +37,8 @@
 #include <tools/StaticStack.h>
 #include <cstdio>
 #include <algorithm>
+#include <cmath>
+#include <unistd.h>
 
 StaticStack::StaticStack(const char* name, void* ptr, int size):
 		Stack(name) {
@@ -47,7 +49,12 @@ StaticStack::StaticStack(const char* name, void* ptr, int size):
 	used_ = 0;
 }
 
+static inline int getAlignSize(int size){
+	return std::ceil(size/1.0/getpagesize())*getpagesize();
+}
+
 void *StaticStack::alloc(int size){
+	size = getAlignSize(size);
 	void* res;
 	if(used_+size > size_)
 		throw "Insufficient memory size of the Stack\n";

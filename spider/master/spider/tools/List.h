@@ -47,6 +47,8 @@ public:
 
 	void sort(int (*comp)(T,T));
 
+	bool isPresent(T item);
+
 private:
 	Stack* stack_;
 	T* array;
@@ -129,6 +131,15 @@ inline int List<T>::myqsort_part(int p, int r, int (*comp)(T,T)){
         else
             return j;
     }
+}
+
+template <class T>
+inline bool List<T>::isPresent(T item){
+	for(int i=0; i<nb; i++){
+		if(item == array[i])
+			return true;
+	}
+	return false;
 }
 
 #endif/*LIST_H*/

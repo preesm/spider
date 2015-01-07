@@ -38,7 +38,7 @@
 #include <cstdio>
 #include <cstring>
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 #define M_VAL 12
 #define NB_TAPS 512
@@ -132,8 +132,8 @@ void snk(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outPar
 			for(int j=0; j<NSamples; j++){
 				hash = hash ^ data[j+i*NSamples];
 			}
-			if(hash != expectedHash[0]){
-				printf("Bad Hash result: %#X instead of %#X\n", hash, expectedHash[0]);
+			if(hash != expectedHash[M_VAL]){
+				printf("Bad Hash result: %#X instead of %#X\n", hash, expectedHash[M_VAL]);
 				return;
 			}
 		}
@@ -202,22 +202,22 @@ void FIR(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outPar
 
 	int i, j;
 
-	memcpy(out, in, NSamples*sizeof(float));
+//	memcpy(out, in, NSamples*sizeof(float));
 
-//	int last_id = 0;
-//	memset(last,0,NB_TAPS*sizeof(float));
-//	for(i=0; i<NB_TAPS; i++){
-//		taps[i] = 1.0/NB_TAPS;
-//	}
-//
-//	for(i=0; i<NSamples; i++){
-//		out[i] = 0;
-//		last[last_id] = in[i];
-//		for(j=0; j<NB_TAPS; j++){
-//			out[i] += taps[j]*last[(last_id+j)%NB_TAPS];
-//		}
-//		last_id = (last_id+1)%NB_TAPS;
-//	}
+	int last_id = 0;
+	memset(last,0,NB_TAPS*sizeof(float));
+	for(i=0; i<NB_TAPS; i++){
+		taps[i] = 1.0/NB_TAPS;
+	}
+
+	for(i=0; i<NSamples; i++){
+		out[i] = 0;
+		last[last_id] = in[i];
+		for(j=0; j<NB_TAPS; j++){
+			out[i] += taps[j]*last[(last_id+j)%NB_TAPS];
+		}
+		last_id = (last_id+1)%NB_TAPS;
+	}
 }
 
 lrtFct ederc_nvar_fcts[NB_FCT_EDERC_NVAR] = {

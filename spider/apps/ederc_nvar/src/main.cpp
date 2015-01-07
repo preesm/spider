@@ -75,7 +75,7 @@ int main(int argc, char* argv[]){
 
 			pisdfStack.freeAll();
 
-			PiSDFGraph *topPisdf = initPisdf_ederc_nvar(archi, &pisdfStack, 2, 12, 4000, 1);
+			PiSDFGraph *topPisdf = initPisdf_ederc_nvar(archi, &pisdfStack, 12, 12, 4000, 1);
 			topPisdf->print("topPisdf.gv");
 
 			Platform::get()->rstTime();
@@ -84,6 +84,8 @@ int main(int argc, char* argv[]){
 
 			spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
 			spider_getLastSRDAG()->print(srdagPath);
+
+			printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
 
 			freePisdf_ederc_nvar(topPisdf, &pisdfStack);
 		}

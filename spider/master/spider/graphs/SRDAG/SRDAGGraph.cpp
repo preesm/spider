@@ -180,8 +180,8 @@ SRDAGEdge* SRDAGGraph::addEdge(
 }
 
 void SRDAGGraph::delVertex(SRDAGVertex* vertex){
-	int nInEdge = vertex->getNConnectedInEdge();
-	int nOutEdge = vertex->getNConnectedOutEdge();
+	int nInEdge = vertex->getNInEdge();
+	int nOutEdge = vertex->getNOutEdge();
 
 	for(int i=0; i<nInEdge; i++)
 		if(vertex->getInEdge(i) != 0)

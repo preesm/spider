@@ -210,7 +210,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 	archi_->setPETypeSendSpeed(0, 1, 10);
 	archi_->setPEType(0, 0);
 
-	char name[10];
+	char name[40];
 	sprintf(name, "PID %d (Spider)", cpIds[0]);
 	archi_->setName(0, name);
 	for(int i=1; i<nLrt; i++){

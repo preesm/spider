@@ -133,7 +133,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 	/* Initialize topDag */
 
 	Schedule* schedule = CREATE(transfoSTack, Schedule)(
-			archi->getNPE(), 1000, transfoSTack);
+			archi->getNPE(), 10000, transfoSTack);
 
 	/* Add initial top actor */
 	PiSDFVertex* root = topPisdf->getBody(0);

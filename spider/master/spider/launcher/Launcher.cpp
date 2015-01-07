@@ -44,6 +44,7 @@
 
 #include <time.h>
 #include <algorithm>
+#include <cstdio>
 
 #include <platform.h>
 #include <spider.h>
@@ -193,6 +194,7 @@ void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 			for(int j = 0; j < cfgVertex->getNOutParam(); j++){
 				int* param = cfgVertex->getOutParam(j);
 				*param = params[j];
+//				printf("Recv param = %d\n", *param);
 			}
 			curNParam_ -= cfgVertex->getNOutParam();
 			getSpiderCommunicator()->ctrl_end_recv(slave);
@@ -206,6 +208,7 @@ void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end){
 
 	msgTrace->msgIx = TRACE_SPIDER;
 	msgTrace->spiderTask = type;
+	msgTrace->srdagIx = -1;
 	msgTrace->start = start;
 	msgTrace->end = end;
 	msgTrace->lrtIx = 0;

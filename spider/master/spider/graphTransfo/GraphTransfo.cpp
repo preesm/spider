@@ -193,12 +193,11 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 		}while(nextHierVx);
 
 		topSrdag->updateState();
-
-		optims(topSrdag, transfoSTack);
-
 		spider_endMonitoring(TRACE_SPIDER_GRAPH);
 
-//		SRDAGWrite(topDag, "topDag_ca.gv", DataRates);
+		spider_startMonitoring();
+		optims(topSrdag, transfoSTack);
+		spider_endMonitoring(TRACE_SPIDER_OPTIM);
 
 		/* Schedule and launch execution */
 		spider_startMonitoring();
@@ -246,12 +245,11 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 	}while(1);
 
 	topSrdag->updateState();
-
-	optims(topSrdag, transfoSTack);
-
 	spider_endMonitoring(TRACE_SPIDER_GRAPH);
 
-	topSrdag->print("tmp.gv");
+	spider_startMonitoring();
+	optims(topSrdag, transfoSTack);
+	spider_endMonitoring(TRACE_SPIDER_OPTIM);
 
 	/* Schedule and launch execution */
 	spider_startMonitoring();

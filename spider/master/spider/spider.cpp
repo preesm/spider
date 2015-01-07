@@ -222,11 +222,12 @@ static inline void printGrantt_SRDAGVertex(int file, Archi* archi, SRDAGVertex* 
 
 }
 
-static const char* spiderTaskName[4] = {
+static const char* spiderTaskName[5] = {
 		"",
 		"Graph handling",
 		"Memory Allocation",
-		"Task Scheduling"
+		"Task Scheduling",
+		"Graph Optimization"
 };
 
 void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, const char* latexPath, ExecutionStat* stat){
@@ -253,6 +254,8 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 							traceMsg->start,
 							traceMsg->end,
 							traceMsg->lrtIx);
+
+					stat->globalEndTime = std::max(traceMsg->end, stat->globalEndTime);
 					getSpiderCommunicator()->trace_end_recv();
 					break;
 				case TRACE_SPIDER:{

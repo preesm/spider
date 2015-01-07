@@ -48,6 +48,7 @@ public:
 	virtual ~ListScheduler();
 
 	void schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi, Stack* stack);
+	void scheduleOnlyConfig(SRDAGGraph* graph, Schedule* schedule, Archi* archi, Stack* stack);
 
 private:
 	SRDAGGraph* srdag_;
@@ -58,6 +59,7 @@ private:
 
 	int computeSchedLevel(SRDAGVertex* vertex);
 	void scheduleVertex(SRDAGVertex* vertex);
+	void addPrevActors(SRDAGVertex* vertex, List<SRDAGVertex*> *list);
 
 };
 

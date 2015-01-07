@@ -56,8 +56,56 @@ ListScheduler::~ListScheduler(){
 
 }
 
-static int compareSchedLevel(SRDAGVertex* vertexA, SRDAGVertex* vertexB){
+int compareSchedLevel(SRDAGVertex* vertexA, SRDAGVertex* vertexB){
 	return vertexB->getSchedLvl() - vertexA->getSchedLvl();
+}
+
+void ListScheduler::addPrevActors(SRDAGVertex* vertex, List<SRDAGVertex*> *list){
+	for(int i=0; i<vertex->getNConnectedInEdge(); i++){
+		SRDAGVertex* prevVertex = vertex->getInEdge(i)->getSrc();
+		if(!list->isPresent(prevVertex) && prevVertex->getState() == SRDAG_EXEC){
+			list->add(prevVertex);
+			computeSchedLevel(prevVertex);
+			addPrevActors(prevVertex, list);
+		}
+	}
+}
+
+void ListScheduler::scheduleOnlyConfig(SRDAGGraph* graph, Schedule* schedule, Archi* archi, Stack* stack){
+	srdag_ = graph;
+	schedule_ = schedule;
+	archi_ = archi;
+
+	list_ = CREATE(stack, List<SRDAGVertex*>)(stack, srdag_->getNExecVertex());
+
+//	Launcher::initTaskOrderingTime();
+
+	for(int i=0; i<srdag_->getNVertex(); i++){
+		SRDAGVertex *vertex = srdag_->getVertex(i);
+		if(vertex->getState() == SRDAG_EXEC && vertex->getNOutParam() > 0){
+			list_->add(vertex);
+			computeSchedLevel(vertex);
+			addPrevActors(vertex, list_);
+		}
+	}
+	list_->sort(compareSchedLevel);
+
+//	Launcher::endTaskOrderingTime();
+//	Launcher::initMappingTime();
+
+	schedule_->setAllMinReadyTime(Platform::get()->getTime());
+	schedule_->setReadyTime(0, Platform::get()->getTime() + MAPPING_TIME*list_->getNb());
+
+//	Launcher::setActorsNb(schedList.getNb());
+
+	for(int i=0; i<list_->getNb(); i++){
+//		printf("%d (%d), ", (*list_)[i]->getId(), (*list_)[i]->getSchedLvl());
+		this->scheduleVertex((*list_)[i]);
+	}
+//	printf("\n");
+
+	list_->~List();
+	stack->free(list_);
 }
 
 void ListScheduler::schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi, Stack* stack){
@@ -66,8 +114,6 @@ void ListScheduler::schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi
 	archi_ = archi;
 
 	list_ = CREATE(stack, List<SRDAGVertex*>)(stack, srdag_->getNExecVertex());
-
-	srdag_->print("tmp.gv");
 
 //	Launcher::initTaskOrderingTime();
 

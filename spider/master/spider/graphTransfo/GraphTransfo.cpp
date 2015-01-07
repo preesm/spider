@@ -205,7 +205,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 		spider_endMonitoring(TRACE_SPIDER_ALLOC);
 
 		spider_startMonitoring();
-		scheduler->schedule(topSrdag, schedule, archi, transfoSTack);
+		scheduler->scheduleOnlyConfig(topSrdag, schedule, archi, transfoSTack);
 		spider_endMonitoring(TRACE_SPIDER_SCHED);
 
 		getLrt()->runUntilNoMoreJobs();

@@ -51,6 +51,7 @@ public:
 	virtual ~Scheduler(){}
 
 	virtual void schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi, Stack* stack) = 0;
+	virtual void scheduleOnlyConfig(SRDAGGraph* graph, Schedule* schedule, Archi* archi, Stack* stack) = 0;
 
 };
 

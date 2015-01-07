@@ -48,7 +48,7 @@
 static int reduceJoinJoin(SRDAGGraph* topDag){
 	for(int i=0; i<topDag->getNVertex(); i++){
 		SRDAGVertex* join0 = topDag->getVertex(i);
-		if(join0 && join0->getState() != SRDAG_RUN && join0->getType() == SRDAG_JOIN){
+		if(join0 && join0->getState() == SRDAG_EXEC && join0->getType() == SRDAG_JOIN){
 			SRDAGVertex* join1 = join0->getOutEdge(0)->getSnk();
 			if(join1 && join1->getType() == SRDAG_JOIN){
 				int nbToAdd = join0->getNConnectedInEdge();
@@ -87,7 +87,7 @@ static int reduceForkFork(SRDAGGraph* topDag){
 		SRDAGVertex* secFork = topDag->getVertex(i);
 		if(secFork && secFork->getType() == SRDAG_FORK){
 			SRDAGVertex* firFork = secFork->getInEdge(0)->getSrc();
-			if(firFork && firFork->getState() != SRDAG_RUN && firFork->getType() == SRDAG_FORK){
+			if(firFork && firFork->getState() == SRDAG_EXEC && firFork->getType() == SRDAG_FORK){
 				int nbToAdd = secFork->getNConnectedOutEdge();
 				int ixToAdd = secFork->getInEdge(0)->getSrcPortIx();
 
@@ -123,7 +123,7 @@ static int removeBr(SRDAGGraph* topDag){
 	bool result = false;
 	for(int i=0; i<topDag->getNVertex(); i++){
 		SRDAGVertex* br = topDag->getVertex(i);
-		if(br && br->getState() != SRDAG_RUN && br->getType() == SRDAG_BROADCAST){
+		if(br && br->getState() == SRDAG_EXEC && br->getType() == SRDAG_BROADCAST){
 			for(int j=0; j<br->getNConnectedOutEdge(); j++){
 				SRDAGEdge* delEdge = br->getOutEdge(j);
 				SRDAGVertex* endVertex = delEdge->getSnk();
@@ -182,7 +182,7 @@ static int removeFork(SRDAGGraph* topDag){
 	bool result = false;
 	for(int i=0; i<topDag->getNVertex(); i++){
 		SRDAGVertex* fork = topDag->getVertex(i);
-		if(fork && fork->getState() != SRDAG_RUN && fork->getType() == SRDAG_FORK){
+		if(fork && fork->getState() == SRDAG_EXEC && fork->getType() == SRDAG_FORK){
 			for(int j=0; j<fork->getNConnectedOutEdge(); j++){
 				SRDAGEdge* delEdge = fork->getOutEdge(j);
 				SRDAGVertex* nextVertex = delEdge->getSnk();
@@ -266,8 +266,8 @@ static int removeJoin(SRDAGGraph* topDag){
 	bool result = false;
 	for(int i=0; i<topDag->getNVertex(); i++){
 		SRDAGVertex* join = topDag->getVertex(i);
-		if(join && join->getState() != SRDAG_RUN && join->getType() == SRDAG_JOIN){
-			if(join->getNConnectedOutEdge() == 1 && join->getOutEdge(0)->getSnk()){
+		if(join && join->getState() == SRDAG_EXEC && join->getType() == SRDAG_JOIN){
+			if(join->getNConnectedInEdge() == 1 && join->getInEdge(0)->getSrc()){
 				SRDAGEdge* inEdge = join->getInEdge(0);
 				SRDAGVertex* nextVertex = join->getOutEdge(0)->getSnk();
 				int edgeIx = join->getOutEdge(0)->getSnkPortIx();
@@ -282,7 +282,7 @@ static int removeJoin(SRDAGGraph* topDag){
 				topDag->delVertex(join);
 
 				return true;
-			}else if(join->getNConnectedOutEdge() == 0){
+			}else if(join->getNConnectedInEdge() == 0){
 				SRDAGVertex* end = topDag->addEnd();
 				SRDAGEdge* edge = join->getInEdge(0);
 
@@ -300,9 +300,28 @@ static int removeJoin(SRDAGGraph* topDag){
 	return result;
 }
 
+static int reduceInitEnd(SRDAGGraph* topDag){
+	for(int i=0; i<topDag->getNVertex(); i++){
+		SRDAGVertex* init = topDag->getVertex(i);
+		if(init && init->getState() == SRDAG_EXEC && init->getType() == SRDAG_INIT){
+			SRDAGVertex* end = init->getOutEdge(0)->getSnk();
+			if(end && end->getState() == SRDAG_EXEC && end->getType() == SRDAG_END){
+				SRDAGEdge* edge = init->getOutEdge(0);
+				edge->disconnectSrc();
+				edge->disconnectSnk();
+				topDag->delEdge(edge);
+				topDag->delVertex(end);
+				topDag->delVertex(init);
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+
 void optims(SRDAGGraph *topDag, Stack* stack){
 	bool res;
-	topDag->print("before.gv");
 	do{
 		res = false;
 		res = res || reduceJoinJoin(topDag);
@@ -310,7 +329,7 @@ void optims(SRDAGGraph *topDag, Stack* stack){
 		res = res || removeBr(topDag);
 		res = res || removeFork(topDag);
 		res = res || removeJoin(topDag);
+		res = res || reduceInitEnd(topDag);
 	}while(res);
-	topDag->print("after.gv");
 }
 

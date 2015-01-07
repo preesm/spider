@@ -40,9 +40,16 @@
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/SRDAG/SRDAGVertex.h>
 
+#include <cmath>
+#include <unistd.h>
+
 void DummyMemAlloc::reset(){
 	currentMem_ = this->memStart_;
 	nbFifos_ = 0;
+}
+
+static inline int getAlignSize(int size){
+	return std::ceil(size/1.0/getpagesize())*getpagesize();
 }
 
 void DummyMemAlloc::alloc(SRDAGGraph* graph){
@@ -52,11 +59,13 @@ void DummyMemAlloc::alloc(SRDAGGraph* graph){
 			for(int j=0; j<vertex->getNConnectedOutEdge(); j++){
 				SRDAGEdge* edge = vertex->getOutEdge(j);
 				if(edge->getAlloc() == -1){
-					if(currentMem_+edge->getRate() > memStart_ + memSize_)
+					int size = edge->getRate();
+					size = getAlignSize(size);
+					if(currentMem_+size > memStart_ + memSize_)
 						throw "Not Enough Shared Memory\n";
 					edge->setAlloc(currentMem_);
 					edge->setAllocIx(nbFifos_++);
-					currentMem_ += edge->getRate();
+					currentMem_ += size;
 				}
 			}
 		}

@@ -48,12 +48,13 @@ int main(int argc, char* argv[]){
 	DynStack pisdfStack("PisdfStack");
 	DynStack archiStack("ArchiStack");
 
-	PlatformLinux platform(1, 0x100000, &archiStack, ederc_nvar_fcts, NB_FCT_EDERC_NVAR);
+#define SH_MEM 0x20000000
+	PlatformLinux platform(4, SH_MEM, &archiStack, ederc_nvar_fcts, NB_FCT_EDERC_NVAR);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_DUMMY;
 	cfg.memAllocStart = (void*)0;
-	cfg.memAllocSize = 0x100000;
+	cfg.memAllocSize = SH_MEM;
 
 	cfg.schedulerType = SCHEDULER_LIST;
 

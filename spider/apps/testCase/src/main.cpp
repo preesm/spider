@@ -49,12 +49,13 @@ int main(int argc, char* argv[]){
 	DynStack archiStack("ArchiStack");
 	DynStack testStack("TestStack");
 
-	PlatformLinux platform(2, &archiStack, test_fcts, NB_FCT_TEST);
+#define SHMEM_SIZE 0x100000
+	PlatformLinux platform(2, SHMEM_SIZE, &archiStack, test_fcts, NB_FCT_TEST);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_DUMMY;
-	cfg.memAllocStart = (void*)1000;
-	cfg.memAllocSize = 1000;
+	cfg.memAllocStart = (void*)0;
+	cfg.memAllocSize = SHMEM_SIZE;
 
 	cfg.schedulerType = SCHEDULER_LIST;
 

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+    <key attr.name="parameters" for="graph" id="parameters"/>
+    <key attr.name="variables" for="graph" id="variables"/>
+    <key attr.name="arguments" for="node" id="arguments"/>
+    <key attr.name="name" attr.type="string" for="graph"/>
+    <key attr.name="delay" attr.type="string" for="edge"/>
+    <graph edgedefault="directed">
+        <data key="name">channel</data>
+        <node id="NSamples" kind="cfg_in_iface"/>
+        <node expr="0" id="M" kind="param"/>
+        <node id="M_in" kind="src">
+            <port annotation="NONE" expr="0" kind="output" name="M_in"/>
+        </node>
+        <node id="data_in" kind="src">
+            <port annotation="NONE" expr="0" kind="output" name="data_in"/>
+        </node>
+        <node id="data_out" kind="snk">
+            <port annotation="NONE" expr="0" kind="input" name="data_out"/>
+        </node>
+        <node id="SetM" kind="actor">
+            <port annotation="NONE" kind="cfg_output" name="M_out"/>
+            <port annotation="NONE" expr="0" kind="input" name="M_in"/>
+        </node>
+        <node id="InitSwitch" kind="actor">
+            <port kind="cfg_input" name="M"/>
+            <port annotation="NONE" expr="0" kind="output" name="out"/>
+        </node>
+        <node id="Switch" kind="actor">
+            <port kind="cfg_input" name="NSamples"/>
+            <port annotation="NONE" expr="0" kind="input" name="sel"/>
+            <port annotation="NONE" expr="0" kind="input" name="in0"/>
+            <port annotation="NONE" expr="0" kind="input" name="in1"/>
+            <port annotation="NONE" expr="0" kind="output" name="out"/>
+        </node>
+        <node id="FIR" kind="actor">
+            <port kind="cfg_input" name="NSamples"/>
+            <port annotation="NONE" expr="0" kind="input" name="in"/>
+            <port annotation="NONE" expr="0" kind="output" name="out"/>
+        </node>
+        <node id="Br" kind="broadcast">
+            <port kind="cfg_input" name="NSamples"/>
+            <port annotation="NONE" expr="0" kind="input" name="in"/>
+            <port annotation="NONE" expr="0" kind="output" name="out0"/>
+            <port annotation="NONE" expr="0" kind="output" name="out1"/>
+        </node>
+        <edge kind="fifo" source="M_in" sourceport="M_in" target="SetM"
+            targetport="M_in" type="void"/>
+        <edge kind="fifo" source="InitSwitch" sourceport="out"
+            target="Switch" targetport="sel" type="void"/>
+        <edge kind="fifo" source="data_in" sourceport="data_in"
+            target="Switch" targetport="in0" type="void"/>
+        <edge kind="fifo" source="Switch" sourceport="out" target="FIR"
+            targetport="in" type="void"/>
+        <edge kind="fifo" source="FIR" sourceport="out" target="Br"
+            targetport="in" type="void"/>
+        <edge kind="fifo" source="Br" sourceport="out0"
+            target="data_out" targetport="data_out" type="void"/>
+        <edge expr="0" kind="fifo" source="Br" sourceport="out1"
+            target="Switch" targetport="in1" type="void">
+            <data key="delay"/>
+        </edge>
+        <edge kind="dependency" source="SetM" sourceport="M_out" target="M"/>
+        <edge kind="dependency" source="M" target="InitSwitch" targetport="M"/>
+        <edge kind="dependency" source="NSamples" target="Switch" targetport="NSamples"/>
+        <edge kind="dependency" source="NSamples" target="FIR" targetport="NSamples"/>
+        <edge kind="dependency" source="NSamples" target="Br" targetport="NSamples"/>
+    </graph>
+</graphml>

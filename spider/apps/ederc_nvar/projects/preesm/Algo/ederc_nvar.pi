@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+    <key attr.name="parameters" for="graph" id="parameters"/>
+    <key attr.name="variables" for="graph" id="variables"/>
+    <key attr.name="arguments" for="node" id="arguments"/>
+    <key attr.name="name" attr.type="string" for="graph"/>
+    <key attr.name="graph_desc" attr.type="string" for="node"/>
+    <graph edgedefault="directed">
+        <data key="name">ederc_nvar</data>
+        <node expr="12" id="Nval" kind="param"/>
+        <node expr="15" id="Nmax" kind="param"/>
+        <node expr="4000" id="NSamples" kind="param"/>
+        <node expr="1" id="Test" kind="param"/>
+        <node expr="1" id="N" kind="param"/>
+        <node id="Config" kind="actor">
+            <port kind="cfg_input" name="Nmax"/>
+            <port kind="cfg_input" name="Nval"/>
+            <port annotation="NONE" kind="cfg_output" name="N"/>
+            <port annotation="NONE" expr="Nmax" kind="output" name="M"/>
+        </node>
+        <node id="MFilter" kind="actor">
+            <port kind="cfg_input" name="Nmax"/>
+            <port kind="cfg_input" name="N"/>
+            <port annotation="NONE" expr="Nmax" kind="input" name="M_in"/>
+            <port annotation="NONE" expr="N" kind="output" name="M_out"/>
+        </node>
+        <node id="Src" kind="actor">
+            <port kind="cfg_input" name="N"/>
+            <port kind="cfg_input" name="Test"/>
+            <port kind="cfg_input" name="NSamples"/>
+            <port annotation="NONE" expr="N*NSamples" kind="output" name="data"/>
+        </node>
+        <node id="Snk" kind="actor">
+            <port kind="cfg_input" name="N"/>
+            <port kind="cfg_input" name="NSamples"/>
+            <port kind="cfg_input" name="Test"/>
+            <port annotation="NONE" expr="N*NSamples" kind="input" name="data"/>
+        </node>
+        <node id="Channel" kind="actor">
+            <data key="graph_desc">Algo/channel.pi</data>
+            <port kind="cfg_input" name="NSamples"/>
+            <port annotation="NONE" expr="1" kind="input" name="M_in"/>
+            <port annotation="NONE" expr="NSamples" kind="input" name="data_in"/>
+            <port annotation="NONE" expr="NSamples" kind="output" name="data_out"/>
+        </node>
+        <edge kind="fifo" source="Config" sourceport="M"
+            target="MFilter" targetport="M_in" type="char"/>
+        <edge kind="fifo" source="MFilter" sourceport="M_out"
+            target="Channel" targetport="M_in" type="char"/>
+        <edge kind="fifo" source="Src" sourceport="data"
+            target="Channel" targetport="data_in" type="float"/>
+        <edge kind="fifo" source="Channel" sourceport="data_out"
+            target="Snk" targetport="data" type="float"/>
+        <edge kind="dependency" source="Nmax" target="Config" targetport="Nmax"/>
+        <edge kind="dependency" source="Nval" target="Config" targetport="Nval"/>
+        <edge kind="dependency" source="Config" sourceport="N" target="N"/>
+        <edge kind="dependency" source="Nmax" target="MFilter" targetport="Nmax"/>
+        <edge kind="dependency" source="N" target="MFilter" targetport="N"/>
+        <edge kind="dependency" source="N" target="Src" targetport="N"/>
+        <edge kind="dependency" source="NSamples" target="Src" targetport="NSamples"/>
+        <edge kind="dependency" source="Test" target="Src" targetport="Test"/>
+        <edge kind="dependency" source="NSamples" target="Channel" targetport="NSamples"/>
+        <edge kind="dependency" source="N" target="Snk" targetport="N"/>
+        <edge kind="dependency" source="NSamples" target="Snk" targetport="NSamples"/>
+        <edge kind="dependency" source="Test" target="Snk" targetport="Test"/>
+    </graph>
+</graphml>

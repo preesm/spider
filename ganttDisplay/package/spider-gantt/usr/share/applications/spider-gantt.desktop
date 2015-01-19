@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Spider Gantt
+Exec=/usr/bin/GanttDisplay.jar -f 
+MimeType=application/spider-gantt
+Terminal=false
+Type=Application
+Categories=                        
+Comment=
+

@@ -52,6 +52,8 @@ public:
 
 	/** Shared Memory Handling */
 	virtual void* virt_to_phy(void* address);
+	virtual int getMinAllocSize();
+	virtual int getCacheLineSize();
 
 	/** Time Handling */
 	virtual void rstTime();

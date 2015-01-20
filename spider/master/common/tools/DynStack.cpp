@@ -59,11 +59,19 @@ static inline int getAlignSize(int size){
 }
 
 void *DynStack::alloc(int size){
+	size += sizeof(int);
+
 	size = getAlignSize(size);
 	curUsedSize_ += size;
 	maxSize_ = std::max(maxSize_, curUsedSize_);
 	nb_++;
-	return memalign(getpagesize(),size);
+
+	void* address = malloc(size);
+	int* sizeAddress = (int*)address;
+	void* dataAddress = (void*)(sizeAddress+1);
+	*sizeAddress = size;
+
+	return dataAddress;
 }
 
 void DynStack::freeAll(){
@@ -73,13 +81,16 @@ void DynStack::freeAll(){
 }
 
 void DynStack::free(void* var){
-	int size = malloc_usable_size (var);
+	void* dataAddress = var;
+	void* address = (void*)(((int*)dataAddress)-1);
+	int size = *((int*)address);
+
 	maxSize_ = std::max(maxSize_, curUsedSize_);
 	curUsedSize_ -= size;
-	if(size == 0){
-		printf("Error %s free'd already free'd memory\n", getName());
-	}
-	std::free(var);
+//	if(size == 0){
+//		printf("Error %s free'd already free'd memory\n", getName());
+//	}
+	std::free(address);
 	nb_--;
 }
 

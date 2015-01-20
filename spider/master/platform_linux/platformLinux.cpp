@@ -106,6 +106,8 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 	int cpIds[nLrt];
 	sem_t* semTrace;
 
+	Platform::set(this);
+
 	stack_ = stack;
 
 	cpIds[0] = getpid();
@@ -219,7 +221,6 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 		archi_->setName(i, name);
 	}
 
-	Platform::set(this);
 	this->rstTime();
 }
 
@@ -270,6 +271,14 @@ void PlatformLinux::fclose(int id){
 
 void* PlatformLinux::virt_to_phy(void* address){
 	return (void*)((long)shMem + (long)address);
+}
+
+int PlatformLinux::getCacheLineSize(){
+	return 0;
+}
+
+int PlatformLinux::getMinAllocSize(){
+	return getpagesize();
 }
 
 /** Time Handling */

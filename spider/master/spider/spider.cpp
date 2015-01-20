@@ -272,6 +272,7 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 					throw "Unhandled trace msg";
 					break;
 			}
+			getSpiderCommunicator()->trace_end_recv();
 			n--;
 		}
 	}

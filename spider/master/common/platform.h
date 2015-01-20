@@ -34,47 +34,50 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <tools/StaticStack.h>
-#include <cstdio>
-#include <algorithm>
-#include <cmath>
-#include <unistd.h>
+#ifndef PLATFORM_H
+#define PLATFORM_H
 
-StaticStack::StaticStack(const char* name, void* ptr, int size):
-		Stack(name) {
-	size_ = size;
-	stack_ = (char*)ptr;
-	curPtr_ = (char*)ptr;
-	maxUsed_ = 0;
-	used_ = 0;
+#include <type.h>
+#include <Message.h>
+
+class Platform{
+public:
+	/** File Handling */
+	virtual int fopen(const char* name) = 0;
+	virtual void fprintf(int id, const char* fmt, ...) = 0;
+	virtual void fclose(int id) = 0;
+
+	/** Memory Handling */
+	virtual void* virt_to_phy(void* address) = 0;
+	virtual int getMinAllocSize() = 0;
+	virtual int getCacheLineSize() = 0;
+
+	/** Time Handling */
+	virtual void rstTime(ClearTimeMsg* msg) = 0;
+	virtual void rstTime() = 0;
+	virtual Time getTime() = 0;
+
+	/** Platform getter/setter */
+	static inline Platform* get();
+	static inline void set(Platform* platform);
+
+protected:
+	Platform();
+	virtual ~Platform();
+
+private:
+	static Platform* platform_;
+};
+
+
+inline Platform* Platform::get(){
+	if(platform_)
+		return platform_;
+	else
+		throw "Error undefined platform\n";
+}
+inline void Platform::set(Platform* platform){
+	platform_ = platform;
 }
 
-static inline int getAlignSize(int size){
-	return std::ceil(size/1.0/getpagesize())*getpagesize();
-}
-
-void *StaticStack::alloc(int size){
-	size = getAlignSize(size);
-	void* res;
-	if(used_+size > size_)
-		throw "Insufficient memory size of the Stack\n";
-	res = curPtr_;
-	curPtr_ += size;
-	used_ += size;
-	return res;
-}
-
-void StaticStack::free(void* var){
-}
-
-void StaticStack::freeAll(){
-	maxUsed_ = std::max(maxUsed_, used_);
-	curPtr_ = stack_;
-	used_ = 0;
-}
-
-
-void StaticStack::printStat(){
-	maxUsed_ = std::max(maxUsed_, used_);
-	printf("%s: %#x / %#x (%.2f %%)\n", getName(), maxUsed_, size_, maxUsed_*100./size_);
-}
+#endif/*PLATFORM_H*/

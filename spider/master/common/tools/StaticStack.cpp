@@ -34,68 +34,50 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <tools/DynStack.h>
-#include <cstdio>
+#include <tools/StaticStack.h>
+#include <platform.h>
+
+#include <stdio.h>
 #include <algorithm>
+#include <math.h>
+//#include <unistd.h>
 
-#include <cstdlib>
-#include <malloc.h>
-#include <unistd.h>
-#include <cmath>
-
-DynStack::DynStack(const char* name): Stack(name){
-	curUsedSize_ = 0;
-	maxSize_ = 0;
-	nb_ = 0;
-}
-
-DynStack::~DynStack(){
-	printStat();
+StaticStack::StaticStack(const char* name, void* ptr, int size):
+		Stack(name) {
+	size_ = size;
+	stack_ = (char*)ptr;
+	curPtr_ = (char*)ptr;
+	maxUsed_ = 0;
+	used_ = 0;
 }
 
 static inline int getAlignSize(int size){
-	return std::ceil(size/1.0/getpagesize())*getpagesize();
+	float minAlloc = Platform::get()->getMinAllocSize();
+	return std::ceil(size/minAlloc)*minAlloc;
 }
 
-void *DynStack::alloc(int size){
+void *StaticStack::alloc(int size){
 	size = getAlignSize(size);
-	curUsedSize_ += size;
-	maxSize_ = std::max(maxSize_, curUsedSize_);
-	nb_++;
-	return memalign(getpagesize(),size);
+	void* res;
+	if(used_+size > size_)
+		throw "Insufficient memory size of the Stack\n";
+	res = curPtr_;
+	curPtr_ += size;
+	used_ += size;
+	return res;
 }
 
-void DynStack::freeAll(){
-	if(nb_ != 0){
-		printf("DynStack Warning (%s): FreeAll called with %d allocated item\n", getName(), nb_);
-	}
+void StaticStack::free(void* var){
 }
 
-void DynStack::free(void* var){
-	int size = malloc_usable_size (var);
-	maxSize_ = std::max(maxSize_, curUsedSize_);
-	curUsedSize_ -= size;
-	if(size == 0){
-		printf("Error %s free'd already free'd memory\n", getName());
-	}
-	std::free(var);
-	nb_--;
+void StaticStack::freeAll(){
+	maxUsed_ = std::max(maxUsed_, used_);
+	curPtr_ = stack_;
+	used_ = 0;
 }
 
-void DynStack::printStat(){
-	printf("%s: ", getName());
 
-	if(maxSize_ < 1024)
-		printf("\t%5.1f B", maxSize_/1.);
-	else if(maxSize_ < 1024*1024)
-		printf("\t%5.1f KB", maxSize_/1024.);
-	else if(maxSize_ < 1024*1024*1024)
-		printf("\t%5.1f MB", maxSize_/1024./1024.);
-	else
-		printf("\t%5.1f GB", maxSize_/1024./1024./1024.);
-
-	if(nb_)
-		printf(", \t%d still in use", nb_);
-
-	printf("\n");
+void StaticStack::printStat(){
+	maxUsed_ = std::max(maxUsed_, used_);
+	printf("%s: %#x / %#x (%.2f %%)\n", getName(), maxUsed_, size_, maxUsed_*100./size_);
 }

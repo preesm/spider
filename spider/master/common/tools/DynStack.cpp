@@ -34,48 +34,69 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PLATFORM_H
-#define PLATFORM_H
+#include <tools/DynStack.h>
+#include <platform.h>
 
-#include <type.h>
-#include <Message.h>
+#include <stdio.h>
+#include <algorithm>
+#include <stdlib.h>
+#include <stdio.h>
+#include <cmath>
 
-class Platform{
-public:
-	/** File Handling */
-	virtual int fopen(const char* name) = 0;
-	virtual void fprintf(int id, const char* fmt, ...) = 0;
-	virtual void fclose(int id) = 0;
+DynStack::DynStack(const char* name): Stack(name){
+	curUsedSize_ = 0;
+	maxSize_ = 0;
+	nb_ = 0;
+}
 
-	/** Shared Memory Handling */
-	virtual void* virt_to_phy(void* address) = 0;
+DynStack::~DynStack(){
+	printStat();
+}
 
-	/** Time Handling */
-	virtual void rstTime(ClearTimeMsg* msg) = 0;
-	virtual void rstTime() = 0;
-	virtual Time getTime() = 0;
+static inline int getAlignSize(int size){
+	float minAlloc = Platform::get()->getMinAllocSize();
+	return std::ceil(size/minAlloc)*minAlloc;
+}
 
-	/** Platform getter/setter */
-	static inline Platform* get();
-	static inline void set(Platform* platform);
+void *DynStack::alloc(int size){
+	size = getAlignSize(size);
+	curUsedSize_ += size;
+	maxSize_ = std::max(maxSize_, curUsedSize_);
+	nb_++;
+	return memalign(getpagesize(),size);
+}
 
-protected:
-	Platform();
-	virtual ~Platform();
+void DynStack::freeAll(){
+	if(nb_ != 0){
+		printf("DynStack Warning (%s): FreeAll called with %d allocated item\n", getName(), nb_);
+	}
+}
 
-private:
-	static Platform* platform_;
-};
+void DynStack::free(void* var){
+	int size = malloc_usable_size (var);
+	maxSize_ = std::max(maxSize_, curUsedSize_);
+	curUsedSize_ -= size;
+	if(size == 0){
+		printf("Error %s free'd already free'd memory\n", getName());
+	}
+	std::free(var);
+	nb_--;
+}
 
+void DynStack::printStat(){
+	printf("%s: ", getName());
 
-inline Platform* Platform::get(){
-	if(platform_)
-		return platform_;
+	if(maxSize_ < 1024)
+		printf("\t%5.1f B", maxSize_/1.);
+	else if(maxSize_ < 1024*1024)
+		printf("\t%5.1f KB", maxSize_/1024.);
+	else if(maxSize_ < 1024*1024*1024)
+		printf("\t%5.1f MB", maxSize_/1024./1024.);
 	else
-		throw "Error undefined platform\n";
-}
-inline void Platform::set(Platform* platform){
-	platform_ = platform;
-}
+		printf("\t%5.1f GB", maxSize_/1024./1024./1024.);
 
-#endif/*PLATFORM_H*/
+	if(nb_)
+		printf(", \t%d still in use", nb_);
+
+	printf("\n");
+}

@@ -40,7 +40,7 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <tools/Set.h>
 
-#include <cstdio>
+#include <stdio.h>
 #include <algorithm>
 
 #define MAX_VERTEX 10000

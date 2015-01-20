@@ -36,8 +36,8 @@
 
 #include "specialActors.h"
 
-#include <cstdio>
-#include <cstring>
+#include <stdio.h>
+#include <string.h>
 #include <algorithm>
 
 void saRoundbuffer(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){

@@ -36,8 +36,8 @@
 
 
 #include <graphs/SRDAG/SRDAGVertex.h>
-#include <cstdio>
-#include <cstring>
+#include <stdio.h>
+#include <string.h>
 
 /** Static Var def */
 int SRDAGVertex::globalId = 0;

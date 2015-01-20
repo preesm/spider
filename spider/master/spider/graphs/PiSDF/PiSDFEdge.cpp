@@ -36,7 +36,7 @@
 
 #include <graphs/PiSDF/PiSDFCommon.h>
 #include <graphs/PiSDF/PiSDFEdge.h>
-#include <cstring>
+#include <string.h>
 
 /** Static Var def */
 int PiSDFEdge::globalId = 0;

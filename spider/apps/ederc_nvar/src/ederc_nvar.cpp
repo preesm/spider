@@ -35,8 +35,8 @@
  ****************************************************************************/
 
 #include "ederc_nvar.h"
-#include <cstdio>
-#include <cstring>
+#include <stdio.h>
+#include <string.h>
 
 #define VERBOSE 0
 

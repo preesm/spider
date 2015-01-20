@@ -35,8 +35,8 @@
  ****************************************************************************/
 
 #include "Schedule.h"
-#include <cstring>
-#include <cstdio>
+#include <string.h>
+#include <stdio.h>
 
 Schedule::Schedule(int nPE, int nJobMax, Stack *stack){
 	stack_ = stack;

@@ -38,8 +38,8 @@
 #include <platformLinux.h>
 #include "ederc_nvar.h"
 
-#include <cstdio>
-#include <cstdlib>
+#include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char* argv[]){
 	SpiderConfig cfg;

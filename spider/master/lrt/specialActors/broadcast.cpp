@@ -36,8 +36,8 @@
 
 #include "specialActors.h"
 
-#include <cstring>
-#include <cstdio>
+#include <string.h>
+#include <stdio.h>
 
 void saBroadcast(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	int nbToken = inParams[0];

@@ -36,7 +36,7 @@
 
 #include "spider.h"
 
-#include <cstdio>
+#include <stdio.h>
 #include <launcher/Launcher.h>
 
 static SpiderCommunicator* spiderCom = 0;

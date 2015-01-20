@@ -61,8 +61,8 @@
 #include <scheduling/Scheduler/ListScheduler.h>
 
 #include <cmath>
-#include <cstdlib>
-#include <cstring>
+#include <stdlib.h>
+#include <string.h>
 
 #include <launcher/Launcher.h>
 

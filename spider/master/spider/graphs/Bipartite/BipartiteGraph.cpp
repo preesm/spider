@@ -39,8 +39,8 @@
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/SRDAG/SRDAGVertex.h>
 
-#include <cstring>
-#include <cstdio>
+#include <string.h>
+#include <stdio.h>
 #include <platform.h>
 
 BipartiteGraph::BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack){

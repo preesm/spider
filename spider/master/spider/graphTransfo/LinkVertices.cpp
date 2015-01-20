@@ -45,7 +45,7 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/SRDAG/SRDAGEdge.h>
 
-#include <cstdio>
+#include <stdio.h>
 #include <cmath>
 #include <algorithm>
 

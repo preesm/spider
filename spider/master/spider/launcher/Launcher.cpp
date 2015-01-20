@@ -44,7 +44,7 @@
 
 #include <time.h>
 #include <algorithm>
-#include <cstdio>
+#include <stdio.h>
 
 #include <platform.h>
 #include <spider.h>

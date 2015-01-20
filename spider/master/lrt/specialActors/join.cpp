@@ -36,8 +36,8 @@
 
 #include "specialActors.h"
 
-#include <cstring>
-#include <cstdio>
+#include <string.h>
+#include <stdio.h>
 
 void saJoin(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	int nbFifoIn, nbFifoOut, i, index;

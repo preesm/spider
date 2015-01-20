@@ -36,7 +36,7 @@
 
 
 #include <graphs/PiSDF/PiSDFVertex.h>
-#include <cstring>
+#include <string.h>
 
 /** Static Var def */
 int PiSDFVertex::globalId = 0;

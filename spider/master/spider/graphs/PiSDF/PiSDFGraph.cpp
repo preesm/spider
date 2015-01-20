@@ -41,7 +41,7 @@
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <tools/Set.h>
 
-#include <cstdio>
+#include <stdio.h>
 
 PiSDFGraph::PiSDFGraph(
 		int nEdges, int nParams,

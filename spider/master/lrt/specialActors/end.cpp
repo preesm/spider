@@ -36,7 +36,7 @@
 
 #include "specialActors.h"
 
-#include <cstdio>
+#include <stdio.h>
 
 void saEnd(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	Param nbTokens = inParams[0];

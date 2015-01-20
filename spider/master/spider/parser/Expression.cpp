@@ -39,8 +39,8 @@
 #include <graphTransfo/GraphTransfo.h>
 
 #include <cctype>
-#include <cstring>
-#include <cstdio>
+#include <string.h>
+#include <stdio.h>
 
 namespace Parser {
 

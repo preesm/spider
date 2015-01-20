@@ -25,7 +25,7 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.189606751" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1879278030" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/spider}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/coms}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/common}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/lrt}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/platform_linux}&quot;"/>
 								</option>
@@ -36,7 +36,7 @@
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.48376098" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.679522108" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/spider}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/coms}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/common}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/lrt}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/platform_linux}&quot;"/>
 								</option>

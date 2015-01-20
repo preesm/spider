@@ -423,6 +423,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				switch(origin_vertex->getType()){
 				case SRDAG_NORMAL:
 				case SRDAG_FORK:
+				case SRDAG_JOIN:
 					sourceVertex = origin_vertex;
 					sourcePortId = piSrcIx;
 					break;
@@ -445,7 +446,6 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					break;
 				default:
 				case SRDAG_END:
-				case SRDAG_JOIN:
 					throw "Unexpected case in pisdf transfo";
 				}
 

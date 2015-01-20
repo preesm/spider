@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+    <key attr.name="parameters" for="graph" id="parameters"/>
+    <key attr.name="variables" for="graph" id="variables"/>
+    <key attr.name="arguments" for="node" id="arguments"/>
+    <key attr.name="name" attr.type="string" for="graph"/>
+    <graph edgedefault="directed">
+        <data key="name">fft</data>
+        <node id="fftSize" kind="cfg_in_iface"/>
+        <node id="in" kind="src">
+            <port annotation="NONE" expr="fftSize" kind="output" name="in"/>
+        </node>
+        <node id="out" kind="snk">
+            <port annotation="NONE" expr="fftSize" kind="input" name="out"/>
+        </node>
+        <node id="Fork" kind="fork">
+            <port annotation="NONE" expr="4" kind="input" name="in"/>
+            <port annotation="NONE" expr="2" kind="output" name="out0"/>
+            <port annotation="NONE" expr="2" kind="output" name="out1"/>
+        </node>
+        <node id="Join" kind="join">
+            <port annotation="NONE" expr="2" kind="input" name="in0"/>
+            <port annotation="NONE" expr="2" kind="input" name="in1"/>
+            <port annotation="NONE" expr="4" kind="output" name="out"/>
+        </node>
+        <node id="fft_core" kind="actor">
+            <port annotation="NONE" expr="1" kind="input" name="in0"/>
+            <port annotation="NONE" expr="1" kind="input" name="in1"/>
+            <port annotation="NONE" expr="1" kind="output" name="out0"/>
+            <port annotation="NONE" expr="1" kind="output" name="out1"/>
+        </node>
+        <edge kind="fifo" source="in" sourceport="in" target="Fork"
+            targetport="in" type="void"/>
+        <edge kind="fifo" source="Fork" sourceport="out0"
+            target="fft_core" targetport="in0" type="void"/>
+        <edge kind="fifo" source="Fork" sourceport="out1"
+            target="fft_core" targetport="in1" type="void"/>
+        <edge kind="fifo" source="fft_core" sourceport="out0"
+            target="Join" targetport="in0" type="void"/>
+        <edge kind="fifo" source="fft_core" sourceport="out1"
+            target="Join" targetport="in1" type="void"/>
+        <edge kind="fifo" source="Join" sourceport="out" target="out"
+            targetport="out" type="void"/>
+        <edge kind="dependency" source="fftSize" target="in"/>
+        <edge kind="dependency" source="fftSize" target="out"/>
+    </graph>
+</graphml>

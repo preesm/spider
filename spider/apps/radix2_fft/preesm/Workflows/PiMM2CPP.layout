@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout>
+   <vertices>
+      <vertex id="scenario" x="57" y="70"/>
+      <vertex id="CPPGen" x="266" y="70"/>
+   </vertices>
+</layout>

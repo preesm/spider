@@ -36,9 +36,11 @@
 
 #include <lrt.h>
 #include <Message.h>
+#include <platform.h>
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "specialActors/specialActors.h"
 

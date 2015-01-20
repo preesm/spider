@@ -37,7 +37,6 @@
 #ifndef LRT_H
 #define LRT_H
 
-#include <platform.h>
 #include <LrtCommunicator.h>
 
 typedef void (*lrtFct)(
@@ -59,6 +58,8 @@ public:
 	void runUntilNoMoreJobs();
 	void runInfinitly();
 
+	inline int getIx() const;
+
 protected:
 	void sendTrace(int srdagIx, Time start, Time end);
 
@@ -71,6 +72,10 @@ private:
 
 inline LrtCommunicator* LRT::getCom(){
 	return com_;
+}
+
+inline int LRT::getIx() const{
+	return ix_;
 }
 
 #endif/*LRT_H*/

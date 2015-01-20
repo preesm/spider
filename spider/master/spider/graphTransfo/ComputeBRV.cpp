@@ -116,7 +116,7 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 	for(int i=0; i < job->graph->getNOutIf(); i++){
 		PiSDFVertex* outIf = job->graph->getOutputIf(i);
 		PiSDFEdge* edge = outIf->getInEdge(0);
-		/* Only if IF<->Body edge */
+		/* Only if Body<->IF edge */
 		if(edge->getSrc()->getType() == PISDF_TYPE_BODY){
 			float prod = edge->resolveProd(job);
 			float cons = edge->resolveCons(job);

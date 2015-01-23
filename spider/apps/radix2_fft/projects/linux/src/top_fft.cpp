@@ -34,67 +34,135 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <spider.h>
-#include <platformLinux.h>
 #include "top_fft.h"
-
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 
-int main(int argc, char* argv[]){
-	SpiderConfig cfg;
-	ExecutionStat stat;
+#define VERBOSE 1
 
-	DynStack pisdfStack("PisdfStack");
-	DynStack archiStack("ArchiStack");
+#define M_VAL 2
+#define NB_TAPS 512
 
-#define SH_MEM 0x00200000
-	PlatformLinux platform(4, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
-	Archi* archi = platform.getArchi();
+void genStepSwitch(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param NStep = inParams[0];
 
-	cfg.memAllocType = MEMALLOC_DUMMY;
-	cfg.memAllocStart = (void*)0;
-	cfg.memAllocSize = SH_MEM;
+	char* steps = (char*) outputFIFOs[0];
+	char* sels = (char*) outputFIFOs[1];
 
-	cfg.schedulerType = SCHEDULER_LIST;
+#if VERBOSE
+	printf("Execute genStepSwitch\n");
+#endif
 
-	cfg.srdagStack = {STACK_DYNAMIC, "SrdagStack", 0, 0};
-	cfg.transfoStack = {STACK_DYNAMIC, "TransfoStack", 0, 0};
-
-	spider_init(cfg);
-
-	printf("Start\n");
-
-//	try{
-		for(int iter=1; iter<=1; iter++){
-			printf("N=%d\n", iter);
-			char ganttPath[30];
-			sprintf(ganttPath, "ederc_nvar_%d.sgantt", iter);
-			char srdagPath[30];
-			sprintf(srdagPath, "ederc_nvar_%d.gv", iter);
-
-			pisdfStack.freeAll();
-
-			PiSDFGraph *topPisdf = init_top_fft(archi, &pisdfStack);
-			topPisdf->print("topPisdf.gv");
-
-			Platform::get()->rstTime();
-
-			spider_launch(archi, topPisdf);
-//
-//			spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
-			spider_getLastSRDAG()->print(srdagPath);
-
-			printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
-
-//			freePisdf_ederc_nvar(topPisdf, &pisdfStack);
-		}
-//	}catch(const char* s){
-//		printf("Exception : %s\n", s);
-//	}
-	printf("finished\n");
-
-	spider_free();
-
-	return 0;
+	steps[0] = 0;
+	sels[0] = 0;
+	for(int i=1; i<NStep; i++){
+		steps[i] = i;
+		sels[i] = 1;
+	}
 }
+
+void cfgFftStep(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param NMAX = inParams[0];
+	Param N = inParams[1];
+
+	char *in  = (char*) inputFIFOs[0];
+	Param* step = (Param*) &outParams[0];
+
+#if VERBOSE
+	printf("Execute cfgFftStep\n");
+#endif
+
+	*step = *in;
+}
+
+void src(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param fftSize = inParams[0];
+	float *out = (float*)outputFIFOs[0];
+
+#if VERBOSE
+	printf("Execute Src\n");
+#endif
+
+}
+
+void snk(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param fftSize = inParams[0];
+	float *in = (float*)inputFIFOs[0];
+
+#if VERBOSE
+	printf("Execute Snk\n");
+#endif
+
+}
+
+void fftRadix2(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param NStep = inParams[0];
+	Param fftSize = inParams[1];
+
+	char* in0 = (char*) inputFIFOs[0];
+	char* in1 = (char*) inputFIFOs[1];
+	char* out0 = (char*) outputFIFOs[0];
+	char* out1 = (char*) outputFIFOs[1];
+
+#if VERBOSE
+	printf("Execute fftRadix2\n");
+#endif
+}
+
+void Switch(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param NSamples = inParams[0];
+	char* in0 = (char*) inputFIFOs[0];
+	char* in1 = (char*) inputFIFOs[1];
+	char* sel = (char*) inputFIFOs[2];
+	char* out = (char*) outputFIFOs[0];
+
+#if VERBOSE
+	printf("Execute Switch\n");
+#endif
+
+	switch(*sel){
+	case 0:
+		memcpy(out, in0, NSamples*sizeof(float));
+		break;
+	case 1:
+		memcpy(out, in1, NSamples*sizeof(float));
+		break;
+	default:
+		printf("Bad sel received in Switch\n");
+		break;
+	}
+}
+
+void configFft(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param fftSize = inParams[0];
+	Param* NStep = (Param*) &outParams[0];
+
+#if VERBOSE
+	printf("Execute configFft\n");
+#endif
+
+	*NStep = 3;
+}
+
+void selcfg(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param *out_Sel = (Param*) &outParams[0];
+	char* in_Sel = (char*) inputFIFOs[0];
+
+#if VERBOSE
+	printf("Execute selcfg\n");
+#endif
+
+	// Set parameter's value.
+	*out_Sel = in_Sel[0];
+}
+
+lrtFct top_fft_fcts[N_FCT_TOP_FFT] = {
+		&src,
+		&snk,
+		&genStepSwitch,
+		&cfgFftStep,
+		&fftRadix2,
+		&Switch,
+		&configFft,
+		&selcfg
+};

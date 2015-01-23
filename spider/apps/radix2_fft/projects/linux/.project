@@ -3,6 +3,7 @@
 	<name>radix2_fft</name>
 	<comment></comment>
 	<projects>
+		<project>Spider</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

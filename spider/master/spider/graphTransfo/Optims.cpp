@@ -319,6 +319,135 @@ static int reduceInitEnd(SRDAGGraph* topDag){
 	return 0;
 }
 
+static int reduceJoinFork(SRDAGGraph* topDag){
+	for(int i=0; i<topDag->getNVertex(); i++){
+		SRDAGVertex* join = topDag->getVertex(i);
+		if(join && join->getType() == SRDAG_JOIN && join->getState() != SRDAG_RUN){
+			SRDAGVertex* fork = join->getOutEdge(0)->getSnk();
+			if(fork && fork->getType() == SRDAG_FORK && fork->getState() != SRDAG_RUN){
+				int totalNbTokens = 0;
+				int totProd = 0;
+
+				int sourceIndex=0, sinkIndex=0;
+#define MAX_SRDAG_INPUT_EDGES 100
+
+				SRDAGVertex* sources[MAX_SRDAG_INPUT_EDGES];
+				int sourceProds[MAX_SRDAG_INPUT_EDGES];
+				int sourcePortIx[MAX_SRDAG_INPUT_EDGES];
+				bool sourceExplode[MAX_SRDAG_INPUT_EDGES];
+				int nbSourceRepetitions = join->getNConnectedInEdge();
+
+				topDag->delEdge(join->getOutEdge(0));
+
+				for(int k=0; k<nbSourceRepetitions; k++){
+					SRDAGEdge *edge = join->getInEdge(k);
+					sources[k] = edge->getSrc();
+					sourceProds[k] = edge->getRate();
+					sourcePortIx[k] = edge->getSrcPortIx();
+
+					topDag->delEdge(edge);
+					totalNbTokens += sourceProds[k];
+					sourceExplode[k] = false;
+				}
+				topDag->delVertex(join);
+
+				SRDAGVertex* sinks[MAX_SRDAG_INPUT_EDGES];
+				int sinkCons[MAX_SRDAG_INPUT_EDGES];
+				int sinkPortIx[MAX_SRDAG_INPUT_EDGES];
+				int nbSinkRepetitions = fork->getNConnectedOutEdge();
+				bool sinkImplode[MAX_SRDAG_INPUT_EDGES];
+				for(int k=0; k<nbSinkRepetitions; k++){
+					SRDAGEdge *edge = fork->getOutEdge(k);
+					sinks[k] = edge->getSnk();
+					sinkCons[k] = edge->getRate();
+					sinkPortIx[k] = edge->getSnkPortIx();
+
+					topDag->delEdge(edge);
+					sinkImplode[k] = false;
+				}
+				topDag->delVertex(fork);
+
+				int curProd = sourceProds[0];
+				int curCons = sinkCons[0];
+
+				while (totProd < totalNbTokens) {
+					// Production/consumption rate for the current source/target.
+					int rest = (curProd > curCons) ? curCons:curProd;
+
+					/*
+					 * Adding explode/implode vertices if required.
+					 */
+
+					if (rest < curProd && !sourceExplode[sourceIndex]){
+						// Adding an explode vertex.
+						SRDAGVertex *fork_vertex = topDag->addFork(MAX_IO_EDGES);
+
+						// Replacing the source vertex by the explode vertex in the array of sources.
+						SRDAGVertex *origin_vertex = sources[sourceIndex];
+						sources[sourceIndex] = fork_vertex;
+						sourceExplode[sourceIndex] = true;
+
+						// Adding an edge between the source and the explode.
+						topDag->addEdge(
+								origin_vertex, sourcePortIx[sourceIndex],
+								fork_vertex, 0,
+								sourceProds[sourceIndex]);
+					}
+
+					if (rest < curCons && !sinkImplode[sinkIndex]){
+						// Adding an implode vertex.
+						SRDAGVertex *join_vertex = topDag->addJoin(MAX_IO_EDGES);
+
+						// Replacing the sink vertex by the implode vertex in the array of sources.
+						SRDAGVertex *origin_vertex = sinks[sinkIndex];//	// Adding vxs
+						sinks[sinkIndex] = join_vertex;
+						sinkImplode[sinkIndex] = true;
+
+						// Adding an edge between the implode and the sink.
+						topDag->addEdge(
+								join_vertex, 0,
+								origin_vertex, sinkPortIx[sinkIndex],
+								sinkCons[sinkIndex]);
+					}
+
+					//Creating the new edge between normal vertices or between a normal and an explode/implode one.
+					int sourcePortId, sinkPortId;
+					if(sourceExplode[sourceIndex]){
+						sourcePortId = sources[sourceIndex]->getNConnectedOutEdge();
+					}else{
+						sourcePortId = sourcePortIx[sourceIndex];
+					}
+
+					if(sinkImplode[sinkIndex])
+						sinkPortId = sinks[sinkIndex]->getNConnectedInEdge();
+					else
+						sinkPortId = sinkPortIx[sinkIndex];
+
+
+					topDag->addEdge(
+							sources[sourceIndex], sourcePortId,
+							sinks[sinkIndex], sinkPortId,
+							rest);
+
+					// Update the totProd for the current edge (totProd is used in the condition of the While loop)
+					totProd += rest;
+
+					curCons -= rest;
+					curProd -= rest;
+
+					if(curProd == 0){
+						curProd += sourceProds[++sourceIndex];
+					}
+					if(curCons == 0){
+						curCons += sinkCons[++sinkIndex];
+					}
+				}
+				return 1;
+			}
+		}
+	}
+	return 0;
+	}
 
 void optims(SRDAGGraph *topDag, Stack* stack){
 	bool res;
@@ -326,6 +455,7 @@ void optims(SRDAGGraph *topDag, Stack* stack){
 		res = false;
 		res = res || reduceJoinJoin(topDag);
 		res = res || reduceForkFork(topDag);
+		res = res || reduceJoinFork(topDag);
 		res = res || removeBr(topDag);
 		res = res || removeFork(topDag);
 		res = res || removeJoin(topDag);

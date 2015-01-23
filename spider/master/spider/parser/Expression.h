@@ -68,6 +68,7 @@ private:
 		ADD,
 		SUB,
 		MUL,
+		POW,
 		DIV
 	} OpType;
 

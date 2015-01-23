@@ -41,6 +41,7 @@
 #include <cctype>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 namespace Parser {
 
@@ -153,6 +154,12 @@ int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job) c
 					*(stackPtr-1) /= *stackPtr;
 				}
 				break;
+			case POW:
+				if(stackPtr-stack >= 2){
+					stackPtr--;
+					*(stackPtr-1) =  pow(*(stackPtr-1), *stackPtr);
+				}
+				break;
 			}
 			break;
 		case VALUE:
@@ -202,6 +209,12 @@ int Expression::evaluate(const int* vertexParamValues, int nParam) const{
 				if(stackPtr-stack >= 2){
 					stackPtr--;
 					*(stackPtr-1) /= *stackPtr;
+				}
+				break;
+			case POW:
+				if(stackPtr-stack >= 2){
+					stackPtr--;
+					*(stackPtr-1) =  pow(*(stackPtr-1), *stackPtr);
 				}
 				break;
 			}
@@ -304,6 +317,16 @@ bool Expression::getNextToken(
 		if(token != 0){
 			token->type = OPERATOR;
 			token->opType = MUL;
+		}
+		(*ptr)++;
+		return true;
+	}
+
+	// check for power
+	if (**ptr == '^'){
+		if(token != 0){
+			token->type = OPERATOR;
+			token->opType = POW;
 		}
 		(*ptr)++;
 		return true;

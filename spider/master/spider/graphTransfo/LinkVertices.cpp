@@ -214,7 +214,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		int curSourceToken, curSinkToken;
 
 		SRDAGVertex** srcRepetitions;
-		SRDAGVertex** snkRepetitions;
+		SRDAGEdge** snkRepetitions;
 
 		bool sinkNeedEnd = false;
 		int beforelastCons;
@@ -335,9 +335,9 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		case PISDF_TYPE_IF:
 			if(sinkConsumption*1 == sourceProduction*nbSourceRepetitions){
 				// No need of specific thing
-				snkRepetitions = CREATE_MUL(stack, 1, SRDAGVertex*);
-				*snkRepetitions = job->outputIfs[edge->getSnk()->getTypeId()]->getSnk();
-				piSnkIx = job->outputIfs[edge->getSnk()->getTypeId()]->getSnkPortIx();
+				snkRepetitions = CREATE_MUL(stack, 1, SRDAGEdge*);
+				*snkRepetitions = job->outputIfs[edge->getSnk()->getTypeId()];
+//				piSnkIx = job->outputIfs[edge->getSnk()->getTypeId()]->getSnkPortIx();
 				curSinkToken = sinkConsumption;
 				beforelastCons = sinkConsumption;
 				lastCons = sinkConsumption;
@@ -345,11 +345,12 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				float nDroppedTokens = sourceProduction*nbSourceRepetitions-sinkConsumption;
 				int nEnd = std::ceil(nDroppedTokens/sourceProduction);
 
-				snkRepetitions = CREATE_MUL(stack, nEnd+1, SRDAGVertex*);
+				snkRepetitions = CREATE_MUL(stack, nEnd+1, SRDAGEdge*);
 				for(int i=0; i<nEnd; i++){
-					snkRepetitions[i] = topSrdag->addEnd();
+					snkRepetitions[i] = topSrdag->addEdge();
+					snkRepetitions[i]->connectSnk(topSrdag->addEnd(), 0);
 				}
-				snkRepetitions[nEnd] = job->outputIfs[edge->getSnk()->getTypeId()]->getSnk();
+				snkRepetitions[nEnd] = job->outputIfs[edge->getSnk()->getTypeId()];
 
 				nbSinkRepetitions = nEnd+1;
 
@@ -367,23 +368,36 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		case PISDF_TYPE_BODY:
 			if(nbDelays == 0){
 				if(sinkNeedEnd){
-					snkRepetitions = CREATE_MUL(stack, nbSinkRepetitions+1, SRDAGVertex*);
-					memcpy(snkRepetitions, job->bodies[edge->getSnk()->getTypeId()], nbSinkRepetitions*sizeof(SRDAGVertex*));
-					snkRepetitions[nbSinkRepetitions] = topSrdag->addEnd();
+					snkRepetitions = CREATE_MUL(stack, nbSinkRepetitions+1, SRDAGEdge*);
+
+					for(int i=0; i<nbSinkRepetitions; i++){
+						snkRepetitions[i] = topSrdag->addEdge();
+						snkRepetitions[i]->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i], edge->getSnkPortIx());
+					}
+					snkRepetitions[nbSinkRepetitions] = topSrdag->addEdge();
+					snkRepetitions[nbSinkRepetitions]->connectSnk(topSrdag->addEnd(), 0);
 					nbSinkRepetitions++;
 				}else{
-					snkRepetitions = CREATE_MUL(stack, nbSinkRepetitions, SRDAGVertex*);
-					memcpy(snkRepetitions, job->bodies[edge->getSnk()->getTypeId()], nbSinkRepetitions*sizeof(SRDAGVertex*));
+					snkRepetitions = CREATE_MUL(stack, nbSinkRepetitions, SRDAGEdge*);
+
+					for(int i=0; i<nbSinkRepetitions; i++){
+						snkRepetitions[i] = topSrdag->addEdge();
+						snkRepetitions[i]->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i], edge->getSnkPortIx());
+					}
 				}
 
 				curSinkToken   = sinkConsumption;
 				beforelastCons = sinkConsumption;
 				lastCons = sinkConsumption;
 			}else{
-				snkRepetitions = CREATE_MUL(stack, nbSinkRepetitions+1, SRDAGVertex*);
+				snkRepetitions = CREATE_MUL(stack, nbSinkRepetitions+1, SRDAGEdge*);
 
-				memcpy(snkRepetitions, job->bodies[edge->getSnk()->getTypeId()], nbSinkRepetitions*sizeof(SRDAGVertex*));
-				snkRepetitions[nbSinkRepetitions] = topSrdag->addEnd();
+				for(int i=0; i<nbSinkRepetitions; i++){
+					snkRepetitions[i] = topSrdag->addEdge();
+					snkRepetitions[i]->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i], edge->getSnkPortIx());
+				}
+				snkRepetitions[nbSinkRepetitions] = topSrdag->addEdge();
+				snkRepetitions[nbSinkRepetitions]->connectSnk(topSrdag->addEnd(), 0);
 
 				nbSinkRepetitions++;
 				curSinkToken   = sinkConsumption;
@@ -396,7 +410,8 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		// Iterating until all consumptions are "satisfied".
 		while (sourceIndex < nbSourceRepetitions
 				|| sinkIndex < nbSinkRepetitions) {
-			SRDAGVertex* sourceVertex, *sinkVertex;
+			SRDAGVertex* sourceVertex;
+			SRDAGEdge* sinkEdge;
 			int sourcePortId, sinkPortId;
 
 			// Production/consumption rate for the current source/target.
@@ -461,44 +476,26 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 			}
 
 			if (rest < curSinkToken &&
-				(snkRepetitions[sinkIndex]->getId() != joinIx)){ // Type == 0 indicates it is a normal vertex.
+					snkRepetitions[sinkIndex]->getSnk() &&
+					(snkRepetitions[sinkIndex]->getSnk()->getId() != joinIx)){ // Type == 0 indicates it is a normal vertex.
 
-				// Adding an implode vertex.
+				// Adding an join vertex.
 				SRDAGVertex *join_vertex = topSrdag->addJoin(MAX_IO_EDGES);
 				joinIx = join_vertex->getId();
 
-				// Replacing the sink vertex by the implode vertex in the array of sources.
-				SRDAGVertex *origin_vertex = snkRepetitions[sinkIndex];//	// Adding vxs
-				snkRepetitions[sinkIndex] = join_vertex;
+				// Replacing the sink vertex by the join vertex in the array of sources.
+				snkRepetitions[sinkIndex]->connectSrc(join_vertex, 0);
+				snkRepetitions[sinkIndex] = topSrdag->addEdge();
+				snkRepetitions[sinkIndex]->connectSnk(join_vertex, 0);
 
-				int sinkPortId;
-
-				switch(origin_vertex->getType()){
-				case SRDAG_NORMAL:
-				case SRDAG_BROADCAST:
-				case SRDAG_JOIN:
-				case SRDAG_FORK:
-					sinkPortId = piSnkIx;
-					break;
-				case SRDAG_ROUNDBUFFER:
-				case SRDAG_END:
-					sinkPortId = 0;
-					break;
-				default:
-				case SRDAG_INIT:
-					throw "Unexpected case in pisdf transfo";
-				}
-
-				if(origin_vertex->getInEdge(sinkPortId) != 0)
-					origin_vertex->getInEdge(sinkPortId)->connectSrc(join_vertex, 0);
-				else
-					// Adding an edge between the implode and the sink.
-					topSrdag->addEdge(
-							join_vertex, 0,
-							origin_vertex, sinkPortId,
-							curSinkToken
-					);
+			}else if(snkRepetitions[sinkIndex]->getSnk()
+					&& snkRepetitions[sinkIndex]->getSnk()->getId() == joinIx){
+				/* Adding the new edge in join*/
+				SRDAGVertex *join_vertex = snkRepetitions[sinkIndex]->getSnk();
+				snkRepetitions[sinkIndex] = topSrdag->addEdge();
+				snkRepetitions[sinkIndex]->connectSnk(join_vertex, join_vertex->getNConnectedInEdge());
 			}
+			sinkEdge = snkRepetitions[sinkIndex];
 
 			//Creating the new edge between normal vertices or between a normal and an explode/implode one.
 
@@ -525,37 +522,19 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				break;
 			}
 
-			sinkVertex = snkRepetitions[sinkIndex];
-			switch(sinkVertex->getType()){
-			case SRDAG_JOIN:
-				if(sinkVertex->getId() == joinIx)
-					sinkPortId = sinkVertex->getNConnectedInEdge();
-				else
-					sinkPortId = piSnkIx;
-				break;
-			case SRDAG_END:
-			case SRDAG_ROUNDBUFFER:
-				sinkPortId = 0;
-				break;
-			default:
-				sinkPortId = piSnkIx;
-				break;
-			}
+			topSrdag->print("tmp.gv");
 
 			if(sourceVertex->getOutEdge(sourcePortId) != 0){
-				if(sinkVertex->getInEdge(sinkPortId) != 0){
-					topSrdag->delEdge(sinkVertex->getInEdge(sinkPortId));
-				}
-				sourceVertex->getOutEdge(sourcePortId)->connectSnk(sinkVertex, sinkPortId);
-			}else if(sinkVertex->getInEdge(sinkPortId) != 0){
-				sinkVertex->getInEdge(sinkPortId)->connectSrc(sourceVertex, sourcePortId);
+				SRDAGEdge* srcEdge = sourceVertex->getOutEdge(sourcePortId);
+				sinkEdge->setAlloc(srcEdge->getAlloc());
+				sinkEdge->setAllocIx(srcEdge->getAllocIx());
+				sinkEdge->setRate(srcEdge->getRate());
+
+				topSrdag->delEdge(srcEdge);
+				sinkEdge->connectSrc(sourceVertex, sourcePortId);
 			}else{
-				// Adding an edge between the implode and the sink.
-				topSrdag->addEdge(
-						sourceVertex, sourcePortId,
-						sinkVertex, sinkPortId,
-						rest
-				);
+				sinkEdge->connectSrc(sourceVertex, sourcePortId);
+				sinkEdge->setRate(rest);
 			}
 
 			// Update the number of token produced/consumed by the current source/target.

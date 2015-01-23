@@ -26,6 +26,7 @@
 ################
 *.gv
 *.xml
+*.sgantt
 
 # Logs and databases #
 ######################

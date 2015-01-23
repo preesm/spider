@@ -121,7 +121,7 @@ static void freeJob(transfoJob *job, Stack* stack){
 static SRDAGVertex* getNextHierVx(SRDAGGraph *topDag){
 	for(int i=0; i<topDag->getNVertex(); i++){ // todo check executable
 		SRDAGVertex* vertex = topDag->getVertex(i);
-		if(vertex->isHierarchical()){
+		if(vertex->isHierarchical() && vertex->getState() == SRDAG_EXEC){
 			return vertex;
 		}
 	}
@@ -142,6 +142,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 		abort();
 	}
 	topSrdag->addVertex(root);
+	topSrdag->updateState();
 
 	Queue<transfoJob*> jobQueue(transfoSTack);
 
@@ -188,11 +189,11 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 			}
 
 			/* Find next hierarchical vertex */
+			topSrdag->updateState();
 			nextHierVx = getNextHierVx(topSrdag);
 
 		}while(nextHierVx);
 
-		topSrdag->updateState();
 		spider_endMonitoring(TRACE_SPIDER_GRAPH);
 
 		spider_startMonitoring();

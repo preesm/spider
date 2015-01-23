@@ -84,10 +84,15 @@ void ListScheduler::scheduleOnlyConfig(SRDAGGraph* graph, Schedule* schedule, Ar
 		SRDAGVertex *vertex = srdag_->getVertex(i);
 		if(vertex->getState() == SRDAG_EXEC && vertex->getNOutParam() > 0){
 			list_->add(vertex);
-			computeSchedLevel(vertex);
+			vertex->setSchedLvl(-1);
 			addPrevActors(vertex, list_);
 		}
 	}
+
+	for(int i=0; i<list_->getNb(); i++){
+		computeSchedLevel((*list_)[i]);
+	}
+
 	list_->sort(compareSchedLevel);
 
 //	Launcher::endTaskOrderingTime();
@@ -121,9 +126,14 @@ void ListScheduler::schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi
 		SRDAGVertex *vertex = srdag_->getVertex(i);
 		if(vertex->getState() == SRDAG_EXEC){
 			list_->add(vertex);
-			computeSchedLevel(vertex);
+			vertex->setSchedLvl(-1);
 		}
 	}
+
+	for(int i=0; i<list_->getNb(); i++){
+		computeSchedLevel((*list_)[i]);
+	}
+
 	list_->sort(compareSchedLevel);
 
 //	Launcher::endTaskOrderingTime();
@@ -178,6 +188,9 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 	for(int i=0; i<vertex->getNConnectedInEdge(); i++){
 		minimumStartTime = std::max(minimumStartTime,
 				vertex->getInEdge(i)->getSrc()->getEndTime());
+		if(vertex->getInEdge(i)->getSrc()->getState() != SRDAG_RUN){
+			throw "Try to start a vertex when previous one is not launched\n";
+		}
 	}
 
 

@@ -76,7 +76,7 @@
         <edge kind="fifo" source="JoinFftStep" sourceport="out"
             target="out" targetport="out" type="float"/>
         <edge kind="fifo" source="genIx" sourceport="ixs"
-            target="fft_radix2" targetport="ix" type="void"/>
+            target="fft_radix2" targetport="ix" type="char"/>
         <edge kind="dependency" source="cfgFftStep" sourceport="step" target="Step"/>
         <edge kind="dependency" source="fftSize" target="in"/>
         <edge kind="dependency" source="fftSize" target="ForkFftStep" targetport="fftSize"/>

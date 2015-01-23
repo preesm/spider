@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+    <key attr.name="parameters" for="graph" id="parameters"/>
+    <key attr.name="variables" for="graph" id="variables"/>
+    <key attr.name="arguments" for="node" id="arguments"/>
+    <key attr.name="name" attr.type="string" for="graph"/>
+    <graph edgedefault="directed">
+        <data key="name">switch</data>
+        <node expr="0" id="Sel" kind="param"/>
+        <node id="fftSize" kind="cfg_in_iface"/>
+        <node id="in0" kind="src">
+            <port annotation="NONE" expr="size" kind="output" name="in0"/>
+        </node>
+        <node id="in1" kind="src">
+            <port annotation="NONE" expr="size" kind="output" name="in1"/>
+        </node>
+        <node id="sel" kind="src">
+            <port annotation="NONE" expr="1" kind="output" name="sel"/>
+        </node>
+        <node id="out" kind="snk">
+            <port annotation="NONE" expr="size" kind="input" name="out"/>
+        </node>
+        <node id="configSel" kind="actor">
+            <port annotation="NONE" kind="cfg_output" name="Sel"/>
+            <port annotation="NONE" expr="1" kind="input" name="sel"/>
+        </node>
+        <node id="f0" kind="fork">
+            <port kind="cfg_input" name="sel"/>
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size" kind="input" name="in"/>
+            <port annotation="NONE" expr="size*sel" kind="output" name="out0"/>
+            <port annotation="NONE" expr="size*(1-sel)" kind="output" name="out1"/>
+        </node>
+        <node id="f1" kind="fork">
+            <port kind="cfg_input" name="sel"/>
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size" kind="input" name="in"/>
+            <port annotation="NONE" expr="size*sel" kind="output" name="out0"/>
+            <port annotation="NONE" expr="size*(1-sel)" kind="output" name="out1"/>
+        </node>
+        <node id="j" kind="join">
+            <port kind="cfg_input" name="sel"/>
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size*(1-sel)" kind="input" name="in0"/>
+            <port annotation="NONE" expr="size*sel" kind="input" name="in1"/>
+            <port annotation="NONE" expr="size" kind="output" name="out"/>
+        </node>
+        <node id="end0" kind="actor">
+            <port kind="cfg_input" name="sel"/>
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size*sel" kind="input" name="in"/>
+        </node>
+        <node id="end1" kind="actor">
+            <port kind="cfg_input" name="sel"/>
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size*(1-sel)" kind="input" name="in"/>
+        </node>
+        <edge kind="fifo" source="sel" sourceport="sel"
+            target="configSel" targetport="sel" type="char"/>
+        <edge kind="fifo" source="in0" sourceport="in0" target="f0"
+            targetport="in" type="char"/>
+        <edge kind="fifo" source="in1" sourceport="in1" target="f1"
+            targetport="in" type="char"/>
+        <edge kind="fifo" source="f0" sourceport="out1" target="j"
+            targetport="in0" type="char"/>
+        <edge kind="fifo" source="f1" sourceport="out0" target="j"
+            targetport="in1" type="char"/>
+        <edge kind="fifo" source="f1" sourceport="out1" target="end1"
+            targetport="in" type="char"/>
+        <edge kind="fifo" source="f0" sourceport="out0" target="end0"
+            targetport="in" type="char"/>
+        <edge kind="fifo" source="j" sourceport="out" target="out"
+            targetport="out" type="char"/>
+        <edge kind="dependency" source="configSel" sourceport="Sel" target="Sel"/>
+        <edge kind="dependency" source="Sel" target="f0" targetport="sel"/>
+        <edge kind="dependency" source="Sel" target="f1" targetport="sel"/>
+        <edge kind="dependency" source="Sel" target="j" targetport="sel"/>
+        <edge kind="dependency" source="Sel" target="end0" targetport="sel"/>
+        <edge kind="dependency" source="Sel" target="end1" targetport="sel"/>
+        <edge kind="dependency" source="fftSize" target="in1"/>
+        <edge kind="dependency" source="fftSize" target="in0"/>
+        <edge kind="dependency" source="fftSize" target="out"/>
+        <edge kind="dependency" source="fftSize" target="end1" targetport="size"/>
+        <edge kind="dependency" source="fftSize" target="j" targetport="size"/>
+        <edge kind="dependency" source="fftSize" target="end0" targetport="size"/>
+        <edge kind="dependency" source="fftSize" target="f0" targetport="size"/>
+        <edge kind="dependency" source="fftSize" target="f1" targetport="size"/>
+    </graph>
+</graphml>

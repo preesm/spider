@@ -78,8 +78,14 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 			int prod = edge->resolveProd(job);
 			int cons = edge->resolveCons(job);
 
-			if(prod < 0 || cons < 0 )
+			if(prod < 0 || cons < 0 ){
+				char name[100];
+				edge->getProdExpr(name, 100);
+				printf("Prod : %s = %d\n", name, prod);
+				edge->getConsExpr(name, 100);
+				printf("Cons : %s = %d\n", name, cons);
 				throw "Error Bad prod/cons resolved\n";
+			}
 
 			topo_matrix[nbEdges*nbVertices + edge->getSrc()->getTypeId()] = prod;
 			topo_matrix[nbEdges*nbVertices + edge->getSnk()->getTypeId()] = -cons;

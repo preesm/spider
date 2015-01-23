@@ -120,8 +120,6 @@ void ListScheduler::schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi
 
 	list_ = CREATE(stack, List<SRDAGVertex*>)(stack, srdag_->getNExecVertex());
 
-//	Launcher::initTaskOrderingTime();
-
 	for(int i=0; i<srdag_->getNVertex(); i++){
 		SRDAGVertex *vertex = srdag_->getVertex(i);
 		if(vertex->getState() == SRDAG_EXEC){
@@ -136,13 +134,13 @@ void ListScheduler::schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi
 
 	list_->sort(compareSchedLevel);
 
-//	Launcher::endTaskOrderingTime();
-//	Launcher::initMappingTime();
+//	for (int i=0; i<list_->getNb(); i++){
+//		printf("%d (%d), ", (*list_)[i]->getId(), (*list_)[i]->getSchedLvl());
+//	}
+//	printf("\n");
 
 	schedule_->setAllMinReadyTime(Platform::get()->getTime());
 	schedule_->setReadyTime(0, Platform::get()->getTime() + MAPPING_TIME*list_->getNb());
-
-//	Launcher::setActorsNb(schedList.getNb());
 
 	for(int i=0; i<list_->getNb(); i++){
 		this->scheduleVertex((*list_)[i]);
@@ -150,12 +148,6 @@ void ListScheduler::schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi
 
 	list_->~List();
 	stack->free(list_);
-
-//	Launcher::endMappingTime();
-//
-//#if EXEC == 1
-//	execute();
-//#endif
 }
 
 int ListScheduler::computeSchedLevel(SRDAGVertex* vertex){

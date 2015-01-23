@@ -227,13 +227,9 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 			/* Add vertices */
 			addSRVertices(topSrdag, job, brv, transfoSTack);
-//			SRDAGWrite(topDag, "topDag_add.gv", DataRates);
-//			SRDAGCheck(topDag);
 
 			/* Link vertices */
 			linkSRVertices(topSrdag, job, brv, transfoSTack);
-//			SRDAGWrite(topDag, "topDag_link.gv", DataRates);
-//			SRDAGCheck(topDag);
 
 			freeJob(job, transfoSTack);
 

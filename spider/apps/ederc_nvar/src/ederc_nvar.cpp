@@ -40,7 +40,7 @@
 
 #define VERBOSE 0
 
-#define M_VAL 12
+#define M_VAL 2
 #define NB_TAPS 512
 
 void config(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
@@ -146,7 +146,7 @@ void setM(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outPa
 	char* in_M = (char*) inputFIFOs[0];
 
 #if VERBOSE
-	printf("Execute setM\n");
+	printf("Execute setM %d\n", in_M[0]);
 #endif
 
 	// Set parameter's value.

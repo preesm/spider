@@ -35,7 +35,7 @@
  ****************************************************************************/
 
 #include <spider.h>
-#include <platformLinux.h>
+#include <platformK2Arm.h>
 #include "ederc_nvar.h"
 
 #include <stdio.h>
@@ -48,8 +48,8 @@ int main(int argc, char* argv[]){
 	DynStack pisdfStack("PisdfStack");
 	DynStack archiStack("ArchiStack");
 
-#define SH_MEM 0x20000000
-	PlatformLinux platform(4, SH_MEM, &archiStack, ederc_nvar_fcts, NB_FCT_EDERC_NVAR);
+#define SH_MEM 0x00200000
+	PlatformK2Arm platform(4, 0, SH_MEM, &archiStack, ederc_nvar_fcts, NB_FCT_EDERC_NVAR);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_DUMMY;
@@ -65,18 +65,18 @@ int main(int argc, char* argv[]){
 
 	printf("Start\n");
 
-//	try{
+	try{
 		for(int iter=1; iter<=1; iter++){
 			printf("N=%d\n", iter);
 			char ganttPath[30];
-			sprintf(ganttPath, "ederc_nvar_%d.xml", iter);
+			sprintf(ganttPath, "ederc_nvar_%d.sgantt", iter);
 			char srdagPath[30];
 			sprintf(srdagPath, "ederc_nvar_%d.gv", iter);
 
 			pisdfStack.freeAll();
 
 			PiSDFGraph *topPisdf = initPisdf_ederc_nvar(archi, &pisdfStack, 12, 12, 4000, 1);
-			topPisdf->print("topPisdf.gv");
+//			topPisdf->print("topPisdf.gv");
 
 			Platform::get()->rstTime();
 
@@ -89,9 +89,9 @@ int main(int argc, char* argv[]){
 
 			freePisdf_ederc_nvar(topPisdf, &pisdfStack);
 		}
-//	}catch(const char* s){
-//		printf("Exception : %s\n", s);
-//	}
+	}catch(const char* s){
+		printf("Exception : %s\n", s);
+	}
 	printf("finished\n");
 
 	spider_free();

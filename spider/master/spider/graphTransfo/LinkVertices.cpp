@@ -522,8 +522,6 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				break;
 			}
 
-			topSrdag->print("tmp.gv");
-
 			if(sourceVertex->getOutEdge(sourcePortId) != 0){
 				SRDAGEdge* srcEdge = sourceVertex->getOutEdge(sourcePortId);
 				sinkEdge->setAlloc(srcEdge->getAlloc());

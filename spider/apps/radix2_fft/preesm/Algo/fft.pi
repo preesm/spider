@@ -4,44 +4,73 @@
     <key attr.name="variables" for="graph" id="variables"/>
     <key attr.name="arguments" for="node" id="arguments"/>
     <key attr.name="name" attr.type="string" for="graph"/>
+    <key attr.name="graph_desc" attr.type="string" for="node"/>
+    <key attr.name="delay" attr.type="string" for="edge"/>
     <graph edgedefault="directed">
         <data key="name">fft</data>
         <node id="fftSize" kind="cfg_in_iface"/>
+        <node expr="3" id="NStep" kind="param"/>
         <node id="in" kind="src">
             <port annotation="NONE" expr="fftSize" kind="output" name="in"/>
         </node>
         <node id="out" kind="snk">
             <port annotation="NONE" expr="fftSize" kind="input" name="out"/>
         </node>
-        <node id="Fork" kind="fork">
-            <port annotation="NONE" expr="4" kind="input" name="in"/>
-            <port annotation="NONE" expr="2" kind="output" name="out0"/>
-            <port annotation="NONE" expr="2" kind="output" name="out1"/>
+        <node id="configFft" kind="actor">
+            <port kind="cfg_input" name="fftSize"/>
+            <port annotation="NONE" kind="cfg_output" name="NStep"/>
         </node>
-        <node id="Join" kind="join">
-            <port annotation="NONE" expr="2" kind="input" name="in0"/>
-            <port annotation="NONE" expr="2" kind="input" name="in1"/>
-            <port annotation="NONE" expr="4" kind="output" name="out"/>
+        <node id="fftStep" kind="actor">
+            <data key="graph_desc">Algo/fftStep.pi</data>
+            <port kind="cfg_input" name="fftSize"/>
+            <port kind="cfg_input" name="NStep"/>
+            <port annotation="NONE" expr="1" kind="input" name="step"/>
+            <port annotation="NONE" expr="fftSize" kind="input" name="in"/>
+            <port annotation="NONE" expr="fftSize" kind="output" name="out"/>
         </node>
-        <node id="fft_core" kind="actor">
-            <port annotation="NONE" expr="1" kind="input" name="in0"/>
-            <port annotation="NONE" expr="1" kind="input" name="in1"/>
-            <port annotation="NONE" expr="1" kind="output" name="out0"/>
-            <port annotation="NONE" expr="1" kind="output" name="out1"/>
+        <node id="Switch" kind="actor">
+            <port kind="cfg_input" name="fftSize"/>
+            <port annotation="NONE" expr="1" kind="input" name="sel"/>
+            <port annotation="NONE" expr="fftSize" kind="input" name="in0"/>
+            <port annotation="NONE" expr="fftSize" kind="input" name="in1"/>
+            <port annotation="NONE" expr="fftSize" kind="output" name="out"/>
         </node>
-        <edge kind="fifo" source="in" sourceport="in" target="Fork"
-            targetport="in" type="void"/>
-        <edge kind="fifo" source="Fork" sourceport="out0"
-            target="fft_core" targetport="in0" type="void"/>
-        <edge kind="fifo" source="Fork" sourceport="out1"
-            target="fft_core" targetport="in1" type="void"/>
-        <edge kind="fifo" source="fft_core" sourceport="out0"
-            target="Join" targetport="in0" type="void"/>
-        <edge kind="fifo" source="fft_core" sourceport="out1"
-            target="Join" targetport="in1" type="void"/>
-        <edge kind="fifo" source="Join" sourceport="out" target="out"
-            targetport="out" type="void"/>
+        <node id="BrFftStep" kind="broadcast">
+            <port kind="cfg_input" name="fftSize"/>
+            <port annotation="NONE" expr="fftSize" kind="input" name="in"/>
+            <port annotation="NONE" expr="fftSize" kind="output" name="out0"/>
+            <port annotation="NONE" expr="fftSize" kind="output" name="out1"/>
+        </node>
+        <node id="GenStepSwitch" kind="actor">
+            <port kind="cfg_input" name="NStep"/>
+            <port annotation="NONE" expr="NStep" kind="output" name="steps"/>
+            <port annotation="NONE" expr="NStep" kind="output" name="sels"/>
+        </node>
+        <edge kind="fifo" source="in" sourceport="in" target="Switch"
+            targetport="in0" type="float"/>
+        <edge kind="fifo" source="Switch" sourceport="out"
+            target="fftStep" targetport="in" type="float"/>
+        <edge kind="fifo" source="fftStep" sourceport="out"
+            target="BrFftStep" targetport="in" type="float"/>
+        <edge kind="fifo" source="BrFftStep" sourceport="out0"
+            target="out" targetport="out" type="float"/>
+        <edge expr="fftSize" kind="fifo" source="BrFftStep"
+            sourceport="out1" target="Switch" targetport="in1" type="float">
+            <data key="delay"/>
+        </edge>
+        <edge kind="fifo" source="GenStepSwitch" sourceport="steps"
+            target="fftStep" targetport="step" type="char"/>
+        <edge kind="fifo" source="GenStepSwitch" sourceport="sels"
+            target="Switch" targetport="sel" type="char"/>
         <edge kind="dependency" source="fftSize" target="in"/>
         <edge kind="dependency" source="fftSize" target="out"/>
+        <edge kind="dependency" source="fftSize" target="configFft" targetport="fftSize"/>
+        <edge kind="dependency" source="fftSize" target="fftStep" targetport="fftSize"/>
+        <edge kind="dependency" source="NStep" target="fftStep" targetport="NStep"/>
+        <edge kind="dependency" source="configFft" sourceport="NStep" target="NStep"/>
+        <edge kind="dependency" source="fftSize" target="BrFftStep.out1-Switch.in1"/>
+        <edge kind="dependency" source="NStep" target="GenStepSwitch" targetport="NStep"/>
+        <edge kind="dependency" source="fftSize" target="Switch" targetport="fftSize"/>
+        <edge kind="dependency" source="fftSize" target="BrFftStep" targetport="fftSize"/>
     </graph>
 </graphml>

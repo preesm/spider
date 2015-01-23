@@ -8,14 +8,23 @@
     <constraints excelUrl="">
         <constraintGroup>
             <operator name="Core0"/>
-            <task name="top_fft/FFT/in"/>
+            <task name="top_fft/FFT/fftStep/out"/>
+            <task name="top_fft/FFT/configFft"/>
             <task name="top_fft"/>
-            <task name="top_fft/Src"/>
-            <task name="top_fft/FFT/Join"/>
+            <task name="top_fft/FFT/BrFftStep"/>
+            <task name="top_fft/FFT/GenStepSwitch"/>
             <task name="top_fft/Snk"/>
+            <task name="top_fft/FFT/fftStep/ForkFftStep"/>
             <task name="top_fft/FFT"/>
-            <task name="top_fft/FFT/fft_core"/>
-            <task name="top_fft/FFT/Fork"/>
+            <task name="top_fft/FFT/fftStep/step"/>
+            <task name="top_fft/FFT/fftStep/cfgFftStep"/>
+            <task name="top_fft/FFT/fftStep/in"/>
+            <task name="top_fft/FFT/in"/>
+            <task name="top_fft/FFT/fftStep/fft_radix2"/>
+            <task name="top_fft/FFT/fftStep"/>
+            <task name="top_fft/FFT/fftStep/JoinFftStep"/>
+            <task name="top_fft/Src"/>
+            <task name="top_fft/FFT/Switch"/>
             <task name="top_fft/FFT/out"/>
         </constraintGroup>
     </constraints>
@@ -32,5 +41,8 @@
         <numberOfTopExecutions>1</numberOfTopExecutions>
     </simuParams>
     <variables excelUrl=""/>
-    <parameterValues/>
+    <parameterValues>
+        <parameter name="Step" parent="fftStep" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="NStep" parent="FFT" type="ACTOR_DEPENDENT" value="[1]"/>
+    </parameterValues>
 </scenario>

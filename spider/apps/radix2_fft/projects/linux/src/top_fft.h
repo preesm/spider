@@ -41,7 +41,7 @@
 
 #include <spider.h>
 
-#define N_FCT_TOP_FFT 8
+#define N_FCT_TOP_FFT 11
 extern lrtFct top_fft_fcts[N_FCT_TOP_FFT];
 
 PiSDFGraph* init_top_fft(Archi* archi, Stack* stack);

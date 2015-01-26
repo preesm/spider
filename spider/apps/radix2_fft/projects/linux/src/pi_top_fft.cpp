@@ -48,8 +48,9 @@ typedef enum{
 
 PiSDFGraph* top_fft(Archi* archi, Stack* stack);
 PiSDFGraph* FFT(Archi* archi, Stack* stack);
-PiSDFGraph* fftStep(Archi* archi, Stack* stack);
+PiSDFGraph* radixReduction(Archi* archi, Stack* stack);
 PiSDFGraph* Switch(Archi* archi, Stack* stack);
+PiSDFGraph* fftStep(Archi* archi, Stack* stack);
 
 /**
  * This is the method you need to call to build a complete PiSDF graph.
@@ -137,12 +138,12 @@ PiSDFGraph* top_fft(Archi* archi, Stack* stack){
 // Method building PiSDFGraphFFT
 PiSDFGraph* FFT(Archi* archi, Stack* stack){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
-		/*Edges*/    9,
+		/*Edges*/    4,
 		/*Params*/   2,
 		/*InputIf*/  1,
 		/*OutputIf*/ 1,
 		/*Config*/   1,
-		/*Body*/     6,
+		/*Body*/     3,
 		/*Archi*/    archi,
 		/*Stack*/    stack);
 
@@ -174,23 +175,6 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 	cf_configFft->isExecutableOnPE(CORE_CORE0);
 	cf_configFft->setTimingOnType(CORE_TYPE_X86, "1000", stack);
 
-	PiSDFVertex* bo_BrFftStep = graph->addSpecialVertex(
-		/*Type*/    PISDF_SUBTYPE_BROADCAST,
-		/*InData*/  1,
-		/*OutData*/ 2,
-		/*InParam*/ 1);
-	bo_BrFftStep->addInParam(0, param_fftSize);
-
-	PiSDFVertex* bo_GenStepSwitch = graph->addBodyVertex(
-		/*Name*/    "GenStepSwitch",
-		/*FctId*/   2,
-		/*InData*/  0,
-		/*OutData*/ 2,
-		/*InParam*/ 1);
-	bo_GenStepSwitch->addInParam(0, param_NStep);
-	bo_GenStepSwitch->isExecutableOnPE(CORE_CORE0);
-	bo_GenStepSwitch->setTimingOnType(CORE_TYPE_X86, "1000", stack);
-
 	PiSDFVertex* bo_ordering = graph->addBodyVertex(
 		/*Name*/    "ordering",
 		/*FctId*/   8,
@@ -209,7 +193,94 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 		/*InParam*/ 2);
 	bo_FFT->addInParam(0, param_NStep);
 	bo_FFT->addInParam(1, param_fftSize);
+	bo_FFT->isExecutableOnPE(CORE_CORE0);
 	bo_FFT->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+
+	PiSDFVertex* bo_radixReduction = graph->addHierVertex(
+		/*Name*/    "radixReduction",
+		/*Graph*/   radixReduction(archi, stack),
+		/*InData*/  1,
+		/*OutData*/ 1,
+		/*InParam*/ 2);
+	bo_radixReduction->addInParam(0, param_NStep);
+	bo_radixReduction->addInParam(1, param_fftSize);
+
+
+	/* Edges */
+	graph->connect(
+		/*Src*/ if_in, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
+		/*Snk*/ bo_ordering, /*SnkPrt*/ 0, /*Cons*/ "fftSize",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ bo_ordering, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
+		/*Snk*/ bo_FFT, /*SnkPrt*/ 0, /*Cons*/ "fftSize/(2^NStep)",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ bo_FFT, /*SrcPrt*/ 0, /*Prod*/ "fftSize/(2^NStep)",
+		/*Snk*/ bo_radixReduction, /*SnkPrt*/ 0, /*Cons*/ "fftSize",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ bo_radixReduction, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
+		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "fftSize",
+		/*Delay*/ "0",0);
+
+	return graph;
+}
+
+// Method building PiSDFGraphradixReduction
+PiSDFGraph* radixReduction(Archi* archi, Stack* stack){
+	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
+		/*Edges*/    7,
+		/*Params*/   2,
+		/*InputIf*/  1,
+		/*OutputIf*/ 1,
+		/*Config*/   0,
+		/*Body*/     4,
+		/*Archi*/    archi,
+		/*Stack*/    stack);
+
+	/* Parameters */
+	PiSDFParam *param_NStep = graph->addHeritedParam("NStep", 0);
+	PiSDFParam *param_fftSize = graph->addHeritedParam("fftSize", 1);
+
+	/* Vertices */
+	PiSDFVertex* if_in = graph->addInputIf(
+		/*Name*/    "if_in",
+		/*InParam*/ 1);
+	if_in->addInParam(0, param_fftSize);
+
+	PiSDFVertex* if_out = graph->addOutputIf(
+		/*Name*/    "if_out",
+		/*InParam*/ 1);
+	if_out->addInParam(0, param_fftSize);
+
+	PiSDFVertex* bo_GenSwitchSel = graph->addBodyVertex(
+		/*Name*/    "GenSwitchSel",
+		/*FctId*/   2,
+		/*InData*/  0,
+		/*OutData*/ 2,
+		/*InParam*/ 1);
+	bo_GenSwitchSel->addInParam(0, param_NStep);
+	bo_GenSwitchSel->isExecutableOnPE(CORE_CORE0);
+	bo_GenSwitchSel->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+
+	PiSDFVertex* bo_Br = graph->addSpecialVertex(
+		/*Type*/    PISDF_SUBTYPE_BROADCAST,
+		/*InData*/  1,
+		/*OutData*/ 2,
+		/*InParam*/ 1);
+	bo_Br->addInParam(0, param_fftSize);
+
+	PiSDFVertex* bo_Switch = graph->addHierVertex(
+		/*Name*/    "Switch",
+		/*Graph*/   Switch(archi, stack),
+		/*InData*/  3,
+		/*OutData*/ 1,
+		/*InParam*/ 1);
+	bo_Switch->addInParam(0, param_fftSize);
 
 	PiSDFVertex* bo_fftStep = graph->addHierVertex(
 		/*Name*/    "fftStep",
@@ -220,20 +291,22 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 	bo_fftStep->addInParam(0, param_fftSize);
 	bo_fftStep->addInParam(1, param_NStep);
 
-	PiSDFVertex* bo_Switch = graph->addHierVertex(
-		/*Name*/    "Switch",
-		/*Graph*/   Switch(archi, stack),
-		/*InData*/  3,
-		/*OutData*/ 1,
-		/*InParam*/ 1);
-	bo_Switch->addInParam(0, param_fftSize);
-
 
 	/* Edges */
 	graph->connect(
-		/*Src*/ if_in, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
-		/*Snk*/ bo_ordering, /*SnkPrt*/ 0, /*Cons*/ "fftSize",
+		/*Src*/ bo_GenSwitchSel, /*SrcPrt*/ 1, /*Prod*/ "NStep",
+		/*Snk*/ bo_Switch, /*SnkPrt*/ 2, /*Cons*/ "1",
 		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ if_in, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
+		/*Snk*/ bo_Switch, /*SnkPrt*/ 0, /*Cons*/ "fftSize",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ bo_Br, /*SrcPrt*/ 1, /*Prod*/ "fftSize",
+		/*Snk*/ bo_Switch, /*SnkPrt*/ 1, /*Cons*/ "fftSize",
+		/*Delay*/ "fftSize",0);
 
 	graph->connect(
 		/*Src*/ bo_Switch, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
@@ -242,37 +315,149 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 
 	graph->connect(
 		/*Src*/ bo_fftStep, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
-		/*Snk*/ bo_BrFftStep, /*SnkPrt*/ 0, /*Cons*/ "fftSize",
+		/*Snk*/ bo_Br, /*SnkPrt*/ 0, /*Cons*/ "fftSize",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_BrFftStep, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
+		/*Src*/ bo_Br, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
 		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "fftSize",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_BrFftStep, /*SrcPrt*/ 1, /*Prod*/ "fftSize",
-		/*Snk*/ bo_Switch, /*SnkPrt*/ 1, /*Cons*/ "fftSize",
-		/*Delay*/ "fftSize",0);
-
-	graph->connect(
-		/*Src*/ bo_GenStepSwitch, /*SrcPrt*/ 0, /*Prod*/ "NStep",
+		/*Src*/ bo_GenSwitchSel, /*SrcPrt*/ 0, /*Prod*/ "NStep",
 		/*Snk*/ bo_fftStep, /*SnkPrt*/ 1, /*Cons*/ "1",
 		/*Delay*/ "0",0);
 
+	return graph;
+}
+
+// Method building PiSDFGraphSwitch
+PiSDFGraph* Switch(Archi* archi, Stack* stack){
+	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
+		/*Edges*/    8,
+		/*Params*/   2,
+		/*InputIf*/  3,
+		/*OutputIf*/ 1,
+		/*Config*/   1,
+		/*Body*/     5,
+		/*Archi*/    archi,
+		/*Stack*/    stack);
+
+	/* Parameters */
+	PiSDFParam *param_Sel = graph->addDynamicParam("Sel");
+	PiSDFParam *param_fftSize = graph->addHeritedParam("fftSize", 0);
+
+	/* Vertices */
+	PiSDFVertex* if_in0 = graph->addInputIf(
+		/*Name*/    "if_in0",
+		/*InParam*/ 1);
+	if_in0->addInParam(0, param_fftSize);
+
+	PiSDFVertex* if_in1 = graph->addInputIf(
+		/*Name*/    "if_in1",
+		/*InParam*/ 1);
+	if_in1->addInParam(0, param_fftSize);
+
+	PiSDFVertex* if_sel = graph->addInputIf(
+		/*Name*/    "if_sel",
+		/*InParam*/ 0);
+
+	PiSDFVertex* if_out = graph->addOutputIf(
+		/*Name*/    "if_out",
+		/*InParam*/ 1);
+	if_out->addInParam(0, param_fftSize);
+
+	PiSDFVertex* cf_configSel = graph->addConfigVertex(
+		/*Name*/    "configSel",
+		/*FctId*/   3,
+		/*SubType*/ PISDF_SUBTYPE_NORMAL,
+		/*InData*/  1,
+		/*OutData*/ 0,
+		/*InParam*/ 0,
+		/*OutParam*/1);
+	cf_configSel->addOutParam(0, param_Sel);
+	cf_configSel->isExecutableOnPE(CORE_CORE0);
+	cf_configSel->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+
+	PiSDFVertex* bo_f0 = graph->addSpecialVertex(
+		/*Type*/    PISDF_SUBTYPE_FORK,
+		/*InData*/  1,
+		/*OutData*/ 2,
+		/*InParam*/ 2);
+	bo_f0->addInParam(0, param_Sel);
+	bo_f0->addInParam(1, param_fftSize);
+
+	PiSDFVertex* bo_f1 = graph->addSpecialVertex(
+		/*Type*/    PISDF_SUBTYPE_FORK,
+		/*InData*/  1,
+		/*OutData*/ 2,
+		/*InParam*/ 2);
+	bo_f1->addInParam(0, param_Sel);
+	bo_f1->addInParam(1, param_fftSize);
+
+	PiSDFVertex* bo_j = graph->addSpecialVertex(
+		/*Type*/    PISDF_SUBTYPE_JOIN,
+		/*InData*/  2,
+		/*OutData*/ 1,
+		/*InParam*/ 2);
+	bo_j->addInParam(0, param_Sel);
+	bo_j->addInParam(1, param_fftSize);
+
+	PiSDFVertex* bo_end0 = graph->addSpecialVertex(
+		PISDF_SUBTYPE_END,
+		/*InData*/  1,
+		/*OutData*/ 0,
+		/*InParam*/ 2);
+	bo_end0->addInParam(0, param_Sel);
+	bo_end0->addInParam(1, param_fftSize);
+
+	PiSDFVertex* bo_end1 = graph->addSpecialVertex(
+			PISDF_SUBTYPE_END,
+		/*InData*/  1,
+		/*OutData*/ 0,
+		/*InParam*/ 2);
+	bo_end1->addInParam(0, param_Sel);
+	bo_end1->addInParam(1, param_fftSize);
+
+	/* Edges */
 	graph->connect(
-		/*Src*/ bo_GenStepSwitch, /*SrcPrt*/ 1, /*Prod*/ "NStep",
-		/*Snk*/ bo_Switch, /*SnkPrt*/ 2, /*Cons*/ "1",
+		/*Src*/ if_sel, /*SrcPrt*/ 0, /*Prod*/ "1",
+		/*Snk*/ cf_configSel, /*SnkPrt*/ 0, /*Cons*/ "1",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_ordering, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
-		/*Snk*/ bo_FFT, /*SnkPrt*/ 0, /*Cons*/ "fftSize/(2^NStep)",
+		/*Src*/ if_in0, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
+		/*Snk*/ bo_f0, /*SnkPrt*/ 0, /*Cons*/ "fftSize",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_FFT, /*SrcPrt*/ 0, /*Prod*/ "fftSize/(2^NStep)",
-		/*Snk*/ bo_Switch, /*SnkPrt*/ 0, /*Cons*/ "fftSize",
+		/*Src*/ if_in1, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
+		/*Snk*/ bo_f1, /*SnkPrt*/ 0, /*Cons*/ "fftSize",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ bo_f0, /*SrcPrt*/ 1, /*Prod*/ "fftSize*(1-Sel)",
+		/*Snk*/ bo_j, /*SnkPrt*/ 0, /*Cons*/ "fftSize*(1-Sel)",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ bo_f1, /*SrcPrt*/ 0, /*Prod*/ "fftSize*Sel",
+		/*Snk*/ bo_j, /*SnkPrt*/ 1, /*Cons*/ "fftSize*Sel",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ bo_f1, /*SrcPrt*/ 1, /*Prod*/ "fftSize*(1-Sel)",
+		/*Snk*/ bo_end1, /*SnkPrt*/ 0, /*Cons*/ "fftSize*(1-Sel)",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ bo_f0, /*SrcPrt*/ 0, /*Prod*/ "fftSize*Sel",
+		/*Snk*/ bo_end0, /*SnkPrt*/ 0, /*Cons*/ "fftSize*Sel",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ bo_j, /*SrcPrt*/ 0, /*Prod*/ "fftSize",
+		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "fftSize",
 		/*Delay*/ "0",0);
 
 	return graph;
@@ -353,7 +538,7 @@ PiSDFGraph* fftStep(Archi* archi, Stack* stack){
 
 	PiSDFVertex* bo_genIx = graph->addBodyVertex(
 		/*Name*/    "genIx",
-		/*FctId*/   -1,
+		/*FctId*/   10,
 		/*InData*/  0,
 		/*OutData*/ 1,
 		/*InParam*/ 1);
@@ -401,138 +586,6 @@ PiSDFGraph* fftStep(Archi* archi, Stack* stack){
 	graph->connect(
 		/*Src*/ bo_genIx, /*SrcPrt*/ 0, /*Prod*/ "2^(NStep-1)",
 		/*Snk*/ bo_fft_radix2, /*SnkPrt*/ 2, /*Cons*/ "1",
-		/*Delay*/ "0",0);
-
-	return graph;
-}
-
-// Method building PiSDFGraphSwitch
-PiSDFGraph* Switch(Archi* archi, Stack* stack){
-	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
-		/*Edges*/    8,
-		/*Params*/   2,
-		/*InputIf*/  3,
-		/*OutputIf*/ 1,
-		/*Config*/   1,
-		/*Body*/     5,
-		/*Archi*/    archi,
-		/*Stack*/    stack);
-
-	/* Parameters */
-	PiSDFParam *param_Sel = graph->addDynamicParam("Sel");
-	PiSDFParam *param_fftSize = graph->addHeritedParam("fftSize", 0);
-
-	/* Vertices */
-	PiSDFVertex* if_in0 = graph->addInputIf(
-		/*Name*/    "if_in0",
-		/*InParam*/ 1);
-	if_in0->addInParam(0, param_fftSize);
-
-	PiSDFVertex* if_in1 = graph->addInputIf(
-		/*Name*/    "if_in1",
-		/*InParam*/ 1);
-	if_in1->addInParam(0, param_fftSize);
-
-	PiSDFVertex* if_sel = graph->addInputIf(
-		/*Name*/    "if_sel",
-		/*InParam*/ 0);
-
-	PiSDFVertex* if_out = graph->addOutputIf(
-		/*Name*/    "if_out",
-		/*InParam*/ 1);
-	if_out->addInParam(0, param_fftSize);
-
-	PiSDFVertex* cf_configSel = graph->addConfigVertex(
-		/*Name*/    "configSel",
-		/*FctId*/   -1,
-		/*SubType*/ PISDF_SUBTYPE_NORMAL,
-		/*InData*/  1,
-		/*OutData*/ 0,
-		/*InParam*/ 0,
-		/*OutParam*/1);
-	cf_configSel->addOutParam(0, param_Sel);
-	cf_configSel->isExecutableOnPE(CORE_CORE0);
-	cf_configSel->setTimingOnType(CORE_TYPE_X86, "1000", stack);
-
-	PiSDFVertex* bo_f0 = graph->addSpecialVertex(
-		/*Type*/    PISDF_SUBTYPE_FORK,
-		/*InData*/  1,
-		/*OutData*/ 2,
-		/*InParam*/ 2);
-	bo_f0->addInParam(0, param_Sel);
-	bo_f0->addInParam(1, param_fftSize);
-
-	PiSDFVertex* bo_f1 = graph->addSpecialVertex(
-		/*Type*/    PISDF_SUBTYPE_FORK,
-		/*InData*/  1,
-		/*OutData*/ 2,
-		/*InParam*/ 2);
-	bo_f1->addInParam(0, param_Sel);
-	bo_f1->addInParam(1, param_fftSize);
-
-	PiSDFVertex* bo_j = graph->addSpecialVertex(
-		/*Type*/    PISDF_SUBTYPE_JOIN,
-		/*InData*/  2,
-		/*OutData*/ 1,
-		/*InParam*/ 2);
-	bo_j->addInParam(0, param_Sel);
-	bo_j->addInParam(1, param_fftSize);
-
-	PiSDFVertex* bo_end0 = graph->addSpecialVertex(
-		PISDF_SUBTYPE_END,
-		/*InData*/  1,
-		/*OutData*/ 0,
-		/*InParam*/ 2);
-	bo_end0->addInParam(0, param_Sel);
-	bo_end0->addInParam(1, param_fftSize);
-
-	PiSDFVertex* bo_end1 = graph->addSpecialVertex(
-			PISDF_SUBTYPE_END,
-		/*InData*/  1,
-		/*OutData*/ 0,
-		/*InParam*/ 2);
-	bo_end1->addInParam(0, param_Sel);
-	bo_end1->addInParam(1, param_fftSize);
-
-	/* Edges */
-	graph->connect(
-		/*Src*/ if_sel, /*SrcPrt*/ 0, /*Prod*/ "1",
-		/*Snk*/ cf_configSel, /*SnkPrt*/ 0, /*Cons*/ "1",
-		/*Delay*/ "0",0);
-
-	graph->connect(
-		/*Src*/ if_in0, /*SrcPrt*/ 0, /*Prod*/ "size",
-		/*Snk*/ bo_f0, /*SnkPrt*/ 0, /*Cons*/ "size",
-		/*Delay*/ "0",0);
-
-	graph->connect(
-		/*Src*/ if_in1, /*SrcPrt*/ 0, /*Prod*/ "size",
-		/*Snk*/ bo_f1, /*SnkPrt*/ 0, /*Cons*/ "size",
-		/*Delay*/ "0",0);
-
-	graph->connect(
-		/*Src*/ bo_f0, /*SrcPrt*/ 1, /*Prod*/ "size*(1-sel)",
-		/*Snk*/ bo_j, /*SnkPrt*/ 0, /*Cons*/ "size*(1-sel)",
-		/*Delay*/ "0",0);
-
-	graph->connect(
-		/*Src*/ bo_f1, /*SrcPrt*/ 0, /*Prod*/ "size*sel",
-		/*Snk*/ bo_j, /*SnkPrt*/ 1, /*Cons*/ "size*sel",
-		/*Delay*/ "0",0);
-
-	graph->connect(
-		/*Src*/ bo_f1, /*SrcPrt*/ 1, /*Prod*/ "size*(1-sel)",
-		/*Snk*/ bo_end1, /*SnkPrt*/ 0, /*Cons*/ "size*(1-sel)",
-		/*Delay*/ "0",0);
-
-	graph->connect(
-		/*Src*/ bo_f0, /*SrcPrt*/ 0, /*Prod*/ "size*sel",
-		/*Snk*/ bo_end0, /*SnkPrt*/ 0, /*Cons*/ "size*sel",
-		/*Delay*/ "0",0);
-
-	graph->connect(
-		/*Src*/ bo_j, /*SrcPrt*/ 0, /*Prod*/ "size",
-		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "size",
 		/*Delay*/ "0",0);
 
 	return graph;

@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
 	DynStack archiStack("ArchiStack");
 
 #define SH_MEM 0x00200000
-	PlatformLinux platform(4, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
+	PlatformLinux platform(1, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_DUMMY;

@@ -109,6 +109,29 @@ void fftRadix2(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param 
 #endif
 }
 
+void ordering(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param fftSize = inParams[0];
+
+	char* in = (char*) inputFIFOs[0];
+	char* out = (char*) outputFIFOs[0];
+
+#if VERBOSE
+	printf("Execute ordering\n");
+#endif
+}
+
+void fft(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param NStep = inParams[0];
+	Param fftSize = inParams[1];
+
+	char* in = (char*) inputFIFOs[0];
+	char* out = (char*) outputFIFOs[0];
+
+#if VERBOSE
+	printf("Execute fft\n");
+#endif
+}
+
 void Switch(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	Param NSamples = inParams[0];
 	char* in0 = (char*) inputFIFOs[0];
@@ -156,6 +179,17 @@ void selcfg(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 	*out_Sel = in_Sel[0];
 }
 
+void genIx(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
+	Param NStep = inParams[0];
+	char* ixs = (char*) outputFIFOs[0];
+
+#if VERBOSE
+	printf("Execute genIx\n");
+#endif
+
+	// Set parameter's value.
+}
+
 lrtFct top_fft_fcts[N_FCT_TOP_FFT] = {
 		&src,
 		&snk,
@@ -164,5 +198,8 @@ lrtFct top_fft_fcts[N_FCT_TOP_FFT] = {
 		&fftRadix2,
 		&Switch,
 		&configFft,
-		&selcfg
+		&selcfg,
+		&ordering,
+		&fft,
+		&genIx
 };

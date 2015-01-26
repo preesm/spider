@@ -8,48 +8,51 @@
     <constraints excelUrl="">
         <constraintGroup>
             <operator name="Core0"/>
-            <task name="top_fft/FFT/fftStep/out"/>
             <task name="top_fft/FFT/configFft"/>
+            <task name="top_fft/FFT/radixReduction/Switch/out"/>
             <task name="top_fft"/>
-            <task name="top_fft/FFT/BrFftStep"/>
-            <task name="top_fft/FFT/GenStepSwitch"/>
+            <task name="top_fft/FFT/radixReduction/Switch"/>
             <task name="top_fft/Snk"/>
-            <task name="top_fft/FFT/fftStep/ForkFftStep"/>
             <task name="top_fft/FFT"/>
-            <task name="top_fft/FFT/fftStep/step"/>
             <task name="top_fft/FFT/FFT"/>
-            <task name="top_fft/FFT/fftStep/fft_radix2"/>
+            <task name="top_fft/FFT/radixReduction/fftStep/out"/>
+            <task name="top_fft/FFT/radixReduction/fftStep/in"/>
+            <task name="top_fft/FFT/radixReduction/Switch/sel"/>
+            <task name="top_fft/FFT/radixReduction/Switch/f1"/>
+            <task name="top_fft/FFT/radixReduction/fftStep"/>
+            <task name="top_fft/FFT/radixReduction/Switch/in0"/>
+            <task name="top_fft/FFT/radixReduction/Switch/in1"/>
+            <task name="top_fft/FFT/radixReduction/out"/>
+            <task name="top_fft/FFT/radixReduction/Switch/f0"/>
             <task name="top_fft/FFT/ordering"/>
-            <task name="top_fft/FFT/Switch/j"/>
-            <task name="top_fft/FFT/Switch/end0"/>
+            <task name="top_fft/FFT/radixReduction/Switch/j"/>
+            <task name="top_fft/FFT/radixReduction/Switch/configSel"/>
+            <task name="top_fft/FFT/radixReduction/fftStep/step"/>
             <task name="top_fft/FFT/out"/>
-            <task name="top_fft/FFT/Switch/sel"/>
-            <task name="top_fft/FFT/Switch/end1"/>
-            <task name="top_fft/FFT/Switch/configSel"/>
-            <task name="top_fft/FFT/fftStep/genIx"/>
-            <task name="top_fft/FFT/Switch/f0"/>
-            <task name="top_fft/FFT/Switch/f1"/>
-            <task name="top_fft/FFT/Switch/out"/>
-            <task name="top_fft/FFT/fftStep/cfgFftStep"/>
-            <task name="top_fft/FFT/fftStep/in"/>
+            <task name="top_fft/FFT/radixReduction/fftStep/fft_radix2"/>
+            <task name="top_fft/FFT/radixReduction/in"/>
+            <task name="top_fft/FFT/radixReduction/fftStep/JoinFftStep"/>
+            <task name="top_fft/FFT/radixReduction/Switch/end1"/>
+            <task name="top_fft/FFT/radixReduction/Switch/end0"/>
+            <task name="top_fft/FFT/radixReduction/GenSwitchSel"/>
             <task name="top_fft/FFT/in"/>
-            <task name="top_fft/FFT/fftStep/JoinFftStep"/>
-            <task name="top_fft/FFT/fftStep"/>
+            <task name="top_fft/FFT/radixReduction/fftStep/genIx"/>
+            <task name="top_fft/FFT/radixReduction/fftStep/cfgFftStep"/>
             <task name="top_fft/Src"/>
-            <task name="top_fft/FFT/Switch"/>
-            <task name="top_fft/FFT/Switch/in1"/>
-            <task name="top_fft/FFT/Switch/in0"/>
+            <task name="top_fft/FFT/radixReduction/Br"/>
+            <task name="top_fft/FFT/radixReduction/fftStep/ForkFftStep"/>
+            <task name="top_fft/FFT/radixReduction"/>
         </constraintGroup>
     </constraints>
     <relativeconstraints excelUrl=""/>
     <timings excelUrl="">
-        <timing opname="x86" time="1000" vertexname="configSel"/>
         <timing opname="x86" time="1000" vertexname="FFT"/>
-        <timing opname="x86" time="1000" vertexname="GenStepSwitch"/>
+        <timing opname="x86" time="1000" vertexname="GenSwitchSel"/>
         <timing opname="x86" time="1000" vertexname="Snk"/>
         <timing opname="x86" time="1000" vertexname="Src"/>
         <timing opname="x86" time="1000" vertexname="cfgFftStep"/>
         <timing opname="x86" time="1000" vertexname="configFft"/>
+        <timing opname="x86" time="1000" vertexname="configSel"/>
         <timing opname="x86" time="1000" vertexname="end0"/>
         <timing opname="x86" time="1000" vertexname="end1"/>
         <timing opname="x86" time="1000" vertexname="fft_radix2"/>
@@ -69,8 +72,8 @@
     </simuParams>
     <variables excelUrl=""/>
     <parameterValues>
-        <parameter name="NStep" parent="FFT" type="ACTOR_DEPENDENT" value="[1]"/>
-        <parameter name="Step" parent="fftStep" type="ACTOR_DEPENDENT" value="[1]"/>
         <parameter name="Sel" parent="Switch" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="Step" parent="fftStep" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="NStep" parent="FFT" type="ACTOR_DEPENDENT" value="[1]"/>
     </parameterValues>
 </scenario>

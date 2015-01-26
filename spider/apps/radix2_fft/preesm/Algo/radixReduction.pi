@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+    <key attr.name="parameters" for="graph" id="parameters"/>
+    <key attr.name="variables" for="graph" id="variables"/>
+    <key attr.name="arguments" for="node" id="arguments"/>
+    <key attr.name="name" attr.type="string" for="graph"/>
+    <key attr.name="graph_desc" attr.type="string" for="node"/>
+    <key attr.name="delay" attr.type="string" for="edge"/>
+    <graph edgedefault="directed">
+        <data key="name">radixReduction</data>
+        <node id="NStep" kind="cfg_in_iface"/>
+        <node id="fftSize" kind="cfg_in_iface"/>
+        <node id="in" kind="src">
+            <port annotation="NONE" expr="fftSize" kind="output" name="in"/>
+        </node>
+        <node id="out" kind="snk">
+            <port annotation="NONE" expr="fftSize" kind="input" name="out"/>
+        </node>
+        <node id="GenSwitchSel" kind="actor">
+            <port kind="cfg_input" name="NStep"/>
+            <port annotation="NONE" expr="NStep" kind="output" name="steps"/>
+            <port annotation="NONE" expr="NStep" kind="output" name="sels"/>
+        </node>
+        <node id="Switch" kind="actor">
+            <data key="graph_desc">Algo/switch.pi</data>
+            <port kind="cfg_input" name="fftSize"/>
+            <port annotation="NONE" expr="1" kind="input" name="sel"/>
+            <port annotation="NONE" expr="fftSize" kind="input" name="in0"/>
+            <port annotation="NONE" expr="fftSize" kind="input" name="in1"/>
+            <port annotation="NONE" expr="fftSize" kind="output" name="out"/>
+        </node>
+        <node id="fftStep" kind="actor">
+            <data key="graph_desc">Algo/fftStep.pi</data>
+            <port kind="cfg_input" name="fftSize"/>
+            <port kind="cfg_input" name="NStep"/>
+            <port annotation="NONE" expr="1" kind="input" name="step"/>
+            <port annotation="NONE" expr="fftSize" kind="input" name="in"/>
+            <port annotation="NONE" expr="fftSize" kind="output" name="out"/>
+        </node>
+        <node id="Br" kind="broadcast">
+            <port kind="cfg_input" name="fftSize"/>
+            <port annotation="NONE" expr="fftSize" kind="input" name="in"/>
+            <port annotation="NONE" expr="fftSize" kind="output" name="out0"/>
+            <port annotation="NONE" expr="fftSize" kind="output" name="out1"/>
+        </node>
+        <edge kind="fifo" source="GenSwitchSel" sourceport="sels"
+            target="Switch" targetport="sel" type="void"/>
+        <edge kind="fifo" source="in" sourceport="in" target="Switch"
+            targetport="in0" type="void"/>
+        <edge expr="fftSize" kind="fifo" source="Br" sourceport="out1"
+            target="Switch" targetport="in1" type="void">
+            <data key="delay"/>
+        </edge>
+        <edge kind="fifo" source="Switch" sourceport="out"
+            target="fftStep" targetport="in" type="void"/>
+        <edge kind="fifo" source="fftStep" sourceport="out" target="Br"
+            targetport="in" type="void"/>
+        <edge kind="fifo" source="Br" sourceport="out0" target="out"
+            targetport="out" type="void"/>
+        <edge kind="fifo" source="GenSwitchSel" sourceport="steps"
+            target="fftStep" targetport="step" type="void"/>
+        <edge kind="dependency" source="NStep" target="GenSwitchSel" targetport="NStep"/>
+        <edge kind="dependency" source="fftSize" target="Switch" targetport="fftSize"/>
+        <edge kind="dependency" source="fftSize" target="fftStep" targetport="fftSize"/>
+        <edge kind="dependency" source="NStep" target="fftStep" targetport="NStep"/>
+        <edge kind="dependency" source="fftSize" target="Br" targetport="fftSize"/>
+        <edge kind="dependency" source="fftSize" target="in"/>
+        <edge kind="dependency" source="fftSize" target="out"/>
+        <edge kind="dependency" source="fftSize" target="Br.out1-Switch.in1"/>
+    </graph>
+</graphml>

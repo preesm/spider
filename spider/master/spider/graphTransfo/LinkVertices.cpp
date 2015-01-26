@@ -382,6 +382,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 
 					for(int i=0; i<nbSinkRepetitions; i++){
 						snkRepetitions[i] = topSrdag->addEdge();
+						snkRepetitions[i]->setRate(sinkConsumption);
 						snkRepetitions[i]->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i], edge->getSnkPortIx());
 					}
 				}

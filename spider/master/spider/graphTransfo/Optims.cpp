@@ -442,6 +442,18 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 						curCons += sinkCons[++sinkIndex];
 					}
 				}
+
+				if(sinkIndex != nbSinkRepetitions){
+					/* Check Unhandled vertices */
+					for(int i=sinkIndex; i<nbSinkRepetitions; i++){
+						if(sinks[i]->getType() == SRDAG_END){
+							topDag->delVertex(sinks[i]);
+						}else{
+							throw "A non-End vertex have a cons of 0\n";
+						}
+					}
+				}
+
 				return 1;
 			}
 		}

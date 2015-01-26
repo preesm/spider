@@ -26,7 +26,7 @@
             <port kind="cfg_input" name="NStep"/>
             <port kind="cfg_input" name="Step"/>
             <port kind="cfg_input" name="fftSize"/>
-            <port annotation="NONE" expr="fftSize/(2^NStep-Step-1)"
+            <port annotation="NONE" expr="fftSize/(2^(NStep-Step-1))"
                 kind="input" name="in"/>
             <port annotation="NONE" expr="fftSize/(2^(NStep-Step))"
                 kind="output" name="out0"/>
@@ -40,7 +40,7 @@
                 kind="input" name="in0"/>
             <port annotation="NONE" expr="fftSize/(2^NStep)"
                 kind="input" name="in1"/>
-            <port annotation="NONE" expr="fftSize/(2^(NStep+1))"
+            <port annotation="NONE" expr="fftSize/(2^(NStep-1))"
                 kind="output" name="out"/>
         </node>
         <node id="fft_radix2" kind="actor">

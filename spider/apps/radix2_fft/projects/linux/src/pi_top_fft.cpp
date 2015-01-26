@@ -590,3 +590,8 @@ PiSDFGraph* fftStep(Archi* archi, Stack* stack){
 
 	return graph;
 }
+
+void free_top_fft(PiSDFGraph* top, Stack* stack){
+	top->~PiSDFGraph();
+	stack->free(top);
+}

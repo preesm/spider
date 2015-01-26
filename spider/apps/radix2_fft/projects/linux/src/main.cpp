@@ -87,7 +87,7 @@ int main(int argc, char* argv[]){
 
 			printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
 
-//			freePisdf_ederc_nvar(topPisdf, &pisdfStack);
+			free_top_fft(topPisdf, &pisdfStack);
 		}
 //	}catch(const char* s){
 //		printf("Exception : %s\n", s);

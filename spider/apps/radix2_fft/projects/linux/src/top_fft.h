@@ -41,10 +41,33 @@
 
 #include <spider.h>
 
-#define N_FCT_TOP_FFT 11
+#define N_FCT_TOP_FFT 12
 extern lrtFct top_fft_fcts[N_FCT_TOP_FFT];
 
 PiSDFGraph* init_top_fft(Archi* archi, Stack* stack);
-void free_top_fft(PiSDFGraph* pisdf, Stack* stack);
+void free_top_fft(PiSDFGraph* top, Stack* stack);
+
+typedef enum{
+	CORE_CORE0 = 0,
+} PE;
+
+typedef enum{
+	CORE_TYPE_X86 = 0,
+} PEType;
+
+typedef enum{
+	SRC_FCT = 0,
+	SNK_FCT = 1,
+	CONFIGFFT_FCT = 2,
+	ORDERING_FCT = 3,
+	MONOFFT_FCT = 4,
+	GENSWITCHSEL_FCT = 5,
+	SELCFG_FCT = 6,
+	END0_FCT = 7,
+	END1_FCT = 8,
+	CFGFFTSTEP_FCT = 9,
+	FFT_RADIX2_FCT = 10,
+	GENIX_FCT = 11,
+} FctIxs;
 
 #endif//TOP_FFT_H

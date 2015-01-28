@@ -4,6 +4,7 @@
     <key attr.name="variables" for="graph" id="variables"/>
     <key attr.name="arguments" for="node" id="arguments"/>
     <key attr.name="name" attr.type="string" for="graph"/>
+    <key attr.name="graph_desc" attr.type="string" for="node"/>
     <graph edgedefault="directed">
         <data key="name">fftStep</data>
         <node id="fftSize" kind="cfg_in_iface"/>
@@ -19,6 +20,11 @@
             <port annotation="NONE" expr="fftSize" kind="input" name="out"/>
         </node>
         <node id="cfgFftStep" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="cfgFftStep">
+                <param direction="IN" isConfig="false" name="in" type="char* "/>
+                <param direction="OUT" isConfig="true" name="step" type=" int* "/>
+            </loop>
             <port annotation="NONE" kind="cfg_output" name="step"/>
             <port annotation="NONE" expr="1" kind="input" name="in"/>
         </node>
@@ -44,6 +50,21 @@
                 kind="output" name="out"/>
         </node>
         <node id="fft_radix2" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="fftRadix2">
+                <param direction="IN" isConfig="true" name="NStep" type="&#xa;&#x9;&#x9;int "/>
+                <param direction="IN" isConfig="true" name="fftSize" type="&#xa;&#x9;&#x9;int "/>
+                <param direction="IN" isConfig="true" name="Step" type="&#xa;&#x9;&#x9;int "/>
+                <param direction="IN" isConfig="false" name="in0" type="&#xa;&#x9;&#x9;short* "/>
+                <param direction="IN" isConfig="false" name="in1" type="&#xa;&#x9;&#x9;short* "/>
+                <param direction="IN" isConfig="false" name="ix" type="&#xa;&#x9;&#x9;char*  "/>
+                <param direction="OUT" isConfig="false" name="out0" type="&#xa;&#x9;&#x9;short* "/>
+                <param direction="OUT" isConfig="false" name="out1" type="&#xa;&#x9;&#x9;short* "/>
+            </loop>
+            <init name="configFft">
+                <param direction="IN" isConfig="true" name="fftSize" type="int "/>
+                <param direction="IN" isConfig="true" name="NStep" type=" int* "/>
+            </init>
             <port kind="cfg_input" name="NStep"/>
             <port kind="cfg_input" name="fftSize"/>
             <port kind="cfg_input" name="Step"/>
@@ -58,23 +79,28 @@
                 kind="output" name="out1"/>
         </node>
         <node id="genIx" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="genIx">
+                <param direction="IN" isConfig="true" name="NStep" type="int "/>
+                <param direction="OUT" isConfig="false" name="ixs" type=" char* "/>
+            </loop>
             <port kind="cfg_input" name="NStep"/>
             <port annotation="NONE" expr="2^(NStep-1)" kind="output" name="ixs"/>
         </node>
         <edge kind="fifo" source="step" sourceport="step"
             target="cfgFftStep" targetport="in" type="char"/>
         <edge kind="fifo" source="in" sourceport="in"
-            target="ForkFftStep" targetport="in" type="float"/>
+            target="ForkFftStep" targetport="in" type="complex"/>
         <edge kind="fifo" source="ForkFftStep" sourceport="out0"
-            target="fft_radix2" targetport="in0" type="float"/>
+            target="fft_radix2" targetport="in0" type="complex"/>
         <edge kind="fifo" source="ForkFftStep" sourceport="out1"
-            target="fft_radix2" targetport="in1" type="float"/>
+            target="fft_radix2" targetport="in1" type="complex"/>
         <edge kind="fifo" source="fft_radix2" sourceport="out0"
-            target="JoinFftStep" targetport="in0" type="float"/>
+            target="JoinFftStep" targetport="in0" type="complex"/>
         <edge kind="fifo" source="fft_radix2" sourceport="out1"
-            target="JoinFftStep" targetport="in1" type="float"/>
+            target="JoinFftStep" targetport="in1" type="complex"/>
         <edge kind="fifo" source="JoinFftStep" sourceport="out"
-            target="out" targetport="out" type="float"/>
+            target="out" targetport="out" type="complex"/>
         <edge kind="fifo" source="genIx" sourceport="ixs"
             target="fft_radix2" targetport="ix" type="char"/>
         <edge kind="dependency" source="cfgFftStep" sourceport="step" target="Step"/>

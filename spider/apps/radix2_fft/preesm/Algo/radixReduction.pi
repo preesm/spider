@@ -17,6 +17,12 @@
             <port annotation="NONE" expr="fftSize" kind="input" name="out"/>
         </node>
         <node id="GenSwitchSel" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="genStepSwitch">
+                <param direction="IN" isConfig="true" name="NStep" type="int "/>
+                <param direction="OUT" isConfig="false" name="steps" type=" char* "/>
+                <param direction="OUT" isConfig="false" name="sels" type=" char* "/>
+            </loop>
             <port kind="cfg_input" name="NStep"/>
             <port annotation="NONE" expr="NStep" kind="output" name="steps"/>
             <port annotation="NONE" expr="NStep" kind="output" name="sels"/>
@@ -24,7 +30,7 @@
         <node id="Switch" kind="actor">
             <data key="graph_desc">Algo/switch.pi</data>
             <port kind="cfg_input" name="fftSize"/>
-            <port annotation="NONE" expr="1" kind="input" name="sel"/>
+            <port annotation="NONE" expr="1" kind="input" name="sel_in"/>
             <port annotation="NONE" expr="fftSize" kind="input" name="in0"/>
             <port annotation="NONE" expr="fftSize" kind="input" name="in1"/>
             <port annotation="NONE" expr="fftSize" kind="output" name="out"/>
@@ -44,21 +50,21 @@
             <port annotation="NONE" expr="fftSize" kind="output" name="out1"/>
         </node>
         <edge kind="fifo" source="GenSwitchSel" sourceport="sels"
-            target="Switch" targetport="sel" type="void"/>
+            target="Switch" targetport="sel_in" type="char"/>
         <edge kind="fifo" source="in" sourceport="in" target="Switch"
-            targetport="in0" type="void"/>
+            targetport="in0" type="complex"/>
         <edge expr="fftSize" kind="fifo" source="Br" sourceport="out1"
-            target="Switch" targetport="in1" type="void">
+            target="Switch" targetport="in1" type="complex">
             <data key="delay"/>
         </edge>
         <edge kind="fifo" source="Switch" sourceport="out"
-            target="fftStep" targetport="in" type="void"/>
+            target="fftStep" targetport="in" type="complex"/>
         <edge kind="fifo" source="fftStep" sourceport="out" target="Br"
-            targetport="in" type="void"/>
+            targetport="in" type="complex"/>
         <edge kind="fifo" source="Br" sourceport="out0" target="out"
-            targetport="out" type="void"/>
+            targetport="out" type="complex"/>
         <edge kind="fifo" source="GenSwitchSel" sourceport="steps"
-            target="fftStep" targetport="step" type="void"/>
+            target="fftStep" targetport="step" type="char"/>
         <edge kind="dependency" source="NStep" target="GenSwitchSel" targetport="NStep"/>
         <edge kind="dependency" source="fftSize" target="Switch" targetport="fftSize"/>
         <edge kind="dependency" source="fftSize" target="fftStep" targetport="fftSize"/>

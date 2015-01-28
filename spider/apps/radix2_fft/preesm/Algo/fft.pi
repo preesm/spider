@@ -16,15 +16,37 @@
             <port annotation="NONE" expr="fftSize" kind="input" name="out"/>
         </node>
         <node id="configFft" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="configFft">
+                <param direction="IN" isConfig="true" name="fftSize" type="int "/>
+                <param direction="OUT" isConfig="true" name="NStep" type=" int* "/>
+            </loop>
             <port kind="cfg_input" name="fftSize"/>
             <port annotation="NONE" kind="cfg_output" name="NStep"/>
         </node>
         <node id="ordering" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="ordering">
+                <param direction="IN" isConfig="true" name="fftSize" type="int "/>
+                <param direction="IN" isConfig="false" name="in" type=" short* "/>
+                <param direction="OUT" isConfig="false" name="out" type=" short *"/>
+            </loop>
             <port kind="cfg_input" name="fftSize"/>
             <port annotation="NONE" expr="fftSize" kind="input" name="in"/>
             <port annotation="NONE" expr="fftSize" kind="output" name="out"/>
         </node>
-        <node id="FFT" kind="actor">
+        <node id="monoFFT" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="fft">
+                <param direction="IN" isConfig="true" name="NStep" type="int "/>
+                <param direction="IN" isConfig="true" name="fftSize" type=" int "/>
+                <param direction="IN" isConfig="false" name="in" type=" short* "/>
+                <param direction="OUT" isConfig="false" name="out" type=" short* "/>
+            </loop>
+            <init name="configFft">
+                <param direction="IN" isConfig="true" name="fftSize" type="int "/>
+                <param direction="IN" isConfig="true" name="NStep" type=" int* "/>
+            </init>
             <port kind="cfg_input" name="NStep"/>
             <port kind="cfg_input" name="fftSize"/>
             <port annotation="NONE" expr="fftSize/(2^NStep)"
@@ -40,20 +62,20 @@
             <port annotation="NONE" expr="fftSize" kind="output" name="out"/>
         </node>
         <edge kind="fifo" source="in" sourceport="in" target="ordering"
-            targetport="in" type="float"/>
+            targetport="in" type="complex"/>
         <edge kind="fifo" source="ordering" sourceport="out"
-            target="FFT" targetport="in" type="float"/>
-        <edge kind="fifo" source="FFT" sourceport="out"
-            target="radixReduction" targetport="in" type="void"/>
+            target="monoFFT" targetport="in" type="complex"/>
+        <edge kind="fifo" source="monoFFT" sourceport="out"
+            target="radixReduction" targetport="in" type="complex"/>
         <edge kind="fifo" source="radixReduction" sourceport="out"
-            target="out" targetport="out" type="void"/>
+            target="out" targetport="out" type="complex"/>
         <edge kind="dependency" source="fftSize" target="in"/>
         <edge kind="dependency" source="fftSize" target="out"/>
         <edge kind="dependency" source="fftSize" target="configFft" targetport="fftSize"/>
         <edge kind="dependency" source="configFft" sourceport="NStep" target="NStep"/>
         <edge kind="dependency" source="fftSize" target="ordering" targetport="fftSize"/>
-        <edge kind="dependency" source="fftSize" target="FFT" targetport="fftSize"/>
-        <edge kind="dependency" source="NStep" target="FFT" targetport="NStep"/>
+        <edge kind="dependency" source="fftSize" target="monoFFT" targetport="fftSize"/>
+        <edge kind="dependency" source="NStep" target="monoFFT" targetport="NStep"/>
         <edge kind="dependency" source="fftSize" target="radixReduction" targetport="fftSize"/>
         <edge kind="dependency" source="NStep" target="radixReduction" targetport="NStep"/>
     </graph>

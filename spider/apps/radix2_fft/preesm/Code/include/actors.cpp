@@ -34,25 +34,14 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "top_fft.h"
-#include <stdio.h>
-#include <string.h>
+#include "actors.h"
 
-#define VERBOSE 1
+#define VERBOSE 0
 
-#define M_VAL 2
-#define NB_TAPS 512
-
-void genStepSwitch(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param NStep = inParams[0];
-
-	char* steps = (char*) outputFIFOs[0];
-	char* sels = (char*) outputFIFOs[1];
-
+void genStepSwitch(int NStep, char* steps, char* sels){
 #if VERBOSE
 	printf("Execute genStepSwitch\n");
 #endif
-
 	steps[0] = 0;
 	sels[0] = 0;
 	for(int i=1; i<NStep; i++){
@@ -61,105 +50,90 @@ void genStepSwitch(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Pa
 	}
 }
 
-void cfgFftStep(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param NMAX = inParams[0];
-	Param N = inParams[1];
-
-	char *in  = (char*) inputFIFOs[0];
-	Param* step = (Param*) &outParams[0];
-
+void cfgFftStep(char* in, int* step){
 #if VERBOSE
 	printf("Execute cfgFftStep\n");
 #endif
-
 	*step = *in;
 }
 
-void src(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param fftSize = inParams[0];
-	float *out = (float*)outputFIFOs[0];
 
+void src(int fftSize, short *out){
 #if VERBOSE
 	printf("Execute Src\n");
 #endif
+	if(N_DATA != fftSize)
+		printf("Bad size, bad SNR expected\n");
 
+    memcpy(out, data_in, fftSize*2*sizeof(short));
 }
 
-void snk(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param fftSize = inParams[0];
-	float *in = (float*)inputFIFOs[0];
-
+void snk(int fftSize, short *in){
 #if VERBOSE
 	printf("Execute Snk\n");
 #endif
 
+	for(int i=0; i<fftSize; i++){
+		printf("%8d + %8d i\n", in[2*i], in[2*i+1]);
+	}
+
+    // Compute SNR
+    float snrVal = snr(in, data_out, fftSize);
+    printf("SNR %f dB\n", snrVal);
 }
 
-void fftRadix2(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param NStep = inParams[0];
-	Param fftSize = inParams[1];
-
-	char* in0 = (char*) inputFIFOs[0];
-	char* in1 = (char*) inputFIFOs[1];
-	char* out0 = (char*) outputFIFOs[0];
-	char* out1 = (char*) outputFIFOs[1];
-
+void fftRadix2(
+		int NStep,
+		int fftSize,
+		int Step,
+		short* in0,
+		short* in1,
+		char*  ix,
+		short* out0,
+		short* out1){
 #if VERBOSE
 	printf("Execute fftRadix2\n");
 #endif
+
+	mixFFT(128, 8, Step, *ix, in0, in1, out0, out1);
 }
 
-void ordering(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param fftSize = inParams[0];
-
-	char* in = (char*) inputFIFOs[0];
-	char* out = (char*) outputFIFOs[0];
-
+void ordering(int fftSize, short* in, short *out){
 #if VERBOSE
 	printf("Execute ordering\n");
 #endif
+
+	for(int proc=0; proc<8; proc++){
+		for(int k=0; k<fftSize/8; k++){
+			out[2*(proc*fftSize/8+k)  ] = in[2*(bitRev(proc, 3)+k*8)  ];
+			out[2*(proc*fftSize/8+k)+1] = in[2*(bitRev(proc, 3)+k*8)+1];
+		}
+	}
 }
 
-void fft(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param NStep = inParams[0];
-	Param fftSize = inParams[1];
+void fft(
+		int NStep,
+		int fftSize,
+		short* in,
+		short* out){
 
-	char* in = (char*) inputFIFOs[0];
-	char* out = (char*) outputFIFOs[0];
+	static short w[2*N_DATA];
 
 #if VERBOSE
 	printf("Execute fft\n");
 #endif
+
+	int localFFTSize = 16;
+    gen_twiddle_fft16x16(w, localFFTSize);
+
+    DSP_fft16x16_cn(w, localFFTSize, in, out);
+
+    for(int i=0; i<2*localFFTSize; i++)
+    	out[i] = out[i]<<1;
+
 }
 
-void Switch(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param NSamples = inParams[0];
-	char* in0 = (char*) inputFIFOs[0];
-	char* in1 = (char*) inputFIFOs[1];
-	char* sel = (char*) inputFIFOs[2];
-	char* out = (char*) outputFIFOs[0];
-
-#if VERBOSE
-	printf("Execute Switch\n");
-#endif
-
-	switch(*sel){
-	case 0:
-		memcpy(out, in0, NSamples*sizeof(float));
-		break;
-	case 1:
-		memcpy(out, in1, NSamples*sizeof(float));
-		break;
-	default:
-		printf("Bad sel received in Switch\n");
-		break;
-	}
-}
-
-void configFft(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param fftSize = inParams[0];
-	Param* NStep = (Param*) &outParams[0];
-
+void configFft(int fftSize, int* NStep){
 #if VERBOSE
 	printf("Execute configFft\n");
 #endif
@@ -167,10 +141,7 @@ void configFft(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param 
 	*NStep = 3;
 }
 
-void selcfg(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param *out_Sel = (Param*) &outParams[0];
-	char* in_Sel = (char*) inputFIFOs[0];
-
+void selcfg(int *out_Sel, char* in_Sel){
 #if VERBOSE
 	printf("Execute selcfg\n");
 #endif
@@ -179,27 +150,13 @@ void selcfg(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 	*out_Sel = in_Sel[0];
 }
 
-void genIx(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param NStep = inParams[0];
-	char* ixs = (char*) outputFIFOs[0];
-
+void genIx(int NStep, char* ixs){
 #if VERBOSE
 	printf("Execute genIx\n");
 #endif
 
-	// Set parameter's value.
+	int maxIds = 1<<(NStep-1);
+	for(int i=0; i<maxIds; i++){
+		ixs[i] = i;
+	}
 }
-
-lrtFct top_fft_fcts[N_FCT_TOP_FFT] = {
-		&src,
-		&snk,
-		&genStepSwitch,
-		&cfgFftStep,
-		&fftRadix2,
-		&Switch,
-		&configFft,
-		&selcfg,
-		&ordering,
-		&fft,
-		&genIx
-};

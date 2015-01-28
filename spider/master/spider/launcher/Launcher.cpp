@@ -194,7 +194,7 @@ void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 			for(int j = 0; j < cfgVertex->getNOutParam(); j++){
 				int* param = cfgVertex->getOutParam(j);
 				*param = params[j];
-//				printf("Recv param = %d\n", *param);
+				printf("Recv param = %d\n", *param);
 			}
 			curNParam_ -= cfgVertex->getNOutParam();
 			getSpiderCommunicator()->ctrl_end_recv(slave);

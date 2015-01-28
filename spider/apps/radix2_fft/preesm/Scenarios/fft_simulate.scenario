@@ -14,25 +14,25 @@
             <task name="top_fft/FFT/radixReduction/Switch"/>
             <task name="top_fft/Snk"/>
             <task name="top_fft/FFT"/>
-            <task name="top_fft/FFT/FFT"/>
+            <task name="top_fft/FFT/radixReduction/Switch/selcfg"/>
             <task name="top_fft/FFT/radixReduction/fftStep/out"/>
             <task name="top_fft/FFT/radixReduction/fftStep/in"/>
-            <task name="top_fft/FFT/radixReduction/Switch/sel"/>
             <task name="top_fft/FFT/radixReduction/Switch/f1"/>
             <task name="top_fft/FFT/radixReduction/fftStep"/>
             <task name="top_fft/FFT/radixReduction/Switch/in0"/>
-            <task name="top_fft/FFT/radixReduction/Switch/in1"/>
             <task name="top_fft/FFT/radixReduction/out"/>
+            <task name="top_fft/FFT/radixReduction/Switch/in1"/>
             <task name="top_fft/FFT/radixReduction/Switch/f0"/>
             <task name="top_fft/FFT/ordering"/>
             <task name="top_fft/FFT/radixReduction/Switch/j"/>
-            <task name="top_fft/FFT/radixReduction/Switch/configSel"/>
             <task name="top_fft/FFT/radixReduction/fftStep/step"/>
             <task name="top_fft/FFT/out"/>
             <task name="top_fft/FFT/radixReduction/fftStep/fft_radix2"/>
+            <task name="top_fft/FFT/monoFFT"/>
             <task name="top_fft/FFT/radixReduction/in"/>
             <task name="top_fft/FFT/radixReduction/fftStep/JoinFftStep"/>
             <task name="top_fft/FFT/radixReduction/Switch/end1"/>
+            <task name="top_fft/FFT/radixReduction/Switch/sel_in"/>
             <task name="top_fft/FFT/radixReduction/Switch/end0"/>
             <task name="top_fft/FFT/radixReduction/GenSwitchSel"/>
             <task name="top_fft/FFT/in"/>
@@ -46,7 +46,6 @@
     </constraints>
     <relativeconstraints excelUrl=""/>
     <timings excelUrl="">
-        <timing opname="x86" time="1000" vertexname="FFT"/>
         <timing opname="x86" time="1000" vertexname="GenSwitchSel"/>
         <timing opname="x86" time="1000" vertexname="Snk"/>
         <timing opname="x86" time="1000" vertexname="Src"/>
@@ -57,14 +56,19 @@
         <timing opname="x86" time="1000" vertexname="end1"/>
         <timing opname="x86" time="1000" vertexname="fft_radix2"/>
         <timing opname="x86" time="1000" vertexname="genIx"/>
+        <timing opname="x86" time="1000" vertexname="monoFFT"/>
         <timing opname="x86" time="1000" vertexname="ordering"/>
+        <timing opname="x86" time="1000" vertexname="selcfg"/>
         <memcpyspeed opname="x86" setuptime="1" timeperunit="1.0"/>
     </timings>
     <simuParams>
         <mainCore/>
         <mainComNode/>
         <averageDataSize>1000</averageDataSize>
-        <dataTypes/>
+        <dataTypes>
+            <dataType name="complex" size="4"/>
+            <dataType name="char" size="1"/>
+        </dataTypes>
         <specialVertexOperators>
             <specialVertexOperator path="Core0"/>
         </specialVertexOperators>
@@ -72,8 +76,8 @@
     </simuParams>
     <variables excelUrl=""/>
     <parameterValues>
-        <parameter name="Sel" parent="Switch" type="ACTOR_DEPENDENT" value="[1]"/>
-        <parameter name="Step" parent="fftStep" type="ACTOR_DEPENDENT" value="[1]"/>
         <parameter name="NStep" parent="FFT" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="sel" parent="Switch" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="Step" parent="fftStep" type="ACTOR_DEPENDENT" value="[1]"/>
     </parameterValues>
 </scenario>

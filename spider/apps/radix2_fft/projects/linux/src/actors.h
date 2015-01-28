@@ -34,64 +34,30 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <spider.h>
-#include <platformLinux.h>
-#include "top_fft.h"
+#ifndef ACTORS_H
+#define ACTORS_H
 
-#include <stdio.h>
-#include <stdlib.h>
+void genStepSwitch(Param NStep, char* steps, char* sels);
+void cfgFftStep(char* in, Param* step);
 
-int main(int argc, char* argv[]){
-	SpiderConfig cfg;
-	ExecutionStat stat;
+void src(Param fftSize, short *out);
+void snk(Param fftSize, short *in);
 
-	DynStack pisdfStack("PisdfStack");
-	DynStack archiStack("ArchiStack");
+void fftRadix2(
+		Param NStep,
+		Param fftSize,
+		Param Step,
+		short* in0,
+		short* in1,
+		char*  ix,
+		short* out0,
+		short* out1);
 
-#define SH_MEM 0x00200000
-	PlatformLinux platform(1, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
-	Archi* archi = platform.getArchi();
+void ordering(Param fftSize, short* in, short *out);
+void fft(Param NStep, Param fftSize, short* in, short* out);
 
-	cfg.memAllocType = MEMALLOC_DUMMY;
-	cfg.memAllocStart = (void*)0;
-	cfg.memAllocSize = SH_MEM;
+void configFft(Param fftSize, Param* NStep);
+void selcfg(Param *sel, char* sel_in);
+void genIx(Param NStep, char* ixs);
 
-	cfg.schedulerType = SCHEDULER_LIST;
-
-	cfg.srdagStack = {STACK_DYNAMIC, "SrdagStack", 0, 0};
-	cfg.transfoStack = {STACK_DYNAMIC, "TransfoStack", 0, 0};
-
-	spider_init(cfg);
-
-	printf("Start\n");
-
-//	try{
-		char ganttPath[30];
-		sprintf(ganttPath, "radixFFT.sgantt");
-		char srdagPath[30];
-		sprintf(srdagPath, "radixFFT.gv");
-
-		pisdfStack.freeAll();
-
-		PiSDFGraph *topPisdf = init_top_fft(archi, &pisdfStack);
-		topPisdf->print("topPisdf.gv");
-
-		Platform::get()->rstTime();
-
-		spider_launch(archi, topPisdf);
-//
-		spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
-		spider_getLastSRDAG()->print(srdagPath);
-
-		printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
-
-		free_top_fft(topPisdf, &pisdfStack);
-//	}catch(const char* s){
-//		printf("Exception : %s\n", s);
-//	}
-	printf("finished\n");
-
-	spider_free();
-
-	return 0;
-}
+#endif//ACTORS_H

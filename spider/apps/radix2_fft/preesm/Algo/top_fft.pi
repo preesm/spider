@@ -9,10 +9,20 @@
         <data key="name">top_fft</data>
         <node expr="8" id="fftSize" kind="param"/>
         <node id="Src" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="src">
+                <param direction="IN" isConfig="true" name="fftSize" type="int "/>
+                <param direction="OUT" isConfig="false" name="out" type=" short *"/>
+            </loop>
             <port kind="cfg_input" name="fftSize"/>
             <port annotation="NONE" expr="fftSize" kind="output" name="out"/>
         </node>
         <node id="Snk" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="snk">
+                <param direction="IN" isConfig="true" name="fftSize" type="int "/>
+                <param direction="IN" isConfig="false" name="in" type=" short *"/>
+            </loop>
             <port kind="cfg_input" name="fftSize"/>
             <port annotation="NONE" expr="fftSize" kind="input" name="in"/>
         </node>
@@ -23,9 +33,9 @@
             <port annotation="NONE" expr="fftSize" kind="output" name="out"/>
         </node>
         <edge kind="fifo" source="Src" sourceport="out" target="FFT"
-            targetport="in" type="float"/>
+            targetport="in" type="complex"/>
         <edge kind="fifo" source="FFT" sourceport="out" target="Snk"
-            targetport="in" type="float"/>
+            targetport="in" type="complex"/>
         <edge kind="dependency" source="fftSize" target="Src" targetport="fftSize"/>
         <edge kind="dependency" source="fftSize" target="FFT" targetport="fftSize"/>
         <edge kind="dependency" source="fftSize" target="Snk" targetport="fftSize"/>

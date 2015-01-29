@@ -274,11 +274,17 @@ static int removeJoin(SRDAGGraph* topDag){
 
 				SRDAGEdge* delEdge = join->getOutEdge(0);
 				delEdge->disconnectSrc();
-				delEdge->disconnectSnk();
-				topDag->delEdge(delEdge);
 
+				if(delEdge->getSnk()){
+					delEdge->disconnectSnk();
+				}
+
+				topDag->delEdge(delEdge);
 				inEdge->disconnectSnk();
-				inEdge->connectSnk(nextVertex, edgeIx);
+
+				if(nextVertex)
+					inEdge->connectSnk(nextVertex, edgeIx);
+
 				topDag->delVertex(join);
 
 				return true;
@@ -443,6 +449,28 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 					}
 				}
 
+				if(sourceIndex != nbSourceRepetitions){
+					/* Check Unhandled vertices */
+					/* Shift on Fork */
+					for(int i=sourceIndex; i<nbSourceRepetitions; i++){
+						if(sources[i]->getType() == SRDAG_FORK){
+							SRDAGVertex* rem_fork = sources[i];
+							for(int j=0; j<rem_fork->getNConnectedOutEdge(); j++){
+								if(rem_fork->getOutEdge(j) == 0){
+									for(int k=j+1; k<rem_fork->getNOutEdge(); k++){
+										SRDAGEdge *edge = rem_fork->getOutEdge(k);
+										if(edge){
+											edge->disconnectSrc();
+											edge->connectSrc(rem_fork, k-1);
+										}
+									}
+								}
+							}
+						}else{
+							throw "A non-End vertex have a cons of 0\n";
+						}
+					}
+				}
 				if(sinkIndex != nbSinkRepetitions){
 					/* Check Unhandled vertices */
 					for(int i=sinkIndex; i<nbSinkRepetitions; i++){

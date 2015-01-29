@@ -235,11 +235,11 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 			transfoSTack->free(brv);
 			transfoSTack->free(job);
-
-			// TODO
-			topSrdag->updateState();
-			optims(topSrdag, transfoSTack);
 		}
+
+		// TODO
+		topSrdag->updateState();
+		optims(topSrdag, transfoSTack);
 
 //        printf("Finish one iter\n");
 	}while(1);

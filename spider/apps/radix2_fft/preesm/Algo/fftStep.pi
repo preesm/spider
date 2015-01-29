@@ -55,16 +55,12 @@
                 <param direction="IN" isConfig="true" name="NStep" type="&#xa;&#x9;&#x9;int "/>
                 <param direction="IN" isConfig="true" name="fftSize" type="&#xa;&#x9;&#x9;int "/>
                 <param direction="IN" isConfig="true" name="Step" type="&#xa;&#x9;&#x9;int "/>
-                <param direction="IN" isConfig="false" name="in0" type="&#xa;&#x9;&#x9;short* "/>
-                <param direction="IN" isConfig="false" name="in1" type="&#xa;&#x9;&#x9;short* "/>
+                <param direction="IN" isConfig="false" name="in0" type="&#xa;&#x9;&#x9;float* "/>
+                <param direction="IN" isConfig="false" name="in1" type="&#xa;&#x9;&#x9;float* "/>
                 <param direction="IN" isConfig="false" name="ix" type="&#xa;&#x9;&#x9;char*  "/>
-                <param direction="OUT" isConfig="false" name="out0" type="&#xa;&#x9;&#x9;short* "/>
-                <param direction="OUT" isConfig="false" name="out1" type="&#xa;&#x9;&#x9;short* "/>
+                <param direction="OUT" isConfig="false" name="out0" type="&#xa;&#x9;&#x9;float* "/>
+                <param direction="OUT" isConfig="false" name="out1" type="&#xa;&#x9;&#x9;float* "/>
             </loop>
-            <init name="configFft">
-                <param direction="IN" isConfig="true" name="fftSize" type="int "/>
-                <param direction="IN" isConfig="true" name="NStep" type=" int* "/>
-            </init>
             <port kind="cfg_input" name="NStep"/>
             <port kind="cfg_input" name="fftSize"/>
             <port kind="cfg_input" name="Step"/>

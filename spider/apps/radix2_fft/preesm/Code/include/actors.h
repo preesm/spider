@@ -40,21 +40,21 @@
 void genStepSwitch(int NStep, char* steps, char* sels);
 void cfgFftStep(char* in, int* step);
 
-void src(int fftSize, short *out);
-void snk(int fftSize, short *in);
+void src(int fftSize, float *out);
+void snk(int fftSize, float *in);
 
 void fftRadix2(
 		int NStep,
 		int fftSize,
 		int Step,
-		short* in0,
-		short* in1,
+		float* in0,
+		float* in1,
 		char*  ix,
-		short* out0,
-		short* out1);
+		float* out0,
+		float* out1);
 
-void ordering(int fftSize, short* in, short *out);
-void fft(int NStep, int fftSize, short* in, short* out);
+void ordering(int fftSize, float* in, float *out);
+void fft(int NStep, int fftSize, float* in, float* out);
 
 void configFft(int fftSize, int* NStep);
 void selcfg(int *sel, char* sel_in);

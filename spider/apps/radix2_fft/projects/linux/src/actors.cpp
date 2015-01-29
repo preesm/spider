@@ -37,11 +37,10 @@
 #include <spider.h>
 
 #include "actors.h"
-#include "data.h"
+#include "data_sp.h"
 
 extern "C"{
-	#include "DSP_fft16x16_cn.h"
-	#include "gen_twiddle_fft16x16.h"
+#include "DSPF_sp_fftSPxSP_cn.h"
 }
 
 #include <stdio.h>
@@ -50,30 +49,75 @@ extern "C"{
 
 #define VERBOSE 1
 
-short norm2_cplx(short *x){
-	long real = x[0];
-	long imag = x[1];
+unsigned char brev[64] = {
+    0x0, 0x20, 0x10, 0x30, 0x8, 0x28, 0x18, 0x38,
+    0x4, 0x24, 0x14, 0x34, 0xc, 0x2c, 0x1c, 0x3c,
+    0x2, 0x22, 0x12, 0x32, 0xa, 0x2a, 0x1a, 0x3a,
+    0x6, 0x26, 0x16, 0x36, 0xe, 0x2e, 0x1e, 0x3e,
+    0x1, 0x21, 0x11, 0x31, 0x9, 0x29, 0x19, 0x39,
+    0x5, 0x25, 0x15, 0x35, 0xd, 0x2d, 0x1d, 0x3d,
+    0x3, 0x23, 0x13, 0x33, 0xb, 0x2b, 0x1b, 0x3b,
+    0x7, 0x27, 0x17, 0x37, 0xf, 0x2f, 0x1f, 0x3f
+};
+
+/* Function for generating Specialized sequence of twiddle factors */
+void tw_gen (float *w, int n)
+{
+    int i, j, k;
+    const double PI = 3.141592654;
+
+    for (j = 1, k = 0; j <= n >> 2; j = j << 2)
+    {
+        for (i = 0; i < n >> 2; i += j)
+        {
+#ifdef _LITTLE_ENDIAN
+            w[k]     = (float) sin (2 * PI * i / n);
+            w[k + 1] = (float) cos (2 * PI * i / n);
+            w[k + 2] = (float) sin (4 * PI * i / n);
+            w[k + 3] = (float) cos (4 * PI * i / n);
+            w[k + 4] = (float) sin (6 * PI * i / n);
+            w[k + 5] = (float) cos (6 * PI * i / n);
+#else
+            w[k]     = (float)  cos (2 * PI * i / n);
+            w[k + 1] = (float) -sin (2 * PI * i / n);
+            w[k + 2] = (float)  cos (4 * PI * i / n);
+            w[k + 3] = (float) -sin (4 * PI * i / n);
+            w[k + 4] = (float)  cos (6 * PI * i / n);
+            w[k + 5] = (float) -sin (6 * PI * i / n);
+#endif
+            k += 6;
+        }
+    }
+}
+
+
+float norm2_cplx(float *x){
+	float real = x[0];
+	float imag = x[1];
 	return sqrt(real*real + imag*imag);
 }
 
-short normVect(short *x, int n){
-	short max = 0;
-	int i;
-	for(i=0; i<n; i++){
-		short val = norm2_cplx(x + 2*i);
-		max = (val>max)?val:max;
+float rms(float *x, int n){
+	float sum = 0;
+	for(int i=0; i<n; i++){
+		float val = norm2_cplx(x + 2*i);
+		sum += val*val;
 	}
-	return max;
+	return sqrt(sum/n);
 }
 
-float snr(short* sig, short* ref, int n){
-	short diff[2*N_DATA];
+float snr(float* sig, float* ref, int n){
+	float diff[2*N_DATA];
 	int i;
 	for(i=0; i<n; i++){
 		diff[2*i]   = sig[2*i]   - ref[2*i];
 		diff[2*i+1] = sig[2*i+1] - ref[2*i+1];
 	}
-	return 20*log((float)normVect(sig, n)/(float)normVect(diff, n));
+
+	printf("RMS Signal : %f\n", rms(sig, n));
+	printf("RMS Noise : %f\n", rms(diff, n));
+
+	return 20*log(rms(sig, n)/rms(diff, n));
 }
 
 inline int bitRev(short v, int logN){
@@ -105,23 +149,23 @@ void cfgFftStep(char* in, Param* step){
 }
 
 
-void src(Param fftSize, short *out){
+void src(Param fftSize, float *out){
 #if VERBOSE
 	printf("Execute Src\n");
 #endif
 	if(N_DATA != fftSize)
 		printf("Bad size, bad SNR expected\n");
 
-    memcpy(out, data_in, fftSize*2*sizeof(short));
+    memcpy(out, data_in, fftSize*2*sizeof(float));
 }
 
-void snk(Param fftSize, short *in){
+void snk(Param fftSize, float *in){
 #if VERBOSE
 	printf("Execute Snk\n");
 #endif
 
-	for(int i=0; i<fftSize; i++){
-		printf("%8d + %8d i\n", in[2*i], in[2*i+1]);
+	for(int i=0; i< 16/*fftSize*/; i++){
+		printf("%f + %f i\n", in[2*i], in[2*i+1]);
 	}
 
     // Compute SNR
@@ -129,7 +173,7 @@ void snk(Param fftSize, short *in){
     printf("SNR %f dB\n", snrVal);
 }
 
-void mixFFT(int n, int p, int step, int id, short* in0, short* in1, short* out0, short* out1){
+void mixFFT(int n, int p, int step, int id, float* in0, float* in1, float* out0, float* out1){
 	int mask = (p-1) ^ ((1<<step)-1);
 	int proc = ((id & mask)<<1) + ( id & (~mask & (p-1)) );
 	printf("mixFFT : n%d p%d step%d id%d proc%d mask %#x %#x\n", n, p, step, id, proc, mask, ~mask & (p-1));
@@ -137,16 +181,16 @@ void mixFFT(int n, int p, int step, int id, short* in0, short* in1, short* out0,
 		int q = 1 << (int)(step+1+log2(n)-log2(p));
 		int m = (proc*n/p+k) % q;
 
-		short k_r = in0[2*k  ];
-		short k_i = in0[2*k+1];
-		short l_r = in1[2*k  ];
-		short l_i = in1[2*k+1];
+		float k_r = in0[2*k  ];
+		float k_i = in0[2*k+1];
+		float l_r = in1[2*k  ];
+		float l_i = in1[2*k+1];
 
 		float z_r = cos(-2*M_PI*m/q);
 		float z_i = sin(-2*M_PI*m/q);
 
-		short l2_r = l_r*z_r - l_i*z_i;
-		short l2_i = l_i*z_r + l_r*z_i;
+		float l2_r = l_r*z_r - l_i*z_i;
+		float l2_i = l_i*z_r + l_r*z_i;
 
 		out0[2*k  ] = k_r + l2_r;
 		out0[2*k+1] = k_i + l2_i;
@@ -160,19 +204,19 @@ void fftRadix2(
 		Param NStep,
 		Param fftSize,
 		Param Step,
-		short* in0,
-		short* in1,
+		float* in0,
+		float* in1,
 		char*  ix,
-		short* out0,
-		short* out1){
+		float* out0,
+		float* out1){
 #if VERBOSE
 	printf("Execute fftRadix2\n");
 #endif
 
-	mixFFT(128, 8, Step, *ix, in0, in1, out0, out1);
+	mixFFT(fftSize, 1<<NStep, Step, *ix, in0, in1, out0, out1);
 }
 
-void ordering(Param fftSize, short* in, short *out){
+void ordering(Param fftSize, float* in, float *out){
 #if VERBOSE
 	printf("Execute ordering\n");
 #endif
@@ -188,23 +232,33 @@ void ordering(Param fftSize, short* in, short *out){
 void fft(
 		Param NStep,
 		Param fftSize,
-		short* in,
-		short* out){
+		float* in,
+		float* out){
 
-	static short w[2*N_DATA];
+	static float w[2*N_DATA];
 
 #if VERBOSE
 	printf("Execute fft\n");
 #endif
 
-	int localFFTSize = 16;
-    gen_twiddle_fft16x16(w, localFFTSize);
+	int localFFTSize = fftSize/(1<<NStep);
 
-    DSP_fft16x16_cn(w, localFFTSize, in, out);
+	int rad;
+	int j = 0;
+	for (int i = 0; i <= 31; i++)
+		if ((localFFTSize & (1 << i)) == 0)
+			j++;
+		else
+			break;
 
-    for(int i=0; i<2*localFFTSize; i++)
-    	out[i] = out[i]<<1;
+	if (j % 2 == 0)
+		rad = 4;
+	else
+		rad = 2;
 
+    tw_gen(w, localFFTSize);
+
+    DSPF_sp_fftSPxSP_cn(localFFTSize, in, w, out, brev, rad, 0, localFFTSize);
 }
 
 void configFft(Param fftSize, Param* NStep){

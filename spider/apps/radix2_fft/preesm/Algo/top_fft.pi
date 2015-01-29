@@ -12,7 +12,7 @@
             <data key="graph_desc">Code/include/actors.h</data>
             <loop name="src">
                 <param direction="IN" isConfig="true" name="fftSize" type="int "/>
-                <param direction="OUT" isConfig="false" name="out" type=" short *"/>
+                <param direction="OUT" isConfig="false" name="out" type=" float *"/>
             </loop>
             <port kind="cfg_input" name="fftSize"/>
             <port annotation="NONE" expr="fftSize" kind="output" name="out"/>
@@ -21,13 +21,18 @@
             <data key="graph_desc">Code/include/actors.h</data>
             <loop name="snk">
                 <param direction="IN" isConfig="true" name="fftSize" type="int "/>
-                <param direction="IN" isConfig="false" name="in" type=" short *"/>
+                <param direction="IN" isConfig="false" name="in" type=" float *"/>
             </loop>
             <port kind="cfg_input" name="fftSize"/>
             <port annotation="NONE" expr="fftSize" kind="input" name="in"/>
         </node>
         <node id="FFT" kind="actor">
             <data key="graph_desc">Algo/fft.pi</data>
+            <loop name="ordering">
+                <param direction="IN" isConfig="true" name="fftSize" type="int "/>
+                <param direction="IN" isConfig="false" name="in" type=" float* "/>
+                <param direction="OUT" isConfig="false" name="out" type=" float *"/>
+            </loop>
             <port kind="cfg_input" name="fftSize"/>
             <port annotation="NONE" expr="fftSize" kind="input" name="in"/>
             <port annotation="NONE" expr="fftSize" kind="output" name="out"/>

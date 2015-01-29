@@ -70,14 +70,14 @@ lrtFct top_fft_fcts[N_FCT_TOP_FFT] = {
 void Src(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	src(
 		/* fftSize */ (Param) inParams[0],
-		/* out     */ (short*) outputFIFOs[0]
+		/* out     */ (float*) outputFIFOs[0]
 	);
 }
 
 void Snk(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	snk(
 		/* fftSize */ (Param) inParams[0],
-		/* in      */ (short*) inputFIFOs[0]
+		/* in      */ (float*) inputFIFOs[0]
 	);
 }
 
@@ -91,8 +91,8 @@ void configFft(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param 
 void ordering(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	ordering(
 		/* fftSize */ (Param) inParams[0],
-		/* in      */ (short*) inputFIFOs[0],
-		/* out     */ (short*) outputFIFOs[0]
+		/* in      */ (float*) inputFIFOs[0],
+		/* out     */ (float*) outputFIFOs[0]
 	);
 }
 
@@ -100,8 +100,8 @@ void monoFFT(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 	fft(
 		/* NStep   */ (Param) inParams[0],
 		/* fftSize */ (Param) inParams[1],
-		/* in      */ (short*) inputFIFOs[0],
-		/* out     */ (short*) outputFIFOs[0]
+		/* in      */ (float*) inputFIFOs[0],
+		/* out     */ (float*) outputFIFOs[0]
 	);
 }
 
@@ -132,11 +132,11 @@ void fft_radix2(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param
 		/* NStep   */ (Param) inParams[0],
 		/* fftSize */ (Param) inParams[1],
 		/* Step    */ (Param) inParams[2],
-		/* in0     */ (short*) inputFIFOs[0],
-		/* in1     */ (short*) inputFIFOs[1],
+		/* in0     */ (float*) inputFIFOs[0],
+		/* in1     */ (float*) inputFIFOs[1],
 		/* ix      */ (char*) inputFIFOs[2],
-		/* out0    */ (short*) outputFIFOs[0],
-		/* out1    */ (short*) outputFIFOs[1]
+		/* out0    */ (float*) outputFIFOs[0],
+		/* out1    */ (float*) outputFIFOs[1]
 	);
 }
 

@@ -36,7 +36,7 @@
  * ****************************************************************************
  */
 
-#include "data.h"
+#include "data_sp.h"
 #include "top_fft.h"
 
 PiSDFGraph* top_fft(Archi* archi, Stack* stack);
@@ -116,13 +116,13 @@ PiSDFGraph* top_fft(Archi* archi, Stack* stack){
 
 	/* Edges */
 	graph->connect(
-		/*Src*/ bo_Src, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ bo_FFT, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ bo_Src, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ bo_FFT, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_FFT, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ bo_Snk, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ bo_FFT, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ bo_Snk, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	return graph;
@@ -201,23 +201,23 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 
 	/* Edges */
 	graph->connect(
-		/*Src*/ if_in, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ bo_ordering, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ if_in, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ bo_ordering, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_ordering, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ bo_monoFFT, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize/(2^NStep))",
+		/*Src*/ bo_ordering, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ bo_monoFFT, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize/(2^NStep))",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_monoFFT, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize/(2^NStep))",
-		/*Snk*/ bo_radixReduction, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ bo_monoFFT, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize/(2^NStep))",
+		/*Snk*/ bo_radixReduction, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_radixReduction, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ bo_radixReduction, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	return graph;
@@ -292,28 +292,28 @@ PiSDFGraph* radixReduction(Archi* archi, Stack* stack){
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ if_in, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ bo_Switch, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ if_in, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ bo_Switch, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_Br, /*SrcPrt*/ 1, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ bo_Switch, /*SnkPrt*/ 1, /*Cons*/ "4*(fftSize)",
-		/*Delay*/ "4*(fftSize)",0);
+		/*Src*/ bo_Br, /*SrcPrt*/ 1, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ bo_Switch, /*SnkPrt*/ 1, /*Cons*/ "8*(fftSize)",
+		/*Delay*/ "8*(fftSize)",0);
 
 	graph->connect(
-		/*Src*/ bo_Switch, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ bo_fftStep, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ bo_Switch, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ bo_fftStep, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_fftStep, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ bo_Br, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ bo_fftStep, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ bo_Br, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_Br, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ bo_Br, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	graph->connect(
@@ -419,38 +419,38 @@ PiSDFGraph* Switch(Archi* archi, Stack* stack){
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ if_in0, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ bo_f0, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ if_in0, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ bo_f0, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ if_in1, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ bo_f1, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ if_in1, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ bo_f1, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_f0, /*SrcPrt*/ 1, /*Prod*/ "4*(fftSize*(1-sel))",
-		/*Snk*/ bo_j, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize*(1-sel))",
+		/*Src*/ bo_f0, /*SrcPrt*/ 1, /*Prod*/ "8*(fftSize*(1-sel))",
+		/*Snk*/ bo_j, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize*(1-sel))",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_f1, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize*sel)",
-		/*Snk*/ bo_j, /*SnkPrt*/ 1, /*Cons*/ "4*(fftSize*sel)",
+		/*Src*/ bo_f1, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize*sel)",
+		/*Snk*/ bo_j, /*SnkPrt*/ 1, /*Cons*/ "8*(fftSize*sel)",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_f1, /*SrcPrt*/ 1, /*Prod*/ "4*(fftSize*(1-sel))",
-		/*Snk*/ bo_end1, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize*(1-sel))",
+		/*Src*/ bo_f1, /*SrcPrt*/ 1, /*Prod*/ "8*(fftSize*(1-sel))",
+		/*Snk*/ bo_end1, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize*(1-sel))",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_f0, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize*sel)",
-		/*Snk*/ bo_end0, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize*sel)",
+		/*Src*/ bo_f0, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize*sel)",
+		/*Snk*/ bo_end0, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize*sel)",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_j, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ bo_j, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	return graph;
@@ -547,33 +547,33 @@ PiSDFGraph* fftStep(Archi* archi, Stack* stack){
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ if_in, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize)",
-		/*Snk*/ bo_ForkFftStep, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize/(2^(NStep-Step-1)))",
+		/*Src*/ if_in, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize)",
+		/*Snk*/ bo_ForkFftStep, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize/(2^(NStep-Step-1)))",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_ForkFftStep, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize/(2^(NStep-Step)))",
-		/*Snk*/ bo_fft_radix2, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize/(2^NStep))",
+		/*Src*/ bo_ForkFftStep, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize/(2^(NStep-Step)))",
+		/*Snk*/ bo_fft_radix2, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize/(2^NStep))",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_ForkFftStep, /*SrcPrt*/ 1, /*Prod*/ "4*(fftSize/(2^(NStep-Step)))",
-		/*Snk*/ bo_fft_radix2, /*SnkPrt*/ 1, /*Cons*/ "4*(fftSize/(2^NStep))",
+		/*Src*/ bo_ForkFftStep, /*SrcPrt*/ 1, /*Prod*/ "8*(fftSize/(2^(NStep-Step)))",
+		/*Snk*/ bo_fft_radix2, /*SnkPrt*/ 1, /*Cons*/ "8*(fftSize/(2^NStep))",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_fft_radix2, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize/(2^NStep))",
-		/*Snk*/ bo_JoinFftStep, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize/(2^NStep))",
+		/*Src*/ bo_fft_radix2, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize/(2^NStep))",
+		/*Snk*/ bo_JoinFftStep, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize/(2^NStep))",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_fft_radix2, /*SrcPrt*/ 1, /*Prod*/ "4*(fftSize/(2^NStep))",
-		/*Snk*/ bo_JoinFftStep, /*SnkPrt*/ 1, /*Cons*/ "4*(fftSize/(2^NStep))",
+		/*Src*/ bo_fft_radix2, /*SrcPrt*/ 1, /*Prod*/ "8*(fftSize/(2^NStep))",
+		/*Snk*/ bo_JoinFftStep, /*SnkPrt*/ 1, /*Cons*/ "8*(fftSize/(2^NStep))",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_JoinFftStep, /*SrcPrt*/ 0, /*Prod*/ "4*(fftSize/(2^(NStep-1)))",
-		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "4*(fftSize)",
+		/*Src*/ bo_JoinFftStep, /*SrcPrt*/ 0, /*Prod*/ "8*(fftSize/(2^(NStep-1)))",
+		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "8*(fftSize)",
 		/*Delay*/ "0",0);
 
 	graph->connect(

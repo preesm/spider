@@ -28,8 +28,8 @@
             <data key="graph_desc">Code/include/actors.h</data>
             <loop name="ordering">
                 <param direction="IN" isConfig="true" name="fftSize" type="int "/>
-                <param direction="IN" isConfig="false" name="in" type=" short* "/>
-                <param direction="OUT" isConfig="false" name="out" type=" short *"/>
+                <param direction="IN" isConfig="false" name="in" type=" float* "/>
+                <param direction="OUT" isConfig="false" name="out" type=" float *"/>
             </loop>
             <port kind="cfg_input" name="fftSize"/>
             <port annotation="NONE" expr="fftSize" kind="input" name="in"/>
@@ -40,8 +40,8 @@
             <loop name="fft">
                 <param direction="IN" isConfig="true" name="NStep" type="int "/>
                 <param direction="IN" isConfig="true" name="fftSize" type=" int "/>
-                <param direction="IN" isConfig="false" name="in" type=" short* "/>
-                <param direction="OUT" isConfig="false" name="out" type=" short* "/>
+                <param direction="IN" isConfig="false" name="in" type=" float* "/>
+                <param direction="OUT" isConfig="false" name="out" type=" float* "/>
             </loop>
             <init name="configFft">
                 <param direction="IN" isConfig="true" name="fftSize" type="int "/>

@@ -271,8 +271,14 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 			if(sourceProduction*1 == sinkConsumption*nbSinkRepetitions){
 				// No need of Broadcast
 				srcRepetitions = CREATE_MUL(stack, 1, SRDAGVertex*);
-				*srcRepetitions = job->inputIfs[edge->getSrc()->getTypeId()]->getSrc();
-				piSrcIx = job->inputIfs[edge->getSrc()->getTypeId()]->getSrcPortIx();
+				srcRepetitions[0] = job->inputIfs[edge->getSrc()->getTypeId()]->getSrc();
+				if(srcRepetitions[0] == 0){
+					srcRepetitions[0] = topSrdag->addRoundBuffer();
+					job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcRepetitions[0], 0);
+					piSrcIx = 0;
+				}else{
+					piSrcIx = job->inputIfs[edge->getSrc()->getTypeId()]->getSrcPortIx();
+				}
 				curSourceToken = sourceProduction;
 			}else{
 				bool perfectBr = sinkConsumption*nbSinkRepetitions%sourceProduction == 0;

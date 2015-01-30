@@ -50,7 +50,8 @@ public:
 			int fOut,
 			int fTrace,
 			sem_t *semTrace,
-			void* shMem,
+			void* fifos,
+			void* dataMem,
 			int nbFifos,
 			Stack* s
 		);

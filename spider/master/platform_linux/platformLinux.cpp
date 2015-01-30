@@ -61,10 +61,12 @@
 #define SHARED_MEM_KEY		8452
 
 #define MAX_MSG_SIZE 10*1024
+#define NFIFOS 32*1024
 
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
 static void* shMem;
+static void* dataMem;
 
 static void initShMem(int shMemSize){
 	/** Open Shared Memory */
@@ -84,6 +86,10 @@ static void initShMem(int shMemSize){
         perror("shmat");
         exit(1);
     }
+
+    dataMem = (void*)((long)shMem + sizeof(unsigned int)*NFIFOS);
+
+    memset(shMem, 0, shMemSize);
 }
 
 static void setAffinity(int cpuId){
@@ -153,7 +159,8 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 					pipeTrace[1],
 					semTrace,
 					shMem,
-					10000,
+					dataMem,
+					NFIFOS,
 					stack);
         	LRT* lrt = CREATE(stack, LRT)(i, lrtCom);
         	setAffinity(i);
@@ -193,7 +200,8 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 			pipeTrace[1],
 			semTrace,
 			shMem,
-			10000,
+			dataMem,
+			NFIFOS,
 			stack);
 	LRT* lrt = CREATE(stack, LRT)(0, lrtCom);
 	setAffinity(0);
@@ -270,7 +278,7 @@ void PlatformLinux::fclose(int id){
 }
 
 void* PlatformLinux::virt_to_phy(void* address){
-	return (void*)((long)shMem + (long)address);
+	return (void*)((long)dataMem + (long)address);
 }
 
 int PlatformLinux::getCacheLineSize(){

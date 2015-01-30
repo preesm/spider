@@ -49,7 +49,8 @@ LinuxLrtCommunicator::LinuxLrtCommunicator(
 		int fOut,
 		int fTrace,
 		sem_t *semTrace,
-		void* shMem,
+		void* fifos,
+		void* dataMem,
 		int nFifos,
 		Stack* s
 	){
@@ -67,8 +68,8 @@ LinuxLrtCommunicator::LinuxLrtCommunicator(
 	curMsgSizeSend_ = 0;
 
 	nbFifos_ = nFifos;
-	fifos_ = (unsigned long*)shMem;
-	shMem_ = (unsigned char*)((long)shMem + nFifos*sizeof(unsigned long));
+	fifos_ = (unsigned long*)fifos;
+	shMem_ = (unsigned char*)dataMem;
 }
 
 LinuxLrtCommunicator::~LinuxLrtCommunicator(){
@@ -144,11 +145,11 @@ void LinuxLrtCommunicator::data_end_send(Fifo* f){
 	volatile unsigned long *mutex = fifos_ + f->id;
 	// TODO protect mutex !
 	// TODO cache memory
-	*mutex += f->ntoken;
+	*mutex = f->ntoken;
 }
 long LinuxLrtCommunicator::data_recv(Fifo* f){
 	volatile unsigned long *mutex = fifos_ + f->id;
-	while(*mutex < f->ntoken);
+	while(*mutex != f->ntoken);
 	*mutex -= f->ntoken;
 	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
 }

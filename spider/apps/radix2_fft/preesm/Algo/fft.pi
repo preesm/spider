@@ -27,11 +27,17 @@
         <node id="ordering" kind="actor">
             <data key="graph_desc">Code/include/actors.h</data>
             <loop name="ordering">
-                <param direction="IN" isConfig="true" name="fftSize" type="int "/>
+                <param direction="IN" isConfig="true" name="fftSize" type="Param "/>
+                <param direction="IN" isConfig="true" name="NStep" type=" Param "/>
                 <param direction="IN" isConfig="false" name="in" type=" float* "/>
                 <param direction="OUT" isConfig="false" name="out" type=" float *"/>
             </loop>
+            <init name="configFft">
+                <param direction="IN" isConfig="true" name="fftSize" type="Param "/>
+                <param direction="IN" isConfig="true" name="NStep" type=" Param* "/>
+            </init>
             <port kind="cfg_input" name="fftSize"/>
+            <port kind="cfg_input" name="NStep"/>
             <port annotation="NONE" expr="fftSize" kind="input" name="in"/>
             <port annotation="NONE" expr="fftSize" kind="output" name="out"/>
         </node>
@@ -78,5 +84,6 @@
         <edge kind="dependency" source="NStep" target="monoFFT" targetport="NStep"/>
         <edge kind="dependency" source="fftSize" target="radixReduction" targetport="fftSize"/>
         <edge kind="dependency" source="NStep" target="radixReduction" targetport="NStep"/>
+        <edge kind="dependency" source="NStep" target="ordering" targetport="NStep"/>
     </graph>
 </graphml>

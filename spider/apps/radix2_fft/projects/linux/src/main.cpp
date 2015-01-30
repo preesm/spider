@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
 	DynStack archiStack("ArchiStack");
 
 #define SH_MEM 0x40000000
-	PlatformLinux platform(1, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
+	PlatformLinux platform(4, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_DUMMY;
@@ -66,10 +66,12 @@ int main(int argc, char* argv[]){
 	printf("Start\n");
 
 //	try{
+	for(int i=1; i<=6; i++){
+		printf("NStep = %d\t", i);
 		char ganttPath[30];
-		sprintf(ganttPath, "radixFFT.sgantt");
+		sprintf(ganttPath, "radixFFT_%d.sgantt", i);
 		char srdagPath[30];
-		sprintf(srdagPath, "radixFFT.gv");
+		sprintf(srdagPath, "radixFFT_%d.gv", i);
 
 		pisdfStack.freeAll();
 
@@ -83,9 +85,10 @@ int main(int argc, char* argv[]){
 		spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
 		spider_getLastSRDAG()->print(srdagPath);
 
-		printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
+		printf("\tEndTime = %d ms\n", stat.globalEndTime/1000000);
 
 		free_top_fft(topPisdf, &pisdfStack);
+	}
 //	}catch(const char* s){
 //		printf("Exception : %s\n", s);
 //	}

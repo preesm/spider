@@ -53,7 +53,7 @@ void fftRadix2(
 		float* out0,
 		float* out1);
 
-void ordering(Param fftSize, float* in, float *out);
+void ordering(Param fftSize, Param NStep, float* in, float *out);
 void fft(Param NStep, Param fftSize, float* in, float* out);
 
 void configFft(Param fftSize, Param* NStep);

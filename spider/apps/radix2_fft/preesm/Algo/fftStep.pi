@@ -42,11 +42,12 @@
         <node id="JoinFftStep" kind="join">
             <port kind="cfg_input" name="fftSize"/>
             <port kind="cfg_input" name="NStep"/>
-            <port annotation="NONE" expr="fftSize/(2^NStep)"
+            <port kind="cfg_input" name="Step"/>
+            <port annotation="NONE" expr="fftSize/(2^(NStep-Step))"
                 kind="input" name="in0"/>
-            <port annotation="NONE" expr="fftSize/(2^NStep)"
+            <port annotation="NONE" expr="fftSize/(2^(NStep-Step))"
                 kind="input" name="in1"/>
-            <port annotation="NONE" expr="fftSize/(2^(NStep-1))"
+            <port annotation="NONE" expr="fftSize/(2^(NStep-Step-1))"
                 kind="output" name="out"/>
         </node>
         <node id="fft_radix2" kind="actor">
@@ -111,5 +112,6 @@
         <edge kind="dependency" source="NStep" target="genIx" targetport="NStep"/>
         <edge kind="dependency" source="NStep" target="ForkFftStep" targetport="NStep"/>
         <edge kind="dependency" source="Step" target="fft_radix2" targetport="Step"/>
+        <edge kind="dependency" source="Step" target="JoinFftStep" targetport="Step"/>
     </graph>
 </graphml>

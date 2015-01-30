@@ -37,27 +37,27 @@
 #ifndef ACTORS_H
 #define ACTORS_H
 
-void genStepSwitch(int NStep, char* steps, char* sels);
-void cfgFftStep(char* in, int* step);
+void genStepSwitch(Param NStep, char* steps, char* sels);
+void cfgFftStep(char* in, Param* step);
 
-void src(int fftSize, float *out);
-void snk(int fftSize, float *in);
+void src(Param fftSize, float *out);
+void snk(Param fftSize, float *in);
 
 void fftRadix2(
-		int NStep,
-		int fftSize,
-		int Step,
+		Param NStep,
+		Param fftSize,
+		Param Step,
 		float* in0,
 		float* in1,
 		char*  ix,
 		float* out0,
 		float* out1);
 
-void ordering(int fftSize, float* in, float *out);
-void fft(int NStep, int fftSize, float* in, float* out);
+void ordering(Param fftSize, Param NStep, float* in, float *out);
+void fft(Param NStep, Param fftSize, float* in, float* out);
 
-void configFft(int fftSize, int* NStep);
-void selcfg(int *sel, char* sel_in);
-void genIx(int NStep, char* ixs);
+void configFft(Param fftSize, Param* NStep);
+void selcfg(Param *sel, char* sel_in);
+void genIx(Param NStep, char* ixs);
 
 #endif//ACTORS_H

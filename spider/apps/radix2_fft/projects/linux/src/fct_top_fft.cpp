@@ -91,6 +91,7 @@ void configFft(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param 
 void ordering(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	ordering(
 		/* fftSize */ (Param) inParams[0],
+		/* NStep   */ (Param) inParams[1],
 		/* in      */ (float*) inputFIFOs[0],
 		/* out     */ (float*) outputFIFOs[0]
 	);

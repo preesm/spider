@@ -47,7 +47,7 @@ extern "C"{
 #include <string.h>
 #include <math.h>
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 unsigned char brev[64] = {
     0x0, 0x20, 0x10, 0x30, 0x8, 0x28, 0x18, 0x38,
@@ -114,8 +114,8 @@ float snr(float* sig, float* ref, int n){
 		diff[2*i+1] = sig[2*i+1] - ref[2*i+1];
 	}
 
-	printf("RMS Signal : %f\n", rms(sig, n));
-	printf("RMS Noise : %f\n", rms(diff, n));
+//	printf("RMS Signal : %f\n", rms(sig, n));
+//	printf("RMS Noise : %f\n", rms(diff, n));
 
 	return 20*log(rms(sig, n)/rms(diff, n));
 }
@@ -164,10 +164,6 @@ void snk(Param fftSize, float *in){
 	printf("Execute Snk\n");
 #endif
 
-	for(int i=0; i< 16/*fftSize*/; i++){
-		printf("%f + %f i\n", in[2*i], in[2*i+1]);
-	}
-
     // Compute SNR
     float snrVal = snr(in, data_out, fftSize);
     printf("SNR %f dB\n", snrVal);
@@ -176,7 +172,7 @@ void snk(Param fftSize, float *in){
 void mixFFT(int n, int p, int step, int id, float* in0, float* in1, float* out0, float* out1){
 	int mask = (p-1) ^ ((1<<step)-1);
 	int proc = ((id & mask)<<1) + ( id & (~mask & (p-1)) );
-	printf("mixFFT : n%d p%d step%d id%d proc%d mask %#x %#x\n", n, p, step, id, proc, mask, ~mask & (p-1));
+//	printf("mixFFT : n%d p%d step%d id%d proc%d mask %#x %#x\n", n, p, step, id, proc, mask, ~mask & (p-1));
 	for(int k=0; k<n/p; k++){
 		int q = 1 << (int)(step+1+log2(n)-log2(p));
 		int m = (proc*n/p+k) % q;
@@ -216,15 +212,15 @@ void fftRadix2(
 	mixFFT(fftSize, 1<<NStep, Step, *ix, in0, in1, out0, out1);
 }
 
-void ordering(Param fftSize, float* in, float *out){
+void ordering(Param fftSize, Param NStep, float* in, float *out){
 #if VERBOSE
 	printf("Execute ordering\n");
 #endif
-
-	for(int proc=0; proc<8; proc++){
-		for(int k=0; k<fftSize/8; k++){
-			out[2*(proc*fftSize/8+k)  ] = in[2*(bitRev(proc, 3)+k*8)  ];
-			out[2*(proc*fftSize/8+k)+1] = in[2*(bitRev(proc, 3)+k*8)+1];
+	int P = 1<<NStep;
+	for(int proc=0; proc<P; proc++){
+		for(int k=0; k<fftSize/P; k++){
+			out[2*(proc*fftSize/P+k)  ] = in[2*(bitRev(proc, NStep)+k*P)  ];
+			out[2*(proc*fftSize/P+k)+1] = in[2*(bitRev(proc, NStep)+k*P)+1];
 		}
 	}
 }
@@ -266,7 +262,9 @@ void configFft(Param fftSize, Param* NStep){
 	printf("Execute configFft\n");
 #endif
 
-	*NStep = 3;
+	static int nstep = 1;
+
+	*NStep = nstep++;
 }
 
 void selcfg(Param *out_Sel, char* in_Sel){

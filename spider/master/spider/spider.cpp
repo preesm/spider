@@ -40,7 +40,6 @@
 #include <launcher/Launcher.h>
 
 static SpiderCommunicator* spiderCom = 0;
-static LRT* lrt = 0;
 
 static Stack* srdagStack = 0;
 static Stack* transfoStack = 0;
@@ -152,22 +151,6 @@ void spider_endMonitoring(TraceSpiderType type){
 	start = 0;
 }
 
-void setSpiderCommunicator(SpiderCommunicator* com){
-	spiderCom = com;
-}
-
-SpiderCommunicator* getSpiderCommunicator(){
-	return spiderCom;
-}
-
-void setLrt(LRT* l){
-	lrt = l;
-}
-
-LRT* getLrt(){
-	return lrt;
-}
-
 static char* regenerateColor(int refInd){
 	static char color[8];
 	color[0] = '\0';
@@ -241,11 +224,12 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 
 	// Popping data from Trace queue.
 	stat->taskOrderingTime = 0;
+	stat->globalEndTime = 0;
 
 	TraceMsg* traceMsg;
 	int n = Launcher::get()->getNLaunched();
 	while(n){
-		if(getSpiderCommunicator()->trace_start_recv((void**)&traceMsg)){
+		if(Platform::getSpiderCommunicator()->trace_start_recv((void**)&traceMsg)){
 			switch (traceMsg->msgIx) {
 				case TRACE_JOB:
 					printGrantt_SRDAGVertex(
@@ -256,7 +240,6 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 							traceMsg->lrtIx);
 
 					stat->globalEndTime = std::max(traceMsg->end, stat->globalEndTime);
-					getSpiderCommunicator()->trace_end_recv();
 					break;
 				case TRACE_SPIDER:{
 					static int i=0;
@@ -272,7 +255,7 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 					throw "Unhandled trace msg";
 					break;
 			}
-			getSpiderCommunicator()->trace_end_recv();
+			Platform::getSpiderCommunicator()->trace_end_recv();
 			n--;
 		}
 	}

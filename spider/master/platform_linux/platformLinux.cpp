@@ -112,8 +112,10 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 	int cpIds[nLrt];
 	sem_t* semTrace;
 
-	Platform::set(this);
+	if(platform_)
+		throw "Try to create 2 platforms";
 
+	platform_ = this;
 	stack_ = stack;
 
 	cpIds[0] = getpid();
@@ -152,7 +154,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
         	initShMem(shMemSize);
 
         	/** Create LRT */
-        	LinuxLrtCommunicator* lrtCom = CREATE(stack, LinuxLrtCommunicator)(
+        	lrtCom_ = (LrtCommunicator*) CREATE(stack, LinuxLrtCommunicator)(
         			MAX_MSG_SIZE,
 					pipeSpidertoLRT[2*i],
 					pipeLRTtoSpider[2*i+1],
@@ -162,14 +164,12 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 					dataMem,
 					NFIFOS,
 					stack);
-        	LRT* lrt = CREATE(stack, LRT)(i, lrtCom);
+        	lrt_ = CREATE(stack, LRT)(i);
         	setAffinity(i);
-        	lrt->setFctTbl(fcts, nLrtFcts);
-
-        	Platform::set(this);
+        	lrt_->setFctTbl(fcts, nLrtFcts);
 
         	/** launch LRT */
-        	lrt->runInfinitly();
+        	lrt_->runInfinitly();
         } else { /* Parent */
         	cpIds[i] = cpid;
         }
@@ -182,7 +182,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
     memset(shMem,0,shMemSize);
 
 	/** Initialize LRT and Communicators */
-    LinuxSpiderCommunicator* spiderCom = CREATE(stack, LinuxSpiderCommunicator)(
+    spiderCom_ = CREATE(stack, LinuxSpiderCommunicator)(
     		MAX_MSG_SIZE,
 			nLrt,
 			semTrace,
@@ -191,9 +191,9 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 			stack);
 
     for(int i=0; i<nLrt; i++)
-    	spiderCom->setLrtCom(i, pipeLRTtoSpider[2*i], pipeSpidertoLRT[2*i+1]);
+    	((LinuxSpiderCommunicator*)spiderCom_)->setLrtCom(i, pipeLRTtoSpider[2*i], pipeSpidertoLRT[2*i+1]);
 
-	LinuxLrtCommunicator* lrtCom = CREATE(stack, LinuxLrtCommunicator)(
+	lrtCom_ = CREATE(stack, LinuxLrtCommunicator)(
 			MAX_MSG_SIZE,
 			pipeSpidertoLRT[0],
 			pipeLRTtoSpider[1],
@@ -203,12 +203,10 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 			dataMem,
 			NFIFOS,
 			stack);
-	LRT* lrt = CREATE(stack, LRT)(0, lrtCom);
+	lrt_ = CREATE(stack, LRT)(0);
 	setAffinity(0);
-	lrt->setFctTbl(fcts, nLrtFcts);
+	lrt_->setFctTbl(fcts, nLrtFcts);
 
-	setLrt(lrt);
-	setSpiderCommunicator(spiderCom);
 
 	/** Create Archi */
 	archi_ = CREATE(stack, SharedMemArchi)(
@@ -244,18 +242,14 @@ PlatformLinux::~PlatformLinux(){
 
 	wait(0);
 
-	LRT* lrt = getLrt();
-	LinuxSpiderCommunicator* spiderCom = (LinuxSpiderCommunicator*)getSpiderCommunicator();
-	LinuxLrtCommunicator* lrtCom = (LinuxLrtCommunicator*)lrt->getCom();
-
-	lrt->~LRT();
-	spiderCom->~LinuxSpiderCommunicator();
-	lrtCom->~LinuxLrtCommunicator();
+	lrt_->~LRT();
+	((LinuxSpiderCommunicator*)spiderCom_)->~LinuxSpiderCommunicator();
+	((LinuxLrtCommunicator*)lrtCom_)->~LinuxLrtCommunicator();
 	archi_->~SharedMemArchi();
 
-	stack_->free(lrt);
-	stack_->free(spiderCom);
-	stack_->free(lrtCom);
+	stack_->free(lrt_);
+	stack_->free(spiderCom_);
+	stack_->free(lrtCom_);
 	stack_->free(archi_);
 }
 
@@ -322,4 +316,3 @@ Time PlatformLinux::getTime(){
 SharedMemArchi* PlatformLinux::getArchi(){
 	return archi_;
 }
-

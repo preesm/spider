@@ -72,9 +72,9 @@ Launcher* Launcher::get(){
 }
 
 void Launcher::send_ClearTimeMsg(int lrtIx){
-	ClearTimeMsg* msg = (ClearTimeMsg*)getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(ClearTimeMsg));
+	ClearTimeMsg* msg = (ClearTimeMsg*)Platform::getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(ClearTimeMsg));
 	msg->msgIx = MSG_CLEAR_TIME;
-	getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMsg));
+	Platform::getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMsg));
 }
 
 void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
@@ -102,7 +102,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 					+ vertex->getNConnectedInEdge()*sizeof(Fifo)
 					+ vertex->getNConnectedOutEdge()*sizeof(Fifo)
 					+ nParams*sizeof(Param);
-	long msgAdd = (long) getSpiderCommunicator()->ctrl_start_send(
+	long msgAdd = (long) Platform::getSpiderCommunicator()->ctrl_start_send(
 			lrtIx,
 			size
 			);
@@ -179,14 +179,14 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 
 	curNParam_ += vertex->getNOutParam();
 
-	getSpiderCommunicator()->ctrl_end_send(lrtIx, size);
+	Platform::getSpiderCommunicator()->ctrl_end_send(lrtIx, size);
 }
 
 void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 	int slave = 0;
 	while(curNParam_ != 0){
 		ParamValueMsg* msg;
-		if(getSpiderCommunicator()->ctrl_start_recv(slave, (void**)(&msg))){
+		if(Platform::getSpiderCommunicator()->ctrl_start_recv(slave, (void**)(&msg))){
 			if(msg->msgIx != MSG_PARAM_VALUE)
 				throw "Unexpected Msg received\n";
 			SRDAGVertex* cfgVertex = topDag->getVertexFromIx(msg->srdagIx);
@@ -197,14 +197,14 @@ void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 //				printf("Recv param = %d\n", *param);
 			}
 			curNParam_ -= cfgVertex->getNOutParam();
-			getSpiderCommunicator()->ctrl_end_recv(slave);
+			Platform::getSpiderCommunicator()->ctrl_end_recv(slave);
 		}
 		slave = (slave+1)%archi->getNPE();
 	}
 }
 
 void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end){
-	TraceMsg* msgTrace = (TraceMsg*) getSpiderCommunicator()->trace_start_send(sizeof(TraceMsg));
+	TraceMsg* msgTrace = (TraceMsg*) Platform::getSpiderCommunicator()->trace_start_send(sizeof(TraceMsg));
 
 	msgTrace->msgIx = TRACE_SPIDER;
 	msgTrace->spiderTask = type;
@@ -213,7 +213,7 @@ void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end){
 	msgTrace->end = end;
 	msgTrace->lrtIx = 0;
 
-	getSpiderCommunicator()->trace_end_send(sizeof(TraceMsgType));
+	Platform::getSpiderCommunicator()->trace_end_send(sizeof(TraceMsgType));
 	nLaunched_++;
 }
 

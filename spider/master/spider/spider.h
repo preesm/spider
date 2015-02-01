@@ -121,10 +121,4 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 
 SRDAGGraph* spider_getLastSRDAG();
 
-void setSpiderCommunicator(SpiderCommunicator* com);
-SpiderCommunicator* getSpiderCommunicator();
-
-void setLrt(LRT* com);
-LRT* getLrt();
-
 #endif//SPIDER_H

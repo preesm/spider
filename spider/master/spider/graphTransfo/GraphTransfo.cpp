@@ -209,7 +209,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 		scheduler->scheduleOnlyConfig(topSrdag, schedule, archi, transfoSTack);
 		spider_endMonitoring(TRACE_SPIDER_SCHED);
 
-		getLrt()->runUntilNoMoreJobs();
+		Platform::get()->getLrt()->runUntilNoMoreJobs();
 
 		/* Resolve params must be done by itself */
 		Launcher::get()->resolveParams(archi, topSrdag);
@@ -260,7 +260,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 	scheduler->schedule(topSrdag, schedule, archi, transfoSTack);
 	spider_endMonitoring(TRACE_SPIDER_SCHED);
 
-	getLrt()->runUntilNoMoreJobs();
+	Platform::get()->getLrt()->runUntilNoMoreJobs();
 
 	schedule->~Schedule();
 	transfoSTack->free(schedule);

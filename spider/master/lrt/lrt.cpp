@@ -35,8 +35,10 @@
  ****************************************************************************/
 
 #include <lrt.h>
+#include <LrtCommunicator.h>
 #include <Message.h>
 #include <platform.h>
+#include <tools/DynStack.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -53,15 +55,16 @@ static lrtFct specialActors[6] = {
 		&saEnd
 };
 
-LRT::LRT(int ix, LrtCommunicator* com){
-	com_ = com;
+LRT::LRT(int ix){
 	/* TODO add some heapMemory */
 	fcts_ = 0;
 	nFct_ = 0;
 	ix_ = ix;
+	stack_ = new DynStack("LRTStack");
 }
 LRT::~LRT(){
 	/* Nothing to Unalloc */
+	delete stack_;
 }
 
 void LRT::setFctTbl(const lrtFct fct[], int nFct){
@@ -70,7 +73,7 @@ void LRT::setFctTbl(const lrtFct fct[], int nFct){
 }
 
 void LRT::sendTrace(int srdagIx, Time start, Time end){
-	TraceMsg* msgTrace = (TraceMsg*) com_->trace_start_send(sizeof(TraceMsg));
+	TraceMsg* msgTrace = (TraceMsg*) Platform::getLrtCommunicator()->trace_start_send(sizeof(TraceMsg));
 
 	msgTrace->msgIx = TRACE_JOB;
 	msgTrace->srdagIx = srdagIx;
@@ -79,12 +82,12 @@ void LRT::sendTrace(int srdagIx, Time start, Time end){
 	msgTrace->end = end;
 	msgTrace->lrtIx = ix_;
 
-	com_->trace_end_send(sizeof(TraceMsgType));
+	Platform::getLrtCommunicator()->trace_end_send(sizeof(TraceMsgType));
 }
 
 int LRT::runOneJob(){
 	void* msg;
-	if(com_->ctrl_start_recv(&msg)){
+	if(Platform::getLrtCommunicator()->ctrl_start_recv(&msg)){
 		switch(((UndefinedMsg*) msg)->msgIx){
 		case MSG_START_JOB:{
 			StartJobMsg* jobMsg = (StartJobMsg*) msg;
@@ -96,13 +99,16 @@ int LRT::runOneJob(){
 				void* inFifosAlloc[jobMsg->nbInEdge];
 				void* outFifosAlloc[jobMsg->nbOutEdge];
 				Param outParams[jobMsg->nbOutParam];
+//				void** inFifosAlloc = CREATE_MUL(stack_, jobMsg->nbInEdge, void*);
+//				void** outFifosAlloc = CREATE_MUL(stack_, jobMsg->nbOutEdge, void*);
+//				Param* outParams = CREATE_MUL(stack_, jobMsg->nbOutParam, Param);
 
 				for(int i=0; i<jobMsg->nbInEdge; i++){
-					inFifosAlloc[i] = (void*) com_->data_recv(&inFifos[i]);
+					inFifosAlloc[i] = (void*) Platform::getLrtCommunicator()->data_recv(&inFifos[i]);
 				}
 
 				for(int i=0; i<jobMsg->nbOutEdge; i++){
-					outFifosAlloc[i] = (void*) com_->data_start_send(&outFifos[i]);
+					outFifosAlloc[i] = (void*) Platform::getLrtCommunicator()->data_start_send(&outFifos[i]);
 				}
 
 				Time start = Platform::get()->getTime();
@@ -119,20 +125,25 @@ int LRT::runOneJob(){
 				sendTrace(jobMsg->srdagIx, start, end);
 
 				for(int i=0; i<jobMsg->nbOutEdge; i++){
-					com_->data_end_send(&outFifos[i]);
+					Platform::getLrtCommunicator()->data_end_send(&outFifos[i]);
 				}
 				for(int i=0; i<jobMsg->nbOutParam; i++){
 					int size = sizeof(ParamValueMsg)+jobMsg->nbOutParam*sizeof(Param);
-					ParamValueMsg* msgParam = (ParamValueMsg*) com_->ctrl_start_send(size);
+					ParamValueMsg* msgParam = (ParamValueMsg*) Platform::getLrtCommunicator()->ctrl_start_send(size);
 					Param* params = (Param*)(msgParam+1);
 
 					msgParam->msgIx = MSG_PARAM_VALUE;
 					msgParam->srdagIx = jobMsg->srdagIx;
 					memcpy(params, outParams, jobMsg->nbOutParam*sizeof(Param));
 
-					com_->ctrl_end_send(size);
+					Platform::getLrtCommunicator()->ctrl_end_send(size);
 				}
-				com_->ctrl_end_recv();
+				Platform::getLrtCommunicator()->ctrl_end_recv();
+
+//				stack_->free(inFifos);
+//				stack_->free(outFifos);
+//				stack_->free(outParams);
+//				stack_->freeAll();
 			}
 			break;
 		}

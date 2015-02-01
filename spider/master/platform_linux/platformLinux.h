@@ -64,8 +64,8 @@ public:
 
 	PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts);
 	virtual ~PlatformLinux();
-private:
 
+private:
 	Stack* stack_;
 	SharedMemArchi* archi_;
 };

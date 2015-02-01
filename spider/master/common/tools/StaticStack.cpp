@@ -51,6 +51,11 @@ StaticStack::StaticStack(const char* name, void* ptr, int size):
 	used_ = 0;
 }
 
+StaticStack::~StaticStack(){
+	freeAll();
+	printStat();
+}
+
 static inline int getAlignSize(int size){
 	float minAlloc = Platform::get()->getMinAllocSize();
 	return ceil(size/minAlloc)*minAlloc;
@@ -78,6 +83,30 @@ void StaticStack::freeAll(){
 
 
 void StaticStack::printStat(){
-	maxUsed_ = std::max(maxUsed_, used_);
-	printf("%s: %#x / %#x (%.2f %%)\n", getName(), maxUsed_, size_, maxUsed_*100./size_);
+	printf("%s: ", getName());
+
+	if(maxUsed_ < 1024)
+		printf("\t%5.1f B", maxUsed_/1.);
+	else if(maxUsed_ < 1024*1024)
+		printf("\t%5.1f KB", maxUsed_/1024.);
+	else if(maxUsed_ < 1024*1024*1024)
+		printf("\t%5.1f MB", maxUsed_/1024./1024.);
+	else
+		printf("\t%5.1f GB", maxUsed_/1024./1024./1024.);
+
+	printf(" / ");
+
+	if(size_ < 1024)
+		printf("\t%5.1f B", size_/1.);
+	else if(size_ < 1024*1024)
+		printf("\t%5.1f KB", size_/1024.);
+	else if(size_ < 1024*1024*1024)
+		printf("\t%5.1f MB", size_/1024./1024.);
+	else
+		printf("\t%5.1f GB", size_/1024./1024./1024.);
+
+	if(used_)
+		printf(", \t%d still in use", used_);
+
+	printf("\n");
 }

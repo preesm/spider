@@ -34,34 +34,119 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef K2_ARM_LRT_COMMUNICATOR_H
-#define K2_ARM_LRT_COMMUNICATOR_H
+#include <platformK2Dsp.h>
 
-#include <LrtCommunicator.h>
-#include <semaphore.h>
-#include <Message.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <time.h>
+#include <string.h>
+#include <errno.h>
+
+#include <ti/csl/device/k2h/src/cslr_device.h>
+#include <ti/csl/cslr_tmr.h>
+#include <ti/csl/csl_types.h>
+#include <ti/csl/csl_chipAux.h>
+
 #include <tools/Stack.h>
 
-class K2ArmLrtCommunicator: public LrtCommunicator{
-public:
-	K2ArmLrtCommunicator();
-	~K2ArmLrtCommunicator();
+#include <lrt.h>
+#include <qmss.h>
+#include <K2DspLrtCommunicator.h>
 
-	void* ctrl_start_send(int size);
-	void ctrl_end_send(int size);
+#define PLATFORM_FPRINTF_BUFFERSIZE 200
+#define SHARED_MEM_KEY		8452
 
-	int ctrl_start_recv(void** data);
-	void ctrl_end_recv();
+#define MAX_MSG_SIZE 10*1024
 
-	void* trace_start_send(int size);
-	void trace_end_send(int size);
+//static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 
-	long data_start_send(Fifo* f);
-	void data_end_send(Fifo* f);
+static CSL_TmrRegsOvly regs;
+static void* shMem;
 
-	long data_recv(Fifo* f);
+static inline void initTime();
 
-private:
-};
+PlatformK2Dsp::PlatformK2Dsp(int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts){
+	int data_mem_start;
+	int data_mem_size;
 
-#endif/*K2_ARM_LRT_COMMUNICATOR_H*/
+	if(platform_)
+		throw "Try to create 2 platforms";
+
+	platform_ = this;
+	stack_ = stack;
+
+	/** Initialize shared memory & QMSS*/
+	lrt_qmss_init(&data_mem_start, &data_mem_size);
+
+	shMem = (void*)data_mem_start;
+	if(data_mem_size < shMemSize)
+		throw "Request too many shared memory";
+
+	initTime();
+
+	/** Create LRT */
+	lrtCom_ = CREATE(stack, K2DspLrtCommunicator)();
+	lrt_ = CREATE(stack, LRT)(4+CSL_chipReadDNUM());
+	lrt_->setFctTbl(fcts, nLrtFcts);
+
+	/** launch LRT */
+	lrt_->runInfinitly();
+}
+
+PlatformK2Dsp::~PlatformK2Dsp(){
+
+}
+
+int PlatformK2Dsp::getMinAllocSize(){
+	return 128;
+}
+
+int PlatformK2Dsp::getCacheLineSize(){
+	return 128;
+}
+
+/** File Handling */
+int PlatformK2Dsp::fopen(const char* name){
+//	return open(name, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH | S_IWOTH);
+	return -1;
+}
+
+void PlatformK2Dsp::fprintf(int id, const char* fmt, ...){
+//	va_list ap;
+//	va_start(ap, fmt);
+//	int n = vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, fmt, ap);
+//	if(n >= PLATFORM_FPRINTF_BUFFERSIZE){
+//		printf("PLATFORM_FPRINTF_BUFFERSIZE too small\n");
+//	}
+//	write(id, buffer, n);
+}
+void PlatformK2Dsp::fclose(int id){
+//	close(id);
+}
+
+void* PlatformK2Dsp::virt_to_phy(void* address){
+	return (void*)((int)shMem + (int)address);
+}
+
+/** Time Handling */
+static inline void initTime(){
+	/* Init base address */
+	regs = (CSL_TmrRegsOvly)CSL_TIMER_0_REGS;
+}
+
+void PlatformK2Dsp::rstTime(ClearTimeMsg* msg){
+	/* Nothing to do, time reset do not send messages */
+}
+
+void PlatformK2Dsp::rstTime(){
+	/* Should not be done by LRT */
+}
+
+Time PlatformK2Dsp::getTime(){
+	CSL_Uint64 val;
+	val = regs->CNTHI;
+	val = (val<<32) + regs->CNTLO;
+	return val*5; /* 200MHz to 1GHz */
+}
+

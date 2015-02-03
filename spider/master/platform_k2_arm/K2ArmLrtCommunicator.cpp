@@ -51,8 +51,8 @@ extern "C"{
 #include <ti/drv/qmss/qmss_drv.h>
 }
 
-#define CTRL_SPIDER_TO_LRT	(BASE_SPIDER_TO_LRT + getLrt()->getIx())
-#define CTRL_LRT_TO_SPIDER	(BASE_LRT_TO_SPIDER	+ getLrt()->getIx())
+#define CTRL_SPIDER_TO_LRT	(BASE_SPIDER_TO_LRT + Platform::get()->getLrt()->getIx())
+#define CTRL_LRT_TO_SPIDER	(BASE_LRT_TO_SPIDER	+ Platform::get()->getLrt()->getIx())
 
 static MonoPcktDesc* cur_mono_pkt_in;
 static MonoPcktDesc* cur_mono_pkt_out;

@@ -34,40 +34,36 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "K2ArmLrtCommunicator.h"
+#include "K2DspLrtCommunicator.h"
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <semaphore.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <platform.h>
 #include <lrt.h>
 #include <qmss.h>
-#include <spider.h>
-#include <sys/mman.h>
 
 extern "C"{
 #include <ti/drv/qmss/qmss_drv.h>
+#include <cache.h>
 }
 
-#define CTRL_SPIDER_TO_LRT	(BASE_SPIDER_TO_LRT + getLrt()->getIx())
-#define CTRL_LRT_TO_SPIDER	(BASE_LRT_TO_SPIDER	+ getLrt()->getIx())
+#define CTRL_SPIDER_TO_LRT	(BASE_SPIDER_TO_LRT + Platform::get()->getLrt()->getIx())
+#define CTRL_LRT_TO_SPIDER	(BASE_LRT_TO_SPIDER	+ Platform::get()->getLrt()->getIx())
 
 static MonoPcktDesc* cur_mono_pkt_in;
 static MonoPcktDesc* cur_mono_pkt_out;
 static MonoPcktDesc* cur_mono_trace_out;
 
-K2ArmLrtCommunicator::K2ArmLrtCommunicator(){
+K2DspLrtCommunicator::K2DspLrtCommunicator(){
 	cur_mono_pkt_in = 0;
 	cur_mono_pkt_out = 0;
 	cur_mono_trace_out = 0;
 }
 
-K2ArmLrtCommunicator::~K2ArmLrtCommunicator(){
+K2DspLrtCommunicator::~K2DspLrtCommunicator(){
 }
 
-void* K2ArmLrtCommunicator::ctrl_start_send(int size){
+void* K2DspLrtCommunicator::ctrl_start_send(int size){
 	if(cur_mono_pkt_out != 0)
 		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
 
@@ -84,7 +80,7 @@ void* K2ArmLrtCommunicator::ctrl_start_send(int size){
 			cur_mono_pkt_out->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
 			break;
 		}
-		usleep(100);
+//		usleep(100);
 	}
 
 	if(size > CTRL_DESC_SIZE - PACKET_HEADER)
@@ -95,10 +91,10 @@ void* K2ArmLrtCommunicator::ctrl_start_send(int size){
 	return data_pkt;
 }
 
-void K2ArmLrtCommunicator::ctrl_end_send(int size){
+void K2DspLrtCommunicator::ctrl_end_send(int size){
 	if(cur_mono_pkt_out){
 		/* Send the descriptor */
-		msync(cur_mono_pkt_out, CTRL_DESC_SIZE, MS_SYNC);
+		cache_wbInvL1D(cur_mono_pkt_out, CTRL_DESC_SIZE);
 		Qmss_queuePushDesc(CTRL_LRT_TO_SPIDER, (void*)cur_mono_pkt_out);
 
 		cur_mono_pkt_out = 0;
@@ -106,14 +102,14 @@ void K2ArmLrtCommunicator::ctrl_end_send(int size){
 		throw "LrtCommunicator: Try to send a free'd message";
 }
 
-int K2ArmLrtCommunicator::ctrl_start_recv(void** data){
+int K2DspLrtCommunicator::ctrl_start_recv(void** data){
 	if(cur_mono_pkt_in == 0){
 		cur_mono_pkt_in = (MonoPcktDesc*)Qmss_queuePop(CTRL_SPIDER_TO_LRT);
 		if(cur_mono_pkt_in == 0){
 			return 0;
 		}
 
-		msync(cur_mono_pkt_in, CTRL_DESC_SIZE, MS_SYNC);
+		cache_invL1D(cur_mono_pkt_in, CTRL_DESC_SIZE);
 	}else
 		throw "LrtCommunicator: Try to receive a message when the previous one is not free'd";
 
@@ -126,12 +122,12 @@ int K2ArmLrtCommunicator::ctrl_start_recv(void** data){
 	return data_size;
 }
 
-void K2ArmLrtCommunicator::ctrl_end_recv(){
+void K2DspLrtCommunicator::ctrl_end_recv(){
 	Qmss_queuePushDesc(EMPTY_CTRL, cur_mono_pkt_in);
 	cur_mono_pkt_in = 0;
 }
 
-void* K2ArmLrtCommunicator::trace_start_send(int size){
+void* K2DspLrtCommunicator::trace_start_send(int size){
 	if(cur_mono_trace_out != 0)
 		throw "LrtCommunicator: Try to send a trace msg when previous one is not sent";
 
@@ -148,7 +144,7 @@ void* K2ArmLrtCommunicator::trace_start_send(int size){
 			cur_mono_trace_out->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
 			break;
 		}
-		usleep(100);
+//		usleep(100);
 	}
 
 	if(size > TRACE_DESC_SIZE - PACKET_HEADER)
@@ -159,10 +155,10 @@ void* K2ArmLrtCommunicator::trace_start_send(int size){
 	return data_pkt;
 }
 
-void K2ArmLrtCommunicator::trace_end_send(int size){
+void K2DspLrtCommunicator::trace_end_send(int size){
 	if(cur_mono_trace_out){
 		/* Send the descriptor */
-		msync(cur_mono_trace_out, TRACE_DESC_SIZE, MS_SYNC);
+		cache_wbInvL1D(cur_mono_trace_out, TRACE_DESC_SIZE);
 		Qmss_queuePushDesc(BASE_TRACE, cur_mono_trace_out);
 
 		cur_mono_trace_out = 0;
@@ -170,7 +166,7 @@ void K2ArmLrtCommunicator::trace_end_send(int size){
 		throw "SpiderCommunicator: Try to send a free'd message";
 }
 
-void K2ArmLrtCommunicator::data_end_send(Fifo* f){
+void K2DspLrtCommunicator::data_end_send(Fifo* f){
 	MonoPcktDesc *mono_pkt;
 	int queueId = BASE_DATA+f->id;
 
@@ -189,12 +185,12 @@ void K2ArmLrtCommunicator::data_end_send(Fifo* f){
 	mono_pkt->pkt_return_qnum = EMPTY_DATA;
 	mono_pkt->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
 
-	msync(mono_pkt, DATA_DESC_SIZE, MS_SYNC);
-	msync(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size, MS_SYNC);
+	cache_invL1D(mono_pkt, DATA_DESC_SIZE);
+	cache_invL1D(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size);
 
 	Qmss_queuePushDesc(queueId, mono_pkt);
 }
-long K2ArmLrtCommunicator::data_recv(Fifo* f){
+long K2DspLrtCommunicator::data_recv(Fifo* f){
 	MonoPcktDesc *mono_pkt;
 	int queueId = BASE_DATA+f->id;
 
@@ -206,14 +202,14 @@ long K2ArmLrtCommunicator::data_recv(Fifo* f){
 	}while(mono_pkt == 0);
 
 	/* TODO handle ntokens */
-	msync(mono_pkt, DATA_DESC_SIZE, MS_SYNC);
-	msync(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size, MS_SYNC);
+	cache_invL1D(mono_pkt, DATA_DESC_SIZE);
+	cache_invL1D(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size);
 
 	Qmss_queuePushDesc(EMPTY_DATA, mono_pkt);
 
 	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
 }
 
-long K2ArmLrtCommunicator::data_start_send(Fifo* f){
+long K2DspLrtCommunicator::data_start_send(Fifo* f){
 	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
 }

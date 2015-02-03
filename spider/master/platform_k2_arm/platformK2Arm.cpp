@@ -102,10 +102,13 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lr
 	long data_mem_size;
 	int cpIds[nArm];
 
+	if(platform_)
+		throw "Try to create 2 platforms";
+
+	platform_ = this;
 	stack_ = stack;
+
 	cpIds[0] = getpid();
-
-
 
 	/** Initialize shared memory & QMSS*/
 	spider_qmss_init(dev_mem_fd, &data_mem_start, &data_mem_size);
@@ -126,31 +129,24 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lr
 
         if (cpid == 0) { /* Child */
         	/** Create LRT */
-        	K2ArmLrtCommunicator* lrtCom = CREATE(stack, K2ArmLrtCommunicator)();
-        	LRT* lrt = CREATE(stack, LRT)(i, lrtCom);
+        	lrtCom_ = CREATE(stack, K2ArmLrtCommunicator)();
+        	lrt_ = CREATE(stack, LRT)(i);
         	setAffinity(i);
-        	lrt->setFctTbl(fcts, nLrtFcts);
-        	setLrt(lrt);
-
-        	Platform::set(this);
+        	lrt_->setFctTbl(fcts, nLrtFcts);
 
         	/** launch LRT */
-			lrt->runInfinitly();
+        	lrt_->runInfinitly();
         } else { /* Parent */
         	cpIds[i] = cpid;
         }
 	}
 
 	/** Initialize LRT and Communicators */
-    K2ArmSpiderCommunicator* spiderCom = CREATE(stack, K2ArmSpiderCommunicator)();
-
-	K2ArmLrtCommunicator* lrtCom = CREATE(stack, K2ArmLrtCommunicator)();
-	LRT* lrt = CREATE(stack, LRT)(0, lrtCom);
+    spiderCom_ = CREATE(stack, K2ArmSpiderCommunicator)();
+	lrtCom_ = CREATE(stack, K2ArmLrtCommunicator)();
+	lrt_ = CREATE(stack, LRT)(0);
 	setAffinity(0);
-	lrt->setFctTbl(fcts, nLrtFcts);
-
-	setLrt(lrt);
-	setSpiderCommunicator(spiderCom);
+	lrt_->setFctTbl(fcts, nLrtFcts);
 
 	/** Create Archi */
 	archi_ = CREATE(stack, SharedMemArchi)(
@@ -172,7 +168,12 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lr
 		archi_->setName(i, name);
 	}
 
-	Platform::set(this);
+	for(int i=0; i<nDsp; i++){
+		sprintf(name, "DSP %d (LRT %d)", i, 4+i);
+		archi_->setPEType(4+i, 1);
+		archi_->setName(4+i, name);
+	}
+
 	this->rstTime();
 }
 
@@ -188,18 +189,14 @@ PlatformK2Arm::~PlatformK2Arm(){
 
 	wait(0);
 
-	LRT* lrt = getLrt();
-	K2ArmSpiderCommunicator* spiderCom = (K2ArmSpiderCommunicator*)getSpiderCommunicator();
-	K2ArmLrtCommunicator* lrtCom = (K2ArmLrtCommunicator*)lrt->getCom();
-
-	lrt->~LRT();
-	spiderCom->~K2ArmSpiderCommunicator();
-	lrtCom->~K2ArmLrtCommunicator();
+	lrt_->~LRT();
+	((K2ArmSpiderCommunicator*)spiderCom_)->~K2ArmSpiderCommunicator();
+	((K2ArmLrtCommunicator*)lrtCom_)->~K2ArmLrtCommunicator();
 	archi_->~SharedMemArchi();
 
-	stack_->free(lrt);
-	stack_->free(spiderCom);
-	stack_->free(lrtCom);
+	stack_->free(lrt_);
+	stack_->free(spiderCom_);
+	stack_->free(lrtCom_);
 	stack_->free(archi_);
 
 	close(dev_mem_fd);
@@ -225,6 +222,14 @@ void PlatformK2Arm::fclose(int id){
 
 void* PlatformK2Arm::virt_to_phy(void* address){
 	return (void*)((long)shMem + (long)address);
+}
+
+int PlatformK2Arm::getMinAllocSize(){
+	return 128;
+}
+
+int PlatformK2Arm::getCacheLineSize(){
+	return 128;
 }
 
 /** Time Handling */
@@ -277,7 +282,7 @@ Time PlatformK2Arm::getTime(){
 	CSL_Uint64 val;
 	val = regs->CNTHI;
 	val = (val<<32) + regs->CNTLO;
-	return val;
+	return val*5; /* 200MHz to 1GHz */
 }
 
 SharedMemArchi* PlatformK2Arm::getArchi(){

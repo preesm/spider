@@ -34,8 +34,8 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PLATFORM_K2_ARM_H
-#define PLATFORM_K2_ARM_H
+#ifndef PLATFORM_K2_DSP_H
+#define PLATFORM_K2_DSP_H
 
 #include <platform.h>
 #include <tools/Stack.h>
@@ -50,6 +50,8 @@ public:
 
 	/** Shared Memory Handling */
 	virtual void* virt_to_phy(void* address);
+	virtual int getMinAllocSize();
+	virtual int getCacheLineSize();
 
 	/** Time Handling */
 	virtual void rstTime();
@@ -63,4 +65,4 @@ private:
 	Stack* stack_;
 };
 
-#endif/*PLATFORM_K2_ARM_H*/
+#endif/*PLATFORM_K2_DSP_H*/

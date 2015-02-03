@@ -53,7 +53,6 @@ extern "C"{
 
 /* Useful Macros*/
 #define align(x)   ((x + CACHE_LINESZ) & (~CACHE_LINESZ))
-#define TranslateAddress(address, offset, type) address = (type)(((uint8_t*)address) + (uint32_t)offset)
 
 /************************ GLOBAL VARIABLES ********************/
 
@@ -133,7 +132,7 @@ static void sysInit (){
 static void sysExit (){
 }
 
-void lrt_qmss_init(long* data_mem_start, long* data_mem_size){
+void lrt_qmss_init(int* data_mem_start, int* data_mem_size){
     initQmss();
     sysInit();
 

@@ -34,32 +34,33 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef K2_ARM_SPIDER_COMMUNICATOR_H
-#define K2_ARM_SPIDER_COMMUNICATOR_H
+#ifndef K2_DSP_LRT_COMMUNICATOR_H
+#define K2_DSP_LRT_COMMUNICATOR_H
 
+#include <LrtCommunicator.h>
 #include <Message.h>
-#include <SpiderCommunicator.h>
 #include <tools/Stack.h>
-#include <semaphore.h>
 
-class K2ArmSpiderCommunicator: public SpiderCommunicator{
+class K2DspLrtCommunicator: public LrtCommunicator{
 public:
-	K2ArmSpiderCommunicator();
-	~K2ArmSpiderCommunicator();
+	K2DspLrtCommunicator();
+	~K2DspLrtCommunicator();
 
-	void* ctrl_start_send(int lrtIx, int size);
-	void ctrl_end_send(int lrtIx, int size);
+	void* ctrl_start_send(int size);
+	void ctrl_end_send(int size);
 
-	int ctrl_start_recv(int lrtIx, void** data);
-	void ctrl_end_recv(int lrtIx);
+	int ctrl_start_recv(void** data);
+	void ctrl_end_recv();
 
 	void* trace_start_send(int size);
 	void trace_end_send(int size);
 
-	int trace_start_recv(void** data);
-	void trace_end_recv();
+	long data_start_send(Fifo* f);
+	void data_end_send(Fifo* f);
+
+	long data_recv(Fifo* f);
 
 private:
 };
 
-#endif/*K2_ARM_SPIDER_COMMUNICATOR_H*/
+#endif/*K2_DSP_LRT_COMMUNICATOR_H*/

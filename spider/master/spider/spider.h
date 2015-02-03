@@ -52,6 +52,7 @@
 
 #include <scheduling/MemAlloc.h>
 #include <scheduling/MemAlloc/DummyMemAlloc.h>
+#include <scheduling/MemAlloc/SpecialActorMemAlloc.h>
 #include <scheduling/Scheduler.h>
 #include <scheduling/Scheduler/ListScheduler.h>
 
@@ -61,6 +62,7 @@
 #include <lrt.h>
 
 #define MAX_STATS_VERTICES 1000
+#define MAX_STATS_PE_TYPES 3
 
 typedef struct{
 	StackType type;
@@ -89,18 +91,20 @@ typedef struct{
 	Time mappingTime;
 	Time graphTransfoTime;
 
-	Time actorTimes[MAX_STATS_VERTICES];
-	Time actorIterations[MAX_STATS_VERTICES];
+	Time actorTimes[MAX_STATS_VERTICES][MAX_STATS_PE_TYPES];
+	Time actorIterations[MAX_STATS_VERTICES][MAX_STATS_PE_TYPES];
 	PiSDFVertex* actors[MAX_STATS_VERTICES];
 	int nbActor;
 
-	Time explodeTime;
-	Time implodeTime;
-	Time roundBufferTime;
-	Time broadcastTime;
+	Time forkTime;
+	Time joinTime;
+	Time rbTime;
+	Time brTime;
 
 	int SRDAGVertices;
 	int SRDAGEdges;
+
+	int memoryUsed;
 
 	Time latencies;
 }ExecutionStat;

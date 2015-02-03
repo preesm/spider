@@ -226,21 +226,73 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 	stat->taskOrderingTime = 0;
 	stat->globalEndTime = 0;
 
+	stat->forkTime = 0;
+	stat->joinTime = 0;
+	stat->rbTime = 0;
+	stat->brTime = 0;
+	stat->nbActor = 0;
+
+	stat->memoryUsed = memAlloc->getMemUsed();
+
 	TraceMsg* traceMsg;
 	int n = Launcher::get()->getNLaunched();
 	while(n){
 		if(Platform::getSpiderCommunicator()->trace_start_recv((void**)&traceMsg)){
 			switch (traceMsg->msgIx) {
-				case TRACE_JOB:
+				case TRACE_JOB:{
+					SRDAGVertex* vertex = srdag->getVertexFromIx(traceMsg->srdagIx);
+					Time execTime = traceMsg->end - traceMsg->start;
+
 					printGrantt_SRDAGVertex(
 							ganttFile, archi,
-							srdag->getVertexFromIx(traceMsg->srdagIx),
+							vertex,
 							traceMsg->start,
 							traceMsg->end,
 							traceMsg->lrtIx);
 
+					/* Update Stats */
 					stat->globalEndTime = std::max(traceMsg->end, stat->globalEndTime);
-					break;
+
+					switch(vertex->getType()){
+						case SRDAG_NORMAL:{
+							int i;
+							int lrtType = archi->getPEType(traceMsg->lrtIx);
+							for(i=0; i<stat->nbActor; i++){
+								if(stat->actors[i] == vertex->getReference()){
+									stat->actorTimes[i][lrtType] += execTime;
+									stat->actorIterations[i][lrtType]++;
+									break;
+								}
+							}
+							if(i == stat->nbActor){
+								stat->actors[stat->nbActor] = vertex->getReference();
+
+								memset(stat->actorTimes[stat->nbActor], 0, MAX_STATS_PE_TYPES*sizeof(Time));
+								memset(stat->actorIterations[stat->nbActor], 0, MAX_STATS_PE_TYPES*sizeof(Time));
+
+								stat->actorTimes[stat->nbActor][lrtType] += execTime;
+								stat->actorIterations[i][lrtType]++;
+								stat->nbActor++;
+							}
+							break;}
+						case SRDAG_BROADCAST:
+							stat->brTime += execTime;
+							break;
+						case SRDAG_FORK:
+							stat->forkTime += execTime;
+							break;
+						case SRDAG_JOIN:
+							stat->joinTime += execTime;
+							break;
+						case SRDAG_ROUNDBUFFER:
+							stat->rbTime += execTime;
+							break;
+						case SRDAG_INIT:
+						case SRDAG_END:
+							break;
+					}
+
+					break;}
 				case TRACE_SPIDER:{
 					static int i=0;
 					Platform::get()->fprintf(ganttFile, "\t<event\n");

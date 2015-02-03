@@ -39,19 +39,18 @@
 #ifndef TOP_FFT_H
 #define TOP_FFT_H
 
-#include <spider.h>
+#include <platform.h>
+#include <lrt.h>
 
 #define N_FCT_TOP_FFT 12
 extern lrtFct top_fft_fcts[N_FCT_TOP_FFT];
-
-PiSDFGraph* init_top_fft(Archi* archi, Stack* stack);
-void free_top_fft(PiSDFGraph* top, Stack* stack);
 
 typedef enum{
 	CORE_CORE3 = 0,
 	CORE_CORE0 = 1,
 	CORE_CORE2 = 2,
 	CORE_CORE1 = 3,
+	CORE_DSP0 = 4,
 } PE;
 
 typedef enum{

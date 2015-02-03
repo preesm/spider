@@ -34,7 +34,7 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <spider.h>
+#include <platform.h>
 
 #include "actors.h"
 #include "data_sp.h"
@@ -46,6 +46,10 @@ extern "C"{
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265359
+#endif
 
 #define VERBOSE 0
 

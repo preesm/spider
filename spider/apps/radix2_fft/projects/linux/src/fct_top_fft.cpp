@@ -36,7 +36,7 @@
  * ****************************************************************************
  */
 
-#include <spider.h>
+#include <platform.h>
 #include "top_fft.h"
 
 #include "actors.h"

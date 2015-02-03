@@ -36,7 +36,7 @@
 
 #include <spider.h>
 #include <platformLinux.h>
-#include "top_fft.h"
+#include "pi_top_fft.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]){
 	PlatformLinux platform(4, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
 	Archi* archi = platform.getArchi();
 
-	cfg.memAllocType = MEMALLOC_DUMMY;
+	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
 	cfg.memAllocStart = (void*)0;
 	cfg.memAllocSize = SH_MEM;
 
@@ -67,7 +67,7 @@ int main(int argc, char* argv[]){
 
 //	try{
 	for(int i=1; i<=6; i++){
-		printf("NStep = %d\t", i);
+		printf("NStep = %d\n", i);
 		char ganttPath[30];
 		sprintf(ganttPath, "radixFFT_%d.sgantt", i);
 		char srdagPath[30];
@@ -85,7 +85,28 @@ int main(int argc, char* argv[]){
 		spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
 		spider_getLastSRDAG()->print(srdagPath);
 
-		printf("\tEndTime = %d ms\n", stat.globalEndTime/1000000);
+		printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
+
+		printf("Memory use = ");
+		if(stat.memoryUsed < 1024)
+			printf("\t%5.1f B", stat.memoryUsed/1.);
+		else if(stat.memoryUsed < 1024*1024)
+			printf("\t%5.1f KB", stat.memoryUsed/1024.);
+		else if(stat.memoryUsed < 1024*1024*1024)
+			printf("\t%5.1f MB", stat.memoryUsed/1024./1024.);
+		else
+			printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
+		printf("\n");
+
+		printf("Actors:\n");
+		for(int j=0; j<stat.nbActor; j++){
+			printf("\t%12s:", stat.actors[j]->getName());
+			for(int k=0; k<archi->getNPETypes(); k++)
+				printf("\t%d (x%d)",
+						stat.actorTimes[j][k]/stat.actorIterations[j][k],
+						stat.actorIterations[j][k]);
+			printf("\n");
+		}
 
 		free_top_fft(topPisdf, &pisdfStack);
 	}

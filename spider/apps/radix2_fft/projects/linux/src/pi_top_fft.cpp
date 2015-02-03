@@ -36,8 +36,9 @@
  * ****************************************************************************
  */
 
+#include <spider.h>
 #include "data_sp.h"
-#include "top_fft.h"
+#include "pi_top_fft.h"
 
 PiSDFGraph* top_fft(Archi* archi, Stack* stack);
 PiSDFGraph* FFT(Archi* archi, Stack* stack);
@@ -96,7 +97,7 @@ PiSDFGraph* top_fft(Archi* archi, Stack* stack){
 	bo_Src->isExecutableOnPE(CORE_CORE0);
 	bo_Src->isExecutableOnPE(CORE_CORE2);
 	bo_Src->isExecutableOnPE(CORE_CORE1);
-	bo_Src->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_Src->setTimingOnType(CORE_TYPE_X86, "129170", stack);
 
 	PiSDFVertex* bo_Snk = graph->addBodyVertex(
 		/*Name*/    "Snk",
@@ -109,7 +110,7 @@ PiSDFGraph* top_fft(Archi* archi, Stack* stack){
 	bo_Snk->isExecutableOnPE(CORE_CORE0);
 	bo_Snk->isExecutableOnPE(CORE_CORE2);
 	bo_Snk->isExecutableOnPE(CORE_CORE1);
-	bo_Snk->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_Snk->setTimingOnType(CORE_TYPE_X86, "2213630", stack);
 
 	PiSDFVertex* bo_FFT = graph->addHierVertex(
 		/*Name*/    "FFT",
@@ -175,7 +176,7 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 	cf_configFft->isExecutableOnPE(CORE_CORE0);
 	cf_configFft->isExecutableOnPE(CORE_CORE2);
 	cf_configFft->isExecutableOnPE(CORE_CORE1);
-	cf_configFft->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	cf_configFft->setTimingOnType(CORE_TYPE_X86, "4070", stack);
 
 	PiSDFVertex* bo_ordering = graph->addBodyVertex(
 		/*Name*/    "ordering",
@@ -189,7 +190,7 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 	bo_ordering->isExecutableOnPE(CORE_CORE0);
 	bo_ordering->isExecutableOnPE(CORE_CORE2);
 	bo_ordering->isExecutableOnPE(CORE_CORE1);
-	bo_ordering->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_ordering->setTimingOnType(CORE_TYPE_X86, "3220086", stack);
 
 	PiSDFVertex* bo_monoFFT = graph->addBodyVertex(
 		/*Name*/    "monoFFT",
@@ -203,7 +204,7 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 	bo_monoFFT->isExecutableOnPE(CORE_CORE0);
 	bo_monoFFT->isExecutableOnPE(CORE_CORE2);
 	bo_monoFFT->isExecutableOnPE(CORE_CORE1);
-	bo_monoFFT->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_monoFFT->setTimingOnType(CORE_TYPE_X86, "2*6155121/(2^NStep)", stack);
 
 	PiSDFVertex* bo_radixReduction = graph->addHierVertex(
 		/*Name*/    "radixReduction",
@@ -277,7 +278,7 @@ PiSDFGraph* radixReduction(Archi* archi, Stack* stack){
 	bo_GenSwitchSel->isExecutableOnPE(CORE_CORE0);
 	bo_GenSwitchSel->isExecutableOnPE(CORE_CORE2);
 	bo_GenSwitchSel->isExecutableOnPE(CORE_CORE1);
-	bo_GenSwitchSel->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_GenSwitchSel->setTimingOnType(CORE_TYPE_X86, "1702", stack);
 
 	PiSDFVertex* bo_Br = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
@@ -392,7 +393,7 @@ PiSDFGraph* Switch(Archi* archi, Stack* stack){
 	cf_selcfg->isExecutableOnPE(CORE_CORE0);
 	cf_selcfg->isExecutableOnPE(CORE_CORE2);
 	cf_selcfg->isExecutableOnPE(CORE_CORE1);
-	cf_selcfg->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	cf_selcfg->setTimingOnType(CORE_TYPE_X86, "229", stack);
 
 	PiSDFVertex* bo_f0 = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_FORK,
@@ -523,7 +524,7 @@ PiSDFGraph* fftStep(Archi* archi, Stack* stack){
 	cf_cfgFftStep->isExecutableOnPE(CORE_CORE0);
 	cf_cfgFftStep->isExecutableOnPE(CORE_CORE2);
 	cf_cfgFftStep->isExecutableOnPE(CORE_CORE1);
-	cf_cfgFftStep->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	cf_cfgFftStep->setTimingOnType(CORE_TYPE_X86, "85", stack);
 
 	PiSDFVertex* bo_ForkFftStep = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_FORK,
@@ -556,7 +557,7 @@ PiSDFGraph* fftStep(Archi* archi, Stack* stack){
 	bo_fft_radix2->isExecutableOnPE(CORE_CORE0);
 	bo_fft_radix2->isExecutableOnPE(CORE_CORE2);
 	bo_fft_radix2->isExecutableOnPE(CORE_CORE1);
-	bo_fft_radix2->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_fft_radix2->setTimingOnType(CORE_TYPE_X86, "3524847/(NStep*(2^NStep))", stack);
 
 	PiSDFVertex* bo_genIx = graph->addBodyVertex(
 		/*Name*/    "genIx",
@@ -569,7 +570,7 @@ PiSDFGraph* fftStep(Archi* archi, Stack* stack){
 	bo_genIx->isExecutableOnPE(CORE_CORE0);
 	bo_genIx->isExecutableOnPE(CORE_CORE2);
 	bo_genIx->isExecutableOnPE(CORE_CORE1);
-	bo_genIx->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_genIx->setTimingOnType(CORE_TYPE_X86, "192", stack);
 
 
 	/* Edges */

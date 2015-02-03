@@ -27,9 +27,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>src</name>
+			<name>actors</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/spider/apps/ederc_nvar/src</location>
+			<location>/home/jheulot/git/spider/spider/apps/ederc_nvar/actors</location>
 		</link>
 	</linkedResources>
 </projectDescription>

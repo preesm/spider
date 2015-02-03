@@ -36,7 +36,7 @@
 
 #include <spider.h>
 #include <platformK2Arm.h>
-#include "ederc_nvar.h"
+#include <ederc_nvar.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,11 +45,16 @@ int main(int argc, char* argv[]){
 	SpiderConfig cfg;
 	ExecutionStat stat;
 
-	DynStack pisdfStack("PisdfStack");
-	DynStack archiStack("ArchiStack");
+	static char TransfoStack[5*1024*1024];
+	static char SrdagStack[6*1024*1024];
+	static char PiSDFStack[2*1024*1024];
+	static char ArchiStack[101*1024];
+
+	StaticStack pisdfStack("PisdfStack", &PiSDFStack, sizeof(PiSDFStack));
+	StaticStack archiStack("ArchiStack", &ArchiStack, sizeof(ArchiStack));
 
 #define SH_MEM 0x00200000
-	PlatformK2Arm platform(4, 0, SH_MEM, &archiStack, ederc_nvar_fcts, NB_FCT_EDERC_NVAR);
+	PlatformK2Arm platform(1, 0, SH_MEM, &archiStack, ederc_nvar_fcts, NB_FCT_EDERC_NVAR);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_DUMMY;
@@ -58,14 +63,14 @@ int main(int argc, char* argv[]){
 
 	cfg.schedulerType = SCHEDULER_LIST;
 
-	cfg.srdagStack = {STACK_DYNAMIC, "SrdagStack", 0, 0};
-	cfg.transfoStack = {STACK_DYNAMIC, "TransfoStack", 0, 0};
+	cfg.srdagStack = {STACK_STATIC, "SrdagStack", &SrdagStack, sizeof(SrdagStack)};
+	cfg.transfoStack = {STACK_STATIC, "TransfoStack", &TransfoStack, sizeof(TransfoStack)};
 
 	spider_init(cfg);
 
 	printf("Start\n");
 
-	try{
+//	try{
 		for(int iter=1; iter<=1; iter++){
 			printf("N=%d\n", iter);
 			char ganttPath[30];
@@ -89,9 +94,9 @@ int main(int argc, char* argv[]){
 
 			freePisdf_ederc_nvar(topPisdf, &pisdfStack);
 		}
-	}catch(const char* s){
-		printf("Exception : %s\n", s);
-	}
+//	}catch(const char* s){
+//		printf("Exception : %s\n", s);
+//	}
 	printf("finished\n");
 
 	spider_free();

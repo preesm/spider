@@ -96,12 +96,12 @@ int LRT::runOneJob(){
 			Param *inParams = (Param*) ((char*)outFifos + jobMsg->nbOutEdge*sizeof(Fifo));
 
 			{
-				void* inFifosAlloc[jobMsg->nbInEdge];
-				void* outFifosAlloc[jobMsg->nbOutEdge];
-				Param outParams[jobMsg->nbOutParam];
-//				void** inFifosAlloc = CREATE_MUL(stack_, jobMsg->nbInEdge, void*);
-//				void** outFifosAlloc = CREATE_MUL(stack_, jobMsg->nbOutEdge, void*);
-//				Param* outParams = CREATE_MUL(stack_, jobMsg->nbOutParam, Param);
+//				void* inFifosAlloc[jobMsg->nbInEdge];
+//				void* outFifosAlloc[jobMsg->nbOutEdge];
+//				Param outParams[jobMsg->nbOutParam];
+				void** inFifosAlloc = CREATE_MUL(stack_, jobMsg->nbInEdge, void*);
+				void** outFifosAlloc = CREATE_MUL(stack_, jobMsg->nbOutEdge, void*);
+				Param* outParams = CREATE_MUL(stack_, jobMsg->nbOutParam, Param);
 
 				for(int i=0; i<jobMsg->nbInEdge; i++){
 					inFifosAlloc[i] = (void*) Platform::getLrtCommunicator()->data_recv(&inFifos[i]);
@@ -140,10 +140,10 @@ int LRT::runOneJob(){
 				}
 				Platform::getLrtCommunicator()->ctrl_end_recv();
 
-//				stack_->free(inFifos);
-//				stack_->free(outFifos);
-//				stack_->free(outParams);
-//				stack_->freeAll();
+				stack_->free(inFifosAlloc);
+				stack_->free(outFifosAlloc);
+				stack_->free(outParams);
+				stack_->freeAll();
 			}
 			break;
 		}

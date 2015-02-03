@@ -37,6 +37,8 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include "Stack.h"
+
 template <class T> class List {
 public:
 	List(Stack* stack, int size);

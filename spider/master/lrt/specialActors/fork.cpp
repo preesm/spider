@@ -58,7 +58,10 @@ void saFork(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 
 		for(i=0; i<nbFifoOut; i++){
 			nbTknOut = inParams[i + 3];
-			memcpy(outputFIFOs[i], ((char*)inputFIFOs[0])+index, nbTknOut);
+
+			if(outputFIFOs[i] != ((char*)inputFIFOs[0])+index)
+				memcpy(outputFIFOs[i], ((char*)inputFIFOs[0])+index, nbTknOut);
+
 			index += nbTknOut;
 		}
 	}else{

@@ -79,7 +79,6 @@ void spider_launch(
 	srdag = new SRDAGGraph(srdagStack);
 
 	jit_ms(pisdf, archi, srdag, transfoStack, memAlloc, scheduler);
-
 }
 
 void spider_setMemAllocType(MemAllocType type, int start, int size){
@@ -89,6 +88,9 @@ void spider_setMemAllocType(MemAllocType type, int start, int size){
 	switch(type){
 	case MEMALLOC_DUMMY:
 		memAlloc = new DummyMemAlloc(start, size);
+		break;
+	case MEMALLOC_SPECIAL_ACTOR:
+		memAlloc = new SpecialActorMemAlloc(start, size);
 		break;
 	}
 }

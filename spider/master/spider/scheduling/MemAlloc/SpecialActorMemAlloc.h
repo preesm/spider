@@ -34,33 +34,28 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef MEM_ALLOC_H
-#define MEM_ALLOC_H
+#ifndef SPECIAL_ACTOR_MEM_ALLOC_H
+#define SPECIAL_ACTOR_MEM_ALLOC_H
 
-#include <platform.h>
-#include <tools/List.h>
-#include <tools/Stack.h>
-#include <graphs/SRDAG/SRDAGVertex.h>
+#include "../MemAlloc.h"
 
-#include <algorithm>
-
-typedef enum{
-	MEMALLOC_DUMMY,
-	MEMALLOC_SPECIAL_ACTOR
-}MemAllocType;
-
-class MemAlloc {
+class SpecialActorMemAlloc : public MemAlloc {
 public:
-	virtual void reset() = 0;
-	virtual void alloc(List<SRDAGVertex*>* listOfVertices) = 0;
-	virtual int getMemUsed() = 0;
+	SpecialActorMemAlloc(int start, int size):
+		MemAlloc(start, size),
+		currentMem_(start),
+		nbFifos_(0){}
 
-	MemAlloc(int start, int size): memStart_(start), memSize_(size){}
-	virtual ~MemAlloc(){}
+	~SpecialActorMemAlloc(){}
+
+	virtual void reset();
+	virtual void alloc(List<SRDAGVertex*>* listOfVertices);
+	virtual int getMemUsed();
 
 protected:
-	int memStart_;
-	int memSize_;
+	int currentMem_;
+	int nbFifos_;
+
 };
 
-#endif/*MEM_ALLOC_H*/
+#endif/*SPECIAL_ACTOR_MEM_ALLOC_H*/

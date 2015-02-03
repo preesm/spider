@@ -202,11 +202,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 		/* Schedule and launch execution */
 		spider_startMonitoring();
-		memAlloc->alloc(topSrdag);
-		spider_endMonitoring(TRACE_SPIDER_ALLOC);
-
-		spider_startMonitoring();
-		scheduler->scheduleOnlyConfig(topSrdag, schedule, archi, transfoSTack);
+		scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi, transfoSTack);
 		spider_endMonitoring(TRACE_SPIDER_SCHED);
 
 		Platform::get()->getLrt()->runUntilNoMoreJobs();
@@ -253,11 +249,7 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 	/* Schedule and launch execution */
 	spider_startMonitoring();
-	memAlloc->alloc(topSrdag);
-	spider_endMonitoring(TRACE_SPIDER_ALLOC);
-
-	spider_startMonitoring();
-	scheduler->schedule(topSrdag, schedule, archi, transfoSTack);
+	scheduler->schedule(topSrdag, memAlloc, schedule, archi, transfoSTack);
 	spider_endMonitoring(TRACE_SPIDER_SCHED);
 
 	Platform::get()->getLrt()->runUntilNoMoreJobs();

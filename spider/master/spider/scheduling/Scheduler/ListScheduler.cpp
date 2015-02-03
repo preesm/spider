@@ -71,7 +71,7 @@ void ListScheduler::addPrevActors(SRDAGVertex* vertex, List<SRDAGVertex*> *list)
 	}
 }
 
-void ListScheduler::scheduleOnlyConfig(SRDAGGraph* graph, Schedule* schedule, Archi* archi, Stack* stack){
+void ListScheduler::scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack){
 	srdag_ = graph;
 	schedule_ = schedule;
 	archi_ = archi;
@@ -88,6 +88,8 @@ void ListScheduler::scheduleOnlyConfig(SRDAGGraph* graph, Schedule* schedule, Ar
 			addPrevActors(vertex, list_);
 		}
 	}
+
+	memAlloc->alloc(list_);
 
 	for(int i=0; i<list_->getNb(); i++){
 		computeSchedLevel((*list_)[i]);
@@ -113,7 +115,7 @@ void ListScheduler::scheduleOnlyConfig(SRDAGGraph* graph, Schedule* schedule, Ar
 	stack->free(list_);
 }
 
-void ListScheduler::schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi, Stack* stack){
+void ListScheduler::schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack){
 	srdag_ = graph;
 	schedule_ = schedule;
 	archi_ = archi;
@@ -127,6 +129,8 @@ void ListScheduler::schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi
 			vertex->setSchedLvl(-1);
 		}
 	}
+
+	memAlloc->alloc(list_);
 
 	for(int i=0; i<list_->getNb(); i++){
 		computeSchedLevel((*list_)[i]);

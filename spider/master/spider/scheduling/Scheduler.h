@@ -40,6 +40,7 @@
 #include "Schedule.h"
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/Archi/Archi.h>
+#include "MemAlloc.h"
 
 typedef enum{
 	SCHEDULER_LIST
@@ -50,8 +51,8 @@ public:
 	Scheduler(){}
 	virtual ~Scheduler(){}
 
-	virtual void schedule(SRDAGGraph* graph, Schedule* schedule, Archi* archi, Stack* stack) = 0;
-	virtual void scheduleOnlyConfig(SRDAGGraph* graph, Schedule* schedule, Archi* archi, Stack* stack) = 0;
+	virtual void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack) = 0;
+	virtual void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack) = 0;
 
 };
 

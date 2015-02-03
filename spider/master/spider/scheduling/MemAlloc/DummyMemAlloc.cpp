@@ -52,9 +52,9 @@ static inline int getAlignSize(int size){
 	return std::ceil(size/1.0/getpagesize())*getpagesize();
 }
 
-void DummyMemAlloc::alloc(SRDAGGraph* graph){
-	for(int i=0; i<graph->getNVertex(); i++){
-		SRDAGVertex* vertex = graph->getVertex(i);
+void DummyMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
+	for(int i=0; i<listOfVertices->getNb(); i++){
+		SRDAGVertex* vertex = listOfVertices->operator [](i);
 		if(vertex->getState() == SRDAG_EXEC){
 			for(int j=0; j<vertex->getNConnectedOutEdge(); j++){
 				SRDAGEdge* edge = vertex->getOutEdge(j);
@@ -70,4 +70,8 @@ void DummyMemAlloc::alloc(SRDAGGraph* graph){
 			}
 		}
 	}
+}
+
+int DummyMemAlloc::getMemUsed(){
+	return currentMem_ - memStart_;
 }

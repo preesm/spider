@@ -46,11 +46,11 @@ public:
 		currentMem_(start),
 		nbFifos_(0){}
 
-
 	~DummyMemAlloc(){}
 
 	virtual void reset();
-	virtual void alloc(SRDAGGraph* graph);
+	virtual void alloc(List<SRDAGVertex*>* listOfVertices);
+	virtual int getMemUsed();
 
 protected:
 	int currentMem_;

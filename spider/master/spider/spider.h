@@ -92,6 +92,8 @@ typedef struct{
 	Time graphTransfoTime;
 
 	Time actorTimes[MAX_STATS_VERTICES][MAX_STATS_PE_TYPES];
+	Time actorFisrt[MAX_STATS_VERTICES];
+	Time actorLast[MAX_STATS_VERTICES];
 	Time actorIterations[MAX_STATS_VERTICES][MAX_STATS_PE_TYPES];
 	PiSDFVertex* actors[MAX_STATS_VERTICES];
 	int nbActor;

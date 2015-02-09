@@ -263,6 +263,9 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 								if(stat->actors[i] == vertex->getReference()){
 									stat->actorTimes[i][lrtType] += execTime;
 									stat->actorIterations[i][lrtType]++;
+
+									stat->actorFisrt[i] = std::min(stat->actorFisrt[i], traceMsg->start);
+									stat->actorLast[i] = std::max(stat->actorLast[i], traceMsg->end);
 									break;
 								}
 							}
@@ -275,6 +278,9 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 								stat->actorTimes[stat->nbActor][lrtType] += execTime;
 								stat->actorIterations[i][lrtType]++;
 								stat->nbActor++;
+
+								stat->actorFisrt[i] = traceMsg->start;
+								stat->actorLast[i] = traceMsg->end;
 							}
 							break;}
 						case SRDAG_BROADCAST:

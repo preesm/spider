@@ -54,6 +54,9 @@
 #include <qmss.h>
 #include <K2DspLrtCommunicator.h>
 
+#include <ti/csl/csl_cache.h>
+#include <ti/csl/csl_cacheAux.h>
+
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
 #define SHARED_MEM_KEY		8452
 
@@ -64,11 +67,17 @@
 static CSL_TmrRegsOvly regs;
 static void* shMem;
 
+#define ENABLE_CACHE 1
+
 static inline void initTime();
 
 PlatformK2Dsp::PlatformK2Dsp(int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts){
 	int data_mem_start;
 	int data_mem_size;
+
+	CACHE_setL1PSize(CACHE_L1_32KCACHE);
+	CACHE_setL1DSize(CACHE_L1_32KCACHE);
+	CACHE_setL2Size (CACHE_0KCACHE);
 
 	if(platform_)
 		throw "Try to create 2 platforms";
@@ -87,7 +96,7 @@ PlatformK2Dsp::PlatformK2Dsp(int shMemSize, Stack *stack, lrtFct* fcts, int nLrt
 
 	/** Create LRT */
 	lrtCom_ = CREATE(stack, K2DspLrtCommunicator)();
-	lrt_ = CREATE(stack, LRT)(4+CSL_chipReadDNUM());
+	lrt_ = CREATE(stack, LRT)(CSL_chipReadDNUM());
 	lrt_->setFctTbl(fcts, nLrtFcts);
 
 	/** launch LRT */

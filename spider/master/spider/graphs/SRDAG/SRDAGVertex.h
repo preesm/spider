@@ -88,11 +88,13 @@ public:
 	inline bool isHierarchical() const;
 	inline Time getStartTime() const;
 	inline Time getEndTime() const;
+	inline int getSlave() const;
 
 	inline void setState(SRDAGState state);
 	void updateState();
 	inline void setStartTime(Time start);
 	inline void setEndTime(Time end);
+	inline void setSlave(int slave);
 
 	/** Comparison fcts */
 	inline bool isEqual(SRDAGVertex* v2);
@@ -134,6 +136,7 @@ private:
 	Time start_, end_;
 	int schedLvl_;
 
+	int slave_;
 };
 
 /** Inlines Fcts */
@@ -314,6 +317,9 @@ inline Time SRDAGVertex::getStartTime() const{
 inline Time SRDAGVertex::getEndTime() const{
 	return end_;
 }
+inline int SRDAGVertex::getSlave() const{
+	return slave_;
+}
 
 inline void SRDAGVertex::setState(SRDAGState state){
 	state_ = state;
@@ -323,6 +329,9 @@ inline void SRDAGVertex::setStartTime(Time start){
 }
 inline void SRDAGVertex::setEndTime(Time end){
 	end_ = end;
+}
+inline void SRDAGVertex::setSlave(int slave){
+	slave_ = slave;
 }
 
 inline bool SRDAGVertex::isEqual(SRDAGVertex* v2){

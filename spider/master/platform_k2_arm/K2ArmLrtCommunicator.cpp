@@ -171,46 +171,49 @@ void K2ArmLrtCommunicator::trace_end_send(int size){
 }
 
 void K2ArmLrtCommunicator::data_end_send(Fifo* f){
-	MonoPcktDesc *mono_pkt;
-	int queueId = BASE_DATA+f->id;
+	if(f->ntoken){
+		MonoPcktDesc *mono_pkt;
+		int queueId = BASE_DATA+f->id;
 
-	if(queueId < BASE_DATA || queueId > MAX_QUEUES )
-		throw "Error: request queue out of bound\n";
+		if(queueId < BASE_DATA || queueId > MAX_QUEUES )
+			throw "Error: request queue out of bound\n";
 
-	do{
-		mono_pkt = (MonoPcktDesc*)Qmss_queuePop(EMPTY_DATA);
-	}while(mono_pkt == 0);
+		do{
+			mono_pkt = (MonoPcktDesc*)Qmss_queuePop(EMPTY_DATA);
+		}while(mono_pkt == 0);
 
-	mono_pkt->type_id = 0x2;
-	mono_pkt->packet_type = 0;
-	mono_pkt->data_offset = 12;
-	mono_pkt->packet_length = 16;
-	mono_pkt->epib = 0;
-	mono_pkt->pkt_return_qnum = EMPTY_DATA;
-	mono_pkt->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
+		mono_pkt->type_id = 0x2;
+		mono_pkt->packet_type = 0;
+		mono_pkt->data_offset = 12;
+		mono_pkt->packet_length = 16;
+		mono_pkt->epib = 0;
+		mono_pkt->pkt_return_qnum = EMPTY_DATA;
+		mono_pkt->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
 
-	msync(mono_pkt, DATA_DESC_SIZE, MS_SYNC);
-	msync(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size, MS_SYNC);
-
-	Qmss_queuePushDesc(queueId, mono_pkt);
+		msync(mono_pkt, DATA_DESC_SIZE, MS_SYNC);
+		msync(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size, MS_SYNC);
+		Qmss_queuePushDesc(queueId, mono_pkt);
+	}
 }
+
 long K2ArmLrtCommunicator::data_recv(Fifo* f){
-	MonoPcktDesc *mono_pkt;
-	int queueId = BASE_DATA+f->id;
+	if(f->ntoken){
+		MonoPcktDesc *mono_pkt;
+		int queueId = BASE_DATA+f->id;
 
-	if(queueId < BASE_DATA || queueId > MAX_QUEUES )
-		throw "Error: request queue out of bound\n";
+		if(queueId < BASE_DATA || queueId > MAX_QUEUES )
+			throw "Error: request queue out of bound\n";
 
-	do{
-		mono_pkt = (MonoPcktDesc*)Qmss_queuePop(queueId);
-	}while(mono_pkt == 0);
+		do{
+			mono_pkt = (MonoPcktDesc*)Qmss_queuePop(queueId);
+		}while(mono_pkt == 0);
 
-	/* TODO handle ntokens */
-	msync(mono_pkt, DATA_DESC_SIZE, MS_SYNC);
-	msync(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size, MS_SYNC);
+		/* TODO handle ntokens */
+		msync(mono_pkt, DATA_DESC_SIZE, MS_SYNC);
+		msync(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size, MS_SYNC);
 
-	Qmss_queuePushDesc(EMPTY_DATA, mono_pkt);
-
+		Qmss_queuePushDesc(EMPTY_DATA, mono_pkt);
+	}
 	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
 }
 

@@ -65,8 +65,8 @@ typedef struct {
 } MonoPcktDesc;
 #define MONO_PACKET_SIZE	sizeof(MonoPcktDesc)
 
-#define CTRL_DESC_SIZE			512
-#define CTRL_DESC_NB			256
+#define CTRL_DESC_SIZE			1024
+#define CTRL_DESC_NB			128
 #define CTRL_DESC_POOL_SIZE		CTRL_DESC_SIZE*CTRL_DESC_NB
 
 #define DATA_DESC_SIZE			64
@@ -79,7 +79,7 @@ typedef struct {
 
 #define QMSS_DESC_BASE	0x0C000000
 #define QMSS_DESC_END	0x0C100000
-#define DATA_BASE		0x0C200000
+#define DATA_BASE		0x0C100000
 #define DATA_END		0x0C600000
 
 #define EMPTY_CTRL 	896

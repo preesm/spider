@@ -56,12 +56,8 @@ Launcher::Launcher(){
 	nLaunched_ = 0;
 }
 
-void Launcher::launchVertex(SRDAGVertex* vertex, int slave){
-#if EXEC == 1
-	CreateTaskMsg::ctrl_end_send(slave, vertex);
-	if(vertex->getType() == ConfigureActor)
-		nbParamToRecv += ((PiSDFConfigVertex*)(vertex->getReference()))->getNbRelatedParams();
-#endif
+void Launcher::launchVertex(SRDAGVertex* vertex){
+	int slave = vertex->getSlave();
 	send_StartJobMsg(slave, vertex);
 	nLaunched_++;
 	vertex->setState(SRDAG_RUN);
@@ -127,7 +123,14 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		inFifos[i].id = edge->getAllocIx();
 		inFifos[i].alloc = edge->getAlloc();
 		inFifos[i].size = edge->getRate();
-		inFifos[i].ntoken = 1;
+
+		if(edge->getSrc()->getSlave() == edge->getSnk()->getSlave()){
+			inFifos[i].ntoken = 0;
+//			if(edge->getSrc()->getSlave()>=4)
+//				printf("N token = 0\n");
+		}
+		else
+			inFifos[i].ntoken = 1;
 	}
 
 	for(int i=0; i<vertex->getNConnectedOutEdge(); i++){
@@ -135,7 +138,11 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		outFifos[i].id = edge->getAllocIx();
 		outFifos[i].alloc = edge->getAlloc();
 		outFifos[i].size = edge->getRate();
-		outFifos[i].ntoken = 1;
+
+		if(edge->getSrc()->getSlave() == edge->getSnk()->getSlave())
+			outFifos[i].ntoken = 0;
+		else
+			outFifos[i].ntoken = 1;
 	}
 
 	switch(vertex->getType()){
@@ -211,7 +218,7 @@ void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end){
 	msgTrace->srdagIx = -1;
 	msgTrace->start = start;
 	msgTrace->end = end;
-	msgTrace->lrtIx = 0;
+	msgTrace->lrtIx = Platform::getLrt()->getIx();
 
 	Platform::getSpiderCommunicator()->trace_end_send(sizeof(TraceMsgType));
 	nLaunched_++;

@@ -73,7 +73,7 @@ private:
 
 inline void Schedule::setAllMinReadyTime(Time time){
 	for(int i=0; i<nPE_; i++){
-		readyTime_[i] = std::min(time, readyTime_[i]);
+		readyTime_[i] = std::max(time, readyTime_[i]);
 	}
 }
 inline void Schedule::setReadyTime(int pe, Time time){

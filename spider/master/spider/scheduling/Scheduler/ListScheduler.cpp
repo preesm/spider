@@ -111,6 +111,10 @@ void ListScheduler::scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Sc
 	}
 //	printf("\n");
 
+	for(int i=0; i<list_->getNb(); i++){
+		Launcher::get()->launchVertex((*list_)[i]);
+	}
+
 	list_->~List();
 	stack->free(list_);
 }
@@ -144,11 +148,16 @@ void ListScheduler::schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* sc
 //	printf("\n");
 
 	schedule_->setAllMinReadyTime(Platform::get()->getTime());
-	schedule_->setReadyTime(0, Platform::get()->getTime() + MAPPING_TIME*list_->getNb());
+//	schedule_->setReadyTime(0, Platform::get()->getTime() + MAPPING_TIME*list_->getNb());
 
 	for(int i=0; i<list_->getNb(); i++){
 		this->scheduleVertex((*list_)[i]);
 	}
+
+	for(int i=0; i<list_->getNb(); i++){
+		Launcher::get()->launchVertex((*list_)[i]);
+	}
+
 
 	list_->~List();
 	stack->free(list_);
@@ -184,8 +193,8 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 	for(int i=0; i<vertex->getNConnectedInEdge(); i++){
 		minimumStartTime = std::max(minimumStartTime,
 				vertex->getInEdge(i)->getSrc()->getEndTime());
-		if(vertex->getInEdge(i)->getSrc()->getState() != SRDAG_RUN){
-			throw "Try to start a vertex when previous one is not launched\n";
+		if(vertex->getInEdge(i)->getSrc()->getSlave() == -1){
+			throw "Try to start a vertex when previous one is not scheduled\n";
 		}
 	}
 
@@ -205,12 +214,16 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 			Time execTime  = vertex->executionTimeOn(slaveType);
 			Time comInTime = 0, comOutTime = 0;
 			/** TODO compute communication time */
-//				for(int input=0; input<vertex->getNbInputEdge(); input++){
-//					comInTime += arch->getTimeCom(slave, Read, vertex->getInputEdge(input)->getTokenRate());
-//				}
-//				for(int output=0; output<vertex->getNbOutputEdge(); output++){
-//					comOutTime += arch->getTimeCom(slave, Write, vertex->getOutputEdge(output)->getTokenRate());
-//				}
+			for(int input=0; input<vertex->getNConnectedInEdge(); input++){
+				if(vertex->getInEdge(input)->getSrc()->getSlave() != pe)
+					comInTime += 1000;
+//				comInTime += arch->getTimeCom(slave, Read, vertex->getInputEdge(input)->getTokenRate());
+			}
+			for(int output=0; output<vertex->getNConnectedOutEdge(); output++){
+				if(vertex->getOutEdge(output)->getSnk()->getSlave() != pe)
+					comOutTime += 1000;
+//				comOutTime += arch->getTimeCom(slave, Write, vertex->getOutputEdge(output)->getTokenRate());
+			}
 			Time endTime = startTime + execTime + comInTime + comOutTime;
 			if(endTime < bestEndTime
 					|| (endTime == bestEndTime && waitTime<bestWaitTime)){
@@ -218,8 +231,6 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 				bestEndTime = endTime;
 				bestStartTime = startTime;
 				bestWaitTime = waitTime;
-//					bestComInTime = comInTime;
-//					bestComOutTime = comOutTime;
 			}
 		}
 	}
@@ -230,5 +241,5 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
 	schedule_->addJob(bestSlave, vertex, bestStartTime, bestEndTime);
 
-	Launcher::get()->launchVertex(vertex, bestSlave);
+	vertex->setSlave(bestSlave);
 }

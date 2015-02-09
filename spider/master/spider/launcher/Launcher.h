@@ -46,7 +46,7 @@ class Launcher {
 public:
 	static Launcher* get();
 
-	void launchVertex(SRDAGVertex* vertex, int slave);
+	void launchVertex(SRDAGVertex* vertex);
 	void resolveParams(Archi* archi, SRDAGGraph* topDag);
 
 	void sendTraceSpider(TraceSpiderType type, Time start, Time end);

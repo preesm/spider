@@ -130,7 +130,7 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lr
         if (cpid == 0) { /* Child */
         	/** Create LRT */
         	lrtCom_ = CREATE(stack, K2ArmLrtCommunicator)();
-        	lrt_ = CREATE(stack, LRT)(i);
+        	lrt_ = CREATE(stack, LRT)(nDsp+i);
         	setAffinity(i);
         	lrt_->setFctTbl(fcts, nLrtFcts);
 
@@ -144,7 +144,7 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lr
 	/** Initialize LRT and Communicators */
     spiderCom_ = CREATE(stack, K2ArmSpiderCommunicator)();
 	lrtCom_ = CREATE(stack, K2ArmLrtCommunicator)();
-	lrt_ = CREATE(stack, LRT)(0);
+	lrt_ = CREATE(stack, LRT)(nDsp);
 	setAffinity(0);
 	lrt_->setFctTbl(fcts, nLrtFcts);
 
@@ -156,29 +156,29 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lr
 
 	archi_->setPETypeRecvSpeed(0, 1, 10);
 	archi_->setPETypeSendSpeed(0, 1, 10);
-	archi_->setPEType(0, 0);
 
 	char name[40];
 	sprintf(name, "PID %d (Spider)", cpIds[0]);
-	archi_->setName(0, name);
+	archi_->setName(nDsp, name);
+	archi_->setPEType(nDsp, 0);
 
 	for(int i=1; i<nArm; i++){
-		sprintf(name, "PID %d (LRT %d)", cpIds[i], i);
-		archi_->setPEType(i, 0);
-		archi_->setName(i, name);
+		sprintf(name, "PID %d (LRT %d)", cpIds[i], nDsp+i);
+		archi_->setPEType(nDsp+i, 0);
+		archi_->setName(nDsp+i, name);
 	}
 
 	for(int i=0; i<nDsp; i++){
-		sprintf(name, "DSP %d (LRT %d)", i, 4+i);
-		archi_->setPEType(4+i, 1);
-		archi_->setName(4+i, name);
+		sprintf(name, "DSP %d (LRT %d)", i, i);
+		archi_->setPEType(i, 1);
+		archi_->setName(i, name);
 	}
 
 	this->rstTime();
 }
 
 PlatformK2Arm::~PlatformK2Arm(){
-	for(int lrt=1; lrt<archi_->getNPE(); lrt++){
+	for(int lrt=0; lrt<archi_->getNPE(); lrt++){
 		int size = sizeof(StopLrtMsg);
 		StopLrtMsg* msg = (StopLrtMsg*) getSpiderCommunicator()->ctrl_start_send(lrt, size);
 

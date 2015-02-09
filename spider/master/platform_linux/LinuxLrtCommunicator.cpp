@@ -142,15 +142,19 @@ void LinuxLrtCommunicator::trace_end_send(int size){
 }
 
 void LinuxLrtCommunicator::data_end_send(Fifo* f){
-	volatile unsigned long *mutex = fifos_ + f->id;
-	// TODO protect mutex !
-	// TODO cache memory
-	*mutex = f->ntoken;
+	if(f->ntoken){
+		volatile unsigned long *mutex = fifos_ + f->id;
+		// TODO protect mutex !
+		// TODO cache memory
+		*mutex = f->ntoken;
+	}
 }
 long LinuxLrtCommunicator::data_recv(Fifo* f){
-	volatile unsigned long *mutex = fifos_ + f->id;
-	while(*mutex != f->ntoken);
-	*mutex -= f->ntoken;
+	if(f->ntoken){
+		volatile unsigned long *mutex = fifos_ + f->id;
+		while(*mutex < f->ntoken);
+		*mutex -= f->ntoken;
+	}
 	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
 }
 

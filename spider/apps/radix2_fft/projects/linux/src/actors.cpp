@@ -64,6 +64,41 @@ unsigned char brev[64] = {
     0x7, 0x27, 0x17, 0x37, 0xf, 0x2f, 0x1f, 0x3f
 };
 
+static float twi64k_r[32*1024];
+static float twi64k_i[32*1024];
+
+static float gen_twi32k[2*32*1024];
+static float gen_twi16k[2*16*1024];
+static float gen_twi8k [2*8*1024];
+static float gen_twi4k [2*4*1024];
+static float gen_twi2k [2*2*1024];
+static float gen_twi1k [2*1024];
+
+void tw_gen (float *w, int n);
+
+void initActors(){
+	for(int i=0; i<32*1024; i++){
+		twi64k_r[i] = cos(-2*M_PI*i/(64*1024));
+		twi64k_i[i] = sin(-2*M_PI*i/(64*1024));
+	}
+	tw_gen(gen_twi32k, 32*1024);
+	tw_gen(gen_twi16k, 16*1024);
+	tw_gen(gen_twi8k,   8*1024);
+	tw_gen(gen_twi4k,   4*1024);
+	tw_gen(gen_twi2k,   2*1024);
+	tw_gen(gen_twi1k,     1024);
+}
+
+static inline float getTwi_r(int m, int q){
+//	return cos(-2*M_PI*m/q);
+	return twi64k_r[64*1024/q*m];
+}
+
+static inline float getTwi_i(int m, int q){
+//	return sin(-2*M_PI*m/q);
+	return twi64k_i[m*64*1024/q];
+}
+
 /* Function for generating Specialized sequence of twiddle factors */
 void tw_gen (float *w, int n)
 {
@@ -186,8 +221,11 @@ void mixFFT(int n, int p, int step, int id, float* in0, float* in1, float* out0,
 		float l_r = in1[2*k  ];
 		float l_i = in1[2*k+1];
 
-		float z_r = cos(-2*M_PI*m/q);
-		float z_i = sin(-2*M_PI*m/q);
+//		float z_r = cos(-2*M_PI*m/q);
+//		float z_i = sin(-2*M_PI*m/q);
+
+		float z_r = getTwi_r(m,q);
+		float z_i = getTwi_i(m,q);
 
 		float l2_r = l_r*z_r - l_i*z_i;
 		float l2_i = l_i*z_r + l_r*z_i;
@@ -235,7 +273,7 @@ void fft(
 		float* in,
 		float* out){
 
-	static float w[2*N_DATA];
+//	static float w[2*N_DATA];
 
 #if VERBOSE
 	printf("Execute fft\n");
@@ -256,7 +294,30 @@ void fft(
 	else
 		rad = 2;
 
-    tw_gen(w, localFFTSize);
+	float* w;
+	switch(localFFTSize){
+	case 32*1024:
+		w = gen_twi32k;
+		break;
+	case 16*1024:
+		w = gen_twi16k;
+		break;
+	case  8*1024:
+		w = gen_twi8k;
+		break;
+	case  4*1024:
+		w = gen_twi4k;
+		break;
+	case  2*1024:
+		w = gen_twi2k;
+		break;
+	case    1024:
+		w = gen_twi1k;
+		break;
+	default:
+		printf("Error no twiddles computed for %d\n", localFFTSize);
+		return;
+	}
 
     DSPF_sp_fftSPxSP_cn(localFFTSize, in, w, out, brev, rad, 0, localFFTSize);
 }

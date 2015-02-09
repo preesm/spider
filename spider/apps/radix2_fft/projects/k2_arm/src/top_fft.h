@@ -46,14 +46,16 @@
 extern lrtFct top_fft_fcts[N_FCT_TOP_FFT];
 
 typedef enum{
-	CORE_CORE3 = 0,
-	CORE_CORE0 = 1,
-	CORE_CORE2 = 2,
-	CORE_CORE1 = 3,
-	CORE_DSP0 = 4,
-	CORE_DSP1 = 5,
-	CORE_DSP2 = 6,
-	CORE_DSP3 = 7,
+	CORE_DSP0 = 0,
+	CORE_DSP1 = 1,
+	CORE_DSP2 = 2,
+	CORE_DSP3 = 3,
+//	CORE_CORE3 = 0,
+	CORE_CORE0 = 4,
+//	CORE_CORE2 = 2,
+	CORE_CORE1 = 5,
+//	CORE_DSP4 = 8,
+//	CORE_DSP5 = 9
 } PE;
 
 typedef enum{

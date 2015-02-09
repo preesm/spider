@@ -180,7 +180,14 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 		/*InParam*/ 2);
 	bo_ordering->addInParam(0, param_fftSize);
 	bo_ordering->addInParam(1, param_NStep);
-	bo_ordering->isExecutableOnAllPE();
+//	bo_ordering->isExecutableOnAllPE();
+	bo_ordering->isExecutableOnPE(CORE_CORE0);
+	bo_ordering->isExecutableOnPE(CORE_DSP0);
+	bo_ordering->isExecutableOnPE(CORE_DSP1);
+	bo_ordering->isExecutableOnPE(CORE_DSP2);
+	bo_ordering->isExecutableOnPE(CORE_DSP3);
+//	bo_ordering->isExecutableOnPE(CORE_DSP4);
+//	bo_ordering->isExecutableOnPE(CORE_DSP5);
 	bo_ordering->setTimingOnType(CORE_TYPE_ARM, "5421680", stack);
 	bo_ordering->setTimingOnType(CORE_TYPE_DSP, "5894265", stack);
 
@@ -192,9 +199,16 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 		/*InParam*/ 2);
 	bo_monoFFT->addInParam(0, param_NStep);
 	bo_monoFFT->addInParam(1, param_fftSize);
-	bo_monoFFT->isExecutableOnAllPE();
+	bo_monoFFT->isExecutableOnPE(CORE_CORE0);
+	bo_monoFFT->isExecutableOnPE(CORE_DSP0);
+	bo_monoFFT->isExecutableOnPE(CORE_DSP1);
+	bo_monoFFT->isExecutableOnPE(CORE_DSP2);
+	bo_monoFFT->isExecutableOnPE(CORE_DSP3);
+//	bo_monoFFT->isExecutableOnPE(CORE_DSP4);
+//	bo_monoFFT->isExecutableOnPE(CORE_DSP5);
+//	bo_monoFFT->isExecutableOnAllPE();
 	bo_monoFFT->setTimingOnType(CORE_TYPE_ARM, "84339721/(2^NStep)", stack);
-	bo_monoFFT->setTimingOnType(CORE_TYPE_DSP, "30488046/(2^NStep)", stack);
+	bo_monoFFT->setTimingOnType(CORE_TYPE_DSP, "18764", stack);
 
 	PiSDFVertex* bo_radixReduction = graph->addHierVertex(
 		/*Name*/    "radixReduction",
@@ -537,9 +551,16 @@ PiSDFGraph* fftStep(Archi* archi, Stack* stack){
 	bo_fft_radix2->addInParam(0, param_NStep);
 	bo_fft_radix2->addInParam(1, param_fftSize);
 	bo_fft_radix2->addInParam(2, param_Step);
-	bo_fft_radix2->isExecutableOnAllPE();
-	bo_fft_radix2->setTimingOnType(CORE_TYPE_ARM, "383*fftSize/(2^NStep)", stack);
-	bo_fft_radix2->setTimingOnType(CORE_TYPE_DSP, "75*fftSize/(2^NStep)", stack);
+//	bo_fft_radix2->isExecutableOnAllPE();
+	bo_fft_radix2->isExecutableOnPE(CORE_DSP0);
+	bo_fft_radix2->isExecutableOnPE(CORE_DSP1);
+	bo_fft_radix2->isExecutableOnPE(CORE_DSP2);
+	bo_fft_radix2->isExecutableOnPE(CORE_DSP3);
+	bo_fft_radix2->isExecutableOnPE(CORE_CORE0);
+	bo_fft_radix2->isExecutableOnPE(CORE_CORE1);
+//	bo_fft_radix2->isExecutableOnPE(CORE_DSP5);
+	bo_fft_radix2->setTimingOnType(CORE_TYPE_ARM, "124769", stack);
+	bo_fft_radix2->setTimingOnType(CORE_TYPE_DSP, "16361", stack);
 
 	PiSDFVertex* bo_genIx = graph->addBodyVertex(
 		/*Name*/    "genIx",

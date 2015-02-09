@@ -41,15 +41,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void initActors();
+
 int main(int argc, char* argv[]){
 	SpiderConfig cfg;
 	ExecutionStat stat;
 
+	initActors();
+
 	DynStack pisdfStack("PisdfStack");
 	DynStack archiStack("ArchiStack");
 
-#define SH_MEM 0x40000000
-	PlatformLinux platform(4, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
+#define SH_MEM 0x00500000
+	PlatformLinux platform(1, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;

@@ -50,11 +50,13 @@ int main(int argc, char* argv[]){
 	DynStack pisdfStack("PisdfStack");
 	DynStack archiStack("ArchiStack");
 
-#define SH_MEM 0x00400000
-	try{
+#define SH_MEM 0x00500000
 	initActors();
-	PlatformK2Arm platform(4, 4, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
+	PlatformK2Arm platform(2, 4, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
 	Archi* archi = platform.getArchi();
+
+	int  nIter[3][4];
+	Time actorTime[3][4];
 
 	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
 	cfg.memAllocStart = (void*)0;
@@ -70,7 +72,7 @@ int main(int argc, char* argv[]){
 	printf("Start\n");
 
 	try{
-		for(int i=1; i<=4; i++){
+		for(int i=1; i<=5; i++){
 			printf("NStep = %d\n", i);
 			char ganttPath[30];
 			sprintf(ganttPath, "radixFFT_%d.sgantt", i);
@@ -89,7 +91,7 @@ int main(int argc, char* argv[]){
 			spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
 			spider_getLastSRDAG()->print(srdagPath);
 
-			int fftTime = stat.globalEndTime;
+			Time fftTime = 0;
 			printf("EndTime = %d us\n", stat.globalEndTime/1000);
 
 			printf("Memory use = ");
@@ -118,9 +120,22 @@ int main(int argc, char* argv[]){
 					else
 						printf("\t(%d):        0 (x0)", k);
 
-				if(strcmp(stat.actors[j]->getName(), "Src") == 0
-						|| strcmp(stat.actors[j]->getName(), "Snk") == 0)
-					fftTime -= total;
+//				if(strcmp(stat.actors[j]->getName(), "ordering") == 0){
+//					nIter[0][i-1] = stat.actorIterations[j][1];
+//					actorTime[0][i-1] = stat.actorTimes[j][1]/stat.actorIterations[j][1];
+//				}
+
+				if(strcmp(stat.actors[j]->getName(), "monoFFT") == 0){
+//					nIter[1][i-1] = stat.actorIterations[j][1];
+//					actorTime[1][i-1] = stat.actorTimes[j][1]/stat.actorIterations[j][1];
+					fftTime -= stat.actorFisrt[j];
+				}
+
+				if(strcmp(stat.actors[j]->getName(), "fft_radix2") == 0){
+//					nIter[2][i-1] = stat.actorIterations[j][1];
+//					actorTime[2][i-1] = stat.actorTimes[j][1]/stat.actorIterations[j][1];
+					fftTime += stat.actorLast[j];
+				}
 
 				printf("\t%.2f%%\n", 100.*total/stat.globalEndTime);
 			}
@@ -134,10 +149,26 @@ int main(int argc, char* argv[]){
 	}
 	printf("finished\n");
 
+//	FILE* f = fopen("out.csv", "w+");
+//	fprintf(f, "NSTEP;1;1;2;2;3;3;4;4\n");
+//	fprintf(f, "Ordering;%d;%d;%d;%d;%d;%d;%d;%d\n",
+//			nIter[0][0], actorTime[0][0],
+//			nIter[0][1], actorTime[0][1],
+//			nIter[0][2], actorTime[0][2],
+//			nIter[0][3], actorTime[0][3]);
+//	fprintf(f, "monoFFT;%d;%d;%d;%d;%d;%d;%d;%d\n",
+//			nIter[1][0], actorTime[1][0],
+//			nIter[1][1], actorTime[1][1],
+//			nIter[1][2], actorTime[1][2],
+//			nIter[1][3], actorTime[1][3]);
+//	fprintf(f, "Butterfly Reduction;%d;%d;%d;%d;%d;%d;%d;%d\n",
+//			nIter[2][0], actorTime[2][0],
+//			nIter[2][1], actorTime[2][1],
+//			nIter[2][2], actorTime[2][2],
+//			nIter[2][3], actorTime[2][3]);
+//	fclose(f);
+
 	spider_free();
 
-	}catch(const char* s){
-		printf("Exception : %s\n", s);
-	}
 	return 0;
 }

@@ -25,11 +25,4 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>actors</name>
-			<type>2</type>
-			<location>/home/jheulot/git/spider/spider/apps/radix2_fft/actors</location>
-		</link>
-	</linkedResources>
 </projectDescription>

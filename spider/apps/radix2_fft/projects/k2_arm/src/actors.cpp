@@ -46,6 +46,7 @@ extern "C"{
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <arm_neon.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265359
@@ -64,22 +65,52 @@ unsigned char brev[64] = {
     0x7, 0x27, 0x17, 0x37, 0xf, 0x2f, 0x1f, 0x3f
 };
 
-static float twi64k_r[32*1024];
-static float twi64k_i[32*1024];
+static float twi64k[2*64*1024];
+static float twi32k[2*64*1024];
+static float twi16k[2*64*1024];
+static float twi8k[2*64*1024];
+static float twi4k[2*64*1024];
+
+static float gen_twi32k[2*32*1024];
+static float gen_twi16k[2*16*1024];
+static float gen_twi8k [2*8*1024];
+static float gen_twi4k [2*4*1024];
+static float gen_twi2k [2*2*1024];
+static float gen_twi1k [2*1024];
+
+void tw_gen (float *w, int n);
 
 void initActors(){
-	for(int i=0; i<32*1024; i++){
-		twi64k_r[i] = cos(-2*M_PI*i/(64*1024));
-		twi64k_i[i] = sin(-2*M_PI*i/(64*1024));
+	for(int i=0; i<64*1024; i++){
+		twi64k[2*i  ] = cos(-2*M_PI*i/(64*1024));
+		twi64k[2*i+1] = sin(-2*M_PI*i/(64*1024));
 	}
-}
-
-static inline float getTwi_r(int m, int q){
-	return twi64k_r[64*1024/q*m];
-}
-
-static inline float getTwi_i(int m, int q){
-	return twi64k_i[m*64*1024/q];
+	for(int i=0; i<64*1024; i++){
+		int new_i = i%(32*1024);
+		twi32k[2*i  ] = cos(-2*M_PI*new_i/(32*1024));
+		twi32k[2*i+1] = sin(-2*M_PI*new_i/(32*1024));
+	}
+	for(int i=0; i<64*1024; i++){
+		int new_i = i%(16*1024);
+		twi16k[2*i  ] = cos(-2*M_PI*new_i/(16*1024));
+		twi16k[2*i+1] = sin(-2*M_PI*new_i/(16*1024));
+	}
+	for(int i=0; i<64*1024; i++){
+		int new_i = i%(8*1024);
+		twi8k[2*i  ] = cos(-2*M_PI*new_i/(8*1024));
+		twi8k[2*i+1] = sin(-2*M_PI*new_i/(8*1024));
+	}
+	for(int i=0; i<64*1024; i++){
+		int new_i = i%(32*1024);
+		twi4k[2*i  ] = cos(-2*M_PI*new_i/(4*1024));
+		twi4k[2*i+1] = sin(-2*M_PI*new_i/(4*1024));
+	}
+	tw_gen(gen_twi32k, 32*1024);
+	tw_gen(gen_twi16k, 16*1024);
+	tw_gen(gen_twi8k,   8*1024);
+	tw_gen(gen_twi4k,   4*1024);
+	tw_gen(gen_twi2k,   2*1024);
+	tw_gen(gen_twi1k,     1024);
 }
 
 /* Function for generating Specialized sequence of twiddle factors */
@@ -191,50 +222,214 @@ void snk(Param fftSize, float *in){
     printf("SNR %f dB\n", snrVal);
 }
 
-void mixFFT(int n, int p, int step, int id, float* in0, float* in1, float* out0, float* out1){
-	int mask = (p-1) ^ ((1<<step)-1);
-	int proc = ((id & mask)<<1) + ( id & (~mask & (p-1)) );
-//	printf("mixFFT : n%d p%d step%d id%d proc%d mask %#x %#x\n", n, p, step, id, proc, mask, ~mask & (p-1));
-	for(int k=0; k<n/p; k++){
-		int q = 1 << (int)(step+1+log2(n)-log2(p));
-		int m = (proc*n/p+k) % q;
-
-		float k_r = in0[2*k  ];
-		float k_i = in0[2*k+1];
-		float l_r = in1[2*k  ];
-		float l_i = in1[2*k+1];
-
-//		float z_r = cos(-2*M_PI*m/q);
-//		float z_i = sin(-2*M_PI*m/q);
-
-		float z_r = getTwi_r(m, q);
-		float z_i = getTwi_i(m, q);
-
-		float l2_r = l_r*z_r - l_i*z_i;
-		float l2_i = l_i*z_r + l_r*z_i;
-
-		out0[2*k  ] = k_r + l2_r;
-		out0[2*k+1] = k_i + l2_i;
-
-		out1[2*k  ] = k_r - l2_r;
-		out1[2*k+1] = k_i - l2_i;
-	}
-}
-
 void fftRadix2(
 		Param NStep,
 		Param fftSize,
 		Param Step,
-		float* in0,
-		float* in1,
+		float* __restrict in0,
+		float* __restrict in1,
 		char*  ix,
-		float* out0,
-		float* out1){
+		float* __restrict out0,
+		float* __restrict out1){
 #if VERBOSE
 	printf("Execute fftRadix2\n");
 #endif
 
-	mixFFT(fftSize, 1<<NStep, Step, *ix, in0, in1, out0, out1);
+	int id	  = *ix;
+	int n	  = fftSize;
+	int p	  = 1<<NStep;
+	int log2n = log2(fftSize);
+	int log2p = NStep;
+	int mask = (p-1) ^ ((1<<Step)-1);
+	int proc = ((id & mask)<<1) + ( id & (~mask & (p-1)) );
+//	printf("mixFFT : n%d p%d step%d id%d proc%d mask %#x %#x\n", n, p, step, id, proc, mask, ~mask & (p-1));
+
+	int q = 1 << (int)(Step+1+log2n-log2p);
+	const int ratio = 64*1024/q;
+
+	const int m_start = proc*n/p;
+	int m = m_start;
+
+	const int nIter = n/p;
+	const int qMask = q-1;
+
+	float* __restrict__ twi_restrict;
+	switch(q){
+	case 64*1024:
+		twi_restrict = twi64k;
+		break;
+	case 32*1024:
+		twi_restrict = twi32k;
+		break;
+	case 16*1024:
+		twi_restrict = twi16k;
+		break;
+	case  8*1024:
+		twi_restrict = twi8k;
+		break;
+	case  4*1024:
+		twi_restrict = twi4k;
+		break;
+	default:
+		printf("Error no twiddles computed for %d\n", q);
+		return;
+	}
+
+	float* __restrict__ in0_align = (float*)__builtin_assume_aligned (in0, 8);
+	float* __restrict__ in1_align = (float*)__builtin_assume_aligned (in1, 8);
+	float* __restrict__ twi_align = (float*)__builtin_assume_aligned (twi_restrict, 8);
+	float* __restrict__ out0_align = (float*)__builtin_assume_aligned (out0, 8);
+	float* __restrict__ out1_align = (float*)__builtin_assume_aligned (out1, 8);
+
+	for(int k=0; k<nIter; k++){
+//		short m_local = m & qMask;
+//		printf("m %d m_local %d q %d\n", m, m_local, q);
+//		float* twi = twi_align + 2*m_local;
+
+		float k_r = in0_align[2*k  ];
+		float k_i = in0_align[2*k+1];
+
+		float l_r = in1_align[2*k  ];
+		float l_i = in1_align[2*k+1];
+
+		float z_r = twi_align[2*m  ];
+		float z_i = twi_align[2*m+1];
+
+		float l2_r = l_r*z_r - l_i*z_i;
+		float l2_i = l_i*z_r + l_r*z_i;
+
+		out0_align[2*k  ] = k_r + l2_r;
+		out0_align[2*k+1] = k_i + l2_i;
+
+		out1_align[2*k  ] = k_r - l2_r;
+		out1_align[2*k+1] = k_i - l2_i;
+
+		m++;
+
+//		float32x2_t v_in0 = vld1_f32(&in0[2*k]);
+//		float32x2_t v_in1 = vld1_f32(&in1[2*k]);
+//		float32x2_t v_twi = vld1_f32(&twi64k[2*ratio*(m & qMask)]);
+//
+//		// Get the real values of a | v1_re | v1_re |
+//		float32x2_t v1r2 = vdup_lane_f32(v_in1, 0);
+//		// Get the imag values of a | v1_im | v1_im |
+//		float32x2_t v1i2 = vdup_lane_f32(v_in1, 1);
+//		// Multiply the real a with b
+//		float32x2_t vrrri = vmul_f32(v1r2, v_twi);
+//		// Multiply the imag a with b
+//		float32x2_t virii = vmul_f32(v1i2, v_twi);
+//
+//		uint32x2_t xorVal = {0x00000000, 0x80000000};
+//
+//		// Conjugate v2
+//		float32x2_t virmii = vreinterpret_f32_u32(veor_u32(vreinterpret_u32_f32(virii), xorVal));
+//
+//		// Swap real/imag elements in v2.
+//		float32_t ir = vget_lane_f32(virmii, 0);
+//		float32_t mii = vget_lane_f32(virmii, 1);
+//		float32x2_t vmiiir = {mii, ir};
+//
+//		// Add and return the result
+//		float32x2_t v1twi = vadd_f32(vrrri, vmiiir);
+//
+//		float32x2_t vOut0 = vadd_f32(v_in0, v1twi);
+//		float32x2_t vOut1 = vsub_f32(v_in0, v1twi);
+//
+//		vst1_f32(&out0[2*k], vOut0);
+//		vst1_f32(&out1[2*k], vOut1);
+//
+//		m++;
+
+//		int k0 = 2*k;
+//		int k1 = 2*(k+1);
+//		int twi0 = 2*ratio*(m & qMask);
+//		int twi1 = 2*ratio*((m+1) & qMask);
+//
+//		float32x2_t v_in0_0 = vld1_f32(&in0[k0]);		// in0 of 1st data
+//		float32x2_t v_in1_0 = vld1_f32(&in1[k0]);		// in1 of 1st data
+//		float32x2_t v_twi_0 = vld1_f32(&twi64k[twi0]);	// twi of 1st data
+//
+//		float32x2_t v_in0_1 = vld1_f32(&in0[k1]);		// in0 of 2nd data
+//		float32x2_t v_in1_1 = vld1_f32(&in1[k1]);		// in1 of 2nd data
+//		float32x2_t v_twi_1 = vld1_f32(&twi64k[twi1]);	// twi of 2nd data
+//
+//		/** Pack Data in 128bits vectors **/
+//		// Get the values of in0:
+//		// 		in0_0.r in0_0.i in0_1.r in0_1.i
+//		float32x4_t vin0 = vcombine_f32(
+//				v_in0_0,
+//				v_in0_1);
+//		// Get the real values of in1:
+//		// 		in1_0.r in1_0.r in1_1.r in1_1.r
+//		float32x4_t vin1r = vcombine_f32(
+//				vdup_lane_f32(v_in1_0, 0),
+//				vdup_lane_f32(v_in1_1, 0));
+//		// Get the imag values of in1:
+//		//		in1_0.i in1_0.i in1_1.i in1_1.i
+//		float32x4_t vin1i = vcombine_f32(
+//				vdup_lane_f32(v_in1_0, 1),
+//				vdup_lane_f32(v_in1_1, 1));
+//		// Get the twiddles factor in one vector:
+//		//		twi_0.r twi_0.i twi_1.r twi_1.i
+//		float32x4_t vtwi= vcombine_f32(
+//				v_twi_0,
+//				v_twi_1);
+//
+//		/** Complex multiplication **/
+//		// Multiply real of in1 with twiddle
+//		// 		in1_0.r*twi_0.r | in1_0.r*twi_0.i | in1_1.r*twi_1.r | in1_1.r*twi_1.i
+//		float32x4_t mul0 = vmulq_f32(vin1r, vtwi);
+//		// Multiply imag of in1 with twiddle
+//		// 		in1_0.i*twi_0.r | in1_0.i*twi_0.i | in1_1.i*twi_1.r | in1_1.i*twi_1.i
+//		float32x4_t mul1 = vmulq_f32(vin1i, vtwi);
+//		// Conjugate imag*imag factor
+////		float32x2_t toNeg = {
+////				vget_lane_f32(vget_low_f32(mul1),1),
+////				vget_lane_f32(vget_high_f32 (mul1),1)
+////		};
+////		float32x2_t neg = vneg_f32(toNeg);
+////
+////		// 		in1_0.i*twi_0.r | -in1_0.i*twi_0.i | in1_1.i*twi_1.r | -in1_1.i*twi_1.i
+////		float32x2_t resMul0 = {vget_lane_f32(vget_low_f32 (mul1),0), vget_lane_f32(neg,0)};
+////		float32x2_t resMul1 = {vget_lane_f32(vget_high_f32(mul1),0), vget_lane_f32(neg,1)};
+////
+////		float32x4_t resMul = vcombine_f32(
+////				resMul0,
+////				resMul1
+////		);
+//
+//
+//		uint32x4_t xorVal = {0x00000000, 0x80000000, 0x00000000, 0x80000000};
+//		float32x4_t resMul = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(mul1), xorVal));
+//
+//		// Swap real/imag elements in mul1.
+//		// 		-in1_0.i*twi_0.i | in1_0.i*twi_0.r | -in1_1.i*twi_1.i | in1_1.i*twi_1.r
+//		float32x4_t mul1_inv = vcombine_f32(
+//				vrev64_f32(vget_low_f32 (resMul)),
+//				vrev64_f32(vget_high_f32(resMul))
+//		);
+//
+//		// Add mul0 and mul1_inv
+//		// 		in1_0.r*twi_0.r - in1_0.i*twi_0.i
+//		// 		in1_0.r*twi_0.i + in1_0.i*twi_0.r
+//		//		in1_1.r*twi_1.r - in1_1.i*twi_1.i
+//		//		in1_1.r*twi_1.i + in1_1.i*twi_1.r
+//		float32x4_t vmul = vaddq_f32(mul0, mul1_inv);
+//
+//		/** Compute out0 = in0+vmul
+//		 * 		and out1 = in0-vmul */
+//		float32x4_t vOut0 = vaddq_f32(vin0, vmul);
+//		float32x4_t vOut1 = vsubq_f32(vin0, vmul);
+//
+//		/** Store result */
+//		vst1_f32(&out0[k0], vget_low_f32(vOut0));		// out0 of 1st data
+//		vst1_f32(&out1[k0], vget_low_f32(vOut1));		// out1 of 1st data
+//
+//		vst1_f32(&out0[k1], vget_high_f32(vOut0));		// out0 of 2nd data
+//		vst1_f32(&out1[k1], vget_high_f32(vOut1));		// out1 of 2nd data
+//
+//		m+=2;
+	}
 }
 
 void ordering(Param fftSize, Param NStep, float* in, float *out){
@@ -256,7 +451,7 @@ void fft(
 		float* in,
 		float* out){
 
-	static float w[2*N_DATA];
+//	static float w[2*N_DATA];
 
 #if VERBOSE
 	printf("Execute fft\n");
@@ -277,7 +472,30 @@ void fft(
 	else
 		rad = 2;
 
-    tw_gen(w, localFFTSize);
+	float* w;
+	switch(localFFTSize){
+	case 32*1024:
+		w = gen_twi32k;
+		break;
+	case 16*1024:
+		w = gen_twi16k;
+		break;
+	case  8*1024:
+		w = gen_twi8k;
+		break;
+	case  4*1024:
+		w = gen_twi4k;
+		break;
+	case  2*1024:
+		w = gen_twi2k;
+		break;
+	case    1024:
+		w = gen_twi1k;
+		break;
+	default:
+		printf("Error no twiddles computed for %d\n", localFFTSize);
+		return;
+	}
 
     DSPF_sp_fftSPxSP_cn(localFFTSize, in, w, out, brev, rad, 0, localFFTSize);
 }

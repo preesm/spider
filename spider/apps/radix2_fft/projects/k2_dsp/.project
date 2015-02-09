@@ -3,6 +3,7 @@
 	<name>radix2_fft_k2_dsp</name>
 	<comment></comment>
 	<projects>
+		<project>Spider_k2_dsp_lrt</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

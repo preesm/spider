@@ -39,8 +39,6 @@
 #include <stdio.h>
 #include <launcher/Launcher.h>
 
-static SpiderCommunicator* spiderCom = 0;
-
 static Stack* srdagStack = 0;
 static Stack* transfoStack = 0;
 

@@ -96,7 +96,7 @@ int LinuxSpiderCommunicator::ctrl_start_recv(int lrtIx, void** data){
 
 	if(nb<0) return 0;
 
-	if(size > msgSizeMax_)
+	if(size > (unsigned long)msgSizeMax_)
 		throw "Msg too big\n";
 
 	curMsgSizeRecv_ = size;
@@ -146,7 +146,7 @@ int LinuxSpiderCommunicator::trace_start_recv(void** data){
 
 	if(nb<0) return 0;
 
-	if(size > msgSizeMax_)
+	if(size > (unsigned long)msgSizeMax_)
 		throw "Msg too big\n";
 
 	curMsgSizeRecv_ = size;

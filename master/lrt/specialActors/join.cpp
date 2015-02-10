@@ -41,7 +41,6 @@
 
 void saJoin(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	int nbFifoIn, nbFifoOut, i, index;
-	void *data;
 	int nbTknIn, nbTknOut;
 
 #if VERBOSE

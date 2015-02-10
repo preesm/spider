@@ -233,7 +233,9 @@ inline const char* PiSDFVertex::getName() const{
 	case PISDF_SUBTYPE_END:
 		return "End";
 	}
+	return "NA";
 }
+
 inline int PiSDFVertex::getFctId() const{
 	return fctId_;
 }

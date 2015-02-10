@@ -47,13 +47,13 @@ protected:
 public:
 
 	virtual int  getNPE() const = 0;
-	virtual inline const char* getPEName(int ix) const = 0;
+	virtual const char* getPEName(int ix) const = 0;
 
-	virtual inline int getNPETypes() const = 0;
-	virtual inline int getPEType(int ix) const = 0;
+	virtual int getNPETypes() const = 0;
+	virtual int getPEType(int ix) const = 0;
 
-	virtual inline Time getTimeSend(int src, int dest, int size) const = 0;
-	virtual inline Time getTimeRecv(int src, int dest, int size) const = 0;
+	virtual Time getTimeSend(int src, int dest, int size) const = 0;
+	virtual Time getTimeRecv(int src, int dest, int size) const = 0;
 };
 
 #endif/*ARCHI_H*/

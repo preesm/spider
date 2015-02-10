@@ -35,9 +35,9 @@
 								<option id="gnu.cpp.compiler.so.debug.option.optimization.level.604603855" name="Optimization Level" superClass="gnu.cpp.compiler.so.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.so.debug.option.debugging.level.433993994" name="Debug Level" superClass="gnu.cpp.compiler.so.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.235442095" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_linux}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/common}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_linux}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/spider}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.pic.725021182" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
@@ -47,9 +47,9 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.so.debug.option.optimization.level.2043197795" name="Optimization Level" superClass="gnu.c.compiler.so.debug.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.so.debug.option.debugging.level.668688201" name="Debug Level" superClass="gnu.c.compiler.so.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.258492493" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_linux}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/common}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_linux}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/spider}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1551303020" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
@@ -65,11 +65,7 @@
 								</inputType>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.so.debug.1272883559" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.so.debug">
-								<option id="gnu.both.asm.option.include.paths.1914296158" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="../Spider/platform"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/Spider/platform_linux}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/Spider/spider}&quot;"/>
-								</option>
+								<option id="gnu.both.asm.option.include.paths.1914296158" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath"/>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1111714813" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -183,10 +179,10 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.so.debug.2107493073;cdt.managedbuild.config.gnu.so.debug.2107493073.;cdt.managedbuild.tool.gnu.c.compiler.so.debug.1430782144;cdt.managedbuild.tool.gnu.c.compiler.input.1551303020">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.so.release.892747326;cdt.managedbuild.config.gnu.so.release.892747326.;cdt.managedbuild.tool.gnu.cpp.compiler.so.release.86710481;cdt.managedbuild.tool.gnu.cpp.compiler.input.1223414843">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.so.debug.2107493073;cdt.managedbuild.config.gnu.so.debug.2107493073.;cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.2110071839;cdt.managedbuild.tool.gnu.cpp.compiler.input.1925082292">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.so.debug.2107493073;cdt.managedbuild.config.gnu.so.debug.2107493073.;cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.2110071839;cdt.managedbuild.tool.gnu.cpp.compiler.input.1925082292">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.so.release.892747326;cdt.managedbuild.config.gnu.so.release.892747326.;cdt.managedbuild.tool.gnu.cpp.compiler.so.release.86710481;cdt.managedbuild.tool.gnu.cpp.compiler.input.1223414843">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.so.release.892747326;cdt.managedbuild.config.gnu.so.release.892747326.;cdt.managedbuild.tool.gnu.c.compiler.so.release.1657910148;cdt.managedbuild.tool.gnu.c.compiler.input.1985678189">

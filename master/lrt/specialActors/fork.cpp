@@ -41,8 +41,7 @@
 
 void saFork(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	int nbFifoIn, nbFifoOut, i, index;
-	char *data;
-	int nbTknIn, nbTknOut;
+	int nbTknIn = inParams[2];
 
 #if VERBOSE
 	printf("Fork\n");
@@ -54,10 +53,8 @@ void saFork(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 	index = 0;
 	if(nbFifoIn == 1){
 		/* Fork */
-		nbTknIn = inParams[2];
-
 		for(i=0; i<nbFifoOut; i++){
-			nbTknOut = inParams[i + 3];
+			int nbTknOut = inParams[i + 3];
 
 			if(outputFIFOs[i] != ((char*)inputFIFOs[0])+index)
 				memcpy(outputFIFOs[i], ((char*)inputFIFOs[0])+index, nbTknOut);
@@ -67,5 +64,8 @@ void saFork(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 	}else{
 		throw "Error in Fork\n";
 	}
+
+	if(index != nbTknIn)
+		printf("Error: Remaining tokens in Fork\n");
 }
 

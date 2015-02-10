@@ -97,7 +97,7 @@ int LinuxLrtCommunicator::ctrl_start_recv(void** data){
 
 	if(nb<0) return 0;
 
-	if(size > msgSizeMax_)
+	if(size > (unsigned long)msgSizeMax_)
 		throw "Msg too big\n";
 
 	curMsgSizeRecv_ = size;
@@ -155,9 +155,9 @@ long LinuxLrtCommunicator::data_recv(Fifo* f){
 		while(*mutex < f->ntoken);
 		*mutex -= f->ntoken;
 	}
-	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
+	return (long)Platform::get()->virt_to_phy((void*)(intptr_t)(f->alloc));
 }
 
 long LinuxLrtCommunicator::data_start_send(Fifo* f){
-	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
+	return (long)Platform::get()->virt_to_phy((void*)(intptr_t)(f->alloc));
 }

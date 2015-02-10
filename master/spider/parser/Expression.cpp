@@ -376,7 +376,7 @@ bool Expression::getNextToken(
 	// check for param
 	if (isalnum(**ptr)){
 		const char *name = *ptr;
-		int nb=0;
+		size_t nb=0;
 //		int id=0;
 		while (isalnum(**ptr)){
 			nb++;

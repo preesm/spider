@@ -99,11 +99,11 @@ int LRT::runOneJob(){
 			void** outFifosAlloc = CREATE_MUL(stack_, jobMsg->nbOutEdge, void*);
 			Param* outParams = CREATE_MUL(stack_, jobMsg->nbOutParam, Param);
 
-			for(int i=0; i<jobMsg->nbInEdge; i++){
+			for(int i=0; i<(int)jobMsg->nbInEdge; i++){
 				inFifosAlloc[i] = (void*) Platform::getLrtCommunicator()->data_recv(&inFifos[i]);
 			}
 
-			for(int i=0; i<jobMsg->nbOutEdge; i++){
+			for(int i=0; i<(int)jobMsg->nbOutEdge; i++){
 				outFifosAlloc[i] = (void*) Platform::getLrtCommunicator()->data_start_send(&outFifos[i]);
 			}
 
@@ -111,7 +111,7 @@ int LRT::runOneJob(){
 
 			if(jobMsg->specialActor && jobMsg->fctIx < 6)
 				specialActors[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
-			else if(jobMsg->fctIx < nFct_)
+			else if((int)jobMsg->fctIx < nFct_)
 				fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
 			else
 				throw "Cannot find actor function\n";
@@ -120,10 +120,10 @@ int LRT::runOneJob(){
 
 			sendTrace(jobMsg->srdagIx, start, end);
 
-			for(int i=0; i<jobMsg->nbOutEdge; i++){
+			for(int i=0; i<(int)jobMsg->nbOutEdge; i++){
 				Platform::getLrtCommunicator()->data_end_send(&outFifos[i]);
 			}
-			for(int i=0; i<jobMsg->nbOutParam; i++){
+			for(int i=0; i<(int)jobMsg->nbOutParam; i++){
 				int size = sizeof(ParamValueMsg)+jobMsg->nbOutParam*sizeof(Param);
 				ParamValueMsg* msgParam = (ParamValueMsg*) Platform::getLrtCommunicator()->ctrl_start_send(size);
 				Param* params = (Param*)(msgParam+1);

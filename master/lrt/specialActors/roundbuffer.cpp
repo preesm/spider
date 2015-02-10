@@ -41,13 +41,8 @@
 #include <algorithm>
 
 void saRoundbuffer(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	int nbTknIn, nbTknOut;
-	char *data;
-
-	nbTknIn = inParams[0];
-	nbTknOut = inParams[1];
-
-	data = (char*)inputFIFOs[0];
+	int nbTknIn = inParams[0];
+	int nbTknOut = inParams[1];
 
 #if VERBOSE
 	printf("Roundbuffer\n");

@@ -39,7 +39,7 @@
 #include <stdio.h>
 
 void saEnd(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param nbTokens = inParams[0];
+//	Param nbTokens = inParams[0];
 
 #if VERBOSE
 	printf("End\n");

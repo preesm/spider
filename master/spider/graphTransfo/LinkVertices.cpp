@@ -186,7 +186,6 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 
 		int nbDelays = edge->resolveDelay(job);
 		int piSrcIx = edge->getSrcPortIx();
-		int piSnkIx = edge->getSnkPortIx();
 
 		int nbSourceRepetitions, nbSinkRepetitions;
 
@@ -343,7 +342,6 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				// No need of specific thing
 				snkRepetitions = CREATE_MUL(stack, 1, SRDAGEdge*);
 				*snkRepetitions = job->outputIfs[edge->getSnk()->getTypeId()];
-//				piSnkIx = job->outputIfs[edge->getSnk()->getTypeId()]->getSnkPortIx();
 				curSinkToken = sinkConsumption;
 				beforelastCons = sinkConsumption;
 				lastCons = sinkConsumption;
@@ -360,7 +358,6 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 
 				nbSinkRepetitions = nEnd+1;
 
-				piSnkIx = job->outputIfs[edge->getSnk()->getTypeId()]->getSnkPortIx();
 				beforelastCons = nDroppedTokens-(nEnd-1)*sourceProduction;
 				lastCons = sinkConsumption;
 				sinkConsumption = sourceProduction;
@@ -419,7 +416,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				|| sinkIndex < nbSinkRepetitions) {
 			SRDAGVertex* sourceVertex;
 			SRDAGEdge* sinkEdge;
-			int sourcePortId, sinkPortId;
+			int sourcePortId;
 
 			// Production/consumption rate for the current source/target.
 			int rest = std::min(curSourceToken, curSinkToken); // Minimum.

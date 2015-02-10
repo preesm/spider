@@ -225,6 +225,8 @@ static int removeFork(SRDAGGraph* topDag){
 							}
 
 							break;}
+						default:
+							break;
 					}
 				}
 			}

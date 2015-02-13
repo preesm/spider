@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Preesm Gantt
+Exec=/usr/bin/GanttDisplay.jar -f 
+MimeType=application/preesm-gantt
+Terminal=false
+Type=Application
+Categories=
+Comment=
+
+Name[en_US]=preesm-gantt

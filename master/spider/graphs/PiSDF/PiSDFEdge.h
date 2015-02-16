@@ -47,7 +47,6 @@ public:
 	/** Constructors */
 	PiSDFEdge(
 			PiSDFGraph* graph,
-			int nParam,
 			Stack *stack);
 	~PiSDFEdge();
 

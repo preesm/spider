@@ -25,7 +25,6 @@
 # Result Files #
 ################
 *.gv
-*.xml
 *.sgantt
 
 # Logs and databases #

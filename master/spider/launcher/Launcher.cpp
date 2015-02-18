@@ -139,7 +139,8 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		outFifos[i].alloc = edge->getAlloc();
 		outFifos[i].size = edge->getRate();
 
-		if(edge->getSrc()->getSlave() == edge->getSnk()->getSlave())
+		if(edge->getSrc() && edge->getSnk()
+				&& edge->getSrc()->getSlave() == edge->getSnk()->getSlave())
 			outFifos[i].ntoken = 0;
 		else
 			outFifos[i].ntoken = 1;

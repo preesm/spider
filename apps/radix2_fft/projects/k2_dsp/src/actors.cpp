@@ -67,8 +67,8 @@ unsigned char brev[64] = {
     0x7, 0x27, 0x17, 0x37, 0xf, 0x2f, 0x1f, 0x3f
 };
 
-#pragma DATA_SECTION(".twiddles")
-static float twi64k[64*1024];
+//#pragma DATA_SECTION(".twiddles")
+//static float twi64k[64*1024];
 
 #pragma DATA_SECTION(".twiddles")
 static float gen_twi32k[2*32*1024];
@@ -89,12 +89,14 @@ static float gen_twi2k [2*2*1024];
 static float gen_twi1k [2*1024];
 
 void tw_gen (float *w, int n);
+void initActors2();
 
 void initActors(){
-	for(int i=0; i<32*1024; i++){
-		twi64k[2*i  ] = cos(-2*M_PI*i/(64*1024));
-		twi64k[2*i+1] = sin(-2*M_PI*i/(64*1024));
-	}
+//	for(int i=0; i<32*1024; i++){
+//		twi64k[2*i  ] = cos(-2*M_PI*i/(64*1024));
+//		twi64k[2*i+1] = sin(-2*M_PI*i/(64*1024));
+//	}
+	initActors2();
 	tw_gen(gen_twi32k, 32*1024);
 	tw_gen(gen_twi16k, 16*1024);
 	tw_gen(gen_twi8k,   8*1024);
@@ -212,77 +214,6 @@ void snk(Param fftSize, float *in){
     printf("SNR %f dB\n", snrVal);
 }
 
-void fftRadix2(
-		Param NStep,
-		Param fftSize,
-		Param Step,
-		float* restrict in0,
-		float* restrict in1,
-		char*  ix,
-		float* restrict out0,
-		float* restrict out1){
-#if VERBOSE
-	printf("Execute fftRadix2\n");
-#endif
-
-	int id	  = *ix;
-	int n	  = fftSize;
-	int p	  = 1<<NStep;
-	int log2n = log2(fftSize);
-	int log2p = NStep;
-	int mask = (p-1) ^ ((1<<Step)-1);
-	int proc = ((id & mask)<<1) + ( id & (~mask & (p-1)) );
-//	printf("mixFFT : n%d p%d step%d id%d proc%d mask %#x %#x\n", n, p, step, id, proc, mask, ~mask & (p-1));
-
-	int q = 1 << (int)(Step+1+log2n-log2p);
-	int ratio = 64*1024/q;
-
-	int m_start = proc*n/p;
-	int m = m_start;
-
-	int nIter = n/p;
-	int qMask = q-1;
-
-	_nassert((int) in0 % 8 == 0); // input1 is 64-bit aligned
-	_nassert((int) in1 % 8 == 0); // input2 is 64-bit aligned
-	_nassert((int) twi64k % 8 == 0); // output is 64-bit aligned
-	_nassert((int) out0 % 8 == 0); // output is 64-bit aligned
-	_nassert((int) out1 % 8 == 0); // output is 64-bit aligned
-
-#pragma MUST_ITERATE(8, ,8)
-	for(int k=0; k<nIter; k++){
-		__float2_t  v_in0  = _amem8_f2_const(&in0[2*k]);
-		__float2_t  v_in1  = _amem8_f2_const(&in1[2*k]);
-		__float2_t  v_twi  = _amem8_f2_const(&twi64k[2*ratio*(m & qMask)]);
-
-		__float2_t  v_in1Twi =  _complex_mpysp(v_in1, v_twi);
-		__float2_t  v_in1Twi_rev = _ftod(_lof(v_in1Twi), -_hif(v_in1Twi));
-
-		_amem8_f2(&out0[2*k]) = _daddsp(v_in0, v_in1Twi_rev);
-		_amem8_f2(&out1[2*k]) = _dsubsp(v_in0, v_in1Twi_rev);
-
-		m++;
-
-//		float k_r = in0[2*k  ];
-//		float k_i = in0[2*k+1];
-//
-//		float l_r = in1[2*k  ];
-//		float l_i = in1[2*k+1];
-//
-//		float z_r = twi64k[2*ratio*m];
-//		float z_i = twi64k[2*ratio*m+1];
-//
-//		float l2_r = l_r*z_r - l_i*z_i;
-//		float l2_i = l_i*z_r + l_r*z_i;
-//
-//		out0[2*k  ] = k_r + l2_r;
-//		out0[2*k+1] = k_i + l2_i;
-//
-//		out1[2*k  ] = k_r - l2_r;
-//		out1[2*k+1] = k_i - l2_i;
-	}
-
-}
 
 void ordering(Param fftSize, Param NStep, float* in, float *out){
 #if VERBOSE

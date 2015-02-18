@@ -52,7 +52,7 @@ int main(int argc, char* argv[]){
 
 #define SH_MEM 0x00500000
 	initActors();
-	PlatformK2Arm platform(2, 4, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
+	PlatformK2Arm platform(2, 8, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
 	Archi* archi = platform.getArchi();
 
 	int  nIter[3][4];
@@ -72,12 +72,12 @@ int main(int argc, char* argv[]){
 	printf("Start\n");
 
 	try{
-		for(int i=1; i<=5; i++){
+		for(int i=1; i<=4; i++){
 			printf("NStep = %d\n", i);
 			char ganttPath[30];
-			sprintf(ganttPath, "radixFFT_%d.sgantt", i);
+			sprintf(ganttPath, "radixFFT_2_%d.pgantt", i);
 			char srdagPath[30];
-			sprintf(srdagPath, "radixFFT_%d.gv", i);
+			sprintf(srdagPath, "radixFFT_2_%d.gv", i);
 
 			pisdfStack.freeAll();
 

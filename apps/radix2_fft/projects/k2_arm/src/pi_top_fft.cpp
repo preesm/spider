@@ -95,7 +95,6 @@ PiSDFGraph* top_fft(Archi* archi, Stack* stack){
 	bo_Src->addInParam(0, param_fftSize);
 	bo_Src->isExecutableOnPE(CORE_CORE0);
 	bo_Src->setTimingOnType(CORE_TYPE_ARM, "1017649", stack);
-	bo_Src->setTimingOnType(CORE_TYPE_DSP, "1054012", stack);
 
 	PiSDFVertex* bo_Snk = graph->addBodyVertex(
 		/*Name*/    "Snk",
@@ -106,7 +105,6 @@ PiSDFGraph* top_fft(Archi* archi, Stack* stack){
 	bo_Snk->addInParam(0, param_fftSize);
 	bo_Snk->isExecutableOnPE(CORE_CORE0);
 	bo_Snk->setTimingOnType(CORE_TYPE_ARM, "6086602", stack);
-	bo_Snk->setTimingOnType(CORE_TYPE_DSP, "6086602", stack);
 
 	PiSDFVertex* bo_FFT = graph->addHierVertex(
 		/*Name*/    "FFT",
@@ -168,9 +166,8 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 		/*OutParam*/1);
 	cf_configFft->addOutParam(0, param_NStep);
 	cf_configFft->addInParam(0, param_fftSize);
-	cf_configFft->isExecutableOnAllPE();
+	cf_configFft->isExecutableOnPE(CORE_CORE0);;
 	cf_configFft->setTimingOnType(CORE_TYPE_ARM, "2294", stack);
-	cf_configFft->setTimingOnType(CORE_TYPE_DSP, "2294", stack);
 
 	PiSDFVertex* bo_ordering = graph->addBodyVertex(
 		/*Name*/    "ordering",
@@ -182,12 +179,14 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 	bo_ordering->addInParam(1, param_NStep);
 //	bo_ordering->isExecutableOnAllPE();
 	bo_ordering->isExecutableOnPE(CORE_CORE0);
-	bo_ordering->isExecutableOnPE(CORE_DSP0);
-	bo_ordering->isExecutableOnPE(CORE_DSP1);
-	bo_ordering->isExecutableOnPE(CORE_DSP2);
-	bo_ordering->isExecutableOnPE(CORE_DSP3);
+//	bo_ordering->isExecutableOnPE(CORE_DSP0);
+//	bo_ordering->isExecutableOnPE(CORE_DSP1);
+//	bo_ordering->isExecutableOnPE(CORE_DSP2);
+//	bo_ordering->isExecutableOnPE(CORE_DSP3);
 //	bo_ordering->isExecutableOnPE(CORE_DSP4);
 //	bo_ordering->isExecutableOnPE(CORE_DSP5);
+//	bo_ordering->isExecutableOnPE(CORE_DSP6);
+//	bo_ordering->isExecutableOnPE(CORE_DSP7);
 	bo_ordering->setTimingOnType(CORE_TYPE_ARM, "5421680", stack);
 	bo_ordering->setTimingOnType(CORE_TYPE_DSP, "5894265", stack);
 
@@ -199,13 +198,15 @@ PiSDFGraph* FFT(Archi* archi, Stack* stack){
 		/*InParam*/ 2);
 	bo_monoFFT->addInParam(0, param_NStep);
 	bo_monoFFT->addInParam(1, param_fftSize);
-	bo_monoFFT->isExecutableOnPE(CORE_CORE0);
+//	bo_monoFFT->isExecutableOnPE(CORE_CORE0);
 	bo_monoFFT->isExecutableOnPE(CORE_DSP0);
 	bo_monoFFT->isExecutableOnPE(CORE_DSP1);
 	bo_monoFFT->isExecutableOnPE(CORE_DSP2);
 	bo_monoFFT->isExecutableOnPE(CORE_DSP3);
-//	bo_monoFFT->isExecutableOnPE(CORE_DSP4);
-//	bo_monoFFT->isExecutableOnPE(CORE_DSP5);
+	bo_monoFFT->isExecutableOnPE(CORE_DSP4);
+	bo_monoFFT->isExecutableOnPE(CORE_DSP5);
+	bo_monoFFT->isExecutableOnPE(CORE_DSP6);
+	bo_monoFFT->isExecutableOnPE(CORE_DSP7);
 //	bo_monoFFT->isExecutableOnAllPE();
 	bo_monoFFT->setTimingOnType(CORE_TYPE_ARM, "84339721/(2^NStep)", stack);
 	bo_monoFFT->setTimingOnType(CORE_TYPE_DSP, "18764", stack);
@@ -278,9 +279,8 @@ PiSDFGraph* radixReduction(Archi* archi, Stack* stack){
 		/*OutData*/ 2,
 		/*InParam*/ 1);
 	bo_GenSwitchSel->addInParam(0, param_NStep);
-	bo_GenSwitchSel->isExecutableOnAllPE();
+	bo_GenSwitchSel->isExecutableOnPE(CORE_CORE0);
 	bo_GenSwitchSel->setTimingOnType(CORE_TYPE_ARM, "144", stack);
-	bo_GenSwitchSel->setTimingOnType(CORE_TYPE_DSP, "144", stack);
 
 	PiSDFVertex* bo_Br = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
@@ -391,9 +391,8 @@ PiSDFGraph* Switch(Archi* archi, Stack* stack){
 		/*InParam*/ 0,
 		/*OutParam*/1);
 	cf_selcfg->addOutParam(0, param_sel);
-	cf_selcfg->isExecutableOnAllPE();
+	cf_selcfg->isExecutableOnPE(CORE_CORE0);
 	cf_selcfg->setTimingOnType(CORE_TYPE_ARM, "114", stack);
-	cf_selcfg->setTimingOnType(CORE_TYPE_DSP, "114", stack);
 
 	PiSDFVertex* bo_f0 = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_FORK,
@@ -520,9 +519,8 @@ PiSDFGraph* fftStep(Archi* archi, Stack* stack){
 		/*InParam*/ 0,
 		/*OutParam*/1);
 	cf_cfgFftStep->addOutParam(0, param_Step);
-	cf_cfgFftStep->isExecutableOnAllPE();
+	cf_cfgFftStep->isExecutableOnPE(CORE_CORE0);
 	cf_cfgFftStep->setTimingOnType(CORE_TYPE_ARM, "85", stack);
-	cf_cfgFftStep->setTimingOnType(CORE_TYPE_DSP, "85", stack);
 
 	PiSDFVertex* bo_ForkFftStep = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_FORK,
@@ -552,13 +550,15 @@ PiSDFGraph* fftStep(Archi* archi, Stack* stack){
 	bo_fft_radix2->addInParam(1, param_fftSize);
 	bo_fft_radix2->addInParam(2, param_Step);
 //	bo_fft_radix2->isExecutableOnAllPE();
+//	bo_fft_radix2->isExecutableOnPE(CORE_CORE0);
 	bo_fft_radix2->isExecutableOnPE(CORE_DSP0);
 	bo_fft_radix2->isExecutableOnPE(CORE_DSP1);
 	bo_fft_radix2->isExecutableOnPE(CORE_DSP2);
 	bo_fft_radix2->isExecutableOnPE(CORE_DSP3);
-	bo_fft_radix2->isExecutableOnPE(CORE_CORE0);
-	bo_fft_radix2->isExecutableOnPE(CORE_CORE1);
-//	bo_fft_radix2->isExecutableOnPE(CORE_DSP5);
+	bo_fft_radix2->isExecutableOnPE(CORE_DSP4);
+	bo_fft_radix2->isExecutableOnPE(CORE_DSP5);
+	bo_fft_radix2->isExecutableOnPE(CORE_DSP6);
+	bo_fft_radix2->isExecutableOnPE(CORE_DSP7);
 	bo_fft_radix2->setTimingOnType(CORE_TYPE_ARM, "124769", stack);
 	bo_fft_radix2->setTimingOnType(CORE_TYPE_DSP, "16361", stack);
 
@@ -569,9 +569,8 @@ PiSDFGraph* fftStep(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_genIx->addInParam(0, param_NStep);
-	bo_genIx->isExecutableOnAllPE();
+	bo_genIx->isExecutableOnPE(CORE_CORE0);
 	bo_genIx->setTimingOnType(CORE_TYPE_ARM, "192", stack);
-	bo_genIx->setTimingOnType(CORE_TYPE_DSP, "192", stack);
 
 
 	/* Edges */

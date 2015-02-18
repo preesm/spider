@@ -123,7 +123,8 @@ int LRT::runOneJob(){
 			for(int i=0; i<(int)jobMsg->nbOutEdge; i++){
 				Platform::getLrtCommunicator()->data_end_send(&outFifos[i]);
 			}
-			for(int i=0; i<(int)jobMsg->nbOutParam; i++){
+
+			if(jobMsg->nbOutParam != 0){
 				int size = sizeof(ParamValueMsg)+jobMsg->nbOutParam*sizeof(Param);
 				ParamValueMsg* msgParam = (ParamValueMsg*) Platform::getLrtCommunicator()->ctrl_start_send(size);
 				Param* params = (Param*)(msgParam+1);

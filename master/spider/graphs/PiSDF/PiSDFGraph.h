@@ -117,7 +117,7 @@ public:
 	PiSDFEdge* connect(
 			PiSDFVertex* source, int sourcePortId, const char* production,
 			PiSDFVertex* sink, int sinkPortId, const char* consumption,
-			const char* delay);
+			const char* delay, PiSDFVertex* setter);
 
 	void delVertex(PiSDFVertex* vertex);
 	void delParam(PiSDFParam* param);

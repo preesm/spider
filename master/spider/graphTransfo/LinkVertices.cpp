@@ -216,7 +216,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		SRDAGEdge** snkRepetitions;
 
 		bool sinkNeedEnd = false;
-		int beforelastCons;
+		int beforelastCons, firstPiSrcIx;
 		int lastCons;
 
 		int brIx = -1;
@@ -231,6 +231,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				srcRepetitions = CREATE_MUL(stack, 1, SRDAGVertex*);
 				*srcRepetitions = job->configs[edge->getSrc()->getTypeId()];
 				curSourceToken = sourceProduction;
+				firstPiSrcIx = piSrcIx;
 			}else{
 				bool perfectBr = sinkConsumption*nbSinkRepetitions%sourceProduction == 0;
 				int nBr = sinkConsumption*nbSinkRepetitions/sourceProduction;
@@ -240,6 +241,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				nbSourceRepetitions = nBr;
 
 				if(perfectBr){
+					firstPiSrcIx = piSrcIx;
 					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
 					SRDAGEdge* configEdge = job->configs[edge->getSrc()->getTypeId()]->getOutEdge(piSrcIx);
 
@@ -250,6 +252,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					for(int i=0; i<nBr; i++)
 						srcRepetitions[i] = broadcast;
 				}else{
+					firstPiSrcIx = piSrcIx;
 					lastCons = sourceProduction - sinkConsumption*nbSinkRepetitions;
 					sinkNeedEnd = true;
 
@@ -275,8 +278,10 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					srcRepetitions[0] = topSrdag->addRoundBuffer();
 					job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcRepetitions[0], 0);
 					piSrcIx = 0;
+					firstPiSrcIx = piSrcIx;
 				}else{
 					piSrcIx = job->inputIfs[edge->getSrc()->getTypeId()]->getSrcPortIx();
+					firstPiSrcIx = piSrcIx;
 				}
 				curSourceToken = sourceProduction;
 			}else{
@@ -291,6 +296,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
 					SRDAGEdge* interfaceEdge = job->inputIfs[edge->getSrc()->getTypeId()];
 					piSrcIx = job->inputIfs[edge->getSrc()->getTypeId()]->getSrcPortIx();
+					firstPiSrcIx = piSrcIx;
 					brIx = broadcast->getId();
 
 					interfaceEdge->connectSnk(broadcast, 0);
@@ -305,6 +311,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
 					SRDAGEdge* interfaceEdge = job->inputIfs[edge->getSrc()->getTypeId()];
 					piSrcIx = job->inputIfs[edge->getSrc()->getTypeId()]->getSrcPortIx();
+					firstPiSrcIx = piSrcIx;
 					brIx = broadcast->getId();
 
 					interfaceEdge->connectSnk(broadcast, 0);
@@ -321,10 +328,30 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				srcRepetitions = CREATE_MUL(stack, nbSourceRepetitions, SRDAGVertex*);
 				memcpy(srcRepetitions, job->bodies[edge->getSrc()->getTypeId()], nbSourceRepetitions*sizeof(SRDAGVertex*));
 				curSourceToken = sourceProduction;
+				firstPiSrcIx = piSrcIx;
 			}else{
 				srcRepetitions = CREATE_MUL(stack, nbSourceRepetitions+1, SRDAGVertex*);
 
-				srcRepetitions[0] = topSrdag->addInit();
+				if(edge->getDelaySetter()){
+					PiSDFVertex* ifDelaySetter = edge->getDelaySetter();
+					SRDAGEdge* setterEdge = job->inputIfs[ifDelaySetter->getTypeId()];
+					if(setterEdge->getRate() == nbDelays){
+						srcRepetitions[0] = setterEdge->getSrc();
+						if(srcRepetitions[0] == 0){
+							srcRepetitions[0] = topSrdag->addRoundBuffer();
+							job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcRepetitions[0], 0);
+							firstPiSrcIx = 0;
+						}else{
+							firstPiSrcIx = setterEdge->getSrcPortIx();
+						}
+					}else{
+						throw "Setter of a delay must be of the same rate than delay";
+					}
+				}else{
+					srcRepetitions[0] = topSrdag->addInit();
+					firstPiSrcIx = piSrcIx;
+				}
+
 				memcpy(srcRepetitions+1, job->bodies[edge->getSrc()->getTypeId()], nbSourceRepetitions*sizeof(SRDAGVertex*));
 
 				nbSourceRepetitions++;
@@ -509,20 +536,29 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				if(sourceVertex->getId() == brIx){
 					sourcePortId = sourceVertex->getNConnectedOutEdge();
 				}else{
-					sourcePortId = piSrcIx;
+					if(sourceIndex == 0)
+						sourcePortId = firstPiSrcIx;
+					else
+						sourcePortId = piSrcIx;
 				}
 				break;
 			case SRDAG_FORK:
 				if(sourceVertex->getId() == forkIx)
 					sourcePortId = sourceVertex->getNConnectedOutEdge();
 				else
-					sourcePortId = piSrcIx;
+					if(sourceIndex == 0)
+						sourcePortId = firstPiSrcIx;
+					else
+						sourcePortId = piSrcIx;
 				break;
 			case SRDAG_INIT:
 				sourcePortId = 0;
 				break;
 			default:
-				sourcePortId = piSrcIx;
+				if(sourceIndex == 0)
+					sourcePortId = firstPiSrcIx;
+				else
+					sourcePortId = piSrcIx;
 				break;
 			}
 

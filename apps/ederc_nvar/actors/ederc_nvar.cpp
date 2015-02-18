@@ -40,7 +40,7 @@
 
 #define VERBOSE 0
 
-#define M_VAL 2
+#define M_VAL 10
 #define NB_TAPS 512
 
 void config(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){

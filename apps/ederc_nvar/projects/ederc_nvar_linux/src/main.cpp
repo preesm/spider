@@ -66,7 +66,7 @@ int main(int argc, char* argv[]){
 	printf("Start\n");
 
 //	try{
-		for(int iter=1; iter<=1; iter++){
+		for(int iter=1; iter<=12; iter++){
 			printf("N=%d\n", iter);
 			char ganttPath[30];
 			sprintf(ganttPath, "ederc_nvar_%d.sgantt", iter);
@@ -75,7 +75,7 @@ int main(int argc, char* argv[]){
 
 			pisdfStack.freeAll();
 
-			PiSDFGraph *topPisdf = initPisdf_ederc_nvar(archi, &pisdfStack, 12, 12, 4000, 1);
+			PiSDFGraph *topPisdf = initPisdf_ederc_nvar(archi, &pisdfStack, iter, 12, 4000, 1);
 //			topPisdf->print("topPisdf.gv");
 
 			Platform::get()->rstTime();

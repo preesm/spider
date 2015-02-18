@@ -40,131 +40,6 @@
 /****************************     TEST 6     ***********************************/
 /*******************************************************************************/
 
-PiSDFGraph* switch_sub(Archi* archi, Stack* stack){
-	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
-			/*Edges*/ 	8,
-			/*Params*/	2,
-			/*InIf*/	3,
-			/*OutIf*/	1,
-			/*Config*/	1,
-			/*Normal*/	5,
-			archi,
-			stack);
-
-	// Parameters.
-	PiSDFParam* paramSel = graph->addDynamicParam("Sel");
-	PiSDFParam* paramNSamples = graph->addHeritedParam("NSamples", 0);
-
-	// Configure vertices
-	PiSDFVertex *vxSelCfg = graph->addConfigVertex(
-			"SelCfg", /*Fct*/ 4,
-			PISDF_SUBTYPE_NORMAL,
-			/*In*/ 1,  /*Out*/ 0,
-			/*Par*/ 0, /*Cfg*/ 1);
-	vxSelCfg->addOutParam(0, paramSel);
-
-	// Interfaces
-	PiSDFVertex *ifIn0 = graph->addInputIf(
-			"In0",
-			1 /*Par*/);
-	ifIn0->addInParam(0, paramNSamples);
-
-	PiSDFVertex *ifIn1 = graph->addInputIf(
-			"In1",
-			1 /*Par*/);
-	ifIn1->addInParam(0, paramNSamples);
-
-	PiSDFVertex *ifSel = graph->addInputIf(
-			"Sel",
-			0 /*Par*/);
-
-	PiSDFVertex *ifOut = graph->addOutputIf(
-			"out",
-			1 /*Par*/);
-	ifOut->addInParam(0, paramNSamples);
-
-	// Other vertices
-	PiSDFVertex *vxF0 = graph->addSpecialVertex(
-			PISDF_SUBTYPE_FORK,
-			/*In*/ 1, /*Out*/ 2,
-			/*Par*/ 2);
-	vxF0->addInParam(0, paramSel);
-	vxF0->addInParam(1, paramNSamples);
-
-	PiSDFVertex *vxF1 = graph->addSpecialVertex(
-			PISDF_SUBTYPE_FORK,
-			/*In*/ 1, /*Out*/ 2,
-			/*Par*/ 2);
-	vxF1->addInParam(0, paramSel);
-	vxF1->addInParam(1, paramNSamples);
-
-	PiSDFVertex *vxJ = graph->addSpecialVertex(
-			PISDF_SUBTYPE_JOIN,
-			/*In*/ 2, /*Out*/ 1,
-			/*Par*/ 2);
-	vxJ->addInParam(0, paramSel);
-	vxJ->addInParam(1, paramNSamples);
-
-	PiSDFVertex *vxE0 = graph->addSpecialVertex(
-			PISDF_SUBTYPE_END,
-			/*In*/ 1, /*Out*/ 0,
-			/*Par*/ 2);
-	vxE0->addInParam(0, paramSel);
-	vxE0->addInParam(1, paramNSamples);
-
-	PiSDFVertex *vxE1 = graph->addSpecialVertex(
-			PISDF_SUBTYPE_END,
-			/*In*/ 1, /*Out*/ 0,
-			/*Par*/ 2);
-	vxE1->addInParam(0, paramSel);
-	vxE1->addInParam(1, paramNSamples);
-
-	// Edges.
-	graph->connect(
-			/*Src*/ ifSel, 	/*SrcPrt*/ 0, /*Prod*/ "1",
-			/*Snk*/ vxSelCfg, /*SnkPrt*/ 0, /*Cons*/ "1",
-			/*Delay*/ "0", 0);
-
-	graph->connect(
-			/*Src*/ ifIn0,	/*SrcPrt*/ 0, /*Prod*/ "4*NSamples",
-			/*Snk*/ vxF0,	/*SnkPrt*/ 0, /*Cons*/ "4*NSamples",
-			/*Delay*/ "0", 0);
-
-	graph->connect(
-			/*Src*/ ifIn1,	/*SrcPrt*/ 0, /*Prod*/ "4*NSamples",
-			/*Snk*/ vxF1,	/*SnkPrt*/ 0, /*Cons*/ "4*NSamples",
-			/*Delay*/ "0", 0);
-
-	graph->connect(
-			/*Src*/ vxF0,	/*SrcPrt*/ 0, /*Prod*/ "4*NSamples*Sel",
-			/*Snk*/ vxE0, 	/*SnkPrt*/ 0, /*Cons*/ "4*NSamples*Sel",
-			/*Delay*/ "0", 0);
-
-	graph->connect(
-			/*Src*/ vxF0,	/*SrcPrt*/ 1, /*Prod*/ "(1-Sel)*4*NSamples",
-			/*Snk*/ vxJ, 	/*SnkPrt*/ 0, /*Cons*/ "(1-Sel)*4*NSamples",
-			/*Delay*/ "0", 0);
-
-	graph->connect(
-			/*Src*/ vxF1,	/*SrcPrt*/ 0, /*Prod*/ "(1-Sel)*4*NSamples",
-			/*Snk*/ vxE1, 	/*SnkPrt*/ 0, /*Cons*/ "(1-Sel)*4*NSamples",
-			/*Delay*/ "0", 0);
-
-	graph->connect(
-			/*Src*/ vxF1,	/*SrcPrt*/ 1, /*Prod*/ "4*NSamples*Sel",
-			/*Snk*/ vxJ, 	/*SnkPrt*/ 1, /*Cons*/ "4*NSamples*Sel",
-			/*Delay*/ "0", 0);
-
-	graph->connect(
-			/*Src*/ vxJ, 	/*SrcPrt*/ 0, /*Prod*/ "4*NSamples",
-			/*Snk*/ ifOut, 	/*SnkPrt*/ 0, /*Cons*/ "4*NSamples",
-			/*Delay*/ "0", 0);
-
-	vxSelCfg->isExecutableOnAllPE();
-	vxSelCfg->setTimingOnType(0, "200", stack);
-	return graph;
-}
-
 PiSDFGraph* ederc_nvar_sub(Archi* archi, Stack* stack){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
 			/*Edges*/ 	7,
@@ -204,25 +79,17 @@ PiSDFGraph* ederc_nvar_sub(Archi* archi, Stack* stack){
 	ifOut->addInParam(0, paramNSamples);
 
 	// Other vertices
-	PiSDFVertex *vxInitSwitch = graph->addBodyVertex(
-			"InitSwitch", /*Fct*/ 5,
+	PiSDFVertex *vxInitFir = graph->addBodyVertex(
+			"InitFir", /*Fct*/ 5,
 			/*In*/ 0, /*Out*/ 1,
 			/*Par*/ 1);
-	vxInitSwitch->addInParam(0, paramM);
-
-//	PiSDFVertex *vxSwitch = graph->addBodyVertex(
-//			"Switch", /*Fct*/ 6,
-//			/*In*/ 3, /*Out*/ 1,
-//			/*Par*/ 1);
-	PiSDFVertex *vxSwitch = graph->addHierVertex(
-			"Switch", switch_sub(archi, stack),
-			/*In*/ 3, /*Out*/ 1,
-			/*Par*/ 1);
-	vxSwitch->addInParam(0, paramNSamples);
+	vxInitFir->addInParam(0, paramM);
 
 	PiSDFVertex *vxFIR = graph->addBodyVertex(
-			"FIR", /*Fct*/ 7,
-			/*In*/ 1, /*Out*/ 1,
+			"FIR",
+			/*Fct*/ 7,
+			/*In*/ 2,
+			/*Out*/ 1,
 			/*Par*/ 1);
 	vxFIR->addInParam(0, paramNSamples);
 
@@ -239,23 +106,13 @@ PiSDFGraph* ederc_nvar_sub(Archi* archi, Stack* stack){
 			/*Delay*/ "0", 0);
 
 	graph->connect(
-			/*Src*/ vxInitSwitch, 	/*SrcPrt*/ 0, /*Prod*/ "M",
-			/*Snk*/ vxSwitch, 		/*SnkPrt*/ 2, /*Cons*/ "1",
-			/*Delay*/ "0", 0);
+			/*Src*/ vxBr, 	/*SrcPrt*/ 0, /*Prod*/ "4*NSamples",
+			/*Snk*/ vxFIR, 	/*SnkPrt*/ 0, /*Cons*/ "4*NSamples",
+			/*Delay*/ "4*NSamples", ifIn);
 
 	graph->connect(
-			/*Src*/ ifIn, 		/*SrcPrt*/ 0, /*Prod*/ "4*NSamples",
-			/*Snk*/ vxSwitch, 	/*SnkPrt*/ 0, /*Cons*/ "4*NSamples",
-			/*Delay*/ "0", 0);
-
-	graph->connect(
-			/*Src*/ vxBr, 		/*SrcPrt*/ 0, /*Prod*/ "4*NSamples",
-			/*Snk*/ vxSwitch, 	/*SnkPrt*/ 1, /*Cons*/ "4*NSamples",
-			/*Delay*/ "4*NSamples", 0);
-
-	graph->connect(
-			/*Src*/ vxSwitch, 	/*SrcPrt*/ 0, /*Prod*/ "4*NSamples",
-			/*Snk*/ vxFIR, 		/*SnkPrt*/ 0, /*Cons*/ "4*NSamples",
+			/*Src*/ vxInitFir, 	/*SrcPrt*/ 0, /*Prod*/ "M",
+			/*Snk*/ vxFIR, 		/*SnkPrt*/ 1, /*Cons*/ "1",
 			/*Delay*/ "0", 0);
 
 	graph->connect(
@@ -271,10 +128,8 @@ PiSDFGraph* ederc_nvar_sub(Archi* archi, Stack* stack){
 	// Timings
 	vxSetM->isExecutableOnAllPE();
 	vxSetM->setTimingOnType(0, "200", stack);
-	vxInitSwitch->isExecutableOnAllPE();
-	vxInitSwitch->setTimingOnType(0, "70", stack);
-	vxSwitch->isExecutableOnAllPE();
-	vxSwitch->setTimingOnType(0, "1600", stack);
+	vxInitFir->isExecutableOnAllPE();
+	vxInitFir->setTimingOnType(0, "70", stack);
 	vxFIR->isExecutableOnAllPE();
 	vxFIR->setTimingOnType(0, "5501132/60", stack);
 	vxBr->isExecutableOnAllPE();

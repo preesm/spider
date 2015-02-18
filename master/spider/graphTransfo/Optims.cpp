@@ -337,7 +337,7 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 				int totProd = 0;
 
 				int sourceIndex=0, sinkIndex=0;
-#define MAX_SRDAG_INPUT_EDGES 100
+#define MAX_SRDAG_INPUT_EDGES 1000
 
 				SRDAGVertex* sources[MAX_SRDAG_INPUT_EDGES];
 				int sourceProds[MAX_SRDAG_INPUT_EDGES];

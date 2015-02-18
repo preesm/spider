@@ -218,6 +218,9 @@ static void sysInit (int memFile){
 	data_desc = (void*)(align((int)descriptors + CTRL_DESC_POOL_SIZE));
 	trace_desc = (void*)(align((int)data_desc + DATA_DESC_POOL_SIZE));
 
+	if((int)trace_desc - (int)descriptors > QMSS_DESC_END-QMSS_DESC_BASE)
+		throw "Alloc to many desc memory";
+
     /* Setup memory region for Ctrl descriptors */
     memset(&regionCfg, 0, sizeof(regionCfg));
     memset(ctrl_desc, 0, CTRL_DESC_POOL_SIZE);

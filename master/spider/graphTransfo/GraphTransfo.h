@@ -45,7 +45,7 @@
 
 #include <spider.h>
 
-#define MAX_IO_EDGES 100
+#define MAX_IO_EDGES 1000
 
 typedef struct transfoJob{
 	PiSDFGraph* graph;

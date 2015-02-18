@@ -73,10 +73,13 @@ static float gen_twi8k [2*8*1024];
 static float gen_twi4k [2*4*1024];
 static float gen_twi2k [2*2*1024];
 static float gen_twi1k [2*1024];
+static float gen_twi256 [2*256];
 
 void tw_gen (float *w, int n);
+void initActors2();
 
 void initActors(){
+	initActors2();
 	for(int i=0; i<32*1024; i++){
 		twi64k_r[i] = cos(-2*M_PI*i/(64*1024));
 		twi64k_i[i] = sin(-2*M_PI*i/(64*1024));
@@ -87,16 +90,7 @@ void initActors(){
 	tw_gen(gen_twi4k,   4*1024);
 	tw_gen(gen_twi2k,   2*1024);
 	tw_gen(gen_twi1k,     1024);
-}
-
-static inline float getTwi_r(int m, int q){
-//	return cos(-2*M_PI*m/q);
-	return twi64k_r[64*1024/q*m];
-}
-
-static inline float getTwi_i(int m, int q){
-//	return sin(-2*M_PI*m/q);
-	return twi64k_i[m*64*1024/q];
+	tw_gen(gen_twi256,     256);
 }
 
 /* Function for generating Specialized sequence of twiddle factors */
@@ -208,85 +202,16 @@ void snk(Param fftSize, float *in){
     printf("SNR %f dB\n", snrVal);
 }
 
-void fftRadix4(
-		Param NStep,
-		Param fftSize,
-		Param Step,
-		float* in0,
-		float* in1,
-		float* in2,
-		float* in3,
-		char*  ix,
-		float* out0,
-		float* out1,
-		float* out2,
-		float* out3){
-#if VERBOSE
-	printf("Execute fftRadix4\n");
-#endif
-
-	int id = *ix;
-	int p = 1<<NStep;
-	int n = fftSize;
-	int mask = ((1<<NStep)-1) ^ ((1<<Step)-1);
-	int proc = ((id & mask)<<1) + ( id & (~mask & (p-1)) );
-//	printf("mixFFT : n%d p%d step%d id%d proc%d mask %#x %#x\n", n, p, step, id, proc, mask, ~mask & (p-1));
-	for(int k=0; k<n/p; k++){
-		int q = 1 << (int)(Step+1+log2(n)-log2(p));
-		int m = (proc*n/p+k) % q;
-
-		float i0r = in0[2*k  ];
-		float i0i = in0[2*k+1];
-		float i1r = in1[2*k  ];
-		float i1i = in1[2*k+1];
-		float i2r = in2[2*k  ];
-		float i2i = in2[2*k+1];
-		float i3r = in3[2*k  ];
-		float i3i = in3[2*k+1];
-
-		float Ar = i0r + i1r + i2r + i3r;
-		float Br = i0r - i1r + i2r - i3r;
-		float Cr = i0r + i1i - i2r - i3i;
-		float Dr = i0r - i1i - i2r + i3i;
-
-		float Ai = i0i + i1i + i2i + i3i;
-		float Bi = i0i - i1i + i2i - i3i;
-		float Ci = i0i - i1r - i2i + i3r;
-		float Di = i0i + i1r - i2i - i3r;
-
-//		float z_r = cos(-2*M_PI*m/q);
-//		float z_i = sin(-2*M_PI*m/q);
-
-//		float z_r = getTwi_r(m,q);
-//		float z_i = getTwi_i(m,q);
-
-//		float l2_r = l_r*z_r - l_i*z_i;
-//		float l2_i = l_i*z_r + l_r*z_i;
-
-		int
-		out0[2*k  ] = Ar ;
-		out0[2*k+1] = Ai;
-
-		out1[2*k  ] = Br * cos(-2*M_PI*m*1/q);
-		out1[2*k+1] = Bi * sin(-2*M_PI*m*1/q);
-
-		out2[2*k  ] = Cr * cos(-2*M_PI*m/q);
-		out2[2*k+1] = Ci * sin(-2*M_PI*m/q);
-
-		out3[2*k  ] = Dr * cos(-2*M_PI*m/q);
-		out3[2*k+1] = Di * sin(-2*M_PI*m/q);
-	}
-}
-
 void ordering(Param fftSize, Param NStep, float* in, float *out){
 #if VERBOSE
 	printf("Execute ordering\n");
 #endif
-	int P = 1<<NStep;
-	for(int proc=0; proc<P; proc++){
-		for(int k=0; k<fftSize/P; k++){
-			out[2*(proc*fftSize/P+k)  ] = in[2*(bitRev(proc, NStep)+k*P)  ];
-			out[2*(proc*fftSize/P+k)+1] = in[2*(bitRev(proc, NStep)+k*P)+1];
+	int nVectors = 1<<(2*NStep);
+	int vectorSize = fftSize/nVectors;
+	for(int vect=0; vect<nVectors; vect++){
+		for(int k=0; k<vectorSize; k++){
+			out[2*(vect*vectorSize+k)  ] = in[2*(bitRev(vect, 2*NStep)+k*nVectors)  ];
+			out[2*(vect*vectorSize+k)+1] = in[2*(bitRev(vect, 2*NStep)+k*nVectors)+1];
 		}
 	}
 }
@@ -303,7 +228,7 @@ void fft(
 	printf("Execute fft\n");
 #endif
 
-	int localFFTSize = fftSize/(1<<NStep);
+	int localFFTSize = fftSize/(1<<(2*NStep));
 
 	int rad;
 	int j = 0;
@@ -338,6 +263,9 @@ void fft(
 	case    1024:
 		w = gen_twi1k;
 		break;
+	case    256:
+		w = gen_twi256;
+		break;
 	default:
 		printf("Error no twiddles computed for %d\n", localFFTSize);
 		return;
@@ -370,7 +298,7 @@ void genIx(Param NStep, char* ixs){
 	printf("Execute genIx\n");
 #endif
 
-	int maxIds = 1<<(NStep-1);
+	int maxIds = 1<<(2*(NStep-1));
 	for(int i=0; i<maxIds; i++){
 		ixs[i] = i;
 	}

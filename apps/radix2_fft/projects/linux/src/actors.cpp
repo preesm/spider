@@ -209,33 +209,11 @@ void snk(Param fftSize, float *in){
 }
 
 void mixFFT(int n, int p, int step, int id, float* in0, float* in1, float* out0, float* out1){
-	int mask = (p-1) ^ ((1<<step)-1);
-	int proc = ((id & mask)<<1) + ( id & (~mask & (p-1)) );
-//	printf("mixFFT : n%d p%d step%d id%d proc%d mask %#x %#x\n", n, p, step, id, proc, mask, ~mask & (p-1));
-	for(int k=0; k<n/p; k++){
-		int q = 1 << (int)(step+1+log2(n)-log2(p));
-		int m = (proc*n/p+k) % q;
 
-		float k_r = in0[2*k  ];
-		float k_i = in0[2*k+1];
-		float l_r = in1[2*k  ];
-		float l_i = in1[2*k+1];
+}
 
-//		float z_r = cos(-2*M_PI*m/q);
-//		float z_i = sin(-2*M_PI*m/q);
-
-		float z_r = getTwi_r(m,q);
-		float z_i = getTwi_i(m,q);
-
-		float l2_r = l_r*z_r - l_i*z_i;
-		float l2_i = l_i*z_r + l_r*z_i;
-
-		out0[2*k  ] = k_r + l2_r;
-		out0[2*k+1] = k_i + l2_i;
-
-		out1[2*k  ] = k_r - l2_r;
-		out1[2*k+1] = k_i - l2_i;
-	}
+static inline int remBit(int n, int bit){
+	return ((n >> (bit+1)) << bit) + (n & ((1<<bit)-1));
 }
 
 void fftRadix2(
@@ -251,7 +229,48 @@ void fftRadix2(
 	printf("Execute fftRadix2\n");
 #endif
 
-	mixFFT(fftSize, 1<<NStep, Step, *ix, in0, in1, out0, out1);
+
+	int localSize = fftSize/(1<<NStep);
+	int id = *ix % (1<<Step);
+	int increment = 1 << (NStep-Step-1);
+
+	for(int k=0; k<localSize; k++){
+		int m = (id * localSize + k) * increment;
+
+//		printf("m/q%d == %f\n", m, fftSize*((1.*id/(1 << (Step+1))) + 1.*k/(localSize*(1<<(Step+1)))));
+
+		float i0r = in0[2*k  ];
+		float i0i = in0[2*k+1];
+		float i1r = in1[2*k  ];
+		float i1i = in1[2*k+1];
+
+		float Ar = i0r;
+		float Ai = i0i;
+		float Br = i1r*cos(-2*M_PI*m/fftSize) - i1i*sin(-2*M_PI*m/fftSize);
+		float Bi = i1r*sin(-2*M_PI*m/fftSize) + i1i*cos(-2*M_PI*m/fftSize);
+
+		out0[2*k  ] = Ar + Br;
+		out0[2*k+1] = Ai + Bi;
+
+		out1[2*k  ] = Ar - Br;
+		out1[2*k+1] = Ai - Bi;
+
+
+//		float z_r = cos(-2*M_PI*m/fftSize);
+//		float z_i = sin(-2*M_PI*m/fftSize);
+//
+//		float z_r = getTwi_r(m,q);
+//		float z_i = getTwi_i(m,q);
+//
+//		float l2_r = l_r*z_r - l_i*z_i;
+//		float l2_i = l_i*z_r + l_r*z_i;
+//
+//		out0[2*k  ] = k_r + l2_r;
+//		out0[2*k+1] = k_i + l2_i;
+//
+//		out1[2*k  ] = k_r - l2_r;
+//		out1[2*k+1] = k_i - l2_i;
+	}
 }
 
 void ordering(Param fftSize, Param NStep, float* in, float *out){

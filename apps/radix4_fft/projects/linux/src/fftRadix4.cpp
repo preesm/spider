@@ -34,93 +34,96 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <spider.h>
-#include <platformLinux.h>
-#include "pi_top_fft.h"
+#include <platform.h>
+
+#include "actors.h"
+#include "data_sp.h"
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+#include <assert.h>
 
-void initActors();
+#ifndef M_PI
+#define M_PI 3.14159265359
+#endif
 
-int main(int argc, char* argv[]){
-	SpiderConfig cfg;
-	ExecutionStat stat;
+#define VERBOSE 0
 
-	initActors();
+#pragma DATA_SECTION(".twiddles")
+static float twi64k[2*64*1024];
 
-	DynStack pisdfStack("PisdfStack");
-	DynStack archiStack("ArchiStack");
-
-//#define SH_MEM 0x00500000
-#define SH_MEM 0x10000000
-	PlatformLinux platform(1, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
-	Archi* archi = platform.getArchi();
-
-	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
-	cfg.memAllocStart = (void*)0;
-	cfg.memAllocSize = SH_MEM;
-
-	cfg.schedulerType = SCHEDULER_LIST;
-
-	cfg.srdagStack = {STACK_DYNAMIC, "SrdagStack", 0, 0};
-	cfg.transfoStack = {STACK_DYNAMIC, "TransfoStack", 0, 0};
-
-	spider_init(cfg);
-
-	printf("Start\n");
-
-//	try{
-	for(int i=1; i<=3; i++){
-//		printf("NStep = %d\n", i);
-		char ganttPath[30];
-		sprintf(ganttPath, "radixFFT_%d.sgantt", i);
-		char srdagPath[30];
-		sprintf(srdagPath, "radixFFT_%d.gv", i);
-
-		pisdfStack.freeAll();
-
-		PiSDFGraph *topPisdf = init_top_fft(archi, &pisdfStack);
-		topPisdf->print("topPisdf.gv");
-
-		Platform::get()->rstTime();
-
-		spider_launch(archi, topPisdf);
-//
-		spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
-		spider_getLastSRDAG()->print(srdagPath);
-
-		printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
-
-		printf("Memory use = ");
-		if(stat.memoryUsed < 1024)
-			printf("\t%5.1f B", stat.memoryUsed/1.);
-		else if(stat.memoryUsed < 1024*1024)
-			printf("\t%5.1f KB", stat.memoryUsed/1024.);
-		else if(stat.memoryUsed < 1024*1024*1024)
-			printf("\t%5.1f MB", stat.memoryUsed/1024./1024.);
-		else
-			printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
-		printf("\n");
-
-//		printf("Actors:\n");
-//		for(int j=0; j<stat.nbActor; j++){
-//			printf("\t%12s:", stat.actors[j]->getName());
-//			for(int k=0; k<archi->getNPETypes(); k++)
-//				printf("\t%d (x%d)",
-//						stat.actorTimes[j][k]/stat.actorIterations[j][k],
-//						stat.actorIterations[j][k]);
-//			printf("\n");
-//		}
-
-		free_top_fft(topPisdf, &pisdfStack);
+void initActors2(){
+	for(int i=0; i<64*1024; i++){
+		twi64k[2*i  ] = cos(-2*M_PI*i/(64*1024));
+		twi64k[2*i+1] = sin(-2*M_PI*i/(64*1024));
 	}
-//	}catch(const char* s){
-//		printf("Exception : %s\n", s);
-//	}
-	printf("finished\n");
+}
 
-	spider_free();
+void fftRadix4(
+		Param NStep,
+		Param fftSize,
+		Param Step,
+		float* p_in0,
+		float* p_in1,
+		float* p_in2,
+		float* p_in3,
+		char*  ix,
+		float* p_out0,
+		float* p_out1,
+		float* p_out2,
+		float* p_out3){
+#if VERBOSE
+	printf("Execute fftRadix4 %d %d\n", Step, *ix);
+#endif
 
-	return 0;
+	int id	  = *ix;
+	int nStage = NStep;
+	int stage = Step;
+	int nVectors = 1<<(2*NStep);
+	int vectorSize = fftSize/nVectors;
+
+	int m = (id % (1<<(2*stage)))*vectorSize;
+	int incr = 1<<(2*(nStage-stage-1));
+
+	for(int k=0; k<vectorSize; k++){
+		float* in0  = &p_in0[2*k];
+		float* in1  = &p_in1[2*k];
+		float* in2  = &p_in2[2*k];
+		float* in3  = &p_in3[2*k];
+
+		int r = (k+m)*incr;
+
+		/* Get the m/q twiddle factor */
+		float* twi1  = &twi64k[2*((2*r)%(64*1024))];
+		float* twi2  = &twi64k[2*((  r)%(64*1024))];
+		float* twi3  = &twi64k[2*((3*r)%(64*1024))];
+
+		float win1_r = in1[0]*twi1[0] - in1[1]*twi1[1];
+		float win1_i = in1[0]*twi1[1] + in1[1]*twi1[0];
+
+		float win2_r = in2[0]*twi2[0] - in2[1]*twi2[1];
+		float win2_i = in2[0]*twi2[1] + in2[1]*twi2[0];
+
+		float win3_r = in3[0]*twi3[0] - in3[1]*twi3[1];
+		float win3_i = in3[0]*twi3[1] + in3[1]*twi3[0];
+
+		float a0_r = in0[0] + win1_r;
+		float a0_i = in0[1] + win1_i;
+		float s0_r = in0[0] - win1_r;
+		float s0_i = in0[1] - win1_i;
+		float a1_r = win2_r + win3_r;
+		float a1_i = win2_i + win3_i;
+		float s1_r = -(win2_i - win3_i);
+		float s1_i = win2_r - win3_r;
+
+		p_out0[2*k  ] = a0_r + a1_r;
+		p_out0[2*k+1] = a0_i + a1_i;
+		p_out1[2*k  ] = s0_r - s1_r;
+		p_out1[2*k+1] = s0_i - s1_i;
+		p_out2[2*k  ] = a0_r - a1_r;
+		p_out2[2*k+1] = a0_i - a1_i;
+		p_out3[2*k  ] = s0_r + s1_r;
+		p_out3[2*k+1] = s0_i + s1_i;
+	}
 }

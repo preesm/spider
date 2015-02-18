@@ -600,7 +600,7 @@ PiSDFGraph* fftStep(Archi* archi, Stack* stack){
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_genIx, /*SrcPrt*/ 0, /*Prod*/ "1*(2^(NStep-1))",
+		/*Src*/ bo_genIx, /*SrcPrt*/ 0, /*Prod*/ "1*(4^(NStep-1))",
 		/*Snk*/ bo_fft_radix4, /*SnkPrt*/ 4, /*Cons*/ "1*(1)",
 		/*Delay*/ "0",0);
 

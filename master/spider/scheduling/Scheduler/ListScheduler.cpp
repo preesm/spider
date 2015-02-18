@@ -214,16 +214,16 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 			Time execTime  = vertex->executionTimeOn(slaveType);
 			Time comInTime = 0, comOutTime = 0;
 			/** TODO compute communication time */
-			for(int input=0; input<vertex->getNConnectedInEdge(); input++){
-				if(vertex->getInEdge(input)->getSrc()->getSlave() != pe)
-					comInTime += 1000;
-//				comInTime += arch->getTimeCom(slave, Read, vertex->getInputEdge(input)->getTokenRate());
-			}
-			for(int output=0; output<vertex->getNConnectedOutEdge(); output++){
-				if(vertex->getOutEdge(output)->getSnk()->getSlave() != pe)
-					comOutTime += 1000;
-//				comOutTime += arch->getTimeCom(slave, Write, vertex->getOutputEdge(output)->getTokenRate());
-			}
+//			for(int input=0; input<vertex->getNConnectedInEdge(); input++){
+//				if(vertex->getInEdge(input)->getSrc()->getSlave() != pe)
+//					comInTime += 1000;
+////				comInTime += arch->getTimeCom(slave, Read, vertex->getInputEdge(input)->getTokenRate());
+//			}
+//			for(int output=0; output<vertex->getNConnectedOutEdge(); output++){
+//				if(vertex->getOutEdge(output)->getSnk()->getSlave() != pe)
+//					comOutTime += 1000;
+////				comOutTime += arch->getTimeCom(slave, Write, vertex->getOutputEdge(output)->getTokenRate());
+//			}
 			Time endTime = startTime + execTime + comInTime + comOutTime;
 			if(endTime < bestEndTime
 					|| (endTime == bestEndTime && waitTime<bestWaitTime)){

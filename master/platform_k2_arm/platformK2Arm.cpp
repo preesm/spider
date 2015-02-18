@@ -276,6 +276,16 @@ void PlatformK2Arm::rstTime(){
 	regs->CNTHI = 0;
 	CSL_FINS(regs->TGCR, TMR_TGCR_TIMHIRS, 1); 	// Release reset
 	CSL_FINS(regs->TGCR, TMR_TGCR_TIMLORS, 1); 	// Release reset
+
+	for(int lrt=0; lrt<archi_->getNPE(); lrt++){
+		int size = sizeof(ClearTimeMsg);
+		ClearTimeMsg* msg = (ClearTimeMsg*) getSpiderCommunicator()->ctrl_start_send(lrt, size);
+
+		msg->msgIx = MSG_CLEAR_TIME;
+
+		getSpiderCommunicator()->ctrl_end_send(lrt, size);
+	}
+
 }
 
 Time PlatformK2Arm::getTime(){

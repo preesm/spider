@@ -144,8 +144,18 @@ static inline void initTime(){
 	regs = (CSL_TmrRegsOvly)CSL_TIMER_0_REGS;
 }
 
+static clock_t base;
+
 void PlatformK2Dsp::rstTime(ClearTimeMsg* msg){
 	/* Nothing to do, time reset do not send messages */
+	CSL_Uint64 val;
+	val = regs->CNTHI;
+	val = (val<<32) + regs->CNTLO;
+	timeBase_ = val;
+
+    /* Initialize timer for clock */
+    TSCL= 0,TSCH=0;
+    base = _itoll(TSCH, TSCL);
 }
 
 void PlatformK2Dsp::rstTime(){
@@ -153,9 +163,7 @@ void PlatformK2Dsp::rstTime(){
 }
 
 Time PlatformK2Dsp::getTime(){
-	CSL_Uint64 val;
-	val = regs->CNTHI;
-	val = (val<<32) + regs->CNTLO;
-	return val*5; /* 200MHz to 1GHz */
+	clock_t t = (_itoll(TSCH, TSCL)-base);
+	return (t+timeBase_*6)/1.2; /* 200MHz to 1GHz */
 }
 

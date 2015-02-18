@@ -65,8 +65,8 @@ typedef struct {
 } MonoPcktDesc;
 #define MONO_PACKET_SIZE	sizeof(MonoPcktDesc)
 
-#define CTRL_DESC_SIZE			1024
-#define CTRL_DESC_NB			128
+#define CTRL_DESC_SIZE			2048
+#define CTRL_DESC_NB			256
 #define CTRL_DESC_POOL_SIZE		CTRL_DESC_SIZE*CTRL_DESC_NB
 
 #define DATA_DESC_SIZE			64

@@ -225,9 +225,9 @@ PiSDFParam* PiSDFGraph::addDynamicParam(const char* name){
 	return param;
 }
 
-PiSDFEdge* PiSDFGraph::addEdge(int nParam) {
+PiSDFEdge* PiSDFGraph::addEdge() {
 	PiSDFEdge* edge = CREATE(stack_, PiSDFEdge)(
-			this, nParam, stack_);
+			this, stack_);
 	edges_.add(edge);
 	return edge;
 }
@@ -235,11 +235,11 @@ PiSDFEdge* PiSDFGraph::addEdge(int nParam) {
 PiSDFEdge* PiSDFGraph::connect(
 		PiSDFVertex* src, int srcPortId, const char* prod,
 		PiSDFVertex* snk, int snkPortId, const char* cons,
-		const char* delay, int nParam){
-	PiSDFEdge* edge = this->addEdge(nParam);
+		const char* delay, PiSDFVertex* setter){
+	PiSDFEdge* edge = this->addEdge();
 	edge->connectSrc(src, srcPortId, prod, stack_);
 	edge->connectSnk(snk, snkPortId, cons, stack_);
-	edge->setDelay(delay, stack_);
+	edge->setDelay(delay, setter, stack_);
 	src->connectOutEdge(srcPortId, edge);
 	snk->connectInEdge(snkPortId, edge);
 	return edge;

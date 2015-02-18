@@ -117,7 +117,7 @@ public:
 	PiSDFEdge* connect(
 			PiSDFVertex* source, int sourcePortId, const char* production,
 			PiSDFVertex* sink, int sinkPortId, const char* consumption,
-			const char* delay, int nParam);
+			const char* delay, PiSDFVertex* setter);
 
 	void delVertex(PiSDFVertex* vertex);
 	void delParam(PiSDFParam* param);
@@ -135,7 +135,7 @@ private:
 	Archi* archi_;
 	Stack* stack_;
 
-	PiSDFEdge* addEdge(int nInParam);
+	PiSDFEdge* addEdge();
 };
 
 /** Inline Fcts */

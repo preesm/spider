@@ -43,7 +43,6 @@ int PiSDFEdge::globalId = 0;
 
 PiSDFEdge::PiSDFEdge(
 		PiSDFGraph* graph,
-		int nParam,
 		Stack* stack){
 	id_ = globalId++;
 	graph_ = graph;
@@ -52,11 +51,9 @@ PiSDFEdge::PiSDFEdge(
 	snk_ = 0; snkPortIx_ = -1;
 
 	prod_ = cons_ = delay_ = 0;
+	setter_ = 0;
 
 	stack_ = stack;
-
-	/* Production and Consumption */
-	/* Parameterized Delays */
 }
 
 PiSDFEdge::~PiSDFEdge(){

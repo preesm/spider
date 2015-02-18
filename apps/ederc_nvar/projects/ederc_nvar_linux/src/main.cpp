@@ -45,15 +45,10 @@ int main(int argc, char* argv[]){
 	SpiderConfig cfg;
 	ExecutionStat stat;
 
-	static char TransfoStack[5*1024*1024];
-	static char SrdagStack[6*1024*1024];
-	static char PiSDFStack[2*1024*1024];
-	static char ArchiStack[101*1024];
+	DynStack pisdfStack("PisdfStack");
+	DynStack archiStack("ArchiStack");
 
-	StaticStack pisdfStack("PisdfStack", &PiSDFStack, sizeof(PiSDFStack));
-	StaticStack archiStack("ArchiStack", &ArchiStack, sizeof(ArchiStack));
-
-#define SH_MEM 0x00200000
+#define SH_MEM 0x00600000
 	PlatformLinux platform(1, SH_MEM, &archiStack, ederc_nvar_fcts, NB_FCT_EDERC_NVAR);
 	Archi* archi = platform.getArchi();
 
@@ -63,15 +58,15 @@ int main(int argc, char* argv[]){
 
 	cfg.schedulerType = SCHEDULER_LIST;
 
-	cfg.srdagStack = {STACK_STATIC, "SrdagStack", &SrdagStack, sizeof(SrdagStack)};
-	cfg.transfoStack = {STACK_STATIC, "TransfoStack", &TransfoStack, sizeof(TransfoStack)};
+	cfg.srdagStack = {STACK_DYNAMIC, "SrdagStack", 0, 0};
+	cfg.transfoStack = {STACK_DYNAMIC, "TransfoStack", 0, 0};
 
 	spider_init(cfg);
 
 	printf("Start\n");
 
 //	try{
-		for(int iter=1; iter<=1; iter++){
+		for(int iter=1; iter<=12; iter++){
 			printf("N=%d\n", iter);
 			char ganttPath[30];
 			sprintf(ganttPath, "ederc_nvar_%d.sgantt", iter);
@@ -80,7 +75,7 @@ int main(int argc, char* argv[]){
 
 			pisdfStack.freeAll();
 
-			PiSDFGraph *topPisdf = initPisdf_ederc_nvar(archi, &pisdfStack, 12, 12, 4000, 1);
+			PiSDFGraph *topPisdf = initPisdf_ederc_nvar(archi, &pisdfStack, iter, 12, 4000, 1);
 //			topPisdf->print("topPisdf.gv");
 
 			Platform::get()->rstTime();

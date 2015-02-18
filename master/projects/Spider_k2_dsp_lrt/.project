@@ -28,17 +28,17 @@
 		<link>
 			<name>common</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/spider/master/common</location>
+			<location>/home/jheulot/git/spider/master/common</location>
 		</link>
 		<link>
 			<name>lrt</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/spider/master/lrt</location>
+			<location>/home/jheulot/git/spider/master/lrt</location>
 		</link>
 		<link>
 			<name>platform_k2_dsp_lrt</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/spider/master/platform_k2_dsp_lrt</location>
+			<location>/home/jheulot/git/spider/master/platform_k2_dsp_lrt</location>
 		</link>
 	</linkedResources>
 </projectDescription>

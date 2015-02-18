@@ -25,7 +25,7 @@
 # Result Files #
 ################
 *.gv
-*.sgantt
+*.pgantt
 
 # Logs and databases #
 ######################

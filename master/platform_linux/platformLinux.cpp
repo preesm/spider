@@ -136,6 +136,10 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 			perror("pipe");
 			exit(EXIT_FAILURE);
 		}
+		fcntl(pipeSpidertoLRT[2*i  ], F_SETPIPE_SZ, 1024*1024);
+		fcntl(pipeSpidertoLRT[2*i+1], F_SETPIPE_SZ, 1024*1024);
+		fcntl(pipeLRTtoSpider[2*i  ], F_SETPIPE_SZ, 1024*1024);
+		fcntl(pipeLRTtoSpider[2*i+1], F_SETPIPE_SZ, 1024*1024);
 		printf("Pipe Spider=>LRT %d: %d <= %d\n", i, pipeSpidertoLRT[2*i], pipeSpidertoLRT[2*i+1]);
 		printf("Pipe LRT=>Spider %d: %d <= %d\n", i, pipeLRTtoSpider[2*i], pipeLRTtoSpider[2*i+1]);
 	}

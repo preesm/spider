@@ -215,11 +215,11 @@ static const char* spiderTaskName[5] = {
 
 void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, const char* latexPath, ExecutionStat* stat){
 	int ganttFile = Platform::get()->fopen(ganttPath);
-	int latexFile = Platform::get()->fopen(latexPath);
+//	int latexFile = Platform::get()->fopen(latexPath);
 
 	// Writing header
 	Platform::get()->fprintf(ganttFile, "<data>\n");
-	Platform::get()->fprintf(latexFile, "<!-- latex\n{");
+//	Platform::get()->fprintf(latexFile, "<!-- latex\n{");
 
 
 	// Popping data from Trace queue.
@@ -489,6 +489,6 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 	Platform::get()->fprintf(ganttFile, "</data>\n");
 	Platform::get()->fclose(ganttFile);
 
-	Platform::get()->fprintf(latexFile, "}\nlatex -->\n");
-	Platform::get()->fclose(latexFile);
+//	Platform::get()->fprintf(latexFile, "}\nlatex -->\n");
+//	Platform::get()->fclose(latexFile);
 }

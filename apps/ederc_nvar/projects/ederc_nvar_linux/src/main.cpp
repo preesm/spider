@@ -69,7 +69,7 @@ int main(int argc, char* argv[]){
 		for(int iter=1; iter<=12; iter++){
 			printf("N=%d\n", iter);
 			char ganttPath[30];
-			sprintf(ganttPath, "ederc_nvar_%d.sgantt", iter);
+			sprintf(ganttPath, "ederc_nvar_%d.pgantt", iter);
 			char srdagPath[30];
 			sprintf(srdagPath, "ederc_nvar_%d.gv", iter);
 

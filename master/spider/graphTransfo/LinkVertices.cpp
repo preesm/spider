@@ -212,12 +212,20 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		int sourceIndex = 0, sinkIndex = 0;
 		int curSourceToken, curSinkToken;
 
-		SRDAGVertex** srcRepetitions;
-		SRDAGEdge** snkRepetitions;
+		typedef struct SrcConnection{
+			SRDAGVertex* src;
+			int prod;
+			int portIx;
+		} SrcConnection;
 
+		typedef struct SnkConnection{
+			SRDAGEdge* edge;
+			int cons;
+		} SnkConnection;
+
+		SrcConnection* srcConnections;
+		SnkConnection* snkConnections;
 		bool sinkNeedEnd = false;
-		int beforelastCons, firstPiSrcIx;
-		int lastCons;
 
 		int brIx = -1;
 		int forkIx = -1;
@@ -228,10 +236,11 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		case PISDF_TYPE_CONFIG:
 			if(sourceProduction*1 == sinkConsumption*nbSinkRepetitions){
 				// No need of Broadcast
-				srcRepetitions = CREATE_MUL(stack, 1, SRDAGVertex*);
-				*srcRepetitions = job->configs[edge->getSrc()->getTypeId()];
-				curSourceToken = sourceProduction;
-				firstPiSrcIx = piSrcIx;
+				srcConnections = CREATE_MUL(stack, 1, SrcConnection);
+
+				srcConnections->src = job->configs[edge->getSrc()->getTypeId()];
+				srcConnections->prod = sourceProduction;
+				srcConnections->portIx = piSrcIx;
 			}else{
 				bool perfectBr = sinkConsumption*nbSinkRepetitions%sourceProduction == 0;
 				int nBr = sinkConsumption*nbSinkRepetitions/sourceProduction;
@@ -241,19 +250,20 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				nbSourceRepetitions = nBr;
 
 				if(perfectBr){
-					firstPiSrcIx = piSrcIx;
 					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
 					SRDAGEdge* configEdge = job->configs[edge->getSrc()->getTypeId()]->getOutEdge(piSrcIx);
 
 					brIx = broadcast->getId();
 					configEdge->connectSnk(broadcast, 0);
 
-					srcRepetitions = CREATE_MUL(stack, nBr, SRDAGVertex*);
-					for(int i=0; i<nBr; i++)
-						srcRepetitions[i] = broadcast;
+					srcConnections = CREATE_MUL(stack, nBr, SrcConnection);
+					for(int i=0; i<nBr; i++){
+						srcConnections[i].src = broadcast;
+						srcConnections[i].portIx = i;
+						srcConnections[i].prod = sourceProduction;
+					}
 				}else{
-					firstPiSrcIx = piSrcIx;
-					lastCons = sourceProduction - sinkConsumption*nbSinkRepetitions;
+//					lastCons = sourceProduction - sinkConsumption*nbSinkRepetitions;
 					sinkNeedEnd = true;
 
 					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
@@ -262,100 +272,87 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					brIx = broadcast->getId();
 					configEdge->connectSnk(broadcast, 0);
 
-					srcRepetitions = CREATE_MUL(stack, nBr, SRDAGVertex*);
-					for(int i=0; i<nBr; i++)
-						srcRepetitions[i] = broadcast;
+					srcConnections = CREATE_MUL(stack, nBr, SrcConnection);
+					for(int i=0; i<nBr; i++){
+						srcConnections[i].src = broadcast;
+						srcConnections[i].portIx = i;
+						srcConnections[i].prod = sourceProduction;
+					}
 				}
-
 			}
 			break;
 		case PISDF_TYPE_IF:
 			if(sourceProduction*1 == sinkConsumption*nbSinkRepetitions){
 				// No need of Broadcast
-				srcRepetitions = CREATE_MUL(stack, 1, SRDAGVertex*);
-				srcRepetitions[0] = job->inputIfs[edge->getSrc()->getTypeId()]->getSrc();
-				if(srcRepetitions[0] == 0){
-					srcRepetitions[0] = topSrdag->addRoundBuffer();
-					job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcRepetitions[0], 0);
-					piSrcIx = 0;
-					firstPiSrcIx = piSrcIx;
+				srcConnections = CREATE_MUL(stack, 1, SrcConnection);
+				srcConnections[0].src = job->inputIfs[edge->getSrc()->getTypeId()]->getSrc();
+				if(srcConnections[0].src == 0){
+					srcConnections[0].src = topSrdag->addRoundBuffer();
+					job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcConnections[0].src, 0);
+					srcConnections[0].portIx = 0;
+					srcConnections[0].prod = sourceProduction;
 				}else{
-					piSrcIx = job->inputIfs[edge->getSrc()->getTypeId()]->getSrcPortIx();
-					firstPiSrcIx = piSrcIx;
+					srcConnections[0].portIx = job->inputIfs[edge->getSrc()->getTypeId()]->getSrcPortIx();
+					srcConnections[0].prod = sourceProduction;
 				}
-				curSourceToken = sourceProduction;
 			}else{
 				bool perfectBr = sinkConsumption*nbSinkRepetitions%sourceProduction == 0;
 				int nBr = sinkConsumption*nbSinkRepetitions/sourceProduction;
 				if(!perfectBr) nBr++;
 
-				curSourceToken = sourceProduction;
 				nbSourceRepetitions = nBr;
+				sinkNeedEnd = perfectBr;
+//					lastCons = sourceProduction - sinkConsumption*nbSinkRepetitions;
 
-				if(perfectBr){
-					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
-					SRDAGEdge* interfaceEdge = job->inputIfs[edge->getSrc()->getTypeId()];
-					piSrcIx = job->inputIfs[edge->getSrc()->getTypeId()]->getSrcPortIx();
-					firstPiSrcIx = piSrcIx;
-					brIx = broadcast->getId();
+				SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
+				job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(broadcast, 0);
 
-					interfaceEdge->connectSnk(broadcast, 0);
-
-					srcRepetitions = CREATE_MUL(stack, nBr, SRDAGVertex*);
-					for(int i=0; i<nBr; i++)
-						srcRepetitions[i] = broadcast;
-				}else{
-					lastCons = sourceProduction - sinkConsumption*nbSinkRepetitions;
-					sinkNeedEnd = true;
-
-					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
-					SRDAGEdge* interfaceEdge = job->inputIfs[edge->getSrc()->getTypeId()];
-					piSrcIx = job->inputIfs[edge->getSrc()->getTypeId()]->getSrcPortIx();
-					firstPiSrcIx = piSrcIx;
-					brIx = broadcast->getId();
-
-					interfaceEdge->connectSnk(broadcast, 0);
-
-					srcRepetitions = CREATE_MUL(stack, nBr, SRDAGVertex*);
-					for(int i=0; i<nBr; i++)
-						srcRepetitions[i] = broadcast;
+				srcConnections = CREATE_MUL(stack, nBr, SrcConnection);
+				for(int i=0; i<nBr; i++){
+					srcConnections[i].src = broadcast;
+					srcConnections[i].portIx = i;
+					srcConnections[i].prod = sourceProduction;
 				}
-
 			}
 			break;
 		case PISDF_TYPE_BODY:
 			if(nbDelays == 0){
-				srcRepetitions = CREATE_MUL(stack, nbSourceRepetitions, SRDAGVertex*);
-				memcpy(srcRepetitions, job->bodies[edge->getSrc()->getTypeId()], nbSourceRepetitions*sizeof(SRDAGVertex*));
-				curSourceToken = sourceProduction;
-				firstPiSrcIx = piSrcIx;
+				srcConnections = CREATE_MUL(stack, nbSourceRepetitions, SrcConnection);
+				for(int i=0; i<nbSourceRepetitions; i++){
+					srcConnections[i].src = job->bodies[edge->getSrc()->getTypeId()][i];
+					srcConnections[i].portIx = piSrcIx;
+					srcConnections[i].prod = sourceProduction;
+				}
 			}else{
-				srcRepetitions = CREATE_MUL(stack, nbSourceRepetitions+1, SRDAGVertex*);
+				nbSourceRepetitions++;
+				srcConnections = CREATE_MUL(stack, nbSourceRepetitions, SrcConnection);
 
 				if(edge->getDelaySetter()){
 					PiSDFVertex* ifDelaySetter = edge->getDelaySetter();
 					SRDAGEdge* setterEdge = job->inputIfs[ifDelaySetter->getTypeId()];
 					if(setterEdge->getRate() == nbDelays){
-						srcRepetitions[0] = setterEdge->getSrc();
-						if(srcRepetitions[0] == 0){
-							srcRepetitions[0] = topSrdag->addRoundBuffer();
-							job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcRepetitions[0], 0);
-							firstPiSrcIx = 0;
+						srcConnections[0].src = setterEdge->getSrc();
+						if(srcConnections[0].src == 0){
+							srcConnections[0].src = topSrdag->addRoundBuffer();
+							job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcConnections[0].src, 0);
+							srcConnections[0].portIx = 0;
 						}else{
-							firstPiSrcIx = setterEdge->getSrcPortIx();
+							srcConnections[0].portIx = setterEdge->getSrcPortIx();
 						}
 					}else{
 						throw "Setter of a delay must be of the same rate than delay";
 					}
 				}else{
-					srcRepetitions[0] = topSrdag->addInit();
-					firstPiSrcIx = piSrcIx;
+					srcConnections[0].src = topSrdag->addInit();
+					srcConnections[0].portIx = 0;
 				}
+				srcConnections[0].prod = nbDelays;
 
-				memcpy(srcRepetitions+1, job->bodies[edge->getSrc()->getTypeId()], nbSourceRepetitions*sizeof(SRDAGVertex*));
-
-				nbSourceRepetitions++;
-				curSourceToken = nbDelays;
+				for(int i=1; i<nbSourceRepetitions; i++){
+					srcConnections[i].src = job->bodies[edge->getSrc()->getTypeId()][i-1];
+					srcConnections[i].portIx = piSrcIx;
+					srcConnections[i].prod = sourceProduction;
+				}
 			}
 			break;
 		}
@@ -367,84 +364,72 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		case PISDF_TYPE_IF:
 			if(sinkConsumption*1 == sourceProduction*nbSourceRepetitions){
 				// No need of specific thing
-				snkRepetitions = CREATE_MUL(stack, 1, SRDAGEdge*);
-				*snkRepetitions = job->outputIfs[edge->getSnk()->getTypeId()];
-				curSinkToken = sinkConsumption;
-				beforelastCons = sinkConsumption;
-				lastCons = sinkConsumption;
+				snkConnections = CREATE_MUL(stack, 1, SnkConnection);
+				snkConnections[0].edge = job->outputIfs[edge->getSnk()->getTypeId()];
+				snkConnections[0].cons = sinkConsumption;
 			}else{
 				float nDroppedTokens = sourceProduction*nbSourceRepetitions-sinkConsumption;
 				int nEnd = std::ceil(nDroppedTokens/sourceProduction);
 
-				snkRepetitions = CREATE_MUL(stack, nEnd+1, SRDAGEdge*);
-				for(int i=0; i<nEnd; i++){
-					snkRepetitions[i] = topSrdag->addEdge();
-					snkRepetitions[i]->connectSnk(topSrdag->addEnd(), 0);
-				}
-				snkRepetitions[nEnd] = job->outputIfs[edge->getSnk()->getTypeId()];
-
 				nbSinkRepetitions = nEnd+1;
+				snkConnections = CREATE_MUL(stack, nbSinkRepetitions, SnkConnection);
+				for(int i=0; i<nEnd; i++){
+					snkConnections[i].edge = topSrdag->addEdge();
+					snkConnections[i].edge->connectSnk(topSrdag->addEnd(), 0);
+					snkConnections[i].cons = sourceProduction;
+				}
+				snkConnections[nEnd-1].cons = nDroppedTokens-(nEnd-1)*sourceProduction;
 
-				beforelastCons = nDroppedTokens-(nEnd-1)*sourceProduction;
-				lastCons = sinkConsumption;
-				sinkConsumption = sourceProduction;
-
-				if(nEnd == 1)
-					curSinkToken = beforelastCons;
-				else
-					curSinkToken = sinkConsumption;
+				snkConnections[nEnd].edge = job->outputIfs[edge->getSnk()->getTypeId()];
+				snkConnections[nEnd].cons = sinkConsumption;
 			}
 			break;
 		case PISDF_TYPE_BODY:
 			if(nbDelays == 0){
 				if(sinkNeedEnd){
-					snkRepetitions = CREATE_MUL(stack, nbSinkRepetitions+1, SRDAGEdge*);
+					snkConnections = CREATE_MUL(stack, nbSinkRepetitions+1, SnkConnection);
 
 					for(int i=0; i<nbSinkRepetitions; i++){
-						snkRepetitions[i] = topSrdag->addEdge();
-						snkRepetitions[i]->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i], edge->getSnkPortIx());
+						snkConnections[i].edge = topSrdag->addEdge();
+						snkConnections[i].edge->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i], edge->getSnkPortIx());
+						snkConnections[i].cons = sinkConsumption;
 					}
-					snkRepetitions[nbSinkRepetitions] = topSrdag->addEdge();
-					snkRepetitions[nbSinkRepetitions]->connectSnk(topSrdag->addEnd(), 0);
+					snkConnections[nbSinkRepetitions].edge = topSrdag->addEdge();
+					snkConnections[nbSinkRepetitions].edge->connectSnk(topSrdag->addEnd(), 0);
+					snkConnections[nbSinkRepetitions].cons = sourceProduction - sinkConsumption*nbSinkRepetitions;
 					nbSinkRepetitions++;
 				}else{
-					snkRepetitions = CREATE_MUL(stack, nbSinkRepetitions, SRDAGEdge*);
+					snkConnections = CREATE_MUL(stack, nbSinkRepetitions, SnkConnection);
 
 					for(int i=0; i<nbSinkRepetitions; i++){
-						snkRepetitions[i] = topSrdag->addEdge();
-						snkRepetitions[i]->setRate(sinkConsumption);
-						snkRepetitions[i]->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i], edge->getSnkPortIx());
+						snkConnections[i].edge = topSrdag->addEdge();
+						snkConnections[i].edge->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i], edge->getSnkPortIx());
+						snkConnections[i].cons = sinkConsumption;
 					}
 				}
-
-				curSinkToken   = sinkConsumption;
-				beforelastCons = sinkConsumption;
-				lastCons = sinkConsumption;
 			}else{
-				snkRepetitions = CREATE_MUL(stack, nbSinkRepetitions+1, SRDAGEdge*);
+				snkConnections = CREATE_MUL(stack, nbSinkRepetitions+1, SnkConnection);
 
 				for(int i=0; i<nbSinkRepetitions; i++){
-					snkRepetitions[i] = topSrdag->addEdge();
-					snkRepetitions[i]->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i], edge->getSnkPortIx());
+					snkConnections[i].edge = topSrdag->addEdge();
+					snkConnections[i].edge->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i], edge->getSnkPortIx());
+					snkConnections[i].cons = sinkConsumption;
 				}
-				snkRepetitions[nbSinkRepetitions] = topSrdag->addEdge();
-				snkRepetitions[nbSinkRepetitions]->connectSnk(topSrdag->addEnd(), 0);
+				snkConnections[nbSinkRepetitions].edge = topSrdag->addEdge();
+				snkConnections[nbSinkRepetitions].edge->connectSnk(topSrdag->addEnd(), 0);
+				snkConnections[nbSinkRepetitions].cons = nbDelays;
 
 				nbSinkRepetitions++;
-				curSinkToken   = sinkConsumption;
-				beforelastCons = sinkConsumption;
-				lastCons = nbDelays;
 			}
 			break;
 		}
 
+		curSourceToken = srcConnections[0].prod;
+		curSinkToken = snkConnections[0].cons;
+
 		// Iterating until all consumptions are "satisfied".
 		while (sourceIndex < nbSourceRepetitions
 				|| sinkIndex < nbSinkRepetitions) {
-			SRDAGVertex* sourceVertex;
-			SRDAGEdge* sinkEdge;
-			int sourcePortId;
-
 			// Production/consumption rate for the current source/target.
 			int rest = std::min(curSourceToken, curSinkToken); // Minimum.
 
@@ -453,126 +438,68 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 			 */
 
 			if (rest < curSourceToken
-					&& (srcRepetitions[sourceIndex]->getId() != forkIx)){
+					&& (srcConnections[sourceIndex].src->getId() != forkIx)){
 				// Adding an explode vertex.
 				SRDAGVertex *fork_vertex = topSrdag->addFork(MAX_IO_EDGES);
 				forkIx = fork_vertex->getId();
 
-				// Replacing the source vertex by the explode vertex in the array of sources.
-				SRDAGVertex *origin_vertex = srcRepetitions[sourceIndex];
-				srcRepetitions[sourceIndex] = fork_vertex;
-
-				SRDAGVertex* sourceVertex;
-				int sourcePortId;
-
-				// TODO check !!!!
-				switch(origin_vertex->getType()){
-				case SRDAG_NORMAL:
-				case SRDAG_FORK:
-				case SRDAG_JOIN:
-					sourceVertex = origin_vertex;
-					sourcePortId = piSrcIx;
-					break;
-				case SRDAG_ROUNDBUFFER:
-					sourceVertex = origin_vertex;
-					sourcePortId = 0;
-					break;
-				case SRDAG_BROADCAST:
-					if(origin_vertex->getId() == brIx){
-						sourceVertex = origin_vertex;
-						sourcePortId = origin_vertex->getNConnectedOutEdge();
-					}else{
-						sourceVertex = origin_vertex;
-						sourcePortId = piSrcIx;
-					}
-					break;
-				case SRDAG_INIT:
-					sourceVertex = origin_vertex;
-					sourcePortId = 0;
-					break;
-				default:
-				case SRDAG_END:
-					throw "Unexpected case in pisdf transfo";
-				}
-
-				if(sourceVertex->getOutEdge(sourcePortId) != 0)
-					sourceVertex->getOutEdge(sourcePortId)->connectSnk(fork_vertex, 0);
+				if(srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx) != 0)
+					srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx)->connectSnk(fork_vertex, 0);
 				else
 					// Adding an edge between the source and the fork.
 					topSrdag->addEdge(
-						sourceVertex, sourcePortId,
-						fork_vertex, 0,
+						srcConnections[sourceIndex].src,
+						srcConnections[sourceIndex].portIx,
+						fork_vertex,
+						0,
 						curSourceToken
 					);
+
+				// Replacing the source vertex by the explode vertex in the array of sources.
+				srcConnections[sourceIndex].src = fork_vertex;
+				srcConnections[sourceIndex].portIx = 0;
 			}
 
 			if (rest < curSinkToken &&
-					snkRepetitions[sinkIndex]->getSnk() &&
-					(snkRepetitions[sinkIndex]->getSnk()->getId() != joinIx)){ // Type == 0 indicates it is a normal vertex.
+					snkConnections[sinkIndex].edge->getSnk() &&
+					(snkConnections[sinkIndex].edge->getSnk()->getId() != joinIx)){ // Type == 0 indicates it is a normal vertex.
 
 				// Adding an join vertex.
 				SRDAGVertex *join_vertex = topSrdag->addJoin(MAX_IO_EDGES);
 				joinIx = join_vertex->getId();
 
 				// Replacing the sink vertex by the join vertex in the array of sources.
-				snkRepetitions[sinkIndex]->connectSrc(join_vertex, 0);
-				snkRepetitions[sinkIndex] = topSrdag->addEdge();
-				snkRepetitions[sinkIndex]->connectSnk(join_vertex, 0);
+				snkConnections[sinkIndex].edge->connectSrc(join_vertex, 0);
+				snkConnections[sinkIndex].edge->setRate(snkConnections[sinkIndex].cons);
+				snkConnections[sinkIndex].edge = topSrdag->addEdge();
+				snkConnections[sinkIndex].edge->connectSnk(join_vertex, 0);
 
-			}else if(snkRepetitions[sinkIndex]->getSnk()
-					&& snkRepetitions[sinkIndex]->getSnk()->getId() == joinIx){
+			}else if(snkConnections[sinkIndex].edge->getSnk()
+					&& snkConnections[sinkIndex].edge->getSnk()->getId() == joinIx){
 				/* Adding the new edge in join*/
-				SRDAGVertex *join_vertex = snkRepetitions[sinkIndex]->getSnk();
-				snkRepetitions[sinkIndex] = topSrdag->addEdge();
-				snkRepetitions[sinkIndex]->connectSnk(join_vertex, join_vertex->getNConnectedInEdge());
+				SRDAGVertex *join_vertex = snkConnections[sinkIndex].edge->getSnk();
+				snkConnections[sinkIndex].edge = topSrdag->addEdge();
+				snkConnections[sinkIndex].edge->connectSnk(join_vertex, join_vertex->getNConnectedInEdge());
 			}
-			sinkEdge = snkRepetitions[sinkIndex];
 
 			//Creating the new edge between normal vertices or between a normal and an explode/implode one.
-
-			sourceVertex = srcRepetitions[sourceIndex];
-			switch(sourceVertex->getType()){
-			case SRDAG_BROADCAST:
-				if(sourceVertex->getId() == brIx){
-					sourcePortId = sourceVertex->getNConnectedOutEdge();
-				}else{
-					if(sourceIndex == 0)
-						sourcePortId = firstPiSrcIx;
-					else
-						sourcePortId = piSrcIx;
-				}
-				break;
-			case SRDAG_FORK:
-				if(sourceVertex->getId() == forkIx)
-					sourcePortId = sourceVertex->getNConnectedOutEdge();
-				else
-					if(sourceIndex == 0)
-						sourcePortId = firstPiSrcIx;
-					else
-						sourcePortId = piSrcIx;
-				break;
-			case SRDAG_INIT:
-				sourcePortId = 0;
-				break;
-			default:
-				if(sourceIndex == 0)
-					sourcePortId = firstPiSrcIx;
-				else
-					sourcePortId = piSrcIx;
-				break;
-			}
-
-			if(sourceVertex->getOutEdge(sourcePortId) != 0){
-				SRDAGEdge* srcEdge = sourceVertex->getOutEdge(sourcePortId);
-				sinkEdge->setAlloc(srcEdge->getAlloc());
-				sinkEdge->setAllocIx(srcEdge->getAllocIx());
-				sinkEdge->setRate(srcEdge->getRate());
+			SRDAGEdge* srcEdge;
+			if((srcEdge = srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx)) != 0){
+				snkConnections[sinkIndex].edge->setAlloc(srcEdge->getAlloc());
+				snkConnections[sinkIndex].edge->setAllocIx(srcEdge->getAllocIx());
+				snkConnections[sinkIndex].edge->setRate(srcEdge->getRate());
 
 				topSrdag->delEdge(srcEdge);
-				sinkEdge->connectSrc(sourceVertex, sourcePortId);
+				snkConnections[sinkIndex].edge->connectSrc(
+						srcConnections[sourceIndex].src,
+						srcConnections[sourceIndex].portIx
+						);
 			}else{
-				sinkEdge->connectSrc(sourceVertex, sourcePortId);
-				sinkEdge->setRate(rest);
+				snkConnections[sinkIndex].edge->connectSrc(
+						srcConnections[sourceIndex].src,
+						srcConnections[sourceIndex].portIx
+						);
+				snkConnections[sinkIndex].edge->setRate(rest);
 			}
 
 			// Update the number of token produced/consumed by the current source/target.
@@ -581,21 +508,18 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 
 			if(curSourceToken == 0){
 				sourceIndex++;
-				curSourceToken = sourceProduction;
+				curSourceToken = srcConnections[sourceIndex].prod;
+			}else{
+				srcConnections[sourceIndex].portIx++;
 			}
 
 			if(curSinkToken == 0){
 				sinkIndex++;
-				if(sinkIndex == nbSinkRepetitions-2)
-					curSinkToken = beforelastCons;
-				else if(sinkIndex == nbSinkRepetitions-1)
-					curSinkToken = lastCons;
-				else
-					curSinkToken = sinkConsumption;
+				curSinkToken = snkConnections[sinkIndex].cons;
 			}
 		}
 
-		stack->free(srcRepetitions);
-		stack->free(snkRepetitions);
+		stack->free(srcConnections);
+		stack->free(snkConnections);
 	}
 }

@@ -179,7 +179,7 @@ int ListScheduler::computeSchedLevel(SRDAGVertex* vertex){
 					}
 				}
 				lvl = std::max(lvl, computeSchedLevel(succ)+(int)minExecTime);
-			                 }
+			}
 		}
 		vertex->setSchedLvl(lvl);
 		return lvl;

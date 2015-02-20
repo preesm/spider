@@ -66,8 +66,6 @@
 
 #include <launcher/Launcher.h>
 
-#define TRANSFO_STACK_SIZE 1024*1024*1024
-
 static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 	memset(job, 0, sizeof(transfoJob));
 	job->graph = nextHierVx->getSubGraph();

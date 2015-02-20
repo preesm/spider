@@ -227,7 +227,6 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		SnkConnection* snkConnections;
 		bool sinkNeedEnd = false;
 
-		int brIx = -1;
 		int forkIx = -1;
 		int joinIx = -1;
 
@@ -253,7 +252,6 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
 					SRDAGEdge* configEdge = job->configs[edge->getSrc()->getTypeId()]->getOutEdge(piSrcIx);
 
-					brIx = broadcast->getId();
 					configEdge->connectSnk(broadcast, 0);
 
 					srcConnections = CREATE_MUL(stack, nBr, SrcConnection);
@@ -269,7 +267,6 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
 					SRDAGEdge* configEdge = job->configs[edge->getSrc()->getTypeId()]->getOutEdge(piSrcIx);
 
-					brIx = broadcast->getId();
 					configEdge->connectSnk(broadcast, 0);
 
 					srcConnections = CREATE_MUL(stack, nBr, SrcConnection);

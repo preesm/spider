@@ -70,7 +70,6 @@
 #define MAX_MSG_SIZE 10*1024
 
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
-static struct timespec start;
 
 static CSL_TmrRegsOvly regs;
 static int dev_mem_fd;

@@ -48,14 +48,14 @@ typedef enum{
 
 typedef enum{
 	TRACE_JOB=1,
-	TRACE_SPIDER=2,
+	TRACE_SPIDER=2
 }TraceMsgType;
 
 typedef enum{
 	TRACE_SPIDER_GRAPH=1,
 	TRACE_SPIDER_ALLOC=2,
 	TRACE_SPIDER_SCHED=3,
-	TRACE_SPIDER_OPTIM=4,
+	TRACE_SPIDER_OPTIM=4
 }TraceSpiderType;
 
 typedef struct {

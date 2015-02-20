@@ -77,7 +77,7 @@ void LRT::sendTrace(int srdagIx, Time start, Time end){
 
 	msgTrace->msgIx = TRACE_JOB;
 	msgTrace->srdagIx = srdagIx;
-	msgTrace->spiderTask = -1;
+	msgTrace->spiderTask = (unsigned long)-1;
 	msgTrace->start = start;
 	msgTrace->end = end;
 	msgTrace->lrtIx = ix_;
@@ -153,7 +153,6 @@ int LRT::runOneJob(){
 		case MSG_PARAM_VALUE:
 		default:
 			throw "Unexpected message received\n";
-			break;
 		}
 		return 1;
 	}

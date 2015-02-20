@@ -174,21 +174,23 @@ void K2DspLrtCommunicator::data_end_send(Fifo* f){
 		if(queueId < BASE_DATA || queueId > MAX_QUEUES )
 			throw "Error: request queue out of bound\n";
 
-		do{
-			mono_pkt = (MonoPcktDesc*)Qmss_queuePop(EMPTY_DATA);
-		}while(mono_pkt == 0);
+		for(int i=0; i<f->ntoken; i++){
+			do{
+				mono_pkt = (MonoPcktDesc*)Qmss_queuePop(EMPTY_DATA);
+			}while(mono_pkt == 0);
 
-		mono_pkt->type_id = 0x2;
-		mono_pkt->packet_type = 0;
-		mono_pkt->data_offset = 12;
-		mono_pkt->packet_length = 16;
-		mono_pkt->epib = 0;
-		mono_pkt->pkt_return_qnum = EMPTY_DATA;
-		mono_pkt->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
+			mono_pkt->type_id = 0x2;
+			mono_pkt->packet_type = 0;
+			mono_pkt->data_offset = 12;
+			mono_pkt->packet_length = 16;
+			mono_pkt->epib = 0;
+			mono_pkt->pkt_return_qnum = EMPTY_DATA;
+			mono_pkt->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
 
-		cache_wbL1D(mono_pkt, DATA_DESC_SIZE);
-		Qmss_queuePushDesc(queueId, mono_pkt);
-		cache_wbL1D(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size);
+			cache_wbL1D(mono_pkt, DATA_DESC_SIZE);
+			Qmss_queuePushDesc(queueId, mono_pkt);
+			cache_wbL1D(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size);
+		}
 	}
 }
 long K2DspLrtCommunicator::data_recv(Fifo* f){
@@ -196,16 +198,17 @@ long K2DspLrtCommunicator::data_recv(Fifo* f){
 		MonoPcktDesc *mono_pkt;
 		int queueId = BASE_DATA+f->id;
 
-		if(queueId < BASE_DATA || queueId > MAX_QUEUES )
-			throw "Error: request queue out of bound\n";
-		do{
-			mono_pkt = (MonoPcktDesc*)Qmss_queuePop(queueId);
-		}while(mono_pkt == 0);
+		for(int i=0; i<f->ntoken; i++){
+			if(queueId < BASE_DATA || queueId > MAX_QUEUES )
+				throw "Error: request queue out of bound\n";
+			do{
+				mono_pkt = (MonoPcktDesc*)Qmss_queuePop(queueId);
+			}while(mono_pkt == 0);
 
-		/* TODO handle ntokens */
-		cache_invL1D(mono_pkt, DATA_DESC_SIZE);
-		Qmss_queuePushDesc(EMPTY_DATA, mono_pkt);
-		cache_invL1D(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size);
+			cache_invL1D(mono_pkt, DATA_DESC_SIZE);
+			Qmss_queuePushDesc(EMPTY_DATA, mono_pkt);
+			cache_invL1D(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size);
+		}
 	}
 	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
 }

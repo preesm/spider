@@ -57,10 +57,12 @@ Launcher::Launcher(){
 }
 
 void Launcher::launchVertex(SRDAGVertex* vertex){
-	int slave = vertex->getSlave();
-	send_StartJobMsg(slave, vertex);
-	nLaunched_++;
-	vertex->setState(SRDAG_RUN);
+	if(vertex->getState() == SRDAG_EXEC){
+		int slave = vertex->getSlave();
+		send_StartJobMsg(slave, vertex);
+		nLaunched_++;
+		vertex->setState(SRDAG_RUN);
+	}
 }
 
 Launcher* Launcher::get(){
@@ -124,13 +126,13 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		inFifos[i].alloc = edge->getAlloc();
 		inFifos[i].size = edge->getRate();
 
-		if(edge->getSrc()->getSlave() == edge->getSnk()->getSlave()){
-			inFifos[i].ntoken = 0;
-//			if(edge->getSrc()->getSlave()>=4)
-//				printf("N token = 0\n");
-		}
-		else
-			inFifos[i].ntoken = 1;
+//		if(edge->getSrc()->getSlave() == edge->getSnk()->getSlave()){
+//			inFifos[i].ntoken = 0;
+////			if(edge->getSrc()->getSlave()>=4)
+////				printf("N token = 0\n");
+//		}
+//		else
+			inFifos[i].ntoken = edge->getNToken();
 	}
 
 	for(int i=0; i<vertex->getNConnectedOutEdge(); i++){
@@ -139,11 +141,11 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		outFifos[i].alloc = edge->getAlloc();
 		outFifos[i].size = edge->getRate();
 
-		if(edge->getSrc() && edge->getSnk()
-				&& edge->getSrc()->getSlave() == edge->getSnk()->getSlave())
-			outFifos[i].ntoken = 0;
-		else
-			outFifos[i].ntoken = 1;
+//		if(edge->getSrc() && edge->getSnk()
+//				&& edge->getSrc()->getSlave() == edge->getSnk()->getSlave())
+//			outFifos[i].ntoken = 0;
+//		else
+			outFifos[i].ntoken = edge->getNToken();
 	}
 
 	switch(vertex->getType()){

@@ -63,6 +63,7 @@ public:
 private:
 
 	Stack* stack_;
+	Time timeBase_;
 };
 
 #endif/*PLATFORM_K2_DSP_H*/

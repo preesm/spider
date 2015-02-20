@@ -110,6 +110,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 	int pipeLRTtoSpider[2*nLrt];
 	int pipeTrace[2];
 	int cpIds[nLrt];
+	sem_t* semFifo;
 	sem_t* semTrace;
 
 	if(platform_)
@@ -120,6 +121,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 
 	cpIds[0] = getpid();
 
+	semFifo = sem_open("spider_fifo", O_CREAT, ACCESSPERMS, 1);
 	semTrace = sem_open("spider_trace", O_CREAT, ACCESSPERMS, 1);
 
 	if (pipe2(pipeTrace, O_NONBLOCK) == -1) {
@@ -163,6 +165,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 					pipeSpidertoLRT[2*i],
 					pipeLRTtoSpider[2*i+1],
 					pipeTrace[1],
+					semFifo,
 					semTrace,
 					shMem,
 					dataMem,
@@ -202,6 +205,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 			pipeSpidertoLRT[0],
 			pipeLRTtoSpider[1],
 			pipeTrace[1],
+			semFifo,
 			semTrace,
 			shMem,
 			dataMem,

@@ -296,12 +296,13 @@ void SRDAGGraph::print(const char *path){
 
 //		switch(mode){
 //		case DataRates:
-			Platform::get()->fprintf(file, "\t%d->%d [label=\"%d (ID%d)\n%#x (%d)\",taillabel=\"%d\",headlabel=\"%d\"];\n",
+			Platform::get()->fprintf(file, "\t%d->%d [label=\"%d (ID%d)\n%#x (ix %d : %d tokens)\",taillabel=\"%d\",headlabel=\"%d\"];\n",
 					srcIx, snkIx,
 					edge->getRate(),
 					edge->getId(),
 					edge->getAlloc(),
 					edge->getAllocIx(),
+					edge->getNToken(),
 					edge->getSrcPortIx(),
 					edge->getSnkPortIx());
 //			break;

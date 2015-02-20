@@ -48,6 +48,7 @@ LinuxLrtCommunicator::LinuxLrtCommunicator(
 		int fIn,
 		int fOut,
 		int fTrace,
+		sem_t *semFifo,
 		sem_t *semTrace,
 		void* fifos,
 		void* dataMem,
@@ -58,6 +59,7 @@ LinuxLrtCommunicator::LinuxLrtCommunicator(
 	fIn_ = fIn;
 	fOut_ = fOut;
 	fTrace_ = fTrace;
+	semFifo_ = semFifo;
 	semTrace_ = semTrace;
 	msgSizeMax_ = msgSizeMax;
 
@@ -143,17 +145,38 @@ void LinuxLrtCommunicator::trace_end_send(int size){
 
 void LinuxLrtCommunicator::data_end_send(Fifo* f){
 	if(f->ntoken){
+		int err = sem_wait(semFifo_);
+		if(err != 0){
+			perror("LinuxLrtCommunicator::data_end_send");
+			exit(-1);
+		}
+
 		volatile unsigned long *mutex = fifos_ + f->id;
-		// TODO protect mutex !
-		// TODO cache memory
-		*mutex = f->ntoken;
+
+		*mutex += f->ntoken;
+
+		sem_post(semFifo_);
 	}
 }
 long LinuxLrtCommunicator::data_recv(Fifo* f){
 	if(f->ntoken){
 		volatile unsigned long *mutex = fifos_ + f->id;
-		while(*mutex < f->ntoken);
-		*mutex -= f->ntoken;
+
+
+		do{
+			int err = sem_wait(semFifo_);
+			if(err != 0){
+				perror("LinuxLrtCommunicator::data_recv");
+				exit(-1);
+			}
+
+			if(*mutex >= f->ntoken){
+				*mutex -= f->ntoken;
+				sem_post(semFifo_);
+				break;
+			}
+			sem_post(semFifo_);
+		}while(1);//*mutex < f->ntoken);
 	}
 	return (long)Platform::get()->virt_to_phy((void*)(intptr_t)(f->alloc));
 }

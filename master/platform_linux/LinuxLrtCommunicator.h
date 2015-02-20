@@ -49,6 +49,7 @@ public:
 			int fIn,
 			int fOut,
 			int fTrace,
+			sem_t *semFifo,
 			sem_t *semTrace,
 			void* fifos,
 			void* dataMem,
@@ -77,6 +78,7 @@ private:
 
 	int fIn_, fOut_, fTrace_;
 	sem_t* semTrace_;
+	sem_t* semFifo_;
 
 	int msgSizeMax_;
 

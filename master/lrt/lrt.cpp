@@ -146,6 +146,7 @@ int LRT::runOneJob(){
 		case MSG_CLEAR_TIME:{
 			ClearTimeMsg* timeMsg = (ClearTimeMsg*) msg;
 			Platform::get()->rstTime(timeMsg);
+			Platform::getLrtCommunicator()->ctrl_end_recv();
 			break;}
 		case MSG_STOP_LRT:
 			exit(EXIT_SUCCESS);

@@ -285,7 +285,7 @@ static void sysInit (int memFile){
     /* Setup CTRL descriptors into FREE queue */
     MonoPcktDesc* mono_pkt;
     for (i = 0; i < CTRL_DESC_NB; i++) {
-		mono_pkt = (MonoPcktDesc *) (ctrl_desc + (i * CTRL_DESC_SIZE));
+		mono_pkt = (MonoPcktDesc *) ((int)ctrl_desc + (i * CTRL_DESC_SIZE));
 
 		mono_pkt->pkt_return_qmgr = 1;
 		mono_pkt->pkt_return_qnum = 1;
@@ -295,7 +295,7 @@ static void sysInit (int memFile){
 
     /* Setup DATA descriptors into FREE queue */
     for (i = 0; i < DATA_DESC_NB; i++) {
-		mono_pkt = (MonoPcktDesc *) (data_desc + (i * DATA_DESC_SIZE));
+		mono_pkt = (MonoPcktDesc *) ((int)data_desc + (i * DATA_DESC_SIZE));
 
 		mono_pkt->pkt_return_qmgr = 1;
 		mono_pkt->pkt_return_qnum = 1;
@@ -305,7 +305,7 @@ static void sysInit (int memFile){
 
     /* Setup TRACE descriptors into FREE queue */
     for (i = 0; i < TRACE_DESC_NB; i++) {
-		mono_pkt = (MonoPcktDesc *) (trace_desc + (i * TRACE_DESC_SIZE));
+		mono_pkt = (MonoPcktDesc *) ((int)trace_desc + (i * TRACE_DESC_SIZE));
 
 		mono_pkt->pkt_return_qmgr = 1;
 		mono_pkt->pkt_return_qnum = 1;

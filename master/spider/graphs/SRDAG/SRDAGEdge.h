@@ -58,11 +58,13 @@ public:
 	inline int getRate() const;
 	inline int getAlloc() const;
 	inline int getAllocIx() const;
+	inline int getNToken() const;
 
 	/** Setters */
 	inline void setRate(int rate);
 	inline void setAlloc(int rate);
 	inline void setAllocIx(int allocIx);
+	inline void setNToken(int nToken);
 
 	/** Connections Fcts */
 	void connectSrc(SRDAGVertex* src, int srcPortId);
@@ -84,6 +86,7 @@ private:
 	int rate_;
 	int alloc_;
 	int allocIx_;
+	int nToken_;
 };
 
 inline int SRDAGEdge::getId() const {
@@ -110,6 +113,9 @@ inline int SRDAGEdge::getAlloc() const{
 inline int SRDAGEdge::getAllocIx() const{
 	return allocIx_;
 }
+inline int SRDAGEdge::getNToken() const{
+	return nToken_;
+}
 
 inline void SRDAGEdge::setRate(int rate){
 	rate_ = rate;
@@ -119,6 +125,9 @@ inline void SRDAGEdge::setAlloc(int alloc){
 }
 inline void SRDAGEdge::setAllocIx(int allocIx){
 	allocIx_ = allocIx;
+}
+inline void SRDAGEdge::setNToken(int nToken){
+	nToken_ = nToken;
 }
 
 

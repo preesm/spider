@@ -168,7 +168,7 @@ int ListScheduler::computeSchedLevel(SRDAGVertex* vertex){
 	if(vertex->getSchedLvl() == -1){
 		for(int i=0; i<vertex->getNConnectedOutEdge(); i++){
 			SRDAGVertex* succ = vertex->getOutEdge(i)->getSnk();
-			if(succ && succ->getState() == SRDAG_EXEC){
+			if(succ && succ->getState() != SRDAG_NEXEC){
 				Time minExecTime = (unsigned int)-1;
 				for(int j=0; j<archi_->getNPE(); j++){
 					if(succ->isExecutableOn(j)){
@@ -193,11 +193,16 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 	for(int i=0; i<vertex->getNConnectedInEdge(); i++){
 		minimumStartTime = std::max(minimumStartTime,
 				vertex->getInEdge(i)->getSrc()->getEndTime());
-		if(vertex->getInEdge(i)->getSrc()->getSlave() == -1){
-			throw "Try to start a vertex when previous one is not scheduled\n";
-		}
+//		if(vertex->getInEdge(i)->getSrc()->getSlave() == -1){
+//			throw "Try to start a vertex when previous one is not scheduled\n";
+//		}
 	}
 
+	if(vertex->getState() == SRDAG_RUN){
+		vertex->setStartTime(minimumStartTime);
+		vertex->setEndTime(minimumStartTime);
+		return;
+	}
 
 	int bestSlave = -1;
 	Time bestStartTime = 0;

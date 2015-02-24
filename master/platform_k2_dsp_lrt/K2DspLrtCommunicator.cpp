@@ -189,8 +189,8 @@ void K2DspLrtCommunicator::data_end_send(Fifo* f){
 
 			cache_wbL1D(mono_pkt, DATA_DESC_SIZE);
 			Qmss_queuePushDesc(queueId, mono_pkt);
-			cache_wbL1D(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size);
 		}
+		cache_wbL1D(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size);
 	}
 }
 long K2DspLrtCommunicator::data_recv(Fifo* f){
@@ -207,8 +207,8 @@ long K2DspLrtCommunicator::data_recv(Fifo* f){
 
 			cache_invL1D(mono_pkt, DATA_DESC_SIZE);
 			Qmss_queuePushDesc(EMPTY_DATA, mono_pkt);
-			cache_invL1D(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size);
 		}
+		cache_invL1D(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size);
 	}
 	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
 }

@@ -28,22 +28,22 @@
 		<link>
 			<name>common</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/spider/master/common</location>
+			<location>/home/jheulot/git/spider/master/common</location>
 		</link>
 		<link>
 			<name>lrt</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/spider/master/lrt</location>
+			<location>/home/jheulot/git/spider/master/lrt</location>
 		</link>
 		<link>
 			<name>platform_k2_arm</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/spider/master/platform_k2_arm</location>
+			<location>/home/jheulot/git/spider/master/platform_k2_arm</location>
 		</link>
 		<link>
 			<name>spider</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/spider/master/spider</location>
+			<location>/home/jheulot/git/spider/master/spider</location>
 		</link>
 	</linkedResources>
 </projectDescription>

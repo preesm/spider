@@ -32,9 +32,9 @@
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.ABI.1350075029" name="Application binary interface (coffabi, eabi) [See 'General' page to edit] (--abi)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.ABI" value="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.ABI.eabi" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.DEBUGGING_MODEL.627429000" name="Debugging model" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.DEBUGGING_MODEL" value="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.DEBUGGING_MODEL.SYMDEBUG__DWARF" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.INCLUDE_PATH.330500782" name="Add dir to #include search path (--include_path, -I)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.INCLUDE_PATH" valueType="includePath">
+									<listOptionValue builtIn="false" value="/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/pdk_keystone2_3_01_01_04/packages"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/common}&quot;"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2/dsplib_c66x_3_2_0_1/packages"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2/pdk_keystone2_3_01_00_03/packages"/>
+									<listOptionValue builtIn="false" value="/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/dsplib_c66x_3_2_0_1/packages"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_k2_dsp_lrt}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
@@ -84,7 +84,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="lib" artifactName="${ProjName}" buildProperties="" cleanCommand="${CG_CLEAN_CMD}" description="" id="com.ti.ccstudio.buildDefinitions.C6000.Release.198865995" name="Release" parent="com.ti.ccstudio.buildDefinitions.C6000.Release">
+				<configuration artifactExtension="lib" artifactName="${ProjName}_release" buildProperties="" cleanCommand="${CG_CLEAN_CMD}" description="" id="com.ti.ccstudio.buildDefinitions.C6000.Release.198865995" name="Release" parent="com.ti.ccstudio.buildDefinitions.C6000.Release">
 					<folderInfo id="com.ti.ccstudio.buildDefinitions.C6000.Release.198865995." name="/" resourcePath="">
 						<toolChain id="com.ti.ccstudio.buildDefinitions.C6000_7.4.library.ReleaseToolchain.434192932" name="TI Build Tools" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.library.ReleaseToolchain" targetTool="com.ti.ccstudio.buildDefinitions.C6000_7.4.library.librarianRelease.1280852161">
 							<option id="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS.1501157339" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS" valueType="stringList">
@@ -102,12 +102,12 @@
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.ABI.1445166063" name="Application binary interface (coffabi, eabi) [See 'General' page to edit] (--abi)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.ABI" value="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.ABI.eabi" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.OPT_LEVEL.library.release.944851562" name="Optimization level (--opt_level, -O)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.OPT_LEVEL.library.release" value="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.OPT_LEVEL.3" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.INCLUDE_PATH.62334406" name="Add dir to #include search path (--include_path, -I)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.INCLUDE_PATH" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
+									<listOptionValue builtIn="false" value="/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/pdk_keystone2_3_01_01_04/packages"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/common}&quot;"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2/dsplib_c66x_3_2_0_1/packages"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2/pdk_keystone2_3_01_00_03/packages"/>
+									<listOptionValue builtIn="false" value="/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/dsplib_c66x_3_2_0_1/packages"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_k2_dsp_lrt}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
 								</option>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.EXCEPTIONS.603484691" name="Enable C++ exception handling (--exceptions)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.EXCEPTIONS" value="true" valueType="boolean"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.DISPLAY_ERROR_NUMBER.596059678" name="Emit diagnostic identifier numbers (--display_error_number, -pden)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.DISPLAY_ERROR_NUMBER" value="true" valueType="boolean"/>
@@ -115,14 +115,14 @@
 									<listOptionValue builtIn="false" value="225"/>
 								</option>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.DIAG_WRAP.361960571" name="Wrap diagnostic messages (--diag_wrap)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.DIAG_WRAP" value="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.DIAG_WRAP.off" valueType="enumerated"/>
-								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.OPT_FOR_SPACE.747906552" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.OPT_FOR_SPACE" value="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.OPT_FOR_SPACE.3" valueType="enumerated"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.OPT_FOR_SPACE.747906552" name="Optimize for code size (--opt_for_space, -ms)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.OPT_FOR_SPACE" value="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.OPT_FOR_SPACE.3" valueType="enumerated"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compiler.inputType__C_SRCS.350794789" name="C Sources" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compiler.inputType__C_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compiler.inputType__CPP_SRCS.1627919299" name="C++ Sources" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compiler.inputType__CPP_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compiler.inputType__ASM_SRCS.939497883" name="Assembly Sources" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compiler.inputType__ASM_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compiler.inputType__ASM2_SRCS.150507639" name="Assembly Sources" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compiler.inputType__ASM2_SRCS"/>
 							</tool>
 							<tool id="com.ti.ccstudio.buildDefinitions.C6000_7.4.library.librarianRelease.1280852161" name="C6000 Archiver" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.library.librarianRelease">
-								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.archiverID.OUTPUT_FILE.1781699689" name="Output file" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.archiverID.OUTPUT_FILE" value="&quot;${ProjName}.lib&quot;" valueType="string"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.archiverID.OUTPUT_FILE.1781699689" name="Output file" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.archiverID.OUTPUT_FILE" value="&quot;${ProjName}_release.lib&quot;" valueType="string"/>
 							</tool>
 						</toolChain>
 					</folderInfo>

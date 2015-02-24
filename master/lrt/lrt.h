@@ -66,6 +66,7 @@ private:
 	int ix_;
 	int nFct_;
 	const lrtFct* fcts_;
+	bool run_;
 
 	Stack* stack_;
 };

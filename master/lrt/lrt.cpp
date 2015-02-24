@@ -135,7 +135,6 @@ int LRT::runOneJob(){
 
 				Platform::getLrtCommunicator()->ctrl_end_send(size);
 			}
-			Platform::getLrtCommunicator()->ctrl_end_recv();
 
 			stack_->free(inFifosAlloc);
 			stack_->free(outFifosAlloc);
@@ -146,15 +145,15 @@ int LRT::runOneJob(){
 		case MSG_CLEAR_TIME:{
 			ClearTimeMsg* timeMsg = (ClearTimeMsg*) msg;
 			Platform::get()->rstTime(timeMsg);
-			Platform::getLrtCommunicator()->ctrl_end_recv();
 			break;}
 		case MSG_STOP_LRT:
-			exit(EXIT_SUCCESS);
+			run_ = false;
 			break;
 		case MSG_PARAM_VALUE:
 		default:
 			throw "Unexpected message received\n";
 		}
+		Platform::getLrtCommunicator()->ctrl_end_recv();
 		return 1;
 	}
 	return 0;
@@ -165,7 +164,8 @@ void LRT::runUntilNoMoreJobs(){
 }
 
 void LRT::runInfinitly(){
+	run_ = true;
 	do{
 		runOneJob();
-	}while(1);
+	}while(run_);
 }

@@ -177,6 +177,8 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 
         	/** launch LRT */
         	lrt_->runInfinitly();
+
+        	exit(EXIT_SUCCESS);
         } else { /* Parent */
         	cpIds[i] = cpid;
         }

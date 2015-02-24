@@ -104,7 +104,11 @@ PlatformK2Dsp::PlatformK2Dsp(int shMemSize, Stack *stack, lrtFct* fcts, int nLrt
 }
 
 PlatformK2Dsp::~PlatformK2Dsp(){
+	lrt_->~LRT();
+	((K2DspLrtCommunicator*)lrtCom_)->~K2DspLrtCommunicator();
 
+	stack_->free(lrt_);
+	stack_->free(lrtCom_);
 }
 
 int PlatformK2Dsp::getMinAllocSize(){

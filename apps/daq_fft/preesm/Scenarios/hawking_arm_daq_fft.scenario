@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+    <files>
+        <algorithm url="/daq_fft/Algo/daq_fft.pi"/>
+        <architecture url="/daq_fft/Archi/hawking_arm.slam"/>
+        <codegenDirectory url=""/>
+    </files>
+    <constraints excelUrl="">
+        <constraintGroup>
+            <operator name="Arm1"/>
+            <task name="daq_fft/cfg"/>
+            <task name="daq_fft/FFT_2"/>
+            <task name="daq_fft/FFT_5"/>
+            <task name="daq_fft/Twi_4"/>
+            <task name="daq_fft/snk"/>
+            <task name="daq_fft/genIx"/>
+            <task name="daq_fft/T_6"/>
+            <task name="daq_fft/src"/>
+            <task name="daq_fft/T_1"/>
+            <task name="daq_fft"/>
+            <task name="daq_fft/T_3"/>
+        </constraintGroup>
+        <constraintGroup>
+            <operator name="Arm2"/>
+            <task name="daq_fft/cfg"/>
+            <task name="daq_fft/FFT_2"/>
+            <task name="daq_fft/FFT_5"/>
+            <task name="daq_fft/Twi_4"/>
+            <task name="daq_fft/snk"/>
+            <task name="daq_fft/genIx"/>
+            <task name="daq_fft/T_6"/>
+            <task name="daq_fft/src"/>
+            <task name="daq_fft/T_1"/>
+            <task name="daq_fft"/>
+            <task name="daq_fft/T_3"/>
+        </constraintGroup>
+        <constraintGroup>
+            <operator name="Arm0"/>
+            <task name="daq_fft/cfg"/>
+            <task name="daq_fft/FFT_2"/>
+            <task name="daq_fft/FFT_5"/>
+            <task name="daq_fft/Twi_4"/>
+            <task name="daq_fft/snk"/>
+            <task name="daq_fft/genIx"/>
+            <task name="daq_fft/T_6"/>
+            <task name="daq_fft/src"/>
+            <task name="daq_fft/T_1"/>
+            <task name="daq_fft"/>
+            <task name="daq_fft/T_3"/>
+        </constraintGroup>
+        <constraintGroup>
+            <operator name="Arm3"/>
+            <task name="daq_fft/cfg"/>
+            <task name="daq_fft/FFT_2"/>
+            <task name="daq_fft/FFT_5"/>
+            <task name="daq_fft/Twi_4"/>
+            <task name="daq_fft/snk"/>
+            <task name="daq_fft/genIx"/>
+            <task name="daq_fft/T_6"/>
+            <task name="daq_fft/src"/>
+            <task name="daq_fft/T_1"/>
+            <task name="daq_fft"/>
+            <task name="daq_fft/T_3"/>
+        </constraintGroup>
+    </constraints>
+    <relativeconstraints excelUrl=""/>
+    <timings excelUrl="">
+        <timing opname="CortexA15" time="1000" vertexname="FFT_2"/>
+        <timing opname="CortexA15" time="1000" vertexname="FFT_5"/>
+        <timing opname="CortexA15" time="1000" vertexname="T_1"/>
+        <timing opname="CortexA15" time="1000" vertexname="T_3"/>
+        <timing opname="CortexA15" time="1000" vertexname="T_6"/>
+        <timing opname="CortexA15" time="1000" vertexname="Twi_4"/>
+        <timing opname="CortexA15" time="1000" vertexname="cfg"/>
+        <timing opname="CortexA15" time="1000" vertexname="genIx"/>
+        <timing opname="CortexA15" time="1000" vertexname="snk"/>
+        <timing opname="CortexA15" time="1000" vertexname="src"/>
+        <memcpyspeed opname="CortexA15" setuptime="1" timeperunit="1.0"/>
+    </timings>
+    <simuParams>
+        <mainCore>Arm0</mainCore>
+        <mainComNode>shared_mem</mainComNode>
+        <averageDataSize>1000</averageDataSize>
+        <dataTypes>
+            <dataType name="complex" size="8"/>
+            <dataType name="char" size="1"/>
+            <dataType name="int" size="4"/>
+        </dataTypes>
+        <specialVertexOperators>
+            <specialVertexOperator path="Arm0"/>
+            <specialVertexOperator path="Arm1"/>
+            <specialVertexOperator path="Arm2"/>
+            <specialVertexOperator path="Arm3"/>
+            <specialVertexOperator path="Dsp0"/>
+            <specialVertexOperator path="Dsp3"/>
+            <specialVertexOperator path="Dsp4"/>
+            <specialVertexOperator path="Dsp1"/>
+            <specialVertexOperator path="Dsp2"/>
+            <specialVertexOperator path="Dsp7"/>
+            <specialVertexOperator path="Dsp5"/>
+            <specialVertexOperator path="Dsp6"/>
+        </specialVertexOperators>
+        <numberOfTopExecutions>1</numberOfTopExecutions>
+    </simuParams>
+    <variables excelUrl=""/>
+    <parameterValues>
+        <parameter name="Nr" parent="daq_fft" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="Nc" parent="daq_fft" type="ACTOR_DEPENDENT" value="[1]"/>
+    </parameterValues>
+</scenario>

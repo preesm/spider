@@ -148,8 +148,8 @@ void cfg(Param size, Param* Nc, Param* Nr){
 #if VERBOSE
 	printf("Execute Cfg\n");
 #endif
-	*Nc = 256;
-	*Nr = 256;
+	*Nc = 1<<((int)log2(size)/2);
+	*Nr = size/(*Nc);
 }
 
 void src(Param size, float *out){

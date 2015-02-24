@@ -89,8 +89,9 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_src->addInParam(0, param_size);
-	bo_src->isExecutableOnPE(CORE_CORE0);
-	bo_src->setTimingOnType(CORE_TYPE_X86, "191305", stack);
+	bo_src->isExecutableOnPE(CORE_ARM0);
+	bo_src->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
+	bo_src->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
 	PiSDFVertex* bo_T_1 = graph->addBodyVertex(
 		/*Name*/    "T_1",
@@ -100,8 +101,16 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 		/*InParam*/ 2);
 	bo_T_1->addInParam(0, param_Nc);
 	bo_T_1->addInParam(1, param_Nr);
-	bo_T_1->isExecutableOnPE(CORE_CORE0);
-	bo_T_1->setTimingOnType(CORE_TYPE_X86, "705126", stack);
+	bo_T_1->isExecutableOnPE(CORE_DSP0);
+	bo_T_1->isExecutableOnPE(CORE_DSP3);
+	bo_T_1->isExecutableOnPE(CORE_DSP4);
+	bo_T_1->isExecutableOnPE(CORE_DSP1);
+	bo_T_1->isExecutableOnPE(CORE_DSP2);
+	bo_T_1->isExecutableOnPE(CORE_DSP7);
+	bo_T_1->isExecutableOnPE(CORE_DSP5);
+	bo_T_1->isExecutableOnPE(CORE_DSP6);
+	bo_T_1->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
+	bo_T_1->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
 	PiSDFVertex* bo_FFT_2 = graph->addBodyVertex(
 		/*Name*/    "FFT_2",
@@ -110,8 +119,16 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_FFT_2->addInParam(0, param_Nr);
-	bo_FFT_2->isExecutableOnPE(CORE_CORE0);
-	bo_FFT_2->setTimingOnType(CORE_TYPE_X86, "16488", stack);
+	bo_FFT_2->isExecutableOnPE(CORE_DSP0);
+	bo_FFT_2->isExecutableOnPE(CORE_DSP3);
+	bo_FFT_2->isExecutableOnPE(CORE_DSP4);
+	bo_FFT_2->isExecutableOnPE(CORE_DSP1);
+	bo_FFT_2->isExecutableOnPE(CORE_DSP2);
+	bo_FFT_2->isExecutableOnPE(CORE_DSP7);
+	bo_FFT_2->isExecutableOnPE(CORE_DSP5);
+	bo_FFT_2->isExecutableOnPE(CORE_DSP6);
+	bo_FFT_2->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
+	bo_FFT_2->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
 	PiSDFVertex* bo_T_3 = graph->addBodyVertex(
 		/*Name*/    "T_3",
@@ -121,8 +138,16 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 		/*InParam*/ 2);
 	bo_T_3->addInParam(0, param_Nr);
 	bo_T_3->addInParam(1, param_Nc);
-	bo_T_3->isExecutableOnPE(CORE_CORE0);
-	bo_T_3->setTimingOnType(CORE_TYPE_X86, "714374", stack);
+	bo_T_3->isExecutableOnPE(CORE_DSP0);
+	bo_T_3->isExecutableOnPE(CORE_DSP3);
+	bo_T_3->isExecutableOnPE(CORE_DSP4);
+	bo_T_3->isExecutableOnPE(CORE_DSP1);
+	bo_T_3->isExecutableOnPE(CORE_DSP2);
+	bo_T_3->isExecutableOnPE(CORE_DSP7);
+	bo_T_3->isExecutableOnPE(CORE_DSP5);
+	bo_T_3->isExecutableOnPE(CORE_DSP6);
+	bo_T_3->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
+	bo_T_3->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
 	PiSDFVertex* bo_Twi_4 = graph->addBodyVertex(
 		/*Name*/    "Twi_4",
@@ -131,8 +156,16 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_Twi_4->addInParam(0, param_Nc);
-	bo_Twi_4->isExecutableOnPE(CORE_CORE0);
-	bo_Twi_4->setTimingOnType(CORE_TYPE_X86, "3848", stack);
+	bo_Twi_4->isExecutableOnPE(CORE_DSP0);
+	bo_Twi_4->isExecutableOnPE(CORE_DSP3);
+	bo_Twi_4->isExecutableOnPE(CORE_DSP4);
+	bo_Twi_4->isExecutableOnPE(CORE_DSP1);
+	bo_Twi_4->isExecutableOnPE(CORE_DSP2);
+	bo_Twi_4->isExecutableOnPE(CORE_DSP7);
+	bo_Twi_4->isExecutableOnPE(CORE_DSP5);
+	bo_Twi_4->isExecutableOnPE(CORE_DSP6);
+	bo_Twi_4->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
+	bo_Twi_4->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
 	PiSDFVertex* bo_FFT_5 = graph->addBodyVertex(
 		/*Name*/    "FFT_5",
@@ -141,8 +174,16 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_FFT_5->addInParam(0, param_Nc);
-	bo_FFT_5->isExecutableOnPE(CORE_CORE0);
-	bo_FFT_5->setTimingOnType(CORE_TYPE_X86, "16614", stack);
+	bo_FFT_5->isExecutableOnPE(CORE_DSP0);
+	bo_FFT_5->isExecutableOnPE(CORE_DSP3);
+	bo_FFT_5->isExecutableOnPE(CORE_DSP4);
+	bo_FFT_5->isExecutableOnPE(CORE_DSP1);
+	bo_FFT_5->isExecutableOnPE(CORE_DSP2);
+	bo_FFT_5->isExecutableOnPE(CORE_DSP7);
+	bo_FFT_5->isExecutableOnPE(CORE_DSP5);
+	bo_FFT_5->isExecutableOnPE(CORE_DSP6);
+	bo_FFT_5->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
+	bo_FFT_5->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
 	PiSDFVertex* bo_T_6 = graph->addBodyVertex(
 		/*Name*/    "T_6",
@@ -152,8 +193,16 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 		/*InParam*/ 2);
 	bo_T_6->addInParam(0, param_Nc);
 	bo_T_6->addInParam(1, param_Nr);
-	bo_T_6->isExecutableOnPE(CORE_CORE0);
-	bo_T_6->setTimingOnType(CORE_TYPE_X86, "707298", stack);
+	bo_T_6->isExecutableOnPE(CORE_DSP0);
+	bo_T_6->isExecutableOnPE(CORE_DSP3);
+	bo_T_6->isExecutableOnPE(CORE_DSP4);
+	bo_T_6->isExecutableOnPE(CORE_DSP1);
+	bo_T_6->isExecutableOnPE(CORE_DSP2);
+	bo_T_6->isExecutableOnPE(CORE_DSP7);
+	bo_T_6->isExecutableOnPE(CORE_DSP5);
+	bo_T_6->isExecutableOnPE(CORE_DSP6);
+	bo_T_6->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
+	bo_T_6->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
 	PiSDFVertex* bo_snk = graph->addBodyVertex(
 		/*Name*/    "snk",
@@ -162,8 +211,9 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 		/*OutData*/ 0,
 		/*InParam*/ 1);
 	bo_snk->addInParam(0, param_size);
-	bo_snk->isExecutableOnPE(CORE_CORE0);
-	bo_snk->setTimingOnType(CORE_TYPE_X86, "1198965", stack);
+	bo_snk->isExecutableOnPE(CORE_ARM0);
+	bo_snk->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
+	bo_snk->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
 	PiSDFVertex* cf_cfg = graph->addConfigVertex(
 		/*Name*/    "cfg",
@@ -176,8 +226,9 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 	cf_cfg->addOutParam(0, param_Nr);
 	cf_cfg->addOutParam(1, param_Nc);
 	cf_cfg->addInParam(0, param_size);
-	cf_cfg->isExecutableOnPE(CORE_CORE0);
-	cf_cfg->setTimingOnType(CORE_TYPE_X86, "276", stack);
+	cf_cfg->isExecutableOnPE(CORE_ARM0);
+	cf_cfg->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
+	cf_cfg->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
 	PiSDFVertex* bo_genIx = graph->addBodyVertex(
 		/*Name*/    "genIx",
@@ -186,8 +237,9 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_genIx->addInParam(0, param_Nr);
-	bo_genIx->isExecutableOnPE(CORE_CORE0);
-	bo_genIx->setTimingOnType(CORE_TYPE_X86, "1015", stack);
+	bo_genIx->isExecutableOnPE(CORE_ARM0);
+	bo_genIx->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
+	bo_genIx->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
 
 	/* Edges */

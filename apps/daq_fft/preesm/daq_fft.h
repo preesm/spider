@@ -48,11 +48,23 @@ PiSDFGraph* init_daq_fft(Archi* archi, Stack* stack);
 void free_daq_fft(PiSDFGraph* top, Stack* stack);
 
 typedef enum{
-	CORE_CORE0 = 0,
+	CORE_ARM0 = 0,
+	CORE_ARM1 = 1,
+	CORE_ARM2 = 2,
+	CORE_ARM3 = 3,
+	CORE_DSP0 = 4,
+	CORE_DSP3 = 5,
+	CORE_DSP4 = 6,
+	CORE_DSP1 = 7,
+	CORE_DSP2 = 8,
+	CORE_DSP7 = 9,
+	CORE_DSP5 = 10,
+	CORE_DSP6 = 11,
 } PE;
 
 typedef enum{
-	CORE_TYPE_X86 = 0,
+	CORE_TYPE_C6678 = 0,
+	CORE_TYPE_CORTEXA15 = 1,
 } PEType;
 
 typedef enum{

@@ -2,12 +2,54 @@
 <scenario>
     <files>
         <algorithm url="/daq_fft/Algo/daq_fft.pi"/>
-        <architecture url="/daq_fft/Archi/1CoreX86.slam"/>
+        <architecture url="/daq_fft/Archi/4CoreX86.slam"/>
         <codegenDirectory url=""/>
     </files>
     <constraints excelUrl="">
         <constraintGroup>
+            <operator name="Core1"/>
+            <task name="daq_fft/cfg"/>
+            <task name="daq_fft/FFT_2"/>
+            <task name="daq_fft/FFT_5"/>
+            <task name="daq_fft/Twi_4"/>
+            <task name="daq_fft/snk"/>
+            <task name="daq_fft/T_6"/>
+            <task name="daq_fft/genIx"/>
+            <task name="daq_fft/src"/>
+            <task name="daq_fft/T_1"/>
+            <task name="daq_fft"/>
+            <task name="daq_fft/T_3"/>
+        </constraintGroup>
+        <constraintGroup>
             <operator name="Core0"/>
+            <task name="daq_fft/cfg"/>
+            <task name="daq_fft/FFT_2"/>
+            <task name="daq_fft/FFT_5"/>
+            <task name="daq_fft/Twi_4"/>
+            <task name="daq_fft/snk"/>
+            <task name="daq_fft/T_6"/>
+            <task name="daq_fft/genIx"/>
+            <task name="daq_fft/src"/>
+            <task name="daq_fft/T_1"/>
+            <task name="daq_fft"/>
+            <task name="daq_fft/T_3"/>
+        </constraintGroup>
+        <constraintGroup>
+            <operator name="Core2"/>
+            <task name="daq_fft/cfg"/>
+            <task name="daq_fft/FFT_2"/>
+            <task name="daq_fft/FFT_5"/>
+            <task name="daq_fft/Twi_4"/>
+            <task name="daq_fft/snk"/>
+            <task name="daq_fft/T_6"/>
+            <task name="daq_fft/genIx"/>
+            <task name="daq_fft/src"/>
+            <task name="daq_fft/T_1"/>
+            <task name="daq_fft"/>
+            <task name="daq_fft/T_3"/>
+        </constraintGroup>
+        <constraintGroup>
+            <operator name="Core3"/>
             <task name="daq_fft/cfg"/>
             <task name="daq_fft/FFT_2"/>
             <task name="daq_fft/FFT_5"/>
@@ -23,16 +65,16 @@
     </constraints>
     <relativeconstraints excelUrl=""/>
     <timings excelUrl="/daq_fft/Code/timings.csv">
-        <timing opname="x86" time="16488" vertexname="FFT_2"/>
-        <timing opname="x86" time="16614" vertexname="FFT_5"/>
+        <timing opname="x86" time="191305" vertexname="src"/>
         <timing opname="x86" time="705126" vertexname="T_1"/>
+        <timing opname="x86" time="16488" vertexname="FFT_2"/>
         <timing opname="x86" time="714374" vertexname="T_3"/>
-        <timing opname="x86" time="707298" vertexname="T_6"/>
         <timing opname="x86" time="3848" vertexname="Twi_4"/>
+        <timing opname="x86" time="16614" vertexname="FFT_5"/>
+        <timing opname="x86" time="707298" vertexname="T_6"/>
+        <timing opname="x86" time="1198965" vertexname="snk"/>
         <timing opname="x86" time="276" vertexname="cfg"/>
         <timing opname="x86" time="1015" vertexname="genIx"/>
-        <timing opname="x86" time="1198965" vertexname="snk"/>
-        <timing opname="x86" time="191305" vertexname="src"/>
         <memcpyspeed opname="x86" setuptime="1" timeperunit="1.0"/>
     </timings>
     <simuParams>
@@ -45,13 +87,16 @@
             <dataType name="int" size="4"/>
         </dataTypes>
         <specialVertexOperators>
+            <specialVertexOperator path="Core3"/>
             <specialVertexOperator path="Core0"/>
+            <specialVertexOperator path="Core2"/>
+            <specialVertexOperator path="Core1"/>
         </specialVertexOperators>
         <numberOfTopExecutions>1</numberOfTopExecutions>
     </simuParams>
     <variables excelUrl=""/>
     <parameterValues>
-        <parameter name="Nr" parent="daq_fft" type="ACTOR_DEPENDENT" value="[1]"/>
         <parameter name="Nc" parent="daq_fft" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="Nr" parent="daq_fft" type="ACTOR_DEPENDENT" value="[1]"/>
     </parameterValues>
 </scenario>

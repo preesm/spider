@@ -83,30 +83,6 @@
                 spirit:name="CortexA15" spirit:vendor="" spirit:version=""/>
             <spirit:configurableElementValues/>
         </spirit:componentInstance>
-        <spirit:componentInstance>
-            <spirit:instanceName>FFTC0</spirit:instanceName>
-            <spirit:componentRef spirit:library="" spirit:name="fftc"
-                spirit:vendor="" spirit:version=""/>
-            <spirit:configurableElementValues/>
-        </spirit:componentInstance>
-        <spirit:componentInstance>
-            <spirit:instanceName>FFTC1</spirit:instanceName>
-            <spirit:componentRef spirit:library="" spirit:name="fftc"
-                spirit:vendor="" spirit:version=""/>
-            <spirit:configurableElementValues/>
-        </spirit:componentInstance>
-        <spirit:componentInstance>
-            <spirit:instanceName>FFTC2</spirit:instanceName>
-            <spirit:componentRef spirit:library="" spirit:name="fftc"
-                spirit:vendor="" spirit:version=""/>
-            <spirit:configurableElementValues/>
-        </spirit:componentInstance>
-        <spirit:componentInstance>
-            <spirit:instanceName>FFTC3</spirit:instanceName>
-            <spirit:componentRef spirit:library="" spirit:name="fftc"
-                spirit:vendor="" spirit:version=""/>
-            <spirit:configurableElementValues/>
-        </spirit:componentInstance>
     </spirit:componentInstances>
     <spirit:interconnections>
         <spirit:interconnection>
@@ -169,26 +145,6 @@
             <spirit:activeInterface spirit:busRef="shared_mem" spirit:componentRef="shared_mem"/>
             <spirit:activeInterface spirit:busRef="shared_mem" spirit:componentRef="Arm3"/>
         </spirit:interconnection>
-        <spirit:interconnection>
-            <spirit:name>shared_mem|shared_mem|FFTC0|shared_mem</spirit:name>
-            <spirit:activeInterface spirit:busRef="shared_mem" spirit:componentRef="shared_mem"/>
-            <spirit:activeInterface spirit:busRef="shared_mem" spirit:componentRef="FFTC0"/>
-        </spirit:interconnection>
-        <spirit:interconnection>
-            <spirit:name>shared_mem|shared_mem|FFTC1|shared_mem</spirit:name>
-            <spirit:activeInterface spirit:busRef="shared_mem" spirit:componentRef="shared_mem"/>
-            <spirit:activeInterface spirit:busRef="shared_mem" spirit:componentRef="FFTC1"/>
-        </spirit:interconnection>
-        <spirit:interconnection>
-            <spirit:name>shared_mem|shared_mem|FFTC2|shared_mem</spirit:name>
-            <spirit:activeInterface spirit:busRef="shared_mem" spirit:componentRef="shared_mem"/>
-            <spirit:activeInterface spirit:busRef="shared_mem" spirit:componentRef="FFTC2"/>
-        </spirit:interconnection>
-        <spirit:interconnection>
-            <spirit:name>shared_mem|shared_mem|FFTC3|shared_mem</spirit:name>
-            <spirit:activeInterface spirit:busRef="shared_mem" spirit:componentRef="shared_mem"/>
-            <spirit:activeInterface spirit:busRef="shared_mem" spirit:componentRef="FFTC3"/>
-        </spirit:interconnection>
     </spirit:interconnections>
     <spirit:hierConnections/>
     <spirit:vendorExtensions>
@@ -198,8 +154,6 @@
             <slam:componentDescription slam:componentRef="c6678"
                 slam:componentType="Operator" slam:refinement=""/>
             <slam:componentDescription slam:componentRef="CortexA15"
-                slam:componentType="Operator" slam:refinement=""/>
-            <slam:componentDescription slam:componentRef="fftc"
                 slam:componentType="Operator" slam:refinement=""/>
         </slam:componentDescriptions>
         <slam:linkDescriptions xmlns:slam="http://sourceforge.net/projects/dftools/slam">
@@ -227,14 +181,6 @@
                 slam:linkType="DataLink" slam:referenceId="shared_mem|shared_mem|Arm1|shared_mem"/>
             <slam:linkDescription slam:directedLink="undirected"
                 slam:linkType="DataLink" slam:referenceId="shared_mem|shared_mem|Arm3|shared_mem"/>
-            <slam:linkDescription slam:directedLink="undirected"
-                slam:linkType="DataLink" slam:referenceId="shared_mem|shared_mem|FFTC0|shared_mem"/>
-            <slam:linkDescription slam:directedLink="undirected"
-                slam:linkType="DataLink" slam:referenceId="shared_mem|shared_mem|FFTC1|shared_mem"/>
-            <slam:linkDescription slam:directedLink="undirected"
-                slam:linkType="DataLink" slam:referenceId="shared_mem|shared_mem|FFTC2|shared_mem"/>
-            <slam:linkDescription slam:directedLink="undirected"
-                slam:linkType="DataLink" slam:referenceId="shared_mem|shared_mem|FFTC3|shared_mem"/>
         </slam:linkDescriptions>
         <slam:designDescription xmlns:slam="http://sourceforge.net/projects/dftools/slam">
             <slam:parameters/>

@@ -52,7 +52,7 @@ int main(int argc, char* argv[]){
 	DynStack archiStack("ArchiStack");
 
 #define SH_MEM 0x00500000
-	PlatformLinux platform(1, SH_MEM, &archiStack, daq_fft_fcts, N_FCT_DAQ_FFT);
+	PlatformLinux platform(4, SH_MEM, &archiStack, daq_fft_fcts, N_FCT_DAQ_FFT);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;

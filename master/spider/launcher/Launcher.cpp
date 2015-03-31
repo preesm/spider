@@ -77,7 +77,7 @@ void Launcher::send_ClearTimeMsg(int lrtIx){
 
 void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 	/** retreive Infos for msg */
-	int nParams;
+	int nParams = 0;
 	switch(vertex->getType()){
 	case SRDAG_NORMAL:
 		nParams = vertex->getNInParam();

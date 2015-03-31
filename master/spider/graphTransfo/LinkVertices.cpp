@@ -223,8 +223,8 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 			int cons;
 		} SnkConnection;
 
-		SrcConnection* srcConnections;
-		SnkConnection* snkConnections;
+		SrcConnection* srcConnections = 0;
+		SnkConnection* snkConnections = 0;
 		bool sinkNeedEnd = false;
 
 		int forkIx = -1;

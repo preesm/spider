@@ -43,43 +43,21 @@ extern "C"{
 #include "edma.h"
 }
 
-void transpose(Param Nc, Param Nr, short* restrict in, short* restrict out){
+void transpose(Param Nc, Param Nr, Cplx16* restrict in, Cplx16* restrict out){
 #if VERBOSE
 	printf("Execute transpose\n");
 #endif
 
-//	int i, j;
-//	_nassert((int) in  % 8 == 0); 	// in  is 64-bit aligned
-//	_nassert((int) out % 8 == 0); 	// out is 64-bit aligned
-//	for (i = 0; i < Nr; i++) {
-//#pragma MUST_ITERATE(8,,8)
-//		for (j = 0; j < Nc; j++) {
-//			out[2*(i*Nc + j)]   = in[2*(j*Nc + i)];
-//			out[2*(i*Nc + j)+1] = in[2*(j*Nc + i)+1];
-//		}
-//	}
-
-	/* See 3-5 of Enhanced Direct Memory Access (EDMA3) Controller User Guide from TI (sprugs5a)*/
-	edma_cpy(
-		/* Src */ in,
-		/* Dst */ out,
+	int res = edma_cpy(
+		in, out,
 		/*ACnt: element size*/ 			4,
-		/*BCnt: line size*/ 			Nc,
-		/*CCnt: n lines in matrice*/ 	Nr,
+		/*BCnt: line size*/ 			256,
+		/*CCnt: n lines in matrice*/ 	256,
 		/*SrcBIdx: = ACnt */			4,
-		/*DstBIdx: = CCnt*ACnt */		4*Nr,
-		/*SrcCIdx: = ACnt*BCnt */		4*Nc,
-		/*DstCIdx: = ACnt */			4
-	);
-//	edma_cpy(
-//		/* Src */ in,
-//		/* Dst */ out,
-//		/*ACnt: element size*/ 			8*Nc*Nr,
-//		/*BCnt: line size*/ 			1,
-//		/*CCnt: n lines in matrice*/ 	1,
-//		/*SrcBIdx: = ACnt */			0,
-//		/*DstBIdx: = CCnt*ACnt */		0,
-//		/*SrcCIdx: = ACnt*BCnt */		0,
-//		/*DstCIdx: = ACnt */			0
-//	);
+		/*DstBIdx: = CCnt*ACnt */		4*256,
+		/*SrcCIdx: = ACnt*BCnt */		4*256,
+		/*DstCIdx: = ACnt */			4);
+
+	if(res)
+		printf("Edma cpy failed\n");
 }

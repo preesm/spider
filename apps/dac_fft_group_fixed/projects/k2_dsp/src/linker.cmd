@@ -62,6 +62,7 @@ SECTIONS
     xdc.meta: load > L2SRAM, type = COPY
 
 	.qmss: load > L2SRAM
+	.cppi: load > L2SRAM
 	.fftData: load > DDR3
 	.twiddles: load > L2SRAM
 }

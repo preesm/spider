@@ -37,14 +37,19 @@
 #ifndef ACTORS_H
 #define ACTORS_H
 
+typedef struct Cplx16{
+	short	imag;
+	short	real;
+} Cplx16;
+
 void cfg(Param size, Param* Nc, Param* Nr, Param* n1, Param* n2);
 
-void src(Param size, short *out);
-void snk(Param size, short *in);
+void src(Param size, Cplx16 *out);
+void snk(Param size, Cplx16 *in);
 
-void fft(Param size, Param n, short* in, short* out);
-void transpose(Param Nc, Param Nr, short* in, short* out);
-void twiddles(Param size, Param n, int* ix, short* in, short* out);
+void fft(Param size, Param n, Cplx16* in, Cplx16* out);
+void transpose(Param Nc, Param Nr, Cplx16* in, Cplx16* out);
+void twiddles(Param size, Param n, int* ix, Cplx16* in, Cplx16* out);
 void genIx(Param Nr, Param n, int* ixs);
 
 #endif//ACTORS_H

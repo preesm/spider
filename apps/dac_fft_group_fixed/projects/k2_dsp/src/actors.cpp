@@ -35,14 +35,16 @@
  ****************************************************************************/
 
 #include <platform.h>
+#include <lrt.h>
 
 #include "actors.h"
 //#include "data_fx.h"
 
 extern "C"{
-#include "ti/dsplib/src/DSP_fft16x16/DSP_fft16x16.h"
-#include "gen_twiddle_fft16x16.h"
+#include "ti/dsplib/src/DSP_fft16x16_imre/DSP_fft16x16_imre.h"
+#include "gen_twiddle_fft16x16_imre.h"
 #include "edma.h"
+int fftc_send (int fftc_ix, Cplx16* in, Cplx16* out, int fftSize, int numBlocks);
 }
 
 #include <stdio.h>
@@ -73,20 +75,12 @@ unsigned char brev[64] = {
 #pragma DATA_SECTION(".twiddles")
 static short gen_twi256[2*256];
 
-static short d2s(double d)
-{
-    d = floor(0.5 + d);  // Explicit rounding to integer //
-    if (d >=  32767.0) return  32767;
-    if (d <= -32768.0) return -32768;
-    return (short)d;
-}
-
 void initActors2();
 
 void initActors(){
 	initActors2();
 
-	gen_twiddle_fft16x16(gen_twi256,     256);
+	gen_twiddle_fft16x16_imre(gen_twi256,     256);
 
 	edma_init();
 }
@@ -125,7 +119,7 @@ void cfg(Param size, Param* Nc, Param* Nr, Param* n1, Param* n2){
 	*n2 = *Nr/8;
 }
 
-void src(Param size, short *out){
+void src(Param size, Cplx16 *out){
 #if VERBOSE
 	printf("Execute Src\n");
 #endif
@@ -135,7 +129,7 @@ void src(Param size, short *out){
 //    memcpy(out, data_in, size*2*sizeof(short));
 }
 
-void snk(Param size, short *in){
+void snk(Param size, Cplx16 *in){
 #if VERBOSE
 	printf("Execute Snk\n");
 #endif
@@ -153,7 +147,7 @@ void snk(Param size, short *in){
 */
 }
 
-void fft(Param size, Param n, short* in, short* out){
+void fft(Param size, Param n, Cplx16* in, Cplx16* out){
 
 #if VERBOSE
 	printf("Execute fft\n");
@@ -199,18 +193,27 @@ void fft(Param size, Param n, short* in, short* out){
 //	_nassert((int) pl_in  % 8 == 0); 	// input  is 64-bit aligned
 //	_nassert((int) pl_out % 8 == 0); 	// output is 64-bit aligned
 //	_nassert((int) pl_w % 8 == 0); 	// twiddles is 64-bit aligned
-//
-//	for(int i=0; i<n; i++){
-//		DSP_fft16x16_cn((short*)pl_w, size, (short*)pl_in, (short*)pl_out);
-//		in += size;
-//		out += size;
-//	}
 
-	for(int i=0; i<n; i++){
-		DSP_fft16x16(w, size, in, out);
-		in += 2*size;
-		out += 2*size;
+	switch(Platform::get()->getLrt()->getIx()){
+//	case 0:
+//		fftc_send (0,(Cplx16*)in, (Cplx16*)out, size, n);
+//		break;
+	default:
+		for(int i=0; i<n; i++){
+			DSP_fft16x16_imre(w, size, (short*)in, (short*)out);
+
+			in  += size;
+			out += size;
+		}
+		break;
 	}
+
+
+//	for(int i=0; i<n; i++){
+//		DSP_fft16x16(w, size, in, out);
+//		in += 2*size;
+//		out += 2*size;
+//	}
 }
 
 void genIx(Param Nr, Param n, int* ixs){

@@ -52,7 +52,7 @@ int main(int argc, char* argv[]){
 	DynStack archiStack("ArchiStack");
 
 #define SH_MEM 0x00500000
-	PlatformK2Arm platform(4, 8, SH_MEM, &archiStack, daq_fft_fcts, N_FCT_DAQ_FFT);
+	PlatformK2Arm platform(2, 4, SH_MEM, &archiStack, daq_fft_fcts, N_FCT_DAQ_FFT);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
@@ -73,63 +73,67 @@ int main(int argc, char* argv[]){
 	PiSDFGraph *topPisdf = init_daq_fft(archi, &pisdfStack);
 	topPisdf->print("topPisdf.gv");
 
-	Platform::get()->rstTime();
 
-	spider_launch(archi, topPisdf);
+		for(int i=0; i<2; i++){
+			Platform::get()->rstTime();
 
-	spider_printGantt(archi, spider_getLastSRDAG(), "dac_fft_group_fixed.pgantt", "latex.tex", &stat);
-	spider_getLastSRDAG()->print("dac_fft_group.gv");
+			spider_launch(archi, topPisdf);
 
-	printf("EndTime = %ld ms\n", stat.globalEndTime/1000000);
+			spider_printGantt(archi, spider_getLastSRDAG(), "dac_fft_group_fixed.pgantt", "latex.tex", &stat);
+			spider_getLastSRDAG()->print("dac_fft_group.gv");
 
-	printf("Memory use = ");
-	if(stat.memoryUsed < 1024)
-		printf("\t%5.1f B", stat.memoryUsed/1.);
-	else if(stat.memoryUsed < 1024*1024)
-		printf("\t%5.1f KB", stat.memoryUsed/1024.);
-	else if(stat.memoryUsed < 1024*1024*1024)
-		printf("\t%5.1f MB", stat.memoryUsed/1024./1024.);
-	else
-		printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
-	printf("\n");
+			printf("EndTime = %ld ms\n", stat.globalEndTime/1000000);
 
-	FILE* f = fopen("timings.csv", "w+");
-	fprintf(f, "Actors,c6678,CortexA15\n");
+			printf("Memory use = ");
+			if(stat.memoryUsed < 1024)
+				printf("\t%5.1f B", stat.memoryUsed/1.);
+			else if(stat.memoryUsed < 1024*1024)
+				printf("\t%5.1f KB", stat.memoryUsed/1024.);
+			else if(stat.memoryUsed < 1024*1024*1024)
+				printf("\t%5.1f MB", stat.memoryUsed/1024./1024.);
+			else
+				printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
+			printf("\n");
 
-	Time fftTime = 0;
+			FILE* f = fopen("timings.csv", "w+");
+			fprintf(f, "Actors,c6678,CortexA15\n");
 
-	printf("Actors:\n");
-	for(int j=0; j<stat.nbActor; j++){
-		printf("\t%12s:", stat.actors[j]->getName());
-		fprintf(f, "%s", stat.actors[j]->getName());
-		for(int k=0; k<archi->getNPETypes(); k++){
-			if(stat.actorIterations[j][k] > 0){
-				printf("\t(%d): %8ld (x%ld)",
-						k,
-						stat.actorTimes[j][k]/stat.actorIterations[j][k],
-						stat.actorIterations[j][k]);
-				fprintf(f, ",%ld", stat.actorTimes[j][k]/stat.actorIterations[j][k]);
-			}else{
-				printf("\t(%d):        0 (x0)", k);
-				fprintf(f, ",%ld", (Time)-1);
+			Time fftTime = 0;
+
+			printf("Actors:\n");
+			for(int j=0; j<stat.nbActor; j++){
+				printf("\t%12s:", stat.actors[j]->getName());
+				fprintf(f, "%s", stat.actors[j]->getName());
+				for(int k=0; k<archi->getNPETypes(); k++){
+					if(stat.actorIterations[j][k] > 0){
+						printf("\t(%d): %8ld (x%ld)",
+								k,
+								stat.actorTimes[j][k]/stat.actorIterations[j][k],
+								stat.actorIterations[j][k]);
+						fprintf(f, ",%ld", stat.actorTimes[j][k]/stat.actorIterations[j][k]);
+					}else{
+						printf("\t(%d):        0 (x0)", k);
+						fprintf(f, ",%ld", (Time)-1);
+					}
+				}
+
+				if(strcmp(stat.actors[j]->getName(), "T_1") == 0){
+					fftTime -= stat.actorFisrt[j];
+				}
+
+				if(strcmp(stat.actors[j]->getName(), "T_6") == 0){
+					fftTime += stat.actorLast[j];
+				}
+
+				printf("\n");
+				fprintf(f, "\n");
 			}
+
+			printf("fftTime = %ld us\n", fftTime/1000);
+
 		}
-
-		if(strcmp(stat.actors[j]->getName(), "T_1") == 0){
-			fftTime -= stat.actorFisrt[j];
-		}
-
-		if(strcmp(stat.actors[j]->getName(), "T_6") == 0){
-			fftTime += stat.actorLast[j];
-		}
-
-		printf("\n");
-		fprintf(f, "\n");
-	}
-
-	printf("fftTime = %ld us\n", fftTime/1000);
-
 	free_daq_fft(topPisdf, &pisdfStack);
+
 
 	}catch(const char* s){
 		printf("Exception : %s\n", s);

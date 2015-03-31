@@ -68,7 +68,7 @@ lrtFct daq_fft_fcts[N_FCT_DAQ_FFT] = {
 void src(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	src(
 		/* size */ (Param) inParams[0],
-		/* out  */ (short*) outputFIFOs[0]
+		/* out  */ (Cplx16*) outputFIFOs[0]
 	);
 }
 
@@ -76,8 +76,8 @@ void T_1(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outPar
 	transpose(
 		/* Nc  */ (Param) inParams[0],
 		/* Nr  */ (Param) inParams[1],
-		/* in  */ (short*) inputFIFOs[0],
-		/* out */ (short*) outputFIFOs[0]
+		/* in  */ (Cplx16*) inputFIFOs[0],
+		/* out */ (Cplx16*) outputFIFOs[0]
 	);
 }
 
@@ -85,8 +85,8 @@ void FFT_2(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outP
 	fft(
 		/* size */ (Param) inParams[0],
 		/* n    */ (Param) inParams[1],
-		/* in   */ (short*) inputFIFOs[0],
-		/* out  */ (short*) outputFIFOs[0]
+		/* in   */ (Cplx16*) inputFIFOs[0],
+		/* out  */ (Cplx16*) outputFIFOs[0]
 	);
 }
 
@@ -94,8 +94,8 @@ void T_3(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outPar
 	transpose(
 		/* Nc  */ (Param) inParams[0],
 		/* Nr  */ (Param) inParams[1],
-		/* in  */ (short*) inputFIFOs[0],
-		/* out */ (short*) outputFIFOs[0]
+		/* in  */ (Cplx16*) inputFIFOs[0],
+		/* out */ (Cplx16*) outputFIFOs[0]
 	);
 }
 
@@ -104,8 +104,8 @@ void Twi_4(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outP
 		/* size */ (Param) inParams[0],
 		/* n    */ (Param) inParams[1],
 		/* ix   */ (int*) inputFIFOs[0],
-		/* in   */ (short*) inputFIFOs[1],
-		/* out  */ (short*) outputFIFOs[0]
+		/* in   */ (Cplx16*) inputFIFOs[1],
+		/* out  */ (Cplx16*) outputFIFOs[0]
 	);
 }
 
@@ -113,8 +113,8 @@ void FFT_5(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outP
 	fft(
 		/* size */ (Param) inParams[0],
 		/* n    */ (Param) inParams[1],
-		/* in   */ (short*) inputFIFOs[0],
-		/* out  */ (short*) outputFIFOs[0]
+		/* in   */ (Cplx16*) inputFIFOs[0],
+		/* out  */ (Cplx16*) outputFIFOs[0]
 	);
 }
 
@@ -122,15 +122,15 @@ void T_6(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outPar
 	transpose(
 		/* Nc  */ (Param) inParams[0],
 		/* Nr  */ (Param) inParams[1],
-		/* in  */ (short*) inputFIFOs[0],
-		/* out */ (short*) outputFIFOs[0]
+		/* in  */ (Cplx16*) inputFIFOs[0],
+		/* out */ (Cplx16*) outputFIFOs[0]
 	);
 }
 
 void snk(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	snk(
 		/* size */ (Param) inParams[0],
-		/* in   */ (short*) inputFIFOs[0]
+		/* in   */ (Cplx16*) inputFIFOs[0]
 	);
 }
 

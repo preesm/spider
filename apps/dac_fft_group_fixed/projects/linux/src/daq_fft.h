@@ -49,9 +49,9 @@ void free_daq_fft(PiSDFGraph* top, Stack* stack);
 
 typedef enum{
 	CORE_CORE3 = 0,
-	CORE_CORE0 = 1,
-	CORE_CORE2 = 2,
-	CORE_CORE1 = 3,
+	CORE_CORE0 = 0,
+	CORE_CORE2 = 0,
+	CORE_CORE1 = 0,
 } PE;
 
 typedef enum{

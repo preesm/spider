@@ -52,14 +52,14 @@ typedef enum{
 	CORE_DSP1 = 1,
 	CORE_DSP2 = 2,
 	CORE_DSP3 = 3,
-	CORE_DSP4 = 4,
-	CORE_DSP5 = 5,
-	CORE_DSP6 = 6,
-	CORE_DSP7 = 7,
-	CORE_ARM0 = 8,
-	CORE_ARM1 = 9,
-	CORE_ARM2 = 10,
-	CORE_ARM3 = 11
+	CORE_DSP4 = 0,
+	CORE_DSP5 = 0,
+	CORE_DSP6 = 0,
+	CORE_DSP7 = 0,
+	CORE_ARM0 = 4,
+	CORE_ARM1 = 5,
+	CORE_ARM2 = 4,
+	CORE_ARM3 = 4
 } PE;
 
 typedef enum{

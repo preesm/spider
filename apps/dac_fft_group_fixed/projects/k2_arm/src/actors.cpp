@@ -35,17 +35,22 @@
  ****************************************************************************/
 
 #include <platform.h>
+#include <lrt.h>
 
 #include "actors.h"
-#include "data_fx.h"
+#include "data_fx_imre.h"
+#include "daq_fft.h"
 
 extern "C"{
-#include "DSP_fft16x16_cn.h"
+#include "DSP_fft16x16_imre_cn.h"
+#include "gen_twiddle_fft16x16_imre.h"
+int fftc_send (int fftc_ix, Cplx16* in, Cplx16* out, int fftSize, int numBlocks);
 }
 
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <sys/mman.h>
 
 #ifndef PI
 # ifdef M_PI
@@ -69,18 +74,15 @@ unsigned char brev[64] = {
     0x7, 0x27, 0x17, 0x37, 0xf, 0x2f, 0x1f, 0x3f
 };
 
-static short twi64k_r[64*1024];
-static short twi64k_i[64*1024];
+static Cplx16 twi64k[64*1024];
 
-static short gen_twi32k[2*32*1024];
-static short gen_twi16k[2*16*1024];
-static short gen_twi8k [2*8*1024];
-static short gen_twi4k [2*4*1024];
-static short gen_twi2k [2*2*1024];
-static short gen_twi1k [2*1024];
-static short gen_twi256[2*256];
-
-int gen_twiddle_fft16x16 (short *w, int n);
+static Cplx16 gen_twi32k[32*1024];
+static Cplx16 gen_twi16k[16*1024];
+static Cplx16 gen_twi8k [8*1024];
+static Cplx16 gen_twi4k [4*1024];
+static Cplx16 gen_twi2k [2*1024];
+static Cplx16 gen_twi1k [1024];
+static Cplx16 gen_twi256[256];
 
 static short d2s(double d)
 {
@@ -93,56 +95,32 @@ static short d2s(double d)
 void initActors(){
     double M = 32767.5;
 	for(int i=0; i<64*1024; i++){
-		twi64k_r[i] = d2s(M*cos(-2*M_PI*i/(64*1024)));
-		twi64k_i[i] = d2s(M*sin(-2*M_PI*i/(64*1024)));
+		twi64k[i].real = d2s(M*cos(-2*M_PI*i/(64*1024)));
+		twi64k[i].imag = d2s(M*sin(-2*M_PI*i/(64*1024)));
 	}
-	gen_twiddle_fft16x16(gen_twi32k, 32*1024);
-	gen_twiddle_fft16x16(gen_twi16k, 16*1024);
-	gen_twiddle_fft16x16(gen_twi8k,   8*1024);
-	gen_twiddle_fft16x16(gen_twi4k,   4*1024);
-	gen_twiddle_fft16x16(gen_twi2k,   2*1024);
-	gen_twiddle_fft16x16(gen_twi1k,     1024);
-	gen_twiddle_fft16x16(gen_twi256,     256);
+	gen_twiddle_fft16x16_imre((short*)gen_twi32k, 32*1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi16k, 16*1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi8k,   8*1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi4k,   4*1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi2k,   2*1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi1k,     1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi256,     256);
+
 }
 
-/* Function for generating Specialized sequence of twiddle factors */
-int gen_twiddle_fft16x16(short *w, int n)
-{
-    int i, j, k;
-    double M = 32767.5;
-
-    for (j = 1, k = 0; j < n >> 2; j = j << 2) {
-        for (i = 0; i < n >> 2; i += j << 1) {
-            w[k +  3] = -d2s(M * sin(2.0 * PI * (i + j) / n));
-            w[k +  2] =  d2s(M * cos(2.0 * PI * (i + j) / n));
-            w[k +  1] = -d2s(M * sin(2.0 * PI * (i    ) / n));
-            w[k +  0] =  d2s(M * cos(2.0 * PI * (i    ) / n));
-
-            k += 4;
-        }
-    }
-    w[k + 3] =  w[k - 1];
-    w[k + 2] =  w[k - 2];
-    w[k + 1] =  w[k - 3];
-    w[k + 0] =  w[k - 4];
-    k += 4;
-
-    return k;
-}
-
-float snr(long long* sig, float* ref, int n){
-	float diff[2*N_DATA];
+float snr(Cplx32* sig, CplxSp* ref, int n){
+	CplxSp diff[N_DATA];
 	int i;
 	for(i=0; i<n; i++){
-		diff[2*i]   = sig[2*i]   - ref[2*i];
-		diff[2*i+1] = sig[2*i+1] - ref[2*i+1];
+		diff[i].real = sig[i].real - ref[i].real;
+		diff[i].imag = sig[i].imag - ref[i].imag;
 	}
 
 	float rms_sig = 0;
 	float rms_diff = 0;
 	for(int i=0; i<n; i++){
-		rms_sig  += sig[2*i]*sig[2*i] + sig[2*i+1]*sig[2*i+1];
-		rms_diff += diff[2*i]*diff[2*i] + diff[2*i+1]*diff[2*i+1];
+		rms_sig  += sig[i].real*sig[i].real   + sig[i].imag*sig[i].imag;
+		rms_diff += diff[i].real*diff[i].real + diff[i].imag*diff[i].imag;
 	}
 	rms_sig  = sqrt(rms_sig/n);
 	rms_diff = sqrt(rms_diff/n);
@@ -155,7 +133,7 @@ float snr(long long* sig, float* ref, int n){
 
 void cfg(Param size, Param* Nc, Param* Nr, Param* n1, Param* n2){
 #if VERBOSE
-	printf("Execute Cfg\n");
+	printf("Execute Cfg size:%d\n", size);
 #endif
 	*Nc = 1<<((int)log2(size)/2);
 	*Nr = size/(*Nc);
@@ -163,29 +141,29 @@ void cfg(Param size, Param* Nc, Param* Nr, Param* n1, Param* n2){
 	*n2 = *Nr/8;
 }
 
-void src(Param size, short *out){
+void src(Param size, Cplx16 *out){
 #if VERBOSE
-	printf("Execute Src\n");
+	printf("Execute Src size:%d\n", size);
 #endif
 #if TEST
 	if(N_DATA != size)
 		printf("Bad size, bad SNR expected\n");
 
-    memcpy(out, data_in, size*2*sizeof(short));
+    memcpy(out, data_in, size*sizeof(Cplx16));
 #endif
 }
 
-void snk(Param size, short *in){
+void snk(Param size, Cplx16 *in){
 #if VERBOSE
-	printf("Execute Snk\n");
+	printf("Execute Snk size:%d\n", size);
 #endif
-
 #if TEST
-	long long in_scaled[2*size];
-	int scaling = 7;//round(log2(data_out[0]/in[0]));
+	Cplx32 in_scaled[size];
+	int scaling = 7;//round(log2((double)data_out[0].real/in[0].real));
 
-	for(int i=0; i<2*size; i++){
-		in_scaled[i] = in[i] << scaling;
+	for(int i=0; i<size; i++){
+		in_scaled[i].real = in[i].real << scaling;
+		in_scaled[i].imag = in[i].imag << scaling;
 	}
 
     // Compute SNR
@@ -194,34 +172,34 @@ void snk(Param size, short *in){
 #endif
 }
 
-void fft(Param size, Param n, short* in, short* out){
+void fft(Param size, Param n, Cplx16* in, Cplx16* out){
 
 #if VERBOSE
-	printf("Execute fft\n");
+	printf("Execute fft size:%d n:%d\n", size, n);
 #endif
 
 	short* w;
 	switch(size){
 	case 32*1024:
-		w = gen_twi32k;
+		w = (short*)gen_twi32k;
 		break;
 	case 16*1024:
-		w = gen_twi16k;
+		w = (short*)gen_twi16k;
 		break;
 	case  8*1024:
-		w = gen_twi8k;
+		w = (short*)gen_twi8k;
 		break;
 	case  4*1024:
-		w = gen_twi4k;
+		w = (short*)gen_twi4k;
 		break;
 	case  2*1024:
-		w = gen_twi2k;
+		w = (short*)gen_twi2k;
 		break;
 	case    1024:
-		w = gen_twi1k;
+		w = (short*)gen_twi1k;
 		break;
 	case    256:
-		w = gen_twi256;
+		w = (short*)gen_twi256;
 		break;
 	default:
 		printf("Error no twiddles computed for %ld\n", size);
@@ -231,47 +209,82 @@ void fft(Param size, Param n, short* in, short* out){
 //	float w[2*size];
 //	tw_gen(w, size);
 
-	for(int i=0; i<n; i++){
-		DSP_fft16x16_cn(w, size, in, out);
-		in += 2*size;
-		out += 2*size;
+//	Cplx16 in2[size];
+//	Cplx16* ptr_out = out;
+//	memcpy(in2, in, size*sizeof(Cplx16));
+//
+//	for(int i=0; i<n; i++){
+//		DSP_fft16x16_imre_cn(w, size, (short*)in, (short*)out);
+//		in  += size;
+//		out += size;
+//	}
+
+	switch(Platform::get()->getLrt()->getIx()){
+	case CORE_ARM0:
+		fftc_send (0, in, out, size, n);
+		break;
+	case CORE_ARM1:
+		fftc_send (1, in, out, size, n);
+		break;
 	}
+
+//	msync(out, size*n*sizeof(Cplx16), MS_INVALIDATE);
+
+//	if(in2[0].real == 182)
+//		for(int i=0; i<10; i++){
+//			printf("%3d in: %8d + %8di out: %8d + %8di\n",
+//					i, in2[i].real, in2[i].imag,
+//					ptr_out[i].real, ptr_out[i].imag
+//			);
+//		}
+
+//	if(in[0].real == 182)
+//		for(int i=0; i<10; i++){
+//			printf("%3d in: %8d + %8di out: %8d + %8di\n",
+//					i, in[i].real, in[i].imag,
+//					out[i].real, out[i].imag
+//			);
+//		}
 }
 
-void transpose(Param Nc, Param Nr, short* in, short* out){
+void transpose(Param Nc, Param Nr, Cplx16* in, Cplx16* out){
 #if VERBOSE
-	printf("Execute transpose\n");
+	printf("Execute transpose Nc:%d Nr:%d\n", Nc, Nr);
 #endif
 	int i, j;
 	for (i = 0; i < Nc; i++) {
 		for (j = 0; j < Nr; j++) {
-			out[2*(i*Nr + j)]   = in[2*(j*Nr + i)];
-			out[2*(i*Nr + j)+1] = in[2*(j*Nr + i)+1];
+			out[i*Nr + j] = in[j*Nr + i];
+			out[i*Nr + j] = in[j*Nr + i];
 		}
 	}
 }
 
-void twiddles(Param size, Param n, int* ix, short* in, short* out){
+void twiddles(Param size, Param n, int* ix, Cplx16* in, Cplx16* out){
 #if VERBOSE
-	printf("Execute twiddles\n");
+	printf("Execute twiddles size:%d n:%d\n", size, n);
 #endif
 	int c;
 	int r = (*ix)*n;
 
 	for(int i=0; i<n; i++){
 		for(c=0; c<size; c++){
-			out[2*c  ] = (in[2*c]*cos(-2*M_PI*r*c/(64*1024)) - in[2*c+1]*sin(-2*M_PI*r*c/(64*1024)))/2;
-			out[2*c+1] = (in[2*c]*sin(-2*M_PI*r*c/(64*1024)) + in[2*c+1]*cos(-2*M_PI*r*c/(64*1024)))/2;
+			short real0 = (((long)in[c].real)*twi64k[r*c].real)>>16;
+			short real1 = (((long)in[c].imag)*twi64k[r*c].imag)>>16;
+			short imag0 = (((long)in[c].imag)*twi64k[r*c].real)>>16;
+			short imag1 = (((long)in[c].real)*twi64k[r*c].imag)>>16;
+			out[c].real = real0 - real1;
+			out[c].imag = imag0 + imag1;
 		}
-		in += 2*size;
-		out += 2*size;
+		in  += size;
+		out += size;
 		r++;
 	}
 }
 
 void genIx(Param Nr, Param n, int* ixs){
 #if VERBOSE
-	printf("Execute genIx\n");
+	printf("Execute genIx Nr:%d n:%d\n", Nr, n);
 #endif
 	for(int i=0; i<Nr/n; i++){
 		ixs[i] = i;

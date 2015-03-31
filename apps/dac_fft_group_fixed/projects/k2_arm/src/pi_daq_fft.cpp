@@ -111,6 +111,7 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 	bo_T_1->isExecutableOnPE(CORE_DSP7);
 	bo_T_1->isExecutableOnPE(CORE_DSP5);
 	bo_T_1->isExecutableOnPE(CORE_DSP6);
+//	bo_T_1->isExecutableOnPE(CORE_ARM0);
 	bo_T_1->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
 	bo_T_1->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
@@ -130,8 +131,10 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 	bo_FFT_2->isExecutableOnPE(CORE_DSP7);
 	bo_FFT_2->isExecutableOnPE(CORE_DSP5);
 	bo_FFT_2->isExecutableOnPE(CORE_DSP6);
-	bo_FFT_2->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
-	bo_FFT_2->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
+	bo_FFT_2->isExecutableOnPE(CORE_ARM0);
+	bo_FFT_2->isExecutableOnPE(CORE_ARM1);
+	bo_FFT_2->setTimingOnType(CORE_TYPE_C6678, "32000", stack);
+	bo_FFT_2->setTimingOnType(CORE_TYPE_CORTEXA15, "17000", stack);
 
 	PiSDFVertex* bo_T_3 = graph->addBodyVertex(
 		/*Name*/    "T_3",
@@ -149,6 +152,7 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 	bo_T_3->isExecutableOnPE(CORE_DSP7);
 	bo_T_3->isExecutableOnPE(CORE_DSP5);
 	bo_T_3->isExecutableOnPE(CORE_DSP6);
+//	bo_T_3->isExecutableOnPE(CORE_ARM0);
 	bo_T_3->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
 	bo_T_3->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
@@ -168,7 +172,8 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 	bo_Twi_4->isExecutableOnPE(CORE_DSP7);
 	bo_Twi_4->isExecutableOnPE(CORE_DSP5);
 	bo_Twi_4->isExecutableOnPE(CORE_DSP6);
-	bo_Twi_4->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
+//	bo_Twi_4->isExecutableOnPE(CORE_ARM0);
+	bo_Twi_4->setTimingOnType(CORE_TYPE_C6678, "14000", stack);
 	bo_Twi_4->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
 	PiSDFVertex* bo_FFT_5 = graph->addBodyVertex(
@@ -187,8 +192,10 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 	bo_FFT_5->isExecutableOnPE(CORE_DSP7);
 	bo_FFT_5->isExecutableOnPE(CORE_DSP5);
 	bo_FFT_5->isExecutableOnPE(CORE_DSP6);
-	bo_FFT_5->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
-	bo_FFT_5->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
+	bo_FFT_5->isExecutableOnPE(CORE_ARM0);
+	bo_FFT_5->isExecutableOnPE(CORE_ARM1);
+	bo_FFT_5->setTimingOnType(CORE_TYPE_C6678, "32000", stack);
+	bo_FFT_5->setTimingOnType(CORE_TYPE_CORTEXA15, "17000", stack);
 
 	PiSDFVertex* bo_T_6 = graph->addBodyVertex(
 		/*Name*/    "T_6",
@@ -206,6 +213,7 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 	bo_T_6->isExecutableOnPE(CORE_DSP7);
 	bo_T_6->isExecutableOnPE(CORE_DSP5);
 	bo_T_6->isExecutableOnPE(CORE_DSP6);
+//	bo_T_6->isExecutableOnPE(CORE_ARM0);
 	bo_T_6->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
 	bo_T_6->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 

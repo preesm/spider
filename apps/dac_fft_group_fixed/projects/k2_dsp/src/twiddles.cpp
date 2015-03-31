@@ -47,7 +47,7 @@
 #endif
 
 #pragma DATA_SECTION(".twiddles")
-static short twi64k[2*64*1024];
+static Cplx16 twi64k[64*1024];
 
 static short d2s(double d)
 {
@@ -57,50 +57,30 @@ static short d2s(double d)
     return (short)d;
 }
 
-int gen_twiddle_fft16x16(short *w, int n)
-{
-    int i, j, k;
-    double M = 32767.5;
-
-    for (j = 1, k = 0; j < n >> 2; j = j << 2) {
-        for (i = 0; i < n >> 2; i += j << 1) {
-            w[k +  3] =  d2s(M * -sin(2.0 * M_PI * (i + j) / n));
-            w[k +  2] =  d2s(M * cos(2.0 * M_PI * (i + j) / n));
-            w[k +  1] =  d2s(M * -sin(2.0 * M_PI * (i    ) / n));
-            w[k +  0] =  d2s(M * cos(2.0 * M_PI * (i    ) / n));
-
-            k += 4;
-        }
-    }
-    w[k + 3] =  w[k - 1];
-    w[k + 2] =  w[k - 2];
-    w[k + 1] =  w[k - 3];
-    w[k + 0] =  w[k - 4];
-    k += 4;
-
-    return k;
-}
-
 void initActors2(){
     double M = 32767.5;
 //	for(int i=0; i<64*1024; i++){
 //		twi64k[2*i  ] = d2s(-M*sin(-2*M_PI*i/(64*1024))/2);
 //		twi64k[2*i+1] = d2s(M*cos(-2*M_PI*i/(64*1024))/2);
 //	}
+//	for(int i=0; i<64*1024; i++){
+//		twi64k[i].real = d2s(M*cos(-2*M_PI*i/(64*1024)));
+//		twi64k[i].imag = d2s(M*sin(-2*M_PI*i/(64*1024)));
+//	}
 
     for(int r=0; r<256; r++){
     	for(int c=0; c<256; c++){
-    		twi64k[2*(r*256+c)  ] =  d2s(-M*sin(-2*M_PI*r*c/(64*1024))/2);
-    		twi64k[2*(r*256+c)+1] =  d2s( M*cos(-2*M_PI*r*c/(64*1024))/2);
+    		twi64k[r*256+c].real =  d2s(M*cos(-2*M_PI*r*c/(64*1024))/2);
+    		twi64k[r*256+c].imag =  d2s(M*sin(-2*M_PI*r*c/(64*1024))/2);
     	}
     }
 
 //    gen_twiddle_fft16x16(twi64k, 64*1024);
 }
 
-void twiddles(Param size, Param n, int* ix, short* in, short* out){
+void twiddles(Param size, Param n, int* ix, Cplx16* in, Cplx16* out){
 #if VERBOSE
-	printf("Execute twiddles\n");
+	printf("Execute twiddles size %d n %d *ix %d\n", size, n, *ix);
 #endif
 	int r = (*ix)*n;
 
@@ -110,7 +90,7 @@ void twiddles(Param size, Param n, int* ix, short* in, short* out){
 	typedef int32x4_t 			complex_32_2;
 
 	complex_16_2 const* restrict pl_in  = (complex_16_2*) in;
-	complex_16_2 const* restrict pl_w = (complex_16_2*) (twi64k+2*r*size);
+	complex_16_2 const* restrict pl_w = (complex_16_2*) (twi64k+r*size);
 	complex_16_2 * restrict pl_out = (complex_16_2*) out;
 
 	/* Specify aligned input/output/twi for optimizations */
@@ -121,4 +101,21 @@ void twiddles(Param size, Param n, int* ix, short* in, short* out){
 	#pragma MUST_ITERATE(8,,8)
 	for(int i=0; i<n*size/2; i++)
 		*(pl_out++) = _dcmpyr1(*(pl_in++), *(pl_w++));
+
+//	int c;
+//	int r = (*ix)*n;
+//
+//	for(int i=0; i<n; i++){
+//		for(c=0; c<size; c++){
+//			short real0 = (((long)(in[c].real))*twi64k[r*c].real)>>16;
+//			short real1 = (((long)(in[c].imag))*twi64k[r*c].imag)>>16;
+//			short imag0 = (((long)(in[c].imag))*twi64k[r*c].real)>>16;
+//			short imag1 = (((long)(in[c].real))*twi64k[r*c].imag)>>16;
+//			out[c].real = real0 - real1;
+//			out[c].imag = imag0 + imag1;
+//		}
+//		in  += size;
+//		out += size;
+//		r++;
+//	}
 }

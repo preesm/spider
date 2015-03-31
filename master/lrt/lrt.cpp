@@ -60,6 +60,7 @@ LRT::LRT(int ix){
 	fcts_ = 0;
 	nFct_ = 0;
 	ix_ = ix;
+	run_ = false;
 	stack_ = new DynStack("LRTStack");
 }
 LRT::~LRT(){

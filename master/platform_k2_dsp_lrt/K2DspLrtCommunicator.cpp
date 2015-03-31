@@ -37,22 +37,28 @@
 #include "K2DspLrtCommunicator.h"
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <platform.h>
 #include <lrt.h>
-#include <qmss.h>
 
 extern "C"{
 #include <ti/drv/qmss/qmss_drv.h>
-#include <cache.h>
+#include <ti/drv/cppi/cppi_drv.h>
+#include <ti/drv/cppi/cppi_desc.h>
+#include "init.h"
+#include "cache.h"
 }
 
-#define CTRL_SPIDER_TO_LRT	(BASE_SPIDER_TO_LRT + Platform::get()->getLrt()->getIx())
-#define CTRL_LRT_TO_SPIDER	(BASE_LRT_TO_SPIDER	+ Platform::get()->getLrt()->getIx())
+#define CTRL_SPIDER_TO_LRT	(QUEUE_CTRL_DOWN_0 	+ Platform::get()->getLrt()->getIx())
+#define CTRL_LRT_TO_SPIDER	(QUEUE_CTRL_UP_0	+ Platform::get()->getLrt()->getIx())
 
-static MonoPcktDesc* cur_mono_pkt_in;
-static MonoPcktDesc* cur_mono_pkt_out;
-static MonoPcktDesc* cur_mono_trace_out;
+static Cppi_Desc* cur_mono_pkt_in;
+static int cur_mono_pkt_in_size;
+static Cppi_Desc* cur_mono_pkt_out;
+static int cur_mono_pkt_out_size;
+static Cppi_Desc* cur_mono_trace_out;
+static int cur_mono_trace_out_size;
 
 K2DspLrtCommunicator::K2DspLrtCommunicator(){
 	cur_mono_pkt_in = 0;
@@ -64,155 +70,201 @@ K2DspLrtCommunicator::~K2DspLrtCommunicator(){
 }
 
 void* K2DspLrtCommunicator::ctrl_start_send(int size){
+	int dataOffset;
 	if(cur_mono_pkt_out != 0)
 		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
 
 	while(cur_mono_pkt_out == 0){
-		cur_mono_pkt_out = (MonoPcktDesc*)Qmss_queuePop(EMPTY_CTRL);
+		cur_mono_pkt_out = (Cppi_Desc*)Qmss_queuePop(QUEUE_FREE_CTRL);
+
 		if(cur_mono_pkt_out != 0){
-			/* Initialize header */
-			cur_mono_pkt_out->type_id = 0x2;
-			cur_mono_pkt_out->packet_type = 0x10;
-			cur_mono_pkt_out->packet_length = CTRL_DESC_SIZE;
-			cur_mono_pkt_out->data_offset = 12;
-			cur_mono_pkt_out->epib = 0;
-			cur_mono_pkt_out->pkt_return_qnum = EMPTY_CTRL;
-			cur_mono_pkt_out->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
+			/* Get Packet info */
+			cur_mono_pkt_out_size  = QMSS_DESC_SIZE(cur_mono_pkt_out);
+			cur_mono_pkt_out = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_pkt_out);
+
+			/* Clear Cache */
+			Osal_qmssBeginMemAccess(cur_mono_pkt_out, cur_mono_pkt_out_size);
+
+			/* Get info */
+			dataOffset = Cppi_getDataOffset(Cppi_DescType_MONOLITHIC, cur_mono_pkt_out);
 			break;
 		}
 //		usleep(100);
 	}
 
-	if(size > CTRL_DESC_SIZE - PACKET_HEADER)
+	if(size > cur_mono_pkt_out_size - dataOffset)
 		throw "LrtCommunicator: Try to send a message too big";
 
 	/* Add data to current descriptor */
-	void* data_pkt = (void*)(((int)cur_mono_pkt_out) + PACKET_HEADER);
+	void* data_pkt = (void*)(((int)cur_mono_pkt_out) + dataOffset);
 	return data_pkt;
 }
 
 void K2DspLrtCommunicator::ctrl_end_send(int size){
 	if(cur_mono_pkt_out){
 		/* Send the descriptor */
-		cache_wbInvL1D(cur_mono_pkt_out, CTRL_DESC_SIZE);
+		Osal_qmssEndMemAccess(cur_mono_pkt_out, cur_mono_pkt_out_size);
 		Qmss_queuePushDesc(CTRL_LRT_TO_SPIDER, (void*)cur_mono_pkt_out);
 
 		cur_mono_pkt_out = 0;
+		cur_mono_pkt_out_size = 0;
 	}else
 		throw "LrtCommunicator: Try to send a free'd message";
 }
 
 int K2DspLrtCommunicator::ctrl_start_recv(void** data){
+	int dataOffset;
+
 	if(cur_mono_pkt_in == 0){
-		cur_mono_pkt_in = (MonoPcktDesc*)Qmss_queuePop(CTRL_SPIDER_TO_LRT);
+		cur_mono_pkt_in = (Cppi_Desc*)Qmss_queuePop(CTRL_SPIDER_TO_LRT);
 		if(cur_mono_pkt_in == 0){
 			return 0;
 		}
 
-		cache_invL1D(cur_mono_pkt_in, CTRL_DESC_SIZE);
+		/* Get Packet info */
+		cur_mono_pkt_in_size  = QMSS_DESC_SIZE(cur_mono_pkt_in);
+		cur_mono_pkt_in = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_pkt_in);
+
+		/* Clear Cache */
+		Osal_qmssBeginMemAccess(cur_mono_pkt_in, cur_mono_pkt_in_size);
+
+		/* Get info */
+		dataOffset = Cppi_getDataOffset(Cppi_DescType_MONOLITHIC, cur_mono_pkt_in);
 	}else
 		throw "LrtCommunicator: Try to receive a message when the previous one is not free'd";
 
-	void* data_pkt = (void*)(((int)cur_mono_pkt_in)
-			+ cur_mono_pkt_in->data_offset);
-	int data_size = cur_mono_pkt_in->packet_length
-			- cur_mono_pkt_in->data_offset;
+	void* data_pkt = (void*)(((int)cur_mono_pkt_in) + dataOffset);
+	int data_size = cur_mono_pkt_in_size - dataOffset;
 
 	*data = data_pkt;
 	return data_size;
 }
 
 void K2DspLrtCommunicator::ctrl_end_recv(){
-	Qmss_queuePushDesc(EMPTY_CTRL, cur_mono_pkt_in);
-	cur_mono_pkt_in = 0;
+	if(cur_mono_pkt_in){
+		/* Send the descriptor */
+		Osal_qmssEndMemAccess(cur_mono_pkt_in, cur_mono_pkt_in_size);
+		Qmss_queuePushDesc(QUEUE_FREE_CTRL, cur_mono_pkt_in);
+
+		cur_mono_pkt_in = 0;
+		cur_mono_pkt_in_size = 0;
+	}else
+		throw "LrtCommunicator: Try to send a free'd message";
 }
 
 void* K2DspLrtCommunicator::trace_start_send(int size){
+	int dataOffset;
+
 	if(cur_mono_trace_out != 0)
 		throw "LrtCommunicator: Try to send a trace msg when previous one is not sent";
 
 	while(cur_mono_trace_out == 0){
-		cur_mono_trace_out = (MonoPcktDesc*)Qmss_queuePop(EMPTY_TRACE);
+		cur_mono_trace_out = (Cppi_Desc*)Qmss_queuePop(QUEUE_FREE_TRACE);
+
 		if(cur_mono_trace_out != 0){
-			/* Initialize header */
-			cur_mono_trace_out->type_id = 0x2;
-			cur_mono_trace_out->packet_type = 0x10;
-			cur_mono_trace_out->packet_length = TRACE_DESC_SIZE;
-			cur_mono_trace_out->data_offset = 12;
-			cur_mono_trace_out->epib = 0;
-			cur_mono_trace_out->pkt_return_qnum = EMPTY_TRACE;
-			cur_mono_trace_out->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
+			/* Get Packet info */
+			cur_mono_trace_out_size  = QMSS_DESC_SIZE(cur_mono_trace_out);
+			cur_mono_trace_out = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_trace_out);
+
+			/* Clear Cache */
+			Osal_qmssBeginMemAccess(cur_mono_trace_out, cur_mono_trace_out_size);
+
+			/* Get info */
+			dataOffset = Cppi_getDataOffset(Cppi_DescType_MONOLITHIC, cur_mono_trace_out);
 			break;
 		}
 //		usleep(100);
 	}
 
-	if(size > TRACE_DESC_SIZE - PACKET_HEADER)
+	if(size > cur_mono_trace_out_size - dataOffset)
 		throw "LrtCommunicator: Try to send a trace message too big";
 
 	/* Add data to current descriptor */
-	void* data_pkt = (void*)(((int)cur_mono_trace_out) + PACKET_HEADER);
+	void* data_pkt = (void*)(((int)cur_mono_trace_out) + dataOffset);
 	return data_pkt;
 }
 
 void K2DspLrtCommunicator::trace_end_send(int size){
 	if(cur_mono_trace_out){
 		/* Send the descriptor */
-		cache_wbInvL1D(cur_mono_trace_out, TRACE_DESC_SIZE);
-		Qmss_queuePushDesc(BASE_TRACE, cur_mono_trace_out);
+		Osal_qmssEndMemAccess(cur_mono_trace_out, cur_mono_trace_out_size);
+		Qmss_queuePushDesc(QUEUE_TRACE, cur_mono_trace_out);
 
 		cur_mono_trace_out = 0;
+		cur_mono_trace_out_size = 0;
 	}else
-		throw "SpiderCommunicator: Try to send a free'd message";
+		throw "LrtCommunicator: Try to send a free'd message";
+}
+
+long K2DspLrtCommunicator::data_start_send(Fifo* f){
+	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
 }
 
 void K2DspLrtCommunicator::data_end_send(Fifo* f){
-	if(f->ntoken){
-		MonoPcktDesc *mono_pkt;
-		int queueId = BASE_DATA+f->id;
+	/* Write back cache */
+	Osal_qmssEndMemAccess(
+			Platform::get()->virt_to_phy((void*)(f->alloc)),
+			f->size);
 
-		if(queueId < BASE_DATA || queueId > MAX_QUEUES )
+	if(f->ntoken){
+		Cppi_Desc *mono_pkt;
+		int queueId = QUEUE_DATA_BASE+f->id;
+
+		if(queueId < QUEUE_DATA_BASE || queueId > QUEUE_LAST )
 			throw "Error: request queue out of bound\n";
 
 		for(int i=0; i<f->ntoken; i++){
 			do{
-				mono_pkt = (MonoPcktDesc*)Qmss_queuePop(EMPTY_DATA);
+				mono_pkt = (Cppi_Desc*)Qmss_queuePop(QUEUE_FREE_DATA);
 			}while(mono_pkt == 0);
 
-			mono_pkt->type_id = 0x2;
-			mono_pkt->packet_type = 0;
-			mono_pkt->data_offset = 12;
-			mono_pkt->packet_length = 16;
-			mono_pkt->epib = 0;
-			mono_pkt->pkt_return_qnum = EMPTY_DATA;
-			mono_pkt->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
+			/* Get Packet info */
+			int mono_pkt_size  = QMSS_DESC_SIZE(mono_pkt);
+			mono_pkt = (Cppi_Desc*)QMSS_DESC_PTR (mono_pkt);
 
-			cache_wbL1D(mono_pkt, DATA_DESC_SIZE);
+//			/* Clear Cache */
+//			Osal_qmssBeginMemAccess(mono_pkt, mono_pkt_size);
+//
+//			/* Write back cache */
+//			Osal_qmssEndMemAccess(mono_pkt, mono_pkt_size);
+
+			/* Send Packet */
 			Qmss_queuePushDesc(queueId, mono_pkt);
 		}
-		cache_wbL1D(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size);
 	}
 }
+
 long K2DspLrtCommunicator::data_recv(Fifo* f){
 	if(f->ntoken){
-		MonoPcktDesc *mono_pkt;
-		int queueId = BASE_DATA+f->id;
+		Cppi_Desc *mono_pkt;
+		int queueId = QUEUE_DATA_BASE+f->id;
+
+		if(queueId < QUEUE_DATA_BASE || queueId > QUEUE_LAST )
+			throw "Error: request queue out of bound\n";
 
 		for(int i=0; i<f->ntoken; i++){
-			if(queueId < BASE_DATA || queueId > MAX_QUEUES )
-				throw "Error: request queue out of bound\n";
 			do{
-				mono_pkt = (MonoPcktDesc*)Qmss_queuePop(queueId);
+				mono_pkt = (Cppi_Desc*)Qmss_queuePop(queueId);
 			}while(mono_pkt == 0);
 
-			cache_invL1D(mono_pkt, DATA_DESC_SIZE);
-			Qmss_queuePushDesc(EMPTY_DATA, mono_pkt);
-		}
-		cache_invL1D(Platform::get()->virt_to_phy((void*)(f->alloc)), f->size);
-	}
-	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
-}
+			/* Get Packet info */
+			int mono_pkt_size  = QMSS_DESC_SIZE(mono_pkt);
+			mono_pkt = (Cppi_Desc*)QMSS_DESC_PTR (mono_pkt);
 
-long K2DspLrtCommunicator::data_start_send(Fifo* f){
+//			/* Clear Cache */
+//			Osal_qmssBeginMemAccess(mono_pkt, mono_pkt_size);
+//
+//			/* Write back cache */
+//			Osal_qmssEndMemAccess(mono_pkt, mono_pkt_size);
+
+			Qmss_queuePushDesc(QUEUE_FREE_DATA, mono_pkt);
+		}
+	}
+
+	/* Invalidate cache */
+	Osal_qmssBeginMemAccess(
+			Platform::get()->virt_to_phy((void*)(f->alloc)),
+			f->size);
+
 	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
 }

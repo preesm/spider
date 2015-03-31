@@ -43,19 +43,21 @@
 #include <string.h>
 #include <errno.h>
 
-#include <ti/csl/device/k2h/src/cslr_device.h>
-#include <ti/csl/cslr_tmr.h>
-#include <ti/csl/csl_types.h>
-#include <ti/csl/csl_chipAux.h>
 
 #include <tools/Stack.h>
 
 #include <lrt.h>
-#include <qmss.h>
 #include <K2DspLrtCommunicator.h>
 
+extern "C"{
+#include <ti/csl/device/k2h/src/cslr_device.h>
+#include <ti/csl/cslr_tmr.h>
+#include <ti/csl/csl_types.h>
+#include <ti/csl/csl_chipAux.h>
 #include <ti/csl/csl_cache.h>
 #include <ti/csl/csl_cacheAux.h>
+#include <init.h>
+}
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
 #define SHARED_MEM_KEY		8452
@@ -72,9 +74,6 @@ static void* shMem;
 static inline void initTime();
 
 PlatformK2Dsp::PlatformK2Dsp(int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts){
-	int data_mem_start;
-	int data_mem_size;
-
 	CACHE_setL1PSize(CACHE_L1_32KCACHE);
 	CACHE_setL1DSize(CACHE_L1_32KCACHE);
 	CACHE_setL2Size (CACHE_0KCACHE);
@@ -86,12 +85,13 @@ PlatformK2Dsp::PlatformK2Dsp(int shMemSize, Stack *stack, lrtFct* fcts, int nLrt
 	stack_ = stack;
 
 	/** Initialize shared memory & QMSS*/
-	lrt_qmss_init(&data_mem_start, &data_mem_size);
+	init_hw();
+	init_qmss();
 
-	shMem = (void*)data_mem_start;
-	if(data_mem_size < shMemSize)
-		throw "Request too many shared memory";
-
+	shMem = (void*) (data_mem_base+0x400); // todo send base Address
+	printf("Base Data @%#x\n", shMem);
+//	if(data_mem_size < shMemSize)
+//		throw "Request too many shared memory";
 	initTime();
 
 	/** Create LRT */

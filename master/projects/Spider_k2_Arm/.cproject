@@ -26,7 +26,7 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.so.debug.1599256950." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.so.debug.342965772" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.so.debug">
 							<option id="cdt.managedbuild.option.gnu.cross.prefix.1192614584" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" value="arm-linux-gnueabihf-" valueType="string"/>
-							<option id="cdt.managedbuild.option.gnu.cross.path.1762733572" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/home/jheulot/k2h_linux/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin" valueType="string"/>
+							<option id="cdt.managedbuild.option.gnu.cross.path.1762733572" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/home/jheulot/k2h_3_1_1_4/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.276731370" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
 							<builder buildPath="${workspace_loc:/Spider_k2_Arm/Debug}" id="cdt.managedbuild.builder.gnu.cross.1610293858" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.995464617" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
@@ -34,15 +34,20 @@
 								<option id="gnu.c.compiler.option.debugging.level.510533048" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1812497122" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEVICE_K2H"/>
+									<listOptionValue builtIn="false" value="FFTC_DRV_DEBUG"/>
+									<listOptionValue builtIn="false" value="_LITTLE_ENDIAN"/>
+									<listOptionValue builtIn="false" value="_TMS320C6600"/>
 									<listOptionValue builtIn="false" value="_VIRTUAL_ADDR_SUPPORT"/>
 									<listOptionValue builtIn="false" value="__ARMv7"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.167138953" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include/ti/drv/qmss"/>
+									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include/ti/drv/qmss/include"/>
+									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/common}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_k2_arm}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/spider}&quot;"/>
-									<listOptionValue builtIn="false" value="/home/jheulot/k2h_linux/devkit/sysroots/cortexa15hf-vfp-neon-3.8-oe-linux-gnueabi/usr/include"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.pic.2139687968" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.956634747" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
@@ -55,10 +60,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_k2_arm}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/spider}&quot;"/>
-									<listOptionValue builtIn="false" value="/home/jheulot/k2h_linux/devkit/sysroots/cortexa15hf-vfp-neon-3.8-oe-linux-gnueabi/usr/include"/>
+									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.66200069" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEVICE_K2H"/>
+									<listOptionValue builtIn="false" value="FFTC_DRV_DEBUG"/>
+									<listOptionValue builtIn="false" value="_LITTLE_ENDIAN"/>
+									<listOptionValue builtIn="false" value="_TMS320C6600"/>
 									<listOptionValue builtIn="false" value="_VIRTUAL_ADDR_SUPPORT"/>
 									<listOptionValue builtIn="false" value="__ARMv7"/>
 								</option>
@@ -71,7 +79,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1972898375" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.112529209" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.paths.2029765477" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/home/jheulot/k2h_linux/devkit/sysroots/cortexa15hf-vfp-neon-3.8-oe-linux-gnueabi/usr/lib"/>
+									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/lib"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.721825261" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="qmss"/>
@@ -121,7 +129,7 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.so.release.882780723." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.so.release.198531034" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.so.release">
 							<option id="cdt.managedbuild.option.gnu.cross.prefix.2096091316" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" value="arm-linux-gnueabihf-" valueType="string"/>
-							<option id="cdt.managedbuild.option.gnu.cross.path.1300576331" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/home/jheulot/k2h_linux/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin" valueType="string"/>
+							<option id="cdt.managedbuild.option.gnu.cross.path.1300576331" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/home/jheulot/k2h_3_1_1_4/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.479077697" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
 							<builder buildPath="${workspace_loc:/Spider_k2_Arm/Release}" id="cdt.managedbuild.builder.gnu.cross.1316242948" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.276858743" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
@@ -133,11 +141,13 @@
 									<listOptionValue builtIn="false" value="__ARMv7"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.679289287" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include/ti/drv/qmss"/>
+									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include/ti/drv/qmss/include"/>
+									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/common}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_k2_arm}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/spider}&quot;"/>
-									<listOptionValue builtIn="false" value="/home/jheulot/k2h_linux/devkit/sysroots/cortexa15hf-vfp-neon-3.8-oe-linux-gnueabi/usr/include"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.pic.1211358408" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1863983037" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
@@ -151,11 +161,13 @@
 									<listOptionValue builtIn="false" value="__ARMv7"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.1300447462" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include/ti/drv/qmss"/>
+									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include/ti/drv/qmss/include"/>
+									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/common}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_k2_arm}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/spider}&quot;"/>
-									<listOptionValue builtIn="false" value="/home/jheulot/k2h_linux/devkit/sysroots/cortexa15hf-vfp-neon-3.8-oe-linux-gnueabi/usr/include"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.pic.1017387696" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1576753917" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -169,7 +181,7 @@
 									<listOptionValue builtIn="false" value="qmss"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.1674418251" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/home/jheulot/k2h_linux/devkit/sysroots/cortexa15hf-vfp-neon-3.8-oe-linux-gnueabi/usr/lib"/>
+									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/lib"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.334841769" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

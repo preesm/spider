@@ -37,163 +37,210 @@
 #include "K2ArmSpiderCommunicator.h"
 
 #include <fcntl.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/mman.h>
 #include <string.h>
 
-#include <qmss.h>
-
 extern "C"{
 #include <ti/drv/qmss/qmss_drv.h>
+#include <ti/drv/cppi/cppi_drv.h>
+#include <ti/drv/cppi/cppi_desc.h>
+#include "init.h"
 }
 
-#define CTRL_SPIDER_TO_LRT(id)	(BASE_SPIDER_TO_LRT + id)
-#define CTRL_LRT_TO_SPIDER(id)	(BASE_LRT_TO_SPIDER	+ id)
+#define CTRL_SPIDER_TO_LRT(id)	(QUEUE_CTRL_DOWN_0 + id)
+#define CTRL_LRT_TO_SPIDER(id)	(QUEUE_CTRL_UP_0   + id)
 
-static MonoPcktDesc* cur_mono_pkt_in[13];
-static MonoPcktDesc* cur_mono_pkt_out[13];
-static MonoPcktDesc* cur_mono_trace_in;
-static MonoPcktDesc* cur_mono_trace_out;
+static Cppi_Desc* 	cur_mono_pkt_in[13];
+static int 			cur_mono_pkt_in_size[13];
+static Cppi_Desc* 	cur_mono_pkt_out[13];
+static int 			cur_mono_pkt_out_size[13];
+static Cppi_Desc* 	cur_mono_trace_in;
+static int 			cur_mono_trace_in_size;
+static Cppi_Desc* 	cur_mono_trace_out;
+static int 			cur_mono_trace_out_size;
 
 K2ArmSpiderCommunicator::K2ArmSpiderCommunicator(){
-	memset(cur_mono_pkt_in,    0, sizeof(cur_mono_pkt_in));
-	memset(cur_mono_pkt_out,   0, sizeof(cur_mono_pkt_out));
-	cur_mono_trace_in = 0;
-	cur_mono_trace_out = 0;
+	memset(cur_mono_pkt_in,    		0, sizeof(cur_mono_pkt_in));
+	memset(cur_mono_pkt_in_size,   	0, sizeof(cur_mono_pkt_in_size));
+	memset(cur_mono_pkt_out,   		0, sizeof(cur_mono_pkt_out));
+	memset(cur_mono_pkt_out_size,   0, sizeof(cur_mono_pkt_out_size));
+	cur_mono_trace_in 		= 0;
+	cur_mono_trace_in_size 	= 0;
+	cur_mono_trace_out 		= 0;
+	cur_mono_trace_out_size = 0;
 }
 
 K2ArmSpiderCommunicator::~K2ArmSpiderCommunicator(){
 }
 
 void* K2ArmSpiderCommunicator::ctrl_start_send(int lrtIx, int size){
+	int dataOffset = 0;
+
 	if(cur_mono_pkt_out[lrtIx] != 0)
 		throw "SpiderCommunicator: Ctrl: Try to send a msg when previous one is not sent";
 
 	while(cur_mono_pkt_out[lrtIx] == 0){
-		cur_mono_pkt_out[lrtIx] = (MonoPcktDesc*)Qmss_queuePop(EMPTY_CTRL);
+		cur_mono_pkt_out[lrtIx] = (Cppi_Desc*)Qmss_queuePop(QUEUE_FREE_CTRL);
+
 		if(cur_mono_pkt_out[lrtIx] != 0){
-			/* Initialize header */
-			cur_mono_pkt_out[lrtIx]->type_id = 0x2;
-			cur_mono_pkt_out[lrtIx]->packet_type = 0x10;
-			cur_mono_pkt_out[lrtIx]->packet_length = CTRL_DESC_SIZE;
-			cur_mono_pkt_out[lrtIx]->data_offset = 12;
-			cur_mono_pkt_out[lrtIx]->epib = 0;
-			cur_mono_pkt_out[lrtIx]->pkt_return_qnum = EMPTY_CTRL;
-			cur_mono_pkt_out[lrtIx]->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
+			/* Get Packet info */
+			cur_mono_pkt_out_size[lrtIx]  = QMSS_DESC_SIZE(cur_mono_pkt_out[lrtIx]);
+			cur_mono_pkt_out[lrtIx] = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_pkt_out[lrtIx]);
+
+			/* Clear Cache */
+			Osal_qmssBeginMemAccess(cur_mono_pkt_out[lrtIx], cur_mono_pkt_out_size[lrtIx]);
+
+			/* Get info */
+			dataOffset = Cppi_getDataOffset(Cppi_DescType_MONOLITHIC, cur_mono_pkt_out[lrtIx]);
 			break;
 		}
 		usleep(100);
 	}
 
-	if(size > CTRL_DESC_SIZE - PACKET_HEADER){
-		printf("%d > %d\n", size, CTRL_DESC_SIZE - PACKET_HEADER);
-		throw "SpiderCommunicator: Ctrl: Try to send a message too big";
-	}
+	if(size > cur_mono_pkt_out_size[lrtIx] - dataOffset)
+		throw "LrtCommunicator: Try to send a message too big";
 
 	/* Add data to current descriptor */
-	void* data_pkt = (void*)(((int)cur_mono_pkt_out[lrtIx]) + PACKET_HEADER);
+	void* data_pkt = (void*)(((int)cur_mono_pkt_out[lrtIx]) + dataOffset);
 	return data_pkt;
 }
 
 void K2ArmSpiderCommunicator::ctrl_end_send(int lrtIx, int size){
 	if(cur_mono_pkt_out[lrtIx]){
 		/* Send the descriptor */
-		msync(cur_mono_pkt_out[lrtIx], CTRL_DESC_SIZE, MS_SYNC);
-		Qmss_queuePushDesc(CTRL_SPIDER_TO_LRT(lrtIx), cur_mono_pkt_out[lrtIx]);
+		Osal_qmssEndMemAccess(cur_mono_pkt_out[lrtIx], cur_mono_pkt_out_size[lrtIx]);
+		Qmss_queuePushDesc(CTRL_SPIDER_TO_LRT(lrtIx), (void*)cur_mono_pkt_out[lrtIx]);
 
 		cur_mono_pkt_out[lrtIx] = 0;
+		cur_mono_pkt_out_size[lrtIx] = 0;
 	}else
-		throw "SpiderCommunicator: Ctrl: Try to send a free'd message";
+		throw "SpiderCommunicator: Try to send a free'd message";
 }
 
 int K2ArmSpiderCommunicator::ctrl_start_recv(int lrtIx, void** data){
+	int dataOffset;
+
 	if(cur_mono_pkt_in[lrtIx] == 0){
-		cur_mono_pkt_in[lrtIx] = (MonoPcktDesc*)Qmss_queuePop(CTRL_LRT_TO_SPIDER(lrtIx));
+		cur_mono_pkt_in[lrtIx] = (Cppi_Desc*)Qmss_queuePop(CTRL_LRT_TO_SPIDER(lrtIx));
 		if(cur_mono_pkt_in[lrtIx] == 0){
 			return 0;
 		}
 
-		msync(cur_mono_pkt_in[lrtIx], CTRL_DESC_SIZE, MS_SYNC);
+		/* Get Packet info */
+		cur_mono_pkt_in_size[lrtIx] = QMSS_DESC_SIZE(cur_mono_pkt_in[lrtIx]);
+		cur_mono_pkt_in[lrtIx] = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_pkt_in[lrtIx]);
+
+		/* Clear Cache */
+		Osal_qmssBeginMemAccess(cur_mono_pkt_in[lrtIx], cur_mono_pkt_in_size[lrtIx]);
+
+		/* Get info */
+		dataOffset = Cppi_getDataOffset(Cppi_DescType_MONOLITHIC, cur_mono_pkt_in[lrtIx]);
 	}else
 		throw "SpiderCommunicator: Ctrl: Try to receive a message when the previous one is not free'd";
 
-
-	void* data_pkt = (void*)(((int)cur_mono_pkt_in[lrtIx])
-			+ cur_mono_pkt_in[lrtIx]->data_offset);
-	int data_size = cur_mono_pkt_in[lrtIx]->packet_length
-			- cur_mono_pkt_in[lrtIx]->data_offset;
+	void* data_pkt = (void*)(((int)cur_mono_pkt_in[lrtIx]) + dataOffset);
+	int data_size = cur_mono_pkt_in_size[lrtIx] - dataOffset;
 
 	*data = data_pkt;
 	return data_size;
 }
 
 void K2ArmSpiderCommunicator::ctrl_end_recv(int lrtIx){
-	Qmss_queuePushDesc(EMPTY_CTRL, cur_mono_pkt_in[lrtIx]);
-	cur_mono_pkt_in[lrtIx] = 0;
+	if(cur_mono_pkt_in[lrtIx]){
+		/* Send the descriptor */
+		Osal_qmssEndMemAccess(cur_mono_pkt_in[lrtIx], cur_mono_pkt_in_size[lrtIx]);
+		Qmss_queuePushDesc(QUEUE_FREE_CTRL, cur_mono_pkt_in[lrtIx]);
+
+		cur_mono_pkt_in[lrtIx] = 0;
+		cur_mono_pkt_in_size[lrtIx] = 0;
+	}else
+		throw "SpiderCommunicator: Try to send a free'd message";
 }
 
 void* K2ArmSpiderCommunicator::trace_start_send(int size){
+	int dataOffset = 0;
+
 	if(cur_mono_trace_out != 0)
 		throw "SpiderCommunicator: Try to send a trace msg when previous one is not sent";
 
 	while(cur_mono_trace_out == 0){
-		cur_mono_trace_out = (MonoPcktDesc*)Qmss_queuePop(EMPTY_TRACE);
+		cur_mono_trace_out = (Cppi_Desc*)Qmss_queuePop(QUEUE_FREE_TRACE);
+
 		if(cur_mono_trace_out != 0){
-			/* Initialize header */
-			cur_mono_trace_out->type_id = 0x2;
-			cur_mono_trace_out->packet_type = 0x10;
-			cur_mono_trace_out->packet_length = TRACE_DESC_SIZE;
-			cur_mono_trace_out->data_offset = 12;
-			cur_mono_trace_out->epib = 0;
-			cur_mono_trace_out->pkt_return_qnum = EMPTY_TRACE;
-			cur_mono_trace_out->src_tag_lo = 1; //copied to .flo_idx of streaming i/f
+			/* Get Packet info */
+			cur_mono_trace_out_size  = QMSS_DESC_SIZE(cur_mono_trace_out);
+			cur_mono_trace_out = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_trace_out);
+
+			/* Clear Cache */
+			Osal_qmssBeginMemAccess(cur_mono_trace_out, cur_mono_trace_out_size);
+
+			/* Get info */
+			dataOffset = Cppi_getDataOffset(Cppi_DescType_MONOLITHIC, cur_mono_trace_out);
 			break;
 		}
 		usleep(100);
 	}
 
-	if(size > TRACE_DESC_SIZE - PACKET_HEADER)
+	if(size > cur_mono_trace_out_size - dataOffset)
 		throw "SpiderCommunicator: Try to send a trace message too big";
 
 	/* Add data to current descriptor */
-	void* data_pkt = (void*)(((int)cur_mono_trace_out) + PACKET_HEADER);
+	void* data_pkt = (void*)(((int)cur_mono_trace_out) + dataOffset);
 	return data_pkt;
 }
 
 void K2ArmSpiderCommunicator::trace_end_send(int size){
 	if(cur_mono_trace_out){
 		/* Send the descriptor */
-		msync(cur_mono_trace_out, TRACE_DESC_SIZE, MS_SYNC);
-		Qmss_queuePushDesc(BASE_TRACE, cur_mono_trace_out);
+		Osal_qmssEndMemAccess(cur_mono_trace_out, cur_mono_trace_out_size);
+		Qmss_queuePushDesc(QUEUE_TRACE, cur_mono_trace_out);
 
 		cur_mono_trace_out = 0;
+		cur_mono_trace_out_size = 0;
 	}else
 		throw "SpiderCommunicator: Try to send a free'd message";
 }
 
 int K2ArmSpiderCommunicator::trace_start_recv(void** data){
+	int dataOffset;
+
 	if(cur_mono_trace_in == 0){
-		cur_mono_trace_in = (MonoPcktDesc*)Qmss_queuePop(BASE_TRACE);
+		cur_mono_trace_in = (Cppi_Desc*)Qmss_queuePop(QUEUE_TRACE);
 		if(cur_mono_trace_in == 0){
 			return 0;
 		}
-		msync(cur_mono_trace_in, TRACE_DESC_SIZE, MS_SYNC);
+
+		/* Get Packet info */
+		cur_mono_trace_in_size = QMSS_DESC_SIZE(cur_mono_trace_in);
+		cur_mono_trace_in = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_trace_in);
+
+		/* Clear Cache */
+		Osal_qmssBeginMemAccess(cur_mono_trace_in, cur_mono_trace_in_size);
+
+		/* Get info */
+		dataOffset = Cppi_getDataOffset(Cppi_DescType_MONOLITHIC, cur_mono_trace_in);
 	}else
-		throw "SpiderCommunicator: Try to receive a trace message when the previous one is not free'd";
+		throw "SpiderCommunicator: Ctrl: Try to receive a message when the previous one is not free'd";
 
-
-	void* data_pkt = (void*)(((int)cur_mono_trace_in)
-			+ cur_mono_trace_in->data_offset);
-	int data_size = cur_mono_trace_in->packet_length
-			- cur_mono_trace_in->data_offset;
+	void* data_pkt = (void*)(((int)cur_mono_trace_in) + dataOffset);
+	int data_size = cur_mono_trace_in_size - dataOffset;
 
 	*data = data_pkt;
 	return data_size;
 }
 
 void K2ArmSpiderCommunicator::trace_end_recv(){
-	Qmss_queuePushDesc(EMPTY_TRACE, cur_mono_trace_in);
-	cur_mono_trace_in = 0;
+	if(cur_mono_trace_in){
+		/* Send the descriptor */
+		Osal_qmssEndMemAccess(cur_mono_trace_in, cur_mono_trace_in_size);
+		Qmss_queuePushDesc(QUEUE_FREE_TRACE, cur_mono_trace_in);
+
+		cur_mono_trace_in = 0;
+		cur_mono_trace_in_size = 0;
+	}else
+		throw "SpiderCommunicator: Try to send a free'd message";
 }

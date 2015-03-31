@@ -35,52 +35,92 @@
  * knowledge of the CeCILL-C license and that you accept its terms.
  * ****************************************************************************
  */
-#include "cache.h"
-#include <ti/csl/csl_xmcAux.h>
-#include <ti/csl/src/intc/csl_intc.h>
-#include <ti/csl/src/intc/csl_intcAux.h>
 
-#define cacheOperationCode(buffer,size,call)  		\
-											  	  	\
-    /* Disable Interrupts */				  		\
-    Uint32 intStatus = _disable_interrupts();		\
-    										  	  	\
-    /*  Cleanup the prefetch buffer also.*/   		\
-    CSL_XMC_invalidatePrefetchBuffer();       		\
-                                              	  	\
-    /* Invalidate the cache. */               		\
-    call(buffer, size, CACHE_FENCE_WAIT);     		\
-    asm (" MFENCE ");                               \
-    asm (" NOP  4");                          		\
-    asm (" NOP  4");                          		\
-    asm (" NOP  4");                          		\
-    asm (" NOP  4");                          		\
-                                              	  	\
-    /* Reenable Interrupts.*/                 		\
-    _restore_interrupts(intStatus);                 \
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
-void cache_wbInvL1D(void* buffer,Uint32 size){
-	cacheOperationCode(buffer,size,CACHE_wbInvL1d);
+#include <sys/mman.h>
+
+#include "init.h"
+
+void* Osal_cppiCsEnter (void){
+    return NULL;
 }
 
-void cache_wbL1D(void* buffer, Uint32 size){
-	cacheOperationCode(buffer,size,CACHE_wbL1d);
+void Osal_cppiCsExit (void* CsHandle){
 }
 
-void cache_invL1D(void* buffer, Uint32 size){
-	cacheOperationCode(buffer,size,CACHE_invL1d);
+void* Osal_cppiMalloc (Uint32 num_bytes){
+    void*           dataPtr;
+
+    dataPtr = (void*)data_mem_base;
+    data_mem_base += num_bytes;
+
+    return dataPtr;
 }
 
-void cache_wbInvL2(void* buffer,Uint32 size){
-	cacheOperationCode(buffer,size,CACHE_wbInvL2);
+void Osal_cppiFree (void* dataPtr, Uint32 num_bytes){
 }
 
-void cache_wbL2(void* buffer, Uint32 size){
-	cacheOperationCode(buffer,size,CACHE_wbL2);
+void Osal_cppiBeginMemAccess (void *ptr, uint32_t size){
+    msync (ptr, size, MS_INVALIDATE);
 }
 
-void cache_invL2(void* buffer, Uint32 size){
-	cacheOperationCode(buffer,size,CACHE_invL2);
+void Osal_cppiEndMemAccess (void *ptr, uint32_t size){
+    msync (ptr, size, MS_SYNC);
 }
 
+void* Osal_qmssCsEnter (void){
+    return NULL;
+}
 
+void Osal_qmssCsExit (void* CsHandle){
+}
+
+void* Osal_qmssAccCsEnter (void){
+    return NULL;
+}
+
+void Osal_qmssAccCsExit (void *CsHandle){
+}
+
+void* Osal_qmssMtCsEnter (void){
+    return NULL;
+}
+
+void Osal_qmssMtCsExit (void* CsHandle){
+    return;
+}
+
+void* Osal_qmssMalloc (Uint32 num_bytes){
+	void* ptr = malloc(num_bytes);
+
+	/* Allocate memory.  */
+	if(ptr){
+		return ptr;
+	}else{
+		printf("Not enough space in Osal_cppiMalloc\n");
+		return ptr;
+	}
+}
+
+void Osal_qmssFree (void* dataPtr, Uint32 num_bytes){
+    if (dataPtr)
+        free(dataPtr);
+}
+
+void Osal_qmssBeginMemAccess (void *ptr, uint32_t size){
+    msync (ptr, size, MS_INVALIDATE);
+}
+
+void Osal_qmssEndMemAccess (void *ptr, uint32_t size){
+    msync (ptr, size, MS_SYNC);
+}
+
+void  Osal_DescBeginMemAccess (void *ptr, uint32_t size){
+    msync (ptr, size, MS_INVALIDATE);
+}
+void  Osal_DescEndMemAccess   (void *ptr, uint32_t size){
+    msync (ptr, size, MS_SYNC);
+}

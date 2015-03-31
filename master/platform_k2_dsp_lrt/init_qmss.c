@@ -34,113 +34,105 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <stdint.h>
+#include "init.h"
+#include "osal.h"
+#include "cache.h"
+
 #include <stdio.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
-extern "C"{
 #include <ti/drv/qmss/qmss_drv.h>
-#include <ti/csl/device/k2h/src/cslr_device.h>
-#include <ti/csl/device/k2h/src/csl_qm_queue.h>
-#include <ti/drv/qmss/device/k2h/src/qmss_device.c>
+#include <ti/drv/qmss/qmss_firmware.h>
+#include <ti/drv/cppi/cppi_desc.h>
+
+#include <ti/csl/cslr_device.h>
+#include <ti/drv/cppi/cppi_drv.h>
+#include <ti/drv/qmss/qmss_drv.h>
+
+int data_mem_base;
+
+/* Default QMSS Driver global config */
+extern Qmss_GlobalConfigParams qmssGblCfgParams;
+/* CPPI device specific configuration */
+extern Cppi_GlobalConfigParams cppiGblCfgParams;
+
+void printQueueState(){
+	int Queue;
+
+#define PRINT_QUEUE(id) if(Qmss_getQueueEntryCount(id) > 0) \
+	printf("%4d: %d\n", id, Qmss_getQueueEntryCount(id))
+
+	printf("\nQueue State:\n");
+	/* Special Queues */
+	PRINT_QUEUE(QUEUE_TX_FFTC_A);
+	PRINT_QUEUE(QUEUE_TX_FFTC_B);
+
+	/* General Purpose Queues */
+	for(Queue = QUEUE_FIRST; Queue < QUEUE_LAST; Queue++){
+		PRINT_QUEUE(Queue);
+	}
+	printf("\n");
 }
 
-#include "qmss.h"
+/**
+ * Init Queue Manager SUbSystem (QMSS)
+ *  - Configure QMSS Driver
+ * 	- Define Memory regions
+ * 	-
+ */
+void init_qmss(){
+	int result;
+    Qmss_InitCfg 			qmss_initCfg;
 
-#define CACHE_LINESZ 64
+    /* Descriptor base addresses */
+    void* data_desc_base  = (void*)align((int)msmc_mem_base);
+    void* ctrl_desc_base  = (void*)align((int)data_desc_base + DATA_DESC_NUM*DATA_DESC_SIZE);
+    void* trace_desc_base = (void*)align((int)ctrl_desc_base + CTRL_DESC_NUM*CTRL_DESC_SIZE);
+    void* fftc_desc_base  = (void*)align((int)trace_desc_base + TRACE_DESC_NUM*TRACE_DESC_SIZE);
+    data_mem_base = align((int)fftc_desc_base + FFTC_DESC_NUM*FFTC_DESC_SIZE);
 
-/* Useful Macros*/
-#define align(x)   ((x + CACHE_LINESZ) & (~CACHE_LINESZ))
-
-/************************ GLOBAL VARIABLES ********************/
-
-/* Virtual addresses */
-static void *dat_mem;		/* Base address of data memory */
-static int dat_mem_size;	/* Size of data Memory */
-
-
-/* OSAL Fcts */
-void Osal_invalidateCache (void *blockPtr, uint32_t size){}
-void Osal_writeBackCache (void *blockPtr, uint32_t size){}
-
-void*  Osal_qmssAccCsEnter ()
-	{return(NULL);}
-void Osal_qmssAccCsExit (void *  key){}
-
-void*  Osal_qmssCsEnter ()
-	{return(NULL);}
-void Osal_qmssCsExit (void *  key){}
-
-void Osal_qmssBeginMemAccess (void *blockPtr, uint32_t size)
-	{Osal_invalidateCache(blockPtr,size);}
-void  Osal_qmssEndMemAccess (void *blockPtr, uint32_t size)
-	{Osal_writeBackCache(blockPtr,size);}
-
-/* QMSS global Init */
-static void initQmss(){
-    Qmss_InitCfg                qmss_initCfg;
-    Qmss_GlobalConfigParams     qmss_globalCfg;
-    int i;
-
-	dat_mem = (void*)DATA_BASE;
-	dat_mem_size = (DATA_END-DATA_BASE);
-
-    /* Initialize QMSS */
+    /* Initialize QMSS Driver */
     memset (&qmss_initCfg, 0, sizeof (Qmss_InitCfg));
 
-    /* Set up QMSS configuration */
     /* Use internal linking RAM */
-    qmss_initCfg.linkingRAM0Base  = 0;   
-    qmss_initCfg.linkingRAM0Size  = 0;
-    qmss_initCfg.linkingRAM1Base  = 0;
-    qmss_initCfg.maxDescNum       = CTRL_DESC_NB + DATA_DESC_NB + TRACE_DESC_NB;
+	qmss_initCfg.linkingRAM0Base  = 0;
+	qmss_initCfg.linkingRAM0Size  = 0;
+	qmss_initCfg.linkingRAM1Base  = 0;
+	qmss_initCfg.maxDescNum       = DATA_DESC_NUM + CTRL_DESC_NUM + TRACE_DESC_NUM + FFTC_DESC_NUM;
+
+	qmss_initCfg.pdspFirmware[0].pdspId   = Qmss_PdspId_PDSP1;
+	qmss_initCfg.pdspFirmware[0].firmware = &acc48_le;
+	qmss_initCfg.pdspFirmware[0].size     = sizeof (acc48_le);
 
     /* Bypass hardware initialization as it is done within Kernel */
     qmss_initCfg.qmssHwStatus     =   QMSS_HW_INIT_COMPLETE;
 
-    qmss_globalCfg = qmssGblCfgParams;
-
-    /* Initialize the Queue Manager */
-    i = Qmss_init (&qmss_initCfg, &qmss_globalCfg);
-    if (i != QMSS_SOK){
-        printf ("initQmss: Error initializing Queue Manager SubSystem, Error code : %d\n", i);
-        abort();
-    }
-
-    /* Start Queue manager on this core */
-    i = Qmss_start ();
-    if (i != QMSS_SOK){
-        printf ("initQmss: Error starting Queue Manager SubSystem, Error code : %d\n", i);
-        abort();
-    }
-}
-
-static void exitQmss(){
-	/* Exit Qmss */
-	int i = Qmss_exit ();
-    if (i){
-        printf ("Error : Qmss exit error code : %d\n", i);
+	if ((result = Qmss_init (&qmss_initCfg, &qmssGblCfgParams)) != QMSS_SOK){
+		printf ("initQmss: Error initializing Queue Manager SubSystem, Error code : %d\n", result);
 		abort();
+	}
+
+	if ((result = Qmss_start ()) != QMSS_SOK){
+		printf ("initQmss: Error starting Queue Manager SubSystem, Error code : %d\n", result);
+		abort();
+	}
+
+    if ((result = Cppi_init (&cppiGblCfgParams)) != CPPI_SOK){
+        printf ("Error initializing CPPI LLD, Error code : %d\n", result);
+        abort();
     }
 }
 
-static void sysInit (){
-}
+void clean_qmss(){
+	Qmss_Result result;
 
-static void sysExit (){
-}
+	/* Exit Cppi */
+	Cppi_exit ();
 
-void lrt_qmss_init(int* data_mem_start, int* data_mem_size){
-    initQmss();
-    sysInit();
-
-    *data_mem_start = (long)dat_mem;
-    *data_mem_size = dat_mem_size;
-}
-
-void lrt_qmss_exit(){
-    sysExit();
-    exitQmss();
+	/* Exit Qmss */
+	if ((result = Qmss_exit ()) != 0){
+		printf ("Error : Qmss exit error %d\n", result);
+		abort();
+	}
 }

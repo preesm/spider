@@ -52,17 +52,20 @@
 #include <errno.h>
 #include <sys/mman.h>
 
-#include <ti/csl/device/k2h/src/cslr_device.h>
-#include <ti/csl/cslr_tmr.h>
-#include <ti/csl/csl_types.h>
 
 #include <tools/Stack.h>
 
 #include <lrt.h>
 #include <spider.h>
-#include <qmss.h>
 #include <K2ArmLrtCommunicator.h>
 #include <K2ArmSpiderCommunicator.h>
+
+extern "C"{
+	#include <ti/csl/cslr_device.h>
+	#include <ti/csl/cslr_tmr.h>
+	#include <ti/csl/csl_types.h>
+	#include "init.h"
+}
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
 #define SHARED_MEM_KEY		8452
@@ -70,12 +73,7 @@
 #define MAX_MSG_SIZE 10*1024
 
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
-
-static CSL_TmrRegsOvly regs;
-static int dev_mem_fd;
 static void* shMem;
-
-static inline void initTime();
 
 static void setAffinity(int cpuId){
     cpu_set_t mask;
@@ -91,14 +89,6 @@ static void setAffinity(int cpuId){
 }
 
 PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts){
-	/* Open mem device */
-	if((dev_mem_fd = open("/dev/mem", (O_RDWR | O_SYNC))) == -1){
-		printf("Failed to open \"dev/mem\" err=%s\n", strerror(errno));
-		abort();
-	}
-
-	long data_mem_start;
-	long data_mem_size;
 	int cpIds[nArm];
 
 	if(platform_)
@@ -110,14 +100,17 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lr
 	cpIds[0] = getpid();
 
 	/** Initialize shared memory & QMSS*/
-	spider_qmss_init(dev_mem_fd, &data_mem_start, &data_mem_size);
+	init_hw();
+	init_qmss();
 
-	shMem = (void*)data_mem_start;
-	if(data_mem_size < shMemSize)
-		throw "Request too many shared memory";
+	shMem = (void*) data_mem_base;
+	printf("Base Data @%#x\n", (int)shMem-msmc_mem_base+CSL_MSMC_SRAM_REGS);
 
-	initTime();
+	memset(shMem,'u', MSMC_SIZE-(data_mem_base-msmc_mem_base));
+	msync(shMem, MSMC_SIZE-(data_mem_base-msmc_mem_base), MS_SYNC);
 
+//	if(data_mem_size < shMemSize)
+//		throw "Request too many shared memory";
 
 	for(int i=1; i<nArm; i++){
         pid_t cpid = fork();
@@ -135,6 +128,7 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lr
 
         	/** launch LRT */
         	lrt_->runInfinitly();
+            exit(0);
         } else { /* Parent */
         	cpIds[i] = cpid;
         }
@@ -159,17 +153,17 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lr
 	char name[40];
 	sprintf(name, "PID %d (Spider)", cpIds[0]);
 	archi_->setName(nDsp, name);
-	archi_->setPEType(nDsp, 0);
+	archi_->setPEType(nDsp, 1);
 
 	for(int i=1; i<nArm; i++){
 		sprintf(name, "PID %d (LRT %d)", cpIds[i], nDsp+i);
-		archi_->setPEType(nDsp+i, 0);
+		archi_->setPEType(nDsp+i, 1);
 		archi_->setName(nDsp+i, name);
 	}
 
 	for(int i=0; i<nDsp; i++){
 		sprintf(name, "DSP %d (LRT %d)", i, i);
-		archi_->setPEType(i, 1);
+		archi_->setPEType(i, 0);
 		archi_->setName(i, name);
 	}
 
@@ -198,7 +192,8 @@ PlatformK2Arm::~PlatformK2Arm(){
 	stack_->free(lrtCom_);
 	stack_->free(archi_);
 
-	close(dev_mem_fd);
+	clean_qmss();
+	clean_hw();
 }
 
 /** File Handling */
@@ -232,49 +227,20 @@ int PlatformK2Arm::getCacheLineSize(){
 }
 
 /** Time Handling */
-static inline void initTime(){
-	/* Init base address */
-	regs = (CSL_TmrRegsOvly)mmap(0, 0x10000, (PROT_READ|PROT_WRITE), MAP_SHARED, dev_mem_fd, (off_t)CSL_TIMER_0_REGS);
-	if (!regs){
-		printf("ERROR: Failed to map TMR registers\n");
-		abort();
-	}
-
-	/* Init Timer */
-	/* TGCR */
-	CSL_FINS(regs->TGCR, TMR_TGCR_TIMMODE, 0); 	// 64-bit mode
-
-	/* TCR */
-	CSL_FINS(regs->TCR, TMR_TCR_CLKSRC_LO, 0); 	// Select Internal clock
-	CSL_FINS(regs->TCR, TMR_TCR_TIEN_LO, 0); 		// Not gated clock
-	CSL_FINS(regs->TCR, TMR_TCR_ENAMODE_LO, 2); 	// Timer enable continuously
-	CSL_FINS(regs->TCR, TMR_TCR_ENAMODE_HI, 2); 	// Timer enable continuously
-
-	/* Reset Timer */
-	CSL_FINS(regs->TGCR, TMR_TGCR_TIMHIRS, 0); 	// Reset
-	CSL_FINS(regs->TGCR, TMR_TGCR_TIMLORS, 0); 	// Reset
-	regs->PRDLO = -1;
-	regs->PRDHI = -1;
-	regs->CNTLO = 0;
-	regs->CNTHI = 0;
-	CSL_FINS(regs->TGCR, TMR_TGCR_TIMHIRS, 1); 	// Release reset
-	CSL_FINS(regs->TGCR, TMR_TGCR_TIMLORS, 1); 	// Release reset
-}
-
 void PlatformK2Arm::rstTime(ClearTimeMsg* msg){
 	/* Nothing to do, time reset do not send messages */
 }
 
 void PlatformK2Arm::rstTime(){
 	/* Reset Timer */
-	CSL_FINS(regs->TGCR, TMR_TGCR_TIMHIRS, 0); 	// Reset
-	CSL_FINS(regs->TGCR, TMR_TGCR_TIMLORS, 0); 	// Reset
-	regs->PRDLO = -1;
-	regs->PRDHI = -1;
-	regs->CNTLO = 0;
-	regs->CNTHI = 0;
-	CSL_FINS(regs->TGCR, TMR_TGCR_TIMHIRS, 1); 	// Release reset
-	CSL_FINS(regs->TGCR, TMR_TGCR_TIMLORS, 1); 	// Release reset
+	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMHIRS, 0); 	// Reset
+	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMLORS, 0); 	// Reset
+	tmr_regs->PRDLO = -1;
+	tmr_regs->PRDHI = -1;
+	tmr_regs->CNTLO = 0;
+	tmr_regs->CNTHI = 0;
+	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMHIRS, 1); 	// Release reset
+	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMLORS, 1); 	// Release reset
 
 	for(int lrt=0; lrt<archi_->getNPE(); lrt++){
 		int size = sizeof(ClearTimeMsg);
@@ -289,8 +255,8 @@ void PlatformK2Arm::rstTime(){
 
 Time PlatformK2Arm::getTime(){
 	CSL_Uint64 val;
-	val = regs->CNTHI;
-	val = (val<<32) + regs->CNTLO;
+	val = tmr_regs->CNTHI;
+	val = (val<<32) + tmr_regs->CNTLO;
 	return val*5; /* 200MHz to 1GHz */
 }
 

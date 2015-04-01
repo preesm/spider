@@ -298,7 +298,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				if(!perfectBr) nBr++;
 
 				nbSourceRepetitions = nBr;
-				sinkNeedEnd = perfectBr;
+				sinkNeedEnd = !perfectBr;
 //					lastCons = sourceProduction - sinkConsumption*nbSinkRepetitions;
 
 				SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);

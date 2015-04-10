@@ -56,19 +56,8 @@ extern "C"{
 # endif
 #endif
 
-#define VERBOSE 1
+#define VERBOSE 0
 #define TEST 1
-
-unsigned char brev[64] = {
-    0x0, 0x20, 0x10, 0x30, 0x8, 0x28, 0x18, 0x38,
-    0x4, 0x24, 0x14, 0x34, 0xc, 0x2c, 0x1c, 0x3c,
-    0x2, 0x22, 0x12, 0x32, 0xa, 0x2a, 0x1a, 0x3a,
-    0x6, 0x26, 0x16, 0x36, 0xe, 0x2e, 0x1e, 0x3e,
-    0x1, 0x21, 0x11, 0x31, 0x9, 0x29, 0x19, 0x39,
-    0x5, 0x25, 0x15, 0x35, 0xd, 0x2d, 0x1d, 0x3d,
-    0x3, 0x23, 0x13, 0x33, 0xb, 0x2b, 0x1b, 0x3b,
-    0x7, 0x27, 0x17, 0x37, 0xf, 0x2f, 0x1f, 0x3f
-};
 
 static Cplx16 twi64k[64*1024];
 
@@ -151,7 +140,7 @@ void snk(Param size, Cplx16 *in){
 	printf("Execute Snk\n");
 #endif
 	Cplx32 in_scaled[size];
-	int scaling = 7;//round(log2(data_out[0]/in[0]));
+	int scaling = round(log2((double)data_out[1].real/in[1].real));
 
 	for(int i=0; i<size; i++){
 		in_scaled[i].real = in[i].real << scaling;
@@ -197,26 +186,11 @@ void fft(Param size, Param n, Cplx16* in, Cplx16* out){
 		return;
 	}
 
-	static Cplx16 in2[256];
-	memcpy(in2, in, size*sizeof(Cplx16));
-
-	Cplx16* ptr_out = out;
-//	float w[2*size];
-//	tw_gen(w, size);
-
-	for(int i=0; i<1; i++){
+	for(int i=0; i<n; i++){
 		DSP_fft16x16_imre_cn(w, size, (short*)in, (short*)out);
 		in  += size;
 		out += size;
 	}
-
-	if(in2[0].real == 182)
-		for(int i=0; i<10; i++){
-			printf("%3d in: %8d + %8di out: %8d + %8di\n",
-					i, in2[i].real, in2[i].imag,
-					ptr_out[i].real, ptr_out[i].imag
-			);
-		}
 }
 
 void transpose(Param Nc, Param Nr, Cplx16* in, Cplx16* out){

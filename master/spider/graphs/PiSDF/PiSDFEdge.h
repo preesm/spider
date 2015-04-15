@@ -91,11 +91,11 @@ private:
 	int snkPortIx_;
 
 	/* Production and Consumption */
-	Parser::Expression* prod_;
-	Parser::Expression* cons_;
+	Expression* prod_;
+	Expression* cons_;
 
 	/* Parameterized Delays */
-	Parser::Expression* delay_;
+	Expression* delay_;
 	PiSDFVertex* setter_;
 };
 
@@ -121,7 +121,7 @@ inline void PiSDFEdge::setDelay(const char* expr, PiSDFVertex* setter, Stack* st
 		stack->free(delay_);
 		delay_ = 0;
 	}
-	delay_ = CREATE(stack, Parser::Expression)(expr, graph_->getParams(), graph_->getNParam(), stack);
+	delay_ = CREATE(stack, Expression)(expr, graph_->getParams(), graph_->getNParam(), stack);
 
 	if(setter != 0
 			&& setter->getType() == PISDF_TYPE_IF

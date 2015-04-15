@@ -42,8 +42,6 @@
 
 struct transfoJob;
 
-namespace Parser {
-
 class Expression {
 public:
 	Expression(const char* expr, const PiSDFParam* const * params, int nParam, Stack* stack);
@@ -90,7 +88,5 @@ private:
 
 	int evaluateNTokens(const char* expr);
 };
-
-} /* namespace Parser */
 
 #endif/*PARSER_EXPRESSION_H*/

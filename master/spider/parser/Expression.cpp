@@ -43,8 +43,6 @@
 #include <stdio.h>
 #include <math.h>
 
-namespace Parser {
-
 #define MAX_NVAR_ELEMENTS 100
 #define REVERSE_POLISH_STACK_MAX_ELEMENTS 100
 #define EXPR_LEN_MAX 1000
@@ -401,4 +399,3 @@ bool Expression::getNextToken(
 	return false;
 }
 
-} /* namespace Parser */

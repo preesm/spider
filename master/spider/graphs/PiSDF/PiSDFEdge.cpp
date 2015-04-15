@@ -86,7 +86,7 @@ void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod, St
 		stack->free(prod_);
 		prod_ = 0;
 	}
-	prod_ = CREATE(stack, Parser::Expression)(prod, src->getInParams(), src->getNInParam(), stack);
+	prod_ = CREATE(stack, Expression)(prod, src->getInParams(), src->getNInParam(), stack);
 }
 
 void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons, Stack* stack){
@@ -100,7 +100,7 @@ void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons, St
 		stack->free(cons_);
 		cons_ = 0;
 	}
-	cons_ = CREATE(stack, Parser::Expression)(cons, snk->getInParams(), snk->getNInParam(), stack);
+	cons_ = CREATE(stack, Expression)(cons, snk->getInParams(), snk->getNInParam(), stack);
 }
 
 

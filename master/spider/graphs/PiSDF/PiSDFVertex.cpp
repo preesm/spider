@@ -85,8 +85,8 @@ PiSDFVertex::PiSDFVertex(
 	constraints_ = CREATE_MUL(stack, nPeMax_, bool);
 	memset(constraints_, false, nPeMax_*sizeof(bool));
 
-	timings_ = CREATE_MUL(stack, nPeTypeMax_, Parser::Expression*);
-	memset(timings_, 0, nPeTypeMax_*sizeof(Parser::Expression*));
+	timings_ = CREATE_MUL(stack, nPeTypeMax_, Expression*);
+	memset(timings_, 0, nPeTypeMax_*sizeof(Expression*));
 }
 
 PiSDFVertex::~PiSDFVertex(){

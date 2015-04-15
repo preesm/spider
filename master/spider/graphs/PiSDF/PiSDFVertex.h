@@ -125,7 +125,7 @@ private:
 
 	int nPeMax_, nPeTypeMax_;
 	bool* constraints_;
-	Parser::Expression** timings_;
+	Expression** timings_;
 };
 
 /** Inlines Fcts */
@@ -283,7 +283,7 @@ inline void PiSDFVertex::setTimingOnType(int peType, const char* timing, Stack *
 		stack->free(timings_[peType]);
 		timings_[peType] = 0;
 	}
-	timings_[peType] = CREATE(stack, Parser::Expression)(timing, this->getInParams(), this->getNInParam(), stack);
+	timings_[peType] = CREATE(stack, Expression)(timing, this->getInParams(), this->getNInParam(), stack);
 }
 inline void PiSDFVertex::isExecutableOnAllPE(){
 	memset(constraints_, true, nPeMax_*sizeof(bool));

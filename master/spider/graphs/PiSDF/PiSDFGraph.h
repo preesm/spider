@@ -88,6 +88,8 @@ public:
 
 	PiSDFParam* addDynamicParam(const char* name);
 
+	PiSDFParam* addDependentParam(const char* name, const char* expr);
+
 	/** Element getters */
 	inline PiSDFEdge* getEdge(int ix);
 	inline PiSDFParam* getParam(int ix);

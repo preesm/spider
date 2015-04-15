@@ -85,6 +85,9 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 			// Do nothing, cannot be evaluated yet
 			job->paramValues[paramIx] = -1;
 			break;
+		case PISDF_PARAM_DEPENDENT:
+			job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
+			break;
 		}
 //		printf("%s <= %d\n", param->getName(), job->paramValues[paramIx]);
 	}
@@ -214,6 +217,15 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 			/* Pop job from queue */
 			transfoJob* job = jobQueue.pop();
+
+			/* Recompute Dependent Params */
+			for(int paramIx=0; paramIx<job->graph->getNParam(); paramIx++){
+				PiSDFParam* param = job->graph->getParam(paramIx);
+				if(param->getType() == PISDF_PARAM_DEPENDENT){
+					job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
+					break;
+				}
+			}
 
 			/* Compute BRV */
 			int* brv = CREATE_MUL(transfoSTack, job->graph->getNBody(), int);

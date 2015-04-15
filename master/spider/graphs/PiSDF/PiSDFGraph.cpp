@@ -194,6 +194,7 @@ PiSDFParam* PiSDFGraph::addStaticParam(const char* name, const char* expr){
 			this, PISDF_PARAM_STATIC);
 
 	// TODO set value
+	throw "Unimplemented";
 
 	params_.add(param);
 	return param;
@@ -221,6 +222,22 @@ PiSDFParam* PiSDFGraph::addDynamicParam(const char* name){
 	PiSDFParam* param = CREATE(stack_, PiSDFParam)(
 			name, params_.getN(),
 			this, PISDF_PARAM_DYNAMIC);
+	params_.add(param);
+	return param;
+}
+
+PiSDFParam* PiSDFGraph::addDependentParam(const char* name, const char* expr){
+	PiSDFParam* param = CREATE(stack_, PiSDFParam)(
+			name, params_.getN(),
+			this, PISDF_PARAM_DEPENDENT);
+
+	Expression* expression = CREATE(stack_, Expression)(
+			expr,
+			this->getParams(),
+			this->getNParam(),
+			stack_);
+	param->setExpression(expression);
+
 	params_.add(param);
 	return param;
 }
@@ -266,6 +283,11 @@ void PiSDFGraph::delVertex(PiSDFVertex* vertex){
 }
 
 void PiSDFGraph::delParam(PiSDFParam* param){
+	if(param->getType() == PISDF_PARAM_DEPENDENT){
+		Expression* expr = param->getExpression();
+		expr->~Expression();
+		stack_->free(expr);
+	}
 	params_.del(param);
 	param->~PiSDFParam();
 	stack_->free(param);

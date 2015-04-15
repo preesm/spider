@@ -39,6 +39,8 @@
 
 #include <graphs/PiSDF/PiSDFCommon.h>
 
+class Expression;
+
 class PiSDFParam{
 public:
 	/** Constructor */
@@ -56,15 +58,13 @@ public:
 	inline PiSDFParamType getType() const;
 	inline int getStaticValue() const;
 	inline int getParentId() const;
+	inline Expression* getExpression();
 
 	/** Setters */
 	inline void setValue(int value);
 	inline void setParentId(int parentId);
 	inline void setSetter(PiSDFVertex* setter, int portIx);
-
-	int evaluate(const int * paramValues);
-
-//	const PiSDFGraph* getGraph() const;
+	inline void setExpression(Expression* expr);
 
 private:
 	static int globalIx;
@@ -84,6 +84,9 @@ private:
 	// DYNAMIC
 	PiSDFVertex* setter_;
 	int portIx_;
+
+	// DEPENDENT
+	Expression* expr_;
 };
 
 /** Inline Fcts */
@@ -110,6 +113,9 @@ inline int PiSDFParam::getParentId() const{
 		throw "Error: Not Herited param used as Herited param\n";
 	return parentId_;
 }
+inline Expression* PiSDFParam::getExpression(){
+	return expr_;
+}
 
 /** Setters */
 inline void PiSDFParam::setValue(int value){
@@ -121,6 +127,9 @@ inline void PiSDFParam::setParentId(int parentId){
 inline void PiSDFParam::setSetter(PiSDFVertex* setter, int portIx){
 	setter_ = setter;
 	portIx_ = portIx;
+}
+inline void PiSDFParam::setExpression(Expression* expr){
+	expr_ = expr;
 }
 
 #endif/*PISDF_PARAM_H*/

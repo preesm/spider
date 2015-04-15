@@ -54,6 +54,7 @@ PiSDFParam::PiSDFParam(
 	parentId_ = -1;
 	setter_ = 0;
 	portIx_ = -1;
+	expr_ = 0;
 }
 
 PiSDFParam::~PiSDFParam(){

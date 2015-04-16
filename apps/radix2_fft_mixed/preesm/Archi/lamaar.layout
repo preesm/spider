@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout>
+   <vertices>
+      <vertex id="shared_mem" x="224" y="254"/>
+      <vertex id="Dsp0" x="57" y="75"/>
+      <vertex id="Dsp1" x="57" y="194"/>
+      <vertex id="Dsp2" x="57" y="313"/>
+      <vertex id="Dsp3" x="57" y="432"/>
+      <vertex id="Arm0" x="391" y="75"/>
+      <vertex id="Arm1" x="391" y="194"/>
+   </vertices>
+</layout>

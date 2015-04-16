@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+    <key attr.name="parameters" for="graph" id="parameters"/>
+    <key attr.name="variables" for="graph" id="variables"/>
+    <key attr.name="arguments" for="node" id="arguments"/>
+    <key attr.name="name" attr.type="string" for="graph"/>
+    <key attr.name="graph_desc" attr.type="string" for="node"/>
+    <graph edgedefault="directed">
+        <data key="name">Radix2_Stage</data>
+        <node id="N1" kind="cfg_in_iface"/>
+        <node id="N2" kind="cfg_in_iface"/>
+        <node id="n1" kind="cfg_in_iface"/>
+        <node expr="0" id="p" kind="param"/>
+        <node expr="N2*N1/n1/2" id="nDFT2" kind="param"/>
+        <node id="DFT_2" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="fft_2">
+                <param direction="IN" isConfig="true" name="n" type="Param "/>
+                <param direction="IN" isConfig="false" name="ix" type=" char* "/>
+                <param direction="IN" isConfig="false" name="i0" type=" float* "/>
+                <param direction="IN" isConfig="false" name="i1" type=" float* "/>
+                <param direction="OUT" isConfig="false" name="o0" type=" float* "/>
+                <param direction="OUT" isConfig="false" name="o1" type=" float* "/>
+            </loop>
+            <port kind="cfg_input" name="n"/>
+            <port annotation="NONE" expr="n" kind="input" name="i0"/>
+            <port annotation="NONE" expr="n" kind="input" name="i1"/>
+            <port annotation="NONE" expr="1" kind="input" name="ix"/>
+            <port annotation="NONE" expr="n" kind="output" name="o0"/>
+            <port annotation="NONE" expr="n" kind="output" name="o1"/>
+        </node>
+        <node id="pValue" kind="src">
+            <port annotation="NONE" expr="1" kind="output" name="pValue"/>
+        </node>
+        <node id="in" kind="src">
+            <port annotation="NONE" expr="N1*N2" kind="output" name="in"/>
+        </node>
+        <node id="out" kind="snk">
+            <port annotation="NONE" expr="N1*N2" kind="input" name="out"/>
+        </node>
+        <node id="F" kind="fork">
+            <port kind="cfg_input" name="N2"/>
+            <port kind="cfg_input" name="p"/>
+            <port annotation="NONE" expr="N2*(2^(p+1))" kind="input" name="in"/>
+            <port annotation="NONE" expr="N2*(2^p)" kind="output" name="o0"/>
+            <port annotation="NONE" expr="N2*(2^p)" kind="output" name="o1"/>
+        </node>
+        <node id="J" kind="join">
+            <port kind="cfg_input" name="N2"/>
+            <port kind="cfg_input" name="p"/>
+            <port annotation="NONE" expr="N2*(2^p)" kind="input" name="i0"/>
+            <port annotation="NONE" expr="N2*(2^p)" kind="input" name="i1"/>
+            <port annotation="NONE" expr="N2*(2^(p+1))" kind="output" name="out"/>
+        </node>
+        <node id="cfg" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="cfg">
+                <param direction="IN" isConfig="false" name="in" type="char* "/>
+                <param direction="OUT" isConfig="true" name="out" type=" Param* "/>
+            </loop>
+            <port annotation="NONE" kind="cfg_output" name="out"/>
+            <port annotation="NONE" expr="1" kind="input" name="in"/>
+        </node>
+        <node id="genIx" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="genIx">
+                <param direction="IN" isConfig="true" name="n" type="Param "/>
+                <param direction="OUT" isConfig="false" name="ixs" type=" char* "/>
+            </loop>
+            <port kind="cfg_input" name="n"/>
+            <port annotation="NONE" expr="n" kind="output" name="ixs"/>
+        </node>
+        <edge kind="fifo" source="pValue" sourceport="pValue"
+            target="cfg" targetport="in" type="int"/>
+        <edge kind="fifo" source="in" sourceport="in" target="F"
+            targetport="in" type="CplxSp"/>
+        <edge kind="fifo" source="F" sourceport="o0" target="DFT_2"
+            targetport="i0" type="CplxSp"/>
+        <edge kind="fifo" source="F" sourceport="o1" target="DFT_2"
+            targetport="i1" type="CplxSp"/>
+        <edge kind="fifo" source="DFT_2" sourceport="o0" target="J"
+            targetport="i0" type="CplxSp"/>
+        <edge kind="fifo" source="DFT_2" sourceport="o1" target="J"
+            targetport="i1" type="CplxSp"/>
+        <edge kind="fifo" source="J" sourceport="out" target="out"
+            targetport="out" type="CplxSp"/>
+        <edge kind="fifo" source="genIx" sourceport="ixs" target="DFT_2"
+            targetport="ix" type="int"/>
+        <edge kind="dependency" source="cfg" sourceport="out" target="p"/>
+        <edge kind="dependency" source="N1" target="in"/>
+        <edge kind="dependency" source="N2" target="in"/>
+        <edge kind="dependency" source="N1" target="out"/>
+        <edge kind="dependency" source="N2" target="out"/>
+        <edge kind="dependency" source="N2" target="F" targetport="N2"/>
+        <edge kind="dependency" source="p" target="F" targetport="p"/>
+        <edge kind="dependency" source="n1" target="DFT_2" targetport="n"/>
+        <edge kind="dependency" source="N2" target="J" targetport="N2"/>
+        <edge kind="dependency" source="p" target="J" targetport="p"/>
+        <edge kind="dependency" source="N2" target="nDFT2"/>
+        <edge kind="dependency" source="n1" target="nDFT2"/>
+        <edge kind="dependency" source="nDFT2" target="genIx" targetport="n"/>
+        <edge kind="dependency" source="N1" target="nDFT2"/>
+    </graph>
+</graphml>

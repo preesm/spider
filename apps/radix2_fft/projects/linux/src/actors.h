@@ -37,7 +37,7 @@
 #ifndef ACTORS_H
 #define ACTORS_H
 
-void genStepSwitch(Param NStep, char* steps, char* sels);
+void genStepSwitch(Param NStep, char* steps);
 void cfgFftStep(char* in, Param* step);
 
 void src(Param fftSize, float *out);

@@ -1,19 +1,3 @@
-/*
- * Do not modify this file; it is automatically generated from the template
- * linkcmd.xdt in the ti.targets.elf package and will be overwritten.
- */
-
-/*
- * put '"'s around paths because, without this, the linker
- * considers '-' as minus operator, not a file name character.
- */
-
-
--l"/opt/ti_k2/xdctools_3_25_06_96/packages/ti/targets/rts6000/lib/ti.targets.rts6000.ae66"
--l"/opt/ti_k2/xdctools_3_25_06_96/packages/ti/targets/rts6000/lib/boot.ae66"
-
---retain="*(xdc.meta)"
-
 
 --args 0x200
 -heap  0x1000
@@ -24,63 +8,6 @@ MEMORY
     L2SRAM (RWX) : org = 0x800000, len = 0x100000
     DDR3 : org = 0xB0000000, len = 0x10000000
 }
-
-/*
- * Linker command file contributions from all loaded packages:
- */
-
-/* Content from xdc.services.global (null): */
-
-/* Content from xdc (null): */
-
-/* Content from xdc.corevers (null): */
-
-/* Content from xdc.shelf (null): */
-
-/* Content from xdc.services.spec (null): */
-
-/* Content from xdc.services.intern.xsr (null): */
-
-/* Content from xdc.services.intern.gen (null): */
-
-/* Content from xdc.services.intern.cmd (null): */
-
-/* Content from xdc.bld (null): */
-
-/* Content from ti.targets (null): */
-
-/* Content from ti.targets.elf (null): */
-
-/* Content from xdc.rov (null): */
-
-/* Content from xdc.runtime (null): */
-
-/* Content from ti.targets.rts6000 (null): */
-
-/* Content from ti.catalog.c6000 (null): */
-
-/* Content from ti.catalog (null): */
-
-/* Content from ti.catalog.peripherals.hdvicp2 (null): */
-
-/* Content from xdc.platform (null): */
-
-/* Content from xdc.cfg (null): */
-
-/* Content from ti.catalog.arm.cortexa15 (null): */
-
-/* Content from ti.platforms.evmTCI6636K2H (null): */
-
-/* Content from configPkg (null): */
-
-
-/*
- * symbolic aliases for static instance objects
- */
-xdc_runtime_Startup__RESETFXN__C = 0;
-xdc_runtime_Startup_reset__I = 0;
-xdc_runtime_Startup__EXECFXN__C = 0;
-xdc_runtime_Startup_exec__E = 0;
 
 SECTIONS
 {
@@ -110,6 +37,8 @@ SECTIONS
     xdc.meta: load > L2SRAM, type = COPY
 
 	.qmss: load > L2SRAM
-	.fftData: load > DDR3
+	.cppi: load > L2SRAM
 	.twiddles: load > L2SRAM
+
+	.fftData: load > DDR3
 }

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+    <key attr.name="parameters" for="graph" id="parameters"/>
+    <key attr.name="variables" for="graph" id="variables"/>
+    <key attr.name="arguments" for="node" id="arguments"/>
+    <key attr.name="name" attr.type="string" for="graph"/>
+    <key attr.name="graph_desc" attr.type="string" for="node"/>
+    <key attr.name="delay" attr.type="string" for="edge"/>
+    <graph edgedefault="directed">
+        <data key="name">DFT_Radix2</data>
+        <node id="N1" kind="cfg_in_iface"/>
+        <node id="N2" kind="cfg_in_iface"/>
+        <node id="n1" kind="cfg_in_iface"/>
+        <node expr="N1*N2" id="size" kind="param"/>
+        <node id="P" kind="cfg_in_iface"/>
+        <node id="Radix2_Stage" kind="actor">
+            <data key="graph_desc">Algo/Radix2_Stage.pi</data>
+            <port kind="cfg_input" name="N1"/>
+            <port kind="cfg_input" name="N2"/>
+            <port kind="cfg_input" name="n1"/>
+            <port annotation="NONE" expr="1" kind="input" name="pValue"/>
+            <port annotation="NONE" expr="N1*N2" kind="input" name="in"/>
+            <port annotation="NONE" expr="N1*N2" kind="output" name="out"/>
+        </node>
+        <node id="Br" kind="broadcast">
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size" kind="input" name="in"/>
+            <port annotation="NONE" expr="size" kind="output" name="o0"/>
+            <port annotation="NONE" expr="size" kind="output" name="o1"/>
+        </node>
+        <node id="out" kind="snk">
+            <port annotation="NONE" expr="size" kind="input" name="out"/>
+        </node>
+        <node id="in" kind="src">
+            <port annotation="NONE" expr="size" kind="output" name="in"/>
+        </node>
+        <node id="genIx" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="genIx">
+                <param direction="IN" isConfig="true" name="n" type="Param "/>
+                <param direction="OUT" isConfig="false" name="ixs" type=" char* "/>
+            </loop>
+            <port kind="cfg_input" name="n"/>
+            <port annotation="NONE" expr="n" kind="output" name="ixs"/>
+        </node>
+        <node id="switch" kind="actor">
+            <data key="graph_desc">Code/include/actors.h</data>
+            <loop name="Switch">
+                <param direction="IN" isConfig="true" name="size" type="Param "/>
+                <param direction="IN" isConfig="false" name="i0" type=" float* "/>
+                <param direction="IN" isConfig="false" name="i1" type=" float* "/>
+                <param direction="OUT" isConfig="false" name="out" type=" float* "/>
+            </loop>
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size" kind="input" name="i0"/>
+            <port annotation="NONE" expr="size" kind="input" name="i1"/>
+            <port annotation="NONE" expr="size" kind="output" name="out"/>
+        </node>
+        <edge kind="fifo" source="genIx" sourceport="ixs"
+            target="Radix2_Stage" targetport="pValue" type="int"/>
+        <edge kind="fifo" source="Radix2_Stage" sourceport="out"
+            target="Br" targetport="in" type="CplxSp"/>
+        <edge kind="fifo" source="Br" sourceport="o0" target="out"
+            targetport="out" type="CplxSp"/>
+        <edge kind="fifo" source="in" sourceport="in" target="switch"
+            targetport="i0" type="CplxSp"/>
+        <edge expr="size" kind="fifo" source="Br" sourceport="o1"
+            target="switch" targetport="i1" type="CplxSp">
+            <data key="delay"/>
+        </edge>
+        <edge kind="fifo" source="switch" sourceport="out"
+            target="Radix2_Stage" targetport="in" type="CplxSp"/>
+        <edge kind="dependency" source="N1" target="Radix2_Stage" targetport="N1"/>
+        <edge kind="dependency" source="N2" target="Radix2_Stage" targetport="N2"/>
+        <edge kind="dependency" source="n1" target="Radix2_Stage" targetport="n1"/>
+        <edge kind="dependency" source="N2" target="size"/>
+        <edge kind="dependency" source="N1" target="size"/>
+        <edge kind="dependency" source="size" target="switch" targetport="size"/>
+        <edge kind="dependency" source="size" target="in"/>
+        <edge kind="dependency" source="size" target="out"/>
+        <edge kind="dependency" source="size" target="Br" targetport="size"/>
+        <edge kind="dependency" source="size" target="Br.o1-switch.i1"/>
+        <edge kind="dependency" source="P" target="genIx" targetport="n"/>
+    </graph>
+</graphml>

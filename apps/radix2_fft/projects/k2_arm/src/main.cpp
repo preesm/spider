@@ -52,7 +52,7 @@ int main(int argc, char* argv[]){
 
 #define SH_MEM 0x00500000
 	initActors();
-	PlatformK2Arm platform(2, 8, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
+	PlatformK2Arm platform(2, 4, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
 	Archi* archi = platform.getArchi();
 
 	int  nIter[3][4];

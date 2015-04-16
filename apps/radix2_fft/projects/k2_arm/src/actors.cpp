@@ -52,7 +52,7 @@ extern "C"{
 #define M_PI 3.14159265359
 #endif
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 unsigned char brev[64] = {
     0x0, 0x20, 0x10, 0x30, 0x8, 0x28, 0x18, 0x38,
@@ -182,15 +182,13 @@ inline int bitRev(short v, int logN){
 	return r;
 }
 
-void genStepSwitch(Param NStep, char* steps, char* sels){
+void genStepSwitch(Param NStep, char* steps){
 #if VERBOSE
 	printf("Execute genStepSwitch\n");
 #endif
 	steps[0] = 0;
-	sels[0] = 0;
 	for(int i=1; i<NStep; i++){
 		steps[i] = i;
-		sels[i] = 1;
 	}
 }
 
@@ -438,11 +436,15 @@ void ordering(Param fftSize, Param NStep, float* in, float *out){
 #endif
 	int P = 1<<NStep;
 	for(int proc=0; proc<P; proc++){
+		int in_offset  = 2*bitRev(proc, NStep);
+		int out_offset = 2*proc*fftSize/P;
 		for(int k=0; k<fftSize/P; k++){
-			out[2*(proc*fftSize/P+k)  ] = in[2*(bitRev(proc, NStep)+k*P)  ];
-			out[2*(proc*fftSize/P+k)+1] = in[2*(bitRev(proc, NStep)+k*P)+1];
+			out[out_offset + 2*k  ] = in[in_offset + 2*k*P  ];
+			out[out_offset + 2*k+1] = in[in_offset + 2*k*P+1];
 		}
 	}
+
+
 }
 
 void fft(

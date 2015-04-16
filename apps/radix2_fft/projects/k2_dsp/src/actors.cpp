@@ -41,6 +41,7 @@
 
 extern "C"{
 #include "ti/dsplib/src/DSPF_sp_fftSPxSP/DSPF_sp_fftSPxSP.h"
+#include "edma.h"
 }
 
 #include <stdio.h>
@@ -96,6 +97,7 @@ void initActors(){
 //		twi64k[2*i  ] = cos(-2*M_PI*i/(64*1024));
 //		twi64k[2*i+1] = sin(-2*M_PI*i/(64*1024));
 //	}
+	edma_init();
 	initActors2();
 	tw_gen(gen_twi32k, 32*1024);
 	tw_gen(gen_twi16k, 16*1024);
@@ -201,7 +203,7 @@ void src(Param fftSize, float *out){
 	if(N_DATA != fftSize)
 		printf("Bad size, bad SNR expected\n");
 
-    memcpy(out, data_in, fftSize*2*sizeof(float));
+//    memcpy(out, data_in, fftSize*2*sizeof(float));
 }
 
 void snk(Param fftSize, float *in){
@@ -210,8 +212,8 @@ void snk(Param fftSize, float *in){
 #endif
 
     // Compute SNR
-    float snrVal = snr(in, data_out, fftSize);
-    printf("SNR %f dB\n", snrVal);
+//    float snrVal = snr(in, data_out, fftSize);
+//    printf("SNR %f dB\n", snrVal);
 }
 
 
@@ -221,11 +223,31 @@ void ordering(Param fftSize, Param NStep, float* in, float *out){
 #endif
 	int P = 1<<NStep;
 	for(int proc=0; proc<P; proc++){
-		for(int k=0; k<fftSize/P; k++){
-			out[2*(proc*fftSize/P+k)  ] = in[2*(bitRev(proc, NStep)+k*P)  ];
-			out[2*(proc*fftSize/P+k)+1] = in[2*(bitRev(proc, NStep)+k*P)+1];
-		}
+		int in_offset  = 2*bitRev(proc, NStep);
+		int out_offset = 2*proc*fftSize/P;
+
+		int eltSize = 8;
+		int factor = 8;
+		int procSize = fftSize/P;
+//		for(int k=0; k<fftSize/P; k++){
+//			out[out_offset + 2*k  ] = in[in_offset + 2*k*P  ];
+//			out[out_offset + 2*k+1] = in[in_offset + 2*k*P+1];
+//		}
+		int res = edma_cpy(
+				in + in_offset, out + out_offset,
+				/*ACnt: element size*/ 			eltSize,
+				/*BCnt: line size*/ 			procSize/factor,
+				/*CCnt: n lines in matrice*/ 	factor,
+				/*SrcBIdx: = ACnt */			P,
+				/*DstBIdx: = ACnt*CCnt */		1,
+				/*SrcCIdx: = ACnt*BCnt */		procSize/factor*P,
+				/*DstCIdx: = ACnt */			procSize/factor);
+
+		if(res)
+			printf("Edma cpy failed\n");
 	}
+
+
 }
 
 void fft(

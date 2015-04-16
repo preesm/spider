@@ -168,15 +168,13 @@ inline int bitRev(short v, int logN){
 	return r;
 }
 
-void genStepSwitch(Param NStep, char* steps, char* sels){
+void genStepSwitch(Param NStep, char* steps){
 #if VERBOSE
 	printf("Execute genStepSwitch\n");
 #endif
 	steps[0] = 0;
-	sels[0] = 0;
 	for(int i=1; i<NStep; i++){
 		steps[i] = i;
-		sels[i] = 1;
 	}
 }
 

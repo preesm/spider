@@ -193,7 +193,7 @@ int edma_clean(){
 	return 0;
 }
 
-int edma_cpy (
+int edma_transpose (
 		void* src, void* dst,
 		int aCnt, int bCnt, int cCnt,
 		int srcBIdx, int dstBIdx,

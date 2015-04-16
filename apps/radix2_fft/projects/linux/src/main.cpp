@@ -70,7 +70,7 @@ int main(int argc, char* argv[]){
 	printf("Start\n");
 
 //	try{
-	for(int i=1; i<=6; i++){
+	for(int i=1; i<=1; i++){
 		printf("NStep = %d\n", i);
 		char ganttPath[30];
 		sprintf(ganttPath, "radixFFT_%d.sgantt", i);

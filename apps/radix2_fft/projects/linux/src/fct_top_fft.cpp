@@ -109,8 +109,7 @@ void monoFFT(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param ou
 void GenSwitchSel(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	genStepSwitch(
 		/* NStep */ (Param) inParams[0],
-		/* steps */ (char*) outputFIFOs[0],
-		/* sels  */ (char*) outputFIFOs[1]
+		/* steps */ (char*) outputFIFOs[0]
 	);
 }
 

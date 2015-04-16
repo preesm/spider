@@ -73,7 +73,7 @@ int main(int argc, char* argv[]){
 	for(int i=1; i<=6; i++){
 		printf("NStep = %d\n", i);
 		char ganttPath[30];
-		sprintf(ganttPath, "radixFFT_%d.sgantt", i);
+		sprintf(ganttPath, "radixFFT_%d.pgantt", i);
 		char srdagPath[30];
 		sprintf(srdagPath, "radixFFT_%d.gv", i);
 

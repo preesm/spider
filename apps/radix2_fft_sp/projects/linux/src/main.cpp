@@ -36,7 +36,8 @@
 
 #include <spider.h>
 #include <platformLinux.h>
-#include "pi_top_fft.h"
+#include "pi_Radix2_fft.h"
+#include "Radix2_fft.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,7 +54,7 @@ int main(int argc, char* argv[]){
 	DynStack archiStack("ArchiStack");
 
 #define SH_MEM 0x00500000
-	PlatformLinux platform(1, SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
+	PlatformLinux platform(4, SH_MEM, &archiStack, radix2_fft_fcts, N_FCT_RADIX2_FFT);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
@@ -79,7 +80,7 @@ int main(int argc, char* argv[]){
 
 		pisdfStack.freeAll();
 
-		PiSDFGraph *topPisdf = init_top_fft(archi, &pisdfStack);
+		PiSDFGraph *topPisdf = init_Radix2_fft(archi, &pisdfStack);
 		topPisdf->print("topPisdf.gv");
 
 		Platform::get()->rstTime();
@@ -112,7 +113,7 @@ int main(int argc, char* argv[]){
 			printf("\n");
 		}
 
-		free_top_fft(topPisdf, &pisdfStack);
+		free_Radix2_fft(topPisdf, &pisdfStack);
 	}
 //	}catch(const char* s){
 //		printf("Exception : %s\n", s);

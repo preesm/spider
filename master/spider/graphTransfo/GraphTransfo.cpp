@@ -223,7 +223,6 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 				PiSDFParam* param = job->graph->getParam(paramIx);
 				if(param->getType() == PISDF_PARAM_DEPENDENT){
 					job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
-					break;
 				}
 			}
 

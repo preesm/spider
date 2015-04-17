@@ -166,6 +166,8 @@ int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job) c
 			break;
 		case PARAMETER:
 			*stackPtr = job->paramValues[paramList[inputPtr->paramIx]->getTypeIx()];
+			if(*stackPtr == -1)
+				return -1; // Not resolved TODO handle better not resolved dependent params
 			stackPtr++;
 			break;
 		default:
@@ -223,6 +225,8 @@ int Expression::evaluate(const int* vertexParamValues, int nParam) const{
 			break;
 		case PARAMETER:
 			*stackPtr = vertexParamValues[inputPtr->paramIx];
+			if(*stackPtr == -1)
+				return -1; // Not resolved TODO handle better not resolved dependent params
 			stackPtr++;
 			break;
 		default:

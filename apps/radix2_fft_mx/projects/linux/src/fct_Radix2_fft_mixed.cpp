@@ -98,7 +98,7 @@ void Radix2_fft_mixed_snk(void* inputFIFOs[], void* outputFIFOs[], Param inParam
 void DFT_Radix2_genIx(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	genIx(
 		/* n   */ (Param) inParams[0],
-		/* ixs */ (char*) outputFIFOs[0]
+		/* ixs */ (int*) outputFIFOs[0]
 	);
 }
 
@@ -127,7 +127,7 @@ void Radix2_Stage_DFT_2(void* inputFIFOs[], void* outputFIFOs[], Param inParams[
 
 void Radix2_Stage_cfg(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	cfg(
-		/* in  */ (char*) inputFIFOs[0],
+		/* in  */ (int*) inputFIFOs[0],
 		/* out */ (Param*) &outParams[0]
 	);
 }
@@ -135,7 +135,7 @@ void Radix2_Stage_cfg(void* inputFIFOs[], void* outputFIFOs[], Param inParams[],
 void Radix2_Stage_genIx(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	genIx(
 		/* n   */ (Param) inParams[0],
-		/* ixs */ (char*) outputFIFOs[0]
+		/* ixs */ (int*) outputFIFOs[0]
 	);
 }
 

@@ -52,7 +52,7 @@ int main(int argc, char* argv[]){
 	DynStack pisdfStack("PisdfStack");
 	DynStack archiStack("ArchiStack");
 
-#define SH_MEM 0x00500000
+#define SH_MEM 0x00800000
 	PlatformLinux platform(1, SH_MEM, &archiStack, Radix2_fft_mixed_fcts, N_FCT_RADIX2_FFT_MIXED);
 	Archi* archi = platform.getArchi();
 
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]){
 		Platform::get()->rstTime();
 
 		spider_launch(archi, topPisdf);
-//
+
 		spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
 		spider_getLastSRDAG()->print(srdagPath);
 

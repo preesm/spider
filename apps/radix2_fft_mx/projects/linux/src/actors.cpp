@@ -47,7 +47,9 @@ extern "C"{
 #include <string.h>
 #include <math.h>
 
-#define VERBOSE 1
+#define VERBOSE 0
+
+static CplxSp twi64k[64*1024];
 
 static CplxSp gen_twi32k[32*1024];
 static CplxSp gen_twi16k[16*1024];
@@ -77,6 +79,10 @@ void initActors(){
 	tw_gen(gen_twi2k,   2*1024);
 	tw_gen(gen_twi1k,     1024);
 
+	for(int i=0; i<32*1024; i++){
+		twi64k[i].real = cos(-2*M_PI*i/(64*1024));
+		twi64k[i].imag = sin(-2*M_PI*i/(64*1024));
+	}
 }
 
 static inline float snr(CplxSp* sig, CplxSp* ref, int n){
@@ -140,18 +146,18 @@ static inline void tw_gen (CplxSp *cplx_w, int n)
     }
 }
 
-void genIx(Param n, char* ixs){
+void genIx(Param n, int* ixs){
 #if VERBOSE
-	printf("Execute genIx\n");
+	printf("Execute genIx: n=%d\n", n);
 #endif
 	for(int i=0; i<n; i++){
 		ixs[i] = i;
 	}
 }
 
-void cfg(char* in, Param* out){
+void cfg(int* in, Param* out){
 #if VERBOSE
-	printf("Execute cfg\n");
+	printf("Execute cfg: in=%d\n", *in);
 #endif
 	*out = *in;
 }
@@ -162,6 +168,11 @@ void src(Param size, CplxSp *out){
 #endif
 	if(N_DATA != size)
 		printf("Bad size, bad SNR expected\n");
+
+//	for(int i = 0; i<size; i++){
+//		out[i].real = i;
+//		out[i].imag = 0;
+//	}
 
     memcpy(out, data_in, size*2*sizeof(float));
 }
@@ -174,12 +185,23 @@ void snk(Param size, CplxSp *in){
     // Compute SNR
     float snrVal = snr(in, data_out, size);
     printf("SNR %f dB\n", snrVal);
+
+//	printf("End:\n");
+//	for(int i=0; i<size; i++){
+//		printf("%d: %08f + %08f i\n", i, in[i].real, in[i].imag);
+//	}
 }
 
 void T(Param N1, Param N2, CplxSp* in, CplxSp *out){
 #if VERBOSE
 	printf("Execute T\n");
 #endif
+//
+//	printf("Before T:\n");
+//	for(int i=0; i<N1*N2; i++){
+//		printf("%d: %08f + %08f i\n", i, in[i].real, in[i].imag);
+//	}
+
 	for(int n2=0; n2<N2; n2++){
 		for(int n1=0; n1<N1; n1++){
 //			printf("%d <- %d\n", n1*N2+n2, bitRev(n1, N1)+n2*N1);
@@ -187,6 +209,11 @@ void T(Param N1, Param N2, CplxSp* in, CplxSp *out){
 			out[n1*N2+n2].imag = in[bitRev(n1, N1)+n2*N1].imag;
 		}
 	}
+
+//	printf("After T:\n");
+//	for(int i=0; i<N1*N2; i++){
+//		printf("%d: %08f + %08f i\n", i, out[i].real, out[i].imag);
+//	}
 }
 void fft(Param size, Param n, CplxSp* in, CplxSp* out){
 #if VERBOSE
@@ -228,18 +255,30 @@ void fft(Param size, Param n, CplxSp* in, CplxSp* out){
 		break;
 	default:
 		printf("Error no twiddles computed for %d\n", size);
-		return;
+//		return;
 	}
 
-	for(int i=0; i<10; i++){
-		printf("%2d: %8d + %8d i\n", i, in[i].real, in[i].imag);
-	}
+//	CplxSp* ptr_out = out;
+//	for(int i=0; i<10; i++){
+//		printf("%2d: %08f + %08f i\n", i, in[i].real, in[i].imag);
+//	}
 
 	for(int i=0; i<n; i++){
 	    DSPF_sp_fftSPxSP_cn(size, (float*)in, (float*)w, (float*)out, brev, rad, 0, size);
 	    in += size;
 	    out += size;
 	}
+
+//	printf("%d FFT_%d:\n", n, size);
+//	for(int i=0; i<size; i++){
+//		printf("%d: %08f + %08f i\n", i, in[i].real, in[i].imag);
+//	}
+//
+//	memcpy(out, in, n*size*sizeof(CplxSp));
+
+//	for(int i=0; i<10; i++){
+//		printf("%2d: %08f + %08f i\n", i, ptr_out[i].real, ptr_out[i].imag);
+//	}
 }
 
 void fft_2(Param n, Param p, Param N2, Param N1, char* ix, CplxSp* i0, CplxSp* i1, CplxSp* o0, CplxSp* o1){
@@ -247,18 +286,15 @@ void fft_2(Param n, Param p, Param N2, Param N1, char* ix, CplxSp* i0, CplxSp* i
 	printf("Execute fft_2\n");
 #endif
 
-	int fftSize = N1*N2;
-	int localSize = N2;
-	int id = *ix % (1<<p);
-	int increment = N1 / (1 << (p+1));
+	const int id	  = (*ix)*n;
+	const int m = (id % (N2*(1<<(p))));
+	const unsigned short incr = N1 / (1 << (p+1));
 
-	for(int k=0; k<localSize; k++){
-		int m = (id * localSize + k) * increment;
+	for(int k=0; k<n; k++){
+		unsigned short r = (m+k)*incr;
 
-//		printf("m/q%d == %f\n", m, fftSize*((1.*id/(1 << (p+1))) + 1.*k/(localSize*(1<<(p+1)))));
-
-		float Br = i1[k].real*cos(-2*M_PI*m/fftSize) - i1[k].imag*sin(-2*M_PI*m/fftSize);
-		float Bi = i1[k].real*sin(-2*M_PI*m/fftSize) + i1[k].imag*cos(-2*M_PI*m/fftSize);
+		float Br = i1[k].real*twi64k[r].real - i1[k].imag*twi64k[r].imag;
+		float Bi = i1[k].real*twi64k[r].imag + i1[k].imag*twi64k[r].real;
 
 		o0[k].real = i0[k].real + Br;
 		o0[k].imag = i0[k].imag + Bi;
@@ -266,6 +302,15 @@ void fft_2(Param n, Param p, Param N2, Param N1, char* ix, CplxSp* i0, CplxSp* i
 		o1[k].real = i0[k].real - Br;
 		o1[k].imag = i0[k].imag - Bi;
 	}
+
+
+//	printf("FFT_2 %d:\n", n);
+//	for(int i=0; i<n; i++){
+//		printf("%d: %08f + %08f i | %08f + %08f i\n", i, i0[i].real, i0[i].imag, i1[i].real, i1[i].imag);
+//	}
+//
+//	memcpy(o0, i0, n*sizeof(CplxSp));
+//	memcpy(o1, i1, n*sizeof(CplxSp));
 }
 
 

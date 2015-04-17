@@ -55,8 +55,8 @@ typedef struct CplxSp{
 	float	imag;
 } CplxSp;
 
-void genIx(Param n, char* ixs);
-void cfg(char* in, Param* out);
+void genIx(Param n, int* ixs);
+void cfg(int* in, Param* out);
 
 void src(Param size, CplxSp *out);
 void snk(Param size, CplxSp *in);

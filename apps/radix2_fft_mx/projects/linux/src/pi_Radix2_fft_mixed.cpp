@@ -80,9 +80,9 @@ PiSDFGraph* Radix2_fft_mixed(Archi* archi, Stack* stack){
 
 	/* Parameters */
 	PiSDFParam *param_fftSize = graph->addStaticParam("fftSize", 64*1024);
-	PiSDFParam *param_P = graph->addStaticParam("P", 1);
-	PiSDFParam *param_n1 = graph->addStaticParam("n1", 32*1024);
-	PiSDFParam *param_n2 = graph->addStaticParam("n2", 1);
+	PiSDFParam *param_P = graph->addStaticParam("P", 5);
+	PiSDFParam *param_n1 = graph->addStaticParam("n1", 2*1024);
+	PiSDFParam *param_n2 = graph->addStaticParam("n2", 4);
 	PiSDFParam *param_N1 = graph->addDependentParam("N1", "2^P");
 	PiSDFParam *param_N2 = graph->addDependentParam("N2", "fftSize/2^P");
 
@@ -387,23 +387,23 @@ PiSDFGraph* Radix2_Stage(Archi* archi, Stack* stack){
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_F, /*SrcPrt*/ 0, /*Prod*/ "(N2*(2^p))*8",
+		/*Src*/ bo_F, /*SrcPrt*/ 0, /*Prod*/ "(N2*(2^(p)))*8",
 		/*Snk*/ bo_DFT_2, /*SnkPrt*/ 0, /*Cons*/ "(n1)*8",
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_F, /*SrcPrt*/ 1, /*Prod*/ "(N2*(2^p))*8",
+		/*Src*/ bo_F, /*SrcPrt*/ 1, /*Prod*/ "(N2*(2^(p)))*8",
 		/*Snk*/ bo_DFT_2, /*SnkPrt*/ 1, /*Cons*/ "(n1)*8",
 		/*Delay*/ "0",0);
 
 	graph->connect(
 		/*Src*/ bo_DFT_2, /*SrcPrt*/ 0, /*Prod*/ "(n1)*8",
-		/*Snk*/ bo_J, /*SnkPrt*/ 0, /*Cons*/ "(N2*(2^p))*8",
+		/*Snk*/ bo_J, /*SnkPrt*/ 0, /*Cons*/ "(N2*(2^(p)))*8",
 		/*Delay*/ "0",0);
 
 	graph->connect(
 		/*Src*/ bo_DFT_2, /*SrcPrt*/ 1, /*Prod*/ "(n1)*8",
-		/*Snk*/ bo_J, /*SnkPrt*/ 1, /*Cons*/ "(N2*(2^p))*8",
+		/*Snk*/ bo_J, /*SnkPrt*/ 1, /*Cons*/ "(N2*(2^(p)))*8",
 		/*Delay*/ "0",0);
 
 	graph->connect(

@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>radix2_fft_sp_linux</name>
+	<name>radix2_fft_fx</name>
 	<comment></comment>
 	<projects>
-		<project>Spider</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -20,8 +19,8 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
+		<nature>org.ietr.preesm.core.ui.wizards.nature</nature>
 		<nature>org.eclipse.cdt.core.cnature</nature>
-		<nature>org.eclipse.cdt.core.ccnature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>

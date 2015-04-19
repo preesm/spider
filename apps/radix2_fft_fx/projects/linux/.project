@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>radix2_fft_fixed</name>
+	<name>radix2_fft_fx_linux</name>
 	<comment></comment>
 	<projects>
 		<project>Spider</project>

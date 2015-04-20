@@ -37,29 +37,34 @@
 #ifndef ACTORS_H
 #define ACTORS_H
 
-#include "data_fx_imre.h"
+#include <spider.h>
 
-void genStepSwitch(Param NStep, char* steps, char* sels);
-void cfgFftStep(char* in, Param* step);
+/* Type Definition */
+typedef struct Cplx16{
+	short	imag;
+	short	real;
+} Cplx16;
 
-void src(Param fftSize, Cplx16 *out);
-void snk(Param fftSize, Cplx16 *in);
+typedef struct Cplx32{
+	long	imag;
+	long	real;
+} Cplx32;
 
-void fftRadix2(
-		Param NStep,
-		Param fftSize,
-		Param Step,
-		Cplx16* in0,
-		Cplx16* in1,
-		char*  ix,
-		Cplx16* out0,
-		Cplx16* out1);
+typedef struct CplxSp{
+	float	imag;
+	float	real;
+} CplxSp;
 
-void ordering(Param fftSize, Param NStep, Cplx16* in, Cplx16 *out);
-void fft(Param NStep, Param fftSize, Cplx16* in, Cplx16* out);
+void cfgFFT(Param* size, Param* P, Param* n1, Param* n2);
 
-void configFft(Param fftSize, Param* NStep);
-void selcfg(Param *sel, char* sel_in);
-void genIx(Param NStep, char* ixs);
+void genIx(Param n, int* ixs);
+void cfg(int* in, Param* out);
+
+void src(Param size, Cplx16 *out);
+void snk(Param size, Cplx16 *in);
+
+void T(Param N1, Param N2, Cplx16* in, Cplx16 *out);
+void fft(Param size, Param n, Cplx16* in, Cplx16* out);
+void fft_2(Param n, Param p, Param N2, Param N1, char* ix, Cplx16* i0, Cplx16* i1, Cplx16* o0, Cplx16* o1);
 
 #endif//ACTORS_H

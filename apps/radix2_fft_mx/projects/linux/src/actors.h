@@ -55,6 +55,11 @@ typedef struct CplxSp{
 	float	imag;
 } CplxSp;
 
+void cfgFFT(Param* size, Param* P, Param* n1, Param* n2);
+
+void CplxSp_to_Cplx16(Param n, CplxSp* in, Cplx16* out);
+void Cplx16_to_CplxSp(Param n, Cplx16* in, CplxSp* out);
+
 void genIx(Param n, int* ixs);
 void cfg(int* in, Param* out);
 
@@ -62,10 +67,7 @@ void src(Param size, CplxSp *out);
 void snk(Param size, CplxSp *in);
 
 void T(Param N1, Param N2, CplxSp* in, CplxSp *out);
-void fft(Param size, Param n, CplxSp* in, CplxSp* out);
+void fft(Param size, Param n, Cplx16* in, Cplx16* out);
 void fft_2(Param n, Param p, Param N2, Param N1, char* ix, CplxSp* i0, CplxSp* i1, CplxSp* o0, CplxSp* o1);
-
-
-void Switch(Param size, CplxSp* i0, CplxSp* i1, CplxSp* out);
 
 #endif//ACTORS_H

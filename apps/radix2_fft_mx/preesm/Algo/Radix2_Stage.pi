@@ -13,16 +13,22 @@
         <node expr="0" id="p" kind="param"/>
         <node expr="N2*N1/n1/2" id="nDFT2" kind="param"/>
         <node id="DFT_2" kind="actor">
-            <data key="graph_desc">Code/include/actors.h</data>
+            <data key="graph_desc">Code/generated/actors.h</data>
             <loop name="fft_2">
                 <param direction="IN" isConfig="true" name="n" type="Param "/>
+                <param direction="IN" isConfig="true" name="p" type=" Param "/>
+                <param direction="IN" isConfig="true" name="N2" type=" Param "/>
+                <param direction="IN" isConfig="true" name="N1" type=" Param "/>
                 <param direction="IN" isConfig="false" name="ix" type=" char* "/>
-                <param direction="IN" isConfig="false" name="i0" type=" float* "/>
-                <param direction="IN" isConfig="false" name="i1" type=" float* "/>
-                <param direction="OUT" isConfig="false" name="o0" type=" float* "/>
-                <param direction="OUT" isConfig="false" name="o1" type=" float* "/>
+                <param direction="IN" isConfig="false" name="i0" type=" CplxSp* "/>
+                <param direction="IN" isConfig="false" name="i1" type=" CplxSp* "/>
+                <param direction="OUT" isConfig="false" name="o0" type=" CplxSp* "/>
+                <param direction="OUT" isConfig="false" name="o1" type=" CplxSp* "/>
             </loop>
             <port kind="cfg_input" name="n"/>
+            <port kind="cfg_input" name="p"/>
+            <port kind="cfg_input" name="N1"/>
+            <port kind="cfg_input" name="N2"/>
             <port annotation="NONE" expr="n" kind="input" name="i0"/>
             <port annotation="NONE" expr="n" kind="input" name="i1"/>
             <port annotation="NONE" expr="1" kind="input" name="ix"/>
@@ -53,19 +59,19 @@
             <port annotation="NONE" expr="N2*(2^(p+1))" kind="output" name="out"/>
         </node>
         <node id="cfg" kind="actor">
-            <data key="graph_desc">Code/include/actors.h</data>
+            <data key="graph_desc">Code/generated/actors.h</data>
             <loop name="cfg">
-                <param direction="IN" isConfig="false" name="in" type="char* "/>
+                <param direction="IN" isConfig="false" name="in" type="int* "/>
                 <param direction="OUT" isConfig="true" name="out" type=" Param* "/>
             </loop>
             <port annotation="NONE" kind="cfg_output" name="out"/>
             <port annotation="NONE" expr="1" kind="input" name="in"/>
         </node>
         <node id="genIx" kind="actor">
-            <data key="graph_desc">Code/include/actors.h</data>
+            <data key="graph_desc">Code/generated/actors.h</data>
             <loop name="genIx">
                 <param direction="IN" isConfig="true" name="n" type="Param "/>
-                <param direction="OUT" isConfig="false" name="ixs" type=" char* "/>
+                <param direction="OUT" isConfig="false" name="ixs" type=" int* "/>
             </loop>
             <port kind="cfg_input" name="n"/>
             <port annotation="NONE" expr="n" kind="output" name="ixs"/>
@@ -100,5 +106,8 @@
         <edge kind="dependency" source="n1" target="nDFT2"/>
         <edge kind="dependency" source="nDFT2" target="genIx" targetport="n"/>
         <edge kind="dependency" source="N1" target="nDFT2"/>
+        <edge kind="dependency" source="p" target="DFT_2" targetport="p"/>
+        <edge kind="dependency" source="N1" target="DFT_2" targetport="N1"/>
+        <edge kind="dependency" source="N2" target="DFT_2" targetport="N2"/>
     </graph>
 </graphml>

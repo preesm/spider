@@ -48,22 +48,7 @@ extern "C"{
 #include <string.h>
 #include <math.h>
 
-#ifndef M_PI
-#define M_PI 3.14159265359
-#endif
-
 #define VERBOSE 0
-
-unsigned char brev[64] = {
-    0x0, 0x20, 0x10, 0x30, 0x8, 0x28, 0x18, 0x38,
-    0x4, 0x24, 0x14, 0x34, 0xc, 0x2c, 0x1c, 0x3c,
-    0x2, 0x22, 0x12, 0x32, 0xa, 0x2a, 0x1a, 0x3a,
-    0x6, 0x26, 0x16, 0x36, 0xe, 0x2e, 0x1e, 0x3e,
-    0x1, 0x21, 0x11, 0x31, 0x9, 0x29, 0x19, 0x39,
-    0x5, 0x25, 0x15, 0x35, 0xd, 0x2d, 0x1d, 0x3d,
-    0x3, 0x23, 0x13, 0x33, 0xb, 0x2b, 0x1b, 0x3b,
-    0x7, 0x27, 0x17, 0x37, 0xf, 0x2f, 0x1f, 0x3f
-};
 
 static Cplx16 twi64k[32*1024];
 
@@ -73,11 +58,22 @@ static Cplx16 gen_twi8k [8*1024];
 static Cplx16 gen_twi4k [4*1024];
 static Cplx16 gen_twi2k [2*1024];
 static Cplx16 gen_twi1k [1024];
+static Cplx16 gen_twi512 [512];
+static Cplx16 gen_twi256 [256];
+static Cplx16 gen_twi128 [128];
+
+static short d2s(double d)
+{
+    d = floor(0.5 + d);  // Explicit rounding to integer //
+    if (d >=  32767.0) return  32767;
+    if (d <= -32768.0) return -32768;
+    return (short)d;
+}
 
 void initActors(){
 	for(int i=0; i<32*1024; i++){
-		twi64k[i].real = cos(-2*M_PI*i/(64*1024));
-		twi64k[i].imag = sin(-2*M_PI*i/(64*1024));
+		twi64k[i].real = d2s(32768.5*cos(-2*M_PI*i/(64*1024)));
+		twi64k[i].imag = d2s(32768.5*sin(-2*M_PI*i/(64*1024)));
 	}
 	gen_twiddle_fft16x16_imre((short*)gen_twi32k, 32*1024);
 	gen_twiddle_fft16x16_imre((short*)gen_twi16k, 16*1024);
@@ -85,9 +81,12 @@ void initActors(){
 	gen_twiddle_fft16x16_imre((short*)gen_twi4k,   4*1024);
 	gen_twiddle_fft16x16_imre((short*)gen_twi2k,   2*1024);
 	gen_twiddle_fft16x16_imre((short*)gen_twi1k,     1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi512,     512);
+	gen_twiddle_fft16x16_imre((short*)gen_twi256,     256);
+	gen_twiddle_fft16x16_imre((short*)gen_twi128,     128);
 }
 
-float snr(Cplx32* sig, CplxSp* ref, int n){
+static inline float snr(Cplx32* sig, CplxSp* ref, int n){
 	CplxSp diff[N_DATA];
 	int i;
 	for(i=0; i<n; i++){
@@ -104,14 +103,12 @@ float snr(Cplx32* sig, CplxSp* ref, int n){
 	rms_sig  = sqrt(rms_sig/n);
 	rms_diff = sqrt(rms_diff/n);
 
-	printf("RMS Signal : %f\n", rms_sig);
-	printf("RMS Noise  : %f\n", rms_diff);
-
 	return 20*log(rms_sig/rms_diff);
 }
 
-inline int bitRev(short v, int logN){
+static inline int bitRev(short v, int N){
 	short r=0;
+	int logN = log2(N);
 	for(int n=0; n<logN; n++){
 		r = (r<<1) + (v & 0x1);
 		v = v>>1;
@@ -119,116 +116,79 @@ inline int bitRev(short v, int logN){
 	return r;
 }
 
-void genStepSwitch(Param NStep, char* steps, char* sels){
+void cfgFFT(Param* size, Param* P, Param* n1, Param* n2){
 #if VERBOSE
-	printf("Execute genStepSwitch\n");
+	printf("Execute cfgFFT\n");
 #endif
-	steps[0] = 0;
-	sels[0] = 0;
-	for(int i=1; i<NStep; i++){
-		steps[i] = i;
-		sels[i] = 1;
+	*size 	= N_DATA;
+	*P 		= 2;
+	*n1 	= 2*1024;
+	*n2 	= 1;
+}
+
+void genIx(Param n, int* ixs){
+#if VERBOSE
+	printf("Execute genIx: n=%d\n", n);
+#endif
+	for(int i=0; i<n; i++){
+		ixs[i] = i;
 	}
 }
 
-void cfgFftStep(char* in, Param* step){
+void cfg(int* in, Param* out){
 #if VERBOSE
-	printf("Execute cfgFftStep\n");
+	printf("Execute cfg: in=%d\n", *in);
 #endif
-	*step = *in;
+	*out = *in;
 }
 
-
-void src(Param fftSize, Cplx16 *out){
+void src(Param size, Cplx16 *out){
 #if VERBOSE
 	printf("Execute Src\n");
 #endif
-	if(N_DATA != fftSize)
+	if(N_DATA != size)
 		printf("Bad size, bad SNR expected\n");
 
-    memcpy(out, data_in, fftSize*sizeof(Cplx16));
+    memcpy(out, data_in, size*sizeof(Cplx16));
 }
 
-void snk(Param fftSize, Cplx16 *in){
+void snk(Param size, Cplx16 *in){
 #if VERBOSE
 	printf("Execute Snk\n");
 #endif
-	Cplx32 in_scaled[fftSize];
+	Cplx32 in_scaled[size];
 	int scaling = round(log2(data_out[0].real/in[0].real));
 
-	for(int i=0; i<fftSize; i++){
+	for(int i=0; i<size; i++){
 		in_scaled[i].real = in[i].real << scaling;
 		in_scaled[i].imag = in[i].imag << scaling;
 	}
 
     // Compute SNR
-    float snrVal = snr(in_scaled, data_out, fftSize);
-    printf("SNR %f dB scaling %d\n", snrVal, 1<<scaling);
+    float snrVal = snr(in_scaled, data_out, size);
+    printf("SNR %f dB scaling %d (%d bits)\n", snrVal, 1<<scaling, scaling);
 }
 
-void fftRadix2(
-		Param NStep,
-		Param fftSize,
-		Param Step,
-		Cplx16* in0,
-		Cplx16* in1,
-		char*  ix,
-		Cplx16* out0,
-		Cplx16* out1){
+void T(Param N1, Param N2, Cplx16* in, Cplx16 *out){
 #if VERBOSE
-	printf("Execute fftRadix2\n");
+	printf("Execute T\n");
 #endif
 
-
-	int localSize = fftSize/(1<<NStep);
-	int id = *ix % (1<<Step);
-	int increment = 1 << (NStep-Step-1);
-
-	for(int k=0; k<localSize; k++){
-		int m = (id * localSize + k) * increment;
-
-//		printf("m/q%d == %f\n", m, fftSize*((1.*id/(1 << (Step+1))) + 1.*k/(localSize*(1<<(Step+1)))));
-
-		float Ar = in0[k].real;
-		float Ai = in0[k].imag;
-		float Br = in1[k].real*cos(-2*M_PI*m/fftSize) - in1[k].imag*sin(-2*M_PI*m/fftSize);
-		float Bi = in1[k].real*sin(-2*M_PI*m/fftSize) + in1[k].imag*cos(-2*M_PI*m/fftSize);
-
-		out0[k].real = (Ar + Br);
-		out0[k].imag = (Ai + Bi);
-
-		out1[k].real = (Ar - Br);
-		out1[k].imag = (Ai - Bi);
-	}
-}
-
-void ordering(Param fftSize, Param NStep, Cplx16* in, Cplx16 *out){
-#if VERBOSE
-	printf("Execute ordering\n");
-#endif
-	int P = 1<<NStep;
-	for(int proc=0; proc<P; proc++){
-		for(int k=0; k<fftSize/P; k++){
-			out[proc*fftSize/P+k].real = in[bitRev(proc, NStep)+k*P].real;
-			out[proc*fftSize/P+k].imag = in[bitRev(proc, NStep)+k*P].imag;
+	for(int n2=0; n2<N2; n2++){
+		for(int n1=0; n1<N1; n1++){
+			out[n1*N2+n2].real = in[bitRev(n1, N1)+n2*N1].real;
+			out[n1*N2+n2].imag = in[bitRev(n1, N1)+n2*N1].imag;
 		}
 	}
 }
 
-void fft(
-		Param NStep,
-		Param fftSize,
-		Cplx16* in,
-		Cplx16* out){
-
+void fft(Param size, Param n, Cplx16* in, Cplx16* out){
 #if VERBOSE
 	printf("Execute fft\n");
 #endif
 
-	int localFFTSize = fftSize/(1<<NStep);
-
 	Cplx16* w;
-	switch(localFFTSize){
+	switch(size){
 	case 32*1024:
 		w = gen_twi32k;
 		break;
@@ -247,46 +207,48 @@ void fft(
 	case    1024:
 		w = gen_twi1k;
 		break;
+	case    512:
+		w = gen_twi512;
+		break;
+	case    256:
+		w = gen_twi256;
+		break;
+	case    128:
+		w = gen_twi128;
+		break;
 	default:
-		printf("Error no twiddles computed for %d\n", localFFTSize);
+		printf("Error no twiddles computed for %ld\n", size);
 		return;
 	}
 
-    DSP_fft16x16_imre_cn((short*)w, localFFTSize, (short*)in, (short*)out);
-
-//    int scaling = 1;
-//	for(int i=0; i<localFFTSize; i++){
-//		out[i].real <<= scaling;
-//		out[i].imag <<= scaling;
-//	}
+	for(int i=0; i<n; i++){
+	    DSP_fft16x16_imre_cn((short*)w, size, (short*)in, (short*)out);
+	    in += size;
+	    out += size;
+	}
 }
 
-void configFft(Param fftSize, Param* NStep){
+void fft_2(Param n, Param p, Param N2, Param N1, char* ix, Cplx16* i0, Cplx16* i1, Cplx16* o0, Cplx16* o1){
 #if VERBOSE
-	printf("Execute configFft\n");
+	printf("Execute fft_2\n");
 #endif
 
-	static int nstep = 1;
+	const int id	  = (*ix)*n;
+	const int m = (id % (N2*(1<<(p))));
+	const unsigned short incr = N1 / (1 << (p+1));
 
-	*NStep = nstep++;
-}
+	for(int k=0; k<n; k++){
+		unsigned short r = (m+k)*incr;
 
-void selcfg(Param *out_Sel, char* in_Sel){
-#if VERBOSE
-	printf("Execute selcfg\n");
-#endif
+		long i1r = i1[k].real;
+		long i1i = i1[k].imag;
+		short Br = (long)(i1r*twi64k[r].real - i1i*twi64k[r].imag)>>15;
+		short Bi = (long)(i1r*twi64k[r].imag + i1i*twi64k[r].real)>>15;
 
-	// Set parameter's value.
-	*out_Sel = in_Sel[0];
-}
+		o0[k].real = (i0[k].real + Br)>>1;
+		o0[k].imag = (i0[k].imag + Bi)>>1;
 
-void genIx(Param NStep, char* ixs){
-#if VERBOSE
-	printf("Execute genIx\n");
-#endif
-
-	int maxIds = 1<<(NStep-1);
-	for(int i=0; i<maxIds; i++){
-		ixs[i] = i;
+		o1[k].real = (i0[k].real - Br)>>1;
+		o1[k].imag = (i0[k].imag - Bi)>>1;
 	}
 }

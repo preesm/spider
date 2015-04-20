@@ -179,11 +179,6 @@ void src(Param size, CplxSp *out){
 	if(N_DATA != size)
 		printf("Bad size, bad SNR expected\n");
 
-//	for(int i = 0; i<size; i++){
-//		out[i].real = i;
-//		out[i].imag = 0;
-//	}
-
     memcpy(out, data_in, size*2*sizeof(float));
 }
 
@@ -195,35 +190,19 @@ void snk(Param size, CplxSp *in){
     // Compute SNR
     float snrVal = snr(in, data_out, size);
     printf("SNR %f dB\n", snrVal);
-
-//	printf("End:\n");
-//	for(int i=0; i<size; i++){
-//		printf("%d: %08f + %08f i\n", i, in[i].real, in[i].imag);
-//	}
 }
 
 void T(Param N1, Param N2, CplxSp* in, CplxSp *out){
 #if VERBOSE
 	printf("Execute T\n");
 #endif
-//
-//	printf("Before T:\n");
-//	for(int i=0; i<N1*N2; i++){
-//		printf("%d: %08f + %08f i\n", i, in[i].real, in[i].imag);
-//	}
 
 	for(int n2=0; n2<N2; n2++){
 		for(int n1=0; n1<N1; n1++){
-//			printf("%d <- %d\n", n1*N2+n2, bitRev(n1, N1)+n2*N1);
 			out[n1*N2+n2].real = in[bitRev(n1, N1)+n2*N1].real;
 			out[n1*N2+n2].imag = in[bitRev(n1, N1)+n2*N1].imag;
 		}
 	}
-
-//	printf("After T:\n");
-//	for(int i=0; i<N1*N2; i++){
-//		printf("%d: %08f + %08f i\n", i, out[i].real, out[i].imag);
-//	}
 }
 void fft(Param size, Param n, CplxSp* in, CplxSp* out){
 #if VERBOSE
@@ -265,30 +244,14 @@ void fft(Param size, Param n, CplxSp* in, CplxSp* out){
 		break;
 	default:
 		printf("Error no twiddles computed for %d\n", size);
-//		return;
+		return;
 	}
-
-//	CplxSp* ptr_out = out;
-//	for(int i=0; i<10; i++){
-//		printf("%2d: %08f + %08f i\n", i, in[i].real, in[i].imag);
-//	}
 
 	for(int i=0; i<n; i++){
 	    DSPF_sp_fftSPxSP_cn(size, (float*)in, (float*)w, (float*)out, brev, rad, 0, size);
 	    in += size;
 	    out += size;
 	}
-
-//	printf("%d FFT_%d:\n", n, size);
-//	for(int i=0; i<size; i++){
-//		printf("%d: %08f + %08f i\n", i, in[i].real, in[i].imag);
-//	}
-//
-//	memcpy(out, in, n*size*sizeof(CplxSp));
-
-//	for(int i=0; i<10; i++){
-//		printf("%2d: %08f + %08f i\n", i, ptr_out[i].real, ptr_out[i].imag);
-//	}
 }
 
 void fft_2(Param n, Param p, Param N2, Param N1, char* ix, CplxSp* i0, CplxSp* i1, CplxSp* o0, CplxSp* o1){
@@ -312,22 +275,5 @@ void fft_2(Param n, Param p, Param N2, Param N1, char* ix, CplxSp* i0, CplxSp* i
 		o1[k].real = i0[k].real - Br;
 		o1[k].imag = i0[k].imag - Bi;
 	}
-
-
-//	printf("FFT_2 %d:\n", n);
-//	for(int i=0; i<n; i++){
-//		printf("%d: %08f + %08f i | %08f + %08f i\n", i, i0[i].real, i0[i].imag, i1[i].real, i1[i].imag);
-//	}
-//
-//	memcpy(o0, i0, n*sizeof(CplxSp));
-//	memcpy(o1, i1, n*sizeof(CplxSp));
-}
-
-
-void Switch(Param size, CplxSp* i0, CplxSp* i1, CplxSp* out){
-#if VERBOSE
-	printf("Execute Switch\n");
-#endif
-
 }
 

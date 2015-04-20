@@ -47,18 +47,20 @@
 #define REVERSE_POLISH_STACK_MAX_ELEMENTS 100
 #define EXPR_LEN_MAX 1000
 
-static int precedence[4] = {
+static int precedence[5] = {
 	2, //OP_ADD
 	2, //OP_SUB
 	3, //OP_MUL
-	3  //OP_DIV
+	3, //OP_DIV
+	4  //OP_POW
 };
 
-static const char* operatorSign[4] = {
+static const char* operatorSign[5] = {
 	"+", //OP_ADD
 	"-", //OP_SUB
 	"*", //OP_MUL
-	"/" //OP_DIV
+	"/" //OP_DIV,
+	"^" //OP_POW
 };
 
 Expression::Expression(

@@ -66,8 +66,8 @@ private:
 		ADD,
 		SUB,
 		MUL,
-		POW,
-		DIV
+		DIV,
+		POW
 	} OpType;
 
 	typedef struct{

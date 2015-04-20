@@ -192,7 +192,7 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="radix2_fft_k2_dsp.com.ti.ccstudio.buildDefinitions.C6000.ProjectType.1579903658" name="C6000" projectType="com.ti.ccstudio.buildDefinitions.C6000.ProjectType"/>
+		<project id="radix2_fft_mx_k2_dsp.com.ti.ccstudio.buildDefinitions.C6000.ProjectType.1579903658" name="C6000" projectType="com.ti.ccstudio.buildDefinitions.C6000.ProjectType"/>
 	</storageModule>
 	<storageModule moduleId="refreshScope"/>
 	<storageModule moduleId="scannerConfiguration"/>

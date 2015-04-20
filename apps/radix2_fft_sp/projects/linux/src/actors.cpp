@@ -204,6 +204,7 @@ void T(Param N1, Param N2, CplxSp* in, CplxSp *out){
 		}
 	}
 }
+
 void fft(Param size, Param n, CplxSp* in, CplxSp* out){
 #if VERBOSE
 	printf("Execute fft\n");

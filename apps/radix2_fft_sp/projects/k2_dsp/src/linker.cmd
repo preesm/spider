@@ -38,7 +38,6 @@ SECTIONS
 
 	.qmss: load > L2SRAM
 	.cppi: load > L2SRAM
-	.twiddles: load > L2SRAM
+	.twiddles: load > DDR3
 
-	.fftData: load > DDR3
 }

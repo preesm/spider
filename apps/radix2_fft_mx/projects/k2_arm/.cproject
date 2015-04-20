@@ -20,7 +20,7 @@
 							<option id="cdt.managedbuild.option.gnu.cross.prefix.323069812" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" value="arm-linux-gnueabihf-" valueType="string"/>
 							<option id="cdt.managedbuild.option.gnu.cross.path.1442180816" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/home/jheulot/k2h_3_1_1_4/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.1362888999" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
-							<builder buildPath="${workspace_loc:/radix2_fft_k2_arm/Debug}" id="cdt.managedbuild.builder.gnu.cross.1368509936" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross">
+							<builder buildPath="${workspace_loc:/radix2_fft_mx_k2_arm/Debug}" id="cdt.managedbuild.builder.gnu.cross.1368509936" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross">
 								<outputEntries>
 									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Debug"/>
 									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Release"/>
@@ -81,11 +81,11 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1657719214" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.597480839" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
 								<option id="gnu.both.asm.option.include.paths.1980808118" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/radix2_fft_k2_arm/Spider_k2_Arm/common}&quot;"/>
-									<listOptionValue builtIn="false" value="../radix2_fft_k2_arm/actors"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/radix2_fft_k2_arm/Spider_k2_Arm/lrt}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/radix2_fft_k2_arm/Spider_k2_Arm/platform_k2_arm}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/radix2_fft_k2_arm/Spider_k2_Arm/spider}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/radix2_fft_mx_k2_arm/Spider_k2_Arm/common}&quot;"/>
+									<listOptionValue builtIn="false" value="../radix2_fft_mx_k2_arm/actors"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/radix2_fft_mx_k2_arm/Spider_k2_Arm/lrt}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/radix2_fft_mx_k2_arm/Spider_k2_Arm/platform_k2_arm}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/radix2_fft_mx_k2_arm/Spider_k2_Arm/spider}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.47932302" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -117,7 +117,7 @@
 							<option id="cdt.managedbuild.option.gnu.cross.prefix.1528426775" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" value="arm-linux-gnueabihf-" valueType="string"/>
 							<option id="cdt.managedbuild.option.gnu.cross.path.700446468" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/home/jheulot/k2h_linux/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.143893020" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
-							<builder buildPath="${workspace_loc:/radix2_fft_k2_arm/Release}" id="cdt.managedbuild.builder.gnu.cross.1319281617" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
+							<builder buildPath="${workspace_loc:/radix2_fft_mx_k2_arm/Release}" id="cdt.managedbuild.builder.gnu.cross.1319281617" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool command="gcc" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cross.c.compiler.1545081629" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.option.optimization.level.472583217" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.753233811" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.none" valueType="enumerated"/>
@@ -183,7 +183,7 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="radix2_fft_k2_arm.cdt.managedbuild.target.gnu.cross.exe.1242724291" name="Executable" projectType="cdt.managedbuild.target.gnu.cross.exe"/>
+		<project id="radix2_fft_mx_k2_arm.cdt.managedbuild.target.gnu.cross.exe.1242724291" name="Executable" projectType="cdt.managedbuild.target.gnu.cross.exe"/>
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
@@ -241,6 +241,13 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/radix2_fft_mx_k2_arm"/>
+		</configuration>
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/radix2_fft_mx_k2_arm"/>
+		</configuration>
+	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>

@@ -37,7 +37,7 @@
 #include <lrt.h>
 #include <platformK2Dsp.h>
 #include <tools/DynStack.h>
-#include "top_fft.h"
+#include "Radix2_fft.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
 	initActors();
 	try{
 		DynStack archiStack("ArchiStack");
-		PlatformK2Dsp platform(SH_MEM, &archiStack, top_fft_fcts, N_FCT_TOP_FFT);
+		PlatformK2Dsp platform(SH_MEM, &archiStack, radix2_fft_fcts, N_FCT_RADIX2_FFT);
 	}catch(const char* s){
 		printf("Exception : %s\n", s);
 	}

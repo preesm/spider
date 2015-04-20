@@ -1,10 +1,12 @@
 #ifndef DATA_H
 #define DATA_H
 
+#include "actors.h"
+
 /* Constants */
 #define N_DATA 65536
 
-extern float data_in[2*N_DATA];
-extern float data_out[2*N_DATA];
+extern CplxSp data_in[N_DATA];
+extern CplxSp data_out[N_DATA];
 
 #endif //DATA_H

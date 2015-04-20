@@ -37,7 +37,6 @@
 #include <platform.h>
 
 #include "actors.h"
-#include "data_sp.h"
 
 extern "C"{
 #include "ti/dsplib/src/DSPF_sp_fftSPxSP/DSPF_sp_fftSPxSP.h"
@@ -57,7 +56,28 @@ extern "C"{
 
 #define VERBOSE 0
 
-unsigned char brev[64] = {
+#pragma DATA_SECTION(".twiddles")
+static CplxSp twi64k[64*1024];
+
+#pragma DATA_SECTION(".twiddles")
+static CplxSp gen_twi32k[32*1024];
+
+#pragma DATA_SECTION(".twiddles")
+static CplxSp gen_twi16k[16*1024];
+
+#pragma DATA_SECTION(".twiddles")
+static CplxSp gen_twi8k [8*1024];
+
+#pragma DATA_SECTION(".twiddles")
+static CplxSp gen_twi4k [4*1024];
+
+#pragma DATA_SECTION(".twiddles")
+static CplxSp gen_twi2k [2*1024];
+
+#pragma DATA_SECTION(".twiddles")
+static CplxSp gen_twi1k [1024];
+
+static unsigned char brev[64] = {
     0x0, 0x20, 0x10, 0x30, 0x8, 0x28, 0x18, 0x38,
     0x4, 0x24, 0x14, 0x34, 0xc, 0x2c, 0x1c, 0x3c,
     0x2, 0x22, 0x12, 0x32, 0xa, 0x2a, 0x1a, 0x3a,
@@ -68,50 +88,41 @@ unsigned char brev[64] = {
     0x7, 0x27, 0x17, 0x37, 0xf, 0x2f, 0x1f, 0x3f
 };
 
-//#pragma DATA_SECTION(".twiddles")
-//static float twi64k[64*1024];
-
-#pragma DATA_SECTION(".twiddles")
-static float gen_twi32k[2*32*1024];
-
-#pragma DATA_SECTION(".twiddles")
-static float gen_twi16k[2*16*1024];
-
-#pragma DATA_SECTION(".twiddles")
-static float gen_twi8k [2*8*1024];
-
-#pragma DATA_SECTION(".twiddles")
-static float gen_twi4k [2*4*1024];
-
-#pragma DATA_SECTION(".twiddles")
-static float gen_twi2k [2*2*1024];
-
-#pragma DATA_SECTION(".twiddles")
-static float gen_twi1k [2*1024];
-
-void tw_gen (float *w, int n);
+static inline void tw_gen (CplxSp *w, int n);
 void initActors2();
 
 void initActors(){
-//	for(int i=0; i<32*1024; i++){
-//		twi64k[2*i  ] = cos(-2*M_PI*i/(64*1024));
-//		twi64k[2*i+1] = sin(-2*M_PI*i/(64*1024));
-//	}
 	edma_init();
-	initActors2();
+
 	tw_gen(gen_twi32k, 32*1024);
 	tw_gen(gen_twi16k, 16*1024);
 	tw_gen(gen_twi8k,   8*1024);
 	tw_gen(gen_twi4k,   4*1024);
 	tw_gen(gen_twi2k,   2*1024);
 	tw_gen(gen_twi1k,     1024);
+
+	for(int i=0; i<32*1024; i++){
+		twi64k[i].real = cos(-2*M_PI*i/(64*1024));
+		twi64k[i].imag = sin(-2*M_PI*i/(64*1024));
+	}
 }
 
-/* Function for generating Specialized sequence of twiddle factors */
-void tw_gen (float *w, int n)
+static inline int bitRev(short v, int N){
+	short r=0;
+	int logN = log2(N);
+	for(int n=0; n<logN; n++){
+		r = (r<<1) + (v & 0x1);
+		v = v>>1;
+	}
+	return r;
+}
+
+static inline void tw_gen (CplxSp *cplx_w, int n)
 {
     int i, j, k;
     const double PI = 3.141592654;
+
+    float* w = (float*) cplx_w;
 
     for (j = 1, k = 0; j <= n >> 2; j = j << 2)
     {
@@ -137,137 +148,65 @@ void tw_gen (float *w, int n)
     }
 }
 
-
-float norm2_cplx(float *x){
-	float real = x[0];
-	float imag = x[1];
-	return sqrt(real*real + imag*imag);
+void cfgFFT(Param* size, Param* P, Param* n1, Param* n2){
+#if VERBOSE
+	printf("Execute cfgFFT\n");
+#endif
+	printf("DSP should not execute cfgFFT\n");
 }
 
-float rms(float *x, int n){
-	float sum = 0;
+void genIx(Param n, int* ixs){
+#if VERBOSE
+	printf("Execute genIx: n=%d\n", n);
+#endif
 	for(int i=0; i<n; i++){
-		float val = norm2_cplx(x + 2*i);
-		sum += val*val;
+		ixs[i] = i;
 	}
-	return sqrt(sum/n);
 }
 
-float snr(float* sig, float* ref, int n){
-	float diff[2*N_DATA];
-	int i;
-	for(i=0; i<n; i++){
-		diff[2*i]   = sig[2*i]   - ref[2*i];
-		diff[2*i+1] = sig[2*i+1] - ref[2*i+1];
-	}
-
-//	printf("RMS Signal : %f\n", rms(sig, n));
-//	printf("RMS Noise : %f\n", rms(diff, n));
-
-	return 20*log(rms(sig, n)/rms(diff, n));
-}
-
-inline int bitRev(short v, int logN){
-	short r=0;
-	for(int n=0; n<logN; n++){
-		r = (r<<1) + (v & 0x1);
-		v = v>>1;
-	}
-	return r;
-}
-
-void genStepSwitch(Param NStep, char* steps, char* sels){
+void cfg(int* in, Param* out){
 #if VERBOSE
-	printf("Execute genStepSwitch\n");
+	printf("Execute cfg: in=%d\n", *in);
 #endif
-	steps[0] = 0;
-	sels[0] = 0;
-	for(int i=1; i<NStep; i++){
-		steps[i] = i;
-		sels[i] = 1;
-	}
+	*out = *in;
 }
 
-void cfgFftStep(char* in, Param* step){
-#if VERBOSE
-	printf("Execute cfgFftStep\n");
-#endif
-	*step = *in;
-}
-
-
-void src(Param fftSize, float *out){
+void src(Param size, CplxSp *out){
 #if VERBOSE
 	printf("Execute Src\n");
 #endif
-	if(N_DATA != fftSize)
-		printf("Bad size, bad SNR expected\n");
-
-//    memcpy(out, data_in, fftSize*2*sizeof(float));
+	printf("DSP should not execute Src\n");
 }
 
-void snk(Param fftSize, float *in){
+void snk(Param size, CplxSp *in){
 #if VERBOSE
 	printf("Execute Snk\n");
 #endif
-
-    // Compute SNR
-//    float snrVal = snr(in, data_out, fftSize);
-//    printf("SNR %f dB\n", snrVal);
+	printf("DSP should not execute Snk\n");
 }
 
-
-void ordering(Param fftSize, Param NStep, float* in, float *out){
+void T(Param N1, Param N2, CplxSp* in, CplxSp *out){
 #if VERBOSE
-	printf("Execute ordering\n");
+	printf("Execute T\n");
 #endif
-	int P = 1<<NStep;
-	for(int proc=0; proc<P; proc++){
-		int in_offset  = 2*bitRev(proc, NStep);
-		int out_offset = 2*proc*fftSize/P;
 
-		int eltSize = 8;
-		int factor = 8;
-		int procSize = fftSize/P;
-//		for(int k=0; k<fftSize/P; k++){
-//			out[out_offset + 2*k  ] = in[in_offset + 2*k*P  ];
-//			out[out_offset + 2*k+1] = in[in_offset + 2*k*P+1];
-//		}
-		int res = edma_cpy(
-				in + in_offset, out + out_offset,
-				/*ACnt: element size*/ 			eltSize,
-				/*BCnt: line size*/ 			procSize/factor,
-				/*CCnt: n lines in matrice*/ 	factor,
-				/*SrcBIdx: = ACnt */			P,
-				/*DstBIdx: = ACnt*CCnt */		1,
-				/*SrcCIdx: = ACnt*BCnt */		procSize/factor*P,
-				/*DstCIdx: = ACnt */			procSize/factor);
-
-		if(res)
-			printf("Edma cpy failed\n");
+	for(int n2=0; n2<N2; n2++){
+		for(int n1=0; n1<N1; n1++){
+			out[n1*N2+n2].real = in[bitRev(n1, N1)+n2*N1].real;
+			out[n1*N2+n2].imag = in[bitRev(n1, N1)+n2*N1].imag;
+		}
 	}
-
-
 }
 
-void fft(
-		Param NStep,
-		Param fftSize,
-		float* in,
-		float* out){
-
-//	static float w[2*N_DATA];
-
+void fft(Param size, Param n, CplxSp* in, CplxSp* out){
 #if VERBOSE
 	printf("Execute fft\n");
 #endif
 
-	int localFFTSize = fftSize/(1<<NStep);
-
 	int rad;
 	int j = 0;
 	for (int i = 0; i <= 31; i++)
-		if ((localFFTSize & (1 << i)) == 0)
+		if ((size & (1 << i)) == 0)
 			j++;
 		else
 			break;
@@ -277,8 +216,8 @@ void fft(
 	else
 		rad = 2;
 
-	float* w;
-	switch(localFFTSize){
+	CplxSp* w;
+	switch(size){
 	case 32*1024:
 		w = gen_twi32k;
 		break;
@@ -298,51 +237,37 @@ void fft(
 		w = gen_twi1k;
 		break;
 	default:
-		printf("Error no twiddles computed for %d\n", localFFTSize);
+		printf("Error no twiddles computed for %d\n", size);
 		return;
 	}
 
-//	clock_t t_start, t_stop, t_overhead, t_opt;
-//    TSCL=0;TSCH=0;
-//
-//    t_start = _itoll(TSCH, TSCL);
-//    t_stop  = _itoll(TSCH, TSCL);
-//    t_overhead = t_stop - t_start;
-//
-//    t_start = _itoll(TSCH, TSCL);
-    DSPF_sp_fftSPxSP(localFFTSize, in, w, out, brev, rad, 0, localFFTSize);
-//    t_stop = _itoll(TSCH, TSCL);
-//    t_opt  = (t_stop - t_start) - t_overhead;
-
-//    printf("DSPF_sp_fftSPxSP %d %d\n", localFFTSize, t_opt);
-}
-
-void configFft(Param fftSize, Param* NStep){
-#if VERBOSE
-	printf("Execute configFft\n");
-#endif
-
-	static int nstep = 1;
-
-	*NStep = nstep++;
-}
-
-void selcfg(Param *out_Sel, char* in_Sel){
-#if VERBOSE
-	printf("Execute selcfg\n");
-#endif
-
-	// Set parameter's value.
-	*out_Sel = in_Sel[0];
-}
-
-void genIx(Param NStep, char* ixs){
-#if VERBOSE
-	printf("Execute genIx\n");
-#endif
-
-	int maxIds = 1<<(NStep-1);
-	for(int i=0; i<maxIds; i++){
-		ixs[i] = i;
+	for(int i=0; i<n; i++){
+	    DSPF_sp_fftSPxSP(size, (float*)in, (float*)w, (float*)out, brev, rad, 0, size);
+	    in += size;
+	    out += size;
 	}
 }
+
+void fft_2(Param n, Param p, Param N2, Param N1, char* ix, CplxSp* i0, CplxSp* i1, CplxSp* o0, CplxSp* o1){
+#if VERBOSE
+	printf("Execute fft_2\n");
+#endif
+
+	const int id	  = (*ix)*n;
+	const int m = (id % (N2*(1<<(p))));
+	const unsigned short incr = N1 / (1 << (p+1));
+
+	for(int k=0; k<n; k++){
+		unsigned short r = (m+k)*incr;
+
+		float Br = i1[k].real*twi64k[r].real - i1[k].imag*twi64k[r].imag;
+		float Bi = i1[k].real*twi64k[r].imag + i1[k].imag*twi64k[r].real;
+
+		o0[k].real = i0[k].real + Br;
+		o0[k].imag = i0[k].imag + Bi;
+
+		o1[k].real = i0[k].real - Br;
+		o1[k].imag = i0[k].imag - Bi;
+	}
+}
+

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>radix2_fft_k2_arm</name>
+	<name>radix2_fft_mx_k2_arm</name>
 	<comment></comment>
 	<projects>
 		<project>Spider_k2_Arm</project>

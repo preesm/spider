@@ -63,21 +63,21 @@ int main(int argc, char* argv[]){
 
 	cfg.schedulerType = SCHEDULER_LIST;
 
-	cfg.srdagStack = {STACK_DYNAMIC, "SrdagStack", 0, 0};
-	cfg.transfoStack = {STACK_DYNAMIC, "TransfoStack", 0, 0};
+	cfg.srdagStack.type = STACK_DYNAMIC;
+	cfg.srdagStack.name = "SrdagStack";
+	cfg.srdagStack.size = 0;
+	cfg.srdagStack.start = 0;
+
+	cfg.transfoStack.type = STACK_DYNAMIC;
+	cfg.transfoStack.name = "TransfoStack";
+	cfg.transfoStack.size = 0;
+	cfg.transfoStack.start = 0;
 
 	spider_init(cfg);
 
 	printf("Start\n");
 
-//	try{
-	for(int i=1; i<=1; i++){
-		printf("NStep = %d\n", i);
-		char ganttPath[30];
-		sprintf(ganttPath, "radixFFT_%d.pgantt", i);
-		char srdagPath[30];
-		sprintf(srdagPath, "radixFFT_%d.gv", i);
-
+	try{
 		pisdfStack.freeAll();
 
 		PiSDFGraph *topPisdf = init_Radix2_fft(archi, &pisdfStack);
@@ -86,11 +86,11 @@ int main(int argc, char* argv[]){
 		Platform::get()->rstTime();
 
 		spider_launch(archi, topPisdf);
-//
-		spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
-		spider_getLastSRDAG()->print(srdagPath);
 
-		printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
+		spider_printGantt(archi, spider_getLastSRDAG(), "radixFFT_2.pgantt", "latex.tex", &stat);
+		spider_getLastSRDAG()->print("radixFFT_2.gv");
+
+		printf("EndTime = %ld us\n", stat.globalEndTime/1000);
 
 		printf("Memory use = ");
 		if(stat.memoryUsed < 1024)
@@ -107,17 +107,16 @@ int main(int argc, char* argv[]){
 		for(int j=0; j<stat.nbActor; j++){
 			printf("\t%12s:", stat.actors[j]->getName());
 			for(int k=0; k<archi->getNPETypes(); k++)
-				printf("\t%d (x%d)",
+				printf("\t%ld (x%ld)",
 						stat.actorTimes[j][k]/stat.actorIterations[j][k],
 						stat.actorIterations[j][k]);
-			printf("\n");
+		printf("\n");
 		}
 
 		free_Radix2_fft(topPisdf, &pisdfStack);
+	}catch(const char* s){
+		printf("Exception : %s\n", s);
 	}
-//	}catch(const char* s){
-//		printf("Exception : %s\n", s);
-//	}
 	printf("finished\n");
 
 	spider_free();

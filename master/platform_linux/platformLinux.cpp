@@ -121,8 +121,16 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 
 	cpIds[0] = getpid();
 
-	semFifo = sem_open("spider_fifo", O_CREAT, ACCESSPERMS, 1);
-	semTrace = sem_open("spider_trace", O_CREAT, ACCESSPERMS, 1);
+	sem_unlink("spider_fifo");
+	sem_unlink("spider_trace");
+
+	semFifo = sem_open("spider_fifo", O_CREAT | O_EXCL, ACCESSPERMS, 1);
+	semTrace = sem_open("spider_trace", O_CREAT | O_EXCL, ACCESSPERMS, 1);
+
+	if(semFifo == 0 || semTrace == 0){
+		printf("Error creating semaphores\n");
+		throw "Error creating semaphores\n";
+	}
 
 	if (pipe2(pipeTrace, O_NONBLOCK) == -1) {
 		perror("pipe");

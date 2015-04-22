@@ -3,6 +3,10 @@
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.262572479">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.262572479" moduleId="org.eclipse.cdt.core.settings" name="Debug">
+				<macros>
+					<stringMacro name="SPIDER_PATH" type="VALUE_PATH_ANY" value="/home/jheulot/git/spider/master"/>
+					<stringMacro name="ROOTFS_PATH" type="VALUE_PATH_ANY" value="/srv/nfs/rootfs-keystoneII"/>
+				</macros>
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -30,11 +34,11 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.683032157" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.1635741385" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.614338396" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/common}&quot;"/>
-									<listOptionValue builtIn="false" value="/home/jheulot/k2h_linux/devkit/sysroots/cortexa15hf-vfp-neon-3.8-oe-linux-gnueabi/usr/include"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/lrt}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/platform_k2_arm}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/spider}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ROOTFS_PATH}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/spider&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/common&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/lrt&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/platform_k2_arm&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.692201860" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEVICE_K2H"/>
@@ -48,10 +52,11 @@
 								<option id="gnu.cpp.compiler.option.optimization.level.1616656156" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.452680104" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1029087575" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/common}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/lrt}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/platform_k2_arm}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/spider}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ROOTFS_PATH}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/spider&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/common&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/lrt&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/platform_k2_arm&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.946520646" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEVICE_K2H"/>
@@ -64,7 +69,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.709672845" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.619071612" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option id="gnu.cpp.link.option.paths.1182193906" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/lib"/>
+									<listOptionValue builtIn="false" value="${ROOTFS_PATH}/usr/lib"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.1681564715" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="qmss"/>
@@ -100,6 +105,10 @@
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.release.398726805">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.release.398726805" moduleId="org.eclipse.cdt.core.settings" name="Release">
+				<macros>
+					<stringMacro name="SPIDER_PATH" type="VALUE_PATH_ANY" value="/home/jheulot/git/spider/master"/>
+					<stringMacro name="ROOTFS_PATH" type="VALUE_PATH_ANY" value="/srv/nfs/rootfs-keystoneII"/>
+				</macros>
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -127,11 +136,11 @@
 									<listOptionValue builtIn="false" value="__ARMv7"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.1296530290" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/common}&quot;"/>
-									<listOptionValue builtIn="false" value="/home/jheulot/k2h_linux/devkit/sysroots/cortexa15hf-vfp-neon-3.8-oe-linux-gnueabi/usr/include"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/lrt}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/platform_k2_arm}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/spider}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ROOTFS_PATH}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/spider&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/common&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/lrt&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/platform_k2_arm&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.other.202376585" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1530097838" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
@@ -145,11 +154,11 @@
 									<listOptionValue builtIn="false" value="__ARMv7"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.357445463" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/common}&quot;"/>
-									<listOptionValue builtIn="false" value="/home/jheulot/k2h_linux/devkit/sysroots/cortexa15hf-vfp-neon-3.8-oe-linux-gnueabi/usr/include"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/lrt}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/platform_k2_arm}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_Arm/spider}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ROOTFS_PATH}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/spider&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/common&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/lrt&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/platform_k2_arm&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.2089736110" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -mfloat-abi=hard -mcpu=cortex-a15 -mfpu=neon-vfpv4 -ftree-vectorizer-verbose=16 -ffast-math " valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1987298172" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -162,8 +171,7 @@
 									<listOptionValue builtIn="false" value="pthread"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.2046909030" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/lib"/>
-									<listOptionValue builtIn="false" value="/home/jheulot/k2h_linux/devkit/sysroots/cortexa15hf-vfp-neon-3.8-oe-linux-gnueabi/usr/lib"/>
+									<listOptionValue builtIn="false" value="${ROOTFS_PATH}/usr/lib"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1013668325" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -250,4 +258,5 @@
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

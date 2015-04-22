@@ -39,8 +39,14 @@
 #include "actors.h"
 
 extern "C"{
-#include "ti/dsplib/src/DSPF_sp_fftSPxSP/DSPF_sp_fftSPxSP.h"
+#include "ti/dsplib/src/DSP_fft16x16_imre/DSP_fft16x16_imre.h"
+#include "gen_twiddle_fft16x16_imre.h"
 #include "edma.h"
+
+#include <stdint.h>
+#include <ti/csl/csl_cache.h>
+#include <ti/csl/csl_cacheAux.h>
+int fftc_send (int fftc_ix, Cplx16* in, Cplx16* out, int fftSize, int numBlocks);
 }
 
 #include <stdio.h>
@@ -57,54 +63,58 @@ extern "C"{
 #define VERBOSE 0
 
 #pragma DATA_SECTION(".twiddles")
-static CplxSp twi64k[64*1024];
+static Cplx16 twi64k[64*1024];
 
 #pragma DATA_SECTION(".twiddles")
-static CplxSp gen_twi32k[32*1024];
+static Cplx16 gen_twi32k[32*1024];
 
 #pragma DATA_SECTION(".twiddles")
-static CplxSp gen_twi16k[16*1024];
+static Cplx16 gen_twi16k[16*1024];
 
 #pragma DATA_SECTION(".twiddles")
-static CplxSp gen_twi8k [8*1024];
+static Cplx16 gen_twi8k [8*1024];
 
 #pragma DATA_SECTION(".twiddles")
-static CplxSp gen_twi4k [4*1024];
+static Cplx16 gen_twi4k [4*1024];
 
 #pragma DATA_SECTION(".twiddles")
-static CplxSp gen_twi2k [2*1024];
+static Cplx16 gen_twi2k [2*1024];
 
 #pragma DATA_SECTION(".twiddles")
-static CplxSp gen_twi1k [1024];
+static Cplx16 gen_twi1k [1024];
 
-static unsigned char brev[64] = {
-    0x0, 0x20, 0x10, 0x30, 0x8, 0x28, 0x18, 0x38,
-    0x4, 0x24, 0x14, 0x34, 0xc, 0x2c, 0x1c, 0x3c,
-    0x2, 0x22, 0x12, 0x32, 0xa, 0x2a, 0x1a, 0x3a,
-    0x6, 0x26, 0x16, 0x36, 0xe, 0x2e, 0x1e, 0x3e,
-    0x1, 0x21, 0x11, 0x31, 0x9, 0x29, 0x19, 0x39,
-    0x5, 0x25, 0x15, 0x35, 0xd, 0x2d, 0x1d, 0x3d,
-    0x3, 0x23, 0x13, 0x33, 0xb, 0x2b, 0x1b, 0x3b,
-    0x7, 0x27, 0x17, 0x37, 0xf, 0x2f, 0x1f, 0x3f
-};
+#pragma DATA_SECTION(".twiddles")
+static Cplx16 gen_twi512 [512];
 
-static inline void tw_gen (CplxSp *w, int n);
-void initActors2();
+#pragma DATA_SECTION(".twiddles")
+static Cplx16 gen_twi256 [256];
+
+#pragma DATA_SECTION(".twiddles")
+static Cplx16 gen_twi128 [128];
+
+static short d2s(double d)
+{
+    d = floor(0.5 + d);  // Explicit rounding to integer //
+    if (d >=  32767.0) return  32767;
+    if (d <= -32768.0) return -32768;
+    return (short)d;
+}
 
 void initActors(){
 	edma_init();
-
-	tw_gen(gen_twi32k, 32*1024);
-	tw_gen(gen_twi16k, 16*1024);
-	tw_gen(gen_twi8k,   8*1024);
-	tw_gen(gen_twi4k,   4*1024);
-	tw_gen(gen_twi2k,   2*1024);
-	tw_gen(gen_twi1k,     1024);
-
 	for(int i=0; i<32*1024; i++){
-		twi64k[i].real = cos(-2*M_PI*i/(64*1024));
-		twi64k[i].imag = sin(-2*M_PI*i/(64*1024));
+		twi64k[i].real = d2s(32768.5*cos(-2*M_PI*i/(64*1024)));
+		twi64k[i].imag = d2s(32768.5*sin(-2*M_PI*i/(64*1024)));
 	}
+	gen_twiddle_fft16x16_imre((short*)gen_twi32k, 32*1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi16k, 16*1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi8k,   8*1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi4k,   4*1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi2k,   2*1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi1k,     1024);
+	gen_twiddle_fft16x16_imre((short*)gen_twi512,     512);
+	gen_twiddle_fft16x16_imre((short*)gen_twi256,     256);
+	gen_twiddle_fft16x16_imre((short*)gen_twi128,     128);
 }
 
 static inline int bitRev(short v, int N){
@@ -115,37 +125,6 @@ static inline int bitRev(short v, int N){
 		v = v>>1;
 	}
 	return r;
-}
-
-static inline void tw_gen (CplxSp *cplx_w, int n)
-{
-    int i, j, k;
-    const double PI = 3.141592654;
-
-    float* w = (float*) cplx_w;
-
-    for (j = 1, k = 0; j <= n >> 2; j = j << 2)
-    {
-        for (i = 0; i < n >> 2; i += j)
-        {
-#ifdef _LITTLE_ENDIAN
-            w[k]     = (float) sin (2 * PI * i / n);
-            w[k + 1] = (float) cos (2 * PI * i / n);
-            w[k + 2] = (float) sin (4 * PI * i / n);
-            w[k + 3] = (float) cos (4 * PI * i / n);
-            w[k + 4] = (float) sin (6 * PI * i / n);
-            w[k + 5] = (float) cos (6 * PI * i / n);
-#else
-            w[k]     = (float)  cos (2 * PI * i / n);
-            w[k + 1] = (float) -sin (2 * PI * i / n);
-            w[k + 2] = (float)  cos (4 * PI * i / n);
-            w[k + 3] = (float) -sin (4 * PI * i / n);
-            w[k + 4] = (float)  cos (6 * PI * i / n);
-            w[k + 5] = (float) -sin (6 * PI * i / n);
-#endif
-            k += 6;
-        }
-    }
 }
 
 void cfgFFT(Param* size, Param* P, Param* n1, Param* n2){
@@ -171,21 +150,21 @@ void cfg(int* in, Param* out){
 	*out = *in;
 }
 
-void src(Param size, CplxSp *out){
+void src(Param size, Cplx16 *out){
 #if VERBOSE
 	printf("Execute Src\n");
 #endif
 	printf("DSP should not execute Src\n");
 }
 
-void snk(Param size, CplxSp *in){
+void snk(Param size, Cplx16 *in){
 #if VERBOSE
 	printf("Execute Snk\n");
 #endif
 	printf("DSP should not execute Snk\n");
 }
 
-void T(Param N1, Param N2, CplxSp* in, CplxSp *out){
+void T(Param N1, Param N2, Cplx16* in, Cplx16 *out){
 #if VERBOSE
 	printf("Execute T\n");
 #endif
@@ -198,25 +177,12 @@ void T(Param N1, Param N2, CplxSp* in, CplxSp *out){
 	}
 }
 
-void fft(Param size, Param n, CplxSp* in, CplxSp* out){
+void fft(Param size, Param n, Cplx16* in, Cplx16* out){
 #if VERBOSE
 	printf("Execute fft\n");
 #endif
 
-	int rad;
-	int j = 0;
-	for (int i = 0; i <= 31; i++)
-		if ((size & (1 << i)) == 0)
-			j++;
-		else
-			break;
-
-	if (j % 2 == 0)
-		rad = 4;
-	else
-		rad = 2;
-
-	CplxSp* w;
+	Cplx16* w;
 	switch(size){
 	case 32*1024:
 		w = gen_twi32k;
@@ -236,19 +202,28 @@ void fft(Param size, Param n, CplxSp* in, CplxSp* out){
 	case    1024:
 		w = gen_twi1k;
 		break;
+	case    512:
+		w = gen_twi512;
+		break;
+	case    256:
+		w = gen_twi256;
+		break;
+	case    128:
+		w = gen_twi128;
+		break;
 	default:
-		printf("Error no twiddles computed for %d\n", size);
+		printf("Error no twiddles computed for %ld\n", size);
 		return;
 	}
 
 	for(int i=0; i<n; i++){
-	    DSPF_sp_fftSPxSP(size, (float*)in, (float*)w, (float*)out, brev, rad, 0, size);
+	    DSP_fft16x16_imre((short*)w, size, (short*)in, (short*)out);
 	    in += size;
 	    out += size;
 	}
 }
 
-void fft_2(Param n, Param p, Param N2, Param N1, char* ix, CplxSp* i0, CplxSp* i1, CplxSp* o0, CplxSp* o1){
+void fft_2(Param n, Param p, Param N2, Param N1, char* ix, Cplx16* i0, Cplx16* i1, Cplx16* o0, Cplx16* o1){
 #if VERBOSE
 	printf("Execute fft_2\n");
 #endif
@@ -260,14 +235,15 @@ void fft_2(Param n, Param p, Param N2, Param N1, char* ix, CplxSp* i0, CplxSp* i
 	for(int k=0; k<n; k++){
 		unsigned short r = (m+k)*incr;
 
-		float Br = i1[k].real*twi64k[r].real - i1[k].imag*twi64k[r].imag;
-		float Bi = i1[k].real*twi64k[r].imag + i1[k].imag*twi64k[r].real;
+		long i1r = i1[k].real;
+		long i1i = i1[k].imag;
+		short Br = (long)(i1r*twi64k[r].real - i1i*twi64k[r].imag)>>15;
+		short Bi = (long)(i1r*twi64k[r].imag + i1i*twi64k[r].real)>>15;
 
-		o0[k].real = i0[k].real + Br;
-		o0[k].imag = i0[k].imag + Bi;
+		o0[k].real = (i0[k].real + Br)>>1;
+		o0[k].imag = (i0[k].imag + Bi)>>1;
 
-		o1[k].real = i0[k].real - Br;
-		o1[k].imag = i0[k].imag - Bi;
+		o1[k].real = (i0[k].real - Br)>>1;
+		o1[k].imag = (i0[k].imag - Bi)>>1;
 	}
 }
-

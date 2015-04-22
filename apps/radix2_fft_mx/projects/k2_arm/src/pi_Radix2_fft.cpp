@@ -127,10 +127,10 @@ PiSDFGraph* Radix2_fft(Archi* archi, Stack* stack){
 	bo_DFT_N2->addInParam(1, param_n2);
 	bo_DFT_N2->isExecutableOnPE(CORE_ARM1);
 	bo_DFT_N2->isExecutableOnPE(CORE_ARM0);
-	bo_DFT_N2->isExecutableOnPE(CORE_DSP0);
-	bo_DFT_N2->isExecutableOnPE(CORE_DSP3);
-	bo_DFT_N2->isExecutableOnPE(CORE_DSP1);
-	bo_DFT_N2->isExecutableOnPE(CORE_DSP2);
+//	bo_DFT_N2->isExecutableOnPE(CORE_DSP0);
+//	bo_DFT_N2->isExecutableOnPE(CORE_DSP3);
+//	bo_DFT_N2->isExecutableOnPE(CORE_DSP1);
+//	bo_DFT_N2->isExecutableOnPE(CORE_DSP2);
 	bo_DFT_N2->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	bo_DFT_N2->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
@@ -169,8 +169,10 @@ PiSDFGraph* Radix2_fft(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_CplxSp_to_Cplx16->addInParam(0, param_convSize);
-	bo_CplxSp_to_Cplx16->isExecutableOnPE(CORE_ARM1);
-	bo_CplxSp_to_Cplx16->isExecutableOnPE(CORE_ARM0);
+	bo_CplxSp_to_Cplx16->isExecutableOnPE(CORE_DSP0);
+	bo_CplxSp_to_Cplx16->isExecutableOnPE(CORE_DSP3);
+	bo_CplxSp_to_Cplx16->isExecutableOnPE(CORE_DSP1);
+	bo_CplxSp_to_Cplx16->isExecutableOnPE(CORE_DSP2);
 	bo_CplxSp_to_Cplx16->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	bo_CplxSp_to_Cplx16->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
@@ -181,8 +183,10 @@ PiSDFGraph* Radix2_fft(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_Cplx16_to_CplxSp->addInParam(0, param_convSize);
-	bo_Cplx16_to_CplxSp->isExecutableOnPE(CORE_ARM1);
-	bo_Cplx16_to_CplxSp->isExecutableOnPE(CORE_ARM0);
+	bo_Cplx16_to_CplxSp->isExecutableOnPE(CORE_DSP0);
+	bo_Cplx16_to_CplxSp->isExecutableOnPE(CORE_DSP3);
+	bo_Cplx16_to_CplxSp->isExecutableOnPE(CORE_DSP1);
+	bo_Cplx16_to_CplxSp->isExecutableOnPE(CORE_DSP2);
 	bo_Cplx16_to_CplxSp->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	bo_Cplx16_to_CplxSp->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
@@ -346,8 +350,8 @@ PiSDFGraph* Radix2_Stage(Archi* archi, Stack* stack){
 	bo_DFT_2->addInParam(1, param_p);
 	bo_DFT_2->addInParam(2, param_N1);
 	bo_DFT_2->addInParam(3, param_N2);
-	bo_DFT_2->isExecutableOnPE(CORE_ARM1);
-	bo_DFT_2->isExecutableOnPE(CORE_ARM0);
+//	bo_DFT_2->isExecutableOnPE(CORE_ARM1);
+//	bo_DFT_2->isExecutableOnPE(CORE_ARM0);
 	bo_DFT_2->isExecutableOnPE(CORE_DSP0);
 	bo_DFT_2->isExecutableOnPE(CORE_DSP3);
 	bo_DFT_2->isExecutableOnPE(CORE_DSP1);

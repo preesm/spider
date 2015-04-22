@@ -57,10 +57,7 @@ extern "C"{
 #define VERBOSE 0
 
 #pragma DATA_SECTION(".twiddles")
-static CplxSp twi64k[64*1024];
-
-#pragma DATA_SECTION(".twiddles")
-static CplxSp gen_twi32k[32*1024];
+static CplxSp twi64k[32*1024];
 
 #pragma DATA_SECTION(".twiddles")
 static CplxSp gen_twi16k[16*1024];
@@ -89,12 +86,10 @@ static unsigned char brev[64] = {
 };
 
 static inline void tw_gen (CplxSp *w, int n);
-void initActors2();
 
 void initActors(){
 	edma_init();
 
-	tw_gen(gen_twi32k, 32*1024);
 	tw_gen(gen_twi16k, 16*1024);
 	tw_gen(gen_twi8k,   8*1024);
 	tw_gen(gen_twi4k,   4*1024);
@@ -102,8 +97,8 @@ void initActors(){
 	tw_gen(gen_twi1k,     1024);
 
 	for(int i=0; i<32*1024; i++){
-		twi64k[i].real = cos(-2*M_PI*i/(64*1024));
-		twi64k[i].imag = sin(-2*M_PI*i/(64*1024));
+		twi64k[i].real = -sin(-2*M_PI*i/(64*1024));
+		twi64k[i].imag = cos(-2*M_PI*i/(64*1024));
 	}
 }
 
@@ -218,9 +213,6 @@ void fft(Param size, Param n, CplxSp* in, CplxSp* out){
 
 	CplxSp* w;
 	switch(size){
-	case 32*1024:
-		w = gen_twi32k;
-		break;
 	case 16*1024:
 		w = gen_twi16k;
 		break;
@@ -257,17 +249,32 @@ void fft_2(Param n, Param p, Param N2, Param N1, char* ix, CplxSp* i0, CplxSp* i
 	const int m = (id % (N2*(1<<(p))));
 	const unsigned short incr = N1 / (1 << (p+1));
 
+	CplxSp const* restrict pd_in0 = i0;
+	CplxSp const* restrict pd_in1 = i1;
+	CplxSp const* restrict pd_twi = twi64k;
+	CplxSp * restrict pd_out0 = o0;
+	CplxSp * restrict pd_out1 = o1;
+
+	#pragma MUST_ITERATE(8, ,8)
 	for(int k=0; k<n; k++){
 		unsigned short r = (m+k)*incr;
 
-		float Br = i1[k].real*twi64k[r].real - i1[k].imag*twi64k[r].imag;
-		float Bi = i1[k].real*twi64k[r].imag + i1[k].imag*twi64k[r].real;
+		__float2_t  v_in0  = _amem8_f2_const(&pd_in0[k]);
+		__float2_t  v_in1  = _amem8_f2_const(&pd_in1[k]);
 
-		o0[k].real = i0[k].real + Br;
-		o0[k].imag = i0[k].imag + Bi;
+		/* Get the corresponding twiddle factor */
+		__float2_t  v_twi  = _amem8_f2_const(&pd_twi[r]);
 
-		o1[k].real = i0[k].real - Br;
-		o1[k].imag = i0[k].imag - Bi;
+		/* Execute:
+		 * 		out0 = in0 + in1*twi
+		 * 		out1 = in0 - in1*twi
+		 * 	with out0, out1, in0, in1 and twi complex floating numbers
+		 * 		[even]: real part and [odd]: imag part
+		 */
+		__float2_t  v_in1Twi =  _complex_mpysp(v_in1, v_twi);
+
+		_amem8_f2(&pd_out0[k]) = _daddsp(v_in0, v_in1Twi);
+		_amem8_f2(&pd_out1[k]) = _dsubsp(v_in0, v_in1Twi);
 	}
 }
 

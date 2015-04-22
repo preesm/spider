@@ -36,6 +36,7 @@
 
 #include <platform.h>
 
+#include "Radix2_fft.h"
 #include "actors.h"
 #include "data_sp.h"
 
@@ -152,7 +153,7 @@ void cfgFFT(Param* size, Param* P, Param* n1, Param* n2){
 #endif
 	*size 	= N_DATA;
 	*P 		= 4;
-	*n1 	= 1*1024;
+	*n1 	= 4*1024;
 	*n2 	= 4;
 }
 

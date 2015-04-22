@@ -51,8 +51,8 @@ typedef struct Cplx32{
 } Cplx32;
 
 typedef struct CplxSp{
-	float	real;
 	float	imag;
+	float	real;
 } CplxSp;
 
 void cfgFFT(Param* size, Param* P, Param* n1, Param* n2);

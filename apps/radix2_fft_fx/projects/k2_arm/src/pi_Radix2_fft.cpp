@@ -311,8 +311,8 @@ PiSDFGraph* Radix2_Stage(Archi* archi, Stack* stack){
 	bo_DFT_2->addInParam(1, param_p);
 	bo_DFT_2->addInParam(2, param_N1);
 	bo_DFT_2->addInParam(3, param_N2);
-	bo_DFT_2->isExecutableOnPE(CORE_ARM1);
-	bo_DFT_2->isExecutableOnPE(CORE_ARM0);
+//	bo_DFT_2->isExecutableOnPE(CORE_ARM1);
+//	bo_DFT_2->isExecutableOnPE(CORE_ARM0);
 	bo_DFT_2->isExecutableOnPE(CORE_DSP0);
 	bo_DFT_2->isExecutableOnPE(CORE_DSP3);
 	bo_DFT_2->isExecutableOnPE(CORE_DSP1);

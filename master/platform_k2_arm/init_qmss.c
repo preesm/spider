@@ -221,6 +221,45 @@ static void configureRxChan(int fftc_ix){
 	}
 }
 
+void setFFTSize(int id, int size){
+	CSL_FftcRegs* regs;
+
+	switch(id){
+	case 0:
+		regs = fftc_a_cfg_regs;
+		break;
+	case 1:
+		regs = fftc_b_cfg_regs;
+		break;
+	default:
+		printf("Unhandled case in setFFTSize\n");
+	}
+
+	int logSize = log2(size)-2;
+
+	regs->Q0_SCALE_SHIFT =
+			CSL_FMK (FFTC_Q0_SCALE_SHIFT_DYNAMIC_SCALING_ENABLE, 	0) 	|
+			CSL_FMK (FFTC_Q0_SCALE_SHIFT_OUTPUT_SCALING, 			16)  |
+			CSL_FMK (FFTC_Q0_SCALE_SHIFT_STAGE_OUT_SCALING, 		0) 	|
+			CSL_FMK (FFTC_Q0_SCALE_SHIFT_STAGE_6_SCALING, 			0) 	|
+			CSL_FMK (FFTC_Q0_SCALE_SHIFT_STAGE_5_SCALING, 			0) 	|
+			CSL_FMK (FFTC_Q0_SCALE_SHIFT_STAGE_4_SCALING, 			0) 	|
+			CSL_FMK (FFTC_Q0_SCALE_SHIFT_STAGE_3_SCALING, 			0) 	|
+			CSL_FMK (FFTC_Q0_SCALE_SHIFT_STAGE_2_SCALING, 			0) 	|
+			CSL_FMK (FFTC_Q0_SCALE_SHIFT_STAGE_1_SCALING, 			0) 	|
+			CSL_FMK (FFTC_Q0_SCALE_SHIFT_STAGE_0_SCALING, 			0) 	|
+			CSL_FMK (FFTC_Q0_SCALE_SHIFT_STAGE_LTE_SHIFT_SCALING, 	0);
+
+	/* Step 4. Configure Queue 'n' Control Register */
+	regs->Q0_CONTROL =
+		CSL_FMK (FFTC_Q0_CONTROL_SUPPRESSED_SIDE_INFO, 	1) |
+		CSL_FMK (FFTC_Q0_CONTROL_DFT_IDFT_SELECT, 		1) |  /* DFT */
+		CSL_FMK (FFTC_Q0_CONTROL_ZERO_PAD_MODE, 		0) |
+		CSL_FMK (FFTC_Q0_CONTROL_ZERO_PAD_VAL, 			0) |
+		CSL_FMK (FFTC_Q0_CONTROL_DFT_SIZE, 				logSize);
+
+}
+
 void configureFFTRegs(CSL_FftcRegs* regs){
 	/* The FFTC Local Configuration consists of configuration of the following
 	 * queue specific registers:
@@ -240,7 +279,7 @@ void configureFFTRegs(CSL_FftcRegs* regs){
 	/* Step 2. Configure the Queue 'n' Scaling and Shift Register configuration. */
 	regs->Q0_SCALE_SHIFT =
 			CSL_FMK (FFTC_Q0_SCALE_SHIFT_DYNAMIC_SCALING_ENABLE, 	0) 	|
-			CSL_FMK (FFTC_Q0_SCALE_SHIFT_OUTPUT_SCALING, 			2) |
+			CSL_FMK (FFTC_Q0_SCALE_SHIFT_OUTPUT_SCALING, 			2)  |
 			CSL_FMK (FFTC_Q0_SCALE_SHIFT_STAGE_OUT_SCALING, 		0) 	|
 			CSL_FMK (FFTC_Q0_SCALE_SHIFT_STAGE_6_SCALING, 			0) 	|
 			CSL_FMK (FFTC_Q0_SCALE_SHIFT_STAGE_5_SCALING, 			0) 	|

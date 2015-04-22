@@ -93,6 +93,8 @@ int fftc_send (int fftc_ix, Cplx16* in, Cplx16* out, int fftSize, int numBlocks)
 
     int bufferSize = (fftSize * sizeof(Cplx16)) * numBlocks;
 
+    setFFTSize(fftc_ix, fftSize);
+
 	void* pCppiDesc;
     int descSize;
 	Cppi_DescType descType;

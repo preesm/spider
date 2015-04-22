@@ -105,9 +105,9 @@ int main(int argc, char* argv[]){
 
 		printf("Actors:\n");
 		for(int j=0; j<stat.nbActor; j++){
-			printf("\t%12s:", stat.actors[j]->getName());
+			printf("\t%18s:", stat.actors[j]->getName());
 			for(int k=0; k<archi->getNPETypes(); k++)
-				printf("\t%ld (x%ld)",
+				printf("\t%8ld (x%3ld)",
 						stat.actorTimes[j][k]/stat.actorIterations[j][k],
 						stat.actorIterations[j][k]);
 		printf("\n");

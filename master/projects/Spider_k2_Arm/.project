@@ -28,22 +28,32 @@
 		<link>
 			<name>common</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/master/common</location>
+			<locationURI>$%7BSPIDER_PATH%7D/common</locationURI>
 		</link>
 		<link>
 			<name>lrt</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/master/lrt</location>
+			<locationURI>$%7BSPIDER_PATH%7D/lrt</locationURI>
 		</link>
 		<link>
 			<name>platform_k2_arm</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/master/platform_k2_arm</location>
+			<locationURI>$%7BSPIDER_PATH%7D/platform_k2_arm</locationURI>
 		</link>
 		<link>
 			<name>spider</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/master/spider</location>
+			<locationURI>$%7BSPIDER_PATH%7D/spider</locationURI>
 		</link>
 	</linkedResources>
+	<variableList>
+		<variable>
+			<name>ROOTFS_PATH</name>
+			<value>file:/srv/nfs/rootfs-keystoneII</value>
+		</variable>
+		<variable>
+			<name>SPIDER_PATH</name>
+			<value>file:/home/jheulot/git/spider/master</value>
+		</variable>
+	</variableList>
 </projectDescription>

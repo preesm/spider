@@ -28,17 +28,31 @@
 		<link>
 			<name>common</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/master/common</location>
+			<locationURI>$%7BSPIDER_PATH%7D/common</locationURI>
 		</link>
 		<link>
 			<name>lrt</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/master/lrt</location>
+			<locationURI>$%7BSPIDER_PATH%7D/lrt</locationURI>
 		</link>
 		<link>
 			<name>platform_k2_dsp_lrt</name>
 			<type>2</type>
-			<location>/home/jheulot/git/spider/master/platform_k2_dsp_lrt</location>
+			<locationURI>$%7BSPIDER_PATH%7D/platform_k2_dsp_lrt</locationURI>
 		</link>
 	</linkedResources>
+	<variableList>
+		<variable>
+			<name>DSPLIB_PATH</name>
+			<value>file:/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/dsplib_c66x_3_2_0_1</value>
+		</variable>
+		<variable>
+			<name>PDK_PATH</name>
+			<value>file:/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/pdk_keystone2_3_01_01_04</value>
+		</variable>
+		<variable>
+			<name>SPIDER_PATH</name>
+			<value>file:/home/jheulot/git/spider/master</value>
+		</variable>
+	</variableList>
 </projectDescription>

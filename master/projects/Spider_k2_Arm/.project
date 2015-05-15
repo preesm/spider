@@ -46,14 +46,4 @@
 			<locationURI>$%7BSPIDER_PATH%7D/spider</locationURI>
 		</link>
 	</linkedResources>
-	<variableList>
-		<variable>
-			<name>ROOTFS_PATH</name>
-			<value>file:/srv/nfs/rootfs-keystoneII</value>
-		</variable>
-		<variable>
-			<name>SPIDER_PATH</name>
-			<value>file:/home/jheulot/git/spider/master</value>
-		</variable>
-	</variableList>
 </projectDescription>

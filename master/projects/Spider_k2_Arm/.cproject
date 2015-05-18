@@ -63,6 +63,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.66200069" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="${SPIDER_DEVICE}"/>
+									<listOptionValue builtIn="false" value="DEVICE_K2L"/>
 									<listOptionValue builtIn="false" value="FFTC_DRV_DEBUG"/>
 									<listOptionValue builtIn="false" value="_LITTLE_ENDIAN"/>
 									<listOptionValue builtIn="false" value="_TMS320C6600"/>

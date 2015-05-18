@@ -1,5 +1,5 @@
 /**
- *   @file  k2h/src/qmss_device.c
+ *   @file  k2l/src/qmss_device.c
  *
  *   @brief   
  *      This file contains the device specific configuration and initialization routines
@@ -40,6 +40,7 @@
  *  \par
 */
 
+#ifdef DEVICE_K2L
 /* QMSS Types includes */
 #include <stdint.h>
 #include <stdlib.h>
@@ -72,14 +73,6 @@ Qmss_QueueNumRange GlobalQmGroup0[] =
         "LOW_PRIORITY_QUEUE-qm1"       
     },
         
-    /** Base queue number and Maximum supported AIF queues */
-    {
-        Qmss_QueueType_AIF_QUEUE,
-        QMSS_AIF_QUEUE_BASE,
-        QMSS_MAX_AIF_QUEUE,
-        "AIF_QUEUE-qm1"
-    },
-        
     /** Base queue number and Maximum supported PASS 0 queues */
     {
         Qmss_QueueType_PASS_QUEUE,
@@ -88,38 +81,86 @@ Qmss_QueueNumRange GlobalQmGroup0[] =
         "PASS_QUEUE-qm1" 
     },
         
-    /** Base queue number and Maximum supported Intc Pend queues in set 1 */
+    /** Base queue number and Maximum supported Intc Pend queues */
     {
         Qmss_QueueType_INTC_QUEUE,
-        QMSS_INTC_QUEUE_BASE,
-        QMSS_MAX_INTC_QUEUE,
+        QMSS_CIC0_QUEUE_BASE,
+        QMSS_MAX_CIC0_QUEUE,
         "INTC_QUEUE-qm1" 
     },
-
+        
     /** Base queue number and Maximum supported Intc Pend queues in set 2 */
     {
         Qmss_QueueType_INTC_SET2_QUEUE,
-        QMSS_INTC_SET2_QUEUE_BASE,
-        QMSS_MAX_INTC_SET2_QUEUE,
+        QMSS_CIC_SET_0_QUEUE_BASE,
+        QMSS_MAX_CIC_SET_0_QUEUE,
         "INTC_SET2_QUEUE-qm1" 
     },
-
+        
     /** Base queue number and Maximum supported Intc Pend queues in set 3 */
     {
         Qmss_QueueType_INTC_SET3_QUEUE,
-        QMSS_INTC_SET3_QUEUE_BASE,
-        QMSS_MAX_INTC_SET3_QUEUE,
+        QMSS_CIC_SET_1_QUEUE_BASE,
+        QMSS_MAX_CIC_SET_1_QUEUE,
         "INTC_SET3_QUEUE-qm1" 
     },
         
-    /** Base queue number and Maximum supported SRIO queues */
+    /** Base queue number and Maximum supported Intc Pend queues in set 4 */
     {
-        Qmss_QueueType_SRIO_QUEUE, 
-        QMSS_SRIO_QUEUE_BASE, 
-        QMSS_MAX_SRIO_QUEUE,
-        "SRIO_QUEUE-qm1" 
+        Qmss_QueueType_INTC_SET4_QUEUE,
+        QMSS_CIC_SET_2_QUEUE_BASE,
+        QMSS_MAX_CIC_SET_2_QUEUE,
+        "INTC_SET4_QUEUE-qm1" 
     },
         
+    /** Base queue number and Maximum supported Intc Pend queues in set 5 */
+    {
+        Qmss_QueueType_INTC_SET5_QUEUE,
+        QMSS_CIC_SET_3_QUEUE_BASE,
+        QMSS_MAX_CIC_SET_3_QUEUE,
+        "INTC_SET5_QUEUE-qm1" 
+    },
+        
+    /** Base queue number and Maximum supported Intc & EDMA Pend queues in set 0 */
+    {
+        Qmss_QueueType_INTC_EDMA_SET0_QUEUE,
+        QMSS_CIC_EDMA_SET_0_QUEUE_BASE,
+        QMSS_MAX_CIC_EDMA_SET_0_QUEUE,
+        "INTC_EDMA_SET0_QUEUE-qm1" 
+    },
+
+    /** Base queue number and Maximum supported Intc & EDMA Pend queues in set 1 */
+    {
+        Qmss_QueueType_INTC_EDMA_SET1_QUEUE,
+        QMSS_CIC_EDMA_SET_1_QUEUE_BASE,
+        QMSS_MAX_CIC_EDMA_SET_1_QUEUE,
+        "INTC_EDMA_SET1_QUEUE-qm1" 
+    },
+
+    /** Base queue number and Maximum supported Intc & EDMA Pend queues in set 2 */
+    {
+        Qmss_QueueType_INTC_EDMA_SET2_QUEUE,
+        QMSS_CIC_EDMA_SET_2_QUEUE_BASE,
+        QMSS_MAX_CIC_EDMA_SET_2_QUEUE,
+        "INTC_EDMA_SET2_QUEUE-qm1" 
+    },
+
+    /** Base queue number and Maximum supported Intc & EDMA Pend & GIC queues in set 0 */
+    {
+        Qmss_QueueType_SOC_SET0_QUEUE,
+        QMSS_SOC_SET_0_QUEUE_BASE,
+        QMSS_MAX_SOC_SET_0_QUEUE,
+        "SOC_SET0_QUEUE-qm1" 
+    },
+
+    /** Base queue number and Maximum supported Intc & EDMA Pend & GIC qeuees in set 1 */
+    {
+        Qmss_QueueType_SOC_SET1_QUEUE,
+        QMSS_SOC_SET_1_QUEUE_BASE,
+        QMSS_MAX_SOC_SET_1_QUEUE,
+        "SOC_SET1_QUEUE-qm1" 
+    },
+
     /** Base queue number and Maximum supported FFTC A queues */
     {
         Qmss_QueueType_FFTC_A_QUEUE,
@@ -135,39 +176,7 @@ Qmss_QueueNumRange GlobalQmGroup0[] =
         QMSS_MAX_FFTC_B_QUEUE,
         "FFTC_B_QUEUE-qm1" 
     },
-        
-    /** Base queue number and Maximum supported FFTC C queues */
-    {
-        Qmss_QueueType_FFTC_C_QUEUE,
-        QMSS_FFTC_C_QUEUE_BASE,
-        QMSS_MAX_FFTC_C_QUEUE,
-        "FFTC_C_QUEUE-qm1" 
-    },
 
-    /** Base queue number and Maximum supported FFTC D queues */
-    {
-        Qmss_QueueType_FFTC_D_QUEUE, 
-        QMSS_FFTC_D_QUEUE_BASE,
-        QMSS_MAX_FFTC_D_QUEUE,
-        "FFTC_D_QUEUE-qm1" 
-    },
-        
-    /** Base queue number and Maximum supported FFTC E queues */
-    {
-        Qmss_QueueType_FFTC_E_QUEUE, 
-        QMSS_FFTC_E_QUEUE_BASE,
-        QMSS_MAX_FFTC_E_QUEUE,
-        "FFTC_E_QUEUE-qm1" 
-    },
-        
-    /** Base queue number and Maximum supported FFTC F queues */
-    {
-        Qmss_QueueType_FFTC_F_QUEUE, 
-        QMSS_FFTC_F_QUEUE_BASE,
-        QMSS_MAX_FFTC_F_QUEUE,
-        "FFTC_F_QUEUE-qm1" 
-    },
-        
     /** Base queue number and Maximum supported BCP queues */
     {
         Qmss_QueueType_BCP_QUEUE,
@@ -183,7 +192,7 @@ Qmss_QueueNumRange GlobalQmGroup0[] =
         QMSS_MAX_HIGH_PRIORITY_QUEUE,
         "HIGH_PRIORITY_QUEUE-qm1" 
     },
-        
+
     /** Base queue number and Maximum supported starvation counter queues */
     {
         Qmss_QueueType_STARVATION_COUNTER_QUEUE,
@@ -191,7 +200,7 @@ Qmss_QueueNumRange GlobalQmGroup0[] =
         QMSS_MAX_STARVATION_COUNTER_QUEUE,
         "STARVATION_COUNTER_QUEUE-qm1" 
     },
-        
+
     /** Base queue number and Maximum supported infrastructure queues on first QM */
     {
         Qmss_QueueType_INFRASTRUCTURE_QUEUE,
@@ -200,14 +209,30 @@ Qmss_QueueNumRange GlobalQmGroup0[] =
         "INFRASTRUCTURE_QUEUE-qm1" 
     },
         
-    /** Base queue number and Maximum supported traffic shaping queues */
+    /** Base queue number and Maximum supported GIC400 queues */
     {
-        Qmss_QueueType_TRAFFIC_SHAPING_QUEUE,
-        QMSS_TRAFFIC_SHAPING_QUEUE_BASE,
-        QMSS_MAX_TRAFFIC_SHAPING_QUEUE,
-        "TRAFFIC_SHAPING_QUEUE-qm1" 
+        Qmss_QueueType_GIC400_QUEUE,
+        QMSS_ARM_GIC_QUEUE_BASE,
+        QMSS_MAX_ARM_GIC_QUEUE,
+        "GIC400_QUEUE-qm1" 
     },
-       
+     
+    /** Base queue number and Maximum supported IQNET queues */
+    {
+        Qmss_QueueType_IQNET_QUEUE,
+        QMSS_IQNET_QUEUE_BASE,
+        QMSS_MAX_IQNET_QUEUE,
+        "IQNET_QUEUE-qm1"
+    },
+ 
+    /** Base queue number and Maximum supported EDMA0 queues */
+    {
+        Qmss_QueueType_EDMA_0_QUEUE,
+        QMSS_EDMA0_QUEUE_BASE,
+        QMSS_MAX_EDMA0_QUEUE,
+        "EDMA_0_QUEUE-qm1"
+    },
+ 
     /** Base queue number and Maximum supported general purpose queues */
     {
         Qmss_QueueType_GENERAL_PURPOSE_QUEUE,
@@ -217,141 +242,63 @@ Qmss_QueueNumRange GlobalQmGroup0[] =
     }
 }; /* GlobalQmGroup0 */
 
-Qmss_QueueNumRange GlobalQmGroup1[] =
+
+Qmss_QueueNumRange NetssQmGroup0[] =
 {
-    /** Base queue number and Maximum supported low priority queues */
+    /** Base queue number and Maximum supported PASS 0 queues */
     {
-        Qmss_QueueType_LOW_PRIORITY_QUEUE, 
-        QMSS_QM2_LOW_PRIORITY_QUEUE_BASE, 
-        QMSS_MAX_QM2_LOW_PRIORITY_QUEUE,
-        "LOW_PRIORITY_QUEUE-qm2"  
+        Qmss_QueueType_PASS_QUEUE,
+        QMSS_NETSS_PASS_QUEUE_BASE,
+        QMSS_MAX_NETSS_PASS_QUEUE,
+        "NETSS_PASS_QUEUE-qm1" 
     },
-
-    /** Base queue number and Maximum supported Intc Pend queues in set 4 */
-    {
-        Qmss_QueueType_INTC_SET4_QUEUE,
-        QMSS_INTC_SET4_QUEUE_BASE,
-        QMSS_MAX_INTC_SET4_QUEUE,
-        "INTC_SET4_QUEUE-qm2" 
-    },
-    
-    /** Base queue number and Maximum supported high priority queues */
-    {
-        Qmss_QueueType_HIGH_PRIORITY_QUEUE,
-        QMSS_QM2_HIGH_PRIORITY_QUEUE_BASE,
-        QMSS_MAX_QM2_HIGH_PRIORITY_QUEUE,
-        "HIGH_PRIORITY_QUEUE-qm2"
-    },
-        
-    /** Base queue number and Maximum supported starvation counter queues */
-    {
-        Qmss_QueueType_STARVATION_COUNTER_QUEUE,
-        QMSS_QM2_STARVATION_COUNTER_QUEUE_BASE,
-        QMSS_MAX_QM2_STARVATION_COUNTER_QUEUE,
-        "STARVATION_COUNTER_QUEUE-qm2"
-    },
-
-    /** Base queue number and Maximum supported infrastructure queues on second QM */
-    {
-        Qmss_QueueType_QM2_INFRASTRUCTURE_QUEUE,
-        QMSS_QM2_INFRASTRUCTURE_DMA_QUEUE_BASE,
-        QMSS_MAX_QM2_INFRASTRUCTURE_DMA_QUEUE,
-        "QM2_INFRASTRUCTURE_QUEUE-qm2"
-    },
-        
-    /** Base queue number and Maximum supported GIC400 queues */
-    {
-        Qmss_QueueType_GIC400_QUEUE,
-        QMSS_GIC400_QUEUE_BASE,
-        QMSS_MAX_GIC400_QUEUE,
-        "GIC400_QUEUE-qm2"
-    },
-     
-    /** Base queue number and Maximum supported EDMA 4 queues */
-    {
-        Qmss_QueueType_EDMA_4_QUEUE,
-        QMSS_EDMA4_QUEUE_BASE,
-        QMSS_MAX_EDMA4_QUEUE,
-        "EDMA_4_QUEUE-qm2"
-    },
-     
-    /** Base queue number and Maximum supported Hyperlink Broadcast queues */
-    {
-        Qmss_QueueType_HLINK_BROADCAST_QUEUE,
-        QMSS_BCAST_HYPERLINK_0_1_QUEUE_BASE,
-        QMSS_MAX_BCAST_HYPERLINK_0_1_QUEUE,
-        "HLINK_BROADCAST_QUEUE-qm2"
-    },
-
-    /** Base queue number and Maximum supported Hyperlink 0 queues */
-    {
-        Qmss_QueueType_HLINK_0_QUEUE,
-        QMSS_HYPERLINK_0_QUEUE_BASE,
-        QMSS_MAX_HYPERLINK_0_QUEUE,
-        "HLINK_0_QUEUE-qm2"
-    },
-
-    /** Base queue number and Maximum supported Hyperlink 1 queues */
-    {
-        Qmss_QueueType_HLINK_1_QUEUE,
-        QMSS_HYPERLINK_1_QUEUE_BASE,
-        QMSS_MAX_HYPERLINK_1_QUEUE,
-        "HLINK_1_QUEUE-qm2"
-    },
-
-    /** Base queue number and Maximum supported XGE (10 gigabit ethernet) queues */
-    {
-        Qmss_QueueType_XGE_QUEUE,
-        QMSS_XGE_QUEUE_BASE,
-        QMSS_MAX_XGE_QUEUE,
-        "XGE_QUEUE-qm2"
-    },
-
-    /** Base queue number and Maximum supported DXB queues */
-    {
-        Qmss_QueueType_DXB_QUEUE,
-        QMSS_DXB_QUEUE_BASE,
-        QMSS_MAX_DXB_QUEUE,
-        "DXB_QUEUE-qm2"
-    },
-
-    /** Base queue number and Maximum supported general purpose queues */
     {
         Qmss_QueueType_GENERAL_PURPOSE_QUEUE,
-        QMSS_QM2_GENERAL_PURPOSE_QUEUE_BASE, 
-        QMSS_MAX_QM2_GENERAL_PURPOSE_QUEUE,
-        "GENERAL_PURPOSE_QUEUE-qm2"
+        QMSS_NETSS_GENERAL_PURPOSE_QUEUE_BASE, 
+        QMSS_MAX_NETSS_GENERAL_PURPOSE_QUEUE,
+        "NETSS_GENERAL_PURPOSE_QUEUE-qm1" 
     }
-}; /* GlobalQmGroup1 */
+}; /* NetssQmGroup0 */
+
+Qmss_QueueNumRange NetssQmGroup1[] =
+{
+    {
+        Qmss_QueueType_GENERAL_PURPOSE_QUEUE,
+        QMSS_NETSS_GENERAL_PURPOSE_QUEUE_BASE2, 
+        QMSS_MAX_NETSS_GENERAL_PURPOSE_QUEUE2,
+        "NETSS_GENERAL_PURPOSE_QUEUE-qm2" 
+    }
+}; /* NetssQmGroup0 */
+
 
 /** @brief QMSS LLD initialization parameters */
 Qmss_GlobalConfigParams qmssGblCfgParams =
 {
     /** Maximum number of queue manager groups */
-    2u,
+    1u,
     /** Maximum number of queue Managers */
-    4u,
+    2u,
     /** Maximum number of queues */
-    16384u,
+    8192u,
     /** Maximum number of descriptor regions */
     64,
     /** Maximum number of PDSP */
     8,
     /** Size of internal linkram */
-    32768u,
+    16384u,
     /** Does not require ordered memory regions */
     0,
     {
         /** queue types for group 0 */
         sizeof(GlobalQmGroup0)/sizeof(Qmss_QueueNumRange),
         /** queue types for group 1 */
-        sizeof(GlobalQmGroup1)/sizeof(Qmss_QueueNumRange)
+        0
     },
     {   /* numQueueNum[] */
         /** Queue groups for group 1 of global QM */
         GlobalQmGroup0,
         /** No second group on global QM on this device */
-        GlobalQmGroup1
+        NULL
     },
     { 
         { /* Registers for first QM */
@@ -374,19 +321,19 @@ Qmss_GlobalConfigParams qmssGblCfgParams =
         },
         { /* Registers for second QM */
             /** QM Global Config registers */
-            (CSL_Qm_configRegs *) CSL_QMSS_CFG_QM_2_CFG_REGS,
+            (CSL_Qm_configRegs *) NULL,
             /** QM Descriptor Config registers */
-            (CSL_Qm_descriptor_region_configRegs *) CSL_QMSS_CFG_QM_2_DESCRIPTOR_REGS, 
+            (CSL_Qm_descriptor_region_configRegs *) NULL, 
             /** QM queue Management registers */
-            (CSL_Qm_queue_managementRegs *) CSL_QMSS_CFG_QM_2_QUEUE_MANAGEMENT_REGS,
+            (CSL_Qm_queue_managementRegs *) NULL,
             /** QM queue Management Proxy registers */
-            (CSL_Qm_queue_managementRegs *) CSL_QMSS_CFG_QM_2_QUEUE_PROXY_REGS,
+            (CSL_Qm_queue_managementRegs *) NULL,
             /** QM queue status registers */
-            (CSL_Qm_queue_status_configRegs *) CSL_QMSS_CFG_QM_2_QUEUE_PEEK_REGS,
+            (CSL_Qm_queue_status_configRegs *) NULL,
             /** QM Status RAM */
-            (CSL_Qm_Queue_Status *) CSL_QMSS_CFG_QM_2_STATUS_RAM,
+            (CSL_Qm_Queue_Status *) NULL,
             /** QM queue Management registers, accessed via DMA port */
-            (CSL_Qm_queue_managementRegs *) CSL_QMSS_DATA_QM2_QUEUE_MANAGEMENT_REGS,
+            (CSL_Qm_queue_managementRegs *) NULL,
             /** QM queue Management Proxy registers, accessed via DMA port */
             (CSL_Qm_queue_managementRegs *) NULL
         }
@@ -516,13 +463,207 @@ Qmss_GlobalConfigParams qmssGblCfgParams =
         /** RM DST resource name for accumulator channels on accumulator 1 (INTD1) */
         "accumulator1-ch"
     },
+    /** RM nameserver pattern for per region queues */
+    "qm-reg-q-ss%d-gr%d-r%d",
     /** Map of PDSP # to its associated intd (which defines which set of logical channels/interrupts are used */
     {
         0, 0, 1, 1, 0, 0, 1, 1
     }
 };
 
+/** @brief QMSS LLD initialization parameters */
+Qmss_GlobalConfigParams qmssNetssGblCfgParams =
+{
+    /** Maximum number of queue manager groups */
+    2u,
+    /** Maximum number of queue Managers */
+    2u,
+    /** Maximum number of queues */
+    128u,
+    /** Maximum number of descriptor regions */
+    16,
+    /** Maximum number of PDSP */
+    0,
+    /** Size of internal linkram */
+    16384u,
+    /** Does not require ordered memory regions (0) */
+    0,
+    {
+        /** queue types for group 0 */
+        sizeof(NetssQmGroup0)/sizeof(Qmss_QueueNumRange),
+        /** queue types for group 1 */
+        sizeof(NetssQmGroup1)/sizeof(Qmss_QueueNumRange),
+    },
+    {   /* numQueueNum[] */
+        /** Queue groups for group 1 of global QM */
+        NetssQmGroup0,
+        /** No second group on global QM on this device */
+        NetssQmGroup1
+    },
+    /* Tables defining queue numbers for each queue manager group */
+    {  /* maxQueueNum[] */
+        { /* Registers for first QM */
+            /** QM Global Config registers */
+            (CSL_Qm_configRegs *) (CSL_NETCP_CFG_REGS + 0x001B0000),
+            /** QM Descriptor Config registers */
+            (CSL_Qm_descriptor_region_configRegs *) (CSL_NETCP_CFG_REGS + 0x001B1000), 
+            /** QM queue Management registers */
+            (CSL_Qm_queue_managementRegs *) (CSL_NETCP_CFG_REGS + 0x001B8000),
+            /** QM queue Management Proxy registers */
+            (CSL_Qm_queue_managementRegs *) NULL,
+            /** QM queue status registers */
+            (CSL_Qm_queue_status_configRegs *) (CSL_NETCP_CFG_REGS + 0x001BC000),
+            /** QM Status RAM */
+            (CSL_Qm_Queue_Status *) NULL,
+            /** QM queue Management registers, accessed via DMA port */
+            (CSL_Qm_queue_managementRegs *) (CSL_NETCP_CFG_REGS + 0x001B8000),
+            /** QM queue Management Proxy registers, accessed via DMA port */
+            (CSL_Qm_queue_managementRegs *) NULL
+        },
+        { /* Registers for second QM */
+            /** QM Global Config registers */
+            (CSL_Qm_configRegs *) (CSL_NETCP_CFG_REGS + 0x001B0800),
+            /** QM Descriptor Config registers */
+            (CSL_Qm_descriptor_region_configRegs *) (CSL_NETCP_CFG_REGS + 0x001B1800), 
+            /** QM queue Management registers */
+            (CSL_Qm_queue_managementRegs *) (CSL_NETCP_CFG_REGS + 0x001B8400),
+            /** QM queue Management Proxy registers */
+            (CSL_Qm_queue_managementRegs *) NULL,
+            /** QM queue status registers */
+            (CSL_Qm_queue_status_configRegs *) (CSL_NETCP_CFG_REGS + 0x001BC400),
+            /** QM Status RAM */
+            (CSL_Qm_Queue_Status *) NULL,
+            /** QM queue Management registers, accessed via DMA port */
+            (CSL_Qm_queue_managementRegs *) (CSL_NETCP_CFG_REGS + 0x001B8400),
+            /** QM queue Management Proxy registers, accessed via DMA port */
+            (CSL_Qm_queue_managementRegs *) NULL
+        }
+    },
+    { /* QMSS global registers */
+        /** QM INTD N registers */
+        {
+            /** QM INTD 1 registers */
+            (CSL_Qm_intdRegs *) NULL,
+            /** QM INTD 2 registers */
+            (CSL_Qm_intdRegs *) NULL
+        },
+        /** QM PDSP N command register */
+        {
+            /** QM PDSP 1 command register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 2 command register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 3 command register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 4 command register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 5 command register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 6 command register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 7 command register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 8 command register */
+            (volatile uint32_t *) NULL
+        },
+        /** QM PDSP N control register */
+        {
+            /** QM PDSP 1 control register */
+            (CSL_PdspRegs *) NULL,
+            /** QM PDSP 2 control register */
+            (CSL_PdspRegs *) NULL,
+            /** QM PDSP 3 control register */
+            (CSL_PdspRegs *) NULL,
+            /** QM PDSP 4 control register */
+            (CSL_PdspRegs *) NULL,
+            /** QM PDSP 5 control register */
+            (CSL_PdspRegs *) NULL,
+            /** QM PDSP 6 control register */
+            (CSL_PdspRegs *) NULL,
+            /** QM PDSP 7 control register */
+            (CSL_PdspRegs *) NULL,
+            /** QM PDSP 8 control register */
+            (CSL_PdspRegs *) NULL
+        },
+        /** QM PDSP N IRAM register */
+        {
+            /** QM PDSP 1 IRAM register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 2 IRAM register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 3 IRAM register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 4 IRAM register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 5 IRAM register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 6 IRAM register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 7 IRAM register */
+            (volatile uint32_t *) NULL,
+            /** QM PDSP 8 IRAM register */
+            (volatile uint32_t *) NULL
+        },
+        /** QM Linking RAM register */
+        (volatile uint32_t *) (CSL_NETCP_CFG_REGS + 0x001a0000),
+        /** QM peripheral base address used to calculate internal addresses */
+        (void *) (CSL_NETCP_CFG_REGS + 0x001a0000)
+    },
+    /** virt2Phy */
+    NULL,
+    /** phy2Virt */
+    NULL,
+    /** virt2PhyDesc */
+    NULL,
+    /** phy2VirtDesc */
+    NULL,
+    /** Resource Manager Handle should be NULL by default */
+    (Qmss_RmServiceHnd)NULL,
+    { 
+        { /* Resource names for first QM */
+            /** RM DTS resource name for first QM overall QM control */
+            "netss-control-qm1",
+            /** RM DTS resource name for first QM allowing Link RAM configurability */
+            "netss-linkram-control-qm1",
+            /** RM DTS resource name for first QM Link RAM indices (internal/region 0) */
+            "netss-linkram-qm1",
+            /** RM DTS resource name for first QM Link RAM indices (external not supported) */
+            "netss-linkram-qm1-ns",
+            /** RM DTS resource name for first QM Memory regions */
+            "netss-memory-regions-qm1",
+        },
+        { /* Resource names for second QM */
+            /** RM DTS resource name for second QM overall QM control */
+            "netss-control-qm2",         
+            /** RM DTS resource name for second QM allowing Link RAM configurability */
+            "netss-linkram-control-qm2",
+            /** RM DTS resource name for second QM Link RAM indices (internal/region 0) */
+            "netss-linkram-qm2",
+            /** RM DTS resource name for second QM Link RAM indices (external not supported) */
+            "netss-linkram-qm2-ns",
+            /** RM DTS resource name for second QM Memory regions */
+            "netss-memory-regions-qm2",
+        }
+    },    
+    /** RM DTS resource name for PDSP Firmware download */
+    "netss-firmware-pdsp",
+    {
+        /** RM DST resource name for accumulator channels on accumulator 0 (INTD0) */
+        "netss-accumulator0-ch",
+        /** RM DST resource name for accumulator channels on accumulator 1 (INTD1) */
+        "netss-accumulator1-ch"
+    },
+    /** RM nameserver pattern for per region queues */
+    "qm-reg-q-ss%d-gr%d-r%d",
+    /** Map of PDSP # to its associated intd (which defines which set of logical channels/interrupts are used */
+    {
+        0, 0, 0, 0, 0, 0, 0, 0
+    }
+};
+#endif
+
 /**
 @}
 */
+
 

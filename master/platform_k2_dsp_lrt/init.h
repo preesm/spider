@@ -37,6 +37,8 @@
 #ifndef INIT_H
 #define INIT_H
 
+#include "platform_config.h"
+
 #include <stdint.h>
 #include <ti/csl/cslr_tmr.h>
 #include <ti/csl/cslr_fftc.h>
@@ -51,19 +53,6 @@
 
 #define TranslateAddress(address, offset, type) address = (type)(((uint8_t*)address) + (uint32_t)offset)
 
-
-#ifdef DEVICE_K2H
-#define MSMC_SIZE 		0x00600000
-#define QMSS_CFG_SIZE 	0x00200000
-#define QMSS_DATA_SIZE 	0x00100000
-#define TMR_REGS_SIZE 	0x00010000
-
-#define CPPI_BASE_REG	0x01F00000
-#define CPPI_SIZE_REG	0x01100000
-
-#else
-#error Please define sizes in platformK2Arm/init_hw.c
-#endif
 
 typedef enum{
 	DATA_REG_NUM  = Qmss_MemRegion_MEMORY_REGION0,
@@ -146,8 +135,6 @@ extern CSL_FftcRegs* fftc_cfg_regs;
 extern void* qm_regs;
 extern CSL_TmrRegsOvly tmr_regs;
 
-#define CPPI_BASE_REG	0x01F00000
-#define CPPI_SIZE_REG	0x01100000
 extern void* cppi_regs;
 
 void init_hw();

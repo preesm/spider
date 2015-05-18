@@ -68,7 +68,7 @@ void* Osal_qmssVirtToPhy (void *ptr){
 		return (void*)(((int)ptr - qmss_cfg_regs) + CSL_QMSS_CFG_BASE);
 	else if((uint32_t)ptr >= (uint32_t)msmc_mem_base
 			&& (uint32_t)ptr < (uint32_t)msmc_mem_base + MSMC_SIZE)
-		return (void*)(((int)ptr - msmc_mem_base) + CSL_MSMC_SRAM_REGS);
+		return (void*)(((int)ptr - msmc_mem_base) + MEMORY_STARTING_ADRESS);
 	else
 		printf("Bad input ptr in Osal_qmssVirtToPhy\n");
 	return 0;
@@ -77,9 +77,9 @@ void* Osal_qmssPhyToVirt (void *ptr){
 	if((uint32_t)ptr >= (uint32_t)CSL_QMSS_CFG_BASE
 			&& (uint32_t)ptr < (uint32_t)CSL_QMSS_CFG_BASE + QMSS_CFG_SIZE)
 		return (void*)(((int)ptr - CSL_QMSS_CFG_BASE) + qmss_cfg_regs);
-	else if((uint32_t)ptr >= (uint32_t)CSL_MSMC_SRAM_REGS
-			&& (uint32_t)ptr < (uint32_t)CSL_MSMC_SRAM_REGS + MSMC_SIZE)
-		return (void*)(((int)ptr - CSL_MSMC_SRAM_REGS) + msmc_mem_base);
+	else if((uint32_t)ptr >= (uint32_t)MEMORY_STARTING_ADRESS
+			&& (uint32_t)ptr < (uint32_t)MEMORY_STARTING_ADRESS + MSMC_SIZE)
+		return (void*)(((int)ptr - MEMORY_STARTING_ADRESS) + msmc_mem_base);
 	else
 		printf("Bad input ptr in Osal_qmssVirtToPhy\n");
 	return 0;
@@ -93,17 +93,17 @@ void* Osal_qmssConvertDescVirtToPhy(uint32_t QID, void *descAddr){
 			|| (uint32_t)descAddr < (uint32_t)msmc_mem_base)
 		printf("Bad input ptr in Osal_qmssConvertDescVirtToPhy\n");
 
-	return (void*)(((int)descAddr - msmc_mem_base) + CSL_MSMC_SRAM_REGS);
+	return (void*)(((int)descAddr - msmc_mem_base) + MEMORY_STARTING_ADRESS);
 }
 void* Osal_qmssConvertDescPhyToVirt(uint32_t QID, void *descAddr){
 	if(descAddr == 0)
 		return 0;
 
-	if((uint32_t)descAddr > (uint32_t)CSL_MSMC_SRAM_REGS + MSMC_SIZE
-			|| (uint32_t)descAddr < (uint32_t)CSL_MSMC_SRAM_REGS)
+	if((uint32_t)descAddr > (uint32_t)MEMORY_STARTING_ADRESS + MSMC_SIZE
+			|| (uint32_t)descAddr < (uint32_t)MEMORY_STARTING_ADRESS)
 		printf("Bad input ptr in Osal_qmssConvertDescPhyToVirt\n");
 
-	return (void*)(((int)descAddr - CSL_MSMC_SRAM_REGS) + msmc_mem_base);
+	return (void*)(((int)descAddr - MEMORY_STARTING_ADRESS) + msmc_mem_base);
 }
 
 /**
@@ -152,7 +152,7 @@ void init_hw(){
 			PROT_READ | PROT_WRITE,
 			MAP_SHARED,
 			dev_mem_fd,
-			(off_t)CSL_MSMC_SRAM_REGS);
+			(off_t)MEMORY_STARTING_ADRESS /*CSL_MSMC_SRAM_REGS*/);
 
 	if(!msmc_mem_base){
 		printf("ERROR: Failed to map MSMC memory\n");
@@ -229,6 +229,8 @@ void init_hw(){
 	 * It needs to be turned on before doing any
 	 * FFTC device register access.
 	 */
+
+#ifdef DEVICE_K2H
 	/* Set FFTC Power domain to ON */
     CSL_FINST (psc_regs->PDCTL[CSL_PSC_PD_FFTC_01], PSC_PDCTL_NEXT, ON);
     CSL_FINST (psc_regs->PDCTL[CSL_PSC_PD_FFTC_2345], PSC_PDCTL_NEXT, ON);
@@ -268,6 +270,40 @@ void init_hw(){
 		/* FFTC Power on failed */
 		abort();
 	}
+
+#elif defined(DEVICE_K2L)
+	/* Set FFTC Power domain to ON */
+	CSL_FINST (psc_regs->PDCTL[CSL_PSC_PD_FFTC_0], PSC_PDCTL_NEXT, ON);
+	CSL_FINST (psc_regs->PDCTL[CSL_PSC_PD_FFTC_1], PSC_PDCTL_NEXT, ON);
+	msync(psc_regs, sizeof(CSL_PscRegs), MS_SYNC);
+
+	/* Enable the clocks too for FFTC */
+	CSL_FINS (psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_0], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
+	CSL_FINS (psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_1], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
+	msync(psc_regs, sizeof(CSL_PscRegs), MS_SYNC);
+
+	/* Start the state transition */
+	psc_regs->PTCMD =   (1 << CSL_PSC_PD_FFTC_0);
+	psc_regs->PTCMD =   (1 << CSL_PSC_PD_FFTC_1);
+	msync(psc_regs, sizeof(CSL_PscRegs), MS_SYNC);
+
+	/* Wait until the state transition process is completed. */
+	do msync(psc_regs, sizeof(CSL_PscRegs), MS_INVALIDATE);
+	while (CSL_FEXTR (psc_regs->PTSTAT, CSL_PSC_PD_FFTC_0, CSL_PSC_PD_FFTC_0));
+
+	do msync(psc_regs, sizeof(CSL_PscRegs), MS_INVALIDATE);
+	while (CSL_FEXTR (psc_regs->PTSTAT, CSL_PSC_PD_FFTC_1, CSL_PSC_PD_FFTC_1));
+
+	/* Check FFTC PSC status */
+	msync(psc_regs, sizeof(CSL_PscRegs), MS_INVALIDATE);
+	if ((CSL_FEXT(psc_regs->PDSTAT[CSL_PSC_PD_FFTC_0],   PSC_PDSTAT_STATE) != PSC_PDSTATE_ON) ||
+		(CSL_FEXT(psc_regs->PDSTAT[CSL_PSC_PD_FFTC_1], PSC_PDSTAT_STATE) != PSC_PDSTATE_ON) ||
+		(CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_0], PSC_MDSTAT_STATE)  != PSC_MODSTATE_ENABLE) ||
+		(CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_1], PSC_MDSTAT_STATE)  != PSC_MODSTATE_ENABLE)){
+		/* FFTC Power on failed */
+		abort();
+	}
+#endif
 
 	/* Reset FFTC */
 	CSL_FINS (fftc_a_cfg_regs->CONTROL, FFTC_CONTROL_RESTART_BIT, 1);

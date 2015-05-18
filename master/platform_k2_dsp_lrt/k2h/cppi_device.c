@@ -578,9 +578,8 @@ Cppi_GlobalConfigParams cppiGblCfgParams =
     CSL_QMSS_DATA_QM2_QUEUE_MANAGEMENT_REGS + 0x10000
 };
 
-#endif
-
 /**
 @}
 */
 
+#endif

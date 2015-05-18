@@ -39,4 +39,6 @@ _GUIDE :
 
 Then you should be able to compile the project on any and for any platform.
 
-Last revision : 5/15/2015  
+3. After this, don't forget to change the variant compilation of the platform : Right-click on the DSP project you want to compile, -> "Properties" and then "General" and select your platform (e.g : TCI6630K2L or TCI6630K2H)
+
+Last revision : 5/18/2015  

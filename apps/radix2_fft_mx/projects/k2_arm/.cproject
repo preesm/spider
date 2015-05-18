@@ -38,6 +38,7 @@
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.692201860" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="${SPIDER_DEVICE}"/>
+									<listOptionValue builtIn="false" value="VERBOSE"/>
 									<listOptionValue builtIn="false" value="_VIRTUAL_ADDR_SUPPORT"/>
 									<listOptionValue builtIn="false" value="__ARMv7"/>
 								</option>
@@ -83,7 +84,7 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1657719214" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.597480839" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
-								<option id="gnu.both.asm.option.include.paths.1980808118" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath"/>
+								<option id="gnu.both.asm.option.include.paths.1980808118" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths"/>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.47932302" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>

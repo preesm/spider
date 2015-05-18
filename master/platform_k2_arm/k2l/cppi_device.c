@@ -1,5 +1,5 @@
 /**
- *   @file  k2h/src/cppi_device.c
+ *   @file  k2l/src/cppi_device.c
  *
  *   @brief   
  *      This file contains the device specific configuration and initialization routines
@@ -40,7 +40,7 @@
  *  \par
 */
 
-#ifdef DEVICE_K2H
+#ifdef DEVICE_K2L
 
 /* CPPI Types includes */
 #include <stdint.h>
@@ -68,11 +68,11 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** CPDMA this configuration belongs to */
         Cppi_CpDma_SRIO_CPDMA,
         /** Maximum supported Rx Channels */
-        16u,
+        0u,
         /** Maximum supported Tx Channels */
-        16u,
+        0u,
         /** Maximum supported Rx Flows */
-        20u,
+        0u,
         /** Priority for all Rx transactions of this CPDMA */
         0u,
         /** Priority for all Tx transactions of this CPDMA */
@@ -81,15 +81,15 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** Base address for the CPDMA overlay registers */
 
         /** Global Config registers */
-        (CSL_Cppidma_global_configRegs *) CSL_SRIO_CFG_PKTDMA_GLOBAL_CFG_REGS,
+        (CSL_Cppidma_global_configRegs *) NULL,
         /** Tx Channel Config registers */
-        (CSL_Cppidma_tx_channel_configRegs *) CSL_SRIO_CFG_PKTDMA_TX_CFG_REGS,
+        (CSL_Cppidma_tx_channel_configRegs *) NULL,
         /** Rx Channel Config registers */
-        (CSL_Cppidma_rx_channel_configRegs *) CSL_SRIO_CFG_PKTDMA_RX_CFG_REGS,
+        (CSL_Cppidma_rx_channel_configRegs *) NULL,
         /** Tx Channel Scheduler registers */
-        (CSL_Cppidma_tx_scheduler_configRegs *) CSL_SRIO_CFG_PKTDMA_TX_SCHEDULER_CFG_REGS,
+        (CSL_Cppidma_tx_scheduler_configRegs *) NULL,
         /** Rx Flow Config registers */
-        (CSL_Cppidma_rx_flow_configRegs *) CSL_SRIO_CFG_PKTDMA_RX_FLOW_CFG_REGS,
+        (CSL_Cppidma_rx_flow_configRegs *) NULL,
         /** RM DTS resource name for CPDMA rx channels */
         "srio-rx-ch",
         /** RM DTS resource name for CPDMA tx channels */
@@ -101,11 +101,11 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** CPDMA this configuration belongs to */
         Cppi_CpDma_AIF_CPDMA,
         /** Maximum supported Rx Channels */
-        129u,
+        0u,
         /** Maximum supported Tx Channels */
-        129u,
+        0u,
         /** Maximum supported Rx Flows */
-        129u,
+        0u,
         /** Priority for all Rx transactions of this CPDMA */
         0u,
         /** Priority for all Tx transactions of this CPDMA */
@@ -114,15 +114,15 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** Base address for the CPDMA overlay registers */
 
         /** Global Config registers */
-        (CSL_Cppidma_global_configRegs *) CSL_AIF_CFG_PKTDMA_GLOBAL_CFG_REGS,
+        (CSL_Cppidma_global_configRegs *) NULL,
         /** Tx Channel Config registers */
-        (CSL_Cppidma_tx_channel_configRegs *) CSL_AIF_CFG_PKTDMA_TX_CFG_REGS,
+        (CSL_Cppidma_tx_channel_configRegs *) NULL,
         /** Rx Channel Config registers */
-        (CSL_Cppidma_rx_channel_configRegs *) CSL_AIF_CFG_PKTDMA_RX_CFG_REGS,
+        (CSL_Cppidma_rx_channel_configRegs *) NULL,
         /** Tx Channel Scheduler registers */
-        (CSL_Cppidma_tx_scheduler_configRegs *) CSL_AIF_CFG_PKTDMA_TX_SCHEDULER_CFG_REGS,
+        (CSL_Cppidma_tx_scheduler_configRegs *) NULL,
         /** Rx Flow Config registers */
-        (CSL_Cppidma_rx_flow_configRegs *) CSL_AIF_CFG_PKTDMA_RX_FLOW_CFG_REGS,
+        (CSL_Cppidma_rx_flow_configRegs *) NULL,
         /** RM DTS resource name for CPDMA rx channels */
         "aif-rx-ch",
         /** RM DTS resource name for CPDMA tx channels */
@@ -200,11 +200,11 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** CPDMA this configuration belongs to */
         Cppi_CpDma_FFTC_C_CPDMA,
         /** Maximum supported Rx Channels */
-        4u,
+        0u,
         /** Maximum supported Tx Channels */
-        4u,
+        0u,
         /** Maximum supported Rx Flows */
-        8u,
+        0u,
         /** Priority for all Rx transactions of this CPDMA */
         0u,
         /** Priority for all Tx transactions of this CPDMA */
@@ -213,15 +213,15 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** Base address for the CPDMA overlay registers */
 
         /** Global Config registers */
-        (CSL_Cppidma_global_configRegs *) CSL_FFTC_2_CFG_PKTDMA_GLOBAL_CFG_REGS,
+        (CSL_Cppidma_global_configRegs *) NULL,
         /** Tx Channel Config registers */
-        (CSL_Cppidma_tx_channel_configRegs *) CSL_FFTC_2_CFG_PKTDMA_TX_CFG_REGS,
+        (CSL_Cppidma_tx_channel_configRegs *) NULL,
         /** Rx Channel Config registers */
-        (CSL_Cppidma_rx_channel_configRegs *) CSL_FFTC_2_CFG_PKTDMA_RX_CFG_REGS,
+        (CSL_Cppidma_rx_channel_configRegs *) NULL,
         /** Tx Channel Scheduler registers */
-        (CSL_Cppidma_tx_scheduler_configRegs *) CSL_FFTC_2_CFG_PKTDMA_TX_SCHEDULER_CFG_REGS,
+        (CSL_Cppidma_tx_scheduler_configRegs *) NULL,
         /** Rx Flow Config registers */
-        (CSL_Cppidma_rx_flow_configRegs *) CSL_FFTC_2_CFG_PKTDMA_RX_FLOW_CFG_REGS,
+        (CSL_Cppidma_rx_flow_configRegs *) NULL,
         /** RM DTS resource name for CPDMA rx channels */
         "fftc-c-rx-ch",
         /** RM DTS resource name for CPDMA tx channels */
@@ -233,11 +233,11 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** CPDMA this configuration belongs to */
         Cppi_CpDma_FFTC_D_CPDMA,
         /** Maximum supported Rx Channels */
-        4u,
+        0u,
         /** Maximum supported Tx Channels */
-        4u,
+        0u,
         /** Maximum supported Rx Flows */
-        8u,
+        0u,
         /** Priority for all Rx transactions of this CPDMA */
         0u,
         /** Priority for all Tx transactions of this CPDMA */
@@ -246,15 +246,15 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** Base address for the CPDMA overlay registers */
 
         /** Global Config registers */
-        (CSL_Cppidma_global_configRegs *) CSL_FFTC_3_CFG_PKTDMA_GLOBAL_CFG_REGS,
+        (CSL_Cppidma_global_configRegs *) NULL,
         /** Tx Channel Config registers */
-        (CSL_Cppidma_tx_channel_configRegs *) CSL_FFTC_3_CFG_PKTDMA_TX_CFG_REGS,
+        (CSL_Cppidma_tx_channel_configRegs *) NULL,
         /** Rx Channel Config registers */
-        (CSL_Cppidma_rx_channel_configRegs *) CSL_FFTC_3_CFG_PKTDMA_RX_CFG_REGS,
+        (CSL_Cppidma_rx_channel_configRegs *) NULL,
         /** Tx Channel Scheduler registers */
-        (CSL_Cppidma_tx_scheduler_configRegs *) CSL_FFTC_3_CFG_PKTDMA_TX_SCHEDULER_CFG_REGS,
+        (CSL_Cppidma_tx_scheduler_configRegs *) NULL,
         /** Rx Flow Config registers */
-        (CSL_Cppidma_rx_flow_configRegs *) CSL_FFTC_3_CFG_PKTDMA_RX_FLOW_CFG_REGS,
+        (CSL_Cppidma_rx_flow_configRegs *) NULL,
         /** RM DTS resource name for CPDMA rx channels */
         "fftc-d-rx-ch",
         /** RM DTS resource name for CPDMA tx channels */
@@ -266,11 +266,11 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** CPDMA this configuration belongs to */
         Cppi_CpDma_FFTC_E_CPDMA,
         /** Maximum supported Rx Channels */
-        4u,
+        0u,
         /** Maximum supported Tx Channels */
-        4u,
+        0u,
         /** Maximum supported Rx Flows */
-        8u,
+        0u,
         /** Priority for all Rx transactions of this CPDMA */
         0u,
         /** Priority for all Tx transactions of this CPDMA */
@@ -279,15 +279,15 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** Base address for the CPDMA overlay registers */
 
         /** Global Config registers */
-        (CSL_Cppidma_global_configRegs *) CSL_FFTC_4_CFG_PKTDMA_GLOBAL_CFG_REGS,
+        (CSL_Cppidma_global_configRegs *) NULL,
         /** Tx Channel Config registers */
-        (CSL_Cppidma_tx_channel_configRegs *) CSL_FFTC_4_CFG_PKTDMA_TX_CFG_REGS,
+        (CSL_Cppidma_tx_channel_configRegs *) NULL,
         /** Rx Channel Config registers */
-        (CSL_Cppidma_rx_channel_configRegs *) CSL_FFTC_4_CFG_PKTDMA_RX_CFG_REGS,
+        (CSL_Cppidma_rx_channel_configRegs *) NULL,
         /** Tx Channel Scheduler registers */
-        (CSL_Cppidma_tx_scheduler_configRegs *) CSL_FFTC_4_CFG_PKTDMA_TX_SCHEDULER_CFG_REGS,
+        (CSL_Cppidma_tx_scheduler_configRegs *) NULL,
         /** Rx Flow Config registers */
-        (CSL_Cppidma_rx_flow_configRegs *) CSL_FFTC_4_CFG_PKTDMA_RX_FLOW_CFG_REGS,
+        (CSL_Cppidma_rx_flow_configRegs *) NULL,
         /** RM DTS resource name for CPDMA rx channels */
         "fftc-e-rx-ch",
         /** RM DTS resource name for CPDMA tx channels */
@@ -299,11 +299,11 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** CPDMA this configuration belongs to */
         Cppi_CpDma_FFTC_F_CPDMA,
         /** Maximum supported Rx Channels */
-        4u,
+        0u,
         /** Maximum supported Tx Channels */
-        4u,
+        0u,
         /** Maximum supported Rx Flows */
-        8u,
+        0u,
         /** Priority for all Rx transactions of this CPDMA */
         0u,
         /** Priority for all Tx transactions of this CPDMA */
@@ -312,15 +312,15 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** Base address for the CPDMA overlay registers */
 
         /** Global Config registers */
-        (CSL_Cppidma_global_configRegs *) CSL_FFTC_5_CFG_PKTDMA_GLOBAL_CFG_REGS,
+        (CSL_Cppidma_global_configRegs *) NULL,
         /** Tx Channel Config registers */
-        (CSL_Cppidma_tx_channel_configRegs *) CSL_FFTC_5_CFG_PKTDMA_TX_CFG_REGS,
+        (CSL_Cppidma_tx_channel_configRegs *) NULL,
         /** Rx Channel Config registers */
-        (CSL_Cppidma_rx_channel_configRegs *) CSL_FFTC_5_CFG_PKTDMA_RX_CFG_REGS,
+        (CSL_Cppidma_rx_channel_configRegs *) NULL,
         /** Tx Channel Scheduler registers */
-        (CSL_Cppidma_tx_scheduler_configRegs *) CSL_FFTC_5_CFG_PKTDMA_TX_SCHEDULER_CFG_REGS,
+        (CSL_Cppidma_tx_scheduler_configRegs *) NULL,
         /** Rx Flow Config registers */
-        (CSL_Cppidma_rx_flow_configRegs *) CSL_FFTC_5_CFG_PKTDMA_RX_FLOW_CFG_REGS,
+        (CSL_Cppidma_rx_flow_configRegs *) NULL,
         /** RM DTS resource name for CPDMA rx channels */
         "fftc-f-rx-ch",
         /** RM DTS resource name for CPDMA tx channels */
@@ -330,13 +330,13 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
     },
     {
         /** CPDMA this configuration belongs to */
-        Cppi_CpDma_PASS_CPDMA,
+        Cppi_CpDma_NETCP_CPDMA,
         /** Maximum supported Rx Channels */
-        24u,
+        91u,
         /** Maximum supported Tx Channels */
-        9u,
+        21u,
         /** Maximum supported Rx Flows */
-        32u,
+        91u,
         /** Priority for all Rx transactions of this CPDMA */
         0u,
         /** Priority for all Tx transactions of this CPDMA */
@@ -347,19 +347,19 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** Global Config registers */
         (CSL_Cppidma_global_configRegs *) CSL_NETCP_CFG_PKTDMA_GLOBAL_CFG_REGS,
         /** Tx Channel Config registers */
-        (CSL_Cppidma_tx_channel_configRegs *) CSL_NETCP_CFG_PKTDMA_TX_CFG_REGS,
+        (CSL_Cppidma_tx_channel_configRegs *) CSL_NETCP_CFG_PKTDMA_GLOBAL_TX_CFG_REGS,
         /** Rx Channel Config registers */
-        (CSL_Cppidma_rx_channel_configRegs *) CSL_NETCP_CFG_PKTDMA_RX_CFG_REGS,
+        (CSL_Cppidma_rx_channel_configRegs *) CSL_NETCP_CFG_PKTDMA_GLOBAL_RX_CFG_REGS,
         /** Tx Channel Scheduler registers */
-        (CSL_Cppidma_tx_scheduler_configRegs *) CSL_NETCP_CFG_PKTDMA_TX_SCHEDULER_CFG_REGS,
+        (CSL_Cppidma_tx_scheduler_configRegs *) CSL_NETCP_CFG_PKTDMA_GLOBAL_TX_SCHEDULER_CFG_REGS,
         /** Rx Flow Config registers */
-        (CSL_Cppidma_rx_flow_configRegs *) CSL_NETCP_CFG_PKTDMA_RX_FLOW_CFG_REGS,
+        (CSL_Cppidma_rx_flow_configRegs *) CSL_NETCP_CFG_PKTDMA_GLOBAL_RX_FLOW_CFG_REGS,
         /** RM DTS resource name for CPDMA rx channels */
-        "pass-rx-ch",
+        "netcp-rx-ch",
         /** RM DTS resource name for CPDMA tx channels */
-        "pass-tx-ch",
+        "netcp-tx-ch",
         /** RM DTS resource name for CPDMA rx flows */
-        "pass-rx-flow-id"         
+        "netcp-rx-flow-id"         
     },
     {
         /** CPDMA this configuration belongs to */
@@ -398,11 +398,11 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** CPDMA this configuration belongs to */
         Cppi_CpDma_QMSS_QM2_CPDMA,
         /** Maximum supported Rx Channels */
-        32u,
+        0u,
         /** Maximum supported Tx Channels */
-        32u,
+        0u,
         /** Maximum supported Rx Flows */
-        64u,
+        0u,
         /** Priority for all Rx transactions of this CPDMA */
         0u,
         /** Priority for all Tx transactions of this CPDMA */
@@ -411,15 +411,15 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** Base address for the CPDMA overlay registers */
 
         /** Global Config registers */
-        (CSL_Cppidma_global_configRegs *) CSL_QMSS_CFG_PKTDMA_2_GLOBAL_CFG_REGS,
+        (CSL_Cppidma_global_configRegs *) NULL,
         /** Tx Channel Config registers */
-        (CSL_Cppidma_tx_channel_configRegs *) CSL_QMSS_CFG_PKTDMA_2_TX_CFG_REGS,
+        (CSL_Cppidma_tx_channel_configRegs *) NULL,
         /** Rx Channel Config registers */
-        (CSL_Cppidma_rx_channel_configRegs *) CSL_QMSS_CFG_PKTDMA_2_RX_CFG_REGS,
+        (CSL_Cppidma_rx_channel_configRegs *) NULL,
         /** Tx Channel Scheduler registers */
-        (CSL_Cppidma_tx_scheduler_configRegs *) CSL_QMSS_CFG_PKTDMA_2_TX_SCHEDULER_CFG_REGS,
+        (CSL_Cppidma_tx_scheduler_configRegs *) NULL,
         /** Rx Flow Config registers */
-        (CSL_Cppidma_rx_flow_configRegs *) CSL_QMSS_CFG_PKTDMA_2_RX_FLOW_CFG_REGS,
+        (CSL_Cppidma_rx_flow_configRegs *) NULL,
         /** RM DTS resource name for CPDMA rx channels */
         "qmss-qm2-rx-ch",
         /** RM DTS resource name for CPDMA tx channels */
@@ -498,11 +498,11 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** CPDMA this configuration belongs to */
         Cppi_CpDma_NETCP_LOCAL_CPDMA,
         /** Maximum supported Rx Channels */
-        (uint32_t) 0u,
+        (uint32_t) 91u,
         /** Maximum supported Tx Channels */
-        (uint32_t) 0u,
+        (uint32_t) 21u,
         /** Maximum supported Rx Flows */
-        (uint32_t) 0u,
+        (uint32_t) 91u,
         /** Priority for all Rx transactions of this CPDMA */
         (uint8_t) 0u,
         /** Priority for all Tx transactions of this CPDMA */
@@ -511,15 +511,16 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** Base address for the CPDMA overlay registers */
 
         /** Global Config registers */
-        (CSL_Cppidma_global_configRegs *) NULL,
+        (CSL_Cppidma_global_configRegs *) CSL_NETCP_CFG_PKTDMA_LOCAL_CFG_REGS,
         /** Tx Channel Config registers */
-        (CSL_Cppidma_tx_channel_configRegs *) NULL,
+        (CSL_Cppidma_tx_channel_configRegs *) CSL_NETCP_CFG_PKTDMA_LOCAL_TX_CFG_REGS,
         /** Rx Channel Config registers */
-        (CSL_Cppidma_rx_channel_configRegs *) NULL,
+        (CSL_Cppidma_rx_channel_configRegs *) CSL_NETCP_CFG_PKTDMA_LOCAL_RX_CFG_REGS,
         /** Tx Channel Scheduler registers */
-        (CSL_Cppidma_tx_scheduler_configRegs *) NULL,
+        (CSL_Cppidma_tx_scheduler_configRegs *) CSL_NETCP_CFG_PKTDMA_LOCAL_TX_SCHEDULER_CFG_REGS,
         /** Rx Flow Config registers */
-        (CSL_Cppidma_rx_flow_configRegs *) NULL,
+        (CSL_Cppidma_rx_flow_configRegs *) CSL_NETCP_CFG_PKTDMA_LOCAL_RX_FLOW_CFG_REGS,
+  
         /** RM DTS resource name for CPDMA rx channels */
         "netcp-local-rx-ch",
         /** RM DTS resource name for CPDMA tx channels */
@@ -531,11 +532,11 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** CPDMA this configuration belongs to */
         Cppi_CpDma_IQN_CPDMA,
         /** Maximum supported Rx Channels */
-        (uint32_t) 0u,
+        (uint32_t) 48u,
         /** Maximum supported Tx Channels */
-        (uint32_t) 0u,
+        (uint32_t) 48u,
         /** Maximum supported Rx Flows */
-        (uint32_t) 0u,
+        (uint32_t) 48u,
         /** Priority for all Rx transactions of this CPDMA */
         (uint8_t) 0u,
         /** Priority for all Tx transactions of this CPDMA */
@@ -544,15 +545,15 @@ Cppi_GlobalCPDMAConfigParams cppiGblCPDMACfgParams[CPPI_MAX_CPDMA] =
         /** Base address for the CPDMA overlay registers */
 
         /** Global Config registers */
-        (CSL_Cppidma_global_configRegs *) NULL,
+        (CSL_Cppidma_global_configRegs *) CSL_IQN_CFG_PKTDMA_GLOBAL_CFG_REGS,
         /** Tx Channel Config registers */
-        (CSL_Cppidma_tx_channel_configRegs *) NULL,
+        (CSL_Cppidma_tx_channel_configRegs *) CSL_IQN_CFG_PKTDMA_TX_CFG_REGS,
         /** Rx Channel Config registers */
-        (CSL_Cppidma_rx_channel_configRegs *) NULL,
+        (CSL_Cppidma_rx_channel_configRegs *) CSL_IQN_CFG_PKTDMA_RX_CFG_REGS,
         /** Tx Channel Scheduler registers */
-        (CSL_Cppidma_tx_scheduler_configRegs *) NULL,
+        (CSL_Cppidma_tx_scheduler_configRegs *) CSL_IQN_CFG_PKTDMA_TX_SCHEDULER_CFG_REGS,
         /** Rx Flow Config registers */
-        (CSL_Cppidma_rx_flow_configRegs *) NULL,
+        (CSL_Cppidma_rx_flow_configRegs *) CSL_IQN_CFG_PKTDMA_RX_FLOW_CFG_REGS,
   
         /** RM DTS resource name for CPDMA rx channels */
         "iqn-rx-ch",
@@ -573,14 +574,12 @@ Cppi_GlobalConfigParams cppiGblCfgParams =
     /** Base address for second 4K queues */
     CSL_QMSS_DATA_QM1_QUEUE_MANAGEMENT_REGS + 0x10000,
     /** Base address for third 4K queues */
-    CSL_QMSS_DATA_QM2_QUEUE_MANAGEMENT_REGS,
+    0,
     /** Base address for fourth 4K queues */
-    CSL_QMSS_DATA_QM2_QUEUE_MANAGEMENT_REGS + 0x10000
+    0
 };
-
-#endif
 
 /**
 @}
 */
-
+#endif

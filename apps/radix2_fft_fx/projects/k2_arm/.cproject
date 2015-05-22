@@ -157,7 +157,7 @@
 								<option id="gnu.cpp.link.option.libs.112931345" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="qmss"/>
 									<listOptionValue builtIn="false" value="cppi"/>
-									<listOptionValue builtIn="false" value="Spider_k2_Arm"/>
+									<listOptionValue builtIn="false" value="Spider_k2_Arm_release"/>
 									<listOptionValue builtIn="false" value="pthread"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.2046909030" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">

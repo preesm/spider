@@ -113,12 +113,12 @@
 							<tool commandLinePattern="${command} ${flags} -o -s -mw ${inputs}" id="com.ti.ccstudio.buildDefinitions.C6000_7.4.exe.compilerRelease.534707960" name="C6000 Compiler" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.exe.compilerRelease">
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.ABI.315807561" name="Application binary interface (coffabi, eabi) [See 'General' page to edit] (--abi)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.ABI" value="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.ABI.eabi" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.INCLUDE_PATH.388549774" name="Add dir to #include search path (--include_path, -I)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.INCLUDE_PATH" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_dsp_lrt/common}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_dsp_lrt/lrt}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_dsp_lrt/platform_k2_dsp_lrt}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/common&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/lrt&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/platform_k2_dsp_lrt&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2/dsplib_c66x_3_2_0_1/packages"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2/pdk_keystone2_3_01_00_03/packages"/>
+									<listOptionValue builtIn="false" value="&quot;${PDK_PATH}/packages&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${DSPLIB_PATH}/packages&quot;"/>
 								</option>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.DISPLAY_ERROR_NUMBER.1335451073" name="Emit diagnostic identifier numbers (--display_error_number, -pden)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.DISPLAY_ERROR_NUMBER" value="true" valueType="boolean"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.DIAG_WARNING.777308595" name="Treat diagnostic &lt;id&gt; as warning (--diag_warning, -pdsw)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compilerID.DIAG_WARNING" valueType="stringList">
@@ -157,9 +157,10 @@
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.LIBRARY.283273982" name="Include library file or command file as input (--library, -l)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.LIBRARY" valueType="libs">
 									<listOptionValue builtIn="false" value="&quot;libc.a&quot;"/>
 									<listOptionValue builtIn="false" value="ti.drv.qmss.ae66"/>
+									<listOptionValue builtIn="false" value="ti.drv.cppi.ae66"/>
 									<listOptionValue builtIn="false" value="dsplib.ae66"/>
 									<listOptionValue builtIn="false" value="ti.csl.ae66"/>
-									<listOptionValue builtIn="false" value="Spider_k2_dsp_lrt.lib"/>
+									<listOptionValue builtIn="false" value="Spider_k2_dsp_lrt_release.lib"/>
 								</option>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C6000_7.4.exeLinker.inputType__CMD_SRCS.877203973" name="Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.exeLinker.inputType__CMD_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C6000_7.4.exeLinker.inputType__CMD2_SRCS.1587546439" name="Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.exeLinker.inputType__CMD2_SRCS"/>

@@ -40,5 +40,10 @@
 			<type>2</type>
 			<locationURI>$%7BSPIDER_PATH%7D/platform_k2_dsp_lrt</locationURI>
 		</link>
+		<link>
+			<name>Debug/Spider_k2_dsp_lrt.lib</name>
+			<type>1</type>
+			<locationURI>EXTERNAL_BUILD_ARTIFACT</locationURI>
+		</link>
 	</linkedResources>
 </projectDescription>

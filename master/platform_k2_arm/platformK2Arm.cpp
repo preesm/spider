@@ -104,7 +104,7 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lr
 	init_qmss();
 
 	shMem = (void*) data_mem_base;
-	printf("Base Data @%#x\n", (int)shMem-msmc_mem_base+MEMORY_STARTING_ADRESS);
+	printf("Base Data @%#x\n", (int)shMem-msmc_mem_base+MEMORY_STARTING_ADDRESS);
 
 	memset(shMem,'u', MSMC_SIZE-(data_mem_base-msmc_mem_base));
 	msync(shMem, MSMC_SIZE-(data_mem_base-msmc_mem_base), MS_SYNC);

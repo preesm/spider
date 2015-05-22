@@ -88,7 +88,7 @@ void init_hw(){
 	/* TMR Regs */
 	tmr_regs = (void*)CSL_TIMER_0_REGS;
 	/* MSMC memory */
-	msmc_mem_base = MEMORY_STARTING_ADRESS;
+	msmc_mem_base = MEMORY_STARTING_ADDRESS;
 	/* FFTC regs */
 	fftc_cfg_regs = (void*)CSL_FFTC_0_CFG_REGS;
 	/* QM regs */

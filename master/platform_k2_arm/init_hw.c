@@ -68,7 +68,7 @@ void* Osal_qmssVirtToPhy (void *ptr){
 		return (void*)(((int)ptr - qmss_cfg_regs) + CSL_QMSS_CFG_BASE);
 	else if((uint32_t)ptr >= (uint32_t)msmc_mem_base
 			&& (uint32_t)ptr < (uint32_t)msmc_mem_base + MSMC_SIZE)
-		return (void*)(((int)ptr - msmc_mem_base) + MEMORY_STARTING_ADRESS);
+		return (void*)(((int)ptr - msmc_mem_base) + MEMORY_STARTING_ADDRESS);
 	else
 		printf("Bad input ptr in Osal_qmssVirtToPhy\n");
 	return 0;
@@ -77,9 +77,9 @@ void* Osal_qmssPhyToVirt (void *ptr){
 	if((uint32_t)ptr >= (uint32_t)CSL_QMSS_CFG_BASE
 			&& (uint32_t)ptr < (uint32_t)CSL_QMSS_CFG_BASE + QMSS_CFG_SIZE)
 		return (void*)(((int)ptr - CSL_QMSS_CFG_BASE) + qmss_cfg_regs);
-	else if((uint32_t)ptr >= (uint32_t)MEMORY_STARTING_ADRESS
-			&& (uint32_t)ptr < (uint32_t)MEMORY_STARTING_ADRESS + MSMC_SIZE)
-		return (void*)(((int)ptr - MEMORY_STARTING_ADRESS) + msmc_mem_base);
+	else if((uint32_t)ptr >= (uint32_t)MEMORY_STARTING_ADDRESS
+			&& (uint32_t)ptr < (uint32_t)MEMORY_STARTING_ADDRESS + MSMC_SIZE)
+		return (void*)(((int)ptr - MEMORY_STARTING_ADDRESS) + msmc_mem_base);
 	else
 		printf("Bad input ptr in Osal_qmssVirtToPhy\n");
 	return 0;
@@ -93,17 +93,17 @@ void* Osal_qmssConvertDescVirtToPhy(uint32_t QID, void *descAddr){
 			|| (uint32_t)descAddr < (uint32_t)msmc_mem_base)
 		printf("Bad input ptr in Osal_qmssConvertDescVirtToPhy\n");
 
-	return (void*)(((int)descAddr - msmc_mem_base) + MEMORY_STARTING_ADRESS);
+	return (void*)(((int)descAddr - msmc_mem_base) + MEMORY_STARTING_ADDRESS);
 }
 void* Osal_qmssConvertDescPhyToVirt(uint32_t QID, void *descAddr){
 	if(descAddr == 0)
 		return 0;
 
-	if((uint32_t)descAddr > (uint32_t)MEMORY_STARTING_ADRESS + MSMC_SIZE
-			|| (uint32_t)descAddr < (uint32_t)MEMORY_STARTING_ADRESS)
+	if((uint32_t)descAddr > (uint32_t)MEMORY_STARTING_ADDRESS + MSMC_SIZE
+			|| (uint32_t)descAddr < (uint32_t)MEMORY_STARTING_ADDRESS)
 		printf("Bad input ptr in Osal_qmssConvertDescPhyToVirt\n");
 
-	return (void*)(((int)descAddr - MEMORY_STARTING_ADRESS) + msmc_mem_base);
+	return (void*)(((int)descAddr - MEMORY_STARTING_ADDRESS) + msmc_mem_base);
 }
 
 /**
@@ -152,7 +152,7 @@ void init_hw(){
 			PROT_READ | PROT_WRITE,
 			MAP_SHARED,
 			dev_mem_fd,
-			(off_t)MEMORY_STARTING_ADRESS /*CSL_MSMC_SRAM_REGS*/);
+			(off_t)MEMORY_STARTING_ADDRESS /*CSL_MSMC_SRAM_REGS*/);
 
 	if(!msmc_mem_base){
 		printf("ERROR: Failed to map MSMC memory\n");

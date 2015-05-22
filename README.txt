@@ -16,29 +16,31 @@ _REQUIREMENTS :
  
 _GUIDE :
 
-1. Import projects you want to compile within your workspace. Note that there is 2 types of projects and they need to be imported differently : 
-  *DSP project : "File"->"Import..." and select "Code Composer Studio/CCS Projects"
-  *ARM project : "File"->"Import..." and select "General/Existing Projects into Workspace"
+0. It is strongly advised to create a new workspace.
 
-2. Set the various environnment variables:
+1. Set the various environnment variables in the "launch_env.sh" files :
+           Name              Type                                      Value                                    
+ ------------------------- -------- --------------------------------------------------------------------------- 
+  ROOTFS_PATH               Path     Path to your PDK folder (that should contains all the                      
+                                     .h headers in a subfolder /usr/lib).                                       
+  PDK_PATH                  Path     Path to your PDK folder.                                                   
+  DSPLIB_PATH               Path     Path to your DSP Lib folder.                                               
+  GCC_LINARO                Path     Path to your Linaro compilation toolchain (should                          
+                                     contains binaries like "arm-linux-gnueabihf-***")                          
+  SPIDER_PATH               Path     Path to your master spider root.                                           
+  SPIDER_DEVICE             String   Define for your platform (currently available : DEVICE_K2H or DEVICE_K2L)  
+  PDK_DEVICE_SUBFOLDER      Path     This corresponds to the name of the folder that differs between            
+                                     platforms, in order to load proper DSP's .lib files.                       
+  SPIDER_K2ARMLIB_OUTPATH   Path     Folder where ARM .so files will be output.                                 
+  SPIDER_K2DSPLIB_OUTPATH   Path     Folder where static DSP .lib files will be output.                         
+  CCS_PATH                  Path     Path to your Code Composer binary.
 
-  a. In CCS, go into "Window"->"Preferences" then "General/Workspace/Linked Resources", and add the following resource :
+2.  In CCS, go into "Window"->"Preferences" then "General/Workspace/Linked Resources", and add the following resource :
     * Name: "SPIDER_PATH" (without quotes) Value: "PATH_TO_YOUR_SPIDER_PATH". e.g : /home/user/spider_git/master
-  
-  b. Always in the "Preferences" window, go into "Code Composer Studio/Build/Variables" and add the following rows :
 
-           Name              Type                                   Value                                  
- ------------------------- -------- ---------------------------------------------------------------------- 
-  DSPLIB_PATH               Path     PATH_TO_YOUR_DSPLIB                                                   
-  GCC_LINARO                Path     PATH_TO_YOUR_LINARO_CROSS_COMPILATION                                 
-  PDK_PATH                  Path     PATH_TO_YOUR_PDK                                                      
-  ROOTFS_PATH               Path     PATH_TO_YOUR_ROOT_FILESYSTEM (contains all .h headers)                
-  SPIDER_DEVICE             String   YOUR_PLATEFORM_NAME (currently available : DEVICE_K2H or DEVICE_K2L)  
-  SPIDER_K2ARMLIB_OUTPATH   Path     DOT_SO_LIB_OUTPUT_PATH                                                
-  SPIDER_PATH               Path     PATH_TO_SPIDER_ROOT   
 
+3. Import projects you want to compile within your workspace. Note that there is 2 types of projects and they need to be imported differently : 
 Then you should be able to compile the project on any and for any platform.
 
-3. After this, don't forget to change the variant compilation of the platform : Right-click on the DSP project you want to compile, -> "Properties" and then "General" and select your platform (e.g : TCI6630K2L or TCI6630K2H)
 
-Last revision : 5/18/2015  
+Last revision : 5/22/2015  

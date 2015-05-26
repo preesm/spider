@@ -63,4 +63,4 @@ xtend-gen/
 configPkg
 
 #Project specific files
-launch_env.sh
+/env.sh

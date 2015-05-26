@@ -18,7 +18,7 @@ _GUIDE :
 
 0. It is strongly advised to create a new workspace.
 
-1. Set the various environnment variables in the "launch_env.sh" files :
+1. Set the various environnment variables in the "env.sh" files. Following is a set of most useful ones :
            Name              Type                                      Value                                    
  ------------------------- -------- --------------------------------------------------------------------------- 
   ROOTFS_PATH               Path     Path to your PDK folder (that should contains all the                      

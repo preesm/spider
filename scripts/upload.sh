@@ -20,6 +20,9 @@ function checkmd5 {
   return 0
 }
 
+#Create remote dir if doesnt exist
+ssh $SSH_REMOTE_USER@$SSH_REMOTE_HOST "mkdir -p $REMOTE_WORKING_PATH"
+
 #Check if files have changed. Warn the user if not (Could be a compilation error)
 
 #Uploading the ARM library

@@ -7,7 +7,9 @@
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/Spider_k2_Arm"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/Spider_k2_Arm/Debug"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="Spider_k2_Arm" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="&quot;&quot;Spider_k2_Arm" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="/home/x0231061/Spider_k2_Arm" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="/home/x0231061/project/clean_spider_git/master/projects/Spider_k2_Arm/libSpider_k2_Arm" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -20,18 +22,18 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="so" artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.sharedLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.sharedLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.so.debug.1599256950" name="Debug" parent="cdt.managedbuild.config.gnu.cross.so.debug">
+				<configuration artifactExtension="so" artifactName="${SPIDER_K2ARMLIB_OUTPATH}/lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.sharedLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.sharedLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.so.debug.1599256950" name="Debug" parent="cdt.managedbuild.config.gnu.cross.so.debug">
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.so.debug.1599256950." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.so.debug.342965772" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.so.debug">
-							<option id="cdt.managedbuild.option.gnu.cross.prefix.1192614584" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" value="arm-linux-gnueabihf-" valueType="string"/>
-							<option id="cdt.managedbuild.option.gnu.cross.path.1762733572" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/home/jheulot/k2h_3_1_1_4/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin" valueType="string"/>
+							<option id="cdt.managedbuild.option.gnu.cross.prefix.1192614584" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" value="${GCC_LINARO}/arm-linux-gnueabihf-" valueType="string"/>
+							<option id="cdt.managedbuild.option.gnu.cross.path.1762733572" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.276731370" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
 							<builder buildPath="${workspace_loc:/Spider_k2_Arm/Debug}" id="cdt.managedbuild.builder.gnu.cross.1610293858" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
-							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.995464617" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
+							<tool commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cross.c.compiler.995464617" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1261605750" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.510533048" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1812497122" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="DEVICE_K2H"/>
+									<listOptionValue builtIn="false" value="${SPIDER_DEVICE}"/>
 									<listOptionValue builtIn="false" value="FFTC_DRV_DEBUG"/>
 									<listOptionValue builtIn="false" value="_LITTLE_ENDIAN"/>
 									<listOptionValue builtIn="false" value="_TMS320C6600"/>
@@ -40,26 +42,27 @@
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.167138953" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="${ROOTFS_PATH}/usr/include"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/common}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_k2_arm}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/spider}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/common&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/lrt&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/platform_k2_arm&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/spider&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.pic.2139687968" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<option id="gnu.c.compiler.option.dialect.std.684720900" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.956634747" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.304648925" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
+							<tool commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.304648925" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
 								<option id="gnu.cpp.compiler.option.optimization.level.520079378" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.94630916" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.13054113" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/common}&quot;"/>
 									<listOptionValue builtIn="false" value="${ROOTFS_PATH}/usr/include"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_k2_arm}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/spider}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/common&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/lrt&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/platform_k2_arm&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/spider&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.66200069" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="DEVICE_K2H"/>
+									<listOptionValue builtIn="false" value="${SPIDER_DEVICE}"/>
 									<listOptionValue builtIn="false" value="FFTC_DRV_DEBUG"/>
 									<listOptionValue builtIn="false" value="_LITTLE_ENDIAN"/>
 									<listOptionValue builtIn="false" value="_TMS320C6600"/>
@@ -67,12 +70,13 @@
 									<listOptionValue builtIn="false" value="__ARMv7"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.pic.132981075" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.dialect.std.913632169" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1667845668" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.1514917263" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
 								<option defaultValue="true" id="gnu.c.link.option.shared.1401109237" name="Shared (-shared)" superClass="gnu.c.link.option.shared" valueType="boolean"/>
 							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1972898375" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
+							<tool commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1972898375" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.112529209" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.paths.2029765477" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="${ROOTFS_PATH}/usr/lib"/>
@@ -84,10 +88,10 @@
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
 								</inputType>
-								<outputType id="cdt.managedbuild.tool.gnu.cpp.linker.output.so.175446744" outputPrefix="/srv/nfs/rootfs-keystoneII/usr/lib/lib" superClass="cdt.managedbuild.tool.gnu.cpp.linker.output.so"/>
+								<outputType id="cdt.managedbuild.tool.gnu.cpp.linker.output.so.175446744" outputPrefix="" superClass="cdt.managedbuild.tool.gnu.cpp.linker.output.so"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1021597846" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
-							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.10310448" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+							<tool commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cross.assembler.10310448" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.705815853" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -108,7 +112,7 @@
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/Spider_k2_Arm"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/Spider_k2_Arm/Release"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="Spider_k2_Arm_release" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="/home/x0231061/project/clean_spider_git/master/projects/Spider_k2_Arm/libSpider_k2_Arm_release" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -121,49 +125,51 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="so" artifactName="${ProjName}_release" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.sharedLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.sharedLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.so.release.882780723" name="Release" parent="cdt.managedbuild.config.gnu.cross.so.release">
+				<configuration artifactExtension="so" artifactName="${SPIDER_K2ARMLIB_OUTPATH}/lib${ProjName}_release" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.sharedLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.sharedLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.so.release.882780723" name="Release" parent="cdt.managedbuild.config.gnu.cross.so.release">
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.so.release.882780723." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.so.release.198531034" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.so.release">
-							<option id="cdt.managedbuild.option.gnu.cross.prefix.2096091316" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" value="arm-linux-gnueabihf-" valueType="string"/>
-							<option id="cdt.managedbuild.option.gnu.cross.path.1300576331" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/home/jheulot/k2h_3_1_1_4/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin" valueType="string"/>
+							<option id="cdt.managedbuild.option.gnu.cross.prefix.2096091316" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" value="${GCC_LINARO}/arm-linux-gnueabihf-" valueType="string"/>
+							<option id="cdt.managedbuild.option.gnu.cross.path.1300576331" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.479077697" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
 							<builder buildPath="${workspace_loc:/Spider_k2_Arm/Release}" id="cdt.managedbuild.builder.gnu.cross.1316242948" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.276858743" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.option.optimization.level.813332015" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.1978802891" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1374342884" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="DEVICE_K2H"/>
+									<listOptionValue builtIn="false" value="${SPIDER_DEVICE}"/>
+									<listOptionValue builtIn="false" value="_LITTLE_ENDIAN"/>
+									<listOptionValue builtIn="false" value="_TMS320C6600"/>
 									<listOptionValue builtIn="false" value="_VIRTUAL_ADDR_SUPPORT"/>
 									<listOptionValue builtIn="false" value="__ARMv7"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.679289287" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include/ti/drv/qmss"/>
-									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include/ti/drv/qmss/include"/>
-									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/common}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_k2_arm}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/spider}&quot;"/>
+									<listOptionValue builtIn="false" value="${ROOTFS_PATH}/usr/include"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/common&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/lrt&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/platform_k2_arm&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/spider&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.pic.1211358408" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<option id="gnu.c.compiler.option.dialect.std.10479353" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1863983037" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1127070104" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
 								<option id="gnu.cpp.compiler.option.optimization.level.1100358933" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.1105634673" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1762160324" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="DEVICE_K2H"/>
+									<listOptionValue builtIn="false" value="${SPIDER_DEVICE}"/>
+									<listOptionValue builtIn="false" value="FFTC_DRV_DEBUG"/>
+									<listOptionValue builtIn="false" value="_LITTLE_ENDIAN"/>
+									<listOptionValue builtIn="false" value="_TMS320C6600"/>
 									<listOptionValue builtIn="false" value="_VIRTUAL_ADDR_SUPPORT"/>
 									<listOptionValue builtIn="false" value="__ARMv7"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.1300447462" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include/ti/drv/qmss"/>
-									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include/ti/drv/qmss/include"/>
-									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/include"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/common}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_k2_arm}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/spider}&quot;"/>
+									<listOptionValue builtIn="false" value="${ROOTFS_PATH}/usr/include"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/common&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/lrt&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/platform_k2_arm&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_PATH}/spider&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.pic.1017387696" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1576753917" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -177,13 +183,13 @@
 									<listOptionValue builtIn="false" value="qmss"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.1674418251" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/srv/nfs/rootfs-keystoneII/usr/lib"/>
+									<listOptionValue builtIn="false" value="${ROOTFS_PATH}/usr/lib"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.334841769" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
 								</inputType>
-								<outputType id="cdt.managedbuild.tool.gnu.cpp.linker.output.so.1667369941" outputPrefix="/srv/nfs/rootfs-keystoneII/usr/lib/lib" superClass="cdt.managedbuild.tool.gnu.cpp.linker.output.so"/>
+								<outputType id="cdt.managedbuild.tool.gnu.cpp.linker.output.so.1667369941" outputPrefix="" superClass="cdt.managedbuild.tool.gnu.cpp.linker.output.so"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.185089750" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.754235335" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">

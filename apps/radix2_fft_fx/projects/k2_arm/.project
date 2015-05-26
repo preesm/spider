@@ -25,10 +25,4 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<variableList>
-		<variable>
-			<name>ARM_GCC_PATH</name>
-			<value>file:/home/jheulot/k2h_3_1_1_4/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux</value>
-		</variable>
-	</variableList>
 </projectDescription>

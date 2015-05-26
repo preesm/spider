@@ -61,3 +61,6 @@ xtend-gen/
 *.out
 *_linkInfo.xml
 configPkg
+
+#Project specific files
+/env.sh

@@ -40,6 +40,7 @@
  *  \par
 */
 
+#ifdef DEVICE_K2H
 /* QMSS Types includes */
 #include <stdint.h>
 #include <stdlib.h>
@@ -525,4 +526,4 @@ Qmss_GlobalConfigParams qmssGblCfgParams =
 /**
 @}
 */
-
+#endif

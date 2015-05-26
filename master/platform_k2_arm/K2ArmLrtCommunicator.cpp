@@ -223,7 +223,7 @@ void K2ArmLrtCommunicator::data_end_send(Fifo* f){
 			}while(mono_pkt == 0);
 
 			/* Get Packet info */
-			int mono_pkt_size  = QMSS_DESC_SIZE(mono_pkt);
+			//int mono_pkt_size  = QMSS_DESC_SIZE(mono_pkt);
 			mono_pkt = (Cppi_Desc*)QMSS_DESC_PTR (mono_pkt);
 
 //			/* Clear Cache */
@@ -252,7 +252,7 @@ long K2ArmLrtCommunicator::data_recv(Fifo* f){
 			}while(mono_pkt == 0);
 
 			/* Get Packet info */
-			int mono_pkt_size  = QMSS_DESC_SIZE(mono_pkt);
+			//int mono_pkt_size  = QMSS_DESC_SIZE(mono_pkt);
 			mono_pkt = (Cppi_Desc*)QMSS_DESC_PTR (mono_pkt);
 
 //			/* Clear Cache */

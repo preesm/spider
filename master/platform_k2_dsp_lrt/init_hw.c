@@ -56,19 +56,6 @@ CSL_TmrRegsOvly tmr_regs;
 
 CSL_PscRegs* psc_regs;
 
-#ifdef DEVICE_K2H
-#define MSMC_SIZE 		0x00600000
-#define QMSS_CFG_SIZE 	0x00200000
-#define QMSS_DATA_SIZE 	0x00100000
-#define TMR_REGS_SIZE 	0x00010000
-
-#define CPPI_BASE_REG	0x01F00000
-#define CPPI_SIZE_REG	0x01100000
-
-#else
-#error Please define sizes in platformK2Arm/init_hw.c
-#endif
-
 void* Osal_qmssVirtToPhy (void *ptr){
 	return ptr;
 }
@@ -101,7 +88,7 @@ void init_hw(){
 	/* TMR Regs */
 	tmr_regs = (void*)CSL_TIMER_0_REGS;
 	/* MSMC memory */
-	msmc_mem_base = CSL_MSMC_SRAM_REGS;
+	msmc_mem_base = MEMORY_STARTING_ADDRESS;
 	/* FFTC regs */
 	fftc_cfg_regs = (void*)CSL_FFTC_0_CFG_REGS;
 	/* QM regs */
@@ -117,6 +104,7 @@ void init_hw(){
 	 * FFTC device register access.
 	 */
 	/* Set FFTC Power domain to ON */
+#ifdef DEVICE_K2H
     CSL_FINST (psc_regs->PDCTL[CSL_PSC_PD_FFTC_01], PSC_PDCTL_NEXT, ON);
     CSL_FINST (psc_regs->PDCTL[CSL_PSC_PD_FFTC_2345], PSC_PDCTL_NEXT, ON);
 
@@ -148,6 +136,31 @@ void init_hw(){
 		/* FFTC Power on failed */
 		abort();
 	}
+#endif
+
+#ifdef DEVICE_K2L
+	CSL_FINST (psc_regs->PDCTL[CSL_PSC_PD_FFTC_0], PSC_PDCTL_NEXT, ON);
+	    CSL_FINST (psc_regs->PDCTL[CSL_PSC_PD_FFTC_1], PSC_PDCTL_NEXT, ON);
+
+		/* Enable the clocks too for FFTC */
+	    CSL_FINS (psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_0], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
+	    CSL_FINS (psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_1], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
+
+		/* Start the state transition */
+	    psc_regs->PTCMD =   (1 << CSL_PSC_PD_FFTC_0);
+	    psc_regs->PTCMD =   (1 << CSL_PSC_PD_FFTC_1);
+
+		/* Wait until the state transition process is completed. */
+		while (CSL_FEXTR (psc_regs->PTSTAT, CSL_PSC_PD_FFTC_0, CSL_PSC_PD_FFTC_0));
+		while (CSL_FEXTR (psc_regs->PTSTAT, CSL_PSC_PD_FFTC_1, CSL_PSC_PD_FFTC_1));
+
+		/* Check FFTC PSC status */
+		if ((CSL_FEXT(psc_regs->PDSTAT[CSL_PSC_PD_FFTC_0],   PSC_PDSTAT_STATE) != PSC_PDSTATE_ON) ||
+			(CSL_FEXT(psc_regs->PDSTAT[CSL_PSC_PD_FFTC_1], PSC_PDSTAT_STATE) != PSC_PDSTATE_ON)){
+			/* FFTC Power on failed */
+			abort();
+		}
+#endif
 
 	/* Initialize Shared Timer0 */
 	/* TGCR */

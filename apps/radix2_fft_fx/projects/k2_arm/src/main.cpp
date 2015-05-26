@@ -53,7 +53,7 @@ int main(int argc, char* argv[]){
 	DynStack pisdfStack("PisdfStack");
 	DynStack archiStack("ArchiStack");
 
-#define SH_MEM 0x00500000
+#define SH_MEM 0x00500000 //size max restante
 	PlatformK2Arm platform(2, 4, SH_MEM, &archiStack, radix2_fft_fcts, N_FCT_RADIX2_FFT);
 	Archi* archi = platform.getArchi();
 
@@ -81,14 +81,14 @@ int main(int argc, char* argv[]){
 		pisdfStack.freeAll();
 
 		PiSDFGraph *topPisdf = init_Radix2_fft(archi, &pisdfStack);
-		topPisdf->print("topPisdf.gv");
+		topPisdf->print("topPisdf_fx.gv");
 
 		Platform::get()->rstTime();
 
 		spider_launch(archi, topPisdf);
 
-		spider_printGantt(archi, spider_getLastSRDAG(), "radixFFT_2.pgantt", "latex.tex", &stat);
-		spider_getLastSRDAG()->print("radixFFT_2.gv");
+		spider_printGantt(archi, spider_getLastSRDAG(), "radixFFT_2_fx.pgantt", "latex.tex", &stat);
+		spider_getLastSRDAG()->print("radixFFT_2_fx.gv");
 
 		printf("EndTime = %ld us\n", stat.globalEndTime/1000);
 

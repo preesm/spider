@@ -66,12 +66,12 @@
 									<listOptionValue builtIn="false" value="Spider_k2_dsp_lrt.lib"/>
 								</option>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.SEARCH_PATH.921772005" name="Add &lt;dir&gt; to library search path (--search_path, -i)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.SEARCH_PATH" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_K2DSPLIB_OUTPATH}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${DSPLIB_PATH}/packages/ti/dsplib/lib&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${PDK_PATH}/packages/ti/drv/qmss/lib/${PDK_DEVICE_SUBFOLDER}/c66&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${PDK_PATH}/packages/ti/drv/cppi/lib/${PDK_DEVICE_SUBFOLDER}/c66&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${PDK_PATH}/packages/ti/csl/lib/${PDK_DEVICE_SUBFOLDER}/c66&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/lib&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_dsp_lrt/Debug}&quot;"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/dsplib_c66x_3_2_0_1/packages/ti/dsplib/lib"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/pdk_keystone2_3_01_01_04/packages/ti/drv/qmss/lib/k2h/c66"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/pdk_keystone2_3_01_01_04/packages/ti/drv/cppi/lib/k2h/c66"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/pdk_keystone2_3_01_01_04/packages/ti/csl/lib/k2h/c66"/>
 									<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
 								</option>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.DISPLAY_ERROR_NUMBER.1815004266" name="Emit diagnostic identifier numbers (--display_error_number)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.DISPLAY_ERROR_NUMBER" value="true" valueType="boolean"/>
@@ -104,7 +104,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="out" artifactName="${ProjName}" buildProperties="" cleanCommand="${CG_CLEAN_CMD}" description="" id="com.ti.ccstudio.buildDefinitions.C6000.Release.1051443052" name="Release" parent="com.ti.ccstudio.buildDefinitions.C6000.Release">
+				<configuration artifactExtension="out" artifactName="${ProjName}_release" buildProperties="" cleanCommand="${CG_CLEAN_CMD}" description="" id="com.ti.ccstudio.buildDefinitions.C6000.Release.1051443052" name="Release" parent="com.ti.ccstudio.buildDefinitions.C6000.Release">
 					<folderInfo id="com.ti.ccstudio.buildDefinitions.C6000.Release.1051443052." name="/" resourcePath="">
 						<toolChain id="com.ti.ccstudio.buildDefinitions.C6000_7.4.exe.ReleaseToolchain.77705557" name="TI Build Tools" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.exe.ReleaseToolchain" targetTool="com.ti.ccstudio.buildDefinitions.C6000_7.4.exe.linkerRelease.1975698436">
 							<option id="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS.265832279" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS" valueType="stringList">
@@ -152,7 +152,7 @@
 								<inputType id="com.ti.ccstudio.buildDefinitions.C6000_7.4.compiler.inputType__ASM2_SRCS.690023496" name="Assembly Sources" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.compiler.inputType__ASM2_SRCS"/>
 							</tool>
 							<tool id="com.ti.ccstudio.buildDefinitions.C6000_7.4.exe.linkerRelease.1975698436" name="C6000 Linker" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.exe.linkerRelease">
-								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.OUTPUT_FILE.1037569170" name="Specify output file name (--output_file, -o)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.OUTPUT_FILE" value="&quot;${ProjName}.out&quot;" valueType="string"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.OUTPUT_FILE.1037569170" name="Specify output file name (--output_file, -o)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.OUTPUT_FILE" value="&quot;${ProjName}_release.out&quot;" valueType="string"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.MAP_FILE.1328401238" name="Input and output sections listed into &lt;file&gt; (--map_file, -m)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.MAP_FILE" value="&quot;${ProjName}.map&quot;" valueType="string"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.LIBRARY.819112985" name="Include library file or command file as input (--library, -l)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.LIBRARY" valueType="libs">
 									<listOptionValue builtIn="false" value="ti.drv.qmss.ae66"/>
@@ -163,12 +163,12 @@
 									<listOptionValue builtIn="false" value="&quot;libc.a&quot;"/>
 								</option>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.SEARCH_PATH.353235984" name="Add &lt;dir&gt; to library search path (--search_path, -i)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.SEARCH_PATH" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/dsplib_c66x_3_2_0_1/packages/ti/dsplib/lib"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/pdk_keystone2_3_01_01_04/packages/ti/drv/qmss/lib/k2h/c66"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/pdk_keystone2_3_01_01_04/packages/ti/drv/cppi/lib/k2h/c66"/>
-									<listOptionValue builtIn="false" value="/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/pdk_keystone2_3_01_01_04/packages/ti/csl/lib/k2h/c66"/>
+									<listOptionValue builtIn="false" value="&quot;${SPIDER_K2DSPLIB_OUTPATH}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${DSPLIB_PATH}/packages/ti/dsplib/lib&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${PDK_PATH}/packages/ti/drv/qmss/lib/${PDK_DEVICE_SUBFOLDER}/c66&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${PDK_PATH}/packages/ti/drv/cppi/lib/${PDK_DEVICE_SUBFOLDER}/c66&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${PDK_PATH}/packages/ti/csl/lib/${PDK_DEVICE_SUBFOLDER}/c66&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/lib&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider_k2_dsp_lrt/Release}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
 								</option>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.DISPLAY_ERROR_NUMBER.1350042246" name="Emit diagnostic identifier numbers (--display_error_number)" superClass="com.ti.ccstudio.buildDefinitions.C6000_7.4.linkerID.DISPLAY_ERROR_NUMBER" value="true" valueType="boolean"/>

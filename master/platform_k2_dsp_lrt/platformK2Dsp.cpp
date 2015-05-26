@@ -50,7 +50,6 @@
 #include <K2DspLrtCommunicator.h>
 
 extern "C"{
-#include <ti/csl/device/k2h/src/cslr_device.h>
 #include <ti/csl/cslr_tmr.h>
 #include <ti/csl/csl_types.h>
 #include <ti/csl/csl_chipAux.h>

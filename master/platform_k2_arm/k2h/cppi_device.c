@@ -40,6 +40,8 @@
  *  \par
 */
 
+#ifdef DEVICE_K2H
+
 /* CPPI Types includes */
 #include <stdint.h>
 #include <stdlib.h>
@@ -575,6 +577,8 @@ Cppi_GlobalConfigParams cppiGblCfgParams =
     /** Base address for fourth 4K queues */
     CSL_QMSS_DATA_QM2_QUEUE_MANAGEMENT_REGS + 0x10000
 };
+
+#endif
 
 /**
 @}

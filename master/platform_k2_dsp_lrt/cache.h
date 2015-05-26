@@ -41,7 +41,6 @@
 #include <stdint.h>
 #include <ti/csl/tistdtypes.h>
 #include <ti/csl/csl_types.h>
-#include <ti/csl/device/k2h/src/cslr_device.h>
 #include <ti/csl/csl_cacheAux.h>
 
 /**

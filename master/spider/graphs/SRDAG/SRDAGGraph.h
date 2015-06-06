@@ -68,9 +68,6 @@ public:
 	inline SRDAGVertex* getVertex(int ix);
 	inline SRDAGVertex* getVertexFromIx(int ix);
 
-	inline int getIxOfEdge(SRDAGEdge* edge);
-	inline int getIxOfVertex(SRDAGVertex* vertex);
-
 	/** Size getters */
 	inline int getNEdge();
 	inline int getNVertex();
@@ -103,13 +100,6 @@ inline SRDAGVertex* SRDAGGraph::getVertexFromIx(int ix){
 			return vertices_[i];
 	}
 	throw "Vertex not found\n";
-}
-
-inline int SRDAGGraph::getIxOfEdge(SRDAGEdge* edge){
-	return edges_.getIxOf(edge);
-}
-inline int SRDAGGraph::getIxOfVertex(SRDAGVertex* vertex){
-	return vertices_.getIxOf(vertex);
 }
 
 /** Size getters */

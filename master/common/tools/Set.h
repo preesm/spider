@@ -65,8 +65,6 @@ public:
 	inline int getN() const;
 	inline TYPE const * const getArray() const;
 
-	inline int getIxOf(TYPE val);
-
 private:
 	Stack* stack_;
 	TYPE* array;
@@ -111,18 +109,6 @@ inline TYPE Set<TYPE>::operator[] (int ix){
 template <typename TYPE>
 inline TYPE const * const Set<TYPE>::getArray() const{
 	return array;
-}
-
-template <typename TYPE>
-inline int Set<TYPE>::getIxOf(TYPE val){
-	int ix = -1;
-	for(int i=0; i<this->nb; i++){
-		if(val == array[i]){
-			ix = i;
-			break;
-		}
-	}
-	return ix;
 }
 
 #endif // SET_H

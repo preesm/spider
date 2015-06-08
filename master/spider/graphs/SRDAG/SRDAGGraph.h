@@ -69,8 +69,8 @@ public:
 	inline SRDAGVertex* getVertexFromIx(int ix);
 
 	/** Size getters */
-	inline int getNEdge();
-	inline int getNVertex();
+	inline int getNEdge() const;
+	inline int getNVertex() const;
 	int getNExecVertex();
 
 	/** Print Fct */
@@ -103,10 +103,10 @@ inline SRDAGVertex* SRDAGGraph::getVertexFromIx(int ix){
 }
 
 /** Size getters */
-inline int SRDAGGraph::getNEdge(){
+inline int SRDAGGraph::getNEdge() const {
 	return edges_.getN();
 }
-inline int SRDAGGraph::getNVertex(){
+inline int SRDAGGraph::getNVertex() const{
 	return vertices_.getN();
 }
 

@@ -19,6 +19,8 @@ export SPIDER_K2DSPLIB_OUTPATH="/home/x0231061/git/compa_spider/master/projects/
 #__Board configuration
 export SSH_REMOTE_USER="root"
 export SSH_REMOTE_HOST="lav1n2"
+export SSH_OPTIONS=""
+export SCP_OPTIONS=""
 export PATH_TO_GANTT_TOOL="/home/x0231061/project/spider_integration/GanttDisplay.jar"
 export REMOTE_WORKING_PATH="/home/root/spider"
 

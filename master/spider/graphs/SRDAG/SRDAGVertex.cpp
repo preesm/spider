@@ -57,13 +57,16 @@ SRDAGVertex::SRDAGVertex(
 	graph_ = graph;
 	reference_ = reference;
 
-	nInEdge_ = nInEdge;
-	inEdges_ = CREATE_MUL(stack, nInEdge_, SRDAGEdge*);
-	memset(inEdges_, 0, nInEdge_*sizeof(SRDAGEdge*));
+	nMaxInEdge_ = nInEdge;
+	inEdges_ = CREATE_MUL(stack, nMaxInEdge_, SRDAGEdge*);
+	memset(inEdges_, 0, nMaxInEdge_*sizeof(SRDAGEdge*));
 
-	nOutEdge_ = nOutEdge;
-	outEdges_ = CREATE_MUL(stack, nOutEdge_, SRDAGEdge*);
-	memset(outEdges_, 0, nOutEdge_*sizeof(SRDAGEdge*));
+	nMaxOutEdge_ = nOutEdge;
+	outEdges_ = CREATE_MUL(stack, nMaxOutEdge_, SRDAGEdge*);
+	memset(outEdges_, 0, nMaxOutEdge_*sizeof(SRDAGEdge*));
+
+	nCurInEdge_ = 0;
+	nCurOutEdge_ = 0;
 
 	nInParam_ = nInParam;
 	inParams_ = CREATE_MUL(stack, nInParam_, int);

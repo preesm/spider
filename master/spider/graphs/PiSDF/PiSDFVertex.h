@@ -37,13 +37,15 @@
 #ifndef PISDF_VERTEX_H
 #define PISDF_VERTEX_H
 
+#include <tools/SetElement.h>
+
 #include <graphs/PiSDF/PiSDFCommon.h>
 #include <graphs/Archi/Archi.h>
 #include <parser/Expression.h>
 
 #include <cstring>
 
-class PiSDFVertex {
+class PiSDFVertex: public SetElement {
 public:
 	PiSDFVertex(
 			const char* name, int fctId,

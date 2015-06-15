@@ -34,82 +34,19 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef SET_H
-#define SET_H
+#ifndef SET_ELEMENT_H
+#define SET_ELEMENT_H
 
-#include <tools/Stack.h>
-#include <tools/SetElement.h>
-
-template<typename TYPE> class Set {
+class SetElement {
 public:
-	Set(int nbmax, Stack *stack){
-		if(nbmax > 0){
-			array = CREATE_MUL(stack, nbmax, TYPE);
+	SetElement():set_ix_(-1){}
+	virtual ~SetElement(){}
 
-			/* Test if TYPE is a SetElement */
-			SetElement* elt = dynamic_cast<SetElement*>(array[0]);
-		}else{
-			array = 0;
-		}
-		nb    = 0;
-		nbMax = nbmax;
-		stack_ = stack;
-	}
-
-	~Set(){
-		if(nbMax != 0)
-			stack_->free(array);
-	}
-
-	inline void add(TYPE value);
-	inline void del(TYPE value);
-
-	inline TYPE operator[](int ix);
-
-	inline int getN() const;
-	inline TYPE const * const getArray() const;
+	void setSetIx(int ix){set_ix_ = ix;}
+	int getSetIx() const {return set_ix_;}
 
 private:
-	Stack* stack_;
-	TYPE* array;
-	int nb;
-	int nbMax;
-
-//	friend class SetIterator;
+	int set_ix_;
 };
 
-template<typename TYPE>
-inline int Set<TYPE>::getN() const{
-	return nb;
-}
-
-template <typename TYPE>
-inline void Set<TYPE>::add(TYPE value){
-	if(nb >= nbMax)
-		throw "Not enough space in Set\n";
-
-	((SetElement*)value)->setSetIx(nb);
-	array[nb++] = value;
-}
-
-template <typename TYPE>
-inline void Set<TYPE>::del(TYPE value){
-	int ix = ((SetElement*)value)->getSetIx();
-	array[ix] = array[--nb];
-	((SetElement*)array[ix])->setSetIx(ix);
-}
-
-template <typename TYPE>
-inline TYPE Set<TYPE>::operator[] (int ix){
-	if(ix < 0 || ix >= nb)
-		throw "Set: operator[] get bad ix";
-	else
-		return array[ix];
-}
-
-template <typename TYPE>
-inline TYPE const * const Set<TYPE>::getArray() const{
-	return array;
-}
-
-#endif // SET_H
+#endif // SET_ELEMENT_H

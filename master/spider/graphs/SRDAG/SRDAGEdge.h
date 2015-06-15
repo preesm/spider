@@ -37,12 +37,14 @@
 #ifndef SRDAG_EDGE_H
 #define SRDAG_EDGE_H
 
+#include <tools/SetElement.h>
+
 #include <graphs/SRDAG/SRDAGCommon.h>
 //#include "SRDAGVertex.h"
 //#include "SRDAGGraph.h"
 //#include <parser/Expression.h>
 
-class SRDAGEdge {
+class SRDAGEdge: public SetElement {
 public:
 	/** Constructors */
 	SRDAGEdge();

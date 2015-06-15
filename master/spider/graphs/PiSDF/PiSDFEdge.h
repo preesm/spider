@@ -37,12 +37,14 @@
 #ifndef PISDF_EDGE_H
 #define PISDF_EDGE_H
 
+#include <tools/SetElement.h>
+
 #include <graphs/PiSDF/PiSDFCommon.h>
 #include <graphs/PiSDF/PiSDFGraph.h>
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <parser/Expression.h>
 
-class PiSDFEdge {
+class PiSDFEdge: public SetElement{
 public:
 	/** Constructors */
 	PiSDFEdge(

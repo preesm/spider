@@ -37,11 +37,13 @@
 #ifndef PISDF_PARAM_H
 #define PISDF_PARAM_H
 
+#include <tools/SetElement.h>
+
 #include <graphs/PiSDF/PiSDFCommon.h>
 
 class Expression;
 
-class PiSDFParam{
+class PiSDFParam : public SetElement{
 public:
 	/** Constructor */
 	PiSDFParam(

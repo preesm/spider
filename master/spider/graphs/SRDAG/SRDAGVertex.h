@@ -37,13 +37,15 @@
 #ifndef SRDAG_VERTEX_H
 #define SRDAG_VERTEX_H
 
+#include <tools/SetElement.h>
+
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/SRDAG/SRDAGEdge.h>
 
 #include <platform.h>
 
-class SRDAGVertex {
+class SRDAGVertex : public SetElement{
 public:
 	friend class SRDAGEdge;
 

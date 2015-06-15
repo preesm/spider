@@ -141,7 +141,7 @@ void init_hw();
 void init_qmss();
 void init_cppi();
 void init_fftc();
-void setFFTSize(int id, int size);
+int setFFTSize(int id, int size);
 
 void printQueueState();
 

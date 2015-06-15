@@ -222,7 +222,7 @@ static void configureRxChan(int fftc_ix){
 	}
 }
 
-void setFFTSize(int id, int size){
+int setFFTSize(int id, int size){
 	CSL_FftcRegs* regs;
 
 	switch(id){
@@ -236,7 +236,18 @@ void setFFTSize(int id, int size){
 		printf("Unhandled case in setFFTSize\n");
 	}
 
-	int logSize = log2(size)-2;
+	//int logSize = log2(size)-2;
+	int logSize = 0;
+	  int mask=1;
+	  int i;
+	  for(i=0;i<32;i++)
+	  {
+		if(size&mask)
+		  break;
+		logSize++;
+		mask<<=1;
+	  }
+	  logSize-=2;
 
 	regs->Q0_SCALE_SHIFT =
 			CSL_FMK (FFTC_Q0_SCALE_SHIFT_DYNAMIC_SCALING_ENABLE, 	0) 	|
@@ -258,7 +269,7 @@ void setFFTSize(int id, int size){
 		CSL_FMK (FFTC_Q0_CONTROL_ZERO_PAD_MODE, 		0) |
 		CSL_FMK (FFTC_Q0_CONTROL_ZERO_PAD_VAL, 			0) |
 		CSL_FMK (FFTC_Q0_CONTROL_DFT_SIZE, 				logSize);
-
+	return logSize+2;
 }
 
 void configureFFTRegs(CSL_FftcRegs* regs){

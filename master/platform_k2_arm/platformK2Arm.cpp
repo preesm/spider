@@ -257,7 +257,7 @@ Time PlatformK2Arm::getTime(){
 	CSL_Uint64 val;
 	val = tmr_regs->CNTHI;
 	val = (val<<32) + tmr_regs->CNTLO;
-	return val*5; /* 200MHz to 1GHz */
+	return val*6; /* 200MHz to 1GHz */
 }
 
 SharedMemArchi* PlatformK2Arm::getArchi(){

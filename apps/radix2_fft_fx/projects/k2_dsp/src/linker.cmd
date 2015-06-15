@@ -40,4 +40,5 @@ SECTIONS
 	.cppi: load > L2SRAM
 	.twiddles: load > L2SRAM
 
+	.imre_data: load > L2SRAM
 }

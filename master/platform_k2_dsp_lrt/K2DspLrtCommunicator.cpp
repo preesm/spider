@@ -93,7 +93,7 @@ void* K2DspLrtCommunicator::ctrl_start_send(int size){
 	}
 
 	if(size > cur_mono_pkt_out_size - dataOffset)
-		throw "LrtCommunicator: Try to send a message too big";
+		throw "DSPLrtCommunicator Ctrl: Try to send a message too big";
 
 	/* Add data to current descriptor */
 	void* data_pkt = (void*)(((int)cur_mono_pkt_out) + dataOffset);
@@ -177,7 +177,7 @@ void* K2DspLrtCommunicator::trace_start_send(int size){
 	}
 
 	if(size > cur_mono_trace_out_size - dataOffset)
-		throw "LrtCommunicator: Try to send a trace message too big";
+		throw "DSPLrtCommunicator Trace: Try to send a trace message too big";
 
 	/* Add data to current descriptor */
 	void* data_pkt = (void*)(((int)cur_mono_trace_out) + dataOffset);

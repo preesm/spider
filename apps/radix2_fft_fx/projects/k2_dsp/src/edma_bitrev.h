@@ -38,14 +38,13 @@
 #ifndef EDMA_H
 #define EDMA_H
 
-int edma_init();
-int edma_clean();
-
-int edma_cpy(
+int edmabr_init(
 		void* src, void* dst,
-		int aCnt, int bCnt, int cCnt,
-		int srcBIdx, int dstBIdx,
-		int srcCIdx, int dstCIdx
-	);
+		unsigned short aCnt, unsigned short bCnt, unsigned short cCnt,
+		short srcBIdx, short dstBIdx,
+		short srcCIdx, short dstCIdx);
+int edmabr_clean();
+
+int edmabr_cpy_jumpaddr_chained_bitreverse ();
 
 #endif

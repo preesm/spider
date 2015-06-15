@@ -29,9 +29,9 @@ export REMOTE_WORKING_PATH="/home/root/spider"
 export NB_DSP="3"
 
 #__Current project configuration
-export CURRENT_ARMLIB_FILENAME="libSpider_k2_Arm.so"
-export CURRENT_ARM_BIN_PATH="/home/x0231061/git/compa_spider/apps/radix2_fft_fx/projects/k2_arm/Debug/radix2_fft_fx_k2_arm"
-export CURRENT_DSP_BIN_PATH="/home/x0231061/git/compa_spider/apps/radix2_fft_fx/projects/k2_dsp/Debug/radix2_fft_fx_k2_dsp.out"
+export CURRENT_ARMLIB_FILENAME="libSpider_k2_Arm_release.so"
+export CURRENT_ARM_BIN_PATH="/home/x0231061/git/compa_spider/apps/radix2_fft_fx/projects/k2_arm/Release/radix2_fft_fx_k2_arm_release"
+export CURRENT_DSP_BIN_PATH="/home/x0231061/git/compa_spider/apps/radix2_fft_fx/projects/k2_dsp/Release/radix2_fft_fx_k2_dsp_release.out"
 export CURRENT_PGANTT_FILE="radixFFT_2_fx.pgantt"
 
 

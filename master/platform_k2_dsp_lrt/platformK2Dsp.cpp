@@ -167,6 +167,6 @@ void PlatformK2Dsp::rstTime(){
 
 Time PlatformK2Dsp::getTime(){
 	clock_t t = (_itoll(TSCH, TSCL)-base);
-	return (t+timeBase_*6)/1.2; /* 200MHz to 1GHz */
+	return (t+timeBase_*6); /* 200MHz to 1GHz */
 }
 

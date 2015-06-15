@@ -94,8 +94,9 @@ PiSDFGraph* Radix2_fft(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_src->addInParam(0, param_fftSize);
-	bo_src->isExecutableOnPE(CORE_ARM1);
-	bo_src->isExecutableOnPE(CORE_ARM0);
+	//bo_src->isExecutableOnPE(CORE_ARM1);
+	//bo_src->isExecutableOnPE(CORE_ARM0);
+	bo_src->isExecutableOnPE(CORE_DSP0);
 	bo_src->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	bo_src->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
@@ -107,12 +108,7 @@ PiSDFGraph* Radix2_fft(Archi* archi, Stack* stack){
 		/*InParam*/ 2);
 	bo_T->addInParam(0, param_N1);
 	bo_T->addInParam(1, param_N2);
-	bo_T->isExecutableOnPE(CORE_ARM1);
-	bo_T->isExecutableOnPE(CORE_ARM0);
 	bo_T->isExecutableOnPE(CORE_DSP0);
-	bo_T->isExecutableOnPE(CORE_DSP3);
-	bo_T->isExecutableOnPE(CORE_DSP1);
-	bo_T->isExecutableOnPE(CORE_DSP2);
 	bo_T->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	bo_T->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
@@ -175,9 +171,9 @@ PiSDFGraph* Radix2_fft(Archi* archi, Stack* stack){
 
 	/* Edges */
 	graph->connect(
-		/*Src*/ bo_src, /*SrcPrt*/ 0, /*Prod*/ "(fftSize)*4",
-		/*Snk*/ bo_T, /*SnkPrt*/ 0, /*Cons*/ "(N1*N2)*4",
-		/*Delay*/ "0",0);
+		 bo_src,  0,  "(fftSize)*4",
+		 bo_T,  0,  "(N1*N2)*4",
+		 "0",0);
 
 	graph->connect(
 		/*Src*/ bo_T, /*SrcPrt*/ 0, /*Prod*/ "(N1*N2)*4",

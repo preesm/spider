@@ -103,6 +103,8 @@ int main(int argc, char* argv[]){
 			printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
 		printf("\n");
 
+		Time fftTime = 0;
+
 		printf("Actors:\n");
 		for(int j=0; j<stat.nbActor; j++){
 			printf("\t%12s:", stat.actors[j]->getName());
@@ -110,8 +112,17 @@ int main(int argc, char* argv[]){
 				printf("\t%8ld (x%3ld)",
 						stat.actorTimes[j][k]/stat.actorIterations[j][k],
 						stat.actorIterations[j][k]);
+			if(strcmp(stat.actors[j]->getName(), "src") == 0){
+			                fftTime -= stat.actorLast[j];
+			}
+
+			if(strcmp(stat.actors[j]->getName(), "snk") == 0){
+				fftTime += stat.actorFisrt[j];
+			}
 		printf("\n");
 		}
+
+		printf("fftTime on Thread%d = %ld kcycles or %5.2f microseconds\n",1, fftTime/1000, (float) fftTime/1200);
 
 		free_Radix2_fft(topPisdf, &pisdfStack);
 	}catch(const char* s){

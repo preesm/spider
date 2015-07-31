@@ -9,10 +9,10 @@
         <data key="name">Radix2_fft</data>
         <node expr="2^P" id="N1" kind="param"/>
         <node expr="64*1024" id="fftSize" kind="param"/>
-        <node expr="2" id="P" kind="param"/>
+        <node expr="4" id="P" kind="param"/>
         <node expr="fftSize/2^P" id="N2" kind="param"/>
-        <node expr="0" id="n1" kind="param"/>
-        <node expr="0" id="n2" kind="param"/>
+        <node expr="4096" id="n1" kind="param"/>
+        <node expr="4" id="n2" kind="param"/>
         <node id="src" kind="actor">
             <data key="graph_desc">Code/generated/actors.h</data>
             <loop name="src">

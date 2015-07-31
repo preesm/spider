@@ -119,6 +119,42 @@ static int reduceForkFork(SRDAGGraph* topDag){
 	return 0;
 }
 
+static int reduceBrBr(SRDAGGraph* topDag){
+	for(int i=0; i<topDag->getNVertex(); i++){
+		SRDAGVertex* secBr = topDag->getVertex(i);
+		if(secBr && secBr->getType() == SRDAG_BROADCAST){
+			SRDAGVertex* firBr = secBr->getInEdge(0)->getSrc();
+			if(firBr && firBr->getState() == SRDAG_EXEC && firBr->getType() == SRDAG_BROADCAST){
+				int nbToAdd = secBr->getNConnectedOutEdge();
+				int ixToAdd = secBr->getInEdge(0)->getSrcPortIx();
+
+				SRDAGEdge* delEdge = firBr->getOutEdge(ixToAdd);
+				delEdge->disconnectSrc();
+				topDag->delEdge(delEdge);
+
+				/* Add first edge where the previous one was */
+				{
+					SRDAGEdge* edge = secBr->getOutEdge(0);
+					edge->disconnectSrc();
+					edge->connectSrc(firBr, ixToAdd);
+				}
+
+				/* Add others at the end of the firBr */
+				ixToAdd = firBr->getNConnectedOutEdge();
+				for(int k=1; k<nbToAdd; k++){
+					SRDAGEdge* edge = secBr->getOutEdge(k);
+					edge->disconnectSrc();
+					edge->connectSrc(firBr, k-1+ixToAdd);
+				}
+
+				topDag->delVertex(secBr);
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
 static int removeBr(SRDAGGraph* topDag){
 	bool result = false;
 	for(int i=0; i<topDag->getNVertex(); i++){
@@ -497,6 +533,7 @@ void optims(SRDAGGraph *topDag, Stack* stack){
 		res = false;
 		res = res || reduceJoinJoin(topDag);
 		res = res || reduceForkFork(topDag);
+		res = res || reduceBrBr(topDag);
 		res = res || reduceJoinFork(topDag);
 		res = res || removeBr(topDag);
 		res = res || removeFork(topDag);

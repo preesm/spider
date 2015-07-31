@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+    <key attr.name="parameters" for="graph" id="parameters"/>
+    <key attr.name="variables" for="graph" id="variables"/>
+    <key attr.name="arguments" for="node" id="arguments"/>
+    <key attr.name="name" attr.type="string" for="graph"/>
+    <key attr.name="graph_desc" attr.type="string" for="node"/>
+    <graph edgedefault="directed">
+        <data key="name">stereo</data>
+        <node expr="2" id="nSlice" kind="param"/>
+        <node expr="0" id="truncValue" kind="param"/>
+        <node expr="25" id="scale" kind="param"/>
+        <node expr="4" id="nIter" kind="param"/>
+        <node expr="3" id="sizeFilter" kind="param"/>
+        <node expr="0" id="minDisp" kind="param"/>
+        <node expr="10" id="maxDisp" kind="param"/>
+        <node expr="144" id="height" kind="param"/>
+        <node expr="176" id="width" kind="param"/>
+        <node expr="width*height" id="size" kind="param"/>
+        <node expr="height/nSlice+2*sizeFilter" id="sliceHeight" kind="param"/>
+        <node id="Config" kind="actor">
+            <data key="graph_desc">Code/include/stereo.h</data>
+            <loop name="Config">
+                <param direction="OUT" isConfig="true" name="nSlice" type="Param"/>
+                <param direction="OUT" isConfig="true" name="truncValue" type="Param"/>
+                <param direction="OUT" isConfig="true" name="scale" type="Param"/>
+                <param direction="OUT" isConfig="true" name="nIter" type="Param"/>
+                <param direction="OUT" isConfig="true" name="sizeFilter" type="Param"/>
+                <param direction="OUT" isConfig="true" name="minDisp" type="Param"/>
+                <param direction="OUT" isConfig="true" name="maxDisp" type="Param"/>
+                <param direction="OUT" isConfig="true" name="height" type="Param"/>
+                <param direction="OUT" isConfig="true" name="width" type="Param"/>
+            </loop>
+            <port annotation="NONE" kind="cfg_output" name="scale"/>
+            <port annotation="NONE" kind="cfg_output" name="maxDisp"/>
+            <port annotation="NONE" kind="cfg_output" name="minDisp"/>
+            <port annotation="NONE" kind="cfg_output" name="nSlice"/>
+            <port annotation="NONE" kind="cfg_output" name="truncValue"/>
+            <port annotation="NONE" kind="cfg_output" name="height"/>
+            <port annotation="NONE" kind="cfg_output" name="width"/>
+            <port annotation="NONE" kind="cfg_output" name="sizeFilter"/>
+            <port annotation="NONE" kind="cfg_output" name="nIter"/>
+        </node>
+        <node id="Camera" kind="actor">
+            <data key="graph_desc">Code/include/stereo.h</data>
+            <loop name="Camera">
+                <param direction="IN" isConfig="true" name="height" type="Param"/>
+                <param direction="IN" isConfig="true" name="width" type="Param"/>
+                <param direction="OUT" isConfig="false" name="rgb_L" type="char"/>
+                <param direction="OUT" isConfig="false" name="rgb_R" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="width"/>
+            <port kind="cfg_input" name="height"/>
+            <port annotation="NONE" expr="height*width" kind="output" name="rgb_L"/>
+            <port annotation="NONE" expr="height*width" kind="output" name="rgb_R"/>
+        </node>
+        <node id="Br_rgbL" kind="broadcast">
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size" kind="input" name="in"/>
+            <port annotation="NONE" expr="size" kind="output" name="out0"/>
+            <port annotation="NONE" expr="size" kind="output" name="out1"/>
+            <port annotation="NONE" expr="size" kind="output" name="out2"/>
+        </node>
+        <node id="RGB2Gray_L" kind="actor">
+            <data key="graph_desc">Code/include/stereo.h</data>
+            <loop name="RGB2Gray">
+                <param direction="IN" isConfig="true" name="size" type="Param"/>
+                <param direction="IN" isConfig="false" name="rgb" type="char"/>
+                <param direction="OUT" isConfig="false" name="gray" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size" kind="input" name="rgb"/>
+            <port annotation="NONE" expr="size" kind="output" name="gray"/>
+        </node>
+        <node id="RGB2Gray_R" kind="actor">
+            <data key="graph_desc">Code/include/stereo.h</data>
+            <loop name="RGB2Gray">
+                <param direction="IN" isConfig="true" name="size" type="Param"/>
+                <param direction="IN" isConfig="false" name="rgb" type="char"/>
+                <param direction="OUT" isConfig="false" name="gray" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size" kind="input" name="rgb"/>
+            <port annotation="NONE" expr="size" kind="output" name="gray"/>
+        </node>
+        <node id="Br_grayL" kind="broadcast">
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size" kind="input" name="in"/>
+            <port annotation="NONE" expr="size" kind="output" name="out0"/>
+            <port annotation="NONE" expr="size" kind="output" name="out1"/>
+        </node>
+        <node id="Br_grayR" kind="broadcast">
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size" kind="input" name="in"/>
+            <port annotation="NONE" expr="size" kind="output" name="out0"/>
+            <port annotation="NONE" expr="size" kind="output" name="out1"/>
+        </node>
+        <node id="Census_L" kind="actor">
+            <data key="graph_desc">Code/include/stereo.h</data>
+            <loop name="Census">
+                <param direction="IN" isConfig="true" name="height" type="Param"/>
+                <param direction="IN" isConfig="true" name="width" type="Param"/>
+                <param direction="IN" isConfig="false" name="gray" type="char"/>
+                <param direction="OUT" isConfig="false" name="cen" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="width"/>
+            <port kind="cfg_input" name="height"/>
+            <port annotation="NONE" expr="height*width" kind="input" name="gray"/>
+            <port annotation="NONE" expr="height*width" kind="output" name="cen"/>
+        </node>
+        <node id="Census_R" kind="actor">
+            <data key="graph_desc">Code/include/stereo.h</data>
+            <loop name="Census">
+                <param direction="IN" isConfig="true" name="height" type="Param"/>
+                <param direction="IN" isConfig="true" name="width" type="Param"/>
+                <param direction="IN" isConfig="false" name="gray" type="char"/>
+                <param direction="OUT" isConfig="false" name="cen" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="width"/>
+            <port kind="cfg_input" name="height"/>
+            <port annotation="NONE" expr="height*width" kind="input" name="gray"/>
+            <port annotation="NONE" expr="height*width" kind="output" name="cen"/>
+        </node>
+        <node id="Split" kind="actor">
+            <data key="graph_desc">Code/include/stereo.h</data>
+            <loop name="Split">
+                <param direction="IN" isConfig="true" name="nSlice" type="Param"/>
+                <param direction="IN" isConfig="true" name="sizeFilter" type="Param"/>
+                <param direction="IN" isConfig="true" name="height" type="Param"/>
+                <param direction="IN" isConfig="true" name="width" type="Param"/>
+                <param direction="IN" isConfig="false" name="in" type="char"/>
+                <param direction="OUT" isConfig="false" name="out" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="width"/>
+            <port kind="cfg_input" name="height"/>
+            <port kind="cfg_input" name="nSlice"/>
+            <port kind="cfg_input" name="sizeFilter"/>
+            <port annotation="NONE" expr="height*width" kind="input" name="in"/>
+            <port annotation="NONE"
+                expr="nSlice*(height*width/nSlice+2*sizeFilter*width)"
+                kind="output" name="out"/>
+        </node>
+        <node id="MedianFilter" kind="actor">
+            <data key="graph_desc">Code/include/stereo.h</data>
+            <loop name="MedianFilter">
+                <param direction="IN" isConfig="true" name="height" type="Param"/>
+                <param direction="IN" isConfig="true" name="width" type="Param"/>
+                <param direction="IN" isConfig="true" name="sizeFilter" type="Param"/>
+                <param direction="IN" isConfig="false" name="in" type="char"/>
+                <param direction="OUT" isConfig="false" name="out" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="width"/>
+            <port kind="cfg_input" name="sizeFilter"/>
+            <port kind="cfg_input" name="height"/>
+            <port annotation="NONE" expr="height*width" kind="input" name="in"/>
+            <port annotation="NONE"
+                expr="height*width-2*sizeFilter*width" kind="output" name="out"/>
+        </node>
+        <node id="Display" kind="actor">
+            <data key="graph_desc">Code/include/stereo.h</data>
+            <loop name="Display">
+                <param direction="IN" isConfig="true" name="height" type="Param"/>
+                <param direction="IN" isConfig="true" name="width" type="Param"/>
+                <param direction="IN" isConfig="false" name="rgb" type="char"/>
+                <param direction="IN" isConfig="false" name="depth" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="width"/>
+            <port kind="cfg_input" name="height"/>
+            <port annotation="NONE" expr="height*width" kind="input" name="depth"/>
+            <port annotation="NONE" expr="width*height" kind="input" name="rgb"/>
+        </node>
+        <node id="costParallel" kind="actor">
+            <data key="graph_desc">Algo/costParallelWork.pi</data>
+            <port kind="cfg_input" name="truncValue"/>
+            <port kind="cfg_input" name="scale"/>
+            <port kind="cfg_input" name="nIter"/>
+            <port kind="cfg_input" name="minDisp"/>
+            <port kind="cfg_input" name="maxDisp"/>
+            <port kind="cfg_input" name="width"/>
+            <port kind="cfg_input" name="height"/>
+            <port annotation="NONE" expr="height*width" kind="input" name="cenL"/>
+            <port annotation="NONE" expr="width*height" kind="input" name="rgb"/>
+            <port annotation="NONE" expr="height*width" kind="input" name="grayL"/>
+            <port annotation="NONE" expr="height*width" kind="input" name="cenR"/>
+            <port annotation="NONE" expr="height*width" kind="input" name="grayR"/>
+            <port annotation="NONE" expr="height*width" kind="output" name="rawDisparity"/>
+        </node>
+        <edge kind="fifo" source="RGB2Gray_L" sourceport="gray"
+            target="Br_grayL" targetport="in" type="char"/>
+        <edge kind="fifo" source="RGB2Gray_R" sourceport="gray"
+            target="Br_grayR" targetport="in" type="char"/>
+        <edge kind="fifo" source="Camera" sourceport="rgb_L"
+            target="Br_rgbL" targetport="in" type="rgb"/>
+        <edge kind="fifo" source="Br_rgbL" sourceport="out0"
+            target="RGB2Gray_L" targetport="rgb" type="rgb"/>
+        <edge kind="fifo" source="Br_rgbL" sourceport="out1"
+            target="costParallel" targetport="rgb" type="rgb"/>
+        <edge kind="fifo" source="Br_rgbL" sourceport="out2"
+            target="Display" targetport="rgb" type="rgb"/>
+        <edge kind="fifo" source="costParallel"
+            sourceport="rawDisparity" target="Split" targetport="in" type="char"/>
+        <edge kind="fifo" source="Split" sourceport="out"
+            target="MedianFilter" targetport="in" type="char"/>
+        <edge kind="fifo" source="MedianFilter" sourceport="out"
+            target="Display" targetport="depth" type="char"/>
+        <edge kind="fifo" source="Br_grayL" sourceport="out0"
+            target="Census_L" targetport="gray" type="char"/>
+        <edge kind="fifo" source="Br_grayR" sourceport="out0"
+            target="Census_R" targetport="gray" type="char"/>
+        <edge kind="fifo" source="Br_grayL" sourceport="out1"
+            target="costParallel" targetport="grayL" type="char"/>
+        <edge kind="fifo" source="Br_grayR" sourceport="out1"
+            target="costParallel" targetport="grayR" type="char"/>
+        <edge kind="fifo" source="Census_L" sourceport="cen"
+            target="costParallel" targetport="cenL" type="char"/>
+        <edge kind="fifo" source="Census_R" sourceport="cen"
+            target="costParallel" targetport="cenR" type="char"/>
+        <edge kind="fifo" source="Camera" sourceport="rgb_R"
+            target="RGB2Gray_R" targetport="rgb" type="rgb"/>
+        <edge kind="dependency" source="Config" sourceport="nSlice" target="nSlice"/>
+        <edge kind="dependency" source="Config" sourceport="truncValue" target="truncValue"/>
+        <edge kind="dependency" source="Config" sourceport="scale" target="scale"/>
+        <edge kind="dependency" source="Config" sourceport="nIter" target="nIter"/>
+        <edge kind="dependency" source="Config" sourceport="sizeFilter" target="sizeFilter"/>
+        <edge kind="dependency" source="Config" sourceport="minDisp" target="minDisp"/>
+        <edge kind="dependency" source="Config" sourceport="maxDisp" target="maxDisp"/>
+        <edge kind="dependency" source="Config" sourceport="height" target="height"/>
+        <edge kind="dependency" source="Config" sourceport="width" target="width"/>
+        <edge kind="dependency" source="height" target="size"/>
+        <edge kind="dependency" source="width" target="size"/>
+        <edge kind="dependency" source="height" target="sliceHeight"/>
+        <edge kind="dependency" source="nSlice" target="sliceHeight"/>
+        <edge kind="dependency" source="sizeFilter" target="sliceHeight"/>
+        <edge kind="dependency" source="size" target="Br_rgbL" targetport="size"/>
+        <edge kind="dependency" source="height" target="Camera" targetport="height"/>
+        <edge kind="dependency" source="width" target="Camera" targetport="width"/>
+        <edge kind="dependency" source="size" target="RGB2Gray_L" targetport="size"/>
+        <edge kind="dependency" source="size" target="RGB2Gray_R" targetport="size"/>
+        <edge kind="dependency" source="height" target="Display" targetport="height"/>
+        <edge kind="dependency" source="width" target="Display" targetport="width"/>
+        <edge kind="dependency" source="width" target="MedianFilter" targetport="width"/>
+        <edge kind="dependency" source="sizeFilter"
+            target="MedianFilter" targetport="sizeFilter"/>
+        <edge kind="dependency" source="nSlice" target="Split" targetport="nSlice"/>
+        <edge kind="dependency" source="sizeFilter" target="Split" targetport="sizeFilter"/>
+        <edge kind="dependency" source="height" target="Split" targetport="height"/>
+        <edge kind="dependency" source="width" target="Split" targetport="width"/>
+        <edge kind="dependency" source="height" target="Census_L" targetport="height"/>
+        <edge kind="dependency" source="width" target="Census_L" targetport="width"/>
+        <edge kind="dependency" source="height" target="Census_R" targetport="height"/>
+        <edge kind="dependency" source="width" target="Census_R" targetport="width"/>
+        <edge kind="dependency" source="size" target="Br_grayL" targetport="size"/>
+        <edge kind="dependency" source="size" target="Br_grayR" targetport="size"/>
+        <edge kind="dependency" source="sliceHeight"
+            target="MedianFilter" targetport="height"/>
+        <edge kind="dependency" source="width" target="costParallel" targetport="width"/>
+        <edge kind="dependency" source="height" target="costParallel" targetport="height"/>
+        <edge kind="dependency" source="minDisp" target="costParallel" targetport="minDisp"/>
+        <edge kind="dependency" source="maxDisp" target="costParallel" targetport="maxDisp"/>
+        <edge kind="dependency" source="nIter" target="costParallel" targetport="nIter"/>
+        <edge kind="dependency" source="truncValue"
+            target="costParallel" targetport="truncValue"/>
+        <edge kind="dependency" source="scale" target="costParallel" targetport="scale"/>
+    </graph>
+</graphml>

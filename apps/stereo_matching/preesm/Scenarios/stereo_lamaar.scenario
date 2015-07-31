@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+    <files>
+        <algorithm url="/stereo_matching/Algo/stereo.pi"/>
+        <architecture url="/stereo_matching/Archi/lamaar.slam"/>
+        <codegenDirectory url="/stereo_matching/Code/generated"/>
+    </files>
+    <constraints excelUrl="">
+        <constraintGroup>
+            <operator name="DSP0"/>
+            <task name="stereo/Display"/>
+            <task name="stereo/costParallel/rgbL"/>
+            <task name="stereo/MedianFilter"/>
+            <task name="stereo/costParallel/Br_Ixs"/>
+            <task name="stereo/Br_rgbL"/>
+            <task name="stereo/Config"/>
+            <task name="stereo/costParallel/grayL"/>
+            <task name="stereo/costParallel/cenR"/>
+            <task name="stereo/costParallel/DisparityGen"/>
+            <task name="stereo/costParallel/cenL"/>
+            <task name="stereo/costParallel"/>
+            <task name="stereo/costParallel/Br_DispIxs"/>
+            <task name="stereo/costParallel/rawDisparity"/>
+            <task name="stereo/costParallel/grayR"/>
+            <task name="stereo/Br_grayL"/>
+            <task name="stereo/RGB2Gray_R"/>
+            <task name="stereo/costParallel/AggregateCost"/>
+            <task name="stereo/Split"/>
+            <task name="stereo/Br_grayR"/>
+            <task name="stereo/costParallel/Br_VWeights"/>
+            <task name="stereo/costParallel/CostConstruction"/>
+            <task name="stereo/costParallel/Br_disp"/>
+            <task name="stereo/Census_R"/>
+            <task name="stereo/Census_L"/>
+            <task name="stereo/Camera"/>
+            <task name="stereo/costParallel/HWeights"/>
+            <task name="stereo/costParallel/GenIx"/>
+            <task name="stereo"/>
+            <task name="stereo/costParallel/Br_rgbL"/>
+            <task name="stereo/costParallel/VWeights"/>
+            <task name="stereo/costParallel/Br_HWeights"/>
+            <task name="stereo/costParallel/DisparitySelect"/>
+            <task name="stereo/RGB2Gray_L"/>
+        </constraintGroup>
+        <constraintGroup>
+            <operator name="ARM0"/>
+            <task name="stereo/Display"/>
+            <task name="stereo/costParallel/rgbL"/>
+            <task name="stereo/MedianFilter"/>
+            <task name="stereo/costParallel/Br_Ixs"/>
+            <task name="stereo/Br_rgbL"/>
+            <task name="stereo/Config"/>
+            <task name="stereo/costParallel/grayL"/>
+            <task name="stereo/costParallel/cenR"/>
+            <task name="stereo/costParallel/DisparityGen"/>
+            <task name="stereo/costParallel/cenL"/>
+            <task name="stereo/costParallel"/>
+            <task name="stereo/costParallel/Br_DispIxs"/>
+            <task name="stereo/costParallel/rawDisparity"/>
+            <task name="stereo/costParallel/grayR"/>
+            <task name="stereo/Br_grayL"/>
+            <task name="stereo/RGB2Gray_R"/>
+            <task name="stereo/costParallel/AggregateCost"/>
+            <task name="stereo/Split"/>
+            <task name="stereo/Br_grayR"/>
+            <task name="stereo/costParallel/Br_VWeights"/>
+            <task name="stereo/costParallel/CostConstruction"/>
+            <task name="stereo/costParallel/Br_disp"/>
+            <task name="stereo/Census_R"/>
+            <task name="stereo/Census_L"/>
+            <task name="stereo/Camera"/>
+            <task name="stereo/costParallel/HWeights"/>
+            <task name="stereo/costParallel/GenIx"/>
+            <task name="stereo"/>
+            <task name="stereo/costParallel/Br_rgbL"/>
+            <task name="stereo/costParallel/VWeights"/>
+            <task name="stereo/costParallel/Br_HWeights"/>
+            <task name="stereo/costParallel/DisparitySelect"/>
+            <task name="stereo/RGB2Gray_L"/>
+        </constraintGroup>
+        <constraintGroup>
+            <operator name="DSP3"/>
+            <task name="stereo/Display"/>
+            <task name="stereo/costParallel/rgbL"/>
+            <task name="stereo/MedianFilter"/>
+            <task name="stereo/costParallel/Br_Ixs"/>
+            <task name="stereo/Br_rgbL"/>
+            <task name="stereo/Config"/>
+            <task name="stereo/costParallel/grayL"/>
+            <task name="stereo/costParallel/cenR"/>
+            <task name="stereo/costParallel/DisparityGen"/>
+            <task name="stereo/costParallel/cenL"/>
+            <task name="stereo/costParallel"/>
+            <task name="stereo/costParallel/Br_DispIxs"/>
+            <task name="stereo/costParallel/rawDisparity"/>
+            <task name="stereo/costParallel/grayR"/>
+            <task name="stereo/Br_grayL"/>
+            <task name="stereo/RGB2Gray_R"/>
+            <task name="stereo/costParallel/AggregateCost"/>
+            <task name="stereo/Split"/>
+            <task name="stereo/Br_grayR"/>
+            <task name="stereo/costParallel/Br_VWeights"/>
+            <task name="stereo/costParallel/CostConstruction"/>
+            <task name="stereo/costParallel/Br_disp"/>
+            <task name="stereo/Census_R"/>
+            <task name="stereo/Census_L"/>
+            <task name="stereo/Camera"/>
+            <task name="stereo/costParallel/HWeights"/>
+            <task name="stereo/costParallel/GenIx"/>
+            <task name="stereo"/>
+            <task name="stereo/costParallel/Br_rgbL"/>
+            <task name="stereo/costParallel/VWeights"/>
+            <task name="stereo/costParallel/Br_HWeights"/>
+            <task name="stereo/costParallel/DisparitySelect"/>
+            <task name="stereo/RGB2Gray_L"/>
+        </constraintGroup>
+        <constraintGroup>
+            <operator name="DSP2"/>
+            <task name="stereo/Display"/>
+            <task name="stereo/costParallel/rgbL"/>
+            <task name="stereo/MedianFilter"/>
+            <task name="stereo/costParallel/Br_Ixs"/>
+            <task name="stereo/Br_rgbL"/>
+            <task name="stereo/Config"/>
+            <task name="stereo/costParallel/grayL"/>
+            <task name="stereo/costParallel/cenR"/>
+            <task name="stereo/costParallel/DisparityGen"/>
+            <task name="stereo/costParallel/cenL"/>
+            <task name="stereo/costParallel"/>
+            <task name="stereo/costParallel/Br_DispIxs"/>
+            <task name="stereo/costParallel/rawDisparity"/>
+            <task name="stereo/costParallel/grayR"/>
+            <task name="stereo/Br_grayL"/>
+            <task name="stereo/RGB2Gray_R"/>
+            <task name="stereo/costParallel/AggregateCost"/>
+            <task name="stereo/Split"/>
+            <task name="stereo/Br_grayR"/>
+            <task name="stereo/costParallel/Br_VWeights"/>
+            <task name="stereo/costParallel/CostConstruction"/>
+            <task name="stereo/costParallel/Br_disp"/>
+            <task name="stereo/Census_R"/>
+            <task name="stereo/Census_L"/>
+            <task name="stereo/Camera"/>
+            <task name="stereo/costParallel/HWeights"/>
+            <task name="stereo/costParallel/GenIx"/>
+            <task name="stereo"/>
+            <task name="stereo/costParallel/Br_rgbL"/>
+            <task name="stereo/costParallel/VWeights"/>
+            <task name="stereo/costParallel/Br_HWeights"/>
+            <task name="stereo/costParallel/DisparitySelect"/>
+            <task name="stereo/RGB2Gray_L"/>
+        </constraintGroup>
+        <constraintGroup>
+            <operator name="DSP1"/>
+            <task name="stereo/Display"/>
+            <task name="stereo/costParallel/rgbL"/>
+            <task name="stereo/MedianFilter"/>
+            <task name="stereo/costParallel/Br_Ixs"/>
+            <task name="stereo/Br_rgbL"/>
+            <task name="stereo/Config"/>
+            <task name="stereo/costParallel/grayL"/>
+            <task name="stereo/costParallel/cenR"/>
+            <task name="stereo/costParallel/DisparityGen"/>
+            <task name="stereo/costParallel/cenL"/>
+            <task name="stereo/costParallel"/>
+            <task name="stereo/costParallel/Br_DispIxs"/>
+            <task name="stereo/costParallel/rawDisparity"/>
+            <task name="stereo/costParallel/grayR"/>
+            <task name="stereo/Br_grayL"/>
+            <task name="stereo/RGB2Gray_R"/>
+            <task name="stereo/costParallel/AggregateCost"/>
+            <task name="stereo/Split"/>
+            <task name="stereo/Br_grayR"/>
+            <task name="stereo/costParallel/Br_VWeights"/>
+            <task name="stereo/costParallel/CostConstruction"/>
+            <task name="stereo/costParallel/Br_disp"/>
+            <task name="stereo/Census_R"/>
+            <task name="stereo/Census_L"/>
+            <task name="stereo/Camera"/>
+            <task name="stereo/costParallel/HWeights"/>
+            <task name="stereo/costParallel/GenIx"/>
+            <task name="stereo"/>
+            <task name="stereo/costParallel/Br_rgbL"/>
+            <task name="stereo/costParallel/VWeights"/>
+            <task name="stereo/costParallel/Br_HWeights"/>
+            <task name="stereo/costParallel/DisparitySelect"/>
+            <task name="stereo/RGB2Gray_L"/>
+        </constraintGroup>
+        <constraintGroup>
+            <operator name="ARM1"/>
+            <task name="stereo/Display"/>
+            <task name="stereo/costParallel/rgbL"/>
+            <task name="stereo/MedianFilter"/>
+            <task name="stereo/costParallel/Br_Ixs"/>
+            <task name="stereo/Br_rgbL"/>
+            <task name="stereo/Config"/>
+            <task name="stereo/costParallel/grayL"/>
+            <task name="stereo/costParallel/cenR"/>
+            <task name="stereo/costParallel/DisparityGen"/>
+            <task name="stereo/costParallel/cenL"/>
+            <task name="stereo/costParallel"/>
+            <task name="stereo/costParallel/Br_DispIxs"/>
+            <task name="stereo/costParallel/rawDisparity"/>
+            <task name="stereo/costParallel/grayR"/>
+            <task name="stereo/Br_grayL"/>
+            <task name="stereo/RGB2Gray_R"/>
+            <task name="stereo/costParallel/AggregateCost"/>
+            <task name="stereo/Split"/>
+            <task name="stereo/Br_grayR"/>
+            <task name="stereo/costParallel/Br_VWeights"/>
+            <task name="stereo/costParallel/CostConstruction"/>
+            <task name="stereo/costParallel/Br_disp"/>
+            <task name="stereo/Census_R"/>
+            <task name="stereo/Census_L"/>
+            <task name="stereo/Camera"/>
+            <task name="stereo/costParallel/HWeights"/>
+            <task name="stereo/costParallel/GenIx"/>
+            <task name="stereo"/>
+            <task name="stereo/costParallel/Br_rgbL"/>
+            <task name="stereo/costParallel/VWeights"/>
+            <task name="stereo/costParallel/Br_HWeights"/>
+            <task name="stereo/costParallel/DisparitySelect"/>
+            <task name="stereo/RGB2Gray_L"/>
+        </constraintGroup>
+    </constraints>
+    <relativeconstraints excelUrl=""/>
+    <timings excelUrl="">
+        <memcpyspeed opname="C6X" setuptime="1" timeperunit="1.0"/>
+        <memcpyspeed opname="ARM" setuptime="1" timeperunit="1.0"/>
+    </timings>
+    <simuParams>
+        <mainCore>ARM0</mainCore>
+        <mainComNode>shared_mem</mainComNode>
+        <averageDataSize>1000</averageDataSize>
+        <dataTypes>
+            <dataType name="char" size="1"/>
+            <dataType name="rgb" size="3"/>
+        </dataTypes>
+        <specialVertexOperators>
+            <specialVertexOperator path="DSP1"/>
+            <specialVertexOperator path="DSP2"/>
+            <specialVertexOperator path="DSP3"/>
+            <specialVertexOperator path="ARM0"/>
+            <specialVertexOperator path="ARM1"/>
+            <specialVertexOperator path="DSP0"/>
+        </specialVertexOperators>
+        <numberOfTopExecutions>1</numberOfTopExecutions>
+    </simuParams>
+    <variables excelUrl=""/>
+    <parameterValues>
+        <parameter name="minDisp" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="maxDisp" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="sizeFilter" parent="stereo"
+            type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="width" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="nIter" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="height" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="truncValue" parent="stereo"
+            type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="scale" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="nSlice" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
+    </parameterValues>
+</scenario>

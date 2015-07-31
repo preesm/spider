@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+    <key attr.name="parameters" for="graph" id="parameters"/>
+    <key attr.name="variables" for="graph" id="variables"/>
+    <key attr.name="arguments" for="node" id="arguments"/>
+    <key attr.name="name" attr.type="string" for="graph"/>
+    <key attr.name="graph_desc" attr.type="string" for="node"/>
+    <key attr.name="delay" attr.type="string" for="edge"/>
+    <graph edgedefault="directed">
+        <data key="name">DisparityComp</data>
+        <node id="height" kind="cfg_in_iface"/>
+        <node id="width" kind="cfg_in_iface"/>
+        <node id="nIter" kind="cfg_in_iface"/>
+        <node id="scale" kind="cfg_in_iface"/>
+        <node id="minDisp" kind="cfg_in_iface"/>
+        <node id="maxDisp" kind="cfg_in_iface"/>
+        <node expr="height*width" id="size" kind="param"/>
+        <node expr="maxDisp-minDisp+1" id="nDisp" kind="param"/>
+        <node id="AggregateCost" kind="actor">
+            <data key="graph_desc">Code/include/stereo.h</data>
+            <loop name="AggregateCost">
+                <param direction="IN" isConfig="true" name="height" type="Param"/>
+                <param direction="IN" isConfig="true" name="width" type="Param"/>
+                <param direction="IN" isConfig="true" name="nIter" type="Param"/>
+                <param direction="IN" isConfig="false" name="offsets" type="char"/>
+                <param direction="IN" isConfig="false" name="vWeights" type="char"/>
+                <param direction="IN" isConfig="false" name="hWeights" type="char"/>
+                <param direction="IN" isConfig="false" name="cost" type="char"/>
+                <param direction="OUT" isConfig="false" name="disp" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="height"/>
+            <port kind="cfg_input" name="width"/>
+            <port kind="cfg_input" name="nIter"/>
+            <port annotation="NONE" expr="width*height" kind="input" name="cost"/>
+            <port annotation="NONE" expr="height*width*nIter"
+                kind="input" name="hWeights"/>
+            <port annotation="NONE" expr="nIter" kind="input" name="offsets"/>
+            <port annotation="NONE" expr="height*width*nIter"
+                kind="input" name="vWeights"/>
+            <port annotation="NONE" expr="width*height" kind="output" name="disp"/>
+        </node>
+        <node id="DisparitySelect" kind="actor">
+            <data key="graph_desc">Code/include/stereo.h</data>
+            <loop name="DisparitySelect">
+                <param direction="IN" isConfig="true" name="height" type="Param"/>
+                <param direction="IN" isConfig="true" name="width" type="Param"/>
+                <param direction="IN" isConfig="true" name="scale" type="Param"/>
+                <param direction="IN" isConfig="true" name="minDisp" type="Param"/>
+                <param direction="IN" isConfig="true" name="maxDisp" type="Param"/>
+                <param direction="IN" isConfig="false" name="dispVal" type="char"/>
+                <param direction="IN" isConfig="false" name="dispIx" type="char"/>
+                <param direction="IN" isConfig="false" name="curDisp" type="char"/>
+                <param direction="IN" isConfig="false" name="curCost" type="char"/>
+                <param direction="OUT" isConfig="false" name="disp" type="char"/>
+                <param direction="OUT" isConfig="false" name="cost" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="height"/>
+            <port kind="cfg_input" name="width"/>
+            <port kind="cfg_input" name="scale"/>
+            <port kind="cfg_input" name="minDisp"/>
+            <port kind="cfg_input" name="maxDisp"/>
+            <port annotation="NONE" expr="width*height" kind="input" name="dispVal"/>
+            <port annotation="NONE" expr="1" kind="input" name="dispIx"/>
+            <port annotation="NONE" expr="width*height" kind="input" name="curDisp"/>
+            <port annotation="NONE" expr="width*height+1" kind="input" name="curCost"/>
+            <port annotation="NONE" expr="height*width" kind="output" name="disp"/>
+            <port annotation="NONE" expr="width*height+1" kind="output" name="cost"/>
+        </node>
+        <node id="Br_Disp" kind="broadcast">
+            <port kind="cfg_input" name="size"/>
+            <port annotation="NONE" expr="size" kind="input" name="in"/>
+            <port annotation="NONE" expr="size" kind="output" name="out0"/>
+            <port annotation="NONE" expr="size" kind="output" name="out1"/>
+        </node>
+        <node id="rawDisparity" kind="snk">
+            <port annotation="NONE" expr="size" kind="input" name="rawDisparity"/>
+        </node>
+        <node id="offsets" kind="src">
+            <port annotation="NONE" expr="nIter" kind="output" name="offsets"/>
+        </node>
+        <node id="vWeights" kind="src">
+            <port annotation="NONE" expr="size*nIter" kind="output" name="vWeights"/>
+        </node>
+        <node id="hWeights" kind="src">
+            <port annotation="NONE" expr="size*nIter" kind="output" name="hWeights"/>
+        </node>
+        <node id="dispIx" kind="src">
+            <port annotation="NONE" expr="nDisp" kind="output" name="dispIx"/>
+        </node>
+        <node id="cost" kind="src">
+            <port annotation="NONE" expr="size*nDisp" kind="output" name="cost"/>
+        </node>
+        <edge expr="size+1" kind="fifo" source="DisparitySelect"
+            sourceport="cost" target="DisparitySelect"
+            targetport="curCost" type="char">
+            <data key="delay"/>
+        </edge>
+        <edge kind="fifo" source="DisparitySelect" sourceport="disp"
+            target="Br_Disp" targetport="in" type="char"/>
+        <edge kind="fifo" source="Br_Disp" sourceport="out0"
+            target="rawDisparity" targetport="rawDisparity" type="char"/>
+        <edge expr="size" kind="fifo" source="Br_Disp" sourceport="out1"
+            target="DisparitySelect" targetport="curDisp" type="char">
+            <data key="delay"/>
+        </edge>
+        <edge kind="fifo" source="offsets" sourceport="offsets"
+            target="AggregateCost" targetport="offsets" type="char"/>
+        <edge kind="fifo" source="vWeights" sourceport="vWeights"
+            target="AggregateCost" targetport="vWeights" type="char"/>
+        <edge kind="fifo" source="hWeights" sourceport="hWeights"
+            target="AggregateCost" targetport="hWeights" type="char"/>
+        <edge kind="fifo" source="dispIx" sourceport="dispIx"
+            target="DisparitySelect" targetport="dispIx" type="char"/>
+        <edge kind="fifo" source="cost" sourceport="cost"
+            target="AggregateCost" targetport="cost" type="char"/>
+        <edge kind="fifo" source="AggregateCost" sourceport="disp"
+            target="DisparitySelect" targetport="dispVal" type="char"/>
+        <edge kind="dependency" source="height" target="AggregateCost" targetport="height"/>
+        <edge kind="dependency" source="width" target="AggregateCost" targetport="width"/>
+        <edge kind="dependency" source="nIter" target="AggregateCost" targetport="nIter"/>
+        <edge kind="dependency" source="scale" target="DisparitySelect" targetport="scale"/>
+        <edge kind="dependency" source="height" target="DisparitySelect" targetport="height"/>
+        <edge kind="dependency" source="width" target="DisparitySelect" targetport="width"/>
+        <edge kind="dependency" source="minDisp"
+            target="DisparitySelect" targetport="minDisp"/>
+        <edge kind="dependency" source="maxDisp"
+            target="DisparitySelect" targetport="maxDisp"/>
+        <edge kind="dependency" source="height" target="size"/>
+        <edge kind="dependency" source="width" target="size"/>
+        <edge kind="dependency" source="size" target="DisparitySelect.cost-DisparitySelect.curCost"/>
+        <edge kind="dependency" source="size" target="Br_Disp.out1-DisparitySelect.curDisp"/>
+        <edge kind="dependency" source="size" target="rawDisparity"/>
+        <edge kind="dependency" source="size" target="vWeights"/>
+        <edge kind="dependency" source="size" target="hWeights"/>
+        <edge kind="dependency" source="nIter" target="vWeights"/>
+        <edge kind="dependency" source="nIter" target="hWeights"/>
+        <edge kind="dependency" source="size" target="cost"/>
+        <edge kind="dependency" source="maxDisp" target="nDisp"/>
+        <edge kind="dependency" source="minDisp" target="nDisp"/>
+        <edge kind="dependency" source="nDisp" target="dispIx"/>
+        <edge kind="dependency" source="nDisp" target="offsets"/>
+        <edge kind="dependency" source="nIter" target="offsets"/>
+        <edge kind="dependency" source="size" target="Br_Disp" targetport="size"/>
+        <edge kind="dependency" source="nDisp" target="cost"/>
+    </graph>
+</graphml>

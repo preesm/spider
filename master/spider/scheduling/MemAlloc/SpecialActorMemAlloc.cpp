@@ -53,6 +53,42 @@ static inline int getAlignSize(int size){
 }
 
 void SpecialActorMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
+	/** Look for Broadcast **/
+		for(int i=0; i<listOfVertices->getNb(); i++){
+			SRDAGVertex* br = listOfVertices->operator [](i);
+			if(br->getState() == SRDAG_EXEC
+					&& br->getType() == SRDAG_BROADCAST){
+
+				if(br->getInEdge(0)->getAlloc() == -1){
+					/** Not allocated at all Broadcast */
+					SRDAGEdge* inEdge = br->getInEdge(0);
+					int fifoIx = nbFifos_++;
+					int size = inEdge->getRate();
+					size = getAlignSize(size);
+					if(currentMem_+size > memStart_ + memSize_)
+						throw "Not Enough Shared Memory\n";
+					inEdge->setAlloc(currentMem_);
+					inEdge->setAllocIx(fifoIx);
+					inEdge->setNToken(br->getNConnectedOutEdge());
+					currentMem_ += size;
+
+					for(int j=0; j<br->getNConnectedOutEdge(); j++){
+						SRDAGEdge* outEdge = br->getOutEdge(j);
+
+						int alloc = br->getInEdge(0)->getAlloc();
+
+						if(outEdge->getAlloc() != -1)
+							throw "Overwrite MemAlloc\n";
+
+						outEdge->setAlloc(alloc);
+						outEdge->setAllocIx(fifoIx);
+					}
+
+					br->setState(SRDAG_RUN);
+				}
+			}
+		}
+
 	/** Look for Fork **/
 	for(int i=0; i<listOfVertices->getNb(); i++){
 		SRDAGVertex* fork = listOfVertices->operator [](i);
@@ -77,6 +113,10 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
 					SRDAGEdge* outEdge = fork->getOutEdge(j);
 
 					int alloc = fork->getInEdge(0)->getAlloc()+offset;
+
+					if(outEdge->getAlloc() != -1)
+						throw "Overwrite MemAlloc\n";
+
 					outEdge->setAlloc(alloc);
 					outEdge->setAllocIx(fifoIx);
 

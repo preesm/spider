@@ -190,18 +190,29 @@ static char* regenerateColor(int refInd){
 	return color;
 }
 
-static inline void printGrantt_SRDAGVertex(int file, Archi* archi, SRDAGVertex* vertex, Time start, Time end, int lrtIx){
+static inline void printGrantt_SRDAGVertex(int ganttFile, int latexFile, Archi* archi, SRDAGVertex* vertex, Time start, Time end, int lrtIx){
 	char name[100];
 	static int i=0;
 	vertex->toString(name, 100);
 
-	Platform::get()->fprintf(file, "\t<event\n");
-	Platform::get()->fprintf(file, "\t\tstart=\"%u\"\n", 	start);
-	Platform::get()->fprintf(file, "\t\tend=\"%u\"\n",		end);
-	Platform::get()->fprintf(file, "\t\ttitle=\"%s\"\n", 	name);
-	Platform::get()->fprintf(file, "\t\tmapping=\"%s\"\n", 	archi->getPEName(lrtIx));
-	Platform::get()->fprintf(file, "\t\tcolor=\"%s\"\n", regenerateColor(i++));
-	Platform::get()->fprintf(file, "\t\t>Step_%d.</event>\n", name);
+	Platform::get()->fprintf(ganttFile, "\t<event\n");
+	Platform::get()->fprintf(ganttFile, "\t\tstart=\"%u\"\n", 	start);
+	Platform::get()->fprintf(ganttFile, "\t\tend=\"%u\"\n",		end);
+	Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n", 	name);
+	Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", 	archi->getPEName(lrtIx));
+	Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", regenerateColor(i++));
+	Platform::get()->fprintf(ganttFile, "\t\t>Step_%d.</event>\n", name);
+
+	/* Latex File */
+	Platform::get()->fprintf(latexFile, "%d/", start/1000); /* Start */
+	Platform::get()->fprintf(latexFile, "%d/", (end - start)/1000); /* Duration */
+	Platform::get()->fprintf(latexFile, "%d/", lrtIx); /* Core index */
+	Platform::get()->fprintf(latexFile, "%s/", ""); /* name */
+
+	if(vertex->getFctId() != -1)
+		Platform::get()->fprintf(latexFile, "color%d,\n", vertex->getFctId()); /* Color */
+	else
+		Platform::get()->fprintf(latexFile, "color%d,\n", 15); /* Color */
 
 }
 
@@ -215,11 +226,11 @@ static const char* spiderTaskName[5] = {
 
 void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, const char* latexPath, ExecutionStat* stat){
 	int ganttFile = Platform::get()->fopen(ganttPath);
-//	int latexFile = Platform::get()->fopen(latexPath);
+	int latexFile = Platform::get()->fopen(latexPath);
 
 	// Writing header
 	Platform::get()->fprintf(ganttFile, "<data>\n");
-//	Platform::get()->fprintf(latexFile, "<!-- latex\n{");
+	Platform::get()->fprintf(latexFile, "<!-- latex\n{");
 
 
 	// Popping data from Trace queue.
@@ -244,7 +255,9 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 					Time execTime = traceMsg->end - traceMsg->start;
 
 					printGrantt_SRDAGVertex(
-							ganttFile, archi,
+							ganttFile,
+							latexFile,
+							archi,
 							vertex,
 							traceMsg->start,
 							traceMsg->end,
@@ -301,6 +314,7 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 					break;}
 				case TRACE_SPIDER:{
 					static int i=0;
+					/* Gantt File */
 					Platform::get()->fprintf(ganttFile, "\t<event\n");
 					Platform::get()->fprintf(ganttFile, "\t\tstart=\"%u\"\n", 	traceMsg->start);
 					Platform::get()->fprintf(ganttFile, "\t\tend=\"%u\"\n",		traceMsg->end);
@@ -308,6 +322,13 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 					Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi->getPEName(traceMsg->lrtIx));
 					Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", 	regenerateColor(i++));
 					Platform::get()->fprintf(ganttFile, "\t\t>Step_%d.</event>\n", spiderTaskName[traceMsg->spiderTask]);
+
+					/* Latex File */
+					Platform::get()->fprintf(latexFile, "%d/", traceMsg->start/1000); /* Start */
+					Platform::get()->fprintf(latexFile, "%d/", (traceMsg->end - traceMsg->start)/1000); /* Duration */
+					Platform::get()->fprintf(latexFile, "%d/", 0); /* Core index */
+					Platform::get()->fprintf(latexFile, "%s/", ""); /* name */
+					Platform::get()->fprintf(latexFile, "color%d,\n",15); /* Color */
 					break;}
 				default:
 					throw "Unhandled trace msg";
@@ -318,177 +339,10 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 		}
 	}
 	Launcher::get()->rstNLaunched();
-//		platform_fprintf("master\t<event\n");
-//		platform_fprintf("\t\tstart=\"%u\"\n", 	timeStartTaskOrdering[j]);
-//		platform_fprintf("\t\tend=\"%u\"\n",	timeEndTaskOrdering[j]);
-//		platform_fprintf("\t\ttitle=\"TaskOrdering_%d\"\n", j);
-//		platform_fprintf("\t\tmapping=\"Master\"\n");
-//		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
-//		platform_fprintf("\t\t>Step_%d.</event>\n", j);
-//
-//		if(latex){
-//			fprintf(flatex, "%d/", timeStartTaskOrdering[j]/1000 );/*start*/
-//			fprintf(flatex, "%d/", (timeEndTaskOrdering[j] - timeStartTaskOrdering[j])/1000);/*duration*/
-//			fprintf(flatex, "%d/",	 0);/*core index*/
-//			fprintf(flatex, "%s/",   "");/*name*/
-//			fprintf(flatex, "color%d,\n",15); // color taskordering
-//		}
-//		stat->taskOrderingTime += timeEndTaskOrdering[j] - timeStartTaskOrdering[j];
-//	}
-//
-//	UINT32 mappingNb = 0;
-//	stat->mappingTime = 0;
-//	for (UINT32 j=0 ; j<nbStepsMapping; j++){
-//		platform_fprintf("\t<event\n");
-//		platform_fprintf("\t\tstart=\"%u\"\n", 	timeStartMapping[j]);
-//		platform_fprintf("\t\tend=\"%u\"\n",	timeEndMapping[j]);
-//		platform_fprintf("\t\ttitle=\"Mapping_%d\"\n", j);
-//		platform_fprintf("\t\tmapping=\"Master\"\n");
-//		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
-//		platform_fprintf("\t\t>Step_%d.</event>\n", j);
-//
-//		if(latex){
-//			fprintf(flatex, "%d/", timeStartMapping[j]/1000 );/*start*/
-//			fprintf(flatex, "%d/", (timeEndMapping[j] - timeStartMapping[j])/1000);/*duration*/
-//			fprintf(flatex, "%d/",	 0);/*core index*/
-//			fprintf(flatex, "%s/",   "");/*name*/
-//			fprintf(flatex, "color%d,\n",15); // color mapping
-//		}
-//
-//		stat->mappingTime += timeEndMapping[j] - timeStartMapping[j];
-//		mappingNb += actorsByStep[j];
-//	}
-//
-//	if(mappingNb != 0)
-//		printf("Mapped %d tasks in %d cycles (%d cycles/tasks)\n",
-//			mappingNb,
-//			stat->mappingTime,
-//			stat->mappingTime/mappingNb);
-//
-//
-//	stat->graphTransfoTime = 0;
-//	for (UINT32 j=0 ; j<nbStepsGraph; j++){
-//		platform_fprintf("\t<event\n");
-//		platform_fprintf("\t\tstart=\"%u\"\n", 	timeStartGraph[j]);
-//		platform_fprintf("\t\tend=\"%u\"\n",	timeEndGraph[j]);
-//		platform_fprintf("\t\ttitle=\"Graph_%d\"\n", j);
-//		platform_fprintf("\t\tmapping=\"Master\"\n");
-//		platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(j));
-//		platform_fprintf("\t\t>Step_%d.</event>\n", j);
-//
-//		if(latex){
-//			fprintf(flatex, "%d/", timeStartGraph[j]/1000 );/*start*/
-//			fprintf(flatex, "%d/", (timeEndGraph[j] - timeStartGraph[j])/1000);/*duration*/
-//			fprintf(flatex, "%d/",	 0);/*core index*/
-//			fprintf(flatex, "%s/",   "");/*name*/
-//			fprintf(flatex, "color%d,\n",15); // color graphtransfo
-//		}
-//		stat->graphTransfoTime += timeEndGraph[j] - timeStartGraph[j];
-//	}
-//
-//	// Writing execution data for each slave.
-//	for(int slave=0; slave<arch->getNbActiveSlaves(); slave++){
-//		int nbTasks;
-//
-//		if(slave !=0){
-//			SendInfoData::send(slave);
-//			UINT32 msgType = platform_QPopUINT32(slave);
-//			if(msgType != MSG_EXEC_TIMES)
-//				exitWithCode(1068);
-//			nbTasks = platform_QPopUINT32(slave);
-//		}else{
-//			nbTasks = Monitor_getNB();
-//		}
-//
-//		for (int j=0 ; j<nbTasks; j++){
-//			taskTime task;
-//			UINT32 execTime;
-//
-//			if(slave !=0){
-//				platform_QPop(slave, &task, sizeof(taskTime));
-//			}else{
-//				task = Monitor_get(j);
-//			}
-//
-//			execTime = task.end - task.start;
-//
-//			int k;
-//			switch(task.type){
-//			case Normal:
-//			case ConfigureActor:
-//				for(k=0; k<stat->nbActor; k++){
-//					if(stat->actors[k] == task.pisdfVertex){
-//						stat->actorTimes[k] += execTime;
-//						stat->actorIterations[k]++;
-//						break;
-//					}
-//				}
-//				if(k == stat->nbActor){
-//					stat->actors[stat->nbActor] = task.pisdfVertex;
-//					stat->actorTimes[stat->nbActor] = execTime;
-//					stat->actorIterations[k] = 1;
-//					stat->nbActor++;
-//				}
-//
-//	//			if(stat->actors[k]->getFunction_index() == 3){
-//	//				stat->latencies[t.end/PERIOD] = t.end%PERIOD + PERIOD;
-//	//			}
-//				break;
-//			case Broadcast:
-//				stat->broadcastTime += execTime;
-//				break;
-//			case Explode:
-//				stat->explodeTime += execTime;
-//				break;
-//			case Implode:
-//				stat->implodeTime += execTime;
-//				break;
-//			case RoundBuffer:
-//				stat->roundBufferTime += execTime;
-//				break;
-//			case Init:
-//			case End:
-//				break;
-//			}
-//
-//			getVertexName(name, MAX_VERTEX_NAME_SIZE, task);
-//			platform_fprintf("\t<event\n");
-//			platform_fprintf("\t\tstart=\"%lu\"\n", task.start);
-//			platform_fprintf("\t\tend=\"%lu\"\n",	task.end);
-//			platform_fprintf("\t\ttitle=\"%s\"\n", name);
-//			platform_fprintf("\t\tmapping=\"%s\"\n", arch->getSlaveName(slave));
-//			platform_fprintf("\t\tcolor=\"%s\"\n", regenerateColor(task.srdagIx));
-//			platform_fprintf("\t\t>%s.</event>\n", name);
-//
-//			if(latex){
-//				fprintf(flatex, "%d/", task.start/1000 );/*start*/
-//				fprintf(flatex, "%d/", (task.end - task.start)/1000);/*duration*/
-//				fprintf(flatex, "%d/",	 slave);/*core index*/
-//				fprintf(flatex, "%s/",   "");/*name*/
-//
-//				if(task.pisdfVertex != 0 && task.pisdfVertex->getFunction_index() == 7)
-//					fprintf(flatex, "color%d,\n", task.repet); // color Id
-//				else
-//					fprintf(flatex, "color%d,\n", 15); // color Id
-//			}
-//
-//			if(task.start > task.end){
-//				printf("Receive bad time\n");
-//			}
-//			if(stat->globalEndTime < task.end)
-//				stat->globalEndTime = task.end;
-//
-//			if(task.globalIx >= ITER_MAX)
-//				printf("Error : task.globalIx %d > ITER_MAX %d \n", task.globalIx, ITER_MAX);
-//
-//			if(stat->endTime[task.globalIx] < task.end)
-//				stat->endTime[task.globalIx] = task.end;
-//		}
-//	}
 
 	Platform::get()->fprintf(ganttFile, "</data>\n");
 	Platform::get()->fclose(ganttFile);
 
-//	Platform::get()->fprintf(latexFile, "}\nlatex -->\n");
-//	Platform::get()->fclose(latexFile);
+	Platform::get()->fprintf(latexFile, "}\nlatex -->\n");
+	Platform::get()->fclose(latexFile);
 }

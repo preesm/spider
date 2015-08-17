@@ -64,7 +64,7 @@ void Config(
 	*nIter = 5;
 	*scale = 10;
 	*truncValue = 1;
-	*nSlice = 1;
+	*nSlice = 4;
 }
 
 void Camera(Param height, Param width, OUT uint8_t* rgb_L, OUT uint8_t* rgb_R){
@@ -99,34 +99,34 @@ void Split(Param nSlice, Param sizeFilter, Param height, Param width, uint8_t* i
 	printf("Split\n");
 	int i;
 
-	memcpy(out, in, height*width);
+//	memcpy(out, in, height*width);
 
-//
-//	int subHeight = height/nSlice+2;
-//	int sliceSize = subHeight*width;
-//
-//	// Fill first and last line with 0
-//	memset(out,0,width);
-//	// First Slice
-//	memcpy(out+width, in, sliceSize);
-//	// Copy next line if several slice
-//	if (nSlice > 1){
-//		memcpy(out +  width + sliceSize , in + sliceSize, width);
-//	}
-//	// Slice other than first and last
-//	for(i=1; i<nSlice-1; i++){
-//		int destIndex = i*(sliceSize+2*width);
-//		memcpy(out + destIndex, in+i*sliceSize-width, sliceSize+2*width);
-//	}
-//	// Last Slice
-//	i = nSlice-1;
-//	if(nSlice > 1){
-//		// we have i = nbSlice -1;
-//		int destIndex = i*(sliceSize+2*width);
-//		memcpy(out + destIndex, in+i*sliceSize-width, sliceSize+width);
-//	}
-//	// Last line
-//	memset(out + (height+nSlice*2-1)*width,0,width);
+
+	int subHeight = height/nSlice+2;
+	int sliceSize = subHeight*width;
+
+	// Fill first and last line with 0
+	memset(out,0,width);
+	// First Slice
+	memcpy(out+width, in, sliceSize);
+	// Copy next line if several slice
+	if (nSlice > 1){
+		memcpy(out +  width + sliceSize , in + sliceSize, width);
+	}
+	// Slice other than first and last
+	for(i=1; i<nSlice-1; i++){
+		int destIndex = i*(sliceSize+2*width);
+		memcpy(out + destIndex, in+i*sliceSize-width, sliceSize+2*width);
+	}
+	// Last Slice
+	i = nSlice-1;
+	if(nSlice > 1){
+		// we have i = nbSlice -1;
+		int destIndex = i*(sliceSize+2*width);
+		memcpy(out + destIndex, in+i*sliceSize-width, sliceSize+width);
+	}
+	// Last line
+	memset(out + (height+nSlice*2-1)*width,0,width);
 }
 
 static inline void swap(unsigned char *a, unsigned char *b){
@@ -162,28 +162,28 @@ static void quickSort(int startIdx, int endIdx, unsigned char *values){
 void MedianFilter(Param height, Param width, Param sizeFilter, uint8_t* in, OUT uint8_t* out){
 	printf("MedianFilter\n");
 
-	memcpy(out, in, height*width);
-//	int k,l;
-//	// Process pixels one by one
-//	for(int j=0; j<height; j++){
-//		out[j*width] = 0;
-//		for(int i=1;i<width-1;i++){
-//			unsigned char pixels[9];
-//			// output pixel is the median of a 3x3 window
-//			// Get the 9 pixels
-//			int k=0;
-//			for(int y=j-1;y<=j+1;y++){
-//				for(int x=i-1;x<=i+1;x++){
-//					pixels[k++] = in[y*width+x];
-//				}
-//			}
-//
-//			// Sort the 9 values
-//			quickSort(0, 8, pixels);
-//			out[j*width+i] = pixels[9/2];
-//		}
-//		out[j*width+width-1] = 0;
-//	}
+//	memcpy(out, in, height*width);
+	int k,l;
+	// Process pixels one by one
+	for(int j=0; j<height; j++){
+		out[j*width] = 0;
+		for(int i=1;i<width-1;i++){
+			unsigned char pixels[9];
+			// output pixel is the median of a 3x3 window
+			// Get the 9 pixels
+			int k=0;
+			for(int y=j-1;y<=j+1;y++){
+				for(int x=i-1;x<=i+1;x++){
+					pixels[k++] = in[y*width+x];
+				}
+			}
+
+			// Sort the 9 values
+			quickSort(0, 8, pixels);
+			out[j*width+i] = pixels[9/2];
+		}
+		out[j*width+width-1] = 0;
+	}
 }
 
 void Display(Param height, Param width, uint8_t* rgb, uint8_t* depth){

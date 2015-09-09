@@ -131,8 +131,8 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 	bo_FFT_2->isExecutableOnPE(CORE_DSP7);
 	bo_FFT_2->isExecutableOnPE(CORE_DSP5);
 	bo_FFT_2->isExecutableOnPE(CORE_DSP6);
-	bo_FFT_2->isExecutableOnPE(CORE_ARM0);
-	bo_FFT_2->isExecutableOnPE(CORE_ARM1);
+//	bo_FFT_2->isExecutableOnPE(CORE_ARM0);
+//	bo_FFT_2->isExecutableOnPE(CORE_ARM1);
 	bo_FFT_2->setTimingOnType(CORE_TYPE_C6678, "32000", stack);
 	bo_FFT_2->setTimingOnType(CORE_TYPE_CORTEXA15, "17000", stack);
 
@@ -192,8 +192,8 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 	bo_FFT_5->isExecutableOnPE(CORE_DSP7);
 	bo_FFT_5->isExecutableOnPE(CORE_DSP5);
 	bo_FFT_5->isExecutableOnPE(CORE_DSP6);
-	bo_FFT_5->isExecutableOnPE(CORE_ARM0);
-	bo_FFT_5->isExecutableOnPE(CORE_ARM1);
+//	bo_FFT_5->isExecutableOnPE(CORE_ARM0);
+//	bo_FFT_5->isExecutableOnPE(CORE_ARM1);
 	bo_FFT_5->setTimingOnType(CORE_TYPE_C6678, "32000", stack);
 	bo_FFT_5->setTimingOnType(CORE_TYPE_CORTEXA15, "17000", stack);
 

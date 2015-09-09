@@ -52,7 +52,7 @@ int main(int argc, char* argv[]){
 	DynStack archiStack("ArchiStack");
 
 #define SH_MEM 0x00500000
-	PlatformK2Arm platform(2, 4, SH_MEM, &archiStack, daq_fft_fcts, N_FCT_DAQ_FFT);
+	PlatformK2Arm platform(4, 8, SH_MEM, &archiStack, daq_fft_fcts, N_FCT_DAQ_FFT);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]){
 
 			spider_launch(archi, topPisdf);
 
-			spider_printGantt(archi, spider_getLastSRDAG(), "dac_fft_group_fixed.pgantt", "latex.tex", &stat);
+			spider_printGantt(archi, spider_getLastSRDAG(), "dac_fft_group_fixed.pgantt", "dac_fft_group_fixed.tex", &stat);
 			spider_getLastSRDAG()->print("dac_fft_group.gv");
 
 			printf("EndTime = %ld ms\n", stat.globalEndTime/1000000);

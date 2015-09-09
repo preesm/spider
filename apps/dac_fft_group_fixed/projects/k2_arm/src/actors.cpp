@@ -61,7 +61,7 @@ int fftc_send (int fftc_ix, Cplx16* in, Cplx16* out, int fftSize, int numBlocks)
 #endif
 
 #define VERBOSE 0
-#define TEST 1
+#define TEST 0
 
 unsigned char brev[64] = {
     0x0, 0x20, 0x10, 0x30, 0x8, 0x28, 0x18, 0x38,

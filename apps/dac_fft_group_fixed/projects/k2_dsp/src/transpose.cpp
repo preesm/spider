@@ -48,7 +48,7 @@ void transpose(Param Nc, Param Nr, Cplx16* restrict in, Cplx16* restrict out){
 	printf("Execute transpose\n");
 #endif
 
-	int res = edma_cpy(
+	int res = edma_transpose(
 		in, out,
 		/*ACnt: element size*/ 			4,
 		/*BCnt: line size*/ 			256,

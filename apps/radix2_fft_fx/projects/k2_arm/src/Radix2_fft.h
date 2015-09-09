@@ -45,12 +45,18 @@
 extern lrtFct radix2_fft_fcts[N_FCT_RADIX2_FFT];
 
 typedef enum{
-	CORE_ARM1 = 5,
-	CORE_ARM0 = 4,
 	CORE_DSP0 = 0,
-	CORE_DSP3 = 3,
 	CORE_DSP1 = 1,
 	CORE_DSP2 = 2,
+	CORE_DSP3 = 3,
+	CORE_DSP4 = 4,
+	CORE_DSP5 = 5,
+	CORE_DSP6 = 6,
+	CORE_DSP7 = 7,
+	CORE_ARM0 = 8,
+	CORE_ARM1 = 9,
+	CORE_ARM2 = 10,
+	CORE_ARM3 = 11,
 } PE;
 
 typedef enum{

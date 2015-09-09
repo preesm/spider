@@ -124,7 +124,7 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.release.398726805." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.release.1407509639" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.release">
 							<option id="cdt.managedbuild.option.gnu.cross.prefix.1528426775" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" value="arm-linux-gnueabihf-" valueType="string"/>
-							<option id="cdt.managedbuild.option.gnu.cross.path.700446468" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/home/jheulot/k2h_linux/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin" valueType="string"/>
+							<option id="cdt.managedbuild.option.gnu.cross.path.700446468" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/home/jheulot/k2h_3_1_1_4/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.143893020" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
 							<builder buildPath="${workspace_loc:/radix2_fft_sp_k2_arm/Release}" id="cdt.managedbuild.builder.gnu.cross.1319281617" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool command="gcc" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cross.c.compiler.1545081629" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">

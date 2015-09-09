@@ -58,7 +58,7 @@
 #include <LinuxSpiderCommunicator.h>
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
-#define SHARED_MEM_KEY		8452
+#define SHARED_MEM_KEY		8452 //0x2104
 
 #define MAX_MSG_SIZE 10*1024
 #define NFIFOS 32*1024

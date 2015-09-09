@@ -54,7 +54,7 @@ int main(int argc, char* argv[]){
 	DynStack archiStack("ArchiStack");
 
 #define SH_MEM 0x00500000
-	PlatformK2Arm platform(2, 4, SH_MEM, &archiStack, radix2_fft_fcts, N_FCT_RADIX2_FFT);
+	PlatformK2Arm platform(4, 8, SH_MEM, &archiStack, radix2_fft_fcts, N_FCT_RADIX2_FFT);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
@@ -103,7 +103,7 @@ int main(int argc, char* argv[]){
 			printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
 		printf("\n");
 
-		printf("Actors:\n");
+		printf("%d Actors:\n", stat.nbActor);
 		for(int j=0; j<stat.nbActor; j++){
 			printf("\t%12s:", stat.actors[j]->getName());
 			for(int k=0; k<archi->getNPETypes(); k++)

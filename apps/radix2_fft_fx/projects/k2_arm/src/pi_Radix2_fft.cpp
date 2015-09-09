@@ -94,8 +94,10 @@ PiSDFGraph* Radix2_fft(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_src->addInParam(0, param_fftSize);
-	bo_src->isExecutableOnPE(CORE_ARM1);
 	bo_src->isExecutableOnPE(CORE_ARM0);
+	bo_src->isExecutableOnPE(CORE_ARM1);
+	bo_src->isExecutableOnPE(CORE_ARM2);
+	bo_src->isExecutableOnPE(CORE_ARM3);
 	bo_src->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	bo_src->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
@@ -107,12 +109,18 @@ PiSDFGraph* Radix2_fft(Archi* archi, Stack* stack){
 		/*InParam*/ 2);
 	bo_T->addInParam(0, param_N1);
 	bo_T->addInParam(1, param_N2);
-	bo_T->isExecutableOnPE(CORE_ARM1);
 	bo_T->isExecutableOnPE(CORE_ARM0);
+	bo_T->isExecutableOnPE(CORE_ARM1);
+	bo_T->isExecutableOnPE(CORE_ARM2);
+	bo_T->isExecutableOnPE(CORE_ARM3);
 	bo_T->isExecutableOnPE(CORE_DSP0);
-	bo_T->isExecutableOnPE(CORE_DSP3);
 	bo_T->isExecutableOnPE(CORE_DSP1);
 	bo_T->isExecutableOnPE(CORE_DSP2);
+	bo_T->isExecutableOnPE(CORE_DSP3);
+	bo_T->isExecutableOnPE(CORE_DSP4);
+	bo_T->isExecutableOnPE(CORE_DSP5);
+	bo_T->isExecutableOnPE(CORE_DSP6);
+	bo_T->isExecutableOnPE(CORE_DSP7);
 	bo_T->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	bo_T->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
@@ -124,12 +132,18 @@ PiSDFGraph* Radix2_fft(Archi* archi, Stack* stack){
 		/*InParam*/ 2);
 	bo_DFT_N2->addInParam(0, param_N2);
 	bo_DFT_N2->addInParam(1, param_n2);
-	bo_DFT_N2->isExecutableOnPE(CORE_ARM1);
-	bo_DFT_N2->isExecutableOnPE(CORE_ARM0);
+//	bo_DFT_N2->isExecutableOnPE(CORE_ARM0);
+//	bo_DFT_N2->isExecutableOnPE(CORE_ARM1);
+//	bo_DFT_N2->isExecutableOnPE(CORE_ARM2);
+//	bo_DFT_N2->isExecutableOnPE(CORE_ARM3);
 	bo_DFT_N2->isExecutableOnPE(CORE_DSP0);
-	bo_DFT_N2->isExecutableOnPE(CORE_DSP3);
 	bo_DFT_N2->isExecutableOnPE(CORE_DSP1);
 	bo_DFT_N2->isExecutableOnPE(CORE_DSP2);
+	bo_DFT_N2->isExecutableOnPE(CORE_DSP3);
+	bo_DFT_N2->isExecutableOnPE(CORE_DSP4);
+	bo_DFT_N2->isExecutableOnPE(CORE_DSP5);
+	bo_DFT_N2->isExecutableOnPE(CORE_DSP6);
+	bo_DFT_N2->isExecutableOnPE(CORE_DSP7);
 	bo_DFT_N2->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	bo_DFT_N2->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
@@ -140,8 +154,10 @@ PiSDFGraph* Radix2_fft(Archi* archi, Stack* stack){
 		/*OutData*/ 0,
 		/*InParam*/ 1);
 	bo_snk->addInParam(0, param_fftSize);
-	bo_snk->isExecutableOnPE(CORE_ARM1);
 	bo_snk->isExecutableOnPE(CORE_ARM0);
+	bo_snk->isExecutableOnPE(CORE_ARM1);
+	bo_snk->isExecutableOnPE(CORE_ARM2);
+	bo_snk->isExecutableOnPE(CORE_ARM3);
 	bo_snk->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	bo_snk->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
@@ -241,8 +257,10 @@ PiSDFGraph* DFT_Radix2(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_genIx->addInParam(0, param_P);
-	bo_genIx->isExecutableOnPE(CORE_ARM1);
 	bo_genIx->isExecutableOnPE(CORE_ARM0);
+	bo_genIx->isExecutableOnPE(CORE_ARM1);
+	bo_genIx->isExecutableOnPE(CORE_ARM2);
+	bo_genIx->isExecutableOnPE(CORE_ARM3);
 	bo_genIx->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	bo_genIx->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
@@ -314,9 +332,13 @@ PiSDFGraph* Radix2_Stage(Archi* archi, Stack* stack){
 //	bo_DFT_2->isExecutableOnPE(CORE_ARM1);
 //	bo_DFT_2->isExecutableOnPE(CORE_ARM0);
 	bo_DFT_2->isExecutableOnPE(CORE_DSP0);
-	bo_DFT_2->isExecutableOnPE(CORE_DSP3);
 	bo_DFT_2->isExecutableOnPE(CORE_DSP1);
 	bo_DFT_2->isExecutableOnPE(CORE_DSP2);
+	bo_DFT_2->isExecutableOnPE(CORE_DSP3);
+	bo_DFT_2->isExecutableOnPE(CORE_DSP4);
+	bo_DFT_2->isExecutableOnPE(CORE_DSP5);
+	bo_DFT_2->isExecutableOnPE(CORE_DSP6);
+	bo_DFT_2->isExecutableOnPE(CORE_DSP7);
 	bo_DFT_2->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	bo_DFT_2->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
@@ -361,8 +383,10 @@ PiSDFGraph* Radix2_Stage(Archi* archi, Stack* stack){
 		/*InParam*/ 0,
 		/*OutParam*/1);
 	cf_cfg->addOutParam(0, param_p);
-	cf_cfg->isExecutableOnPE(CORE_ARM1);
 	cf_cfg->isExecutableOnPE(CORE_ARM0);
+	cf_cfg->isExecutableOnPE(CORE_ARM1);
+	cf_cfg->isExecutableOnPE(CORE_ARM2);
+	cf_cfg->isExecutableOnPE(CORE_ARM3);
 	cf_cfg->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	cf_cfg->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
@@ -373,8 +397,10 @@ PiSDFGraph* Radix2_Stage(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_genIx->addInParam(0, param_nDFT2);
-	bo_genIx->isExecutableOnPE(CORE_ARM1);
 	bo_genIx->isExecutableOnPE(CORE_ARM0);
+	bo_genIx->isExecutableOnPE(CORE_ARM1);
+	bo_genIx->isExecutableOnPE(CORE_ARM2);
+	bo_genIx->isExecutableOnPE(CORE_ARM3);
 	bo_genIx->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 	bo_genIx->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 

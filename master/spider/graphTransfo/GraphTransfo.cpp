@@ -66,6 +66,8 @@
 
 #include <launcher/Launcher.h>
 
+#define VERBOSE 0
+
 static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 	memset(job, 0, sizeof(transfoJob));
 	job->graph = nextHierVx->getSubGraph();
@@ -184,8 +186,24 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 					}
 				}
 
+			#if VERBOSE
+				/* Display Param values */
+				printf("\nParam Values:\n");
+				for(int i=0; i<job->graph->getNParam(); i++){
+					printf("%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
+				}
+			#endif
+
 				int* brv = CREATE_MUL(transfoSTack, job->graph->getNBody(), int);
 				computeBRV(topSrdag, job, brv, transfoSTack);
+
+			#if VERBOSE
+				/* Display BRV values */
+				printf("\nBRV Values:\n");
+				for(int i=0; i<job->graph->getNBody(); i++){
+					printf("%s: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+				}
+			#endif
 
 				addSRVertices(topSrdag, job, brv, transfoSTack);
 
@@ -234,9 +252,25 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 				}
 			}
 
+		#if VERBOSE
+			/* Display Param values */
+			printf("\nParam Values:\n");
+			for(int i=0; i<job->graph->getNParam(); i++){
+				printf("%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
+			}
+		#endif
+
 			/* Compute BRV */
 			int* brv = CREATE_MUL(transfoSTack, job->graph->getNBody(), int);
 			computeBRV(topSrdag, job, brv, transfoSTack);
+
+		#if VERBOSE
+			/* Display BRV values */
+			printf("\nBRV Values:\n");
+			for(int i=0; i<job->graph->getNBody(); i++){
+				printf("%s: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+			}
+		#endif
 
 			/* Add vertices */
 			addSRVertices(topSrdag, job, brv, transfoSTack);

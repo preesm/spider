@@ -1,0 +1,21 @@
+/*
+ *  ======== config.bld ========
+ *  Sample Build configuration script
+ */
+
+/* Get the Tools Base directory from the Environment Variable. */
+var tiCgtDir = java.lang.System.getenv("XDCCGROOT");
+if (!tiCgtDir)
+{
+    throw new Error("XDCCGROOT environment variable not set");
+}
+
+//Setup for c66 target
+var C66 = xdc.useModule('ti.targets.elf.C66');
+C66.rootDir = tiCgtDir;
+C66.ccOpts.suffix += " -mi10 -mo ";
+
+//list interested targets in Build.targets array
+Build.targets = [
+                    C66,
+                ];

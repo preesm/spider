@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <ti/omp/omp.h>
+#include <omp.h>
 
 #include <ti/csl/csl_xmcAux.h>
 #include <ti/csl/csl_cacheAux.h>

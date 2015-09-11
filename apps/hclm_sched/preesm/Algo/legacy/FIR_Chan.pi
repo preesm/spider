@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+    <key attr.name="parameters" for="graph" id="parameters"/>
+    <key attr.name="variables" for="graph" id="variables"/>
+    <key attr.name="arguments" for="node" id="arguments"/>
+    <key attr.name="name" attr.type="string" for="graph"/>
+    <key attr.name="graph_desc" attr.type="string" for="node"/>
+    <key attr.name="delay" attr.type="string" for="edge"/>
+    <graph edgedefault="directed">
+        <data key="name">FIR_Chan</data>
+        <node id="NbS" kind="cfg_in_iface"/>
+        <node expr="0" id="M" kind="param"/>
+        <node id="M_in" kind="src">
+            <port annotation="NONE" expr="1" kind="output" name="M_in"/>
+        </node>
+        <node id="in" kind="src">
+            <port annotation="NONE" expr="NbS" kind="output" name="in"/>
+        </node>
+        <node id="out" kind="snk">
+            <port annotation="NONE" expr="NbS" kind="input" name="out"/>
+        </node>
+        <node id="cfg_M" kind="actor">
+            <data key="graph_desc">hclm_sched/Code/generated/actors.h</data>
+            <loop name="cfg_M">
+                <param direction="IN" isConfig="false" name="in" type="char"/>
+                <param direction="OUT" isConfig="true" name="M" type="Param"/>
+            </loop>
+            <port annotation="NONE" kind="cfg_output" name="M"/>
+            <port annotation="NONE" expr="1" kind="input" name="in"/>
+        </node>
+        <node id="initSw" kind="actor">
+            <data key="graph_desc">hclm_sched/Code/generated/actors.h</data>
+            <loop name="initSw">
+                <param direction="IN" isConfig="true" name="M" type="Param"/>
+                <param direction="OUT" isConfig="false" name="ixs" type="char"/>
+                <param direction="OUT" isConfig="false" name="sels" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="M"/>
+            <port annotation="NONE" expr="M" kind="output" name="sels"/>
+            <port annotation="NONE" expr="M" kind="output" name="ixs"/>
+        </node>
+        <node id="Switch" kind="actor">
+            <data key="graph_desc">hclm_sched/Code/generated/actors.h</data>
+            <loop name="Switch">
+                <param direction="IN" isConfig="true" name="NbS" type="Param"/>
+                <param direction="IN" isConfig="false" name="sel" type="char"/>
+                <param direction="IN" isConfig="false" name="i0" type="float"/>
+                <param direction="IN" isConfig="false" name="i1" type="float"/>
+                <param direction="OUT" isConfig="false" name="out" type="float"/>
+            </loop>
+            <port kind="cfg_input" name="NbS"/>
+            <port annotation="NONE" expr="1" kind="input" name="sel"/>
+            <port annotation="NONE" expr="NbS" kind="input" name="i0"/>
+            <port annotation="NONE" expr="NbS" kind="input" name="i1"/>
+            <port annotation="NONE" expr="NbS" kind="output" name="out"/>
+        </node>
+        <node id="FIR" kind="actor">
+            <data key="graph_desc">hclm_sched/Code/generated/actors.h</data>
+            <loop name="FIR">
+                <param direction="IN" isConfig="true" name="NbS" type="Param"/>
+                <param direction="IN" isConfig="false" name="ix" type="char"/>
+                <param direction="IN" isConfig="false" name="in" type="float"/>
+                <param direction="OUT" isConfig="false" name="out" type="float"/>
+            </loop>
+            <port kind="cfg_input" name="NbS"/>
+            <port annotation="NONE" expr="NbS" kind="input" name="in"/>
+            <port annotation="NONE" expr="1" kind="input" name="ix"/>
+            <port annotation="NONE" expr="NbS" kind="output" name="out"/>
+        </node>
+        <node id="Br" kind="broadcast">
+            <port kind="cfg_input" name="NbS"/>
+            <port annotation="NONE" expr="NbS" kind="input" name="in"/>
+            <port annotation="NONE" expr="NbS" kind="output" name="o0"/>
+            <port annotation="NONE" expr="NbS" kind="output" name="o1"/>
+        </node>
+        <edge kind="fifo" source="M_in" sourceport="M_in" target="cfg_M"
+            targetport="in" type="char"/>
+        <edge kind="fifo" source="initSw" sourceport="sels"
+            target="Switch" targetport="sel" type="char"/>
+        <edge kind="fifo" source="in" sourceport="in" target="Switch"
+            targetport="i0" type="float"/>
+        <edge kind="fifo" source="Switch" sourceport="out" target="FIR"
+            targetport="in" type="float"/>
+        <edge kind="fifo" source="FIR" sourceport="out" target="Br"
+            targetport="in" type="float"/>
+        <edge kind="fifo" source="Br" sourceport="o0" target="out"
+            targetport="out" type="float"/>
+        <edge expr="NbS" kind="fifo" source="Br" sourceport="o1"
+            target="Switch" targetport="i1" type="float">
+            <data key="delay"/>
+        </edge>
+        <edge kind="fifo" source="initSw" sourceport="ixs" target="FIR"
+            targetport="ix" type="char"/>
+        <edge kind="dependency" source="cfg_M" sourceport="M" target="M"/>
+        <edge kind="dependency" source="NbS" target="in"/>
+        <edge kind="dependency" source="NbS" target="out"/>
+        <edge kind="dependency" source="NbS" target="Switch" targetport="NbS"/>
+        <edge kind="dependency" source="NbS" target="FIR" targetport="NbS"/>
+        <edge kind="dependency" source="NbS" target="Br" targetport="NbS"/>
+        <edge kind="dependency" source="M" target="initSw" targetport="M"/>
+        <edge kind="dependency" source="NbS" target="Br.o1-Switch.i1"/>
+    </graph>
+</graphml>

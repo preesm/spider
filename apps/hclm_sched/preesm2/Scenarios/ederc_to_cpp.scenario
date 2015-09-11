@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+    <files>
+        <algorithm url="/ederc_nvar/Algo/ederc_nvar.pi"/>
+        <architecture url="/ederc_nvar/Archi/1CoreX86.slam"/>
+        <codegenDirectory url=""/>
+    </files>
+    <constraints excelUrl="">
+        <constraintGroup>
+            <operator name="Core0"/>
+            <task name="ederc_nvar/Channel/Br"/>
+            <task name="ederc_nvar/Channel/InitSwitch"/>
+            <task name="ederc_nvar/Src"/>
+            <task name="ederc_nvar/Channel/Switch"/>
+            <task name="ederc_nvar/Channel/M_in"/>
+            <task name="ederc_nvar/Channel/data_in"/>
+            <task name="ederc_nvar/Config"/>
+            <task name="ederc_nvar/Channel/data_out"/>
+            <task name="ederc_nvar/Channel/FIR"/>
+            <task name="ederc_nvar"/>
+            <task name="ederc_nvar/Channel/SetM"/>
+            <task name="ederc_nvar/MFilter"/>
+            <task name="ederc_nvar/Channel"/>
+            <task name="ederc_nvar/Snk"/>
+        </constraintGroup>
+    </constraints>
+    <relativeconstraints excelUrl=""/>
+    <timings excelUrl="">
+        <timing opname="x86" time="20" vertexname="Channel"/>
+        <timing opname="x86" time="5" vertexname="Config"/>
+        <timing opname="x86" time="10" vertexname="MFilter"/>
+        <timing opname="x86" time="30" vertexname="Snk"/>
+        <timing opname="x86" time="35" vertexname="Src"/>
+        <timing opname="x86" time="10" vertexname="FIR"/>
+        <timing opname="x86" time="60" vertexname="InitSwitch"/>
+        <timing opname="x86" time="20" vertexname="Switch"/>
+        <timing opname="x86" time="2" vertexname="SetM"/>
+        <memcpyspeed opname="x86" setuptime="1" timeperunit="1.0"/>
+    </timings>
+    <simuParams>
+        <mainCore/>
+        <mainComNode/>
+        <averageDataSize>1000</averageDataSize>
+        <dataTypes>
+            <dataType name="char" size="1"/>
+            <dataType name="float" size="4"/>
+        </dataTypes>
+        <specialVertexOperators>
+            <specialVertexOperator path="Core0"/>
+        </specialVertexOperators>
+        <numberOfTopExecutions>1</numberOfTopExecutions>
+    </simuParams>
+    <variables excelUrl=""/>
+    <parameterValues>
+        <parameter name="M" parent="Channel" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="N" parent="ederc_nvar" type="ACTOR_DEPENDENT" value="[1]"/>
+    </parameterValues>
+</scenario>

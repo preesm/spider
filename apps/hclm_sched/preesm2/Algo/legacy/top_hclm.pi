@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+    <key attr.name="parameters" for="graph" id="parameters"/>
+    <key attr.name="variables" for="graph" id="variables"/>
+    <key attr.name="arguments" for="node" id="arguments"/>
+    <key attr.name="name" attr.type="string" for="graph"/>
+    <graph edgedefault="directed">
+        <data key="name">top_hclm</data>
+        <node expr="0" id="NbS" kind="param"/>
+        <node expr="0" id="N" kind="param"/>
+        <node expr="0" id="Nmax" kind="param"/>
+        <node expr="0" id="Test" kind="param"/>
+        <node id="cfg" kind="actor">
+            <port kind="cfg_input" name="Test"/>
+            <port kind="cfg_input" name="Nmax"/>
+            <port annotation="NONE" kind="cfg_output" name="N"/>
+            <port annotation="NONE" expr="0" kind="output" name="M"/>
+        </node>
+        <node id="F" kind="fork">
+            <port kind="cfg_input" name="Nmax"/>
+            <port kind="cfg_input" name="N"/>
+            <port annotation="NONE" expr="0" kind="input" name="in"/>
+            <port annotation="NONE" expr="0" kind="output" name="o0"/>
+            <port annotation="NONE" expr="0" kind="output" name="o1"/>
+        </node>
+        <node id="src" kind="actor">
+            <port kind="cfg_input" name="NbS"/>
+            <port kind="cfg_input" name="N"/>
+            <port annotation="NONE" expr="0" kind="output" name="out"/>
+        </node>
+        <node id="end" kind="actor">
+            <port kind="cfg_input" name="Nmax"/>
+            <port kind="cfg_input" name="N"/>
+            <port annotation="NONE" expr="0" kind="input" name="in"/>
+        </node>
+        <node id="FIR_Chan" kind="actor">
+            <port kind="cfg_input" name="NbS"/>
+            <port annotation="NONE" expr="0" kind="input" name="M"/>
+            <port annotation="NONE" expr="0" kind="input" name="in"/>
+            <port annotation="NONE" expr="0" kind="output" name="out"/>
+        </node>
+        <node id="snk" kind="actor">
+            <port kind="cfg_input" name="NbS"/>
+            <port kind="cfg_input" name="N"/>
+            <port annotation="NONE" expr="0" kind="input" name="n"/>
+        </node>
+        <edge kind="fifo" source="cfg" sourceport="M" target="F"
+            targetport="in" type="void"/>
+        <edge kind="fifo" source="F" sourceport="o0" target="FIR_Chan"
+            targetport="M" type="void"/>
+        <edge kind="fifo" source="F" sourceport="o1" target="end"
+            targetport="in" type="void"/>
+        <edge kind="fifo" source="src" sourceport="out"
+            target="FIR_Chan" targetport="in" type="void"/>
+        <edge kind="fifo" source="FIR_Chan" sourceport="out"
+            target="snk" targetport="n" type="void"/>
+        <edge kind="dependency" source="NbS" target="snk" targetport="NbS"/>
+        <edge kind="dependency" source="NbS" target="FIR_Chan" targetport="NbS"/>
+        <edge kind="dependency" source="NbS" target="src" targetport="NbS"/>
+        <edge kind="dependency" source="Nmax" target="cfg" targetport="Nmax"/>
+        <edge kind="dependency" source="Test" target="cfg" targetport="Test"/>
+        <edge kind="dependency" source="N" target="F" targetport="N"/>
+        <edge kind="dependency" source="Nmax" target="F" targetport="Nmax"/>
+        <edge kind="dependency" source="N" target="src" targetport="N"/>
+        <edge kind="dependency" source="N" target="snk" targetport="N"/>
+        <edge kind="dependency" source="N" target="end" targetport="N"/>
+        <edge kind="dependency" source="Nmax" target="end" targetport="Nmax"/>
+        <edge kind="dependency" source="cfg" sourceport="N" target="N"/>
+    </graph>
+</graphml>

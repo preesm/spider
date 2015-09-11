@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+    <key attr.name="parameters" for="graph" id="parameters"/>
+    <key attr.name="variables" for="graph" id="variables"/>
+    <key attr.name="arguments" for="node" id="arguments"/>
+    <key attr.name="name" attr.type="string" for="graph"/>
+    <key attr.name="graph_desc" attr.type="string" for="node"/>
+    <graph edgedefault="directed">
+        <data key="name">top_hclm</data>
+        <node expr="4000" id="NbS" kind="param"/>
+        <node expr="0" id="N" kind="param"/>
+        <node expr="20" id="NMax" kind="param"/>
+        <node expr="0" id="MNext" kind="param"/>
+        <node expr="10" id="MStart" kind="param"/>
+        <node expr="10" id="NVal" kind="param"/>
+        <node id="cfg_N" kind="actor">
+            <data key="graph_desc">hclm_sched/Code/generated/actors.h</data>
+            <loop name="cfg_N">
+                <param direction="IN" isConfig="true" name="NVal" type="Param"/>
+                <param direction="IN" isConfig="true" name="MStart" type="Param"/>
+                <param direction="IN" isConfig="true" name="MNext" type="Param"/>
+                <param direction="IN" isConfig="true" name="NMax" type="Param"/>
+                <param direction="OUT" isConfig="true" name="N" type="Param"/>
+                <param direction="OUT" isConfig="false" name="M" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="NMax"/>
+            <port kind="cfg_input" name="NVal"/>
+            <port kind="cfg_input" name="MStart"/>
+            <port kind="cfg_input" name="MNext"/>
+            <port annotation="NONE" kind="cfg_output" name="N"/>
+            <port annotation="NONE" expr="NMax" kind="output" name="M"/>
+        </node>
+        <node id="F" kind="fork">
+            <port kind="cfg_input" name="NMax"/>
+            <port kind="cfg_input" name="N"/>
+            <port annotation="NONE" expr="NMax" kind="input" name="in"/>
+            <port annotation="NONE" expr="N" kind="output" name="o0"/>
+            <port annotation="NONE" expr="NMax-N" kind="output" name="o1"/>
+        </node>
+        <node id="src" kind="actor">
+            <data key="graph_desc">hclm_sched/Code/generated/actors.h</data>
+            <loop name="src">
+                <param direction="IN" isConfig="true" name="NbS" type="Param"/>
+                <param direction="IN" isConfig="true" name="N" type="Param"/>
+                <param direction="OUT" isConfig="false" name="out" type="float"/>
+            </loop>
+            <port kind="cfg_input" name="NbS"/>
+            <port kind="cfg_input" name="N"/>
+            <port annotation="NONE" expr="NbS*N" kind="output" name="out"/>
+        </node>
+        <node id="end" kind="actor">
+            <data key="graph_desc">hclm_sched/Code/generated/actors.h</data>
+            <loop name="end">
+                <param direction="IN" isConfig="true" name="NMax" type="Param"/>
+                <param direction="IN" isConfig="true" name="N" type="Param"/>
+                <param direction="IN" isConfig="false" name="in" type="char"/>
+            </loop>
+            <port kind="cfg_input" name="NMax"/>
+            <port kind="cfg_input" name="N"/>
+            <port annotation="NONE" expr="NMax-N" kind="input" name="in"/>
+        </node>
+        <node id="FIR_Chan" kind="actor">
+            <data key="graph_desc">Algo/legacy/FIR_Chan.pi</data>
+            <port kind="cfg_input" name="NbS"/>
+            <port annotation="NONE" expr="1" kind="input" name="M_in"/>
+            <port annotation="NONE" expr="NbS" kind="input" name="in"/>
+            <port annotation="NONE" expr="NbS" kind="output" name="out"/>
+        </node>
+        <node id="snk" kind="actor">
+            <data key="graph_desc">hclm_sched/Code/generated/actors.h</data>
+            <loop name="snk">
+                <param direction="IN" isConfig="true" name="NbS" type="Param"/>
+                <param direction="IN" isConfig="true" name="N" type="Param"/>
+                <param direction="IN" isConfig="false" name="in" type="float"/>
+            </loop>
+            <port kind="cfg_input" name="NbS"/>
+            <port kind="cfg_input" name="N"/>
+            <port annotation="NONE" expr="NbS*N" kind="input" name="in"/>
+        </node>
+        <edge kind="fifo" source="cfg_N" sourceport="M" target="F"
+            targetport="in" type="char"/>
+        <edge kind="fifo" source="F" sourceport="o0" target="FIR_Chan"
+            targetport="M_in" type="char"/>
+        <edge kind="fifo" source="F" sourceport="o1" target="end"
+            targetport="in" type="char"/>
+        <edge kind="fifo" source="src" sourceport="out"
+            target="FIR_Chan" targetport="in" type="float"/>
+        <edge kind="fifo" source="FIR_Chan" sourceport="out"
+            target="snk" targetport="in" type="float"/>
+        <edge kind="dependency" source="NbS" target="snk" targetport="NbS"/>
+        <edge kind="dependency" source="NbS" target="FIR_Chan" targetport="NbS"/>
+        <edge kind="dependency" source="NbS" target="src" targetport="NbS"/>
+        <edge kind="dependency" source="NMax" target="cfg_N" targetport="NMax"/>
+        <edge kind="dependency" source="MNext" target="cfg_N" targetport="MNext"/>
+        <edge kind="dependency" source="N" target="F" targetport="N"/>
+        <edge kind="dependency" source="NMax" target="F" targetport="NMax"/>
+        <edge kind="dependency" source="N" target="src" targetport="N"/>
+        <edge kind="dependency" source="N" target="snk" targetport="N"/>
+        <edge kind="dependency" source="N" target="end" targetport="N"/>
+        <edge kind="dependency" source="NMax" target="end" targetport="NMax"/>
+        <edge kind="dependency" source="cfg_N" sourceport="N" target="N"/>
+        <edge kind="dependency" source="MStart" target="cfg_N" targetport="MStart"/>
+        <edge kind="dependency" source="NVal" target="cfg_N" targetport="NVal"/>
+    </graph>
+</graphml>

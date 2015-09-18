@@ -95,7 +95,12 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
 		if(fork->getState() == SRDAG_EXEC
 				&& fork->getType() == SRDAG_FORK){
 
-			if(fork->getInEdge(0)->getAlloc() == -1){
+			bool isCleanFork = fork->getInEdge(0)->getAlloc() == -1;
+			for(int j=0; j<fork->getNConnectedOutEdge(); j++){
+				isCleanFork = isCleanFork && fork->getOutEdge(j)->getAlloc() == -1;
+			}
+
+			if(isCleanFork && fork->getInEdge(0)->getAlloc() == -1){
 				/** Not allocated at all Fork */
 				SRDAGEdge* inEdge = fork->getInEdge(0);
 				int fifoIx = nbFifos_++;

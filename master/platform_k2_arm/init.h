@@ -58,6 +58,9 @@
 #define QMSS_DATA_SIZE 	0x00100000
 #define TMR_REGS_SIZE 	0x00010000
 
+#define DDR_BASE 		0xD0000000
+#define DDR_SIZE 		0x10000000
+
 #define CPPI_BASE_REG	0x01F00000
 #define CPPI_SIZE_REG	0x01100000
 
@@ -141,6 +144,7 @@ typedef enum{
 
 extern int qmss_cfg_regs;
 extern int msmc_mem_base;
+extern int ddr_mem_base;
 extern int data_mem_base;
 extern CSL_FftcRegs* fftc_a_cfg_regs;
 extern CSL_FftcRegs* fftc_b_cfg_regs;
@@ -152,7 +156,7 @@ extern CSL_TmrRegsOvly tmr_regs;
 extern void* cppi_regs;
 
 void init_hw();
-void init_qmss();
+void init_qmss(int useMsmc);
 void init_cppi();
 void init_fftc();
 

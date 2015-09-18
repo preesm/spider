@@ -142,6 +142,7 @@ typedef enum{
 extern int qmss_cfg_regs;
 extern int msmc_mem_base;
 extern int data_mem_base;
+extern int ddr_mem_base;
 extern CSL_FftcRegs* fftc_cfg_regs;
 extern void* qm_regs;
 extern CSL_TmrRegsOvly tmr_regs;
@@ -151,7 +152,7 @@ extern CSL_TmrRegsOvly tmr_regs;
 extern void* cppi_regs;
 
 void init_hw();
-void init_qmss();
+void init_qmss(int useMsmc);
 void init_cppi();
 void init_fftc();
 

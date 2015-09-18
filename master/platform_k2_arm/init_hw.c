@@ -54,6 +54,7 @@ static int dev_mem_fd;
 
 int qmss_cfg_regs;
 int msmc_mem_base;
+int ddr_mem_base;
 CSL_FftcRegs* fftc_a_cfg_regs;
 CSL_FftcRegs* fftc_b_cfg_regs;
 void* cppi_regs;
@@ -155,6 +156,19 @@ void init_hw(){
 			(off_t)CSL_MSMC_SRAM_REGS);
 
 	if(!msmc_mem_base){
+		printf("ERROR: Failed to map MSMC memory\n");
+		abort();
+	}
+
+	/* DDR memory */
+	ddr_mem_base = (int)mmap(
+			0, DDR_SIZE,
+			PROT_READ | PROT_WRITE,
+			MAP_SHARED,
+			dev_mem_fd,
+			(off_t)DDR_BASE);
+
+	if(!ddr_mem_base){
 		printf("ERROR: Failed to map MSMC memory\n");
 		abort();
 	}

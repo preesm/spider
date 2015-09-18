@@ -49,6 +49,7 @@
 
 int qmss_cfg_regs;
 int msmc_mem_base;
+int ddr_mem_base;
 CSL_FftcRegs* fftc_cfg_regs;
 void* cppi_regs;
 void* qm_regs;
@@ -102,6 +103,8 @@ void init_hw(){
 	tmr_regs = (void*)CSL_TIMER_0_REGS;
 	/* MSMC memory */
 	msmc_mem_base = CSL_MSMC_SRAM_REGS;
+	/* DDR memory */
+	ddr_mem_base = CSL_DDR3_0_DATA;
 	/* FFTC regs */
 	fftc_cfg_regs = (void*)CSL_FFTC_0_CFG_REGS;
 	/* QM regs */

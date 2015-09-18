@@ -88,7 +88,7 @@ static void setAffinity(int cpuId){
     }
 }
 
-PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts){
+PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts){
 	int cpIds[nArm];
 
 	if(platform_)
@@ -101,13 +101,22 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lr
 
 	/** Initialize shared memory & QMSS*/
 	init_hw();
-	init_qmss();
+	init_qmss(useMsmc);
 
 	shMem = (void*) data_mem_base;
-	printf("Base Data @%#x\n", (int)shMem-msmc_mem_base+CSL_MSMC_SRAM_REGS);
-
-	memset(shMem,'u', MSMC_SIZE-(data_mem_base-msmc_mem_base));
-	msync(shMem, MSMC_SIZE-(data_mem_base-msmc_mem_base), MS_SYNC);
+	if(useMsmc){
+		printf("Base Data @%#x\n", (int)shMem-msmc_mem_base+CSL_MSMC_SRAM_REGS);
+		if(shMemSize > MSMC_SIZE-(data_mem_base-msmc_mem_base))
+			throw "not enought shared memory";
+		memset(shMem,'u', MSMC_SIZE-(data_mem_base-msmc_mem_base));
+		msync(shMem, MSMC_SIZE-(data_mem_base-msmc_mem_base), MS_SYNC);
+	}else{
+		printf("Base Data @%#x\n", (int)shMem-ddr_mem_base+DDR_BASE);
+		if(shMemSize > DDR_SIZE)
+			throw "not enought shared memory";
+		memset(shMem,'u', shMemSize);
+		msync(shMem, shMemSize, MS_SYNC);
+	}
 
 //	if(data_mem_size < shMemSize)
 //		throw "Request too many shared memory";

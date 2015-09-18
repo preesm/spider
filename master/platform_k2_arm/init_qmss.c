@@ -319,7 +319,7 @@ void configureFFTRegs(CSL_FftcRegs* regs){
  * 	- Define Memory regions
  * 	-
  */
-void init_qmss(){
+void init_qmss(int useMsmc){
 	int i, result;
     Qmss_InitCfg 			qmss_initCfg;
 	Cppi_CpDmaInitCfg 		cpdmaCfg;
@@ -330,7 +330,12 @@ void init_qmss(){
     void* ctrl_desc_base  = (void*)align((int)data_desc_base + DATA_DESC_NUM*DATA_DESC_SIZE);
     void* trace_desc_base = (void*)align((int)ctrl_desc_base + CTRL_DESC_NUM*CTRL_DESC_SIZE);
     void* fftc_desc_base  = (void*)align((int)trace_desc_base + TRACE_DESC_NUM*TRACE_DESC_SIZE);
-    data_mem_base = align((int)fftc_desc_base + FFTC_DESC_NUM*FFTC_DESC_SIZE);
+
+    if(useMsmc){
+    	data_mem_base = align((int)fftc_desc_base + FFTC_DESC_NUM*FFTC_DESC_SIZE);
+    }else{
+    	data_mem_base = align((int)ddr_mem_base);
+    }
 
     /* Initialize QMSS Driver */
     memset (&qmss_initCfg, 0, sizeof (Qmss_InitCfg));

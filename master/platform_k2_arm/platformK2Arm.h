@@ -43,6 +43,11 @@
 #include <graphs/Archi/SharedMemArchi.h>
 #include <lrt.h>
 
+typedef enum{
+	USE_MSMC = 1,
+	USE_DDR = 0
+} SharedMemMode;
+
 class PlatformK2Arm: public Platform{
 public:
 	/** File Handling */
@@ -62,7 +67,7 @@ public:
 
 	SharedMemArchi* getArchi();
 
-	PlatformK2Arm(int nArm, int nDsp, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts);
+	PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts);
 	virtual ~PlatformK2Arm();
 private:
 

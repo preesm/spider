@@ -88,7 +88,7 @@ void* K2ArmSpiderCommunicator::ctrl_start_send(int lrtIx, int size){
 
 		if(cur_mono_pkt_out[lrtIx] != 0){
 			/* Get Packet info */
-			cur_mono_pkt_out_size[lrtIx]  = QMSS_DESC_SIZE(cur_mono_pkt_out[lrtIx]);
+			cur_mono_pkt_out_size[lrtIx]  = CTRL_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_pkt_out[lrtIx]);
 			cur_mono_pkt_out[lrtIx] = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_pkt_out[lrtIx]);
 
 			/* Clear Cache */

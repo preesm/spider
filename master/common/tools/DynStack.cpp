@@ -67,6 +67,8 @@ void *DynStack::alloc(int size){
 	nb_++;
 
 	void* address = malloc(size);
+	if(address == 0)
+		throw "MemAlloc failed";
 	int* sizeAddress = (int*)address;
 	void* dataAddress = (void*)(sizeAddress+1);
 	*sizeAddress = size;

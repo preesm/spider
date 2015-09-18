@@ -99,8 +99,8 @@ PiSDFGraph* top_hclm_opt(Archi* archi, Stack* stack, Param MNext, Param MStart, 
 	cf_cfg_N->addInParam(1, param_NVal);
 	cf_cfg_N->addInParam(2, param_MStart);
 	cf_cfg_N->addInParam(3, param_MNext);
-	cf_cfg_N->isExecutableOnPE(CORE_CORE0);
-	cf_cfg_N->setTimingOnType(CORE_TYPE_X86, "100", stack);
+	cf_cfg_N->isExecutableOnPE(CORE_ARM0);
+	cf_cfg_N->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
 	PiSDFVertex* bo_F = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_FORK,
@@ -118,8 +118,8 @@ PiSDFGraph* top_hclm_opt(Archi* archi, Stack* stack, Param MNext, Param MStart, 
 		/*InParam*/ 2);
 	bo_src->addInParam(0, param_NbS);
 	bo_src->addInParam(1, param_N);
-	bo_src->isExecutableOnPE(CORE_CORE0);
-	bo_src->setTimingOnType(CORE_TYPE_X86, "100", stack);
+	bo_src->isExecutableOnPE(CORE_DSP0);
+	bo_src->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 
 	PiSDFVertex* bo_end = graph->addSpecialVertex(
 			/*Type*/    PISDF_SUBTYPE_END,
@@ -137,8 +137,8 @@ PiSDFGraph* top_hclm_opt(Archi* archi, Stack* stack, Param MNext, Param MStart, 
 		/*InParam*/ 2);
 	bo_snk->addInParam(0, param_NbS);
 	bo_snk->addInParam(1, param_N);
-	bo_snk->isExecutableOnPE(CORE_CORE0);
-	bo_snk->setTimingOnType(CORE_TYPE_X86, "100", stack);
+	bo_snk->isExecutableOnPE(CORE_DSP0);
+	bo_snk->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 
 	PiSDFVertex* bo_br = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
@@ -235,8 +235,8 @@ PiSDFGraph* FIR_Chan_opt(Archi* archi, Stack* stack){
 		/*InParam*/ 0,
 		/*OutParam*/1);
 	cf_cfg_M->addOutParam(0, param_M);
-	cf_cfg_M->isExecutableOnPE(CORE_CORE0);
-	cf_cfg_M->setTimingOnType(CORE_TYPE_X86, "100", stack);
+	cf_cfg_M->isExecutableOnPE(CORE_ARM0);
+	cf_cfg_M->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
 	PiSDFVertex* bo_initSw = graph->addBodyVertex(
 		/*Name*/    "initSw",
@@ -245,8 +245,17 @@ PiSDFGraph* FIR_Chan_opt(Archi* archi, Stack* stack){
 		/*OutData*/ 2,
 		/*InParam*/ 1);
 	bo_initSw->addInParam(0, param_M);
-	bo_initSw->isExecutableOnPE(CORE_CORE0);
-	bo_initSw->setTimingOnType(CORE_TYPE_X86, "100", stack);
+	bo_initSw->isExecutableOnPE(CORE_ARM0);
+	bo_initSw->isExecutableOnPE(CORE_DSP0);
+	bo_initSw->isExecutableOnPE(CORE_DSP1);
+	bo_initSw->isExecutableOnPE(CORE_DSP2);
+	bo_initSw->isExecutableOnPE(CORE_DSP3);
+	bo_initSw->isExecutableOnPE(CORE_DSP4);
+	bo_initSw->isExecutableOnPE(CORE_DSP5);
+	bo_initSw->isExecutableOnPE(CORE_DSP6);
+	bo_initSw->isExecutableOnPE(CORE_DSP7);
+	bo_initSw->setTimingOnType(CORE_TYPE_ARM, "100", stack);
+	bo_initSw->setTimingOnType(CORE_TYPE_C6X, "10", stack);
 
 	PiSDFVertex* bo_FIR = graph->addBodyVertex(
 		/*Name*/    "FIR",
@@ -255,8 +264,17 @@ PiSDFGraph* FIR_Chan_opt(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_FIR->addInParam(0, param_NbS);
-	bo_FIR->isExecutableOnPE(CORE_CORE0);
-	bo_FIR->setTimingOnType(CORE_TYPE_X86, "100", stack);
+	bo_FIR->isExecutableOnPE(CORE_DSP0);
+	bo_FIR->isExecutableOnPE(CORE_DSP1);
+	bo_FIR->isExecutableOnPE(CORE_DSP2);
+	bo_FIR->isExecutableOnPE(CORE_DSP3);
+	bo_FIR->isExecutableOnPE(CORE_DSP4);
+	bo_FIR->isExecutableOnPE(CORE_DSP5);
+	bo_FIR->isExecutableOnPE(CORE_DSP6);
+	bo_FIR->isExecutableOnPE(CORE_DSP7);
+	bo_FIR->setTimingOnType(CORE_TYPE_C6X, "10000", stack);
+//	bo_FIR->isExecutableOnPE(CORE_ARM0);
+//	bo_FIR->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
 	PiSDFVertex* bo_Br = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,

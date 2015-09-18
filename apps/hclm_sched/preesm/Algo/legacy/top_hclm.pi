@@ -72,21 +72,33 @@
                 <param direction="IN" isConfig="true" name="NbS" type="Param"/>
                 <param direction="IN" isConfig="true" name="N" type="Param"/>
                 <param direction="IN" isConfig="false" name="in" type="float"/>
+                <param direction="IN" isConfig="false" name="M" type="char"/>
             </loop>
             <port kind="cfg_input" name="NbS"/>
             <port kind="cfg_input" name="N"/>
             <port annotation="NONE" expr="NbS*N" kind="input" name="in"/>
+            <port annotation="NONE" expr="N" kind="input" name="M"/>
+        </node>
+        <node id="br" kind="broadcast">
+            <port kind="cfg_input" name="N"/>
+            <port annotation="NONE" expr="N" kind="input" name="in"/>
+            <port annotation="NONE" expr="N" kind="output" name="o0"/>
+            <port annotation="NONE" expr="N" kind="output" name="o1"/>
         </node>
         <edge kind="fifo" source="cfg_N" sourceport="M" target="F"
             targetport="in" type="char"/>
-        <edge kind="fifo" source="F" sourceport="o0" target="FIR_Chan"
-            targetport="M_in" type="char"/>
+        <edge kind="fifo" source="F" sourceport="o0" target="br"
+            targetport="in" type="char"/>
         <edge kind="fifo" source="F" sourceport="o1" target="end"
             targetport="in" type="char"/>
         <edge kind="fifo" source="src" sourceport="out"
             target="FIR_Chan" targetport="in" type="float"/>
         <edge kind="fifo" source="FIR_Chan" sourceport="out"
             target="snk" targetport="in" type="float"/>
+        <edge kind="fifo" source="br" sourceport="o1" target="snk"
+            targetport="M" type="char"/>
+        <edge kind="fifo" source="br" sourceport="o0" target="FIR_Chan"
+            targetport="M_in" type="char"/>
         <edge kind="dependency" source="NbS" target="snk" targetport="NbS"/>
         <edge kind="dependency" source="NbS" target="FIR_Chan" targetport="NbS"/>
         <edge kind="dependency" source="NbS" target="src" targetport="NbS"/>
@@ -101,5 +113,6 @@
         <edge kind="dependency" source="cfg_N" sourceport="N" target="N"/>
         <edge kind="dependency" source="MStart" target="cfg_N" targetport="MStart"/>
         <edge kind="dependency" source="NVal" target="cfg_N" targetport="NVal"/>
+        <edge kind="dependency" source="N" target="br" targetport="N"/>
     </graph>
 </graphml>

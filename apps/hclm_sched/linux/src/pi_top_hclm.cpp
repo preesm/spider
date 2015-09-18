@@ -68,12 +68,12 @@ PiSDFGraph* init_top_hclm(Archi* archi, Stack* stack, Param MNext, Param MStart,
 // Method building PiSDFGraphtop_hclm
 PiSDFGraph* top_hclm(Archi* archi, Stack* stack, Param MNext, Param MStart, Param NMax, Param NVal, Param NbS){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
-		/*Edges*/    5,
+		/*Edges*/    7,
 		/*Params*/   6,
 		/*InputIf*/  0,
 		/*OutputIf*/ 0,
 		/*Config*/   1,
-		/*Body*/     5,
+		/*Body*/     6,
 		/*Archi*/    archi,
 		/*Stack*/    stack);
 
@@ -132,13 +132,20 @@ PiSDFGraph* top_hclm(Archi* archi, Stack* stack, Param MNext, Param MStart, Para
 	PiSDFVertex* bo_snk = graph->addBodyVertex(
 		/*Name*/    "snk",
 		/*FctId*/   TOP_HCLM_SNK_FCT,
-		/*InData*/  1,
+		/*InData*/  2,
 		/*OutData*/ 0,
 		/*InParam*/ 2);
 	bo_snk->addInParam(0, param_NbS);
 	bo_snk->addInParam(1, param_N);
 	bo_snk->isExecutableOnPE(CORE_CORE0);
 	bo_snk->setTimingOnType(CORE_TYPE_X86, "100", stack);
+
+	PiSDFVertex* bo_br = graph->addSpecialVertex(
+		/*Type*/    PISDF_SUBTYPE_BROADCAST,
+		/*InData*/  1,
+		/*OutData*/ 2,
+		/*InParam*/ 1);
+	bo_br->addInParam(0, param_N);
 
 	PiSDFVertex* bo_FIR_Chan = graph->addHierVertex(
 		/*Name*/    "FIR_Chan",
@@ -157,7 +164,7 @@ PiSDFGraph* top_hclm(Archi* archi, Stack* stack, Param MNext, Param MStart, Para
 
 	graph->connect(
 		/*Src*/ bo_F, /*SrcPrt*/ 0, /*Prod*/ "(N)*1",
-		/*Snk*/ bo_FIR_Chan, /*SnkPrt*/ 0, /*Cons*/ "(1)*1",
+		/*Snk*/ bo_br, /*SnkPrt*/ 0, /*Cons*/ "(N)*1",
 		/*Delay*/ "0",0);
 
 	graph->connect(
@@ -173,6 +180,16 @@ PiSDFGraph* top_hclm(Archi* archi, Stack* stack, Param MNext, Param MStart, Para
 	graph->connect(
 		/*Src*/ bo_FIR_Chan, /*SrcPrt*/ 0, /*Prod*/ "(NbS)*4",
 		/*Snk*/ bo_snk, /*SnkPrt*/ 0, /*Cons*/ "(NbS*N)*4",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ bo_br, /*SrcPrt*/ 1, /*Prod*/ "(N)*1",
+		/*Snk*/ bo_snk, /*SnkPrt*/ 1, /*Cons*/ "(N)*1",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ bo_br, /*SrcPrt*/ 0, /*Prod*/ "(N)*1",
+		/*Snk*/ bo_FIR_Chan, /*SnkPrt*/ 0, /*Cons*/ "(1)*1",
 		/*Delay*/ "0",0);
 
 	return graph;

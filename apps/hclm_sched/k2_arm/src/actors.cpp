@@ -42,7 +42,7 @@
 
 #define VERBOSE 0
 #define NB_TAPS 512
-#define TEST 1
+#define TEST 0
 
 #if DSP
 extern "C"{
@@ -164,8 +164,8 @@ void FIR(Param NbS, char*ix,  float* in, float* out){
 
 //	memcpy(out, in, NbS*sizeof(float));
 
-#if DSP
-	float input[NbS+NB_TAPS-1];
+#ifdef DSP
+	static float input[4000+NB_TAPS-1];
 
 	memset(input, 0, (NB_TAPS-1)*sizeof(float));
 	memcpy(input+NB_TAPS-1, in, NbS*sizeof(float));
@@ -181,18 +181,18 @@ void FIR(Param NbS, char*ix,  float* in, float* out){
 	);
 #else
 
-//	int last_id = 0;
-//	float last[NB_TAPS];
-//
-//	memset(last,0,NB_TAPS*sizeof(float));
-//
-//	for(int i=0; i<NbS; i++){
-//		out[i] = 0;
-//		last[last_id] = in[i];
-//		for(int j=0; j<NB_TAPS; j++){
-//			out[i] += taps[j]*last[(last_id+j)%NB_TAPS];
-//		}
-//		last_id = (last_id+1)%NB_TAPS;
-//	}
+	int last_id = 0;
+	float last[NB_TAPS];
+
+	memset(last,0,NB_TAPS*sizeof(float));
+
+	for(int i=0; i<NbS; i++){
+		out[i] = 0;
+		last[last_id] = in[i];
+		for(int j=0; j<NB_TAPS; j++){
+			out[i] += taps[j]*last[(last_id+j)%NB_TAPS];
+		}
+		last_id = (last_id+1)%NB_TAPS;
+	}
 #endif
 }

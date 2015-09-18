@@ -34,28 +34,23 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef ACTORS_H
-#define ACTORS_H
+#include <lrt.h>
+#include <platformK2Dsp.h>
+#include <tools/DynStack.h>
+#include "top_hclm.h"
 
-#include "type.h"
+#include <stdio.h>
+#include <stdlib.h>
 
-typedef enum{
-	MNext_Const = 0,
-	MNext_DEC = -1,
-	MNext_INC = 1,
-} MNextVal;
+void initActors();
 
-void cfg_N(Param NVal, Param MStart, Param MNext, Param NMax, Param *N, char* M);
-void cfg_M(char* in, Param *M);
-
-void src(Param NbS, Param N, float* out);
-void snk(Param NbS, Param N, float* in, char* M);
-
-void end(Param NMax, Param N, char* in);
-
-void initSw(Param M, char* ixs, char* sels);
-void Switch(Param NbS, char* sel, float* i0, float* i1, float* out);
-
-void FIR(Param NbS, char* ix,  float* in, float* out);
-
-#endif//ACTORS_H
+int main(int argc, char* argv[]){
+#define SH_MEM 0x00400000
+	try{
+		DynStack archiStack("ArchiStack");
+		PlatformK2Dsp platform(SH_MEM, &archiStack, top_hclm_fcts, N_FCT_TOP_HCLM);
+	}catch(const char* s){
+		printf("Exception : %s\n", s);
+	}
+	return 0;
+}

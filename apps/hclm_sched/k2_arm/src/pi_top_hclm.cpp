@@ -38,13 +38,13 @@
 
 #include "top_hclm.h"
 
-PiSDFGraph* top_hclm_opt(Archi* archi, Stack* stack, Param MNext = 0, Param MStart = 10, Param NMax = 20, Param NVal = 10, Param NbS = 4000);
-PiSDFGraph* FIR_Chan_opt(Archi* archi, Stack* stack);
+PiSDFGraph* top_hclm(Archi* archi, Stack* stack, Param MNext = 0, Param MStart = 10, Param NMax = 20, Param NVal = 10, Param NbS = 4000);
+PiSDFGraph* FIR_Chan(Archi* archi, Stack* stack);
 
 /**
  * This is the method you need to call to build a complete PiSDF graph.
  */
-PiSDFGraph* init_top_hclm_opt(Archi* archi, Stack* stack, Param MNext, Param MStart, Param NMax, Param NVal, Param NbS){
+PiSDFGraph* init_top_hclm(Archi* archi, Stack* stack, Param MNext, Param MStart, Param NMax, Param NVal, Param NbS){
 	PiSDFGraph* top = CREATE(stack, PiSDFGraph)(
 		/*Edges*/    0,
 		/*Params*/   0,
@@ -57,7 +57,7 @@ PiSDFGraph* init_top_hclm_opt(Archi* archi, Stack* stack, Param MNext, Param MSt
 
 	top->addHierVertex(
 		/*Name*/     "top",
-		/*Graph*/    top_hclm_opt(archi, stack, MNext, MStart, NMax, NVal, NbS),
+		/*Graph*/    top_hclm(archi, stack, MNext, MStart, NMax, NVal, NbS),
 		/*InputIf*/  0,
 		/*OutputIf*/ 0,
 		/*Params*/   0);
@@ -66,7 +66,7 @@ PiSDFGraph* init_top_hclm_opt(Archi* archi, Stack* stack, Param MNext, Param MSt
 }
 
 // Method building PiSDFGraphtop_hclm
-PiSDFGraph* top_hclm_opt(Archi* archi, Stack* stack, Param MNext, Param MStart, Param NMax, Param NVal, Param NbS){
+PiSDFGraph* top_hclm(Archi* archi, Stack* stack, Param MNext, Param MStart, Param NMax, Param NVal, Param NbS){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
 		/*Edges*/    7,
 		/*Params*/   6,
@@ -99,8 +99,8 @@ PiSDFGraph* top_hclm_opt(Archi* archi, Stack* stack, Param MNext, Param MStart, 
 	cf_cfg_N->addInParam(1, param_NVal);
 	cf_cfg_N->addInParam(2, param_MStart);
 	cf_cfg_N->addInParam(3, param_MNext);
-	cf_cfg_N->isExecutableOnPE(CORE_CORE0);
-	cf_cfg_N->setTimingOnType(CORE_TYPE_X86, "100", stack);
+	cf_cfg_N->isExecutableOnPE(CORE_ARM0);
+	cf_cfg_N->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
 	PiSDFVertex* bo_F = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_FORK,
@@ -118,8 +118,8 @@ PiSDFGraph* top_hclm_opt(Archi* archi, Stack* stack, Param MNext, Param MStart, 
 		/*InParam*/ 2);
 	bo_src->addInParam(0, param_NbS);
 	bo_src->addInParam(1, param_N);
-	bo_src->isExecutableOnPE(CORE_CORE0);
-	bo_src->setTimingOnType(CORE_TYPE_X86, "100", stack);
+	bo_src->isExecutableOnPE(CORE_DSP0);
+	bo_src->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 
 	PiSDFVertex* bo_end = graph->addSpecialVertex(
 			/*Type*/    PISDF_SUBTYPE_END,
@@ -137,8 +137,8 @@ PiSDFGraph* top_hclm_opt(Archi* archi, Stack* stack, Param MNext, Param MStart, 
 		/*InParam*/ 2);
 	bo_snk->addInParam(0, param_NbS);
 	bo_snk->addInParam(1, param_N);
-	bo_snk->isExecutableOnPE(CORE_CORE0);
-	bo_snk->setTimingOnType(CORE_TYPE_X86, "100", stack);
+	bo_snk->isExecutableOnPE(CORE_DSP0);
+	bo_snk->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 
 	PiSDFVertex* bo_br = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
@@ -149,7 +149,7 @@ PiSDFGraph* top_hclm_opt(Archi* archi, Stack* stack, Param MNext, Param MStart, 
 
 	PiSDFVertex* bo_FIR_Chan = graph->addHierVertex(
 		/*Name*/    "FIR_Chan",
-		/*Graph*/   FIR_Chan_opt(archi, stack),
+		/*Graph*/   FIR_Chan(archi, stack),
 		/*InData*/  2,
 		/*OutData*/ 1,
 		/*InParam*/ 1);
@@ -196,7 +196,7 @@ PiSDFGraph* top_hclm_opt(Archi* archi, Stack* stack, Param MNext, Param MStart, 
 }
 
 // Method building PiSDFGraphFIR_Chan
-PiSDFGraph* FIR_Chan_opt(Archi* archi, Stack* stack){
+PiSDFGraph* FIR_Chan(Archi* archi, Stack* stack){
 	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
 		/*Edges*/    8,
 		/*Params*/   2,
@@ -235,8 +235,8 @@ PiSDFGraph* FIR_Chan_opt(Archi* archi, Stack* stack){
 		/*InParam*/ 0,
 		/*OutParam*/1);
 	cf_cfg_M->addOutParam(0, param_M);
-	cf_cfg_M->isExecutableOnPE(CORE_CORE0);
-	cf_cfg_M->setTimingOnType(CORE_TYPE_X86, "100", stack);
+	cf_cfg_M->isExecutableOnPE(CORE_ARM0);
+	cf_cfg_M->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
 	PiSDFVertex* bo_initSw = graph->addBodyVertex(
 		/*Name*/    "initSw",
@@ -245,8 +245,25 @@ PiSDFGraph* FIR_Chan_opt(Archi* archi, Stack* stack){
 		/*OutData*/ 2,
 		/*InParam*/ 1);
 	bo_initSw->addInParam(0, param_M);
-	bo_initSw->isExecutableOnPE(CORE_CORE0);
-	bo_initSw->setTimingOnType(CORE_TYPE_X86, "100", stack);
+	bo_initSw->isExecutableOnPE(CORE_ARM0);
+	bo_initSw->setTimingOnType(CORE_TYPE_ARM, "100", stack);
+
+	PiSDFVertex* bo_Switch = graph->addBodyVertex(
+		/*Name*/    "Switch",
+		/*FctId*/   FIR_CHAN_SWITCH_FCT,
+		/*InData*/  3,
+		/*OutData*/ 1,
+		/*InParam*/ 1);
+	bo_Switch->addInParam(0, param_NbS);
+	bo_Switch->isExecutableOnPE(CORE_DSP0);
+	bo_Switch->isExecutableOnPE(CORE_DSP1);
+	bo_Switch->isExecutableOnPE(CORE_DSP2);
+	bo_Switch->isExecutableOnPE(CORE_DSP3);
+	bo_Switch->isExecutableOnPE(CORE_DSP4);
+	bo_Switch->isExecutableOnPE(CORE_DSP5);
+	bo_Switch->isExecutableOnPE(CORE_DSP6);
+	bo_Switch->isExecutableOnPE(CORE_DSP7);
+	bo_Switch->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 
 	PiSDFVertex* bo_FIR = graph->addBodyVertex(
 		/*Name*/    "FIR",
@@ -255,8 +272,17 @@ PiSDFGraph* FIR_Chan_opt(Archi* archi, Stack* stack){
 		/*OutData*/ 1,
 		/*InParam*/ 1);
 	bo_FIR->addInParam(0, param_NbS);
-	bo_FIR->isExecutableOnPE(CORE_CORE0);
-	bo_FIR->setTimingOnType(CORE_TYPE_X86, "100", stack);
+	bo_FIR->isExecutableOnPE(CORE_DSP0);
+	bo_FIR->isExecutableOnPE(CORE_DSP1);
+	bo_FIR->isExecutableOnPE(CORE_DSP2);
+	bo_FIR->isExecutableOnPE(CORE_DSP3);
+	bo_FIR->isExecutableOnPE(CORE_DSP4);
+	bo_FIR->isExecutableOnPE(CORE_DSP5);
+	bo_FIR->isExecutableOnPE(CORE_DSP6);
+	bo_FIR->isExecutableOnPE(CORE_DSP7);
+	bo_FIR->setTimingOnType(CORE_TYPE_C6X, "100", stack);
+//	bo_FIR->isExecutableOnPE(CORE_ARM0);
+//	bo_FIR->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
 	PiSDFVertex* bo_Br = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
@@ -274,7 +300,17 @@ PiSDFGraph* FIR_Chan_opt(Archi* archi, Stack* stack){
 
 	graph->connect(
 		/*Src*/ bo_initSw, /*SrcPrt*/ 0, /*Prod*/ "(M)*1",
-		/*Snk*/ bo_FIR, /*SnkPrt*/ 1, /*Cons*/ "(1)*1",
+		/*Snk*/ bo_Switch, /*SnkPrt*/ 0, /*Cons*/ "(1)*1",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ if_in, /*SrcPrt*/ 0, /*Prod*/ "(NbS)*4",
+		/*Snk*/ bo_Switch, /*SnkPrt*/ 1, /*Cons*/ "(NbS)*4",
+		/*Delay*/ "0",0);
+
+	graph->connect(
+		/*Src*/ bo_Switch, /*SrcPrt*/ 0, /*Prod*/ "(NbS)*4",
+		/*Snk*/ bo_FIR, /*SnkPrt*/ 0, /*Cons*/ "(NbS)*4",
 		/*Delay*/ "0",0);
 
 	graph->connect(
@@ -289,13 +325,18 @@ PiSDFGraph* FIR_Chan_opt(Archi* archi, Stack* stack){
 
 	graph->connect(
 		/*Src*/ bo_Br, /*SrcPrt*/ 1, /*Prod*/ "(NbS)*4",
-		/*Snk*/ bo_FIR, /*SnkPrt*/ 0, /*Cons*/ "(NbS)*4",
-		/*Delay*/ "(NbS)*4", if_in);
+		/*Snk*/ bo_Switch, /*SnkPrt*/ 2, /*Cons*/ "(NbS)*4",
+		/*Delay*/ "(NbS)*4",0);
+
+	graph->connect(
+		/*Src*/ bo_initSw, /*SrcPrt*/ 1, /*Prod*/ "(M)*1",
+		/*Snk*/ bo_FIR, /*SnkPrt*/ 1, /*Cons*/ "(1)*1",
+		/*Delay*/ "0",0);
 
 	return graph;
 }
 
-void free_top_hclm_opt(PiSDFGraph* top, Stack* stack){
+void free_top_hclm(PiSDFGraph* top, Stack* stack){
 	top->~PiSDFGraph();
 	stack->free(top);
 }

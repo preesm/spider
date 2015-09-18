@@ -36,7 +36,7 @@
  * ****************************************************************************
  */
 
-#include <spider.h>
+#include <lrt.h>
 #include "top_hclm.h"
 
 #include "actors.h"

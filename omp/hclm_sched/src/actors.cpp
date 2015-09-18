@@ -44,6 +44,12 @@
 #define NB_TAPS 512
 #define TEST 1
 
+#if DSP
+extern "C"{
+#include <ti/dsplib/src/DSPF_sp_fir_gen/DSPF_sp_fir_gen.h>
+}
+#endif
+
 void cfg_N(Param NVal, Param MStart, Param MNext, Param NMax, Param *N, char* M){
 #if VERBOSE
 	printf("Execute Cfg_N %ld\n", NVal);
@@ -111,9 +117,9 @@ void snk(Param NbS, Param N, float* in, char* M){
 				hash = hash ^ data[j+i*NbS];
 			}
 			if(hash != expectedHash[M[i]]){
-				printf("ERROR: Bad Hash result for %d: %#X instead of %#X\n", i, hash, expectedHash[M[i]]);
+				printf("ERROR: Bad Hash result for %d M=%d  : %#X instead of %#X\n", i, M[i], hash, expectedHash[M[i]]);
 			}else
-				printf("Result %d M=%d OK\n", i, M[i]);
+				printf("Result %d M=%d OK (%#X)\n", i, M[i], hash);
 		}
 	}
 }
@@ -147,28 +153,46 @@ void Switch(Param NbS, char* sel, float* i0, float* i1, float* out){
 
 void FIR(Param NbS, char*ix,  float* in, float* out){
 	float taps[NB_TAPS];
-	float last[NB_TAPS];
 
 #if VERBOSE
 	printf("Execute FIR\n");
 #endif
 
-	int i, j;
-
-//	memcpy(out, in, NSamples*sizeof(float));
-
-	int last_id = 0;
-	memset(last,0,NB_TAPS*sizeof(float));
-	for(i=0; i<NB_TAPS; i++){
+	for(int i=0; i<NB_TAPS; i++){
 		taps[i] = 1.0/NB_TAPS;
 	}
 
-	for(i=0; i<NbS; i++){
+//	memcpy(out, in, NbS*sizeof(float));
+
+#ifdef DSP
+	float input[NbS+NB_TAPS-1];
+
+	memset(input, 0, (NB_TAPS-1)*sizeof(float));
+	memcpy(input+NB_TAPS-1, in, NbS*sizeof(float));
+
+//	printf("Inputs:\n in 0x%x \n out 0x%x\n", in, out);
+
+	DSPF_sp_fir_gen(
+			input,
+			taps,
+			out,
+			NB_TAPS,
+			NbS
+	);
+#else
+
+	int last_id = 0;
+	float last[NB_TAPS];
+
+	memset(last,0,NB_TAPS*sizeof(float));
+
+	for(int i=0; i<NbS; i++){
 		out[i] = 0;
 		last[last_id] = in[i];
-		for(j=0; j<NB_TAPS; j++){
+		for(int j=0; j<NB_TAPS; j++){
 			out[i] += taps[j]*last[(last_id+j)%NB_TAPS];
 		}
 		last_id = (last_id+1)%NB_TAPS;
 	}
+#endif
 }

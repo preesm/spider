@@ -14,13 +14,13 @@
 
 #define CHECK 1
 
-#define NVAL 20
+#define NVAL 15
 #define NBSAMPLES 4000
 
 static float temp[2*NBSAMPLES];
 
 #if CHECK
-	static float input[NBSAMPLES];
+	static float input[NVAL*NBSAMPLES];
 	static float output[NVAL*NBSAMPLES];
 #endif
 
@@ -36,17 +36,14 @@ void hclm_sched(Param MNext, Param MStart, Param N, Param NbS, OmpMonitor* monit
 		M[i] = MStart + i*MNext;
 	}
 
-	for(int i=0; i<N; i++){
-		memcpy(temp, input, NbS*sizeof(float));
-	}
+	int j, i;
+	int n= N;
 
-	int j;
-
-
-	#pragma omp parallel for private(j,temp) firstprivate(input) shared(output) schedule(dynamic)
-	for(int i=0; i<N; i++){
+//	#pragma omp parallel for private(j,temp) firstprivate(input) shared(output) schedule(dynamic)
+	#pragma omp parallel for private(j,temp) schedule(dynamic)
+	for(i=0; i<n; i++){
 		float *int_in, *int_out;
-		int_in 	= input;
+		int_in 	= input+i*NbS;
 		int_out = temp;
 
 		for(j=0; j<M[i]; j++){

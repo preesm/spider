@@ -50,7 +50,7 @@ public:
 	virtual void rstTime();
 	virtual Time getTime();
 
-	PlatformK2Dsp();
+	PlatformK2Dsp(int i);
 	virtual ~PlatformK2Dsp();
 
 private:

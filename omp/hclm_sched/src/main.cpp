@@ -23,18 +23,20 @@
 
 int main(){
 	#if DSP
-		Platform* platform = new PlatformK2Dsp();
+		PlatformK2Dsp platform(0);
 	#else
-		Platform* platform = new PlatformLinux();
+		PlatformLinux platform(0);
 	#endif
 
+	printf("Start\n");
 	try{
-		OmpMonitor* monitor = new OmpMonitor();
-		hclm_sched(0, 7, 7, 4000, monitor);
-		monitor->saveData(1, "test");
+		OmpMonitor monitor(0);
+		hclm_sched(1, 6, 9, 4000, &monitor);
+		monitor.saveData(1, "test");
 	}catch(char const* ex){
 		printf("Error: %s\n",ex);
 	}
+	printf("End\n");
 
 	return 0;
 }

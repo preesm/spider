@@ -51,7 +51,7 @@ typedef struct{
 static taskTime taskTimes[800];
 static int nbTaskTime;
 
-OmpMonitor::OmpMonitor(){
+OmpMonitor::OmpMonitor(int i){
 	nbTaskTime = 0;
 	endTime = 0;
 }

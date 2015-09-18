@@ -56,7 +56,7 @@
 static struct timespec start;
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 
-PlatformLinux::PlatformLinux(){
+PlatformLinux::PlatformLinux(int i){
 	if(platform_)
 		throw "Try to create 2 platforms";
 

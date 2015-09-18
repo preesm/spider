@@ -7,6 +7,7 @@ include Makefile.config
 include Makefile.libomp
 
 PROG_NAME := omp_hclm
+BUILD_TYPE := release
 
 #
 # Compiler option configuration
@@ -15,7 +16,7 @@ LNK_CMD   = $(CFGDIR)/linker.cmd
 OPT_CMD   = $(CFGDIR)/compiler.opt
 CL_OPTS   = -@ $(OPT_CMD) -mv6600 -DDEVICE_K2H --omp -I $(OMP_DIR)/ti/runtime/openmp -I $(DSP_DIR)
 CLPP_OPTS = $(CL_OPTS) --exceptions 
-LNK_OPTS  = -x -c --priority -w
+LNK_OPTS  = -x -c --priority -w -I $(DSP_DIR)/ti/dsplib/lib -ldsplib.ae66  
 CL        = $(XDCCGROOT)/bin/cl6x
 RTS_LIB   = $(XDCCGROOT)/lib/libc.a
 

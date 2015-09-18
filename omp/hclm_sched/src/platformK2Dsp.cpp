@@ -50,22 +50,19 @@ extern "C"{
 #include <ti/csl/cslr_device.h>
 }
 
-CSL_TmrRegsOvly tmr_regs;
+static CSL_TmrRegsOvly tmr_regs;
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
 #define SHARED_MEM_KEY		8452
 
 #define MAX_MSG_SIZE 10*1024
 
-//static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
+static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 
-static CSL_TmrRegsOvly regs;
-
-static inline void initTime();
-
-PlatformK2Dsp::PlatformK2Dsp(){
-	if(platform_)
+PlatformK2Dsp::PlatformK2Dsp(int i){
+	if(platform_){
 		throw "Try to create 2 platforms";
+	}
 
 	platform_ = this;
 
@@ -91,8 +88,6 @@ PlatformK2Dsp::PlatformK2Dsp(){
 	tmr_regs->CNTHI = 0;
 	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMHIRS, 1); 	// Release reset
 	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMLORS, 1); 	// Release reset
-
-	initTime();
 }
 
 PlatformK2Dsp::~PlatformK2Dsp(){
@@ -100,45 +95,46 @@ PlatformK2Dsp::~PlatformK2Dsp(){
 
 /** File Handling */
 int PlatformK2Dsp::fopen(const char* name){
-//	return open(name, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH | S_IWOTH);
-	return -1;
+	return fopen(name);
+//	return -1;
 }
 
 void PlatformK2Dsp::fprintf(int id, const char* fmt, ...){
-//	va_list ap;
-//	va_start(ap, fmt);
-//	int n = vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, fmt, ap);
-//	if(n >= PLATFORM_FPRINTF_BUFFERSIZE){
-//		printf("PLATFORM_FPRINTF_BUFFERSIZE too small\n");
-//	}
-//	write(id, buffer, n);
+	va_list ap;
+	va_start(ap, fmt);
+	int n = vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, fmt, ap);
+	if(n >= PLATFORM_FPRINTF_BUFFERSIZE){
+		printf("PLATFORM_FPRINTF_BUFFERSIZE too small\n");
+	}
+	fprintf(id, "%s", buffer);
 }
 void PlatformK2Dsp::fclose(int id){
-//	close(id);
+	fclose(id);
 }
 
-/** Time Handling */
-static inline void initTime(){
-	/* Init base address */
-	regs = (CSL_TmrRegsOvly)CSL_TIMER_0_REGS;
-}
-
-static clock_t base;
 
 void PlatformK2Dsp::rstTime(){
 	/* Nothing to do, time reset do not send messages */
-	CSL_Uint64 val;
-	val = regs->CNTHI;
-	val = (val<<32) + regs->CNTLO;
-	timeBase_ = val;
+//	CSL_Uint64 val;
+//	val = regs->CNTHI;
+//	val = (val<<32) + regs->CNTLO;
+//	timeBase_ = val;
 
-    /* Initialize timer for clock */
-    TSCL= 0,TSCH=0;
-    base = _itoll(TSCH, TSCL);
+	/* Reset Timer */
+	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMHIRS, 0); 	// Reset
+	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMLORS, 0); 	// Reset
+	tmr_regs->PRDLO = (Uint32)-1;
+	tmr_regs->PRDHI = (Uint32)-1;
+	tmr_regs->CNTLO = 0;
+	tmr_regs->CNTHI = 0;
+	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMHIRS, 1); 	// Release reset
+	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMLORS, 1); 	// Release reset
 }
 
 Time PlatformK2Dsp::getTime(){
-	clock_t t = (_itoll(TSCH, TSCL)-base);
-	return (t+timeBase_*6)/1.2; /* 200MHz to 1GHz */
+	CSL_Uint64 val;
+	val = tmr_regs->CNTHI;
+	val = (val<<32) + tmr_regs->CNTLO;
+	return val*5; /* 200MHz to 1GHz */
 }
 

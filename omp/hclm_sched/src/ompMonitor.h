@@ -41,7 +41,7 @@
 
 class OmpMonitor {
 public:
-	OmpMonitor();
+	OmpMonitor(int i);
 	~OmpMonitor();
 
 	int startTask(int task, int core);

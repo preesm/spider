@@ -16,7 +16,6 @@ LNK_OPTS  = -x -c --priority -w
 CL        = $(XDCCGROOT)/bin/cl6x
 RTS_LIB   = $(XDCCGROOT)/lib/libc.a
 
-
 ifeq ($(BUILD_TYPE),debug)
     CL_OPTS += -g --optimize_with_debug=on
 else

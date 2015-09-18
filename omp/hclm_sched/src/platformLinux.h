@@ -50,7 +50,7 @@ public:
 	virtual void rstTime();
 	virtual Time getTime();
 
-	PlatformLinux();
+	PlatformLinux(int i);
 	virtual ~PlatformLinux();
 
 };

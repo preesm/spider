@@ -95,8 +95,8 @@ typedef struct {
 typedef struct {
 	unsigned long id:32;
 	unsigned long alloc:32;
-	unsigned short size:16;
-	unsigned short ntoken:16;
+	unsigned long size:32;
+	unsigned long ntoken:32;
 } Fifo;
 
 typedef struct {

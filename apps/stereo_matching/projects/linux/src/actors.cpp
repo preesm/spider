@@ -56,6 +56,7 @@ void Config(
 		OUT Param* maxDisp,
 		OUT Param* height,
 		OUT Param* width){
+	printf("Config");
 	*width  = 434;
 	*height = 380;
 	*minDisp = 0;

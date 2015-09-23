@@ -81,22 +81,28 @@ typedef struct{
 
 	StackConfig srdagStack;
 	StackConfig transfoStack;
+
+	bool useGraphOptim;
+	bool useActorPrecedence;
 } SpiderConfig;
 
 typedef struct{
 	Time globalEndTime;
-	Time endTime;
 
-	Time taskOrderingTime;
 	Time mappingTime;
-	Time graphTransfoTime;
+	Time optimTime;
+	Time graphTime;
 
 	Time actorTimes[MAX_STATS_VERTICES][MAX_STATS_PE_TYPES];
 	Time actorFisrt[MAX_STATS_VERTICES];
 	Time actorLast[MAX_STATS_VERTICES];
 	Time actorIterations[MAX_STATS_VERTICES][MAX_STATS_PE_TYPES];
+
 	PiSDFVertex* actors[MAX_STATS_VERTICES];
-	int nbActor;
+	int nPiSDFActor;
+
+	int nSRDAGActor;
+	int nExecSRDAGActor;
 
 	Time forkTime;
 	Time joinTime;
@@ -119,6 +125,10 @@ void spider_setMemAllocType(MemAllocType type, int start, int size);
 void spider_setSchedulerType(SchedulerType type);
 void spider_setSrdagStack(StackConfig cfg);
 void spider_setTransfoStack(StackConfig cfg);
+
+void spider_setGraphOptim(bool useGraphOptim);
+void spider_setActorPrecedence(bool useActorPrecedence);
+void spider_setSpecialActorPrecedence(bool useSpecialActorPrecedence);
 
 void spider_startMonitoring();
 void spider_endMonitoring(TraceSpiderType type);

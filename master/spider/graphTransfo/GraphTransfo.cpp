@@ -66,7 +66,7 @@
 
 #include <launcher/Launcher.h>
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 	memset(job, 0, sizeof(transfoJob));
@@ -131,7 +131,15 @@ static SRDAGVertex* getNextHierVx(SRDAGGraph *topDag){
 	return 0;
 }
 
-void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* transfoSTack, MemAlloc* memAlloc, Scheduler* scheduler){
+void jit_ms(
+		PiSDFGraph* topPisdf,
+		Archi* archi,
+		SRDAGGraph *topSrdag,
+		Stack* transfoSTack,
+		MemAlloc* memAlloc,
+		Scheduler* scheduler,
+		bool useGraphOptim,
+		bool useActorPrecedence){
 
 	/* Initialize topDag */
 
@@ -223,13 +231,15 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 		spider_endMonitoring(TRACE_SPIDER_GRAPH);
 
-		spider_startMonitoring();
-		optims(topSrdag, transfoSTack);
-		spider_endMonitoring(TRACE_SPIDER_OPTIM);
+		if(useGraphOptim){
+			spider_startMonitoring();
+			optims(topSrdag, transfoSTack);
+			spider_endMonitoring(TRACE_SPIDER_OPTIM);
+		}
 
 		/* Schedule and launch execution */
 		spider_startMonitoring();
-		scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi, transfoSTack);
+		scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi, transfoSTack, useActorPrecedence);
 		spider_endMonitoring(TRACE_SPIDER_SCHED);
 
 		Platform::get()->getLrt()->runUntilNoMoreJobs();
@@ -243,6 +253,8 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 			/* Pop job from queue */
 			transfoJob* job = jobQueue.pop();
+
+			topSrdag->print("tmp.gv");
 
 			/* Recompute Dependent Params */
 			for(int paramIx=0; paramIx<job->graph->getNParam(); paramIx++){
@@ -282,11 +294,23 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 
 			transfoSTack->free(brv);
 			transfoSTack->free(job);
+
+			spider_endMonitoring(TRACE_SPIDER_GRAPH);
+			spider_startMonitoring();
 		}
 
 		// TODO
 		topSrdag->updateState();
-		optims(topSrdag, transfoSTack);
+
+		spider_endMonitoring(TRACE_SPIDER_GRAPH);
+
+		if(useGraphOptim){
+			optims(topSrdag, transfoSTack);
+			spider_startMonitoring();
+			spider_endMonitoring(TRACE_SPIDER_OPTIM);
+		}
+
+		spider_startMonitoring();
 
 //        printf("Finish one iter\n");
 	}while(1);
@@ -294,13 +318,15 @@ void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* tra
 	topSrdag->updateState();
 	spider_endMonitoring(TRACE_SPIDER_GRAPH);
 
-	spider_startMonitoring();
-	optims(topSrdag, transfoSTack);
-	spider_endMonitoring(TRACE_SPIDER_OPTIM);
+	if(useGraphOptim){
+		spider_startMonitoring();
+		optims(topSrdag, transfoSTack);
+		spider_endMonitoring(TRACE_SPIDER_OPTIM);
+	}
 
 	/* Schedule and launch execution */
 	spider_startMonitoring();
-	scheduler->schedule(topSrdag, memAlloc, schedule, archi, transfoSTack);
+	scheduler->schedule(topSrdag, memAlloc, schedule, archi, transfoSTack, useActorPrecedence);
 	spider_endMonitoring(TRACE_SPIDER_SCHED);
 
 	Platform::get()->getLrt()->runUntilNoMoreJobs();

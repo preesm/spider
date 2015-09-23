@@ -56,10 +56,10 @@ Launcher::Launcher(){
 	nLaunched_ = 0;
 }
 
-void Launcher::launchVertex(SRDAGVertex* vertex){
+void Launcher::launchVertex(SRDAGVertex* vertex, bool useActorPrecedence){
 	if(vertex->getState() == SRDAG_EXEC){
 		int slave = vertex->getSlave();
-		send_StartJobMsg(slave, vertex);
+		send_StartJobMsg(slave, vertex, useActorPrecedence);
 		nLaunched_++;
 		vertex->setState(SRDAG_RUN);
 	}
@@ -75,7 +75,7 @@ void Launcher::send_ClearTimeMsg(int lrtIx){
 	Platform::getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMsg));
 }
 
-void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
+void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex, bool useActorPrecedence){
 	/** retreive Infos for msg */
 	int nParams = 0;
 	switch(vertex->getType()){
@@ -126,12 +126,13 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		inFifos[i].alloc = edge->getAlloc();
 		inFifos[i].size = edge->getRate();
 
-//		if(edge->getSrc()->getSlave() == edge->getSnk()->getSlave()){
-//			inFifos[i].ntoken = 0;
-////			if(edge->getSrc()->getSlave()>=4)
-////				printf("N token = 0\n");
-//		}
-//		else
+		if(useActorPrecedence &&
+				edge->getSrc()->getSlave() == edge->getSnk()->getSlave()){
+			inFifos[i].ntoken = 0;
+//			if(edge->getSrc()->getSlave()>=4)
+//				printf("N token = 0\n");
+		}
+		else
 			inFifos[i].ntoken = edge->getNToken();
 	}
 
@@ -141,10 +142,11 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 		outFifos[i].alloc = edge->getAlloc();
 		outFifos[i].size = edge->getRate();
 
-//		if(edge->getSrc() && edge->getSnk()
-//				&& edge->getSrc()->getSlave() == edge->getSnk()->getSlave())
-//			outFifos[i].ntoken = 0;
-//		else
+		if(useActorPrecedence
+				&& edge->getSrc() && edge->getSnk()
+				&& edge->getSrc()->getSlave() == edge->getSnk()->getSlave())
+			outFifos[i].ntoken = 0;
+		else
 			outFifos[i].ntoken = edge->getNToken();
 	}
 

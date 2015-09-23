@@ -55,7 +55,7 @@ int main(int argc, char* argv[]){
 	PlatformLinux platform(1, SH_MEM, &archiStack, top_hclm_fcts, N_FCT_TOP_HCLM);
 	Archi* archi = platform.getArchi();
 
-	cfg.memAllocType = MEMALLOC_DUMMY;
+	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
 	cfg.memAllocStart = (void*)0;
 	cfg.memAllocSize = SH_MEM;
 
@@ -65,6 +65,9 @@ int main(int argc, char* argv[]){
 	static char srdagStack[8*1024*1024];
 	cfg.srdagStack = {STACK_STATIC, "SrdagStack", srdagStack, 8*1024*1024};
 	cfg.transfoStack = {STACK_STATIC, "TransfoStack", transfoStack, 8*1024*1024 };
+
+	cfg.useGraphOptim = true;
+	cfg.useActorPrecedence = true;
 
 //	cfg.srdagStack = {STACK_DYNAMIC, "SrdagStack", 0, 0};
 //	cfg.transfoStack = {STACK_DYNAMIC, "TransfoStack", 0, 0};

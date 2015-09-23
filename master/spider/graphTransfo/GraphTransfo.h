@@ -45,7 +45,7 @@
 
 #include <spider.h>
 
-#define MAX_IO_EDGES 1000
+#define MAX_IO_EDGES 100
 
 typedef struct transfoJob{
 	PiSDFGraph* graph;
@@ -56,6 +56,14 @@ typedef struct transfoJob{
 	SRDAGVertex*** bodies;
 } transfoJob;
 
-void jit_ms(PiSDFGraph* topPisdf, Archi* archi, SRDAGGraph *topSrdag, Stack* transfoSTack, MemAlloc* memAlloc, Scheduler* scheduler);
+void jit_ms(
+		PiSDFGraph* topPisdf,
+		Archi* archi,
+		SRDAGGraph *topSrdag,
+		Stack* transfoSTack,
+		MemAlloc* memAlloc,
+		Scheduler* scheduler,
+		bool useGraphOptim,
+		bool useActorPrecedence);
 
 #endif/*GRAPH_TRANSFO_H*/

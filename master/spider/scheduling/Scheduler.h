@@ -51,8 +51,8 @@ public:
 	Scheduler(){}
 	virtual ~Scheduler(){}
 
-	virtual void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack) = 0;
-	virtual void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack) = 0;
+	virtual void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack, bool useActorPrecedence) = 0;
+	virtual void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack, bool useActorPrecedence) = 0;
 
 };
 

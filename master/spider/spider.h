@@ -89,6 +89,9 @@ typedef struct{
 typedef struct{
 	Time globalEndTime;
 
+	Time execTime;
+	Time schedTime;
+
 	Time mappingTime;
 	Time optimTime;
 	Time graphTime;

@@ -280,7 +280,7 @@ PiSDFGraph* FIR_Chan(Archi* archi, Stack* stack){
 	bo_FIR->isExecutableOnPE(CORE_DSP5);
 	bo_FIR->isExecutableOnPE(CORE_DSP6);
 	bo_FIR->isExecutableOnPE(CORE_DSP7);
-	bo_FIR->setTimingOnType(CORE_TYPE_C6X, "100", stack);
+	bo_FIR->setTimingOnType(CORE_TYPE_C6X, "100000", stack);
 //	bo_FIR->isExecutableOnPE(CORE_ARM0);
 //	bo_FIR->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 

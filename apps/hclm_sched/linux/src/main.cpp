@@ -37,21 +37,28 @@
 #include <spider.h>
 #include <platformLinux.h>
 #include "top_hclm.h"
-#include "top_hclm.h"
+#include "tests.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
+#define SRDAG_SIZE 		128	*1024*1024
+#define TRANSFO_SIZE 	128	*1024*1024
+#define PISDF_SIZE 		1	*1024*1024
+#define ARCHI_SIZE 		512	*1024
+
+static char transfoStack[TRANSFO_SIZE];
+static char srdagStack[SRDAG_SIZE];
+static char pisdfStackMem[PISDF_SIZE];
+static char archiStackMem[ARCHI_SIZE];
+
 int main(int argc, char* argv[]){
 	SpiderConfig cfg;
-	ExecutionStat stat;
 
-	static char pisdfStackPtr[1024*1024];
-	static char archiStackPtr[150*1024];
-	StaticStack pisdfStack("PisdfStack", pisdfStackPtr, 1024*1024);
-	StaticStack archiStack("ArchiStack", archiStackPtr, 150*1024);
+	StaticStack pisdfStack("PisdfStack", pisdfStackMem, PISDF_SIZE);
+	StaticStack archiStack("ArchiStack", archiStackMem, ARCHI_SIZE);
 
-#define SH_MEM 0x01000000
+#define SH_MEM 0x04000000
 	PlatformLinux platform(1, SH_MEM, &archiStack, top_hclm_fcts, N_FCT_TOP_HCLM);
 	Archi* archi = platform.getArchi();
 
@@ -61,50 +68,27 @@ int main(int argc, char* argv[]){
 
 	cfg.schedulerType = SCHEDULER_LIST;
 
-	static char transfoStack[8*1024*1024];
-	static char srdagStack[8*1024*1024];
-	cfg.srdagStack = {STACK_STATIC, "SrdagStack", srdagStack, 8*1024*1024};
-	cfg.transfoStack = {STACK_STATIC, "TransfoStack", transfoStack, 8*1024*1024 };
+	cfg.srdagStack.type = STACK_STATIC;
+	cfg.srdagStack.name = "SrdagStack";
+	cfg.srdagStack.size = SRDAG_SIZE;
+	cfg.srdagStack.start = srdagStack;
+
+	cfg.transfoStack.type = STACK_STATIC;
+	cfg.transfoStack.name = "TransfoStack";
+	cfg.transfoStack.size = TRANSFO_SIZE;
+	cfg.transfoStack.start = transfoStack;
 
 	cfg.useGraphOptim = true;
 	cfg.useActorPrecedence = true;
-
-//	cfg.srdagStack = {STACK_DYNAMIC, "SrdagStack", 0, 0};
-//	cfg.transfoStack = {STACK_DYNAMIC, "TransfoStack", 0, 0};
 
 
 	spider_init(cfg);
 
 	printf("Start\n");
 
-	try{
-		for(int iter=1; iter<=1; iter++){
-			printf("N=%d\n", iter);
-			char ganttPath[30];
-			sprintf(ganttPath, "ederc_nvar_%d.pgantt", iter);
-			char srdagPath[30];
-			sprintf(srdagPath, "ederc_nvar_%d.gv", iter);
+	testOptims(&pisdfStack, archi);
 
-			pisdfStack.freeAll();
 
-			PiSDFGraph *topPisdf = init_top_hclm(archi, &pisdfStack, 1, 1, 20, 10, 4000);
-//			topPisdf->print("topPisdf.gv");
-
-			Platform::get()->rstTime();
-
-			spider_launch(archi, topPisdf);
-
-			spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
-			spider_getLastSRDAG()->print(srdagPath);
-
-			printf("EndTime = %ld ms\n", stat.globalEndTime/1000000);
-			printf("ShMem = %d kB\n", stat.memoryUsed/1024);
-
-			free_top_hclm(topPisdf, &pisdfStack);
-		}
-	}catch(const char* s){
-		printf("Exception : %s\n", s);
-	}
 
 	//	try{
 //			for(int iter=1; iter<=1; iter++){

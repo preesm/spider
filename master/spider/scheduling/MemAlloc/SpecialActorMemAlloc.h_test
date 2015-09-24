@@ -34,23 +34,32 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <lrt.h>
-#include <platformK2Dsp.h>
-#include <tools/DynStack.h>
-#include "top_hclm.h"
+#ifndef SPECIAL_ACTOR_MEM_ALLOC_H
+#define SPECIAL_ACTOR_MEM_ALLOC_H
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "../MemAlloc.h"
 
-void initActors();
+class SpecialActorMemAlloc : public MemAlloc {
+public:
+	SpecialActorMemAlloc(int start, int size):
+		MemAlloc(start, size),
+		currentMem_(start),
+		nbFifos_(0){}
 
-int main(int argc, char* argv[]){
-#define SH_MEM 0x00400000
-	try{
-		DynStack archiStack("ArchiStack");
-		PlatformK2Dsp platform(SH_MEM, USE_MSMC, &archiStack, top_hclm_fcts, N_FCT_TOP_HCLM);
-	}catch(const char* s){
-		printf("Exception : %s\n", s);
-	}
-	return 0;
-}
+	~SpecialActorMemAlloc(){}
+
+	virtual void reset();
+	virtual void alloc(List<SRDAGVertex*>* listOfVertices);
+	virtual int getMemUsed();
+
+protected:
+	int currentMem_;
+	int nbFifos_;
+
+	void allocFork(SRDAGVertex* fork);
+	void allocJoin(SRDAGVertex* join);
+	void allocBr(SRDAGVertex* br);
+
+};
+
+#endif/*SPECIAL_ACTOR_MEM_ALLOC_H*/

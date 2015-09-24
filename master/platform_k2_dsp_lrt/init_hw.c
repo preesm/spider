@@ -104,7 +104,7 @@ void init_hw(){
 	/* MSMC memory */
 	msmc_mem_base = CSL_MSMC_SRAM_REGS;
 	/* DDR memory */
-	ddr_mem_base = CSL_DDR3_0_DATA;
+	ddr_mem_base = DDR_BASE;
 	/* FFTC regs */
 	fftc_cfg_regs = (void*)CSL_FFTC_0_CFG_REGS;
 	/* QM regs */

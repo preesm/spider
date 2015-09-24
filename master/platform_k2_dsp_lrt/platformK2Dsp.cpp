@@ -73,7 +73,7 @@ static void* shMem;
 
 static inline void initTime();
 
-PlatformK2Dsp::PlatformK2Dsp(int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts){
+PlatformK2Dsp::PlatformK2Dsp(int shMemSize, SharedMemMode useMsmc, Stack *stack, lrtFct* fcts, int nLrtFcts){
 	CACHE_setL1PSize(CACHE_L1_32KCACHE);
 	CACHE_setL1DSize(CACHE_L1_32KCACHE);
 	CACHE_setL2Size (CACHE_0KCACHE);
@@ -86,7 +86,7 @@ PlatformK2Dsp::PlatformK2Dsp(int shMemSize, Stack *stack, lrtFct* fcts, int nLrt
 
 	/** Initialize shared memory & QMSS*/
 	init_hw();
-	init_qmss();
+	init_qmss(useMsmc);
 
 	shMem = (void*) (data_mem_base+0x400); // todo send base Address
 	printf("Base Data @%#x\n", shMem);

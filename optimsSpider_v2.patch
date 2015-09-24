@@ -1,0 +1,147 @@
+diff --git a/master/common/tools/Set.h b/master/common/tools/Set.h
+index 125b77e..086d570 100644
+--- a/master/common/tools/Set.h
++++ b/master/common/tools/Set.h
+@@ -38,12 +38,16 @@
+ #define SET_H
+ 
+ #include <tools/Stack.h>
++#include <tools/SetElement.h>
+ 
+ template<typename TYPE> class Set {
+ public:
+ 	Set(int nbmax, Stack *stack){
+ 		if(nbmax > 0){
+ 			array = CREATE_MUL(stack, nbmax, TYPE);
++
++			/* Test if TYPE is a SetElement */
++			SetElement* elt = dynamic_cast<SetElement*>(array[0]);
+ 		}else{
+ 			array = 0;
+ 		}
+@@ -83,19 +87,16 @@ template <typename TYPE>
+ inline void Set<TYPE>::add(TYPE value){
+ 	if(nb >= nbMax)
+ 		throw "Not enough space in Set\n";
++
++	((SetElement*)value)->setSetIx(nb);
+ 	array[nb++] = value;
+ }
+ 
+ template <typename TYPE>
+ inline void Set<TYPE>::del(TYPE value){
+-	for(int i=0; i<nb; i++){
+-		if(array[i] == value){
+-			array[i] = array[--nb];
+-			return;
+-		}
+-	}
+-	/* TODO: do not search item */
+-	throw "Deleting Element not present in Set\n";
++	int ix = ((SetElement*)value)->getSetIx();
++	array[ix] = array[--nb];
++	((SetElement*)array[ix])->setSetIx(ix);
+ }
+ 
+ template <typename TYPE>
+diff --git a/master/spider/graphs/PiSDF/PiSDFEdge.h b/master/spider/graphs/PiSDF/PiSDFEdge.h
+index 1f26b5e..aab5e54 100644
+--- a/master/spider/graphs/PiSDF/PiSDFEdge.h
++++ b/master/spider/graphs/PiSDF/PiSDFEdge.h
+@@ -37,12 +37,14 @@
+ #ifndef PISDF_EDGE_H
+ #define PISDF_EDGE_H
+ 
++#include <tools/SetElement.h>
++
+ #include <graphs/PiSDF/PiSDFCommon.h>
+ #include <graphs/PiSDF/PiSDFGraph.h>
+ #include <graphs/PiSDF/PiSDFVertex.h>
+ #include <parser/Expression.h>
+ 
+-class PiSDFEdge {
++class PiSDFEdge: public SetElement{
+ public:
+ 	/** Constructors */
+ 	PiSDFEdge(
+diff --git a/master/spider/graphs/PiSDF/PiSDFParam.h b/master/spider/graphs/PiSDF/PiSDFParam.h
+index 291c48d..b7693bc 100644
+--- a/master/spider/graphs/PiSDF/PiSDFParam.h
++++ b/master/spider/graphs/PiSDF/PiSDFParam.h
+@@ -37,11 +37,13 @@
+ #ifndef PISDF_PARAM_H
+ #define PISDF_PARAM_H
+ 
++#include <tools/SetElement.h>
++
+ #include <graphs/PiSDF/PiSDFCommon.h>
+ 
+ class Expression;
+ 
+-class PiSDFParam{
++class PiSDFParam : public SetElement{
+ public:
+ 	/** Constructor */
+ 	PiSDFParam(
+diff --git a/master/spider/graphs/PiSDF/PiSDFVertex.h b/master/spider/graphs/PiSDF/PiSDFVertex.h
+index 2f4495b..3c04155 100644
+--- a/master/spider/graphs/PiSDF/PiSDFVertex.h
++++ b/master/spider/graphs/PiSDF/PiSDFVertex.h
+@@ -37,13 +37,15 @@
+ #ifndef PISDF_VERTEX_H
+ #define PISDF_VERTEX_H
+ 
++#include <tools/SetElement.h>
++
+ #include <graphs/PiSDF/PiSDFCommon.h>
+ #include <graphs/Archi/Archi.h>
+ #include <parser/Expression.h>
+ 
+ #include <cstring>
+ 
+-class PiSDFVertex {
++class PiSDFVertex: public SetElement {
+ public:
+ 	PiSDFVertex(
+ 			const char* name, int fctId,
+diff --git a/master/spider/graphs/SRDAG/SRDAGEdge.h b/master/spider/graphs/SRDAG/SRDAGEdge.h
+index 46d316f..b7eda95 100644
+--- a/master/spider/graphs/SRDAG/SRDAGEdge.h
++++ b/master/spider/graphs/SRDAG/SRDAGEdge.h
+@@ -37,12 +37,14 @@
+ #ifndef SRDAG_EDGE_H
+ #define SRDAG_EDGE_H
+ 
++#include <tools/SetElement.h>
++
+ #include <graphs/SRDAG/SRDAGCommon.h>
+ //#include "SRDAGVertex.h"
+ //#include "SRDAGGraph.h"
+ //#include <parser/Expression.h>
+ 
+-class SRDAGEdge {
++class SRDAGEdge: public SetElement {
+ public:
+ 	/** Constructors */
+ 	SRDAGEdge();
+diff --git a/master/spider/graphs/SRDAG/SRDAGVertex.h b/master/spider/graphs/SRDAG/SRDAGVertex.h
+index 94d6eb1..a7ec376 100644
+--- a/master/spider/graphs/SRDAG/SRDAGVertex.h
++++ b/master/spider/graphs/SRDAG/SRDAGVertex.h
+@@ -37,13 +37,15 @@
+ #ifndef SRDAG_VERTEX_H
+ #define SRDAG_VERTEX_H
+ 
++#include <tools/SetElement.h>
++
+ #include <graphs/PiSDF/PiSDFVertex.h>
+ #include <graphs/SRDAG/SRDAGCommon.h>
+ #include <graphs/SRDAG/SRDAGEdge.h>
+ 
+ #include <platform.h>
+ 
+-class SRDAGVertex {
++class SRDAGVertex : public SetElement{
+ public:
+ 	friend class SRDAGEdge;
+ 

@@ -83,7 +83,7 @@ void* K2ArmLrtCommunicator::ctrl_start_send(int size){
 
 		if(cur_mono_pkt_out != 0){
 			/* Get Packet info */
-			cur_mono_pkt_out_size  = QMSS_DESC_SIZE(cur_mono_pkt_out);
+			cur_mono_pkt_out_size  = CTRL_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_pkt_out);
 			cur_mono_pkt_out = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_pkt_out);
 
 			/* Clear Cache */
@@ -126,7 +126,7 @@ int K2ArmLrtCommunicator::ctrl_start_recv(void** data){
 		}
 
 		/* Get Packet info */
-		cur_mono_pkt_in_size  = QMSS_DESC_SIZE(cur_mono_pkt_in);
+		cur_mono_pkt_in_size  = CTRL_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_pkt_in);
 		cur_mono_pkt_in = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_pkt_in);
 
 		/* Clear Cache */
@@ -167,7 +167,7 @@ void* K2ArmLrtCommunicator::trace_start_send(int size){
 
 		if(cur_mono_trace_out != 0){
 			/* Get Packet info */
-			cur_mono_trace_out_size  = QMSS_DESC_SIZE(cur_mono_trace_out);
+			cur_mono_trace_out_size  = TRACE_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_trace_out);
 			cur_mono_trace_out = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_trace_out);
 
 			/* Clear Cache */
@@ -223,7 +223,7 @@ void K2ArmLrtCommunicator::data_end_send(Fifo* f){
 			}while(mono_pkt == 0);
 
 			/* Get Packet info */
-			int mono_pkt_size  = QMSS_DESC_SIZE(mono_pkt);
+			int mono_pkt_size  = DATA_DESC_SIZE;//QMSS_DESC_SIZE(mono_pkt);
 			mono_pkt = (Cppi_Desc*)QMSS_DESC_PTR (mono_pkt);
 
 //			/* Clear Cache */
@@ -252,7 +252,7 @@ long K2ArmLrtCommunicator::data_recv(Fifo* f){
 			}while(mono_pkt == 0);
 
 			/* Get Packet info */
-			int mono_pkt_size  = QMSS_DESC_SIZE(mono_pkt);
+			int mono_pkt_size  = DATA_DESC_SIZE;//QMSS_DESC_SIZE(mono_pkt);
 			mono_pkt = (Cppi_Desc*)QMSS_DESC_PTR (mono_pkt);
 
 //			/* Clear Cache */

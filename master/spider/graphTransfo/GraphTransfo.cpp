@@ -66,7 +66,7 @@
 
 #include <launcher/Launcher.h>
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 	memset(job, 0, sizeof(transfoJob));
@@ -253,8 +253,6 @@ void jit_ms(
 
 			/* Pop job from queue */
 			transfoJob* job = jobQueue.pop();
-
-			topSrdag->print("tmp.gv");
 
 			/* Recompute Dependent Params */
 			for(int paramIx=0; paramIx<job->graph->getNParam(); paramIx++){

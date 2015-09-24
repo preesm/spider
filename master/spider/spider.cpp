@@ -257,6 +257,7 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 	stat->mappingTime = 0;
 	stat->graphTime = 0;
 	stat->optimTime = 0;
+	stat->schedTime = 0;
 	stat->globalEndTime = 0;
 
 	stat->forkTime = 0;
@@ -349,6 +350,8 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 					Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", 	regenerateColor(i++));
 					Platform::get()->fprintf(ganttFile, "\t\t>Step_%d.</event>\n", spiderTaskName[traceMsg->spiderTask]);
 
+					stat->schedTime = std::max(traceMsg->end, stat->schedTime);
+
 					switch(traceMsg->spiderTask){
 					case TRACE_SPIDER_GRAPH:
 						stat->graphTime += traceMsg->end - traceMsg->start;
@@ -384,4 +387,6 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 	Platform::get()->fclose(ganttFile);
 
 	Platform::get()->fclose(latexFile);
+
+	stat->execTime = stat->globalEndTime - stat->schedTime;
 }

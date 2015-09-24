@@ -1,0 +1,233 @@
+diff --git a/master/common/tools/Set.h b/master/common/tools/Set.h
+index 79e44fc..125b77e 100644
+--- a/master/common/tools/Set.h
++++ b/master/common/tools/Set.h
+@@ -65,8 +65,6 @@ public:
+ 	inline int getN() const;
+ 	inline TYPE const * const getArray() const;
+ 
+-	inline int getIxOf(TYPE val);
+-
+ private:
+ 	Stack* stack_;
+ 	TYPE* array;
+@@ -113,16 +111,4 @@ inline TYPE const * const Set<TYPE>::getArray() const{
+ 	return array;
+ }
+ 
+-template <typename TYPE>
+-inline int Set<TYPE>::getIxOf(TYPE val){
+-	int ix = -1;
+-	for(int i=0; i<this->nb; i++){
+-		if(val == array[i]){
+-			ix = i;
+-			break;
+-		}
+-	}
+-	return ix;
+-}
+-
+ #endif // SET_H
+diff --git a/master/spider/graphs/SRDAG/SRDAGGraph.cpp b/master/spider/graphs/SRDAG/SRDAGGraph.cpp
+index 97d8968..a11a753 100644
+--- a/master/spider/graphs/SRDAG/SRDAGGraph.cpp
++++ b/master/spider/graphs/SRDAG/SRDAGGraph.cpp
+@@ -180,15 +180,19 @@ SRDAGEdge* SRDAGGraph::addEdge(
+ }
+ 
+ void SRDAGGraph::delVertex(SRDAGVertex* vertex){
+-	int nInEdge = vertex->getNInEdge();
+-	int nOutEdge = vertex->getNOutEdge();
+-
+-	for(int i=0; i<nInEdge; i++)
++	int i=0;
++	while(vertex->getNConnectedInEdge() > 0){
+ 		if(vertex->getInEdge(i) != 0)
+ 			vertex->getInEdge(i)->disconnectSnk();
+-	for(int i=0; i<nOutEdge; i++)
++		i++;
++	}
++
++	i=0;
++	while(vertex->getNConnectedOutEdge() > 0){
+ 		if(vertex->getOutEdge(i) != 0)
+ 			vertex->getOutEdge(i)->disconnectSrc();
++		i++;
++	}
+ 
+ 	vertices_.del(vertex);
+ 	vertex->~SRDAGVertex();
+diff --git a/master/spider/graphs/SRDAG/SRDAGGraph.h b/master/spider/graphs/SRDAG/SRDAGGraph.h
+index 215bbd2..8dce605 100644
+--- a/master/spider/graphs/SRDAG/SRDAGGraph.h
++++ b/master/spider/graphs/SRDAG/SRDAGGraph.h
+@@ -68,12 +68,9 @@ public:
+ 	inline SRDAGVertex* getVertex(int ix);
+ 	inline SRDAGVertex* getVertexFromIx(int ix);
+ 
+-	inline int getIxOfEdge(SRDAGEdge* edge);
+-	inline int getIxOfVertex(SRDAGVertex* vertex);
+-
+ 	/** Size getters */
+-	inline int getNEdge();
+-	inline int getNVertex();
++	inline int getNEdge() const;
++	inline int getNVertex() const;
+ 	int getNExecVertex();
+ 
+ 	/** Print Fct */
+@@ -105,18 +102,11 @@ inline SRDAGVertex* SRDAGGraph::getVertexFromIx(int ix){
+ 	throw "Vertex not found\n";
+ }
+ 
+-inline int SRDAGGraph::getIxOfEdge(SRDAGEdge* edge){
+-	return edges_.getIxOf(edge);
+-}
+-inline int SRDAGGraph::getIxOfVertex(SRDAGVertex* vertex){
+-	return vertices_.getIxOf(vertex);
+-}
+-
+ /** Size getters */
+-inline int SRDAGGraph::getNEdge(){
++inline int SRDAGGraph::getNEdge() const {
+ 	return edges_.getN();
+ }
+-inline int SRDAGGraph::getNVertex(){
++inline int SRDAGGraph::getNVertex() const{
+ 	return vertices_.getN();
+ }
+ 
+diff --git a/master/spider/graphs/SRDAG/SRDAGVertex.cpp b/master/spider/graphs/SRDAG/SRDAGVertex.cpp
+index 3282513..eb87c3b 100644
+--- a/master/spider/graphs/SRDAG/SRDAGVertex.cpp
++++ b/master/spider/graphs/SRDAG/SRDAGVertex.cpp
+@@ -57,13 +57,16 @@ SRDAGVertex::SRDAGVertex(
+ 	graph_ = graph;
+ 	reference_ = reference;
+ 
+-	nInEdge_ = nInEdge;
+-	inEdges_ = CREATE_MUL(stack, nInEdge_, SRDAGEdge*);
+-	memset(inEdges_, 0, nInEdge_*sizeof(SRDAGEdge*));
++	nMaxInEdge_ = nInEdge;
++	inEdges_ = CREATE_MUL(stack, nMaxInEdge_, SRDAGEdge*);
++	memset(inEdges_, 0, nMaxInEdge_*sizeof(SRDAGEdge*));
+ 
+-	nOutEdge_ = nOutEdge;
+-	outEdges_ = CREATE_MUL(stack, nOutEdge_, SRDAGEdge*);
+-	memset(outEdges_, 0, nOutEdge_*sizeof(SRDAGEdge*));
++	nMaxOutEdge_ = nOutEdge;
++	outEdges_ = CREATE_MUL(stack, nMaxOutEdge_, SRDAGEdge*);
++	memset(outEdges_, 0, nMaxOutEdge_*sizeof(SRDAGEdge*));
++
++	nCurInEdge_ = 0;
++	nCurOutEdge_ = 0;
+ 
+ 	nInParam_ = nInParam;
+ 	inParams_ = CREATE_MUL(stack, nInParam_, int);
+diff --git a/master/spider/graphs/SRDAG/SRDAGVertex.h b/master/spider/graphs/SRDAG/SRDAGVertex.h
+index 7ab280d..94d6eb1 100644
+--- a/master/spider/graphs/SRDAG/SRDAGVertex.h
++++ b/master/spider/graphs/SRDAG/SRDAGVertex.h
+@@ -126,7 +126,8 @@ private:
+ 	SRDAGGraph* graph_;
+ 	PiSDFVertex* reference_;
+ 
+-	int nInEdge_, nOutEdge_;
++	int nMaxInEdge_, nMaxOutEdge_;
++	int nCurInEdge_, nCurOutEdge_;
+ 	SRDAGEdge **inEdges_, **outEdges_;
+ 
+ 	int nInParam_, nOutParam_;
+@@ -168,33 +169,25 @@ inline const int* const * SRDAGVertex::getOutParams() const{
+ 
+ /** Data edge getters */
+ inline int SRDAGVertex::getNInEdge() const{
+-	return nInEdge_;
++	return nMaxInEdge_;
+ }
+ inline int SRDAGVertex::getNOutEdge() const{
+-	return nOutEdge_;
++	return nMaxOutEdge_;
+ }
+ inline int SRDAGVertex::getNConnectedInEdge() const{
+-	int nb=0;
+-	for(int i=0; i<nInEdge_; i++)
+-		if(inEdges_[i] != 0)
+-			nb++;
+-	return nb;
++	return nCurInEdge_;
+ }
+ inline int SRDAGVertex::getNConnectedOutEdge() const{
+-	int nb=0;
+-	for(int i=0; i<nOutEdge_; i++)
+-		if(outEdges_[i] != 0)
+-			nb++;
+-	return nb;
++	return nCurOutEdge_;
+ }
+ inline SRDAGEdge* SRDAGVertex::getInEdge(int ix){
+-	if(ix < nInEdge_ && ix >= 0)
++	if(ix < nMaxInEdge_ && ix >= 0)
+ 		return inEdges_[ix];
+ 	else
+ 		throw "SRDAGVertex: Bad ix in getInEdge";
+ }
+ inline SRDAGEdge* SRDAGVertex::getOutEdge(int ix){
+-	if(ix < nOutEdge_ && ix >= 0)
++	if(ix < nMaxOutEdge_ && ix >= 0)
+ 		return outEdges_[ix];
+ 	else
+ 		throw "SRDAGVertex: Bad ix in getOutEdge";
+@@ -209,36 +202,44 @@ inline SRDAGEdge* const * SRDAGVertex::getOutEdges(){
+ 
+ /** Connect Fcts */
+ inline void SRDAGVertex::connectInEdge(SRDAGEdge* edge, int ix){
+-	if(ix >= nInEdge_ && ix < 0)
++	if(ix >= nMaxInEdge_ && ix < 0)
+ 		throw "SRDAGVertex: Bad ix in connectInEdge";
+ 	else if(inEdges_[ix] != 0)
+ 		throw "SRDAGVertex: Try to overwrite already connected input edge";
+-	else
++	else{
+ 		inEdges_[ix] = edge;
++		nCurInEdge_++;
++	}
+ }
+ inline void SRDAGVertex::connectOutEdge(SRDAGEdge* edge, int ix){
+-	if(ix >= nOutEdge_ && ix < 0)
++	if(ix >= nMaxOutEdge_ && ix < 0)
+ 		throw "SRDAGVertex: Bad ix in connectOutEdge";
+ 	else if(outEdges_[ix] != 0)
+ 		throw "SRDAGVertex: Try to overwrite already connected output edge";
+-	else
++	else{
+ 		outEdges_[ix] = edge;
++		nCurOutEdge_++;
++	}
+ }
+ inline void SRDAGVertex::disconnectInEdge(int ix){
+-	if(ix >= nInEdge_ && ix < 0)
++	if(ix >= nMaxInEdge_ && ix < 0)
+ 		throw "SRDAGVertex: Bad ix in disconnectInEdge";
+ 	else if(inEdges_[ix] == 0)
+ 		throw "SRDAGVertex: Try to disconnect empty input edge";
+-	else
++	else{
+ 		inEdges_[ix] = 0;
++		nCurInEdge_--;
++	}
+ }
+ inline void SRDAGVertex::disconnectOutEdge(int ix){
+-	if(ix >= nOutEdge_ && ix < 0)
++	if(ix >= nMaxOutEdge_ && ix < 0)
+ 		throw "SRDAGVertex: Bad ix in disconnectOutEdge";
+ 	else if(outEdges_[ix] == 0)
+ 		throw "SRDAGVertex: Try to disconnect empty output edge";
+-	else
++	else{
+ 		outEdges_[ix] = 0;
++		nCurOutEdge_--;
++	}
+ }
+ 
+ /** Add Param Fcts */

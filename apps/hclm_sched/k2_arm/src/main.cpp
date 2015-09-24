@@ -37,6 +37,7 @@
 #include <spider.h>
 #include <platformK2Arm.h>
 #include "top_hclm.h"
+#include "tests.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,21 +54,19 @@ static char archiStackMem[ARCHI_SIZE];
 
 int main(int argc, char* argv[]){
 	SpiderConfig cfg;
-	ExecutionStat stat;
 
 	StaticStack pisdfStack("PisdfStack", pisdfStackMem, PISDF_SIZE);
 	StaticStack archiStack("ArchiStack", archiStackMem, ARCHI_SIZE);
 
 #define SH_MEM 0x00500000
-	PlatformK2Arm platform(4, 8, SH_MEM, &archiStack, top_hclm_fcts, N_FCT_TOP_HCLM);
+	PlatformK2Arm platform(4, 8, USE_MSMC, SH_MEM, &archiStack, top_hclm_fcts, N_FCT_TOP_HCLM);
 	Archi* archi = platform.getArchi();
 
-	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
+	cfg.memAllocType = MEMALLOC_DUMMY;
 	cfg.memAllocStart = (void*)0;
 	cfg.memAllocSize = SH_MEM;
 
 	cfg.schedulerType = SCHEDULER_LIST;
-
 
 	cfg.srdagStack.type = STACK_STATIC;
 	cfg.srdagStack.name = "SrdagStack";
@@ -79,88 +78,15 @@ int main(int argc, char* argv[]){
 	cfg.transfoStack.size = TRANSFO_SIZE;
 	cfg.transfoStack.start = transfoStack;
 
+	cfg.useGraphOptim = false;
+	cfg.useActorPrecedence = false;
+
 	spider_init(cfg);
 
 	printf("Start\n");
 
-	try{
-		pisdfStack.freeAll();
+	testOptims(&pisdfStack, archi);
 
-		PiSDFGraph *topPisdf = init_top_hclm(archi, &pisdfStack, 0, 9, 20, 10, 4000);
-//			topPisdf->print("topPisdf.gv");
-
-		Platform::get()->rstTime();
-
-		spider_launch(archi, topPisdf);
-
-		spider_printGantt(
-				archi, spider_getLastSRDAG(),
-				"hclm_sched.pgantt",
-				"latex.tex",
-				&stat);
-		spider_getLastSRDAG()->print("hclm_sched.gv");
-
-		printf("EndTime = %ld ms\n", stat.globalEndTime/1000000);
-		printf("ShMem = %d kB\n", stat.memoryUsed/1024);
-
-		free_top_hclm(topPisdf, &pisdfStack);
-	}catch(const char* s){
-		printf("Exception : %s\n", s);
-	}
-
-	try{
-		pisdfStack.freeAll();
-
-		PiSDFGraph *topPisdf = init_top_hclm_opt(archi, &pisdfStack, 0, 9, 20, 10, 4000);
-//			topPisdf->print("topPisdf.gv");
-
-		Platform::get()->rstTime();
-
-		spider_launch(archi, topPisdf);
-
-		spider_printGantt(
-				archi, spider_getLastSRDAG(),
-				"hclm_sched_opt.pgantt",
-				"latex.tex",
-				&stat);
-		spider_getLastSRDAG()->print("hclm_sched_opt.gv");
-
-		printf("EndTime = %ld ms\n", stat.globalEndTime/1000000);
-		printf("ShMem = %d kB\n", stat.memoryUsed/1024);
-
-		free_top_hclm_opt(topPisdf, &pisdfStack);
-	}catch(const char* s){
-		printf("Exception : %s\n", s);
-	}
-
-	//	try{
-//			for(int iter=1; iter<=1; iter++){
-//				printf("N=%d\n", iter);
-//				char ganttPath[30];
-//				sprintf(ganttPath, "ederc_nvar_%d.pgantt", iter);
-//				char srdagPath[30];
-//				sprintf(srdagPath, "ederc_nvar_%d.gv", iter);
-//
-//				pisdfStack.freeAll();
-//
-//				PiSDFGraph *topPisdf = init_top_hclm_opt(archi, &pisdfStack, -1, 10, 20, 9, 4000);
-//	//			topPisdf->print("topPisdf.gv");
-//
-//				Platform::get()->rstTime();
-//
-//				spider_launch(archi, topPisdf);
-//
-//				spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
-//				spider_getLastSRDAG()->print(srdagPath);
-//
-//				printf("EndTime = %ld ms\n", stat.globalEndTime/1000000);
-//				printf("ShMem = %d kB\n", stat.memoryUsed/1024);
-//
-//				free_top_hclm_opt(topPisdf, &pisdfStack);
-//			}
-	//	}catch(const char* s){
-	//		printf("Exception : %s\n", s);
-	//	}
 	printf("finished\n");
 
 	spider_free();

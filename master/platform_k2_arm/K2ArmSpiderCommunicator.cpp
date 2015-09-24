@@ -131,7 +131,7 @@ int K2ArmSpiderCommunicator::ctrl_start_recv(int lrtIx, void** data){
 		}
 
 		/* Get Packet info */
-		cur_mono_pkt_in_size[lrtIx] = QMSS_DESC_SIZE(cur_mono_pkt_in[lrtIx]);
+		cur_mono_pkt_in_size[lrtIx] = CTRL_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_pkt_in[lrtIx]);
 		cur_mono_pkt_in[lrtIx] = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_pkt_in[lrtIx]);
 
 		/* Clear Cache */
@@ -172,7 +172,7 @@ void* K2ArmSpiderCommunicator::trace_start_send(int size){
 
 		if(cur_mono_trace_out != 0){
 			/* Get Packet info */
-			cur_mono_trace_out_size  = QMSS_DESC_SIZE(cur_mono_trace_out);
+			cur_mono_trace_out_size  = TRACE_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_trace_out);
 			cur_mono_trace_out = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_trace_out);
 
 			/* Clear Cache */
@@ -215,7 +215,7 @@ int K2ArmSpiderCommunicator::trace_start_recv(void** data){
 		}
 
 		/* Get Packet info */
-		cur_mono_trace_in_size = QMSS_DESC_SIZE(cur_mono_trace_in);
+		cur_mono_trace_in_size = TRACE_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_trace_in);
 		cur_mono_trace_in = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_trace_in);
 
 		/* Clear Cache */

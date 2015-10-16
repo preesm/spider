@@ -245,8 +245,17 @@ PiSDFGraph* FIR_Chan(Archi* archi, Stack* stack){
 		/*OutData*/ 2,
 		/*InParam*/ 1);
 	bo_initSw->addInParam(0, param_M);
-	bo_initSw->isExecutableOnPE(CORE_ARM0);
+	bo_initSw->isExecutableOnPE(CORE_ARM1);
+	bo_initSw->isExecutableOnPE(CORE_DSP0);
+	bo_initSw->isExecutableOnPE(CORE_DSP1);
+	bo_initSw->isExecutableOnPE(CORE_DSP2);
+	bo_initSw->isExecutableOnPE(CORE_DSP3);
+	bo_initSw->isExecutableOnPE(CORE_DSP4);
+	bo_initSw->isExecutableOnPE(CORE_DSP5);
+	bo_initSw->isExecutableOnPE(CORE_DSP6);
+	bo_initSw->isExecutableOnPE(CORE_DSP7);
 	bo_initSw->setTimingOnType(CORE_TYPE_ARM, "100", stack);
+	bo_initSw->setTimingOnType(CORE_TYPE_C6X, "100", stack);
 
 	PiSDFVertex* bo_Switch = graph->addBodyVertex(
 		/*Name*/    "Switch",
@@ -280,7 +289,7 @@ PiSDFGraph* FIR_Chan(Archi* archi, Stack* stack){
 	bo_FIR->isExecutableOnPE(CORE_DSP5);
 	bo_FIR->isExecutableOnPE(CORE_DSP6);
 	bo_FIR->isExecutableOnPE(CORE_DSP7);
-	bo_FIR->setTimingOnType(CORE_TYPE_C6X, "100", stack);
+	bo_FIR->setTimingOnType(CORE_TYPE_C6X, "100000", stack);
 //	bo_FIR->isExecutableOnPE(CORE_ARM0);
 //	bo_FIR->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 

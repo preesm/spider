@@ -181,18 +181,18 @@ void FIR(Param NbS, char*ix,  float* in, float* out){
 	);
 #else
 
-//	int last_id = 0;
-//	float last[NB_TAPS];
-//
-//	memset(last,0,NB_TAPS*sizeof(float));
-//
-//	for(int i=0; i<NbS; i++){
-//		out[i] = 0;
-//		last[last_id] = in[i];
-//		for(int j=0; j<NB_TAPS; j++){
-//			out[i] += taps[j]*last[(last_id+j)%NB_TAPS];
-//		}
-//		last_id = (last_id+1)%NB_TAPS;
-//	}
+	int last_id = 0;
+	float last[NB_TAPS];
+
+	memset(last,0,NB_TAPS*sizeof(float));
+
+	for(int i=0; i<NbS; i++){
+		out[i] = 0;
+		last[last_id] = in[i];
+		for(int j=0; j<NB_TAPS; j++){
+			out[i] += taps[j]*last[(last_id+j)%NB_TAPS];
+		}
+		last_id = (last_id+1)%NB_TAPS;
+	}
 #endif
 }

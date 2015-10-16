@@ -48,7 +48,7 @@ int main(int argc, char* argv[]){
 #define SH_MEM 0x00400000
 	try{
 		DynStack archiStack("ArchiStack");
-		PlatformK2Dsp platform(SH_MEM, &archiStack, top_hclm_fcts, N_FCT_TOP_HCLM);
+		PlatformK2Dsp platform(SH_MEM, USE_MSMC, &archiStack, top_hclm_fcts, N_FCT_TOP_HCLM);
 	}catch(const char* s){
 		printf("Exception : %s\n", s);
 	}

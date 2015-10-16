@@ -106,7 +106,7 @@ int fftc_send (int fftc_ix, Cplx16* in, Cplx16* out, int fftSize, int numBlocks)
 		printf ("Out of descriptors!! Cannot get a free Tx descriptor \n");
 	}
 
-	descSize  = QMSS_DESC_SIZE(pCppiDesc);
+	descSize  = FFTC_DESC_SIZE;//QMSS_DESC_SIZE(pCppiDesc);
 	pCppiDesc = (void*) (QMSS_DESC_PTR (pCppiDesc));
 
 	Osal_DescBeginMemAccess(pCppiDesc, descSize);
@@ -166,7 +166,7 @@ int fftc_send (int fftc_ix, Cplx16* in, Cplx16* out, int fftSize, int numBlocks)
 		printQueueState();
 	}
 
-	descSize  = QMSS_DESC_SIZE(pCppiDesc);
+	descSize  = FFTC_DESC_SIZE;//QMSS_DESC_SIZE(pCppiDesc);
 	pCppiDesc = (void*) (QMSS_DESC_PTR (pCppiDesc));
 
 	Osal_DescBeginMemAccess(pCppiDesc, descSize);

@@ -60,6 +60,7 @@ public:
 	void trace_end_recv();
 
 private:
+	int maxCtrlMsgSize;
 };
 
 #endif/*K2_ARM_SPIDER_COMMUNICATOR_H*/

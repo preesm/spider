@@ -73,7 +73,7 @@ static void* shMem;
 
 static inline void initTime();
 
-PlatformK2Dsp::PlatformK2Dsp(int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts){
+PlatformK2Dsp::PlatformK2Dsp(int shMemSize, SharedMemMode useMsmc, Stack *stack, lrtFct* fcts, int nLrtFcts){
 	CACHE_setL1PSize(CACHE_L1_32KCACHE);
 	CACHE_setL1DSize(CACHE_L1_32KCACHE);
 	CACHE_setL2Size (CACHE_0KCACHE);
@@ -86,7 +86,7 @@ PlatformK2Dsp::PlatformK2Dsp(int shMemSize, Stack *stack, lrtFct* fcts, int nLrt
 
 	/** Initialize shared memory & QMSS*/
 	init_hw();
-	init_qmss();
+	init_qmss(useMsmc);
 
 	shMem = (void*) (data_mem_base+0x400); // todo send base Address
 	printf("Base Data @%#x\n", shMem);
@@ -148,7 +148,7 @@ static inline void initTime(){
 	regs = (CSL_TmrRegsOvly)CSL_TIMER_0_REGS;
 }
 
-static clock_t base;
+static uint64_t base;
 
 void PlatformK2Dsp::rstTime(ClearTimeMsg* msg){
 	/* Nothing to do, time reset do not send messages */
@@ -167,7 +167,7 @@ void PlatformK2Dsp::rstTime(){
 }
 
 Time PlatformK2Dsp::getTime(){
-	clock_t t = (_itoll(TSCH, TSCL)-base);
+	uint64_t t = (_itoll(TSCH, TSCL)-base)/1000;
 	return (t+timeBase_*6)/1.2; /* 200MHz to 1GHz */
 }
 

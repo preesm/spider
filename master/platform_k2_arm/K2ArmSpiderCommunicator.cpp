@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include <sys/mman.h>
 #include <string.h>
+#include <algorithm>
 
 extern "C"{
 #include <ti/drv/qmss/qmss_drv.h>
@@ -72,13 +73,17 @@ K2ArmSpiderCommunicator::K2ArmSpiderCommunicator(){
 	cur_mono_trace_in_size 	= 0;
 	cur_mono_trace_out 		= 0;
 	cur_mono_trace_out_size = 0;
+	maxCtrlMsgSize = 0;
 }
 
 K2ArmSpiderCommunicator::~K2ArmSpiderCommunicator(){
+	printf("Spider Ctrl msg Max: %d / %d\n", maxCtrlMsgSize, CTRL_DESC_SIZE);
 }
 
 void* K2ArmSpiderCommunicator::ctrl_start_send(int lrtIx, int size){
 	int dataOffset = 0;
+
+	maxCtrlMsgSize = std::max(maxCtrlMsgSize,size);
 
 	if(cur_mono_pkt_out[lrtIx] != 0)
 		throw "SpiderCommunicator: Ctrl: Try to send a msg when previous one is not sent";
@@ -101,8 +106,10 @@ void* K2ArmSpiderCommunicator::ctrl_start_send(int lrtIx, int size){
 		usleep(100);
 	}
 
-	if(size > cur_mono_pkt_out_size[lrtIx] - dataOffset)
-		throw "LrtCommunicator: Try to send a message too big";
+	if(size > cur_mono_pkt_out_size[lrtIx] - dataOffset){
+		printf("%d > %d\n", size, cur_mono_pkt_out_size[lrtIx] - dataOffset);
+		throw "SpiderCommunicator: ctrl_start_send: Try to send a message too big";
+	}
 
 	/* Add data to current descriptor */
 	void* data_pkt = (void*)(((int)cur_mono_pkt_out[lrtIx]) + dataOffset);
@@ -131,7 +138,7 @@ int K2ArmSpiderCommunicator::ctrl_start_recv(int lrtIx, void** data){
 		}
 
 		/* Get Packet info */
-		cur_mono_pkt_in_size[lrtIx] = QMSS_DESC_SIZE(cur_mono_pkt_in[lrtIx]);
+		cur_mono_pkt_in_size[lrtIx] = CTRL_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_pkt_in[lrtIx]);
 		cur_mono_pkt_in[lrtIx] = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_pkt_in[lrtIx]);
 
 		/* Clear Cache */
@@ -172,7 +179,7 @@ void* K2ArmSpiderCommunicator::trace_start_send(int size){
 
 		if(cur_mono_trace_out != 0){
 			/* Get Packet info */
-			cur_mono_trace_out_size  = QMSS_DESC_SIZE(cur_mono_trace_out);
+			cur_mono_trace_out_size  = TRACE_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_trace_out);
 			cur_mono_trace_out = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_trace_out);
 
 			/* Clear Cache */
@@ -215,7 +222,7 @@ int K2ArmSpiderCommunicator::trace_start_recv(void** data){
 		}
 
 		/* Get Packet info */
-		cur_mono_trace_in_size = QMSS_DESC_SIZE(cur_mono_trace_in);
+		cur_mono_trace_in_size = TRACE_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_trace_in);
 		cur_mono_trace_in = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_trace_in);
 
 		/* Clear Cache */

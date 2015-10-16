@@ -163,17 +163,20 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMe
 	sprintf(name, "PID %d (Spider)", cpIds[0]);
 	archi_->setName(nDsp, name);
 	archi_->setPEType(nDsp, 1);
+	archi_->activatePE(nDsp);
 
 	for(int i=1; i<nArm; i++){
 		sprintf(name, "PID %d (LRT %d)", cpIds[i], nDsp+i);
 		archi_->setPEType(nDsp+i, 1);
 		archi_->setName(nDsp+i, name);
+		archi_->activatePE(nDsp+i);
 	}
 
 	for(int i=0; i<nDsp; i++){
 		sprintf(name, "DSP %d (LRT %d)", i, i);
 		archi_->setPEType(i, 0);
 		archi_->setName(i, name);
+		archi_->activatePE(i);
 	}
 
 	this->rstTime();
@@ -266,7 +269,7 @@ Time PlatformK2Arm::getTime(){
 	CSL_Uint64 val;
 	val = tmr_regs->CNTHI;
 	val = (val<<32) + tmr_regs->CNTLO;
-	return val*5; /* 200MHz to 1GHz */
+	return val*5/1000; /* 200MHz to 1GHz */
 }
 
 SharedMemArchi* PlatformK2Arm::getArchi(){

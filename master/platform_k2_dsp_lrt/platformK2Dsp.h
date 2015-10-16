@@ -41,6 +41,11 @@
 #include <tools/Stack.h>
 #include <lrt.h>
 
+typedef enum{
+	USE_MSMC = 1,
+	USE_DDR = 0
+} SharedMemMode;
+
 class PlatformK2Dsp: public Platform{
 public:
 	/** File Handling */
@@ -58,7 +63,7 @@ public:
 	virtual void rstTime(ClearTimeMsg* msg);
 	virtual Time getTime();
 
-	PlatformK2Dsp(int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts);
+	PlatformK2Dsp(int shMemSize, SharedMemMode useMsmc,  Stack *stack, lrtFct* fcts, int nLrtFcts);
 	virtual ~PlatformK2Dsp();
 private:
 

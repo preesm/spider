@@ -62,6 +62,9 @@ public:
 	long data_recv(Fifo* f);
 
 private:
+	int maxCtrlMsgSize;
+	int maxTraceMsgSize;
+	int maxDataMsgSize;
 };
 
 #endif/*K2_ARM_LRT_COMMUNICATOR_H*/

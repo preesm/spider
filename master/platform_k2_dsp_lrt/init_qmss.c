@@ -91,10 +91,11 @@ void init_qmss(int useMsmc){
     void* trace_desc_base = (void*)align((int)ctrl_desc_base + CTRL_DESC_NUM*CTRL_DESC_SIZE);
     void* fftc_desc_base  = (void*)align((int)trace_desc_base + TRACE_DESC_NUM*TRACE_DESC_SIZE);
 
-    if(useMsmc)
+    if(useMsmc){
     	data_mem_base = align((int)fftc_desc_base + FFTC_DESC_NUM*FFTC_DESC_SIZE);
-    else
-        data_mem_base = align((int)ddr_mem_base);
+    }else{
+    	data_mem_base = align((int)ddr_mem_base);
+    }
 
     /* Initialize QMSS Driver */
     memset (&qmss_initCfg, 0, sizeof (Qmss_InitCfg));

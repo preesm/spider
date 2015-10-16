@@ -68,9 +68,15 @@ K2ArmLrtCommunicator::K2ArmLrtCommunicator(){
 	cur_mono_pkt_in = 0;
 	cur_mono_pkt_out = 0;
 	cur_mono_trace_out = 0;
+	maxCtrlMsgSize = 0;
+	maxTraceMsgSize = 0;
+	maxDataMsgSize = 0;
 }
 
 K2ArmLrtCommunicator::~K2ArmLrtCommunicator(){
+	printf("LRT Ctrl msg Max: %d / %d\n", maxCtrlMsgSize, CTRL_DESC_SIZE);
+	printf("LRT Trace msg Max: %d / %d\n", maxCtrlMsgSize, TRACE_DESC_SIZE);
+	printf("LRT Data msg Max: %d / %d\n", maxCtrlMsgSize, DATA_DESC_SIZE);
 }
 
 void* K2ArmLrtCommunicator::ctrl_start_send(int size){
@@ -78,12 +84,14 @@ void* K2ArmLrtCommunicator::ctrl_start_send(int size){
 	if(cur_mono_pkt_out != 0)
 		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
 
+	maxCtrlMsgSize = std::max(maxCtrlMsgSize,size);
+
 	while(cur_mono_pkt_out == 0){
 		cur_mono_pkt_out = (Cppi_Desc*)Qmss_queuePop(QUEUE_FREE_CTRL);
 
 		if(cur_mono_pkt_out != 0){
 			/* Get Packet info */
-			cur_mono_pkt_out_size  = QMSS_DESC_SIZE(cur_mono_pkt_out);
+			cur_mono_pkt_out_size  = CTRL_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_pkt_out);
 			cur_mono_pkt_out = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_pkt_out);
 
 			/* Clear Cache */
@@ -96,8 +104,10 @@ void* K2ArmLrtCommunicator::ctrl_start_send(int size){
 		usleep(100);
 	}
 
-	if(size > cur_mono_pkt_out_size - dataOffset)
-		throw "LrtCommunicator: Try to send a message too big";
+	if(size > cur_mono_pkt_out_size - dataOffset){
+		printf("%d > %d\n", size, cur_mono_pkt_out_size - dataOffset);
+		throw "LrtCommunicator: ctrl_start_send: Try to send a message too big";
+	}
 
 	/* Add data to current descriptor */
 	void* data_pkt = (void*)(((int)cur_mono_pkt_out) + dataOffset);
@@ -126,7 +136,7 @@ int K2ArmLrtCommunicator::ctrl_start_recv(void** data){
 		}
 
 		/* Get Packet info */
-		cur_mono_pkt_in_size  = QMSS_DESC_SIZE(cur_mono_pkt_in);
+		cur_mono_pkt_in_size  = CTRL_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_pkt_in);
 		cur_mono_pkt_in = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_pkt_in);
 
 		/* Clear Cache */
@@ -162,12 +172,14 @@ void* K2ArmLrtCommunicator::trace_start_send(int size){
 	if(cur_mono_trace_out != 0)
 		throw "LrtCommunicator: Try to send a trace msg when previous one is not sent";
 
+	maxTraceMsgSize = std::max(maxTraceMsgSize,size);
+
 	while(cur_mono_trace_out == 0){
 		cur_mono_trace_out = (Cppi_Desc*)Qmss_queuePop(QUEUE_FREE_TRACE);
 
 		if(cur_mono_trace_out != 0){
 			/* Get Packet info */
-			cur_mono_trace_out_size  = QMSS_DESC_SIZE(cur_mono_trace_out);
+			cur_mono_trace_out_size  = TRACE_DESC_SIZE;//QMSS_DESC_SIZE(cur_mono_trace_out);
 			cur_mono_trace_out = (Cppi_Desc*)QMSS_DESC_PTR (cur_mono_trace_out);
 
 			/* Clear Cache */
@@ -206,9 +218,11 @@ long K2ArmLrtCommunicator::data_start_send(Fifo* f){
 
 void K2ArmLrtCommunicator::data_end_send(Fifo* f){
 	/* Write back cache */
-	Osal_qmssEndMemAccess(
-			Platform::get()->virt_to_phy((void*)(f->alloc)),
-			f->size);
+//	if(f->ntoken){
+		Osal_qmssEndMemAccess(
+				Platform::get()->virt_to_phy((void*)(f->alloc)),
+				f->size);
+//	}
 
 	if(f->ntoken){
 		Cppi_Desc *mono_pkt;
@@ -223,7 +237,7 @@ void K2ArmLrtCommunicator::data_end_send(Fifo* f){
 			}while(mono_pkt == 0);
 
 			/* Get Packet info */
-			int mono_pkt_size  = QMSS_DESC_SIZE(mono_pkt);
+			int mono_pkt_size  = DATA_DESC_SIZE;//QMSS_DESC_SIZE(mono_pkt);
 			mono_pkt = (Cppi_Desc*)QMSS_DESC_PTR (mono_pkt);
 
 //			/* Clear Cache */
@@ -252,7 +266,7 @@ long K2ArmLrtCommunicator::data_recv(Fifo* f){
 			}while(mono_pkt == 0);
 
 			/* Get Packet info */
-			int mono_pkt_size  = QMSS_DESC_SIZE(mono_pkt);
+			int mono_pkt_size  = DATA_DESC_SIZE;//QMSS_DESC_SIZE(mono_pkt);
 			mono_pkt = (Cppi_Desc*)QMSS_DESC_PTR (mono_pkt);
 
 //			/* Clear Cache */
@@ -266,9 +280,11 @@ long K2ArmLrtCommunicator::data_recv(Fifo* f){
 	}
 
 	/* Invalidate cache */
-	Osal_qmssBeginMemAccess(
-			Platform::get()->virt_to_phy((void*)(f->alloc)),
-			f->size);
+//	if(f->ntoken){
+		Osal_qmssBeginMemAccess(
+				Platform::get()->virt_to_phy((void*)(f->alloc)),
+				f->size);
+//	}
 
 	return (long)Platform::get()->virt_to_phy((void*)(f->alloc));
 }

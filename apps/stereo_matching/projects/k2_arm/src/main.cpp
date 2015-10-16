@@ -43,9 +43,9 @@
 
 void initActors();
 
-#define SRDAG_SIZE 		1	*1024*1024
-#define TRANSFO_SIZE 	1	*1024*1024
-#define PISDF_SIZE 		128	*1024
+#define SRDAG_SIZE 		256	*1024
+#define TRANSFO_SIZE 	512	*1024
+#define PISDF_SIZE 		96	*1024
 #define ARCHI_SIZE 		3	*1024
 
 static char transfoStack[TRANSFO_SIZE];
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]){
 	StaticStack archiStack("ArchiStack", archiStackMem, ARCHI_SIZE);
 
 #define SH_MEM 0x04000000
-	PlatformK2Arm platform(1, 0, USE_DDR, SH_MEM, &archiStack, stereo_fcts, N_FCT_STEREO);
+	PlatformK2Arm platform(1, 8, USE_DDR, SH_MEM, &archiStack, stereo_fcts, N_FCT_STEREO);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
@@ -87,51 +87,71 @@ int main(int argc, char* argv[]){
 	printf("Start\n");
 
 	try{
-		int i=1;
-//	for(int i=1; i<=1; i++){
-		printf("NStep = %d\n", i);
-		char ganttPath[30];
-		sprintf(ganttPath, "stereo.pgantt");
-		char srdagPath[30];
-		sprintf(srdagPath, "stereo.gv");
+		FILE* fres = fopen("stereo.csv", "w+");
+		fprintf(fres, "core,globalEndTime,schedTime,speedup\n");
+		for(int iter=1; iter<=8; iter++){
+			printf("NStep = %d\n", iter);
+			char ganttPath[30];
+			sprintf(ganttPath, "stereo_%d.pgantt", iter);
+			char srdagPath[30];
+			sprintf(srdagPath, "stereo.gv");
 
-		pisdfStack.freeAll();
+			pisdfStack.freeAll();
 
-		PiSDFGraph *topPisdf = init_stereo(archi, &pisdfStack);
-		topPisdf->print("topPisdf.gv");
+			PiSDFGraph *topPisdf = init_stereo(archi, &pisdfStack);
+			topPisdf->print("topPisdf.gv");
 
-		Platform::get()->rstTime();
+			for(int i=0; i<9; i++)
+				archi->desactivatePE(i);
 
-		spider_launch(archi, topPisdf);
-//
-		spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
-		spider_getLastSRDAG()->print(srdagPath);
+			archi->activatePE(8);
+			for(int i=0; i<iter; i++)
+				archi->activatePE(i);
 
-		printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
+			printf("Start\n");
+			Platform::get()->rstTime();
 
-		printf("Memory use = ");
-		if(stat.memoryUsed < 1024)
-			printf("\t%5.1f B", stat.memoryUsed/1.);
-		else if(stat.memoryUsed < 1024*1024)
-			printf("\t%5.1f KB", stat.memoryUsed/1024.);
-		else if(stat.memoryUsed < 1024*1024*1024)
-			printf("\t%5.1f MB", stat.memoryUsed/1024./1024.);
-		else
-			printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
-		printf("\n");
+			spider_launch(archi, topPisdf);
+	//
+			spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
+			spider_getLastSRDAG()->print(srdagPath);
 
-		printf("Actors:\n");
-		for(int j=0; j<stat.nbActor; j++){
-			printf("\t%12s:", stat.actors[j]->getName());
-			for(int k=0; k<archi->getNPETypes(); k++)
-				printf("\t%d (x%d)",
-						stat.actorTimes[j][k]/stat.actorIterations[j][k],
-						stat.actorIterations[j][k]);
+			printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
+
+			printf("Memory use = ");
+			if(stat.memoryUsed < 1024)
+				printf("\t%5.1f B", stat.memoryUsed/1.);
+			else if(stat.memoryUsed < 1024*1024)
+				printf("\t%5.1f KB", stat.memoryUsed/1024.);
+			else if(stat.memoryUsed < 1024*1024*1024)
+				printf("\t%5.1f MB", stat.memoryUsed/1024./1024.);
+			else
+				printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
 			printf("\n");
-		}
 
-		free_stereo(topPisdf, &pisdfStack);
-//	}
+			printf("Actors:\n");
+			for(int j=0; j<stat.nPiSDFActor; j++){
+				printf("\t%18s:", stat.actors[j]->getName());
+				for(int k=0; k<archi->getNPETypes(); k++)
+					printf("\t%d (x%d)",
+							stat.actorTimes[j][k]/stat.actorIterations[j][k],
+							stat.actorIterations[j][k]);
+				printf("\n");
+			}
+
+			static float firstExec=0;
+			if(iter == 1)
+				firstExec = stat.globalEndTime;
+
+			fprintf(fres, "%d,%lu,%lu,%f\n",
+					iter,
+					stat.globalEndTime,
+					stat.schedTime,
+					firstExec/stat.globalEndTime);
+
+			free_stereo(topPisdf, &pisdfStack);
+		}
+		fclose(fres);
 	}catch(const char* s){
 		printf("Exception : %s\n", s);
 	}

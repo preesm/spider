@@ -34,113 +34,31 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <spider.h>
-#include <platformLinux.h>
-#include "stereo.h"
+#ifndef ACTORS_H_
+#define ACTORS_H_
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <lrt.h>
+#include <stdint.h>
 
-void initActors();
+#define IN
+#define OUT
 
-#define SRDAG_SIZE 		512	*1024*1024
-#define TRANSFO_SIZE 	512	*1024*1024
-#define PISDF_SIZE 		64	*1024*1024
-#define ARCHI_SIZE 		3	*1024*1024
+void Config(OUT Param* nSlice, OUT Param* truncValue, OUT Param* scale, OUT Param* nIter, OUT Param* sizeFilter, OUT Param* minDisp, OUT Param* maxDisp, OUT Param* height, OUT Param* width);
 
-static char transfoStack[TRANSFO_SIZE];
-static char srdagStack[SRDAG_SIZE];
-static char pisdfStackMem[PISDF_SIZE];
-static char archiStackMem[ARCHI_SIZE];
+void Camera(Param height, Param width, OUT uint8_t* rgb_L, OUT uint8_t* rgb_R);
+void RGB2Gray(Param size, IN uint8_t* rgb, OUT uint8_t* gray);
+void Census(Param height, Param width, uint8_t* gray, OUT uint8_t* cen);
+void Split(Param nSlice, Param sizeFilter, Param height, Param width, uint8_t* in, OUT uint8_t* out);
+void MedianFilter(Param height, Param width, Param sizeFilter, uint8_t* in, OUT uint8_t* out);
+void Display(Param height, Param width, uint8_t* rgb, uint8_t* depth);
 
-int main(int argc, char* argv[]){
-	SpiderConfig cfg;
-	ExecutionStat stat;
+void GenIx(Param nIter, OUT uint8_t* ixs);
+void DisparityGen(Param maxDisp, Param minDisp, OUT uint8_t* dispIxs);
+void HWeights(Param height, Param width, uint8_t* offset, uint8_t* rgbL, OUT uint8_t* out);
+void VWeights(Param height, Param width, uint8_t* offset, uint8_t* rgbL, OUT uint8_t* out);
+void CostConstruction(Param height, Param width, Param truncValue, uint8_t* grayL, uint8_t* grayR, uint8_t* cenL, uint8_t* cenR, uint8_t* disp, OUT uint8_t* error);
+void AggregateCost(Param height, Param width, Param nIter, uint8_t* offsets, uint8_t* vWeights, uint8_t* hWeights, uint8_t* cost, OUT uint8_t* disp);
+void DisparitySelect(Param height, Param width, Param scale, Param minDisp, Param maxDisp, uint8_t* dispVal, uint8_t* dispIx, uint8_t* curDisp, uint8_t* curCost, OUT uint8_t* disp, OUT uint8_t* cost);
 
-//	initActors();
 
-	StaticStack pisdfStack("PisdfStack", pisdfStackMem, PISDF_SIZE);
-	StaticStack archiStack("ArchiStack", archiStackMem, ARCHI_SIZE);
-
-#define SH_MEM 0x04000000
-	PlatformLinux platform(1, SH_MEM, &archiStack, stereo_fcts, N_FCT_STEREO);
-	Archi* archi = platform.getArchi();
-
-	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
-	cfg.memAllocStart = (void*)0;
-	cfg.memAllocSize = SH_MEM;
-
-	cfg.schedulerType = SCHEDULER_LIST;
-
-	cfg.srdagStack.type = STACK_STATIC;
-	cfg.srdagStack.name = "SrdagStack";
-	cfg.srdagStack.size = SRDAG_SIZE;
-	cfg.srdagStack.start = srdagStack;
-
-	cfg.transfoStack.type = STACK_STATIC;
-	cfg.transfoStack.name = "TransfoStack";
-	cfg.transfoStack.size = TRANSFO_SIZE;
-	cfg.transfoStack.start = transfoStack;
-
-	cfg.useGraphOptim = true;
-	cfg.useActorPrecedence = true;
-
-	spider_init(cfg);
-
-	printf("Start\n");
-
-//	try{
-		int i=1;
-//	for(int i=1; i<=1; i++){
-		printf("NStep = %d\n", i);
-		char ganttPath[30];
-		sprintf(ganttPath, "stereo.pgantt");
-		char srdagPath[30];
-		sprintf(srdagPath, "stereo.gv");
-
-		pisdfStack.freeAll();
-
-		PiSDFGraph *topPisdf = init_stereo(archi, &pisdfStack);
-		topPisdf->print("topPisdf.gv");
-
-		Platform::get()->rstTime();
-
-		spider_launch(archi, topPisdf);
-//
-		spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
-		spider_getLastSRDAG()->print(srdagPath);
-
-		printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
-
-		printf("Memory use = ");
-		if(stat.memoryUsed < 1024)
-			printf("\t%5.1f B", stat.memoryUsed/1.);
-		else if(stat.memoryUsed < 1024*1024)
-			printf("\t%5.1f KB", stat.memoryUsed/1024.);
-		else if(stat.memoryUsed < 1024*1024*1024)
-			printf("\t%5.1f MB", stat.memoryUsed/1024./1024.);
-		else
-			printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
-		printf("\n");
-
-		printf("Actors:\n");
-		for(int j=0; j<stat.nPiSDFActor; j++){
-			printf("\t%12s:", stat.actors[j]->getName());
-			for(int k=0; k<archi->getNPETypes(); k++)
-				printf("\t%d (x%d)",
-						stat.actorTimes[j][k]/stat.actorIterations[j][k],
-						stat.actorIterations[j][k]);
-			printf("\n");
-		}
-
-		free_stereo(topPisdf, &pisdfStack);
-//	}
-//	}catch(const char* s){
-//		printf("Exception : %s\n", s);
-//	}
-	printf("finished\n");
-
-	spider_free();
-
-	return 0;
-}
+#endif /* ACTORS_H_ */

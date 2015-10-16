@@ -34,8 +34,9 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <spider.h>
-#include <platformLinux.h>
+#include <lrt.h>
+#include <platformK2Dsp.h>
+#include <tools/DynStack.h>
 #include "stereo.h"
 
 #include <stdio.h>
@@ -43,104 +44,13 @@
 
 void initActors();
 
-#define SRDAG_SIZE 		512	*1024*1024
-#define TRANSFO_SIZE 	512	*1024*1024
-#define PISDF_SIZE 		64	*1024*1024
-#define ARCHI_SIZE 		3	*1024*1024
-
-static char transfoStack[TRANSFO_SIZE];
-static char srdagStack[SRDAG_SIZE];
-static char pisdfStackMem[PISDF_SIZE];
-static char archiStackMem[ARCHI_SIZE];
-
 int main(int argc, char* argv[]){
-	SpiderConfig cfg;
-	ExecutionStat stat;
-
-//	initActors();
-
-	StaticStack pisdfStack("PisdfStack", pisdfStackMem, PISDF_SIZE);
-	StaticStack archiStack("ArchiStack", archiStackMem, ARCHI_SIZE);
-
 #define SH_MEM 0x04000000
-	PlatformLinux platform(1, SH_MEM, &archiStack, stereo_fcts, N_FCT_STEREO);
-	Archi* archi = platform.getArchi();
-
-	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
-	cfg.memAllocStart = (void*)0;
-	cfg.memAllocSize = SH_MEM;
-
-	cfg.schedulerType = SCHEDULER_LIST;
-
-	cfg.srdagStack.type = STACK_STATIC;
-	cfg.srdagStack.name = "SrdagStack";
-	cfg.srdagStack.size = SRDAG_SIZE;
-	cfg.srdagStack.start = srdagStack;
-
-	cfg.transfoStack.type = STACK_STATIC;
-	cfg.transfoStack.name = "TransfoStack";
-	cfg.transfoStack.size = TRANSFO_SIZE;
-	cfg.transfoStack.start = transfoStack;
-
-	cfg.useGraphOptim = true;
-	cfg.useActorPrecedence = true;
-
-	spider_init(cfg);
-
-	printf("Start\n");
-
-//	try{
-		int i=1;
-//	for(int i=1; i<=1; i++){
-		printf("NStep = %d\n", i);
-		char ganttPath[30];
-		sprintf(ganttPath, "stereo.pgantt");
-		char srdagPath[30];
-		sprintf(srdagPath, "stereo.gv");
-
-		pisdfStack.freeAll();
-
-		PiSDFGraph *topPisdf = init_stereo(archi, &pisdfStack);
-		topPisdf->print("topPisdf.gv");
-
-		Platform::get()->rstTime();
-
-		spider_launch(archi, topPisdf);
-//
-		spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
-		spider_getLastSRDAG()->print(srdagPath);
-
-		printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
-
-		printf("Memory use = ");
-		if(stat.memoryUsed < 1024)
-			printf("\t%5.1f B", stat.memoryUsed/1.);
-		else if(stat.memoryUsed < 1024*1024)
-			printf("\t%5.1f KB", stat.memoryUsed/1024.);
-		else if(stat.memoryUsed < 1024*1024*1024)
-			printf("\t%5.1f MB", stat.memoryUsed/1024./1024.);
-		else
-			printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
-		printf("\n");
-
-		printf("Actors:\n");
-		for(int j=0; j<stat.nPiSDFActor; j++){
-			printf("\t%12s:", stat.actors[j]->getName());
-			for(int k=0; k<archi->getNPETypes(); k++)
-				printf("\t%d (x%d)",
-						stat.actorTimes[j][k]/stat.actorIterations[j][k],
-						stat.actorIterations[j][k]);
-			printf("\n");
-		}
-
-		free_stereo(topPisdf, &pisdfStack);
-//	}
-//	}catch(const char* s){
-//		printf("Exception : %s\n", s);
-//	}
-	printf("finished\n");
-
-	spider_free();
-
+	try{
+		DynStack archiStack("ArchiStack");
+		PlatformK2Dsp platform(SH_MEM, USE_DDR, &archiStack, stereo_fcts, N_FCT_STEREO);
+	}catch(const char* s){
+		printf("Exception : %s\n", s);
+	}
 	return 0;
 }

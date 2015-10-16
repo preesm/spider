@@ -43,10 +43,7 @@ extern "C"{
 #define VERBOSE 0
 
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
 
 void Config(
 		OUT Param* nSlice,
@@ -58,9 +55,7 @@ void Config(
 		OUT Param* maxDisp,
 		OUT Param* height,
 		OUT Param* width){
-#if VERBOSE
 	printf("Config");
-#endif
 	*width  = 434;
 	*height = 380;
 	*minDisp = 0;
@@ -69,24 +64,13 @@ void Config(
 	*nIter = 5;
 	*scale = 10;
 	*truncValue = 1;
-	*nSlice = 10;
+	*nSlice = 4;
 }
 
 void Camera(Param height, Param width, OUT uint8_t* rgb_L, OUT uint8_t* rgb_R){
 #if VERBOSE
 	printf("Camera\n");
 #endif
-	int f;
-
-//	f = open("im2.ppm", O_RDWR);
-//	lseek(f, 15, SEEK_SET);
-//	read(f, rgb_L, height*width*3);
-//	close(f);
-//
-//	f = open("im5.ppm", O_RDWR);
-//	lseek(f, 15, SEEK_SET);
-//	read(f, rgb_R, height*width*3);
-//	close(f);
 }
 
 void RGB2Gray(Param size, IN uint8_t* rgb, OUT uint8_t* gray){
@@ -103,7 +87,7 @@ void Census(Param height, Param width, uint8_t* gray, OUT uint8_t* cen){
 #if VERBOSE
 	printf("Census\n");
 #endif
-	census(height, width, gray, cen);
+	calcCensus(height, width, gray, cen);
 }
 
 void Split(Param nSlice, Param sizeFilter, Param height, Param width, uint8_t* in, OUT uint8_t* out){
@@ -201,30 +185,55 @@ void MedianFilter(Param height, Param width, Param sizeFilter, uint8_t* in, OUT 
 	}
 }
 
+void DisparitySelect(Param height, Param width, Param scale, Param minDisp, Param maxDisp, uint8_t* dispVal, uint8_t* dispIx, uint8_t* curDisp, uint8_t* curCost, OUT uint8_t* disp, OUT uint8_t* cost){
+#if VERBOSE
+	printf("DisparitySelect\n");
+#endif
+	/* disparity is argmin of cost */
+	if(*dispIx == 0){
+		/* first iteration */
+		for(int i=0; i<height*width; i++){
+			cost[i] = dispVal[i];
+			disp[i] = (*dispIx)*scale;
+		}
+	}else{
+		/* select disparity to minimize cost */
+		for(int i=0; i<height*width; i++){
+			if(dispVal[i] < curCost[i]){
+				cost[i] = dispVal[i];
+				disp[i] = (*dispIx)*scale;
+			}else{
+				cost[i] = curCost[i];
+				disp[i] = curDisp[i];
+			}
+		}
+	}
+}
+
 void Display(Param height, Param width, uint8_t* rgb, uint8_t* depth){
 #if VERBOSE
 	printf("Display\n");
 #endif
 
-//	FILE * outFile;
-//	int i;
-//	if((outFile = fopen("result.ppm", "wb+")) == NULL )
-//    {
-//        fprintf(stderr,"ERROR: Task read cannot create/open ppm_file 'result.ppm'\n");
-//        return;
-//    }
-//
-//	fprintf(outFile,"P6\n");
-//	fprintf(outFile,"%d %d\n",width,height);
-//	fprintf(outFile,"255\n");
-//	for(i=0; i<height*width;i++){
-//		unsigned char value = (*(depth+i));
-//		fwrite(&value,sizeof(char),1,outFile);
-//		fwrite(&value,sizeof(char),1,outFile);
-//		fwrite(&value,sizeof(char),1,outFile);
-//	}
-//
-//	fclose(outFile);
+	FILE * outFile;
+	int i;
+	if((outFile = fopen("result.ppm", "wb+")) == NULL )
+    {
+        fprintf(stderr,"ERROR: Task read cannot create/open ppm_file 'result.ppm'\n");
+        return;
+    }
+
+	fprintf(outFile,"P6\n");
+	fprintf(outFile,"%d %d\n",width,height);
+	fprintf(outFile,"255\n");
+	for(i=0; i<height*width;i++){
+		unsigned char value = (*(depth+i));
+		fwrite(&value,sizeof(char),1,outFile);
+		fwrite(&value,sizeof(char),1,outFile);
+		fwrite(&value,sizeof(char),1,outFile);
+	}
+
+	fclose(outFile);
 }
 
 void GenIx(Param nIter, OUT uint8_t* ixs){
@@ -282,45 +291,13 @@ void AggregateCost(
 	printf("AggregateCost\n");
 #endif
 
-	uint8_t tmp[450*375];
+	static uint8_t tmp[450*375];
 
 	memcpy(disp, cost, width*height);
 	/*recursive aggregation*/
 	for(int i=0; i<nIter; i++){
 		aggregateV(height, width, offsets[i], disp, vWeights+i*height*width, tmp);
 		aggregateH(height, width, offsets[i], tmp, hWeights+i*height*width, disp);
-	}
-}
-
-void DisparitySelect(
-		Param height, Param width, Param scale,
-		Param minDisp, Param maxDisp,
-		uint8_t* dispVal, uint8_t* dispIx, uint8_t* curDisp,
-		uint8_t* curCost, OUT uint8_t* disp, OUT uint8_t* cost){
-#if VERBOSE
-	printf("DisparitySelect\n");
-#endif
-
-//	memcpy(disp, dispVal, width*height);
-
-	/* disparity is argmin of cost */
-	if(*dispIx == 0){
-		/* first iteration */
-		for(int i=0; i<height*width; i++){
-			cost[i] = dispVal[i];
-			disp[i] = (*dispIx)*scale;
-		}
-	}else{
-		/* select disparity to minimize cost */
-		for(int i=0; i<height*width; i++){
-			if(dispVal[i] < curCost[i]){
-				cost[i] = dispVal[i];
-				disp[i] = (*dispIx)*scale;
-			}else{
-				cost[i] = curCost[i];
-				disp[i] = curDisp[i];
-			}
-		}
 	}
 }
 

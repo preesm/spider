@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>stereo_k2_dsp</name>
+	<comment></comment>
+	<projects>
+		<project>Spider_k2_dsp_lrt</project>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.cdt.managedbuilder.core.genmakebuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<name>org.eclipse.cdt.managedbuilder.core.ScannerConfigBuilder</name>
+			<triggers>full,incremental,</triggers>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>com.ti.ccstudio.core.ccsNature</nature>
+		<nature>org.eclipse.cdt.core.cnature</nature>
+		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
+		<nature>org.eclipse.cdt.core.ccnature</nature>
+		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
+	</natures>
+	<variableList>
+		<variable>
+			<name>DSPLIB_PATH</name>
+			<value>file:/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/dsplib_c66x_3_2_0_1</value>
+		</variable>
+		<variable>
+			<name>PDK_PATH</name>
+			<value>file:/opt/ti_k2_v6_0_1_mcsdk_3_1_1_4/pdk_keystone2_3_01_01_04</value>
+		</variable>
+		<variable>
+			<name>SPIDER_PATH</name>
+			<value>file:/home/jheulot/git/spider/master</value>
+		</variable>
+	</variableList>
+</projectDescription>

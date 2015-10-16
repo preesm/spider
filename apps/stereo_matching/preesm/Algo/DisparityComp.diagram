@@ -851,8 +851,8 @@
       </graphicsAlgorithm>
     </connectionDecorators>
     <bendpoints x="558" y="406"/>
-    <bendpoints x="409" y="406"/>
-    <bendpoints x="409" y="364"/>
+    <bendpoints x="403" y="406"/>
+    <bendpoints x="403" y="365"/>
   </connections>
   <connections xsi:type="pi:FreeFormConnection" visible="true" active="true" start="//@children.8/@anchors.0" end="//@children.12/@anchors.0">
     <graphicsAlgorithm xsi:type="al:Polyline" foreground="//@colors.8" lineWidth="2" lineStyle="DASH" filled="false" transparency="0.0"/>

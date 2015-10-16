@@ -179,8 +179,8 @@
             <port kind="cfg_input" name="width"/>
             <port kind="cfg_input" name="height"/>
             <port annotation="NONE" expr="height*width" kind="input" name="cenL"/>
-            <port annotation="NONE" expr="width*height" kind="input" name="rgb"/>
             <port annotation="NONE" expr="height*width" kind="input" name="grayL"/>
+            <port annotation="NONE" expr="width*height" kind="input" name="rgb"/>
             <port annotation="NONE" expr="height*width" kind="input" name="cenR"/>
             <port annotation="NONE" expr="height*width" kind="input" name="grayR"/>
             <port annotation="NONE" expr="height*width" kind="output" name="rawDisparity"/>

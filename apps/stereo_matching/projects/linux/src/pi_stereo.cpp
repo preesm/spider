@@ -398,16 +398,16 @@ PiSDFGraph* costParallel(Archi* archi, Stack* stack){
 	bo_GenDisp->isExecutableOnPE(CORE_CORE0);
 	bo_GenDisp->setTimingOnType(CORE_TYPE_X86, "1000", stack);
 
-	PiSDFVertex* bo_VWeights = graph->addBodyVertex(
+	PiSDFVertex* bo_VWeight = graph->addBodyVertex(
 		/*Name*/    "VWeights",
 		/*FctId*/   COSTPARALLEL_VWEIGHTS_FCT,
 		/*InData*/  2,
 		/*OutData*/ 1,
 		/*InParam*/ 2);
-	bo_VWeights->addInParam(0, param_height);
-	bo_VWeights->addInParam(1, param_width);
-	bo_VWeights->isExecutableOnPE(CORE_CORE0);
-	bo_VWeights->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_VWeight->addInParam(0, param_height);
+	bo_VWeight->addInParam(1, param_width);
+	bo_VWeight->isExecutableOnPE(CORE_CORE0);
+	bo_VWeight->setTimingOnType(CORE_TYPE_X86, "1000", stack);
 
 	PiSDFVertex* bo_HWeight = graph->addBodyVertex(
 		/*Name*/    "HWeight",
@@ -477,7 +477,7 @@ PiSDFGraph* costParallel(Archi* archi, Stack* stack){
 		/*Delay*/ "0",0);
 
 	graph->connect(
-		/*Src*/ bo_VWeights, /*SrcPrt*/ 0, /*Prod*/ "(height*width)*1",
+		/*Src*/ bo_VWeight, /*SrcPrt*/ 0, /*Prod*/ "(height*width)*1",
 		/*Snk*/ bo_DispComp, /*SnkPrt*/ 1, /*Cons*/ "(height*width*nIter)*1",
 		/*Delay*/ "0",0);
 
@@ -523,7 +523,7 @@ PiSDFGraph* costParallel(Archi* archi, Stack* stack){
 
 	graph->connect(
 		/*Src*/ bo_Br_Ix, /*SrcPrt*/ 2, /*Prod*/ "(nIter)*1",
-		/*Snk*/ bo_VWeights, /*SnkPrt*/ 0, /*Cons*/ "(1)*1",
+		/*Snk*/ bo_VWeight, /*SnkPrt*/ 0, /*Cons*/ "(1)*1",
 		/*Delay*/ "0",0);
 
 	graph->connect(
@@ -533,7 +533,7 @@ PiSDFGraph* costParallel(Archi* archi, Stack* stack){
 
 	graph->connect(
 		/*Src*/ bo_Br_rgb, /*SrcPrt*/ 1, /*Prod*/ "(size)*3",
-		/*Snk*/ bo_VWeights, /*SnkPrt*/ 1, /*Cons*/ "(height*width)*3",
+		/*Snk*/ bo_VWeight, /*SnkPrt*/ 1, /*Cons*/ "(height*width)*3",
 		/*Delay*/ "0",0);
 
 	graph->connect(

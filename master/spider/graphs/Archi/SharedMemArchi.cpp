@@ -42,6 +42,7 @@ SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType) {
 	nPE_ = nPE;
 	nPEType_ = nPEType;
 	peType_ = CREATE_MUL(stack, nPE_, int);
+	peActive_ = CREATE_MUL(stack, nPE_, bool);
 	peName_ = CREATE_MUL(stack, nPE_, char*);
 	peTypeASend_ = CREATE_MUL(stack, nPEType_, float);
 	peTypeBSend_ = CREATE_MUL(stack, nPEType_, float);

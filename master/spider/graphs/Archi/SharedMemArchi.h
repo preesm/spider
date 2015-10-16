@@ -52,6 +52,10 @@ public:
 	virtual inline int getNPETypes() const;
 	virtual inline int getPEType(int ix) const;
 
+	virtual inline void desactivatePE(int pe);
+	virtual inline void activatePE(int pe);
+	virtual inline bool isActivated(int pe) const;
+
 	virtual inline Time getTimeSend(int src, int dest, int size) const;
 	virtual inline Time getTimeRecv(int src, int dest, int size) const;
 
@@ -66,6 +70,7 @@ private:
 	int nPE_;
 	int nPEType_;
 	int* peType_;
+	bool* peActive_;
 	char ** peName_;
 	float* peTypeASend_;
 	float* peTypeBSend_;
@@ -109,5 +114,19 @@ inline void SharedMemArchi::setName(int pe, const char* name){
 inline void SharedMemArchi::setPEType(int pe, int type){
 	peType_[pe] = type;
 }
+
+
+inline void SharedMemArchi::desactivatePE(int pe){
+	peActive_[pe] = false;
+}
+
+inline void SharedMemArchi::activatePE(int pe){
+	peActive_[pe] = true;
+}
+
+inline bool SharedMemArchi::isActivated(int pe) const{
+	return peActive_[pe];
+}
+
 
 #endif/*SHARED_MEM_ARCH_H*/

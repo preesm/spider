@@ -225,6 +225,9 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 	// Getting a slave for the vertex.
 	for(int pe = 0; pe < archi_->getNPE(); pe++){
 		int slaveType = archi_->getPEType(pe);
+
+		if(!archi_->isActivated(pe)) continue;
+
 		// checking the constraints
 		if(vertex->isExecutableOn(pe)){
 			Time startTime = std::max(schedule_->getReadyTime(pe), minimumStartTime);

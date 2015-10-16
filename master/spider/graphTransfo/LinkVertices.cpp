@@ -49,7 +49,7 @@
 #include <cmath>
 #include <algorithm>
 
-#define MAX_VERTEX_REPETITION 1000
+#define MAX_VERTEX_REPETITION 100
 
 typedef enum {VERTEX, EDGE} nodeType;
 

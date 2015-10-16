@@ -88,18 +88,24 @@ typedef struct{
 
 typedef struct{
 	Time globalEndTime;
-	Time endTime;
 
-	Time taskOrderingTime;
+	Time execTime;
+	Time schedTime;
+
 	Time mappingTime;
-	Time graphTransfoTime;
+	Time optimTime;
+	Time graphTime;
 
 	Time actorTimes[MAX_STATS_VERTICES][MAX_STATS_PE_TYPES];
 	Time actorFisrt[MAX_STATS_VERTICES];
 	Time actorLast[MAX_STATS_VERTICES];
 	Time actorIterations[MAX_STATS_VERTICES][MAX_STATS_PE_TYPES];
+
 	PiSDFVertex* actors[MAX_STATS_VERTICES];
-	int nbActor;
+	int nPiSDFActor;
+
+	int nSRDAGActor;
+	int nExecSRDAGActor;
 
 	Time forkTime;
 	Time joinTime;

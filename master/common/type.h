@@ -37,6 +37,8 @@
 #ifndef TYPE_H
 #define TYPE_H
 
+#include <stdint.h>
+
 typedef unsigned long 	Time;
 typedef long 			Param;
 

@@ -221,43 +221,62 @@ static inline void printGrantt_SRDAGVertex(int ganttFile, int latexFile, Archi* 
 
 	/* Latex File */
 	Platform::get()->fprintf(latexFile, "%f,", start/latexScaling); /* Start */
-	Platform::get()->fprintf(latexFile, "%f,", (end - start)/latexScaling); /* Duration */
+	Platform::get()->fprintf(latexFile, "%f,", end/latexScaling); /* Duration */
 	Platform::get()->fprintf(latexFile, "%d,", lrtIx); /* Core index */
 
-	if(vertex->getFctId() != -1)
-		Platform::get()->fprintf(latexFile, "color%d\n", vertex->getFctId()); /* Color */
-	else
-		Platform::get()->fprintf(latexFile, "color%d\n", 15); /* Color */
+	if(vertex->getFctId() == 7){
+		int firId=0;
+		SRDAGVertex* prec = vertex->getInEdge(0)->getSrc();
+		while(prec->getFctId() == 7){
+			firId++;
+			prec = prec->getInEdge(0)->getSrc();
+		}
+
+		Platform::get()->fprintf(latexFile, "color%d\n", firId); /* Color */
+	}else Platform::get()->fprintf(latexFile, "c\n"); /* Color */
+//	if(vertex->getFctId() != -1)
+//		Platform::get()->fprintf(latexFile, "color%d\n", vertex->getFctId()); /* Color */
+//	else
+//		Platform::get()->fprintf(latexFile, "color%d\n", 15); /* Color */
 
 }
 
-static const char* spiderTaskName[5] = {
+static const char* spiderTaskName[9] = {
 		"",
 		"Graph handling",
 		"Memory Allocation",
 		"Task Scheduling",
-		"Graph Optimization"
+		"Graph Optimization",
+		"Tmp 0",
+		"Tmp 1",
+		"Tmp 2",
+		"Tmp 3"
 };
 
 void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, const char* latexPath, ExecutionStat* stat){
 	int ganttFile = Platform::get()->fopen(ganttPath);
 	int latexFile = Platform::get()->fopen(latexPath);
 
-	float latexScaling = 1000*1000;
+	float latexScaling = 1000;
 
 	// Writing header
 	Platform::get()->fprintf(ganttFile, "<data>\n");
-	Platform::get()->fprintf(latexFile, "start,length,core,color\n");
+	Platform::get()->fprintf(latexFile, "start,end,core,color\n");
 
 	// Popping data from Trace queue.
-	stat->taskOrderingTime = 0;
+	stat->mappingTime = 0;
+	stat->graphTime = 0;
+	stat->optimTime = 0;
+	stat->schedTime = 0;
 	stat->globalEndTime = 0;
 
 	stat->forkTime = 0;
 	stat->joinTime = 0;
 	stat->rbTime = 0;
 	stat->brTime = 0;
-	stat->nbActor = 0;
+	stat->nExecSRDAGActor = 0;
+	stat->nSRDAGActor = srdag->getNVertex();
+	stat->nPiSDFActor = 0;
 
 	stat->memoryUsed = memAlloc->getMemUsed();
 
@@ -270,24 +289,30 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 					SRDAGVertex* vertex = srdag->getVertexFromIx(traceMsg->srdagIx);
 					Time execTime = traceMsg->end - traceMsg->start;
 
+					static int baseTime=0;
+//					if(strcmp(vertex->getReference()->getName(),"src") == 0){
+//						baseTime = traceMsg->start;
+//					}
+
 					printGrantt_SRDAGVertex(
 							ganttFile,
 							latexFile,
 							archi,
 							vertex,
-							traceMsg->start,
-							traceMsg->end,
+							traceMsg->start-baseTime,
+							traceMsg->end-baseTime,
 							traceMsg->lrtIx,
 							latexScaling);
 
 					/* Update Stats */
-					stat->globalEndTime = std::max(traceMsg->end, stat->globalEndTime);
+					stat->globalEndTime = std::max(traceMsg->end-baseTime, stat->globalEndTime);
+					stat->nExecSRDAGActor++;
 
 					switch(vertex->getType()){
 						case SRDAG_NORMAL:{
 							int i;
 							int lrtType = archi->getPEType(traceMsg->lrtIx);
-							for(i=0; i<stat->nbActor; i++){
+							for(i=0; i<stat->nPiSDFActor; i++){
 								if(stat->actors[i] == vertex->getReference()){
 									stat->actorTimes[i][lrtType] += execTime;
 									stat->actorIterations[i][lrtType]++;
@@ -297,15 +322,15 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 									break;
 								}
 							}
-							if(i == stat->nbActor){
-								stat->actors[stat->nbActor] = vertex->getReference();
+							if(i == stat->nPiSDFActor){
+								stat->actors[stat->nPiSDFActor] = vertex->getReference();
 
-								memset(stat->actorTimes[stat->nbActor], 0, MAX_STATS_PE_TYPES*sizeof(Time));
-								memset(stat->actorIterations[stat->nbActor], 0, MAX_STATS_PE_TYPES*sizeof(Time));
+								memset(stat->actorTimes[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES*sizeof(Time));
+								memset(stat->actorIterations[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES*sizeof(Time));
 
-								stat->actorTimes[stat->nbActor][lrtType] += execTime;
+								stat->actorTimes[stat->nPiSDFActor][lrtType] += execTime;
 								stat->actorIterations[i][lrtType]++;
-								stat->nbActor++;
+								stat->nPiSDFActor++;
 
 								stat->actorFisrt[i] = traceMsg->start;
 								stat->actorLast[i] = traceMsg->end;
@@ -330,6 +355,8 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 
 					break;}
 				case TRACE_SPIDER:{
+//					break;
+
 					static int i=0;
 					/* Gantt File */
 					Platform::get()->fprintf(ganttFile, "\t<event\n");
@@ -340,11 +367,28 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 					Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", 	regenerateColor(i++));
 					Platform::get()->fprintf(ganttFile, "\t\t>Step_%d.</event>\n", spiderTaskName[traceMsg->spiderTask]);
 
+					stat->schedTime = std::max(traceMsg->end, stat->schedTime);
+
+					switch(traceMsg->spiderTask){
+					case TRACE_SPIDER_GRAPH:
+						stat->graphTime += traceMsg->end - traceMsg->start;
+						break;
+					case TRACE_SPIDER_ALLOC:
+						throw "Unhandle trace";
+						break;
+					case TRACE_SPIDER_SCHED:
+						stat->mappingTime += traceMsg->end - traceMsg->start;
+						break;
+					case TRACE_SPIDER_OPTIM:
+						stat->optimTime += traceMsg->end - traceMsg->start;
+						break;
+					}
+
 					/* Latex File */
 					Platform::get()->fprintf(latexFile, "%f,", traceMsg->start/latexScaling); /* Start */
-					Platform::get()->fprintf(latexFile, "%f,", (traceMsg->end - traceMsg->start)/latexScaling); /* Duration */
+					Platform::get()->fprintf(latexFile, "%f,", traceMsg->end/latexScaling); /* Duration */
 					Platform::get()->fprintf(latexFile, "%d,", 0); /* Core index */
-					Platform::get()->fprintf(latexFile, "color%d\n",15); /* Color */
+					Platform::get()->fprintf(latexFile, "colorSched\n",15); /* Color */
 					break;}
 				default:
 					throw "Unhandled trace msg";
@@ -360,4 +404,6 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 	Platform::get()->fclose(ganttFile);
 
 	Platform::get()->fclose(latexFile);
+
+	stat->execTime = stat->globalEndTime - stat->schedTime;
 }

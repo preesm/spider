@@ -5,6 +5,6 @@
 #include "type.h"
 #include "ompMonitor.h"
 
-void hclm_sched(Param MNext, Param MStart, Param N, Param NbS, OmpMonitor* monitor);
+void hclm_sched(int MNext, Param MStart, Param N, Param NbS, OmpMonitor* monitor);
 
 #endif

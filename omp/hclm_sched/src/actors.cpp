@@ -110,6 +110,7 @@ void snk(Param NbS, Param N, float* in, char* M){
 
 	if(TEST){
 		int hash;
+		printf("Test N=%d\n", N);
 		for(int i=0; i<N; i++){
 			hash = 0;
 			int* data = (int*)in;

@@ -14,7 +14,7 @@
 
 #define CHECK 1
 
-#define NVAL 15
+#define NVAL 18
 #define NBSAMPLES 4000
 
 static float temp[2*NBSAMPLES];
@@ -24,7 +24,7 @@ static float temp[2*NBSAMPLES];
 	static float output[NVAL*NBSAMPLES];
 #endif
 
-void hclm_sched(Param MNext, Param MStart, Param N, Param NbS, OmpMonitor* monitor){
+void hclm_sched(int MNext, Param MStart, Param N, Param NbS, OmpMonitor* monitor){
 #if CHECK
 	src(NbS, N, input);
 #endif

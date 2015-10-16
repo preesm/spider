@@ -28,11 +28,56 @@ int main(){
 		PlatformLinux platform(0);
 	#endif
 
+
+	FILE* fres;
 	printf("Start\n");
 	try{
-		OmpMonitor monitor(0);
-		hclm_sched(1, 6, 9, 4000, &monitor);
-		monitor.saveData(1, "test");
+		fres = fopen("omp/omp_homo.csv", "w+");
+		int iter = 1;
+		for(iter=1; iter<=17; iter++){
+			printf("homo %d\n", iter);
+			OmpMonitor monitor(0);
+			hclm_sched(
+					/*MNext*/ 	0,
+					/*MStart*/ 	12,
+					/*N*/ 		iter,
+					/*NbS*/ 	4000,
+					&monitor);
+			monitor.saveData(iter, "homo");
+			fprintf(fres, "%d,%d\n", iter, monitor.getEndTime());
+		}
+		fclose(fres);
+
+		fres = fopen("omp/omp_inc.csv", "w+");
+		for(iter=1; iter<=17; iter++){
+			printf("inc %d\n", iter);
+			OmpMonitor monitor(0);
+			hclm_sched(
+					/*MNext*/ 	1,
+					/*MStart*/ 	1,
+					/*N*/ 		iter,
+					/*NbS*/ 	4000,
+					&monitor);
+			monitor.saveData(iter, "inc");
+			fprintf(fres, "%d,%d\n", iter, monitor.getEndTime());
+		}
+		fclose(fres);
+
+		fres = fopen("omp/omp_dec.csv", "w+");
+		for(iter=1; iter<=17; iter++){
+			printf("dec %d\n", iter);
+			OmpMonitor monitor(0);
+			hclm_sched(
+					/*MNext*/ 	-1,
+					/*MStart*/ 	iter,
+					/*N*/ 		iter,
+					/*NbS*/ 	4000,
+					&monitor);
+			monitor.saveData(iter, "dec");
+			fprintf(fres, "%d,%d\n", iter, monitor.getEndTime());
+		}
+		fclose(fres);
+
 	}catch(char const* ex){
 		printf("Error: %s\n",ex);
 	}

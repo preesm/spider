@@ -60,6 +60,10 @@ OmpMonitor::~OmpMonitor(){
 
 }
 
+Time OmpMonitor::getEndTime(){
+	return endTime;
+}
+
 void OmpMonitor::endApp(){
 	endTime = Platform::get()->getTime();
 }
@@ -95,14 +99,14 @@ void OmpMonitor::saveData(int iter, const char* ganttName){
 	char file[100];
 	char name[30];
 	char color[10];
-	sprintf(file, "gantt_%s_%d.pgantt", ganttName, iter);
+	sprintf(file, "omp/gantt_%s_%d.pgantt", ganttName, iter);
 	FILE* f = fopen(file, "w+");
 	if(f == NULL){
 		printf("failed open file %s\n", file);
 		return;
 	}
 
-	sprintf(file, "gantt_%s_%d.dat", ganttName, iter);
+	sprintf(file, "omp/gantt_%s_%d.dat", ganttName, iter);
 	FILE* flatex = fopen(file, "w+");
 	if(flatex == NULL){
 		printf("failed open file %s\n", file);

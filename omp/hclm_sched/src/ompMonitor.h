@@ -51,6 +51,8 @@ public:
 
 	void saveData(int iter, const char* ganttName);
 
+	Time getEndTime();
+
 private:
 	Time endTime;
 };

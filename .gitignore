@@ -27,6 +27,7 @@
 *.gv
 *.pgantt
 *.csv
+*.dat
 
 # Logs and databases #
 ######################

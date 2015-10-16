@@ -47,8 +47,8 @@ public:
 	ListScheduler();
 	virtual ~ListScheduler();
 
-	void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack);
-	void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack);
+	void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack, bool useActorPrecedence);
+	void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack, bool useActorPrecedence);
 
 private:
 	SRDAGGraph* srdag_;

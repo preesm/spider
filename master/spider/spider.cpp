@@ -47,11 +47,16 @@ static SRDAGGraph* srdag = 0;
 static MemAlloc* memAlloc;
 static Scheduler* scheduler;
 
+static bool useGraphOptim = true;
+static bool useActorPrecedence = true;
+
 void spider_init(SpiderConfig cfg){
 	spider_setMemAllocType(cfg.memAllocType, (long)cfg.memAllocStart, cfg.memAllocSize);
 	spider_setSchedulerType(cfg.schedulerType);
 	spider_setSrdagStack(cfg.srdagStack);
 	spider_setTransfoStack(cfg.transfoStack);
+	spider_setActorPrecedence(cfg.useActorPrecedence);
+	spider_setGraphOptim(cfg.useGraphOptim);
 }
 
 void spider_free(){
@@ -76,7 +81,18 @@ void spider_launch(
 
 	srdag = new SRDAGGraph(srdagStack);
 
-	jit_ms(pisdf, archi, srdag, transfoStack, memAlloc, scheduler);
+	jit_ms(pisdf, archi, srdag,
+			transfoStack, memAlloc, scheduler,
+			useGraphOptim,
+			useActorPrecedence);
+}
+
+void spider_setGraphOptim(bool useGraphOptim_){
+	useGraphOptim = useGraphOptim_;
+}
+
+void spider_setActorPrecedence(bool useActorPrecedence_){
+	useActorPrecedence = useActorPrecedence_;
 }
 
 void spider_setMemAllocType(MemAllocType type, int start, int size){

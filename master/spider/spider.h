@@ -81,6 +81,9 @@ typedef struct{
 
 	StackConfig srdagStack;
 	StackConfig transfoStack;
+
+	bool useGraphOptim;
+	bool useActorPrecedence;
 } SpiderConfig;
 
 typedef struct{
@@ -119,6 +122,10 @@ void spider_setMemAllocType(MemAllocType type, int start, int size);
 void spider_setSchedulerType(SchedulerType type);
 void spider_setSrdagStack(StackConfig cfg);
 void spider_setTransfoStack(StackConfig cfg);
+
+void spider_setGraphOptim(bool useGraphOptim);
+void spider_setActorPrecedence(bool useActorPrecedence);
+void spider_setSpecialActorPrecedence(bool useSpecialActorPrecedence);
 
 void spider_startMonitoring();
 void spider_endMonitoring(TraceSpiderType type);

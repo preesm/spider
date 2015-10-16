@@ -39,11 +39,12 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <launcher/Launcher.h>
+#include <spider.h>
 
 #include <algorithm>
 #include <stdio.h>
 
-#define MAPPING_TIME 100
+#define MAPPING_TIME 100000
 
 ListScheduler::ListScheduler(){
 	srdag_ = 0;
@@ -71,7 +72,13 @@ void ListScheduler::addPrevActors(SRDAGVertex* vertex, List<SRDAGVertex*> *list)
 	}
 }
 
-void ListScheduler::scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack){
+void ListScheduler::scheduleOnlyConfig(
+		SRDAGGraph* graph,
+		MemAlloc* memAlloc,
+		Schedule* schedule,
+		Archi* archi,
+		Stack* stack,
+		bool useActorPrecedence){
 	srdag_ = graph;
 	schedule_ = schedule;
 	archi_ = archi;
@@ -112,14 +119,20 @@ void ListScheduler::scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Sc
 //	printf("\n");
 
 	for(int i=0; i<list_->getNb(); i++){
-		Launcher::get()->launchVertex((*list_)[i]);
+		Launcher::get()->launchVertex((*list_)[i], useActorPrecedence);
 	}
 
 	list_->~List();
 	stack->free(list_);
 }
 
-void ListScheduler::schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack){
+void ListScheduler::schedule(
+		SRDAGGraph* graph,
+		MemAlloc* memAlloc,
+		Schedule* schedule,
+		Archi* archi,
+		Stack* stack,
+		bool useActorPrecedence){
 	srdag_ = graph;
 	schedule_ = schedule;
 	archi_ = archi;
@@ -155,7 +168,7 @@ void ListScheduler::schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* sc
 	}
 
 	for(int i=0; i<list_->getNb(); i++){
-		Launcher::get()->launchVertex((*list_)[i]);
+		Launcher::get()->launchVertex((*list_)[i], useActorPrecedence);
 	}
 
 

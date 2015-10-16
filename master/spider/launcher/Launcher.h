@@ -46,7 +46,7 @@ class Launcher {
 public:
 	static Launcher* get();
 
-	void launchVertex(SRDAGVertex* vertex);
+	void launchVertex(SRDAGVertex* vertex, bool useActorPrecedence);
 	void resolveParams(Archi* archi, SRDAGGraph* topDag);
 
 	void sendTraceSpider(TraceSpiderType type, Time start, Time end);
@@ -63,7 +63,7 @@ private:
 	static Launcher instance_;
 
 	void send_ClearTimeMsg(int lrtIx);
-	void send_StartJobMsg(int lrtIx, SRDAGVertex* vertex);
+	void send_StartJobMsg(int lrtIx, SRDAGVertex* vertex, bool useActorPrecedence);
 
 };
 

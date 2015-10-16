@@ -41,9 +41,31 @@
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <graphs/PiSDF/PiSDFEdge.h>
 
+#include <stdio.h>
+
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/SRDAG/SRDAGEdge.h>
+
+static bool joinjoinUsed = false;
+static bool forkforkUsed = false;
+static bool brbrUsed = false;
+static bool brUsed = false;
+static bool forkUsed = false;
+static bool joinUsed = false;
+static bool initendUsed = false;
+static bool joinforkUsed = false;
+
+void printOptimsStats(){
+	if(!joinjoinUsed) 	printf("JoinJoin Unused\n");
+	if(!forkforkUsed) 	printf("ForkFork Unused\n");
+	if(!brbrUsed) 		printf("BrBr Unused\n");
+	if(!brUsed) 		printf("Br Unused\n");
+	if(!forkUsed) 		printf("Fork Unused\n");
+	if(!joinUsed) 		printf("Join Unused\n");
+	if(!initendUsed) 	printf("InitEnd Unused\n");
+	if(!joinforkUsed) 	printf("JoinFork Unused\n");
+}
 
 static int reduceJoinJoin(SRDAGGraph* topDag){
 	for(int i=0; i<topDag->getNVertex(); i++){
@@ -75,6 +97,8 @@ static int reduceJoinJoin(SRDAGGraph* topDag){
 				}
 
 				topDag->delVertex(join0);
+
+				joinjoinUsed = true;
 				return 1;
 			}
 		}
@@ -112,6 +136,8 @@ static int reduceForkFork(SRDAGGraph* topDag){
 				}
 
 				topDag->delVertex(secFork);
+
+				forkforkUsed = true;
 				return 1;
 			}
 		}
@@ -148,6 +174,8 @@ static int reduceBrBr(SRDAGGraph* topDag){
 				}
 
 				topDag->delVertex(secBr);
+
+				brbrUsed = true;
 				return 1;
 			}
 		}
@@ -195,6 +223,7 @@ static int removeBr(SRDAGGraph* topDag){
 				inEdge->connectSnk(nextVertex, edgeIx);
 				topDag->delVertex(br);
 
+				brUsed = true;
 				return true;
 			}else if(br->getNConnectedOutEdge() == 0){
 				SRDAGVertex* end = topDag->addEnd();
@@ -204,11 +233,14 @@ static int removeBr(SRDAGGraph* topDag){
 				edge->connectSnk(end, 0);
 
 				topDag->delVertex(br);
+				brUsed = true;
 				return true;
 			}
 
-			if(result)
+			if(result){
+				brUsed = true;
 				return true;
+			}
 		}
 	}
 	return result;
@@ -281,6 +313,7 @@ static int removeFork(SRDAGGraph* topDag){
 				inEdge->connectSnk(nextVertex, edgeIx);
 				topDag->delVertex(fork);
 
+				forkUsed = true;
 				return true;
 			}else if(fork->getNConnectedOutEdge() == 0){
 				SRDAGVertex* end = topDag->addEnd();
@@ -290,11 +323,14 @@ static int removeFork(SRDAGGraph* topDag){
 				edge->connectSnk(end, 0);
 
 				topDag->delVertex(fork);
+				forkUsed = true;
 				return true;
 			}
 
-			if(result)
+			if(result){
+				forkUsed = true;
 				return true;
+			}
 		}
 	}
 	return result;
@@ -325,6 +361,7 @@ static int removeJoin(SRDAGGraph* topDag){
 
 				topDag->delVertex(join);
 
+				joinUsed = true;
 				return true;
 			}else if(join->getNConnectedInEdge() == 0){
 				SRDAGVertex* end = topDag->addEnd();
@@ -334,11 +371,14 @@ static int removeJoin(SRDAGGraph* topDag){
 				edge->connectSnk(end, 0);
 
 				topDag->delVertex(join);
+				joinUsed = true;
 				return true;
 			}
 
-			if(result)
+			if(result){
+				joinUsed = true;
 				return true;
+			}
 		}
 	}
 	return result;
@@ -356,6 +396,7 @@ static int reduceInitEnd(SRDAGGraph* topDag){
 				topDag->delEdge(edge);
 				topDag->delVertex(end);
 				topDag->delVertex(init);
+				initendUsed = true;
 				return 1;
 			}
 		}
@@ -373,7 +414,7 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 				int totProd = 0;
 
 				int sourceIndex=0, sinkIndex=0;
-#define MAX_SRDAG_INPUT_EDGES 1000
+#define MAX_SRDAG_INPUT_EDGES 100
 
 				SRDAGVertex* sources[MAX_SRDAG_INPUT_EDGES];
 				int sourceProds[MAX_SRDAG_INPUT_EDGES];
@@ -520,6 +561,7 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 					}
 				}
 
+				joinforkUsed = true;
 				return 1;
 			}
 		}
@@ -528,17 +570,50 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 	}
 
 void optims(SRDAGGraph *topDag, Stack* stack){
-	bool res;
+	bool res, resTotal;
 	do{
 		res = false;
-		res = res || reduceJoinJoin(topDag);
-		res = res || reduceForkFork(topDag);
-		res = res || reduceBrBr(topDag);
-		res = res || reduceJoinFork(topDag);
-		res = res || removeBr(topDag);
-		res = res || removeFork(topDag);
-		res = res || removeJoin(topDag);
-		res = res || reduceInitEnd(topDag);
+		resTotal = false;
+		do{
+			res = reduceJoinJoin(topDag);
+			resTotal = res || resTotal;
+		}while(res);
+
+		do{
+			res = reduceForkFork(topDag);
+			resTotal = res || resTotal;
+		}while(res);
+
+		do{
+			res = reduceBrBr(topDag);
+			resTotal = res || resTotal;
+		}while(res);
+
+		do{
+			res = reduceJoinFork(topDag);
+			resTotal = res || resTotal;
+		}while(res);
+
+		do{
+			res = removeBr(topDag);
+			resTotal = res || resTotal;
+		}while(res);
+
+		do{
+			res = removeFork(topDag);
+			resTotal = res || resTotal;
+		}while(res);
+
+		do{
+			res = removeJoin(topDag);
+			resTotal = res || resTotal;
+		}while(res);
+
+		do{
+			res = reduceInitEnd(topDag);
+			resTotal = res || resTotal;
+		}while(res);
+
 	}while(res);
 }
 

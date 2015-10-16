@@ -40,6 +40,16 @@
 #include <stdlib.h>
 #include "pi_daq_fft.h"
 
+#define SRDAG_SIZE 		128	*1024
+#define TRANSFO_SIZE 	512	*1024
+#define PISDF_SIZE 		32	*1024
+#define ARCHI_SIZE 		3	*1024
+
+static char transfoStack[TRANSFO_SIZE];
+static char srdagStack[SRDAG_SIZE];
+static char pisdfStackMem[PISDF_SIZE];
+static char archiStackMem[ARCHI_SIZE];
+
 void initActors();
 
 int main(int argc, char* argv[]){
@@ -48,11 +58,11 @@ int main(int argc, char* argv[]){
 
 	initActors();
 
-	DynStack pisdfStack("PisdfStack");
-	DynStack archiStack("ArchiStack");
+	StaticStack pisdfStack("PisdfStack", pisdfStackMem, PISDF_SIZE);
+	StaticStack archiStack("ArchiStack", archiStackMem, ARCHI_SIZE);
 
 #define SH_MEM 0x00500000
-	PlatformK2Arm platform(4, 8, SH_MEM, &archiStack, daq_fft_fcts, N_FCT_DAQ_FFT);
+	PlatformK2Arm platform(4, 8, USE_MSMC, SH_MEM, &archiStack, daq_fft_fcts, N_FCT_DAQ_FFT);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
@@ -61,8 +71,18 @@ int main(int argc, char* argv[]){
 
 	cfg.schedulerType = SCHEDULER_LIST;
 
-	cfg.srdagStack = {STACK_DYNAMIC, "SrdagStack", 0, 0};
-	cfg.transfoStack = {STACK_DYNAMIC, "TransfoStack", 0, 0};
+	cfg.srdagStack.type = STACK_STATIC;
+	cfg.srdagStack.name = "SrdagStack";
+	cfg.srdagStack.size = SRDAG_SIZE;
+	cfg.srdagStack.start = srdagStack;
+
+	cfg.transfoStack.type = STACK_STATIC;
+	cfg.transfoStack.name = "TransfoStack";
+	cfg.transfoStack.size = TRANSFO_SIZE;
+	cfg.transfoStack.start = transfoStack;
+
+	cfg.useGraphOptim = true;
+	cfg.useActorPrecedence = true;
 
 	spider_init(cfg);
 
@@ -79,8 +99,10 @@ int main(int argc, char* argv[]){
 
 			spider_launch(archi, topPisdf);
 
-			spider_printGantt(archi, spider_getLastSRDAG(), "dac_fft_group_fixed.pgantt", "dac_fft_group_fixed.tex", &stat);
-			spider_getLastSRDAG()->print("dac_fft_group.gv");
+			spider_printGantt(archi, spider_getLastSRDAG(),
+					"6steps/6step_fft_fixed.pgantt",
+					"6steps/6step_fft_fixed.dat", &stat);
+			spider_getLastSRDAG()->print("6steps/6step_fft_fixed.gv");
 
 			printf("EndTime = %ld ms\n", stat.globalEndTime/1000000);
 
@@ -95,13 +117,13 @@ int main(int argc, char* argv[]){
 				printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
 			printf("\n");
 
-			FILE* f = fopen("timings.csv", "w+");
+			FILE* f = fopen("6steps/timings.csv", "w+");
 			fprintf(f, "Actors,c6678,CortexA15\n");
 
 			Time fftTime = 0;
 
 			printf("Actors:\n");
-			for(int j=0; j<stat.nbActor; j++){
+			for(int j=0; j<stat.nPiSDFActor; j++){
 				printf("\t%12s:", stat.actors[j]->getName());
 				fprintf(f, "%s", stat.actors[j]->getName());
 				for(int k=0; k<archi->getNPETypes(); k++){

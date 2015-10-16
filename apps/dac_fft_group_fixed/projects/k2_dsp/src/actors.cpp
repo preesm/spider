@@ -74,6 +74,8 @@ unsigned char brev[64] = {
 
 #pragma DATA_SECTION(".twiddles")
 static short gen_twi256[2*256];
+#pragma DATA_SECTION(".twiddles")
+static short gen_twi512[2*512];
 
 void initActors2();
 
@@ -81,6 +83,7 @@ void initActors(){
 	initActors2();
 
 	gen_twiddle_fft16x16_imre(gen_twi256,     256);
+	gen_twiddle_fft16x16_imre(gen_twi512,     512);
 
 	edma_init();
 }
@@ -173,6 +176,9 @@ void fft(Param size, Param n, Cplx16* in, Cplx16* out){
 //	case    1024:
 //		w = gen_twi1k;
 //		break;
+	case    512:
+		w = gen_twi512;
+		break;
 	case    256:
 		w = gen_twi256;
 		break;

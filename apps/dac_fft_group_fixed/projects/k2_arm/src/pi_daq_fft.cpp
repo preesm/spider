@@ -81,7 +81,7 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 	PiSDFParam *param_Nc = graph->addDynamicParam("Nc");
 	PiSDFParam *param_N1 = graph->addDynamicParam("n1");
 	PiSDFParam *param_N2 = graph->addDynamicParam("n2");
-	PiSDFParam *param_size = graph->addStaticParam("size", 64*1024);
+	PiSDFParam *param_size = graph->addStaticParam("size", 2*64*1024);
 
 	/* Vertices */
 	PiSDFVertex* bo_src = graph->addBodyVertex(
@@ -92,6 +92,7 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 		/*InParam*/ 1);
 	bo_src->addInParam(0, param_size);
 	bo_src->isExecutableOnPE(CORE_ARM0);
+	bo_src->isExecutableOnPE(CORE_DSP0);
 	bo_src->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
 	bo_src->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 
@@ -254,6 +255,7 @@ PiSDFGraph* daq_fft(Archi* archi, Stack* stack){
 	bo_genIx->addInParam(0, param_Nr);
 	bo_genIx->addInParam(1, param_N2);
 	bo_genIx->isExecutableOnPE(CORE_ARM0);
+	bo_genIx->isExecutableOnPE(CORE_DSP0);
 	bo_genIx->setTimingOnType(CORE_TYPE_C6678, "1000", stack);
 	bo_genIx->setTimingOnType(CORE_TYPE_CORTEXA15, "1000", stack);
 

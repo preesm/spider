@@ -49,12 +49,12 @@ extern "C"{
 void initActors();
 
 int main(int argc, char* argv[]){
-#define SH_MEM 0x00400000
+#define SH_MEM 0x00500000
 	edma_init();
 	initActors();
 	try{
 		DynStack archiStack("ArchiStack");
-		PlatformK2Dsp platform(SH_MEM, &archiStack, daq_fft_fcts, N_FCT_DAQ_FFT);
+		PlatformK2Dsp platform(SH_MEM, USE_MSMC, &archiStack, daq_fft_fcts, N_FCT_DAQ_FFT);
 	}catch(const char* s){
 		printf("Exception : %s\n", s);
 	}

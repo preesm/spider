@@ -44,17 +44,27 @@
 
 void initActors();
 
+#define SRDAG_SIZE 		512	*1024
+#define TRANSFO_SIZE 	512	*1024
+#define PISDF_SIZE 		64	*1024
+#define ARCHI_SIZE 		3	*1024
+
+static char transfoStack[TRANSFO_SIZE];
+static char srdagStack[SRDAG_SIZE];
+static char pisdfStackMem[PISDF_SIZE];
+static char archiStackMem[ARCHI_SIZE];
+
 int main(int argc, char* argv[]){
 	SpiderConfig cfg;
 	ExecutionStat stat;
 
 	initActors();
 
-	DynStack pisdfStack("PisdfStack");
-	DynStack archiStack("ArchiStack");
+	StaticStack pisdfStack("PisdfStack", pisdfStackMem, PISDF_SIZE);
+	StaticStack archiStack("ArchiStack", archiStackMem, ARCHI_SIZE);
 
 #define SH_MEM 0x00500000
-	PlatformK2Arm platform(4, 8, SH_MEM, &archiStack, radix2_fft_fcts, N_FCT_RADIX2_FFT);
+	PlatformK2Arm platform(4, 8, USE_MSMC, SH_MEM, &archiStack, radix2_fft_fcts, N_FCT_RADIX2_FFT);
 	Archi* archi = platform.getArchi();
 
 	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
@@ -63,57 +73,83 @@ int main(int argc, char* argv[]){
 
 	cfg.schedulerType = SCHEDULER_LIST;
 
-	cfg.srdagStack.type = STACK_DYNAMIC;
+	cfg.srdagStack.type = STACK_STATIC;
 	cfg.srdagStack.name = "SrdagStack";
-	cfg.srdagStack.size = 0;
-	cfg.srdagStack.start = 0;
+	cfg.srdagStack.size = SRDAG_SIZE;
+	cfg.srdagStack.start = srdagStack;
 
-	cfg.transfoStack.type = STACK_DYNAMIC;
+	cfg.transfoStack.type = STACK_STATIC;
 	cfg.transfoStack.name = "TransfoStack";
-	cfg.transfoStack.size = 0;
-	cfg.transfoStack.start = 0;
+	cfg.transfoStack.size = TRANSFO_SIZE;
+	cfg.transfoStack.start = transfoStack;
+
+	cfg.useGraphOptim = true;
+	cfg.useActorPrecedence = true;
 
 	spider_init(cfg);
 
 	printf("Start\n");
 
 	try{
-		pisdfStack.freeAll();
+		for(int i=0; i<2; i++){
+			pisdfStack.freeAll();
 
-		PiSDFGraph *topPisdf = init_Radix2_fft(archi, &pisdfStack);
-		topPisdf->print("topPisdf.gv");
+			PiSDFGraph *topPisdf = init_Radix2_fft(archi, &pisdfStack);
+			topPisdf->print("topPisdf.gv");
 
-		Platform::get()->rstTime();
+			Platform::get()->rstTime();
 
-		spider_launch(archi, topPisdf);
+			spider_launch(archi, topPisdf);
 
-		spider_printGantt(archi, spider_getLastSRDAG(), "radixFFT_2.pgantt", "latex.tex", &stat);
-		spider_getLastSRDAG()->print("radixFFT_2.gv");
+			spider_printGantt(archi, spider_getLastSRDAG(),
+					"radix2_fx/radixFFT_2.pgantt",
+					"radix2_fx/radixFFT_2.dat", &stat);
+			spider_getLastSRDAG()->print("radix2_fx/radixFFT_2.gv");
 
-		printf("EndTime = %ld us\n", stat.globalEndTime/1000);
+			printf("EndTime = %ld us\n", stat.globalEndTime/1000);
 
-		printf("Memory use = ");
-		if(stat.memoryUsed < 1024)
-			printf("\t%5.1f B", stat.memoryUsed/1.);
-		else if(stat.memoryUsed < 1024*1024)
-			printf("\t%5.1f KB", stat.memoryUsed/1024.);
-		else if(stat.memoryUsed < 1024*1024*1024)
-			printf("\t%5.1f MB", stat.memoryUsed/1024./1024.);
-		else
-			printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
-		printf("\n");
+			printf("Memory use = ");
+			if(stat.memoryUsed < 1024)
+				printf("\t%5.1f B", stat.memoryUsed/1.);
+			else if(stat.memoryUsed < 1024*1024)
+				printf("\t%5.1f KB", stat.memoryUsed/1024.);
+			else if(stat.memoryUsed < 1024*1024*1024)
+				printf("\t%5.1f MB", stat.memoryUsed/1024./1024.);
+			else
+				printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
+			printf("\n");
 
-		printf("%d Actors:\n", stat.nbActor);
-		for(int j=0; j<stat.nbActor; j++){
-			printf("\t%12s:", stat.actors[j]->getName());
-			for(int k=0; k<archi->getNPETypes(); k++)
-				printf("\t%8ld (x%3ld)",
-						stat.actorTimes[j][k]/stat.actorIterations[j][k],
-						stat.actorIterations[j][k]);
-		printf("\n");
+			Time fftTime = 0;
+
+			printf("Actors:\n");
+			for(int j=0; j<stat.nPiSDFActor; j++){
+				printf("\t%12s:", stat.actors[j]->getName());
+				for(int k=0; k<archi->getNPETypes(); k++){
+					if(stat.actorIterations[j][k] > 0){
+						printf("\t(%d): %8ld (x%ld)",
+								k,
+								stat.actorTimes[j][k]/stat.actorIterations[j][k],
+								stat.actorIterations[j][k]);
+					}else{
+						printf("\t(%d):        0 (x0)", k);
+					}
+				}
+
+				if(strcmp(stat.actors[j]->getName(), "src") == 0){
+					fftTime -= stat.actorFisrt[j];
+				}
+
+				if(strcmp(stat.actors[j]->getName(), "snk") == 0){
+					fftTime += stat.actorLast[j];
+				}
+
+				printf("\n");
+			}
+
+			printf("fftTime = %ld us\n", fftTime/1000);
+
+			free_Radix2_fft(topPisdf, &pisdfStack);
 		}
-
-		free_Radix2_fft(topPisdf, &pisdfStack);
 	}catch(const char* s){
 		printf("Exception : %s\n", s);
 	}

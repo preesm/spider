@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
 	initActors();
 	try{
 		DynStack archiStack("ArchiStack");
-		PlatformK2Dsp platform(SH_MEM, &archiStack, radix2_fft_fcts, N_FCT_RADIX2_FFT);
+		PlatformK2Dsp platform(SH_MEM, USE_MSMC, &archiStack, radix2_fft_fcts, N_FCT_RADIX2_FFT);
 	}catch(const char* s){
 		printf("Exception : %s\n", s);
 	}

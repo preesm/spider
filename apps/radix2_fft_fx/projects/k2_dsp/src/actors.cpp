@@ -37,6 +37,7 @@
 #include <platform.h>
 
 #include "actors.h"
+#include "edma_br.h"
 
 extern "C"{
 #include "ti/dsplib/src/DSP_fft16x16_imre/DSP_fft16x16_imre.h"
@@ -154,14 +155,14 @@ void src(Param size, Cplx16 *out){
 #if VERBOSE
 	printf("Execute Src\n");
 #endif
-	printf("DSP should not execute Src\n");
+//	printf("DSP should not execute Src\n");
 }
 
 void snk(Param size, Cplx16 *in){
 #if VERBOSE
 	printf("Execute Snk\n");
 #endif
-	printf("DSP should not execute Snk\n");
+//	printf("DSP should not execute Snk\n");
 }
 
 void T(Param N1, Param N2, Cplx16* in, Cplx16 *out){
@@ -169,12 +170,31 @@ void T(Param N1, Param N2, Cplx16* in, Cplx16 *out){
 	printf("Execute T\n");
 #endif
 
-	for(int n2=0; n2<N2; n2++){
-		for(int n1=0; n1<N1; n1++){
-			out[n1*N2+n2].real = in[bitRev(n1, N1)+n2*N1].real;
-			out[n1*N2+n2].imag = in[bitRev(n1, N1)+n2*N1].imag;
-		}
+//	for(int n2=0; n2<N2; n2++){
+//		for(int n1=0; n1<N1; n1++){
+//			out[n1*N2+n2].real = in[bitRev(n1, N1)+n2*N1].real;
+//			out[n1*N2+n2].imag = in[bitRev(n1, N1)+n2*N1].imag;
+//		}
+//	}
+
+	for(int n1=0; n1<N1; n1++){
+		int bRev = bitRev(n1, N1);
+//		for(int n2=0; n2<N2; n2++){
+//			out[n1*N2+n2].real = in[bRev+n2*N1].real;
+//			out[n1*N2+n2].imag = in[bRev+n2*N1].imag;
+//		}
+		edma_cpy (
+				in  + bRev,
+				out + n1*N2,
+				4, N2, 1,
+				N1*4, 4,
+				0, 0);
 	}
+
+//	if(edmabr_init(in, out, 4, 4096, 1, 64, 4, 0, 0) != 0) {
+//		printf("Error while initializing the EDMA.");
+//	}
+
 }
 
 void fft(Param size, Param n, Cplx16* in, Cplx16* out){
@@ -228,22 +248,36 @@ void fft_2(Param n, Param p, Param N2, Param N1, char* ix, Cplx16* i0, Cplx16* i
 	printf("Execute fft_2\n");
 #endif
 
-	const int id	  = (*ix)*n;
+	int k;
+	const int id          = (*ix)*n;
 	const int m = (id % (N2*(1<<(p))));
 	const unsigned short incr = N1 / (1 << (p+1));
+	int64_t *ptrIn0;
+	int64_t *ptrIn1;
+	int64_t *ptr0ut0;
+	int64_t *ptrOut1;
+	int64_t input0, input1, twiddles;
 
-	for(int k=0; k<n; k++){
-		unsigned short r = (m+k)*incr;
+	__x128_t B32;
+	int64_t B16;
+	int64_t B16_hi;
+	int64_t B16_lo;
+	ptrIn0 = (int64_t *)i0;
+	ptrIn1 = (int64_t *)i1;
+	ptr0ut0 = (int64_t *)o0;
+	ptrOut1 = (int64_t *)o1;
 
-		long i1r = i1[k].real;
-		long i1i = i1[k].imag;
-		short Br = (long)(i1r*twi64k[r].real - i1i*twi64k[r].imag)>>15;
-		short Bi = (long)(i1r*twi64k[r].imag + i1i*twi64k[r].real)>>15;
+	for(k=0; k<n; k+=2){
+		input1 = _amem8(ptrIn1++);
+		twiddles = _itoll(*(int32_t *)&twi64k[(m+k+1)*incr],*(int32_t *)&twi64k[(m+k)*incr]) ;
 
-		o0[k].real = (i0[k].real + Br)>>1;
-		o0[k].imag = (i0[k].imag + Bi)>>1;
 
-		o1[k].real = (i0[k].real - Br)>>1;
-		o1[k].imag = (i0[k].imag - Bi)>>1;
+		B32 = _dcmpy(twiddles, input1);
+		B16_hi = _dshr(_hi128(B32), 15);
+		B16_lo = _dshr(_lo128(B32), 15);
+		B16 = _itoll(_pack2(_hill(B16_hi), _loll(B16_hi)), _pack2(_hill(B16_lo), _loll(B16_lo)));
+		input0 = _amem8(ptrIn0++);
+		_amem8(ptr0ut0++) = _dshr2(_dadd2(input0, B16), 1);
+		_amem8(ptrOut1++) = _dshr2(_dsub2(input0, B16), 1);
 	}
 }

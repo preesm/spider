@@ -122,9 +122,9 @@ void cfgFFT(Param* size, Param* P, Param* n1, Param* n2){
 #if VERBOSE
 	printf("Execute cfgFFT\n");
 #endif
-	*size 	= N_DATA;
+	*size 	= 2*N_DATA;
 	*P 		= 4;
-	*n1 	= 4*1024;
+	*n1 	= 8*1024;
 	*n2 	= 2;
 }
 
@@ -190,7 +190,7 @@ void fft(Param size, Param n, Cplx16* in, Cplx16* out){
 #endif
 
 	switch(Platform::get()->getLrt()->getIx()){
-	case CORE_ARM0:
+	case CORE_ARM2:
 		fftc_send (0, in, out, size, n);
 		break;
 	case CORE_ARM1:

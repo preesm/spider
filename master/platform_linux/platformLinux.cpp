@@ -237,6 +237,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 	archi_->setPETypeRecvSpeed(0, 1, 10);
 	archi_->setPETypeSendSpeed(0, 1, 10);
 	archi_->setPEType(0, 0);
+	archi_->activatePE(0);
 
 	char name[40];
 	sprintf(name, "PID %d (Spider)", cpIds[0]);
@@ -245,6 +246,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 		sprintf(name, "PID %d (LRT %d)", cpIds[i], i);
 		archi_->setPEType(i, 0);
 		archi_->setName(i, name);
+		archi_->activatePE(i);
 	}
 
 	this->rstTime();

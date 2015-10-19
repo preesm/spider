@@ -39,6 +39,8 @@
 
 #include <platform.h>
 
+typedef Time(*MappingTimeFct)(int);
+
 class Archi {
 protected:
 	Archi(){}
@@ -60,6 +62,7 @@ public:
 	virtual Time getTimeRecv(int src, int dest, int size) const = 0;
 
 	virtual int getSpiderPeIx() const = 0;
+	virtual MappingTimeFct getMappingTimeFct() const = 0;
 };
 
 #endif/*ARCHI_H*/

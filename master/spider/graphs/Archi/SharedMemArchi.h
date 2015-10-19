@@ -43,7 +43,7 @@
 
 class SharedMemArchi: public Archi {
 public:
-	SharedMemArchi(Stack* s, int nPE, int nPEType, int spiderPe);
+	SharedMemArchi(Stack* s, int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct);
 	virtual ~SharedMemArchi();
 
 	virtual int  getNPE() const;
@@ -61,11 +61,14 @@ public:
 
 	virtual inline int getSpiderPeIx() const;
 
+	virtual inline MappingTimeFct getMappingTimeFct() const;
+
 	inline void setPETypeSendSpeed(int type, float a, float b);
 	inline void setPETypeRecvSpeed(int type, float a, float b);
 
 	inline void setName(int pe, const char* name);
 	inline void setPEType(int pe, int type);
+
 
 private:
 	Stack* stack_;
@@ -79,6 +82,7 @@ private:
 	float* peTypeBSend_;
 	float* peTypeARecv_;
 	float* peTypeBRecv_;
+	MappingTimeFct mapFct_;
 
 };
 
@@ -134,5 +138,10 @@ inline bool SharedMemArchi::isActivated(int pe) const{
 inline int SharedMemArchi::getSpiderPeIx() const{
 	return spiderPe_;
 }
+
+inline MappingTimeFct SharedMemArchi::getMappingTimeFct() const{
+	return mapFct_;
+}
+
 
 #endif/*SHARED_MEM_ARCH_H*/

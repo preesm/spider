@@ -68,6 +68,8 @@ public:
 private:
 	Stack* stack_;
 	SharedMemArchi* archi_;
+
+	static Time mappingTime(int nActors);
 };
 
 #endif/*PLATFORM_LINUX_H*/

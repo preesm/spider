@@ -155,7 +155,8 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMe
 				/* Stack */  	stack,
 				/* Nb PE */		nArm+nDsp,
 				/* Nb PE Type*/ 2,
-				/* Spider Pe */ nDsp);
+				/* Spider Pe */ nDsp,
+				/*MappingTime*/ this->mappingTime);
 
 	archi_->setPETypeRecvSpeed(0, 1, 10);
 	archi_->setPETypeSendSpeed(0, 1, 10);
@@ -277,3 +278,6 @@ SharedMemArchi* PlatformK2Arm::getArchi(){
 	return archi_;
 }
 
+Time PlatformK2Arm::mappingTime(int nActors){
+	return 100000*nActors;
+}

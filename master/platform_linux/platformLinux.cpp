@@ -231,7 +231,8 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 				/* Stack */  	stack,
 				/* Nb PE */		nLrt,
 				/* Nb PE Type*/ 1,
-				/* Spider Pe */ 0);
+				/* Spider Pe */ 0,
+				/*MappingTime*/ this->mappingTime);
 
 	archi_->setPETypeRecvSpeed(0, 1, 10);
 	archi_->setPETypeSendSpeed(0, 1, 10);
@@ -334,4 +335,8 @@ Time PlatformLinux::getTime(){
 
 SharedMemArchi* PlatformLinux::getArchi(){
 	return archi_;
+}
+
+Time PlatformLinux::mappingTime(int nActors){
+	return 1000*nActors;
 }

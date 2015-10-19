@@ -37,7 +37,7 @@
 #include "SharedMemArchi.h"
 #include <tools/Stack.h>
 
-SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType, int spiderPe) {
+SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct) {
 	stack_ = stack;
 	nPE_ = nPE;
 	nPEType_ = nPEType;
@@ -49,6 +49,7 @@ SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType, int spiderPe)
 	peTypeBSend_ = CREATE_MUL(stack, nPEType_, float);
 	peTypeARecv_ = CREATE_MUL(stack, nPEType_, float);
 	peTypeBRecv_ = CREATE_MUL(stack, nPEType_, float);
+	mapFct_ = mapFct;
 }
 
 SharedMemArchi::~SharedMemArchi() {

@@ -69,10 +69,12 @@ public:
 
 	PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts);
 	virtual ~PlatformK2Arm();
-private:
 
+private:
 	Stack* stack_;
 	SharedMemArchi* archi_;
+
+	static Time mappingTime(int nActors);
 };
 
 #endif/*PLATFORM_K2_ARM_H*/

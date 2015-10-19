@@ -44,8 +44,6 @@
 #include <algorithm>
 #include <stdio.h>
 
-#define MAPPING_TIME 100000
-
 ListScheduler::ListScheduler(){
 	srdag_ = 0;
 	schedule_ = 0;
@@ -110,7 +108,7 @@ void ListScheduler::scheduleOnlyConfig(
 	schedule_->setAllMinReadyTime(Platform::get()->getTime());
 	schedule_->setReadyTime(
 			/* Spider Pe */ 		archi->getSpiderPeIx(),
-			/* End of Mapping */ 	Platform::get()->getTime() + MAPPING_TIME*list_->getNb());
+			/* End of Mapping */ 	Platform::get()->getTime() + archi->getMappingTimeFct()(list_->getNb()));
 
 //	Launcher::setActorsNb(schedList.getNb());
 
@@ -165,7 +163,7 @@ void ListScheduler::schedule(
 	schedule_->setAllMinReadyTime(Platform::get()->getTime());
 	schedule_->setReadyTime(
 			/* Spider Pe */ 		archi->getSpiderPeIx(),
-			/* End of Mapping */ 	Platform::get()->getTime() + MAPPING_TIME*list_->getNb());
+			/* End of Mapping */ 	Platform::get()->getTime() + archi->getMappingTimeFct()(list_->getNb()));
 
 	for(int i=0; i<list_->getNb(); i++){
 		this->scheduleVertex((*list_)[i]);

@@ -37,10 +37,11 @@
 #include "SharedMemArchi.h"
 #include <tools/Stack.h>
 
-SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType) {
+SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType, int spiderPe) {
 	stack_ = stack;
 	nPE_ = nPE;
 	nPEType_ = nPEType;
+	spiderPe_ = spiderPe;
 	peType_ = CREATE_MUL(stack, nPE_, int);
 	peActive_ = CREATE_MUL(stack, nPE_, bool);
 	peName_ = CREATE_MUL(stack, nPE_, char*);

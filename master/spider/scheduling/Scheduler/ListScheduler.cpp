@@ -108,7 +108,9 @@ void ListScheduler::scheduleOnlyConfig(
 //	Launcher::initMappingTime();
 
 	schedule_->setAllMinReadyTime(Platform::get()->getTime());
-	schedule_->setReadyTime(0, Platform::get()->getTime() + MAPPING_TIME*list_->getNb());
+	schedule_->setReadyTime(
+			/* Spider Pe */ 		archi->getSpiderPeIx(),
+			/* End of Mapping */ 	Platform::get()->getTime() + MAPPING_TIME*list_->getNb());
 
 //	Launcher::setActorsNb(schedList.getNb());
 
@@ -161,7 +163,9 @@ void ListScheduler::schedule(
 //	printf("\n");
 
 	schedule_->setAllMinReadyTime(Platform::get()->getTime());
-//	schedule_->setReadyTime(0, Platform::get()->getTime() + MAPPING_TIME*list_->getNb());
+	schedule_->setReadyTime(
+			/* Spider Pe */ 		archi->getSpiderPeIx(),
+			/* End of Mapping */ 	Platform::get()->getTime() + MAPPING_TIME*list_->getNb());
 
 	for(int i=0; i<list_->getNb(); i++){
 		this->scheduleVertex((*list_)[i]);

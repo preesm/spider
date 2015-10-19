@@ -58,6 +58,8 @@ public:
 
 	virtual Time getTimeSend(int src, int dest, int size) const = 0;
 	virtual Time getTimeRecv(int src, int dest, int size) const = 0;
+
+	virtual int getSpiderPeIx() const = 0;
 };
 
 #endif/*ARCHI_H*/

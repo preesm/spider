@@ -230,7 +230,8 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 	archi_ = CREATE(stack, SharedMemArchi)(
 				/* Stack */  	stack,
 				/* Nb PE */		nLrt,
-				/* Nb PE Type*/ 1);
+				/* Nb PE Type*/ 1,
+				/* Spider Pe */ 0);
 
 	archi_->setPETypeRecvSpeed(0, 1, 10);
 	archi_->setPETypeSendSpeed(0, 1, 10);

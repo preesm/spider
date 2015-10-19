@@ -154,7 +154,8 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMe
 	archi_ = CREATE(stack, SharedMemArchi)(
 				/* Stack */  	stack,
 				/* Nb PE */		nArm+nDsp,
-				/* Nb PE Type*/ 2);
+				/* Nb PE Type*/ 2,
+				/* Spider Pe */ nDsp);
 
 	archi_->setPETypeRecvSpeed(0, 1, 10);
 	archi_->setPETypeSendSpeed(0, 1, 10);

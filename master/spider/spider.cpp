@@ -276,6 +276,7 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 	stat->brTime = 0;
 	stat->nExecSRDAGActor = 0;
 	stat->nSRDAGActor = srdag->getNVertex();
+	stat->nSRDAGEdge = srdag->getNEdge();
 	stat->nPiSDFActor = 0;
 
 	stat->memoryUsed = memAlloc->getMemUsed();

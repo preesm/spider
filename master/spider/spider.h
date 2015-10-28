@@ -105,15 +105,13 @@ typedef struct{
 	int nPiSDFActor;
 
 	int nSRDAGActor;
+	int nSRDAGEdge;
 	int nExecSRDAGActor;
 
 	Time forkTime;
 	Time joinTime;
 	Time rbTime;
 	Time brTime;
-
-	int SRDAGVertices;
-	int SRDAGEdges;
 
 	int memoryUsed;
 

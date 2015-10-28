@@ -124,11 +124,17 @@ inline void SharedMemArchi::setPEType(int pe, int type){
 
 
 inline void SharedMemArchi::desactivatePE(int pe){
-	peActive_[pe] = false;
+	if(peActive_[pe]){
+		Platform::get()->idleLrt(pe);
+		peActive_[pe] = false;
+	}
 }
 
 inline void SharedMemArchi::activatePE(int pe){
-	peActive_[pe] = true;
+	if(!peActive_[pe]){
+		Platform::get()->wakeLrt(pe);
+		peActive_[pe] = true;
+	}
 }
 
 inline bool SharedMemArchi::isActivated(int pe) const{

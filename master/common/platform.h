@@ -67,6 +67,11 @@ public:
 	static inline LrtCommunicator* getLrtCommunicator();
 	static inline SpiderCommunicator* getSpiderCommunicator();
 
+	/** Platform Core Handling **/
+	virtual void idleLrt(int i) = 0;
+	virtual void wakeLrt(int i) = 0;
+	virtual void idle() = 0;
+
 protected:
 	Platform();
 	virtual ~Platform();

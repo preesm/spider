@@ -120,6 +120,7 @@ typedef struct{
 
 void spider_init(SpiderConfig cfg);
 void spider_launch(Archi* archi, PiSDFGraph* pisdf);
+void spider_idle(Archi* archi);
 void spider_free();
 
 void spider_setMemAllocType(MemAllocType type, int start, int size);

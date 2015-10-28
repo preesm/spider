@@ -57,6 +57,9 @@ public:
 	void runUntilNoMoreJobs();
 	void runInfinitly();
 
+	inline void setIdle(bool idle);
+	inline bool isIdle();
+
 	inline int getIx() const;
 
 protected:
@@ -67,12 +70,21 @@ private:
 	int nFct_;
 	const lrtFct* fcts_;
 	bool run_;
+	bool idle_;
 
 	Stack* stack_;
 };
 
 inline int LRT::getIx() const{
 	return ix_;
+}
+
+inline void LRT::setIdle(bool idle){
+	idle_ = idle;
+}
+
+inline bool LRT::isIdle(){
+	return idle_;
 }
 
 #endif/*LRT_H*/

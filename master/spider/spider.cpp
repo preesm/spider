@@ -59,6 +59,14 @@ void spider_init(SpiderConfig cfg){
 	spider_setGraphOptim(cfg.useGraphOptim);
 }
 
+void spider_idle(Archi* archi){
+	for(int lrt=0; lrt<archi->getNPE(); lrt++){
+		if(lrt != archi->getSpiderPeIx()){
+			archi->desactivatePE(lrt);
+		}
+	}
+}
+
 void spider_free(){
 	if(srdag != 0)
 		delete srdag;

@@ -134,6 +134,9 @@ void DemoStereo::startSpider(){
 	spider_printGantt(archi, spider_getLastSRDAG(), "stereo.pgantt", "stereo.tex", &stat);
 	spider_getLastSRDAG()->print("stereo.gv");
 
+	/* Set Spider to Idle Mode */
+	spider_idle(archi);
+
 	/* Populate result field */
 	ui->execTime->setText(convertTime(stat.globalEndTime));
 	ui->schedTime->setText(convertTime(stat.schedTime));

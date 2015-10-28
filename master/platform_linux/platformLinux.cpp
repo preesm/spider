@@ -74,15 +74,28 @@ static struct timespec start;
 static void* shMem;
 static void* dataMem;
 
+void PlatformLinux::sig_handler(int signo){
+	switch(signo){
+	case SIG_IDLE:
+		getLrt()->setIdle(true);
+		break;
+	case SIG_WAKE:
+		getLrt()->setIdle(false);
+		break;
+	default:
+		break;
+	}
+}
+
 static void initShMem(int shMemSize){
 	/** Open Shared Memory */
-    int shmid;
-    key_t key = SHARED_MEM_KEY;
+	int shmid;
+	key_t key = SHARED_MEM_KEY;
 
 	printf("Creating shared memory...\n");
 
-    /** Get the segment. */
-    if ((shmid = shmget(key, shMemSize, IPC_CREAT | 0666)) < 0) {
+	/** Get the segment. */
+	if ((shmid = shmget(key, shMemSize, IPC_CREAT | 0666)) < 0) {
 		/* Bad memory size */
 		if(errno == EINVAL){
 			printf("Error openning shared memory, try:\n");
@@ -90,39 +103,38 @@ static void initShMem(int shMemSize){
 			printf("\tsudo sysctl -w kernel.shmmax=%d\n", shMemSize);
 			exit(-1);
 		}
-        perror("shmget");
-        exit(1);
-    }
+		perror("shmget");
+		exit(1);
+	}
 
-    /** Now we attach the segment to our data space. */
-    if ((shMem = (void*)shmat(shmid, NULL, 0)) == (void *) -1) {
-        perror("shmat");
-        exit(1);
-    }
+	/** Now we attach the segment to our data space. */
+	if ((shMem = (void*)shmat(shmid, NULL, 0)) == (void *) -1) {
+		perror("shmat");
+		exit(1);
+	}
 
-    dataMem = (void*)((long)shMem + sizeof(unsigned int)*NFIFOS);
+	dataMem = (void*)((long)shMem + sizeof(unsigned int)*NFIFOS);
 
-    memset(shMem, 0, shMemSize);
+	memset(shMem, 0, shMemSize);
 }
 
 static void setAffinity(int cpuId){
-    cpu_set_t mask;
-    int status;
+	cpu_set_t mask;
+	int status;
 
-    CPU_ZERO(&mask);
-    CPU_SET(cpuId, &mask);
-    status = sched_setaffinity(0, sizeof(mask), &mask);
-    if (status != 0)
-    {
-        perror("sched_setaffinity");
-    }
+	CPU_ZERO(&mask);
+	CPU_SET(cpuId, &mask);
+	status = sched_setaffinity(0, sizeof(mask), &mask);
+	if (status != 0)
+	{
+		perror("sched_setaffinity");
+	}
 }
 
 PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts){
 	int pipeSpidertoLRT[2*nLrt];
 	int pipeLRTtoSpider[2*nLrt];
 	int pipeTrace[2];
-	int cpIds[nLrt];
 	sem_t* semFifo;
 	sem_t* semTrace;
 
@@ -132,7 +144,9 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 	platform_ = this;
 	stack_ = stack;
 
-	cpIds[0] = getpid();
+	cpIds_ = CREATE_MUL(stack, nLrt, int);
+
+	cpIds_[0] = getpid();
 
 	sem_unlink("spider_fifo");
 	sem_unlink("spider_trace");
@@ -168,21 +182,25 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 	}
 
 	for(int i=1; i<nLrt; i++){
-        pid_t cpid = fork();
-        if (cpid == -1) {
-            perror("fork");
-            exit(EXIT_FAILURE);
-        }
+		pid_t cpid = fork();
+		if (cpid == -1) {
+			perror("fork");
+			exit(EXIT_FAILURE);
+		}
 
-        if (cpid == 0) { /* Child */
-        	/** Close unused pipe */
+		if (cpid == 0) { /* Child */
+			/** Close unused pipe */
 
-        	/** Initialize shared memory */
-        	initShMem(shMemSize);
+			/** Initialize shared memory */
+			initShMem(shMemSize);
 
-        	/** Create LRT */
-        	lrtCom_ = (LrtCommunicator*) CREATE(stack, LinuxLrtCommunicator)(
-        			MAX_MSG_SIZE,
+			/** Register Signals */
+			signal(SIG_IDLE, sig_handler);
+			signal(SIG_WAKE, sig_handler);
+
+			/** Create LRT */
+			lrtCom_ = (LrtCommunicator*) CREATE(stack, LinuxLrtCommunicator)(
+					MAX_MSG_SIZE,
 					pipeSpidertoLRT[2*i],
 					pipeLRTtoSpider[2*i+1],
 					pipeTrace[1],
@@ -192,36 +210,40 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 					dataMem,
 					NFIFOS,
 					stack);
-        	lrt_ = CREATE(stack, LRT)(i);
-        	setAffinity(i);
-        	lrt_->setFctTbl(fcts, nLrtFcts);
+			lrt_ = CREATE(stack, LRT)(i);
+			setAffinity(i);
+			lrt_->setFctTbl(fcts, nLrtFcts);
 
-        	/** launch LRT */
-        	lrt_->runInfinitly();
+			/** launch LRT */
+			lrt_->runInfinitly();
 
-        	exit(EXIT_SUCCESS);
-        } else { /* Parent */
-        	cpIds[i] = cpid;
-        }
+			exit(EXIT_SUCCESS);
+		} else { /* Parent */
+			cpIds_[i] = cpid;
+		}
 	}
 
 	/** Close unused pipe */
 
 	/** Initialize shared memory */
 	initShMem(shMemSize);
-    memset(shMem,0,shMemSize);
+	memset(shMem,0,shMemSize);
+
+	/** Register Signals */
+	signal(SIG_IDLE, sig_handler);
+	signal(SIG_WAKE, sig_handler);
 
 	/** Initialize LRT and Communicators */
-    spiderCom_ = CREATE(stack, LinuxSpiderCommunicator)(
-    		MAX_MSG_SIZE,
+	spiderCom_ = CREATE(stack, LinuxSpiderCommunicator)(
+			MAX_MSG_SIZE,
 			nLrt,
 			semTrace,
 			pipeTrace[1],
 			pipeTrace[0],
 			stack);
 
-    for(int i=0; i<nLrt; i++)
-    	((LinuxSpiderCommunicator*)spiderCom_)->setLrtCom(i, pipeLRTtoSpider[2*i], pipeSpidertoLRT[2*i+1]);
+	for(int i=0; i<nLrt; i++)
+		((LinuxSpiderCommunicator*)spiderCom_)->setLrtCom(i, pipeLRTtoSpider[2*i], pipeSpidertoLRT[2*i+1]);
 
 	lrtCom_ = CREATE(stack, LinuxLrtCommunicator)(
 			MAX_MSG_SIZE,
@@ -253,10 +275,10 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 	archi_->activatePE(0);
 
 	char name[40];
-	sprintf(name, "PID %d (Spider)", cpIds[0]);
+	sprintf(name, "PID %d (Spider)", cpIds_[0]);
 	archi_->setName(0, name);
 	for(int i=1; i<nLrt; i++){
-		sprintf(name, "PID %d (LRT %d)", cpIds[i], i);
+		sprintf(name, "PID %d (LRT %d)", cpIds_[i], i);
 		archi_->setPEType(i, 0);
 		archi_->setName(i, name);
 		archi_->activatePE(i);
@@ -286,6 +308,7 @@ PlatformLinux::~PlatformLinux(){
 	stack_->free(spiderCom_);
 	stack_->free(lrtCom_);
 	stack_->free(archi_);
+	stack_->free(cpIds_);
 }
 
 /** File Handling */
@@ -346,6 +369,19 @@ Time PlatformLinux::getTime(){
 	val *= 1000000000;
 	val += ts.tv_nsec - start.tv_nsec;
 	return val;
+}
+
+void PlatformLinux::idleLrt(int lrt){
+	kill(cpIds_[lrt], SIG_IDLE);
+}
+
+void PlatformLinux::wakeLrt(int lrt){
+	kill(cpIds_[lrt], SIG_WAKE);
+}
+
+void PlatformLinux::idle(){
+	while(lrt_->isIdle())
+		sleep((unsigned)-1);
 }
 
 SharedMemArchi* PlatformLinux::getArchi(){

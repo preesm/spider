@@ -168,5 +168,8 @@ void LRT::runInfinitly(){
 	run_ = true;
 	do{
 		runOneJob();
+		if(idle_){
+			Platform::get()->idle();
+		}
 	}while(run_);
 }

@@ -42,6 +42,7 @@
 #include <graphs/Archi/Archi.h>
 #include <graphs/Archi/SharedMemArchi.h>
 #include <lrt.h>
+#include <signal.h>
 
 class PlatformLinux: public Platform{
 public:
@@ -60,16 +61,28 @@ public:
 	virtual void rstTime(ClearTimeMsg* msg);
 	virtual Time getTime();
 
+	/** Platform Core Handling **/
+	virtual void idleLrt(int i);
+	virtual void wakeLrt(int i);
+	virtual void idle();
+
 	SharedMemArchi* getArchi();
 
 	PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts);
 	virtual ~PlatformLinux();
 
 private:
+	enum{
+		SIG_IDLE = SIGUSR1,
+		SIG_WAKE = SIGUSR2
+	};
+
 	Stack* stack_;
 	SharedMemArchi* archi_;
+	int* cpIds_;
 
 	static Time mappingTime(int nActors);
+	static void sig_handler(int signo);
 };
 
 #endif/*PLATFORM_LINUX_H*/

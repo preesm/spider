@@ -291,8 +291,9 @@ inline void PiSDFVertex::isExecutableOnAllPE(){
 	memset(constraints_, true, nPeMax_*sizeof(bool));
 }
 inline void PiSDFVertex::isExecutableOnPE(int pe){
-	if(pe < 0 || pe >= nPeMax_)
+	if(pe < 0)
 		throw "PiSDFVertex: accessing bad PE ix\n";
+	else if(pe >= nPeMax_) return;
 	constraints_[pe] = true;
 }
 

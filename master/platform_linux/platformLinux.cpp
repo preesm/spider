@@ -40,6 +40,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdarg.h>
 #include <sys/time.h>
 #include <time.h>
@@ -49,6 +50,9 @@
 #include <sys/wait.h>
 #include <cstring>
 #include <sched.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <errno.h>
 
 #include <tools/Stack.h>
 
@@ -59,6 +63,8 @@
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
 #define SHARED_MEM_KEY		8452 //0x2104
+
+#define SHMMAX_SYS_FILE "/proc/sys/kernel/shmmax"
 
 #define MAX_MSG_SIZE 10*1024
 #define NFIFOS 32*1024
@@ -77,6 +83,13 @@ static void initShMem(int shMemSize){
 
     /** Get the segment. */
     if ((shmid = shmget(key, shMemSize, IPC_CREAT | 0666)) < 0) {
+		/* Bad memory size */
+		if(errno == EINVAL){
+			printf("Error openning shared memory, try:\n");
+			printf("\tsudo ipcrm -M 0x2104\n", shMemSize);
+			printf("\tsudo sysctl -w kernel.shmmax=%d\n", shMemSize);
+			exit(-1);
+		}
         perror("shmget");
         exit(1);
     }

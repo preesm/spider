@@ -35,16 +35,15 @@
  ****************************************************************************/
 
 #include "actors.h"
-
-extern "C"{
 #include "stereomatch.h"
-}
 
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+#include <demostereo.h>
 
 void Config(
 		OUT Param* nSlice,
@@ -59,16 +58,19 @@ void Config(
 #if VERBOSE
 	printf("Config");
 #endif
+	extern DemoStereo* demo;
+
+	demo->getParams(minDisp, maxDisp, scale, nIter, nSlice);
 
 	*width  = 434;
 	*height = 380;
-	*minDisp = 0;
-	*maxDisp = 19;
+//	*minDisp = 0;
+//	*maxDisp = 19;
 	*sizeFilter = 1;
-	*nIter = 20;
-	*scale = 10;
+//	*nIter = 5;
+//	*scale = 10;
 	*truncValue = 1;
-	*nSlice = 10;
+//	*nSlice = 4;
 }
 
 void Camera(Param height, Param width, OUT uint8_t* rgb_L, OUT uint8_t* rgb_R){

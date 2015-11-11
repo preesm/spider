@@ -252,11 +252,12 @@ PiSDFEdge* PiSDFGraph::addEdge() {
 PiSDFEdge* PiSDFGraph::connect(
 		PiSDFVertex* src, int srcPortId, const char* prod,
 		PiSDFVertex* snk, int snkPortId, const char* cons,
-		const char* delay, PiSDFVertex* setter){
+		const char* delay,
+		PiSDFVertex* setter, PiSDFVertex* getter){
 	PiSDFEdge* edge = this->addEdge();
 	edge->connectSrc(src, srcPortId, prod, stack_);
 	edge->connectSnk(snk, snkPortId, cons, stack_);
-	edge->setDelay(delay, setter, stack_);
+	edge->setDelay(delay, setter, getter, stack_);
 	src->connectOutEdge(srcPortId, edge);
 	snk->connectInEdge(snkPortId, edge);
 	return edge;

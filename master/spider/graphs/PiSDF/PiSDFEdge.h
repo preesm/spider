@@ -60,7 +60,7 @@ public:
 	inline int getSnkPortIx() const;
 
 	/** Setters */
-	inline void setDelay(const char* delay, PiSDFVertex* setter, Stack* stack);
+	inline void setDelay(const char* delay, PiSDFVertex* setter, PiSDFVertex* getter, Stack* stack);
 
 	/** Connections Fcts */
 	void connectSrc(PiSDFVertex* src, int srcPortId, const char* prod, Stack* stack);
@@ -79,6 +79,7 @@ public:
 	inline void getDelayExpr(char* out, int sizeOut);
 
 	inline PiSDFVertex* getDelaySetter();
+	inline PiSDFVertex* getDelayGetter();
 
 private:
 	static int globalId;
@@ -99,6 +100,7 @@ private:
 	/* Parameterized Delays */
 	Expression* delay_;
 	PiSDFVertex* setter_;
+	PiSDFVertex* getter_;
 };
 
 inline int PiSDFEdge::getId() const{
@@ -117,7 +119,7 @@ inline int PiSDFEdge::getSnkPortIx() const {
 	return snkPortIx_;
 }
 
-inline void PiSDFEdge::setDelay(const char* expr, PiSDFVertex* setter, Stack* stack){
+inline void PiSDFEdge::setDelay(const char* expr, PiSDFVertex* setter, PiSDFVertex* getter, Stack* stack){
 	if(delay_ != 0){
 		delay_->~Expression();
 		stack->free(delay_);
@@ -130,6 +132,12 @@ inline void PiSDFEdge::setDelay(const char* expr, PiSDFVertex* setter, Stack* st
 			&& setter->getSubType() == PISDF_SUBTYPE_INPUT_IF){
 		setter_ = setter;
 		setter->connectOutEdge(0, this);
+	}
+	if(getter != 0
+			&& getter->getType() == PISDF_TYPE_IF
+			&& getter->getSubType() == PISDF_SUBTYPE_OUTPUT_IF){
+		getter_ = getter;
+		getter->connectInEdge(0, this);
 	}
 }
 
@@ -157,6 +165,10 @@ inline void PiSDFEdge::getDelayExpr(char* out, int sizeOut){
 
 inline PiSDFVertex* PiSDFEdge::getDelaySetter(){
 	return setter_;
+}
+
+inline PiSDFVertex* PiSDFEdge::getDelayGetter(){
+	return getter_;
 }
 
 #endif/*PISDF_EDGE_H*/

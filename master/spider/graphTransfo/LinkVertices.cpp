@@ -412,9 +412,21 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					snkConnections[i].edge->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i], edge->getSnkPortIx());
 					snkConnections[i].cons = sinkConsumption;
 				}
-				snkConnections[nbSinkRepetitions].edge = topSrdag->addEdge();
-				snkConnections[nbSinkRepetitions].edge->connectSnk(topSrdag->addEnd(), 0);
-				snkConnections[nbSinkRepetitions].cons = nbDelays;
+
+				if(edge->getDelayGetter()){
+					PiSDFVertex* ifDelayGetter = edge->getDelayGetter();
+					SRDAGEdge* getterEdge = job->outputIfs[ifDelayGetter->getTypeId()];
+					if(getterEdge->getRate() == nbDelays){
+						snkConnections[nbSinkRepetitions].edge = getterEdge;
+						snkConnections[nbSinkRepetitions].cons = nbDelays;
+					}else{
+						throw "Getter of a delay must be of the same rate than delay";
+					}
+				}else{
+					snkConnections[nbSinkRepetitions].edge = topSrdag->addEdge();
+					snkConnections[nbSinkRepetitions].edge->connectSnk(topSrdag->addEnd(), 0);
+					snkConnections[nbSinkRepetitions].cons = nbDelays;
+				}
 
 				nbSinkRepetitions++;
 			}

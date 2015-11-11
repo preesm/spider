@@ -160,37 +160,37 @@ PiSDFGraph* top_hclm(Archi* archi, Stack* stack, Param MNext, Param MStart, Para
 	graph->connect(
 		/*Src*/ cf_cfg_N, /*SrcPrt*/ 0, /*Prod*/ "(NMax)*1",
 		/*Snk*/ bo_F, /*SnkPrt*/ 0, /*Cons*/ "(NMax)*1",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	graph->connect(
 		/*Src*/ bo_F, /*SrcPrt*/ 0, /*Prod*/ "(N)*1",
 		/*Snk*/ bo_br, /*SnkPrt*/ 0, /*Cons*/ "(N)*1",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	graph->connect(
 		/*Src*/ bo_F, /*SrcPrt*/ 1, /*Prod*/ "(NMax-N)*1",
 		/*Snk*/ bo_end, /*SnkPrt*/ 0, /*Cons*/ "(NMax-N)*1",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	graph->connect(
 		/*Src*/ bo_src, /*SrcPrt*/ 0, /*Prod*/ "(NbS*N)*4",
 		/*Snk*/ bo_FIR_Chan, /*SnkPrt*/ 1, /*Cons*/ "(NbS)*4",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	graph->connect(
 		/*Src*/ bo_FIR_Chan, /*SrcPrt*/ 0, /*Prod*/ "(NbS)*4",
 		/*Snk*/ bo_snk, /*SnkPrt*/ 0, /*Cons*/ "(NbS*N)*4",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	graph->connect(
 		/*Src*/ bo_br, /*SrcPrt*/ 1, /*Prod*/ "(N)*1",
 		/*Snk*/ bo_snk, /*SnkPrt*/ 1, /*Cons*/ "(N)*1",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	graph->connect(
 		/*Src*/ bo_br, /*SrcPrt*/ 0, /*Prod*/ "(N)*1",
 		/*Snk*/ bo_FIR_Chan, /*SnkPrt*/ 0, /*Cons*/ "(1)*1",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	return graph;
 }
@@ -280,42 +280,42 @@ PiSDFGraph* FIR_Chan(Archi* archi, Stack* stack){
 	graph->connect(
 		/*Src*/ if_M_in, /*SrcPrt*/ 0, /*Prod*/ "(1)*1",
 		/*Snk*/ cf_cfg_M, /*SnkPrt*/ 0, /*Cons*/ "(1)*1",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	graph->connect(
 		/*Src*/ bo_initSw, /*SrcPrt*/ 0, /*Prod*/ "(M)*1",
 		/*Snk*/ bo_Switch, /*SnkPrt*/ 0, /*Cons*/ "(1)*1",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	graph->connect(
 		/*Src*/ if_in, /*SrcPrt*/ 0, /*Prod*/ "(NbS)*4",
 		/*Snk*/ bo_Switch, /*SnkPrt*/ 1, /*Cons*/ "(NbS)*4",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	graph->connect(
 		/*Src*/ bo_Switch, /*SrcPrt*/ 0, /*Prod*/ "(NbS)*4",
 		/*Snk*/ bo_FIR, /*SnkPrt*/ 0, /*Cons*/ "(NbS)*4",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	graph->connect(
 		/*Src*/ bo_FIR, /*SrcPrt*/ 0, /*Prod*/ "(NbS)*4",
 		/*Snk*/ bo_Br, /*SnkPrt*/ 0, /*Cons*/ "(NbS)*4",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	graph->connect(
 		/*Src*/ bo_Br, /*SrcPrt*/ 0, /*Prod*/ "(NbS)*4",
 		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "(NbS)*4",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	graph->connect(
 		/*Src*/ bo_Br, /*SrcPrt*/ 1, /*Prod*/ "(NbS)*4",
 		/*Snk*/ bo_Switch, /*SnkPrt*/ 2, /*Cons*/ "(NbS)*4",
-		/*Delay*/ "(NbS)*4",0);
+		/*Delay*/ "(NbS)*4",0,0);
 
 	graph->connect(
 		/*Src*/ bo_initSw, /*SrcPrt*/ 1, /*Prod*/ "(M)*1",
 		/*Snk*/ bo_FIR, /*SnkPrt*/ 1, /*Cons*/ "(1)*1",
-		/*Delay*/ "0",0);
+		/*Delay*/ "0",0,0);
 
 	return graph;
 }

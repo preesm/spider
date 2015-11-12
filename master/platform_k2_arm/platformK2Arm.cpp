@@ -278,6 +278,15 @@ SharedMemArchi* PlatformK2Arm::getArchi(){
 	return archi_;
 }
 
+void PlatformK2Arm::idleLrt(int lrt){
+}
+
+void PlatformK2Arm::wakeLrt(int lrt){
+}
+
+void PlatformK2Arm::idle(){
+}
+
 Time PlatformK2Arm::mappingTime(int nActors){
 	return 100000*nActors;
 }

@@ -171,3 +171,11 @@ Time PlatformK2Dsp::getTime(){
 	return (t+timeBase_*6)/1.2; /* 200MHz to 1GHz */
 }
 
+void PlatformK2Dsp::idleLrt(int lrt){
+}
+
+void PlatformK2Dsp::wakeLrt(int lrt){
+}
+
+void PlatformK2Dsp::idle(){
+}

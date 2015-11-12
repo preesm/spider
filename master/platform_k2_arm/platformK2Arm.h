@@ -65,6 +65,11 @@ public:
 	virtual void rstTime(ClearTimeMsg* msg);
 	virtual Time getTime();
 
+	/** Platform Core Handling **/
+	virtual void idleLrt(int i);
+	virtual void wakeLrt(int i);
+	virtual void idle();
+
 	SharedMemArchi* getArchi();
 
 	PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts);

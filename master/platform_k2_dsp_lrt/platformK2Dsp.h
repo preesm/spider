@@ -63,6 +63,11 @@ public:
 	virtual void rstTime(ClearTimeMsg* msg);
 	virtual Time getTime();
 
+	/** Platform Core Handling **/
+	virtual void idleLrt(int i);
+	virtual void wakeLrt(int i);
+	virtual void idle();
+
 	PlatformK2Dsp(int shMemSize, SharedMemMode useMsmc,  Stack *stack, lrtFct* fcts, int nLrtFcts);
 	virtual ~PlatformK2Dsp();
 private:

@@ -253,7 +253,8 @@ PiSDFEdge* PiSDFGraph::connect(
 		PiSDFVertex* src, int srcPortId, const char* prod,
 		PiSDFVertex* snk, int snkPortId, const char* cons,
 		const char* delay,
-		PiSDFVertex* setter, PiSDFVertex* getter){
+		PiSDFVertex* setter,
+		PiSDFVertex* getter){
 	PiSDFEdge* edge = this->addEdge();
 	edge->connectSrc(src, srcPortId, prod, stack_);
 	edge->connectSnk(snk, snkPortId, cons, stack_);

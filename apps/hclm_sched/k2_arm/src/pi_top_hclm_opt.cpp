@@ -285,14 +285,6 @@ PiSDFGraph* FIR_Chan_opt(Archi* archi, Stack* stack){
 //	bo_FIR->isExecutableOnPE(CORE_ARM0);
 //	bo_FIR->setTimingOnType(CORE_TYPE_ARM, "100", stack);
 
-	PiSDFVertex* bo_Br = graph->addSpecialVertex(
-		/*Type*/    PISDF_SUBTYPE_BROADCAST,
-		/*InData*/  1,
-		/*OutData*/ 2,
-		/*InParam*/ 1);
-	bo_Br->addInParam(0, param_NbS);
-
-
 	/* Edges */
 	graph->connect(
 		/*Src*/ if_M_in, /*SrcPrt*/ 0, /*Prod*/ "(1)*1",
@@ -306,18 +298,8 @@ PiSDFGraph* FIR_Chan_opt(Archi* archi, Stack* stack){
 
 	graph->connect(
 		/*Src*/ bo_FIR, /*SrcPrt*/ 0, /*Prod*/ "(NbS)*4",
-		/*Snk*/ bo_Br, /*SnkPrt*/ 0, /*Cons*/ "(NbS)*4",
-		/*Delay*/ "0",0);
-
-	graph->connect(
-		/*Src*/ bo_Br, /*SrcPrt*/ 0, /*Prod*/ "(NbS)*4",
-		/*Snk*/ if_out, /*SnkPrt*/ 0, /*Cons*/ "(NbS)*4",
-		/*Delay*/ "0",0);
-
-	graph->connect(
-		/*Src*/ bo_Br, /*SrcPrt*/ 1, /*Prod*/ "(NbS)*4",
 		/*Snk*/ bo_FIR, /*SnkPrt*/ 0, /*Cons*/ "(NbS)*4",
-		/*Delay*/ "(NbS)*4", if_in);
+		/*Delay*/ "(NbS)*4", if_in, if_out);
 
 	return graph;
 }

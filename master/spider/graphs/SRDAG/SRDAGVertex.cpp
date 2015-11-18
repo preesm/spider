@@ -46,6 +46,7 @@ int SRDAGVertex::globalId = 0;
 SRDAGVertex::SRDAGVertex(
 		SRDAGType type,	SRDAGGraph* graph,
 		PiSDFVertex* reference,
+		int refId, int iterId,
 		int nInEdge, int nOutEdge,
 		int nInParam, int nOutParam,
 		Stack* stack){
@@ -56,6 +57,8 @@ SRDAGVertex::SRDAGVertex(
 	state_ = SRDAG_NEXEC;
 	graph_ = graph;
 	reference_ = reference;
+	refId_ = refId;
+	iterId_ = iterId;
 
 	nMaxInEdge_ = nInEdge;
 	inEdges_ = CREATE_MUL(stack, nMaxInEdge_, SRDAGEdge*);

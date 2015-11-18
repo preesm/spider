@@ -55,7 +55,7 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stack
 		switch(pi_vertex->getSubType()){
 		case PISDF_SUBTYPE_NORMAL:
 			for(int j=0; j<brv[bodyIx]; j++){
-				job->bodies[bodyIx][j] = topSrdag->addVertex(pi_vertex);
+				job->bodies[bodyIx][j] = topSrdag->addVertex(pi_vertex, j, job->graphIter);
 
 				for(int i=0; i<pi_vertex->getNInParam(); i++){
 					job->bodies[bodyIx][j]->addInParam(i, job->paramValues[pi_vertex->getInParam(i)->getTypeIx()]);
@@ -92,7 +92,7 @@ void addCAVertices(SRDAGGraph *topSrdag, transfoJob *job, Stack* stack){
     job->configs = CREATE_MUL(stack, job->graph->getNConfig(), SRDAGVertex*);
     for(int configIx=0; configIx<job->graph->getNConfig(); configIx++){
     	PiSDFVertex* config = job->graph->getConfig(configIx);
-		job->configs[configIx] = topSrdag->addVertex(config);
+		job->configs[configIx] = topSrdag->addVertex(config, 0, job->graphIter);
 
 		for(int i=0; i<config->getNInParam(); i++){
 			job->configs[configIx]->addInParam(i, job->paramValues[config->getInParam(i)->getTypeIx()]);

@@ -71,6 +71,7 @@
 static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 	memset(job, 0, sizeof(transfoJob));
 	job->graph = nextHierVx->getSubGraph();
+	job->graphIter = nextHierVx->getRefId();
 
 	/* Add Static and Herited parameter values */
 	job->paramValues = CREATE_MUL(stack, job->graph->getNParam(), int);
@@ -152,7 +153,7 @@ void jit_ms(
 		printf("Error top graph without subgraph\n");
 		abort();
 	}
-	topSrdag->addVertex(root);
+	topSrdag->addVertex(root, 0, 0);
 	topSrdag->updateState();
 
 	Queue<transfoJob*> jobQueue(transfoSTack);

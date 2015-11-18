@@ -52,6 +52,7 @@ public:
 	SRDAGVertex(
 			SRDAGType type, SRDAGGraph* graph,
 			PiSDFVertex* reference,
+			int refId, int iterId,
 			int nInEdge, int nOutEdge,
 			int nInParam, int nOutParam,
 			Stack* stack);
@@ -91,6 +92,8 @@ public:
 	inline Time getStartTime() const;
 	inline Time getEndTime() const;
 	inline int getSlave() const;
+	inline int getRefId() const;
+	inline int getIterId() const;
 
 	inline void setState(SRDAGState state);
 	void updateState();
@@ -127,6 +130,8 @@ private:
 	SRDAGState state_;
 	SRDAGGraph* graph_;
 	PiSDFVertex* reference_;
+	int refId_;
+	int iterId_;
 
 	int nMaxInEdge_, nMaxOutEdge_;
 	int nCurInEdge_, nCurOutEdge_;
@@ -322,6 +327,12 @@ inline Time SRDAGVertex::getEndTime() const{
 }
 inline int SRDAGVertex::getSlave() const{
 	return slave_;
+}
+inline int SRDAGVertex::getRefId() const{
+	return refId_;
+}
+inline int SRDAGVertex::getIterId() const{
+	return iterId_;
 }
 
 inline void SRDAGVertex::setState(SRDAGState state){

@@ -222,7 +222,7 @@ static inline void printGrantt_SRDAGVertex(int ganttFile, int latexFile, Archi* 
 	Platform::get()->fprintf(ganttFile, "\t<event\n");
 	Platform::get()->fprintf(ganttFile, "\t\tstart=\"%u\"\n", 	start);
 	Platform::get()->fprintf(ganttFile, "\t\tend=\"%u\"\n",		end);
-	Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n", 	name);
+	Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s_%d_%d\"\n", 	name, vertex->getIterId(), vertex->getRefId());
 	Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", 	archi->getPEName(lrtIx));
 	Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", regenerateColor(i++));
 	Platform::get()->fprintf(ganttFile, "\t\t>Step_%d.</event>\n", name);
@@ -233,14 +233,7 @@ static inline void printGrantt_SRDAGVertex(int ganttFile, int latexFile, Archi* 
 	Platform::get()->fprintf(latexFile, "%d,", lrtIx); /* Core index */
 
 	if(vertex->getFctId() == 7){
-		int firId=0;
-		SRDAGVertex* prec = vertex->getInEdge(0)->getSrc();
-		while(prec->getFctId() == 7){
-			firId++;
-			prec = prec->getInEdge(0)->getSrc();
-		}
-
-		Platform::get()->fprintf(latexFile, "color%d\n", firId); /* Color */
+		Platform::get()->fprintf(latexFile, "color%d\n", vertex->getIterId()); /* Color */
 	}else Platform::get()->fprintf(latexFile, "c\n"); /* Color */
 //	if(vertex->getFctId() != -1)
 //		Platform::get()->fprintf(latexFile, "color%d\n", vertex->getFctId()); /* Color */

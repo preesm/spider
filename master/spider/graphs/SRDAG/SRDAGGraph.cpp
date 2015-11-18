@@ -68,10 +68,10 @@ SRDAGGraph::~SRDAGGraph() {
 	}
 }
 
-SRDAGVertex* SRDAGGraph::addVertex(PiSDFVertex* reference){
+SRDAGVertex* SRDAGGraph::addVertex(PiSDFVertex* reference, int refId, int iterId){
 	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_NORMAL, this,
-			reference,
+			reference, refId, iterId,
 			reference->getNInEdge(),
 			reference->getNOutEdge(),
 			reference->getNInParam(),
@@ -84,7 +84,7 @@ SRDAGVertex* SRDAGGraph::addVertex(PiSDFVertex* reference){
 SRDAGVertex* SRDAGGraph::addBroadcast(int nOutput){
 	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_BROADCAST, this,
-			0 /*Ref*/,
+			0 /*Ref*/, 0, 0,
 			1 /*nInEdge*/,
 			nOutput /*nOutEdge*/,
 			0 /*nInParam*/,
@@ -97,7 +97,7 @@ SRDAGVertex* SRDAGGraph::addBroadcast(int nOutput){
 SRDAGVertex* SRDAGGraph::addFork(int nOutput){
 	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_FORK, this,
-			0 /*Ref*/,
+			0 /*Ref*/, 0, 0,
 			1 /*nInEdge*/,
 			nOutput /*nOutEdge*/,
 			0 /*nInParam*/,
@@ -110,7 +110,7 @@ SRDAGVertex* SRDAGGraph::addFork(int nOutput){
 SRDAGVertex* SRDAGGraph::addJoin(int nInput){
 	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_JOIN, this,
-			0 /*Ref*/,
+			0 /*Ref*/, 0, 0,
 			nInput /*nInEdge*/,
 			1 /*nOutEdge*/,
 			0 /*nInParam*/,
@@ -123,7 +123,7 @@ SRDAGVertex* SRDAGGraph::addJoin(int nInput){
 SRDAGVertex* SRDAGGraph::addInit(){
 	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_INIT, this,
-			0 /*Ref*/,
+			0 /*Ref*/, 0, 0,
 			0 /*nInEdge*/,
 			1 /*nOutEdge*/,
 			0 /*nInParam*/,
@@ -136,7 +136,7 @@ SRDAGVertex* SRDAGGraph::addInit(){
 SRDAGVertex* SRDAGGraph::addEnd(){
 	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_END, this,
-			0 /*Ref*/,
+			0 /*Ref*/, 0, 0,
 			1 /*nInEdge*/,
 			0 /*nOutEdge*/,
 			0 /*nInParam*/,
@@ -149,7 +149,7 @@ SRDAGVertex* SRDAGGraph::addEnd(){
 SRDAGVertex* SRDAGGraph::addRoundBuffer(){
 	SRDAGVertex* vertex = CREATE(stack_, SRDAGVertex)(
 			SRDAG_ROUNDBUFFER, this,
-			0 /*Ref*/,
+			0 /*Ref*/, 0, 0,
 			1 /*nInEdge*/,
 			1 /*nOutEdge*/,
 			0 /*nInParam*/,

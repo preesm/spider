@@ -39,136 +39,142 @@
 #include <stdio.h>
 #include <launcher/Launcher.h>
 
-static Stack* srdagStack = 0;
-static Stack* transfoStack = 0;
+Spider* Spider::spider_ = 0;
 
-static SRDAGGraph* srdag = 0;
+Spider::Spider(SpiderConfig cfg){
+	if(spider_)
+		throw "Try to create 2 Spider instances";
 
-static MemAlloc* memAlloc;
-static Scheduler* scheduler;
+	spider_ = this;
 
-static bool useGraphOptim = true;
-static bool useActorPrecedence = true;
-
-void spider_init(SpiderConfig cfg){
-	spider_setMemAllocType(cfg.memAllocType, (long)cfg.memAllocStart, cfg.memAllocSize);
-	spider_setSchedulerType(cfg.schedulerType);
-	spider_setSrdagStack(cfg.srdagStack);
-	spider_setTransfoStack(cfg.transfoStack);
-	spider_setActorPrecedence(cfg.useActorPrecedence);
-	spider_setGraphOptim(cfg.useGraphOptim);
+	setMemAllocType(cfg.memAllocType, (long)cfg.memAllocStart, cfg.memAllocSize);
+	setSchedulerType(cfg.schedulerType);
+	setSrdagStack(cfg.srdagStack);
+	setTransfoStack(cfg.transfoStack);
+	setActorPrecedence(cfg.useActorPrecedence);
+	setGraphOptim(cfg.useGraphOptim);
 }
 
-void spider_idle(Archi* archi){
-	for(int lrt=0; lrt<archi->getNPE(); lrt++){
-		if(lrt != archi->getSpiderPeIx()){
-			archi->desactivatePE(lrt);
+Spider::~Spider(){
+	if(srdag_ != 0)
+		delete srdag_;
+	if(memAlloc_ != 0)
+		delete memAlloc_;
+	if(scheduler_ != 0)
+		delete scheduler_;
+	if(srdagStack_ != 0)
+		delete srdagStack_;
+	if(transfoStack_ != 0)
+		delete transfoStack_;
+}
+
+Spider* Spider::get(){
+	return spider_;
+}
+
+void Spider::idle(){
+	for(int lrt=0; lrt<archi_->getNPE(); lrt++){
+		if(lrt != archi_->getSpiderPeIx()){
+			archi_->desactivatePE(lrt);
 		}
 	}
 }
 
-void spider_free(){
-	if(srdag != 0)
-		delete srdag;
-	if(memAlloc != 0)
-		delete memAlloc;
-	if(scheduler != 0)
-		delete scheduler;
-	if(srdagStack != 0)
-		delete srdagStack;
-	if(transfoStack != 0)
-		delete transfoStack;
+void Spider::iterate(){
+	delete srdag_;
+	srdagStack_->freeAll();
+	memAlloc_->reset();
+
+	srdag_ = new SRDAGGraph(srdagStack_);
+
+	jit_ms(pisdf_, archi_, srdag_,
+			transfoStack_, memAlloc_, scheduler_,
+			useGraphOptim_,
+			useActorPrecedence_);
 }
 
-void spider_launch(
-		Archi* archi,
-		PiSDFGraph* pisdf){
-	delete srdag;
-	srdagStack->freeAll();
-	memAlloc->reset();
-
-	srdag = new SRDAGGraph(srdagStack);
-
-	jit_ms(pisdf, archi, srdag,
-			transfoStack, memAlloc, scheduler,
-			useGraphOptim,
-			useActorPrecedence);
+void Spider::setGraphOptim(bool useGraphOptim){
+	useGraphOptim_ = useGraphOptim;
 }
 
-void spider_setGraphOptim(bool useGraphOptim_){
-	useGraphOptim = useGraphOptim_;
+void Spider::setActorPrecedence(bool useActorPrecedence){
+	useActorPrecedence_ = useActorPrecedence;
 }
 
-void spider_setActorPrecedence(bool useActorPrecedence_){
-	useActorPrecedence = useActorPrecedence_;
+void Spider::setArchi(Archi* archi){
+	archi_ = archi;
 }
 
-void spider_setMemAllocType(MemAllocType type, int start, int size){
-	if(memAlloc != 0){
-		delete memAlloc;
+void Spider::setGraph(PiSDFGraph* graph){
+	pisdf_ = graph;
+}
+
+void Spider::setMemAllocType(MemAllocType type, int start, int size){
+	if(memAlloc_ != 0){
+		delete memAlloc_;
 	}
 	switch(type){
 	case MEMALLOC_DUMMY:
-		memAlloc = new DummyMemAlloc(start, size);
+		memAlloc_ = new DummyMemAlloc(start, size);
 		break;
 	case MEMALLOC_SPECIAL_ACTOR:
-		memAlloc = new SpecialActorMemAlloc(start, size);
+		memAlloc_ = new SpecialActorMemAlloc(start, size);
 		break;
 	}
 }
 
-void spider_setSchedulerType(SchedulerType type){
-	if(scheduler != 0){
-		delete scheduler;
+void Spider::setSchedulerType(SchedulerType type){
+	if(scheduler_ != 0){
+		delete scheduler_;
 	}
 	switch(type){
 	case SCHEDULER_LIST:
-		scheduler = new ListScheduler();
+		scheduler_ = new ListScheduler();
 		break;
 	}
 }
 
-void spider_setSrdagStack(StackConfig cfg){
-	if(srdagStack != 0){
-		delete srdagStack;
+void Spider::setSrdagStack(StackConfig cfg){
+	if(srdagStack_ != 0){
+		delete srdagStack_;
 	}
 	switch(cfg.type){
 	case STACK_DYNAMIC:
-		srdagStack = new DynStack(cfg.name);
+		srdagStack_ = new DynStack(cfg.name);
 		break;
 	case STACK_STATIC:
-		srdagStack = new StaticStack(cfg.name, cfg.start, cfg.size);
+		srdagStack_ = new StaticStack(cfg.name, cfg.start, cfg.size);
 		break;
 	}
 }
 
-void spider_setTransfoStack(StackConfig cfg){
-	if(transfoStack != 0){
-		delete transfoStack;
+void Spider::setTransfoStack(StackConfig cfg){
+	if(transfoStack_ != 0){
+		delete transfoStack_;
 	}
 	switch(cfg.type){
 	case STACK_DYNAMIC:
-		transfoStack = new DynStack(cfg.name);
+		transfoStack_ = new DynStack(cfg.name);
 		break;
 	case STACK_STATIC:
-		transfoStack = new StaticStack(cfg.name, cfg.start, cfg.size);
+		transfoStack_ = new StaticStack(cfg.name, cfg.start, cfg.size);
 		break;
 	}
 }
 
-SRDAGGraph* spider_getLastSRDAG(){
-	return srdag;
+SRDAGGraph* Spider::getLastSRDAG(){
+	return srdag_;
 }
 
 static Time start = 0;
 
-void spider_startMonitoring(){
+void Spider::startMonitoring(){
 	if(start != 0)
 		throw "Try to monitor 2 different things in the same time";
 	start = Platform::get()->getTime();
 }
 
-void spider_endMonitoring(TraceSpiderType type){
+void Spider::endMonitoring(TraceSpiderType type){
 	if(start == 0)
 		throw "End monitor with no starting point";
 	Launcher::get()->sendTraceSpider(type, start, Platform::get()->getTime());
@@ -254,7 +260,7 @@ static const char* spiderTaskName[9] = {
 		"Tmp 3"
 };
 
-void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, const char* latexPath, ExecutionStat* stat){
+void Spider::printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, const char* latexPath, ExecutionStat* stat){
 	int ganttFile = Platform::get()->fopen(ganttPath);
 	int latexFile = Platform::get()->fopen(latexPath);
 
@@ -280,7 +286,7 @@ void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, c
 	stat->nSRDAGEdge = srdag->getNEdge();
 	stat->nPiSDFActor = 0;
 
-	stat->memoryUsed = memAlloc->getMemUsed();
+	stat->memoryUsed = memAlloc_->getMemUsed();
 
 	TraceMsg* traceMsg;
 	int n = Launcher::get()->getNLaunched();

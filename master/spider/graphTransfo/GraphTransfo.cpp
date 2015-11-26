@@ -161,8 +161,7 @@ void jit_ms(
 	// Check nb of config //
 
 	/* Look for hierrachical actor in topDag */
-
-	spider_startMonitoring();
+	Spider::get()->startMonitoring();
 
 	do{
 		SRDAGVertex* nextHierVx = getNextHierVx(topSrdag);
@@ -230,25 +229,25 @@ void jit_ms(
 
 		}while(nextHierVx);
 
-		spider_endMonitoring(TRACE_SPIDER_GRAPH);
+		Spider::get()->endMonitoring(TRACE_SPIDER_GRAPH);
 
 		if(useGraphOptim){
-			spider_startMonitoring();
+			Spider::get()->startMonitoring();
 			optims(topSrdag, transfoSTack);
-			spider_endMonitoring(TRACE_SPIDER_OPTIM);
+			Spider::get()->endMonitoring(TRACE_SPIDER_OPTIM);
 		}
 
 		/* Schedule and launch execution */
-		spider_startMonitoring();
+		Spider::get()->startMonitoring();
 		scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi, transfoSTack, useActorPrecedence);
-		spider_endMonitoring(TRACE_SPIDER_SCHED);
+		Spider::get()->endMonitoring(TRACE_SPIDER_SCHED);
 
 		Platform::get()->getLrt()->runUntilNoMoreJobs();
 
 		/* Resolve params must be done by itself */
 		Launcher::get()->resolveParams(archi, topSrdag);
 
-		spider_startMonitoring();
+		Spider::get()->startMonitoring();
 
 		while(! jobQueue.isEmpty()){
 
@@ -294,39 +293,39 @@ void jit_ms(
 			transfoSTack->free(brv);
 			transfoSTack->free(job);
 
-			spider_endMonitoring(TRACE_SPIDER_GRAPH);
-			spider_startMonitoring();
+			Spider::get()->endMonitoring(TRACE_SPIDER_GRAPH);
+			Spider::get()->startMonitoring();
 		}
 
 		// TODO
 		topSrdag->updateState();
 
-		spider_endMonitoring(TRACE_SPIDER_GRAPH);
+		Spider::get()->endMonitoring(TRACE_SPIDER_GRAPH);
 
 		if(useGraphOptim){
-			spider_startMonitoring();
+			Spider::get()->startMonitoring();
 			optims(topSrdag, transfoSTack);
-			spider_endMonitoring(TRACE_SPIDER_OPTIM);
+			Spider::get()->endMonitoring(TRACE_SPIDER_OPTIM);
 		}
 
-		spider_startMonitoring();
+		Spider::get()->startMonitoring();
 
 //        printf("Finish one iter\n");
 	}while(1);
 
 	topSrdag->updateState();
-	spider_endMonitoring(TRACE_SPIDER_GRAPH);
+	Spider::get()->endMonitoring(TRACE_SPIDER_GRAPH);
 
 	if(useGraphOptim){
-		spider_startMonitoring();
+		Spider::get()->startMonitoring();
 		optims(topSrdag, transfoSTack);
-		spider_endMonitoring(TRACE_SPIDER_OPTIM);
+		Spider::get()->endMonitoring(TRACE_SPIDER_OPTIM);
 	}
 
 	/* Schedule and launch execution */
-	spider_startMonitoring();
+	Spider::get()->startMonitoring();
 	scheduler->schedule(topSrdag, memAlloc, schedule, archi, transfoSTack, useActorPrecedence);
-	spider_endMonitoring(TRACE_SPIDER_SCHED);
+	Spider::get()->endMonitoring(TRACE_SPIDER_SCHED);
 
 	Platform::get()->getLrt()->runUntilNoMoreJobs();
 

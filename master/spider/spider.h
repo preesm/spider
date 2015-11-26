@@ -118,25 +118,56 @@ typedef struct{
 	Time latencies;
 }ExecutionStat;
 
-void spider_init(SpiderConfig cfg);
-void spider_launch(Archi* archi, PiSDFGraph* pisdf);
-void spider_idle(Archi* archi);
-void spider_free();
+class Spider{
+public:
+	Spider(SpiderConfig cfg);
+	~Spider();
 
-void spider_setMemAllocType(MemAllocType type, int start, int size);
-void spider_setSchedulerType(SchedulerType type);
-void spider_setSrdagStack(StackConfig cfg);
-void spider_setTransfoStack(StackConfig cfg);
+	void setMemAllocType(MemAllocType type, int start, int size);
+	void setSchedulerType(SchedulerType type);
+	void setSrdagStack(StackConfig cfg);
+	void setTransfoStack(StackConfig cfg);
 
-void spider_setGraphOptim(bool useGraphOptim);
-void spider_setActorPrecedence(bool useActorPrecedence);
-void spider_setSpecialActorPrecedence(bool useSpecialActorPrecedence);
+	void setGraphOptim(bool useGraphOptim);
+	void setActorPrecedence(bool useActorPrecedence);
+	void setSpecialActorPrecedence(bool useSpecialActorPrecedence);
 
-void spider_startMonitoring();
-void spider_endMonitoring(TraceSpiderType type);
+	void setArchi(Archi* archi);
+	void setGraph(PiSDFGraph* pisdf);
 
-void spider_printGantt(Archi* archi, SRDAGGraph* srdag, const char* ganttPath, const char* latexPath, ExecutionStat* stat);
+	void startMonitoring();
+	void endMonitoring(TraceSpiderType type);
 
-SRDAGGraph* spider_getLastSRDAG();
+	void iterate();
+	void idle();
+
+	void printGantt(
+			Archi* archi,
+			SRDAGGraph* srdag,
+			const char* ganttPath,
+			const char* latexPath,
+			ExecutionStat* stat);
+
+	SRDAGGraph* getLastSRDAG();
+
+	static Spider* get();
+
+private:
+	Archi* archi_;
+	PiSDFGraph* pisdf_;
+	SRDAGGraph* srdag_;
+
+	Stack* srdagStack_;
+	Stack* transfoStack_;
+
+
+	MemAlloc* memAlloc_;
+	Scheduler* scheduler_;
+
+	bool useGraphOptim_;
+	bool useActorPrecedence_;
+
+	static Spider* spider_;
+};
 
 #endif//SPIDER_H

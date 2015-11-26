@@ -41,8 +41,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void initActors();
-
 #define SRDAG_SIZE 		512	*1024*1024
 #define TRANSFO_SIZE 	512	*1024*1024
 #define PISDF_SIZE 		64	*1024*1024
@@ -56,8 +54,6 @@ static char archiStackMem[ARCHI_SIZE];
 int main(int argc, char* argv[]){
 	SpiderConfig cfg;
 	ExecutionStat stat;
-
-//	initActors();
 
 	StaticStack pisdfStack("PisdfStack", pisdfStackMem, PISDF_SIZE);
 	StaticStack archiStack("ArchiStack", archiStackMem, ARCHI_SIZE);
@@ -85,7 +81,7 @@ int main(int argc, char* argv[]){
 	cfg.useGraphOptim = true;
 	cfg.useActorPrecedence = true;
 
-	spider_init(cfg);
+	Spider spider(cfg);
 
 	printf("Start\n");
 
@@ -105,10 +101,12 @@ int main(int argc, char* argv[]){
 
 		Platform::get()->rstTime();
 
-		spider_launch(archi, topPisdf);
+		spider.setArchi(archi);
+		spider.setGraph(topPisdf);
+		spider.iterate();
 //
-		spider_printGantt(archi, spider_getLastSRDAG(), ganttPath, "latex.tex", &stat);
-		spider_getLastSRDAG()->print(srdagPath);
+		spider.printGantt(archi, spider.getLastSRDAG(), ganttPath, "latex.tex", &stat);
+		spider.getLastSRDAG()->print(srdagPath);
 
 		printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
 
@@ -139,8 +137,6 @@ int main(int argc, char* argv[]){
 //		printf("Exception : %s\n", s);
 //	}
 	printf("finished\n");
-
-	spider_free();
 
 	return 0;
 }

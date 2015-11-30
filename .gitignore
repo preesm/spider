@@ -62,3 +62,20 @@ xtend-gen/
 *.out
 *_linkInfo.xml
 configPkg
+
+# Autotools #
+#####################
+Makefile.in
+autom4te.cache
+autoscan.log
+autoscan-*.log
+aclocal.m4
+*.m4
+compile
+config.h.in
+configure
+configure.scan
+depcomp
+install-sh
+missing
+stamp-h1

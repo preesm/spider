@@ -28,22 +28,22 @@
 		<link>
 			<name>common</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/common</locationURI>
+			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/libspider/common</locationURI>
 		</link>
 		<link>
 			<name>lrt</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/lrt</locationURI>
+			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/libspider/lrt</locationURI>
 		</link>
 		<link>
 			<name>platform_linux</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/platform_linux</locationURI>
+			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/platforms/platform_linux</locationURI>
 		</link>
 		<link>
 			<name>spider</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/spider</locationURI>
+			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/libspider/spider</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

@@ -34,12 +34,13 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef TYPE_H
-#define TYPE_H
+#include "StackMonitor.h"
 
-#include <stdint.h>
+#include <tools/StaticStack.h>
+#include <tools/DynStack.h>
 
-typedef unsigned long 	Time;
-typedef long 			Param;
+Stack* StackMonitor::stacks_[STACK_COUNT] = {0};
 
-#endif/*TYPE_H*/
+void StackMonitor::printStackStats(){
+	// TODO
+}

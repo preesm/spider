@@ -40,6 +40,6 @@
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include "GraphTransfo.h"
 
-void computeBRV(SRDAGGraph *topDag, transfoJob *job, int* brv, Stack* stack);
+void computeBRV(SRDAGGraph *topDag, transfoJob *job, int* brv);
 
 #endif//COMPUTE_BRV

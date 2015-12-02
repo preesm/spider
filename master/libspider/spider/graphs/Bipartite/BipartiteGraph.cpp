@@ -43,13 +43,13 @@
 #include <stdio.h>
 #include <platform.h>
 
-BipartiteGraph::BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack){
+BipartiteGraph::BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack stackId){
 	nVerticesG1_ = g1->getNVertex();
 	nVerticesG2_ = g2->getNVertex();
-	graph_ = CREATE_MUL(stack, nVerticesG1_*nVerticesG2_, int);
-	nConnections_ = CREATE_MUL(stack, nVerticesG1_, int);
+	graph_ = CREATE_MUL(stackId, nVerticesG1_*nVerticesG2_, int);
+	nConnections_ = CREATE_MUL(stackId, nVerticesG1_, int);
 	memset(nConnections_, 0, nVerticesG1_*sizeof(int));
-	stack_ = stack;
+	stackId_ = stackId;
 
 	for (int ixG1=0; ixG1 < nVerticesG1_; ixG1++) {
 		SRDAGVertex* vertexG1 = g1->getVertex(ixG1);
@@ -64,26 +64,26 @@ BipartiteGraph::BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack){
 }
 
 BipartiteGraph::~BipartiteGraph() {
-	stack_->free(graph_);
-	stack_->free(nConnections_);
+	StackMonitor::free(stackId_, graph_);
+	StackMonitor::free(stackId_, nConnections_);
 }
 
 bool BipartiteGraph::hasPerfectMatch() {
-	int* matching = CREATE_MUL(stack_, nVerticesG1_, int);
-	bool* visited = CREATE_MUL(stack_, nVerticesG1_, bool);
+	int* matching = CREATE_MUL(stackId_, nVerticesG1_, int);
+	bool* visited = CREATE_MUL(stackId_, nVerticesG1_, bool);
 
 	memset(matching, -1, nVerticesG1_*sizeof(int));
 
 	for (int u = 0; u < nVerticesG1_; u++) {
 		memset(visited, false, nVerticesG1_*sizeof(bool));
 		if (!findPath(this, u, matching, visited)){
-			stack_->free(matching);
-			stack_->free(visited);
+			StackMonitor::free(stackId_, matching);
+			StackMonitor::free(stackId_, visited);
 			return false;
 		}
 	}
-	stack_->free(matching);
-	stack_->free(visited);
+	StackMonitor::free(stackId_, matching);
+	StackMonitor::free(stackId_, visited);
 	return true;
 }
 
@@ -100,8 +100,8 @@ bool BipartiteGraph::hasPerfectMatch() {
     return false;
   }
 
-void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack, const char* testName){
-	BipartiteGraph* bipartite = CREATE(stack, BipartiteGraph)(g1, g2, stack);
+void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack stackId, const char* testName){
+	BipartiteGraph* bipartite = CREATE(stackId, BipartiteGraph)(g1, g2, stackId);
 
 	printf("%s : ", testName);
 	if(g1->getNVertex() == g2->getNVertex()
@@ -122,7 +122,7 @@ void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack,
 	}
 
 	bipartite->~BipartiteGraph();
-	stack->free(bipartite);
+	StackMonitor::free(stackId, bipartite);
 }
 
 void BipartiteGraph::print(const char* path, SRDAGGraph* g1, SRDAGGraph* g2){

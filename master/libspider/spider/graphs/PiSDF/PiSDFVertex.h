@@ -54,8 +54,7 @@ public:
 			PiSDFGraph* graph, PiSDFGraph* subGraph,
 			int nInEdge, int nOutEdge,
 			int nInParam, int nOutParam,
-			Archi* archi,
-			Stack* stack);
+			Archi* archi);
 	~PiSDFVertex();
 
 	/** Parameters getters */
@@ -99,14 +98,12 @@ public:
 	inline Time getTimingOnType(int peType, const int* vertexParamValues, int nParam);
 	inline const bool* getConstraints() const;
 
-	inline void setTimingOnType(int peType, const char* timing, Stack *stack);
+	inline void setTimingOnType(int peType, const char* timing);
 	inline void isExecutableOnAllPE();
 	inline void isExecutableOnPE(int pe);
 
 private:
 	static int globalId;
-
-	Stack* stack_;
 
 	int id_;
 	int typeId_;
@@ -276,16 +273,16 @@ inline const bool* PiSDFVertex::getConstraints() const{
 	return constraints_;
 }
 
-inline void PiSDFVertex::setTimingOnType(int peType, const char* timing, Stack *stack){
+inline void PiSDFVertex::setTimingOnType(int peType, const char* timing){
 	if(peType < 0 || peType >= nPeTypeMax_)
 		throw "PiSDFVertex: accessing bad PE type ix\n";
 
 	if(timings_[peType] != 0){
 		timings_[peType]->~Expression();
-		stack->free(timings_[peType]);
+		StackMonitor::free(PISDF_STACK, timings_[peType]);
 		timings_[peType] = 0;
 	}
-	timings_[peType] = CREATE(stack, Expression)(timing, this->getInParams(), this->getNInParam(), stack);
+	timings_[peType] = CREATE(PISDF_STACK, Expression)(timing, this->getInParams(), this->getNInParam());
 }
 inline void PiSDFVertex::isExecutableOnAllPE(){
 	memset(constraints_, true, nPeMax_*sizeof(bool));

@@ -38,12 +38,12 @@
 #include <graphs/PiSDF/PiSDFEdge.h>
 #include <string.h>
 
+#include <monitor/StackMonitor.h>
+
 /** Static Var def */
 int PiSDFEdge::globalId = 0;
 
-PiSDFEdge::PiSDFEdge(
-		PiSDFGraph* graph,
-		Stack* stack){
+PiSDFEdge::PiSDFEdge(PiSDFGraph* graph){
 	id_ = globalId++;
 	graph_ = graph;
 
@@ -52,30 +52,28 @@ PiSDFEdge::PiSDFEdge(
 
 	prod_ = cons_ = delay_ = 0;
 	setter_ = 0;
-
-	stack_ = stack;
 }
 
 PiSDFEdge::~PiSDFEdge(){
 	if(delay_ != 0){
 		delay_->~Expression();
-		stack_->free(delay_);
+		StackMonitor::free(PISDF_STACK, delay_);
 		delay_ = 0;
 	}
 	if(prod_ != 0){
 		prod_->~Expression();
-		stack_->free(prod_);
+		StackMonitor::free(PISDF_STACK, prod_);
 		prod_ = 0;
 	}
 	if(cons_ != 0){
 		cons_->~Expression();
-		stack_->free(cons_);
+		StackMonitor::free(PISDF_STACK, cons_);
 		cons_ = 0;
 	}
 
 }
 
-void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod, Stack* stack){
+void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod){
 	if(src_ != 0)
 		throw "PiSDFEdge: try to connect to an already connected edge";
 	src_ = src;
@@ -83,13 +81,13 @@ void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod, St
 
 	if(prod_ != 0){
 		prod_->~Expression();
-		stack->free(prod_);
+		StackMonitor::free(PISDF_STACK, prod_);
 		prod_ = 0;
 	}
-	prod_ = CREATE(stack, Expression)(prod, src->getInParams(), src->getNInParam(), stack);
+	prod_ = CREATE(PISDF_STACK, Expression)(prod, src->getInParams(), src->getNInParam());
 }
 
-void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons, Stack* stack){
+void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons){
 	if(snk_ != 0)
 		throw "PiSDFEdge: try to connect to an already connected edge";
 	snk_ = snk;
@@ -97,15 +95,8 @@ void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons, St
 
 	if(cons_ != 0){
 		cons_->~Expression();
-		stack->free(cons_);
+		StackMonitor::free(PISDF_STACK, cons_);
 		cons_ = 0;
 	}
-	cons_ = CREATE(stack, Expression)(cons, snk->getInParams(), snk->getNInParam(), stack);
+	cons_ = CREATE(PISDF_STACK, Expression)(cons, snk->getInParams(), snk->getNInParam());
 }
-
-
-
-
-
-
-

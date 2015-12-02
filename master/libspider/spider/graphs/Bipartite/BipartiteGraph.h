@@ -42,16 +42,16 @@
 
 class BipartiteGraph {
 public:
-	static void compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack, const char* testName);
+	static void compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack stackId, const char* testName);
 
 private:
 	int* graph_;
 	int nVerticesG1_;
 	int nVerticesG2_;
 	int* nConnections_;
-	Stack* stack_;
+	SpiderStack stackId_;
 
-	BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, Stack* stack);
+	BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack stackId);
 	virtual ~BipartiteGraph();
 
 	bool hasPerfectMatch();

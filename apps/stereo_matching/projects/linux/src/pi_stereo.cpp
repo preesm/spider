@@ -38,27 +38,31 @@
 
 #include "stereo.h"
 
-PiSDFGraph* stereo(Archi* archi, Stack* stack);
-PiSDFGraph* costParallel(Archi* archi, Stack* stack);
-PiSDFGraph* DispComp(Archi* archi, Stack* stack);
+#include <graphs/PiSDF/PiSDFGraph.h>
+#include <graphs/PiSDF/PiSDFParam.h>
+#include <graphs/PiSDF/PiSDFEdge.h>
+#include <graphs/PiSDF/PiSDFVertex.h>
+
+PiSDFGraph* stereo(Archi* archi);
+PiSDFGraph* costParallel(Archi* archi);
+PiSDFGraph* DispComp(Archi* archi);
 
 /**
  * This is the method you need to call to build a complete PiSDF graph.
  */
-PiSDFGraph* init_stereo(Archi* archi, Stack* stack){
-	PiSDFGraph* top = CREATE(stack, PiSDFGraph)(
+PiSDFGraph* init_stereo(Archi* archi){
+	PiSDFGraph* top = CREATE(PISDF_STACK, PiSDFGraph)(
 		/*Edges*/    0,
 		/*Params*/   0,
 		/*InputIf*/  0,
 		/*OutputIf*/ 0,
 		/*Config*/   0,
 		/*Body*/     1,
-		/*Archi*/    archi,
-		/*Stack*/    stack);
+		/*Archi*/    archi);
 
 	top->addHierVertex(
 		/*Name*/     "top",
-		/*Graph*/    stereo(archi, stack),
+		/*Graph*/    stereo(archi),
 		/*InputIf*/  0,
 		/*OutputIf*/ 0,
 		/*Params*/   0);
@@ -67,16 +71,15 @@ PiSDFGraph* init_stereo(Archi* archi, Stack* stack){
 }
 
 // Method building PiSDFGraphstereo
-PiSDFGraph* stereo(Archi* archi, Stack* stack){
-	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
+PiSDFGraph* stereo(Archi* archi){
+	PiSDFGraph* graph = CREATE(PISDF_STACK, PiSDFGraph)(
 		/*Edges*/    16,
 		/*Params*/   11,
 		/*InputIf*/  0,
 		/*OutputIf*/ 0,
 		/*Config*/   1,
 		/*Body*/     12,
-		/*Archi*/    archi,
-		/*Stack*/    stack);
+		/*Archi*/    archi);
 
 	/* Parameters */
 	PiSDFParam *param_nSlice = graph->addDynamicParam("nSlice");
@@ -110,7 +113,7 @@ PiSDFGraph* stereo(Archi* archi, Stack* stack){
 	cf_Config->addOutParam(7, param_sizeFilter);
 	cf_Config->addOutParam(8, param_nIter);
 	cf_Config->isExecutableOnPE(CORE_CORE0);
-	cf_Config->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	cf_Config->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_Camera = graph->addBodyVertex(
 		/*Name*/    "Camera",
@@ -121,7 +124,7 @@ PiSDFGraph* stereo(Archi* archi, Stack* stack){
 	bo_Camera->addInParam(0, param_width);
 	bo_Camera->addInParam(1, param_height);
 	bo_Camera->isExecutableOnPE(CORE_CORE0);
-	bo_Camera->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_Camera->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_Br_rgbL = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
@@ -138,7 +141,7 @@ PiSDFGraph* stereo(Archi* archi, Stack* stack){
 		/*InParam*/ 1);
 	bo_RGB2Gray_L->addInParam(0, param_size);
 	bo_RGB2Gray_L->isExecutableOnPE(CORE_CORE0);
-	bo_RGB2Gray_L->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_RGB2Gray_L->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_RGB2Gray_R = graph->addBodyVertex(
 		/*Name*/    "RGB2Gray_R",
@@ -148,7 +151,7 @@ PiSDFGraph* stereo(Archi* archi, Stack* stack){
 		/*InParam*/ 1);
 	bo_RGB2Gray_R->addInParam(0, param_size);
 	bo_RGB2Gray_R->isExecutableOnPE(CORE_CORE0);
-	bo_RGB2Gray_R->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_RGB2Gray_R->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_Br_grayL = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
@@ -173,7 +176,7 @@ PiSDFGraph* stereo(Archi* archi, Stack* stack){
 	bo_Census_L->addInParam(0, param_width);
 	bo_Census_L->addInParam(1, param_height);
 	bo_Census_L->isExecutableOnPE(CORE_CORE0);
-	bo_Census_L->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_Census_L->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_Census_R = graph->addBodyVertex(
 		/*Name*/    "Census_R",
@@ -184,7 +187,7 @@ PiSDFGraph* stereo(Archi* archi, Stack* stack){
 	bo_Census_R->addInParam(0, param_width);
 	bo_Census_R->addInParam(1, param_height);
 	bo_Census_R->isExecutableOnPE(CORE_CORE0);
-	bo_Census_R->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_Census_R->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_Split = graph->addBodyVertex(
 		/*Name*/    "Split",
@@ -197,7 +200,7 @@ PiSDFGraph* stereo(Archi* archi, Stack* stack){
 	bo_Split->addInParam(2, param_nSlice);
 	bo_Split->addInParam(3, param_sizeFilter);
 	bo_Split->isExecutableOnPE(CORE_CORE0);
-	bo_Split->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_Split->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_MedianFilter = graph->addBodyVertex(
 		/*Name*/    "MedianFilter",
@@ -209,7 +212,7 @@ PiSDFGraph* stereo(Archi* archi, Stack* stack){
 	bo_MedianFilter->addInParam(1, param_sizeFilter);
 	bo_MedianFilter->addInParam(2, param_sliceHeight);
 	bo_MedianFilter->isExecutableOnPE(CORE_CORE0);
-	bo_MedianFilter->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_MedianFilter->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_Display = graph->addBodyVertex(
 		/*Name*/    "Display",
@@ -220,11 +223,11 @@ PiSDFGraph* stereo(Archi* archi, Stack* stack){
 	bo_Display->addInParam(0, param_width);
 	bo_Display->addInParam(1, param_height);
 	bo_Display->isExecutableOnPE(CORE_CORE0);
-	bo_Display->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_Display->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_costParallel = graph->addHierVertex(
 		/*Name*/    "costParallel",
-		/*Graph*/   costParallel(archi, stack),
+		/*Graph*/   costParallel(archi),
 		/*InData*/  5,
 		/*OutData*/ 1,
 		/*InParam*/ 7);
@@ -322,16 +325,15 @@ PiSDFGraph* stereo(Archi* archi, Stack* stack){
 }
 
 // Method building PiSDFGraphcostParallel
-PiSDFGraph* costParallel(Archi* archi, Stack* stack){
-	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
+PiSDFGraph* costParallel(Archi* archi){
+	PiSDFGraph* graph = CREATE(PISDF_STACK, PiSDFGraph)(
 		/*Edges*/    18,
 		/*Params*/   9,
 		/*InputIf*/  5,
 		/*OutputIf*/ 1,
 		/*Config*/   0,
 		/*Body*/     9,
-		/*Archi*/    archi,
-		/*Stack*/    stack);
+		/*Archi*/    archi);
 
 	/* Parameters */
 	PiSDFParam *param_nIter = graph->addHeritedParam("nIter", 0);
@@ -385,7 +387,7 @@ PiSDFGraph* costParallel(Archi* archi, Stack* stack){
 		/*InParam*/ 1);
 	bo_GenIx->addInParam(0, param_nIter);
 	bo_GenIx->isExecutableOnPE(CORE_CORE0);
-	bo_GenIx->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_GenIx->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_GenDisp = graph->addBodyVertex(
 		/*Name*/    "GenDisp",
@@ -396,7 +398,7 @@ PiSDFGraph* costParallel(Archi* archi, Stack* stack){
 	bo_GenDisp->addInParam(0, param_minDisp);
 	bo_GenDisp->addInParam(1, param_maxDisp);
 	bo_GenDisp->isExecutableOnPE(CORE_CORE0);
-	bo_GenDisp->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_GenDisp->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_VWeight = graph->addBodyVertex(
 		/*Name*/    "VWeights",
@@ -407,7 +409,7 @@ PiSDFGraph* costParallel(Archi* archi, Stack* stack){
 	bo_VWeight->addInParam(0, param_height);
 	bo_VWeight->addInParam(1, param_width);
 	bo_VWeight->isExecutableOnPE(CORE_CORE0);
-	bo_VWeight->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_VWeight->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_HWeight = graph->addBodyVertex(
 		/*Name*/    "HWeight",
@@ -418,7 +420,7 @@ PiSDFGraph* costParallel(Archi* archi, Stack* stack){
 	bo_HWeight->addInParam(0, param_height);
 	bo_HWeight->addInParam(1, param_width);
 	bo_HWeight->isExecutableOnPE(CORE_CORE0);
-	bo_HWeight->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_HWeight->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_CostConstruction = graph->addBodyVertex(
 		/*Name*/    "CostConstruction",
@@ -430,7 +432,7 @@ PiSDFGraph* costParallel(Archi* archi, Stack* stack){
 	bo_CostConstruction->addInParam(1, param_height);
 	bo_CostConstruction->addInParam(2, param_width);
 	bo_CostConstruction->isExecutableOnPE(CORE_CORE0);
-	bo_CostConstruction->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_CostConstruction->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* if_rawDisparity = graph->addOutputIf(
 		/*Name*/    "if_rawDisparity",
@@ -453,7 +455,7 @@ PiSDFGraph* costParallel(Archi* archi, Stack* stack){
 
 	PiSDFVertex* bo_DispComp = graph->addHierVertex(
 		/*Name*/    "DispComp",
-		/*Graph*/   DispComp(archi, stack),
+		/*Graph*/   DispComp(archi),
 		/*InData*/  5,
 		/*OutData*/ 1,
 		/*InParam*/ 6);
@@ -560,16 +562,15 @@ PiSDFGraph* costParallel(Archi* archi, Stack* stack){
 }
 
 // Method building PiSDFGraphDispComp
-PiSDFGraph* DispComp(Archi* archi, Stack* stack){
-	PiSDFGraph* graph = CREATE(stack, PiSDFGraph)(
+PiSDFGraph* DispComp(Archi* archi){
+	PiSDFGraph* graph = CREATE(PISDF_STACK, PiSDFGraph)(
 		/*Edges*/    10,
 		/*Params*/   8,
 		/*InputIf*/  5,
 		/*OutputIf*/ 1,
 		/*Config*/   0,
 		/*Body*/     3,
-		/*Archi*/    archi,
-		/*Stack*/    stack);
+		/*Archi*/    archi);
 
 	/* Parameters */
 	PiSDFParam *param_height = graph->addHeritedParam("height", 0);
@@ -592,7 +593,7 @@ PiSDFGraph* DispComp(Archi* archi, Stack* stack){
 	bo_AggregateCost->addInParam(1, param_width);
 	bo_AggregateCost->addInParam(2, param_nIter);
 	bo_AggregateCost->isExecutableOnPE(CORE_CORE0);
-	bo_AggregateCost->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_AggregateCost->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_DisparitySelect = graph->addBodyVertex(
 		/*Name*/    "DisparitySelect",
@@ -606,7 +607,7 @@ PiSDFGraph* DispComp(Archi* archi, Stack* stack){
 	bo_DisparitySelect->addInParam(3, param_minDisp);
 	bo_DisparitySelect->addInParam(4, param_maxDisp);
 	bo_DisparitySelect->isExecutableOnPE(CORE_CORE0);
-	bo_DisparitySelect->setTimingOnType(CORE_TYPE_X86, "1000", stack);
+	bo_DisparitySelect->setTimingOnType(CORE_TYPE_X86, "1000");
 
 	PiSDFVertex* bo_Br_Disp = graph->addSpecialVertex(
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
@@ -704,7 +705,8 @@ PiSDFGraph* DispComp(Archi* archi, Stack* stack){
 	return graph;
 }
 
-void free_stereo(PiSDFGraph* top, Stack* stack){
+void free_stereo(PiSDFGraph* top){
 	top->~PiSDFGraph();
-	stack->free(top);
+	StackMonitor::free(PISDF_STACK, top);
+	StackMonitor::freeAll(PISDF_STACK);
 }

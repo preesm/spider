@@ -38,12 +38,12 @@
 #define SHARED_MEM_ARCH_H
 
 #include "Archi.h"
-#include <tools/Stack.h>
+#include <monitor/StackMonitor.h>
 #include <cstring>
 
 class SharedMemArchi: public Archi {
 public:
-	SharedMemArchi(Stack* s, int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct);
+	SharedMemArchi(int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct);
 	virtual ~SharedMemArchi();
 
 	virtual int  getNPE() const;
@@ -71,7 +71,6 @@ public:
 
 
 private:
-	Stack* stack_;
 	int nPE_;
 	int spiderPe_;
 	int nPEType_;
@@ -114,7 +113,7 @@ inline void SharedMemArchi::setPETypeRecvSpeed(int type, float a, float b){
 }
 inline void SharedMemArchi::setName(int pe, const char* name){
 	int size = strlen(name)+1;
-	char* newName = CREATE_MUL(stack_, size, char);
+	char* newName = CREATE_MUL(ARCHI_STACK, size, char);
 	peName_[pe] = newName;
 	strcpy(newName, name);
 }

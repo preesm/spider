@@ -71,8 +71,6 @@ private:
 	const lrtFct* fcts_;
 	bool run_;
 	bool idle_;
-
-	Stack* stack_;
 };
 
 inline int LRT::getIx() const{

@@ -41,34 +41,34 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <monitor/StackMonitor.h>
+
 LinuxSpiderCommunicator::LinuxSpiderCommunicator(
 		int msgSizeMax,
 		int nLrt,
 		sem_t* semTrace,
 		int fTraceWr,
-		int fTraceRd,
-		Stack* s){
-	stack_ = s;
+		int fTraceRd){
 
-	fIn_ = CREATE_MUL(s, nLrt, int);
-	fOut_ = CREATE_MUL(s, nLrt, int);
+	fIn_ = CREATE_MUL(ARCHI_STACK, nLrt, int);
+	fOut_ = CREATE_MUL(ARCHI_STACK, nLrt, int);
 	fTraceRd_ = fTraceRd;
 	fTraceWr_ = fTraceWr;
 	semTrace_ = semTrace;
 
 	msgSizeMax_ = msgSizeMax;
 
-	msgBufferRecv_ = (void*) CREATE_MUL(s, msgSizeMax, char);
+	msgBufferRecv_ = (void*) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
 	curMsgSizeRecv_ = 0;
-	msgBufferSend_ = (void*) CREATE_MUL(s, msgSizeMax, char);
+	msgBufferSend_ = (void*) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
 	curMsgSizeSend_ = 0;
 }
 
 LinuxSpiderCommunicator::~LinuxSpiderCommunicator(){
-	stack_->free(fIn_);
-	stack_->free(fOut_);
-	stack_->free(msgBufferRecv_);
-	stack_->free(msgBufferSend_);
+	StackMonitor::free(ARCHI_STACK, fIn_);
+	StackMonitor::free(ARCHI_STACK, fOut_);
+	StackMonitor::free(ARCHI_STACK, msgBufferRecv_);
+	StackMonitor::free(ARCHI_STACK, msgBufferSend_);
 }
 
 void LinuxSpiderCommunicator::setLrtCom(int lrtIx, int fIn, int fOut){

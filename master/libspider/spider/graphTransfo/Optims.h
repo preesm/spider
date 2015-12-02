@@ -40,6 +40,6 @@
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include "GraphTransfo.h"
 
-void optims(SRDAGGraph *topDag, Stack* stack);
+void optims(SRDAGGraph *topDag);
 
 #endif/*OPTIMS_H*/

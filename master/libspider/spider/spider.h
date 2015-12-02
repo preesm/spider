@@ -37,32 +37,39 @@
 #ifndef SPIDER_H
 #define SPIDER_H
 
-#include <graphs/PiSDF/PiSDFCommon.h>
-#include <graphs/SRDAG/SRDAGCommon.h>
-#include <graphs/PiSDF/PiSDFGraph.h>
-#include <graphs/SRDAG/SRDAGGraph.h>
-#include <graphs/PiSDF/PiSDFVertex.h>
-#include <graphs/Bipartite/BipartiteGraph.h>
+class PiSDFVertex;
+class Archi;
+class PiSDFGraph;
+class SRDAGGraph;
+class MemAlloc;
+class Scheduler;
 
-#include <tools/StaticStack.h>
-#include <tools/DynStack.h>
-
-#include <graphs/Archi/Archi.h>
-#include <graphs/Archi/SharedMemArchi.h>
-
-#include <scheduling/MemAlloc.h>
-#include <scheduling/MemAlloc/DummyMemAlloc.h>
-#include <scheduling/MemAlloc/SpecialActorMemAlloc.h>
-#include <scheduling/Scheduler.h>
-#include <scheduling/Scheduler/ListScheduler.h>
-
-#include <graphTransfo/GraphTransfo.h>
-
-#include <SpiderCommunicator.h>
-#include <lrt.h>
 
 #define MAX_STATS_VERTICES 1000
 #define MAX_STATS_PE_TYPES 3
+
+typedef unsigned long 	Time;
+typedef long 			Param;
+
+typedef void (*lrtFct)(
+		void* inputFIFOs[],
+		void* outputFIFOs[],
+		Param inParams[],
+		Param outParams[]);
+
+typedef enum{
+	MEMALLOC_DUMMY,
+	MEMALLOC_SPECIAL_ACTOR
+}MemAllocType;
+
+typedef enum{
+	SCHEDULER_LIST
+}SchedulerType;
+
+typedef enum{
+	STACK_STATIC,
+	STACK_DYNAMIC
+}StackType;
 
 typedef struct{
 	StackType type;
@@ -79,8 +86,11 @@ typedef struct{
 
 	SchedulerType schedulerType;
 
+	StackConfig archiStack;
+	StackConfig pisdfStack;
 	StackConfig srdagStack;
 	StackConfig transfoStack;
+	StackConfig lrtStack;
 
 	bool useGraphOptim;
 	bool useActorPrecedence;
@@ -125,8 +135,6 @@ public:
 
 	void setMemAllocType(MemAllocType type, int start, int size);
 	void setSchedulerType(SchedulerType type);
-	void setSrdagStack(StackConfig cfg);
-	void setTransfoStack(StackConfig cfg);
 
 	void setGraphOptim(bool useGraphOptim);
 	void setActorPrecedence(bool useActorPrecedence);
@@ -135,20 +143,15 @@ public:
 	void setArchi(Archi* archi);
 	void setGraph(PiSDFGraph* pisdf);
 
-	void startMonitoring();
-	void endMonitoring(TraceSpiderType type);
-
 	void iterate();
 	void idle();
 
 	void printGantt(
-			Archi* archi,
-			SRDAGGraph* srdag,
 			const char* ganttPath,
 			const char* latexPath,
 			ExecutionStat* stat);
 
-	SRDAGGraph* getLastSRDAG();
+	void printSRDAG(const char* srdagPath);
 
 	static Spider* get();
 
@@ -156,10 +159,6 @@ private:
 	Archi* archi_;
 	PiSDFGraph* pisdf_;
 	SRDAGGraph* srdag_;
-
-	Stack* srdagStack_;
-	Stack* transfoStack_;
-
 
 	MemAlloc* memAlloc_;
 	Scheduler* scheduler_;

@@ -45,12 +45,12 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/SRDAG/SRDAGEdge.h>
 
-void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stack){
-    job->bodies = CREATE_MUL(stack, job->graph->getNBody(), SRDAGVertex**);
+void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
+    job->bodies = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), SRDAGVertex**);
 
     for(int bodyIx=0; bodyIx<job->graph->getNBody(); bodyIx++){
 		PiSDFVertex* pi_vertex = job->graph->getBody(bodyIx);
-        job->bodies[bodyIx] = CREATE_MUL(stack, brv[bodyIx], SRDAGVertex*);
+        job->bodies[bodyIx] = CREATE_MUL(TRANSFO_STACK, brv[bodyIx], SRDAGVertex*);
 
 		switch(pi_vertex->getSubType()){
 		case PISDF_SUBTYPE_NORMAL:
@@ -88,8 +88,8 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stack
 	}
 }
 
-void addCAVertices(SRDAGGraph *topSrdag, transfoJob *job, Stack* stack){
-    job->configs = CREATE_MUL(stack, job->graph->getNConfig(), SRDAGVertex*);
+void addCAVertices(SRDAGGraph *topSrdag, transfoJob *job){
+    job->configs = CREATE_MUL(TRANSFO_STACK, job->graph->getNConfig(), SRDAGVertex*);
     for(int configIx=0; configIx<job->graph->getNConfig(); configIx++){
     	PiSDFVertex* config = job->graph->getConfig(configIx);
 		job->configs[configIx] = topSrdag->addVertex(config, 0, job->graphIter);

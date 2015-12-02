@@ -37,32 +37,32 @@
 #include "SharedMemArchi.h"
 #include <tools/Stack.h>
 
-SharedMemArchi::SharedMemArchi(Stack* stack, int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct) {
-	stack_ = stack;
+SharedMemArchi::SharedMemArchi(int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct) {
 	nPE_ = nPE;
 	nPEType_ = nPEType;
 	spiderPe_ = spiderPe;
-	peType_ = CREATE_MUL(stack, nPE_, int);
-	peActive_ = CREATE_MUL(stack, nPE_, bool);
-	peName_ = CREATE_MUL(stack, nPE_, char*);
-	peTypeASend_ = CREATE_MUL(stack, nPEType_, float);
-	peTypeBSend_ = CREATE_MUL(stack, nPEType_, float);
-	peTypeARecv_ = CREATE_MUL(stack, nPEType_, float);
-	peTypeBRecv_ = CREATE_MUL(stack, nPEType_, float);
+	peType_ = CREATE_MUL(ARCHI_STACK, nPE_, int);
+	peActive_ = CREATE_MUL(ARCHI_STACK, nPE_, bool);
+	peName_ = CREATE_MUL(ARCHI_STACK, nPE_, char*);
+	peTypeASend_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
+	peTypeBSend_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
+	peTypeARecv_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
+	peTypeBRecv_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
 	mapFct_ = mapFct;
 }
 
 SharedMemArchi::~SharedMemArchi() {
 	for(int i=0; i<nPE_; i++)
-		stack_->free(peName_[i]);
+		StackMonitor::free(ARCHI_STACK, peName_[i]);
 
 	/** Free allocated arrays **/
-	stack_->free(peType_);
-	stack_->free(peName_);
-	stack_->free(peTypeASend_);
-	stack_->free(peTypeBSend_);
-	stack_->free(peTypeARecv_);
-	stack_->free(peTypeBRecv_);
+	StackMonitor::free(ARCHI_STACK, peType_);
+	StackMonitor::free(ARCHI_STACK, peActive_);
+	StackMonitor::free(ARCHI_STACK, peName_);
+	StackMonitor::free(ARCHI_STACK, peTypeASend_);
+	StackMonitor::free(ARCHI_STACK, peTypeBSend_);
+	StackMonitor::free(ARCHI_STACK, peTypeARecv_);
+	StackMonitor::free(ARCHI_STACK, peTypeBRecv_);
 
 	/** Reset values **/
 	nPE_ = 0;

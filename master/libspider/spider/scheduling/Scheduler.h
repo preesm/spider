@@ -41,18 +41,15 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/Archi/Archi.h>
 #include "MemAlloc.h"
-
-typedef enum{
-	SCHEDULER_LIST
-}SchedulerType;
+#include <spider.h>
 
 class Scheduler {
 public:
 	Scheduler(){}
 	virtual ~Scheduler(){}
 
-	virtual void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack, bool useActorPrecedence) = 0;
-	virtual void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, Stack* stack, bool useActorPrecedence) = 0;
+	virtual void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, bool useActorPrecedence) = 0;
+	virtual void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, bool useActorPrecedence) = 0;
 
 };
 

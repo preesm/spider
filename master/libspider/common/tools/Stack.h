@@ -39,14 +39,6 @@
 
 #include <new>
 
-#define CREATE(stack, type) new((stack)->alloc(sizeof(type))) type
-#define CREATE_MUL(stack, size, type) new((stack)->alloc(size*sizeof(type))) type[size]
-
-typedef enum{
-	STACK_STATIC,
-	STACK_DYNAMIC
-}StackType;
-
 class Stack{
 public:
 	virtual void* alloc(int size) = 0;

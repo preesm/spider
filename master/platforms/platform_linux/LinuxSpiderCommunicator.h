@@ -44,7 +44,7 @@
 
 class LinuxSpiderCommunicator: public SpiderCommunicator{
 public:
-	LinuxSpiderCommunicator(int msgSizeMax, int nLrt, sem_t* semTrace, int fTraceWr, int fTraceRd, Stack* s);
+	LinuxSpiderCommunicator(int msgSizeMax, int nLrt, sem_t* semTrace, int fTraceWr, int fTraceRd);
 	~LinuxSpiderCommunicator();
 
 	void setLrtCom(int lrtIx, int fIn, int fOut);
@@ -62,8 +62,6 @@ public:
 	void trace_end_recv();
 
 private:
-	Stack* stack_;
-
 	int *fIn_, *fOut_;
 
 	int fTraceRd_;

@@ -65,11 +65,9 @@ static const char* operatorSign[5] = {
 
 Expression::Expression(
 		const char* expr,
-		const PiSDFParam* const * params, int nParam,
-		Stack* stackAlloc){
+		const PiSDFParam* const * params, int nParam){
 	nElt_ = evaluateNTokens(expr);
-	stack_ = CREATE_MUL(stackAlloc, nElt_, Token);
-	stackAlloc_ = stackAlloc;
+	stack_ = CREATE_MUL(PISDF_STACK, nElt_, Token);
 
 	Token* output = stack_;
 	Token stack[MAX_NVAR_ELEMENTS];
@@ -118,7 +116,7 @@ Expression::Expression(
 }
 
 Expression::~Expression() {
-	stackAlloc_->free(stack_);
+	StackMonitor::free(PISDF_STACK, stack_);
 }
 
 int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job) const{

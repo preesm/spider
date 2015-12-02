@@ -38,22 +38,21 @@
 #include <string.h>
 #include <stdio.h>
 
-Schedule::Schedule(int nPE, int nJobMax, Stack *stack){
-	stack_ = stack;
+Schedule::Schedule(int nPE, int nJobMax){
 	nPE_ = nPE;
 	nJobMax_ = nJobMax;
-	nJobPerPE_ = CREATE_MUL(stack, nPE_, int);
-	readyTime_ = CREATE_MUL(stack, nPE_, Time);
-	schedules_ = CREATE_MUL(stack, nPE_*nJobMax_, SRDAGVertex*);
+	nJobPerPE_ = CREATE_MUL(TRANSFO_STACK, nPE_, int);
+	readyTime_ = CREATE_MUL(TRANSFO_STACK, nPE_, Time);
+	schedules_ = CREATE_MUL(TRANSFO_STACK, nPE_*nJobMax_, SRDAGVertex*);
 
 	memset(nJobPerPE_, 0, nPE_*sizeof(int));
 	memset(readyTime_, 0, nPE_*sizeof(Time));
 }
 
 Schedule::~Schedule(){
-	stack_->free(nJobPerPE_);
-	stack_->free(readyTime_);
-	stack_->free(schedules_);
+	StackMonitor::free(TRANSFO_STACK, nJobPerPE_);
+	StackMonitor::free(TRANSFO_STACK, readyTime_);
+	StackMonitor::free(TRANSFO_STACK, schedules_);
 }
 
 void Schedule::addJob(int pe, SRDAGVertex* job, Time start, Time end){

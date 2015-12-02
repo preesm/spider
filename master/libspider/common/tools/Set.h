@@ -37,14 +37,14 @@
 #ifndef SET_H
 #define SET_H
 
-#include <tools/Stack.h>
+#include <monitor/StackMonitor.h>
 #include <tools/SetElement.h>
 
 template<typename TYPE> class Set {
 public:
-	Set(int nbmax, Stack *stack){
+	Set(int nbmax, SpiderStack stackId){
 		if(nbmax > 0){
-			array = CREATE_MUL(stack, nbmax, TYPE);
+			array = CREATE_MUL(stackId, nbmax, TYPE);
 
 			/* Test if TYPE is a SetElement */
 			SetElement* elt = dynamic_cast<SetElement*>(array[0]);
@@ -53,12 +53,12 @@ public:
 		}
 		nb    = 0;
 		nbMax = nbmax;
-		stack_ = stack;
+		stackId_ = stackId;
 	}
 
 	~Set(){
 		if(nbMax != 0)
-			stack_->free(array);
+			StackMonitor::free(stackId_, array);
 	}
 
 	inline void add(TYPE value);
@@ -70,7 +70,7 @@ public:
 	inline TYPE const * const getArray() const;
 
 private:
-	Stack* stack_;
+	SpiderStack stackId_;
 	TYPE* array;
 	int nb;
 	int nbMax;

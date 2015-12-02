@@ -3,13 +3,7 @@
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.config.gnu.so.debug.2107493073">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.so.debug.2107493073" moduleId="org.eclipse.cdt.core.settings" name="Debug">
-				<externalSettings>
-					<externalSetting>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/Spider"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/Spider/Debug"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="Spider" srcPrefixMapping="" srcRootPath=""/>
-					</externalSetting>
-				</externalSettings>
+				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -48,10 +42,10 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.so.debug.option.optimization.level.2043197795" name="Optimization Level" superClass="gnu.c.compiler.so.debug.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.so.debug.option.debugging.level.668688201" name="Debug Level" superClass="gnu.c.compiler.so.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.258492493" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/common}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lrt}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/platform_linux}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/spider}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/Spider/common}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/Spider/lrt}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/Spider/platform_linux}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/Spider/spider}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1551303020" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -66,7 +60,12 @@
 								</inputType>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.so.debug.1272883559" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.so.debug">
-								<option id="gnu.both.asm.option.include.paths.1914296158" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths"/>
+								<option id="gnu.both.asm.option.include.paths.1914296158" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/Spider/common}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/Spider/lrt}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/Spider/platform_linux}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Spider/Spider/spider}&quot;"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1111714813" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -95,8 +94,8 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="common"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="lrt"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="common"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="lrt"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="platform_linux"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="spider"/>
 					</sourceEntries>
@@ -174,7 +173,8 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="common"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="lrt"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="platform_linux"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="spider"/>
+						<entry excluding="monitor" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="spider"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="spider/monitor"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

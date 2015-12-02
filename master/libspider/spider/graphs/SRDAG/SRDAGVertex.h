@@ -54,8 +54,7 @@ public:
 			PiSDFVertex* reference,
 			int refId, int iterId,
 			int nInEdge, int nOutEdge,
-			int nInParam, int nOutParam,
-			Stack* stack);
+			int nInParam, int nOutParam);
 	~SRDAGVertex();
 
 	/** Parameters getters */
@@ -125,7 +124,6 @@ private:
 	static int globalId;
 
 	int id_;
-	Stack* stack_;
 	SRDAGType type_;
 	SRDAGState state_;
 	SRDAGGraph* graph_;

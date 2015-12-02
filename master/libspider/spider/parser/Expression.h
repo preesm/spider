@@ -38,13 +38,12 @@
 #define PARSER_EXPRESSION_H
 
 #include <graphs/PiSDF/PiSDFParam.h>
-#include <tools/Stack.h>
 
 struct transfoJob;
 
 class Expression {
 public:
-	Expression(const char* expr, const PiSDFParam* const * params, int nParam, Stack* stack);
+	Expression(const char* expr, const PiSDFParam* const * params, int nParam);
 	virtual ~Expression();
 
 	int evaluate(const PiSDFParam* const * paramList, transfoJob* job) const;
@@ -79,7 +78,6 @@ private:
 
 	Token* stack_;
 	int nElt_;
-	Stack* stackAlloc_;
 
 	bool getNextToken(
 			Token* token,

@@ -34,33 +34,69 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef LIST_SCHEDULER_H
-#define LIST_SCHEDULER_H
+#ifndef STACKMONITOR_H
+#define STACKMONITOR_H
 
-#include "../Scheduler.h"
-#include <graphs/SRDAG/SRDAGVertex.h>
-#include <tools/List.h>
-#include <platform.h>
+#include <spider.h>
+#include <tools/Stack.h>
+#include <tools/DynStack.h>
+#include <tools/StaticStack.h>
 
-class ListScheduler : public Scheduler {
+typedef enum{
+	PISDF_STACK,
+	SRDAG_STACK,
+	ARCHI_STACK,
+	TRANSFO_STACK,
+	LRT_STACK,
+	STACK_COUNT
+} SpiderStack;
+
+
+#define CREATE(stackId, type) new(StackMonitor::alloc(stackId, sizeof(type))) type
+#define CREATE_MUL(stackId, size, type) new(StackMonitor::alloc(stackId, size*sizeof(type))) type[size]
+
+
+class StackMonitor {
 public:
-	ListScheduler();
-	virtual ~ListScheduler();
+	static inline void initStack(SpiderStack id, StackConfig cfg);
+	static inline void cleanAllStack();
+	static inline void* alloc(SpiderStack id, int size);
+	static inline void free(SpiderStack id, void* ptr);
+	static inline void freeAll(SpiderStack id);
 
-	void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, bool useActorPrecedence);
-	void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, bool useActorPrecedence);
+	static void printStackStats();
 
 private:
-	SRDAGGraph* srdag_;
-	Schedule* schedule_;
-	Archi* archi_;
-
-	List<SRDAGVertex*>* list_;
-
-	int computeSchedLevel(SRDAGVertex* vertex);
-	void scheduleVertex(SRDAGVertex* vertex);
-	void addPrevActors(SRDAGVertex* vertex, List<SRDAGVertex*> *list);
-
+	static Stack* stacks_[STACK_COUNT];
 };
 
-#endif/*LIST_SCHEDULER_H*/
+void StackMonitor::initStack(SpiderStack stackId, StackConfig cfg){
+	switch(cfg.type){
+	case STACK_DYNAMIC:
+		stacks_[stackId] = new DynStack(cfg.name);
+		break;
+	case STACK_STATIC:
+		stacks_[stackId] = new StaticStack(cfg.name, cfg.start, cfg.size);
+		break;
+	}
+}
+
+void StackMonitor::cleanAllStack(){
+	for(int i=0; i<STACK_COUNT; i++){
+		delete stacks_[i];
+	}
+}
+
+void* StackMonitor::alloc(SpiderStack stackId, int size){
+	return stacks_[stackId]->alloc(size);
+}
+
+void StackMonitor::free(SpiderStack stackId, void* ptr){
+	return stacks_[stackId]->free(ptr);
+}
+
+void StackMonitor::freeAll(SpiderStack stackId){
+	return stacks_[stackId]->freeAll();
+}
+
+#endif /* STACKMONITOR_H */

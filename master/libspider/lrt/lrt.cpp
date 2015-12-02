@@ -44,6 +44,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <monitor/StackMonitor.h>
+
 #include "specialActors/specialActors.h"
 
 static lrtFct specialActors[6] = {
@@ -61,11 +63,9 @@ LRT::LRT(int ix){
 	nFct_ = 0;
 	ix_ = ix;
 	run_ = false;
-	stack_ = new DynStack("LRTStack");
 }
 LRT::~LRT(){
 	/* Nothing to Unalloc */
-	delete stack_;
 }
 
 void LRT::setFctTbl(const lrtFct fct[], int nFct){
@@ -96,9 +96,9 @@ int LRT::runOneJob(){
 			Fifo *outFifos = (Fifo*) ((char*)inFifos + jobMsg->nbInEdge*sizeof(Fifo));
 			Param *inParams = (Param*) ((char*)outFifos + jobMsg->nbOutEdge*sizeof(Fifo));
 
-			void** inFifosAlloc = CREATE_MUL(stack_, jobMsg->nbInEdge, void*);
-			void** outFifosAlloc = CREATE_MUL(stack_, jobMsg->nbOutEdge, void*);
-			Param* outParams = CREATE_MUL(stack_, jobMsg->nbOutParam, Param);
+			void** inFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbInEdge, void*);
+			void** outFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbOutEdge, void*);
+			Param* outParams = CREATE_MUL(LRT_STACK, jobMsg->nbOutParam, Param);
 
 			for(int i=0; i<(int)jobMsg->nbInEdge; i++){
 				inFifosAlloc[i] = (void*) Platform::getLrtCommunicator()->data_recv(&inFifos[i]);
@@ -137,10 +137,10 @@ int LRT::runOneJob(){
 				Platform::getLrtCommunicator()->ctrl_end_send(size);
 			}
 
-			stack_->free(inFifosAlloc);
-			stack_->free(outFifosAlloc);
-			stack_->free(outParams);
-			stack_->freeAll();
+			StackMonitor::free(LRT_STACK, inFifosAlloc);
+			StackMonitor::free(LRT_STACK, outFifosAlloc);
+			StackMonitor::free(LRT_STACK, outParams);
+			StackMonitor::freeAll(LRT_STACK);
 			break;
 		}
 		case MSG_CLEAR_TIME:{

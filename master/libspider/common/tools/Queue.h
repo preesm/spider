@@ -41,16 +41,17 @@
 #include <cstdlib>
 
 #include "Stack.h"
+#include <monitor/StackMonitor.h>
 
 template<typename TYPE> class Queue{
 public:
 	Queue(){
-		stack_ 	= 0;
+		stackId_ 	= 0;
 		first_ 	= 0;
 		last_ 	= 0;
 	}
-	Queue(Stack *stack){
-		stack_ 	= stack;
+	Queue(SpiderStack stackId){
+		stackId_ 	= stackId;
 		first_ 	= 0;
 		last_ 	= 0;
 	}
@@ -67,7 +68,7 @@ private:
 		struct QueueItem* next;
 	};
 
-	Stack* stack_;
+	SpiderStack stackId_;
 	struct QueueItem* first_;
 	struct QueueItem* last_;
 };
@@ -80,7 +81,7 @@ inline bool Queue<TYPE>::isEmpty() const{
 
 template<typename TYPE>
 inline void Queue<TYPE>::push(TYPE value){
-	struct QueueItem* newItem = CREATE(stack_, struct QueueItem);
+	struct QueueItem* newItem = CREATE(stackId_, struct QueueItem);
 	newItem->cur 	= value;
 	newItem->next 	= 0;
 
@@ -100,7 +101,7 @@ inline TYPE Queue<TYPE>::pop(){
 	struct QueueItem* old = first_;
 	TYPE val = first_->cur;
 	first_ = first_->next;
-	stack_->free(old);
+	StackMonitor::free(stackId_, old);
 	if(first_ == 0)
 		last_ = 0;
 	return val;

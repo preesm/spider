@@ -43,6 +43,8 @@
 #include <cstdio>
 #include <platform.h>
 
+#include <monitor/StackMonitor.h>
+
 LinuxLrtCommunicator::LinuxLrtCommunicator(
 		int msgSizeMax,
 		int fIn,
@@ -52,10 +54,8 @@ LinuxLrtCommunicator::LinuxLrtCommunicator(
 		sem_t *semTrace,
 		void* fifos,
 		void* dataMem,
-		int nFifos,
-		Stack* s
+		int nFifos
 	){
-	stack_ = s;
 	fIn_ = fIn;
 	fOut_ = fOut;
 	fTrace_ = fTrace;
@@ -63,10 +63,10 @@ LinuxLrtCommunicator::LinuxLrtCommunicator(
 	semTrace_ = semTrace;
 	msgSizeMax_ = msgSizeMax;
 
-	msgBufferRecv_ = (void*) CREATE_MUL(s, msgSizeMax, char);
+	msgBufferRecv_ = (void*) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
 	curMsgSizeRecv_ = 0;
 
-	msgBufferSend_ = (void*) CREATE_MUL(s, msgSizeMax, char);
+	msgBufferSend_ = (void*) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
 	curMsgSizeSend_ = 0;
 
 	nbFifos_ = nFifos;
@@ -75,8 +75,8 @@ LinuxLrtCommunicator::LinuxLrtCommunicator(
 }
 
 LinuxLrtCommunicator::~LinuxLrtCommunicator(){
-	stack_->free(msgBufferRecv_);
-	stack_->free(msgBufferSend_);
+	StackMonitor::free(ARCHI_STACK, msgBufferRecv_);
+	StackMonitor::free(ARCHI_STACK, msgBufferSend_);
 }
 
 void* LinuxLrtCommunicator::ctrl_start_send(int size){

@@ -49,11 +49,9 @@ PiSDFVertex::PiSDFVertex(
 		PiSDFGraph* graph, PiSDFGraph* subGraph,
 		int nInEdge, int nOutEdge,
 		int nInParam, int nOutParam,
-		Archi* archi,
-		Stack* stack){
+		Archi* archi){
 
 	id_ = globalId++;
-	stack_ = stack;
 	typeId_ = typeId;
 	fctId_ = fctId;
 	type_ = type;
@@ -64,44 +62,44 @@ PiSDFVertex::PiSDFVertex(
 	subGraph_ = subGraph;
 
 	nInEdge_ = nInEdge;
-	inEdges_ = CREATE_MUL(stack, nInEdge_, PiSDFEdge*);
+	inEdges_ = CREATE_MUL(PISDF_STACK, nInEdge_, PiSDFEdge*);
 	memset(inEdges_, 0, nInEdge_*sizeof(PiSDFEdge*));
 
 	nOutEdge_ = nOutEdge;
-	outEdges_ = CREATE_MUL(stack, nOutEdge_, PiSDFEdge*);
+	outEdges_ = CREATE_MUL(PISDF_STACK, nOutEdge_, PiSDFEdge*);
 	memset(outEdges_, 0, nOutEdge_*sizeof(PiSDFEdge*));
 
 	nInParam_ = nInParam;
-	inParams_ = CREATE_MUL(stack, nInParam, PiSDFParam*);
+	inParams_ = CREATE_MUL(PISDF_STACK, nInParam, PiSDFParam*);
 	memset(inParams_, 0, nInParam*sizeof(PiSDFParam*));
 
 	nOutParam_ = nOutParam;
-	outParams_ = CREATE_MUL(stack, nOutParam, PiSDFParam*);
+	outParams_ = CREATE_MUL(PISDF_STACK, nOutParam, PiSDFParam*);
 	memset(outParams_, 0, nOutParam*sizeof(PiSDFParam*));
 
 	nPeMax_ = archi->getNPE();
 	nPeTypeMax_ = archi->getNPETypes();
 
-	constraints_ = CREATE_MUL(stack, nPeMax_, bool);
+	constraints_ = CREATE_MUL(PISDF_STACK, nPeMax_, bool);
 	memset(constraints_, false, nPeMax_*sizeof(bool));
 
-	timings_ = CREATE_MUL(stack, nPeTypeMax_, Expression*);
+	timings_ = CREATE_MUL(PISDF_STACK, nPeTypeMax_, Expression*);
 	memset(timings_, 0, nPeTypeMax_*sizeof(Expression*));
 }
 
 PiSDFVertex::~PiSDFVertex(){
-	stack_->free(inEdges_);
-	stack_->free(outEdges_);
-	stack_->free(inParams_);
-	stack_->free(outParams_);
-	stack_->free(constraints_);
+	StackMonitor::free(PISDF_STACK,inEdges_);
+	StackMonitor::free(PISDF_STACK,outEdges_);
+	StackMonitor::free(PISDF_STACK,inParams_);
+	StackMonitor::free(PISDF_STACK,outParams_);
+	StackMonitor::free(PISDF_STACK,constraints_);
 
 	for(int i=0; i<nPeTypeMax_; i++){
 		if(timings_[i]){
 			timings_[i]->~Expression();
-			stack_->free(timings_[i]);
+			StackMonitor::free(PISDF_STACK,timings_[i]);
 			timings_[i] = 0;
 		}
 	}
-	stack_->free(timings_);
+	StackMonitor::free(PISDF_STACK,timings_);
 }

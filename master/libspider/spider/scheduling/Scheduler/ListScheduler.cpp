@@ -75,13 +75,12 @@ void ListScheduler::scheduleOnlyConfig(
 		MemAlloc* memAlloc,
 		Schedule* schedule,
 		Archi* archi,
-		Stack* stack,
 		bool useActorPrecedence){
 	srdag_ = graph;
 	schedule_ = schedule;
 	archi_ = archi;
 
-	list_ = CREATE(stack, List<SRDAGVertex*>)(stack, srdag_->getNExecVertex());
+	list_ = CREATE(TRANSFO_STACK, List<SRDAGVertex*>)(TRANSFO_STACK, srdag_->getNExecVertex());
 
 //	Launcher::initTaskOrderingTime();
 
@@ -123,7 +122,7 @@ void ListScheduler::scheduleOnlyConfig(
 	}
 
 	list_->~List();
-	stack->free(list_);
+	StackMonitor::free(TRANSFO_STACK, list_);
 }
 
 void ListScheduler::schedule(
@@ -131,13 +130,12 @@ void ListScheduler::schedule(
 		MemAlloc* memAlloc,
 		Schedule* schedule,
 		Archi* archi,
-		Stack* stack,
 		bool useActorPrecedence){
 	srdag_ = graph;
 	schedule_ = schedule;
 	archi_ = archi;
 
-	list_ = CREATE(stack, List<SRDAGVertex*>)(stack, srdag_->getNExecVertex());
+	list_ = CREATE(TRANSFO_STACK, List<SRDAGVertex*>)(TRANSFO_STACK, srdag_->getNExecVertex());
 
 	for(int i=0; i<srdag_->getNVertex(); i++){
 		SRDAGVertex *vertex = srdag_->getVertex(i);
@@ -175,7 +173,7 @@ void ListScheduler::schedule(
 
 
 	list_->~List();
-	stack->free(list_);
+	StackMonitor::free(TRANSFO_STACK, list_);
 }
 
 int ListScheduler::computeSchedLevel(SRDAGVertex* vertex){

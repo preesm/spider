@@ -58,9 +58,9 @@ static inline int compute_lcm(int a, int b){
 	return abs(a*b)/compute_gcd(a,b);
 }
 
-int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices, Stack *stack){
-	Rational* ratioMatrix = CREATE_MUL(stack, nbVertices*nbEdges, Rational);
-	Rational* ratioResult = CREATE_MUL(stack, nbVertices, Rational);
+int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices){
+	Rational* ratioMatrix = CREATE_MUL(TRANSFO_STACK, nbVertices*nbEdges, Rational);
+	Rational* ratioResult = CREATE_MUL(TRANSFO_STACK, nbVertices, Rational);
 
 //	printf("Topo Matrix:\n");
 //	for(int i=0; i<nbEdges; i++){
@@ -154,8 +154,8 @@ int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices, Stack *st
 		brv[i] = abs(ratioResult[i].getNominator() * lcm / ratioResult[i].getDenominator());
 	}
 
-	stack->free(ratioMatrix);
-	stack->free(ratioResult);
+	StackMonitor::free(TRANSFO_STACK, ratioMatrix);
+	StackMonitor::free(TRANSFO_STACK, ratioResult);
 
 	return 0;
 }

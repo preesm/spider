@@ -48,11 +48,9 @@ SRDAGVertex::SRDAGVertex(
 		PiSDFVertex* reference,
 		int refId, int iterId,
 		int nInEdge, int nOutEdge,
-		int nInParam, int nOutParam,
-		Stack* stack){
+		int nInParam, int nOutParam){
 	id_ = globalId++;
 
-	stack_ = stack;
 	type_ = type;
 	state_ = SRDAG_NEXEC;
 	graph_ = graph;
@@ -61,22 +59,22 @@ SRDAGVertex::SRDAGVertex(
 	iterId_ = iterId;
 
 	nMaxInEdge_ = nInEdge;
-	inEdges_ = CREATE_MUL(stack, nMaxInEdge_, SRDAGEdge*);
+	inEdges_ = CREATE_MUL(SRDAG_STACK, nMaxInEdge_, SRDAGEdge*);
 	memset(inEdges_, 0, nMaxInEdge_*sizeof(SRDAGEdge*));
 
 	nMaxOutEdge_ = nOutEdge;
-	outEdges_ = CREATE_MUL(stack, nMaxOutEdge_, SRDAGEdge*);
+	outEdges_ = CREATE_MUL(SRDAG_STACK, nMaxOutEdge_, SRDAGEdge*);
 	memset(outEdges_, 0, nMaxOutEdge_*sizeof(SRDAGEdge*));
 
 	nCurInEdge_ = 0;
 	nCurOutEdge_ = 0;
 
 	nInParam_ = nInParam;
-	inParams_ = CREATE_MUL(stack, nInParam_, int);
+	inParams_ = CREATE_MUL(SRDAG_STACK, nInParam_, int);
 	memset(inParams_, 0, nInParam*sizeof(int));
 
 	nOutParam_ = nOutParam;
-	outParams_ = CREATE_MUL(stack, nOutParam_, int*);
+	outParams_ = CREATE_MUL(SRDAG_STACK, nOutParam_, int*);
 	memset(outParams_, 0, nOutParam*sizeof(int**));
 
 	start_ = end_ = -1;
@@ -85,10 +83,10 @@ SRDAGVertex::SRDAGVertex(
 }
 
 SRDAGVertex::~SRDAGVertex(){
-	stack_->free(inEdges_);
-	stack_->free(outEdges_);
-	stack_->free(inParams_);
-	stack_->free(outParams_);
+	StackMonitor::free(SRDAG_STACK,inEdges_);
+	StackMonitor::free(SRDAG_STACK,outEdges_);
+	StackMonitor::free(SRDAG_STACK,inParams_);
+	StackMonitor::free(SRDAG_STACK,outParams_);
 }
 
 void SRDAGVertex::toString(char* name, int sizeMax) const{

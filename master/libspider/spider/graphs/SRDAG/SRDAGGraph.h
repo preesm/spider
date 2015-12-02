@@ -43,7 +43,7 @@
 
 class SRDAGGraph {
 public:
-	SRDAGGraph(Stack *stack);
+	SRDAGGraph();
 	virtual ~SRDAGGraph();
 
 	SRDAGVertex* addVertex(PiSDFVertex* reference, int refId, int iterId);
@@ -82,7 +82,6 @@ public:
 private:
 	SRDAGEdgeSet edges_;
 	SRDAGVertexSet vertices_;
-	Stack* stack_;
 };
 
 /** Inline Fcts */

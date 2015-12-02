@@ -38,7 +38,6 @@
 #define PLATFORM_LINUX_H
 
 #include <platform.h>
-#include <tools/Stack.h>
 #include <graphs/Archi/Archi.h>
 #include <graphs/Archi/SharedMemArchi.h>
 #include <lrt.h>
@@ -68,7 +67,7 @@ public:
 
 	SharedMemArchi* getArchi();
 
-	PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts);
+	PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts);
 	virtual ~PlatformLinux();
 
 private:
@@ -77,7 +76,6 @@ private:
 		SIG_WAKE = SIGUSR2
 	};
 
-	Stack* stack_;
 	SharedMemArchi* archi_;
 	int* cpIds_;
 

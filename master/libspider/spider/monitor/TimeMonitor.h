@@ -34,33 +34,18 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef LIST_SCHEDULER_H
-#define LIST_SCHEDULER_H
+#ifndef MONITOR_TIMEMONITOR_H
+#define MONITOR_TIMEMONITOR_H
 
-#include "../Scheduler.h"
-#include <graphs/SRDAG/SRDAGVertex.h>
-#include <tools/List.h>
-#include <platform.h>
+#include <Message.h>
 
-class ListScheduler : public Scheduler {
+class TimeMonitor {
 public:
-	ListScheduler();
-	virtual ~ListScheduler();
-
-	void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, bool useActorPrecedence);
-	void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi, bool useActorPrecedence);
-
+	static void startMonitoring();
+	static void endMonitoring(TraceSpiderType type);
+	static const char* spiderTaskName[9];
 private:
-	SRDAGGraph* srdag_;
-	Schedule* schedule_;
-	Archi* archi_;
-
-	List<SRDAGVertex*>* list_;
-
-	int computeSchedLevel(SRDAGVertex* vertex);
-	void scheduleVertex(SRDAGVertex* vertex);
-	void addPrevActors(SRDAGVertex* vertex, List<SRDAGVertex*> *list);
-
+	static Time start;
 };
 
-#endif/*LIST_SCHEDULER_H*/
+#endif /* MONITOR_TIMEMONITOR_H */

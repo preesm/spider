@@ -53,8 +53,7 @@ public:
 			sem_t *semTrace,
 			void* fifos,
 			void* dataMem,
-			int nbFifos,
-			Stack* s
+			int nbFifos
 		);
 
 	~LinuxLrtCommunicator();
@@ -74,8 +73,6 @@ public:
 	long data_recv(Fifo* f);
 
 private:
-	Stack* stack_;
-
 	int fIn_, fOut_, fTrace_;
 	sem_t* semTrace_;
 	sem_t* semFifo_;

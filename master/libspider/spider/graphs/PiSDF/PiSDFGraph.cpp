@@ -47,17 +47,15 @@ PiSDFGraph::PiSDFGraph(
 		int nEdges, int nParams,
 		int nInputIf, int nOutputIf,
 		int nConfig, int nBody,
-		Archi *archi,
-		Stack *stack):
+		Archi *archi):
 
-		edges_(nEdges, stack),
-		params_(nParams, stack),
-		bodies_(nBody, stack),
-		configs_(nConfig, stack),
-		inputIfs_(nInputIf, stack),
-		outputIfs_(nInputIf, stack)
+		edges_(nEdges, PISDF_STACK),
+		params_(nParams, PISDF_STACK),
+		bodies_(nBody, PISDF_STACK),
+		configs_(nConfig, PISDF_STACK),
+		inputIfs_(nInputIf, PISDF_STACK),
+		outputIfs_(nInputIf, PISDF_STACK)
 		{
-	stack_ = stack;
 	parent_ = 0;
 	archi_ = archi;
 }
@@ -68,7 +66,7 @@ PiSDFGraph::~PiSDFGraph() {
 	while(bodies_.getN() > 0){
 		if(bodies_[0]->isHierarchical()){
 			bodies_[0]->getSubGraph()->~PiSDFGraph();
-			stack_->free(bodies_[0]->getSubGraph());
+			StackMonitor::free(PISDF_STACK, bodies_[0]->getSubGraph());
 		}
 		delVertex(bodies_[0]);
 	}
@@ -86,15 +84,14 @@ PiSDFVertex* PiSDFGraph::addBodyVertex(
 		const char* vertexName, int fctId,
 		int nInEdge, int nOutEdge,
 		int nInParam){
-	PiSDFVertex* body = CREATE(stack_, PiSDFVertex)(
+	PiSDFVertex* body = CREATE(PISDF_STACK, PiSDFVertex)(
 			vertexName, fctId,
 			bodies_.getN(),
 			PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
 			this, 0,
 			nInEdge, nOutEdge,
 			nInParam, 0,
-			archi_,
-			stack_);
+			archi_);
 	bodies_.add(body);
 	return body;
 }
@@ -104,15 +101,14 @@ PiSDFVertex* PiSDFGraph::addHierVertex(
 		PiSDFGraph* graph,
 		int nInEdge, int nOutEdge,
 		int nInParam){
-	PiSDFVertex* body = CREATE(stack_, PiSDFVertex)(
+	PiSDFVertex* body = CREATE(PISDF_STACK, PiSDFVertex)(
 			vertexName, -1,
 			bodies_.getN(),
 			PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
 			this, 0,
 			nInEdge, nOutEdge,
 			nInParam, 0,
-			archi_,
-			stack_);
+			archi_);
 	body->setSubGraph(graph);
 	graph->setParentVertex(body);
 	bodies_.add(body);
@@ -123,15 +119,14 @@ PiSDFVertex* PiSDFGraph::addSpecialVertex(
 		PiSDFSubType type,
 		int nInEdge, int nOutEdge,
 		int nInParam){
-	PiSDFVertex* body = CREATE(stack_, PiSDFVertex)(
+	PiSDFVertex* body = CREATE(PISDF_STACK, PiSDFVertex)(
 			0, -1,
 			bodies_.getN(),
 			PISDF_TYPE_BODY, type,
 			this, 0,
 			nInEdge, nOutEdge,
 			nInParam, 0,
-			archi_,
-			stack_);
+			archi_);
 	bodies_.add(body);
 	return body;
 }
@@ -141,15 +136,14 @@ PiSDFVertex* PiSDFGraph::addConfigVertex(
 		PiSDFSubType subType,
 		int nInEdge, int nOutEdge,
 		int nInParam, int nOutParam){
-	PiSDFVertex* config = CREATE(stack_, PiSDFVertex)(
+	PiSDFVertex* config = CREATE(PISDF_STACK, PiSDFVertex)(
 			vertexName, fctId,
 			configs_.getN(),
 			PISDF_TYPE_CONFIG, subType,
 			this, 0,
 			nInEdge, nOutEdge,
 			nInParam, nOutParam,
-			archi_,
-			stack_);
+			archi_);
 	configs_.add(config);
 	return config;
 
@@ -158,15 +152,14 @@ PiSDFVertex* PiSDFGraph::addConfigVertex(
 PiSDFVertex* PiSDFGraph::addInputIf(
 		const char* name,
 		int nInParam){
-	PiSDFVertex* inIf = CREATE(stack_, PiSDFVertex)(
+	PiSDFVertex* inIf = CREATE(PISDF_STACK, PiSDFVertex)(
 			name, -1,
 			inputIfs_.getN(),
 			PISDF_TYPE_IF, PISDF_SUBTYPE_INPUT_IF,
 			this, 0,
 			0, 1,
 			nInParam, 0,
-			archi_,
-			stack_);
+			archi_);
 	inputIfs_.add(inIf);
 	return inIf;
 }
@@ -174,22 +167,21 @@ PiSDFVertex* PiSDFGraph::addInputIf(
 PiSDFVertex* PiSDFGraph::addOutputIf(
 		const char* name,
 		int nInParam){
-	PiSDFVertex* outIf = CREATE(stack_, PiSDFVertex)(
+	PiSDFVertex* outIf = CREATE(PISDF_STACK, PiSDFVertex)(
 			name, -1,
 			outputIfs_.getN(),
 			PISDF_TYPE_IF, PISDF_SUBTYPE_OUTPUT_IF,
 			this, 0,
 			1, 0,
 			nInParam, 0,
-			archi_,
-			stack_);
+			archi_);
 	outputIfs_.add(outIf);
 	return outIf;
 }
 
 
 PiSDFParam* PiSDFGraph::addStaticParam(const char* name, const char* expr){
-	PiSDFParam* param = CREATE(stack_, PiSDFParam)(
+	PiSDFParam* param = CREATE(PISDF_STACK, PiSDFParam)(
 			name, params_.getN(),
 			this, PISDF_PARAM_STATIC);
 
@@ -201,7 +193,7 @@ PiSDFParam* PiSDFGraph::addStaticParam(const char* name, const char* expr){
 }
 
 PiSDFParam* PiSDFGraph::addStaticParam(const char* name, int value){
-	PiSDFParam* param = CREATE(stack_, PiSDFParam)(
+	PiSDFParam* param = CREATE(PISDF_STACK, PiSDFParam)(
 			name, params_.getN(),
 			this, PISDF_PARAM_STATIC);
 	param->setValue(value);
@@ -210,7 +202,7 @@ PiSDFParam* PiSDFGraph::addStaticParam(const char* name, int value){
 }
 
 PiSDFParam* PiSDFGraph::addHeritedParam(const char* name, int parentId){
-	PiSDFParam* param = CREATE(stack_, PiSDFParam)(
+	PiSDFParam* param = CREATE(PISDF_STACK, PiSDFParam)(
 			name, params_.getN(),
 			this, PISDF_PARAM_HERITED);
 	param->setParentId(parentId);
@@ -219,7 +211,7 @@ PiSDFParam* PiSDFGraph::addHeritedParam(const char* name, int parentId){
 }
 
 PiSDFParam* PiSDFGraph::addDynamicParam(const char* name){
-	PiSDFParam* param = CREATE(stack_, PiSDFParam)(
+	PiSDFParam* param = CREATE(PISDF_STACK, PiSDFParam)(
 			name, params_.getN(),
 			this, PISDF_PARAM_DYNAMIC);
 	params_.add(param);
@@ -227,15 +219,14 @@ PiSDFParam* PiSDFGraph::addDynamicParam(const char* name){
 }
 
 PiSDFParam* PiSDFGraph::addDependentParam(const char* name, const char* expr){
-	PiSDFParam* param = CREATE(stack_, PiSDFParam)(
+	PiSDFParam* param = CREATE(PISDF_STACK, PiSDFParam)(
 			name, params_.getN(),
 			this, PISDF_PARAM_DEPENDENT);
 
-	Expression* expression = CREATE(stack_, Expression)(
+	Expression* expression = CREATE(PISDF_STACK, Expression)(
 			expr,
 			this->getParams(),
-			this->getNParam(),
-			stack_);
+			this->getNParam());
 	param->setExpression(expression);
 
 	params_.add(param);
@@ -243,8 +234,7 @@ PiSDFParam* PiSDFGraph::addDependentParam(const char* name, const char* expr){
 }
 
 PiSDFEdge* PiSDFGraph::addEdge() {
-	PiSDFEdge* edge = CREATE(stack_, PiSDFEdge)(
-			this, stack_);
+	PiSDFEdge* edge = CREATE(PISDF_STACK, PiSDFEdge)(this);
 	edges_.add(edge);
 	return edge;
 }
@@ -256,9 +246,9 @@ PiSDFEdge* PiSDFGraph::connect(
 		PiSDFVertex* setter,
 		PiSDFVertex* getter){
 	PiSDFEdge* edge = this->addEdge();
-	edge->connectSrc(src, srcPortId, prod, stack_);
-	edge->connectSnk(snk, snkPortId, cons, stack_);
-	edge->setDelay(delay, setter, getter, stack_);
+	edge->connectSrc(src, srcPortId, prod);
+	edge->connectSnk(snk, snkPortId, cons);
+	edge->setDelay(delay, setter, getter);
 	src->connectOutEdge(srcPortId, edge);
 	snk->connectInEdge(snkPortId, edge);
 	return edge;
@@ -281,24 +271,24 @@ void PiSDFGraph::delVertex(PiSDFVertex* vertex){
 		break;
 	}
 	vertex->~PiSDFVertex();
-	stack_->free(vertex);
+	StackMonitor::free(PISDF_STACK, vertex);
 }
 
 void PiSDFGraph::delParam(PiSDFParam* param){
 	if(param->getType() == PISDF_PARAM_DEPENDENT){
 		Expression* expr = param->getExpression();
 		expr->~Expression();
-		stack_->free(expr);
+		StackMonitor::free(PISDF_STACK, expr);
 	}
 	params_.del(param);
 	param->~PiSDFParam();
-	stack_->free(param);
+	StackMonitor::free(PISDF_STACK, param);
 }
 
 void PiSDFGraph::delEdge(PiSDFEdge* edge){
 	edges_.del(edge);
 	edge->~PiSDFEdge();
-	stack_->free(edge);
+	StackMonitor::free(PISDF_STACK, edge);
 }
 
 /** Print Fct */

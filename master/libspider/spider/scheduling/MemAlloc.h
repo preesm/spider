@@ -43,11 +43,7 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 
 #include <algorithm>
-
-typedef enum{
-	MEMALLOC_DUMMY,
-	MEMALLOC_SPECIAL_ACTOR
-}MemAllocType;
+#include <spider.h>
 
 class MemAlloc {
 public:

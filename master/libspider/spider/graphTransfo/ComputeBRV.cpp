@@ -51,7 +51,7 @@
 #include <cmath>
 #include <algorithm>
 
-void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
+void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv){
 	int nbVertices = job->graph->getNBody();
 
 	/* Compute nbEdges */
@@ -65,7 +65,7 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 		}
 	}
 
-    int* topo_matrix = CREATE_MUL(stack, nbEdges*nbVertices, int);
+    int* topo_matrix = CREATE_MUL(TRANSFO_STACK, nbEdges*nbVertices, int);
 	memset(topo_matrix, 0, nbEdges*nbVertices*sizeof(int));
 
 	/* Fill the topology matrix(nbEdges x nbVertices) */
@@ -102,7 +102,7 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 //	}
 
 	/* Compute nullSpace */
-	nullSpace(topo_matrix, brv, nbEdges, nbVertices, stack);
+	nullSpace(topo_matrix, brv, nbEdges, nbVertices);
 
 	/* Updating the productions of the round buffer vertices. */
 	int coef=1;
@@ -149,7 +149,7 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv, Stack* stack){
 		brv[i] *= coef;
 	}
 
-	stack->free(topo_matrix);
+	StackMonitor::free(TRANSFO_STACK,topo_matrix);
 
 //	printf("brv:\n");
 //	for(int i=0; i<nbVertices; i++){

@@ -174,7 +174,7 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job){
 	}
 }
 
-void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stack){
+void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 	PiSDFGraph* currentPiSDF = job->graph;
 
 	for (int i = 0; i < currentPiSDF->getNEdge(); i++) {
@@ -235,7 +235,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		case PISDF_TYPE_CONFIG:
 			if(sourceProduction*1 == sinkConsumption*nbSinkRepetitions){
 				// No need of Broadcast
-				srcConnections = CREATE_MUL(stack, 1, SrcConnection);
+				srcConnections = CREATE_MUL(TRANSFO_STACK, 1, SrcConnection);
 
 				srcConnections->src = job->configs[edge->getSrc()->getTypeId()];
 				srcConnections->prod = sourceProduction;
@@ -254,7 +254,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 
 					configEdge->connectSnk(broadcast, 0);
 
-					srcConnections = CREATE_MUL(stack, nBr, SrcConnection);
+					srcConnections = CREATE_MUL(TRANSFO_STACK, nBr, SrcConnection);
 					for(int i=0; i<nBr; i++){
 						srcConnections[i].src = broadcast;
 						srcConnections[i].portIx = i;
@@ -269,7 +269,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 
 					configEdge->connectSnk(broadcast, 0);
 
-					srcConnections = CREATE_MUL(stack, nBr, SrcConnection);
+					srcConnections = CREATE_MUL(TRANSFO_STACK, nBr, SrcConnection);
 					for(int i=0; i<nBr; i++){
 						srcConnections[i].src = broadcast;
 						srcConnections[i].portIx = i;
@@ -281,7 +281,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		case PISDF_TYPE_IF:
 			if(sourceProduction*1 == sinkConsumption*nbSinkRepetitions){
 				// No need of Broadcast
-				srcConnections = CREATE_MUL(stack, 1, SrcConnection);
+				srcConnections = CREATE_MUL(TRANSFO_STACK, 1, SrcConnection);
 				srcConnections[0].src = job->inputIfs[edge->getSrc()->getTypeId()]->getSrc();
 				if(srcConnections[0].src == 0){
 					srcConnections[0].src = topSrdag->addRoundBuffer();
@@ -304,7 +304,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				SRDAGVertex* broadcast = topSrdag->addBroadcast(MAX_IO_EDGES);
 				job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(broadcast, 0);
 
-				srcConnections = CREATE_MUL(stack, nBr, SrcConnection);
+				srcConnections = CREATE_MUL(TRANSFO_STACK, nBr, SrcConnection);
 				for(int i=0; i<nBr; i++){
 					srcConnections[i].src = broadcast;
 					srcConnections[i].portIx = i;
@@ -314,7 +314,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 			break;
 		case PISDF_TYPE_BODY:
 			if(nbDelays == 0){
-				srcConnections = CREATE_MUL(stack, nbSourceRepetitions, SrcConnection);
+				srcConnections = CREATE_MUL(TRANSFO_STACK, nbSourceRepetitions, SrcConnection);
 				for(int i=0; i<nbSourceRepetitions; i++){
 					srcConnections[i].src = job->bodies[edge->getSrc()->getTypeId()][i];
 					srcConnections[i].portIx = piSrcIx;
@@ -322,7 +322,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				}
 			}else{
 				nbSourceRepetitions++;
-				srcConnections = CREATE_MUL(stack, nbSourceRepetitions, SrcConnection);
+				srcConnections = CREATE_MUL(TRANSFO_STACK, nbSourceRepetitions, SrcConnection);
 
 				if(edge->getDelaySetter()){
 					PiSDFVertex* ifDelaySetter = edge->getDelaySetter();
@@ -361,7 +361,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		case PISDF_TYPE_IF:
 			if(sinkConsumption*1 == sourceProduction*nbSourceRepetitions){
 				// No need of specific thing
-				snkConnections = CREATE_MUL(stack, 1, SnkConnection);
+				snkConnections = CREATE_MUL(TRANSFO_STACK, 1, SnkConnection);
 				snkConnections[0].edge = job->outputIfs[edge->getSnk()->getTypeId()];
 				snkConnections[0].cons = sinkConsumption;
 			}else{
@@ -369,7 +369,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 				int nEnd = std::ceil(nDroppedTokens/sourceProduction);
 
 				nbSinkRepetitions = nEnd+1;
-				snkConnections = CREATE_MUL(stack, nbSinkRepetitions, SnkConnection);
+				snkConnections = CREATE_MUL(TRANSFO_STACK, nbSinkRepetitions, SnkConnection);
 				for(int i=0; i<nEnd; i++){
 					snkConnections[i].edge = topSrdag->addEdge();
 					snkConnections[i].edge->connectSnk(topSrdag->addEnd(), 0);
@@ -384,7 +384,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 		case PISDF_TYPE_BODY:
 			if(nbDelays == 0){
 				if(sinkNeedEnd){
-					snkConnections = CREATE_MUL(stack, nbSinkRepetitions+1, SnkConnection);
+					snkConnections = CREATE_MUL(TRANSFO_STACK, nbSinkRepetitions+1, SnkConnection);
 
 					for(int i=0; i<nbSinkRepetitions; i++){
 						snkConnections[i].edge = topSrdag->addEdge();
@@ -396,7 +396,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					snkConnections[nbSinkRepetitions].cons = sourceProduction - sinkConsumption*nbSinkRepetitions;
 					nbSinkRepetitions++;
 				}else{
-					snkConnections = CREATE_MUL(stack, nbSinkRepetitions, SnkConnection);
+					snkConnections = CREATE_MUL(TRANSFO_STACK, nbSinkRepetitions, SnkConnection);
 
 					for(int i=0; i<nbSinkRepetitions; i++){
 						snkConnections[i].edge = topSrdag->addEdge();
@@ -405,7 +405,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 					}
 				}
 			}else{
-				snkConnections = CREATE_MUL(stack, nbSinkRepetitions+1, SnkConnection);
+				snkConnections = CREATE_MUL(TRANSFO_STACK, nbSinkRepetitions+1, SnkConnection);
 
 				for(int i=0; i<nbSinkRepetitions; i++){
 					snkConnections[i].edge = topSrdag->addEdge();
@@ -528,7 +528,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv, Stack* stac
 			}
 		}
 
-		stack->free(srcConnections);
-		stack->free(snkConnections);
+		StackMonitor::free(TRANSFO_STACK, srcConnections);
+		StackMonitor::free(TRANSFO_STACK, snkConnections);
 	}
 }

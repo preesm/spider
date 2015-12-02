@@ -55,6 +55,7 @@
 #include <errno.h>
 
 #include <tools/Stack.h>
+#include <monitor/StackMonitor.h>
 
 #include <lrt.h>
 #include <spider.h>
@@ -131,7 +132,7 @@ static void setAffinity(int cpuId){
 	}
 }
 
-PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts){
+PlatformLinux::PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts){
 	int pipeSpidertoLRT[2*nLrt];
 	int pipeLRTtoSpider[2*nLrt];
 	int pipeTrace[2];
@@ -142,9 +143,8 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 		throw "Try to create 2 platforms";
 
 	platform_ = this;
-	stack_ = stack;
 
-	cpIds_ = CREATE_MUL(stack, nLrt, int);
+	cpIds_ = CREATE_MUL(ARCHI_STACK, nLrt, int);
 
 	cpIds_[0] = getpid();
 
@@ -199,7 +199,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 			signal(SIG_WAKE, sig_handler);
 
 			/** Create LRT */
-			lrtCom_ = (LrtCommunicator*) CREATE(stack, LinuxLrtCommunicator)(
+			lrtCom_ = (LrtCommunicator*) CREATE(ARCHI_STACK, LinuxLrtCommunicator)(
 					MAX_MSG_SIZE,
 					pipeSpidertoLRT[2*i],
 					pipeLRTtoSpider[2*i+1],
@@ -208,9 +208,8 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 					semTrace,
 					shMem,
 					dataMem,
-					NFIFOS,
-					stack);
-			lrt_ = CREATE(stack, LRT)(i);
+					NFIFOS);
+			lrt_ = CREATE(ARCHI_STACK, LRT)(i);
 			setAffinity(i);
 			lrt_->setFctTbl(fcts, nLrtFcts);
 
@@ -234,18 +233,17 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 	signal(SIG_WAKE, sig_handler);
 
 	/** Initialize LRT and Communicators */
-	spiderCom_ = CREATE(stack, LinuxSpiderCommunicator)(
+	spiderCom_ = CREATE(ARCHI_STACK, LinuxSpiderCommunicator)(
 			MAX_MSG_SIZE,
 			nLrt,
 			semTrace,
 			pipeTrace[1],
-			pipeTrace[0],
-			stack);
+			pipeTrace[0]);
 
 	for(int i=0; i<nLrt; i++)
 		((LinuxSpiderCommunicator*)spiderCom_)->setLrtCom(i, pipeLRTtoSpider[2*i], pipeSpidertoLRT[2*i+1]);
 
-	lrtCom_ = CREATE(stack, LinuxLrtCommunicator)(
+	lrtCom_ = CREATE(ARCHI_STACK, LinuxLrtCommunicator)(
 			MAX_MSG_SIZE,
 			pipeSpidertoLRT[0],
 			pipeLRTtoSpider[1],
@@ -254,16 +252,14 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, Stack *stack, lrtFct* fcts
 			semTrace,
 			shMem,
 			dataMem,
-			NFIFOS,
-			stack);
-	lrt_ = CREATE(stack, LRT)(0);
+			NFIFOS);
+	lrt_ = CREATE(ARCHI_STACK, LRT)(0);
 	setAffinity(0);
 	lrt_->setFctTbl(fcts, nLrtFcts);
 
 
 	/** Create Archi */
-	archi_ = CREATE(stack, SharedMemArchi)(
-				/* Stack */  	stack,
+	archi_ = CREATE(ARCHI_STACK, SharedMemArchi)(
 				/* Nb PE */		nLrt,
 				/* Nb PE Type*/ 1,
 				/* Spider Pe */ 0,
@@ -304,11 +300,11 @@ PlatformLinux::~PlatformLinux(){
 	((LinuxLrtCommunicator*)lrtCom_)->~LinuxLrtCommunicator();
 	archi_->~SharedMemArchi();
 
-	stack_->free(lrt_);
-	stack_->free(spiderCom_);
-	stack_->free(lrtCom_);
-	stack_->free(archi_);
-	stack_->free(cpIds_);
+	StackMonitor::free(ARCHI_STACK, lrt_);
+	StackMonitor::free(ARCHI_STACK, spiderCom_);
+	StackMonitor::free(ARCHI_STACK, lrtCom_);
+	StackMonitor::free(ARCHI_STACK, archi_);
+	StackMonitor::free(ARCHI_STACK, cpIds_);
 }
 
 /** File Handling */

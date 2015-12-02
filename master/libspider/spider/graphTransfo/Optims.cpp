@@ -569,7 +569,7 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 	return 0;
 	}
 
-void optims(SRDAGGraph *topDag, Stack* stack){
+void optims(SRDAGGraph *topDag){
 	bool res, resTotal;
 	do{
 		res = false;

@@ -47,9 +47,7 @@
 class PiSDFEdge: public SetElement{
 public:
 	/** Constructors */
-	PiSDFEdge(
-			PiSDFGraph* graph,
-			Stack *stack);
+	PiSDFEdge(PiSDFGraph* graph);
 	~PiSDFEdge();
 
 	/** Getters */
@@ -60,11 +58,11 @@ public:
 	inline int getSnkPortIx() const;
 
 	/** Setters */
-	inline void setDelay(const char* delay, PiSDFVertex* setter, PiSDFVertex* getter, Stack* stack);
+	inline void setDelay(const char* delay, PiSDFVertex* setter, PiSDFVertex* getter);
 
 	/** Connections Fcts */
-	void connectSrc(PiSDFVertex* src, int srcPortId, const char* prod, Stack* stack);
-	void connectSnk(PiSDFVertex* snk, int snkPortId, const char* cons, Stack* stack);
+	void connectSrc(PiSDFVertex* src, int srcPortId, const char* prod);
+	void connectSnk(PiSDFVertex* snk, int snkPortId, const char* cons);
 
 	/** Add Param Fcts */
 	inline void addInParam(int ix, PiSDFParam* param);
@@ -86,7 +84,6 @@ private:
 
 	int id_;
 	PiSDFGraph* graph_;
-	Stack *stack_;
 
 	PiSDFVertex* src_;
 	int srcPortIx_;
@@ -119,13 +116,13 @@ inline int PiSDFEdge::getSnkPortIx() const {
 	return snkPortIx_;
 }
 
-inline void PiSDFEdge::setDelay(const char* expr, PiSDFVertex* setter, PiSDFVertex* getter, Stack* stack){
+inline void PiSDFEdge::setDelay(const char* expr, PiSDFVertex* setter, PiSDFVertex* getter){
 	if(delay_ != 0){
 		delay_->~Expression();
-		stack->free(delay_);
+		StackMonitor::free(PISDF_STACK, delay_);
 		delay_ = 0;
 	}
-	delay_ = CREATE(stack, Expression)(expr, graph_->getParams(), graph_->getNParam(), stack);
+	delay_ = CREATE(PISDF_STACK, Expression)(expr, graph_->getParams(), graph_->getNParam());
 
 	if(setter != 0
 			&& setter->getType() == PISDF_TYPE_IF

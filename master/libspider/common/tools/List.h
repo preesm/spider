@@ -37,11 +37,11 @@
 #ifndef LIST_H
 #define LIST_H
 
-#include "Stack.h"
+#include <monitor/StackMonitor.h>
 
 template <class T> class List {
 public:
-	List(Stack* stack, int size);
+	List(SpiderStack stackId, int size);
 	~List();
 	T& operator [](int n);
 	int getNb();
@@ -52,7 +52,7 @@ public:
 	bool isPresent(T item);
 
 private:
-	Stack* stack_;
+	SpiderStack stackId_;
 	T* array;
 	int nb;
 	int nbMax;
@@ -62,20 +62,20 @@ private:
 };
 
 template <class T>
-inline List<T>::List(Stack* stack, int size){
-	stack_ = stack;
+inline List<T>::List(SpiderStack stackId, int size){
+	stackId_ = stackId;
 	nb = 0;
 	nbMax = size;
 	if(size == 0)
 		array = 0;
 	else
-		array = CREATE_MUL(stack, size, T);
+		array = CREATE_MUL(stackId_, size, T);
 }
 
 template <class T>
 inline List<T>::~List(){
 	if(array != 0)
-		stack_->free(array);
+		StackMonitor::free(stackId_, array);
 }
 
 template <class T>

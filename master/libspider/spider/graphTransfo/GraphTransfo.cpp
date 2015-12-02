@@ -60,6 +60,9 @@
 #include <scheduling/Scheduler.h>
 #include <scheduling/Scheduler/ListScheduler.h>
 
+#include <monitor/TimeMonitor.h>
+#include <lrt.h>
+
 #include <cmath>
 #include <stdlib.h>
 #include <string.h>
@@ -67,14 +70,15 @@
 #include <launcher/Launcher.h>
 
 #define VERBOSE 0
+#define SCHEDULE_SIZE 10000
 
-static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
+static void initJob(transfoJob *job, SRDAGVertex *nextHierVx){
 	memset(job, 0, sizeof(transfoJob));
 	job->graph = nextHierVx->getSubGraph();
 	job->graphIter = nextHierVx->getRefId();
 
 	/* Add Static and Herited parameter values */
-	job->paramValues = CREATE_MUL(stack, job->graph->getNParam(), int);
+	job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), int);
 	for(int paramIx=0; paramIx<job->graph->getNParam(); paramIx++){
 		PiSDFParam* param = job->graph->getParam(paramIx);
 		switch(param->getType()){
@@ -96,30 +100,30 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx, Stack* stack){
 	}
 
 	/* Add edge interfaces in job */
-	job->inputIfs = CREATE_MUL(stack, nextHierVx->getNConnectedInEdge(), SRDAGEdge*);
-	job->outputIfs = CREATE_MUL(stack, nextHierVx->getNConnectedOutEdge(), SRDAGEdge*);
+	job->inputIfs = CREATE_MUL(TRANSFO_STACK, nextHierVx->getNConnectedInEdge(), SRDAGEdge*);
+	job->outputIfs = CREATE_MUL(TRANSFO_STACK, nextHierVx->getNConnectedOutEdge(), SRDAGEdge*);
 
 	memcpy(job->inputIfs, nextHierVx->getInEdges(), nextHierVx->getNConnectedInEdge()*sizeof(SRDAGEdge*));
 	memcpy(job->outputIfs, nextHierVx->getOutEdges(), nextHierVx->getNConnectedInEdge()*sizeof(SRDAGEdge*));
 
 }
 
-static void freeJob(transfoJob *job, Stack* stack){
+static void freeJob(transfoJob *job){
 	if(job->configs != 0)
-		stack->free(job->configs);
+		StackMonitor::free(TRANSFO_STACK,job->configs);
 
 	if(job->bodies != 0){
 		for(int i=0; i<job->graph->getNBody(); i++){
 			if(job->bodies[i] != 0){
-				stack->free(job->bodies[i]);
+				StackMonitor::free(TRANSFO_STACK,job->bodies[i]);
 			}
 		}
-		stack->free(job->bodies);
+		StackMonitor::free(TRANSFO_STACK,job->bodies);
 	}
 
-	stack->free(job->paramValues);
-	stack->free(job->inputIfs);
-	stack->free(job->outputIfs);
+	StackMonitor::free(TRANSFO_STACK,job->paramValues);
+	StackMonitor::free(TRANSFO_STACK,job->inputIfs);
+	StackMonitor::free(TRANSFO_STACK,job->outputIfs);
 }
 
 static SRDAGVertex* getNextHierVx(SRDAGGraph *topDag){
@@ -136,7 +140,6 @@ void jit_ms(
 		PiSDFGraph* topPisdf,
 		Archi* archi,
 		SRDAGGraph *topSrdag,
-		Stack* transfoSTack,
 		MemAlloc* memAlloc,
 		Scheduler* scheduler,
 		bool useGraphOptim,
@@ -144,8 +147,7 @@ void jit_ms(
 
 	/* Initialize topDag */
 
-	Schedule* schedule = CREATE(transfoSTack, Schedule)(
-			archi->getNPE(), 10000, transfoSTack);
+	Schedule* schedule = CREATE(TRANSFO_STACK, Schedule)(archi->getNPE(), SCHEDULE_SIZE);
 
 	/* Add initial top actor */
 	PiSDFVertex* root = topPisdf->getBody(0);
@@ -156,12 +158,12 @@ void jit_ms(
 	topSrdag->addVertex(root, 0, 0);
 	topSrdag->updateState();
 
-	Queue<transfoJob*> jobQueue(transfoSTack);
+	Queue<transfoJob*> jobQueue(TRANSFO_STACK);
 
 	// Check nb of config //
 
 	/* Look for hierrachical actor in topDag */
-	Spider::get()->startMonitoring();
+	TimeMonitor::startMonitoring();
 
 	do{
 		SRDAGVertex* nextHierVx = getNextHierVx(topSrdag);
@@ -171,15 +173,15 @@ void jit_ms(
 
 		do{
 			/* Fill the transfoJob data */
-			transfoJob* job = CREATE(transfoSTack, transfoJob);
-			initJob(job, nextHierVx, transfoSTack);
+			transfoJob* job = CREATE(TRANSFO_STACK, transfoJob);
+			initJob(job, nextHierVx);
 
 			/* Remove Hierachical vertex */
 			topSrdag->delVertex(nextHierVx);
 
 			if(job->graph->getNConfig() > 0){
 				/* Put CA in topDag */
-				addCAVertices(topSrdag, job, transfoSTack);
+				addCAVertices(topSrdag, job);
 
 				/* Link CA in topDag */
 				linkCAVertices(topSrdag, job);
@@ -202,8 +204,8 @@ void jit_ms(
 				}
 			#endif
 
-				int* brv = CREATE_MUL(transfoSTack, job->graph->getNBody(), int);
-				computeBRV(topSrdag, job, brv, transfoSTack);
+				int* brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
+				computeBRV(topSrdag, job, brv);
 
 			#if VERBOSE
 				/* Display BRV values */
@@ -213,14 +215,14 @@ void jit_ms(
 				}
 			#endif
 
-				addSRVertices(topSrdag, job, brv, transfoSTack);
+				addSRVertices(topSrdag, job, brv);
 
-				linkSRVertices(topSrdag, job, brv, transfoSTack);
+				linkSRVertices(topSrdag, job, brv);
 
-				freeJob(job, transfoSTack);
+				freeJob(job);
 
-				transfoSTack->free(brv);
-				transfoSTack->free(job);
+				StackMonitor::free(TRANSFO_STACK, brv);
+				StackMonitor::free(TRANSFO_STACK, job);
 			}
 
 			/* Find next hierarchical vertex */
@@ -229,25 +231,25 @@ void jit_ms(
 
 		}while(nextHierVx);
 
-		Spider::get()->endMonitoring(TRACE_SPIDER_GRAPH);
+		TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
 		if(useGraphOptim){
-			Spider::get()->startMonitoring();
-			optims(topSrdag, transfoSTack);
-			Spider::get()->endMonitoring(TRACE_SPIDER_OPTIM);
+			TimeMonitor::startMonitoring();
+			optims(topSrdag);
+			TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
 		}
 
 		/* Schedule and launch execution */
-		Spider::get()->startMonitoring();
-		scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi, transfoSTack, useActorPrecedence);
-		Spider::get()->endMonitoring(TRACE_SPIDER_SCHED);
+		TimeMonitor::startMonitoring();
+		scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi, useActorPrecedence);
+		TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
 		Platform::get()->getLrt()->runUntilNoMoreJobs();
 
 		/* Resolve params must be done by itself */
 		Launcher::get()->resolveParams(archi, topSrdag);
 
-		Spider::get()->startMonitoring();
+		TimeMonitor::startMonitoring();
 
 		while(! jobQueue.isEmpty()){
 
@@ -271,8 +273,8 @@ void jit_ms(
 		#endif
 
 			/* Compute BRV */
-			int* brv = CREATE_MUL(transfoSTack, job->graph->getNBody(), int);
-			computeBRV(topSrdag, job, brv, transfoSTack);
+			int* brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
+			computeBRV(topSrdag, job, brv);
 
 		#if VERBOSE
 			/* Display BRV values */
@@ -283,54 +285,53 @@ void jit_ms(
 		#endif
 
 			/* Add vertices */
-			addSRVertices(topSrdag, job, brv, transfoSTack);
+			addSRVertices(topSrdag, job, brv);
 
 			/* Link vertices */
-			linkSRVertices(topSrdag, job, brv, transfoSTack);
+			linkSRVertices(topSrdag, job, brv);
 
-			freeJob(job, transfoSTack);
+			freeJob(job);
 
-			transfoSTack->free(brv);
-			transfoSTack->free(job);
+			StackMonitor::free(TRANSFO_STACK, brv);
+			StackMonitor::free(TRANSFO_STACK, job);
 
-			Spider::get()->endMonitoring(TRACE_SPIDER_GRAPH);
-			Spider::get()->startMonitoring();
+			TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
+			TimeMonitor::startMonitoring();
 		}
 
 		// TODO
 		topSrdag->updateState();
 
-		Spider::get()->endMonitoring(TRACE_SPIDER_GRAPH);
+		TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
 		if(useGraphOptim){
-			Spider::get()->startMonitoring();
-			optims(topSrdag, transfoSTack);
-			Spider::get()->endMonitoring(TRACE_SPIDER_OPTIM);
+			TimeMonitor::startMonitoring();
+			optims(topSrdag);
+			TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
 		}
 
-		Spider::get()->startMonitoring();
+		TimeMonitor::startMonitoring();
 
 //        printf("Finish one iter\n");
 	}while(1);
 
 	topSrdag->updateState();
-	Spider::get()->endMonitoring(TRACE_SPIDER_GRAPH);
+	TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
 	if(useGraphOptim){
-		Spider::get()->startMonitoring();
-		optims(topSrdag, transfoSTack);
-		Spider::get()->endMonitoring(TRACE_SPIDER_OPTIM);
+		TimeMonitor::startMonitoring();
+		optims(topSrdag);
+		TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
 	}
 
 	/* Schedule and launch execution */
-	Spider::get()->startMonitoring();
-	scheduler->schedule(topSrdag, memAlloc, schedule, archi, transfoSTack, useActorPrecedence);
-	Spider::get()->endMonitoring(TRACE_SPIDER_SCHED);
+	TimeMonitor::startMonitoring();
+	scheduler->schedule(topSrdag, memAlloc, schedule, archi, useActorPrecedence);
+	TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
 	Platform::get()->getLrt()->runUntilNoMoreJobs();
 
 	schedule->~Schedule();
-	transfoSTack->free(schedule);
-
-	transfoSTack->freeAll();
+	StackMonitor::free(TRANSFO_STACK, schedule);
+	StackMonitor::freeAll(TRANSFO_STACK);
 }

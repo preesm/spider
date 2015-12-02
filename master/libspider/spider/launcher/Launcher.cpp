@@ -48,6 +48,7 @@
 
 #include <platform.h>
 #include <spider.h>
+#include <lrt.h>
 
 Launcher Launcher::instance_;
 

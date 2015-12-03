@@ -105,6 +105,8 @@ void StaticStack::printStat(){
 	else
 		printf("\t%5.1f GB", size_/1024./1024./1024.);
 
+	printf(" (%2d %%)", (int)(maxUsed_*100.0/size_));
+
 	if(used_)
 		printf(", \t%d still in use", used_);
 

@@ -44,8 +44,8 @@
 #define N_FCT_STEREO 16
 extern lrtFct stereo_fcts[N_FCT_STEREO];
 
-PiSDFGraph* init_stereo(Archi* archi);
-void free_stereo(PiSDFGraph* top);
+void init_stereo();
+void free_stereo();
 
 typedef enum{
 	CORE_CORE0 = 0,

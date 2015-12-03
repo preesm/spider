@@ -45,8 +45,7 @@ public:
 	PiSDFGraph(
 			int nEdges, int nParams,
 			int nInputIf, int nOutputIf,
-			int nConfig, int nBody,
-			Archi *archi);
+			int nConfig, int nBody);
 	virtual ~PiSDFGraph();
 
 	PiSDFVertex* addBodyVertex(
@@ -133,7 +132,6 @@ private:
 	PiSDFVertexSet configs_;
 	PiSDFVertexSet inputIfs_;
 	PiSDFVertexSet outputIfs_;
-	Archi* archi_;
 
 	PiSDFEdge* addEdge();
 };

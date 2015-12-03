@@ -153,7 +153,11 @@ public:
 
 	void printSRDAG(const char* srdagPath);
 
+	void printActorsStat(ExecutionStat* stat);
+
 	static Spider* get();
+	PiSDFGraph* getGraph();
+	Archi* getArchi();
 
 private:
 	Archi* archi_;

@@ -53,8 +53,7 @@ public:
 			PiSDFType type, PiSDFSubType subType,
 			PiSDFGraph* graph, PiSDFGraph* subGraph,
 			int nInEdge, int nOutEdge,
-			int nInParam, int nOutParam,
-			Archi* archi);
+			int nInParam, int nOutParam);
 	~PiSDFVertex();
 
 	/** Parameters getters */

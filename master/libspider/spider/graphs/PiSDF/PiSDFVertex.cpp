@@ -48,8 +48,7 @@ PiSDFVertex::PiSDFVertex(
 		PiSDFType type, PiSDFSubType subType,
 		PiSDFGraph* graph, PiSDFGraph* subGraph,
 		int nInEdge, int nOutEdge,
-		int nInParam, int nOutParam,
-		Archi* archi){
+		int nInParam, int nOutParam){
 
 	id_ = globalId++;
 	typeId_ = typeId;
@@ -77,8 +76,8 @@ PiSDFVertex::PiSDFVertex(
 	outParams_ = CREATE_MUL(PISDF_STACK, nOutParam, PiSDFParam*);
 	memset(outParams_, 0, nOutParam*sizeof(PiSDFParam*));
 
-	nPeMax_ = archi->getNPE();
-	nPeTypeMax_ = archi->getNPETypes();
+	nPeMax_ = Spider::get()->getArchi()->getNPE();
+	nPeTypeMax_ = Spider::get()->getArchi()->getNPETypes();
 
 	constraints_ = CREATE_MUL(PISDF_STACK, nPeMax_, bool);
 	memset(constraints_, false, nPeMax_*sizeof(bool));

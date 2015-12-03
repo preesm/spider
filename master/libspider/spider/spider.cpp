@@ -111,6 +111,8 @@ void Spider::idle(){
 }
 
 void Spider::iterate(){
+	Platform::get()->rstTime();
+
 	delete srdag_;
 	StackMonitor::freeAll(SRDAG_STACK);
 	memAlloc_->reset();
@@ -137,6 +139,14 @@ void Spider::setArchi(Archi* archi){
 
 void Spider::setGraph(PiSDFGraph* graph){
 	pisdf_ = graph;
+}
+
+PiSDFGraph* Spider::getGraph(){
+	return pisdf_;
+}
+
+Archi* Spider::getArchi(){
+	return archi_;
 }
 
 void Spider::setMemAllocType(MemAllocType type, int start, int size){
@@ -166,6 +176,18 @@ void Spider::setSchedulerType(SchedulerType type){
 
 void Spider::printSRDAG(const char* srdagPath){
 	return srdag_->print(srdagPath);
+}
+
+void Spider::printActorsStat(ExecutionStat* stat){
+	printf("Actors:\n");
+	for(int j=0; j<stat->nPiSDFActor; j++){
+		printf("\t%12s:", stat->actors[j]->getName());
+		for(int k=0; k<archi_->getNPETypes(); k++)
+			printf("\t%d (x%d)",
+					stat->actorTimes[j][k]/stat->actorIterations[j][k],
+					stat->actorIterations[j][k]);
+		printf("\n");
+	}
 }
 
 static char* regenerateColor(int refInd){

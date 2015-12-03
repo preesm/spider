@@ -46,8 +46,7 @@
 PiSDFGraph::PiSDFGraph(
 		int nEdges, int nParams,
 		int nInputIf, int nOutputIf,
-		int nConfig, int nBody,
-		Archi *archi):
+		int nConfig, int nBody):
 
 		edges_(nEdges, PISDF_STACK),
 		params_(nParams, PISDF_STACK),
@@ -57,7 +56,6 @@ PiSDFGraph::PiSDFGraph(
 		outputIfs_(nInputIf, PISDF_STACK)
 		{
 	parent_ = 0;
-	archi_ = archi;
 }
 
 PiSDFGraph::~PiSDFGraph() {
@@ -90,8 +88,7 @@ PiSDFVertex* PiSDFGraph::addBodyVertex(
 			PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
 			this, 0,
 			nInEdge, nOutEdge,
-			nInParam, 0,
-			archi_);
+			nInParam, 0);
 	bodies_.add(body);
 	return body;
 }
@@ -107,8 +104,7 @@ PiSDFVertex* PiSDFGraph::addHierVertex(
 			PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
 			this, 0,
 			nInEdge, nOutEdge,
-			nInParam, 0,
-			archi_);
+			nInParam, 0);
 	body->setSubGraph(graph);
 	graph->setParentVertex(body);
 	bodies_.add(body);
@@ -125,8 +121,7 @@ PiSDFVertex* PiSDFGraph::addSpecialVertex(
 			PISDF_TYPE_BODY, type,
 			this, 0,
 			nInEdge, nOutEdge,
-			nInParam, 0,
-			archi_);
+			nInParam, 0);
 	bodies_.add(body);
 	return body;
 }
@@ -142,8 +137,7 @@ PiSDFVertex* PiSDFGraph::addConfigVertex(
 			PISDF_TYPE_CONFIG, subType,
 			this, 0,
 			nInEdge, nOutEdge,
-			nInParam, nOutParam,
-			archi_);
+			nInParam, nOutParam);
 	configs_.add(config);
 	return config;
 
@@ -158,8 +152,7 @@ PiSDFVertex* PiSDFGraph::addInputIf(
 			PISDF_TYPE_IF, PISDF_SUBTYPE_INPUT_IF,
 			this, 0,
 			0, 1,
-			nInParam, 0,
-			archi_);
+			nInParam, 0);
 	inputIfs_.add(inIf);
 	return inIf;
 }
@@ -173,8 +166,7 @@ PiSDFVertex* PiSDFGraph::addOutputIf(
 			PISDF_TYPE_IF, PISDF_SUBTYPE_OUTPUT_IF,
 			this, 0,
 			1, 0,
-			nInParam, 0,
-			archi_);
+			nInParam, 0);
 	outputIfs_.add(outIf);
 	return outIf;
 }

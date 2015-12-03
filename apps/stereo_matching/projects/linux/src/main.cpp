@@ -94,7 +94,6 @@ int main(int argc, char* argv[]){
 	cfg.useActorPrecedence = true;
 
 	Spider spider(cfg);
-
 	PlatformLinux platform(1, SH_MEM_SIZE, stereo_fcts, N_FCT_STEREO);
 
 	printf("Start\n");
@@ -104,15 +103,11 @@ int main(int argc, char* argv[]){
 //	for(int i=1; i<=1; i++){
 		printf("NStep = %d\n", i);
 
-		PiSDFGraph *topPisdf = init_stereo(platform.getArchi());
+		init_stereo();
 
-		Platform::get()->rstTime();
-
-		spider.setGraph(topPisdf);
-		spider.setArchi(platform.getArchi());
 		spider.iterate();
 
-		spider.printGantt("stereo.pgantt", "latex.tex", &stat);
+		spider.printGantt("stereo.pgantt", "stereo_tex.dat", &stat);
 		spider.printSRDAG("stereo.gv");
 
 		printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
@@ -128,17 +123,9 @@ int main(int argc, char* argv[]){
 			printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
 		printf("\n");
 
-//		printf("Actors:\n");
-//		for(int j=0; j<stat.nPiSDFActor; j++){
-//			printf("\t%12s:", stat.actors[j]->getName());
-//			for(int k=0; k<archi->getNPETypes(); k++)
-//				printf("\t%d (x%d)",
-//						stat.actorTimes[j][k]/stat.actorIterations[j][k],
-//						stat.actorIterations[j][k]);
-//			printf("\n");
-//		}
+		spider.printActorsStat(&stat);
 
-		free_stereo(topPisdf);
+		free_stereo();
 //	}
 //	}catch(const char* s){
 //		printf("Exception : %s\n", s);

@@ -43,43 +43,41 @@
 #include <graphs/PiSDF/PiSDFEdge.h>
 #include <graphs/PiSDF/PiSDFVertex.h>
 
-PiSDFGraph* stereo(Archi* archi);
-PiSDFGraph* costParallel(Archi* archi);
-PiSDFGraph* DispComp(Archi* archi);
+PiSDFGraph* stereo();
+PiSDFGraph* costParallel();
+PiSDFGraph* DispComp();
 
 /**
  * This is the method you need to call to build a complete PiSDF graph.
  */
-PiSDFGraph* init_stereo(Archi* archi){
+void init_stereo(){
 	PiSDFGraph* top = CREATE(PISDF_STACK, PiSDFGraph)(
 		/*Edges*/    0,
 		/*Params*/   0,
 		/*InputIf*/  0,
 		/*OutputIf*/ 0,
 		/*Config*/   0,
-		/*Body*/     1,
-		/*Archi*/    archi);
+		/*Body*/     1);
 
 	top->addHierVertex(
 		/*Name*/     "top",
-		/*Graph*/    stereo(archi),
+		/*Graph*/    stereo(),
 		/*InputIf*/  0,
 		/*OutputIf*/ 0,
 		/*Params*/   0);
 
-	return top;
+	Spider::get()->setGraph(top);
 }
 
 // Method building PiSDFGraphstereo
-PiSDFGraph* stereo(Archi* archi){
+PiSDFGraph* stereo(){
 	PiSDFGraph* graph = CREATE(PISDF_STACK, PiSDFGraph)(
 		/*Edges*/    16,
 		/*Params*/   11,
 		/*InputIf*/  0,
 		/*OutputIf*/ 0,
 		/*Config*/   1,
-		/*Body*/     12,
-		/*Archi*/    archi);
+		/*Body*/     12);
 
 	/* Parameters */
 	PiSDFParam *param_nSlice = graph->addDynamicParam("nSlice");
@@ -227,7 +225,7 @@ PiSDFGraph* stereo(Archi* archi){
 
 	PiSDFVertex* bo_costParallel = graph->addHierVertex(
 		/*Name*/    "costParallel",
-		/*Graph*/   costParallel(archi),
+		/*Graph*/   costParallel(),
 		/*InData*/  5,
 		/*OutData*/ 1,
 		/*InParam*/ 7);
@@ -325,15 +323,14 @@ PiSDFGraph* stereo(Archi* archi){
 }
 
 // Method building PiSDFGraphcostParallel
-PiSDFGraph* costParallel(Archi* archi){
+PiSDFGraph* costParallel(){
 	PiSDFGraph* graph = CREATE(PISDF_STACK, PiSDFGraph)(
 		/*Edges*/    18,
 		/*Params*/   9,
 		/*InputIf*/  5,
 		/*OutputIf*/ 1,
 		/*Config*/   0,
-		/*Body*/     9,
-		/*Archi*/    archi);
+		/*Body*/     9);
 
 	/* Parameters */
 	PiSDFParam *param_nIter = graph->addHeritedParam("nIter", 0);
@@ -455,7 +452,7 @@ PiSDFGraph* costParallel(Archi* archi){
 
 	PiSDFVertex* bo_DispComp = graph->addHierVertex(
 		/*Name*/    "DispComp",
-		/*Graph*/   DispComp(archi),
+		/*Graph*/   DispComp(),
 		/*InData*/  5,
 		/*OutData*/ 1,
 		/*InParam*/ 6);
@@ -562,15 +559,14 @@ PiSDFGraph* costParallel(Archi* archi){
 }
 
 // Method building PiSDFGraphDispComp
-PiSDFGraph* DispComp(Archi* archi){
+PiSDFGraph* DispComp(){
 	PiSDFGraph* graph = CREATE(PISDF_STACK, PiSDFGraph)(
 		/*Edges*/    10,
 		/*Params*/   8,
 		/*InputIf*/  5,
 		/*OutputIf*/ 1,
 		/*Config*/   0,
-		/*Body*/     3,
-		/*Archi*/    archi);
+		/*Body*/     3);
 
 	/* Parameters */
 	PiSDFParam *param_height = graph->addHeritedParam("height", 0);
@@ -705,7 +701,8 @@ PiSDFGraph* DispComp(Archi* archi){
 	return graph;
 }
 
-void free_stereo(PiSDFGraph* top){
+void free_stereo(){
+	PiSDFGraph* top = Spider::get()->getGraph();
 	top->~PiSDFGraph();
 	StackMonitor::free(PISDF_STACK, top);
 	StackMonitor::freeAll(PISDF_STACK);

@@ -37,13 +37,25 @@
 #ifndef SPIDER_H
 #define SPIDER_H
 
-class PiSDFVertex;
 class Archi;
+class PiSDFVertex;
+class PiSDFParam;
 class PiSDFGraph;
+class PiSDFEdge;
 class SRDAGGraph;
 class MemAlloc;
 class Scheduler;
 
+
+typedef enum PiSDFSubType {
+	PISDF_SUBTYPE_NORMAL,
+	PISDF_SUBTYPE_BROADCAST,
+	PISDF_SUBTYPE_FORK,
+	PISDF_SUBTYPE_JOIN,
+	PISDF_SUBTYPE_END,
+	PISDF_SUBTYPE_INPUT_IF,
+	PISDF_SUBTYPE_OUTPUT_IF
+} PiSDFSubType;
 
 #define MAX_STATS_VERTICES 1000
 #define MAX_STATS_PE_TYPES 3
@@ -159,6 +171,88 @@ namespace Spider{
 	Archi* getArchi();
 
 	/* PiSDF Graph Generation */
+	PiSDFGraph* createGraph(
+			int nEdges,
+			int nParams,
+			int nInIfs,
+			int nOutIfs,
+			int nConfigs,
+			int nBodies);
+
+	PiSDFVertex* addBodyVertex(
+				PiSDFGraph* graph,
+				const char* vertexName, int fctId,
+				int nInEdge, int nOutEdge,
+				int nInParam);
+
+	PiSDFVertex* addHierVertex(
+			PiSDFGraph* graph,
+			const char* vertexName,
+			PiSDFGraph* subgraph,
+			int nInEdge, int nOutEdge,
+			int nInParam);
+
+	PiSDFVertex* addSpecialVertex(
+			PiSDFGraph* graph,
+			PiSDFSubType subType,
+			int nInEdge, int nOutEdge,
+			int nInParam);
+
+	PiSDFVertex* addConfigVertex(
+			PiSDFGraph* graph,
+			const char* vertexName, int fctId,
+			PiSDFSubType subType,
+			int nInEdge, int nOutEdge,
+			int nInParam, int nOutParam);
+
+	PiSDFVertex* addInputIf(
+			PiSDFGraph* graph,
+			const char* name,
+			int nInParam);
+
+	PiSDFVertex* addOutputIf(
+			PiSDFGraph* graph,
+			const char* name,
+			int nInParam);
+
+	PiSDFParam* addStaticParam(
+			PiSDFGraph* graph,
+			const char* name,
+			const char* expr);
+
+	PiSDFParam* addStaticParam(
+			PiSDFGraph* graph,
+			const char* name,
+			int value);
+
+	PiSDFParam* addHeritedParam(
+			PiSDFGraph* graph,
+			const char* name,
+			int parentId);
+
+	PiSDFParam* addDynamicParam(
+			PiSDFGraph* graph,
+			const char* name);
+
+	PiSDFParam* addDependentParam(
+			PiSDFGraph* graph,
+			const char* name,
+			const char* expr);
+
+	PiSDFEdge* connect(
+			PiSDFGraph* graph,
+			PiSDFVertex* source, int sourcePortId, const char* production,
+			PiSDFVertex* sink, int sinkPortId, const char* consumption,
+			const char* delay, PiSDFVertex* setter=0, PiSDFVertex* getter=0);
+
+	void addInParam(PiSDFVertex* vertex, int ix, PiSDFParam* param);
+	void addOutParam(PiSDFVertex* vertex, int ix, PiSDFParam* param);
+
+	void setTimingOnType(PiSDFVertex* vertex, int peType, const char* timing);
+	void isExecutableOnAllPE(PiSDFVertex* vertex);
+	void isExecutableOnPE(PiSDFVertex* vertex, int pe);
+
+	void cleanPiSDF();
 };
 
 #endif//SPIDER_H

@@ -38,11 +38,6 @@
 
 #include "stereo.h"
 
-#include <graphs/PiSDF/PiSDFGraph.h>
-#include <graphs/PiSDF/PiSDFParam.h>
-#include <graphs/PiSDF/PiSDFEdge.h>
-#include <graphs/PiSDF/PiSDFVertex.h>
-
 PiSDFGraph* stereo();
 PiSDFGraph* costParallel();
 PiSDFGraph* DispComp();
@@ -51,7 +46,7 @@ PiSDFGraph* DispComp();
  * This is the method you need to call to build a complete PiSDF graph.
  */
 void init_stereo(){
-	PiSDFGraph* top = CREATE(PISDF_STACK, PiSDFGraph)(
+	PiSDFGraph* top = Spider::createGraph(
 		/*Edges*/    0,
 		/*Params*/   0,
 		/*InputIf*/  0,
@@ -59,7 +54,8 @@ void init_stereo(){
 		/*Config*/   0,
 		/*Body*/     1);
 
-	top->addHierVertex(
+	Spider::addHierVertex(
+		/* Graph */  top,
 		/*Name*/     "top",
 		/*Graph*/    stereo(),
 		/*InputIf*/  0,
@@ -71,7 +67,7 @@ void init_stereo(){
 
 // Method building PiSDFGraphstereo
 PiSDFGraph* stereo(){
-	PiSDFGraph* graph = CREATE(PISDF_STACK, PiSDFGraph)(
+	PiSDFGraph* graph = Spider::createGraph(
 		/*Edges*/    16,
 		/*Params*/   11,
 		/*InputIf*/  0,
@@ -80,20 +76,21 @@ PiSDFGraph* stereo(){
 		/*Body*/     12);
 
 	/* Parameters */
-	PiSDFParam *param_nSlice = graph->addDynamicParam("nSlice");
-	PiSDFParam *param_truncValue = graph->addDynamicParam("truncValue");
-	PiSDFParam *param_scale = graph->addDynamicParam("scale");
-	PiSDFParam *param_nIter = graph->addDynamicParam("nIter");
-	PiSDFParam *param_sizeFilter = graph->addDynamicParam("sizeFilter");
-	PiSDFParam *param_minDisp = graph->addDynamicParam("minDisp");
-	PiSDFParam *param_maxDisp = graph->addDynamicParam("maxDisp");
-	PiSDFParam *param_height = graph->addDynamicParam("height");
-	PiSDFParam *param_width = graph->addDynamicParam("width");
-	PiSDFParam *param_size = graph->addDependentParam("size", "width*height");
-	PiSDFParam *param_sliceHeight = graph->addDependentParam("sliceHeight", "height/nSlice+2*sizeFilter");
+	PiSDFParam *param_nSlice = Spider::addDynamicParam(graph,"nSlice");
+	PiSDFParam *param_truncValue = Spider::addDynamicParam(graph,"truncValue");
+	PiSDFParam *param_scale = Spider::addDynamicParam(graph,"scale");
+	PiSDFParam *param_nIter = Spider::addDynamicParam(graph,"nIter");
+	PiSDFParam *param_sizeFilter = Spider::addDynamicParam(graph,"sizeFilter");
+	PiSDFParam *param_minDisp = Spider::addDynamicParam(graph,"minDisp");
+	PiSDFParam *param_maxDisp = Spider::addDynamicParam(graph,"maxDisp");
+	PiSDFParam *param_height = Spider::addDynamicParam(graph,"height");
+	PiSDFParam *param_width = Spider::addDynamicParam(graph,"width");
+	PiSDFParam *param_size = Spider::addDependentParam(graph,"size", "width*height");
+	PiSDFParam *param_sliceHeight = Spider::addDependentParam(graph,"sliceHeight", "height/nSlice+2*sizeFilter");
 
 	/* Vertices */
-	PiSDFVertex* cf_Config = graph->addConfigVertex(
+	PiSDFVertex* cf_Config = Spider::addConfigVertex(
+		/*Graph*/   graph,
 		/*Name*/    "Config",
 		/*FctId*/   STEREO_CONFIG_FCT,
 		/*SubType*/ PISDF_SUBTYPE_NORMAL,
@@ -101,220 +98,248 @@ PiSDFGraph* stereo(){
 		/*OutData*/ 0,
 		/*InParam*/ 0,
 		/*OutParam*/9);
-	cf_Config->addOutParam(0, param_scale);
-	cf_Config->addOutParam(1, param_maxDisp);
-	cf_Config->addOutParam(2, param_minDisp);
-	cf_Config->addOutParam(3, param_nSlice);
-	cf_Config->addOutParam(4, param_truncValue);
-	cf_Config->addOutParam(5, param_height);
-	cf_Config->addOutParam(6, param_width);
-	cf_Config->addOutParam(7, param_sizeFilter);
-	cf_Config->addOutParam(8, param_nIter);
-	cf_Config->isExecutableOnPE(CORE_CORE0);
-	cf_Config->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addOutParam(cf_Config, 0, param_scale);
+	Spider::addOutParam(cf_Config, 1, param_maxDisp);
+	Spider::addOutParam(cf_Config, 2, param_minDisp);
+	Spider::addOutParam(cf_Config, 3, param_nSlice);
+	Spider::addOutParam(cf_Config, 4, param_truncValue);
+	Spider::addOutParam(cf_Config, 5, param_height);
+	Spider::addOutParam(cf_Config, 6, param_width);
+	Spider::addOutParam(cf_Config, 7, param_sizeFilter);
+	Spider::addOutParam(cf_Config, 8, param_nIter);
+	Spider::isExecutableOnPE(cf_Config, CORE_CORE0);
+	Spider::setTimingOnType(cf_Config, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_Camera = graph->addBodyVertex(
+	PiSDFVertex* bo_Camera = Spider::addBodyVertex(
+		/*Graph*/   graph,
 		/*Name*/    "Camera",
 		/*FctId*/   STEREO_CAMERA_FCT,
 		/*InData*/  0,
 		/*OutData*/ 2,
 		/*InParam*/ 2);
-	bo_Camera->addInParam(0, param_width);
-	bo_Camera->addInParam(1, param_height);
-	bo_Camera->isExecutableOnPE(CORE_CORE0);
-	bo_Camera->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_Camera, 0, param_width);
+	Spider::addInParam(bo_Camera, 1, param_height);
+	Spider::isExecutableOnPE(bo_Camera, CORE_CORE0);
+	Spider::setTimingOnType(bo_Camera, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_Br_rgbL = graph->addSpecialVertex(
+	PiSDFVertex* bo_Br_rgbL = Spider::addSpecialVertex(
+		/*Graph*/   graph,
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
 		/*InData*/  1,
 		/*OutData*/ 3,
 		/*InParam*/ 1);
-	bo_Br_rgbL->addInParam(0, param_size);
+	Spider::addInParam(bo_Br_rgbL, 0, param_size);
 
-	PiSDFVertex* bo_RGB2Gray_L = graph->addBodyVertex(
+	PiSDFVertex* bo_RGB2Gray_L = Spider::addBodyVertex(
+		/*Graph*/   graph,
 		/*Name*/    "RGB2Gray_L",
 		/*FctId*/   STEREO_RGB2GRAY_L_FCT,
 		/*InData*/  1,
 		/*OutData*/ 1,
 		/*InParam*/ 1);
-	bo_RGB2Gray_L->addInParam(0, param_size);
-	bo_RGB2Gray_L->isExecutableOnPE(CORE_CORE0);
-	bo_RGB2Gray_L->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_RGB2Gray_L, 0, param_size);
+	Spider::isExecutableOnPE(bo_RGB2Gray_L, CORE_CORE0);
+	Spider::setTimingOnType(bo_RGB2Gray_L, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_RGB2Gray_R = graph->addBodyVertex(
+	PiSDFVertex* bo_RGB2Gray_R = Spider::addBodyVertex(
+		/*Graph*/   graph,
 		/*Name*/    "RGB2Gray_R",
 		/*FctId*/   STEREO_RGB2GRAY_R_FCT,
 		/*InData*/  1,
 		/*OutData*/ 1,
 		/*InParam*/ 1);
-	bo_RGB2Gray_R->addInParam(0, param_size);
-	bo_RGB2Gray_R->isExecutableOnPE(CORE_CORE0);
-	bo_RGB2Gray_R->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_RGB2Gray_R, 0, param_size);
+	Spider::isExecutableOnPE(bo_RGB2Gray_R, CORE_CORE0);
+	Spider::setTimingOnType(bo_RGB2Gray_R, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_Br_grayL = graph->addSpecialVertex(
+	PiSDFVertex* bo_Br_grayL = Spider::addSpecialVertex(
+		/*Graph*/   graph,
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
 		/*InData*/  1,
 		/*OutData*/ 2,
 		/*InParam*/ 1);
-	bo_Br_grayL->addInParam(0, param_size);
+	Spider::addInParam(bo_Br_grayL, 0, param_size);
 
-	PiSDFVertex* bo_Br_grayR = graph->addSpecialVertex(
+	PiSDFVertex* bo_Br_grayR = Spider::addSpecialVertex(
+		/*Graph*/   graph,
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
 		/*InData*/  1,
 		/*OutData*/ 2,
 		/*InParam*/ 1);
-	bo_Br_grayR->addInParam(0, param_size);
+	Spider::addInParam(bo_Br_grayR, 0, param_size);
 
-	PiSDFVertex* bo_Census_L = graph->addBodyVertex(
+	PiSDFVertex* bo_Census_L = Spider::addBodyVertex(
+		/*Graph*/   graph,
 		/*Name*/    "Census_L",
 		/*FctId*/   STEREO_CENSUS_L_FCT,
 		/*InData*/  1,
 		/*OutData*/ 1,
 		/*InParam*/ 2);
-	bo_Census_L->addInParam(0, param_width);
-	bo_Census_L->addInParam(1, param_height);
-	bo_Census_L->isExecutableOnPE(CORE_CORE0);
-	bo_Census_L->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_Census_L, 0, param_width);
+	Spider::addInParam(bo_Census_L, 1, param_height);
+	Spider::isExecutableOnPE(bo_Census_L, CORE_CORE0);
+	Spider::setTimingOnType(bo_Census_L, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_Census_R = graph->addBodyVertex(
+	PiSDFVertex* bo_Census_R = Spider::addBodyVertex(
+		/*Graph*/   graph,
 		/*Name*/    "Census_R",
 		/*FctId*/   STEREO_CENSUS_R_FCT,
 		/*InData*/  1,
 		/*OutData*/ 1,
 		/*InParam*/ 2);
-	bo_Census_R->addInParam(0, param_width);
-	bo_Census_R->addInParam(1, param_height);
-	bo_Census_R->isExecutableOnPE(CORE_CORE0);
-	bo_Census_R->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_Census_R, 0, param_width);
+	Spider::addInParam(bo_Census_R, 1, param_height);
+	Spider::isExecutableOnPE(bo_Census_R, CORE_CORE0);
+	Spider::setTimingOnType(bo_Census_R, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_Split = graph->addBodyVertex(
+	PiSDFVertex* bo_Split = Spider::addBodyVertex(
+		/*Graph*/   graph,
 		/*Name*/    "Split",
 		/*FctId*/   STEREO_SPLIT_FCT,
 		/*InData*/  1,
 		/*OutData*/ 1,
 		/*InParam*/ 4);
-	bo_Split->addInParam(0, param_width);
-	bo_Split->addInParam(1, param_height);
-	bo_Split->addInParam(2, param_nSlice);
-	bo_Split->addInParam(3, param_sizeFilter);
-	bo_Split->isExecutableOnPE(CORE_CORE0);
-	bo_Split->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_Split, 0, param_width);
+	Spider::addInParam(bo_Split, 1, param_height);
+	Spider::addInParam(bo_Split, 2, param_nSlice);
+	Spider::addInParam(bo_Split, 3, param_sizeFilter);
+	Spider::isExecutableOnPE(bo_Split, CORE_CORE0);
+	Spider::setTimingOnType(bo_Split, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_MedianFilter = graph->addBodyVertex(
+	PiSDFVertex* bo_MedianFilter = Spider::addBodyVertex(
+		/*Graph*/   graph,
 		/*Name*/    "MedianFilter",
 		/*FctId*/   STEREO_MEDIANFILTER_FCT,
 		/*InData*/  1,
 		/*OutData*/ 1,
 		/*InParam*/ 3);
-	bo_MedianFilter->addInParam(0, param_width);
-	bo_MedianFilter->addInParam(1, param_sizeFilter);
-	bo_MedianFilter->addInParam(2, param_sliceHeight);
-	bo_MedianFilter->isExecutableOnPE(CORE_CORE0);
-	bo_MedianFilter->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_MedianFilter, 0, param_width);
+	Spider::addInParam(bo_MedianFilter, 1, param_sizeFilter);
+	Spider::addInParam(bo_MedianFilter, 2, param_sliceHeight);
+	Spider::isExecutableOnPE(bo_MedianFilter, CORE_CORE0);
+	Spider::setTimingOnType(bo_MedianFilter, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_Display = graph->addBodyVertex(
+	PiSDFVertex* bo_Display = Spider::addBodyVertex(
+		/*Graph*/   graph,
 		/*Name*/    "Display",
 		/*FctId*/   STEREO_DISPLAY_FCT,
 		/*InData*/  2,
 		/*OutData*/ 0,
 		/*InParam*/ 2);
-	bo_Display->addInParam(0, param_width);
-	bo_Display->addInParam(1, param_height);
-	bo_Display->isExecutableOnPE(CORE_CORE0);
-	bo_Display->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_Display, 0, param_width);
+	Spider::addInParam(bo_Display, 1, param_height);
+	Spider::isExecutableOnPE(bo_Display, CORE_CORE0);
+	Spider::setTimingOnType(bo_Display, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_costParallel = graph->addHierVertex(
+	PiSDFVertex* bo_costParallel = Spider::addHierVertex(
+		/*Graph*/   graph,
 		/*Name*/    "costParallel",
 		/*Graph*/   costParallel(),
 		/*InData*/  5,
 		/*OutData*/ 1,
 		/*InParam*/ 7);
-	bo_costParallel->addInParam(0, param_nIter);
-	bo_costParallel->addInParam(1, param_height);
-	bo_costParallel->addInParam(2, param_width);
-	bo_costParallel->addInParam(3, param_maxDisp);
-	bo_costParallel->addInParam(4, param_minDisp);
-	bo_costParallel->addInParam(5, param_truncValue);
-	bo_costParallel->addInParam(6, param_scale);
+	Spider::addInParam(bo_costParallel, 0, param_nIter);
+	Spider::addInParam(bo_costParallel, 1, param_height);
+	Spider::addInParam(bo_costParallel, 2, param_width);
+	Spider::addInParam(bo_costParallel, 3, param_maxDisp);
+	Spider::addInParam(bo_costParallel, 4, param_minDisp);
+	Spider::addInParam(bo_costParallel, 5, param_truncValue);
+	Spider::addInParam(bo_costParallel, 6, param_scale);
 
 
 	/* Edges */
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_RGB2Gray_L, /*SrcPrt*/ 0, /*Prod*/ "(size)*1",
 		/*Snk*/ bo_Br_grayL, /*SnkPrt*/ 0, /*Cons*/ "(size)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_RGB2Gray_R, /*SrcPrt*/ 0, /*Prod*/ "(size)*1",
 		/*Snk*/ bo_Br_grayR, /*SnkPrt*/ 0, /*Cons*/ "(size)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_Camera, /*SrcPrt*/ 0, /*Prod*/ "(height*width)*3",
 		/*Snk*/ bo_Br_rgbL, /*SnkPrt*/ 0, /*Cons*/ "(size)*3",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_Br_rgbL, /*SrcPrt*/ 0, /*Prod*/ "(size)*3",
 		/*Snk*/ bo_RGB2Gray_L, /*SnkPrt*/ 0, /*Cons*/ "(size)*3",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_Br_rgbL, /*SrcPrt*/ 1, /*Prod*/ "(size)*3",
 		/*Snk*/ bo_costParallel, /*SnkPrt*/ 4, /*Cons*/ "(width*height)*3",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_Br_rgbL, /*SrcPrt*/ 2, /*Prod*/ "(size)*3",
 		/*Snk*/ bo_Display, /*SnkPrt*/ 1, /*Cons*/ "(width*height)*3",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_costParallel, /*SrcPrt*/ 0, /*Prod*/ "(height*width)*1",
 		/*Snk*/ bo_Split, /*SnkPrt*/ 0, /*Cons*/ "(height*width)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_Split, /*SrcPrt*/ 0, /*Prod*/ "(nSlice*(height*width/nSlice+2*sizeFilter*width))*1",
 		/*Snk*/ bo_MedianFilter, /*SnkPrt*/ 0, /*Cons*/ "(sliceHeight*width)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_MedianFilter, /*SrcPrt*/ 0, /*Prod*/ "(sliceHeight*width-2*sizeFilter*width)*1",
 		/*Snk*/ bo_Display, /*SnkPrt*/ 0, /*Cons*/ "(height*width)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_Br_grayL, /*SrcPrt*/ 0, /*Prod*/ "(size)*1",
 		/*Snk*/ bo_Census_L, /*SnkPrt*/ 0, /*Cons*/ "(height*width)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_Br_grayR, /*SrcPrt*/ 0, /*Prod*/ "(size)*1",
 		/*Snk*/ bo_Census_R, /*SnkPrt*/ 0, /*Cons*/ "(height*width)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_Br_grayL, /*SrcPrt*/ 1, /*Prod*/ "(size)*1",
 		/*Snk*/ bo_costParallel, /*SnkPrt*/ 2, /*Cons*/ "(height*width)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_Br_grayR, /*SrcPrt*/ 1, /*Prod*/ "(size)*1",
 		/*Snk*/ bo_costParallel, /*SnkPrt*/ 3, /*Cons*/ "(height*width)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_Census_L, /*SrcPrt*/ 0, /*Prod*/ "(height*width)*1",
 		/*Snk*/ bo_costParallel, /*SnkPrt*/ 0, /*Cons*/ "(height*width)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_Census_R, /*SrcPrt*/ 0, /*Prod*/ "(height*width)*1",
 		/*Snk*/ bo_costParallel, /*SnkPrt*/ 1, /*Cons*/ "(height*width)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+		/*Graph*/   graph,
 		/*Src*/ bo_Camera, /*SrcPrt*/ 1, /*Prod*/ "(height*width)*3",
 		/*Snk*/ bo_RGB2Gray_R, /*SnkPrt*/ 0, /*Cons*/ "(size)*3",
 		/*Delay*/ "0",0);
@@ -324,7 +349,7 @@ PiSDFGraph* stereo(){
 
 // Method building PiSDFGraphcostParallel
 PiSDFGraph* costParallel(){
-	PiSDFGraph* graph = CREATE(PISDF_STACK, PiSDFGraph)(
+	PiSDFGraph* graph = Spider::createGraph(
 		/*Edges*/    18,
 		/*Params*/   9,
 		/*InputIf*/  5,
@@ -333,224 +358,257 @@ PiSDFGraph* costParallel(){
 		/*Body*/     9);
 
 	/* Parameters */
-	PiSDFParam *param_nIter = graph->addHeritedParam("nIter", 0);
-	PiSDFParam *param_height = graph->addHeritedParam("height", 1);
-	PiSDFParam *param_width = graph->addHeritedParam("width", 2);
-	PiSDFParam *param_maxDisp = graph->addHeritedParam("maxDisp", 3);
-	PiSDFParam *param_minDisp = graph->addHeritedParam("minDisp", 4);
-	PiSDFParam *param_truncValue = graph->addHeritedParam("truncValue", 5);
-	PiSDFParam *param_scale = graph->addHeritedParam("scale", 6);
-	PiSDFParam *param_size = graph->addDependentParam("size", "height*width");
-	PiSDFParam *param_nDisp = graph->addDependentParam("nDisp", "maxDisp-minDisp+1");
+	PiSDFParam *param_nIter = Spider::addHeritedParam(graph, "nIter", 0);
+	PiSDFParam *param_height = Spider::addHeritedParam(graph, "height", 1);
+	PiSDFParam *param_width = Spider::addHeritedParam(graph, "width", 2);
+	PiSDFParam *param_maxDisp = Spider::addHeritedParam(graph, "maxDisp", 3);
+	PiSDFParam *param_minDisp = Spider::addHeritedParam(graph, "minDisp", 4);
+	PiSDFParam *param_truncValue = Spider::addHeritedParam(graph, "truncValue", 5);
+	PiSDFParam *param_scale = Spider::addHeritedParam(graph, "scale", 6);
+	PiSDFParam *param_size = Spider::addDependentParam(graph, "size", "height*width");
+	PiSDFParam *param_nDisp = Spider::addDependentParam(graph, "nDisp", "maxDisp-minDisp+1");
 
 	/* Vertices */
-	PiSDFVertex* if_cenL = graph->addInputIf(
+	PiSDFVertex* if_cenL = Spider::addInputIf(
+			/*Graph*/   graph,
 		/*Name*/    "if_cenL",
 		/*InParam*/ 1);
-	if_cenL->addInParam(0, param_size);
+	Spider::addInParam(if_cenL, 0, param_size);
 
-	PiSDFVertex* if_cenR = graph->addInputIf(
+	PiSDFVertex* if_cenR = Spider::addInputIf(
+			/*Graph*/   graph,
 		/*Name*/    "if_cenR",
 		/*InParam*/ 1);
-	if_cenR->addInParam(0, param_size);
+	Spider::addInParam(if_cenR, 0, param_size);
 
-	PiSDFVertex* if_grayL = graph->addInputIf(
+	PiSDFVertex* if_grayL = Spider::addInputIf(
+			/*Graph*/   graph,
 		/*Name*/    "if_grayL",
 		/*InParam*/ 1);
-	if_grayL->addInParam(0, param_size);
+	Spider::addInParam(if_grayL, 0, param_size);
 
-	PiSDFVertex* if_grayR = graph->addInputIf(
+	PiSDFVertex* if_grayR = Spider::addInputIf(
+			/*Graph*/   graph,
 		/*Name*/    "if_grayR",
 		/*InParam*/ 1);
-	if_grayR->addInParam(0, param_size);
+	Spider::addInParam(if_grayR, 0, param_size);
 
-	PiSDFVertex* if_rgb = graph->addInputIf(
+	PiSDFVertex* if_rgb = Spider::addInputIf(
+			/*Graph*/   graph,
 		/*Name*/    "if_rgb",
 		/*InParam*/ 1);
-	if_rgb->addInParam(0, param_size);
+	Spider::addInParam(if_rgb, 0, param_size);
 
-	PiSDFVertex* bo_Br_rgb = graph->addSpecialVertex(
+	PiSDFVertex* bo_Br_rgb = Spider::addSpecialVertex(
+			/*Graph*/   graph,
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
 		/*InData*/  1,
 		/*OutData*/ 2,
 		/*InParam*/ 1);
-	bo_Br_rgb->addInParam(0, param_size);
+	Spider::addInParam(bo_Br_rgb, 0, param_size);
 
-	PiSDFVertex* bo_GenIx = graph->addBodyVertex(
+	PiSDFVertex* bo_GenIx = Spider::addBodyVertex(
+			/*Graph*/   graph,
 		/*Name*/    "GenIx",
 		/*FctId*/   COSTPARALLEL_GENIX_FCT,
 		/*InData*/  0,
 		/*OutData*/ 1,
 		/*InParam*/ 1);
-	bo_GenIx->addInParam(0, param_nIter);
-	bo_GenIx->isExecutableOnPE(CORE_CORE0);
-	bo_GenIx->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_GenIx, 0, param_nIter);
+	Spider::isExecutableOnPE(bo_GenIx, CORE_CORE0);
+	Spider::setTimingOnType(bo_GenIx, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_GenDisp = graph->addBodyVertex(
+	PiSDFVertex* bo_GenDisp = Spider::addBodyVertex(
+			/*Graph*/   graph,
 		/*Name*/    "GenDisp",
 		/*FctId*/   COSTPARALLEL_GENDISP_FCT,
 		/*InData*/  0,
 		/*OutData*/ 1,
 		/*InParam*/ 2);
-	bo_GenDisp->addInParam(0, param_minDisp);
-	bo_GenDisp->addInParam(1, param_maxDisp);
-	bo_GenDisp->isExecutableOnPE(CORE_CORE0);
-	bo_GenDisp->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_GenDisp, 0, param_minDisp);
+	Spider::addInParam(bo_GenDisp, 1, param_maxDisp);
+	Spider::isExecutableOnPE(bo_GenDisp, CORE_CORE0);
+	Spider::setTimingOnType(bo_GenDisp, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_VWeight = graph->addBodyVertex(
+	PiSDFVertex* bo_VWeight = Spider::addBodyVertex(
+			/*Graph*/   graph,
 		/*Name*/    "VWeights",
 		/*FctId*/   COSTPARALLEL_VWEIGHTS_FCT,
 		/*InData*/  2,
 		/*OutData*/ 1,
 		/*InParam*/ 2);
-	bo_VWeight->addInParam(0, param_height);
-	bo_VWeight->addInParam(1, param_width);
-	bo_VWeight->isExecutableOnPE(CORE_CORE0);
-	bo_VWeight->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_VWeight, 0, param_height);
+	Spider::addInParam(bo_VWeight, 1, param_width);
+	Spider::isExecutableOnPE(bo_VWeight, CORE_CORE0);
+	Spider::setTimingOnType(bo_VWeight, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_HWeight = graph->addBodyVertex(
+	PiSDFVertex* bo_HWeight = Spider::addBodyVertex(
+			/*Graph*/   graph,
 		/*Name*/    "HWeight",
 		/*FctId*/   COSTPARALLEL_HWEIGHT_FCT,
 		/*InData*/  2,
 		/*OutData*/ 1,
 		/*InParam*/ 2);
-	bo_HWeight->addInParam(0, param_height);
-	bo_HWeight->addInParam(1, param_width);
-	bo_HWeight->isExecutableOnPE(CORE_CORE0);
-	bo_HWeight->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_HWeight, 0, param_height);
+	Spider::addInParam(bo_HWeight, 1, param_width);
+	Spider::isExecutableOnPE(bo_HWeight, CORE_CORE0);
+	Spider::setTimingOnType(bo_HWeight, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_CostConstruction = graph->addBodyVertex(
+	PiSDFVertex* bo_CostConstruction = Spider::addBodyVertex(
+			/*Graph*/   graph,
 		/*Name*/    "CostConstruction",
 		/*FctId*/   COSTPARALLEL_COSTCONSTRUCTION_FCT,
 		/*InData*/  5,
 		/*OutData*/ 1,
 		/*InParam*/ 3);
-	bo_CostConstruction->addInParam(0, param_truncValue);
-	bo_CostConstruction->addInParam(1, param_height);
-	bo_CostConstruction->addInParam(2, param_width);
-	bo_CostConstruction->isExecutableOnPE(CORE_CORE0);
-	bo_CostConstruction->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_CostConstruction, 0, param_truncValue);
+	Spider::addInParam(bo_CostConstruction, 1, param_height);
+	Spider::addInParam(bo_CostConstruction, 2, param_width);
+	Spider::isExecutableOnPE(bo_CostConstruction, CORE_CORE0);
+	Spider::setTimingOnType(bo_CostConstruction, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* if_rawDisparity = graph->addOutputIf(
+	PiSDFVertex* if_rawDisparity = Spider::addOutputIf(
+			/*Graph*/   graph,
 		/*Name*/    "if_rawDisparity",
 		/*InParam*/ 1);
-	if_rawDisparity->addInParam(0, param_size);
+	Spider::addInParam(if_rawDisparity, 0, param_size);
 
-	PiSDFVertex* bo_Br_Ix = graph->addSpecialVertex(
+	PiSDFVertex* bo_Br_Ix = Spider::addSpecialVertex(
+			/*Graph*/   graph,
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
 		/*InData*/  1,
 		/*OutData*/ 3,
 		/*InParam*/ 1);
-	bo_Br_Ix->addInParam(0, param_nIter);
+	Spider::addInParam(bo_Br_Ix, 0, param_nIter);
 
-	PiSDFVertex* bo_Br_Disp = graph->addSpecialVertex(
+	PiSDFVertex* bo_Br_Disp = Spider::addSpecialVertex(
+			/*Graph*/   graph,
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
 		/*InData*/  1,
 		/*OutData*/ 2,
 		/*InParam*/ 1);
-	bo_Br_Disp->addInParam(0, param_nDisp);
+	Spider::addInParam(bo_Br_Disp, 0, param_nDisp);
 
-	PiSDFVertex* bo_DispComp = graph->addHierVertex(
+	PiSDFVertex* bo_DispComp = Spider::addHierVertex(
+			/*Graph*/   graph,
 		/*Name*/    "DispComp",
 		/*Graph*/   DispComp(),
 		/*InData*/  5,
 		/*OutData*/ 1,
 		/*InParam*/ 6);
-	bo_DispComp->addInParam(0, param_height);
-	bo_DispComp->addInParam(1, param_width);
-	bo_DispComp->addInParam(2, param_nIter);
-	bo_DispComp->addInParam(3, param_scale);
-	bo_DispComp->addInParam(4, param_minDisp);
-	bo_DispComp->addInParam(5, param_maxDisp);
+	Spider::addInParam(bo_DispComp, 0, param_height);
+	Spider::addInParam(bo_DispComp, 1, param_width);
+	Spider::addInParam(bo_DispComp, 2, param_nIter);
+	Spider::addInParam(bo_DispComp, 3, param_scale);
+	Spider::addInParam(bo_DispComp, 4, param_minDisp);
+	Spider::addInParam(bo_DispComp, 5, param_maxDisp);
 
 
 	/* Edges */
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_DispComp, /*SrcPrt*/ 0, /*Prod*/ "(height*width)*1",
 		/*Snk*/ if_rawDisparity, /*SnkPrt*/ 0, /*Cons*/ "(size)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_CostConstruction, /*SrcPrt*/ 0, /*Prod*/ "(height*width)*1",
 		/*Snk*/ bo_DispComp, /*SnkPrt*/ 4, /*Cons*/ "(height*width*(maxDisp-minDisp+1))*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_VWeight, /*SrcPrt*/ 0, /*Prod*/ "(height*width)*1",
 		/*Snk*/ bo_DispComp, /*SnkPrt*/ 1, /*Cons*/ "(height*width*nIter)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_HWeight, /*SrcPrt*/ 0, /*Prod*/ "(height*width)*1",
 		/*Snk*/ bo_DispComp, /*SnkPrt*/ 2, /*Cons*/ "(height*width*nIter)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ if_rgb, /*SrcPrt*/ 0, /*Prod*/ "(size)*3",
 		/*Snk*/ bo_Br_rgb, /*SnkPrt*/ 0, /*Cons*/ "(size)*3",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_GenIx, /*SrcPrt*/ 0, /*Prod*/ "(nIter)*1",
 		/*Snk*/ bo_Br_Ix, /*SnkPrt*/ 0, /*Cons*/ "(nIter)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_GenDisp, /*SrcPrt*/ 0, /*Prod*/ "(maxDisp-minDisp+1)*1",
 		/*Snk*/ bo_Br_Disp, /*SnkPrt*/ 0, /*Cons*/ "(nDisp)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_Br_Disp, /*SrcPrt*/ 0, /*Prod*/ "(nDisp)*1",
 		/*Snk*/ bo_CostConstruction, /*SnkPrt*/ 0, /*Cons*/ "(1)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_Br_Disp, /*SrcPrt*/ 1, /*Prod*/ "(nDisp)*1",
 		/*Snk*/ bo_DispComp, /*SnkPrt*/ 3, /*Cons*/ "(maxDisp-minDisp+1)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_Br_Ix, /*SrcPrt*/ 0, /*Prod*/ "(nIter)*1",
 		/*Snk*/ bo_DispComp, /*SnkPrt*/ 0, /*Cons*/ "(nIter)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_Br_Ix, /*SrcPrt*/ 1, /*Prod*/ "(nIter)*1",
 		/*Snk*/ bo_HWeight, /*SnkPrt*/ 0, /*Cons*/ "(1)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_Br_Ix, /*SrcPrt*/ 2, /*Prod*/ "(nIter)*1",
 		/*Snk*/ bo_VWeight, /*SnkPrt*/ 0, /*Cons*/ "(1)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_Br_rgb, /*SrcPrt*/ 0, /*Prod*/ "(size)*3",
 		/*Snk*/ bo_HWeight, /*SnkPrt*/ 1, /*Cons*/ "(height*width)*3",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_Br_rgb, /*SrcPrt*/ 1, /*Prod*/ "(size)*3",
 		/*Snk*/ bo_VWeight, /*SnkPrt*/ 1, /*Cons*/ "(height*width)*3",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ if_cenL, /*SrcPrt*/ 0, /*Prod*/ "(size)*1",
 		/*Snk*/ bo_CostConstruction, /*SnkPrt*/ 1, /*Cons*/ "(height*width)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ if_cenR, /*SrcPrt*/ 0, /*Prod*/ "(size)*1",
 		/*Snk*/ bo_CostConstruction, /*SnkPrt*/ 2, /*Cons*/ "(height*width)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ if_grayL, /*SrcPrt*/ 0, /*Prod*/ "(size)*1",
 		/*Snk*/ bo_CostConstruction, /*SnkPrt*/ 3, /*Cons*/ "(height*width)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ if_grayR, /*SrcPrt*/ 0, /*Prod*/ "(size)*1",
 		/*Snk*/ bo_CostConstruction, /*SnkPrt*/ 4, /*Cons*/ "(height*width)*1",
 		/*Delay*/ "0",0);
@@ -560,7 +618,7 @@ PiSDFGraph* costParallel(){
 
 // Method building PiSDFGraphDispComp
 PiSDFGraph* DispComp(){
-	PiSDFGraph* graph = CREATE(PISDF_STACK, PiSDFGraph)(
+	PiSDFGraph* graph = Spider::createGraph(
 		/*Edges*/    10,
 		/*Params*/   8,
 		/*InputIf*/  5,
@@ -569,131 +627,150 @@ PiSDFGraph* DispComp(){
 		/*Body*/     3);
 
 	/* Parameters */
-	PiSDFParam *param_height = graph->addHeritedParam("height", 0);
-	PiSDFParam *param_width = graph->addHeritedParam("width", 1);
-	PiSDFParam *param_nIter = graph->addHeritedParam("nIter", 2);
-	PiSDFParam *param_scale = graph->addHeritedParam("scale", 3);
-	PiSDFParam *param_minDisp = graph->addHeritedParam("minDisp", 4);
-	PiSDFParam *param_maxDisp = graph->addHeritedParam("maxDisp", 5);
-	PiSDFParam *param_size = graph->addDependentParam("size", "height*width");
-	PiSDFParam *param_nDisp = graph->addDependentParam("nDisp", "maxDisp-minDisp+1");
+	PiSDFParam *param_height = Spider::addHeritedParam(graph, "height", 0);
+	PiSDFParam *param_width = Spider::addHeritedParam(graph, "width", 1);
+	PiSDFParam *param_nIter = Spider::addHeritedParam(graph, "nIter", 2);
+	PiSDFParam *param_scale = Spider::addHeritedParam(graph, "scale", 3);
+	PiSDFParam *param_minDisp = Spider::addHeritedParam(graph, "minDisp", 4);
+	PiSDFParam *param_maxDisp = Spider::addHeritedParam(graph, "maxDisp", 5);
+	PiSDFParam *param_size = Spider::addDependentParam(graph, "size", "height*width");
+	PiSDFParam *param_nDisp = Spider::addDependentParam(graph, "nDisp", "maxDisp-minDisp+1");
 
 	/* Vertices */
-	PiSDFVertex* bo_AggregateCost = graph->addBodyVertex(
+	PiSDFVertex* bo_AggregateCost = Spider::addBodyVertex(
+			/*Graph*/   graph,
 		/*Name*/    "AggregateCost",
 		/*FctId*/   DISPCOMP_AGGREGATECOST_FCT,
 		/*InData*/  4,
 		/*OutData*/ 1,
 		/*InParam*/ 3);
-	bo_AggregateCost->addInParam(0, param_height);
-	bo_AggregateCost->addInParam(1, param_width);
-	bo_AggregateCost->addInParam(2, param_nIter);
-	bo_AggregateCost->isExecutableOnPE(CORE_CORE0);
-	bo_AggregateCost->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_AggregateCost, 0, param_height);
+	Spider::addInParam(bo_AggregateCost, 1, param_width);
+	Spider::addInParam(bo_AggregateCost, 2, param_nIter);
+	Spider::isExecutableOnPE(bo_AggregateCost, CORE_CORE0);
+	Spider::setTimingOnType(bo_AggregateCost, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_DisparitySelect = graph->addBodyVertex(
+	PiSDFVertex* bo_DisparitySelect = Spider::addBodyVertex(
+			/*Graph*/   graph,
 		/*Name*/    "DisparitySelect",
 		/*FctId*/   DISPCOMP_DISPARITYSELECT_FCT,
 		/*InData*/  4,
 		/*OutData*/ 2,
 		/*InParam*/ 5);
-	bo_DisparitySelect->addInParam(0, param_height);
-	bo_DisparitySelect->addInParam(1, param_width);
-	bo_DisparitySelect->addInParam(2, param_scale);
-	bo_DisparitySelect->addInParam(3, param_minDisp);
-	bo_DisparitySelect->addInParam(4, param_maxDisp);
-	bo_DisparitySelect->isExecutableOnPE(CORE_CORE0);
-	bo_DisparitySelect->setTimingOnType(CORE_TYPE_X86, "1000");
+	Spider::addInParam(bo_DisparitySelect, 0, param_height);
+	Spider::addInParam(bo_DisparitySelect, 1, param_width);
+	Spider::addInParam(bo_DisparitySelect, 2, param_scale);
+	Spider::addInParam(bo_DisparitySelect, 3, param_minDisp);
+	Spider::addInParam(bo_DisparitySelect, 4, param_maxDisp);
+	Spider::isExecutableOnPE(bo_DisparitySelect, CORE_CORE0);
+	Spider::setTimingOnType(bo_DisparitySelect, CORE_TYPE_X86, "1000");
 
-	PiSDFVertex* bo_Br_Disp = graph->addSpecialVertex(
+	PiSDFVertex* bo_Br_Disp = Spider::addSpecialVertex(
+			/*Graph*/   graph,
 		/*Type*/    PISDF_SUBTYPE_BROADCAST,
 		/*InData*/  1,
 		/*OutData*/ 2,
 		/*InParam*/ 1);
-	bo_Br_Disp->addInParam(0, param_size);
+	Spider::addInParam(bo_Br_Disp, 0, param_size);
 
-	PiSDFVertex* if_rawDisparity = graph->addOutputIf(
+	PiSDFVertex* if_rawDisparity = Spider::addOutputIf(
+			/*Graph*/   graph,
 		/*Name*/    "if_rawDisparity",
 		/*InParam*/ 1);
-	if_rawDisparity->addInParam(0, param_size);
+	Spider::addInParam(if_rawDisparity, 0, param_size);
 
-	PiSDFVertex* if_offsets = graph->addInputIf(
+	PiSDFVertex* if_offsets = Spider::addInputIf(
+			/*Graph*/   graph,
 		/*Name*/    "if_offsets",
 		/*InParam*/ 2);
-	if_offsets->addInParam(0, param_nDisp);
-	if_offsets->addInParam(1, param_nIter);
+	Spider::addInParam(if_offsets, 0, param_nDisp);
+	Spider::addInParam(if_offsets, 1, param_nIter);
 
-	PiSDFVertex* if_vWeights = graph->addInputIf(
+	PiSDFVertex* if_vWeights = Spider::addInputIf(
+			/*Graph*/   graph,
 		/*Name*/    "if_vWeights",
 		/*InParam*/ 2);
-	if_vWeights->addInParam(0, param_size);
-	if_vWeights->addInParam(1, param_nIter);
+	Spider::addInParam(if_vWeights, 0, param_size);
+	Spider::addInParam(if_vWeights, 1, param_nIter);
 
-	PiSDFVertex* if_hWeights = graph->addInputIf(
+	PiSDFVertex* if_hWeights = Spider::addInputIf(
+			/*Graph*/   graph,
 		/*Name*/    "if_hWeights",
 		/*InParam*/ 2);
-	if_hWeights->addInParam(0, param_size);
-	if_hWeights->addInParam(1, param_nIter);
+	Spider::addInParam(if_hWeights, 0, param_size);
+	Spider::addInParam(if_hWeights, 1, param_nIter);
 
-	PiSDFVertex* if_dispIx = graph->addInputIf(
+	PiSDFVertex* if_dispIx = Spider::addInputIf(
+			/*Graph*/   graph,
 		/*Name*/    "if_dispIx",
 		/*InParam*/ 1);
-	if_dispIx->addInParam(0, param_nDisp);
+	Spider::addInParam(if_dispIx, 0, param_nDisp);
 
-	PiSDFVertex* if_cost = graph->addInputIf(
+	PiSDFVertex* if_cost = Spider::addInputIf(
+			/*Graph*/   graph,
 		/*Name*/    "if_cost",
 		/*InParam*/ 2);
-	if_cost->addInParam(0, param_size);
-	if_cost->addInParam(1, param_nDisp);
+	Spider::addInParam(if_cost, 0, param_size);
+	Spider::addInParam(if_cost, 1, param_nDisp);
 
 
 	/* Edges */
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_DisparitySelect, /*SrcPrt*/ 1, /*Prod*/ "(width*height+1)*1",
 		/*Snk*/ bo_DisparitySelect, /*SnkPrt*/ 3, /*Cons*/ "(width*height+1)*1",
 		/*Delay*/ "(size+1)*1",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_DisparitySelect, /*SrcPrt*/ 0, /*Prod*/ "(height*width)*1",
 		/*Snk*/ bo_Br_Disp, /*SnkPrt*/ 0, /*Cons*/ "(size)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_Br_Disp, /*SrcPrt*/ 0, /*Prod*/ "(size)*1",
 		/*Snk*/ if_rawDisparity, /*SnkPrt*/ 0, /*Cons*/ "(size)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_Br_Disp, /*SrcPrt*/ 1, /*Prod*/ "(size)*1",
 		/*Snk*/ bo_DisparitySelect, /*SnkPrt*/ 2, /*Cons*/ "(width*height)*1",
 		/*Delay*/ "(size)*1",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ if_offsets, /*SrcPrt*/ 0, /*Prod*/ "(nIter)*1",
 		/*Snk*/ bo_AggregateCost, /*SnkPrt*/ 2, /*Cons*/ "(nIter)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ if_vWeights, /*SrcPrt*/ 0, /*Prod*/ "(size*nIter)*1",
 		/*Snk*/ bo_AggregateCost, /*SnkPrt*/ 3, /*Cons*/ "(height*width*nIter)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ if_hWeights, /*SrcPrt*/ 0, /*Prod*/ "(size*nIter)*1",
 		/*Snk*/ bo_AggregateCost, /*SnkPrt*/ 1, /*Cons*/ "(height*width*nIter)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ if_dispIx, /*SrcPrt*/ 0, /*Prod*/ "(nDisp)*1",
 		/*Snk*/ bo_DisparitySelect, /*SnkPrt*/ 1, /*Cons*/ "(1)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ if_cost, /*SrcPrt*/ 0, /*Prod*/ "(size*nDisp)*1",
 		/*Snk*/ bo_AggregateCost, /*SnkPrt*/ 0, /*Cons*/ "(width*height)*1",
 		/*Delay*/ "0",0);
 
-	graph->connect(
+	Spider::connect(
+			/*Graph*/   graph,
 		/*Src*/ bo_AggregateCost, /*SrcPrt*/ 0, /*Prod*/ "(width*height)*1",
 		/*Snk*/ bo_DisparitySelect, /*SnkPrt*/ 0, /*Cons*/ "(width*height)*1",
 		/*Delay*/ "0",0);
@@ -702,8 +779,5 @@ PiSDFGraph* DispComp(){
 }
 
 void free_stereo(){
-	PiSDFGraph* top = Spider::getGraph();
-	top->~PiSDFGraph();
-	StackMonitor::free(PISDF_STACK, top);
-	StackMonitor::freeAll(PISDF_STACK);
+	Spider::cleanPiSDF();
 }

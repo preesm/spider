@@ -413,3 +413,169 @@ void Spider::printGantt(const char* ganttPath, const char* latexPath, ExecutionS
 
 	stat->execTime = stat->globalEndTime - stat->schedTime;
 }
+
+PiSDFGraph* Spider::createGraph(
+		int nEdges,
+		int nParams,
+		int nInIfs,
+		int nOutIfs,
+		int nConfigs,
+		int nBodies){
+	return CREATE(PISDF_STACK, PiSDFGraph)(
+			/*Edges*/    nEdges,
+			/*Params*/   nParams,
+			/*InputIf*/  nInIfs,
+			/*OutputIf*/ nOutIfs,
+			/*Config*/   nConfigs,
+			/*Body*/     nBodies);
+}
+
+PiSDFVertex* Spider::addBodyVertex(
+			PiSDFGraph* graph,
+			const char* vertexName, int fctId,
+			int nInEdge, int nOutEdge,
+			int nInParam){
+	return graph->addBodyVertex(
+			vertexName,
+			fctId,
+			nInEdge,
+			nOutEdge,
+			nInParam);
+}
+
+PiSDFVertex* Spider::addHierVertex(
+		PiSDFGraph* graph,
+		const char* vertexName,
+		PiSDFGraph* subgraph,
+		int nInEdge, int nOutEdge,
+		int nInParam){
+	return graph->addHierVertex(
+			vertexName,
+			subgraph,
+			nInEdge,
+			nOutEdge,
+			nInParam);
+}
+
+PiSDFVertex* Spider::addSpecialVertex(
+		PiSDFGraph* graph,
+		PiSDFSubType subType,
+		int nInEdge, int nOutEdge,
+		int nInParam){
+	return graph->addSpecialVertex(
+			subType,
+			nInEdge,
+			nOutEdge,
+			nInParam);
+}
+
+PiSDFVertex* Spider::addConfigVertex(
+		PiSDFGraph* graph,
+		const char* vertexName, int fctId,
+		PiSDFSubType subType,
+		int nInEdge, int nOutEdge,
+		int nInParam, int nOutParam){
+	return graph->addConfigVertex(
+			vertexName,
+			fctId,
+			subType,
+			nInEdge,
+			nOutEdge,
+			nInParam,
+			nOutParam);
+}
+
+PiSDFVertex* Spider::addInputIf(
+		PiSDFGraph* graph,
+		const char* name,
+		int nInParam){
+	return graph->addInputIf(
+			name,
+			nInParam);
+}
+
+PiSDFVertex* Spider::addOutputIf(
+		PiSDFGraph* graph,
+		const char* name,
+		int nInParam){
+	return graph->addOutputIf(
+			name,
+			nInParam);
+}
+
+PiSDFParam* Spider::addStaticParam(
+		PiSDFGraph* graph,
+		const char* name,
+		const char* expr){
+	return graph->addStaticParam(
+			name,
+			expr);
+}
+
+PiSDFParam* Spider::addStaticParam(
+		PiSDFGraph* graph,
+		const char* name,
+		int value){
+	return graph->addStaticParam(
+			name,
+			value);
+}
+
+PiSDFParam* Spider::addHeritedParam(
+		PiSDFGraph* graph,
+		const char* name,
+		int parentId){
+	return graph->addHeritedParam(
+			name,
+			parentId);
+}
+
+PiSDFParam* Spider::addDynamicParam(
+		PiSDFGraph* graph,
+		const char* name){
+	return graph->addDynamicParam(name);
+}
+
+PiSDFParam* Spider::addDependentParam(
+		PiSDFGraph* graph,
+		const char* name,
+		const char* expr){
+	return graph->addDependentParam(name, expr);
+}
+
+PiSDFEdge* Spider::connect(
+		PiSDFGraph* graph,
+		PiSDFVertex* source, int sourcePortId, const char* production,
+		PiSDFVertex* sink, int sinkPortId, const char* consumption,
+		const char* delay, PiSDFVertex* setter, PiSDFVertex* getter){
+	return graph->connect(
+			source, sourcePortId, production,
+			sink, sinkPortId, consumption,
+			delay, setter, getter);
+}
+
+void Spider::addInParam(PiSDFVertex* vertex, int ix, PiSDFParam* param){
+	vertex->addInParam(ix, param);
+}
+void Spider::addOutParam(PiSDFVertex* vertex, int ix, PiSDFParam* param){
+	vertex->addOutParam(ix, param);
+}
+
+void Spider::setTimingOnType(PiSDFVertex* vertex, int peType, const char* timing){
+	vertex->setTimingOnType(peType, timing);
+}
+
+void Spider::isExecutableOnAllPE(PiSDFVertex* vertex){
+	vertex->isExecutableOnAllPE();
+}
+
+void Spider::isExecutableOnPE(PiSDFVertex* vertex, int pe){
+	vertex->isExecutableOnPE(pe);
+}
+
+void Spider::cleanPiSDF(){
+	PiSDFGraph* graph = pisdf_;
+	graph->~PiSDFGraph();
+	StackMonitor::free(PISDF_STACK, graph);
+	StackMonitor::freeAll(PISDF_STACK);
+}

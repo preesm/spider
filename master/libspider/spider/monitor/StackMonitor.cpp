@@ -39,7 +39,36 @@
 #include <tools/StaticStack.h>
 #include <tools/DynStack.h>
 
-Stack* StackMonitor::stacks_[STACK_COUNT] = {0};
+static Stack* stacks[STACK_COUNT] = {0};
+
+void StackMonitor::initStack(SpiderStack stackId, StackConfig cfg){
+	switch(cfg.type){
+	case STACK_DYNAMIC:
+		stacks[stackId] = new DynStack(cfg.name);
+		break;
+	case STACK_STATIC:
+		stacks[stackId] = new StaticStack(cfg.name, cfg.start, cfg.size);
+		break;
+	}
+}
+
+void StackMonitor::cleanAllStack(){
+	for(int i=0; i<STACK_COUNT; i++){
+		delete stacks[i];
+	}
+}
+
+void* StackMonitor::alloc(SpiderStack stackId, int size){
+	return stacks[stackId]->alloc(size);
+}
+
+void StackMonitor::free(SpiderStack stackId, void* ptr){
+	return stacks[stackId]->free(ptr);
+}
+
+void StackMonitor::freeAll(SpiderStack stackId){
+	return stacks[stackId]->freeAll();
+}
 
 void StackMonitor::printStackStats(){
 	// TODO

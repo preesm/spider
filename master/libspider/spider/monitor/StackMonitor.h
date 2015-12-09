@@ -56,47 +56,14 @@ typedef enum{
 #define CREATE_MUL(stackId, size, type) new(StackMonitor::alloc(stackId, size*sizeof(type))) type[size]
 
 
-class StackMonitor {
-public:
-	static inline void initStack(SpiderStack id, StackConfig cfg);
-	static inline void cleanAllStack();
-	static inline void* alloc(SpiderStack id, int size);
-	static inline void free(SpiderStack id, void* ptr);
-	static inline void freeAll(SpiderStack id);
+namespace StackMonitor {
+	void initStack(SpiderStack id, StackConfig cfg);
+	void cleanAllStack();
+	void* alloc(SpiderStack id, int size);
+	void free(SpiderStack id, void* ptr);
+	void freeAll(SpiderStack id);
 
-	static void printStackStats();
-
-private:
-	static Stack* stacks_[STACK_COUNT];
+	void printStackStats();
 };
-
-void StackMonitor::initStack(SpiderStack stackId, StackConfig cfg){
-	switch(cfg.type){
-	case STACK_DYNAMIC:
-		stacks_[stackId] = new DynStack(cfg.name);
-		break;
-	case STACK_STATIC:
-		stacks_[stackId] = new StaticStack(cfg.name, cfg.start, cfg.size);
-		break;
-	}
-}
-
-void StackMonitor::cleanAllStack(){
-	for(int i=0; i<STACK_COUNT; i++){
-		delete stacks_[i];
-	}
-}
-
-void* StackMonitor::alloc(SpiderStack stackId, int size){
-	return stacks_[stackId]->alloc(size);
-}
-
-void StackMonitor::free(SpiderStack stackId, void* ptr){
-	return stacks_[stackId]->free(ptr);
-}
-
-void StackMonitor::freeAll(SpiderStack stackId){
-	return stacks_[stackId]->freeAll();
-}
 
 #endif /* STACKMONITOR_H */

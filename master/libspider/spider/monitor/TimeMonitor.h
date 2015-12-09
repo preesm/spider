@@ -39,13 +39,11 @@
 
 #include <Message.h>
 
-class TimeMonitor {
-public:
-	static void startMonitoring();
-	static void endMonitoring(TraceSpiderType type);
-	static const char* spiderTaskName[9];
-private:
-	static Time start;
+namespace TimeMonitor {
+	void startMonitoring();
+	void endMonitoring(TraceSpiderType type);
+
+	const char* getTaskName(TraceSpiderType type);
 };
 
 #endif /* MONITOR_TIMEMONITOR_H */

@@ -9,7 +9,7 @@
 #include <platform.h>
 #include <Launcher.h>
 
-const char* TimeMonitor::spiderTaskName[9] = {
+static const char* spiderTaskName[9] = {
 		"",
 		"Graph handling",
 		"Memory Allocation",
@@ -21,7 +21,12 @@ const char* TimeMonitor::spiderTaskName[9] = {
 		"Tmp 3"
 };
 
-Time TimeMonitor::start = 0;
+static Time start = 0;
+
+
+const char* TimeMonitor::getTaskName(TraceSpiderType type){
+	return spiderTaskName[type];
+}
 
 void TimeMonitor::startMonitoring(){
 	if(start != 0)

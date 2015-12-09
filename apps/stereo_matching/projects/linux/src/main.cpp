@@ -93,7 +93,7 @@ int main(int argc, char* argv[]){
 	cfg.useGraphOptim = true;
 	cfg.useActorPrecedence = true;
 
-	Spider spider(cfg);
+	Spider::init(cfg);
 	PlatformLinux platform(1, SH_MEM_SIZE, stereo_fcts, N_FCT_STEREO);
 
 	printf("Start\n");
@@ -105,10 +105,10 @@ int main(int argc, char* argv[]){
 
 		init_stereo();
 
-		spider.iterate();
+		Spider::iterate();
 
-		spider.printGantt("stereo.pgantt", "stereo_tex.dat", &stat);
-		spider.printSRDAG("stereo.gv");
+		Spider::printGantt("stereo.pgantt", "stereo_tex.dat", &stat);
+		Spider::printSRDAG("stereo.gv");
 
 		printf("EndTime = %d ms\n", stat.globalEndTime/1000000);
 
@@ -123,7 +123,7 @@ int main(int argc, char* argv[]){
 			printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
 		printf("\n");
 
-		spider.printActorsStat(&stat);
+		Spider::printActorsStat(&stat);
 
 		free_stereo();
 //	}
@@ -131,6 +131,7 @@ int main(int argc, char* argv[]){
 //		printf("Exception : %s\n", s);
 //	}
 	printf("finished\n");
+	Spider::clean();
 
 	return 0;
 }

@@ -128,10 +128,10 @@ typedef struct{
 	Time latencies;
 }ExecutionStat;
 
-class Spider{
-public:
-	Spider(SpiderConfig cfg);
-	~Spider();
+/* TODO Namespace */
+namespace Spider{
+	void init(SpiderConfig cfg);
+	void clean();
 
 	void setMemAllocType(MemAllocType type, int start, int size);
 	void setSchedulerType(SchedulerType type);
@@ -155,22 +155,10 @@ public:
 
 	void printActorsStat(ExecutionStat* stat);
 
-	static Spider* get();
 	PiSDFGraph* getGraph();
 	Archi* getArchi();
 
-private:
-	Archi* archi_;
-	PiSDFGraph* pisdf_;
-	SRDAGGraph* srdag_;
-
-	MemAlloc* memAlloc_;
-	Scheduler* scheduler_;
-
-	bool useGraphOptim_;
-	bool useActorPrecedence_;
-
-	static Spider* spider_;
+	/* PiSDF Graph Generation */
 };
 
 #endif//SPIDER_H

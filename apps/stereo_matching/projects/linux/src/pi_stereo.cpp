@@ -66,7 +66,7 @@ void init_stereo(){
 		/*OutputIf*/ 0,
 		/*Params*/   0);
 
-	Spider::get()->setGraph(top);
+	Spider::setGraph(top);
 }
 
 // Method building PiSDFGraphstereo
@@ -702,7 +702,7 @@ PiSDFGraph* DispComp(){
 }
 
 void free_stereo(){
-	PiSDFGraph* top = Spider::get()->getGraph();
+	PiSDFGraph* top = Spider::getGraph();
 	top->~PiSDFGraph();
 	StackMonitor::free(PISDF_STACK, top);
 	StackMonitor::freeAll(PISDF_STACK);

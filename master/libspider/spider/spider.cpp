@@ -66,14 +66,19 @@
 #include <stdio.h>
 #include <launcher/Launcher.h>
 
-Spider* Spider::spider_ = 0;
 
-Spider::Spider(SpiderConfig cfg){
-	if(spider_)
-		throw "Try to create 2 Spider instances";
+static Archi* archi_;
+static PiSDFGraph* pisdf_;
+static SRDAGGraph* srdag_;
 
-	spider_ = this;
+static MemAlloc* memAlloc_;
+static Scheduler* scheduler_;
 
+static bool useGraphOptim_;
+static bool useActorPrecedence_;
+
+
+void Spider::init(SpiderConfig cfg){
 	setMemAllocType(cfg.memAllocType, (long)cfg.memAllocStart, cfg.memAllocSize);
 	setSchedulerType(cfg.schedulerType);
 
@@ -87,7 +92,7 @@ Spider::Spider(SpiderConfig cfg){
 	setGraphOptim(cfg.useGraphOptim);
 }
 
-Spider::~Spider(){
+void Spider::clean(){
 	if(srdag_ != 0)
 		delete srdag_;
 	if(memAlloc_ != 0)
@@ -96,10 +101,6 @@ Spider::~Spider(){
 		delete scheduler_;
 
 	StackMonitor::cleanAllStack();
-}
-
-Spider* Spider::get(){
-	return spider_;
 }
 
 void Spider::idle(){
@@ -367,10 +368,10 @@ void Spider::printGantt(const char* ganttPath, const char* latexPath, ExecutionS
 					Platform::get()->fprintf(ganttFile, "\t<event\n");
 					Platform::get()->fprintf(ganttFile, "\t\tstart=\"%u\"\n", 	traceMsg->start);
 					Platform::get()->fprintf(ganttFile, "\t\tend=\"%u\"\n",		traceMsg->end);
-					Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n", 	TimeMonitor::spiderTaskName[traceMsg->spiderTask]);
+					Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n", 	TimeMonitor::getTaskName((TraceSpiderType)traceMsg->spiderTask));
 					Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi_->getPEName(traceMsg->lrtIx));
 					Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", 	regenerateColor(i++));
-					Platform::get()->fprintf(ganttFile, "\t\t>Step_%d.</event>\n", TimeMonitor::spiderTaskName[traceMsg->spiderTask]);
+					Platform::get()->fprintf(ganttFile, "\t\t>Step_%d.</event>\n", traceMsg->spiderTask);
 
 					stat->schedTime = std::max(traceMsg->end, stat->schedTime);
 

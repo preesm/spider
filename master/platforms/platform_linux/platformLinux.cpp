@@ -280,7 +280,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts
 		archi_->activatePE(i);
 	}
 
-	Spider::get()->setArchi(archi_);
+	Spider::setArchi(archi_);
 
 	this->rstTime();
 }

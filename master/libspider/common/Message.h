@@ -37,7 +37,7 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-#include <type.h>
+#include <spider.h>
 
 typedef enum{
 	MSG_START_JOB=1,

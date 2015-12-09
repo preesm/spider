@@ -37,7 +37,6 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#include <type.h>
 #include <Message.h>
 
 class LRT;

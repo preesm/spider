@@ -92,6 +92,13 @@ typedef struct{
 } StackConfig;
 
 typedef struct{
+	int nLrt;
+	int shMemSize;
+	lrtFct* fcts;
+	int nLrtFcts;
+} PlatformConfig;
+
+typedef struct{
 	MemAllocType memAllocType;
 	void* memAllocStart;
 	int memAllocSize;
@@ -106,6 +113,8 @@ typedef struct{
 
 	bool useGraphOptim;
 	bool useActorPrecedence;
+
+	PlatformConfig platform;
 } SpiderConfig;
 
 typedef struct{

@@ -110,11 +110,11 @@ typedef struct {
 //	unsigned long srdagIx:30;
 }ParamValueMsg;
 
-typedef struct {
+typedef struct ClearTimeMsg{
 	unsigned long msgIx;
 //	unsigned char msgIx:2;
 //	unsigned char reserved:6;
-}ClearTimeMsg;
+} ClearTimeMsg;
 
 typedef struct {
 	unsigned long msgIx;

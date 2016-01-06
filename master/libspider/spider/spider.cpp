@@ -66,6 +66,7 @@
 #include <stdio.h>
 #include <launcher/Launcher.h>
 
+#include "platformLinux.h"
 
 static Archi* archi_;
 static PiSDFGraph* pisdf_;
@@ -73,6 +74,7 @@ static SRDAGGraph* srdag_;
 
 static MemAlloc* memAlloc_;
 static Scheduler* scheduler_;
+static PlatformLinux* platform;
 
 static bool useGraphOptim_;
 static bool useActorPrecedence_;
@@ -90,9 +92,18 @@ void Spider::init(SpiderConfig cfg){
 
 	setActorPrecedence(cfg.useActorPrecedence);
 	setGraphOptim(cfg.useGraphOptim);
+
+	platform = new PlatformLinux(
+			cfg.platform.nLrt,
+			cfg.platform.shMemSize,
+			cfg.platform.fcts,
+			cfg.platform.nLrtFcts
+	);
 }
 
 void Spider::clean(){
+	if(platform != 0)
+		delete platform;
 	if(srdag_ != 0)
 		delete srdag_;
 	if(memAlloc_ != 0)

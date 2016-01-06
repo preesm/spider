@@ -55,6 +55,7 @@
 #include <errno.h>
 
 #include <tools/Stack.h>
+#include <graphs/Archi/SharedMemArchi.h>
 #include <monitor/StackMonitor.h>
 
 #include <lrt.h>
@@ -74,6 +75,8 @@ static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
 static void* shMem;
 static void* dataMem;
+
+static SharedMemArchi* archi_;
 
 void PlatformLinux::sig_handler(int signo){
 	switch(signo){
@@ -382,10 +385,6 @@ void PlatformLinux::wakeLrt(int lrt){
 void PlatformLinux::idle(){
 	while(lrt_->isIdle())
 		sleep((unsigned)-1);
-}
-
-SharedMemArchi* PlatformLinux::getArchi(){
-	return archi_;
 }
 
 Time PlatformLinux::mappingTime(int nActors){

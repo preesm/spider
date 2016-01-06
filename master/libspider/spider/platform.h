@@ -34,53 +34,80 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PLATFORM_LINUX_H
-#define PLATFORM_LINUX_H
+#ifndef PLATFORM_H
+#define PLATFORM_H
 
-#include <platform.h>
-#include <graphs/Archi/Archi.h>
-#include <graphs/Archi/SharedMemArchi.h>
-#include <lrt.h>
-#include <signal.h>
+#include "spider.h"
 
-class PlatformLinux: public Platform{
+class LRT;
+class LrtCommunicator;
+class SpiderCommunicator;
+struct ClearTimeMsg;
+
+class Platform{
 public:
 	/** File Handling */
-	virtual int fopen(const char* name);
-	virtual void fprintf(int id, const char* fmt, ...);
-	virtual void fclose(int id);
+	virtual int fopen(const char* name) = 0;
+	virtual void fprintf(int id, const char* fmt, ...) = 0;
+	virtual void fclose(int id) = 0;
 
-	/** Shared Memory Handling */
-	virtual void* virt_to_phy(void* address);
-	virtual int getMinAllocSize();
-	virtual int getCacheLineSize();
+	/** Memory Handling */
+	virtual void* virt_to_phy(void* address) = 0;
+	virtual int getMinAllocSize() = 0;
+	virtual int getCacheLineSize() = 0;
 
 	/** Time Handling */
-	virtual void rstTime();
-	virtual void rstTime(ClearTimeMsg* msg);
-	virtual Time getTime();
+	virtual void rstTime(struct ClearTimeMsg* msg) = 0;
+	virtual void rstTime() = 0;
+	virtual Time getTime() = 0;
+
+	/** Platform getter/setter */
+	static inline LRT* getLrt();
+	static inline Platform* get();
+	static inline LrtCommunicator* getLrtCommunicator();
+	static inline SpiderCommunicator* getSpiderCommunicator();
 
 	/** Platform Core Handling **/
-	virtual void idleLrt(int i);
-	virtual void wakeLrt(int i);
-	virtual void idle();
+	virtual void idleLrt(int i) = 0;
+	virtual void wakeLrt(int i) = 0;
+	virtual void idle() = 0;
 
-	SharedMemArchi* getArchi();
+protected:
+	Platform();
+	virtual ~Platform();
 
-	PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts);
-	virtual ~PlatformLinux();
-
-private:
-	enum{
-		SIG_IDLE = SIGUSR1,
-		SIG_WAKE = SIGUSR2
-	};
-
-	SharedMemArchi* archi_;
-	int* cpIds_;
-
-	static Time mappingTime(int nActors);
-	static void sig_handler(int signo);
+	static LRT* lrt_;
+	static Platform* platform_;
+	static LrtCommunicator* lrtCom_;
+	static SpiderCommunicator* spiderCom_;
 };
 
-#endif/*PLATFORM_LINUX_H*/
+inline Platform* Platform::get(){
+	if(platform_)
+		return platform_;
+	else
+		throw "Error undefined platform\n";
+}
+
+inline LRT* Platform::getLrt(){
+	if(lrt_)
+		return lrt_;
+	else
+		throw "Error undefined LRT\n";
+}
+
+inline LrtCommunicator* Platform::getLrtCommunicator(){
+	if(lrtCom_)
+		return lrtCom_;
+	else
+		throw "Error undefined LRT Communicator\n";
+}
+
+inline SpiderCommunicator* Platform::getSpiderCommunicator(){
+	if(spiderCom_)
+		return spiderCom_;
+	else
+		throw "Error undefined Spider Communicator\n";
+}
+
+#endif/*PLATFORM_H*/

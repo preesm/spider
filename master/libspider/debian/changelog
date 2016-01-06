@@ -1,0 +1,6 @@
+libspider (0.5-1) trusty; urgency=low
+
+  * Add platform settings to spider config.
+  * Remove unused header
+
+ -- Julien Heulot <jheulot@insa-rennes.fr>  Wed, 06 Jan 2016 16:17:00 +0100

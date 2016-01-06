@@ -1,0 +1,21 @@
+Source: libspider
+Priority: optional
+Maintainer: Julien Heulot <jheulot@insa-rennes.fr>
+Build-Depends: debhelper (>= 9.0.0), autotools-dev
+Standards-Version: 3.9.5
+Section: libs
+Homepage: http://preesm.sourceforge.net/website/
+Vcs-Git: git@github.com:COMPA-Runtime/Spider.git
+
+Package: libspider-dev
+Section: libdevel
+Architecture: any
+Depends: libspider (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Description: Spider library sources
+ more infos in http://preesm.sourceforge.net/website/
+
+Package: libspider
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Spider library binaries
+ more infos in http://preesm.sourceforge.net/website/

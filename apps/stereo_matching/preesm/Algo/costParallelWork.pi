@@ -38,20 +38,20 @@
             <port annotation="NONE" expr="size" kind="output" name="out1"/>
         </node>
         <node id="GenIx" kind="actor">
-            <data key="graph_desc">Code/include/stereo.h</data>
+            <data key="graph_desc">Code/include/actors.h</data>
             <loop name="GenIx">
                 <param direction="IN" isConfig="true" name="nIter" type="Param"/>
-                <param direction="OUT" isConfig="false" name="ixs" type="int"/>
+                <param direction="OUT" isConfig="false" name="ixs" type="uint8_t"/>
             </loop>
             <port kind="cfg_input" name="nIter"/>
             <port annotation="NONE" expr="nIter" kind="output" name="ixs"/>
         </node>
         <node id="GenDisp" kind="actor">
-            <data key="graph_desc">Code/include/stereo.h</data>
+            <data key="graph_desc">Code/include/actors.h</data>
             <loop name="DisparityGen">
                 <param direction="IN" isConfig="true" name="maxDisp" type="Param"/>
                 <param direction="IN" isConfig="true" name="minDisp" type="Param"/>
-                <param direction="OUT" isConfig="false" name="dispIxs" type="int"/>
+                <param direction="OUT" isConfig="false" name="dispIxs" type="uint8_t"/>
             </loop>
             <port kind="cfg_input" name="minDisp"/>
             <port kind="cfg_input" name="maxDisp"/>
@@ -59,13 +59,13 @@
                 kind="output" name="dispIxs"/>
         </node>
         <node id="VWeights" kind="actor">
-            <data key="graph_desc">Code/include/stereo.h</data>
+            <data key="graph_desc">Code/include/actors.h</data>
             <loop name="VWeights">
                 <param direction="IN" isConfig="true" name="height" type="Param"/>
                 <param direction="IN" isConfig="true" name="width" type="Param"/>
-                <param direction="IN" isConfig="false" name="offset" type="char"/>
-                <param direction="IN" isConfig="false" name="rgbL" type="char"/>
-                <param direction="OUT" isConfig="false" name="out" type="char"/>
+                <param direction="IN" isConfig="false" name="offset" type="uint8_t"/>
+                <param direction="IN" isConfig="false" name="rgbL" type="uint8_t"/>
+                <param direction="OUT" isConfig="false" name="out" type="uint8_t"/>
             </loop>
             <port kind="cfg_input" name="height"/>
             <port kind="cfg_input" name="width"/>
@@ -74,13 +74,13 @@
             <port annotation="NONE" expr="height*width" kind="output" name="out"/>
         </node>
         <node id="HWeight" kind="actor">
-            <data key="graph_desc">Code/include/stereo.h</data>
+            <data key="graph_desc">Code/include/actors.h</data>
             <loop name="HWeights">
                 <param direction="IN" isConfig="true" name="height" type="Param"/>
                 <param direction="IN" isConfig="true" name="width" type="Param"/>
-                <param direction="IN" isConfig="false" name="offset" type="char"/>
-                <param direction="IN" isConfig="false" name="rgbL" type="char"/>
-                <param direction="OUT" isConfig="false" name="out" type="char"/>
+                <param direction="IN" isConfig="false" name="offset" type="uint8_t"/>
+                <param direction="IN" isConfig="false" name="rgbL" type="uint8_t"/>
+                <param direction="OUT" isConfig="false" name="out" type="uint8_t"/>
             </loop>
             <port kind="cfg_input" name="height"/>
             <port kind="cfg_input" name="width"/>
@@ -89,17 +89,17 @@
             <port annotation="NONE" expr="height*width" kind="output" name="out"/>
         </node>
         <node id="CostConstruction" kind="actor">
-            <data key="graph_desc">Code/include/stereo.h</data>
+            <data key="graph_desc">Code/include/actors.h</data>
             <loop name="CostConstruction">
                 <param direction="IN" isConfig="true" name="height" type="Param"/>
                 <param direction="IN" isConfig="true" name="width" type="Param"/>
                 <param direction="IN" isConfig="true" name="truncValue" type="Param"/>
-                <param direction="IN" isConfig="false" name="grayL" type="char"/>
-                <param direction="IN" isConfig="false" name="grayR" type="char"/>
-                <param direction="IN" isConfig="false" name="cenL" type="char"/>
-                <param direction="IN" isConfig="false" name="cenR" type="char"/>
-                <param direction="IN" isConfig="false" name="disp" type="char"/>
-                <param direction="OUT" isConfig="false" name="error" type="char"/>
+                <param direction="IN" isConfig="false" name="grayL" type="uint8_t"/>
+                <param direction="IN" isConfig="false" name="grayR" type="uint8_t"/>
+                <param direction="IN" isConfig="false" name="cenL" type="uint8_t"/>
+                <param direction="IN" isConfig="false" name="cenR" type="uint8_t"/>
+                <param direction="IN" isConfig="false" name="disp" type="uint8_t"/>
+                <param direction="OUT" isConfig="false" name="error" type="uint8_t"/>
             </loop>
             <port kind="cfg_input" name="truncValue"/>
             <port kind="cfg_input" name="height"/>
@@ -147,41 +147,41 @@
             <port annotation="NONE" expr="nDisp" kind="output" name="out1"/>
         </node>
         <edge kind="fifo" source="DispComp" sourceport="rawDisparity"
-            target="rawDisparity" targetport="rawDisparity" type="char"/>
+            target="rawDisparity" targetport="rawDisparity" type="uint8_t"/>
         <edge kind="fifo" source="CostConstruction" sourceport="error"
-            target="DispComp" targetport="cost" type="char"/>
+            target="DispComp" targetport="cost" type="uint8_t"/>
         <edge kind="fifo" source="VWeights" sourceport="out"
-            target="DispComp" targetport="vWeights" type="char"/>
+            target="DispComp" targetport="vWeights" type="uint8_t"/>
         <edge kind="fifo" source="HWeight" sourceport="out"
-            target="DispComp" targetport="hWeights" type="char"/>
+            target="DispComp" targetport="hWeights" type="uint8_t"/>
         <edge kind="fifo" source="rgb" sourceport="rgb" target="Br_rgb"
             targetport="in" type="rgb"/>
         <edge kind="fifo" source="GenIx" sourceport="ixs" target="Br_Ix"
-            targetport="in" type="char"/>
+            targetport="in" type="uint8_t"/>
         <edge kind="fifo" source="GenDisp" sourceport="dispIxs"
-            target="Br_Disp" targetport="in" type="char"/>
+            target="Br_Disp" targetport="in" type="uint8_t"/>
         <edge kind="fifo" source="Br_Disp" sourceport="out0"
-            target="CostConstruction" targetport="disp" type="char"/>
+            target="CostConstruction" targetport="disp" type="uint8_t"/>
         <edge kind="fifo" source="Br_Disp" sourceport="out1"
-            target="DispComp" targetport="dispIx" type="char"/>
+            target="DispComp" targetport="dispIx" type="uint8_t"/>
         <edge kind="fifo" source="Br_Ix" sourceport="out0"
-            target="DispComp" targetport="offsets" type="char"/>
+            target="DispComp" targetport="offsets" type="uint8_t"/>
         <edge kind="fifo" source="Br_Ix" sourceport="out1"
-            target="HWeight" targetport="offset" type="char"/>
+            target="HWeight" targetport="offset" type="uint8_t"/>
         <edge kind="fifo" source="Br_Ix" sourceport="out2"
-            target="VWeights" targetport="offset" type="char"/>
+            target="VWeights" targetport="offset" type="uint8_t"/>
         <edge kind="fifo" source="Br_rgb" sourceport="out0"
             target="HWeight" targetport="rgbL" type="rgb"/>
         <edge kind="fifo" source="Br_rgb" sourceport="out1"
             target="VWeights" targetport="rgbL" type="rgb"/>
         <edge kind="fifo" source="cenL" sourceport="cenL"
-            target="CostConstruction" targetport="cenL" type="char"/>
+            target="CostConstruction" targetport="cenL" type="uint8_t"/>
         <edge kind="fifo" source="cenR" sourceport="cenR"
-            target="CostConstruction" targetport="cenR" type="char"/>
+            target="CostConstruction" targetport="cenR" type="uint8_t"/>
         <edge kind="fifo" source="grayL" sourceport="grayL"
-            target="CostConstruction" targetport="grayL" type="char"/>
+            target="CostConstruction" targetport="grayL" type="uint8_t"/>
         <edge kind="fifo" source="grayR" sourceport="grayR"
-            target="CostConstruction" targetport="grayR" type="char"/>
+            target="CostConstruction" targetport="grayR" type="uint8_t"/>
         <edge kind="dependency" source="nIter" target="GenIx" targetport="nIter"/>
         <edge kind="dependency" source="height"
             target="CostConstruction" targetport="height"/>

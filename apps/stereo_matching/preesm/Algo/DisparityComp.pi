@@ -17,16 +17,16 @@
         <node expr="height*width" id="size" kind="param"/>
         <node expr="maxDisp-minDisp+1" id="nDisp" kind="param"/>
         <node id="AggregateCost" kind="actor">
-            <data key="graph_desc">Code/include/stereo.h</data>
+            <data key="graph_desc">Code/include/actors.h</data>
             <loop name="AggregateCost">
                 <param direction="IN" isConfig="true" name="height" type="Param"/>
                 <param direction="IN" isConfig="true" name="width" type="Param"/>
                 <param direction="IN" isConfig="true" name="nIter" type="Param"/>
-                <param direction="IN" isConfig="false" name="offsets" type="char"/>
-                <param direction="IN" isConfig="false" name="vWeights" type="char"/>
-                <param direction="IN" isConfig="false" name="hWeights" type="char"/>
-                <param direction="IN" isConfig="false" name="cost" type="char"/>
-                <param direction="OUT" isConfig="false" name="disp" type="char"/>
+                <param direction="IN" isConfig="false" name="offsets" type="uint8_t"/>
+                <param direction="IN" isConfig="false" name="vWeights" type="uint8_t"/>
+                <param direction="IN" isConfig="false" name="hWeights" type="uint8_t"/>
+                <param direction="IN" isConfig="false" name="cost" type="uint8_t"/>
+                <param direction="OUT" isConfig="false" name="disp" type="uint8_t"/>
             </loop>
             <port kind="cfg_input" name="height"/>
             <port kind="cfg_input" name="width"/>
@@ -40,19 +40,19 @@
             <port annotation="NONE" expr="width*height" kind="output" name="disp"/>
         </node>
         <node id="DisparitySelect" kind="actor">
-            <data key="graph_desc">Code/include/stereo.h</data>
+            <data key="graph_desc">Code/include/actors.h</data>
             <loop name="DisparitySelect">
                 <param direction="IN" isConfig="true" name="height" type="Param"/>
                 <param direction="IN" isConfig="true" name="width" type="Param"/>
                 <param direction="IN" isConfig="true" name="scale" type="Param"/>
                 <param direction="IN" isConfig="true" name="minDisp" type="Param"/>
                 <param direction="IN" isConfig="true" name="maxDisp" type="Param"/>
-                <param direction="IN" isConfig="false" name="dispVal" type="char"/>
-                <param direction="IN" isConfig="false" name="dispIx" type="char"/>
-                <param direction="IN" isConfig="false" name="curDisp" type="char"/>
-                <param direction="IN" isConfig="false" name="curCost" type="char"/>
-                <param direction="OUT" isConfig="false" name="disp" type="char"/>
-                <param direction="OUT" isConfig="false" name="cost" type="char"/>
+                <param direction="IN" isConfig="false" name="dispVal" type="uint8_t"/>
+                <param direction="IN" isConfig="false" name="dispIx" type="uint8_t"/>
+                <param direction="IN" isConfig="false" name="curDisp" type="uint8_t"/>
+                <param direction="IN" isConfig="false" name="curCost" type="uint8_t"/>
+                <param direction="OUT" isConfig="false" name="disp" type="uint8_t"/>
+                <param direction="OUT" isConfig="false" name="cost" type="uint8_t"/>
             </loop>
             <port kind="cfg_input" name="height"/>
             <port kind="cfg_input" name="width"/>
@@ -92,29 +92,29 @@
         </node>
         <edge expr="size+1" kind="fifo" source="DisparitySelect"
             sourceport="cost" target="DisparitySelect"
-            targetport="curCost" type="char">
+            targetport="curCost" type="uint8_t">
             <data key="delay"/>
         </edge>
         <edge kind="fifo" source="DisparitySelect" sourceport="disp"
-            target="Br_Disp" targetport="in" type="char"/>
+            target="Br_Disp" targetport="in" type="uint8_t"/>
         <edge kind="fifo" source="Br_Disp" sourceport="out0"
-            target="rawDisparity" targetport="rawDisparity" type="char"/>
+            target="rawDisparity" targetport="rawDisparity" type="uint8_t"/>
         <edge expr="size" kind="fifo" source="Br_Disp" sourceport="out1"
-            target="DisparitySelect" targetport="curDisp" type="char">
+            target="DisparitySelect" targetport="curDisp" type="uint8_t">
             <data key="delay"/>
         </edge>
         <edge kind="fifo" source="offsets" sourceport="offsets"
-            target="AggregateCost" targetport="offsets" type="char"/>
+            target="AggregateCost" targetport="offsets" type="uint8_t"/>
         <edge kind="fifo" source="vWeights" sourceport="vWeights"
-            target="AggregateCost" targetport="vWeights" type="char"/>
+            target="AggregateCost" targetport="vWeights" type="uint8_t"/>
         <edge kind="fifo" source="hWeights" sourceport="hWeights"
-            target="AggregateCost" targetport="hWeights" type="char"/>
+            target="AggregateCost" targetport="hWeights" type="uint8_t"/>
         <edge kind="fifo" source="dispIx" sourceport="dispIx"
-            target="DisparitySelect" targetport="dispIx" type="char"/>
+            target="DisparitySelect" targetport="dispIx" type="uint8_t"/>
         <edge kind="fifo" source="cost" sourceport="cost"
-            target="AggregateCost" targetport="cost" type="char"/>
+            target="AggregateCost" targetport="cost" type="uint8_t"/>
         <edge kind="fifo" source="AggregateCost" sourceport="disp"
-            target="DisparitySelect" targetport="dispVal" type="char"/>
+            target="DisparitySelect" targetport="dispVal" type="uint8_t"/>
         <edge kind="dependency" source="height" target="AggregateCost" targetport="height"/>
         <edge kind="dependency" source="width" target="AggregateCost" targetport="width"/>
         <edge kind="dependency" source="nIter" target="AggregateCost" targetport="nIter"/>

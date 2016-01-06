@@ -34,8 +34,7 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <spider.h>
-#include <platformLinux.h>
+#include <spider/spider.h>
 #include "stereo.h"
 
 #include <stdio.h>
@@ -93,8 +92,12 @@ int main(int argc, char* argv[]){
 	cfg.useGraphOptim = true;
 	cfg.useActorPrecedence = true;
 
+	cfg.platform.nLrt = 1;
+	cfg.platform.shMemSize = SH_MEM_SIZE;
+	cfg.platform.fcts = stereo_fcts;
+	cfg.platform.nLrtFcts = N_FCT_STEREO;
+
 	Spider::init(cfg);
-	PlatformLinux platform(1, SH_MEM_SIZE, stereo_fcts, N_FCT_STEREO);
 
 	printf("Start\n");
 

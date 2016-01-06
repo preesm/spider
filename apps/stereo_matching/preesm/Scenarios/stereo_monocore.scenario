@@ -3,7 +3,7 @@
     <files>
         <algorithm url="/stereo_matching/Algo/stereo.pi"/>
         <architecture url="/stereo_matching/Archi/1CoreX86.slam"/>
-        <codegenDirectory url="/Code/generated/monocore"/>
+        <codegenDirectory url="/Code/generated"/>
     </files>
     <constraints excelUrl="">
         <constraintGroup>
@@ -76,6 +76,7 @@
         <averageDataSize>1000</averageDataSize>
         <dataTypes>
             <dataType name="char" size="1"/>
+            <dataType name="uint8_t" size="1"/>
             <dataType name="rgb" size="3"/>
         </dataTypes>
         <specialVertexOperators>
@@ -91,16 +92,16 @@
     </simuParams>
     <variables excelUrl=""/>
     <parameterValues>
-        <parameter name="sizeFilter" parent="stereo"
-            type="ACTOR_DEPENDENT" value="[1]"/>
-        <parameter name="maxDisp" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
-        <parameter name="scale" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
         <parameter name="height" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
-        <parameter name="minDisp" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
         <parameter name="truncValue" parent="stereo"
             type="ACTOR_DEPENDENT" value="[1]"/>
-        <parameter name="width" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="sizeFilter" parent="stereo"
+            type="ACTOR_DEPENDENT" value="[1]"/>
         <parameter name="nIter" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
         <parameter name="nSlice" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="scale" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="width" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="maxDisp" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
+        <parameter name="minDisp" parent="stereo" type="ACTOR_DEPENDENT" value="[1]"/>
     </parameterValues>
 </scenario>

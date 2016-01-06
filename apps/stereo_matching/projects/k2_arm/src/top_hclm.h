@@ -36,42 +36,53 @@
  * ****************************************************************************
  */
 
-#ifndef STEREO_H
-#define STEREO_H
+#ifndef TOP_HCLM_H
+#define TOP_HCLM_H
 
-#include <spider/spider.h>
+#include <spider.h>
 
-#define N_FCT_STEREO 16
-extern lrtFct stereo_fcts[N_FCT_STEREO];
+#define N_FCT_TOP_HCLM 8
+extern lrtFct top_hclm_fcts[N_FCT_TOP_HCLM];
 
-void init_stereo();
-void free_stereo();
+PiSDFGraph* init_top_hclm(Archi* archi, Stack* stack, Param MNext = 0, Param MStart = 10, Param NMax = 20, Param NVal = 10, Param NbS = 4000);
+void free_top_hclm(PiSDFGraph* top, Stack* stack);
+
+
+#define N_FCT_TOP_HCLM_OPT 8
+extern lrtFct top_hclm_fcts[N_FCT_TOP_HCLM_OPT];
+
+PiSDFGraph* init_top_hclm_opt(Archi* archi, Stack* stack, Param MNext = 0, Param MStart = 10, Param NMax = 20, Param NVal = 10, Param NbS = 4000);
+void free_top_hclm_opt(PiSDFGraph* top, Stack* stack);
 
 typedef enum{
-	CORE_CORE0 = 0,
+	CORE_DSP0 = 0,
+	CORE_DSP1 = 1,
+	CORE_DSP2 = 2,
+	CORE_DSP3 = 3,
+	CORE_DSP4 = 4,
+	CORE_DSP5 = 5,
+	CORE_DSP6 = 6,
+	CORE_DSP7 = 7,
+	CORE_ARM0 = 8,
+	CORE_ARM1 = 9,
+	CORE_ARM2 = 10,
+	CORE_ARM3 = 11,
 } PE;
 
 typedef enum{
-	CORE_TYPE_X86 = 0,
+	CORE_TYPE_C6X = 0,
+	CORE_TYPE_ARM = 1,
 } PEType;
 
 typedef enum{
-	STEREO_CONFIG_FCT = 0,
-	STEREO_CAMERA_FCT = 1,
-	STEREO_RGB2GRAY_L_FCT = 2,
-	STEREO_RGB2GRAY_R_FCT = 3,
-	STEREO_CENSUS_L_FCT = 4,
-	STEREO_CENSUS_R_FCT = 5,
-	STEREO_SPLIT_FCT = 6,
-	STEREO_MEDIANFILTER_FCT = 7,
-	STEREO_DISPLAY_FCT = 8,
-	COSTPARALLEL_GENIX_FCT = 9,
-	COSTPARALLEL_GENDISP_FCT = 10,
-	COSTPARALLEL_VWEIGHTS_FCT = 11,
-	COSTPARALLEL_HWEIGHT_FCT = 12,
-	COSTPARALLEL_COSTCONSTRUCTION_FCT = 13,
-	DISPCOMP_AGGREGATECOST_FCT = 14,
-	DISPCOMP_DISPARITYSELECT_FCT = 15,
+	TOP_HCLM_CFG_N_FCT = 0,
+	TOP_HCLM_SRC_FCT = 1,
+//	TOP_HCLM_END_FCT = 2,
+	TOP_HCLM_SNK_FCT = 3,
+	FIR_CHAN_CFG_M_FCT = 4,
+	FIR_CHAN_INITSW_FCT = 5,
+	FIR_CHAN_SWITCH_FCT = 6,
+	FIR_CHAN_FIR_FCT = 7,
 } FctIxs;
 
-#endif//STEREO_H
+#endif//TOP_HCLM_H

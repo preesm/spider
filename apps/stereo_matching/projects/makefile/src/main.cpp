@@ -34,26 +34,104 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef STEREO_H_
-#define STEREO_H_
+#include <spider/spider.h>
+#include <spider/platformLinux.h>
+#include "stereo.h"
 
-#include <spider.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-void Config(OUT Param nSlice, OUT Param truncValue, OUT Param scale, OUT Param nIter, OUT Param sizeFilter, OUT Param minDisp, OUT Param maxDisp, OUT Param height, OUT Param width);
+#define SH_MEM_SIZE 0x04000000
 
-void Camera(Param height, Param width, OUT char* rgb_L, OUT char* rgb_R);
-void RGB2Gray(Param size, IN char* rgb, OUT char* gray);
-void Census(Param height, Param width, char* gray, OUT char* cen);
-void Split(Param nSlice, Param sizeFilter, Param height, Param width, char* in, OUT char* out);
-void MedianFilter(Param height, Param width, Param sizeFilter, char* in, OUT char* out);
-void Display(Param height, Param width, char* rgb, char* depth);
+#define PISDF_SIZE 		4	*1024*1024
+#define SRDAG_SIZE 		8	*1024*1024
+#define ARCHI_SIZE 		128	*1024
+#define TRANSFO_SIZE 	1	*1024*1024
+#define LRT_SIZE 		16	*1024
 
-void GenIx(Param nIter, OUT int* ixs);
-void DisparityGen(Param maxDisp, Param minDisp, OUT int* dispIxs);
-void HWeights(Param height, Param width, char* offset, char* rgbL, OUT char* out);
-void VWeights(Param height, Param width, char* offset, char* rgbL, OUT char* out);
-void CostConstruction(Param height, Param width, Param truncValue, char* grayL, char* grayR, char* cenL, char* cenR, char* disp, OUT char* error);
-void AggregateCost(Param height, Param width, Param nIter, char* offsets, char* vWeights, char* hWeights, char* cost, OUT char* disp);
-void DisparitySelect(Param height, Param width, Param scale, Param minDisp, Param maxDisp, char* dispVal, char* dispIx, char* curDisp, char* curCost, OUT char* disp, OUT char* cost);
+static char transfoStack[TRANSFO_SIZE];
+static char srdagStack[SRDAG_SIZE];
+static char pisdfStack[PISDF_SIZE];
+static char archiStack[ARCHI_SIZE];
+static char lrtStack[LRT_SIZE];
 
-#endif /* STEREO_H_ */
+int main(int argc, char* argv[]){
+	SpiderConfig cfg;
+	ExecutionStat stat;
+
+	cfg.memAllocType = MEMALLOC_SPECIAL_ACTOR;
+	cfg.memAllocStart = (void*)0;
+	cfg.memAllocSize = SH_MEM_SIZE;
+
+	cfg.schedulerType = SCHEDULER_LIST;
+
+	cfg.archiStack.type = STACK_STATIC;
+	cfg.archiStack.name = "ArchiStack";
+	cfg.archiStack.size = ARCHI_SIZE;
+	cfg.archiStack.start = archiStack;
+
+	cfg.pisdfStack.type = STACK_STATIC;
+	cfg.pisdfStack.name = "PiSDFStack";
+	cfg.pisdfStack.size = PISDF_SIZE;
+	cfg.pisdfStack.start = pisdfStack;
+
+	cfg.srdagStack.type = STACK_STATIC;
+	cfg.srdagStack.name = "SrdagStack";
+	cfg.srdagStack.size = SRDAG_SIZE;
+	cfg.srdagStack.start = srdagStack;
+
+	cfg.transfoStack.type = STACK_STATIC;
+	cfg.transfoStack.name = "TransfoStack";
+	cfg.transfoStack.size = TRANSFO_SIZE;
+	cfg.transfoStack.start = transfoStack;
+
+	cfg.lrtStack.type = STACK_STATIC;
+	cfg.lrtStack.name = "LrtStack";
+	cfg.lrtStack.size = LRT_SIZE;
+	cfg.lrtStack.start = lrtStack;
+
+	cfg.useGraphOptim = true;
+	cfg.useActorPrecedence = true;
+
+	Spider::init(cfg);
+	PlatformLinux platform(1, SH_MEM_SIZE, stereo_fcts, N_FCT_STEREO);
+
+	printf("Start\n");
+
+//	try{
+		int i=1;
+//	for(int i=1; i<=1; i++){
+		printf("NStep = %d\n", i);
+
+		init_stereo();
+
+		Spider::iterate();
+
+		Spider::printGantt("stereo.pgantt", "stereo_tex.dat", &stat);
+		Spider::printSRDAG("stereo.gv");
+
+		printf("EndTime = %ld ms\n", stat.globalEndTime/1000000);
+
+		printf("Memory use = ");
+		if(stat.memoryUsed < 1024)
+			printf("\t%5.1f B", stat.memoryUsed/1.);
+		else if(stat.memoryUsed < 1024*1024)
+			printf("\t%5.1f KB", stat.memoryUsed/1024.);
+		else if(stat.memoryUsed < 1024*1024*1024)
+			printf("\t%5.1f MB", stat.memoryUsed/1024./1024.);
+		else
+			printf("\t%5.1f GB", stat.memoryUsed/1024./1024./1024.);
+		printf("\n");
+
+		Spider::printActorsStat(&stat);
+
+		free_stereo();
+//	}
+//	}catch(const char* s){
+//		printf("Exception : %s\n", s);
+//	}
+	printf("finished\n");
+	Spider::clean();
+
+	return 0;
+}

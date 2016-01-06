@@ -37,7 +37,6 @@
  */
 
 #include <spider/spider.h>
-#include <stdint.h>
 #include "stereo.h"
 
 #include "actors.h"

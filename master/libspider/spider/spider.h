@@ -140,7 +140,6 @@ typedef struct{
 	Time latencies;
 }ExecutionStat;
 
-/* TODO Namespace */
 namespace Spider{
 	void init(SpiderConfig cfg);
 	void clean();

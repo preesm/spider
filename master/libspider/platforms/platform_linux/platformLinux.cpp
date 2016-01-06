@@ -100,7 +100,7 @@ static void initShMem(int shMemSize){
 		/* Bad memory size */
 		if(errno == EINVAL){
 			printf("Error openning shared memory, try:\n");
-			printf("\tsudo ipcrm -M 0x2104\n", shMemSize);
+			printf("\tsudo ipcrm -M 0x2104\n");
 			printf("\tsudo sysctl -w kernel.shmmax=%d\n", shMemSize);
 			exit(-1);
 		}
@@ -315,13 +315,15 @@ int PlatformLinux::fopen(const char* name){
 }
 
 void PlatformLinux::fprintf(int id, const char* fmt, ...){
+	ssize_t l;
+
 	va_list ap;
 	va_start(ap, fmt);
 	int n = vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, fmt, ap);
 	if(n >= PLATFORM_FPRINTF_BUFFERSIZE){
 		printf("PLATFORM_FPRINTF_BUFFERSIZE too small\n");
 	}
-	write(id, buffer, n);
+	l = write(id, buffer, n);
 }
 void PlatformLinux::fclose(int id){
 	close(id);

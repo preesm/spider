@@ -184,7 +184,7 @@ void Spider::printActorsStat(ExecutionStat* stat){
 	for(int j=0; j<stat->nPiSDFActor; j++){
 		printf("\t%12s:", stat->actors[j]->getName());
 		for(int k=0; k<archi_->getNPETypes(); k++)
-			printf("\t%d (x%d)",
+			printf("\t%ld (x%ld)",
 					stat->actorTimes[j][k]/stat->actorIterations[j][k],
 					stat->actorIterations[j][k]);
 		printf("\n");

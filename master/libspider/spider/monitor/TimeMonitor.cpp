@@ -7,7 +7,7 @@
 
 #include "TimeMonitor.h"
 #include <platform.h>
-#include <Launcher.h>
+#include <launcher/Launcher.h>
 
 static const char* spiderTaskName[9] = {
 		"",

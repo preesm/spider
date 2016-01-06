@@ -88,8 +88,9 @@ void* LinuxLrtCommunicator::ctrl_start_send(int size){
 
 void LinuxLrtCommunicator::ctrl_end_send(int size){
 	unsigned long s = curMsgSizeSend_;
-	write(fOut_, &s, sizeof(unsigned long));
-	write(fOut_, msgBufferSend_, curMsgSizeSend_);
+	ssize_t l;
+	l = write(fOut_, &s, sizeof(unsigned long));
+	l = write(fOut_, msgBufferSend_, curMsgSizeSend_);
 	curMsgSizeSend_ = 0;
 }
 
@@ -127,6 +128,7 @@ void* LinuxLrtCommunicator::trace_start_send(int size){
 
 void LinuxLrtCommunicator::trace_end_send(int size){
 	unsigned long s = curMsgSizeSend_;
+	ssize_t l;
 
 	int err = sem_wait(semTrace_);
 
@@ -135,8 +137,8 @@ void LinuxLrtCommunicator::trace_end_send(int size){
 		exit(-1);
 	}
 
-	write(fTrace_, &s, sizeof(unsigned long));
-	write(fTrace_, msgBufferSend_, curMsgSizeSend_);
+	l = write(fTrace_, &s, sizeof(unsigned long));
+	l = write(fTrace_, msgBufferSend_, curMsgSizeSend_);
 
 	sem_post(semTrace_);
 

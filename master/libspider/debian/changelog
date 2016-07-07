@@ -1,6 +1,7 @@
-libspider (0.5-1) trusty; urgency=low
+libspider (0.6-1) trusty; urgency=low
 
-  * Add platform settings to spider config.
-  * Remove unused header
+  * Handle efficiently RoundBuffers form Preesm generation.
+  * Allow PiSDF graphs print
+  * Extend Max edge count
 
- -- Julien Heulot <jheulot@insa-rennes.fr>  Wed, 06 Jan 2016 16:17:00 +0100
+ -- Julien Heulot <jheulot@insa-rennes.fr>  Thu, 07 Jul 2016 09:34:00 +0100

@@ -49,13 +49,11 @@
 #include <cmath>
 #include <algorithm>
 
-#define MAX_VERTEX_REPETITION 100
-
 typedef enum {VERTEX, EDGE} nodeType;
 
 typedef struct node{
 	int nb;
-	int rates[MAX_VERTEX_REPETITION];
+	int rates[MAX_IO_EDGES];
     nodeType type;
 	//todo union ?
 		struct {

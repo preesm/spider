@@ -414,12 +414,11 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 				int totProd = 0;
 
 				int sourceIndex=0, sinkIndex=0;
-#define MAX_SRDAG_INPUT_EDGES 100
 
-				SRDAGVertex* sources[MAX_SRDAG_INPUT_EDGES];
-				int sourceProds[MAX_SRDAG_INPUT_EDGES];
-				int sourcePortIx[MAX_SRDAG_INPUT_EDGES];
-				bool sourceExplode[MAX_SRDAG_INPUT_EDGES];
+				SRDAGVertex* sources[MAX_IO_EDGES];
+				int sourceProds[MAX_IO_EDGES];
+				int sourcePortIx[MAX_IO_EDGES];
+				bool sourceExplode[MAX_IO_EDGES];
 				int nbSourceRepetitions = join->getNConnectedInEdge();
 
 				topDag->delEdge(join->getOutEdge(0));
@@ -436,11 +435,11 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 				}
 				topDag->delVertex(join);
 
-				SRDAGVertex* sinks[MAX_SRDAG_INPUT_EDGES];
-				int sinkCons[MAX_SRDAG_INPUT_EDGES];
-				int sinkPortIx[MAX_SRDAG_INPUT_EDGES];
+				SRDAGVertex* sinks[MAX_IO_EDGES];
+				int sinkCons[MAX_IO_EDGES];
+				int sinkPortIx[MAX_IO_EDGES];
 				int nbSinkRepetitions = fork->getNConnectedOutEdge();
-				bool sinkImplode[MAX_SRDAG_INPUT_EDGES];
+				bool sinkImplode[MAX_IO_EDGES];
 				for(int k=0; k<nbSinkRepetitions; k++){
 					SRDAGEdge *edge = fork->getOutEdge(k);
 					sinks[k] = edge->getSnk();

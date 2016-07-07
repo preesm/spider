@@ -45,6 +45,8 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/SRDAG/SRDAGEdge.h>
 
+#include <stdio.h>
+
 void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
     job->bodies = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), SRDAGVertex**);
 
@@ -64,6 +66,17 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 			break;
 		case PISDF_SUBTYPE_BROADCAST:
 			for(int j=0; j<brv[bodyIx]; j++){
+				/* Check Broadcast use */
+				int cons = pi_vertex->getInEdge(0)->resolveCons(job);
+				for(int tmp=0; tmp<pi_vertex->getNOutEdge(); tmp++){
+					int prod = pi_vertex->getOutEdge(tmp)->resolveProd(job);
+					if(prod != cons){
+						char prodExpr[100], consExpr[100];
+						pi_vertex->getInEdge(0)->getConsExpr(consExpr, 100);
+						pi_vertex->getOutEdge(tmp)->getProdExpr(prodExpr, 100);
+						printf("Warning: Broadcast have different production/consumption: %s (%d) != %s (%d) \n", prod, cons);
+					}
+				}
 				job->bodies[bodyIx][j] = topSrdag->addBroadcast(MAX_IO_EDGES);
 			}
 			break;

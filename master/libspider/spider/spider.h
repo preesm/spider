@@ -173,6 +173,7 @@ namespace Spider{
 			ExecutionStat* stat);
 
 	void printSRDAG(const char* srdagPath);
+	void printPiSDF(const char* pisdfPath);
 
 	void printActorsStat(ExecutionStat* stat);
 

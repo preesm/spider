@@ -190,6 +190,10 @@ void Spider::printSRDAG(const char* srdagPath){
 	return srdag_->print(srdagPath);
 }
 
+void Spider::printPiSDF(const char* pisdfPath){
+	return pisdf_->print(pisdfPath);
+}
+
 void Spider::printActorsStat(ExecutionStat* stat){
 	printf("Actors:\n");
 	for(int j=0; j<stat->nPiSDFActor; j++){

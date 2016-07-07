@@ -63,6 +63,7 @@ LRT::LRT(int ix){
 	nFct_ = 0;
 	ix_ = ix;
 	run_ = false;
+	idle_ = false;
 }
 LRT::~LRT(){
 	/* Nothing to Unalloc */

@@ -119,7 +119,7 @@ Expression::~Expression() {
 	StackMonitor::free(PISDF_STACK, stack_);
 }
 
-int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job) const{
+int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job, bool* ok) const{
 	int stack[MAX_NVAR_ELEMENTS];
 	int* stackPtr = stack;
 	const Token* inputPtr = stack_;
@@ -165,9 +165,12 @@ int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job) c
 			stackPtr++;
 			break;
 		case PARAMETER:
-			*stackPtr = job->paramValues[paramList[inputPtr->paramIx]->getTypeIx()];
-			if(*stackPtr == -1)
-				return -1; // Not resolved TODO handle better not resolved dependent params
+			if(job->paramSet[paramList[inputPtr->paramIx]->getTypeIx()])
+				*stackPtr = job->paramValues[paramList[inputPtr->paramIx]->getTypeIx()];
+			else{
+				if(ok) *ok = false;
+				return 0; // Not resolved TODO handle better not resolved dependent params
+			}
 			stackPtr++;
 			break;
 		default:
@@ -175,6 +178,7 @@ int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job) c
 		}
 		inputPtr++;
 	}
+	if(ok) *ok = true;
 	return stack[0];
 }
 

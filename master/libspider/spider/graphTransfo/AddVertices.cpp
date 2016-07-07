@@ -67,6 +67,11 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 				job->bodies[bodyIx][j] = topSrdag->addBroadcast(MAX_IO_EDGES);
 			}
 			break;
+		case PISDF_SUBTYPE_ROUNDBUFFER:
+			for(int j=0; j<brv[bodyIx]; j++){
+				job->bodies[bodyIx][j] = topSrdag->addRoundBuffer();
+			}
+			break;
 		case PISDF_SUBTYPE_JOIN:
 			for(int j=0; j<brv[bodyIx]; j++){
 				job->bodies[bodyIx][j] = topSrdag->addJoin(MAX_IO_EDGES);

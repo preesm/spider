@@ -230,6 +230,8 @@ inline const char* PiSDFVertex::getName() const{
 		return "Join";
 	case PISDF_SUBTYPE_END:
 		return "End";
+	case PISDF_SUBTYPE_ROUNDBUFFER:
+		return "Roundbuffer";
 	}
 	return "NA";
 }

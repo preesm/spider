@@ -42,6 +42,7 @@
 #include <graphs/PiSDF/PiSDFEdge.h>
 
 #include <stdio.h>
+#include <cmath>
 
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/SRDAG/SRDAGVertex.h>
@@ -65,6 +66,84 @@ void printOptimsStats(){
 	if(!joinUsed) 		printf("Join Unused\n");
 	if(!initendUsed) 	printf("InitEnd Unused\n");
 	if(!joinforkUsed) 	printf("JoinFork Unused\n");
+}
+
+static int reduceRB(SRDAGGraph* topDag){
+	for(int i=0; i<topDag->getNVertex(); i++){
+		SRDAGVertex* rb = topDag->getVertex(i);
+		if(rb && rb->getState() == SRDAG_EXEC && rb->getType() == SRDAG_ROUNDBUFFER){
+			int inTkn = rb->getInEdge(0)->getRate();
+			int outTkn = rb->getOutEdge(0)->getRate();
+			if(inTkn == outTkn){
+				SRDAGEdge* inEdge = rb->getInEdge(0);
+				SRDAGVertex* nextVertex = rb->getOutEdge(0)->getSnk();
+				int edgeIx = rb->getOutEdge(0)->getSnkPortIx();
+
+				SRDAGEdge* delEdge = rb->getOutEdge(0);
+				delEdge->disconnectSrc();
+				delEdge->disconnectSnk();
+				topDag->delEdge(delEdge);
+
+				inEdge->disconnectSnk();
+				inEdge->connectSnk(nextVertex, edgeIx);
+				topDag->delVertex(rb);
+				return 1;
+			}else if(inTkn < outTkn){
+				/* Duplicate Token Using Br/Join Pattern */
+				int nBrOut = (int)ceil(((float)outTkn)/inTkn);
+				SRDAGVertex* br = topDag->addBroadcast(MAX_IO_EDGES);
+				SRDAGVertex* join = topDag->addJoin(MAX_IO_EDGES);
+				int rest = outTkn;
+
+				br->setState(SRDAG_EXEC);
+				join->setState(SRDAG_EXEC);
+
+				SRDAGEdge* inEdge = rb->getInEdge(0);
+				SRDAGEdge* outEdge = rb->getOutEdge(0);
+
+				inEdge->disconnectSnk();
+				inEdge->connectSnk(br, 0);
+				outEdge->disconnectSrc();
+				outEdge->connectSrc(join, 0);
+				topDag->delVertex(rb);
+
+				for(int j=0; j<nBrOut; j++){
+					if(rest >= inTkn){
+						topDag->addEdge(br, j, join, j, inTkn);
+						rest -= inTkn;
+					}else{
+						SRDAGVertex* fork = topDag->addFork(MAX_IO_EDGES);
+						SRDAGVertex* end = topDag->addEnd();
+						fork->setState(SRDAG_EXEC);
+						end->setState(SRDAG_EXEC);
+						topDag->addEdge(br, j, fork, 0, inTkn);
+						topDag->addEdge(fork, 0, join, j, rest);
+						topDag->addEdge(fork, 1, end, 0, inTkn-rest);
+						rest -= rest;
+					}
+				}
+			}else{ /* inTkn > outTkn */
+				/* Discard Token Using Fork/End Pattern */
+				SRDAGEdge* inEdge = rb->getInEdge(0);
+				SRDAGEdge* outEdge = rb->getOutEdge(0);
+
+				SRDAGVertex* fork = topDag->addFork(MAX_IO_EDGES);
+				SRDAGVertex* end = topDag->addEnd();
+				fork->setState(SRDAG_EXEC);
+				end->setState(SRDAG_EXEC);
+				topDag->addEdge(fork, 0, end, 0, inTkn-outTkn);
+
+				inEdge->disconnectSnk();
+				inEdge->connectSnk(fork, 0);
+
+				outEdge->disconnectSrc();
+				outEdge->connectSrc(fork, 1);
+
+				topDag->delVertex(rb);
+			}
+		}
+	}
+	return 0;
 }
 
 static int reduceJoinJoin(SRDAGGraph* topDag){
@@ -407,6 +486,34 @@ static int reduceInitEnd(SRDAGGraph* topDag){
 	return 0;
 }
 
+static int reduceJoinEnd(SRDAGGraph* topDag){
+	for(int i=0; i<topDag->getNVertex(); i++){
+		SRDAGVertex* join = topDag->getVertex(i);
+		if(join && join->getState() == SRDAG_EXEC && join->getType() == SRDAG_JOIN){
+			SRDAGVertex* end = join->getOutEdge(0)->getSnk();
+			if(end && end->getState() == SRDAG_EXEC && end->getType() == SRDAG_END){
+				int nEdges = join->getNConnectedInEdge();
+				for(int j=0; j<nEdges; j++){
+					SRDAGEdge* edge = join->getInEdge(j);
+					SRDAGVertex* newEnd = topDag->addEnd();
+					newEnd->setState(SRDAG_EXEC);
+					edge->disconnectSnk();
+					edge->connectSnk(newEnd, 0);
+				}
+
+				SRDAGEdge* edge = join->getOutEdge(0);
+				edge->disconnectSrc();
+				edge->disconnectSnk();
+				topDag->delEdge(edge);
+				topDag->delVertex(end);
+				topDag->delVertex(join);
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
 static int reduceJoinFork(SRDAGGraph* topDag){
 	for(int i=0; i<topDag->getNVertex(); i++){
 		SRDAGVertex* join = topDag->getVertex(i);
@@ -578,6 +685,17 @@ void optims(SRDAGGraph *topDag){
 	do{
 		res = false;
 		resTotal = false;
+
+		do{
+			res = reduceRB(topDag);
+			resTotal = res || resTotal;
+		}while(res);
+
+		do{
+			res = reduceJoinEnd(topDag);
+			resTotal = res || resTotal;
+		}while(res);
+
 		do{
 			res = reduceJoinJoin(topDag);
 			resTotal = res || resTotal;

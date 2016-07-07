@@ -228,6 +228,7 @@ static int removeBr(SRDAGGraph* topDag){
 			}else if(br->getNConnectedOutEdge() == 0){
 				SRDAGVertex* end = topDag->addEnd();
 				SRDAGEdge* edge = br->getInEdge(0);
+				end->setState(SRDAG_EXEC);
 
 				edge->disconnectSnk();
 				edge->connectSnk(end, 0);
@@ -318,6 +319,7 @@ static int removeFork(SRDAGGraph* topDag){
 			}else if(fork->getNConnectedOutEdge() == 0){
 				SRDAGVertex* end = topDag->addEnd();
 				SRDAGEdge* edge = fork->getInEdge(0);
+				end->setState(SRDAG_EXEC);
 
 				edge->disconnectSnk();
 				edge->connectSnk(end, 0);
@@ -366,6 +368,7 @@ static int removeJoin(SRDAGGraph* topDag){
 			}else if(join->getNConnectedInEdge() == 0){
 				SRDAGVertex* end = topDag->addEnd();
 				SRDAGEdge* edge = join->getInEdge(0);
+				end->setState(SRDAG_EXEC);
 
 				edge->disconnectSnk();
 				edge->connectSnk(end, 0);
@@ -465,6 +468,7 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 					if (rest < curProd && !sourceExplode[sourceIndex]){
 						// Adding an explode vertex.
 						SRDAGVertex *fork_vertex = topDag->addFork(MAX_IO_EDGES);
+						fork_vertex->setState(SRDAG_EXEC);
 
 						// Replacing the source vertex by the explode vertex in the array of sources.
 						SRDAGVertex *origin_vertex = sources[sourceIndex];
@@ -481,6 +485,7 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 					if (rest < curCons && !sinkImplode[sinkIndex]){
 						// Adding an implode vertex.
 						SRDAGVertex *join_vertex = topDag->addJoin(MAX_IO_EDGES);
+						join_vertex->setState(SRDAG_EXEC);
 
 						// Replacing the sink vertex by the implode vertex in the array of sources.
 						SRDAGVertex *origin_vertex = sinks[sinkIndex];//	// Adding vxs

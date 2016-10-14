@@ -35,7 +35,9 @@
  ****************************************************************************/
 
 #include <graphs/PiSDF/PiSDFCommon.h>
+#include <graphs/PiSDF/PiSDFGraph.h>
 #include <graphs/PiSDF/PiSDFParam.h>
+#include <parser/Expression.h>
 
 /** Static Var def */
 int PiSDFParam::globalIx = 0;
@@ -44,7 +46,8 @@ PiSDFParam::PiSDFParam(
 		const char* name,
 		int typeIx,
 		PiSDFGraph* graph,
-		PiSDFParamType type){
+		PiSDFParamType type,
+		const char* expr){
 	id_ = globalIx++;
 	typeIx_ = typeIx;
 	name_ = name;
@@ -54,8 +57,33 @@ PiSDFParam::PiSDFParam(
 	parentId_ = -1;
 	setter_ = 0;
 	portIx_ = -1;
-	expr_ = 0;
+
+	switch(type){
+	case PISDF_PARAM_DEPENDENT:
+		expr_ = CREATE(PISDF_STACK, Expression)(
+				expr,
+				graph->getParams(),
+				graph->getNParam());
+		break;
+	case PISDF_PARAM_STATIC:
+	case PISDF_PARAM_HERITED:
+	case PISDF_PARAM_DYNAMIC:
+	default:
+		expr_ = 0;
+		break;
+	}
 }
 
 PiSDFParam::~PiSDFParam(){
+	switch(this->type_){
+	case PISDF_PARAM_DEPENDENT:
+		expr_->~Expression();
+		StackMonitor::free(PISDF_STACK, expr_);
+		break;
+	case PISDF_PARAM_STATIC:
+	case PISDF_PARAM_HERITED:
+	case PISDF_PARAM_DYNAMIC:
+	default:
+		break;
+	}
 }

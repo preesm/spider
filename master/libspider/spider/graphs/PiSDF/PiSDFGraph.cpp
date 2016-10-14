@@ -175,7 +175,8 @@ PiSDFVertex* PiSDFGraph::addOutputIf(
 PiSDFParam* PiSDFGraph::addStaticParam(const char* name, const char* expr){
 	PiSDFParam* param = CREATE(PISDF_STACK, PiSDFParam)(
 			name, params_.getN(),
-			this, PISDF_PARAM_STATIC);
+			this, PISDF_PARAM_STATIC,
+			NULL);
 
 	// TODO set value
 	throw "Unimplemented";
@@ -187,7 +188,8 @@ PiSDFParam* PiSDFGraph::addStaticParam(const char* name, const char* expr){
 PiSDFParam* PiSDFGraph::addStaticParam(const char* name, int value){
 	PiSDFParam* param = CREATE(PISDF_STACK, PiSDFParam)(
 			name, params_.getN(),
-			this, PISDF_PARAM_STATIC);
+			this, PISDF_PARAM_STATIC,
+			NULL);
 	param->setValue(value);
 	params_.add(param);
 	return param;
@@ -196,7 +198,8 @@ PiSDFParam* PiSDFGraph::addStaticParam(const char* name, int value){
 PiSDFParam* PiSDFGraph::addHeritedParam(const char* name, int parentId){
 	PiSDFParam* param = CREATE(PISDF_STACK, PiSDFParam)(
 			name, params_.getN(),
-			this, PISDF_PARAM_HERITED);
+			this, PISDF_PARAM_HERITED,
+			NULL);
 	param->setParentId(parentId);
 	params_.add(param);
 	return param;
@@ -205,7 +208,8 @@ PiSDFParam* PiSDFGraph::addHeritedParam(const char* name, int parentId){
 PiSDFParam* PiSDFGraph::addDynamicParam(const char* name){
 	PiSDFParam* param = CREATE(PISDF_STACK, PiSDFParam)(
 			name, params_.getN(),
-			this, PISDF_PARAM_DYNAMIC);
+			this, PISDF_PARAM_DYNAMIC,
+			NULL);
 	params_.add(param);
 	return param;
 }
@@ -213,13 +217,8 @@ PiSDFParam* PiSDFGraph::addDynamicParam(const char* name){
 PiSDFParam* PiSDFGraph::addDependentParam(const char* name, const char* expr){
 	PiSDFParam* param = CREATE(PISDF_STACK, PiSDFParam)(
 			name, params_.getN(),
-			this, PISDF_PARAM_DEPENDENT);
-
-	Expression* expression = CREATE(PISDF_STACK, Expression)(
-			expr,
-			this->getParams(),
-			this->getNParam());
-	param->setExpression(expression);
+			this, PISDF_PARAM_DEPENDENT,
+			expr);
 
 	params_.add(param);
 	return param;
@@ -267,11 +266,6 @@ void PiSDFGraph::delVertex(PiSDFVertex* vertex){
 }
 
 void PiSDFGraph::delParam(PiSDFParam* param){
-	if(param->getType() == PISDF_PARAM_DEPENDENT){
-		Expression* expr = param->getExpression();
-		expr->~Expression();
-		StackMonitor::free(PISDF_STACK, expr);
-	}
 	params_.del(param);
 	param->~PiSDFParam();
 	StackMonitor::free(PISDF_STACK, param);

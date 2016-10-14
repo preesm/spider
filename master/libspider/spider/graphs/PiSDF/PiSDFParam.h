@@ -50,7 +50,8 @@ public:
 			const char* name,
 			int typeIx,
 			PiSDFGraph* graph,
-			PiSDFParamType type);
+			PiSDFParamType type,
+			const char* expr);
 	~PiSDFParam();
 
 	/** Getters */

@@ -1,0 +1,14 @@
+.project
+.cproject
+.settings
+Makefile
+common
+*.lo
+.deps
+.dirstamp
+.libs
+libtool
+*.sh
+*.la
+config.h
+config.status

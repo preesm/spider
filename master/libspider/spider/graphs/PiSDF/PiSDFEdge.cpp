@@ -52,6 +52,7 @@ PiSDFEdge::PiSDFEdge(PiSDFGraph* graph){
 
 	prod_ = cons_ = delay_ = 0;
 	setter_ = 0;
+	getter_ = 0;
 }
 
 PiSDFEdge::~PiSDFEdge(){

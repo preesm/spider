@@ -383,9 +383,7 @@ bool Expression::getNextToken(
 	if (isalnum(**ptr) || (**ptr == '_')){
 		const char *name = *ptr;
 		size_t nb=0;
-//		int id=0;
 		while (isalnum(**ptr) || (**ptr == '_')){
-			printf("%c\n", **ptr);
 			nb++;
 			(*ptr)++;
 		}

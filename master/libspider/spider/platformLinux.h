@@ -54,7 +54,7 @@ public:
 
 	/** Time Handling */
 	virtual void rstTime();
-	virtual void rstTime(ClearTimeMsg* msg);
+	virtual void rstTime(struct ClearTimeMsg* msg);
 	virtual Time getTime();
 
 	/** Platform Core Handling **/

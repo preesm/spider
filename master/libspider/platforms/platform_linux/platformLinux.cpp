@@ -345,7 +345,7 @@ int PlatformLinux::getMinAllocSize(){
 }
 
 /** Time Handling */
-void PlatformLinux::rstTime(ClearTimeMsg* msg){
+void PlatformLinux::rstTime(struct ClearTimeMsg* msg){
 	struct timespec* ts = (struct timespec*)(msg+1);
 	start = *ts;
 }

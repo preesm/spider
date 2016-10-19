@@ -37,7 +37,7 @@
 #ifndef LRT_COMMUNICATOR_H
 #define LRT_COMMUNICATOR_H
 
-#include <Message.h>
+#include "Message.h"
 
 class LrtCommunicator {
 public:

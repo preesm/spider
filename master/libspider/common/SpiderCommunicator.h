@@ -37,7 +37,7 @@
 #ifndef SPIDER_COMMUNICATOR_H
 #define SPIDER_COMMUNICATOR_H
 
-#include <Message.h>
+#include "Message.h"
 
 class SpiderCommunicator {
 public:

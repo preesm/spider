@@ -69,7 +69,6 @@
 
 #include <launcher/Launcher.h>
 
-#define VERBOSE 0
 #define SCHEDULE_SIZE 10000
 
 static void initJob(transfoJob *job, SRDAGVertex *nextHierVx){
@@ -145,6 +144,7 @@ void jit_ms(
 		SRDAGGraph *topSrdag,
 		MemAlloc* memAlloc,
 		Scheduler* scheduler,
+		bool verbose,
 		bool useGraphOptim,
 		bool useActorPrecedence){
 
@@ -191,24 +191,24 @@ void jit_ms(
 
 				jobQueue.push(job);
 			}else{
-			#if VERBOSE
-				/* Display Param values */
-				printf("\nParam Values:\n");
-				for(int i=0; i<job->graph->getNParam(); i++){
-					printf("%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
+				if(verbose){
+					/* Display Param values */
+					printf("\nParam Values:\n");
+					for(int i=0; i<job->graph->getNParam(); i++){
+						printf("%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
+					}
 				}
-			#endif
 
 				int* brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
 				computeBRV(topSrdag, job, brv);
 
-			#if VERBOSE
-				/* Display BRV values */
-				printf("\nBRV Values:\n");
-				for(int i=0; i<job->graph->getNBody(); i++){
-					printf("%s: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+				if(verbose){
+					/* Display BRV values */
+					printf("\nBRV Values:\n");
+					for(int i=0; i<job->graph->getNBody(); i++){
+						printf("%s: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+					}
 				}
-			#endif
 
 				addSRVertices(topSrdag, job, brv);
 
@@ -242,7 +242,7 @@ void jit_ms(
 		Platform::get()->getLrt()->runUntilNoMoreJobs();
 
 		/* Resolve params must be done by itself */
-		Launcher::get()->resolveParams(archi, topSrdag);
+		Launcher::get()->resolveParams(archi, topSrdag, verbose);
 
 		TimeMonitor::startMonitoring();
 
@@ -259,25 +259,25 @@ void jit_ms(
 				}
 			}
 
-		#if VERBOSE
-			/* Display Param values */
-			printf("\nParam Values:\n");
-			for(int i=0; i<job->graph->getNParam(); i++){
-				printf("%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
+			if(verbose){
+				/* Display Param values */
+				printf("\nParam Values:\n");
+				for(int i=0; i<job->graph->getNParam(); i++){
+					printf("%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
+				}
 			}
-		#endif
 
 			/* Compute BRV */
 			int* brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
 			computeBRV(topSrdag, job, brv);
 
-		#if VERBOSE
-			/* Display BRV values */
-			printf("\nBRV Values:\n");
-			for(int i=0; i<job->graph->getNBody(); i++){
-				printf("%s: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+			if(verbose){
+				/* Display BRV values */
+				printf("\nBRV Values:\n");
+				for(int i=0; i<job->graph->getNBody(); i++){
+					printf("%s: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+				}
 			}
-		#endif
 
 			/* Add vertices */
 			addSRVertices(topSrdag, job, brv);

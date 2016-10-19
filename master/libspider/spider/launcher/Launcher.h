@@ -47,7 +47,7 @@ public:
 	static Launcher* get();
 
 	void launchVertex(SRDAGVertex* vertex, bool useActorPrecedence);
-	void resolveParams(Archi* archi, SRDAGGraph* topDag);
+	void resolveParams(Archi* archi, SRDAGGraph* topDag, bool verbose);
 
 	void sendTraceSpider(TraceSpiderType type, Time start, Time end);
 

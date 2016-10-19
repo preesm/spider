@@ -114,6 +114,7 @@ typedef struct{
 
 	bool useGraphOptim;
 	bool useActorPrecedence;
+	bool verbose;
 
 	PlatformConfig platform;
 } SpiderConfig;
@@ -157,6 +158,7 @@ namespace Spider{
 	void setMemAllocType(MemAllocType type, int start, int size);
 	void setSchedulerType(SchedulerType type);
 
+	void setVerbose(bool verbose);
 	void setGraphOptim(bool useGraphOptim);
 	void setActorPrecedence(bool useActorPrecedence);
 	void setSpecialActorPrecedence(bool useSpecialActorPrecedence);

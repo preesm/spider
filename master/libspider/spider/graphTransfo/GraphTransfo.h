@@ -63,6 +63,7 @@ void jit_ms(
 		SRDAGGraph *topSrdag,
 		MemAlloc* memAlloc,
 		Scheduler* scheduler,
+		bool verbose,
 		bool useGraphOptim,
 		bool useActorPrecedence);
 

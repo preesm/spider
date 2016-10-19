@@ -195,7 +195,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex, bool useActorPre
 	Platform::getSpiderCommunicator()->ctrl_end_send(lrtIx, size);
 }
 
-void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
+void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag, bool verbose){
 	int slave = 0;
 	while(curNParam_ != 0){
 		ParamValueMsg* msg;
@@ -207,7 +207,8 @@ void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 			for(int j = 0; j < cfgVertex->getNOutParam(); j++){
 				int* param = cfgVertex->getOutParam(j);
 				*param = params[j];
-//				printf("Recv param = %d\n", *param);
+				if(verbose)
+					printf("Recv param %s = %d\n", cfgVertex->getReference()->getOutParam(j)->getName(), *param);
 			}
 			curNParam_ -= cfgVertex->getNOutParam();
 			Platform::getSpiderCommunicator()->ctrl_end_recv(slave);

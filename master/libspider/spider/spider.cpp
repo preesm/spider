@@ -76,9 +76,9 @@ static MemAlloc* memAlloc_;
 static Scheduler* scheduler_;
 static PlatformLinux* platform;
 
+static bool verbose_;
 static bool useGraphOptim_;
 static bool useActorPrecedence_;
-
 
 void Spider::init(SpiderConfig cfg){
 	setMemAllocType(cfg.memAllocType, (long)cfg.memAllocStart, cfg.memAllocSize);
@@ -92,6 +92,7 @@ void Spider::init(SpiderConfig cfg){
 
 	setActorPrecedence(cfg.useActorPrecedence);
 	setGraphOptim(cfg.useGraphOptim);
+	setVerbose(cfg.verbose);
 
 	platform = new PlatformLinux(
 			cfg.platform.nLrt,
@@ -133,12 +134,17 @@ void Spider::iterate(){
 
 	jit_ms(pisdf_, archi_, srdag_,
 			memAlloc_, scheduler_,
+			verbose_,
 			useGraphOptim_,
 			useActorPrecedence_);
 }
 
 void Spider::setGraphOptim(bool useGraphOptim){
 	useGraphOptim_ = useGraphOptim;
+}
+
+void Spider::setVerbose(bool verbose){
+	verbose_ = verbose;
 }
 
 void Spider::setActorPrecedence(bool useActorPrecedence){

@@ -59,7 +59,8 @@ PiSDFParam::PiSDFParam(
 	portIx_ = -1;
 
 	switch(type){
-	case PISDF_PARAM_DEPENDENT:
+	case PISDF_PARAM_DEPENDENT_STATIC:
+	case PISDF_PARAM_DEPENDENT_DYNAMIC:
 		expr_ = CREATE(PISDF_STACK, Expression)(
 				expr,
 				graph->getParams(),
@@ -76,7 +77,8 @@ PiSDFParam::PiSDFParam(
 
 PiSDFParam::~PiSDFParam(){
 	switch(this->type_){
-	case PISDF_PARAM_DEPENDENT:
+	case PISDF_PARAM_DEPENDENT_STATIC:
+	case PISDF_PARAM_DEPENDENT_DYNAMIC:
 		expr_->~Expression();
 		StackMonitor::free(PISDF_STACK, expr_);
 		break;

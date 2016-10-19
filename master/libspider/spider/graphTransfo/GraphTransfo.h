@@ -51,7 +51,6 @@ typedef struct transfoJob{
 	PiSDFGraph* graph;
 	int graphIter;
 	int* paramValues;
-	bool* paramSet;
 	SRDAGEdge** inputIfs;
 	SRDAGEdge** outputIfs;
 	SRDAGVertex** configs;

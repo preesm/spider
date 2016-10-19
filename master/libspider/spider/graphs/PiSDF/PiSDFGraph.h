@@ -79,14 +79,11 @@ public:
 			int nInParam);
 
 	PiSDFParam* addStaticParam(const char* name, const char* expr);
-
 	PiSDFParam* addStaticParam(const char* name, int value);
-
 	PiSDFParam* addHeritedParam(const char* name, int parentId);
-
 	PiSDFParam* addDynamicParam(const char* name);
-
-	PiSDFParam* addDependentParam(const char* name, const char* expr);
+	PiSDFParam* addStaticDependentParam(const char* name, const char* expr);
+	PiSDFParam* addDynamicDependentParam(const char* name, const char* expr);
 
 	/** Element getters */
 	inline PiSDFEdge* getEdge(int ix);

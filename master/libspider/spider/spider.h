@@ -244,7 +244,12 @@ namespace Spider{
 			PiSDFGraph* graph,
 			const char* name);
 
-	PiSDFParam* addDependentParam(
+	PiSDFParam* addStaticDependentParam(
+			PiSDFGraph* graph,
+			const char* name,
+			const char* expr);
+
+	PiSDFParam* addDynamicDependentParam(
 			PiSDFGraph* graph,
 			const char* name,
 			const char* expr);

@@ -551,11 +551,18 @@ PiSDFParam* Spider::addDynamicParam(
 	return graph->addDynamicParam(name);
 }
 
-PiSDFParam* Spider::addDependentParam(
+PiSDFParam* Spider::addStaticDependentParam(
 		PiSDFGraph* graph,
 		const char* name,
 		const char* expr){
-	return graph->addDependentParam(name, expr);
+	return graph->addStaticDependentParam(name, expr);
+}
+
+PiSDFParam* Spider::addDynamicDependentParam(
+		PiSDFGraph* graph,
+		const char* name,
+		const char* expr){
+	return graph->addDynamicDependentParam(name, expr);
 }
 
 PiSDFEdge* Spider::connect(

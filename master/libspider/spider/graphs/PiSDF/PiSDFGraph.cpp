@@ -214,10 +214,20 @@ PiSDFParam* PiSDFGraph::addDynamicParam(const char* name){
 	return param;
 }
 
-PiSDFParam* PiSDFGraph::addDependentParam(const char* name, const char* expr){
+PiSDFParam* PiSDFGraph::addDynamicDependentParam(const char* name, const char* expr){
 	PiSDFParam* param = CREATE(PISDF_STACK, PiSDFParam)(
 			name, params_.getN(),
-			this, PISDF_PARAM_DEPENDENT,
+			this, PISDF_PARAM_DEPENDENT_DYNAMIC,
+			expr);
+
+	params_.add(param);
+	return param;
+}
+
+PiSDFParam* PiSDFGraph::addStaticDependentParam(const char* name, const char* expr){
+	PiSDFParam* param = CREATE(PISDF_STACK, PiSDFParam)(
+			name, params_.getN(),
+			this, PISDF_PARAM_DEPENDENT_STATIC,
 			expr);
 
 	params_.add(param);

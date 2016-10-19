@@ -165,12 +165,7 @@ int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job, b
 			stackPtr++;
 			break;
 		case PARAMETER:
-			if(job->paramSet[paramList[inputPtr->paramIx]->getTypeIx()])
-				*stackPtr = job->paramValues[paramList[inputPtr->paramIx]->getTypeIx()];
-			else{
-				if(ok) *ok = false;
-				return 0; // Not resolved TODO handle better not resolved dependent params
-			}
+			*stackPtr = job->paramValues[paramList[inputPtr->paramIx]->getTypeIx()];
 			stackPtr++;
 			break;
 		default:

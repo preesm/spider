@@ -78,26 +78,25 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx){
 	job->graphIter = nextHierVx->getRefId();
 
 	/* Add Static and Herited parameter values */
-	job->paramSet = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), bool);
 	job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), int);
 	for(int paramIx=0; paramIx<job->graph->getNParam(); paramIx++){
 		PiSDFParam* param = job->graph->getParam(paramIx);
 		switch(param->getType()){
 		case PISDF_PARAM_STATIC:
-			job->paramSet[paramIx] = true;
 			job->paramValues[paramIx] = param->getStaticValue();
 			break;
 		case PISDF_PARAM_HERITED:
-			job->paramSet[paramIx] = true;
 			job->paramValues[paramIx] = nextHierVx->getInParam(param->getParentId());
 			break;
 		case PISDF_PARAM_DYNAMIC:
 			// Do nothing, cannot be evaluated yet
-			job->paramSet[paramIx] = false;
 			job->paramValues[paramIx] = -1;
 			break;
-		case PISDF_PARAM_DEPENDENT:
-			job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job, &job->paramSet[paramIx]);
+		case PISDF_PARAM_DEPENDENT_STATIC:
+			job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
+			break;
+		case PISDF_PARAM_DEPENDENT_DYNAMIC:
+			job->paramValues[paramIx] = -1;
 			break;
 		}
 //		printf("%s <= %d\n", param->getName(), job->paramValues[paramIx]);
@@ -192,14 +191,6 @@ void jit_ms(
 
 				jobQueue.push(job);
 			}else{
-				/* Recompute Dependent Params */
-				for(int paramIx=0; paramIx<job->graph->getNParam(); paramIx++){
-					PiSDFParam* param = job->graph->getParam(paramIx);
-					if(param->getType() == PISDF_PARAM_DEPENDENT){
-						job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
-					}
-				}
-
 			#if VERBOSE
 				/* Display Param values */
 				printf("\nParam Values:\n");
@@ -260,10 +251,10 @@ void jit_ms(
 			/* Pop job from queue */
 			transfoJob* job = jobQueue.pop();
 
-			/* Recompute Dependent Params */
+			/* Recompute Dependent Dynamic Params */
 			for(int paramIx=0; paramIx<job->graph->getNParam(); paramIx++){
 				PiSDFParam* param = job->graph->getParam(paramIx);
-				if(param->getType() == PISDF_PARAM_DEPENDENT){
+				if(param->getType() == PISDF_PARAM_DEPENDENT_DYNAMIC){
 					job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
 				}
 			}
@@ -272,10 +263,7 @@ void jit_ms(
 			/* Display Param values */
 			printf("\nParam Values:\n");
 			for(int i=0; i<job->graph->getNParam(); i++){
-				if(job->paramSet[i])
-					printf("%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
-				else
-					printf("%s: not resolved\n", job->graph->getParam(i)->getName());
+				printf("%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
 			}
 		#endif
 

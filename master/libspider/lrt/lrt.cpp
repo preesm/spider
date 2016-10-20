@@ -120,7 +120,8 @@ int LRT::runOneJob(){
 
 			Time end = Platform::get()->getTime();
 
-			sendTrace(jobMsg->srdagIx, start, end);
+			if(jobMsg->traceEnabled)
+				sendTrace(jobMsg->srdagIx, start, end);
 
 			for(int i=0; i<(int)jobMsg->nbOutEdge; i++){
 				Platform::getLrtCommunicator()->data_end_send(&outFifos[i]);

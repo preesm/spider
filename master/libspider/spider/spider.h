@@ -115,6 +115,7 @@ typedef struct{
 	bool useGraphOptim;
 	bool useActorPrecedence;
 	bool verbose;
+	bool traceEnabled;
 
 	PlatformConfig platform;
 } SpiderConfig;
@@ -162,6 +163,7 @@ namespace Spider{
 	void setGraphOptim(bool useGraphOptim);
 	void setActorPrecedence(bool useActorPrecedence);
 	void setSpecialActorPrecedence(bool useSpecialActorPrecedence);
+	void setTraceEnabled(bool traceEnabled);
 
 	void setArchi(Archi* archi);
 	void setGraph(PiSDFGraph* pisdf);

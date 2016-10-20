@@ -81,6 +81,7 @@ typedef struct {
 	unsigned long srdagIx;
 	unsigned long specialActor;
 	unsigned long fctIx;
+	unsigned long traceEnabled;
 	unsigned long nbInEdge;
 	unsigned long nbOutEdge;
 	unsigned long nbInParam;

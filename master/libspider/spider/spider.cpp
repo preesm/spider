@@ -79,6 +79,7 @@ static PlatformLinux* platform;
 static bool verbose_;
 static bool useGraphOptim_;
 static bool useActorPrecedence_;
+static bool traceEnabled_;
 
 void Spider::init(SpiderConfig cfg){
 	setMemAllocType(cfg.memAllocType, (long)cfg.memAllocStart, cfg.memAllocSize);
@@ -93,6 +94,7 @@ void Spider::init(SpiderConfig cfg){
 	setActorPrecedence(cfg.useActorPrecedence);
 	setGraphOptim(cfg.useGraphOptim);
 	setVerbose(cfg.verbose);
+	setTraceEnabled(cfg.traceEnabled);
 
 	platform = new PlatformLinux(
 			cfg.platform.nLrt,
@@ -136,7 +138,8 @@ void Spider::iterate(){
 			memAlloc_, scheduler_,
 			verbose_,
 			useGraphOptim_,
-			useActorPrecedence_);
+			useActorPrecedence_,
+			traceEnabled_);
 }
 
 void Spider::setGraphOptim(bool useGraphOptim){
@@ -149,6 +152,10 @@ void Spider::setVerbose(bool verbose){
 
 void Spider::setActorPrecedence(bool useActorPrecedence){
 	useActorPrecedence_ = useActorPrecedence;
+}
+
+void Spider::setTraceEnabled(bool traceEnabled){
+	traceEnabled_ = traceEnabled;
 }
 
 void Spider::setArchi(Archi* archi){

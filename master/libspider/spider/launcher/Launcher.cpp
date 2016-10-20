@@ -57,10 +57,10 @@ Launcher::Launcher(){
 	nLaunched_ = 0;
 }
 
-void Launcher::launchVertex(SRDAGVertex* vertex, bool useActorPrecedence){
+void Launcher::launchVertex(SRDAGVertex* vertex, bool useActorPrecedence, bool traceEnabled){
 	if(vertex->getState() == SRDAG_EXEC){
 		int slave = vertex->getSlave();
-		send_StartJobMsg(slave, vertex, useActorPrecedence);
+		send_StartJobMsg(slave, vertex, useActorPrecedence, traceEnabled);
 		nLaunched_++;
 		vertex->setState(SRDAG_RUN);
 	}
@@ -76,7 +76,7 @@ void Launcher::send_ClearTimeMsg(int lrtIx){
 	Platform::getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMsg));
 }
 
-void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex, bool useActorPrecedence){
+void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex, bool useActorPrecedence, bool traceEnbaled){
 	/** retreive Infos for msg */
 	int nParams = 0;
 	switch(vertex->getType()){
@@ -115,6 +115,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex, bool useActorPre
 	msg->srdagIx = vertex->getId();
 	msg->specialActor = vertex->getType() != SRDAG_NORMAL;
 	msg->fctIx = vertex->getFctId();
+	msg->traceEnabled = traceEnbaled;
 
 	msg->nbInEdge = vertex->getNConnectedInEdge();
 	msg->nbOutEdge = vertex->getNConnectedOutEdge();

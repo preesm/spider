@@ -65,6 +65,7 @@ void jit_ms(
 		Scheduler* scheduler,
 		bool verbose,
 		bool useGraphOptim,
-		bool useActorPrecedence);
+		bool useActorPrecedence,
+		bool traceEnabled);
 
 #endif/*GRAPH_TRANSFO_H*/

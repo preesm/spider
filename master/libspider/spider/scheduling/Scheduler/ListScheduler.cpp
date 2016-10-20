@@ -75,7 +75,8 @@ void ListScheduler::scheduleOnlyConfig(
 		MemAlloc* memAlloc,
 		Schedule* schedule,
 		Archi* archi,
-		bool useActorPrecedence){
+		bool useActorPrecedence,
+		bool traceEnabled){
 	srdag_ = graph;
 	schedule_ = schedule;
 	archi_ = archi;
@@ -118,7 +119,7 @@ void ListScheduler::scheduleOnlyConfig(
 //	printf("\n");
 
 	for(int i=0; i<list_->getNb(); i++){
-		Launcher::get()->launchVertex((*list_)[i], useActorPrecedence);
+		Launcher::get()->launchVertex((*list_)[i], useActorPrecedence, traceEnabled);
 	}
 
 	list_->~List();
@@ -130,7 +131,8 @@ void ListScheduler::schedule(
 		MemAlloc* memAlloc,
 		Schedule* schedule,
 		Archi* archi,
-		bool useActorPrecedence){
+		bool useActorPrecedence,
+		bool traceEnabled){
 	srdag_ = graph;
 	schedule_ = schedule;
 	archi_ = archi;
@@ -168,7 +170,7 @@ void ListScheduler::schedule(
 	}
 
 	for(int i=0; i<list_->getNb(); i++){
-		Launcher::get()->launchVertex((*list_)[i], useActorPrecedence);
+		Launcher::get()->launchVertex((*list_)[i], useActorPrecedence, traceEnabled);
 	}
 
 

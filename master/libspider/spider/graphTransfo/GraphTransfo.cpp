@@ -146,7 +146,8 @@ void jit_ms(
 		Scheduler* scheduler,
 		bool verbose,
 		bool useGraphOptim,
-		bool useActorPrecedence){
+		bool useActorPrecedence,
+		bool traceEnabled){
 
 	/* Initialize topDag */
 
@@ -236,7 +237,7 @@ void jit_ms(
 
 		/* Schedule and launch execution */
 		TimeMonitor::startMonitoring();
-		scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi, useActorPrecedence);
+		scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi, useActorPrecedence, traceEnabled);
 		TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
 		Platform::get()->getLrt()->runUntilNoMoreJobs();
@@ -321,7 +322,7 @@ void jit_ms(
 
 	/* Schedule and launch execution */
 	TimeMonitor::startMonitoring();
-	scheduler->schedule(topSrdag, memAlloc, schedule, archi, useActorPrecedence);
+	scheduler->schedule(topSrdag, memAlloc, schedule, archi, useActorPrecedence, traceEnabled);
 	TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
 	Platform::get()->getLrt()->runUntilNoMoreJobs();

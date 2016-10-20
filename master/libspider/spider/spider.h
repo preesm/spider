@@ -162,8 +162,12 @@ namespace Spider{
 	void setVerbose(bool verbose);
 	void setGraphOptim(bool useGraphOptim);
 	void setActorPrecedence(bool useActorPrecedence);
-	void setSpecialActorPrecedence(bool useSpecialActorPrecedence);
 	void setTraceEnabled(bool traceEnabled);
+
+	bool getVerbose();
+	bool getGraphOptim();
+	bool getActorPrecedence();
+	bool getTraceEnabled();
 
 	void setArchi(Archi* archi);
 	void setGraph(PiSDFGraph* pisdf);

@@ -57,10 +57,10 @@ Launcher::Launcher(){
 	nLaunched_ = 0;
 }
 
-void Launcher::launchVertex(SRDAGVertex* vertex, bool useActorPrecedence, bool traceEnabled){
+void Launcher::launchVertex(SRDAGVertex* vertex){
 	if(vertex->getState() == SRDAG_EXEC){
 		int slave = vertex->getSlave();
-		send_StartJobMsg(slave, vertex, useActorPrecedence, traceEnabled);
+		send_StartJobMsg(slave, vertex);
 		nLaunched_++;
 		vertex->setState(SRDAG_RUN);
 	}
@@ -76,7 +76,7 @@ void Launcher::send_ClearTimeMsg(int lrtIx){
 	Platform::getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMsg));
 }
 
-void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex, bool useActorPrecedence, bool traceEnbaled){
+void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 	/** retreive Infos for msg */
 	int nParams = 0;
 	switch(vertex->getType()){
@@ -115,7 +115,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex, bool useActorPre
 	msg->srdagIx = vertex->getId();
 	msg->specialActor = vertex->getType() != SRDAG_NORMAL;
 	msg->fctIx = vertex->getFctId();
-	msg->traceEnabled = traceEnbaled;
+	msg->traceEnabled = Spider::getTraceEnabled();
 
 	msg->nbInEdge = vertex->getNConnectedInEdge();
 	msg->nbOutEdge = vertex->getNConnectedOutEdge();
@@ -128,7 +128,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex, bool useActorPre
 		inFifos[i].alloc = edge->getAlloc();
 		inFifos[i].size = edge->getRate();
 
-		if(useActorPrecedence &&
+		if(Spider::getActorPrecedence() &&
 				edge->getSrc()->getSlave() == edge->getSnk()->getSlave()){
 			inFifos[i].ntoken = 0;
 //			if(edge->getSrc()->getSlave()>=4)
@@ -144,7 +144,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex, bool useActorPre
 		outFifos[i].alloc = edge->getAlloc();
 		outFifos[i].size = edge->getRate();
 
-		if(useActorPrecedence
+		if(Spider::getActorPrecedence()
 				&& edge->getSrc() && edge->getSnk()
 				&& edge->getSrc()->getSlave() == edge->getSnk()->getSlave())
 			outFifos[i].ntoken = 0;
@@ -196,7 +196,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex, bool useActorPre
 	Platform::getSpiderCommunicator()->ctrl_end_send(lrtIx, size);
 }
 
-void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag, bool verbose){
+void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 	int slave = 0;
 	while(curNParam_ != 0){
 		ParamValueMsg* msg;
@@ -208,7 +208,7 @@ void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag, bool verbose){
 			for(int j = 0; j < cfgVertex->getNOutParam(); j++){
 				int* param = cfgVertex->getOutParam(j);
 				*param = params[j];
-				if(verbose)
+				if(Spider::getVerbose())
 					printf("Recv param %s = %d\n", cfgVertex->getReference()->getOutParam(j)->getName(), *param);
 			}
 			curNParam_ -= cfgVertex->getNOutParam();

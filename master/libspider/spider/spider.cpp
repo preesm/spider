@@ -134,12 +134,7 @@ void Spider::iterate(){
 
 	srdag_ = new SRDAGGraph();
 
-	jit_ms(pisdf_, archi_, srdag_,
-			memAlloc_, scheduler_,
-			verbose_,
-			useGraphOptim_,
-			useActorPrecedence_,
-			traceEnabled_);
+	jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
 }
 
 void Spider::setGraphOptim(bool useGraphOptim){
@@ -156,6 +151,22 @@ void Spider::setActorPrecedence(bool useActorPrecedence){
 
 void Spider::setTraceEnabled(bool traceEnabled){
 	traceEnabled_ = traceEnabled;
+}
+
+bool Spider::getVerbose(){
+	return verbose_;
+}
+
+bool Spider::getGraphOptim(){
+	return useGraphOptim_;
+}
+
+bool Spider::getActorPrecedence(){
+	return useActorPrecedence_;
+}
+
+bool Spider::getTraceEnabled(){
+	return traceEnabled_;
 }
 
 void Spider::setArchi(Archi* archi){

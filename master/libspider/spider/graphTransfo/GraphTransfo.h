@@ -62,10 +62,6 @@ void jit_ms(
 		Archi* archi,
 		SRDAGGraph *topSrdag,
 		MemAlloc* memAlloc,
-		Scheduler* scheduler,
-		bool verbose,
-		bool useGraphOptim,
-		bool useActorPrecedence,
-		bool traceEnabled);
+		Scheduler* scheduler);
 
 #endif/*GRAPH_TRANSFO_H*/

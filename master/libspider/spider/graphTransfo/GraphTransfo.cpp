@@ -143,11 +143,7 @@ void jit_ms(
 		Archi* archi,
 		SRDAGGraph *topSrdag,
 		MemAlloc* memAlloc,
-		Scheduler* scheduler,
-		bool verbose,
-		bool useGraphOptim,
-		bool useActorPrecedence,
-		bool traceEnabled){
+		Scheduler* scheduler){
 
 	/* Initialize topDag */
 
@@ -192,7 +188,7 @@ void jit_ms(
 
 				jobQueue.push(job);
 			}else{
-				if(verbose){
+				if(Spider::getVerbose()){
 					/* Display Param values */
 					printf("\nParam Values:\n");
 					for(int i=0; i<job->graph->getNParam(); i++){
@@ -203,7 +199,7 @@ void jit_ms(
 				int* brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
 				computeBRV(topSrdag, job, brv);
 
-				if(verbose){
+				if(Spider::getVerbose()){
 					/* Display BRV values */
 					printf("\nBRV Values:\n");
 					for(int i=0; i<job->graph->getNBody(); i++){
@@ -229,7 +225,7 @@ void jit_ms(
 
 		TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
-		if(useGraphOptim){
+		if(Spider::getGraphOptim()){
 			TimeMonitor::startMonitoring();
 			optims(topSrdag);
 			TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
@@ -237,13 +233,13 @@ void jit_ms(
 
 		/* Schedule and launch execution */
 		TimeMonitor::startMonitoring();
-		scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi, useActorPrecedence, traceEnabled);
+		scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi);
 		TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
 		Platform::get()->getLrt()->runUntilNoMoreJobs();
 
 		/* Resolve params must be done by itself */
-		Launcher::get()->resolveParams(archi, topSrdag, verbose);
+		Launcher::get()->resolveParams(archi, topSrdag);
 
 		TimeMonitor::startMonitoring();
 
@@ -260,7 +256,7 @@ void jit_ms(
 				}
 			}
 
-			if(verbose){
+			if(Spider::getVerbose()){
 				/* Display Param values */
 				printf("\nParam Values:\n");
 				for(int i=0; i<job->graph->getNParam(); i++){
@@ -272,7 +268,7 @@ void jit_ms(
 			int* brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
 			computeBRV(topSrdag, job, brv);
 
-			if(verbose){
+			if(Spider::getVerbose()){
 				/* Display BRV values */
 				printf("\nBRV Values:\n");
 				for(int i=0; i<job->graph->getNBody(); i++){
@@ -300,7 +296,7 @@ void jit_ms(
 
 		TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
-		if(useGraphOptim){
+		if(Spider::getGraphOptim()){
 			TimeMonitor::startMonitoring();
 			optims(topSrdag);
 			TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
@@ -314,7 +310,7 @@ void jit_ms(
 	topSrdag->updateState();
 	TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
-	if(useGraphOptim){
+	if(Spider::getGraphOptim()){
 		TimeMonitor::startMonitoring();
 		optims(topSrdag);
 		TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
@@ -322,7 +318,7 @@ void jit_ms(
 
 	/* Schedule and launch execution */
 	TimeMonitor::startMonitoring();
-	scheduler->schedule(topSrdag, memAlloc, schedule, archi, useActorPrecedence, traceEnabled);
+	scheduler->schedule(topSrdag, memAlloc, schedule, archi);
 	TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
 	Platform::get()->getLrt()->runUntilNoMoreJobs();

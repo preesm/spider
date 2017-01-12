@@ -85,6 +85,29 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
 					}
 
 					br->setState(SRDAG_RUN);
+				}else{
+					bool outputNotAllocated = true;
+					for(int j=0; j<br->getNConnectedOutEdge(); j++)
+						outputNotAllocated = outputNotAllocated && br->getInEdge(0)->getAlloc() != -1;
+					if(outputNotAllocated){
+						/** Not allocated at all Broadcast */
+						SRDAGEdge* inEdge = br->getInEdge(0);
+						int size = inEdge->getRate();
+
+						for(int j=0; j<br->getNConnectedOutEdge(); j++){
+							SRDAGEdge* outEdge = br->getOutEdge(j);
+
+							int alloc = br->getInEdge(0)->getAlloc();
+
+							if(outEdge->getAlloc() != -1)
+								throw "Overwrite MemAlloc\n";
+
+							outEdge->setAlloc(alloc);
+							outEdge->setNToken(0);
+						}
+
+						br->setState(SRDAG_RUN);
+					}
 				}
 			}
 		}

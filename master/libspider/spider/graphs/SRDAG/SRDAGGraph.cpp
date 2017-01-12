@@ -79,10 +79,10 @@ SRDAGVertex* SRDAGGraph::addVertex(PiSDFVertex* reference, int refId, int iterId
 	return vertex;
 }
 
-SRDAGVertex* SRDAGGraph::addBroadcast(int nOutput){
+SRDAGVertex* SRDAGGraph::addBroadcast(int nOutput, PiSDFVertex* reference){
 	SRDAGVertex* vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
 			SRDAG_BROADCAST, this,
-			0 /*Ref*/, 0, 0,
+			reference /*Ref*/, 0, 0,
 			1 /*nInEdge*/,
 			nOutput /*nOutEdge*/,
 			0 /*nInParam*/,

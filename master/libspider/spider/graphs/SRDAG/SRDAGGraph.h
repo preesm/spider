@@ -47,7 +47,7 @@ public:
 	virtual ~SRDAGGraph();
 
 	SRDAGVertex* addVertex(PiSDFVertex* reference, int refId, int iterId);
-	SRDAGVertex* addBroadcast(int nOutput);
+	SRDAGVertex* addBroadcast(int nOutput, PiSDFVertex* reference=0);
 	SRDAGVertex* addFork(int nOutput);
 	SRDAGVertex* addJoin(int nInput);
 	SRDAGVertex* addInit();

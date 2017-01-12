@@ -110,13 +110,18 @@ void addCAVertices(SRDAGGraph *topSrdag, transfoJob *job){
     job->configs = CREATE_MUL(TRANSFO_STACK, job->graph->getNConfig(), SRDAGVertex*);
     for(int configIx=0; configIx<job->graph->getNConfig(); configIx++){
     	PiSDFVertex* config = job->graph->getConfig(configIx);
-		job->configs[configIx] = topSrdag->addVertex(config, 0, job->graphIter);
 
-		for(int i=0; i<config->getNInParam(); i++){
-			job->configs[configIx]->addInParam(i, job->paramValues[config->getInParam(i)->getTypeIx()]);
-		}
-		for(int i=0; i<config->getNOutParam(); i++){
-			job->configs[configIx]->addOutParam(i, &(job->paramValues[config->getOutParam(i)->getTypeIx()]));
-		}
+    	if(config->getSubType() == PISDF_SUBTYPE_BROADCAST)
+    		job->configs[configIx] = topSrdag->addBroadcast(MAX_IO_EDGES, config);
+    	else{
+    		job->configs[configIx] = topSrdag->addVertex(config, 0, job->graphIter);
+
+			for(int i=0; i<config->getNInParam(); i++){
+				job->configs[configIx]->addInParam(i, job->paramValues[config->getInParam(i)->getTypeIx()]);
+			}
+			for(int i=0; i<config->getNOutParam(); i++){
+				job->configs[configIx]->addOutParam(i, &(job->paramValues[config->getOutParam(i)->getTypeIx()]));
+			}
+    	}
 	}
 }

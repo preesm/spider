@@ -219,13 +219,16 @@ void Spider::printPiSDF(const char* pisdfPath){
 }
 
 void Spider::printActorsStat(ExecutionStat* stat){
-	printf("Actors:\n");
+	printf("\t%15s:\n", "Actors");
 	for(int j=0; j<stat->nPiSDFActor; j++){
-		printf("\t%12s:", stat->actors[j]->getName());
+		printf("\t%15s:", stat->actors[j]->getName());
 		for(int k=0; k<archi_->getNPETypes(); k++)
-			printf("\t%ld (x%ld)",
-					stat->actorTimes[j][k]/stat->actorIterations[j][k],
-					stat->actorIterations[j][k]);
+			if(stat->actorIterations[j][k])
+				printf("\t%ld (x%ld)",
+						stat->actorTimes[j][k]/stat->actorIterations[j][k],
+						stat->actorIterations[j][k]);
+			else
+				printf("\t%ld (x%ld)", 0, 0);
 		printf("\n");
 	}
 }
@@ -334,7 +337,7 @@ void Spider::printGantt(const char* ganttPath, const char* latexPath, ExecutionS
 					SRDAGVertex* vertex = srdag_->getVertexFromIx(traceMsg->srdagIx);
 					Time execTime = traceMsg->end - traceMsg->start;
 
-					static int baseTime=0;
+					static Time baseTime=0;
 //					if(strcmp(vertex->getReference()->getName(),"src") == 0){
 //						baseTime = traceMsg->start;
 //					}
@@ -621,7 +624,9 @@ void Spider::isExecutableOnPE(PiSDFVertex* vertex, int pe){
 
 void Spider::cleanPiSDF(){
 	PiSDFGraph* graph = pisdf_;
-	graph->~PiSDFGraph();
-	StackMonitor::free(PISDF_STACK, graph);
-	StackMonitor::freeAll(PISDF_STACK);
+	if(graph != 0){
+		graph->~PiSDFGraph();
+		StackMonitor::free(PISDF_STACK, graph);
+		StackMonitor::freeAll(PISDF_STACK);
+	}
 }

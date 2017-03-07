@@ -331,7 +331,7 @@ void Spider::printGantt(const char* ganttPath, const char* latexPath, ExecutionS
 	TraceMsg* traceMsg;
 	int n = Launcher::get()->getNLaunched();
 	while(n){
-		if(Platform::getSpiderCommunicator()->trace_start_recv((void**)&traceMsg)){
+		if(Platform::get()->getSpiderCommunicator()->trace_start_recv((void**)&traceMsg)){
 			switch (traceMsg->msgIx) {
 				case TRACE_JOB:{
 					SRDAGVertex* vertex = srdag_->getVertexFromIx(traceMsg->srdagIx);
@@ -442,7 +442,7 @@ void Spider::printGantt(const char* ganttPath, const char* latexPath, ExecutionS
 					throw "Unhandled trace msg";
 					break;
 			}
-			Platform::getSpiderCommunicator()->trace_end_recv();
+			Platform::get()->getSpiderCommunicator()->trace_end_recv();
 			n--;
 		}
 	}

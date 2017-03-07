@@ -62,10 +62,10 @@ public:
 	virtual Time getTime() = 0;
 
 	/** Platform getter/setter */
-	static inline LRT* getLrt();
 	static inline Platform* get();
-	static inline LrtCommunicator* getLrtCommunicator();
-	static inline SpiderCommunicator* getSpiderCommunicator();
+	virtual LRT* getLrt() = 0;
+	virtual LrtCommunicator* getLrtCommunicator() = 0;
+	virtual SpiderCommunicator* getSpiderCommunicator() = 0;
 
 	/** Platform Core Handling **/
 	virtual void idleLrt(int i) = 0;
@@ -76,10 +76,7 @@ protected:
 	Platform();
 	virtual ~Platform();
 
-	static LRT* lrt_;
 	static Platform* platform_;
-	static LrtCommunicator* lrtCom_;
-	static SpiderCommunicator* spiderCom_;
 };
 
 inline Platform* Platform::get(){
@@ -89,25 +86,5 @@ inline Platform* Platform::get(){
 		throw "Error undefined platform\n";
 }
 
-inline LRT* Platform::getLrt(){
-	if(lrt_)
-		return lrt_;
-	else
-		throw "Error undefined LRT\n";
-}
-
-inline LrtCommunicator* Platform::getLrtCommunicator(){
-	if(lrtCom_)
-		return lrtCom_;
-	else
-		throw "Error undefined LRT Communicator\n";
-}
-
-inline SpiderCommunicator* Platform::getSpiderCommunicator(){
-	if(spiderCom_)
-		return spiderCom_;
-	else
-		throw "Error undefined Spider Communicator\n";
-}
 
 #endif/*PLATFORM_H*/

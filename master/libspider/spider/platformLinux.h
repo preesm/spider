@@ -62,6 +62,11 @@ public:
 	virtual void wakeLrt(int i);
 	virtual void idle();
 
+	/** Platform getter/setter */
+	inline LRT* getLrt();
+	inline LrtCommunicator* getLrtCommunicator();
+	inline SpiderCommunicator* getSpiderCommunicator();
+
 	PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts);
 	virtual ~PlatformLinux();
 
@@ -75,6 +80,32 @@ private:
 
 	static Time mappingTime(int nActors);
 	static void sig_handler(int signo);
+
+	LRT* lrt_;
+	LrtCommunicator* lrtCom_;
+	SpiderCommunicator* spiderCom_;
 };
+
+
+inline LRT* PlatformLinux::getLrt(){
+	if(lrt_)
+		return lrt_;
+	else
+		throw "Error undefined LRT\n";
+}
+
+inline LrtCommunicator* PlatformLinux::getLrtCommunicator(){
+	if(lrtCom_)
+		return lrtCom_;
+	else
+		throw "Error undefined LRT Communicator\n";
+}
+
+inline SpiderCommunicator* PlatformLinux::getSpiderCommunicator(){
+	if(spiderCom_)
+		return spiderCom_;
+	else
+		throw "Error undefined Spider Communicator\n";
+}
 
 #endif/*PLATFORM_LINUX_H*/

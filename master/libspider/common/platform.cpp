@@ -36,10 +36,10 @@
 
 #include <platform.h>
 
-LRT* Platform::lrt_ = 0;
+//LRT* Platform::lrt_ = 0;
 Platform* Platform::platform_ = 0;
-LrtCommunicator* Platform::lrtCom_ = 0;
-SpiderCommunicator* Platform::spiderCom_ = 0;
+//LrtCommunicator* Platform::lrtCom_ = 0;
+//SpiderCommunicator* Platform::spiderCom_ = 0;
 
 Platform::Platform(){
 

@@ -81,10 +81,10 @@ static SharedMemArchi* archi_;
 void PlatformLinux::sig_handler(int signo){
 	switch(signo){
 	case SIG_IDLE:
-		getLrt()->setIdle(true);
+		Platform::get()->getLrt()->setIdle(true);
 		break;
 	case SIG_WAKE:
-		getLrt()->setIdle(false);
+		Platform::get()->getLrt()->setIdle(false);
 		break;
 	default:
 		break;

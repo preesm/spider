@@ -135,7 +135,7 @@ static void setAffinity(int cpuId){
 	}
 }
 
-PlatformLinux::PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts){
+PlatformLinux::PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack){
 	int pipeSpidertoLRT[2*nLrt];
 	int pipeLRTtoSpider[2*nLrt];
 	int pipeTrace[2];
@@ -146,6 +146,9 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts
 		throw "Try to create 2 platforms";
 
 	platform_ = this;
+
+	StackMonitor::initStack(LRT_STACK, lrtStack);
+	StackMonitor::initStack(ARCHI_STACK, archiStack);
 
 	cpIds_ = CREATE_MUL(ARCHI_STACK, nLrt, int);
 

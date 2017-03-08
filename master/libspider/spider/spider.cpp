@@ -85,11 +85,11 @@ void Spider::init(SpiderConfig cfg){
 	setMemAllocType(cfg.memAllocType, (long)cfg.memAllocStart, cfg.memAllocSize);
 	setSchedulerType(cfg.schedulerType);
 
-	StackMonitor::initStack(ARCHI_STACK, cfg.archiStack);
 	StackMonitor::initStack(PISDF_STACK, cfg.pisdfStack);
 	StackMonitor::initStack(SRDAG_STACK, cfg.srdagStack);
 	StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
-	StackMonitor::initStack(LRT_STACK, cfg.lrtStack);
+//	StackMonitor::initStack(LRT_STACK, cfg.lrtStack);
+//	StackMonitor::initStack(ARCHI_STACK, cfg.archiStack);
 
 	setActorPrecedence(cfg.useActorPrecedence);
 	setGraphOptim(cfg.useGraphOptim);
@@ -100,7 +100,9 @@ void Spider::init(SpiderConfig cfg){
 			cfg.platform.nLrt,
 			cfg.platform.shMemSize,
 			cfg.platform.fcts,
-			cfg.platform.nLrtFcts
+			cfg.platform.nLrtFcts,
+			cfg.archiStack,
+			cfg.lrtStack
 	);
 }
 

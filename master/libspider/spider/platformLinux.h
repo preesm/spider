@@ -66,6 +66,9 @@ public:
 	inline LRT* getLrt();
 	inline LrtCommunicator* getLrtCommunicator();
 	inline SpiderCommunicator* getSpiderCommunicator();
+	inline void setStack(SpiderStack id, Stack* stack);
+	inline Stack* getStack(SpiderStack id);
+	inline Stack* getStack(int id);
 
 	PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack,
 			StackConfig lrtStack, StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack);
@@ -81,6 +84,8 @@ private:
 
 	static Time mappingTime(int nActors);
 	static void sig_handler(int signo);
+
+	Stack* stacks[STACK_COUNT];
 
 	LRT* lrt_;
 	LrtCommunicator* lrtCom_;
@@ -108,5 +113,18 @@ inline SpiderCommunicator* PlatformLinux::getSpiderCommunicator(){
 	else
 		throw "Error undefined Spider Communicator\n";
 }
+
+inline void PlatformLinux::setStack(SpiderStack id, Stack* stack){
+	stacks[id] = stack;
+}
+
+inline Stack* PlatformLinux::getStack(SpiderStack id){
+	return stacks[id];
+}
+
+inline Stack* PlatformLinux::getStack(int id){
+	return stacks[id];
+}
+
 
 #endif/*PLATFORM_LINUX_H*/

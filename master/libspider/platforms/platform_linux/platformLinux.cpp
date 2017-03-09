@@ -315,6 +315,8 @@ PlatformLinux::~PlatformLinux(){
 	StackMonitor::free(ARCHI_STACK, lrtCom_);
 	StackMonitor::free(ARCHI_STACK, archi_);
 	StackMonitor::free(ARCHI_STACK, cpIds_);
+
+	StackMonitor::cleanAllStack();
 }
 
 /** File Handling */

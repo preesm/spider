@@ -110,8 +110,7 @@ void Spider::init(SpiderConfig cfg){
 }
 
 void Spider::clean(){
-	if(platform != 0)
-		delete platform;
+
 	if(srdag_ != 0)
 		delete srdag_;
 	if(memAlloc_ != 0)
@@ -119,7 +118,10 @@ void Spider::clean(){
 	if(scheduler_ != 0)
 		delete scheduler_;
 
-	StackMonitor::cleanAllStack();
+	if(platform != 0)
+		delete platform;
+
+//	StackMonitor::cleanAllStack();
 }
 
 void Spider::idle(){

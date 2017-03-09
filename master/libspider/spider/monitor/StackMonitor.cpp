@@ -39,35 +39,43 @@
 #include <tools/StaticStack.h>
 #include <tools/DynStack.h>
 
-static Stack* stacks[STACK_COUNT] = {0};
+#include <platform.h>
+
+//static Stack* stacks[STACK_COUNT] = {0};
 
 void StackMonitor::initStack(SpiderStack stackId, StackConfig cfg){
 	switch(cfg.type){
 	case STACK_DYNAMIC:
-		stacks[stackId] = new DynStack(cfg.name);
+		Platform::get()->setStack(stackId, new DynStack(cfg.name));
+		//stacks[stackId] = new DynStack(cfg.name);
 		break;
 	case STACK_STATIC:
-		stacks[stackId] = new StaticStack(cfg.name, cfg.start, cfg.size);
+		Platform::get()->setStack(stackId, new StaticStack(cfg.name, cfg.start, cfg.size));
+		//stacks[stackId] = new StaticStack(cfg.name, cfg.start, cfg.size);
 		break;
 	}
 }
 
 void StackMonitor::cleanAllStack(){
 	for(int i=0; i<STACK_COUNT; i++){
-		delete stacks[i];
+		delete Platform::get()->getStack(i);
+		//delete stacks[i];
 	}
 }
 
 void* StackMonitor::alloc(SpiderStack stackId, int size){
-	return stacks[stackId]->alloc(size);
+	return Platform::get()->getStack(stackId)->alloc(size);
+	//return stacks[stackId]->alloc(size);
 }
 
 void StackMonitor::free(SpiderStack stackId, void* ptr){
-	return stacks[stackId]->free(ptr);
+	return Platform::get()->getStack(stackId)->free(ptr);
+	//return stacks[stackId]->free(ptr);
 }
 
 void StackMonitor::freeAll(SpiderStack stackId){
-	return stacks[stackId]->freeAll();
+	return Platform::get()->getStack(stackId)->freeAll();
+	//return stacks[stackId]->freeAll();
 }
 
 void StackMonitor::printStackStats(){

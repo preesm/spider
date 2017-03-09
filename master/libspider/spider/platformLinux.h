@@ -67,7 +67,8 @@ public:
 	inline LrtCommunicator* getLrtCommunicator();
 	inline SpiderCommunicator* getSpiderCommunicator();
 
-	PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack);
+	PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack,
+			StackConfig lrtStack, StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack);
 	virtual ~PlatformLinux();
 
 private:

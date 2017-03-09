@@ -85,9 +85,9 @@ void Spider::init(SpiderConfig cfg){
 	setMemAllocType(cfg.memAllocType, (long)cfg.memAllocStart, cfg.memAllocSize);
 	setSchedulerType(cfg.schedulerType);
 
-	StackMonitor::initStack(PISDF_STACK, cfg.pisdfStack);
-	StackMonitor::initStack(SRDAG_STACK, cfg.srdagStack);
-	StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
+//	StackMonitor::initStack(PISDF_STACK, cfg.pisdfStack);
+//	StackMonitor::initStack(SRDAG_STACK, cfg.srdagStack);
+//	StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
 //	StackMonitor::initStack(LRT_STACK, cfg.lrtStack);
 //	StackMonitor::initStack(ARCHI_STACK, cfg.archiStack);
 
@@ -102,7 +102,10 @@ void Spider::init(SpiderConfig cfg){
 			cfg.platform.fcts,
 			cfg.platform.nLrtFcts,
 			cfg.archiStack,
-			cfg.lrtStack
+			cfg.lrtStack,
+			cfg.pisdfStack,
+			cfg.srdagStack,
+			cfg.transfoStack
 	);
 }
 

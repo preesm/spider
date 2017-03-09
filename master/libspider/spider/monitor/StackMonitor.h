@@ -55,7 +55,6 @@ typedef enum{
 #define CREATE(stackId, type) new(StackMonitor::alloc(stackId, sizeof(type))) type
 #define CREATE_MUL(stackId, size, type) new(StackMonitor::alloc(stackId, size*sizeof(type))) type[size]
 
-
 namespace StackMonitor {
 	void initStack(SpiderStack id, StackConfig cfg);
 	void cleanAllStack();

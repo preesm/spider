@@ -38,6 +38,7 @@
 #define PLATFORM_H
 
 #include "spider.h"
+#include <monitor/StackMonitor.h>
 
 class LRT;
 class LrtCommunicator;
@@ -66,6 +67,9 @@ public:
 	virtual LRT* getLrt() = 0;
 	virtual LrtCommunicator* getLrtCommunicator() = 0;
 	virtual SpiderCommunicator* getSpiderCommunicator() = 0;
+	inline void setStack(SpiderStack id, Stack* stack);
+	inline Stack* getStack(SpiderStack id);
+	inline Stack* getStack(int id);
 
 	/** Platform Core Handling **/
 	virtual void idleLrt(int i) = 0;
@@ -77,6 +81,8 @@ protected:
 	virtual ~Platform();
 
 	static Platform* platform_;
+
+	Stack* stacks[STACK_COUNT];
 };
 
 inline Platform* Platform::get(){
@@ -86,5 +92,16 @@ inline Platform* Platform::get(){
 		throw "Error undefined platform\n";
 }
 
+inline void Platform::setStack(SpiderStack id, Stack* stack){
+	stacks[id] = stack;
+}
+
+inline Stack* Platform::getStack(SpiderStack id){
+	return stacks[id];
+}
+
+inline Stack* Platform::getStack(int id){
+	return stacks[id];
+}
 
 #endif/*PLATFORM_H*/

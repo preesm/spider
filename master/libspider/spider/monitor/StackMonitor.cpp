@@ -47,13 +47,15 @@ void StackMonitor::initStack(SpiderStack stackId, StackConfig cfg){
 	switch(cfg.type){
 	case STACK_DYNAMIC:
 		Platform::get()->setStack(stackId, new DynStack(cfg.name));
-		//stacks[stackId] = new DynStack(cfg.name);
 		break;
 	case STACK_STATIC:
 		Platform::get()->setStack(stackId, new StaticStack(cfg.name, cfg.start, cfg.size));
-		//stacks[stackId] = new StaticStack(cfg.name, cfg.start, cfg.size);
 		break;
 	}
+}
+
+void StackMonitor::clean(SpiderStack id){
+	delete Platform::get()->getStack(id);
 }
 
 void StackMonitor::cleanAllStack(){
@@ -81,3 +83,4 @@ void StackMonitor::freeAll(SpiderStack stackId){
 void StackMonitor::printStackStats(){
 	// TODO
 }
+

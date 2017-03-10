@@ -57,6 +57,7 @@ typedef enum{
 
 namespace StackMonitor {
 	void initStack(SpiderStack id, StackConfig cfg);
+	void clean(SpiderStack id);
 	void cleanAllStack();
 	void* alloc(SpiderStack id, int size);
 	void free(SpiderStack id, void* ptr);
@@ -66,3 +67,4 @@ namespace StackMonitor {
 };
 
 #endif /* STACKMONITOR_H */
+

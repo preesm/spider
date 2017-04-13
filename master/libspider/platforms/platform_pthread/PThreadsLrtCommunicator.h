@@ -35,53 +35,67 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "StackMonitor.h"
+#ifndef PTHREADS_LRT_COMMUNICATOR_H
+#define PTHREADS_LRT_COMMUNICATOR_H
 
-#include <tools/StaticStack.h>
-#include <tools/DynStack.h>
+#include <LrtCommunicator.h>
+#include <semaphore.h>
+#include <Message.h>
+#include <tools/Stack.h>
+#include <queue>
 
-#include <platform.h>
+class PThreadsLrtCommunicator: public LrtCommunicator{
+public:
+	PThreadsLrtCommunicator(
+			int msgSizeMax,
+			std::queue<unsigned char>* fIn,
+			std::queue<unsigned char>* fOut,
+			std::queue<unsigned char>* fTrace,
+			sem_t *semTrace,
+			sem_t *semFifoSpidertoLRT,
+			sem_t *semFifoLRTtoSpider,
+			void* fifos,
+			void* dataMem
+		);
 
-//static Stack* stacks[STACK_COUNT] = {0};
+	~PThreadsLrtCommunicator();
 
-void StackMonitor::initStack(SpiderStack stackId, StackConfig cfg){
-	switch(cfg.type){
-	case STACK_DYNAMIC:
-		Platform::get()->setStack(stackId, new DynStack(cfg.name));
-		break;
-	case STACK_STATIC:
-		Platform::get()->setStack(stackId, new StaticStack(cfg.name, cfg.start, cfg.size));
-		break;
-	}
-}
+	void* ctrl_start_send(int size);
+	void ctrl_end_send(int size);
 
-void StackMonitor::clean(SpiderStack id){
-	delete Platform::get()->getStack(id);
-}
+	int ctrl_start_recv(void** data);
+	void ctrl_end_recv();
 
-void StackMonitor::cleanAllStack(){
-	for(int i=0; i<STACK_COUNT; i++){
-		delete Platform::get()->getStack(i);
-		//delete stacks[i];
-	}
-}
+	void* trace_start_send(int size);
+	void trace_end_send(int size);
 
-void* StackMonitor::alloc(SpiderStack stackId, int size){
-	return Platform::get()->getStack(stackId)->alloc(size);
-	//return stacks[stackId]->alloc(size);
-}
+	long data_start_send(Fifo* f);
+	void data_end_send(Fifo* f);
 
-void StackMonitor::free(SpiderStack stackId, void* ptr){
-	return Platform::get()->getStack(stackId)->free(ptr);
-	//return stacks[stackId]->free(ptr);
-}
+	long data_recv(Fifo* f);
 
-void StackMonitor::freeAll(SpiderStack stackId){
-	return Platform::get()->getStack(stackId)->freeAll();
-	//return stacks[stackId]->freeAll();
-}
+	void setLrtJobIx(int jobIx, int lrtIx);
+	unsigned long getLrtJobIx(int lrt);
 
-void StackMonitor::printStackStats(){
-	// TODO
-}
+private:
+	std::queue<unsigned char>* fIn_;
+	std::queue<unsigned char>* fOut_;
+	std::queue<unsigned char>* fTrace_;
 
+	sem_t* semTrace_;
+	sem_t* semFifoSpidertoLRT_;
+	sem_t* semFifoLRTtoSpider_;
+
+	int msgSizeMax_;
+
+	void* msgBufferSend_;
+	int curMsgSizeSend_;
+
+	void* msgBufferRecv_;
+	int curMsgSizeRecv_;
+
+	unsigned long* jobTab_;
+	unsigned char* shMem_;
+};
+
+#endif/*PTHREADS_LRT_COMMUNICATOR_H*/

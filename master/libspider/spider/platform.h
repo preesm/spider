@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,			*
+ * Hugo Miomandre												            *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -39,6 +40,7 @@
 
 #include "spider.h"
 #include <monitor/StackMonitor.h>
+#include <stdio.h>
 
 class LRT;
 class LrtCommunicator;
@@ -48,9 +50,9 @@ struct ClearTimeMsg;
 class Platform{
 public:
 	/** File Handling */
-	virtual int fopen(const char* name) = 0;
-	virtual void fprintf(int id, const char* fmt, ...) = 0;
-	virtual void fclose(int id) = 0;
+	virtual FILE* fopen(const char* name) = 0;
+	virtual void fprintf(FILE* id, const char* fmt, ...) = 0;
+	virtual void fclose(FILE* id) = 0;
 
 	/** Memory Handling */
 	virtual void* virt_to_phy(void* address) = 0;

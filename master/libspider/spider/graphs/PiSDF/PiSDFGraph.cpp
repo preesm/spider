@@ -289,8 +289,8 @@ void PiSDFGraph::delEdge(PiSDFEdge* edge){
 
 /** Print Fct */
 void PiSDFGraph::print(const char *path){
-	int file = Platform::get()->fopen(path);
-	if(file == -1){
+	FILE *file = Platform::get()->fopen(path);
+	if(file == NULL){
 		printf("cannot open %s\n", path);
 		return;
 	}

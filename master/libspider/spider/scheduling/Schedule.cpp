@@ -70,7 +70,7 @@ void Schedule::addJob(int pe, SRDAGVertex* job, Time start, Time end){
 }
 
 void Schedule::print(const char* path){
-	int file = Platform::get()->fopen(path);
+	FILE *file = Platform::get()->fopen(path);
 	char name[100];
 
 	// Writing header
@@ -97,6 +97,7 @@ void Schedule::print(const char* path){
 		}
 	}
 	Platform::get()->fprintf(file, "</data>\n");
+
 	Platform::get()->fclose(file);
 }
 

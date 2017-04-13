@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,			*
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -85,12 +86,6 @@ void Spider::init(SpiderConfig cfg){
 	setMemAllocType(cfg.memAllocType, (long)cfg.memAllocStart, cfg.memAllocSize);
 	setSchedulerType(cfg.schedulerType);
 
-//	StackMonitor::initStack(PISDF_STACK, cfg.pisdfStack);
-//	StackMonitor::initStack(SRDAG_STACK, cfg.srdagStack);
-//	StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
-//	StackMonitor::initStack(LRT_STACK, cfg.lrtStack);
-//	StackMonitor::initStack(ARCHI_STACK, cfg.archiStack);
-
 	setActorPrecedence(cfg.useActorPrecedence);
 	setGraphOptim(cfg.useGraphOptim);
 	setVerbose(cfg.verbose);
@@ -117,11 +112,9 @@ void Spider::clean(){
 		delete memAlloc_;
 	if(scheduler_ != 0)
 		delete scheduler_;
-
+		
 	if(platform != 0)
 		delete platform;
-
-//	StackMonitor::cleanAllStack();
 }
 
 void Spider::idle(){
@@ -238,7 +231,7 @@ void Spider::printActorsStat(ExecutionStat* stat){
 						stat->actorTimes[j][k]/stat->actorIterations[j][k],
 						stat->actorIterations[j][k]);
 			else
-				printf("\t%ld (x%ld)", 0, 0);
+				printf("\t%d (x%d)", 0, 0);
 		printf("\n");
 	}
 }
@@ -282,7 +275,7 @@ static char* regenerateColor(int refInd){
 	return color;
 }
 
-static inline void printGrantt_SRDAGVertex(int ganttFile, int latexFile, Archi* archi, SRDAGVertex* vertex, Time start, Time end, int lrtIx, float latexScaling){
+static inline void printGrantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Archi* archi, SRDAGVertex* vertex, Time start, Time end, int lrtIx, float latexScaling){
 	char name[100];
 	static int i=0;
 	vertex->toString(name, 100);
@@ -311,8 +304,11 @@ static inline void printGrantt_SRDAGVertex(int ganttFile, int latexFile, Archi* 
 }
 
 void Spider::printGantt(const char* ganttPath, const char* latexPath, ExecutionStat* stat){
-	int ganttFile = Platform::get()->fopen(ganttPath);
-	int latexFile = Platform::get()->fopen(latexPath);
+	FILE *ganttFile = Platform::get()->fopen(ganttPath);
+	if(ganttFile == NULL) throw "Error opening ganttFile";
+
+	FILE *latexFile = Platform::get()->fopen(latexPath);
+	if(latexFile == NULL) throw "Error opening latexFile";
 
 	float latexScaling = 1000;
 
@@ -459,8 +455,8 @@ void Spider::printGantt(const char* ganttPath, const char* latexPath, ExecutionS
 	Launcher::get()->rstNLaunched();
 
 	Platform::get()->fprintf(ganttFile, "</data>\n");
-	Platform::get()->fclose(ganttFile);
 
+	Platform::get()->fclose(ganttFile);
 	Platform::get()->fclose(latexFile);
 
 	stat->execTime = stat->globalEndTime - stat->schedTime;
@@ -640,3 +636,4 @@ void Spider::cleanPiSDF(){
 		StackMonitor::freeAll(PISDF_STACK);
 	}
 }
+

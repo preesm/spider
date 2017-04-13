@@ -225,8 +225,8 @@ void SRDAGGraph::print(const char *path){
 		printf("Errors in the SRDAG Graph\n");
 
 	int maxId = -1;
-	int file = Platform::get()->fopen(path);
-	if(file == -1){
+	FILE *file = Platform::get()->fopen(path);
+	if(file == NULL){
 		printf("cannot open %s\n", path);
 		return;
 	}

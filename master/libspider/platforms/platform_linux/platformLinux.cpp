@@ -320,11 +320,11 @@ PlatformLinux::~PlatformLinux(){
 }
 
 /** File Handling */
-int PlatformLinux::fopen(const char* name){
-	return open(name, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH | S_IWOTH);
+FILE* PlatformLinux::fopen(const char* name){
+	return std::fopen(name, "w+");
 }
 
-void PlatformLinux::fprintf(int id, const char* fmt, ...){
+void PlatformLinux::fprintf(FILE* id, const char* fmt, ...){
 	ssize_t l;
 
 	va_list ap;
@@ -333,10 +333,13 @@ void PlatformLinux::fprintf(int id, const char* fmt, ...){
 	if(n >= PLATFORM_FPRINTF_BUFFERSIZE){
 		printf("PLATFORM_FPRINTF_BUFFERSIZE too small\n");
 	}
-	l = write(id, buffer, n);
+	for (int i = 0; i < n; i++) fputc(buffer[i], id);
 }
-void PlatformLinux::fclose(int id){
-	close(id);
+void PlatformLinux::fclose(FILE* id){
+	if (id != NULL){
+		std::fclose(id);
+		id = NULL;
+	}
 }
 
 void* PlatformLinux::virt_to_phy(void* address){
@@ -355,6 +358,10 @@ int PlatformLinux::getMinAllocSize(){
 void PlatformLinux::rstTime(struct ClearTimeMsg* msg){
 	struct timespec* ts = (struct timespec*)(msg+1);
 	start = *ts;
+}
+
+void PlatformLinux::rstJobIx(){
+	// Not Implemented
 }
 
 void PlatformLinux::rstTime(){

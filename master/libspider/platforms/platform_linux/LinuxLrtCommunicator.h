@@ -72,6 +72,9 @@ public:
 
 	long data_recv(Fifo* f);
 
+	void setLrtJobIx(int jobIx, int lrtIx);
+	unsigned long getLrtJobIx(int lrt);
+
 private:
 	int fIn_, fOut_, fTrace_;
 	sem_t* semTrace_;

@@ -126,8 +126,8 @@ void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack s
 }
 
 void BipartiteGraph::print(const char* path, SRDAGGraph* g1, SRDAGGraph* g2){
-	int file = Platform::get()->fopen(path);
-	if(file == -1){
+	FILE *file = Platform::get()->fopen(path);
+	if(file == NULL){
 		printf("cannot open %s\n", path);
 		return;
 	}

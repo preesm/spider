@@ -57,6 +57,8 @@ public:
 	virtual void rstTime(struct ClearTimeMsg* msg);
 	virtual Time getTime();
 
+	virtual void rstJobIx();
+
 	/** Platform Core Handling **/
 	virtual void idleLrt(int i);
 	virtual void wakeLrt(int i);

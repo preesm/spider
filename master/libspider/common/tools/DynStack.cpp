@@ -40,7 +40,6 @@
 #include <stdio.h>
 #include <algorithm>
 #include <stdlib.h>
-#include <stdio.h>
 #include <cmath>
 
 DynStack::DynStack(const char* name): Stack(name){

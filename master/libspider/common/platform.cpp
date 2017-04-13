@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
  * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -36,10 +37,7 @@
 
 #include <platform.h>
 
-//LRT* Platform::lrt_ = 0;
 Platform* Platform::platform_ = 0;
-//LrtCommunicator* Platform::lrtCom_ = 0;
-//SpiderCommunicator* Platform::spiderCom_ = 0;
 
 Platform::Platform(){
 

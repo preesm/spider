@@ -43,9 +43,9 @@
 class PlatformLinux: public Platform{
 public:
 	/** File Handling */
-	virtual int fopen(const char* name);
-	virtual void fprintf(int id, const char* fmt, ...);
-	virtual void fclose(int id);
+	virtual FILE* fopen(const char* name);
+	virtual void fprintf(FILE* id, const char* fmt, ...);
+	virtual void fclose(FILE* id);
 
 	/** Shared Memory Handling */
 	virtual void* virt_to_phy(void* address);

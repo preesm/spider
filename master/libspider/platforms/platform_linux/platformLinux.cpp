@@ -36,7 +36,7 @@
 
 #include <platformLinux.h>
 
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>

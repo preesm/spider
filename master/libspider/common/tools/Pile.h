@@ -37,7 +37,7 @@
 #ifndef PILE_H
 #define PILE_H
 
-#include <cstdio>
+#include <stdio.h>
 #include <cstdlib>
 
 #include "Stack.h"

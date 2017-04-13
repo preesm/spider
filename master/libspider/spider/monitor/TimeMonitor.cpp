@@ -2,7 +2,7 @@
  * TimeMonitor.cpp
  *
  *  Created on: Dec 1, 2015
- *      Author: jheulot
+ *      Author: jheulot, hmiomandre
  */
 
 #include "TimeMonitor.h"
@@ -37,6 +37,6 @@ void TimeMonitor::startMonitoring(){
 void TimeMonitor::endMonitoring(TraceSpiderType type){
 	if(start == 0)
 		throw "End monitor with no starting point";
-	Launcher::get()->sendTraceSpider(type, start, Platform::get()->getTime());
+	if(Spider::getTraceEnabled() == true) Launcher::get()->sendTraceSpider(type, start, Platform::get()->getTime());
 	start = 0;
 }

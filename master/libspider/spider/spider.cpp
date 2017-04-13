@@ -141,7 +141,10 @@ void Spider::iterate(){
 
 	srdag_ = new SRDAGGraph();
 
+
 	jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
+
+	Platform::get()->rstJobIx();
 }
 
 void Spider::setGraphOptim(bool useGraphOptim){

@@ -62,6 +62,8 @@ public:
 	virtual void rstTime() = 0;
 	virtual Time getTime() = 0;
 
+	virtual void rstJobIx() = 0;
+
 	/** Platform getter/setter */
 	static inline Platform* get();
 	virtual LRT* getLrt() = 0;

@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
  * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -70,6 +71,18 @@ Launcher* Launcher::get(){
 	return &instance_;
 }
 
+void Launcher::send_ResetLrtMsg(int lrtIx){
+	ResetLrtMsg* msg = (ResetLrtMsg*) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(ResetLrtMsg));
+	msg->msgIx = MSG_RESET_LRT;
+	Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ResetLrtMsg));
+}
+
+void Launcher::send_EndIterMsg(int lrtIx){
+	EndIterMsg* msg = (EndIterMsg*) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(EndIterMsg));
+	msg->msgIx = MSG_END_ITER;
+	Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(EndIterMsg));
+}
+
 void Launcher::send_ClearTimeMsg(int lrtIx){
 	ClearTimeMsg* msg = (ClearTimeMsg*)Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(ClearTimeMsg));
 	msg->msgIx = MSG_CLEAR_TIME;
@@ -124,9 +137,11 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex* vertex){
 
 	for(int i=0; i<vertex->getNConnectedInEdge(); i++){
 		SRDAGEdge* edge = vertex->getInEdge(i);
-		inFifos[i].id = edge->getAllocIx();
+		inFifos[i].id = edge->getAllocIx(); // Deprecated
 		inFifos[i].alloc = edge->getAlloc();
 		inFifos[i].size = edge->getRate();
+		inFifos[i].blkLrtIx = edge->getSrc()->getSlave();
+		inFifos[i].blkLrtJobIx = edge->getSrc()->getSlaveJobIx();
 
 		if(Spider::getActorPrecedence() &&
 				edge->getSrc()->getSlave() == edge->getSnk()->getSlave()){

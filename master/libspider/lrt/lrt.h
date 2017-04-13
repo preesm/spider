@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
  * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -58,9 +59,11 @@ public:
 	void runInfinitly();
 
 	inline void setIdle(bool idle);
+	inline void setJobIx(int jobIx);
 	inline bool isIdle();
 
 	inline int getIx() const;
+	inline int getJobIx() const;
 
 protected:
 	void sendTrace(int srdagIx, Time start, Time end);
@@ -71,10 +74,15 @@ private:
 	const lrtFct* fcts_;
 	bool run_;
 	bool idle_;
+	int jobIx_;
 };
 
 inline int LRT::getIx() const{
 	return ix_;
+}
+
+inline int LRT::getJobIx() const{
+	return jobIx_;
 }
 
 inline void LRT::setIdle(bool idle){
@@ -83,6 +91,10 @@ inline void LRT::setIdle(bool idle){
 
 inline bool LRT::isIdle(){
 	return idle_;
+}
+
+inline void LRT::setJobIx(int jobIx){
+	jobIx_ = jobIx;
 }
 
 #endif/*LRT_H*/

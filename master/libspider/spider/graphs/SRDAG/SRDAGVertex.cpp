@@ -80,6 +80,7 @@ SRDAGVertex::SRDAGVertex(
 	start_ = end_ = -1;
 	schedLvl_ = -1;
 	slave_ = -1;
+	slaveJobIx_ = -1;
 }
 
 SRDAGVertex::~SRDAGVertex(){

@@ -65,6 +65,9 @@ private:
 	void send_ClearTimeMsg(int lrtIx);
 	void send_StartJobMsg(int lrtIx, SRDAGVertex* vertex);
 
+	void send_EndIterMsg(int lrtIx);
+	void send_ResetLrtMsg(int lrtIx);
+
 };
 
 #endif/*LAUNCHER_H*/

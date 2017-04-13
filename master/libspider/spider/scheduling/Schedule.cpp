@@ -62,6 +62,7 @@ void Schedule::addJob(int pe, SRDAGVertex* job, Time start, Time end){
 		throw "Schedule: too much jobs\n";
 
 	schedules_[pe*nJobMax_+nJobPerPE_[pe]] = job;
+	job->setSlaveJobIx(nJobPerPE_[pe]);
 	nJobPerPE_[pe]++;
 	readyTime_[pe] = std::max(readyTime_[pe], end);
 	job->setStartTime(start);

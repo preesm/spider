@@ -233,20 +233,21 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 			Time execTime  = vertex->executionTimeOn(slaveType);
 			Time comInTime = 0, comOutTime = 0;
 			/** TODO compute communication time */
-			for(int input=0; input<vertex->getNConnectedInEdge(); input++){
-				if(vertex->getInEdge(input)->getSrc()->getSlave() != pe)
-					comInTime += 1000;
+//			for(int input=0; input<vertex->getNConnectedInEdge(); input++){
+//				if(vertex->getInEdge(input)->getSrc()->getSlave() != pe)
+//					comInTime += 1000;
 //				comInTime += archi_->getTimeRecv(
 //						vertex->getInEdge(input)->getSrc()->getSlave(),
 //						pe,
 //						vertex->getInEdge(input)->getRate());
-			}
+//			}
 //			for(int output=0; output<vertex->getNConnectedOutEdge(); output++){
 //				if(vertex->getOutEdge(output)->getSnk()->getSlave() != pe)
 //					comOutTime += 1000;
-////				comOutTime += arch->getTimeCom(slave, Write, vertex->getOutputEdge(output)->getTokenRate());
+//					comOutTime += arch->getTimeCom(slave, Write, vertex->getOutputEdge(output)->getTokenRate());
 //			}
 			Time endTime = startTime + execTime + comInTime + comOutTime;
+			//printf("Actor %d, Pe %d: minimu_start %ld, ready time %ld, start time %ld, exec time %ld, endTime %ld\n", vertex->getId(), pe, minimumStartTime, schedule_->getReadyTime(pe), startTime + comInTime, execTime, endTime);
 			if(endTime < bestEndTime
 					|| (endTime == bestEndTime && waitTime<bestWaitTime)){
 				bestSlave = pe;
@@ -260,6 +261,7 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 	if(bestSlave == -1){
 		printf("No slave found to execute one instance of %s\n", vertex->getReference()->getName());
 	}
+	//printf("=> choose pe %d\n", bestSlave);
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
 	schedule_->addJob(bestSlave, vertex, bestStartTime, bestEndTime);
 

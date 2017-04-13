@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
  * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -56,6 +57,9 @@ public:
 	virtual void data_end_send(Fifo* f) = 0;
 
 	virtual long data_recv(Fifo* f) = 0;
+
+	virtual void setLrtJobIx(int jobIx, int lrtIx) = 0;
+	virtual unsigned long getLrtJobIx(int lrt) = 0;
 
 
 protected:

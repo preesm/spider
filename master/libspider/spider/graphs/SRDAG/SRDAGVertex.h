@@ -91,6 +91,7 @@ public:
 	inline Time getStartTime() const;
 	inline Time getEndTime() const;
 	inline int getSlave() const;
+	inline int getSlaveJobIx() const;
 	inline int getRefId() const;
 	inline int getIterId() const;
 
@@ -99,6 +100,7 @@ public:
 	inline void setStartTime(Time start);
 	inline void setEndTime(Time end);
 	inline void setSlave(int slave);
+	inline void setSlaveJobIx(int slaveJobIx);
 
 	/** Comparison fcts */
 	inline bool isEqual(SRDAGVertex* v2);
@@ -141,6 +143,8 @@ private:
 
 	Time start_, end_;
 	int schedLvl_;
+
+	int slaveJobIx_;
 
 	int slave_;
 };
@@ -344,6 +348,12 @@ inline void SRDAGVertex::setEndTime(Time end){
 }
 inline void SRDAGVertex::setSlave(int slave){
 	slave_ = slave;
+}
+inline void SRDAGVertex::setSlaveJobIx(int slaveJobIx){
+	slaveJobIx_ = slaveJobIx;
+}
+inline int SRDAGVertex::getSlaveJobIx() const{
+	return slaveJobIx_;
 }
 
 inline bool SRDAGVertex::isEqual(SRDAGVertex* v2){

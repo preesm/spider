@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
  * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -44,6 +45,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <unistd.h>
+
 #include <monitor/StackMonitor.h>
 
 #include "specialActors/specialActors.h"
@@ -64,6 +67,7 @@ LRT::LRT(int ix){
 	ix_ = ix;
 	run_ = false;
 	idle_ = false;
+	jobIx_ = 0;
 }
 LRT::~LRT(){
 	/* Nothing to Unalloc */
@@ -101,13 +105,16 @@ int LRT::runOneJob(){
 			void** outFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbOutEdge, void*);
 			Param* outParams = CREATE_MUL(LRT_STACK, jobMsg->nbOutParam, Param);
 
+
 			for(int i=0; i<(int)jobMsg->nbInEdge; i++){
+				while(inFifos[i].blkLrtJobIx >= Platform::get()->getLrtCommunicator()->getLrtJobIx(inFifos[i].blkLrtIx));
 				inFifosAlloc[i] = (void*) Platform::get()->getLrtCommunicator()->data_recv(&inFifos[i]);
 			}
 
 			for(int i=0; i<(int)jobMsg->nbOutEdge; i++){
 				outFifosAlloc[i] = (void*) Platform::get()->getLrtCommunicator()->data_start_send(&outFifos[i]);
 			}
+
 
 			Time start = Platform::get()->getTime();
 
@@ -135,9 +142,13 @@ int LRT::runOneJob(){
 				msgParam->msgIx = MSG_PARAM_VALUE;
 				msgParam->srdagIx = jobMsg->srdagIx;
 				memcpy(params, outParams, jobMsg->nbOutParam*sizeof(Param));
-
 				Platform::get()->getLrtCommunicator()->ctrl_end_send(size);
 			}
+
+			jobIx_++;
+			//__sync_synchronize();
+			// do memory full barrier here !!
+			Platform::get()->getLrtCommunicator()->setLrtJobIx(jobIx_, ix_);
 
 			StackMonitor::free(LRT_STACK, inFifosAlloc);
 			StackMonitor::free(LRT_STACK, outFifosAlloc);
@@ -148,6 +159,18 @@ int LRT::runOneJob(){
 		case MSG_CLEAR_TIME:{
 			ClearTimeMsg* timeMsg = (ClearTimeMsg*) msg;
 			Platform::get()->rstTime(timeMsg);
+			break;}
+		case MSG_END_ITER:{
+			EndIterMsg* msg = (EndIterMsg*) Platform::get()->getLrtCommunicator()->ctrl_start_send(sizeof(EndIterMsg));
+			msg->msgIx = MSG_END_ITER;
+			Platform::get()->getLrtCommunicator()->ctrl_end_send(sizeof(EndIterMsg));
+			break;}
+		case MSG_RESET_LRT:{
+			jobIx_ = 0;
+			Platform::get()->getLrtCommunicator()->setLrtJobIx(jobIx_, ix_);
+			ResetLrtMsg* msg = (ResetLrtMsg*) Platform::get()->getLrtCommunicator()->ctrl_start_send(sizeof(ResetLrtMsg));
+			msg->msgIx = MSG_RESET_LRT;
+			Platform::get()->getLrtCommunicator()->ctrl_end_send(sizeof(ResetLrtMsg));
 			break;}
 		case MSG_STOP_LRT:
 			run_ = false;

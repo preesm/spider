@@ -1,7 +1,6 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,			*
- * Hugo Miomandre												            *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -37,17 +36,18 @@
 
 #ifdef _MSC_VER
 	#if (_MSC_VER < 1900)
-		#define snprintf _snprintf
+	#define snprintf _snprintf 
 	#endif
-#endif //_MSC_VER
+#endif
 
 #include "BipartiteGraph.h"
 #include <tools/Stack.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/SRDAG/SRDAGVertex.h>
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+#include <cstdio>
 #include <platform.h>
 
 BipartiteGraph::BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack stackId){
@@ -108,6 +108,8 @@ bool BipartiteGraph::hasPerfectMatch() {
   }
 
 void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack stackId, const char* testName){
+#if 1
+
 	BipartiteGraph* bipartite = CREATE(stackId, BipartiteGraph)(g1, g2, stackId);
 
 	printf("%s : ", testName);
@@ -130,6 +132,8 @@ void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack s
 
 	bipartite->~BipartiteGraph();
 	StackMonitor::free(stackId, bipartite);
+
+#endif
 }
 
 void BipartiteGraph::print(const char* path, SRDAGGraph* g1, SRDAGGraph* g2){

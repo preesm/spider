@@ -1,6 +1,6 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
  * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
@@ -38,6 +38,8 @@
 #ifndef LRT_COMMUNICATOR_H
 #define LRT_COMMUNICATOR_H
 
+#include <stdint.h>
+
 #include "Message.h"
 
 class LrtCommunicator {
@@ -53,13 +55,21 @@ public:
 	virtual void* trace_start_send(int size) = 0;
 	virtual void trace_end_send(int size) = 0;
 
-	virtual long data_start_send(Fifo* f) = 0;
+	virtual uintptr_t data_start_send(Fifo* f) = 0;
 	virtual void data_end_send(Fifo* f) = 0;
 
-	virtual long data_recv(Fifo* f) = 0;
+	virtual uintptr_t data_recv(Fifo* f) = 0;
 
-	virtual void setLrtJobIx(int jobIx, int lrtIx) = 0;
-	virtual unsigned long getLrtJobIx(int lrt) = 0;
+	virtual void allocateDataBuffer(int nbInput, Fifo* fIn, int nbOutput, Fifo* fOut) {};
+	virtual void freeDataBuffer(int nbInput, int nbOutput) {};
+
+	virtual void setLrtJobIx(int lrtIx, int jobIx){};
+	virtual long getLrtJobIx(int lrtIx) = 0;
+
+	virtual void rstLrtJobIx(int lrtIx) {};
+
+	virtual void waitForLrtUnlock(int nbDependency, int* blkLrtIx, int* blkLrtJobIx, int jobIx) {};
+	virtual void unlockLrt(int jobIx) {};
 
 
 protected:

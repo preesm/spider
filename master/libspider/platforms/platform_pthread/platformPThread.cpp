@@ -39,11 +39,15 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-	#include <unistd.h>
+#include <unistd.h>
 #endif // _WIN32
 
 #ifdef _MSC_VER
 	#define steady_clock system_clock
+
+	#if (_MSC_VER < 1900)
+	#define snprintf _snprintf 
+	#endif
 #endif
 
 #include <pthread.h>
@@ -52,7 +56,7 @@
 #include <cstring>
 #include <cstdio>
 
-#include <platformPThreads.h>
+#include <platformPThread.h>
 
 #include <fcntl.h>
 #include <stdlib.h>
@@ -66,8 +70,8 @@
 
 #include <lrt.h>
 #include <spider.h>
-#include <PThreadsLrtCommunicator.h>
-#include <PThreadsSpiderCommunicator.h>
+#include <PThreadLrtCommunicator.h>
+#include <PThreadSpiderCommunicator.h>
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
 
@@ -103,13 +107,13 @@ static void setAffinity(int cpuId){
 	}
 }
 
-PlatformPThreads::PlatformPThreads(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
+PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
 	StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack){
 
 	if (platform_) throw "Try to create 2 platforms";
 	platform_ = this;
 
-	printfSpider();
+	//printfSpider();
 
 	nLrt_ = nLrt;
 
@@ -120,7 +124,7 @@ PlatformPThreads::PlatformPThreads(int nLrt, int shMemSize, lrtFct* fcts, int nL
 	stackLrt = (Stack**)malloc(nLrt_*sizeof(Stack*));
 
 	lrt_ = (LRT**)malloc(nLrt_*sizeof(LRT*));
-	lrtCom_ = (LrtCommunicator**)malloc(nLrt_*sizeof(PThreadsLrtCommunicator*));
+	lrtCom_ = (LrtCommunicator**)malloc(nLrt_*sizeof(PThreadLrtCommunicator*));
 
 	thread_ID_tab_ = (pthread_t*)malloc(nLrt_*sizeof(pthread_t));
 
@@ -175,16 +179,15 @@ PlatformPThreads::PlatformPThreads(int nLrt, int shMemSize, lrtFct* fcts, int nL
 
 
 	//TODO have shMem a multiple of getMinAllocSize
-	//jobTab = malloc(((shMemSize + this->getMinAllocSize())/ this->getMinAllocSize())* this->getMinAllocSize());
 	jobTab = malloc(shMemSize);
 
-	dataMem = (void*)((long)jobTab + sizeof(unsigned int)*nLrt_);
+	dataMem = (void*) ((long)jobTab + sizeof(unsigned int)*nLrt_);
 
 	thread_ID_tab_[0] = pthread_self();
 	pthread_barrier_init(&pthread_barrier_init_and_end_thread, NULL, nLrt_);
 
 	//Lancement des threads
-	for (int i = 1; i<nLrt_; i++) pthread_create(&thread_lrt[i - 1], NULL, &lrtPThreads_helper, &arg_lrt[i - 1]);
+	for (int i = 1; i<nLrt_; i++) pthread_create(&thread_lrt[i - 1], NULL, &lrtPThread_helper, &arg_lrt[i - 1]);
 
 	//waiting for every threads to register itself in thread_ID_tab_
 	pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
@@ -199,9 +202,8 @@ PlatformPThreads::PlatformPThreads(int nLrt, int shMemSize, lrtFct* fcts, int nL
 	/** Initialize shared memory */
 	memset(jobTab, 0, shMemSize);
 
-
 	/** Initialize LRT and Communicators */
-	spiderCom_ = CREATE(ARCHI_STACK, PThreadsSpiderCommunicator)(
+	spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
 		MAX_MSG_SIZE,
 		nLrt_,
 		&semTrace,
@@ -211,10 +213,10 @@ PlatformPThreads::PlatformPThreads(int nLrt, int shMemSize, lrtFct* fcts, int nL
 		&fifoTrace);
 
 
-	for (int i = 0;i < nLrt_;i++) ((PThreadsSpiderCommunicator*)spiderCom_)->setLrtCom(i, fifoLRTtoSpider[i], fifoSpidertoLRT[i]);
+	for (int i = 0;i < nLrt_;i++) ((PThreadSpiderCommunicator*)spiderCom_)->setLrtCom(i, fifoLRTtoSpider[i], fifoSpidertoLRT[i]);
 
 
-	lrtCom_[0] = CREATE(ARCHI_STACK, PThreadsLrtCommunicator)(
+	lrtCom_[0] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
 		MAX_MSG_SIZE,
 		fifoSpidertoLRT[0],
 		fifoLRTtoSpider[0],
@@ -264,7 +266,7 @@ PlatformPThreads::PlatformPThreads(int nLrt, int shMemSize, lrtFct* fcts, int nL
 	this->rstTime();
 }
 
-PlatformPThreads::~PlatformPThreads(){
+PlatformPThread::~PlatformPThread(){
 	for (int lrt = 1; lrt<archi_->getNPE(); lrt++){
 		int size = sizeof(StopLrtMsg);
 		StopLrtMsg* msg = (StopLrtMsg*)getSpiderCommunicator()->ctrl_start_send(lrt, size);
@@ -282,9 +284,13 @@ PlatformPThreads::~PlatformPThreads(){
 	for (int i = 1; i < nLrt_; i++) pthread_join(thread_ID_tab_[i], NULL);
 
 
-	for (int i = 0; i < nLrt_; i++) lrt_[i]->~LRT();
-	((PThreadsSpiderCommunicator*)spiderCom_)->~PThreadsSpiderCommunicator();
-	for (int i = 0; i < nLrt_; i++) ((PThreadsLrtCommunicator*)lrtCom_[i])->~PThreadsLrtCommunicator();
+	lrt_[0]->~LRT();
+	((PThreadLrtCommunicator*)lrtCom_[0])->~PThreadLrtCommunicator();
+
+	// for (int i = 0; i < nLrt_; i++) lrt_[i]->~LRT();
+	((PThreadSpiderCommunicator*)spiderCom_)->~PThreadSpiderCommunicator();
+	// for (int i = 0; i < nLrt_; i++) ((PThreadLrtCommunicator*)lrtCom_[i])->~PThreadLrtCommunicator();
+
 	archi_->~SharedMemArchi();
 
 
@@ -292,6 +298,13 @@ PlatformPThreads::~PlatformPThreads(){
 	StackMonitor::free(ARCHI_STACK, lrtCom_[0]);
 	StackMonitor::free(ARCHI_STACK, spiderCom_);
 	StackMonitor::free(ARCHI_STACK, archi_);
+
+
+	StackMonitor::freeAll(ARCHI_STACK);
+	StackMonitor::freeAll(LRT_STACK);
+	StackMonitor::freeAll(TRANSFO_STACK);
+	StackMonitor::freeAll(SRDAG_STACK);
+	StackMonitor::freeAll(PISDF_STACK);
 
 
 	//WARNING : Thread specific stacks have to be cleaned BEFORE exiting threads
@@ -316,9 +329,14 @@ PlatformPThreads::~PlatformPThreads(){
 
 	free(lrt_);
 	free(lrtCom_);
-	free(thread_ID_tab_);
+
 	free(stackArchi);
 	free(stackLrt);
+
+	for (int i = 0; i < nLrt_; i++){
+		delete fifoSpidertoLRT[i];
+		delete fifoLRTtoSpider[i];
+	}
 
 	free(fifoLRTtoSpider);
 	free(fifoSpidertoLRT);
@@ -327,12 +345,12 @@ PlatformPThreads::~PlatformPThreads(){
 }
 
 /** File Handling */
-FILE* PlatformPThreads::fopen(const char* name){
+FILE* PlatformPThread::fopen(const char* name){
 
 	return std::fopen(name, "w+");
 }
 
-void PlatformPThreads::fprintf(FILE* id, const char* fmt, ...){
+void PlatformPThread::fprintf(FILE* id, const char* fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
 
@@ -348,22 +366,22 @@ void PlatformPThreads::fprintf(FILE* id, const char* fmt, ...){
 
 	for (int i = 0; i < n; i++) fputc(buffer[i], id);
 }
-void PlatformPThreads::fclose(FILE* id){
+void PlatformPThread::fclose(FILE* id){
 	if (id != NULL){
 		std::fclose(id);
 		id = NULL;
 	}
 }
 
-void* PlatformPThreads::virt_to_phy(void* address){
+void* PlatformPThread::virt_to_phy(void* address){
 	return (void*)((long)dataMem + (long)address);
 }
 
-int PlatformPThreads::getCacheLineSize(){
+int PlatformPThread::getCacheLineSize(){
 	return 0;
 }
 
-int PlatformPThreads::getMinAllocSize(){
+int PlatformPThread::getMinAllocSize(){
 #ifdef _WIN32
 	//workaround because Windows
 	return 4096;
@@ -373,7 +391,7 @@ int PlatformPThreads::getMinAllocSize(){
 }
 
 
-void PlatformPThreads::rstJobIx(){
+void PlatformPThread::rstJobIx(){
 	//Sending a msg to all slave LRTs, end of graph iteration
 	for (int i = 1;i < nLrt_;i++){
 		EndIterMsg* msg = (EndIterMsg*) getSpiderCommunicator()->ctrl_start_send(i, sizeof(EndIterMsg));
@@ -402,6 +420,9 @@ void PlatformPThreads::rstJobIx(){
 	//reseting master LRT jobIx counter
 	Platform::get()->getLrt()->setJobIx(0);
 
+	//reseting jobTab
+	memset(jobTab, 0, sizeof(unsigned int)*nLrt_);
+
 	//Waiting for slave LRTs to reset their jobIx counter
 	for (int i = 1;i < nLrt_;i++){
 		void* msg = NULL;
@@ -414,12 +435,12 @@ void PlatformPThreads::rstJobIx(){
 }
 
 /** Time Handling */
-void PlatformPThreads::rstTime(struct ClearTimeMsg* msg){
+void PlatformPThread::rstTime(struct ClearTimeMsg* msg){
 	struct timespec* ts = (struct timespec*)(msg + 1);
 	start = *ts;
 }
 
-void PlatformPThreads::rstTime(){
+void PlatformPThread::rstTime(){
 	start_steady = std::chrono::steady_clock::now();
 
 	start.tv_sec = (start_steady - origin_steady).count() / 1000000000;
@@ -438,7 +459,7 @@ void PlatformPThreads::rstTime(){
 	}
 }
 
-Time PlatformPThreads::getTime(){
+Time PlatformPThread::getTime(){
 	std::chrono::time_point<std::chrono::steady_clock> ts_steady = std::chrono::steady_clock::now();
 	long long val_steady = (ts_steady - start_steady).count();
 
@@ -452,15 +473,15 @@ Time PlatformPThreads::getTime(){
 	return val_steady;
 }
 
-void PlatformPThreads::idleLrt(int lrt){
+void PlatformPThread::idleLrt(int lrt){
 	lrt_[lrt]->setIdle(true);
 }
 
-void PlatformPThreads::wakeLrt(int lrt){
+void PlatformPThread::wakeLrt(int lrt){
 	lrt_[lrt]->setIdle(false);
 }
 
-void PlatformPThreads::idle(){
+void PlatformPThread::idle(){
 	while (lrt_[0]->isIdle()){
 #ifdef _WIN32
 		Sleep((unsigned)-1);
@@ -470,12 +491,12 @@ void PlatformPThreads::idle(){
 	}
 }
 
-Time PlatformPThreads::mappingTime(int nActors){
+Time PlatformPThread::mappingTime(int nActors, int nPe){
 	return 1000 * nActors;
 }
 
 
-void PlatformPThreads::lrtPThreads(Arg_lrt *argument_lrt){
+void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt){
 
 	int indice = argument_lrt->indice;
 
@@ -496,7 +517,7 @@ void PlatformPThreads::lrtPThreads(Arg_lrt *argument_lrt){
 
 
 	/** Create LRT */
-	lrtCom_[indice] = CREATE(ARCHI_STACK, PThreadsLrtCommunicator)(
+	lrtCom_[indice] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
 		MAX_MSG_SIZE,
 		argument_lrt->fifoSpidertoLRT,
 		argument_lrt->fifoLRTtoSpider,
@@ -520,6 +541,10 @@ void PlatformPThreads::lrtPThreads(Arg_lrt *argument_lrt){
 	//wait for every LRT to end
 	pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
 
+
+	lrt_[indice]->~LRT();
+	((PThreadLrtCommunicator*)lrtCom_[indice])->~PThreadLrtCommunicator();
+
 	//freeing thread specific stacks
 	StackMonitor::free(ARCHI_STACK, lrt_[indice]);
 	StackMonitor::free(ARCHI_STACK, lrtCom_[indice]);
@@ -531,9 +556,9 @@ void PlatformPThreads::lrtPThreads(Arg_lrt *argument_lrt){
 	pthread_exit(EXIT_SUCCESS);
 }
 
-void* lrtPThreads_helper(void *voidArgs) {
+void* lrtPThread_helper(void *voidArgs) {
 	Arg_lrt *args = (Arg_lrt*)voidArgs;
-	args->instance->lrtPThreads(args);
+	args->instance->lrtPThread(args);
 	return 0;
 }
 
@@ -574,21 +599,5 @@ void printfSpider(){
 	printf("  .;;;;;;;                                              ;;;;;;;.  \n");
 	printf("\n");
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

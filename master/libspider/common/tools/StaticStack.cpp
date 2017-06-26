@@ -40,7 +40,6 @@
 #include <stdio.h>
 #include <algorithm>
 #include <math.h>
-//#include <unistd.h>
 
 StaticStack::StaticStack(const char* name, void* ptr, int size):
 		Stack(name) {
@@ -57,15 +56,19 @@ StaticStack::~StaticStack(){
 }
 
 static inline int getAlignSize(int size){
-	float minAlloc = Platform::get()->getMinAllocSize();
-	return ceil(size/minAlloc)*minAlloc;
+	float minAlloc = (float) Platform::get()->getMinAllocSize();
+	return (int)ceil(((float)size)/minAlloc)*minAlloc;
 }
 
 void *StaticStack::alloc(int size){
 	size = getAlignSize(size);
 	void* res;
 	if(used_+size > size_)
+	{
+		printf("Stack %s is full at %d, want at least %d\n",getName(),size_,used_+size);
+		while(1);
 		throw "Insufficient memory size of the Stack\n";
+	}
 	res = curPtr_;
 	curPtr_ += size;
 	used_ += size;
@@ -83,6 +86,7 @@ void StaticStack::freeAll(){
 
 
 void StaticStack::printStat(){
+#ifdef VERBOSE_STACK
 	printf("%s: ", getName());
 
 	if(maxUsed_ < 1024)
@@ -111,4 +115,5 @@ void StaticStack::printStat(){
 		printf(", \t%d still in use", used_);
 
 	printf("\n");
+#endif
 }

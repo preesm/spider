@@ -1,7 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
  * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
- * Hugo Miomandre												            *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -35,52 +35,33 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PTHREADS_SPIDER_COMMUNICATOR_H
-#define PTHREADS_SPIDER_COMMUNICATOR_H
+#ifndef ROUND_ROBIN_SCATTERED_H
+#define ROUND_ROBIN_SCATTERED_H
 
-#include <Message.h>
-#include <SpiderCommunicator.h>
-#include <tools/Stack.h>
-#include <semaphore.h>
-#include <queue>
+#include "../Scheduler.h"
+#include <graphs/SRDAG/SRDAGVertex.h>
+#include <tools/List.h>
+#include <platform.h>
 
-class PThreadsSpiderCommunicator: public SpiderCommunicator{
+class RoundRobinScattered : public Scheduler {
 public:
-	PThreadsSpiderCommunicator(int msgSizeMax, int nLrt,
-							sem_t* semTrace, sem_t* semFifoSpidertoLRT, sem_t* semFifoLRTtoSpider,
-							std::queue<unsigned char>* fTraceWr, std::queue<unsigned char>* fTraceRd);
-	~PThreadsSpiderCommunicator();
+	RoundRobinScattered();
+	virtual ~RoundRobinScattered();
 
-	void setLrtCom(int lrtIx, std::queue<unsigned char>* fIn, std::queue<unsigned char>* fOut);
-
-	void* ctrl_start_send(int lrtIx, int size);
-	void ctrl_end_send(int lrtIx, int size);
-
-	int ctrl_start_recv(int lrtIx, void** data);
-	void ctrl_end_recv(int lrtIx);
-
-	void* trace_start_send(int size);
-	void trace_end_send(int size);
-
-	int trace_start_recv(void** data);
-	void trace_end_recv();
+	void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi);
+	void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi);
 
 private:
-	std::queue<unsigned char>** fIn_;
-	std::queue<unsigned char>** fOut_;
-	std::queue<unsigned char>* fTraceRd_;
-	std::queue<unsigned char>* fTraceWr_;
+	SRDAGGraph* srdag_;
+	Schedule* schedule_;
+	Archi* archi_;
 
-	sem_t* semTrace_;
-	sem_t* semFifoSpidertoLRT_;
-	sem_t* semFifoLRTtoSpider_;
+	List<SRDAGVertex*>* list_;
 
-	int msgSizeMax_;
+	int computeSchedLevel(SRDAGVertex* vertex);
+	void scheduleVertex(SRDAGVertex* vertex);
+	void addPrevActors(SRDAGVertex* vertex, List<SRDAGVertex*> *list);
 
-	void* msgBufferRecv_;
-	int curMsgSizeRecv_;
-	void* msgBufferSend_;
-	int curMsgSizeSend_;
 };
 
-#endif/*PTHREADS_SPIDER_COMMUNICATOR_H*/
+#endif/*ROUND_ROBIN_SCATTERED_H*/

@@ -39,7 +39,7 @@
 
 #include <platform.h>
 
-typedef Time(*MappingTimeFct)(int);
+typedef Time(*MappingTimeFct)(int,int);
 
 class Archi {
 protected:
@@ -63,6 +63,8 @@ public:
 
 	virtual int getSpiderPeIx() const = 0;
 	virtual MappingTimeFct getMappingTimeFct() const = 0;
+
+	virtual int getNPEforType(int type) = 0;
 };
 
 #endif/*ARCHI_H*/

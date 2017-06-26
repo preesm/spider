@@ -75,6 +75,8 @@ public:
 	virtual Stack* getStack(SpiderStack id) = 0;
 	virtual Stack* getStack(int id) = 0;
 
+	virtual inline int getMaxActorAllocSize(int pe);
+
 	/** Platform Core Handling **/
 	virtual void idleLrt(int i) = 0;
 	virtual void wakeLrt(int i) = 0;
@@ -94,5 +96,9 @@ inline Platform* Platform::get(){
 		throw "Error undefined platform\n";
 }
 
+// If unimplemented in child
+inline int Platform::getMaxActorAllocSize(int pe){
+	return 1024 * 1024 * 1024;
+}
 
 #endif/*PLATFORM_H*/

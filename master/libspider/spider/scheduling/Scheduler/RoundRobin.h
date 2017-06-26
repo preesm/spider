@@ -35,74 +35,33 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <graphs/SRDAG/SRDAGCommon.h>
+#ifndef ROUND_ROBIN_H
+#define ROUND_ROBIN_H
+
+#include "../Scheduler.h"
 #include <graphs/SRDAG/SRDAGVertex.h>
-#include <graphs/SRDAG/SRDAGEdge.h>
+#include <tools/List.h>
+#include <platform.h>
 
-/** Static Var def */
-//int SRDAGEdge::globalId = 0;
+class RoundRobin : public Scheduler {
+public:
+	RoundRobin();
+	virtual ~RoundRobin();
 
-SRDAGEdge::SRDAGEdge(){
-	id_ = -1;
-	graph_ = 0;
+	void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi);
+	void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi);
 
-	src_ = 0; srcPortIx_ = -1;
-	snk_ = 0; snkPortIx_ = -1;
+private:
+	SRDAGGraph* srdag_;
+	Schedule* schedule_;
+	Archi* archi_;
 
-	rate_ = -1;
-	alloc_ = -1;
-	allocIx_ = -1;
-	nToken_ = 1;
-}
+	List<SRDAGVertex*>* list_;
 
-SRDAGEdge::SRDAGEdge(SRDAGGraph* graph, int globalId){
-	
-	//id_ = globalId++;
-	id_ = globalId;
+	int computeSchedLevel(SRDAGVertex* vertex);
+	void scheduleVertex(SRDAGVertex* vertex);
+	void addPrevActors(SRDAGVertex* vertex, List<SRDAGVertex*> *list);
 
-	graph_ = graph;
+};
 
-	src_ = 0; srcPortIx_ = -1;
-	snk_ = 0; snkPortIx_ = -1;
-
-	rate_ = -1;
-	alloc_ = -1;
-	allocIx_ = -1;
-	nToken_ = 1;
-}
-
-SRDAGEdge::~SRDAGEdge(){
-
-}
-
-void SRDAGEdge::connectSrc(SRDAGVertex *src, int srcPortId){
-	if(src_ != 0)
-		throw "SRDAGEdge: try to connect to an already connected edge";
-	src_ = src;
-	srcPortIx_ = srcPortId;
-	src_->connectOutEdge(this, srcPortIx_);
-}
-
-void SRDAGEdge::connectSnk(SRDAGVertex *snk, int snkPortId){
-	if(snk_ != 0)
-		throw "SRDAGEdge: try to connect to an already connected edge";
-	snk_ = snk;
-	snkPortIx_ = snkPortId;
-	snk_->connectInEdge(this, snkPortIx_);
-}
-
-void SRDAGEdge::disconnectSrc(){
-	if(src_ == 0)
-		throw "SRDAGEdge: try to disconnect a not connected edge";
-	src_->disconnectOutEdge(srcPortIx_);
-	src_ = 0;
-	srcPortIx_ = -1;
-}
-
-void SRDAGEdge::disconnectSnk(){
-	if(snk_ == 0)
-		throw "SRDAGEdge: try to disconnect a not connected edge";
-	snk_->disconnectInEdge(snkPortIx_);
-	snk_ = 0;
-	snkPortIx_ = -1;
-}
+#endif/*ROUND_ROBIN_H*/

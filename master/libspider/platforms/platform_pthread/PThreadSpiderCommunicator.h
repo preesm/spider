@@ -1,7 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
  * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
- * Hugo Miomandre                                                           *
+ * Hugo Miomandre												            *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -35,52 +35,41 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PTHREADS_LRT_COMMUNICATOR_H
-#define PTHREADS_LRT_COMMUNICATOR_H
+#ifndef PTHREAD_SPIDER_COMMUNICATOR_H
+#define PTHREAD_SPIDER_COMMUNICATOR_H
 
-#include <LrtCommunicator.h>
-#include <semaphore.h>
 #include <Message.h>
+#include <SpiderCommunicator.h>
 #include <tools/Stack.h>
+#include <semaphore.h>
 #include <queue>
 
-class PThreadsLrtCommunicator: public LrtCommunicator{
+class PThreadSpiderCommunicator: public SpiderCommunicator{
 public:
-	PThreadsLrtCommunicator(
-			int msgSizeMax,
-			std::queue<unsigned char>* fIn,
-			std::queue<unsigned char>* fOut,
-			std::queue<unsigned char>* fTrace,
-			sem_t *semTrace,
-			sem_t *semFifoSpidertoLRT,
-			sem_t *semFifoLRTtoSpider,
-			void* fifos,
-			void* dataMem
-		);
+	PThreadSpiderCommunicator(int msgSizeMax, int nLrt,
+							sem_t* semTrace, sem_t* semFifoSpidertoLRT, sem_t* semFifoLRTtoSpider,
+							std::queue<unsigned char>* fTraceWr, std::queue<unsigned char>* fTraceRd);
+	~PThreadSpiderCommunicator();
 
-	~PThreadsLrtCommunicator();
+	void setLrtCom(int lrtIx, std::queue<unsigned char>* fIn, std::queue<unsigned char>* fOut);
 
-	void* ctrl_start_send(int size);
-	void ctrl_end_send(int size);
+	void* ctrl_start_send(int lrtIx, int size);
+	void ctrl_end_send(int lrtIx, int size);
 
-	int ctrl_start_recv(void** data);
-	void ctrl_end_recv();
+	int ctrl_start_recv(int lrtIx, void** data);
+	void ctrl_end_recv(int lrtIx);
 
 	void* trace_start_send(int size);
 	void trace_end_send(int size);
 
-	long data_start_send(Fifo* f);
-	void data_end_send(Fifo* f);
-
-	long data_recv(Fifo* f);
-
-	void setLrtJobIx(int jobIx, int lrtIx);
-	unsigned long getLrtJobIx(int lrt);
+	int trace_start_recv(void** data);
+	void trace_end_recv();
 
 private:
-	std::queue<unsigned char>* fIn_;
-	std::queue<unsigned char>* fOut_;
-	std::queue<unsigned char>* fTrace_;
+	std::queue<unsigned char>** fIn_;
+	std::queue<unsigned char>** fOut_;
+	std::queue<unsigned char>* fTraceRd_;
+	std::queue<unsigned char>* fTraceWr_;
 
 	sem_t* semTrace_;
 	sem_t* semFifoSpidertoLRT_;
@@ -88,14 +77,10 @@ private:
 
 	int msgSizeMax_;
 
-	void* msgBufferSend_;
-	int curMsgSizeSend_;
-
 	void* msgBufferRecv_;
 	int curMsgSizeRecv_;
-
-	unsigned long* jobTab_;
-	unsigned char* shMem_;
+	void* msgBufferSend_;
+	int curMsgSizeSend_;
 };
 
-#endif/*PTHREADS_LRT_COMMUNICATOR_H*/
+#endif/*PTHREADS_SPIDER_COMMUNICATOR_H*/

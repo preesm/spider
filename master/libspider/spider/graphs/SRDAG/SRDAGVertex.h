@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -50,6 +51,7 @@ public:
 	friend class SRDAGEdge;
 
 	SRDAGVertex(
+			int globalId,
 			SRDAGType type, SRDAGGraph* graph,
 			PiSDFVertex* reference,
 			int refId, int iterId,
@@ -123,7 +125,7 @@ protected:
 	inline void disconnectOutEdge(int ix);
 
 private:
-	static int globalId;
+	//static int globalId;
 
 	int id_;
 	SRDAGType type_;
@@ -196,10 +198,14 @@ inline SRDAGEdge* SRDAGVertex::getInEdge(int ix){
 		throw "SRDAGVertex: Bad ix in getInEdge";
 }
 inline SRDAGEdge* SRDAGVertex::getOutEdge(int ix){
-	if(ix < nMaxOutEdge_ && ix >= 0)
+	if(ix < nMaxOutEdge_ && ix >= 0){
+		//printf("SRDAGVertex: getOutEdge %d/%d\n",ix,nMaxOutEdge_);
 		return outEdges_[ix];
-	else
+	}
+	else{
+		printf("SRDAGVertex: Bad ix in getOutEdge %d/%d\n",ix,nMaxOutEdge_);
 		throw "SRDAGVertex: Bad ix in getOutEdge";
+	}
 }
 inline SRDAGEdge* const * SRDAGVertex::getInEdges(){
 	return inEdges_;
@@ -417,7 +423,7 @@ inline Time SRDAGVertex::executionTimeOn(int peType) const{
 	case SRDAG_END:
 		return 1;
 	default:
-		throw "Unhandled case in SRDAGVertex::isExecutableOn\n";
+		throw "Unhandled case in SRDAGVertex::executionTimeOn\n";
 	}
 }
 inline int SRDAGVertex::getSchedLvl() const {

@@ -35,100 +35,102 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "PThreadsSpiderCommunicator.h"
-#include <monitor/StackMonitor.h>
+#include "PThreadLrtCommunicator.h"
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 #include <fcntl.h>
-#include <stdlib.h>
+#include <semaphore.h>
+#include <cstdlib>
 #include <stdio.h>
-
 #include <platform.h>
 
-PThreadsSpiderCommunicator::PThreadsSpiderCommunicator(
-		int msgSizeMax,
-		int nLrt,
-		sem_t* semTrace,
-		sem_t* semFifoSpidertoLRT,
-		sem_t* semFifoLRTtoSpider,
-		std::queue<unsigned char>* fTraceWr,
-		std::queue<unsigned char>* fTraceRd){
+#include <monitor/StackMonitor.h>
 
-	fIn_ = (std::queue<unsigned char>**) malloc(nLrt * sizeof(std::queue<unsigned char>*));
-	fOut_ = (std::queue<unsigned char>**) malloc(nLrt * sizeof(std::queue<unsigned char>*));
-	fTraceRd_ = fTraceRd;
-	fTraceWr_ = fTraceWr;
+#include <pthread.h>
+
+PThreadLrtCommunicator::PThreadLrtCommunicator(
+		int msgSizeMax,
+		std::queue<unsigned char>* fIn,
+		std::queue<unsigned char>* fOut,
+		std::queue<unsigned char>* fTrace,
+		sem_t *semTrace,
+		sem_t *semFifoSpidertoLRT,
+		sem_t *semFifoLRTtoSpider,
+		void* jobTab,
+		void* dataMem
+	){
+	fIn_ = fIn;
+	fOut_ = fOut;
+	fTrace_ = fTrace;
 
 	semTrace_ = semTrace;
-	semFifoSpidertoLRT_ = semFifoSpidertoLRT;
 	semFifoLRTtoSpider_ = semFifoLRTtoSpider;
+	semFifoSpidertoLRT_ = semFifoSpidertoLRT;
 
 	msgSizeMax_ = msgSizeMax;
 
 	msgBufferRecv_ = (void*) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
 	curMsgSizeRecv_ = 0;
+
 	msgBufferSend_ = (void*) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
 	curMsgSizeSend_ = 0;
+
+	jobTab_ = (unsigned long*)jobTab;
+	shMem_ = (unsigned char*)dataMem;
 }
 
-PThreadsSpiderCommunicator::~PThreadsSpiderCommunicator(){
-	StackMonitor::free(ARCHI_STACK, fIn_);
-	StackMonitor::free(ARCHI_STACK, fOut_);
+PThreadLrtCommunicator::~PThreadLrtCommunicator(){
 	StackMonitor::free(ARCHI_STACK, msgBufferRecv_);
 	StackMonitor::free(ARCHI_STACK, msgBufferSend_);
-
-	free(fIn_);
-	free(fOut_);
 }
 
-void PThreadsSpiderCommunicator::setLrtCom(int lrtIx, std::queue<unsigned char>* fIn, std::queue<unsigned char>* fOut){
-	fIn_[lrtIx] = fIn;
-	fOut_[lrtIx] = fOut;
-}
-
-void* PThreadsSpiderCommunicator::ctrl_start_send(int lrtIx, int size){
+void* PThreadLrtCommunicator::ctrl_start_send(int size){
 	if(curMsgSizeSend_)
 		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
 	curMsgSizeSend_ = size;
 	return msgBufferSend_;
 }
 
-void PThreadsSpiderCommunicator::ctrl_end_send(int lrtIx, int size){
+void PThreadLrtCommunicator::ctrl_end_send(int size){
 	unsigned long s = curMsgSizeSend_;
 
-	static unsigned long size_fifo[4] = {0};
-
-
-	//prise du semaphore de fOut_[lrtIx]
-	sem_wait(&semFifoSpidertoLRT_[lrtIx]);
+	//Prise du semaphore de fOut_
+	sem_wait(semFifoLRTtoSpider_);
 
 	//Envoi de la taille du message à venir
-	for (unsigned int i = 0;i < sizeof(unsigned long);i++) fOut_[lrtIx]->push(s >> (sizeof(unsigned long)-1-i)*8 & 0xFF);
+	for (unsigned int i = 0;i < sizeof(unsigned long);i++) fOut_->push(s >> (sizeof(unsigned long)-1-i)*8 & 0xFF);
 
-	//Envoie du message
-	for (int i = 0;i < curMsgSizeSend_;i++) fOut_[lrtIx]->push(*(((char*)msgBufferSend_)+i) & 0xFF);
+	//Envoi du message
+	for (int i = 0;i < curMsgSizeSend_;i++) fOut_->push((*(((char*)msgBufferSend_)+i)) & 0xFF);
 
-	if (fOut_[lrtIx]->size() > size_fifo[lrtIx]) size_fifo[lrtIx] = fOut_[lrtIx]->size();
-
-	//Relachement du semaphore de fOut_[lrtIx]
-	sem_post(&semFifoSpidertoLRT_[lrtIx]);
+	//Relachement du semaphore de fOut_
+	sem_post(semFifoLRTtoSpider_);
 
 	curMsgSizeSend_ = 0;
 }
 
-int PThreadsSpiderCommunicator::ctrl_start_recv(int lrtIx, void** data){
+int PThreadLrtCommunicator::ctrl_start_recv(void** data){
 	unsigned long size = 0;
 
-	//Rien à faire si fifo vide
-	if (fIn_[lrtIx]->empty()) return 0;
 
-	//Prise du semaphore de fIn_[lrtIx]
-	sem_wait(&semFifoLRTtoSpider_[lrtIx]);
+	//Prise du semaphore de fIn_
+	sem_wait(semFifoSpidertoLRT_);
+
+
+	if (fIn_->empty()) {
+		sem_post(semFifoSpidertoLRT_);
+		return 0;
+	}
+
 
 	//Reception/reconstitution de la taille du message à venir
-	for (unsigned int nb = 0;nb < sizeof(unsigned long);nb++){
+	for(unsigned int nb = 0;nb < sizeof(unsigned long);nb++) {
 		size = size << 8;
-		size += fIn_[lrtIx]->front();
-		fIn_[lrtIx]->pop();
+		size += fIn_->front();
+		fIn_->pop();
 	}
 
 	if(size > (unsigned long)msgSizeMax_)
@@ -138,82 +140,71 @@ int PThreadsSpiderCommunicator::ctrl_start_recv(int lrtIx, void** data){
 
 	//Reception du message
 	for (unsigned int recv = 0;recv < size;recv++){
-		*(((char*) msgBufferRecv_) + recv) = fIn_[lrtIx]->front();
-		fIn_[lrtIx]->pop();
+		*(((char*) msgBufferRecv_) + recv) = fIn_->front();
+		fIn_->pop();
 	}
 
-	//Relachement du semaphore de fIn_[lrtIx]
-	sem_post(&semFifoLRTtoSpider_[lrtIx]);
+	//Relachement du semaphore de fIn_
+	sem_post(semFifoSpidertoLRT_);
 
 	*data = msgBufferRecv_;
 	return curMsgSizeRecv_;
 }
 
-void PThreadsSpiderCommunicator::ctrl_end_recv(int lrtIx){
+void PThreadLrtCommunicator::ctrl_end_recv(){
 	curMsgSizeRecv_ = 0;
 }
 
-void* PThreadsSpiderCommunicator::trace_start_send(int size){
+void* PThreadLrtCommunicator::trace_start_send(int size){
 	if(curMsgSizeSend_)
 		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
 	curMsgSizeSend_ = size;
 	return msgBufferSend_;
 }
 
-void PThreadsSpiderCommunicator::trace_end_send(int size){
+void PThreadLrtCommunicator::trace_end_send(int size){
 	unsigned long s = curMsgSizeSend_;
 
-	static unsigned int size_trace;
-
 	int err = sem_wait(semTrace_);
-
 	if(err != 0){
-		perror("PThreadsLrtCommunicator::trace_end_send");
+		perror("PThreadLrtCommunicator::trace_end_send");
 		exit(-1);
 	}
 
-	//Envoi de la taille de la trace à venir
-	for (unsigned int i = 0;i < sizeof(unsigned long);i++) fTraceWr_->push(s >> (sizeof(unsigned long)-1-i)*8 & 0xFF);
+	//Envoi de la taille de la trace
+	for (unsigned int i = 0;i < sizeof(unsigned long);i++) fTrace_->push(s >> (sizeof(unsigned long)-1-i)*8 & 0xFF);
 
 	//Envoi de la trace
-	for (int i = 0;i < curMsgSizeSend_;i++) fTraceWr_->push((*(((char*)msgBufferSend_)+i)) & 0xFF);
+	for (int i = 0;i < curMsgSizeSend_;i++) fTrace_->push(*(((char*) msgBufferSend_ ) +i) & 0xFF);
 
 	sem_post(semTrace_);
 
 	curMsgSizeSend_ = 0;
 }
 
-int PThreadsSpiderCommunicator::trace_start_recv(void** data){
-	unsigned long size = 0;
-	unsigned int nb = 0;
-
-	if (fTraceRd_->empty()) return 0;
-
-	for (nb = 0;nb < sizeof(unsigned long);nb++){
-		while (fTraceRd_->empty());
-		size = size << 8;
-		size += fTraceRd_->front();
-		fTraceRd_->pop();
-	}
-
-	if(nb<0) return 0;
-
-	if(size > (unsigned long)msgSizeMax_)
-		throw "Msg too big\n";
-
-	curMsgSizeRecv_ = size;
-
-	unsigned int recv;
-	for (recv = 0;recv < size;recv++){
-		while (fTraceRd_->empty());
-		*(((char*) msgBufferRecv_) + recv) = fTraceRd_->front();
-		fTraceRd_->pop();
-	}
-
-	*data = msgBufferRecv_;
-	return curMsgSizeRecv_;
+void PThreadLrtCommunicator::data_end_send(Fifo* f){
+	// Nothing to do
 }
 
-void PThreadsSpiderCommunicator::trace_end_recv(){
-	curMsgSizeRecv_ = 0;
+uintptr_t PThreadLrtCommunicator::data_recv(Fifo* f){
+	return (long)Platform::get()->virt_to_phy((void*)(intptr_t)(f->alloc));
+}
+
+uintptr_t PThreadLrtCommunicator::data_start_send(Fifo* f){
+	return (long)Platform::get()->virt_to_phy((void*)(intptr_t)(f->alloc));
+}
+
+void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx){
+	jobTab_[lrtIx] = jobIx;
+}
+
+long PThreadLrtCommunicator::getLrtJobIx(int lrtIx){
+	return jobTab_[lrtIx];
+}
+
+void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int* blkLrtIx, int* blkLrtJobIx, int jobIx){
+
+	for(int i=0; i < nbDependency; i++){
+		while(blkLrtJobIx[i] >= getLrtJobIx(blkLrtIx[i]));
+	}
 }

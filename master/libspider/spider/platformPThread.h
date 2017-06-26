@@ -35,19 +35,19 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifndef PLATFORM_PTHREADS_H
-#define PLATFORM_PTHREADS_H
+#ifndef PLATFORM_PTHREAD_H
+#define PLATFORM_PTHREAD_H
 
 #include "platform.h"
 #include <signal.h>
 #include <semaphore.h>
 #include <queue>
 #include <pthread.h>
-#include <PThreadsLrtCommunicator.h>
+#include <PThreadLrtCommunicator.h>
 
 struct Arg_lrt;
 
-class PlatformPThreads: public Platform{
+class PlatformPThread: public Platform{
 public:
 	/** File Handling */
 	virtual FILE* fopen(const char* name);
@@ -83,16 +83,16 @@ public:
 	inline int getThreadNumber();
 
 	/* Fonction de thread */
-	void lrtPThreads(Arg_lrt *argument_lrt);
+	void lrtPThread(Arg_lrt *argument_lrt);
 
 
-	PlatformPThreads(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
+	PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
 			StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack);
-	virtual ~PlatformPThreads();
+	virtual ~PlatformPThread();
 
 
 private:
-	static Time mappingTime(int nActors);
+	static Time mappingTime(int nActors, int nPe);
 
 	int nLrt_;
 	pthread_t* thread_ID_tab_;
@@ -110,9 +110,7 @@ private:
 	std::queue<unsigned char> fifoTrace;
 
 	//Semaphores
-	sem_t semFifo;
 	sem_t semTrace;
-
 	sem_t* semFifoSpidertoLRT;
 	sem_t* semFifoLRTtoSpider;
 
@@ -122,7 +120,7 @@ private:
 };
 
 
-inline void PlatformPThreads::setStack(SpiderStack id, Stack* stack){
+inline void PlatformPThread::setStack(SpiderStack id, Stack* stack){
 	switch(id){
 	case PISDF_STACK :
 		stackPisdf = stack;
@@ -144,7 +142,7 @@ inline void PlatformPThreads::setStack(SpiderStack id, Stack* stack){
 	}
 }
 
-inline Stack* PlatformPThreads::getStack(SpiderStack id){
+inline Stack* PlatformPThread::getStack(SpiderStack id){
 	switch(id){
 	case PISDF_STACK :
 		return stackPisdf;
@@ -166,7 +164,7 @@ inline Stack* PlatformPThreads::getStack(SpiderStack id){
 	}
 }
 
-inline Stack* PlatformPThreads::getStack(int id){
+inline Stack* PlatformPThread::getStack(int id){
 	switch(id){
 	case PISDF_STACK :
 		return stackPisdf;
@@ -188,7 +186,7 @@ inline Stack* PlatformPThreads::getStack(int id){
 	}
 }
 
-inline int PlatformPThreads::getThreadNumber(){
+inline int PlatformPThread::getThreadNumber(){
 	for(int i = 0;i < nLrt_;i++){
 		if (pthread_equal(thread_ID_tab_[i], pthread_self()) != 0)
 			return i;
@@ -196,15 +194,15 @@ inline int PlatformPThreads::getThreadNumber(){
 	throw "Error undefined ID\n";
 }
 
-inline LRT* PlatformPThreads::getLrt(){
+inline LRT* PlatformPThread::getLrt(){
 	return lrt_[getThreadNumber()];
 }
 
-inline LrtCommunicator* PlatformPThreads::getLrtCommunicator(){
+inline LrtCommunicator* PlatformPThread::getLrtCommunicator(){
 	return lrtCom_[getThreadNumber()];
 }
 
-inline SpiderCommunicator* PlatformPThreads::getSpiderCommunicator(){
+inline SpiderCommunicator* PlatformPThread::getSpiderCommunicator(){
 	if(spiderCom_)
 		return spiderCom_;
 	else
@@ -214,11 +212,10 @@ inline SpiderCommunicator* PlatformPThreads::getSpiderCommunicator(){
 
 // Structure de passage d'argument dans le thread
 typedef struct Arg_lrt {
-	PlatformPThreads *instance;
+	PlatformPThread *instance;
 	std::queue<unsigned char>* fifoSpidertoLRT;
 	std::queue<unsigned char>* fifoLRTtoSpider;
 	std::queue<unsigned char>* fifoTrace;
-	sem_t* semFifo;
 	sem_t* semTrace;
 	sem_t* semFifoSpidertoLRT;
 	sem_t* semFifoLRTtoSpider;
@@ -232,7 +229,7 @@ typedef struct Arg_lrt {
 }Arg_lrt;
 
 // Fonction wrapper pour lancer un thread sur une méthode d'objet
-void* lrtPThreads_helper(void *voidArgs);
+void* lrtPThread_helper(void *voidArgs);
 
 
 #endif/*PLATFORM_PTHREADS_H*/

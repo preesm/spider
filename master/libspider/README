@@ -1,0 +1,1 @@
+WARNING : platform_k2_arm, platform_k2_dsp_lrt and platform_linux may need modification to comply to the new lrt.cpp following the addition of platform_pthread

@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -61,7 +62,7 @@ typedef enum PiSDFSubType {
 #define MAX_STATS_VERTICES 1000
 #define MAX_STATS_PE_TYPES 3
 
-typedef unsigned long 	Time;
+typedef unsigned long long 	Time;
 typedef long 			Param;
 
 typedef void (*lrtFct)(
@@ -76,7 +77,10 @@ typedef enum{
 }MemAllocType;
 
 typedef enum{
-	SCHEDULER_LIST
+	SCHEDULER_LIST,
+	SCHEDULER_LIST_ON_THE_GO,
+	ROUND_ROBIN,
+	ROUND_ROBIN_SCATTERED
 }SchedulerType;
 
 typedef enum{
@@ -274,6 +278,8 @@ namespace Spider{
 	void setTimingOnType(PiSDFVertex* vertex, int peType, const char* timing);
 	void isExecutableOnAllPE(PiSDFVertex* vertex);
 	void isExecutableOnPE(PiSDFVertex* vertex, int pe);
+
+	void isExecutableOnPEType(PiSDFVertex* vertex, int peType);
 
 	void cleanPiSDF();
 };

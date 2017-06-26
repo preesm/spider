@@ -35,7 +35,7 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include "ListScheduler.h"
+#include "ListSchedulerOnTheGo.h"
 
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
@@ -45,14 +45,21 @@
 #include <algorithm>
 #include <stdio.h>
 
-ListScheduler::ListScheduler(){
+ListSchedulerOnTheGo::ListSchedulerOnTheGo(){
+
+	if(Spider::getGraphOptim()){
+		printf("Graph Optim not supported with this scheduler\n");
+		throw "Graph Optim not supported with this scheduler";
+	}
+
+
 	srdag_ = 0;
 	schedule_ = 0;
 	archi_ = 0;
 	list_ = 0;
 }
 
-ListScheduler::~ListScheduler(){
+ListSchedulerOnTheGo::~ListSchedulerOnTheGo(){
 
 }
 
@@ -60,7 +67,7 @@ static int compareSchedLevel(SRDAGVertex* vertexA, SRDAGVertex* vertexB){
 	return vertexB->getSchedLvl() - vertexA->getSchedLvl();
 }
 
-void ListScheduler::addPrevActors(SRDAGVertex* vertex, List<SRDAGVertex*> *list){
+void ListSchedulerOnTheGo::addPrevActors(SRDAGVertex* vertex, List<SRDAGVertex*> *list){
 	for(int i=0; i<vertex->getNConnectedInEdge(); i++){
 		SRDAGVertex* prevVertex = vertex->getInEdge(i)->getSrc();
 		if(!list->isPresent(prevVertex) && prevVertex->getState() == SRDAG_EXEC){
@@ -71,7 +78,7 @@ void ListScheduler::addPrevActors(SRDAGVertex* vertex, List<SRDAGVertex*> *list)
 	}
 }
 
-void ListScheduler::scheduleOnlyConfig(
+void ListSchedulerOnTheGo::scheduleOnlyConfig(
 		SRDAGGraph* graph,
 		MemAlloc* memAlloc,
 		Schedule* schedule,
@@ -83,6 +90,7 @@ void ListScheduler::scheduleOnlyConfig(
 	list_ = CREATE(TRANSFO_STACK, List<SRDAGVertex*>)(TRANSFO_STACK, srdag_->getNExecVertex());
 
 //	Launcher::initTaskOrderingTime();
+
 
 	for(int i=0; i<srdag_->getNVertex(); i++){
 		SRDAGVertex *vertex = srdag_->getVertex(i);
@@ -125,7 +133,7 @@ void ListScheduler::scheduleOnlyConfig(
 	StackMonitor::free(TRANSFO_STACK, list_);
 }
 
-void ListScheduler::schedule(
+void ListSchedulerOnTheGo::schedule(
 		SRDAGGraph* graph,
 		MemAlloc* memAlloc,
 		Schedule* schedule,
@@ -136,7 +144,7 @@ void ListScheduler::schedule(
 
 	list_ = CREATE(TRANSFO_STACK, List<SRDAGVertex*>)(TRANSFO_STACK, srdag_->getNExecVertex());
 
-	// Fill the list_ with SRDAGVertices in scheduling order
+	// Fill the list_ with SRDAGVertices
 	for(int i=0; i<srdag_->getNVertex(); i++){
 		SRDAGVertex *vertex = srdag_->getVertex(i);
 		if(vertex->getState() == SRDAG_EXEC){
@@ -147,10 +155,12 @@ void ListScheduler::schedule(
 
 	memAlloc->alloc(list_);
 
+	// determine scheduling level for SRDAGVertices 
 	for(int i=0; i<list_->getNb(); i++){
 		computeSchedLevel((*list_)[i]);
 	}
 
+	// sort SRDAGVertices in list_ depending on their scheduling level
 	list_->sort(compareSchedLevel);
 
 //	for (int i=0; i<list_->getNb(); i++){
@@ -165,29 +175,31 @@ void ListScheduler::schedule(
 
 	for(int i=0; i<list_->getNb(); i++){
 		this->scheduleVertex((*list_)[i]);
-	}
-
-	for(int i=0; i<list_->getNb(); i++){
 		Launcher::get()->launchVertex((*list_)[i]);
 	}
+
+	// for(int i=0; i<list_->getNb(); i++){
+	// 	Launcher::get()->launchVertex((*list_)[i]);
+	// }
 
 
 	list_->~List();
 	StackMonitor::free(TRANSFO_STACK, list_);
 }
 
-int ListScheduler::computeSchedLevel(SRDAGVertex* vertex){
+#if 0
+int ListSchedulerOnTheGo::computeSchedLevel(SRDAGVertex* vertex){
 	int lvl = 0;
 	if(vertex->getSchedLvl() == -1){
 		for(int i=0; i<vertex->getNConnectedOutEdge(); i++){
 			SRDAGVertex* succ = vertex->getOutEdge(i)->getSnk();
 			if(succ && succ->getState() != SRDAG_NEXEC){
-				Time minExecTime = (unsigned int)-1;
+				Time minExecTime = (Time)-1;
 				for(int j=0; j<archi_->getNPE(); j++){
 					if(succ->isExecutableOn(j)){
 						Time execTime = succ->executionTimeOn(archi_->getPEType(j));
 						if(execTime == 0)
-							throw "ListScheduler: Null execution time may cause problems\n";
+							throw "ListSchedulerOnTheGo: Null execution time may cause problems\n";
 						minExecTime = std::min(minExecTime, execTime);
 					}
 				}
@@ -199,8 +211,31 @@ int ListScheduler::computeSchedLevel(SRDAGVertex* vertex){
 	}
 	return vertex->getSchedLvl();
 }
+#else
+int ListSchedulerOnTheGo::computeSchedLevel(SRDAGVertex* vertex){
+	int lvl = 0;
+	if(vertex->getSchedLvl() == -1){
+		for(int i=0; i<vertex->getNConnectedOutEdge(); i++){
+			SRDAGVertex* succ = vertex->getOutEdge(i)->getSnk();
+			if(succ && succ->getState() != SRDAG_NEXEC){
+				Time minExecTime = (Time)-1;
+				for(int j=0; j<archi_->getNPETypes(); j++){
+					
+					Time execTime = succ->executionTimeOn(archi_->getPEType(j));
+					if (execTime == 0) continue;
+					minExecTime = std::min(minExecTime, execTime);
+				}
+				lvl = std::max(lvl, computeSchedLevel(succ)+(int)minExecTime);
+			}
+		}
+		vertex->setSchedLvl(lvl);
+		return lvl;
+	}
+	return vertex->getSchedLvl();
+}
+#endif
 
-void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
+void ListSchedulerOnTheGo::scheduleVertex(SRDAGVertex* vertex){
 	Time minimumStartTime=0;
 
 	for(int i=0; i<vertex->getNConnectedInEdge(); i++){
@@ -222,14 +257,33 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 	Time bestWaitTime = 0;
 	Time bestEndTime = (Time)-1; // Very high value.
 
+
+		//Getting alloc size to determine if PE can handle it
+		int vertexAllocSize = 0;
+		for(int i=0; i<vertex->getNConnectedInEdge(); i++){
+			vertexAllocSize += vertex->getInEdge(i)->getRate();
+		}
+
+		for(int i=0; i<vertex->getNConnectedOutEdge(); i++){
+			vertexAllocSize += vertex->getOutEdge(i)->getRate();
+		}
+
+		//if (vertex->getType() == SRDAG_NORMAL) printf("%s requires %d bytes\n",vertex->getReference()->getName(),vertexAllocSize);
+
+
+
 	// Getting a slave for the vertex.
 	for(int pe = 0; pe < archi_->getNPE(); pe++){
 		int slaveType = archi_->getPEType(pe);
 
 		if(!archi_->isActivated(pe)) continue;
 
+		// Patch to avoid sending special actors to clusters
+		if ((vertex->getType() != SRDAG_NORMAL) && (slaveType == 1)) continue;
+
+
 		// checking the constraints
-		if(vertex->isExecutableOn(pe)){
+		if(vertex->isExecutableOn(pe) && vertexAllocSize < Platform::get()->getMaxActorAllocSize(pe)){
 			Time startTime = std::max(schedule_->getReadyTime(pe), minimumStartTime);
 			Time waitTime  = startTime - schedule_->getReadyTime(pe);
 			Time execTime  = vertex->executionTimeOn(slaveType);
@@ -267,7 +321,7 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
 	schedule_->addJob(bestSlave, vertex, bestStartTime, bestEndTime);
 
-	//printf("fctId %d scheduled on PE %d\n",vertex->getFctId(),bestSlave);
+	//if (vertex->getType() == SRDAG_NORMAL) printf("%s scheduled on PE %d\n",vertex->getReference()->getName(),bestSlave);
 
 	vertex->setSlave(bestSlave);
 }

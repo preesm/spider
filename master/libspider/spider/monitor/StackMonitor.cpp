@@ -42,7 +42,6 @@
 
 #include <platform.h>
 
-//static Stack* stacks[STACK_COUNT] = {0};
 
 void StackMonitor::initStack(SpiderStack stackId, StackConfig cfg){
 	switch(cfg.type){
@@ -62,23 +61,19 @@ void StackMonitor::clean(SpiderStack id){
 void StackMonitor::cleanAllStack(){
 	for(int i=0; i<STACK_COUNT; i++){
 		delete Platform::get()->getStack(i);
-		//delete stacks[i];
 	}
 }
 
 void* StackMonitor::alloc(SpiderStack stackId, int size){
 	return Platform::get()->getStack(stackId)->alloc(size);
-	//return stacks[stackId]->alloc(size);
 }
 
 void StackMonitor::free(SpiderStack stackId, void* ptr){
 	return Platform::get()->getStack(stackId)->free(ptr);
-	//return stacks[stackId]->free(ptr);
 }
 
 void StackMonitor::freeAll(SpiderStack stackId){
 	return Platform::get()->getStack(stackId)->freeAll();
-	//return stacks[stackId]->freeAll();
 }
 
 void StackMonitor::printStackStats(){

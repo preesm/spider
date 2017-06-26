@@ -35,74 +35,69 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <graphs/SRDAG/SRDAGCommon.h>
-#include <graphs/SRDAG/SRDAGVertex.h>
-#include <graphs/SRDAG/SRDAGEdge.h>
+#ifndef PTHREAD_LRT_COMMUNICATOR_H
+#define PTHREAD_LRT_COMMUNICATOR_H
 
-/** Static Var def */
-//int SRDAGEdge::globalId = 0;
+#include <LrtCommunicator.h>
+#include <semaphore.h>
+#include <Message.h>
+#include <tools/Stack.h>
+#include <queue>
 
-SRDAGEdge::SRDAGEdge(){
-	id_ = -1;
-	graph_ = 0;
+class PThreadLrtCommunicator: public LrtCommunicator{
+public:
+	PThreadLrtCommunicator(
+			int msgSizeMax,
+			std::queue<unsigned char>* fIn,
+			std::queue<unsigned char>* fOut,
+			std::queue<unsigned char>* fTrace,
+			sem_t *semTrace,
+			sem_t *semFifoSpidertoLRT,
+			sem_t *semFifoLRTtoSpider,
+			void* fifos,
+			void* dataMem
+		);
 
-	src_ = 0; srcPortIx_ = -1;
-	snk_ = 0; snkPortIx_ = -1;
+	~PThreadLrtCommunicator();
 
-	rate_ = -1;
-	alloc_ = -1;
-	allocIx_ = -1;
-	nToken_ = 1;
-}
+	void* ctrl_start_send(int size);
+	void ctrl_end_send(int size);
 
-SRDAGEdge::SRDAGEdge(SRDAGGraph* graph, int globalId){
-	
-	//id_ = globalId++;
-	id_ = globalId;
+	int ctrl_start_recv(void** data);
+	void ctrl_end_recv();
 
-	graph_ = graph;
+	void* trace_start_send(int size);
+	void trace_end_send(int size);
 
-	src_ = 0; srcPortIx_ = -1;
-	snk_ = 0; snkPortIx_ = -1;
+	uintptr_t data_start_send(Fifo* f);
+	void data_end_send(Fifo* f);
 
-	rate_ = -1;
-	alloc_ = -1;
-	allocIx_ = -1;
-	nToken_ = 1;
-}
+	uintptr_t data_recv(Fifo* f);
 
-SRDAGEdge::~SRDAGEdge(){
+	void setLrtJobIx(int lrtIx, int jobIx);
+	long getLrtJobIx(int lrtIx);
 
-}
+	void waitForLrtUnlock(int nbDependency, int* blkLrtIx, int* blkLrtJobIx, int jobIx);
 
-void SRDAGEdge::connectSrc(SRDAGVertex *src, int srcPortId){
-	if(src_ != 0)
-		throw "SRDAGEdge: try to connect to an already connected edge";
-	src_ = src;
-	srcPortIx_ = srcPortId;
-	src_->connectOutEdge(this, srcPortIx_);
-}
+private:
+	std::queue<unsigned char>* fIn_;
+	std::queue<unsigned char>* fOut_;
+	std::queue<unsigned char>* fTrace_;
 
-void SRDAGEdge::connectSnk(SRDAGVertex *snk, int snkPortId){
-	if(snk_ != 0)
-		throw "SRDAGEdge: try to connect to an already connected edge";
-	snk_ = snk;
-	snkPortIx_ = snkPortId;
-	snk_->connectInEdge(this, snkPortIx_);
-}
+	sem_t* semTrace_;
+	sem_t* semFifoSpidertoLRT_;
+	sem_t* semFifoLRTtoSpider_;
 
-void SRDAGEdge::disconnectSrc(){
-	if(src_ == 0)
-		throw "SRDAGEdge: try to disconnect a not connected edge";
-	src_->disconnectOutEdge(srcPortIx_);
-	src_ = 0;
-	srcPortIx_ = -1;
-}
+	int msgSizeMax_;
 
-void SRDAGEdge::disconnectSnk(){
-	if(snk_ == 0)
-		throw "SRDAGEdge: try to disconnect a not connected edge";
-	snk_->disconnectInEdge(snkPortIx_);
-	snk_ = 0;
-	snkPortIx_ = -1;
-}
+	void* msgBufferSend_;
+	int curMsgSizeSend_;
+
+	void* msgBufferRecv_;
+	int curMsgSizeRecv_;
+
+	unsigned long* jobTab_;
+	unsigned char* shMem_;
+};
+
+#endif/*PTHREAD_LRT_COMMUNICATOR_H*/

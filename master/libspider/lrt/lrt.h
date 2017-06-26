@@ -1,6 +1,6 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
  * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
@@ -41,6 +41,8 @@
 #include <tools/Stack.h>
 #include <platform.h>
 
+#define NB_MAX_ACTOR (200)
+
 typedef void (*lrtFct)(
 		void* inputFIFOs[],
 		void* outputFIFOs[],
@@ -62,6 +64,8 @@ public:
 	inline void setJobIx(int jobIx);
 	inline bool isIdle();
 
+	inline void rstJobIx();
+
 	inline int getIx() const;
 	inline int getJobIx() const;
 
@@ -75,6 +79,27 @@ private:
 	bool run_;
 	bool idle_;
 	int jobIx_;
+	int jobIxTotal_;
+
+	int tabBlkLrtIx[NB_MAX_ACTOR];
+	int tabBlkLrtJobIx[NB_MAX_ACTOR];
+
+#ifdef VERBOSE_TIME
+	Time time_waiting_job;
+	Time time_waiting_prev_actor;
+	Time time_waiting_input_comm;
+	Time time_compute;
+	Time time_waiting_output_comm;
+	Time time_global;
+
+	Time time_alloc_data;
+
+	Time time_other;
+
+	Time start_waiting_job;
+
+	int nb_iter;
+#endif
 };
 
 inline int LRT::getIx() const{
@@ -95,6 +120,10 @@ inline bool LRT::isIdle(){
 
 inline void LRT::setJobIx(int jobIx){
 	jobIx_ = jobIx;
+}
+
+inline void LRT::rstJobIx(){
+	jobIx_ = 0;
 }
 
 #endif/*LRT_H*/

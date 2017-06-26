@@ -69,6 +69,7 @@ public:
 	inline void setName(int pe, const char* name);
 	inline void setPEType(int pe, int type);
 
+	virtual inline int getNPEforType(int type);
 
 private:
 	int nPE_;
@@ -83,6 +84,7 @@ private:
 	float* peTypeBRecv_;
 	MappingTimeFct mapFct_;
 
+	int* nPEperType_;
 };
 
 inline const char* SharedMemArchi::getPEName(int ix) const{
@@ -119,6 +121,8 @@ inline void SharedMemArchi::setName(int pe, const char* name){
 }
 inline void SharedMemArchi::setPEType(int pe, int type){
 	peType_[pe] = type;
+
+	nPEperType_[type]++;
 }
 
 
@@ -148,5 +152,8 @@ inline MappingTimeFct SharedMemArchi::getMappingTimeFct() const{
 	return mapFct_;
 }
 
+inline int SharedMemArchi::getNPEforType(int type){
+	return nPEperType_[type];
+}
 
 #endif/*SHARED_MEM_ARCH_H*/

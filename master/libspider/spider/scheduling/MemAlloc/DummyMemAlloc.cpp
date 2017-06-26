@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -34,17 +35,13 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#ifdef _WIN32
-	#define getpagesize() 4096
-#else
-	#include <unistd.h>
-#endif
-
 #include "DummyMemAlloc.h"
 
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/SRDAG/SRDAGVertex.h>
+
+#include <platform.h>
 
 #include <cmath>
 
@@ -55,7 +52,9 @@ void DummyMemAlloc::reset(){
 }
 
 static inline int getAlignSize(int size){
-	return std::ceil(size/1.0/getpagesize())*getpagesize();
+	//return std::ceil(size/1.0/getpagesize())*getpagesize();
+	float minAlloc = (float) Platform::get()->getMinAllocSize();
+	return (int)ceil(((float)size)/minAlloc)*minAlloc;
 }
 
 void DummyMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){

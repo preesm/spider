@@ -39,6 +39,7 @@
 #define PTHREAD_LRT_COMMUNICATOR_H
 
 #include <LrtCommunicator.h>
+#include <sys/types.h>
 #include <semaphore.h>
 #include <Message.h>
 #include <tools/Stack.h>

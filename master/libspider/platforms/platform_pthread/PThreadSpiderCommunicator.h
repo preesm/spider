@@ -41,6 +41,7 @@
 #include <Message.h>
 #include <SpiderCommunicator.h>
 #include <tools/Stack.h>
+#include <sys/types.h>
 #include <semaphore.h>
 #include <queue>
 

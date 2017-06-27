@@ -22,16 +22,15 @@ The project compilation requires the following libraries:
 	static void setAffinity(int cpuId) function's body.
 	Moreover pthread-2.10.0 is compiled using Visual Studio
 
-## pthread-2.10.0
+## pthread-2.10.0 for Visual Studio > 2013 
 1. Download source code from https://sourceforge.net/projects/pthreads4w/files/latest/download
 2. Look for x86 Visual Studio command prompt in the Start menu/All Programs/Visual Studio 20XX/Visual Studio Tools
 3. Navigate to pthread-2.10.0 uncompressed sources folder
 4. Execute "nmake" to list available command and use the one that fits your needs (nmake clean VC)
-5. Copy pthreadVC2.lib to <project-path>/spider_w32/lib/pthread-2.10.0/lib and to <project-path>/sobel_spider/lib/pthread-2.10.0/lib
-   Copy pthreadVC2.dll to <project-path>/spider_w32/lib/pthread-2.10.0/dll and to <project-path>/sobel_spider/lib/pthread-2.10.0/dll
-   Copy pthread.h to <project-path>/spider_w32/lib/pthread-2.10.0/include and to <project-path>/sobel_spider/lib/pthread-2.10.0/include
-   Copy sched.h to <project-path>/spider_w32/lib/pthread-2.10.0/include and to <project-path>/sobel_spider/lib/pthread-2.10.0/include
-   Copy semaphore.h to <project-path>/spider_w32/lib/pthread-2.10.0/include and to <project-path>/sobel_spider/lib/pthread-2.10.0/include
+5. Copy **ALL PATHS BELOW SEEMS TO BE INCORRECT (spider_w32?)**
+  * `pthreadVC2.lib` and `pthreadVC2.dll` to `<project-path>/spider_w32/lib/pthread-2.10.0/lib` and to `<project-path>/sobel_spider/lib/pthread-2.10.0/lib`
+  * `pthread.h`, `sched.h` and `semaphore.h` to `<project-path>/spider_w32/lib/pthread-2.10.0/include` and to `<project-path>/sobel_spider/lib/pthread-2.10.0/include`
+ 
    
    
 ## pthread-2.8.0

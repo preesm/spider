@@ -28,6 +28,7 @@ The project compilation requires the following libraries:
 4. Execute "nmake" to list available command and use the one that fits your needs (nmake clean VC)
 5. Copy pthreadVC2.lib to /lib_spider/lib/pthread-2.10.0/lib
    Copy pthreadVC2.dll to /lib_spider/lib/pthread-2.10.0/dll
+   Copy _ptw32.h to /lib_spider/lib/pthread-2.10.0/include
    Copy pthread.h to /lib_spider/lib/pthread-2.10.0/include
    Copy sched.h to /lib_spider/lib/pthread-2.10.0/include
    Copy semaphore.h to /lib_spider/lib/pthread-2.10.0/include

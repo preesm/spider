@@ -108,7 +108,6 @@ bool BipartiteGraph::hasPerfectMatch() {
   }
 
 void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack stackId, const char* testName){
-#if 1
 
 	BipartiteGraph* bipartite = CREATE(stackId, BipartiteGraph)(g1, g2, stackId);
 
@@ -132,8 +131,6 @@ void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack s
 
 	bipartite->~BipartiteGraph();
 	StackMonitor::free(stackId, bipartite);
-
-#endif
 }
 
 void BipartiteGraph::print(const char* path, SRDAGGraph* g1, SRDAGGraph* g2){

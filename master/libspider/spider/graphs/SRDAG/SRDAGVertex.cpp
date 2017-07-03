@@ -101,7 +101,7 @@ SRDAGVertex::~SRDAGVertex(){
 }
 
 void SRDAGVertex::toString(char* name, int sizeMax) const{
-#if 1
+
 	switch(type_){
 	case SRDAG_NORMAL:
 		snprintf(name, sizeMax, "%s", reference_->getName());
@@ -125,7 +125,6 @@ void SRDAGVertex::toString(char* name, int sizeMax) const{
 		snprintf(name, sizeMax, "End");
 		break;
 	}
-#endif
 }
 
 void SRDAGVertex::updateState(){

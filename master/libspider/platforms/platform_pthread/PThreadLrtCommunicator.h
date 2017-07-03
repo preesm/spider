@@ -70,10 +70,10 @@ public:
 	void* trace_start_send(int size);
 	void trace_end_send(int size);
 
-	uintptr_t data_start_send(Fifo* f);
+	void* data_start_send(Fifo* f);
 	void data_end_send(Fifo* f);
 
-	uintptr_t data_recv(Fifo* f);
+	void* data_recv(Fifo* f);
 
 	void setLrtJobIx(int lrtIx, int jobIx);
 	long getLrtJobIx(int lrtIx);

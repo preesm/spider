@@ -203,7 +203,7 @@ int LRT::runOneJob(){
 				Time start = Platform::get()->getTime();
 				#endif
 
-				inFifosAlloc[i] = (void*) Platform::get()->getLrtCommunicator()->data_recv(&inFifos[i]); // in com 
+				inFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_recv(&inFifos[i]); // in com 
 
 				#ifdef VERBOSE_TIME
 				time_waiting_input_comm += Platform::get()->getTime() - start;
@@ -216,7 +216,7 @@ int LRT::runOneJob(){
 				Time start = Platform::get()->getTime();
 				#endif
 
-				outFifosAlloc[i] = (void*) Platform::get()->getLrtCommunicator()->data_start_send(&outFifos[i]); // in com
+				outFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_start_send(&outFifos[i]); // in com
 
 				#ifdef VERBOSE_TIME
 				time_waiting_input_comm += Platform::get()->getTime() - start;

@@ -186,12 +186,12 @@ void PThreadLrtCommunicator::data_end_send(Fifo* f){
 	// Nothing to do
 }
 
-uintptr_t PThreadLrtCommunicator::data_recv(Fifo* f){
-	return (long)Platform::get()->virt_to_phy((void*)(intptr_t)(f->alloc));
+void* PThreadLrtCommunicator::data_recv(Fifo* f){
+	return (void*) Platform::get()->virt_to_phy((void*)(intptr_t)(f->alloc));
 }
 
-uintptr_t PThreadLrtCommunicator::data_start_send(Fifo* f){
-	return (long)Platform::get()->virt_to_phy((void*)(intptr_t)(f->alloc));
+void* PThreadLrtCommunicator::data_start_send(Fifo* f){
+	return (void*) Platform::get()->virt_to_phy((void*)(intptr_t)(f->alloc));
 }
 
 void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx){

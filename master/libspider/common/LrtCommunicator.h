@@ -38,8 +38,6 @@
 #ifndef LRT_COMMUNICATOR_H
 #define LRT_COMMUNICATOR_H
 
-#include <stdint.h>
-
 #include "Message.h"
 
 class LrtCommunicator {
@@ -55,10 +53,10 @@ public:
 	virtual void* trace_start_send(int size) = 0;
 	virtual void trace_end_send(int size) = 0;
 
-	virtual uintptr_t data_start_send(Fifo* f) = 0;
+	virtual void* data_start_send(Fifo* f) = 0;
 	virtual void data_end_send(Fifo* f) = 0;
 
-	virtual uintptr_t data_recv(Fifo* f) = 0;
+	virtual void* data_recv(Fifo* f) = 0;
 
 	virtual void allocateDataBuffer(int nbInput, Fifo* fIn, int nbOutput, Fifo* fOut) {};
 	virtual void freeDataBuffer(int nbInput, int nbOutput) {};

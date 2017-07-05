@@ -41,6 +41,8 @@
 #include "platform.h"
 #include <signal.h>
 
+// semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
+// making compilation error with the IDE's own declaration of said types
 #include <semaphore.h>
 #ifdef _MSC_VER
 	#ifdef int64_t

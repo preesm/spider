@@ -42,7 +42,6 @@
 #endif
 
 #include <fcntl.h>
-#include <semaphore.h>
 #include <cstdlib>
 #include <stdio.h>
 #include <platform.h>

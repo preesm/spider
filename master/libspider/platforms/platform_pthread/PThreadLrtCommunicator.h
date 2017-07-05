@@ -40,7 +40,18 @@
 
 #include <LrtCommunicator.h>
 #include <sys/types.h>
+
 #include <semaphore.h>
+#ifdef _MSC_VER
+	#ifdef int64_t
+	#undef int64_t
+	#endif
+
+	#ifdef uint64_t
+	#undef uint64_t
+	#endif
+#endif
+
 #include <Message.h>
 #include <tools/Stack.h>
 #include <queue>

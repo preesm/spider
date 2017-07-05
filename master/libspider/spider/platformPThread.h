@@ -40,7 +40,18 @@
 
 #include "platform.h"
 #include <signal.h>
+
 #include <semaphore.h>
+#ifdef _MSC_VER
+	#ifdef int64_t
+	#undef int64_t
+	#endif
+
+	#ifdef uint64_t
+	#undef uint64_t
+	#endif
+#endif
+
 #include <queue>
 #include <pthread.h>
 #include <PThreadLrtCommunicator.h>

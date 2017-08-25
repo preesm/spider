@@ -106,7 +106,7 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx){
 	job->outputIfs = CREATE_MUL(TRANSFO_STACK, nextHierVx->getNConnectedOutEdge(), SRDAGEdge*);
 
 	memcpy(job->inputIfs, nextHierVx->getInEdges(), nextHierVx->getNConnectedInEdge()*sizeof(SRDAGEdge*));
-	memcpy(job->outputIfs, nextHierVx->getOutEdges(), nextHierVx->getNConnectedInEdge()*sizeof(SRDAGEdge*));
+	memcpy(job->outputIfs, nextHierVx->getOutEdges(), nextHierVx->getNConnectedOutEdge()*sizeof(SRDAGEdge*));
 
 }
 

@@ -339,6 +339,8 @@ int LRT::runOneJob() {
         start_waiting_job = Platform::get()->getTime();
 #endif
         return 1;
+	} else {
+		usleep(100);
     }
     return 0;
 }

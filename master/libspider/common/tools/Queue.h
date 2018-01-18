@@ -37,7 +37,7 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include <cstdio>
+#include <stdio.h>
 #include <cstdlib>
 
 #include "Stack.h"

@@ -266,8 +266,12 @@ inline bool PiSDFVertex::canExecuteOn(int pe){
 	return constraints_[pe];
 }
 inline Time PiSDFVertex::getTimingOnType(int peType, const int* vertexParamValues, int nParam){
-	if(peType < 0 || peType >= nPeTypeMax_)
+	if(peType < 0 || peType >= nPeTypeMax_){
+		printf("PiSDFVertex: get accessing bad PE type ix %d\n",peType);
 		throw "PiSDFVertex: accessing bad PE type ix\n";
+	}
+
+	if(timings_[peType] == NULL) return 0;
 	return timings_[peType]->evaluate(vertexParamValues, nParam);
 }
 inline const bool* PiSDFVertex::getConstraints() const{
@@ -275,8 +279,10 @@ inline const bool* PiSDFVertex::getConstraints() const{
 }
 
 inline void PiSDFVertex::setTimingOnType(int peType, const char* timing){
-	if(peType < 0 || peType >= nPeTypeMax_)
+	if(peType < 0 || peType >= nPeTypeMax_){
+		printf("PiSDFVertex: set accessing bad PE type ix %d\n",peType);
 		throw "PiSDFVertex: accessing bad PE type ix\n";
+	}
 
 	if(timings_[peType] != 0){
 		timings_[peType]->~Expression();

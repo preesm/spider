@@ -2,7 +2,7 @@
  * TimeMonitor.cpp
  *
  *  Created on: Dec 1, 2015
- *      Author: jheulot
+ *      Author: jheulot, hmiomandre
  */
 
 #include "TimeMonitor.h"

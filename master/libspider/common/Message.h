@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -43,7 +44,9 @@ typedef enum{
 	MSG_START_JOB=1,
 	MSG_PARAM_VALUE=2,
 	MSG_CLEAR_TIME=3,
-	MSG_STOP_LRT=4
+	MSG_RESET_LRT=4,
+	MSG_END_ITER=5,
+	MSG_STOP_LRT=6
 }CtrlMsgType;
 
 typedef enum{
@@ -98,10 +101,12 @@ typedef struct {
 }TraceMsg;
 
 typedef struct {
-	unsigned long id:32;
+	unsigned long id:32; // Deprecated
 	unsigned long alloc:32;
 	unsigned long size:32;
 	unsigned long ntoken:32;
+	unsigned long blkLrtIx:32;
+	unsigned long blkLrtJobIx:32;
 } Fifo;
 
 typedef struct {
@@ -116,6 +121,18 @@ typedef struct ClearTimeMsg{
 //	unsigned char msgIx:2;
 //	unsigned char reserved:6;
 } ClearTimeMsg;
+
+typedef struct {
+	unsigned long msgIx;
+//	unsigned char msgIx:2;
+//	unsigned char reserved:6;
+}ResetLrtMsg;
+
+typedef struct {
+	unsigned long msgIx;
+//	unsigned char msgIx:2;
+//	unsigned char reserved:6;
+}EndIterMsg;
 
 typedef struct {
 	unsigned long msgIx;

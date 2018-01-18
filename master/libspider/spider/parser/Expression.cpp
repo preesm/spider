@@ -155,7 +155,7 @@ int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job, b
 			case POW:
 				if(stackPtr-stack >= 2){
 					stackPtr--;
-					*(stackPtr-1) =  pow(*(stackPtr-1), *stackPtr);
+					*(stackPtr-1) =  pow((double)*(stackPtr-1), *stackPtr);
 				}
 				break;
 			}
@@ -213,7 +213,7 @@ int Expression::evaluate(const int* vertexParamValues, int nParam) const{
 			case POW:
 				if(stackPtr-stack >= 2){
 					stackPtr--;
-					*(stackPtr-1) =  pow(*(stackPtr-1), *stackPtr);
+					*(stackPtr - 1) = pow((double)*(stackPtr - 1), *stackPtr);
 				}
 				break;
 			}

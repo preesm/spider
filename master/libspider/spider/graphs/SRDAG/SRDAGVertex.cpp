@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -34,22 +35,31 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
+#ifdef _MSC_VER
+	#if (_MSC_VER < 1900)
+	#define snprintf _snprintf 
+	#endif
+#endif
 
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <stdio.h>
 #include <string.h>
 
 /** Static Var def */
-int SRDAGVertex::globalId = 0;
+//int SRDAGVertex::globalId = 0;
 
 /** Constructor */
 SRDAGVertex::SRDAGVertex(
+		int globalId,
 		SRDAGType type,	SRDAGGraph* graph,
 		PiSDFVertex* reference,
 		int refId, int iterId,
 		int nInEdge, int nOutEdge,
 		int nInParam, int nOutParam){
-	id_ = globalId++;
+	
+
+	//id_ = globalId++;
+	id_ = globalId;
 
 	type_ = type;
 	state_ = SRDAG_NEXEC;
@@ -80,6 +90,7 @@ SRDAGVertex::SRDAGVertex(
 	start_ = end_ = -1;
 	schedLvl_ = -1;
 	slave_ = -1;
+	slaveJobIx_ = -1;
 }
 
 SRDAGVertex::~SRDAGVertex(){
@@ -90,6 +101,7 @@ SRDAGVertex::~SRDAGVertex(){
 }
 
 void SRDAGVertex::toString(char* name, int sizeMax) const{
+
 	switch(type_){
 	case SRDAG_NORMAL:
 		snprintf(name, sizeMax, "%s", reference_->getName());

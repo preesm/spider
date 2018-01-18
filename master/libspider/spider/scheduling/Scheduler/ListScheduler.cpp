@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -55,7 +56,7 @@ ListScheduler::~ListScheduler(){
 
 }
 
-int compareSchedLevel(SRDAGVertex* vertexA, SRDAGVertex* vertexB){
+static int compareSchedLevel(SRDAGVertex* vertexA, SRDAGVertex* vertexB){
 	return vertexB->getSchedLvl() - vertexA->getSchedLvl();
 }
 
@@ -106,7 +107,7 @@ void ListScheduler::scheduleOnlyConfig(
 	schedule_->setAllMinReadyTime(Platform::get()->getTime());
 	schedule_->setReadyTime(
 			/* Spider Pe */ 		archi->getSpiderPeIx(),
-			/* End of Mapping */ 	Platform::get()->getTime() + archi->getMappingTimeFct()(list_->getNb()));
+			/* End of Mapping */ 	Platform::get()->getTime() + archi->getMappingTimeFct()(list_->getNb(),archi_->getNPE()));
 
 //	Launcher::setActorsNb(schedList.getNb());
 
@@ -135,6 +136,7 @@ void ListScheduler::schedule(
 
 	list_ = CREATE(TRANSFO_STACK, List<SRDAGVertex*>)(TRANSFO_STACK, srdag_->getNExecVertex());
 
+	// Fill the list_ with SRDAGVertices in scheduling order
 	for(int i=0; i<srdag_->getNVertex(); i++){
 		SRDAGVertex *vertex = srdag_->getVertex(i);
 		if(vertex->getState() == SRDAG_EXEC){
@@ -159,7 +161,7 @@ void ListScheduler::schedule(
 	schedule_->setAllMinReadyTime(Platform::get()->getTime());
 	schedule_->setReadyTime(
 			/* Spider Pe */ 		archi->getSpiderPeIx(),
-			/* End of Mapping */ 	Platform::get()->getTime() + archi->getMappingTimeFct()(list_->getNb()));
+			/* End of Mapping */ 	Platform::get()->getTime() + archi->getMappingTimeFct()(list_->getNb(),archi_->getNPE()));
 
 	for(int i=0; i<list_->getNb(); i++){
 		this->scheduleVertex((*list_)[i]);
@@ -218,7 +220,7 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 	int bestSlave = -1;
 	Time bestStartTime = 0;
 	Time bestWaitTime = 0;
-	Time bestEndTime = (unsigned long)-1; // Very high value.
+	Time bestEndTime = (Time)-1; // Very high value.
 
 	// Getting a slave for the vertex.
 	for(int pe = 0; pe < archi_->getNPE(); pe++){
@@ -233,22 +235,23 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 			Time execTime  = vertex->executionTimeOn(slaveType);
 			Time comInTime = 0, comOutTime = 0;
 			/** TODO compute communication time */
-			for(int input=0; input<vertex->getNConnectedInEdge(); input++){
-				if(vertex->getInEdge(input)->getSrc()->getSlave() != pe)
-					comInTime += 1000;
+//			for(int input=0; input<vertex->getNConnectedInEdge(); input++){
+//				if(vertex->getInEdge(input)->getSrc()->getSlave() != pe)
+//					comInTime += 1000;
 //				comInTime += archi_->getTimeRecv(
 //						vertex->getInEdge(input)->getSrc()->getSlave(),
 //						pe,
 //						vertex->getInEdge(input)->getRate());
-			}
+//			}
 //			for(int output=0; output<vertex->getNConnectedOutEdge(); output++){
 //				if(vertex->getOutEdge(output)->getSnk()->getSlave() != pe)
 //					comOutTime += 1000;
-////				comOutTime += arch->getTimeCom(slave, Write, vertex->getOutputEdge(output)->getTokenRate());
+//					comOutTime += arch->getTimeCom(slave, Write, vertex->getOutputEdge(output)->getTokenRate());
 //			}
 			Time endTime = startTime + execTime + comInTime + comOutTime;
-			if(endTime < bestEndTime
-					|| (endTime == bestEndTime && waitTime<bestWaitTime)){
+			//printf("Actor %d, Pe %d/%d: minimu_start %ld, ready time %ld, start time %ld, exec time %ld, endTime %ld\n", vertex->getId(), pe, archi_->getNPE(), minimumStartTime, schedule_->getReadyTime(pe), startTime + comInTime, execTime, endTime);
+			if(endTime < bestEndTime || (endTime == bestEndTime && waitTime<bestWaitTime)){
+
 				bestSlave = pe;
 				bestEndTime = endTime;
 				bestStartTime = startTime;
@@ -260,8 +263,11 @@ void ListScheduler::scheduleVertex(SRDAGVertex* vertex){
 	if(bestSlave == -1){
 		printf("No slave found to execute one instance of %s\n", vertex->getReference()->getName());
 	}
+	//printf("=> choose pe %d\n", bestSlave);
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
 	schedule_->addJob(bestSlave, vertex, bestStartTime, bestEndTime);
+
+	//printf("fctId %d scheduled on PE %d\n",vertex->getFctId(),bestSlave);
 
 	vertex->setSlave(bestSlave);
 }

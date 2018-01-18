@@ -39,6 +39,7 @@
 
 SharedMemArchi::SharedMemArchi(int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct) {
 	nPE_ = nPE;
+	//printf("SPIDER %d\n", nPE_);
 	nPEType_ = nPEType;
 	spiderPe_ = spiderPe;
 	peType_ = CREATE_MUL(ARCHI_STACK, nPE_, int);
@@ -49,7 +50,13 @@ SharedMemArchi::SharedMemArchi(int nPE, int nPEType, int spiderPe, MappingTimeFc
 	peTypeARecv_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
 	peTypeBRecv_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
 	mapFct_ = mapFct;
+
+	nPEperType_ = CREATE_MUL(ARCHI_STACK, nPEType_, int);
+	
+	memset(nPEperType_,0,nPEType_ * sizeof(*nPEperType_));
+	memset(peActive_,false,nPE_ * sizeof(bool));
 }
+
 
 SharedMemArchi::~SharedMemArchi() {
 	for(int i=0; i<nPE_; i++)
@@ -64,6 +71,8 @@ SharedMemArchi::~SharedMemArchi() {
 	StackMonitor::free(ARCHI_STACK, peTypeARecv_);
 	StackMonitor::free(ARCHI_STACK, peTypeBRecv_);
 
+	StackMonitor::free(ARCHI_STACK, nPEperType_);
+
 	/** Reset values **/
 	nPE_ = 0;
 	nPEType_ = 0;
@@ -73,6 +82,8 @@ SharedMemArchi::~SharedMemArchi() {
 	peTypeBSend_ = 0;
 	peTypeARecv_ = 0;
 	peTypeBRecv_ = 0;
+
+	nPEperType_ = 0;
 }
 
 

@@ -34,13 +34,20 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
+#ifdef _MSC_VER
+	#if (_MSC_VER < 1900)
+	#define snprintf _snprintf 
+	#endif
+#endif
+
 #include "BipartiteGraph.h"
 #include <tools/Stack.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/SRDAG/SRDAGVertex.h>
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+#include <cstdio>
 #include <platform.h>
 
 BipartiteGraph::BipartiteGraph(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack stackId){
@@ -101,6 +108,7 @@ bool BipartiteGraph::hasPerfectMatch() {
   }
 
 void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack stackId, const char* testName){
+
 	BipartiteGraph* bipartite = CREATE(stackId, BipartiteGraph)(g1, g2, stackId);
 
 	printf("%s : ", testName);
@@ -126,8 +134,8 @@ void BipartiteGraph::compareGraphs(SRDAGGraph* g1, SRDAGGraph* g2, SpiderStack s
 }
 
 void BipartiteGraph::print(const char* path, SRDAGGraph* g1, SRDAGGraph* g2){
-	int file = Platform::get()->fopen(path);
-	if(file == -1){
+	FILE *file = Platform::get()->fopen(path);
+	if(file == NULL){
 		printf("cannot open %s\n", path);
 		return;
 	}

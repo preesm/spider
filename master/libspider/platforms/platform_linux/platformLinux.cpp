@@ -36,7 +36,7 @@
 
 #include <platformLinux.h>
 
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -81,10 +81,10 @@ static SharedMemArchi* archi_;
 void PlatformLinux::sig_handler(int signo){
 	switch(signo){
 	case SIG_IDLE:
-		getLrt()->setIdle(true);
+		Platform::get()->getLrt()->setIdle(true);
 		break;
 	case SIG_WAKE:
-		getLrt()->setIdle(false);
+		Platform::get()->getLrt()->setIdle(false);
 		break;
 	default:
 		break;
@@ -135,17 +135,22 @@ static void setAffinity(int cpuId){
 	}
 }
 
-PlatformLinux::PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts){
+PlatformLinux::PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack,
+		StackConfig lrtStack, StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack){
 	int pipeSpidertoLRT[2*nLrt];
 	int pipeLRTtoSpider[2*nLrt];
 	int pipeTrace[2];
 	sem_t* semFifo;
 	sem_t* semTrace;
 
-	if(platform_)
-		throw "Try to create 2 platforms";
-
+	if(platform_) throw "Try to create 2 platforms";
 	platform_ = this;
+
+	StackMonitor::initStack(PISDF_STACK, pisdfStack);
+	StackMonitor::initStack(SRDAG_STACK, srdagStack);
+	StackMonitor::initStack(TRANSFO_STACK, transfoStack);
+	StackMonitor::initStack(LRT_STACK, lrtStack);
+	StackMonitor::initStack(ARCHI_STACK, archiStack);
 
 	cpIds_ = CREATE_MUL(ARCHI_STACK, nLrt, int);
 
@@ -310,14 +315,16 @@ PlatformLinux::~PlatformLinux(){
 	StackMonitor::free(ARCHI_STACK, lrtCom_);
 	StackMonitor::free(ARCHI_STACK, archi_);
 	StackMonitor::free(ARCHI_STACK, cpIds_);
+
+	StackMonitor::cleanAllStack();
 }
 
 /** File Handling */
-int PlatformLinux::fopen(const char* name){
-	return open(name, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH | S_IWOTH);
+FILE* PlatformLinux::fopen(const char* name){
+	return std::fopen(name, "w+");
 }
 
-void PlatformLinux::fprintf(int id, const char* fmt, ...){
+void PlatformLinux::fprintf(FILE* id, const char* fmt, ...){
 	ssize_t l;
 
 	va_list ap;
@@ -326,10 +333,13 @@ void PlatformLinux::fprintf(int id, const char* fmt, ...){
 	if(n >= PLATFORM_FPRINTF_BUFFERSIZE){
 		printf("PLATFORM_FPRINTF_BUFFERSIZE too small\n");
 	}
-	l = write(id, buffer, n);
+	for (int i = 0; i < n; i++) fputc(buffer[i], id);
 }
-void PlatformLinux::fclose(int id){
-	close(id);
+void PlatformLinux::fclose(FILE* id){
+	if (id != NULL){
+		std::fclose(id);
+		id = NULL;
+	}
 }
 
 void* PlatformLinux::virt_to_phy(void* address){
@@ -348,6 +358,10 @@ int PlatformLinux::getMinAllocSize(){
 void PlatformLinux::rstTime(struct ClearTimeMsg* msg){
 	struct timespec* ts = (struct timespec*)(msg+1);
 	start = *ts;
+}
+
+void PlatformLinux::rstJobIx(){
+	// Not Implemented
 }
 
 void PlatformLinux::rstTime(){

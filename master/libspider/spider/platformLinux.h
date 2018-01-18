@@ -43,9 +43,9 @@
 class PlatformLinux: public Platform{
 public:
 	/** File Handling */
-	virtual int fopen(const char* name);
-	virtual void fprintf(int id, const char* fmt, ...);
-	virtual void fclose(int id);
+	virtual FILE* fopen(const char* name);
+	virtual void fprintf(FILE* id, const char* fmt, ...);
+	virtual void fclose(FILE* id);
 
 	/** Shared Memory Handling */
 	virtual void* virt_to_phy(void* address);
@@ -57,12 +57,23 @@ public:
 	virtual void rstTime(struct ClearTimeMsg* msg);
 	virtual Time getTime();
 
+	virtual void rstJobIx();
+
 	/** Platform Core Handling **/
 	virtual void idleLrt(int i);
 	virtual void wakeLrt(int i);
 	virtual void idle();
 
-	PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts);
+	/** Platform getter/setter */
+	inline LRT* getLrt();
+	inline LrtCommunicator* getLrtCommunicator();
+	inline SpiderCommunicator* getSpiderCommunicator();
+	inline void setStack(SpiderStack id, Stack* stack);
+	inline Stack* getStack(SpiderStack id);
+	inline Stack* getStack(int id);
+
+	PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack,
+			StackConfig lrtStack, StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack);
 	virtual ~PlatformLinux();
 
 private:
@@ -75,6 +86,47 @@ private:
 
 	static Time mappingTime(int nActors);
 	static void sig_handler(int signo);
+
+	Stack* stacks[STACK_COUNT];
+
+	LRT* lrt_;
+	LrtCommunicator* lrtCom_;
+	SpiderCommunicator* spiderCom_;
 };
+
+
+inline LRT* PlatformLinux::getLrt(){
+	if(lrt_)
+		return lrt_;
+	else
+		throw "Error undefined LRT\n";
+}
+
+inline LrtCommunicator* PlatformLinux::getLrtCommunicator(){
+	if(lrtCom_)
+		return lrtCom_;
+	else
+		throw "Error undefined LRT Communicator\n";
+}
+
+inline SpiderCommunicator* PlatformLinux::getSpiderCommunicator(){
+	if(spiderCom_)
+		return spiderCom_;
+	else
+		throw "Error undefined Spider Communicator\n";
+}
+
+inline void PlatformLinux::setStack(SpiderStack id, Stack* stack){
+	stacks[id] = stack;
+}
+
+inline Stack* PlatformLinux::getStack(SpiderStack id){
+	return stacks[id];
+}
+
+inline Stack* PlatformLinux::getStack(int id){
+	return stacks[id];
+}
+
 
 #endif/*PLATFORM_LINUX_H*/

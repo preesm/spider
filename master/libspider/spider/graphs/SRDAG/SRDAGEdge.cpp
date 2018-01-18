@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -39,7 +40,7 @@
 #include <graphs/SRDAG/SRDAGEdge.h>
 
 /** Static Var def */
-int SRDAGEdge::globalId = 0;
+//int SRDAGEdge::globalId = 0;
 
 SRDAGEdge::SRDAGEdge(){
 	id_ = -1;
@@ -54,8 +55,11 @@ SRDAGEdge::SRDAGEdge(){
 	nToken_ = 1;
 }
 
-SRDAGEdge::SRDAGEdge(SRDAGGraph* graph){
-	id_ = globalId++;
+SRDAGEdge::SRDAGEdge(SRDAGGraph* graph, int globalId){
+	
+	//id_ = globalId++;
+	id_ = globalId;
+
 	graph_ = graph;
 
 	src_ = 0; srcPortIx_ = -1;
@@ -102,10 +106,3 @@ void SRDAGEdge::disconnectSnk(){
 	snk_ = 0;
 	snkPortIx_ = -1;
 }
-
-
-
-
-
-
-

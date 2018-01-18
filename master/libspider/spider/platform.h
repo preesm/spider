@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,			*
+ * Hugo Miomandre												            *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -38,6 +39,8 @@
 #define PLATFORM_H
 
 #include "spider.h"
+#include <monitor/StackMonitor.h>
+#include <stdio.h>
 
 class LRT;
 class LrtCommunicator;
@@ -47,9 +50,9 @@ struct ClearTimeMsg;
 class Platform{
 public:
 	/** File Handling */
-	virtual int fopen(const char* name) = 0;
-	virtual void fprintf(int id, const char* fmt, ...) = 0;
-	virtual void fclose(int id) = 0;
+	virtual FILE* fopen(const char* name) = 0;
+	virtual void fprintf(FILE* id, const char* fmt, ...) = 0;
+	virtual void fclose(FILE* id) = 0;
 
 	/** Memory Handling */
 	virtual void* virt_to_phy(void* address) = 0;
@@ -61,11 +64,18 @@ public:
 	virtual void rstTime() = 0;
 	virtual Time getTime() = 0;
 
+	virtual void rstJobIx() = 0;
+
 	/** Platform getter/setter */
-	static inline LRT* getLrt();
 	static inline Platform* get();
-	static inline LrtCommunicator* getLrtCommunicator();
-	static inline SpiderCommunicator* getSpiderCommunicator();
+	virtual LRT* getLrt() = 0;
+	virtual LrtCommunicator* getLrtCommunicator() = 0;
+	virtual SpiderCommunicator* getSpiderCommunicator() = 0;
+	virtual void setStack(SpiderStack id, Stack* stack) = 0;
+	virtual Stack* getStack(SpiderStack id) = 0;
+	virtual Stack* getStack(int id) = 0;
+
+	virtual inline int getMaxActorAllocSize(int pe);
 
 	/** Platform Core Handling **/
 	virtual void idleLrt(int i) = 0;
@@ -76,10 +86,7 @@ protected:
 	Platform();
 	virtual ~Platform();
 
-	static LRT* lrt_;
 	static Platform* platform_;
-	static LrtCommunicator* lrtCom_;
-	static SpiderCommunicator* spiderCom_;
 };
 
 inline Platform* Platform::get(){
@@ -89,25 +96,9 @@ inline Platform* Platform::get(){
 		throw "Error undefined platform\n";
 }
 
-inline LRT* Platform::getLrt(){
-	if(lrt_)
-		return lrt_;
-	else
-		throw "Error undefined LRT\n";
-}
-
-inline LrtCommunicator* Platform::getLrtCommunicator(){
-	if(lrtCom_)
-		return lrtCom_;
-	else
-		throw "Error undefined LRT Communicator\n";
-}
-
-inline SpiderCommunicator* Platform::getSpiderCommunicator(){
-	if(spiderCom_)
-		return spiderCom_;
-	else
-		throw "Error undefined Spider Communicator\n";
+// If unimplemented in child
+inline int Platform::getMaxActorAllocSize(int pe){
+	return 1024 * 1024 * 1024;
 }
 
 #endif/*PLATFORM_H*/

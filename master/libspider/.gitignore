@@ -2,7 +2,6 @@
 .cproject
 .settings
 Makefile
-common
 *.lo
 .deps
 .dirstamp

@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -39,37 +40,43 @@
 #include <tools/StaticStack.h>
 #include <tools/DynStack.h>
 
-static Stack* stacks[STACK_COUNT] = {0};
+#include <platform.h>
+
 
 void StackMonitor::initStack(SpiderStack stackId, StackConfig cfg){
 	switch(cfg.type){
 	case STACK_DYNAMIC:
-		stacks[stackId] = new DynStack(cfg.name);
+		Platform::get()->setStack(stackId, new DynStack(cfg.name));
 		break;
 	case STACK_STATIC:
-		stacks[stackId] = new StaticStack(cfg.name, cfg.start, cfg.size);
+		Platform::get()->setStack(stackId, new StaticStack(cfg.name, cfg.start, cfg.size));
 		break;
 	}
+}
+
+void StackMonitor::clean(SpiderStack id){
+	delete Platform::get()->getStack(id);
 }
 
 void StackMonitor::cleanAllStack(){
 	for(int i=0; i<STACK_COUNT; i++){
-		delete stacks[i];
+		delete Platform::get()->getStack(i);
 	}
 }
 
 void* StackMonitor::alloc(SpiderStack stackId, int size){
-	return stacks[stackId]->alloc(size);
+	return Platform::get()->getStack(stackId)->alloc(size);
 }
 
 void StackMonitor::free(SpiderStack stackId, void* ptr){
-	return stacks[stackId]->free(ptr);
+	return Platform::get()->getStack(stackId)->free(ptr);
 }
 
 void StackMonitor::freeAll(SpiderStack stackId){
-	return stacks[stackId]->freeAll();
+	return Platform::get()->getStack(stackId)->freeAll();
 }
 
 void StackMonitor::printStackStats(){
 	// TODO
 }
+

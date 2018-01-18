@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -55,9 +56,9 @@ typedef enum{
 #define CREATE(stackId, type) new(StackMonitor::alloc(stackId, sizeof(type))) type
 #define CREATE_MUL(stackId, size, type) new(StackMonitor::alloc(stackId, size*sizeof(type))) type[size]
 
-
 namespace StackMonitor {
 	void initStack(SpiderStack id, StackConfig cfg);
+	void clean(SpiderStack id);
 	void cleanAllStack();
 	void* alloc(SpiderStack id, int size);
 	void free(SpiderStack id, void* ptr);
@@ -67,3 +68,4 @@ namespace StackMonitor {
 };
 
 #endif /* STACKMONITOR_H */
+

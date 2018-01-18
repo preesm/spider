@@ -186,3 +186,11 @@ long LinuxLrtCommunicator::data_recv(Fifo* f){
 long LinuxLrtCommunicator::data_start_send(Fifo* f){
 	return (long)Platform::get()->virt_to_phy((void*)(intptr_t)(f->alloc));
 }
+
+void LinuxLrtCommunicator::setLrtJobIx(int jobIx, int lrtIx){
+	// Not implemented
+}
+unsigned long LinuxLrtCommunicator::getLrtJobIx(int lrt){
+	// Not implemented
+	return 0;
+}

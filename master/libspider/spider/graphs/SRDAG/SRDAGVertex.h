@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -50,6 +51,7 @@ public:
 	friend class SRDAGEdge;
 
 	SRDAGVertex(
+			int globalId,
 			SRDAGType type, SRDAGGraph* graph,
 			PiSDFVertex* reference,
 			int refId, int iterId,
@@ -91,6 +93,7 @@ public:
 	inline Time getStartTime() const;
 	inline Time getEndTime() const;
 	inline int getSlave() const;
+	inline int getSlaveJobIx() const;
 	inline int getRefId() const;
 	inline int getIterId() const;
 
@@ -99,6 +102,7 @@ public:
 	inline void setStartTime(Time start);
 	inline void setEndTime(Time end);
 	inline void setSlave(int slave);
+	inline void setSlaveJobIx(int slaveJobIx);
 
 	/** Comparison fcts */
 	inline bool isEqual(SRDAGVertex* v2);
@@ -121,7 +125,7 @@ protected:
 	inline void disconnectOutEdge(int ix);
 
 private:
-	static int globalId;
+	//static int globalId;
 
 	int id_;
 	SRDAGType type_;
@@ -141,6 +145,8 @@ private:
 
 	Time start_, end_;
 	int schedLvl_;
+
+	int slaveJobIx_;
 
 	int slave_;
 };
@@ -192,10 +198,14 @@ inline SRDAGEdge* SRDAGVertex::getInEdge(int ix){
 		throw "SRDAGVertex: Bad ix in getInEdge";
 }
 inline SRDAGEdge* SRDAGVertex::getOutEdge(int ix){
-	if(ix < nMaxOutEdge_ && ix >= 0)
+	if(ix < nMaxOutEdge_ && ix >= 0){
+		//printf("SRDAGVertex: getOutEdge %d/%d\n",ix,nMaxOutEdge_);
 		return outEdges_[ix];
-	else
+	}
+	else{
+		printf("SRDAGVertex: Bad ix in getOutEdge %d/%d\n",ix,nMaxOutEdge_);
 		throw "SRDAGVertex: Bad ix in getOutEdge";
+	}
 }
 inline SRDAGEdge* const * SRDAGVertex::getInEdges(){
 	return inEdges_;
@@ -345,6 +355,12 @@ inline void SRDAGVertex::setEndTime(Time end){
 inline void SRDAGVertex::setSlave(int slave){
 	slave_ = slave;
 }
+inline void SRDAGVertex::setSlaveJobIx(int slaveJobIx){
+	slaveJobIx_ = slaveJobIx;
+}
+inline int SRDAGVertex::getSlaveJobIx() const{
+	return slaveJobIx_;
+}
 
 inline bool SRDAGVertex::isEqual(SRDAGVertex* v2){
 	bool equal = true;
@@ -407,7 +423,7 @@ inline Time SRDAGVertex::executionTimeOn(int peType) const{
 	case SRDAG_END:
 		return 1;
 	default:
-		throw "Unhandled case in SRDAGVertex::isExecutableOn\n";
+		throw "Unhandled case in SRDAGVertex::executionTimeOn\n";
 	}
 }
 inline int SRDAGVertex::getSchedLvl() const {

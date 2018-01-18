@@ -1,6 +1,7 @@
 /****************************************************************************
  * Copyright or © or Copr. IETR/INSA (2013): Julien Heulot, Yaset Oliva,    *
- * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet             *
+ * Maxime Pelcat, Jean-François Nezan, Jean-Christophe Prevotet,            *
+ * Hugo Miomandre                                                           *
  *                                                                          *
  * [jheulot,yoliva,mpelcat,jnezan,jprevote]@insa-rennes.fr                  *
  *                                                                          *
@@ -64,6 +65,9 @@ private:
 
 	void send_ClearTimeMsg(int lrtIx);
 	void send_StartJobMsg(int lrtIx, SRDAGVertex* vertex);
+
+	void send_EndIterMsg(int lrtIx);
+	void send_ResetLrtMsg(int lrtIx);
 
 };
 

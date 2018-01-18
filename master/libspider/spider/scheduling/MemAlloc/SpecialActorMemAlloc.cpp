@@ -34,6 +34,13 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
+#ifdef _WIN32
+	#define getpagesize() 4096
+#else
+	#include <unistd.h>
+#endif
+
+
 #include "SpecialActorMemAlloc.h"
 
 #include <graphs/SRDAG/SRDAGCommon.h>
@@ -41,7 +48,6 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 
 #include <cmath>
-#include <unistd.h>
 
 void SpecialActorMemAlloc::reset(){
 	currentMem_ = this->memStart_;

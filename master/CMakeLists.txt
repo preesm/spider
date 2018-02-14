@@ -52,21 +52,6 @@ if(WIN32)
 endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/lib/cmake_modules/")
 
-
-# *******************************************
-# ************** SDL2 LIBRARY ***************
-# *******************************************
-# Set variables before finding SDL Library
-# Helps to find where SDL libraries are saved (win32 only)
-if(NOT WIN32)
-	Find_Package (SDL2 REQUIRED )
-
-	if(NOT SDL2_FOUND)
-	  MESSAGE(FATAL_ERROR "SDL not found !")
-	endif()
-endif()
-
-
 # *******************************************
 # ************ Pthread LIBRARY **************
 # *******************************************
@@ -76,6 +61,8 @@ if (WIN32)
 	file(GLOB PTHREADDIR "${LIBS_DIR}/pthread-[\\.|0-9]*")
 	set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PTHREADDIR})
 	Find_Package ( THREADS REQUIRED )
+else()
+	Find_Package ( Threads REQUIRED )
 endif()
 
 if(NOT THREADS_FOUND)

@@ -48,7 +48,7 @@ gcc ... -lpthread -lSpider ...
 This project is maintained by the Preesm maintainers. Contact us using one of the following:
 
 *   General information : contact@preesm.org
-*   Technical support : https://github.com/preesm/spdier/issues
+*   Technical support : https://github.com/preesm/spider/issues
 
 ## License
 

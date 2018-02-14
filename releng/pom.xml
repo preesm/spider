@@ -1,10 +1,11 @@
 <!--
 
-    Copyright or © or Copr. IETR/INSA - Rennes () :
+    Copyright or © or Copr. IETR/INSA - Rennes (2018) :
 
+    Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
 
-    This software is a computer program whose purpose is to help prototyping
-    parallel applications using dataflow formalism.
+    Spider is a dataflow based runtime used to execute dynamic PiSDF
+    applications. The Preesm tool may be used to design PiSDF applications.
 
     This software is governed by the CeCILL  license under French law and
     abiding by the rules of distribution of free software.  You can  use,

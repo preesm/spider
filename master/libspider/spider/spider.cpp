@@ -629,7 +629,7 @@ PiSDFParam* Spider::addStaticParam(
 PiSDFParam* Spider::addStaticParam(
 		PiSDFGraph* graph,
 		const char* name,
-		int value){
+        Param value){
 	return graph->addStaticParam(
 			name,
 			value);

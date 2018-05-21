@@ -243,7 +243,7 @@ namespace Spider{
 	PiSDFParam* addStaticParam(
 			PiSDFGraph* graph,
 			const char* name,
-			int value);
+			Param value);
 
 	PiSDFParam* addHeritedParam(
 			PiSDFGraph* graph,

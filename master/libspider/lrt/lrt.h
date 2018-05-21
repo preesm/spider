@@ -68,6 +68,7 @@ public:
 
 	inline int getIx() const;
 	inline int getJobIx() const;
+	inline void setUsePapify();
 
 protected:
 	void sendTrace(int srdagIx, Time start, Time end);
@@ -78,6 +79,7 @@ private:
 	const lrtFct* fcts_;
 	bool run_;
 	bool idle_;
+	bool usePapify_;
 	int jobIx_;
 	int jobIxTotal_;
 
@@ -124,6 +126,10 @@ inline void LRT::setJobIx(int jobIx){
 
 inline void LRT::rstJobIx(){
 	jobIx_ = 0;
+}
+
+inline void LRT::setUsePapify() {
+	usePapify_ = true;
 }
 
 #endif/*LRT_H*/

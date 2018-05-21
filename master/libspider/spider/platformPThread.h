@@ -100,7 +100,7 @@ public:
 
 
 	PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
-			StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack);
+			StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack, bool usePapify);
 	virtual ~PlatformPThread();
 
 
@@ -235,10 +235,11 @@ typedef struct Arg_lrt {
 	int shMemSize;
 	lrtFct* fcts;
 	int nLrtFcts;
-	int indice;
+	int index;
 	int nLrt;
 	StackConfig archiStack;
 	StackConfig lrtStack;
+	bool usePapify;
 }Arg_lrt;
 
 // Fonction wrapper pour lancer un thread sur une méthode d'objet

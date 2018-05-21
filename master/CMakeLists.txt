@@ -93,9 +93,13 @@ find_library(papi_LIBRARY papi)
 
 if (NOT papi_LIBRARY)
 	MESSAGE("papi lib NOT found")
+    set(papi_sources )
 else()
 	MESSAGE("FOUND: papi lib")
     add_definitions(-DPAPI_AVAILABLE)
+    set(papi_sources
+        ./libspider/papify/eventLib.c
+        ./libspider/papify/eventLib.h)
 endif()
 
 
@@ -159,7 +163,7 @@ file(
 )
 
 
-add_library(Spider SHARED ${source_files} ${header_files})
+add_library(Spider SHARED ${source_files} ${header_files} ${papi_sources})
 target_link_libraries(Spider ${CMAKE_THREAD_LIBS_INIT})
 if (papi_LIBRARY)
     target_link_libraries(Spider ${papi_LIBRARY})

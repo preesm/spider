@@ -115,7 +115,7 @@ static void setAffinity(int cpuId){
 }
 
 PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
-	StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack){
+	StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack, bool usePapify){
 
 	if (platform_) throw std::runtime_error("Try to create 2 platforms");
 	platform_ = this;
@@ -166,7 +166,8 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 	sem_init(&semTrace, 0, 1);
 
 
-	//remplissage sturcture de passage de parametre dans les threads
+	// Filling up parameters for each threads
+    // TODO use "usePapify" only for monitored LRTs / HW PEs
 	for (int i = 1; i<nLrt_; i++){
 		arg_lrt[i - 1].fifoSpidertoLRT = fifoSpidertoLRT[i];
 		arg_lrt[i - 1].fifoLRTtoSpider = fifoLRTtoSpider[i];
@@ -177,11 +178,12 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 		arg_lrt[i - 1].shMemSize = shMemSize;
 		arg_lrt[i - 1].fcts = fcts;
 		arg_lrt[i - 1].nLrtFcts = nLrtFcts;
-		arg_lrt[i - 1].indice = i;
+		arg_lrt[i - 1].index = i;
 		arg_lrt[i - 1].nLrt = nLrt_;
 		arg_lrt[i - 1].instance = this;
 		arg_lrt[i - 1].archiStack = archiStack;
 		arg_lrt[i - 1].lrtStack = lrtStack;
+		arg_lrt[i - 1].usePapify = usePapify;
 	}
 
 
@@ -511,32 +513,32 @@ void PlatformPThread::idle(){
 }
 
 Time PlatformPThread::mappingTime(int nActors, int nPe){
-	return 1000 * nActors;
+	return (unsigned long long) 1000 * nActors;
 }
 
 
 void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt){
 
-	int indice = argument_lrt->indice;
+	int index = argument_lrt->index;
 
 	//registering itself in thread_ID_tab_
-	thread_ID_tab_[indice] = pthread_self();
+	thread_ID_tab_[index] = pthread_self();
 
 	//waiting for every threads to register itself in thread_ID_tab_
 	pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
 
 	//Declaration des stacks spécific au thread
 	argument_lrt->archiStack.size /= argument_lrt->nLrt;
-	argument_lrt->archiStack.start = (char*)argument_lrt->archiStack.start + argument_lrt->archiStack.size * indice * sizeof(char);
+	argument_lrt->archiStack.start = (char*)argument_lrt->archiStack.start + argument_lrt->archiStack.size * index * sizeof(char);
 	StackMonitor::initStack(ARCHI_STACK, argument_lrt->archiStack);
 
 	argument_lrt->lrtStack.size /= argument_lrt->nLrt;
-	argument_lrt->lrtStack.start = (char*) argument_lrt->lrtStack.start + argument_lrt->lrtStack.size * indice * sizeof(char);
+	argument_lrt->lrtStack.start = (char*) argument_lrt->lrtStack.start + argument_lrt->lrtStack.size * index * sizeof(char);
 	StackMonitor::initStack(LRT_STACK, argument_lrt->lrtStack);
 
 
 	/** Create LRT */
-	lrtCom_[indice] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
+	lrtCom_[index] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
 		MAX_MSG_SIZE,
 		argument_lrt->fifoSpidertoLRT,
 		argument_lrt->fifoLRTtoSpider,
@@ -546,27 +548,32 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt){
 		argument_lrt->semFifoLRTtoSpider,
 		jobTab,
 		dataMem);
-	lrt_[indice] = CREATE(ARCHI_STACK, LRT)(indice);
-	setAffinity(indice);
-	lrt_[indice]->setFctTbl(argument_lrt->fcts, argument_lrt->nLrtFcts);
+	lrt_[index] = CREATE(ARCHI_STACK, LRT)(index);
+	setAffinity(index);
+	lrt_[index]->setFctTbl(argument_lrt->fcts, argument_lrt->nLrtFcts);
 
-	//Wait for all LRTs to be created
+	// Enable papify if need to
+    if (argument_lrt->usePapify) {
+        lrt_[index]->setUsePapify();
+    }
+
+	// Wait for all LRTs to be created
 	pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
 
-	/** launch LRT */
-	lrt_[indice]->runInfinitly();
+	// Start LRT */
+	lrt_[index]->runInfinitly();
 
 
 	//wait for every LRT to end
 	pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
 
 
-	lrt_[indice]->~LRT();
-	((PThreadLrtCommunicator*)lrtCom_[indice])->~PThreadLrtCommunicator();
+	lrt_[index]->~LRT();
+	((PThreadLrtCommunicator*)lrtCom_[index])->~PThreadLrtCommunicator();
 
 	//freeing thread specific stacks
-	StackMonitor::free(ARCHI_STACK, lrt_[indice]);
-	StackMonitor::free(ARCHI_STACK, lrtCom_[indice]);
+	StackMonitor::free(ARCHI_STACK, lrt_[index]);
+	StackMonitor::free(ARCHI_STACK, lrtCom_[index]);
 
 	//cleaning thread specific stacks
 	StackMonitor::clean(ARCHI_STACK);

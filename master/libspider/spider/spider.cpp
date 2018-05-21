@@ -120,7 +120,8 @@ void Spider::init(SpiderConfig cfg){
 			cfg.lrtStack,
 			cfg.pisdfStack,
 			cfg.srdagStack,
-			cfg.transfoStack
+			cfg.transfoStack,
+            cfg.usePapify
 	);
 }
 

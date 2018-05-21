@@ -59,6 +59,10 @@
 
 #include "specialActors/specialActors.h"
 
+#ifdef PAPI_AVAILABLE
+#include "../papify/eventLib.h"
+#endif
+
 static lrtFct specialActors[6] = {
 		&saBroadcast,
 		&saFork,
@@ -77,6 +81,7 @@ LRT::LRT(int ix){
 	idle_ = false;
 	jobIx_ = 0;
 	jobIxTotal_ = 0;
+	usePapify_ = false;
 
 #ifdef VERBOSE_TIME
 	time_waiting_job = 0;
@@ -225,17 +230,27 @@ int LRT::runOneJob(){
 
 
 			start = Platform::get()->getTime();
-
-			if(jobMsg->specialActor && jobMsg->fctIx < 6)
-				specialActors[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
-			else if((int)jobMsg->fctIx < nFct_)
-				fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
-			else{
+            #ifdef PAPI_AVAILABLE
+			// We can monitor the events
+			if (usePapify_) {
+                // Start monitoring the events
+			}
+            #endif
+			if(jobMsg->specialActor && jobMsg->fctIx < 6) {
+			    specialActors[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
+			} else if((int)jobMsg->fctIx < nFct_) {
+			    fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
+			} else{
 				printf("Cannot find actor function\n");
 				while(1);
 			}
 
 			Time end = Platform::get()->getTime();
+            #ifdef PAPI_AVAILABLE
+            // Stop monitoring the events
+            if (usePapify_) {
+            }
+            #endif
 
 			#ifdef VERBOSE_TIME
 			time_compute += end - start;

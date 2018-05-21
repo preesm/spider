@@ -85,6 +85,19 @@ if (WIN32)
 	endif()
 endif()
 
+# *******************************************
+# ************ PAPI LIBRARY *****************
+# *******************************************
+
+find_library(papi_LIBRARY papi)
+
+if (NOT papi_LIBRARY)
+	MESSAGE("papi lib NOT found")
+else()
+	MESSAGE("FOUND: papi lib")
+    add_definitions(-DPAPI_AVAILABLE)
+endif()
+
 
 # *******************************************
 # *************  spider.dll/a  **************
@@ -148,3 +161,6 @@ file(
 
 add_library(Spider SHARED ${source_files} ${header_files})
 target_link_libraries(Spider ${CMAKE_THREAD_LIBS_INIT})
+if (papi_LIBRARY)
+    target_link_libraries(Spider ${papi_LIBRARY})
+endif()

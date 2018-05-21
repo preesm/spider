@@ -81,9 +81,18 @@ static struct timespec start;
 static void* jobTab;
 static void* dataMem;
 
+#undef PAPI_AVAILABLE
+
+#ifdef PAPI_AVAILABLE
+static long long start_steady;
+static long long origin_steady;
+#else
 static std::chrono::time_point<std::chrono::steady_clock> start_steady;
 
 static std::chrono::time_point<std::chrono::steady_clock> origin_steady = std::chrono::steady_clock::now();
+#endif
+
+
 
 static SharedMemArchi* archi_;
 
@@ -184,23 +193,25 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 	thread_ID_tab_[0] = pthread_self();
 	pthread_barrier_init(&pthread_barrier_init_and_end_thread, NULL, nLrt_);
 
-	//Lancement des threads
-	for (int i = 1; i<nLrt_; i++) pthread_create(&thread_lrt[i - 1], NULL, &lrtPThread_helper, &arg_lrt[i - 1]);
+	// Starting the threads
+	for (int i = 1; i < nLrt_; ++i) {
+	    pthread_create(&thread_lrt[i - 1], NULL, &lrtPThread_helper, &arg_lrt[i - 1]);
+	}
 
-	//waiting for every threads to register itself in thread_ID_tab_
+	// Waiting for every threads to register itself in thread_ID_tab_
 	pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
 
-	//Declaration des stacks spécific au thread
+	// Declaring thread specific stacks
 	archiStack.size /= nLrt_;
 	StackMonitor::initStack(ARCHI_STACK, archiStack);
 
 	lrtStack.size /= nLrt_;
 	StackMonitor::initStack(LRT_STACK, lrtStack);
 
-	/** Initialize shared memory */
+	// Initialize shared memory
 	memset(jobTab, 0, shMemSize);
 
-	/** Initialize LRT and Communicators */
+	// Initialize LRT and Communicators
 	spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
 		MAX_MSG_SIZE,
 		nLrt_,
@@ -211,7 +222,10 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 		&fifoTrace);
 
 
-	for (int i = 0;i < nLrt_;i++) ((PThreadSpiderCommunicator*)spiderCom_)->setLrtCom(i, fifoLRTtoSpider[i], fifoSpidertoLRT[i]);
+	for (int i = 0;i < nLrt_;i++) {
+        PThreadSpiderCommunicator* spiderCom = (PThreadSpiderCommunicator*) spiderCom_;
+	    spiderCom->setLrtCom(i, fifoLRTtoSpider[i], fifoSpidertoLRT[i]);
+	}
 
 
 	lrtCom_[0] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
@@ -227,7 +241,7 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 
 	lrt_[0] = CREATE(ARCHI_STACK, LRT)(0);
 
-	//Wait for all LRTs to be ready to start
+	// Wait for all LRTs to be ready to start
 	pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
 
 
@@ -458,15 +472,22 @@ void PlatformPThread::rstTime(){
 }
 
 Time PlatformPThread::getTime(){
-	std::chrono::time_point<std::chrono::steady_clock> ts_steady = std::chrono::steady_clock::now();
-	long long val_steady = (ts_steady - start_steady).count();
+#ifdef PAPI_AVAILABLE
+    // Whenever PAPI is available we're using it
+    long long val_steady = 0;
+#else
+    std::chrono::time_point<std::chrono::steady_clock> ts_steady = std::chrono::steady_clock::now();
+    long long val_steady = (ts_steady - start_steady).count();
+    #ifdef _WIN32
+        // Spider will think something went bad if returned time is 0, so in such case we're setting it to 1 because time in Windows is bad
+        if (val_steady == 0) {
+            val_steady++;
+        }
+    #endif // _WIN32
+#endif
 
-#ifdef _WIN32
-	// Spider will think something went bad if returned time is 0, so in such case we're setting it to 1 because time in Windows is bad
-	if (val_steady == 0){
-		val_steady++;
-	}
-#endif // _WIN32
+
+
 
 	return val_steady;
 }

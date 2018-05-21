@@ -118,6 +118,7 @@ typedef struct{
 	bool useActorPrecedence;
 	bool verbose;
 	bool traceEnabled;
+	bool usePapify;
 
 	PlatformConfig platform;
 } SpiderConfig;

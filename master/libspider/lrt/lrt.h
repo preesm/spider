@@ -42,7 +42,7 @@
 #include <platform.h>
 
 #include <map>
-#include "../papify/eventLib.h"
+#include "../papify/PapifyAction.h"
 
 #define NB_MAX_ACTOR (200)
 
@@ -51,14 +51,6 @@ typedef void (*lrtFct)(
 		void* outputFIFOs[],
 		Param inParams[],
 		Param outParams[]);
-
-// Structure encompassing all papify information needed for a given job
-typedef struct lrt_papify_t {
-    papify_action_s* papifyActions;
-    bool doesTiming;
-    int eventSetId;
-    int eventSetSize;
-}lrt_papify_t;
 
 
 class LRT{
@@ -78,7 +70,7 @@ public:
 	 * @param fct  the job function
 	 * @param papifyActions  the papifyActions structure
 	 */
-	void addPapifyJobInfo(lrtFct const & fct , papify_action_s* papifyActions);
+	void addPapifyJobInfo(lrtFct const & fct , PapifyAction* papifyAction);
 
 	inline void setIdle(bool idle);
 	inline void setJobIx(int jobIx);
@@ -106,7 +98,7 @@ private:
 	int tabBlkLrtIx[NB_MAX_ACTOR];
 	int tabBlkLrtJobIx[NB_MAX_ACTOR];
 
-	std::map<lrtFct, lrt_papify_t*> jobPapifyActions_;
+	std::map<lrtFct, PapifyAction*> jobPapifyActions_;
 #ifdef VERBOSE_TIME
 	Time time_waiting_job;
 	Time time_waiting_prev_actor;

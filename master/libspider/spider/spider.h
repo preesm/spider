@@ -37,6 +37,7 @@
 #define SPIDER_H
 
 #include <map>
+#include <vector>
 
 class Archi;
 class PiSDFVertex;
@@ -108,7 +109,7 @@ typedef struct {
 	char* peID_;
 	char* actorName_;
 	int   eventSize_;
-	char* monitoredEvents_;
+	std::vector<char*> monitoredEvents_;
 	bool  isTiming_;
 	int   eventSetID_;
 }PapifyConfig;

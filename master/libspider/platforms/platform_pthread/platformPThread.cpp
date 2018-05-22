@@ -91,6 +91,8 @@ static SharedMemArchi* archi_;
 
 pthread_barrier_t pthread_barrier_init_and_end_thread;
 
+PapifyEventLib* papifyEventLib = nullptr;
+
 void printfSpider(void);
 
 static void setAffinity(int cpuId){
@@ -158,11 +160,6 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 	}
 	sem_init(&semTrace, 0, 1);
 
-	if (usePapify) {
-        // Initializing papify
-        event_init_multiplex();
-	}
-
     // TODO use "usePapify" only for monitored LRTs / HW PEs
 #ifndef PAPI_AVAILABLE
     // If PAPI is not available on the current platform, force disable it
@@ -171,6 +168,10 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
     }
     usePapify = false;
 #endif
+    if (usePapify) {
+        // Initializing papify
+        papifyEventLib = new PapifyEventLib();
+    }
     // Filling up parameters for each threads
 	for (int i = 1; i<nLrt_; i++){
 		arg_lrt[i - 1].fifoSpidertoLRT = fifoSpidertoLRT[i];
@@ -254,16 +255,14 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
         std::map<lrtFct , PapifyConfig*>::iterator it;
         for (it = jobPapifyActions.begin(); it != jobPapifyActions.end(); ++it) {
             // TODO check that LRT_STACK is large enough
-            papify_action_s* papifyAction =CREATE(LRT_STACK, papify_action_s);
             PapifyConfig* papifyConfig = it->second;
-            configure_papify(papifyAction,
+            PapifyAction* papifyAction = CREATE(LRT_STACK, PapifyAction)(
                     /* componentName */   papifyConfig->peType_,
                     /* PEName */          papifyConfig->peID_,
                     /* actorName */       papifyConfig->actorName_,
                     /* num_events */      papifyConfig->eventSize_,
                     /* all_events_name */ papifyConfig->monitoredEvents_,
-                    /* eventSet_Id */     papifyConfig->eventSetID_);
-            papifyAction->isTiming = papifyConfig->isTiming_;
+                    /* eventSet_Id */     papifyConfig->eventSetID_, papifyConfig->isTiming_, *papifyEventLib);
             lrt_[0]->addPapifyJobInfo(it->first, papifyAction);
         }
     }
@@ -577,20 +576,17 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt){
 	// Enable papify if need to
     if (argument_lrt->usePapify) {
         lrt_[index]->setUsePapify();
-        printf("monitoring !!!\n");
         std::map<lrtFct , PapifyConfig*>::iterator it;
         for (it = argument_lrt->jobPapifyActions.begin(); it != argument_lrt->jobPapifyActions.end(); ++it) {
             // TODO check that LRT_STACK is large enough
-            papify_action_s* papifyAction =CREATE(LRT_STACK, papify_action_s);
             PapifyConfig* papifyConfig = it->second;
-            configure_papify(papifyAction,
+            PapifyAction* papifyAction = CREATE(LRT_STACK, PapifyAction)(
                     /* componentName */   papifyConfig->peType_,
                     /* PEName */          papifyConfig->peID_,
                     /* actorName */       papifyConfig->actorName_,
                     /* num_events */      papifyConfig->eventSize_,
                     /* all_events_name */ papifyConfig->monitoredEvents_,
-                    /* eventSet_Id */     papifyConfig->eventSetID_);
-            papifyAction->isTiming = papifyConfig->isTiming_;
+                    /* eventSet_Id */     papifyConfig->eventSetID_, papifyConfig->isTiming_, *papifyEventLib);
             lrt_[index]->addPapifyJobInfo(it->first, papifyAction);
         }
     }

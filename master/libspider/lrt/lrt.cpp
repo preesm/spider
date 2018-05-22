@@ -231,39 +231,26 @@ int LRT::runOneJob(){
 			    specialActors[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
 			} else if((int)jobMsg->fctIx < nFct_) {
                 // We can monitor the events
-                lrt_papify_t* papifyJobInfo = nullptr;
+                PapifyAction* papifyAction = nullptr;
                 if (usePapify_) {
                     // Start monitoring the events
                     try {
-                        papifyJobInfo  = jobPapifyActions_.at(fcts_[jobMsg->fctIx]);
-                        // Do the events monitoring
-                        if (papifyJobInfo->eventSetSize > 0) {
-                            event_start(papifyJobInfo->papifyActions, papifyJobInfo->eventSetId);
-                        }
-                        // Do the timing monitoring
-                        if (papifyJobInfo->doesTiming) {
-                            event_start_papify_timing(papifyJobInfo->papifyActions);
-                        }
+                        papifyAction  = jobPapifyActions_.at(fcts_[jobMsg->fctIx]);
+                        papifyAction->startMonitor();
                     } catch (std::out_of_range &e) {
                         // This job does not have papify events associated with  it
-                        papifyJobInfo = nullptr;
+                        papifyAction = nullptr;
                     }
                 }
 
 			    fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
 
                 // Stop monitoring the events
-                if (usePapify_ && papifyJobInfo) {
-                    // Stop the timing monitoring
-                    if (papifyJobInfo->doesTiming) {
-                        event_stop_papify_timing(papifyJobInfo->papifyActions);
-                    }
-                    // Stop the events monitoring
-                    if (papifyJobInfo->eventSetSize > 0) {
-                        event_stop(papifyJobInfo->papifyActions, papifyJobInfo->eventSetId);
-                    }
+                if (usePapify_ && papifyAction) {
+                    // Stop monitoring
+                    papifyAction->stopMonitor();
                     // Writes the monitoring results
-                    event_write_file(papifyJobInfo->papifyActions);
+                    papifyAction->writeEvents();
                 }
 			} else{
 				printf("Cannot find actor function\n");
@@ -409,11 +396,11 @@ void LRT::runInfinitly(){
 }
 
 
-void LRT::addPapifyJobInfo(lrtFct const & fct, papify_action_s* papifyActions) {
-    lrt_papify_t* lrtPapifyInfo = CREATE(LRT_STACK, lrt_papify_t);
+void LRT::addPapifyJobInfo(lrtFct const & fct, PapifyAction* papifyAction) {
+    /*lrt_papify_t* lrtPapifyInfo = CREATE(LRT_STACK, lrt_papify_t);
     lrtPapifyInfo->papifyActions = papifyActions;
     lrtPapifyInfo->eventSetId = papifyActions->eventSetID;
     lrtPapifyInfo->eventSetSize = papifyActions->num_counters;
-    lrtPapifyInfo->doesTiming = papifyActions->isTiming != 0;
-    this->jobPapifyActions_[fct] = lrtPapifyInfo;
+    lrtPapifyInfo->doesTiming = papifyActions->isTiming != 0;*/
+    this->jobPapifyActions_[fct] = papifyAction;
 }

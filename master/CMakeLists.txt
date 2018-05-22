@@ -93,13 +93,14 @@ find_library(papi_LIBRARY papi)
 
 if (NOT papi_LIBRARY)
 	MESSAGE("papi lib NOT found")
-    set(papi_sources )
 else()
 	MESSAGE("FOUND: papi lib")
     add_definitions(-DPAPI_AVAILABLE)
     set(papi_sources
-        ./libspider/papify/eventLib.c
-        ./libspider/papify/eventLib.h)
+            libspider/papify/PapifyAction.cpp
+            libspider/papify/PapifyAction.h
+            libspider/papify/PapifyEventLib.cpp
+            libspider/papify/PapifyEventLib.h)
 endif()
 
 

@@ -101,8 +101,17 @@ public:
 	void lrtPThread(Arg_lrt *argument_lrt);
 
 
-	PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
-			StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack, bool usePapify, std::map<lrtFct, PapifyConfig*> &jobPapifyActions);
+	PlatformPThread(int nLrt,
+                    int shMemSize,
+                    lrtFct* fcts,
+                    int nLrtFcts,
+                    StackConfig archiStack,
+                    StackConfig lrtStack,
+			        StackConfig pisdfStack,
+                    StackConfig srdagStack,
+                    StackConfig transfoStack,
+                    bool usePapify,
+                    std::map<lrtFct, PapifyConfig*>& jobPapifyActions);
 	virtual ~PlatformPThread();
 
 
@@ -242,7 +251,7 @@ typedef struct Arg_lrt {
 	StackConfig archiStack;
 	StackConfig lrtStack;
 	bool usePapify;
-    std::map<lrtFct, PapifyConfig*> &jobPapifyActions;
+    std::map<lrtFct, PapifyConfig*>* jobPapifyActions;
 }Arg_lrt;
 
 // Fonction wrapper pour lancer un thread sur une méthode d'objet

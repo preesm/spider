@@ -110,7 +110,7 @@ static void setAffinity(int cpuId){
 }
 
 PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
-	StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack, bool usePapify, std::map<lrtFct, PapifyConfig*> &jobPapifyActions) {
+	StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack, bool usePapify, std::map<lrtFct, PapifyConfig*>& jobPapifyActions) {
 
 	if (platform_) throw std::runtime_error("Try to create 2 platforms");
 	platform_ = this;
@@ -189,7 +189,7 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 		arg_lrt[i - 1].archiStack = archiStack;
 		arg_lrt[i - 1].lrtStack = lrtStack;
 		arg_lrt[i - 1].usePapify = usePapify;
-		arg_lrt[i - 1].jobPapifyActions = jobPapifyActions;
+		arg_lrt[i - 1].jobPapifyActions = &jobPapifyActions;
 	}
 
 
@@ -577,7 +577,7 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt){
     if (argument_lrt->usePapify) {
         lrt_[index]->setUsePapify();
         std::map<lrtFct , PapifyConfig*>::iterator it;
-        for (it = argument_lrt->jobPapifyActions.begin(); it != argument_lrt->jobPapifyActions.end(); ++it) {
+        for (it = argument_lrt->jobPapifyActions->begin(); it != argument_lrt->jobPapifyActions->end(); ++it) {
             // TODO check that LRT_STACK is large enough
             PapifyConfig* papifyConfig = it->second;
             PapifyAction* papifyAction = CREATE(LRT_STACK, PapifyAction)(

@@ -121,7 +121,8 @@ void Spider::init(SpiderConfig cfg){
 			cfg.pisdfStack,
 			cfg.srdagStack,
 			cfg.transfoStack,
-            cfg.usePapify
+            cfg.usePapify,
+            cfg.papifyJobInfo
 	);
 }
 
@@ -157,7 +158,6 @@ void Spider::iterate(){
 	memAlloc_->reset();
 
 	srdag_ = new SRDAGGraph();
-
 
 	jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
 

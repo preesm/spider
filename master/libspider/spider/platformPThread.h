@@ -58,6 +58,9 @@
 #include <pthread.h>
 #include <PThreadLrtCommunicator.h>
 
+#include <map>
+#include "../papify/eventLib.h"
+
 struct Arg_lrt;
 
 class PlatformPThread: public Platform{
@@ -100,7 +103,7 @@ public:
 
 
 	PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
-			StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack, bool usePapify);
+			StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack, bool usePapify, std::map<lrtFct, PapifyConfig*> &jobPapifyActions);
 	virtual ~PlatformPThread();
 
 
@@ -240,6 +243,7 @@ typedef struct Arg_lrt {
 	StackConfig archiStack;
 	StackConfig lrtStack;
 	bool usePapify;
+    std::map<lrtFct, PapifyConfig*> &jobPapifyActions;
 }Arg_lrt;
 
 // Fonction wrapper pour lancer un thread sur une méthode d'objet

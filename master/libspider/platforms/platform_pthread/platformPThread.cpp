@@ -81,16 +81,9 @@ static struct timespec start;
 static void* jobTab;
 static void* dataMem;
 
-#undef PAPI_AVAILABLE
-
-#ifdef PAPI_AVAILABLE
-static long long start_steady;
-static long long origin_steady;
-#else
 static std::chrono::time_point<std::chrono::steady_clock> start_steady;
 
 static std::chrono::time_point<std::chrono::steady_clock> origin_steady = std::chrono::steady_clock::now();
-#endif
 
 
 
@@ -115,7 +108,7 @@ static void setAffinity(int cpuId){
 }
 
 PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
-	StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack, bool usePapify){
+	StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack, bool usePapify, std::map<lrtFct, PapifyConfig*> &jobPapifyActions) {
 
 	if (platform_) throw std::runtime_error("Try to create 2 platforms");
 	platform_ = this;
@@ -165,9 +158,20 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 	}
 	sem_init(&semTrace, 0, 1);
 
+	if (usePapify) {
+        // Initializing papify
+        event_init_multiplex();
+	}
 
-	// Filling up parameters for each threads
     // TODO use "usePapify" only for monitored LRTs / HW PEs
+#ifndef PAPI_AVAILABLE
+    // If PAPI is not available on the current platform, force disable it
+    if (usePapify) {
+        printf("WARNING: Spider was not compiled on a platform with PAPI, thus the monitoring is disabled.\n");
+    }
+    usePapify = false;
+#endif
+    // Filling up parameters for each threads
 	for (int i = 1; i<nLrt_; i++){
 		arg_lrt[i - 1].fifoSpidertoLRT = fifoSpidertoLRT[i];
 		arg_lrt[i - 1].fifoLRTtoSpider = fifoLRTtoSpider[i];
@@ -184,6 +188,7 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 		arg_lrt[i - 1].archiStack = archiStack;
 		arg_lrt[i - 1].lrtStack = lrtStack;
 		arg_lrt[i - 1].usePapify = usePapify;
+		arg_lrt[i - 1].jobPapifyActions = jobPapifyActions;
 	}
 
 
@@ -243,6 +248,26 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 
 	lrt_[0] = CREATE(ARCHI_STACK, LRT)(0);
 
+	// Check papify profiles
+    if (usePapify) {
+        lrt_[0]->setUsePapify();
+        std::map<lrtFct , PapifyConfig*>::iterator it;
+        for (it = jobPapifyActions.begin(); it != jobPapifyActions.end(); ++it) {
+            // TODO check that LRT_STACK is large enough
+            papify_action_s* papifyAction =CREATE(LRT_STACK, papify_action_s);
+            PapifyConfig* papifyConfig = it->second;
+            configure_papify(papifyAction,
+                    /* componentName */   papifyConfig->peType_,
+                    /* PEName */          papifyConfig->peID_,
+                    /* actorName */       papifyConfig->actorName_,
+                    /* num_events */      papifyConfig->eventSize_,
+                    /* all_events_name */ papifyConfig->monitoredEvents_,
+                    /* eventSet_Id */     papifyConfig->eventSetID_);
+            papifyAction->isTiming = papifyConfig->isTiming_;
+            lrt_[0]->addPapifyJobInfo(it->first, papifyAction);
+        }
+    }
+
 	// Wait for all LRTs to be ready to start
 	pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
 
@@ -290,12 +315,14 @@ PlatformPThread::~PlatformPThread(){
 		getSpiderCommunicator()->ctrl_end_send(lrt, size);
 	}
 
-	//wait for every LRT to end
+	// Wait for every LRT to end
 	pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
 
 
-	//wait for each thread to free its lrt and archi stacks and to reach its end
-	for (int i = 1; i < nLrt_; i++) pthread_join(thread_ID_tab_[i], NULL);
+	// Wait for each thread to free its lrt and archi stacks and to reach its end
+	for (int i = 1; i < nLrt_; i++) {
+	    pthread_join(thread_ID_tab_[i], NULL);
+	}
 
 
 	lrt_[0]->~LRT();
@@ -474,19 +501,14 @@ void PlatformPThread::rstTime(){
 }
 
 Time PlatformPThread::getTime(){
-#ifdef PAPI_AVAILABLE
-    // Whenever PAPI is available we're using it
-    long long val_steady = 0;
-#else
     std::chrono::time_point<std::chrono::steady_clock> ts_steady = std::chrono::steady_clock::now();
     long long val_steady = (ts_steady - start_steady).count();
     #ifdef _WIN32
         // Spider will think something went bad if returned time is 0, so in such case we're setting it to 1 because time in Windows is bad
-        if (val_steady == 0) {
-            val_steady++;
-        }
+            if (val_steady == 0) {
+                val_steady++;
+            }
     #endif // _WIN32
-#endif
 
 
 
@@ -555,6 +577,22 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt){
 	// Enable papify if need to
     if (argument_lrt->usePapify) {
         lrt_[index]->setUsePapify();
+        printf("monitoring !!!\n");
+        std::map<lrtFct , PapifyConfig*>::iterator it;
+        for (it = argument_lrt->jobPapifyActions.begin(); it != argument_lrt->jobPapifyActions.end(); ++it) {
+            // TODO check that LRT_STACK is large enough
+            papify_action_s* papifyAction =CREATE(LRT_STACK, papify_action_s);
+            PapifyConfig* papifyConfig = it->second;
+            configure_papify(papifyAction,
+                    /* componentName */   papifyConfig->peType_,
+                    /* PEName */          papifyConfig->peID_,
+                    /* actorName */       papifyConfig->actorName_,
+                    /* num_events */      papifyConfig->eventSize_,
+                    /* all_events_name */ papifyConfig->monitoredEvents_,
+                    /* eventSet_Id */     papifyConfig->eventSetID_);
+            papifyAction->isTiming = papifyConfig->isTiming_;
+            lrt_[index]->addPapifyJobInfo(it->first, papifyAction);
+        }
     }
 
 	// Wait for all LRTs to be created

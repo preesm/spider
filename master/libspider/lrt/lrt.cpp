@@ -59,9 +59,6 @@
 
 #include "specialActors/specialActors.h"
 
-#ifdef PAPI_AVAILABLE
-#include "../papify/eventLib.h"
-#endif
 
 static lrtFct specialActors[6] = {
 		&saBroadcast,
@@ -230,27 +227,50 @@ int LRT::runOneJob(){
 
 
 			start = Platform::get()->getTime();
-            #ifdef PAPI_AVAILABLE
-			// We can monitor the events
-			if (usePapify_) {
-                // Start monitoring the events
-			}
-            #endif
 			if(jobMsg->specialActor && jobMsg->fctIx < 6) {
 			    specialActors[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
 			} else if((int)jobMsg->fctIx < nFct_) {
+                // We can monitor the events
+                lrt_papify_t* papifyJobInfo = nullptr;
+                if (usePapify_) {
+                    // Start monitoring the events
+                    try {
+                        papifyJobInfo  = jobPapifyActions_.at(fcts_[jobMsg->fctIx]);
+                        // Do the events monitoring
+                        if (papifyJobInfo->eventSetSize > 0) {
+                            event_start(papifyJobInfo->papifyActions, papifyJobInfo->eventSetId);
+                        }
+                        // Do the timing monitoring
+                        if (papifyJobInfo->doesTiming) {
+                            event_start_papify_timing(papifyJobInfo->papifyActions);
+                        }
+                    } catch (std::out_of_range &e) {
+                        // This job does not have papify events associated with  it
+                        papifyJobInfo = nullptr;
+                    }
+                }
+
 			    fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
+
+                // Stop monitoring the events
+                if (usePapify_ && papifyJobInfo) {
+                    // Stop the timing monitoring
+                    if (papifyJobInfo->doesTiming) {
+                        event_stop_papify_timing(papifyJobInfo->papifyActions);
+                    }
+                    // Stop the events monitoring
+                    if (papifyJobInfo->eventSetSize > 0) {
+                        event_stop(papifyJobInfo->papifyActions, papifyJobInfo->eventSetId);
+                    }
+                    // Writes the monitoring results
+                    event_write_file(papifyJobInfo->papifyActions);
+                }
 			} else{
 				printf("Cannot find actor function\n");
 				while(1);
 			}
 
 			Time end = Platform::get()->getTime();
-            #ifdef PAPI_AVAILABLE
-            // Stop monitoring the events
-            if (usePapify_) {
-            }
-            #endif
 
 			#ifdef VERBOSE_TIME
 			time_compute += end - start;
@@ -386,4 +406,14 @@ void LRT::runInfinitly(){
 	#ifdef VERBOSE_TIME
 	time_global += Platform::get()->getTime() - start;
 	#endif
+}
+
+
+void LRT::addPapifyJobInfo(lrtFct const & fct, papify_action_s* papifyActions) {
+    lrt_papify_t* lrtPapifyInfo = CREATE(LRT_STACK, lrt_papify_t);
+    lrtPapifyInfo->papifyActions = papifyActions;
+    lrtPapifyInfo->eventSetId = papifyActions->eventSetID;
+    lrtPapifyInfo->eventSetSize = papifyActions->num_counters;
+    lrtPapifyInfo->doesTiming = papifyActions->isTiming != 0;
+    this->jobPapifyActions_[fct] = lrtPapifyInfo;
 }

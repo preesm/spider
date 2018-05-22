@@ -51,8 +51,10 @@ typedef struct papify_action_s {
 	FILE* papify_output_file;		// File where the monitoring data will be stored
 	int* papify_eventCodeSet;		// Code of the events that are being monitored
 	int papify_eventSet;			// EventSet associated to the monitoring of the function
-	
+	int eventSetID; // ID of the event set to witch the papify action is attached
+    int isTiming;   // Flag that inform on the usage of papify timing
 } papify_action_s;
+
 
 
 /**
@@ -181,4 +183,10 @@ void event_stop_papify_timing(papify_action_s* papify_action);
  */
 void configure_papify(papify_action_s* papify_action, char* componentName, char* PEName, char* actorName, int num_events, char* all_events_name, int eventSet_id);
 
+/**
+ * @brief This function writes all the monitoring information as a new line of the .csv file
+ *
+ * @param papify_action
+ */
+void event_write_file(papify_action_s* papify_action);
 #endif

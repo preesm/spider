@@ -36,6 +36,8 @@
 #ifndef SPIDER_H
 #define SPIDER_H
 
+#include <map>
+
 class Archi;
 class PiSDFVertex;
 class PiSDFParam;
@@ -101,6 +103,16 @@ typedef struct{
 	int nLrtFcts;
 } PlatformConfig;
 
+typedef struct {
+	char* peType_;
+	char* peID_;
+	char* actorName_;
+	int   eventSize_;
+	char* monitoredEvents_;
+	bool  isTiming_;
+	int   eventSetID_;
+}PapifyConfig;
+
 typedef struct{
 	MemAllocType memAllocType;
 	void* memAllocStart;
@@ -119,6 +131,8 @@ typedef struct{
 	bool verbose;
 	bool traceEnabled;
 	bool usePapify;
+
+    std::map<lrtFct, PapifyConfig*> papifyJobInfo;
 
 	PlatformConfig platform;
 } SpiderConfig;

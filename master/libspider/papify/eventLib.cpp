@@ -71,8 +71,8 @@ static void test_fail( char *file, int line, char *call, int retval ) {
 static void init_multiplex( void ) {
 
     int retval;
-    const PAPI_hw_info_t *hw_info, *hw_info_register32;
-    const PAPI_component_info_t *cmpinfo, *cmpinfo_register32;
+    const PAPI_hw_info_t *hw_info;//, *hw_info_register32;
+    const PAPI_component_info_t *cmpinfo;//, *cmpinfo_register32;
 
     /* Initialize the library */
 
@@ -147,7 +147,7 @@ void event_init_multiplex(void) {
         test_fail( __FILE__, __LINE__, "PAPI_thread_init", retval );
 
     // multiplex initialization
-    init_multiplex(  );
+    init_multiplex();
 
     printf("event_init done \n");
     time_zero = PAPI_get_real_usec();
@@ -168,36 +168,48 @@ void eventList_set_multiplex_unified(papify_action_s* papify_action) {
 }
 
 void event_create_eventList_unified(papify_action_s* papify_action) {
-
-    int retval, i, maxNumberHwCounters, eventCodeSetMaxSize;
+    int retval = 1;
+    int i;
+    int eventCodeSetMaxSize;
+    //int maxNumberHwCounters;
     PAPI_event_info_t info;
-    unsigned long threadId;
 
-    maxNumberHwCounters = PAPI_get_opt( PAPI_MAX_HWCTRS, NULL );
+   // maxNumberHwCounters = PAPI_get_opt( PAPI_MAX_HWCTRS, NULL );
     eventCodeSetMaxSize = PAPI_get_opt( PAPI_MAX_MPX_CTRS, NULL );
 
-    if ( eventCodeSetMaxSize < papify_action[0].num_counters)
-        test_fail( __FILE__, __LINE__, "eventCodeSetMaxSize < eventCodeSetSize, too many performance events defined! ", retval );
+    if (eventCodeSetMaxSize < papify_action[0].num_counters)
+        test_fail( __FILE__, __LINE__, "eventCodeSetMaxSize < eventCodeSetSize, too many performance events defined! ", retval);
 
-    threadId = PAPI_register_thread();
-    if ( retval != PAPI_OK )
+    // Register the thread ID
+    retval = PAPI_register_thread();
+    if (retval != PAPI_OK)
         test_fail( __FILE__, __LINE__, "PAPI_register_thread", retval );
 
+    // Retrieve the thread ID
+    unsigned long threadId = PAPI_thread_id();
+
+    // Creates the event set
     retval = PAPI_create_eventset( &papify_action->papify_eventSet );
-    if ( retval != PAPI_OK )
+    if (retval != PAPI_OK) {
         test_fail( __FILE__, __LINE__, "PAPI_create_eventset", retval );
+    }
 
     retval = PAPI_assign_eventset_component( papify_action[0].papify_eventSet, PAPI_get_component_index(papify_action[0].component_id));
-    if ( retval == PAPI_ENOCMP )
-   	retval = PAPI_assign_eventset_component( papify_action[0].papify_eventSet, 0 );
 
-    if ( retval != PAPI_OK )
+    if (retval == PAPI_ENOCMP) {
+        retval = PAPI_assign_eventset_component( papify_action[0].papify_eventSet, 0 );
+    }
+
+    if (retval != PAPI_OK) {
         test_fail( __FILE__, __LINE__, "PAPI_assign_eventset_component", retval );
+    }
 
     eventList_set_multiplex_unified(papify_action);
-    retval = PAPI_attach( papify_action[0].papify_eventSet, threadId );
-    if ( retval != PAPI_OK )
-        test_fail( __FILE__, __LINE__, "PAPI_attach_thread", retval );
+
+   /* retval = PAPI_attach( papify_action[0].papify_eventSet, PAPI_thread_id());
+    if ( retval != PAPI_OK ) {
+        test_fail( __FILE__, __LINE__, "PAPI_attach_thread", retval);
+    }*/
     for (i = 0; i < papify_action[0].num_counters; i++) {
         retval = PAPI_get_event_info(papify_action[0].papify_eventCodeSet[i], &info);
         if ( retval != PAPI_OK )
@@ -220,28 +232,23 @@ void event_launch(papify_action_s* papify_action, int eventSet_id) {
 
 
 void event_start(papify_action_s* papify_action, int eventSet_id){
-
-    int retval;
     if(papify_action[0].num_counters != 0){
-    	retval = PAPI_read( papify_eventSet_PEs[eventSet_id], papify_action->counterValuesStart );
+    	int retval = PAPI_read( papify_eventSet_PEs[eventSet_id], papify_action->counterValuesStart );
+        if (retval != PAPI_OK)
+            test_fail( __FILE__, __LINE__, "PAPI_read", retval);
     }
-    if ( retval != PAPI_OK )
-        test_fail( __FILE__, __LINE__, "PAPI_read",retval );
 }
 
 
 void event_stop(papify_action_s* papify_action, int eventSet_id) {
-
-    int retval, i;
-    if(papify_action[0].num_counters != 0){
-    	retval = PAPI_read( papify_eventSet_PEs[eventSet_id], papify_action->counterValuesStop );
-	for(i = 0; i < papify_action[0].num_counters; i++){
-	    papify_action[0].counterValues[i] = papify_action[0].counterValuesStop[i] - papify_action[0].counterValuesStart[i];
-	}
+    if(papify_action[0].num_counters != 0) {
+    	int retval = PAPI_read( papify_eventSet_PEs[eventSet_id], papify_action->counterValuesStop );
+        for(int i = 0; i < papify_action[0].num_counters; i++){
+            papify_action[0].counterValues[i] = papify_action[0].counterValuesStop[i] - papify_action[0].counterValuesStart[i];
+        }
+        if ( retval != PAPI_OK )
+            test_fail( __FILE__, __LINE__, "PAPI_read", retval );
     }
-    if ( retval != PAPI_OK )
-        test_fail( __FILE__, __LINE__, "PAPI_read", retval );
-
 }
 
 void event_init_output_file(papify_action_s* papify_action, char* actorName, char* all_events_name) {
@@ -253,7 +260,7 @@ void event_init_output_file(papify_action_s* papify_action, char* actorName, cha
 	snprintf(output_string, sizeof output_string, "%s%s%s", "Actor,Action,tini,tend,", all_events_name, "\n");
 
 	papify_action->papify_output_file = fopen(file_name,"w");
-	fprintf(papify_action->papify_output_file,output_string);
+	fprintf(papify_action->papify_output_file, "%s", output_string);
 	fclose(papify_action->papify_output_file);
 }
 
@@ -267,19 +274,18 @@ void event_init_event_code_set(papify_action_s* papify_action, int code_set_size
 
 	snprintf(all_events_name_local, sizeof(all_events_name_local), "%s", all_events_name);
 	char* event_name;
-	char codeName_aux[250];
+//	char codeName_aux[250];
 
 	event_name = strtok(all_events_name_local, ",");
 
 	for(i = 0; i < code_set_size; i++){
-		
 		retval = PAPI_event_name_to_code(event_name, &event_code);
 		if ( retval != PAPI_OK ) {
 	  		test_fail( __FILE__, __LINE__, 
 		      "Translation of event not found\n", retval );
 		}
 
-        	event_name = strtok(NULL, ",");
+		event_name = strtok(NULL, ",");
 
 		papify_action[0].papify_eventCodeSet[i] = event_code;
 	}
@@ -288,25 +294,24 @@ void event_init_event_code_set(papify_action_s* papify_action, int code_set_size
 
 void event_init_papify_actions(papify_action_s* papify_action, char* componentName, char* PEName, char* actorName, int num_events) {
 
-	papify_action->counterValues = malloc(sizeof(long long) * num_events);
-	papify_action->counterValuesStart = malloc(sizeof(long long) * num_events);
-	papify_action->counterValuesStop = malloc(sizeof(long long) * num_events);
+	papify_action->counterValues = (long long*)malloc(sizeof(long long) * num_events);
+	papify_action->counterValuesStart = (long long*)malloc(sizeof(long long) * num_events);
+	papify_action->counterValuesStop = (long long*) malloc(sizeof(long long) * num_events);
 
-	papify_action[0].action_id = malloc(strlen(actorName)+1);
+	papify_action[0].action_id = (char*) malloc(strlen(actorName)+1);
 	snprintf(papify_action[0].action_id, (strlen(actorName)+1) * sizeof(char), "%s", actorName);
 
-	papify_action[0].component_id = malloc(strlen(componentName)+1);
+	papify_action[0].component_id = (char*) malloc(strlen(componentName)+1);
 	snprintf(papify_action[0].component_id, (strlen(componentName)+1) * sizeof(char), "%s", componentName);
 
-	papify_action[0].PE_id = malloc(strlen(PEName)+1);
+	papify_action[0].PE_id =(char*) malloc(strlen(PEName)+1);
 	snprintf(papify_action[0].PE_id, (strlen(PEName)+1) * sizeof(char), "%s", PEName);
 
 	papify_action[0].num_counters = num_events;
 
-	papify_action->papify_eventCodeSet = malloc(sizeof(int) * num_events);
-	papify_action->papify_eventSet = malloc(sizeof(int) * 1);
+	papify_action->papify_eventCodeSet = (int*)malloc(sizeof(int) * num_events);
 	papify_action->papify_eventSet = PAPI_NULL;
-	papify_action->papify_output_file = malloc(sizeof(FILE) * 1);
+	papify_action->papify_output_file = (FILE*) malloc(sizeof(FILE) * 1);
 }
 
 void event_start_papify_timing(papify_action_s* papify_action) {
@@ -330,7 +335,8 @@ void configure_papify(papify_action_s* papify_action, char* componentName, char*
 	event_init_output_file(papify_action, actorName, all_events_name);
 
 	pthread_mutex_lock(&lock);
-    	if(papify_eventSet_PEs_launched[eventSet_id] == 0 && papify_action[0].num_counters != 0){
+    papify_action->eventSetID = eventSet_id;
+    if(papify_eventSet_PEs_launched[eventSet_id] == 0 && papify_action[0].num_counters != 0) {
 		event_init_event_code_set(papify_action, num_events, all_events_name);
 	
 		event_create_eventList_unified(papify_action);
@@ -340,10 +346,8 @@ void configure_papify(papify_action_s* papify_action, char* componentName, char*
 	pthread_mutex_unlock(&lock);
 }
 
-/* 
-* This function writes all the monitoring information as a new line of the .csv file
-*/
-void event_write_file(papify_action_s* papify_action){
+
+void event_write_file(papify_action_s* papify_action) {
 
 	char output_file_name[250];
 	int i;
@@ -355,7 +359,7 @@ void event_write_file(papify_action_s* papify_action){
 	fprintf(papify_action[0].papify_output_file, "%s,%s,%llu,%llu", papify_action[0].PE_id, papify_action[0].action_id, papify_action[0].time_init_action, papify_action[0].time_end_action);
 
 	for(i = 0; i < papify_action[0].num_counters; i++){
-		fprintf(papify_action[0].papify_output_file, ",%lu", papify_action[0].counterValues[i]);
+		fprintf(papify_action[0].papify_output_file, ",%lld", papify_action[0].counterValues[i]);
 	}
 	fprintf(papify_action[0].papify_output_file, "\n");
 

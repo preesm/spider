@@ -71,10 +71,6 @@ PapifyAction::PapifyAction(PapifyAction &papifyAction, const char* PEId) {
                                                                        this->PEId_,
                                                                        this->eventSetID_,
                                                                        this->PAPIEventCodeSet_);
-            // 2. Launch the event set
-            this->papifyEventLib_->startEventSet(PAPIEventSetID_);
-            // 3. Set the event set as launched
-            this->papifyEventLib_->setPAPIEventSetStart(this->eventSetID_, this->PEId_);
         } else {
             // Get the PAPI event set ID
             PAPIEventSetID_ = this->papifyEventLib_->getPAPIEventSetID(this->eventSetID_, this->PEId_);
@@ -118,10 +114,6 @@ PapifyAction::PapifyAction(const char *PEType,
                                                                PEType,                 /* Type of the processing element */
                                                                this->PEId_,
                                                                this->PAPIEventCodeSet_  /* PAPI event code set associated to the event monitored */);
-            // 2. Launch the event set
-            papifyEventLib->startEventSet(PAPIEventSetID_);
-            // 3. Set the event set as launched
-            papifyEventLib->setPAPIEventSetStart(eventSetID, this->PEId_);
         } else {
             // Get the PAPI event set ID
             PAPIEventSetID_ = papifyEventLib->getPAPIEventSetID(eventSetID, this->PEId_);
@@ -141,6 +133,16 @@ void PapifyAction::startMonitor() {
     }
     // Retrieve the starting counter values
     if (numberOfEvents_ > 0) {
+        // 1. Do we need to stop and start ?
+        if (!this->papifyEventLib_->isEventSetLaunched(this->eventSetID_, this->PEId_)) {
+            unsigned long index;
+            if (this->papifyEventLib_->isSomeEventSetRunning(this->PEId_, & index)) {
+                this->papifyEventLib_->stopEventSetRunning(index, this->PEId_);
+            }
+            this->papifyEventLib_->startEventSet(this->PAPIEventSetID_);
+            this->papifyEventLib_->setPAPIEventSetStart(this->eventSetID_, this->PEId_);
+        }
+        // 2. Let's read the value
         int retVal = PAPI_read(PAPIEventSetID_, counterValuesStart_.data());
         if (retVal != PAPI_OK) {
             PapifyEventLib::throwError(__FILE__, __LINE__, retVal);

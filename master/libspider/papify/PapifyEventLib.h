@@ -141,6 +141,28 @@ public:
     }
 
     /**
+     * @brief Check if some event set is running
+     *
+     * @param PEId  The PE id
+     * @param index Index to be filled with the eventSet ID currently running
+     * @return true if an event set is running, false else
+     */
+    inline bool isSomeEventSetRunning(const char* PEId, unsigned long *index) {
+        for (unsigned long i = 0; i < PEEventSetLaunched_[PEId].size(); ++i) {
+            if (PEEventSetLaunched_[PEId][i] > 0) {
+                *index = i;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    inline void stopEventSetRunning(unsigned long index, const char* PEId) {
+        PEEventSetLaunched_[PEId][index] = 0;
+        PAPI_stop(PEEventSets_[PEId][index], NULL);
+    }
+
+    /**
      * @brief Check if a given event set has already been created
      * @param eventSetID User id (not PAPI) of the event set
      *

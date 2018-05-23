@@ -39,6 +39,7 @@
 PapifyEventLib::~PapifyEventLib() {
     if (configLock_) {
         pthread_mutex_destroy(configLock_);
+        delete configLock_;
     }
 }
 
@@ -116,22 +117,13 @@ void PapifyEventLib::throwError(const char* file, int line, int papiErrorCode) {
     throwError(file, line, "an error occured");
 }
 
-long long PapifyEventLib::getZeroTime() {
-    return zeroTime_;
-}
-
-bool PapifyEventLib::isEventSetLaunched(int eventSetID) {
-    if (eventSetID > PEEventSetLaunched_.size()) {
-        return false;
-    }
-    return PEEventSetLaunched_[eventSetID] != 0;
-}
 
 int PapifyEventLib::PAPIEventSetInit(int numberOfEvents,
-                                     std::vector<char *> &moniteredEventSet,
-                                     int eventSetID, const char* PEType) {
-    std::vector<int> PAPIEventCodeSet((unsigned long)numberOfEvents);
-    // 1. Retrieve the PAPI event code
+                                     std::vector<const char *> &moniteredEventSet,
+                                     int eventSetID,
+                                     const char* PEType,
+                                     std::vector<int> &PAPIEventCodeSet) {
+    // 1. Retrieve the PAPI event codes
     for (int i = 0; i < numberOfEvents; ++i) {
         const char* eventName = moniteredEventSet[i];
         int retVal = PAPI_event_name_to_code(eventName, &PAPIEventCodeSet[i]);
@@ -187,6 +179,19 @@ int PapifyEventLib::PAPIEventSetInit(int numberOfEvents,
             return -1;
         }
     }
+    // The hash table between the user event set ID and the PAPI event set ID
     PEEventSets_[eventSetID] = PAPIEventSetID;
     return PAPIEventSetID;
+}
+
+void PapifyEventLib::getPAPIEventCodeSet(std::vector<const char *> &moniteredEventSet,
+                                         std::vector<int> &PAPIEventCodeSet) {
+    unsigned long numberOfEvents = moniteredEventSet.size();
+    for (unsigned long i = 0; i < numberOfEvents; ++i) {
+        const char* eventName = moniteredEventSet[i];
+        int retVal = PAPI_event_name_to_code(eventName, &PAPIEventCodeSet[i]);
+        if (retVal != PAPI_OK) {
+            throwError(__FILE__, __LINE__, retVal);
+        }
+    }
 }

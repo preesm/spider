@@ -44,6 +44,10 @@ public:
      * Initializes the PAPI library and the different interfaces needed
      */
     PapifyEventLib();
+
+    /**
+     * Destructor
+     */
     ~PapifyEventLib();
 
     /**
@@ -65,30 +69,63 @@ public:
     static void throwError(const char* file, int line, int papiErrorCode);
 
     /**
-     * @brief Returned the zero time of the initialization of PAPI
-     *
-     * @return the zero time value
-     */
-    long long getZeroTime(void);
-
-    /**
-     * @brief Check if a given event set has already been launched
-     * @param eventSetID User id (not PAPI) of the event set
-     * @return true if already launched, false else
-     */
-    bool isEventSetLaunched(int eventSetID);
-
-    /**
      * @brief Init a PAPI event set corresponding to the event passed in parameter.
      * @param numberOfEvents     Number of events in the event set
-     * @param moniteredEventSet  The event set
+     * @param moniteredEventSet  The event set names (provided to the method)
      * @param eventSetID         User id of the event set
      * @param PEType             The PE component type
+     * @param PAPIEventCodeSet   The event set codes (initialized by the method)
      *
      * @return the id of the event set
      */
     int PAPIEventSetInit(int numberOfEvents,
-                          std::vector<char *>& moniteredEventSet, int eventSetID, const char* PEType);
+                         std::vector<const char *>& moniteredEventSet,
+                         int eventSetID,
+                         const char* PEType,
+                         std::vector<int> &PAPIEventCodeSet);
+    /**
+     * @brief Retrieve the PAPI code equivalent to the PAPI name code
+     * @param moniteredEventSet  The event set names (provided to the method)
+     * @param PAPIEventCodeSet   The event set codes (initialized by the method)
+     *
+     */
+    void getPAPIEventCodeSet(std::vector<const char*> & moniteredEventSet,
+                             std::vector<int> &PAPIEventCodeSet);
+
+    /**
+     * @brief Returned the zero time of the initialization of PAPI
+     *
+     * @return the zero time value
+     */
+    inline long long getZeroTime() {
+        return zeroTime_;
+    }
+
+    /**
+     * @brief Check if a given event set has already been launched
+     * @param eventSetID User id (not PAPI) of the event set
+     *
+     * @return true if already launched, false else
+     */
+    inline bool isEventSetLaunched(int eventSetID) {
+        if (eventSetID > PEEventSetLaunched_.size() || eventSetID < 0) {
+            return false;
+        }
+        return PEEventSetLaunched_[eventSetID] != 0;
+    }
+
+    /**
+     * @brief Check if a given event set has already been created
+     * @param eventSetID User id (not PAPI) of the event set
+     *
+     * @return true if already exists, false else
+     */
+    inline bool doesEventSetExists(int eventSetID) {
+        if (eventSetID > PEEventSetLaunched_.size() || eventSetID < 0) {
+            return false;
+        }
+        return PEEventSets_[eventSetID] != PAPI_NULL;
+    }
 
     /**
      * @brief Launch the monitoring of the eventSet.
@@ -122,10 +159,17 @@ public:
         PEEventSetLaunched_[eventSetID] = 1;
     }
 
+    /**
+     * @brief Lock the access to the eventlib manager
+     */
     inline void configLock() {
         pthread_mutex_lock(configLock_);
     }
 
+
+    /**
+     * @brief Unlock the access to the eventlib manager
+     */
     inline void configUnlock() {
         pthread_mutex_unlock(configLock_);
     }

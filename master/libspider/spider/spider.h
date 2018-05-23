@@ -105,11 +105,11 @@ typedef struct{
 } PlatformConfig;
 
 typedef struct {
-	char* peType_;
-	char* peID_;
-	char* actorName_;
+	const char* peType_;
+	const char* peID_;
+	const char* actorName_;
 	int   eventSize_;
-	std::vector<char*> monitoredEvents_;
+	std::vector<const char*> monitoredEvents_;
 	bool  isTiming_;
 	int   eventSetID_;
 }PapifyConfig;

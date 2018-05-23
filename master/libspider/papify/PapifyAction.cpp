@@ -44,60 +44,62 @@ PapifyAction::~PapifyAction() {
 }
 
 
-PapifyAction::PapifyAction(const char *PEType, const char *PEId, const char *actorName, int numberOfEvents,
-                           std::vector<char *>& moniteredEventSet, int eventSetID, bool monitorTime ,
-                           PapifyEventLib& papifyEventLib): papifyEventLib_(papifyEventLib) {
+PapifyAction::PapifyAction(const char *PEType,
+                           const char *PEId,
+                           const char *actorName,
+                           int numberOfEvents,
+                           std::vector<const char *>& moniteredEventSet,
+                           int eventSetID,
+                           bool monitorTime ,
+                           PapifyEventLib* papifyEventLib) {
     this->PEType_         = PEType;
     this->PEId_           = PEId;
     this->actorName_      = actorName;
     this->eventSetID_     = eventSetID;
     this->numberOfEvents_ = numberOfEvents;
     this->monitorTiming_  = monitorTime;
-    this->PAPIEventSetID  = 0; // Papify::getPAPIEventSetID(moniteredEventSet);
+    this->papifyEventLib_ = papifyEventLib;
 
     this->counterValues_      = std::vector<long long int>((unsigned long)numberOfEvents);
     this->counterValuesStart_ = std::vector<long long int>((unsigned long)numberOfEvents);
     this->counterValuesStop_  = std::vector<long long int>((unsigned long)numberOfEvents);
 
-    papifyEventLib.configLock();
+    papifyEventLib->configLock();
     if (numberOfEvents > 0) {
-        if (!papifyEventLib.isEventSetLaunched(eventSetID)) {
+        this->PAPIEventCodeSet_.resize((unsigned long)numberOfEvents);
+        if (!papifyEventLib->doesEventSetExists(eventSetID)) {
             // 1. Create and get the PAPI event set ID
-            PAPIEventSetID = papifyEventLib.PAPIEventSetInit(numberOfEvents, moniteredEventSet, eventSetID, PEType);
+            PAPIEventSetID_ = papifyEventLib->PAPIEventSetInit(numberOfEvents,         /* Number of events being monitored */
+                                                             moniteredEventSet,      /* Vector of the event to be monitored */
+                                                             eventSetID,             /* User event set ID (specified at compile time) */
+                                                             PEType,                 /* Type of the processing element */
+                                                             this->PAPIEventCodeSet_  /* PAPI event code set associated to the event monitored */);
             // 2. Launch the event set
-            papifyEventLib.startEventSet(PAPIEventSetID);
+            papifyEventLib->startEventSet(PAPIEventSetID_);
             // 3. Set the event set as launched
-            papifyEventLib.setPAPIEventSetStart(eventSetID);
+            papifyEventLib->setPAPIEventSetStart(eventSetID);
         } else {
             // Get the PAPI event set ID
-            PAPIEventSetID = papifyEventLib.getPAPIEventSetID(eventSetID);
+            PAPIEventSetID_ = papifyEventLib->getPAPIEventSetID(eventSetID);
+            // Initialize the the PAPIEventCodeSet
+            papifyEventLib->getPAPIEventCodeSet(moniteredEventSet, this->PAPIEventCodeSet_);
         }
     }
-    papifyEventLib.configUnlock();
+    papifyEventLib->configUnlock();
 
-    // TODO: fix this.
-    std::string fileName= std::string("papify-output/papify_output_") + std::string(actorName) + std::string(".csv");
-    outputFile_ = fopen(fileName.c_str(), "w");
-    if (!outputFile_) {
-        PapifyEventLib::throwError(__FILE__, __LINE__, "failed to open output file");
-    }
-    fprintf(outputFile_, "Actor,Action,Tstart,Tend,");
-    for (int i = 0; i < numberOfEvents; ++i) {
-        fprintf(outputFile_, "%s,", moniteredEventSet[i]);
-    }
-    fprintf(outputFile_, "\n");
+    outputFile_ = nullptr;
 }
 
 void PapifyAction::startMonitor() {
     if (monitorTiming_) {
         // Update start timing value
-        timeStart = PAPI_get_real_usec() - papifyEventLib_.getZeroTime();
+        timeStart = PAPI_get_real_usec() - papifyEventLib_->getZeroTime();
     }
     // Retrieve the starting counter values
     if (numberOfEvents_ > 0) {
-        int retVal = PAPI_read(PAPIEventSetID, counterValuesStart_.data());
+        int retVal = PAPI_read(PAPIEventSetID_, counterValuesStart_.data());
         if (retVal != PAPI_OK) {
-            //Papify::throwError();
+            PapifyEventLib::throwError(__FILE__, __LINE__, retVal);
         }
     }
 }
@@ -105,13 +107,13 @@ void PapifyAction::startMonitor() {
 void PapifyAction::stopMonitor() {
     if (monitorTiming_) {
         // Update start timing value
-        timeStop = PAPI_get_real_usec() - papifyEventLib_.getZeroTime();
+        timeStop = PAPI_get_real_usec() - papifyEventLib_->getZeroTime();
     }
     // Retrieve the stoping counter values
     if (numberOfEvents_ > 0) {
-        int retVal = PAPI_read(PAPIEventSetID, counterValuesStop_.data());
+        int retVal = PAPI_read(PAPIEventSetID_, counterValuesStop_.data());
         if (retVal != PAPI_OK) {
-            //Papify::throwError();
+            PapifyEventLib::throwError(__FILE__, __LINE__, retVal);
         }
         // Compute the difference between the start end value and the start value of the counters
         for(int i = 0; i < numberOfEvents_; ++i) {
@@ -121,7 +123,29 @@ void PapifyAction::stopMonitor() {
 }
 
 void PapifyAction::writeEvents() {
-    if (outputFile_) {
+    if (!outputFile_) {
+        std::string fileName= std::string("papify-output/papify_output_") + std::string(actorName_) + std::string(".csv");
+        outputFile_ = fopen(fileName.c_str(), "w");
+        if (!outputFile_) {
+            PapifyEventLib::throwError(__FILE__, __LINE__, "failed to open output file");
+        }
+        fprintf(outputFile_, "Actor,Action,Tstart,Tend,");
+        char eventName[200];
+        for (int i = 0; i < numberOfEvents_; ++i) {
+            int retVal = PAPI_event_code_to_name(PAPIEventCodeSet_[i], eventName);
+            if (retVal != PAPI_OK) {
+                PapifyEventLib::throwError(__FILE__, __LINE__, retVal);
+            }
+            fprintf(outputFile_, "%s,", eventName);
+        }
+        fprintf(outputFile_, "\n");
+    } else {
+        writeEvents(outputFile_);
+    }
+}
+
+void PapifyAction::writeEvents(FILE *file) {
+    if (file) {
         fprintf(outputFile_, "%s,%s, %llu, %llu", PEId_, actorName_, timeStart, timeStop);
         for (int i = 0; i < numberOfEvents_; ++i) {
             fprintf(outputFile_, ",%lld", counterValues_[i]);

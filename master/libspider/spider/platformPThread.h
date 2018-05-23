@@ -39,6 +39,7 @@
 #define PLATFORM_PTHREAD_H
 
 #include "platform.h"
+#include "../papify/PapifyAction.h"
 #include <signal.h>
 
 // semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
@@ -141,6 +142,9 @@ private:
 	LRT** lrt_;
 	LrtCommunicator** lrtCom_;
 	SpiderCommunicator* spiderCom_;
+
+	// Papify information
+    std::map<lrtFct, PapifyAction*> papifyJobInfo;
 };
 
 
@@ -251,7 +255,6 @@ typedef struct Arg_lrt {
 	StackConfig archiStack;
 	StackConfig lrtStack;
 	bool usePapify;
-    std::map<lrtFct, PapifyConfig*>* jobPapifyActions;
 }Arg_lrt;
 
 // Fonction wrapper pour lancer un thread sur une méthode d'objet

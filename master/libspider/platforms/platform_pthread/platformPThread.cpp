@@ -91,8 +91,6 @@ static SharedMemArchi* archi_;
 
 pthread_barrier_t pthread_barrier_init_and_end_thread;
 
-PapifyEventLib* papifyEventLib = nullptr;
-
 void printfSpider(void);
 
 static void setAffinity(int cpuId){
@@ -169,8 +167,24 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
     usePapify = false;
 #endif
     if (usePapify) {
-        // Initializing papify
-        papifyEventLib = new PapifyEventLib();
+        // Initializing Papify
+        PapifyEventLib* papifyEventLib = new PapifyEventLib();
+
+        // Register Papify actor configuration
+        if (usePapify) {
+            std::map<lrtFct , PapifyConfig*>::iterator it;
+            for (it = jobPapifyActions.begin(); it != jobPapifyActions.end(); ++it) {
+                PapifyConfig* papifyConfig = it->second;
+                PapifyAction* papifyAction = new PapifyAction(
+                        /* componentName */   papifyConfig->peType_,
+                        /* PEName */          papifyConfig->peID_,
+                        /* actorName */       papifyConfig->actorName_,
+                        /* num_events */      papifyConfig->eventSize_,
+                        /* all_events_name */ papifyConfig->monitoredEvents_,
+                        /* eventSet_Id */     papifyConfig->eventSetID_, papifyConfig->isTiming_, papifyEventLib);
+                papifyJobInfo.insert(std::make_pair(it->first, papifyAction));
+            }
+        }
     }
     // Filling up parameters for each threads
 	for (int i = 1; i<nLrt_; i++){
@@ -189,7 +203,6 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 		arg_lrt[i - 1].archiStack = archiStack;
 		arg_lrt[i - 1].lrtStack = lrtStack;
 		arg_lrt[i - 1].usePapify = usePapify;
-		arg_lrt[i - 1].jobPapifyActions = &jobPapifyActions;
 	}
 
 
@@ -252,18 +265,9 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 	// Check papify profiles
     if (usePapify) {
         lrt_[0]->setUsePapify();
-        std::map<lrtFct , PapifyConfig*>::iterator it;
-        for (it = jobPapifyActions.begin(); it != jobPapifyActions.end(); ++it) {
-            // TODO check that LRT_STACK is large enough
-            PapifyConfig* papifyConfig = it->second;
-            PapifyAction* papifyAction = CREATE(LRT_STACK, PapifyAction)(
-                    /* componentName */   papifyConfig->peType_,
-                    /* PEName */          papifyConfig->peID_,
-                    /* actorName */       papifyConfig->actorName_,
-                    /* num_events */      papifyConfig->eventSize_,
-                    /* all_events_name */ papifyConfig->monitoredEvents_,
-                    /* eventSet_Id */     papifyConfig->eventSetID_, papifyConfig->isTiming_, *papifyEventLib);
-            lrt_[0]->addPapifyJobInfo(it->first, papifyAction);
+        std::map<lrtFct , PapifyAction*>::iterator it;
+        for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
+            lrt_[0]->addPapifyJobInfo(it->first, it->second);
         }
     }
 
@@ -332,6 +336,17 @@ PlatformPThread::~PlatformPThread(){
 	// for (int i = 0; i < nLrt_; i++) ((PThreadLrtCommunicator*)lrtCom_[i])->~PThreadLrtCommunicator();
 
 	archi_->~SharedMemArchi();
+
+	// Free Papify information
+    if (!papifyJobInfo.empty()) {
+        std::map<lrtFct , PapifyAction*>::iterator it;
+        // Delete the event lib manager
+        delete papifyJobInfo.begin()->second->getPapifyEventLib();
+        // Delete all actor monitors
+        for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
+            delete it->second;
+        }
+    }
 
 
 	StackMonitor::free(ARCHI_STACK, lrt_[0]);
@@ -576,18 +591,9 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt){
 	// Enable papify if need to
     if (argument_lrt->usePapify) {
         lrt_[index]->setUsePapify();
-        std::map<lrtFct , PapifyConfig*>::iterator it;
-        for (it = argument_lrt->jobPapifyActions->begin(); it != argument_lrt->jobPapifyActions->end(); ++it) {
-            // TODO check that LRT_STACK is large enough
-            PapifyConfig* papifyConfig = it->second;
-            PapifyAction* papifyAction = CREATE(LRT_STACK, PapifyAction)(
-                    /* componentName */   papifyConfig->peType_,
-                    /* PEName */          papifyConfig->peID_,
-                    /* actorName */       papifyConfig->actorName_,
-                    /* num_events */      papifyConfig->eventSize_,
-                    /* all_events_name */ papifyConfig->monitoredEvents_,
-                    /* eventSet_Id */     papifyConfig->eventSetID_, papifyConfig->isTiming_, *papifyEventLib);
-            lrt_[index]->addPapifyJobInfo(it->first, papifyAction);
+        std::map<lrtFct , PapifyAction*>::iterator it;
+        for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
+            lrt_[index]->addPapifyJobInfo(it->first, it->second);
         }
     }
 

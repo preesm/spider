@@ -124,7 +124,7 @@ LRT::~LRT(){
 	(float)time_other*100/time_global,
 	(float)time_global / CHIP_FREQ / nb_iter);
 	
-	#endif
+    #endif
 }
 
 void LRT::setFctTbl(const lrtFct fct[], int nFct){
@@ -397,10 +397,5 @@ void LRT::runInfinitly(){
 
 
 void LRT::addPapifyJobInfo(lrtFct const & fct, PapifyAction* papifyAction) {
-    /*lrt_papify_t* lrtPapifyInfo = CREATE(LRT_STACK, lrt_papify_t);
-    lrtPapifyInfo->papifyActions = papifyActions;
-    lrtPapifyInfo->eventSetId = papifyActions->eventSetID;
-    lrtPapifyInfo->eventSetSize = papifyActions->num_counters;
-    lrtPapifyInfo->doesTiming = papifyActions->isTiming != 0;*/
-    this->jobPapifyActions_[fct] = papifyAction;
+    this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
 }

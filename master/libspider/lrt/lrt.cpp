@@ -125,6 +125,15 @@ LRT::~LRT(){
 	(float)time_global / CHIP_FREQ / nb_iter);
 	
     #endif
+
+    if (usePapify_) {
+        std::map<lrtFct , PapifyAction*>::iterator it;
+        // Delete all actor monitors
+        for (it = jobPapifyActions_.begin(); it != jobPapifyActions_.end(); ++it) {
+            delete it->second;
+        }
+    }
+
 }
 
 void LRT::setFctTbl(const lrtFct fct[], int nFct){
@@ -397,5 +406,6 @@ void LRT::runInfinitly(){
 
 
 void LRT::addPapifyJobInfo(lrtFct const & fct, PapifyAction* papifyAction) {
+    papifyAction->addLRT(ix_);
     this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
 }

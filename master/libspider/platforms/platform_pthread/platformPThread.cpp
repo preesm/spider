@@ -328,6 +328,13 @@ PlatformPThread::~PlatformPThread(){
 	}
 
 
+    // Free Papify information
+    if (!papifyJobInfo.empty()) {
+        std::map<lrtFct , PapifyAction*>::iterator it;
+        // Delete the event lib manager
+        delete papifyJobInfo.begin()->second->getPapifyEventLib();
+    }
+
 	lrt_[0]->~LRT();
 	((PThreadLrtCommunicator*)lrtCom_[0])->~PThreadLrtCommunicator();
 
@@ -336,17 +343,6 @@ PlatformPThread::~PlatformPThread(){
 	// for (int i = 0; i < nLrt_; i++) ((PThreadLrtCommunicator*)lrtCom_[i])->~PThreadLrtCommunicator();
 
 	archi_->~SharedMemArchi();
-
-	// Free Papify information
-    if (!papifyJobInfo.empty()) {
-        std::map<lrtFct , PapifyAction*>::iterator it;
-        // Delete the event lib manager
-        delete papifyJobInfo.begin()->second->getPapifyEventLib();
-        // Delete all actor monitors
-        for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
-            delete it->second;
-        }
-    }
 
 
 	StackMonitor::free(ARCHI_STACK, lrt_[0]);
@@ -593,7 +589,7 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt){
         lrt_[index]->setUsePapify();
         std::map<lrtFct , PapifyAction*>::iterator it;
         for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
-            lrt_[index]->addPapifyJobInfo(it->first, it->second);
+            lrt_[index]->addPapifyJobInfo(it->first, new PapifyAction(*it->second, std::to_string(index).c_str()));
         }
     }
 

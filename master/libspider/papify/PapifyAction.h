@@ -65,6 +65,14 @@ public:
                  int eventSetID,
                  bool monitorTime,
                  PapifyEventLib* papifyEventLib);
+    /**
+     * @brief Initialize a new PapifyAction object by copying properties of an other one
+     *
+     * @param papifyAction  Original PapifyAction
+     * @param PEId          The PE id
+     */
+    PapifyAction(PapifyAction& papifyAction, const char* PEId);
+
     ~PapifyAction();
 
     /**
@@ -100,6 +108,10 @@ public:
         return papifyEventLib_;
     }
 
+    inline void addLRT(int lrtID) {
+        lrtIDs_.push_back(lrtID);
+    }
+
 private:
     const char* PEId_;
     const char* PEType_;
@@ -124,6 +136,9 @@ private:
     bool monitorTiming_;
     long long timeStart;
     long long timeStop;
+
+    // Vector of LRTs using this specific configuration
+    std::vector<int> lrtIDs_;
 
     // The file for writing the results
     FILE* outputFile_;

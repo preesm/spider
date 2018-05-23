@@ -37,6 +37,7 @@
 #include <pthread.h>
 #include <vector>
 #include <papi.h>
+#include <map>
 
 class PapifyEventLib {
 public:
@@ -82,6 +83,7 @@ public:
                          std::vector<const char *>& moniteredEventSet,
                          int eventSetID,
                          const char* PEType,
+                         const char* PEId,
                          std::vector<int> &PAPIEventCodeSet);
     /**
      * @brief Retrieve the PAPI code equivalent to the PAPI name code
@@ -91,6 +93,30 @@ public:
      */
     void getPAPIEventCodeSet(std::vector<const char*> & moniteredEventSet,
                              std::vector<int> &PAPIEventCodeSet);
+
+    /**
+     *
+     * @param PEId
+     */
+    int registerNewThread(int numberOfEvents,
+                          const char* PEType,
+                          const char* PEId,
+                          int eventSetID,
+                          std::vector<int> &PAPIEventCodeSet);
+
+    /**
+     * @brief Add an entry in the table of PE event set ID / event set launched
+     *
+     * @param PEId PE id
+     */
+    inline void registerNewThreadSets(const char* PEId) {
+        try {
+            PEEventSets_.at(PEId);
+        } catch (std::out_of_range &e) {
+            PEEventSets_.insert(std::make_pair(PEId, std::vector<int>(50, PAPI_NULL)));
+            PEEventSetLaunched_.insert(std::make_pair(PEId, std::vector<int>(50, 0)));
+        }
+    }
 
     /**
      * @brief Returned the zero time of the initialization of PAPI
@@ -107,11 +133,11 @@ public:
      *
      * @return true if already launched, false else
      */
-    inline bool isEventSetLaunched(int eventSetID) {
-        if (eventSetID > PEEventSetLaunched_.size() || eventSetID < 0) {
+    inline bool isEventSetLaunched(int eventSetID, const char* PEId) {
+        if (eventSetID > PEEventSetLaunched_[PEId].size() || eventSetID < 0) {
             return false;
         }
-        return PEEventSetLaunched_[eventSetID] != 0;
+        return PEEventSetLaunched_[PEId][eventSetID] != 0;
     }
 
     /**
@@ -120,11 +146,11 @@ public:
      *
      * @return true if already exists, false else
      */
-    inline bool doesEventSetExists(int eventSetID) {
-        if (eventSetID > PEEventSetLaunched_.size() || eventSetID < 0) {
+    inline bool doesEventSetExists(int eventSetID, const char* PEId) {
+        if (eventSetID > PEEventSetLaunched_[PEId].size() || eventSetID < 0) {
             return false;
         }
-        return PEEventSets_[eventSetID] != PAPI_NULL;
+        return PEEventSets_[PEId][eventSetID] != PAPI_NULL;
     }
 
     /**
@@ -147,16 +173,16 @@ public:
      * @param eventSetID the user event set ID
      * @return the corresponding PAPI event set id
      */
-    inline int getPAPIEventSetID(int eventSetID) {
-        return PEEventSets_[eventSetID];
+    inline int getPAPIEventSetID(int eventSetID, const char* PEId) {
+        return PEEventSets_[PEId][eventSetID];
     }
 
     /**
      * @brief Set the corresponding PAPI event set as launched
      * @param eventSetID the user evetn set ID
      */
-    inline void setPAPIEventSetStart(int eventSetID) {
-        PEEventSetLaunched_[eventSetID] = 1;
+    inline void setPAPIEventSetStart(int eventSetID, const char* PEId) {
+        PEEventSetLaunched_[PEId][eventSetID] = 1;
     }
 
     /**
@@ -175,9 +201,9 @@ public:
     }
 private:
     pthread_mutex_t* configLock_;
-    std::vector<int> PEEventSets_;
-    std::vector<int> PEEventSetLaunched_;
-    long long        zeroTime_;
+    std::map<const char*, std::vector<int> > PEEventSets_;
+    std::map<const char*, std::vector<int> > PEEventSetLaunched_;
+    long long zeroTime_;
 };
 
 #endif //SPIDER_PAPIFYEVENTLIB_H

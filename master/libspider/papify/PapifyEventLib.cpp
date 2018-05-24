@@ -122,19 +122,20 @@ int PapifyEventLib::PAPIEventSetInit(int numberOfEvents,
                                      std::vector<const char *> &moniteredEventSet,
                                      int eventSetID,
                                      const char* PEType,
-                                     const char* PEId,
+                                     std::string* PEId,
                                      std::vector<int> &PAPIEventCodeSet) {
     // 1. Retrieve the PAPI event codes
     for (int i = 0; i < numberOfEvents; ++i) {
         const char* eventName = moniteredEventSet[i];
         int retVal = PAPI_event_name_to_code(eventName, &PAPIEventCodeSet[i]);
+        printf("%s - 0x%X\n", eventName, PAPIEventCodeSet[i]);
         if (retVal != PAPI_OK) {
             throwError(__FILE__, __LINE__, retVal);
         }
     }
 
     // 2. Create the unified event list
-    int eventCodeSetMaxSize = PAPI_get_opt( PAPI_MAX_MPX_CTRS, NULL );
+    int eventCodeSetMaxSize = PAPI_get_opt(PAPI_MAX_MPX_CTRS, NULL);
     if (eventCodeSetMaxSize < numberOfEvents) {
         throwError(__FILE__, __LINE__, "eventCodeSetMaxSize < eventCodeSetSize, too many performance events defined!");
         return -1;
@@ -144,7 +145,7 @@ int PapifyEventLib::PAPIEventSetInit(int numberOfEvents,
 
 int PapifyEventLib::registerNewThread(int numberOfEvents,
                                       const char* PEType,
-                                      const char* PEId,
+                                      std::string* PEId,
                                       int eventSetID,
                                       std::vector<int> &PAPIEventCodeSet) {
     // Register thread
@@ -157,7 +158,6 @@ int PapifyEventLib::registerNewThread(int numberOfEvents,
     int PAPIEventSetID = PAPI_NULL;
     retVal = PAPI_create_eventset(&PAPIEventSetID);
     if (retVal != PAPI_OK) {
-        printf("%d\n", retVal);
         throwError(__FILE__, __LINE__, retVal);
         return -1;
     }

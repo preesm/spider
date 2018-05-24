@@ -83,7 +83,7 @@ public:
                          std::vector<const char *>& moniteredEventSet,
                          int eventSetID,
                          const char* PEType,
-                         const char* PEId,
+                         std::string* PEId,
                          std::vector<int> &PAPIEventCodeSet);
     /**
      * @brief Retrieve the PAPI code equivalent to the PAPI name code
@@ -100,7 +100,7 @@ public:
      */
     int registerNewThread(int numberOfEvents,
                           const char* PEType,
-                          const char* PEId,
+                          std::string* PEId,
                           int eventSetID,
                           std::vector<int> &PAPIEventCodeSet);
 
@@ -109,7 +109,7 @@ public:
      *
      * @param PEId PE id
      */
-    inline void registerNewThreadSets(const char* PEId) {
+    inline void registerNewThreadSets(std::string* PEId) {
         try {
             PEEventSets_.at(PEId);
         } catch (std::out_of_range &e) {
@@ -133,7 +133,7 @@ public:
      *
      * @return true if already launched, false else
      */
-    inline bool isEventSetLaunched(int eventSetID, const char* PEId) {
+    inline bool isEventSetLaunched(int eventSetID, std::string* PEId) {
         if (eventSetID > PEEventSetLaunched_[PEId].size() || eventSetID < 0) {
             return false;
         }
@@ -147,7 +147,7 @@ public:
      * @param index Index to be filled with the eventSet ID currently running
      * @return true if an event set is running, false else
      */
-    inline bool isSomeEventSetRunning(const char* PEId, unsigned long *index) {
+    inline bool isSomeEventSetRunning(std::string* PEId, unsigned long *index) {
         for (unsigned long i = 0; i < PEEventSetLaunched_[PEId].size(); ++i) {
             if (PEEventSetLaunched_[PEId][i] > 0) {
                 *index = i;
@@ -157,7 +157,7 @@ public:
         return false;
     }
 
-    inline void stopEventSetRunning(unsigned long index, const char* PEId) {
+    inline void stopEventSetRunning(unsigned long index, std::string* PEId) {
         PEEventSetLaunched_[PEId][index] = 0;
         PAPI_stop(PEEventSets_[PEId][index], NULL);
     }
@@ -168,7 +168,7 @@ public:
      *
      * @return true if already exists, false else
      */
-    inline bool doesEventSetExists(int eventSetID, const char* PEId) {
+    inline bool doesEventSetExists(int eventSetID, std::string* PEId) {
         if (eventSetID > PEEventSetLaunched_[PEId].size() || eventSetID < 0) {
             return false;
         }
@@ -195,7 +195,7 @@ public:
      * @param eventSetID the user event set ID
      * @return the corresponding PAPI event set id
      */
-    inline int getPAPIEventSetID(int eventSetID, const char* PEId) {
+    inline int getPAPIEventSetID(int eventSetID, std::string* PEId) {
         return PEEventSets_[PEId][eventSetID];
     }
 
@@ -203,7 +203,7 @@ public:
      * @brief Set the corresponding PAPI event set as launched
      * @param eventSetID the user evetn set ID
      */
-    inline void setPAPIEventSetStart(int eventSetID, const char* PEId) {
+    inline void setPAPIEventSetStart(int eventSetID, std::string* PEId) {
         PEEventSetLaunched_[PEId][eventSetID] = 1;
     }
 
@@ -223,8 +223,8 @@ public:
     }
 private:
     pthread_mutex_t* configLock_;
-    std::map<const char*, std::vector<int> > PEEventSets_;
-    std::map<const char*, std::vector<int> > PEEventSetLaunched_;
+    std::map<std::string*, std::vector<int> > PEEventSets_;
+    std::map<std::string*, std::vector<int> > PEEventSetLaunched_;
     long long zeroTime_;
 };
 

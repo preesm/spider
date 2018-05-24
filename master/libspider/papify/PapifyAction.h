@@ -113,9 +113,9 @@ public:
     }
 
 private:
-    const char* PEId_;
-    const char* PEType_;
-    const char* actorName_;
+    std::string PEId_;
+    std::string PEType_;
+    std::string actorName_;
 
     // PapifyEventLib handler
     PapifyEventLib* papifyEventLib_;

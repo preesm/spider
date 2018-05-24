@@ -106,7 +106,7 @@ typedef struct{
 
 typedef struct {
 	const char* peType_;
-	const char* peID_;
+	long long   peID_;
 	const char* actorName_;
 	int   eventSize_;
 	std::vector<const char*> monitoredEvents_;

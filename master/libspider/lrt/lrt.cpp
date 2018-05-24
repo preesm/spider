@@ -239,27 +239,25 @@ int LRT::runOneJob(){
 			if(jobMsg->specialActor && jobMsg->fctIx < 6) {
 			    specialActors[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
 			} else if((int)jobMsg->fctIx < nFct_) {
-                // We can monitor the events
-                PapifyAction* papifyAction = nullptr;
                 if (usePapify_) {
-                    // Start monitoring the events
                     try {
+                        // We can monitor the events
+                        PapifyAction* papifyAction = nullptr;
                         papifyAction  = jobPapifyActions_.at(fcts_[jobMsg->fctIx]);
+                        // Start monitoring
                         papifyAction->startMonitor();
+                        // Do the monitored job
+                        fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
+                        // Stop monitoring
+                        papifyAction->stopMonitor();
+                        // Writes the monitoring results
+                        papifyAction->writeEvents();
                     } catch (std::out_of_range &e) {
                         // This job does not have papify events associated with  it
-                        papifyAction = nullptr;
+                        fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
                     }
-                }
-
-			    fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
-
-                // Stop monitoring the events
-                if (usePapify_ && papifyAction) {
-                    // Stop monitoring
-                    papifyAction->stopMonitor();
-                    // Writes the monitoring results
-                    papifyAction->writeEvents();
+                } else {
+                    fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
                 }
 			} else{
 				printf("Cannot find actor function\n");
@@ -406,6 +404,5 @@ void LRT::runInfinitly(){
 
 
 void LRT::addPapifyJobInfo(lrtFct const & fct, PapifyAction* papifyAction) {
-    papifyAction->addLRT(ix_);
     this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
 }

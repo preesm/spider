@@ -83,7 +83,7 @@ public:
                          std::vector<const char *>& moniteredEventSet,
                          int eventSetID,
                          const char* PEType,
-                         std::string* PEId,
+                         long long PEId,
                          std::vector<int> &PAPIEventCodeSet);
     /**
      * @brief Retrieve the PAPI code equivalent to the PAPI name code
@@ -100,7 +100,7 @@ public:
      */
     int registerNewThread(int numberOfEvents,
                           const char* PEType,
-                          std::string* PEId,
+                          long long PEId,
                           int eventSetID,
                           std::vector<int> &PAPIEventCodeSet);
 
@@ -109,12 +109,13 @@ public:
      *
      * @param PEId PE id
      */
-    inline void registerNewThreadSets(std::string* PEId) {
+    inline void registerProcessingElement(long long PEId) {
         try {
             PEEventSets_.at(PEId);
         } catch (std::out_of_range &e) {
             PEEventSets_.insert(std::make_pair(PEId, std::vector<int>(50, PAPI_NULL)));
-            PEEventSetLaunched_.insert(std::make_pair(PEId, std::vector<int>(50, 0)));
+            PEEventSetRunningID_.insert(std::make_pair(PEId, PAPI_NULL));
+            PEEventSetRunning_.insert(std::make_pair(PEId, false));
         }
     }
 
@@ -133,11 +134,8 @@ public:
      *
      * @return true if already launched, false else
      */
-    inline bool isEventSetLaunched(int eventSetID, std::string* PEId) {
-        if (eventSetID > PEEventSetLaunched_[PEId].size() || eventSetID < 0) {
-            return false;
-        }
-        return PEEventSetLaunched_[PEId][eventSetID] != 0;
+    inline bool isEventSetRunning(long long PEId, int PAPIEventSetID_) {
+        return isSomeEventSetRunning(PEId) && PEEventSetRunningID_[PEId] == PAPIEventSetID_;
     }
 
     /**
@@ -147,19 +145,17 @@ public:
      * @param index Index to be filled with the eventSet ID currently running
      * @return true if an event set is running, false else
      */
-    inline bool isSomeEventSetRunning(std::string* PEId, unsigned long *index) {
-        for (unsigned long i = 0; i < PEEventSetLaunched_[PEId].size(); ++i) {
-            if (PEEventSetLaunched_[PEId][i] > 0) {
-                *index = i;
-                return true;
-            }
-        }
-        return false;
+    inline bool isSomeEventSetRunning(long long PEId) {
+        return PEEventSetRunning_[PEId];
     }
 
-    inline void stopEventSetRunning(unsigned long index, std::string* PEId) {
-        PEEventSetLaunched_[PEId][index] = 0;
-        PAPI_stop(PEEventSets_[PEId][index], NULL);
+    inline void stopEventSetRunning(long long PEId) {
+        int retVal = PAPI_stop(PEEventSetRunningID_[PEId], NULL);
+        if (retVal != PAPI_OK) {
+            throwError(__FILE__, __LINE__, retVal);
+        }
+        PEEventSetRunning_[PEId] = false;
+        PEEventSetRunningID_[PEId] = PAPI_NULL;
     }
 
     /**
@@ -168,9 +164,9 @@ public:
      *
      * @return true if already exists, false else
      */
-    inline bool doesEventSetExists(int eventSetID, std::string* PEId) {
-        if (eventSetID > PEEventSetLaunched_[PEId].size() || eventSetID < 0) {
-            return false;
+    inline bool doesEventSetExists(long long PEId, int eventSetID) {
+        if (eventSetID < 0) {
+            throwError(__FILE__, __LINE__, "unvalid event set value");
         }
         return PEEventSets_[PEId][eventSetID] != PAPI_NULL;
     }
@@ -182,11 +178,13 @@ public:
      *
      * @param PAPIEventSetID The PAPI event set id
      */
-    inline void startEventSet(int PAPIEventSetID) {
+    inline void startEventSet(long long PEId, int PAPIEventSetID) {
         int retVal = PAPI_start(PAPIEventSetID);
         if (retVal != PAPI_OK) {
             throwError(__FILE__, __LINE__, retVal);
         }
+        PEEventSetRunning_[PEId] = true;
+        PEEventSetRunningID_[PEId] = PAPIEventSetID;
     }
 
     /**
@@ -195,16 +193,8 @@ public:
      * @param eventSetID the user event set ID
      * @return the corresponding PAPI event set id
      */
-    inline int getPAPIEventSetID(int eventSetID, std::string* PEId) {
+    inline int getPAPIEventSetID(long long PEId, int eventSetID) {
         return PEEventSets_[PEId][eventSetID];
-    }
-
-    /**
-     * @brief Set the corresponding PAPI event set as launched
-     * @param eventSetID the user evetn set ID
-     */
-    inline void setPAPIEventSetStart(int eventSetID, std::string* PEId) {
-        PEEventSetLaunched_[PEId][eventSetID] = 1;
     }
 
     /**
@@ -223,8 +213,9 @@ public:
     }
 private:
     pthread_mutex_t* configLock_;
-    std::map<std::string*, std::vector<int> > PEEventSets_;
-    std::map<std::string*, std::vector<int> > PEEventSetLaunched_;
+    std::map<long long, std::vector<int> > PEEventSets_;
+    std::map<long long, bool> PEEventSetRunning_;
+    std::map<long long, int> PEEventSetRunningID_;
     long long zeroTime_;
 };
 

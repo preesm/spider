@@ -89,14 +89,11 @@ endif()
 # ************ PAPI LIBRARY *****************
 # *******************************************
 
-find_library(papi_LIBRARY papi)
+find_package(PAPI)
 
-if (NOT papi_LIBRARY)
-	MESSAGE("papi lib NOT found")
-else()
-	MESSAGE("FOUND: papi lib")
+if (PAPI_FOUND)
     add_definitions(-DPAPI_AVAILABLE)
-    set(papi_sources
+    set(papify_sources
             libspider/papify/PapifyAction.cpp
             libspider/papify/PapifyAction.h
             libspider/papify/PapifyEventLib.cpp
@@ -110,11 +107,12 @@ endif()
 
 include_directories(
 	#${THREADS_PTHREADS_INCLUDE_DIR}
-	${PTHREADDIR}/include
-	./libspider/common
-	./libspider/lrt
-	./libspider/platforms/platform_pthread
-	./libspider/spider
+		${PAPI_INCLUDE_DIRS}
+        ${PTHREADDIR}/include
+        ./libspider/common
+        ./libspider/lrt
+        ./libspider/platforms/platform_pthread
+        ./libspider/spider
 )
 
 file(
@@ -164,8 +162,5 @@ file(
 )
 
 
-add_library(Spider SHARED ${source_files} ${header_files} ${papi_sources})
-target_link_libraries(Spider ${CMAKE_THREAD_LIBS_INIT})
-if (papi_LIBRARY)
-    target_link_libraries(Spider ${papi_LIBRARY})
-endif()
+add_library(Spider SHARED ${source_files} ${header_files} ${papify_sources})
+target_link_libraries(Spider ${CMAKE_THREAD_LIBS_INIT} ${PAPI_LIBRARIES})

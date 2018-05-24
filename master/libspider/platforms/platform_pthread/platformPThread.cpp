@@ -589,7 +589,7 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt){
         lrt_[index]->setUsePapify();
         std::map<lrtFct , PapifyAction*>::iterator it;
         for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
-            lrt_[index]->addPapifyJobInfo(it->first, new PapifyAction(*it->second, std::to_string(index).c_str()));
+            lrt_[index]->addPapifyJobInfo(it->first, new PapifyAction(*it->second, index));
         }
     }
 

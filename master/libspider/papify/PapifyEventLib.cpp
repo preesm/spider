@@ -62,6 +62,7 @@ static void PAPIInitMultiplex() {
         return;
     }
 
+
     std::string cmpInfoName (cmpinfo->name);
     std::string hwInfoModel (hw_info->model_string);
     if (cmpInfoName.find("perfctr.c") && (hwInfoModel == "POWER6")) {
@@ -122,7 +123,7 @@ int PapifyEventLib::PAPIEventSetInit(int numberOfEvents,
                                      std::vector<const char *> &moniteredEventSet,
                                      int eventSetID,
                                      const char* PEType,
-                                     std::string* PEId,
+                                     long long PEId,
                                      std::vector<int> &PAPIEventCodeSet) {
     // 1. Retrieve the PAPI event codes
     for (int i = 0; i < numberOfEvents; ++i) {
@@ -145,7 +146,7 @@ int PapifyEventLib::PAPIEventSetInit(int numberOfEvents,
 
 int PapifyEventLib::registerNewThread(int numberOfEvents,
                                       const char* PEType,
-                                      std::string* PEId,
+                                      long long PEId,
                                       int eventSetID,
                                       std::vector<int> &PAPIEventCodeSet) {
     // Register thread

@@ -58,7 +58,7 @@ public:
      * @param monitorTime       Precise if papify should also monitor time for this actor
      */
     PapifyAction(const char* PEType,
-                 const char* PEId,
+                 long long PEId,
                  const char* actorName,
                  int numberOfEvents,
                  std::vector<const char*>& moniteredEventSet,
@@ -71,7 +71,7 @@ public:
      * @param papifyAction  Original PapifyAction
      * @param PEId          The PE id
      */
-    PapifyAction(PapifyAction& papifyAction, const char* PEId);
+    PapifyAction(PapifyAction& papifyAction, long long PEId);
 
     ~PapifyAction();
 
@@ -107,15 +107,10 @@ public:
     inline PapifyEventLib* getPapifyEventLib() {
         return papifyEventLib_;
     }
-
-    inline void addLRT(int lrtID) {
-        lrtIDs_.push_back(lrtID);
-    }
-
 private:
-    std::string PEId_;
-    std::string PEType_;
-    std::string actorName_;
+    long long PEId_;
+    const char* PEType_;
+    const char* actorName_;
 
     // PapifyEventLib handler
     PapifyEventLib* papifyEventLib_;
@@ -136,9 +131,6 @@ private:
     bool monitorTiming_;
     long long timeStart;
     long long timeStop;
-
-    // Vector of LRTs using this specific configuration
-    std::vector<int> lrtIDs_;
 
     // The file for writing the results
     FILE* outputFile_;

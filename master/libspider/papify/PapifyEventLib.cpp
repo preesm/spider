@@ -41,6 +41,7 @@ PapifyEventLib::~PapifyEventLib() {
         pthread_mutex_destroy(configLock_);
         delete configLock_;
     }
+    PAPI_shutdown();
 }
 
 static void PAPIInitMultiplex() {
@@ -129,7 +130,6 @@ int PapifyEventLib::PAPIEventSetInit(int numberOfEvents,
     for (int i = 0; i < numberOfEvents; ++i) {
         const char* eventName = moniteredEventSet[i];
         int retVal = PAPI_event_name_to_code(eventName, &PAPIEventCodeSet[i]);
-        printf("%s - 0x%X\n", eventName, PAPIEventCodeSet[i]);
         if (retVal != PAPI_OK) {
             throwError(__FILE__, __LINE__, retVal);
         }

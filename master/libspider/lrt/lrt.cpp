@@ -257,6 +257,7 @@ int LRT::runOneJob(){
                         fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
                     }
                 } else {
+                    // We don't use papify
                     fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
                 }
 			} else{

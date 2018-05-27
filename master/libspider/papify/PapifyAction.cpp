@@ -169,16 +169,17 @@ void PapifyAction::stopMonitor() {
 void PapifyAction::writeEvents() {
     if (!outputFile_) {
         std::string fileName= std::string("papify-output/papify_output_") +
-                              actorName_ +
-                              std::string("_") +
+                              std::string("LRT_") +
                               std::to_string(PEId_) +
+                              std::string("__") +
+                              actorName_ +
                               std::string(".csv");
         outputFile_ = fopen(fileName.c_str(), "w");
         if (!outputFile_) {
             PapifyEventLib::throwError(__FILE__, __LINE__, "failed to open output file");
         }
-        fprintf(outputFile_, "Actor,Action,Tstart,Tend,");
-        char eventName[200];
+        fprintf(outputFile_, "PE,Actor,tinit,tend,");
+        char eventName[PAPI_MAX_STR_LEN];
         for (int i = 0; i < numberOfEvents_; ++i) {
             int retVal = PAPI_event_code_to_name(PAPIEventCodeSet_[i], eventName);
             if (retVal != PAPI_OK) {

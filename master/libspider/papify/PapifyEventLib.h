@@ -1,7 +1,7 @@
 /**
  * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2017) :
  *
- * Daniel Madronal <daniel.madronal@upm.es> (2017-2018)
+ * Daniel Madroñal <daniel.madronal@upm.es> (2017-2018) 
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
  *
  *

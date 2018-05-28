@@ -74,6 +74,11 @@ aclocal.m4
 compile
 config.h.in
 configure
+
+# Clion Project files #
+master/.idea/*
+master/cmake-build-release/*
+master/cmake-build-debug/*
 configure.scan
 depcomp
 install-sh

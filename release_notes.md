@@ -7,8 +7,6 @@ Spider Changelog
 ### New Feature
 
 ### Changes
-* Fix Papify codegen configuration;
-* Enable notifications to Slack vaader-ietr#preesm;
-* Update DFTools to 1.7.1+;
+* Changing const char* exception to runtime_errors
 
 ### Bug fix

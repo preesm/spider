@@ -144,7 +144,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts
 	sem_t* semFifo;
 	sem_t* semTrace;
 
-	if(platform_) throw "Try to create 2 platforms";
+	if(platform_) throw std::runtime_error("Try to create 2 platforms");
 	platform_ = this;
 
 	StackMonitor::initStack(PISDF_STACK, pisdfStack);
@@ -165,7 +165,7 @@ PlatformLinux::PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts
 
 	if(semFifo == 0 || semTrace == 0){
 		printf("Error creating semaphores\n");
-		throw "Error creating semaphores\n";
+		throw std::runtime_error("Error creating semaphores\n");
 	}
 
 	if (pipe2(pipeTrace, O_NONBLOCK) == -1) {

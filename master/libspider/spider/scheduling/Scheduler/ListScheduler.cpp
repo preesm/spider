@@ -185,7 +185,7 @@ int ListScheduler::computeSchedLevel(SRDAGVertex* vertex){
 					if(succ->isExecutableOn(j)){
 						Time execTime = succ->executionTimeOn(archi_->getPEType(j));
 						if(execTime == 0)
-							throw "ListScheduler: Null execution time may cause problems\n";
+							throw std::runtime_error("ListScheduler: Null execution time may cause problems\n");
 						minExecTime = std::min(minExecTime, execTime);
 					}
 				}

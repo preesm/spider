@@ -64,6 +64,8 @@ private:
 		SUB,
 		MUL,
 		DIV,
+		CEIL,
+		FLOOR,
 		POW
 	} OpType;
 

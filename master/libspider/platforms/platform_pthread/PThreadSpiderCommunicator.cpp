@@ -87,7 +87,7 @@ void PThreadSpiderCommunicator::setLrtCom(int lrtIx, std::queue<unsigned char>* 
 
 void* PThreadSpiderCommunicator::ctrl_start_send(int lrtIx, int size){
 	if(curMsgSizeSend_)
-		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
+		throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
 	curMsgSizeSend_ = size;
 	return msgBufferSend_;
 }
@@ -139,7 +139,7 @@ int PThreadSpiderCommunicator::ctrl_start_recv(int lrtIx, void** data){
 	}
 
 	if(size > (unsigned long)msgSizeMax_)
-		throw "Msg too big\n";
+		throw std::runtime_error("Msg too big\n");
 
 	curMsgSizeRecv_ = size;
 
@@ -162,7 +162,7 @@ void PThreadSpiderCommunicator::ctrl_end_recv(int lrtIx){
 
 void* PThreadSpiderCommunicator::trace_start_send(int size){
 	if(curMsgSizeSend_)
-		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
+		throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
 	curMsgSizeSend_ = size;
 	return msgBufferSend_;
 }
@@ -206,7 +206,7 @@ int PThreadSpiderCommunicator::trace_start_recv(void** data){
 	if(nb<0) return 0;
 
 	if(size > (unsigned long)msgSizeMax_)
-		throw "Msg too big\n";
+		throw std::runtime_error("Msg too big\n");
 
 	curMsgSizeRecv_ = size;
 

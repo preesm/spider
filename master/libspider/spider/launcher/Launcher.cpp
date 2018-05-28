@@ -215,7 +215,7 @@ void Launcher::resolveParams(Archi* archi, SRDAGGraph* topDag){
 		ParamValueMsg* msg;
 		if(Platform::get()->getSpiderCommunicator()->ctrl_start_recv(slave, (void**)(&msg))){
 			if(msg->msgIx != MSG_PARAM_VALUE)
-				throw "Unexpected Msg received\n";
+				throw std::runtime_error("Unexpected Msg received\n");
 			SRDAGVertex* cfgVertex = topDag->getVertexFromIx(msg->srdagIx);
 			Param* params = (Param*) (msg+1);
 			for(int j = 0; j < cfgVertex->getNOutParam(); j++){

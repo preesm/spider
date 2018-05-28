@@ -42,6 +42,7 @@
 #include <algorithm>
 #include <stdlib.h>
 #include <cmath>
+#include <stdexcept>
 
 DynStack::DynStack(const char* name): Stack(name){
 	curUsedSize_ = 0;
@@ -68,7 +69,7 @@ void *DynStack::alloc(int size){
 
 	void* address = malloc(size);
 	if(address == 0)
-		throw "MemAlloc failed";
+		throw std::runtime_error("MemAlloc failed");
 	int* sizeAddress = (int*)address;
 	void* dataAddress = (void*)(sizeAddress+1);
 	*sizeAddress = size;

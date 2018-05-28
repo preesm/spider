@@ -108,12 +108,12 @@ inline PiSDFParamType PiSDFParam::getType() const{
 }
 inline int PiSDFParam::getStaticValue() const{
 	if(type_ != PISDF_PARAM_STATIC)
-		throw "Error: Not Static param used as Static param\n";
+		throw std::runtime_error("Error: Not Static param used as Static param\n");
 	return value_;
 }
 inline int PiSDFParam::getParentId() const{
 	if(type_ != PISDF_PARAM_HERITED)
-		throw "Error: Not Herited param used as Herited param\n";
+		throw std::runtime_error("Error: Not Herited param used as Herited param\n");
 	return parentId_;
 }
 inline Expression* PiSDFParam::getExpression(){

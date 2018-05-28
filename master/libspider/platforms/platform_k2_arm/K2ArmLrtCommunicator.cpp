@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdexcept>
 #include <platform.h>
 #include <lrt.h>
 #include <spider.h>
@@ -80,7 +81,7 @@ K2ArmLrtCommunicator::~K2ArmLrtCommunicator(){
 void* K2ArmLrtCommunicator::ctrl_start_send(int size){
 	int dataOffset = 0;
 	if(cur_mono_pkt_out != 0)
-		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
+		throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
 
 	maxCtrlMsgSize = std::max(maxCtrlMsgSize,size);
 
@@ -104,7 +105,7 @@ void* K2ArmLrtCommunicator::ctrl_start_send(int size){
 
 	if(size > cur_mono_pkt_out_size - dataOffset){
 		printf("%d > %d\n", size, cur_mono_pkt_out_size - dataOffset);
-		throw "LrtCommunicator: ctrl_start_send: Try to send a message too big";
+		throw std::runtime_error("LrtCommunicator: ctrl_start_send: Try to send a message too big");
 	}
 
 	/* Add data to current descriptor */
@@ -121,7 +122,7 @@ void K2ArmLrtCommunicator::ctrl_end_send(int size){
 		cur_mono_pkt_out = 0;
 		cur_mono_pkt_out_size = 0;
 	}else
-		throw "LrtCommunicator: Try to send a free'd message";
+		throw std::runtime_error("LrtCommunicator: Try to send a free'd message");
 }
 
 int K2ArmLrtCommunicator::ctrl_start_recv(void** data){
@@ -143,7 +144,7 @@ int K2ArmLrtCommunicator::ctrl_start_recv(void** data){
 		/* Get info */
 		dataOffset = Cppi_getDataOffset(Cppi_DescType_MONOLITHIC, cur_mono_pkt_in);
 	}else
-		throw "LrtCommunicator: Try to receive a message when the previous one is not free'd";
+		throw std::runtime_error("LrtCommunicator: Try to receive a message when the previous one is not free'd");
 
 	void* data_pkt = (void*)(((int)cur_mono_pkt_in) + dataOffset);
 	int data_size = cur_mono_pkt_in_size - dataOffset;
@@ -161,14 +162,14 @@ void K2ArmLrtCommunicator::ctrl_end_recv(){
 		cur_mono_pkt_in = 0;
 		cur_mono_pkt_in_size = 0;
 	}else
-		throw "LrtCommunicator: Try to send a free'd message";
+		throw std::runtime_error("LrtCommunicator: Try to send a free'd message");
 }
 
 void* K2ArmLrtCommunicator::trace_start_send(int size){
 	int dataOffset = 0;
 
 	if(cur_mono_trace_out != 0)
-		throw "LrtCommunicator: Try to send a trace msg when previous one is not sent";
+		throw std::runtime_error("LrtCommunicator: Try to send a trace msg when previous one is not sent");
 
 	maxTraceMsgSize = std::max(maxTraceMsgSize,size);
 
@@ -191,7 +192,7 @@ void* K2ArmLrtCommunicator::trace_start_send(int size){
 	}
 
 	if(size > cur_mono_trace_out_size - dataOffset)
-		throw "LrtCommunicator: Try to send a trace message too big";
+		throw std::runtime_error("LrtCommunicator: Try to send a trace message too big");
 
 	/* Add data to current descriptor */
 	void* data_pkt = (void*)(((int)cur_mono_trace_out) + dataOffset);
@@ -207,7 +208,7 @@ void K2ArmLrtCommunicator::trace_end_send(int size){
 		cur_mono_trace_out = 0;
 		cur_mono_trace_out_size = 0;
 	}else
-		throw "LrtCommunicator: Try to send a free'd message";
+		throw std::runtime_error("LrtCommunicator: Try to send a free'd message");
 }
 
 long K2ArmLrtCommunicator::data_start_send(Fifo* f){
@@ -227,7 +228,7 @@ void K2ArmLrtCommunicator::data_end_send(Fifo* f){
 		int queueId = QUEUE_DATA_BASE+f->id;
 
 		if(queueId < QUEUE_DATA_BASE || queueId > QUEUE_LAST )
-			throw "Error: request queue out of bound\n";
+			throw std::runtime_error("Error: request queue out of bound\n");
 
 		for(int i=0; i<f->ntoken; i++){
 			do{
@@ -256,7 +257,7 @@ long K2ArmLrtCommunicator::data_recv(Fifo* f){
 		int queueId = QUEUE_DATA_BASE+f->id;
 
 		if(queueId < QUEUE_DATA_BASE || queueId > QUEUE_LAST )
-			throw "Error: request queue out of bound\n";
+			throw std::runtime_error("Error: request queue out of bound\n");
 
 		for(int i=0; i<f->ntoken; i++){
 			do{

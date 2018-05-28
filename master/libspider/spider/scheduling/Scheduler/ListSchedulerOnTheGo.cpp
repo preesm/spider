@@ -47,7 +47,7 @@ ListSchedulerOnTheGo::ListSchedulerOnTheGo(){
 
 	if(Spider::getGraphOptim()){
 		printf("Graph Optim not supported with this scheduler\n");
-		throw "Graph Optim not supported with this scheduler";
+		throw std::runtime_error("Graph Optim not supported with this scheduler");
 	}
 
 
@@ -197,7 +197,7 @@ int ListSchedulerOnTheGo::computeSchedLevel(SRDAGVertex* vertex){
 					if(succ->isExecutableOn(j)){
 						Time execTime = succ->executionTimeOn(archi_->getPEType(j));
 						if(execTime == 0)
-							throw "ListSchedulerOnTheGo: Null execution time may cause problems\n";
+							throw std::runtime_error("ListSchedulerOnTheGo: Null execution time may cause problems\n");
 						minExecTime = std::min(minExecTime, execTime);
 					}
 				}

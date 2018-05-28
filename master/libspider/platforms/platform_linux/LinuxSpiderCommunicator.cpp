@@ -41,6 +41,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdexcept>
 
 LinuxSpiderCommunicator::LinuxSpiderCommunicator(
 		int msgSizeMax,
@@ -77,7 +78,7 @@ void LinuxSpiderCommunicator::setLrtCom(int lrtIx, int fIn, int fOut){
 
 void* LinuxSpiderCommunicator::ctrl_start_send(int lrtIx, int size){
 	if(curMsgSizeSend_)
-		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
+		throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
 	curMsgSizeSend_ = size;
 	return msgBufferSend_;
 }
@@ -97,7 +98,7 @@ int LinuxSpiderCommunicator::ctrl_start_recv(int lrtIx, void** data){
 	if(nb<0) return 0;
 
 	if(size > (unsigned long)msgSizeMax_)
-		throw "Msg too big\n";
+		throw std::runtime_error("Msg too big\n");
 
 	curMsgSizeRecv_ = size;
 
@@ -117,7 +118,7 @@ void LinuxSpiderCommunicator::ctrl_end_recv(int lrtIx){
 
 void* LinuxSpiderCommunicator::trace_start_send(int size){
 	if(curMsgSizeSend_)
-		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
+		throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
 	curMsgSizeSend_ = size;
 	return msgBufferSend_;
 }
@@ -148,7 +149,7 @@ int LinuxSpiderCommunicator::trace_start_recv(void** data){
 	if(nb<0) return 0;
 
 	if(size > (unsigned long)msgSizeMax_)
-		throw "Msg too big\n";
+		throw std::runtime_error("Msg too big\n");
 
 	curMsgSizeRecv_ = size;
 

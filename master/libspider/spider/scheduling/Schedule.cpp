@@ -58,9 +58,9 @@ Schedule::~Schedule(){
 
 void Schedule::addJob(int pe, SRDAGVertex* job, Time start, Time end){
 	if(pe < 0 || pe >= nPE_)
-		throw "Schedule: Accessing bad PE\n";
+		throw std::runtime_error("Schedule: Accessing bad PE\n");
 	if(nJobPerPE_[pe] >= nJobMax_)
-		throw "Schedule: too much jobs\n";
+		throw std::runtime_error("Schedule: too much jobs\n");
 
 	schedules_[pe*nJobMax_+nJobPerPE_[pe]] = job;
 	job->setSlaveJobIx(nJobPerPE_[pe]);

@@ -178,7 +178,7 @@ PiSDFParam* PiSDFGraph::addStaticParam(const char* name, const char* expr){
 			NULL);
 
 	// TODO set value
-	throw "Unimplemented";
+	throw std::runtime_error("addStaticParam: Unimplemented");
 
 	params_.add(param);
 	return param;

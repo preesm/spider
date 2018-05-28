@@ -161,13 +161,13 @@ inline int SRDAGVertex::getInParam(int ix) const{
 	if(ix < nInParam_ && ix >= 0)
 		return inParams_[ix];
 	else
-		throw "SRDAGVertex: Bad ix in getInParam";
+		throw std::runtime_error("SRDAGVertex: Bad ix in getInParam");
 }
 inline int* SRDAGVertex::getOutParam(int ix){
 	if(ix < nOutParam_ && ix >= 0)
 		return outParams_[ix];
 	else
-		throw "SRDAGVertex: Bad ix in getOutParam";
+		throw std::runtime_error("SRDAGVertex: Bad ix in getOutParam");
 }
 inline const int* SRDAGVertex::getInParams() const{
 	return inParams_;
@@ -193,7 +193,7 @@ inline SRDAGEdge* SRDAGVertex::getInEdge(int ix){
 	if(ix < nMaxInEdge_ && ix >= 0)
 		return inEdges_[ix];
 	else
-		throw "SRDAGVertex: Bad ix in getInEdge";
+		throw std::runtime_error("SRDAGVertex: Bad ix in getInEdge");
 }
 inline SRDAGEdge* SRDAGVertex::getOutEdge(int ix){
 	if(ix < nMaxOutEdge_ && ix >= 0){
@@ -202,7 +202,7 @@ inline SRDAGEdge* SRDAGVertex::getOutEdge(int ix){
 	}
 	else{
 		printf("SRDAGVertex: Bad ix in getOutEdge %d/%d\n",ix,nMaxOutEdge_);
-		throw "SRDAGVertex: Bad ix in getOutEdge";
+		throw std::runtime_error("SRDAGVertex: Bad ix in getOutEdge");
 	}
 }
 inline SRDAGEdge* const * SRDAGVertex::getInEdges(){
@@ -216,9 +216,9 @@ inline SRDAGEdge* const * SRDAGVertex::getOutEdges(){
 /** Connect Fcts */
 inline void SRDAGVertex::connectInEdge(SRDAGEdge* edge, int ix){
 	if(ix >= nMaxInEdge_ && ix < 0)
-		throw "SRDAGVertex: Bad ix in connectInEdge";
+		throw std::runtime_error("SRDAGVertex: Bad ix in connectInEdge");
 	else if(inEdges_[ix] != 0)
-		throw "SRDAGVertex: Try to overwrite already connected input edge";
+		throw std::runtime_error("SRDAGVertex: Try to overwrite already connected input edge");
 	else{
 		inEdges_[ix] = edge;
 		nCurInEdge_++;
@@ -226,9 +226,9 @@ inline void SRDAGVertex::connectInEdge(SRDAGEdge* edge, int ix){
 }
 inline void SRDAGVertex::connectOutEdge(SRDAGEdge* edge, int ix){
 	if(ix >= nMaxOutEdge_ && ix < 0)
-		throw "SRDAGVertex: Bad ix in connectOutEdge";
+		throw std::runtime_error("SRDAGVertex: Bad ix in connectOutEdge");
 	else if(outEdges_[ix] != 0)
-		throw "SRDAGVertex: Try to overwrite already connected output edge";
+		throw std::runtime_error("SRDAGVertex: Try to overwrite already connected output edge");
 	else{
 		outEdges_[ix] = edge;
 		nCurOutEdge_++;
@@ -236,9 +236,9 @@ inline void SRDAGVertex::connectOutEdge(SRDAGEdge* edge, int ix){
 }
 inline void SRDAGVertex::disconnectInEdge(int ix){
 	if(ix >= nMaxInEdge_ && ix < 0)
-		throw "SRDAGVertex: Bad ix in disconnectInEdge";
+		throw std::runtime_error("SRDAGVertex: Bad ix in disconnectInEdge");
 	else if(inEdges_[ix] == 0)
-		throw "SRDAGVertex: Try to disconnect empty input edge";
+		throw std::runtime_error("SRDAGVertex: Try to disconnect empty input edge");
 	else{
 		inEdges_[ix] = 0;
 		nCurInEdge_--;
@@ -246,9 +246,9 @@ inline void SRDAGVertex::disconnectInEdge(int ix){
 }
 inline void SRDAGVertex::disconnectOutEdge(int ix){
 	if(ix >= nMaxOutEdge_ && ix < 0)
-		throw "SRDAGVertex: Bad ix in disconnectOutEdge";
+		throw std::runtime_error("SRDAGVertex: Bad ix in disconnectOutEdge");
 	else if(outEdges_[ix] == 0)
-		throw "SRDAGVertex: Try to disconnect empty output edge";
+		throw std::runtime_error("SRDAGVertex: Try to disconnect empty output edge");
 	else{
 		outEdges_[ix] = 0;
 		nCurOutEdge_--;
@@ -258,17 +258,17 @@ inline void SRDAGVertex::disconnectOutEdge(int ix){
 /** Add Param Fcts */
 inline void SRDAGVertex::addInParam(int ix, int param){
 	if(ix >= nInParam_ || ix < 0)
-		throw "SRDAGVertex: Bad ix in addInParam";
+		throw std::runtime_error("SRDAGVertex: Bad ix in addInParam");
 	else if(inParams_[ix] != 0)
-		throw "SRDAGVertex: Try to erase already connected input param";
+		throw std::runtime_error("SRDAGVertex: Try to erase already connected input param");
 	else
 		inParams_[ix] = param;
 }
 inline void SRDAGVertex::addOutParam(int ix, int* param){
 	if(ix >= nOutParam_ && ix < 0)
-		throw "SRDAGVertex: Bad ix in addOutParam";
+		throw std::runtime_error("SRDAGVertex: Bad ix in addOutParam");
 	else if(outParams_[ix] != 0)
-		throw "SRDAGVertex: Try to erase already connected output param";
+		throw std::runtime_error("SRDAGVertex: Try to erase already connected output param");
 	else
 		outParams_[ix] = param;
 }
@@ -301,7 +301,7 @@ inline int SRDAGVertex::getFctId() const{
 		return END_F_IX;
 		break;
 	default:
-		throw "Unhandled case in SRDAGVertex::getFctId\n";
+		throw std::runtime_error("Unhandled case in SRDAGVertex::getFctId\n");
 	}
 }
 inline SRDAGType SRDAGVertex::getType() const{
@@ -406,7 +406,7 @@ inline bool SRDAGVertex::isExecutableOn(int pe) const{
 	case SRDAG_END:
 		return true;
 	default:
-		throw "Unhandled case in SRDAGVertex::isExecutableOn\n";
+		throw std::runtime_error("Unhandled case in SRDAGVertex::isExecutableOn\n");
 	}
 }
 inline Time SRDAGVertex::executionTimeOn(int peType) const{
@@ -421,7 +421,7 @@ inline Time SRDAGVertex::executionTimeOn(int peType) const{
 	case SRDAG_END:
 		return 1;
 	default:
-		throw "Unhandled case in SRDAGVertex::executionTimeOn\n";
+		throw std::runtime_error("Unhandled case in SRDAGVertex::executionTimeOn\n");
 	}
 }
 inline int SRDAGVertex::getSchedLvl() const {

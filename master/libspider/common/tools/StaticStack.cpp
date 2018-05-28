@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <algorithm>
 #include <math.h>
+#include <stdexcept>
 
 StaticStack::StaticStack(const char* name, void* ptr, int size):
 		Stack(name) {
@@ -67,8 +68,7 @@ void *StaticStack::alloc(int size){
 	if(used_+size > size_)
 	{
 		printf("Stack %s is full at %d, want at least %d\n",getName(),size_,used_+size);
-		while(1);
-		throw "Insufficient memory size of the Stack\n";
+		throw std::runtime_error("Insufficient memory size of the Stack\n");
 	}
 	res = curPtr_;
 	curPtr_ += size;

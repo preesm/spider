@@ -138,7 +138,7 @@ int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices){
 		}
 		if (val != 0) {
 			if(ratioMatrix[i*nbVertices+i] == 0){
-				throw "elt diagonal zero\n";
+				throw std::runtime_error("elt diagonal zero\n");
 			}
 			ratioResult[i] = val.getAbs() / ratioMatrix[i*nbVertices+i];
 		}

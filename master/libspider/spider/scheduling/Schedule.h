@@ -76,25 +76,25 @@ inline void Schedule::setAllMinReadyTime(Time time){
 }
 inline void Schedule::setReadyTime(int pe, Time time){
 	if(pe < 0 || pe >= nPE_)
-		throw "Schedule: Accessing bad PE\n";
+		throw std::runtime_error("Schedule: Accessing bad PE\n");
 	readyTime_[pe] = time;
 }
 inline Time Schedule::getReadyTime(int pe) const{
 	if(pe < 0 || pe >= nPE_)
-		throw "Schedule: Accessing bad PE\n";
+		throw std::runtime_error("Schedule: Accessing bad PE\n");
 	return readyTime_[pe];
 }
 
 inline int Schedule::getNJobs(int pe) const{
 	if(pe < 0 || pe >= nPE_)
-		throw "Schedule: Accessing bad PE\n";
+		throw std::runtime_error("Schedule: Accessing bad PE\n");
 	return nJobPerPE_[pe];
 }
 inline SRDAGVertex* Schedule::getJob(int pe, int ix) const{
 	if(pe < 0 || pe >= nPE_)
-		throw "Schedule: Accessing bad PE\n";
+		throw std::runtime_error("Schedule: Accessing bad PE\n");
 	if(ix < 0 || ix >= nJobPerPE_[pe])
-		throw "Schedule: Accessing bad Job\n";
+		throw std::runtime_error("Schedule: Accessing bad Job\n");
 
 	return schedules_[pe*nJobMax_+ix];
 }

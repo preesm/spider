@@ -40,6 +40,7 @@
 
 #include <stdio.h>
 #include <cstdlib>
+#include <stdexcept>
 
 #include "Stack.h"
 
@@ -87,7 +88,7 @@ inline void Pile<TYPE>::push(TYPE value){
 template<typename TYPE>
 inline TYPE Pile<TYPE>::pop(){
 	if(first_ == 0)
-		throw "Try to pop an empty Pile\n";
+		throw std::runtime_error("Try to pop an empty Pile\n");
 
 	TYPE val = first_->cur;
 	first_ = first_->next;

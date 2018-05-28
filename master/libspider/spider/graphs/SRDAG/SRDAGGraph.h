@@ -102,7 +102,7 @@ inline SRDAGVertex* SRDAGGraph::getVertexFromIx(int ix){
 		if(vertices_[i]->getId() == ix)
 			return vertices_[i];
 	}
-	throw "Vertex not found\n";
+	throw std::runtime_error("Vertex not found\n");
 }
 
 /** Size getters */

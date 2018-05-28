@@ -82,7 +82,7 @@ LinuxLrtCommunicator::~LinuxLrtCommunicator(){
 
 void* LinuxLrtCommunicator::ctrl_start_send(int size){
 	if(curMsgSizeSend_)
-		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
+		throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
 	curMsgSizeSend_ = size;
 	return msgBufferSend_;
 }
@@ -102,7 +102,7 @@ int LinuxLrtCommunicator::ctrl_start_recv(void** data){
 	if(nb<0) return 0;
 
 	if(size > (unsigned long)msgSizeMax_)
-		throw "Msg too big\n";
+		throw std::runtime_error("Msg too big\n");
 
 	curMsgSizeRecv_ = size;
 
@@ -122,7 +122,7 @@ void LinuxLrtCommunicator::ctrl_end_recv(){
 
 void* LinuxLrtCommunicator::trace_start_send(int size){
 	if(curMsgSizeSend_)
-		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
+		throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
 	curMsgSizeSend_ = size;
 	return msgBufferSend_;
 }

@@ -42,6 +42,7 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <algorithm>
+#include <stdexcept>
 
 extern "C"{
 #include <ti/drv/qmss/qmss_drv.h>
@@ -84,7 +85,7 @@ void* K2ArmSpiderCommunicator::ctrl_start_send(int lrtIx, int size){
 	maxCtrlMsgSize = std::max(maxCtrlMsgSize,size);
 
 	if(cur_mono_pkt_out[lrtIx] != 0)
-		throw "SpiderCommunicator: Ctrl: Try to send a msg when previous one is not sent";
+		throw std::runtime_error("SpiderCommunicator: Ctrl: Try to send a msg when previous one is not sent");
 
 	while(cur_mono_pkt_out[lrtIx] == 0){
 		cur_mono_pkt_out[lrtIx] = (Cppi_Desc*)Qmss_queuePop(QUEUE_FREE_CTRL);
@@ -106,7 +107,7 @@ void* K2ArmSpiderCommunicator::ctrl_start_send(int lrtIx, int size){
 
 	if(size > cur_mono_pkt_out_size[lrtIx] - dataOffset){
 		printf("%d > %d\n", size, cur_mono_pkt_out_size[lrtIx] - dataOffset);
-		throw "SpiderCommunicator: ctrl_start_send: Try to send a message too big";
+		throw std::runtime_error("SpiderCommunicator: ctrl_start_send: Try to send a message too big");
 	}
 
 	/* Add data to current descriptor */
@@ -123,7 +124,7 @@ void K2ArmSpiderCommunicator::ctrl_end_send(int lrtIx, int size){
 		cur_mono_pkt_out[lrtIx] = 0;
 		cur_mono_pkt_out_size[lrtIx] = 0;
 	}else
-		throw "SpiderCommunicator: Try to send a free'd message";
+		throw std::runtime_error("SpiderCommunicator: Try to send a free'd message");
 }
 
 int K2ArmSpiderCommunicator::ctrl_start_recv(int lrtIx, void** data){
@@ -145,7 +146,7 @@ int K2ArmSpiderCommunicator::ctrl_start_recv(int lrtIx, void** data){
 		/* Get info */
 		dataOffset = Cppi_getDataOffset(Cppi_DescType_MONOLITHIC, cur_mono_pkt_in[lrtIx]);
 	}else
-		throw "SpiderCommunicator: Ctrl: Try to receive a message when the previous one is not free'd";
+		throw std::runtime_error("SpiderCommunicator: Ctrl: Try to receive a message when the previous one is not free'd");
 
 	void* data_pkt = (void*)(((int)cur_mono_pkt_in[lrtIx]) + dataOffset);
 	int data_size = cur_mono_pkt_in_size[lrtIx] - dataOffset;
@@ -163,14 +164,14 @@ void K2ArmSpiderCommunicator::ctrl_end_recv(int lrtIx){
 		cur_mono_pkt_in[lrtIx] = 0;
 		cur_mono_pkt_in_size[lrtIx] = 0;
 	}else
-		throw "SpiderCommunicator: Try to send a free'd message";
+		throw std::runtime_error("SpiderCommunicator: Try to send a free'd message");
 }
 
 void* K2ArmSpiderCommunicator::trace_start_send(int size){
 	int dataOffset = 0;
 
 	if(cur_mono_trace_out != 0)
-		throw "SpiderCommunicator: Try to send a trace msg when previous one is not sent";
+		throw std::runtime_error("SpiderCommunicator: Try to send a trace msg when previous one is not sent");
 
 	while(cur_mono_trace_out == 0){
 		cur_mono_trace_out = (Cppi_Desc*)Qmss_queuePop(QUEUE_FREE_TRACE);
@@ -191,7 +192,7 @@ void* K2ArmSpiderCommunicator::trace_start_send(int size){
 	}
 
 	if(size > cur_mono_trace_out_size - dataOffset)
-		throw "SpiderCommunicator: Try to send a trace message too big";
+		throw std::runtime_error("SpiderCommunicator: Try to send a trace message too big");
 
 	/* Add data to current descriptor */
 	void* data_pkt = (void*)(((int)cur_mono_trace_out) + dataOffset);
@@ -207,7 +208,7 @@ void K2ArmSpiderCommunicator::trace_end_send(int size){
 		cur_mono_trace_out = 0;
 		cur_mono_trace_out_size = 0;
 	}else
-		throw "SpiderCommunicator: Try to send a free'd message";
+		throw std::runtime_error("SpiderCommunicator: Try to send a free'd message");
 }
 
 int K2ArmSpiderCommunicator::trace_start_recv(void** data){
@@ -229,7 +230,7 @@ int K2ArmSpiderCommunicator::trace_start_recv(void** data){
 		/* Get info */
 		dataOffset = Cppi_getDataOffset(Cppi_DescType_MONOLITHIC, cur_mono_trace_in);
 	}else
-		throw "SpiderCommunicator: Ctrl: Try to receive a message when the previous one is not free'd";
+		throw std::runtime_error("SpiderCommunicator: Ctrl: Try to receive a message when the previous one is not free'd");
 
 	void* data_pkt = (void*)(((int)cur_mono_trace_in) + dataOffset);
 	int data_size = cur_mono_trace_in_size - dataOffset;
@@ -247,5 +248,5 @@ void K2ArmSpiderCommunicator::trace_end_recv(){
 		cur_mono_trace_in = 0;
 		cur_mono_trace_in_size = 0;
 	}else
-		throw "SpiderCommunicator: Try to send a free'd message";
+		throw std::runtime_error("SpiderCommunicator: Try to send a free'd message");
 }

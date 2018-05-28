@@ -67,7 +67,7 @@ void DummyMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
 					int size = edge->getRate();
 					size = getAlignSize(size);
 					if(currentMem_+size > memStart_ + memSize_)
-						throw "Not Enough Shared Memory\n";
+						throw std::runtime_error("Not Enough Shared Memory\n");
 					edge->setAlloc(currentMem_);
 					edge->setAllocIx(nbFifos_++);
 					currentMem_ += size;

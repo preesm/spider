@@ -38,6 +38,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdexcept>
 
 void saFork(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	int nbFifoIn, nbFifoOut, i, index;
@@ -51,21 +52,23 @@ void saFork(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 	nbFifoOut = inParams[1];
 
 	index = 0;
-	if(nbFifoIn == 1){
+	if(nbFifoIn == 1) {
 		/* Fork */
-		for(i=0; i<nbFifoOut; i++){
+		for(i=0; i<nbFifoOut; i++) {
 			int nbTknOut = inParams[i + 3];
 
-			if(outputFIFOs[i] != ((char*)inputFIFOs[0])+index)
+			if(outputFIFOs[i] != ((char*)inputFIFOs[0])+index) {
 				memcpy(outputFIFOs[i], ((char*)inputFIFOs[0])+index, nbTknOut);
+			}
 
 			index += nbTknOut;
 		}
-	}else{
-		throw "Error in Fork\n";
+	}else {
+		throw std::runtime_error("Error in Fork\n");
 	}
 
-	if(index != nbTknIn)
-		printf("Error: Remaining tokens in Fork\n");
+	if(index != nbTknIn) {
+		throw std::runtime_error("Fork error: Remaining tokens.\n");
+	}
 }
 

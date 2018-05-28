@@ -79,7 +79,7 @@ PlatformK2Dsp::PlatformK2Dsp(int shMemSize, SharedMemMode useMsmc, Stack *stack,
 	CACHE_setL2Size (CACHE_0KCACHE);
 
 	if(platform_)
-		throw "Try to create 2 platforms";
+		throw std::runtime_error("Try to create 2 platforms");
 
 	platform_ = this;
 	stack_ = stack;

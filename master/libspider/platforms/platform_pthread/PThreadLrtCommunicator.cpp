@@ -88,7 +88,7 @@ PThreadLrtCommunicator::~PThreadLrtCommunicator(){
 
 void* PThreadLrtCommunicator::ctrl_start_send(int size){
 	if(curMsgSizeSend_)
-		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
+		throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
 	curMsgSizeSend_ = size;
 	return msgBufferSend_;
 }
@@ -133,7 +133,7 @@ int PThreadLrtCommunicator::ctrl_start_recv(void** data){
 	}
 
 	if(size > (unsigned long)msgSizeMax_)
-		throw "Msg too big\n";
+		throw std::runtime_error("Msg too big\n");
 
 	curMsgSizeRecv_ = size;
 
@@ -156,7 +156,7 @@ void PThreadLrtCommunicator::ctrl_end_recv(){
 
 void* PThreadLrtCommunicator::trace_start_send(int size){
 	if(curMsgSizeSend_)
-		throw "LrtCommunicator: Try to send a msg when previous one is not sent";
+		throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
 	curMsgSizeSend_ = size;
 	return msgBufferSend_;
 }

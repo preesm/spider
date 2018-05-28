@@ -151,7 +151,7 @@ inline void PlatformPThread::setStack(SpiderStack id, Stack* stack){
 		stackLrt[getThreadNumber()] = stack;
 		break;
 	default :
-		throw "Error in stack index\n";
+		throw std::runtime_error("Error in stack index\n");
 	}
 }
 
@@ -173,7 +173,7 @@ inline Stack* PlatformPThread::getStack(SpiderStack id){
 		return stackLrt[getThreadNumber()];
 		break;
 	default :
-		throw "Error in stack index\n";
+		throw std::runtime_error("Error in stack index\n");
 	}
 }
 
@@ -195,7 +195,7 @@ inline Stack* PlatformPThread::getStack(int id){
 		return stackLrt[getThreadNumber()];
 		break;
 	default :
-		throw "Error in stack index\n";
+		throw std::runtime_error("Error in stack index\n");
 	}
 }
 
@@ -204,7 +204,7 @@ inline int PlatformPThread::getThreadNumber(){
 		if (pthread_equal(thread_ID_tab_[i], pthread_self()) != 0)
 			return i;
 	}
-	throw "Error undefined ID\n";
+	throw std::runtime_error("Error undefined ID\n");
 }
 
 inline LRT* PlatformPThread::getLrt(){
@@ -219,7 +219,7 @@ inline SpiderCommunicator* PlatformPThread::getSpiderCommunicator(){
 	if(spiderCom_)
 		return spiderCom_;
 	else
-		throw "Error undefined spider communicator\n";
+		throw std::runtime_error("Error undefined spider communicator\n");
 }
 
 

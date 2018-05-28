@@ -364,10 +364,10 @@ static inline void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Arch
 
 void Spider::printGantt(const char* ganttPath, const char* latexPath, ExecutionStat* stat){
 	FILE *ganttFile = Platform::get()->fopen(ganttPath);
-	if(ganttFile == nullptr) throw "Error opening ganttFile";
+	if(ganttFile == nullptr) throw std::runtime_error("Error opening ganttFile");
 
 	FILE *latexFile = Platform::get()->fopen(latexPath);
-	if(latexFile == nullptr) throw "Error opening latexFile";
+	if(latexFile == nullptr) throw std::runtime_error("Error opening latexFile");
 
 	float latexScaling = 1000;
 
@@ -495,7 +495,7 @@ void Spider::printGantt(const char* ganttPath, const char* latexPath, ExecutionS
 						stat->graphTime += traceMsg->end - traceMsg->start;
 						break;
 					case TRACE_SPIDER_ALLOC:
-						throw "Unhandle trace";
+						throw std::runtime_error("Unhandle trace");
 					case TRACE_SPIDER_SCHED:
 						stat->mappingTime += traceMsg->end - traceMsg->start;
 						break;
@@ -512,7 +512,7 @@ void Spider::printGantt(const char* ganttPath, const char* latexPath, ExecutionS
 					break;}
 				default:
 					printf("msgIx %lu\n",traceMsg->msgIx);
-					throw "Unhandled trace msg";
+					throw std::runtime_error("Unhandled trace msg");
 			}
 			Platform::get()->getSpiderCommunicator()->trace_end_recv();
 			n--;

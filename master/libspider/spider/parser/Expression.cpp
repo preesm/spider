@@ -41,6 +41,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include "Expression.h"
 
 #define MAX_NVAR_ELEMENTS 100
 #define REVERSE_POLISH_STACK_MAX_ELEMENTS 100
@@ -100,7 +101,7 @@ Expression::Expression(
 				output[ixOutput++] = stack[ixStack];
 			}
 			if(ixStack == 0){
-				throw "Parsing Error missing left parenthesis\n";
+				throw std::runtime_error("Parsing error: missing left parenthesis\n");
 			}
 			ixStack--;
 			break;
@@ -157,6 +158,18 @@ int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job, b
 					*(stackPtr-1) =  pow((double)*(stackPtr-1), *stackPtr);
 				}
 				break;
+            case FLOOR:
+                if(stackPtr-stack >= 2){
+                    stackPtr--;
+                    *(stackPtr-1) =  floor(*stackPtr);
+                }
+                break;
+            case CEIL:
+                if(stackPtr-stack >= 2){
+                    stackPtr--;
+                    *(stackPtr-1) =  ceil(*stackPtr);
+                }
+                break;
 			}
 			break;
 		case VALUE:
@@ -168,7 +181,7 @@ int Expression::evaluate(const PiSDFParam* const * paramList, transfoJob* job, b
 			stackPtr++;
 			break;
 		default:
-			throw "Error: Parenthesis in evaluated var\n";
+			throw std::runtime_error("Error: Parenthesis in evaluated var\n");
 		}
 		inputPtr++;
 	}
@@ -215,6 +228,18 @@ int Expression::evaluate(const int* vertexParamValues, int nParam) const{
 					*(stackPtr - 1) = pow((double)*(stackPtr - 1), *stackPtr);
 				}
 				break;
+            case FLOOR:
+                if(stackPtr-stack >= 2){
+                    stackPtr--;
+                    *(stackPtr-1) =  floor(*stackPtr);
+                }
+                break;
+            case CEIL:
+                if(stackPtr-stack >= 2){
+                    stackPtr--;
+                    *(stackPtr-1) =  ceil(*stackPtr);
+                }
+                break;
 			}
 			break;
 		case VALUE:
@@ -228,7 +253,7 @@ int Expression::evaluate(const int* vertexParamValues, int nParam) const{
 			stackPtr++;
 			break;
 		default:
-			throw "Error: Parenthesis in evaluated var\n";
+			throw std::runtime_error("Error: Parenthesis in evaluated var\n");
 		}
 		inputPtr++;
 	}
@@ -264,7 +289,7 @@ void Expression::toString(
 			sprintf(outputStack[outputStackSize++], "%s", params[stack_[i].paramIx]->getName());
 			break;
 		default:
-			throw "Error: Parenthesis in evaluated var\n";
+			throw std::runtime_error("Error: Parenthesis in evaluated var\n");
 		}
 	}
 	strcpy(out,outputStack[0]);
@@ -374,7 +399,7 @@ bool Expression::getNextToken(
 	}
 
 	// check for param
-	if (isalnum(**ptr) || (**ptr == '_')){
+	if (isalnum(**ptr) || (**ptr == '_')) {
 		const char *name = *ptr;
 		size_t nb=0;
 		while (isalnum(**ptr) || (**ptr == '_')){
@@ -383,20 +408,29 @@ bool Expression::getNextToken(
 		}
 
 		if(token != 0){
-			token->type = PARAMETER;
-			for(int i=0; i<nParam; i++){
-				if(nb == strlen(params[i]->getName())
+		    // Check if it is an OPERATOR
+            const char* operatorStrings[2] = {"floor", "ceil"};
+            OpType operatorTypes[2] = {FLOOR, CEIL};
+            for (int i = 0; i < 2; ++i) {
+                if (nb == strlen(operatorStrings[i]) &&
+                        strncasecmp(operatorStrings[i], name, nb) == 0) {
+                    token->opType = operatorTypes[i];
+                    return true;
+                }
+            }
+            // Check if it is a PARAMETER
+            for(int i=0; i<nParam; i++){
+                token->type = PARAMETER;
+                if(nb == strlen(params[i]->getName())
 						&& strncmp(params[i]->getName(), name, nb) == 0){
 					token->paramIx = i/*params[i]->getTypeIx()*/;
 					return true;
 				}
 			}
-			throw "Error parsing: param not found\n";
-			return false;
+			std::string error = std::string("Failed to parse expression: ") + std::string(name);
+			throw std::runtime_error(error.c_str());
 		}else return true;
 	}
-
-	throw "Error during parsing \n";
-	return false;
+    throw std::runtime_error("Failed parsing.\n");
 }
 

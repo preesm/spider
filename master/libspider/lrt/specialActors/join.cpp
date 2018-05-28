@@ -38,6 +38,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdexcept>
 
 void saJoin(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
 	int nbFifoIn, nbFifoOut, i, index;
@@ -51,11 +52,11 @@ void saJoin(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 	nbFifoOut = inParams[1];
 
 	index = 0;
-	if(nbFifoOut == 1){
+	if(nbFifoOut == 1) {
 		/* Join */
 		nbTknOut = inParams[2];
 
-		for(i=0; i<nbFifoIn; i++){
+		for(i=0; i<nbFifoIn; i++) {
 			nbTknIn = inParams[i + 3];
 
 			if(((char*)outputFIFOs[0])+index != inputFIFOs[i])
@@ -63,11 +64,12 @@ void saJoin(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param out
 			index += nbTknIn;
 		}
 
-	}else{
-		throw "Error in Join\n";
+	} else {
+		throw std::runtime_error("Error in Join\n");
 	}
 
-	if(index != nbTknOut)
-		printf("Error: Remaining tokens in Join\n");
+	if(index != nbTknOut) {
+		throw std::runtime_error("Join error: Remaining tokens.\n");
+	}
 }
 

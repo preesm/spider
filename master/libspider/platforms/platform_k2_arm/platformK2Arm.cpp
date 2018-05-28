@@ -92,7 +92,7 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMe
 	int cpIds[nArm];
 
 	if(platform_)
-		throw "Try to create 2 platforms";
+		throw std::runtime_error("Try to create 2 platforms");
 
 	platform_ = this;
 	stack_ = stack;
@@ -107,19 +107,19 @@ PlatformK2Arm::PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMe
 	if(useMsmc){
 		printf("Base Data @%#x\n", (int)shMem-msmc_mem_base+CSL_MSMC_SRAM_REGS);
 		if(shMemSize > MSMC_SIZE-(data_mem_base-msmc_mem_base))
-			throw "not enought shared memory";
+			throw std::runtime_error("not enought shared memory");
 		memset(shMem,'u', MSMC_SIZE-(data_mem_base-msmc_mem_base));
 		msync(shMem, MSMC_SIZE-(data_mem_base-msmc_mem_base), MS_SYNC);
 	}else{
 		printf("Base Data @%#x\n", (int)shMem-ddr_mem_base+DDR_BASE);
 		if(shMemSize > DDR_SIZE)
-			throw "not enought shared memory";
+			throw std::runtime_error("not enought shared memory");
 		memset(shMem,'u', shMemSize);
 		msync(shMem, shMemSize, MS_SYNC);
 	}
 
 //	if(data_mem_size < shMemSize)
-//		throw "Request too many shared memory";
+//		throw std::runtime_error("Request too many shared memory");
 
 	for(int i=1; i<nArm; i++){
         pid_t cpid = fork();

@@ -38,6 +38,7 @@
 #define LIST_H
 
 #include <monitor/StackMonitor.h>
+#include <stdexcept>
 
 template <class T> class List {
 public:
@@ -81,7 +82,7 @@ inline List<T>::~List(){
 template <class T>
 inline T& List<T>::operator [](int ix){
 	if(ix<0 || ix>=nb)
-		throw "List: Accesing unitialized element\n";
+		throw std::runtime_error("List: Accesing unitialized element\n");
 	return array[ix];
 }
 
@@ -93,7 +94,7 @@ inline int List<T>::getNb(){
 template <class T>
 inline void List<T>::add(T e){
 	if(nb>=nbMax)
-		throw "List: Full !\n";
+		throw std::runtime_error("List: Full !\n");
 	array[nb]=e;
 	nb++;
 }

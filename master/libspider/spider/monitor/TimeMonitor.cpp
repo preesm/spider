@@ -65,13 +65,13 @@ const char* TimeMonitor::getTaskName(TraceSpiderType type){
 
 void TimeMonitor::startMonitoring(){
 	if(start != 0)
-		throw "Try to monitor 2 different things in the same time";
+		throw std::runtime_error("Try to monitor 2 different things in the same time");
 	start = Platform::get()->getTime();
 }
 
 void TimeMonitor::endMonitoring(TraceSpiderType type){
 	if(start == 0)
-		throw "End monitor with no starting point";
+		throw std::runtime_error("End monitor with no starting point");
 	if(Spider::getTraceEnabled() == true) Launcher::get()->sendTraceSpider(type, start, Platform::get()->getTime());
 	start = 0;
 }

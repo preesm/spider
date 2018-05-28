@@ -39,6 +39,7 @@
 
 #include <monitor/StackMonitor.h>
 #include <tools/SetElement.h>
+#include <stdexcept>
 
 template<typename TYPE> class Set {
 public:
@@ -86,7 +87,7 @@ inline int Set<TYPE>::getN() const{
 template <typename TYPE>
 inline void Set<TYPE>::add(TYPE value){
 	if(nb >= nbMax)
-		throw "Not enough space in Set\n";
+		throw std::runtime_error("Not enough space in Set\n");
 
 	((SetElement*)value)->setSetIx(nb);
 	array[nb++] = value;
@@ -102,7 +103,7 @@ inline void Set<TYPE>::del(TYPE value){
 template <typename TYPE>
 inline TYPE Set<TYPE>::operator[] (int ix){
 	if(ix < 0 || ix >= nb)
-		throw "Set: operator[] get bad ix";
+		throw std::runtime_error("Set: operator[] get bad ix");
 	else
 		return array[ix];
 }

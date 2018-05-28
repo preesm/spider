@@ -43,6 +43,7 @@
 
 #include "Stack.h"
 #include <monitor/StackMonitor.h>
+#include <stdexcept>
 
 template<typename TYPE> class Queue{
 public:
@@ -97,7 +98,7 @@ inline void Queue<TYPE>::push(TYPE value){
 template<typename TYPE>
 inline TYPE Queue<TYPE>::pop(){
 	if(first_ == 0)
-		throw "Try to pop an empty Queue\n";
+		throw std::runtime_error("Try to pop an empty Queue\n");
 
 	struct QueueItem* old = first_;
 	TYPE val = first_->cur;

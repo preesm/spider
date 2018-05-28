@@ -108,7 +108,7 @@ static void setAffinity(int cpuId){
 PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
 	StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack){
 
-	if (platform_) throw "Try to create 2 platforms";
+	if (platform_) throw std::runtime_error("Try to create 2 platforms");
 	platform_ = this;
 
 	//printfSpider();

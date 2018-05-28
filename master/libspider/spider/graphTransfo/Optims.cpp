@@ -655,7 +655,7 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 								}
 							}
 						}else{
-							throw "A non-End vertex have a cons of 0\n";
+							throw std::runtime_error("A non-End vertex have a cons of 0\n");
 						}
 					}
 				}
@@ -665,7 +665,7 @@ static int reduceJoinFork(SRDAGGraph* topDag){
 						if(sinks[i]->getType() == SRDAG_END){
 							topDag->delVertex(sinks[i]);
 						}else{
-							throw "A non-End vertex have a cons of 0\n";
+							throw std::runtime_error("A non-End vertex have a cons of 0\n");
 						}
 					}
 				}

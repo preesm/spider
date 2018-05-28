@@ -39,6 +39,7 @@
 #include "spider.h"
 #include <monitor/StackMonitor.h>
 #include <stdio.h>
+#include <stdexcept>
 
 class LRT;
 class LrtCommunicator;
@@ -91,7 +92,7 @@ inline Platform* Platform::get(){
 	if(platform_)
 		return platform_;
 	else
-		throw "Error undefined platform\n";
+		throw std::runtime_error("Error undefined platform\n");
 }
 
 // If unimplemented in child

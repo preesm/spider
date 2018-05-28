@@ -78,7 +78,7 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job){
 				switch(pi_src->getType()){
 				case PISDF_TYPE_IF:{
 					if(pi_src->getSubType() != PISDF_SUBTYPE_INPUT_IF)
-						throw "Error in graph transfo, Output IF connected to Config input\n";
+						throw std::runtime_error("Error in graph transfo, Output IF connected to Config input\n");
 
 					SRDAGEdge* srcEdge = job->inputIfs[pi_src->getTypeId()];
 					if(srcEdge->getRate() == cons){
@@ -106,10 +106,10 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job){
 
 					sr_edge->connectSnk(sr_ca, inEdgeIx);
 					if(prod != cons)
-						throw "Error in graph transfo, cons/prod between Configs doesn't match\n";
+						throw std::runtime_error("Error in graph transfo, cons/prod between Configs doesn't match\n");
 					break;}
 				default:
-					throw "Error in graph transfo, Normal vertex precede config one\n";
+					throw std::runtime_error("Error in graph transfo, Normal vertex precede config one\n");
 				}
 			}
 		}
@@ -126,7 +126,7 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job){
 				switch(pi_snk->getType()){
 				case PISDF_TYPE_IF:{
 					if(pi_snk->getSubType() != PISDF_SUBTYPE_OUTPUT_IF)
-						throw "Error in graph transfo, Input IF connected to Config output\n";
+						throw std::runtime_error("Error in graph transfo, Input IF connected to Config output\n");
 
 					SRDAGEdge* snkEdge = job->outputIfs[pi_snk->getTypeId()];
 					if(snkEdge->getRate() == prod){
@@ -155,7 +155,7 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job){
 					sr_edge->connectSrc(sr_ca, outEdgeIx);
 
 					if(cons == prod)
-						throw "Error in graph transfo, cons/prod between configs doesn't match\n";
+						throw std::runtime_error("Error in graph transfo, cons/prod between configs doesn't match\n");
 					break;}
 				case PISDF_TYPE_BODY:{
 					SRDAGEdge* sr_edge = topSrdag->addEdge();
@@ -163,7 +163,7 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job){
 					sr_edge->setRate(prod);
 					break;}
 				default:
-					throw "Error in graph transfo, Unhandled case\n";
+					throw std::runtime_error("Error in graph transfo, Unhandled case\n");
 				}
 			}
 		}
@@ -333,7 +333,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 							srcConnections[0].portIx = setterEdge->getSrcPortIx();
 						}
 					}else{
-						throw "Setter of a delay must be of the same rate than delay";
+						throw std::runtime_error("Setter of a delay must be of the same rate than delay");
 					}
 				}else{
 					srcConnections[0].src = topSrdag->addInit();
@@ -352,7 +352,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 
 		switch(edge->getSnk()->getType()){
 		case PISDF_TYPE_CONFIG:
-			throw "Should be impossible";
+			throw std::runtime_error("Should be impossible");
 			break;
 		case PISDF_TYPE_IF:
 			if(sinkConsumption*1 == sourceProduction*nbSourceRepetitions){
@@ -416,7 +416,7 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv){
 						snkConnections[nbSinkRepetitions].edge = getterEdge;
 						snkConnections[nbSinkRepetitions].cons = nbDelays;
 					}else{
-						throw "Getter of a delay must be of the same rate than delay";
+						throw std::runtime_error("Getter of a delay must be of the same rate than delay");
 					}
 				}else{
 					snkConnections[nbSinkRepetitions].edge = topSrdag->addEdge();

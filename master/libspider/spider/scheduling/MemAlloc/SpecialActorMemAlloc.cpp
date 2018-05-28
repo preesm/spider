@@ -73,7 +73,7 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
 					int size = inEdge->getRate();
 					size = getAlignSize(size);
 					if(currentMem_+size > memStart_ + memSize_)
-						throw "Not Enough Shared Memory\n";
+						throw std::runtime_error("Not Enough Shared Memory\n");
 					inEdge->setAlloc(currentMem_);
 					inEdge->setAllocIx(fifoIx);
 					inEdge->setNToken(br->getNConnectedOutEdge());
@@ -85,7 +85,7 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
 						int alloc = br->getInEdge(0)->getAlloc();
 
 						if(outEdge->getAlloc() != -1)
-							throw "Overwrite MemAlloc\n";
+							throw std::runtime_error("Overwrite MemAlloc\n");
 
 						outEdge->setAlloc(alloc);
 						outEdge->setAllocIx(fifoIx);
@@ -107,7 +107,7 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
 							int alloc = br->getInEdge(0)->getAlloc();
 
 							if(outEdge->getAlloc() != -1)
-								throw "Overwrite MemAlloc\n";
+								throw std::runtime_error("Overwrite MemAlloc\n");
 
 							outEdge->setAlloc(alloc);
 							outEdge->setNToken(0);
@@ -137,7 +137,7 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
 				int size = inEdge->getRate();
 				size = getAlignSize(size);
 				if(currentMem_+size > memStart_ + memSize_)
-					throw "Not Enough Shared Memory\n";
+					throw std::runtime_error("Not Enough Shared Memory\n");
 				inEdge->setAlloc(currentMem_);
 				inEdge->setAllocIx(fifoIx);
 				inEdge->setNToken(fork->getNConnectedOutEdge());
@@ -150,7 +150,7 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
 					int alloc = fork->getInEdge(0)->getAlloc()+offset;
 
 					if(outEdge->getAlloc() != -1)
-						throw "Overwrite MemAlloc\n";
+						throw std::runtime_error("Overwrite MemAlloc\n");
 
 					outEdge->setAlloc(alloc);
 					outEdge->setAllocIx(fifoIx);
@@ -182,7 +182,7 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
 				int fifoIx = nbFifos_++;
 				size = getAlignSize(size);
 				if(currentMem_+size > memStart_ + memSize_)
-					throw "Not Enough Shared Memory\n";
+					throw std::runtime_error("Not Enough Shared Memory\n");
 				outEdge->setAlloc(currentMem_);
 				outEdge->setAllocIx(fifoIx);
 				outEdge->setNToken(join->getNConnectedInEdge());
@@ -215,7 +215,7 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
 					int size = edge->getRate();
 					size = getAlignSize(size);
 					if(currentMem_+size > memStart_ + memSize_)
-						throw "Not Enough Shared Memory\n";
+						throw std::runtime_error("Not Enough Shared Memory\n");
 					edge->setAlloc(currentMem_);
 					currentMem_ += size;
 				}

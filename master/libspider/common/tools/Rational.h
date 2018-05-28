@@ -43,6 +43,7 @@
 #define RATIONAL_H_
 
 #include <stdlib.h>
+#include <stdexcept>
 
 class Rational {
 private:
@@ -160,7 +161,7 @@ public:
 	inline int toInt() const {
 		if(denominator == 1)
 			return nominator;
-		throw "Error conv Rational to int without denominator = 1\n";
+		throw std::runtime_error("Error conv Rational to int without denominator = 1\n");
 	}
 
 	inline int getDenominator() const {

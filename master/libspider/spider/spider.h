@@ -155,7 +155,7 @@ typedef struct{
 }ExecutionStat;
 
 namespace Spider{
-	void init(SpiderConfig cfg);
+	void init(SpiderConfig& cfg);
 	void clean();
 
 	void setMemAllocType(MemAllocType type, int start, int size);

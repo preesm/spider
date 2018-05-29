@@ -99,7 +99,7 @@ static bool useGraphOptim_;
 static bool useActorPrecedence_;
 static bool traceEnabled_;
 
-void Spider::init(SpiderConfig cfg){
+void Spider::init(SpiderConfig& cfg){
 
 	setGraphOptim(cfg.useGraphOptim);
 
@@ -109,7 +109,6 @@ void Spider::init(SpiderConfig cfg){
 	setActorPrecedence(cfg.useActorPrecedence);
 	setVerbose(cfg.verbose);
 	setTraceEnabled(cfg.traceEnabled);
-
 
 	platform = new PlatformPThread(
 			cfg.platform.nLrt,

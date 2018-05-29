@@ -42,36 +42,43 @@
 
 class LrtCommunicator {
 public:
-	virtual ~LrtCommunicator(){}
+    virtual ~LrtCommunicator() {}
 
-	virtual void* ctrl_start_send(int size) = 0;
-	virtual void ctrl_end_send(int size) = 0;
+    virtual void *ctrl_start_send(int size) = 0;
 
-	virtual int ctrl_start_recv(void** data) = 0;
-	virtual void ctrl_end_recv() = 0;
+    virtual void ctrl_end_send(int size) = 0;
 
-	virtual void* trace_start_send(int size) = 0;
-	virtual void trace_end_send(int size) = 0;
+    virtual int ctrl_start_recv(void **data) = 0;
 
-	virtual void* data_start_send(Fifo* f) = 0;
-	virtual void data_end_send(Fifo* f) = 0;
+    virtual void ctrl_end_recv() = 0;
 
-	virtual void* data_recv(Fifo* f) = 0;
+    virtual void *trace_start_send(int size) = 0;
 
-	virtual void allocateDataBuffer(int nbInput, Fifo* fIn, int nbOutput, Fifo* fOut) {};
-	virtual void freeDataBuffer(int nbInput, int nbOutput) {};
+    virtual void trace_end_send(int size) = 0;
 
-	virtual void setLrtJobIx(int lrtIx, int jobIx){};
-	virtual long getLrtJobIx(int lrtIx) = 0;
+    virtual void *data_start_send(Fifo *f) = 0;
 
-	virtual void rstLrtJobIx(int lrtIx) {};
+    virtual void data_end_send(Fifo *f) = 0;
 
-	virtual void waitForLrtUnlock(int nbDependency, int* blkLrtIx, int* blkLrtJobIx, int jobIx) {};
-	virtual void unlockLrt(int jobIx) {};
+    virtual void *data_recv(Fifo *f) = 0;
+
+    virtual void allocateDataBuffer(int nbInput, Fifo *fIn, int nbOutput, Fifo *fOut) {};
+
+    virtual void freeDataBuffer(int nbInput, int nbOutput) {};
+
+    virtual void setLrtJobIx(int lrtIx, int jobIx) {};
+
+    virtual long getLrtJobIx(int lrtIx) = 0;
+
+    virtual void rstLrtJobIx(int lrtIx) {};
+
+    virtual void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx) {};
+
+    virtual void unlockLrt(int jobIx) {};
 
 
 protected:
-	LrtCommunicator(){}
+    LrtCommunicator() {}
 };
 
 #endif/*LRT_COMMUNICATOR_H*/

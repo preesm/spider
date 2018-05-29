@@ -45,68 +45,71 @@
 #include <monitor/StackMonitor.h>
 #include <stdexcept>
 
-template<typename TYPE> class Queue{
+template<typename TYPE>
+class Queue {
 public:
-	Queue(){
-		stackId_ 	= 0;
-		first_ 	= 0;
-		last_ 	= 0;
-	}
-	Queue(SpiderStack stackId){
-		stackId_ 	= stackId;
-		first_ 	= 0;
-		last_ 	= 0;
-	}
+    Queue() {
+        stackId_ = 0;
+        first_ = 0;
+        last_ = 0;
+    }
 
-	inline bool isEmpty() const;
+    Queue(SpiderStack stackId) {
+        stackId_ = stackId;
+        first_ = 0;
+        last_ = 0;
+    }
 
-	inline void push(TYPE value);
-	inline TYPE pop();
+    inline bool isEmpty() const;
+
+    inline void push(TYPE value);
+
+    inline TYPE pop();
 
 
 private:
-	struct QueueItem{
-		TYPE cur;
-		struct QueueItem* next;
-	};
+    struct QueueItem {
+        TYPE cur;
+        struct QueueItem *next;
+    };
 
-	SpiderStack stackId_;
-	struct QueueItem* first_;
-	struct QueueItem* last_;
+    SpiderStack stackId_;
+    struct QueueItem *first_;
+    struct QueueItem *last_;
 };
 
 
 template<typename TYPE>
-inline bool Queue<TYPE>::isEmpty() const{
-	return first_ == 0;
+inline bool Queue<TYPE>::isEmpty() const {
+    return first_ == 0;
 }
 
 template<typename TYPE>
-inline void Queue<TYPE>::push(TYPE value){
-	struct QueueItem* newItem = CREATE(stackId_, struct QueueItem);
-	newItem->cur 	= value;
-	newItem->next 	= 0;
+inline void Queue<TYPE>::push(TYPE value) {
+    struct QueueItem *newItem = CREATE(stackId_, struct QueueItem);
+    newItem->cur = value;
+    newItem->next = 0;
 
-	if(last_ == 0)
-		first_ = last_ = newItem;
-	else{
-		last_->next = newItem;
-		last_ = newItem;
-	}
+    if (last_ == 0)
+        first_ = last_ = newItem;
+    else {
+        last_->next = newItem;
+        last_ = newItem;
+    }
 }
 
 template<typename TYPE>
-inline TYPE Queue<TYPE>::pop(){
-	if(first_ == 0)
-		throw std::runtime_error("Try to pop an empty Queue\n");
+inline TYPE Queue<TYPE>::pop() {
+    if (first_ == 0)
+        throw std::runtime_error("Try to pop an empty Queue\n");
 
-	struct QueueItem* old = first_;
-	TYPE val = first_->cur;
-	first_ = first_->next;
-	StackMonitor::free(stackId_, old);
-	if(first_ == 0)
-		last_ = 0;
-	return val;
+    struct QueueItem *old = first_;
+    TYPE val = first_->cur;
+    first_ = first_->next;
+    StackMonitor::free(stackId_, old);
+    if (first_ == 0)
+        last_ = 0;
+    return val;
 }
 
 #endif/*QUEUE_H*/

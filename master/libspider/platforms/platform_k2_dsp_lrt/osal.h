@@ -45,7 +45,8 @@
 
 #include "init.h"
 
-void  Osal_DescBeginMemAccess (void *ptr, uint32_t size);
-void  Osal_DescEndMemAccess   (void *ptr, uint32_t size);
+void Osal_DescBeginMemAccess(void *ptr, uint32_t size);
+
+void Osal_DescEndMemAccess(void *ptr, uint32_t size);
 
 

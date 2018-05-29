@@ -43,43 +43,52 @@
 #include <graphs/Archi/SharedMemArchi.h>
 #include <lrt.h>
 
-typedef enum{
-	USE_MSMC = 1,
-	USE_DDR = 0
+typedef enum {
+    USE_MSMC = 1,
+    USE_DDR = 0
 } SharedMemMode;
 
-class PlatformK2Arm: public Platform{
+class PlatformK2Arm : public Platform {
 public:
-	/** File Handling */
-	virtual int fopen(const char* name);
-	virtual void fprintf(int id, const char* fmt, ...);
-	virtual void fclose(int id);
+    /** File Handling */
+    virtual int fopen(const char *name);
 
-	/** Shared Memory Handling */
-	virtual void* virt_to_phy(void* address);
-	virtual int getMinAllocSize();
-	virtual int getCacheLineSize();
+    virtual void fprintf(int id, const char *fmt, ...);
 
-	/** Time Handling */
-	virtual void rstTime();
-	virtual void rstTime(ClearTimeMsg* msg);
-	virtual Time getTime();
+    virtual void fclose(int id);
 
-	/** Platform Core Handling **/
-	virtual void idleLrt(int i);
-	virtual void wakeLrt(int i);
-	virtual void idle();
+    /** Shared Memory Handling */
+    virtual void *virt_to_phy(void *address);
 
-	SharedMemArchi* getArchi();
+    virtual int getMinAllocSize();
 
-	PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMemSize, Stack *stack, lrtFct* fcts, int nLrtFcts);
-	virtual ~PlatformK2Arm();
+    virtual int getCacheLineSize();
+
+    /** Time Handling */
+    virtual void rstTime();
+
+    virtual void rstTime(ClearTimeMsg *msg);
+
+    virtual Time getTime();
+
+    /** Platform Core Handling **/
+    virtual void idleLrt(int i);
+
+    virtual void wakeLrt(int i);
+
+    virtual void idle();
+
+    SharedMemArchi *getArchi();
+
+    PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMemSize, Stack *stack, lrtFct *fcts, int nLrtFcts);
+
+    virtual ~PlatformK2Arm();
 
 private:
-	Stack* stack_;
-	SharedMemArchi* archi_;
+    Stack *stack_;
+    SharedMemArchi *archi_;
 
-	static Time mappingTime(int nActors);
+    static Time mappingTime(int nActors);
 };
 
 #endif/*PLATFORM_K2_ARM_H*/

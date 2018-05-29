@@ -39,14 +39,16 @@
 
 class SetElement {
 public:
-	SetElement():set_ix_(-1){}
-	virtual ~SetElement(){}
+    SetElement() : set_ix_(-1) {}
 
-	void setSetIx(int ix){set_ix_ = ix;}
-	int getSetIx() const {return set_ix_;}
+    virtual ~SetElement() {}
+
+    void setSetIx(int ix) { set_ix_ = ix; }
+
+    int getSetIx() const { return set_ix_; }
 
 private:
-	int set_ix_;
+    int set_ix_;
 };
 
 #endif // SET_ELEMENT_H

@@ -48,12 +48,12 @@
 int qmss_cfg_regs;
 int msmc_mem_base;
 int ddr_mem_base;
-CSL_FftcRegs* fftc_cfg_regs;
-void* cppi_regs;
-void* qm_regs;
+CSL_FftcRegs *fftc_cfg_regs;
+void *cppi_regs;
+void *qm_regs;
 CSL_TmrRegsOvly tmr_regs;
 
-CSL_PscRegs* psc_regs;
+CSL_PscRegs *psc_regs;
 
 #ifdef DEVICE_K2H
 #define MSMC_SIZE 		0x00600000
@@ -68,18 +68,20 @@ CSL_PscRegs* psc_regs;
 #error Please define sizes in platformK2Arm/init_hw.c
 #endif
 
-void* Osal_qmssVirtToPhy (void *ptr){
-	return ptr;
-}
-void* Osal_qmssPhyToVirt (void *ptr){
-	return ptr;
+void *Osal_qmssVirtToPhy(void *ptr) {
+    return ptr;
 }
 
-void* Osal_qmssConvertDescVirtToPhy(uint32_t QID, void *descAddr){
-	return descAddr;
+void *Osal_qmssPhyToVirt(void *ptr) {
+    return ptr;
 }
-void* Osal_qmssConvertDescPhyToVirt(uint32_t QID, void *descAddr){
-	return descAddr;
+
+void *Osal_qmssConvertDescVirtToPhy(uint32_t QID, void *descAddr) {
+    return descAddr;
+}
+
+void *Osal_qmssConvertDescPhyToVirt(uint32_t QID, void *descAddr) {
+    return descAddr;
 }
 
 /**
@@ -88,88 +90,88 @@ void* Osal_qmssConvertDescPhyToVirt(uint32_t QID, void *descAddr){
  * 	- Enable Power Domains
  * 	- Configure Timers
  */
-void init_hw(){
-	/* Init Cache */
-	CACHE_setL1DSize(CACHE_L1_32KCACHE);
-	CACHE_setL1PSize(CACHE_L1_32KCACHE);
-	CACHE_setL2Size(CACHE_0KCACHE);
+void init_hw() {
+    /* Init Cache */
+    CACHE_setL1DSize(CACHE_L1_32KCACHE);
+    CACHE_setL1PSize(CACHE_L1_32KCACHE);
+    CACHE_setL2Size(CACHE_0KCACHE);
 
-	/* Translate Memory using mmap */
-	/* QMSS CFG Regs */
-	qmss_cfg_regs = CSL_QMSS_CFG_BASE;
-	/* TMR Regs */
-	tmr_regs = (void*)CSL_TIMER_0_REGS;
-	/* MSMC memory */
-	msmc_mem_base = CSL_MSMC_SRAM_REGS;
-	/* DDR memory */
-	ddr_mem_base = DDR_BASE;
-	/* FFTC regs */
-	fftc_cfg_regs = (void*)CSL_FFTC_0_CFG_REGS;
-	/* QM regs */
-	qm_regs = (void*)0x23a00000;
-	/* CPPI Regs */
-	cppi_regs = (void*)CPPI_BASE_REG;
-	/* Map PSC Regs */
-	psc_regs = (void*)CSL_PSC_REGS;
+    /* Translate Memory using mmap */
+    /* QMSS CFG Regs */
+    qmss_cfg_regs = CSL_QMSS_CFG_BASE;
+    /* TMR Regs */
+    tmr_regs = (void *) CSL_TIMER_0_REGS;
+    /* MSMC memory */
+    msmc_mem_base = CSL_MSMC_SRAM_REGS;
+    /* DDR memory */
+    ddr_mem_base = DDR_BASE;
+    /* FFTC regs */
+    fftc_cfg_regs = (void *) CSL_FFTC_0_CFG_REGS;
+    /* QM regs */
+    qm_regs = (void *) 0x23a00000;
+    /* CPPI Regs */
+    cppi_regs = (void *) CPPI_BASE_REG;
+    /* Map PSC Regs */
+    psc_regs = (void *) CSL_PSC_REGS;
 
-	/* Initialize power domains */
-	/* FFTC power domain is turned OFF by default.
-	 * It needs to be turned on before doing any
-	 * FFTC device register access.
-	 */
-	/* Set FFTC Power domain to ON */
-    CSL_FINST (psc_regs->PDCTL[CSL_PSC_PD_FFTC_01], PSC_PDCTL_NEXT, ON);
-    CSL_FINST (psc_regs->PDCTL[CSL_PSC_PD_FFTC_2345], PSC_PDCTL_NEXT, ON);
+    /* Initialize power domains */
+    /* FFTC power domain is turned OFF by default.
+     * It needs to be turned on before doing any
+     * FFTC device register access.
+     */
+    /* Set FFTC Power domain to ON */
+    CSL_FINST(psc_regs->PDCTL[CSL_PSC_PD_FFTC_01], PSC_PDCTL_NEXT, ON);
+    CSL_FINST(psc_regs->PDCTL[CSL_PSC_PD_FFTC_2345], PSC_PDCTL_NEXT, ON);
 
-	/* Enable the clocks too for FFTC */
-    CSL_FINS (psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_0], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
-    CSL_FINS (psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_1], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
-    CSL_FINS (psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_2], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
-    CSL_FINS (psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_3], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
-    CSL_FINS (psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_4], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
-    CSL_FINS (psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_5], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
+    /* Enable the clocks too for FFTC */
+    CSL_FINS(psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_0], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
+    CSL_FINS(psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_1], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
+    CSL_FINS(psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_2], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
+    CSL_FINS(psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_3], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
+    CSL_FINS(psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_4], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
+    CSL_FINS(psc_regs->MDCTL[CSL_PSC_LPSC_FFTC_5], PSC_MDCTL_NEXT, PSC_MODSTATE_ENABLE);
 
-	/* Start the state transition */
-    psc_regs->PTCMD =   (1 << CSL_PSC_PD_FFTC_01);
-    psc_regs->PTCMD =   (1 << CSL_PSC_PD_FFTC_2345);
+    /* Start the state transition */
+    psc_regs->PTCMD = (1 << CSL_PSC_PD_FFTC_01);
+    psc_regs->PTCMD = (1 << CSL_PSC_PD_FFTC_2345);
 
-	/* Wait until the state transition process is completed. */
-	while (CSL_FEXTR (psc_regs->PTSTAT, CSL_PSC_PD_FFTC_01, CSL_PSC_PD_FFTC_01));
-	while (CSL_FEXTR (psc_regs->PTSTAT, CSL_PSC_PD_FFTC_2345, CSL_PSC_PD_FFTC_2345));
+    /* Wait until the state transition process is completed. */
+    while (CSL_FEXTR(psc_regs->PTSTAT, CSL_PSC_PD_FFTC_01, CSL_PSC_PD_FFTC_01));
+    while (CSL_FEXTR(psc_regs->PTSTAT, CSL_PSC_PD_FFTC_2345, CSL_PSC_PD_FFTC_2345));
 
-	/* Check FFTC PSC status */
-	if ((CSL_FEXT(psc_regs->PDSTAT[CSL_PSC_PD_FFTC_01],   PSC_PDSTAT_STATE) != PSC_PDSTATE_ON) ||
-		(CSL_FEXT(psc_regs->PDSTAT[CSL_PSC_PD_FFTC_2345], PSC_PDSTAT_STATE) != PSC_PDSTATE_ON) ||
-		(CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_0], PSC_MDSTAT_STATE)  != PSC_MODSTATE_ENABLE) ||
-		(CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_1], PSC_MDSTAT_STATE)  != PSC_MODSTATE_ENABLE) ||
-		(CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_2], PSC_MDSTAT_STATE)  != PSC_MODSTATE_ENABLE) ||
-		(CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_3], PSC_MDSTAT_STATE)  != PSC_MODSTATE_ENABLE) ||
-		(CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_4], PSC_MDSTAT_STATE)  != PSC_MODSTATE_ENABLE) ||
-		(CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_5], PSC_MDSTAT_STATE)  != PSC_MODSTATE_ENABLE)){
-		/* FFTC Power on failed */
-		abort();
-	}
+    /* Check FFTC PSC status */
+    if ((CSL_FEXT(psc_regs->PDSTAT[CSL_PSC_PD_FFTC_01], PSC_PDSTAT_STATE) != PSC_PDSTATE_ON) ||
+        (CSL_FEXT(psc_regs->PDSTAT[CSL_PSC_PD_FFTC_2345], PSC_PDSTAT_STATE) != PSC_PDSTATE_ON) ||
+        (CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_0], PSC_MDSTAT_STATE) != PSC_MODSTATE_ENABLE) ||
+        (CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_1], PSC_MDSTAT_STATE) != PSC_MODSTATE_ENABLE) ||
+        (CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_2], PSC_MDSTAT_STATE) != PSC_MODSTATE_ENABLE) ||
+        (CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_3], PSC_MDSTAT_STATE) != PSC_MODSTATE_ENABLE) ||
+        (CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_4], PSC_MDSTAT_STATE) != PSC_MODSTATE_ENABLE) ||
+        (CSL_FEXT(psc_regs->MDSTAT[CSL_PSC_LPSC_FFTC_5], PSC_MDSTAT_STATE) != PSC_MODSTATE_ENABLE)) {
+        /* FFTC Power on failed */
+        abort();
+    }
 
-	/* Initialize Shared Timer0 */
-	/* TGCR */
-	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMMODE, 0); 	// 64-bit mode
+    /* Initialize Shared Timer0 */
+    /* TGCR */
+    CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMMODE, 0);    // 64-bit mode
 
-	/* TCR */
-	CSL_FINS(tmr_regs->TCR, TMR_TCR_CLKSRC_LO, 0); 	// Select Internal clock
-	CSL_FINS(tmr_regs->TCR, TMR_TCR_TIEN_LO, 0); 		// Not gated clock
-	CSL_FINS(tmr_regs->TCR, TMR_TCR_ENAMODE_LO, 2); 	// Timer enable continuously
-	CSL_FINS(tmr_regs->TCR, TMR_TCR_ENAMODE_HI, 2); 	// Timer enable continuously
+    /* TCR */
+    CSL_FINS(tmr_regs->TCR, TMR_TCR_CLKSRC_LO, 0);    // Select Internal clock
+    CSL_FINS(tmr_regs->TCR, TMR_TCR_TIEN_LO, 0);        // Not gated clock
+    CSL_FINS(tmr_regs->TCR, TMR_TCR_ENAMODE_LO, 2);    // Timer enable continuously
+    CSL_FINS(tmr_regs->TCR, TMR_TCR_ENAMODE_HI, 2);    // Timer enable continuously
 
-	/* Reset Timer */
-	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMHIRS, 0); 	// Reset
-	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMLORS, 0); 	// Reset
-	tmr_regs->PRDLO = (Uint32)-1;
-	tmr_regs->PRDHI = (Uint32)-1;
-	tmr_regs->CNTLO = 0;
-	tmr_regs->CNTHI = 0;
-	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMHIRS, 1); 	// Release reset
-	CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMLORS, 1); 	// Release reset
+    /* Reset Timer */
+    CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMHIRS, 0);    // Reset
+    CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMLORS, 0);    // Reset
+    tmr_regs->PRDLO = (Uint32) - 1;
+    tmr_regs->PRDHI = (Uint32) - 1;
+    tmr_regs->CNTLO = 0;
+    tmr_regs->CNTHI = 0;
+    CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMHIRS, 1);    // Release reset
+    CSL_FINS(tmr_regs->TGCR, TMR_TGCR_TIMLORS, 1);    // Release reset
 }
 
-void clean_hw(){
+void clean_hw() {
 }

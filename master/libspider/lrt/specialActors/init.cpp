@@ -37,14 +37,13 @@
 #include "specialActors.h"
 
 #include <string.h>
-#include <stdio.h>
 
-void saInit(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	Param nbTokens = inParams[0];
-	memset(outputFIFOs[0], 0, nbTokens);
+void saInit(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
+    Param nbTokens = inParams[0];
+    memset(outputFIFOs[0], 0, nbTokens);
 
 #if VERBOSE
-	printf("Init\n");
+    printf("Init\n");
 #endif
 }
 

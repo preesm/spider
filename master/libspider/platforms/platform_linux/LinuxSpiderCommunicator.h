@@ -42,38 +42,43 @@
 #include <tools/Stack.h>
 #include <semaphore.h>
 
-class LinuxSpiderCommunicator: public SpiderCommunicator{
+class LinuxSpiderCommunicator : public SpiderCommunicator {
 public:
-	LinuxSpiderCommunicator(int msgSizeMax, int nLrt, sem_t* semTrace, int fTraceWr, int fTraceRd);
-	~LinuxSpiderCommunicator();
+    LinuxSpiderCommunicator(int msgSizeMax, int nLrt, sem_t *semTrace, int fTraceWr, int fTraceRd);
 
-	void setLrtCom(int lrtIx, int fIn, int fOut);
+    ~LinuxSpiderCommunicator();
 
-	void* ctrl_start_send(int lrtIx, int size);
-	void ctrl_end_send(int lrtIx, int size);
+    void setLrtCom(int lrtIx, int fIn, int fOut);
 
-	int ctrl_start_recv(int lrtIx, void** data);
-	void ctrl_end_recv(int lrtIx);
+    void *ctrl_start_send(int lrtIx, int size);
 
-	void* trace_start_send(int size);
-	void trace_end_send(int size);
+    void ctrl_end_send(int lrtIx, int size);
 
-	int trace_start_recv(void** data);
-	void trace_end_recv();
+    int ctrl_start_recv(int lrtIx, void **data);
+
+    void ctrl_end_recv(int lrtIx);
+
+    void *trace_start_send(int size);
+
+    void trace_end_send(int size);
+
+    int trace_start_recv(void **data);
+
+    void trace_end_recv();
 
 private:
-	int *fIn_, *fOut_;
+    int *fIn_, *fOut_;
 
-	int fTraceRd_;
-	int fTraceWr_;
-	sem_t* semTrace_;
+    int fTraceRd_;
+    int fTraceWr_;
+    sem_t *semTrace_;
 
-	int msgSizeMax_;
+    int msgSizeMax_;
 
-	void* msgBufferRecv_;
-	int curMsgSizeRecv_;
-	void* msgBufferSend_;
-	int curMsgSizeSend_;
+    void *msgBufferRecv_;
+    int curMsgSizeRecv_;
+    void *msgBufferSend_;
+    int curMsgSizeSend_;
 };
 
 #endif/*LINUX_SPIDER_COMMUNICATOR_H*/

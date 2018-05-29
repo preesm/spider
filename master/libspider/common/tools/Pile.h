@@ -44,55 +44,59 @@
 
 #include "Stack.h"
 
-template<typename TYPE> class Pile{
+template<typename TYPE>
+class Pile {
 public:
-	Pile(){
-		stack_ 	= 0;
-		first_ 	= 0;
-	}
-	Pile(Stack *stack){
-		stack_ 	= stack;
-		first_ 	= 0;
-	}
+    Pile() {
+        stack_ = 0;
+        first_ = 0;
+    }
 
-	inline bool isEmpty() const;
+    Pile(Stack *stack) {
+        stack_ = stack;
+        first_ = 0;
+    }
 
-	inline void push(TYPE value);
-	inline TYPE pop();
+    inline bool isEmpty() const;
+
+    inline void push(TYPE value);
+
+    inline TYPE pop();
 
 
 private:
-	struct PileItem{
-		TYPE cur;
-		struct PileItem* next;
-	};
+    struct PileItem {
+        TYPE cur;
+        struct PileItem *next;
+    };
 
-	Stack* stack_;
-	struct PileItem* first_;
+    Stack *stack_;
+    struct PileItem *first_;
 };
 
 
 template<typename TYPE>
-inline bool Pile<TYPE>::isEmpty() const{
-	return first_ == 0;
+inline bool Pile<TYPE>::isEmpty() const {
+    return first_ == 0;
 }
 
 template<typename TYPE>
-inline void Pile<TYPE>::push(TYPE value){
-	struct PileItem* newItem = CREATE(stack_, struct QueueItem);
-	newItem->cur 	= value;
-	newItem->next 	= first_;
-	first_ = newItem;
+inline void Pile<TYPE>::push(TYPE value) {
+    struct PileItem *newItem = CREATE(stack_,
+    struct QueueItem);
+    newItem->cur = value;
+    newItem->next = first_;
+    first_ = newItem;
 }
 
 template<typename TYPE>
-inline TYPE Pile<TYPE>::pop(){
-	if(first_ == 0)
-		throw std::runtime_error("Try to pop an empty Pile\n");
+inline TYPE Pile<TYPE>::pop() {
+    if (first_ == 0)
+        throw std::runtime_error("Try to pop an empty Pile\n");
 
-	TYPE val = first_->cur;
-	first_ = first_->next;
-	return val;
+    TYPE val = first_->cur;
+    first_ = first_->next;
+    return val;
 }
 
 #endif/*PILE_H*/

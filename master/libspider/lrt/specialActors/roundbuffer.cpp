@@ -36,30 +36,29 @@
  */
 #include "specialActors.h"
 
-#include <stdio.h>
 #include <string.h>
 #include <algorithm>
 
-void saRoundbuffer(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	int nbTknIn = inParams[0];
-	int nbTknOut = inParams[1];
+void saRoundbuffer(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
+    int nbTknIn = inParams[0];
+    int nbTknOut = inParams[1];
 
 #if VERBOSE
-	printf("Roundbuffer\n");
+    printf("Roundbuffer\n");
 #endif
 
-	if(nbTknIn == nbTknOut){
-		memcpy(outputFIFOs[0], inputFIFOs[0], nbTknIn);
-	}else if(nbTknIn < nbTknOut){
-		int offset=0;
-		while(nbTknOut){
-			int rest = std::min(nbTknIn,nbTknOut);
-			memcpy(((char*)outputFIFOs[0])+offset, inputFIFOs[0], rest);
-			nbTknOut -= rest;
-			offset += rest;
-		}
-	}else{
-		memcpy(outputFIFOs[0], ((char*)inputFIFOs[0])+nbTknIn-nbTknOut, nbTknOut);
-	}
+    if (nbTknIn == nbTknOut) {
+        memcpy(outputFIFOs[0], inputFIFOs[0], nbTknIn);
+    } else if (nbTknIn < nbTknOut) {
+        int offset = 0;
+        while (nbTknOut) {
+            int rest = std::min(nbTknIn, nbTknOut);
+            memcpy(((char *) outputFIFOs[0]) + offset, inputFIFOs[0], rest);
+            nbTknOut -= rest;
+            offset += rest;
+        }
+    } else {
+        memcpy(outputFIFOs[0], ((char *) inputFIFOs[0]) + nbTknIn - nbTknOut, nbTknOut);
+    }
 }
 

@@ -41,29 +41,34 @@
 #include <Message.h>
 #include <tools/Stack.h>
 
-class K2DspLrtCommunicator: public LrtCommunicator{
+class K2DspLrtCommunicator : public LrtCommunicator {
 public:
-	K2DspLrtCommunicator();
-	~K2DspLrtCommunicator();
+    K2DspLrtCommunicator();
 
-	void* ctrl_start_send(int size);
-	void ctrl_end_send(int size);
+    ~K2DspLrtCommunicator();
 
-	int ctrl_start_recv(void** data);
-	void ctrl_end_recv();
+    void *ctrl_start_send(int size);
 
-	void* trace_start_send(int size);
-	void trace_end_send(int size);
+    void ctrl_end_send(int size);
 
-	long data_start_send(Fifo* f);
-	void data_end_send(Fifo* f);
+    int ctrl_start_recv(void **data);
 
-	long data_recv(Fifo* f);
+    void ctrl_end_recv();
+
+    void *trace_start_send(int size);
+
+    void trace_end_send(int size);
+
+    long data_start_send(Fifo *f);
+
+    void data_end_send(Fifo *f);
+
+    long data_recv(Fifo *f);
 
 private:
-	int maxCtrlMsgSize;
-	int maxTraceMsgSize;
-	int maxDataMsgSize;
+    int maxCtrlMsgSize;
+    int maxTraceMsgSize;
+    int maxDataMsgSize;
 };
 
 #endif/*K2_DSP_LRT_COMMUNICATOR_H*/

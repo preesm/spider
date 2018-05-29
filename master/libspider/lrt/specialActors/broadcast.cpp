@@ -37,19 +37,18 @@
 #include "specialActors.h"
 
 #include <string.h>
-#include <stdio.h>
 
-void saBroadcast(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	int nbToken = inParams[0];
-	int nbOut = inParams[1];
+void saBroadcast(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
+    int nbToken = inParams[0];
+    int nbOut = inParams[1];
 
 #if VERBOSE
-	printf("Broadcast\n");
+    printf("Broadcast\n");
 #endif
 
-	for(int i=0; i<nbOut; i++){
-		if(outputFIFOs[i] != inputFIFOs[0])
-			memcpy(outputFIFOs[i], inputFIFOs[0], nbToken);
-	}
+    for (int i = 0; i < nbOut; i++) {
+        if (outputFIFOs[i] != inputFIFOs[0])
+            memcpy(outputFIFOs[i], inputFIFOs[0], nbToken);
+    }
 }
 

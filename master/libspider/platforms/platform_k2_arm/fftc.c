@@ -59,19 +59,19 @@
 
 
 /* Type Definition */
-typedef struct Cplx16{
-	short	imag;
-	short	real;
+typedef struct Cplx16 {
+    short imag;
+    short real;
 } Cplx16;
 
-typedef struct Cplx32{
-	long	imag;
-	long	real;
+typedef struct Cplx32 {
+    long imag;
+    long real;
 } Cplx32;
 
-typedef struct CplxSp{
-	float	imag;
-	float	real;
+typedef struct CplxSp {
+    float imag;
+    float real;
 } CplxSp;
 
 #define     FFTC_TEST_NUM_HOST_DESC             32
@@ -79,122 +79,122 @@ typedef struct CplxSp{
 #define     FFTC_CPPI_HOST_DESC_SIZE           (32)
 #define     FFTC_TEST_SAMPLE_SIZE               4
 
-static int freeRxQueue[2] 	= {QUEUE_FREE_RX_FFTC_A, 	QUEUE_FREE_RX_FFTC_B};
-static int rxQueue[2] 		= {QUEUE_RX_FFTC_A, 		QUEUE_RX_FFTC_B};
-static int txQueue[2] 		= {QUEUE_TX_FFTC_A, 		QUEUE_TX_FFTC_B};
+static int freeRxQueue[2] = {QUEUE_FREE_RX_FFTC_A, QUEUE_FREE_RX_FFTC_B};
+static int rxQueue[2] = {QUEUE_RX_FFTC_A, QUEUE_RX_FFTC_B};
+static int txQueue[2] = {QUEUE_TX_FFTC_A, QUEUE_TX_FFTC_B};
 
-int fftc_send (int fftc_ix, Cplx16* in, Cplx16* out, int fftSize, int numBlocks){
+int fftc_send(int fftc_ix, Cplx16 *in, Cplx16 *out, int fftSize, int numBlocks) {
     Cplx16 *pResultBuffer;
-    uint8_t* phy_out, *phy_in;
-	uint32_t ResultBufferLen;
+    uint8_t *phy_out, *phy_in;
+    uint32_t ResultBufferLen;
 
     int bufferSize = (fftSize * sizeof(Cplx16)) * numBlocks;
 
     setFFTSize(fftc_ix, fftSize);
 
-	void* pCppiDesc;
+    void *pCppiDesc;
     int descSize;
-	Cppi_DescType descType;
-	Qmss_Queue queue_free_fftc;
+    Cppi_DescType descType;
+    Qmss_Queue queue_free_fftc;
 
-	/* Setup RX Packet */
-	/* Get a free descriptor */
-	if ((pCppiDesc = Qmss_queuePop (QUEUE_FREE_FFTC)) == NULL){
-		printf ("Out of descriptors!! Cannot get a free Tx descriptor \n");
-	}
+    /* Setup RX Packet */
+    /* Get a free descriptor */
+    if ((pCppiDesc = Qmss_queuePop(QUEUE_FREE_FFTC)) == NULL) {
+        printf("Out of descriptors!! Cannot get a free Tx descriptor \n");
+    }
 
-	descSize  = FFTC_DESC_SIZE;//QMSS_DESC_SIZE(pCppiDesc);
-	pCppiDesc = (void*) (QMSS_DESC_PTR (pCppiDesc));
+    descSize = FFTC_DESC_SIZE;//QMSS_DESC_SIZE(pCppiDesc);
+    pCppiDesc = (void *) (QMSS_DESC_PTR(pCppiDesc));
 
-	Osal_DescBeginMemAccess(pCppiDesc, descSize);
-	descType  = Cppi_getDescType (pCppiDesc);
+    Osal_DescBeginMemAccess(pCppiDesc, descSize);
+    descType = Cppi_getDescType(pCppiDesc);
 
-	queue_free_fftc.qMgr = 0;
-	queue_free_fftc.qNum = QUEUE_FREE_FFTC;
+    queue_free_fftc.qMgr = 0;
+    queue_free_fftc.qNum = QUEUE_FREE_FFTC;
 
-	phy_out = Osal_qmssVirtToPhy(out);
-	Cppi_setData 			(Cppi_DescType_HOST, pCppiDesc, (uint8_t*)phy_out, bufferSize);
-	Cppi_setOriginalBufInfo (Cppi_DescType_HOST, pCppiDesc, (uint8_t*)phy_out, bufferSize);
-	Cppi_setReturnQueue 	(Cppi_DescType_HOST, pCppiDesc, queue_free_fftc);
-	Cppi_setPacketLen 		(Cppi_DescType_HOST, pCppiDesc, bufferSize);
+    phy_out = Osal_qmssVirtToPhy(out);
+    Cppi_setData(Cppi_DescType_HOST, pCppiDesc, (uint8_t *) phy_out, bufferSize);
+    Cppi_setOriginalBufInfo(Cppi_DescType_HOST, pCppiDesc, (uint8_t *) phy_out, bufferSize);
+    Cppi_setReturnQueue(Cppi_DescType_HOST, pCppiDesc, queue_free_fftc);
+    Cppi_setPacketLen(Cppi_DescType_HOST, pCppiDesc, bufferSize);
 
-	/* Sync Descriptor */
-	Osal_DescEndMemAccess(pCppiDesc, descSize);
+    /* Sync Descriptor */
+    Osal_DescEndMemAccess(pCppiDesc, descSize);
 
-	/* Push descriptor back to free queue */
-	Qmss_queuePushDescSize (freeRxQueue[fftc_ix], pCppiDesc, descSize);
+    /* Push descriptor back to free queue */
+    Qmss_queuePushDescSize(freeRxQueue[fftc_ix], pCppiDesc, descSize);
 
-	/* Send a Tx descriptor */
-	if ((pCppiDesc = Qmss_queuePop (QUEUE_FREE_FFTC)) == NULL){
-		printf ("Out of descriptors!! Cannot get a free Tx descriptor \n");
-	}
+    /* Send a Tx descriptor */
+    if ((pCppiDesc = Qmss_queuePop(QUEUE_FREE_FFTC)) == NULL) {
+        printf("Out of descriptors!! Cannot get a free Tx descriptor \n");
+    }
 
-	descSize  = QMSS_DESC_SIZE(pCppiDesc);
-	pCppiDesc = (void*) (QMSS_DESC_PTR (pCppiDesc));
+    descSize = QMSS_DESC_SIZE(pCppiDesc);
+    pCppiDesc = (void *) (QMSS_DESC_PTR(pCppiDesc));
 
-	Osal_DescBeginMemAccess(pCppiDesc, descSize);
+    Osal_DescBeginMemAccess(pCppiDesc, descSize);
 
-	descType  = Cppi_getDescType (pCppiDesc);
+    descType = Cppi_getDescType(pCppiDesc);
 
-	queue_free_fftc.qMgr = 0;
-	queue_free_fftc.qNum = QUEUE_FREE_FFTC;
+    queue_free_fftc.qMgr = 0;
+    queue_free_fftc.qNum = QUEUE_FREE_FFTC;
 
-	phy_in = Osal_qmssVirtToPhy(in);
-	Cppi_setData 			(Cppi_DescType_HOST, pCppiDesc, (uint8_t*)phy_in, bufferSize);
-	Cppi_setOriginalBufInfo (Cppi_DescType_HOST, pCppiDesc, (uint8_t*)phy_in, bufferSize);
-	Cppi_setReturnQueue 	(Cppi_DescType_HOST, pCppiDesc, queue_free_fftc);
-	Cppi_setPacketLen 		(Cppi_DescType_HOST, pCppiDesc, bufferSize);
+    phy_in = Osal_qmssVirtToPhy(in);
+    Cppi_setData(Cppi_DescType_HOST, pCppiDesc, (uint8_t *) phy_in, bufferSize);
+    Cppi_setOriginalBufInfo(Cppi_DescType_HOST, pCppiDesc, (uint8_t *) phy_in, bufferSize);
+    Cppi_setReturnQueue(Cppi_DescType_HOST, pCppiDesc, queue_free_fftc);
+    Cppi_setPacketLen(Cppi_DescType_HOST, pCppiDesc, bufferSize);
 
-	/* Sync Descriptor */
-	Osal_DescEndMemAccess(pCppiDesc, descSize);
+    /* Sync Descriptor */
+    Osal_DescEndMemAccess(pCppiDesc, descSize);
 
-	/* Push descriptor onto FFTC Tx queue */
-	Qmss_queuePushDescSize (txQueue[fftc_ix], pCppiDesc, descSize);
+    /* Push descriptor onto FFTC Tx queue */
+    Qmss_queuePushDescSize(txQueue[fftc_ix], pCppiDesc, descSize);
 
-	/* Get the raw result from the engine. */
-	int i=0;
-	do{
-		pCppiDesc = Qmss_queuePop (rxQueue[fftc_ix]);
-		i++;
-	}while (pCppiDesc == NULL && i<10000);
+    /* Get the raw result from the engine. */
+    int i = 0;
+    do {
+        pCppiDesc = Qmss_queuePop(rxQueue[fftc_ix]);
+        i++;
+    } while (pCppiDesc == NULL && i < 10000);
 
-	if(i==10000){
-		printf("FFTC timeout\n");
-		printQueueState();
-	}
+    if (i == 10000) {
+        printf("FFTC timeout\n");
+        printQueueState();
+    }
 
-	descSize  = FFTC_DESC_SIZE;//QMSS_DESC_SIZE(pCppiDesc);
-	pCppiDesc = (void*) (QMSS_DESC_PTR (pCppiDesc));
+    descSize = FFTC_DESC_SIZE;//QMSS_DESC_SIZE(pCppiDesc);
+    pCppiDesc = (void *) (QMSS_DESC_PTR(pCppiDesc));
 
-	Osal_DescBeginMemAccess(pCppiDesc, descSize);
+    Osal_DescBeginMemAccess(pCppiDesc, descSize);
 
-	descType  = Cppi_getDescType (pCppiDesc);
+    descType = Cppi_getDescType(pCppiDesc);
 
-	/* Get Data buffer containing the result and its length */
-	Cppi_getData (descType, pCppiDesc, (uint8_t**)&pResultBuffer, &ResultBufferLen);
-	pResultBuffer = Osal_qmssPhyToVirt(pResultBuffer);
+    /* Get Data buffer containing the result and its length */
+    Cppi_getData(descType, pCppiDesc, (uint8_t * *) & pResultBuffer, &ResultBufferLen);
+    pResultBuffer = Osal_qmssPhyToVirt(pResultBuffer);
 
-	/* Verify Data Location */
-	if(pResultBuffer != out){
-		printf("Result Location: get %#x, %#x expected\n", (int)pResultBuffer, (int)out);
-		return 1;
-	}
+    /* Verify Data Location */
+    if (pResultBuffer != out) {
+        printf("Result Location: get %#x, %#x expected\n", (int) pResultBuffer, (int) out);
+        return 1;
+    }
 
-	/* Verify Length */
-	if(ResultBufferLen != bufferSize){
-		printf("Bad Result Length: get %d, %d expected\n", ResultBufferLen, bufferSize);
-		return 1;
-	}
+    /* Verify Length */
+    if (ResultBufferLen != bufferSize) {
+        printf("Bad Result Length: get %d, %d expected\n", ResultBufferLen, bufferSize);
+        return 1;
+    }
 
-	/* Send Descriptor to free Queue */
-	Cppi_setData 			(Cppi_DescType_HOST, pCppiDesc, (uint8_t*)0, 0);
-	Cppi_setOriginalBufInfo (Cppi_DescType_HOST, pCppiDesc, (uint8_t*)0, 0);
-	Cppi_setPacketLen 		(Cppi_DescType_HOST, pCppiDesc, 0);
+    /* Send Descriptor to free Queue */
+    Cppi_setData(Cppi_DescType_HOST, pCppiDesc, (uint8_t *) 0, 0);
+    Cppi_setOriginalBufInfo(Cppi_DescType_HOST, pCppiDesc, (uint8_t *) 0, 0);
+    Cppi_setPacketLen(Cppi_DescType_HOST, pCppiDesc, 0);
 
-	Osal_DescEndMemAccess(pCppiDesc, descSize);
+    Osal_DescEndMemAccess(pCppiDesc, descSize);
 
-	Qmss_queuePushDescSize(QUEUE_FREE_FFTC, pCppiDesc, descSize);
+    Qmss_queuePushDescSize(QUEUE_FREE_FFTC, pCppiDesc, descSize);
 
-	/* Return success. */
-	return 0;
+    /* Return success. */
+    return 0;
 }

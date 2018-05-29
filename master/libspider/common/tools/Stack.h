@@ -38,24 +38,28 @@
 
 #include <new>
 
-class Stack{
+class Stack {
 public:
-	virtual void* alloc(int size) = 0;
-	virtual void free(void* var) = 0;
-	virtual void freeAll() = 0;
+    virtual void *alloc(int size) = 0;
 
-	virtual void printStat() = 0;
+    virtual void free(void *var) = 0;
 
-	inline const char* getName() const;
+    virtual void freeAll() = 0;
 
-	Stack(const char* name): name_(name){}
-	virtual ~Stack(){}
+    virtual void printStat() = 0;
+
+    inline const char *getName() const;
+
+    Stack(const char *name) : name_(name) {}
+
+    virtual ~Stack() {}
 
 private:
-	const char* name_;
+    const char *name_;
 };
 
-inline const char* Stack::getName() const{
-	return name_;
+inline const char *Stack::getName() const {
+    return name_;
 }
+
 #endif // STACKINTERFACE_H

@@ -38,79 +38,75 @@
 #include <tools/DynStack.h>
 #include <platform.h>
 
-#include <stdio.h>
 #include <algorithm>
-#include <stdlib.h>
-#include <cmath>
-#include <stdexcept>
 
-DynStack::DynStack(const char* name): Stack(name){
-	curUsedSize_ = 0;
-	maxSize_ = 0;
-	nb_ = 0;
+DynStack::DynStack(const char *name) : Stack(name) {
+    curUsedSize_ = 0;
+    maxSize_ = 0;
+    nb_ = 0;
 }
 
-DynStack::~DynStack(){
-	printStat();
+DynStack::~DynStack() {
+    printStat();
 }
 
-static inline int getAlignSize(int size){
-	float minAlloc = Platform::get()->getMinAllocSize();
-	return std::ceil(size/minAlloc)*minAlloc;
+static inline int getAlignSize(int size) {
+    float minAlloc = Platform::get()->getMinAllocSize();
+    return std::ceil(size / minAlloc) * minAlloc;
 }
 
-void *DynStack::alloc(int size){
-	size += sizeof(int);
+void *DynStack::alloc(int size) {
+    size += sizeof(int);
 
-	size = getAlignSize(size);
-	curUsedSize_ += size;
-	maxSize_ = std::max(maxSize_, curUsedSize_);
-	nb_++;
+    size = getAlignSize(size);
+    curUsedSize_ += size;
+    maxSize_ = std::max(maxSize_, curUsedSize_);
+    nb_++;
 
-	void* address = malloc(size);
-	if(address == 0)
-		throw std::runtime_error("MemAlloc failed");
-	int* sizeAddress = (int*)address;
-	void* dataAddress = (void*)(sizeAddress+1);
-	*sizeAddress = size;
+    void *address = malloc(size);
+    if (address == 0)
+        throw std::runtime_error("MemAlloc failed");
+    int *sizeAddress = (int *) address;
+    void *dataAddress = (void *) (sizeAddress + 1);
+    *sizeAddress = size;
 
-	return dataAddress;
+    return dataAddress;
 }
 
-void DynStack::freeAll(){
-	if(nb_ != 0){
-		printf("DynStack Warning (%s): FreeAll called with %d allocated item\n", getName(), nb_);
-	}
+void DynStack::freeAll() {
+    if (nb_ != 0) {
+        printf("DynStack Warning (%s): FreeAll called with %d allocated item\n", getName(), nb_);
+    }
 }
 
-void DynStack::free(void* var){
-	void* dataAddress = var;
-	void* address = (void*)(((int*)dataAddress)-1);
-	int size = *((int*)address);
+void DynStack::free(void *var) {
+    void *dataAddress = var;
+    void *address = (void *) (((int *) dataAddress) - 1);
+    int size = *((int *) address);
 
-	maxSize_ = std::max(maxSize_, curUsedSize_);
-	curUsedSize_ -= size;
+    maxSize_ = std::max(maxSize_, curUsedSize_);
+    curUsedSize_ -= size;
 //	if(size == 0){
 //		printf("Error %s free'd already free'd memory\n", getName());
 //	}
-	std::free(address);
-	nb_--;
+    std::free(address);
+    nb_--;
 }
 
-void DynStack::printStat(){
-	printf("%s: ", getName());
+void DynStack::printStat() {
+    printf("%s: ", getName());
 
-	if(maxSize_ < 1024)
-		printf("\t%5.1f B", maxSize_/1.);
-	else if(maxSize_ < 1024*1024)
-		printf("\t%5.1f KB", maxSize_/1024.);
-	else if(maxSize_ < 1024*1024*1024)
-		printf("\t%5.1f MB", maxSize_/1024./1024.);
-	else
-		printf("\t%5.1f GB", maxSize_/1024./1024./1024.);
+    if (maxSize_ < 1024)
+        printf("\t%5.1f B", maxSize_ / 1.);
+    else if (maxSize_ < 1024 * 1024)
+        printf("\t%5.1f KB", maxSize_ / 1024.);
+    else if (maxSize_ < 1024 * 1024 * 1024)
+        printf("\t%5.1f MB", maxSize_ / 1024. / 1024.);
+    else
+        printf("\t%5.1f GB", maxSize_ / 1024. / 1024. / 1024.);
 
-	if(nb_)
-		printf(", \t%d still in use", nb_);
+    if (nb_)
+        printf(", \t%d still in use", nb_);
 
-	printf("\n");
+    printf("\n");
 }

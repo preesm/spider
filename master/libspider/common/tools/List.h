@@ -40,109 +40,114 @@
 #include <monitor/StackMonitor.h>
 #include <stdexcept>
 
-template <class T> class List {
+template<class T>
+class List {
 public:
-	List(SpiderStack stackId, int size);
-	~List();
-	T& operator [](int n);
-	int getNb();
-	void add(T e);
+    List(SpiderStack stackId, int size);
 
-	void sort(int (*comp)(T,T));
+    ~List();
 
-	bool isPresent(T item);
+    T &operator[](int n);
+
+    int getNb();
+
+    void add(T e);
+
+    void sort(int (*comp)(T, T));
+
+    bool isPresent(T item);
 
 private:
-	SpiderStack stackId_;
-	T* array;
-	int nb;
-	int nbMax;
+    SpiderStack stackId_;
+    T *array;
+    int nb;
+    int nbMax;
 
-	void myqsort(int p, int r, int (*comp)(T,T));
-	int myqsort_part(int p, int r, int (*comp)(T,T));
+    void myqsort(int p, int r, int (*comp)(T, T));
+
+    int myqsort_part(int p, int r, int (*comp)(T, T));
 };
 
-template <class T>
-inline List<T>::List(SpiderStack stackId, int size){
-	stackId_ = stackId;
-	nb = 0;
-	nbMax = size;
-	if(size == 0)
-		array = 0;
-	else
-		array = CREATE_MUL(stackId_, size, T);
+template<class T>
+inline List<T>::List(SpiderStack stackId, int size) {
+    stackId_ = stackId;
+    nb = 0;
+    nbMax = size;
+    if (size == 0)
+        array = 0;
+    else
+        array = CREATE_MUL(stackId_, size, T);
 }
 
-template <class T>
-inline List<T>::~List(){
-	if(array != 0)
-		StackMonitor::free(stackId_, array);
+template<class T>
+inline List<T>::~List() {
+    if (array != 0)
+        StackMonitor::free(stackId_, array);
 }
 
-template <class T>
-inline T& List<T>::operator [](int ix){
-	if(ix<0 || ix>=nb)
-		throw std::runtime_error("List: Accesing unitialized element\n");
-	return array[ix];
+template<class T>
+inline T &List<T>::operator[](int ix) {
+    if (ix < 0 || ix >= nb)
+        throw std::runtime_error("List: Accesing unitialized element\n");
+    return array[ix];
 }
 
-template <class T>
-inline int List<T>::getNb(){
-	return nb;
+template<class T>
+inline int List<T>::getNb() {
+    return nb;
 }
 
-template <class T>
-inline void List<T>::add(T e){
-	if(nb>=nbMax)
-		throw std::runtime_error("List: Full !\n");
-	array[nb]=e;
-	nb++;
+template<class T>
+inline void List<T>::add(T e) {
+    if (nb >= nbMax)
+        throw std::runtime_error("List: Full !\n");
+    array[nb] = e;
+    nb++;
 }
 
-template <class T>
-inline void List<T>::sort(int (*comp)(T,T)){
-	myqsort(0,nb-1, comp);
+template<class T>
+inline void List<T>::sort(int (*comp)(T, T)) {
+    myqsort(0, nb - 1, comp);
 }
 
-template <class T>
-inline void List<T>::myqsort(int p, int r, int (*comp)(T,T)){
-	int q;
-	if(p<r){
-		q = myqsort_part(p, r, comp);
-		myqsort(p, q, comp);
-		myqsort(q+1, r, comp);
-	}
+template<class T>
+inline void List<T>::myqsort(int p, int r, int (*comp)(T, T)) {
+    int q;
+    if (p < r) {
+        q = myqsort_part(p, r, comp);
+        myqsort(p, q, comp);
+        myqsort(q + 1, r, comp);
+    }
 }
 
-template <class T>
-inline int List<T>::myqsort_part(int p, int r, int (*comp)(T,T)){
+template<class T>
+inline int List<T>::myqsort_part(int p, int r, int (*comp)(T, T)) {
     T pivot = array[p];
-    int i = p-1, j = r+1;
+    int i = p - 1, j = r + 1;
     T temp;
     while (1) {
         do
             j--;
-        while (comp (array[j],pivot) > 0);
+        while (comp(array[j], pivot) > 0);
         do
             i++;
-        while (comp (array[i],pivot) < 0);
+        while (comp(array[i], pivot) < 0);
         if (i < j) {
             temp = array[i];
             array[i] = array[j];
             array[j] = temp;
-        }
-        else
+        } else
             return j;
     }
 }
 
-template <class T>
-inline bool List<T>::isPresent(T item){
-	for(int i=0; i<nb; i++){
-		if(item == array[i])
-			return true;
-	}
-	return false;
+template<class T>
+inline bool List<T>::isPresent(T item) {
+    for (int i = 0; i < nb; i++) {
+        if (item == array[i])
+            return true;
+    }
+    return false;
 }
 
 #endif/*LIST_H*/

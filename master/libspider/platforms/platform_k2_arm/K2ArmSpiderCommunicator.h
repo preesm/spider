@@ -42,25 +42,30 @@
 #include <tools/Stack.h>
 #include <semaphore.h>
 
-class K2ArmSpiderCommunicator: public SpiderCommunicator{
+class K2ArmSpiderCommunicator : public SpiderCommunicator {
 public:
-	K2ArmSpiderCommunicator();
-	~K2ArmSpiderCommunicator();
+    K2ArmSpiderCommunicator();
 
-	void* ctrl_start_send(int lrtIx, int size);
-	void ctrl_end_send(int lrtIx, int size);
+    ~K2ArmSpiderCommunicator();
 
-	int ctrl_start_recv(int lrtIx, void** data);
-	void ctrl_end_recv(int lrtIx);
+    void *ctrl_start_send(int lrtIx, int size);
 
-	void* trace_start_send(int size);
-	void trace_end_send(int size);
+    void ctrl_end_send(int lrtIx, int size);
 
-	int trace_start_recv(void** data);
-	void trace_end_recv();
+    int ctrl_start_recv(int lrtIx, void **data);
+
+    void ctrl_end_recv(int lrtIx);
+
+    void *trace_start_send(int size);
+
+    void trace_end_send(int size);
+
+    int trace_start_recv(void **data);
+
+    void trace_end_recv();
 
 private:
-	int maxCtrlMsgSize;
+    int maxCtrlMsgSize;
 };
 
 #endif/*K2_ARM_SPIDER_COMMUNICATOR_H*/

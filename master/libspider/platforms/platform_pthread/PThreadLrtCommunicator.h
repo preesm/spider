@@ -45,74 +45,80 @@
 // semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
 // making compilation error with the IDE's own declaration of said types
 #include <semaphore.h>
-#ifdef _MSC_VER
-	#ifdef int64_t
-	#undef int64_t
-	#endif
 
-	#ifdef uint64_t
-	#undef uint64_t
-	#endif
+#ifdef _MSC_VER
+#ifdef int64_t
+#undef int64_t
+#endif
+
+#ifdef uint64_t
+#undef uint64_t
+#endif
 #endif
 
 #include <Message.h>
 #include <tools/Stack.h>
 #include <queue>
 
-class PThreadLrtCommunicator: public LrtCommunicator{
+class PThreadLrtCommunicator : public LrtCommunicator {
 public:
-	PThreadLrtCommunicator(
-			int msgSizeMax,
-			std::queue<unsigned char>* fIn,
-			std::queue<unsigned char>* fOut,
-			std::queue<unsigned char>* fTrace,
-			sem_t *semTrace,
-			sem_t *semFifoSpidertoLRT,
-			sem_t *semFifoLRTtoSpider,
-			void* fifos,
-			void* dataMem
-		);
+    PThreadLrtCommunicator(
+            int msgSizeMax,
+            std::queue<unsigned char> *fIn,
+            std::queue<unsigned char> *fOut,
+            std::queue<unsigned char> *fTrace,
+            sem_t *semTrace,
+            sem_t *semFifoSpidertoLRT,
+            sem_t *semFifoLRTtoSpider,
+            void *fifos,
+            void *dataMem
+    );
 
-	~PThreadLrtCommunicator();
+    ~PThreadLrtCommunicator();
 
-	void* ctrl_start_send(int size);
-	void ctrl_end_send(int size);
+    void *ctrl_start_send(int size);
 
-	int ctrl_start_recv(void** data);
-	void ctrl_end_recv();
+    void ctrl_end_send(int size);
 
-	void* trace_start_send(int size);
-	void trace_end_send(int size);
+    int ctrl_start_recv(void **data);
 
-	void* data_start_send(Fifo* f);
-	void data_end_send(Fifo* f);
+    void ctrl_end_recv();
 
-	void* data_recv(Fifo* f);
+    void *trace_start_send(int size);
 
-	void setLrtJobIx(int lrtIx, int jobIx);
-	long getLrtJobIx(int lrtIx);
+    void trace_end_send(int size);
 
-	void waitForLrtUnlock(int nbDependency, int* blkLrtIx, int* blkLrtJobIx, int jobIx);
+    void *data_start_send(Fifo *f);
+
+    void data_end_send(Fifo *f);
+
+    void *data_recv(Fifo *f);
+
+    void setLrtJobIx(int lrtIx, int jobIx);
+
+    long getLrtJobIx(int lrtIx);
+
+    void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx);
 
 private:
-	std::queue<unsigned char>* fIn_;
-	std::queue<unsigned char>* fOut_;
-	std::queue<unsigned char>* fTrace_;
+    std::queue<unsigned char> *fIn_;
+    std::queue<unsigned char> *fOut_;
+    std::queue<unsigned char> *fTrace_;
 
-	sem_t* semTrace_;
-	sem_t* semFifoSpidertoLRT_;
-	sem_t* semFifoLRTtoSpider_;
+    sem_t *semTrace_;
+    sem_t *semFifoSpidertoLRT_;
+    sem_t *semFifoLRTtoSpider_;
 
-	int msgSizeMax_;
+    int msgSizeMax_;
 
-	void* msgBufferSend_;
-	int curMsgSizeSend_;
+    void *msgBufferSend_;
+    int curMsgSizeSend_;
 
-	void* msgBufferRecv_;
-	int curMsgSizeRecv_;
+    void *msgBufferRecv_;
+    int curMsgSizeRecv_;
 
-	unsigned long* jobTab_;
-	unsigned char* shMem_;
+    unsigned long *jobTab_;
+    unsigned char *shMem_;
 };
 
 #endif/*PTHREAD_LRT_COMMUNICATOR_H*/

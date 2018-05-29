@@ -41,83 +41,84 @@
 #include "init.h"
 #include "cache.h"
 
-void* Osal_cppiCsEnter (void){
+void *Osal_cppiCsEnter(void) {
     return NULL;
 }
 
-void Osal_cppiCsExit (void* CsHandle){
+void Osal_cppiCsExit(void *CsHandle) {
 }
 
-void* Osal_cppiMalloc (Uint32 num_bytes){
-    void*           dataPtr;
+void *Osal_cppiMalloc(Uint32 num_bytes) {
+    void *dataPtr;
 
-    dataPtr = (void*)data_mem_base;
+    dataPtr = (void *) data_mem_base;
     data_mem_base += num_bytes;
 
     return dataPtr;
 }
 
-void Osal_cppiFree (void* dataPtr, Uint32 num_bytes){
+void Osal_cppiFree(void *dataPtr, Uint32 num_bytes) {
 }
 
-void Osal_cppiBeginMemAccess (void *ptr, uint32_t size){
-    CACHE_invL1d (ptr, size, CACHE_FENCE_WAIT);
+void Osal_cppiBeginMemAccess(void *ptr, uint32_t size) {
+    CACHE_invL1d(ptr, size, CACHE_FENCE_WAIT);
 }
 
-void Osal_cppiEndMemAccess (void *ptr, uint32_t size){
-    CACHE_wbL1d (ptr, size, CACHE_FENCE_WAIT);
+void Osal_cppiEndMemAccess(void *ptr, uint32_t size) {
+    CACHE_wbL1d(ptr, size, CACHE_FENCE_WAIT);
 }
 
-void* Osal_qmssCsEnter (void){
+void *Osal_qmssCsEnter(void) {
     return NULL;
 }
 
-void Osal_qmssCsExit (void* CsHandle){
+void Osal_qmssCsExit(void *CsHandle) {
 }
 
-void* Osal_qmssAccCsEnter (void){
+void *Osal_qmssAccCsEnter(void) {
     return NULL;
 }
 
-void Osal_qmssAccCsExit (void *CsHandle){
+void Osal_qmssAccCsExit(void *CsHandle) {
 }
 
-void* Osal_qmssMtCsEnter (void){
+void *Osal_qmssMtCsEnter(void) {
     return NULL;
 }
 
-void Osal_qmssMtCsExit (void* CsHandle){
+void Osal_qmssMtCsExit(void *CsHandle) {
     return;
 }
 
-void* Osal_qmssMalloc (Uint32 num_bytes){
-	void* ptr = malloc(num_bytes);
+void *Osal_qmssMalloc(Uint32 num_bytes) {
+    void *ptr = malloc(num_bytes);
 
-	/* Allocate memory.  */
-	if(ptr){
-		return ptr;
-	}else{
-		printf("Not enough space in Osal_cppiMalloc\n");
-		return ptr;
-	}
+    /* Allocate memory.  */
+    if (ptr) {
+        return ptr;
+    } else {
+        printf("Not enough space in Osal_cppiMalloc\n");
+        return ptr;
+    }
 }
 
-void Osal_qmssFree (void* dataPtr, Uint32 num_bytes){
+void Osal_qmssFree(void *dataPtr, Uint32 num_bytes) {
     if (dataPtr)
         free(dataPtr);
 }
 
-void Osal_qmssBeginMemAccess (void *ptr, uint32_t size){
-    CACHE_invL1d (ptr, size, CACHE_FENCE_WAIT);
+void Osal_qmssBeginMemAccess(void *ptr, uint32_t size) {
+    CACHE_invL1d(ptr, size, CACHE_FENCE_WAIT);
 }
 
-void Osal_qmssEndMemAccess (void *ptr, uint32_t size){
-    CACHE_wbL1d (ptr, size, CACHE_FENCE_WAIT);
+void Osal_qmssEndMemAccess(void *ptr, uint32_t size) {
+    CACHE_wbL1d(ptr, size, CACHE_FENCE_WAIT);
 }
 
-void  Osal_DescBeginMemAccess (void *ptr, uint32_t size){
-    CACHE_invL1d (ptr, size, CACHE_FENCE_WAIT);
+void Osal_DescBeginMemAccess(void *ptr, uint32_t size) {
+    CACHE_invL1d(ptr, size, CACHE_FENCE_WAIT);
 }
-void  Osal_DescEndMemAccess   (void *ptr, uint32_t size){
-    CACHE_wbL1d (ptr, size, CACHE_FENCE_WAIT);
+
+void Osal_DescEndMemAccess(void *ptr, uint32_t size) {
+    CACHE_wbL1d(ptr, size, CACHE_FENCE_WAIT);
 }

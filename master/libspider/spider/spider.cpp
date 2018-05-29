@@ -110,17 +110,7 @@ void Spider::init(SpiderConfig& cfg){
 	setVerbose(cfg.verbose);
 	setTraceEnabled(cfg.traceEnabled);
 
-	platform = new PlatformPThread(
-			cfg.platform.nLrt,
-			cfg.platform.shMemSize,
-			cfg.platform.fcts,
-			cfg.platform.nLrtFcts,
-			cfg.archiStack,
-			cfg.lrtStack,
-			cfg.pisdfStack,
-			cfg.srdagStack,
-			cfg.transfoStack
-	);
+	platform = new PlatformPThread(cfg);
 }
 
 void Spider::clean(){

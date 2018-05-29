@@ -98,9 +98,8 @@ public:
 	/* Fonction de thread */
 	void lrtPThread(Arg_lrt *argument_lrt);
 
+	explicit PlatformPThread(SpiderConfig& config);
 
-	PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
-			StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack);
 	virtual ~PlatformPThread();
 
 

@@ -105,15 +105,14 @@ static void setAffinity(int cpuId){
 	}
 }
 
-PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack, StackConfig lrtStack,
-	StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack){
 
+PlatformPThread::PlatformPThread(SpiderConfig& config){
 	if (platform_) throw std::runtime_error("Try to create 2 platforms");
 	platform_ = this;
 
 	//printfSpider();
 
-	nLrt_ = nLrt;
+	nLrt_ = config.platform.nLrt;
 
 	stackPisdf = 0;
 	stackSrdag = 0;
@@ -127,9 +126,9 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 	thread_ID_tab_ = (pthread_t*)malloc(nLrt_*sizeof(pthread_t));
 
 	//Global stacks initialisation
-	StackMonitor::initStack(PISDF_STACK, pisdfStack);
-	StackMonitor::initStack(SRDAG_STACK, srdagStack);
-	StackMonitor::initStack(TRANSFO_STACK, transfoStack);
+	StackMonitor::initStack(PISDF_STACK, config.pisdfStack);
+	StackMonitor::initStack(SRDAG_STACK, config.srdagStack);
+	StackMonitor::initStack(TRANSFO_STACK, config.transfoStack);
 
 
 	//allocation des fifos
@@ -165,19 +164,19 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 		arg_lrt[i - 1].semTrace = &semTrace;
 		arg_lrt[i - 1].semFifoSpidertoLRT = &semFifoSpidertoLRT[i];
 		arg_lrt[i - 1].semFifoLRTtoSpider = &semFifoLRTtoSpider[i];
-		arg_lrt[i - 1].shMemSize = shMemSize;
-		arg_lrt[i - 1].fcts = fcts;
-		arg_lrt[i - 1].nLrtFcts = nLrtFcts;
+		arg_lrt[i - 1].shMemSize = config.platform.shMemSize;
+		arg_lrt[i - 1].fcts = config.platform.fcts;
+		arg_lrt[i - 1].nLrtFcts = config.platform.nLrtFcts;
 		arg_lrt[i - 1].indice = i;
 		arg_lrt[i - 1].nLrt = nLrt_;
 		arg_lrt[i - 1].instance = this;
-		arg_lrt[i - 1].archiStack = archiStack;
-		arg_lrt[i - 1].lrtStack = lrtStack;
+		arg_lrt[i - 1].archiStack = config.archiStack;
+		arg_lrt[i - 1].lrtStack = config.lrtStack;
 	}
 
 
 	//TODO have shMem a multiple of getMinAllocSize
-	jobTab = malloc(shMemSize);
+	jobTab = malloc(config.platform.shMemSize);
 
 	dataMem = (void*) ((long)jobTab + sizeof(unsigned int)*nLrt_);
 
@@ -185,20 +184,22 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 	pthread_barrier_init(&pthread_barrier_init_and_end_thread, NULL, nLrt_);
 
 	//Lancement des threads
-	for (int i = 1; i<nLrt_; i++) pthread_create(&thread_lrt[i - 1], NULL, &lrtPThread_helper, &arg_lrt[i - 1]);
+	for (int i = 1; i<nLrt_; i++) {
+		pthread_create(&thread_lrt[i - 1], NULL, &lrtPThread_helper, &arg_lrt[i - 1]);
+	}
 
 	//waiting for every threads to register itself in thread_ID_tab_
 	pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
 
 	//Declaration des stacks spécific au thread
-	archiStack.size /= nLrt_;
-	StackMonitor::initStack(ARCHI_STACK, archiStack);
+	config.archiStack.size /= nLrt_;
+	StackMonitor::initStack(ARCHI_STACK, config.archiStack);
 
-	lrtStack.size /= nLrt_;
-	StackMonitor::initStack(LRT_STACK, lrtStack);
+	config.lrtStack.size /= nLrt_;
+	StackMonitor::initStack(LRT_STACK, config.lrtStack);
 
 	/** Initialize shared memory */
-	memset(jobTab, 0, shMemSize);
+	memset(jobTab, 0, config.platform.shMemSize);
 
 	/** Initialize LRT and Communicators */
 	spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
@@ -232,7 +233,7 @@ PlatformPThread::PlatformPThread(int nLrt, int shMemSize, lrtFct* fcts, int nLrt
 
 
 	setAffinity(0);
-	lrt_[0]->setFctTbl(fcts, nLrtFcts);
+	lrt_[0]->setFctTbl(config.platform.fcts, config.platform.nLrtFcts);
 
 
 	/** Create Archi */

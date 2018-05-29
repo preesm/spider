@@ -45,58 +45,67 @@
 
 class Schedule {
 public:
-	Schedule();
-	Schedule(int nPE, int nJobMax);
-	~Schedule();
+    Schedule();
 
-	inline void setAllMinReadyTime(Time time);
+    Schedule(int nPE, int nJobMax);
+
+    ~Schedule();
+
+    inline void setAllMinReadyTime(Time time);
+
     inline void setReadyTime(int pe, Time time);
+
     inline Time getReadyTime(int pe) const;
 
-	void addJob(int pe, SRDAGVertex* job, Time start, Time end);
+    void addJob(int pe, SRDAGVertex *job, Time start, Time end);
 
-	void print(const char* path);
-	bool check();
+    void print(const char *path);
+
+    bool check();
 
 private:
-	int nPE_;
-	int nJobMax_;
-	int* nJobPerPE_;
-	Time* readyTime_;
-	SRDAGVertex** schedules_;
+    int nPE_;
+    int nJobMax_;
+    int *nJobPerPE_;
+    Time *readyTime_;
+    SRDAGVertex **schedules_;
 
     inline int getNJobs(int pe) const;
-	inline SRDAGVertex* getJob(int pe, int ix) const;
+
+    inline SRDAGVertex *getJob(int pe, int ix) const;
 };
 
-inline void Schedule::setAllMinReadyTime(Time time){
-	for(int i=0; i<nPE_; i++){
-		readyTime_[i] = std::max(time, readyTime_[i]);
-	}
-}
-inline void Schedule::setReadyTime(int pe, Time time){
-	if(pe < 0 || pe >= nPE_)
-		throw std::runtime_error("Schedule: Accessing bad PE\n");
-	readyTime_[pe] = time;
-}
-inline Time Schedule::getReadyTime(int pe) const{
-	if(pe < 0 || pe >= nPE_)
-		throw std::runtime_error("Schedule: Accessing bad PE\n");
-	return readyTime_[pe];
+inline void Schedule::setAllMinReadyTime(Time time) {
+    for (int i = 0; i < nPE_; i++) {
+        readyTime_[i] = std::max(time, readyTime_[i]);
+    }
 }
 
-inline int Schedule::getNJobs(int pe) const{
-	if(pe < 0 || pe >= nPE_)
-		throw std::runtime_error("Schedule: Accessing bad PE\n");
-	return nJobPerPE_[pe];
+inline void Schedule::setReadyTime(int pe, Time time) {
+    if (pe < 0 || pe >= nPE_)
+        throw std::runtime_error("Schedule: Accessing bad PE\n");
+    readyTime_[pe] = time;
 }
-inline SRDAGVertex* Schedule::getJob(int pe, int ix) const{
-	if(pe < 0 || pe >= nPE_)
-		throw std::runtime_error("Schedule: Accessing bad PE\n");
-	if(ix < 0 || ix >= nJobPerPE_[pe])
-		throw std::runtime_error("Schedule: Accessing bad Job\n");
 
-	return schedules_[pe*nJobMax_+ix];
+inline Time Schedule::getReadyTime(int pe) const {
+    if (pe < 0 || pe >= nPE_)
+        throw std::runtime_error("Schedule: Accessing bad PE\n");
+    return readyTime_[pe];
+}
+
+inline int Schedule::getNJobs(int pe) const {
+    if (pe < 0 || pe >= nPE_)
+        throw std::runtime_error("Schedule: Accessing bad PE\n");
+    return nJobPerPE_[pe];
+}
+
+inline SRDAGVertex *Schedule::getJob(int pe, int ix) const {
+    if (pe < 0 || pe >= nPE_)
+        throw std::runtime_error("Schedule: Accessing bad PE\n");
+    if (ix < 0 || ix >= nJobPerPE_[pe])
+        throw std::runtime_error("Schedule: Accessing bad Job\n");
+
+    return schedules_[pe * nJobMax_ + ix];
 }
 
 #endif/*SCHEDULE_H*/

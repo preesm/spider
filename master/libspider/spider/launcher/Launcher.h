@@ -45,29 +45,33 @@
 
 class Launcher {
 public:
-	static Launcher* get();
+    static Launcher *get();
 
-	void launchVertex(SRDAGVertex* vertex);
-	void resolveParams(Archi* archi, SRDAGGraph* topDag);
+    void launchVertex(SRDAGVertex *vertex);
 
-	void sendTraceSpider(TraceSpiderType type, Time start, Time end);
+    void resolveParams(Archi *archi, SRDAGGraph *topDag);
 
-	int getNLaunched();
-	void rstNLaunched();
+    void sendTraceSpider(TraceSpiderType type, Time start, Time end);
+
+    int getNLaunched();
+
+    void rstNLaunched();
 
 protected:
-	Launcher();
+    Launcher();
 
 private:
-	int nLaunched_;
-	int curNParam_;
-	static Launcher instance_;
+    int nLaunched_;
+    int curNParam_;
+    static Launcher instance_;
 
-	void send_ClearTimeMsg(int lrtIx);
-	void send_StartJobMsg(int lrtIx, SRDAGVertex* vertex);
+    void send_ClearTimeMsg(int lrtIx);
 
-	void send_EndIterMsg(int lrtIx);
-	void send_ResetLrtMsg(int lrtIx);
+    void send_StartJobMsg(int lrtIx, SRDAGVertex *vertex);
+
+    void send_EndIterMsg(int lrtIx);
+
+    void send_ResetLrtMsg(int lrtIx);
 
 };
 

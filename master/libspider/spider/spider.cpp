@@ -41,14 +41,6 @@
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/PiSDF/PiSDFGraph.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
-#include <graphs/PiSDF/PiSDFVertex.h>
-#include <graphs/Bipartite/BipartiteGraph.h>
-
-#include <tools/StaticStack.h>
-#include <tools/DynStack.h>
-
-#include <graphs/Archi/Archi.h>
-#include <graphs/Archi/SharedMemArchi.h>
 
 #include <scheduling/MemAlloc.h>
 #include <scheduling/MemAlloc/DummyMemAlloc.h>
@@ -62,13 +54,10 @@
 
 #include <graphTransfo/GraphTransfo.h>
 
-#include <monitor/StackMonitor.h>
 #include <monitor/TimeMonitor.h>
 
 #include <SpiderCommunicator.h>
-#include <lrt.h>
 
-#include <stdio.h>
 #include <launcher/Launcher.h>
 
 #include "platformPThread.h"
@@ -85,320 +74,317 @@
 #define CHIP_FREQ (1)
 #endif
 
-static Archi* archi_;
-static PiSDFGraph* pisdf_;
-static SRDAGGraph* srdag_;
+static Archi *archi_;
+static PiSDFGraph *pisdf_;
+static SRDAGGraph *srdag_;
 
-static MemAlloc* memAlloc_;
-static Scheduler* scheduler_;
+static MemAlloc *memAlloc_;
+static Scheduler *scheduler_;
 //static PlatformMPPA* platform;
-static PlatformPThread* platform;
+static PlatformPThread *platform;
 
 static bool verbose_;
 static bool useGraphOptim_;
 static bool useActorPrecedence_;
 static bool traceEnabled_;
 
-void Spider::init(SpiderConfig& cfg){
+void Spider::init(SpiderConfig &cfg) {
 
-	setGraphOptim(cfg.useGraphOptim);
+    setGraphOptim(cfg.useGraphOptim);
 
-	setMemAllocType(cfg.memAllocType, (long)cfg.memAllocStart, cfg.memAllocSize);
-	setSchedulerType(cfg.schedulerType);
+    setMemAllocType(cfg.memAllocType, (long) cfg.memAllocStart, cfg.memAllocSize);
+    setSchedulerType(cfg.schedulerType);
 
-	setActorPrecedence(cfg.useActorPrecedence);
-	setVerbose(cfg.verbose);
-	setTraceEnabled(cfg.traceEnabled);
+    setActorPrecedence(cfg.useActorPrecedence);
+    setVerbose(cfg.verbose);
+    setTraceEnabled(cfg.traceEnabled);
 
-	platform = new PlatformPThread(cfg);
+    platform = new PlatformPThread(cfg);
 }
 
-void Spider::clean(){
+void Spider::clean() {
 
-	if(srdag_ != 0)
-		delete srdag_;
-	if(memAlloc_ != 0)
-		delete memAlloc_;
-	if(scheduler_ != 0)
-		delete scheduler_;
-		
-	if(platform != 0)
-		delete platform;
+    if (srdag_ != 0)
+        delete srdag_;
+    if (memAlloc_ != 0)
+        delete memAlloc_;
+    if (scheduler_ != 0)
+        delete scheduler_;
 
-	//StackMonitor::cleanAllStack();
+    if (platform != 0)
+        delete platform;
+
+    //StackMonitor::cleanAllStack();
 }
 
-void Spider::idle(){
-	for(int lrt=0; lrt<archi_->getNPE(); lrt++){
-		if(lrt != archi_->getSpiderPeIx()){
-			archi_->desactivatePE(lrt);
-		}
-	}
+void Spider::idle() {
+    for (int lrt = 0; lrt < archi_->getNPE(); lrt++) {
+        if (lrt != archi_->getSpiderPeIx()) {
+            archi_->desactivatePE(lrt);
+        }
+    }
 }
 
-void Spider::iterate(){
-	Platform::get()->rstTime();
-	/** Set all slave jobIx to 0 */
+void Spider::iterate() {
+    Platform::get()->rstTime();
+    /** Set all slave jobIx to 0 */
 
-	delete srdag_;
-	StackMonitor::freeAll(SRDAG_STACK);
-	memAlloc_->reset();
+    delete srdag_;
+    StackMonitor::freeAll(SRDAG_STACK);
+    memAlloc_->reset();
 
-	srdag_ = new SRDAGGraph();
+    srdag_ = new SRDAGGraph();
 
 
-	jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
+    jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
 
-	//Mise à zéro compteur job
-	Platform::get()->rstJobIx();
+    //Mise à zéro compteur job
+    Platform::get()->rstJobIx();
 }
 
-void Spider::setGraphOptim(bool useGraphOptim){
-	useGraphOptim_ = useGraphOptim;
+void Spider::setGraphOptim(bool useGraphOptim) {
+    useGraphOptim_ = useGraphOptim;
 }
 
-void Spider::setVerbose(bool verbose){
-	verbose_ = verbose;
+void Spider::setVerbose(bool verbose) {
+    verbose_ = verbose;
 }
 
-void Spider::setActorPrecedence(bool useActorPrecedence){
-	useActorPrecedence_ = useActorPrecedence;
+void Spider::setActorPrecedence(bool useActorPrecedence) {
+    useActorPrecedence_ = useActorPrecedence;
 }
 
-void Spider::setTraceEnabled(bool traceEnabled){
-	traceEnabled_ = traceEnabled;
+void Spider::setTraceEnabled(bool traceEnabled) {
+    traceEnabled_ = traceEnabled;
 }
 
-bool Spider::getVerbose(){
-	return verbose_;
+bool Spider::getVerbose() {
+    return verbose_;
 }
 
-bool Spider::getGraphOptim(){
-	return useGraphOptim_;
+bool Spider::getGraphOptim() {
+    return useGraphOptim_;
 }
 
-bool Spider::getActorPrecedence(){
-	return useActorPrecedence_;
+bool Spider::getActorPrecedence() {
+    return useActorPrecedence_;
 }
 
-bool Spider::getTraceEnabled(){
-	return traceEnabled_;
+bool Spider::getTraceEnabled() {
+    return traceEnabled_;
 }
 
-void Spider::setArchi(Archi* archi){
-	archi_ = archi;
+void Spider::setArchi(Archi *archi) {
+    archi_ = archi;
 }
 
-void Spider::setGraph(PiSDFGraph* graph){
-	pisdf_ = graph;
+void Spider::setGraph(PiSDFGraph *graph) {
+    pisdf_ = graph;
 }
 
-PiSDFGraph* Spider::getGraph(){
-	return pisdf_;
+PiSDFGraph *Spider::getGraph() {
+    return pisdf_;
 }
 
-Archi* Spider::getArchi(){
-	return archi_;
+Archi *Spider::getArchi() {
+    return archi_;
 }
 
-void Spider::setMemAllocType(MemAllocType type, int start, int size){
-	if(memAlloc_ != 0){
-		delete memAlloc_;
-	}
-	switch(type){
-	case MEMALLOC_DUMMY:
-		memAlloc_ = new DummyMemAlloc(start, size);
-		break;
-	case MEMALLOC_SPECIAL_ACTOR:
-		memAlloc_ = new SpecialActorMemAlloc(start, size);
-		break;
-	}
+void Spider::setMemAllocType(MemAllocType type, int start, int size) {
+    if (memAlloc_ != 0) {
+        delete memAlloc_;
+    }
+    switch (type) {
+        case MEMALLOC_DUMMY:
+            memAlloc_ = new DummyMemAlloc(start, size);
+            break;
+        case MEMALLOC_SPECIAL_ACTOR:
+            memAlloc_ = new SpecialActorMemAlloc(start, size);
+            break;
+    }
 }
 
-void Spider::setSchedulerType(SchedulerType type){
-	if(scheduler_ != 0){
-		delete scheduler_;
-	}
-	switch(type){
-	case SCHEDULER_LIST:
-		scheduler_ = new ListScheduler();
-		break;
-	case SCHEDULER_LIST_ON_THE_GO:
-		scheduler_ = new ListSchedulerOnTheGo();
-		break;
-	case ROUND_ROBIN:
-		scheduler_ = new RoundRobin();
-		break;
-	case ROUND_ROBIN_SCATTERED:
-		scheduler_ = new RoundRobinScattered();
-		break;
-	}
+void Spider::setSchedulerType(SchedulerType type) {
+    if (scheduler_ != 0) {
+        delete scheduler_;
+    }
+    switch (type) {
+        case SCHEDULER_LIST:
+            scheduler_ = new ListScheduler();
+            break;
+        case SCHEDULER_LIST_ON_THE_GO:
+            scheduler_ = new ListSchedulerOnTheGo();
+            break;
+        case ROUND_ROBIN:
+            scheduler_ = new RoundRobin();
+            break;
+        case ROUND_ROBIN_SCATTERED:
+            scheduler_ = new RoundRobinScattered();
+            break;
+    }
 }
 
-void Spider::printSRDAG(const char* srdagPath){
-	return srdag_->print(srdagPath);
+void Spider::printSRDAG(const char *srdagPath) {
+    return srdag_->print(srdagPath);
 }
 
-void Spider::printPiSDF(const char* pisdfPath){
-	return pisdf_->print(pisdfPath);
+void Spider::printPiSDF(const char *pisdfPath) {
+    return pisdf_->print(pisdfPath);
 }
 
-void Spider::printActorsStat(ExecutionStat* stat){
-	printf("\t%15s:\n", "Actors");
-	for(int j=0; j<stat->nPiSDFActor; j++){
-		printf("\t%15s:", stat->actors[j]->getName());
-		for(int k=0; k<archi_->getNPETypes(); k++)
-			if(stat->actorIterations[j][k])
-				printf("\t%lld (x%lld)",
-						stat->actorTimes[j][k]/stat->actorIterations[j][k],
-						stat->actorIterations[j][k]);
-			else
-				printf("\t%d (x%d)", 0, 0);
-		printf("\n");
-	}
+void Spider::printActorsStat(ExecutionStat *stat) {
+    printf("\t%15s:\n", "Actors");
+    for (int j = 0; j < stat->nPiSDFActor; j++) {
+        printf("\t%15s:", stat->actors[j]->getName());
+        for (int k = 0; k < archi_->getNPETypes(); k++)
+            if (stat->actorIterations[j][k])
+                printf("\t%lld (x%lld)",
+                       stat->actorTimes[j][k] / stat->actorIterations[j][k],
+                       stat->actorIterations[j][k]);
+            else
+                printf("\t%d (x%d)", 0, 0);
+        printf("\n");
+    }
 }
 
-static char* regenerateColor(int refInd){
-	static char color[8];
-	color[0] = '\0';
+static char *regenerateColor(int refInd) {
+    static char color[8];
+    color[0] = '\0';
 
-	int ired = (refInd & 0x3)*50 + 100;
-	int igreen = ((refInd >> 2) & 0x3)*50 + 100;
-	int iblue = ((refInd >> 4) & 0x3)*50 + 100;
-	char red[5];
-	char green[5];
-	char blue[5];
-	if(ired <= 0xf){
-		sprintf(red,"0%x",ired);
-	}
-	else{
-		sprintf(red,"%x",ired);
-	}
+    int ired = (refInd & 0x3) * 50 + 100;
+    int igreen = ((refInd >> 2) & 0x3) * 50 + 100;
+    int iblue = ((refInd >> 4) & 0x3) * 50 + 100;
+    char red[5];
+    char green[5];
+    char blue[5];
+    if (ired <= 0xf) {
+        sprintf(red, "0%x", ired);
+    } else {
+        sprintf(red, "%x", ired);
+    }
 
-	if(igreen <= 0xf){
-		sprintf(green,"0%x",igreen);
-	}
-	else{
-		sprintf(green,"%x",igreen);
-	}
+    if (igreen <= 0xf) {
+        sprintf(green, "0%x", igreen);
+    } else {
+        sprintf(green, "%x", igreen);
+    }
 
-	if(iblue <= 0xf){
-		sprintf(blue,"0%x",iblue);
-	}
-	else{
-		sprintf(blue,"%x",iblue);
-	}
+    if (iblue <= 0xf) {
+        sprintf(blue, "0%x", iblue);
+    } else {
+        sprintf(blue, "%x", iblue);
+    }
 
-	strcpy(color,"#");
-	strcat(color,red);
-	strcat(color,green);
-	strcat(color,blue);
+    strcpy(color, "#");
+    strcat(color, red);
+    strcat(color, green);
+    strcat(color, blue);
 
-	return color;
+    return color;
 }
 
 static inline void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Archi *archi, SRDAGVertex *vertex,
                                           Time start, Time end, int lrtIx, float latexScaling) {
-	static char name[200];
-	static int i=0;
-	vertex->toString(name, 100);
+    static char name[200];
+    static int i = 0;
+    vertex->toString(name, 100);
 
-	char* temp_str = (char*) malloc(300*sizeof(char));
+    char *temp_str = (char *) malloc(300 * sizeof(char));
 
 
-	sprintf(temp_str,
-		"\t<event\n"
-		"\t\tstart=\"%llu\"\n"
-		"\t\tend=\"%llu\"\n"
-		"\t\ttitle=\"%s_%d_%d\"\n"
-		"\t\tmapping=\"%s\"\n"
-		"\t\tcolor=\"%s\"\n"
-		"\t\t>Step_%d.</event>\n",
-		start,
-		end,
-		name, vertex->getIterId(), vertex->getRefId(),
-		archi->getPEName(lrtIx),
-		regenerateColor(i++),
-		name);
+    sprintf(temp_str,
+            "\t<event\n"
+            "\t\tstart=\"%llu\"\n"
+            "\t\tend=\"%llu\"\n"
+            "\t\ttitle=\"%s_%d_%d\"\n"
+            "\t\tmapping=\"%s\"\n"
+            "\t\tcolor=\"%s\"\n"
+            "\t\t>Step_%d.</event>\n",
+            start,
+            end,
+            name, vertex->getIterId(), vertex->getRefId(),
+            archi->getPEName(lrtIx),
+            regenerateColor(i++),
+            lrtIx);
 
-	Platform::get()->fprintf(ganttFile,"%s", temp_str);
+    Platform::get()->fprintf(ganttFile, "%s", temp_str);
 
-	sprintf(temp_str,
-		"%f,"
-		"%f,"
-		"%d,",
-		start/latexScaling,
-		end/latexScaling,
-		lrtIx);
+    sprintf(temp_str,
+            "%f,"
+            "%f,"
+            "%d,",
+            start / latexScaling,
+            end / latexScaling,
+            lrtIx);
 
-	if(vertex->getFctId() == 7)	{
-	    sprintf(temp_str + strlen(temp_str), "color%d\n", vertex->getIterId());
-	} else {
-	    sprintf(temp_str + strlen(temp_str), "c\n");
-	}
+    if (vertex->getFctId() == 7) {
+        sprintf(temp_str + strlen(temp_str), "color%d\n", vertex->getIterId());
+    } else {
+        sprintf(temp_str + strlen(temp_str), "c\n");
+    }
 
-	Platform::get()->fprintf(latexFile,"%s", temp_str);
+    Platform::get()->fprintf(latexFile, "%s", temp_str);
 
-	/* Latex File */
-	// Platform::get()->fprintf(latexFile, "%f,", start/latexScaling); /* Start */
-	// Platform::get()->fprintf(latexFile, "%f,", end/latexScaling); /* Duration */
-	// Platform::get()->fprintf(latexFile, "%d,", lrtIx); /* Core index */
+    /* Latex File */
+    // Platform::get()->fprintf(latexFile, "%f,", start/latexScaling); /* Start */
+    // Platform::get()->fprintf(latexFile, "%f,", end/latexScaling); /* Duration */
+    // Platform::get()->fprintf(latexFile, "%d,", lrtIx); /* Core index */
 
-	// if(vertex->getFctId() == 7){
-	// 	Platform::get()->fprintf(latexFile, "color%d\n", vertex->getIterId()); /* Color */
-	// }else Platform::get()->fprintf(latexFile, "c\n"); /* Color */
+    // if(vertex->getFctId() == 7){
+    // 	Platform::get()->fprintf(latexFile, "color%d\n", vertex->getIterId()); /* Color */
+    // }else Platform::get()->fprintf(latexFile, "c\n"); /* Color */
 
-	free(temp_str);
+    free(temp_str);
 }
 
-void Spider::printGantt(const char* ganttPath, const char* latexPath, ExecutionStat* stat){
-	FILE *ganttFile = Platform::get()->fopen(ganttPath);
-	if(ganttFile == nullptr) throw std::runtime_error("Error opening ganttFile");
+void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionStat *stat) {
+    FILE *ganttFile = Platform::get()->fopen(ganttPath);
+    if (ganttFile == nullptr) throw std::runtime_error("Error opening ganttFile");
 
-	FILE *latexFile = Platform::get()->fopen(latexPath);
-	if(latexFile == nullptr) throw std::runtime_error("Error opening latexFile");
+    FILE *latexFile = Platform::get()->fopen(latexPath);
+    if (latexFile == nullptr) throw std::runtime_error("Error opening latexFile");
 
-	float latexScaling = 1000;
+    float latexScaling = 1000;
 
-	// Writing header
-	Platform::get()->fprintf(ganttFile, "<data>\n");
-	Platform::get()->fprintf(latexFile, "start,end,core,color\n");
+    // Writing header
+    Platform::get()->fprintf(ganttFile, "<data>\n");
+    Platform::get()->fprintf(latexFile, "start,end,core,color\n");
 
-	// Popping data from Trace queue.
-	stat->mappingTime = 0;
-	stat->graphTime = 0;
-	stat->optimTime = 0;
-	stat->schedTime = 0;
-	stat->globalEndTime = 0;
+    // Popping data from Trace queue.
+    stat->mappingTime = 0;
+    stat->graphTime = 0;
+    stat->optimTime = 0;
+    stat->schedTime = 0;
+    stat->globalEndTime = 0;
 
-	stat->forkTime = 0;
-	stat->joinTime = 0;
-	stat->rbTime = 0;
-	stat->brTime = 0;
-	stat->nExecSRDAGActor = 0;
-	stat->nSRDAGActor = srdag_->getNVertex();
-	stat->nSRDAGEdge = srdag_->getNEdge();
-	stat->nPiSDFActor = 0;
+    stat->forkTime = 0;
+    stat->joinTime = 0;
+    stat->rbTime = 0;
+    stat->brTime = 0;
+    stat->nExecSRDAGActor = 0;
+    stat->nSRDAGActor = srdag_->getNVertex();
+    stat->nSRDAGEdge = srdag_->getNEdge();
+    stat->nPiSDFActor = 0;
 
-	stat->memoryUsed = memAlloc_->getMemUsed();
+    stat->memoryUsed = memAlloc_->getMemUsed();
 
-	TraceMsg* traceMsg;
-	int n = Launcher::get()->getNLaunched();
-	while(n){
-		if(Platform::get()->getSpiderCommunicator()->trace_start_recv((void**)&traceMsg)){
-			switch (traceMsg->msgIx) {
-				case TRACE_JOB:{
-					SRDAGVertex* vertex = srdag_->getVertexFromIx(traceMsg->srdagIx);
+    TraceMsg *traceMsg;
+    int n = Launcher::get()->getNLaunched();
+    while (n) {
+        if (Platform::get()->getSpiderCommunicator()->trace_start_recv((void **) &traceMsg)) {
+            switch (traceMsg->msgIx) {
+                case TRACE_JOB: {
+                    SRDAGVertex *vertex = srdag_->getVertexFromIx(traceMsg->srdagIx);
 
-					traceMsg->start /= CHIP_FREQ;
-					traceMsg->end /= CHIP_FREQ;
-					
-					Time execTime = traceMsg->end - traceMsg->start;
+                    traceMsg->start /= CHIP_FREQ;
+                    traceMsg->end /= CHIP_FREQ;
 
-					static Time baseTime=0;
-					// if(strcmp(vertex->getReference()->getName(),"src") == 0){
-					// 	baseTime = traceMsg->start;
-					// }
+                    Time execTime = traceMsg->end - traceMsg->start;
+
+                    static Time baseTime = 0;
+                    // if(strcmp(vertex->getReference()->getName(),"src") == 0){
+                    // 	baseTime = traceMsg->start;
+                    // }
 
 
                     printGantt_SRDAGVertex(
@@ -411,290 +397,295 @@ void Spider::printGantt(const char* ganttPath, const char* latexPath, ExecutionS
                             traceMsg->lrtIx,
                             latexScaling);
 
-					/* Update Stats */
-					stat->globalEndTime = std::max(traceMsg->end-baseTime, stat->globalEndTime);
-					stat->nExecSRDAGActor++;
+                    /* Update Stats */
+                    stat->globalEndTime = std::max(traceMsg->end - baseTime, stat->globalEndTime);
+                    stat->nExecSRDAGActor++;
 
-					switch(vertex->getType()){
-						case SRDAG_NORMAL:{
-							int i;
-							int lrtType = archi_->getPEType(traceMsg->lrtIx);
-							for(i=0; i<stat->nPiSDFActor; i++){
-								if(stat->actors[i] == vertex->getReference()){
-									stat->actorTimes[i][lrtType] += execTime;
-									stat->actorIterations[i][lrtType]++;
+                    switch (vertex->getType()) {
+                        case SRDAG_NORMAL: {
+                            int i;
+                            int lrtType = archi_->getPEType(traceMsg->lrtIx);
+                            for (i = 0; i < stat->nPiSDFActor; i++) {
+                                if (stat->actors[i] == vertex->getReference()) {
+                                    stat->actorTimes[i][lrtType] += execTime;
+                                    stat->actorIterations[i][lrtType]++;
 
-									stat->actorFisrt[i] = std::min(stat->actorFisrt[i], traceMsg->start);
-									stat->actorLast[i] = std::max(stat->actorLast[i], traceMsg->end);
-									break;
-								}
-							}
-							if(i == stat->nPiSDFActor){
-								stat->actors[stat->nPiSDFActor] = vertex->getReference();
+                                    stat->actorFisrt[i] = std::min(stat->actorFisrt[i], traceMsg->start);
+                                    stat->actorLast[i] = std::max(stat->actorLast[i], traceMsg->end);
+                                    break;
+                                }
+                            }
+                            if (i == stat->nPiSDFActor) {
+                                stat->actors[stat->nPiSDFActor] = vertex->getReference();
 
-								memset(stat->actorTimes[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES*sizeof(Time));
-								memset(stat->actorIterations[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES*sizeof(Time));
+                                memset(stat->actorTimes[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES * sizeof(Time));
+                                memset(stat->actorIterations[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES * sizeof(Time));
 
-								stat->actorTimes[stat->nPiSDFActor][lrtType] += execTime;
-								stat->actorIterations[i][lrtType]++;
-								stat->nPiSDFActor++;
+                                stat->actorTimes[stat->nPiSDFActor][lrtType] += execTime;
+                                stat->actorIterations[i][lrtType]++;
+                                stat->nPiSDFActor++;
 
-								stat->actorFisrt[i] = traceMsg->start;
-								stat->actorLast[i] = traceMsg->end;
-							}
-							break;}
-						case SRDAG_BROADCAST:
-							stat->brTime += execTime;
-							break;
-						case SRDAG_FORK:
-							stat->forkTime += execTime;
-							break;
-						case SRDAG_JOIN:
-							stat->joinTime += execTime;
-							break;
-						case SRDAG_ROUNDBUFFER:
-							stat->rbTime += execTime;
-							break;
-						case SRDAG_INIT:
-						case SRDAG_END:
-							break;
-					}
+                                stat->actorFisrt[i] = traceMsg->start;
+                                stat->actorLast[i] = traceMsg->end;
+                            }
+                            break;
+                        }
+                        case SRDAG_BROADCAST:
+                            stat->brTime += execTime;
+                            break;
+                        case SRDAG_FORK:
+                            stat->forkTime += execTime;
+                            break;
+                        case SRDAG_JOIN:
+                            stat->joinTime += execTime;
+                            break;
+                        case SRDAG_ROUNDBUFFER:
+                            stat->rbTime += execTime;
+                            break;
+                        case SRDAG_INIT:
+                        case SRDAG_END:
+                            break;
+                    }
 
-					break;}
-				case TRACE_SPIDER:{
+                    break;
+                }
+                case TRACE_SPIDER: {
 
-					static int i=0;
+                    static int i = 0;
 
-					traceMsg->start /= CHIP_FREQ;
-					traceMsg->end /= CHIP_FREQ;
+                    traceMsg->start /= CHIP_FREQ;
+                    traceMsg->end /= CHIP_FREQ;
 
-					/* Gantt File */
-					Platform::get()->fprintf(ganttFile, "\t<event\n");
-					Platform::get()->fprintf(ganttFile, "\t\tstart=\"%llu\"\n", 	traceMsg->start);
-					Platform::get()->fprintf(ganttFile, "\t\tend=\"%llu\"\n",		traceMsg->end);
-					Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n", 	TimeMonitor::getTaskName((TraceSpiderType)traceMsg->spiderTask));
-					Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi_->getPEName(traceMsg->lrtIx));
-					Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", 	regenerateColor(i++));
-					Platform::get()->fprintf(ganttFile, "\t\t>Step_%lu.</event>\n", traceMsg->spiderTask);
+                    /* Gantt File */
+                    Platform::get()->fprintf(ganttFile, "\t<event\n");
+                    Platform::get()->fprintf(ganttFile, "\t\tstart=\"%llu\"\n", traceMsg->start);
+                    Platform::get()->fprintf(ganttFile, "\t\tend=\"%llu\"\n", traceMsg->end);
+                    Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n",
+                                             TimeMonitor::getTaskName((TraceSpiderType) traceMsg->spiderTask));
+                    Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi_->getPEName(traceMsg->lrtIx));
+                    Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", regenerateColor(i++));
+                    Platform::get()->fprintf(ganttFile, "\t\t>Step_%lu.</event>\n", traceMsg->spiderTask);
 
-					stat->schedTime = std::max(traceMsg->end, stat->schedTime);
+                    stat->schedTime = std::max(traceMsg->end, stat->schedTime);
 
-					switch(traceMsg->spiderTask){
-					case TRACE_SPIDER_GRAPH:
-						stat->graphTime += traceMsg->end - traceMsg->start;
-						break;
-					case TRACE_SPIDER_ALLOC:
-						throw std::runtime_error("Unhandle trace");
-					case TRACE_SPIDER_SCHED:
-						stat->mappingTime += traceMsg->end - traceMsg->start;
-						break;
-					case TRACE_SPIDER_OPTIM:
-						stat->optimTime += traceMsg->end - traceMsg->start;
-						break;
-					}
+                    switch (traceMsg->spiderTask) {
+                        case TRACE_SPIDER_GRAPH:
+                            stat->graphTime += traceMsg->end - traceMsg->start;
+                            break;
+                        case TRACE_SPIDER_ALLOC:
+                            throw std::runtime_error("Unhandle trace");
+                        case TRACE_SPIDER_SCHED:
+                            stat->mappingTime += traceMsg->end - traceMsg->start;
+                            break;
+                        case TRACE_SPIDER_OPTIM:
+                            stat->optimTime += traceMsg->end - traceMsg->start;
+                            break;
+                    }
 
-					/* Latex File */
-					Platform::get()->fprintf(latexFile, "%f,", traceMsg->start/latexScaling); /* Start */
-					Platform::get()->fprintf(latexFile, "%f,", traceMsg->end/latexScaling); /* Duration */
-					Platform::get()->fprintf(latexFile, "%d,", 0); /* Core index */
-					Platform::get()->fprintf(latexFile, "colorSched\n",15); /* Color */
-					break;}
-				default:
-					printf("msgIx %lu\n",traceMsg->msgIx);
-					throw std::runtime_error("Unhandled trace msg");
-			}
-			Platform::get()->getSpiderCommunicator()->trace_end_recv();
-			n--;
-		}
-	}
-	Launcher::get()->rstNLaunched();
+                    /* Latex File */
+                    Platform::get()->fprintf(latexFile, "%f,", traceMsg->start / latexScaling); /* Start */
+                    Platform::get()->fprintf(latexFile, "%f,", traceMsg->end / latexScaling); /* Duration */
+                    Platform::get()->fprintf(latexFile, "%d,", 0); /* Core index */
+                    Platform::get()->fprintf(latexFile, "colorSched\n", 15); /* Color */
+                    break;
+                }
+                default:
+                    printf("msgIx %lu\n", traceMsg->msgIx);
+                    throw std::runtime_error("Unhandled trace msg");
+            }
+            Platform::get()->getSpiderCommunicator()->trace_end_recv();
+            n--;
+        }
+    }
+    Launcher::get()->rstNLaunched();
 
-	Platform::get()->fprintf(ganttFile, "</data>\n");
+    Platform::get()->fprintf(ganttFile, "</data>\n");
 
-	Platform::get()->fclose(ganttFile);
-	Platform::get()->fclose(latexFile);
+    Platform::get()->fclose(ganttFile);
+    Platform::get()->fclose(latexFile);
 
-	stat->execTime = stat->globalEndTime - stat->schedTime;
+    stat->execTime = stat->globalEndTime - stat->schedTime;
 }
 
-PiSDFGraph* Spider::createGraph(
-		int nEdges,
-		int nParams,
-		int nInIfs,
-		int nOutIfs,
-		int nConfigs,
-		int nBodies){
-	return CREATE(PISDF_STACK, PiSDFGraph)(
-			/*Edges*/    nEdges,
-			/*Params*/   nParams,
-			/*InputIf*/  nInIfs,
-			/*OutputIf*/ nOutIfs,
-			/*Config*/   nConfigs,
-			/*Body*/     nBodies);
+PiSDFGraph *Spider::createGraph(
+        int nEdges,
+        int nParams,
+        int nInIfs,
+        int nOutIfs,
+        int nConfigs,
+        int nBodies) {
+    return CREATE(PISDF_STACK, PiSDFGraph)(
+            /*Edges*/    nEdges,
+            /*Params*/   nParams,
+            /*InputIf*/  nInIfs,
+            /*OutputIf*/ nOutIfs,
+            /*Config*/   nConfigs,
+            /*Body*/     nBodies);
 }
 
-PiSDFVertex* Spider::addBodyVertex(
-			PiSDFGraph* graph,
-			const char* vertexName, int fctId,
-			int nInEdge, int nOutEdge,
-			int nInParam){
-	return graph->addBodyVertex(
-			vertexName,
-			fctId,
-			nInEdge,
-			nOutEdge,
-			nInParam);
+PiSDFVertex *Spider::addBodyVertex(
+        PiSDFGraph *graph,
+        const char *vertexName, int fctId,
+        int nInEdge, int nOutEdge,
+        int nInParam) {
+    return graph->addBodyVertex(
+            vertexName,
+            fctId,
+            nInEdge,
+            nOutEdge,
+            nInParam);
 }
 
-PiSDFVertex* Spider::addHierVertex(
-		PiSDFGraph* graph,
-		const char* vertexName,
-		PiSDFGraph* subgraph,
-		int nInEdge, int nOutEdge,
-		int nInParam){
-	return graph->addHierVertex(
-			vertexName,
-			subgraph,
-			nInEdge,
-			nOutEdge,
-			nInParam);
+PiSDFVertex *Spider::addHierVertex(
+        PiSDFGraph *graph,
+        const char *vertexName,
+        PiSDFGraph *subgraph,
+        int nInEdge, int nOutEdge,
+        int nInParam) {
+    return graph->addHierVertex(
+            vertexName,
+            subgraph,
+            nInEdge,
+            nOutEdge,
+            nInParam);
 }
 
-PiSDFVertex* Spider::addSpecialVertex(
-		PiSDFGraph* graph,
-		PiSDFSubType subType,
-		int nInEdge, int nOutEdge,
-		int nInParam){
-	return graph->addSpecialVertex(
-			subType,
-			nInEdge,
-			nOutEdge,
-			nInParam);
+PiSDFVertex *Spider::addSpecialVertex(
+        PiSDFGraph *graph,
+        PiSDFSubType subType,
+        int nInEdge, int nOutEdge,
+        int nInParam) {
+    return graph->addSpecialVertex(
+            subType,
+            nInEdge,
+            nOutEdge,
+            nInParam);
 }
 
-PiSDFVertex* Spider::addConfigVertex(
-		PiSDFGraph* graph,
-		const char* vertexName, int fctId,
-		PiSDFSubType subType,
-		int nInEdge, int nOutEdge,
-		int nInParam, int nOutParam){
-	return graph->addConfigVertex(
-			vertexName,
-			fctId,
-			subType,
-			nInEdge,
-			nOutEdge,
-			nInParam,
-			nOutParam);
+PiSDFVertex *Spider::addConfigVertex(
+        PiSDFGraph *graph,
+        const char *vertexName, int fctId,
+        PiSDFSubType subType,
+        int nInEdge, int nOutEdge,
+        int nInParam, int nOutParam) {
+    return graph->addConfigVertex(
+            vertexName,
+            fctId,
+            subType,
+            nInEdge,
+            nOutEdge,
+            nInParam,
+            nOutParam);
 }
 
-PiSDFVertex* Spider::addInputIf(
-		PiSDFGraph* graph,
-		const char* name,
-		int nInParam){
-	return graph->addInputIf(
-			name,
-			nInParam);
+PiSDFVertex *Spider::addInputIf(
+        PiSDFGraph *graph,
+        const char *name,
+        int nInParam) {
+    return graph->addInputIf(
+            name,
+            nInParam);
 }
 
-PiSDFVertex* Spider::addOutputIf(
-		PiSDFGraph* graph,
-		const char* name,
-		int nInParam){
-	return graph->addOutputIf(
-			name,
-			nInParam);
+PiSDFVertex *Spider::addOutputIf(
+        PiSDFGraph *graph,
+        const char *name,
+        int nInParam) {
+    return graph->addOutputIf(
+            name,
+            nInParam);
 }
 
-PiSDFParam* Spider::addStaticParam(
-		PiSDFGraph* graph,
-		const char* name,
-		const char* expr){
-	return graph->addStaticParam(
-			name,
-			expr);
+PiSDFParam *Spider::addStaticParam(
+        PiSDFGraph *graph,
+        const char *name,
+        const char *expr) {
+    return graph->addStaticParam(
+            name,
+            expr);
 }
 
-PiSDFParam* Spider::addStaticParam(
-		PiSDFGraph* graph,
-		const char* name,
-        Param value){
-	return graph->addStaticParam(
-			name,
-			value);
+PiSDFParam *Spider::addStaticParam(
+        PiSDFGraph *graph,
+        const char *name,
+        Param value) {
+    return graph->addStaticParam(
+            name,
+            value);
 }
 
-PiSDFParam* Spider::addHeritedParam(
-		PiSDFGraph* graph,
-		const char* name,
-		int parentId){
-	return graph->addHeritedParam(
-			name,
-			parentId);
+PiSDFParam *Spider::addHeritedParam(
+        PiSDFGraph *graph,
+        const char *name,
+        int parentId) {
+    return graph->addHeritedParam(
+            name,
+            parentId);
 }
 
-PiSDFParam* Spider::addDynamicParam(
-		PiSDFGraph* graph,
-		const char* name){
-	return graph->addDynamicParam(name);
+PiSDFParam *Spider::addDynamicParam(
+        PiSDFGraph *graph,
+        const char *name) {
+    return graph->addDynamicParam(name);
 }
 
-PiSDFParam* Spider::addStaticDependentParam(
-		PiSDFGraph* graph,
-		const char* name,
-		const char* expr){
-	return graph->addStaticDependentParam(name, expr);
+PiSDFParam *Spider::addStaticDependentParam(
+        PiSDFGraph *graph,
+        const char *name,
+        const char *expr) {
+    return graph->addStaticDependentParam(name, expr);
 }
 
-PiSDFParam* Spider::addDynamicDependentParam(
-		PiSDFGraph* graph,
-		const char* name,
-		const char* expr){
-	return graph->addDynamicDependentParam(name, expr);
+PiSDFParam *Spider::addDynamicDependentParam(
+        PiSDFGraph *graph,
+        const char *name,
+        const char *expr) {
+    return graph->addDynamicDependentParam(name, expr);
 }
 
-PiSDFEdge* Spider::connect(
-		PiSDFGraph* graph,
-		PiSDFVertex* source, int sourcePortId, const char* production,
-		PiSDFVertex* sink, int sinkPortId, const char* consumption,
-		const char* delay, PiSDFVertex* setter, PiSDFVertex* getter){
-	return graph->connect(
-			source, sourcePortId, production,
-			sink, sinkPortId, consumption,
-			delay, setter, getter);
+PiSDFEdge *Spider::connect(
+        PiSDFGraph *graph,
+        PiSDFVertex *source, int sourcePortId, const char *production,
+        PiSDFVertex *sink, int sinkPortId, const char *consumption,
+        const char *delay, PiSDFVertex *setter, PiSDFVertex *getter) {
+    return graph->connect(
+            source, sourcePortId, production,
+            sink, sinkPortId, consumption,
+            delay, setter, getter);
 }
 
-void Spider::addInParam(PiSDFVertex* vertex, int ix, PiSDFParam* param){
-	vertex->addInParam(ix, param);
-}
-void Spider::addOutParam(PiSDFVertex* vertex, int ix, PiSDFParam* param){
-	vertex->addOutParam(ix, param);
+void Spider::addInParam(PiSDFVertex *vertex, int ix, PiSDFParam *param) {
+    vertex->addInParam(ix, param);
 }
 
-void Spider::setTimingOnType(PiSDFVertex* vertex, int peType, const char* timing){
-	vertex->setTimingOnType(peType, timing);
+void Spider::addOutParam(PiSDFVertex *vertex, int ix, PiSDFParam *param) {
+    vertex->addOutParam(ix, param);
 }
 
-void Spider::isExecutableOnAllPE(PiSDFVertex* vertex){
-	vertex->isExecutableOnAllPE();
+void Spider::setTimingOnType(PiSDFVertex *vertex, int peType, const char *timing) {
+    vertex->setTimingOnType(peType, timing);
 }
 
-void Spider::isExecutableOnPE(PiSDFVertex* vertex, int pe){
-	vertex->isExecutableOnPE(pe);
+void Spider::isExecutableOnAllPE(PiSDFVertex *vertex) {
+    vertex->isExecutableOnAllPE();
 }
 
-void Spider::isExecutableOnPEType(PiSDFVertex* vertex, int peType){
-	for (int pe = 0; pe < archi_->getNPE(); pe++){
-		if (archi_->getPEType(pe) == peType) vertex->isExecutableOnPE(pe);
-	}
+void Spider::isExecutableOnPE(PiSDFVertex *vertex, int pe) {
+    vertex->isExecutableOnPE(pe);
 }
 
-void Spider::cleanPiSDF(){
-	PiSDFGraph* graph = pisdf_;
-	if(graph != 0){
-		graph->~PiSDFGraph();
-		StackMonitor::free(PISDF_STACK, graph);
-		StackMonitor::freeAll(PISDF_STACK);
-	}
+void Spider::isExecutableOnPEType(PiSDFVertex *vertex, int peType) {
+    for (int pe = 0; pe < archi_->getNPE(); pe++) {
+        if (archi_->getPEType(pe) == peType) vertex->isExecutableOnPE(pe);
+    }
+}
+
+void Spider::cleanPiSDF() {
+    PiSDFGraph *graph = pisdf_;
+    if (graph != 0) {
+        graph->~PiSDFGraph();
+        StackMonitor::free(PISDF_STACK, graph);
+        StackMonitor::freeAll(PISDF_STACK);
+    }
 }
 

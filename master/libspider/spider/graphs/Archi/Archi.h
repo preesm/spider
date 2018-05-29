@@ -40,32 +40,39 @@
 
 #include <platform.h>
 
-typedef Time(*MappingTimeFct)(int,int);
+typedef Time(*MappingTimeFct)(int, int);
 
 class Archi {
 protected:
-	Archi(){}
-	virtual ~Archi(){}
+    Archi() {}
+
+    virtual ~Archi() {}
 
 public:
 
-	virtual int  getNPE() const = 0;
-	virtual const char* getPEName(int ix) const = 0;
+    virtual int getNPE() const = 0;
 
-	virtual int getNPETypes() const = 0;
-	virtual int getPEType(int ix) const = 0;
+    virtual const char *getPEName(int ix) const = 0;
 
-	virtual void desactivatePE(int pe) = 0;
-	virtual void activatePE(int pe) = 0;
-	virtual bool isActivated(int pe) const = 0;
+    virtual int getNPETypes() const = 0;
 
-	virtual Time getTimeSend(int src, int dest, int size) const = 0;
-	virtual Time getTimeRecv(int src, int dest, int size) const = 0;
+    virtual int getPEType(int ix) const = 0;
 
-	virtual int getSpiderPeIx() const = 0;
-	virtual MappingTimeFct getMappingTimeFct() const = 0;
+    virtual void desactivatePE(int pe) = 0;
 
-	virtual int getNPEforType(int type) = 0;
+    virtual void activatePE(int pe) = 0;
+
+    virtual bool isActivated(int pe) const = 0;
+
+    virtual Time getTimeSend(int src, int dest, int size) const = 0;
+
+    virtual Time getTimeRecv(int src, int dest, int size) const = 0;
+
+    virtual int getSpiderPeIx() const = 0;
+
+    virtual MappingTimeFct getMappingTimeFct() const = 0;
+
+    virtual int getNPEforType(int type) = 0;
 };
 
 #endif/*ARCHI_H*/

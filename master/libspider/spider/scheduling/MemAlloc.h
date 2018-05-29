@@ -47,16 +47,19 @@
 
 class MemAlloc {
 public:
-	virtual void reset() = 0;
-	virtual void alloc(List<SRDAGVertex*>* listOfVertices) = 0;
-	virtual int getMemUsed() = 0;
+    virtual void reset() = 0;
 
-	MemAlloc(int start, int size): memStart_(start), memSize_(size){}
-	virtual ~MemAlloc(){}
+    virtual void alloc(List<SRDAGVertex *> *listOfVertices) = 0;
+
+    virtual int getMemUsed() = 0;
+
+    MemAlloc(int start, int size) : memStart_(start), memSize_(size) {}
+
+    virtual ~MemAlloc() {}
 
 protected:
-	int memStart_;
-	int memSize_;
+    int memStart_;
+    int memSize_;
 };
 
 #endif/*MEM_ALLOC_H*/

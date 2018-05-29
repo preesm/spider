@@ -38,6 +38,6 @@
 
 #include <tools/Stack.h>
 
-int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices);
+int nullSpace(int *topo_matrix, int *brv, int nbEdges, int nbVertices);
 
 #endif

@@ -42,119 +42,132 @@
 #include <monitor/StackMonitor.h>
 #include <cstring>
 
-class SharedMemArchi: public Archi {
+class SharedMemArchi : public Archi {
 public:
-	SharedMemArchi(int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct);
-	virtual ~SharedMemArchi();
+    SharedMemArchi(int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct);
 
-	virtual int  getNPE() const;
-	virtual inline const char* getPEName(int ix) const;
+    virtual ~SharedMemArchi();
 
-	virtual inline int getNPETypes() const;
-	virtual inline int getPEType(int ix) const;
+    virtual int getNPE() const;
 
-	virtual inline void desactivatePE(int pe);
-	virtual inline void activatePE(int pe);
-	virtual inline bool isActivated(int pe) const;
+    virtual inline const char *getPEName(int ix) const;
 
-	virtual inline Time getTimeSend(int src, int dest, int size) const;
-	virtual inline Time getTimeRecv(int src, int dest, int size) const;
+    virtual inline int getNPETypes() const;
 
-	virtual inline int getSpiderPeIx() const;
+    virtual inline int getPEType(int ix) const;
 
-	virtual inline MappingTimeFct getMappingTimeFct() const;
+    virtual inline void desactivatePE(int pe);
 
-	inline void setPETypeSendSpeed(int type, float a, float b);
-	inline void setPETypeRecvSpeed(int type, float a, float b);
+    virtual inline void activatePE(int pe);
 
-	inline void setName(int pe, const char* name);
-	inline void setPEType(int pe, int type);
+    virtual inline bool isActivated(int pe) const;
 
-	virtual inline int getNPEforType(int type);
+    virtual inline Time getTimeSend(int src, int dest, int size) const;
+
+    virtual inline Time getTimeRecv(int src, int dest, int size) const;
+
+    virtual inline int getSpiderPeIx() const;
+
+    virtual inline MappingTimeFct getMappingTimeFct() const;
+
+    inline void setPETypeSendSpeed(int type, float a, float b);
+
+    inline void setPETypeRecvSpeed(int type, float a, float b);
+
+    inline void setName(int pe, const char *name);
+
+    inline void setPEType(int pe, int type);
+
+    virtual inline int getNPEforType(int type);
 
 private:
-	int nPE_;
-	int spiderPe_;
-	int nPEType_;
-	int* peType_;
-	bool* peActive_;
-	char ** peName_;
-	float* peTypeASend_;
-	float* peTypeBSend_;
-	float* peTypeARecv_;
-	float* peTypeBRecv_;
-	MappingTimeFct mapFct_;
+    int nPE_;
+    int spiderPe_;
+    int nPEType_;
+    int *peType_;
+    bool *peActive_;
+    char **peName_;
+    float *peTypeASend_;
+    float *peTypeBSend_;
+    float *peTypeARecv_;
+    float *peTypeBRecv_;
+    MappingTimeFct mapFct_;
 
-	int* nPEperType_;
+    int *nPEperType_;
 };
 
-inline const char* SharedMemArchi::getPEName(int ix) const{
-	return peName_[ix];
+inline const char *SharedMemArchi::getPEName(int ix) const {
+    return peName_[ix];
 }
 
-inline int SharedMemArchi::getNPETypes() const{
-	return nPEType_;
-}
-inline int SharedMemArchi::getPEType(int ix) const{
-	return peType_[ix];
+inline int SharedMemArchi::getNPETypes() const {
+    return nPEType_;
 }
 
-inline Time SharedMemArchi::getTimeSend(int src, int dest, int size) const{
-	return peTypeASend_[peType_[src]]*size + peTypeASend_[peType_[src]];
-}
-inline Time SharedMemArchi::getTimeRecv(int src, int dest, int size) const{
-	return peTypeARecv_[peType_[dest]]*size + peTypeARecv_[peType_[dest]];
+inline int SharedMemArchi::getPEType(int ix) const {
+    return peType_[ix];
 }
 
-inline void SharedMemArchi::setPETypeSendSpeed(int type, float a, float b){
-	peTypeASend_[type] = a;
-	peTypeBSend_[type] = b;
-}
-inline void SharedMemArchi::setPETypeRecvSpeed(int type, float a, float b){
-	peTypeARecv_[type] = a;
-	peTypeBRecv_[type] = b;
-}
-inline void SharedMemArchi::setName(int pe, const char* name){
-	int size = strlen(name)+1;
-	char* newName = CREATE_MUL(ARCHI_STACK, size, char);
-	peName_[pe] = newName;
-	strcpy(newName, name);
-}
-inline void SharedMemArchi::setPEType(int pe, int type){
-	peType_[pe] = type;
-
-	nPEperType_[type]++;
+inline Time SharedMemArchi::getTimeSend(int src, int dest, int size) const {
+    return peTypeASend_[peType_[src]] * size + peTypeASend_[peType_[src]];
 }
 
-
-inline void SharedMemArchi::desactivatePE(int pe){
-	if(peActive_[pe]){
-		Platform::get()->idleLrt(pe);
-		peActive_[pe] = false;
-	}
+inline Time SharedMemArchi::getTimeRecv(int src, int dest, int size) const {
+    return peTypeARecv_[peType_[dest]] * size + peTypeARecv_[peType_[dest]];
 }
 
-inline void SharedMemArchi::activatePE(int pe){
-	if(!peActive_[pe]){
-		Platform::get()->wakeLrt(pe);
-		peActive_[pe] = true;
-	}
+inline void SharedMemArchi::setPETypeSendSpeed(int type, float a, float b) {
+    peTypeASend_[type] = a;
+    peTypeBSend_[type] = b;
 }
 
-inline bool SharedMemArchi::isActivated(int pe) const{
-	return peActive_[pe];
+inline void SharedMemArchi::setPETypeRecvSpeed(int type, float a, float b) {
+    peTypeARecv_[type] = a;
+    peTypeBRecv_[type] = b;
 }
 
-inline int SharedMemArchi::getSpiderPeIx() const{
-	return spiderPe_;
+inline void SharedMemArchi::setName(int pe, const char *name) {
+    int size = strlen(name) + 1;
+    char *newName = CREATE_MUL(ARCHI_STACK, size, char);
+    peName_[pe] = newName;
+    strcpy(newName, name);
 }
 
-inline MappingTimeFct SharedMemArchi::getMappingTimeFct() const{
-	return mapFct_;
+inline void SharedMemArchi::setPEType(int pe, int type) {
+    peType_[pe] = type;
+
+    nPEperType_[type]++;
 }
 
-inline int SharedMemArchi::getNPEforType(int type){
-	return nPEperType_[type];
+
+inline void SharedMemArchi::desactivatePE(int pe) {
+    if (peActive_[pe]) {
+        Platform::get()->idleLrt(pe);
+        peActive_[pe] = false;
+    }
+}
+
+inline void SharedMemArchi::activatePE(int pe) {
+    if (!peActive_[pe]) {
+        Platform::get()->wakeLrt(pe);
+        peActive_[pe] = true;
+    }
+}
+
+inline bool SharedMemArchi::isActivated(int pe) const {
+    return peActive_[pe];
+}
+
+inline int SharedMemArchi::getSpiderPeIx() const {
+    return spiderPe_;
+}
+
+inline MappingTimeFct SharedMemArchi::getMappingTimeFct() const {
+    return mapFct_;
+}
+
+inline int SharedMemArchi::getNPEforType(int type) {
+    return nPEperType_[type];
 }
 
 #endif/*SHARED_MEM_ARCH_H*/

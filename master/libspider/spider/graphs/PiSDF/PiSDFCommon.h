@@ -40,21 +40,28 @@
 #include <tools/Set.h>
 
 class PiSDFEdge;
+
 class PiSDFParam;
+
 class PiSDFGraph;
+
 class PiSDFVertex;
 
 typedef enum PiSDFParamType {
-	PISDF_PARAM_STATIC, PISDF_PARAM_HERITED, PISDF_PARAM_DYNAMIC, PISDF_PARAM_DEPENDENT_DYNAMIC, PISDF_PARAM_DEPENDENT_STATIC
+    PISDF_PARAM_STATIC,
+    PISDF_PARAM_HERITED,
+    PISDF_PARAM_DYNAMIC,
+    PISDF_PARAM_DEPENDENT_DYNAMIC,
+    PISDF_PARAM_DEPENDENT_STATIC
 } PiSDFParamType;
 
 typedef enum PiSDFType {
-	PISDF_TYPE_BODY, PISDF_TYPE_CONFIG, PISDF_TYPE_IF
+    PISDF_TYPE_BODY, PISDF_TYPE_CONFIG, PISDF_TYPE_IF
 } PiSDFType;
 
 /** Set types */
-typedef Set<PiSDFEdge*> PiSDFEdgeSet;
-typedef Set<PiSDFParam*> PiSDFParamSet;
-typedef Set<PiSDFVertex*> PiSDFVertexSet;
+typedef Set<PiSDFEdge *> PiSDFEdgeSet;
+typedef Set<PiSDFParam *> PiSDFParamSet;
+typedef Set<PiSDFVertex *> PiSDFVertexSet;
 
 #endif/*PISDF_COMMON_H*/

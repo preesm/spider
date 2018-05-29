@@ -41,92 +41,107 @@
 #include "platform.h"
 #include <signal.h>
 
-class PlatformLinux: public Platform{
+class PlatformLinux : public Platform {
 public:
-	/** File Handling */
-	virtual FILE* fopen(const char* name);
-	virtual void fprintf(FILE* id, const char* fmt, ...);
-	virtual void fclose(FILE* id);
+    /** File Handling */
+    virtual FILE *fopen(const char *name);
 
-	/** Shared Memory Handling */
-	virtual void* virt_to_phy(void* address);
-	virtual int getMinAllocSize();
-	virtual int getCacheLineSize();
+    virtual void fprintf(FILE *id, const char *fmt, ...);
 
-	/** Time Handling */
-	virtual void rstTime();
-	virtual void rstTime(struct ClearTimeMsg* msg);
-	virtual Time getTime();
+    virtual void fclose(FILE *id);
 
-	virtual void rstJobIx();
+    /** Shared Memory Handling */
+    virtual void *virt_to_phy(void *address);
 
-	/** Platform Core Handling **/
-	virtual void idleLrt(int i);
-	virtual void wakeLrt(int i);
-	virtual void idle();
+    virtual int getMinAllocSize();
 
-	/** Platform getter/setter */
-	inline LRT* getLrt();
-	inline LrtCommunicator* getLrtCommunicator();
-	inline SpiderCommunicator* getSpiderCommunicator();
-	inline void setStack(SpiderStack id, Stack* stack);
-	inline Stack* getStack(SpiderStack id);
-	inline Stack* getStack(int id);
+    virtual int getCacheLineSize();
 
-	PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack,
-			StackConfig lrtStack, StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack);
-	virtual ~PlatformLinux();
+    /** Time Handling */
+    virtual void rstTime();
+
+    virtual void rstTime(struct ClearTimeMsg *msg);
+
+    virtual Time getTime();
+
+    virtual void rstJobIx();
+
+    /** Platform Core Handling **/
+    virtual void idleLrt(int i);
+
+    virtual void wakeLrt(int i);
+
+    virtual void idle();
+
+    /** Platform getter/setter */
+    inline LRT *getLrt();
+
+    inline LrtCommunicator *getLrtCommunicator();
+
+    inline SpiderCommunicator *getSpiderCommunicator();
+
+    inline void setStack(SpiderStack id, Stack *stack);
+
+    inline Stack *getStack(SpiderStack id);
+
+    inline Stack *getStack(int id);
+
+    PlatformLinux(int nLrt, int shMemSize, lrtFct *fcts, int nLrtFcts, StackConfig archiStack,
+                  StackConfig lrtStack, StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack);
+
+    virtual ~PlatformLinux();
 
 private:
-	enum{
-		SIG_IDLE = SIGUSR1,
-		SIG_WAKE = SIGUSR2
-	};
+    enum {
+        SIG_IDLE = SIGUSR1,
+        SIG_WAKE = SIGUSR2
+    };
 
-	int* cpIds_;
+    int *cpIds_;
 
-	static Time mappingTime(int nActors);
-	static void sig_handler(int signo);
+    static Time mappingTime(int nActors);
 
-	Stack* stacks[STACK_COUNT];
+    static void sig_handler(int signo);
 
-	LRT* lrt_;
-	LrtCommunicator* lrtCom_;
-	SpiderCommunicator* spiderCom_;
+    Stack *stacks[STACK_COUNT];
+
+    LRT *lrt_;
+    LrtCommunicator *lrtCom_;
+    SpiderCommunicator *spiderCom_;
 };
 
 
-inline LRT* PlatformLinux::getLrt(){
-	if(lrt_)
-		return lrt_;
-	else
-		throw std::runtime_error("Error undefined LRT\n");
+inline LRT *PlatformLinux::getLrt() {
+    if (lrt_)
+        return lrt_;
+    else
+        throw std::runtime_error("Error undefined LRT\n");
 }
 
-inline LrtCommunicator* PlatformLinux::getLrtCommunicator(){
-	if(lrtCom_)
-		return lrtCom_;
-	else
-		throw std::runtime_error("Error undefined LRT Communicator\n");
+inline LrtCommunicator *PlatformLinux::getLrtCommunicator() {
+    if (lrtCom_)
+        return lrtCom_;
+    else
+        throw std::runtime_error("Error undefined LRT Communicator\n");
 }
 
-inline SpiderCommunicator* PlatformLinux::getSpiderCommunicator(){
-	if(spiderCom_)
-		return spiderCom_;
-	else
-		throw std::runtime_error("Error undefined Spider Communicator\n");
+inline SpiderCommunicator *PlatformLinux::getSpiderCommunicator() {
+    if (spiderCom_)
+        return spiderCom_;
+    else
+        throw std::runtime_error("Error undefined Spider Communicator\n");
 }
 
-inline void PlatformLinux::setStack(SpiderStack id, Stack* stack){
-	stacks[id] = stack;
+inline void PlatformLinux::setStack(SpiderStack id, Stack *stack) {
+    stacks[id] = stack;
 }
 
-inline Stack* PlatformLinux::getStack(SpiderStack id){
-	return stacks[id];
+inline Stack *PlatformLinux::getStack(SpiderStack id) {
+    return stacks[id];
 }
 
-inline Stack* PlatformLinux::getStack(int id){
-	return stacks[id];
+inline Stack *PlatformLinux::getStack(int id) {
+    return stacks[id];
 }
 
 

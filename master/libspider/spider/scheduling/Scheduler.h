@@ -45,11 +45,13 @@
 
 class Scheduler {
 public:
-	Scheduler(){}
-	virtual ~Scheduler(){}
+    Scheduler() {}
 
-	virtual void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi) = 0;
-	virtual void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi) = 0;
+    virtual ~Scheduler() {}
+
+    virtual void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi) = 0;
+
+    virtual void scheduleOnlyConfig(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi) = 0;
 
 };
 

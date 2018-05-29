@@ -40,6 +40,7 @@
 #include "GraphTransfo.h"
 
 void addCAVertices(SRDAGGraph *topDag, transfoJob *job);
+
 void addSRVertices(SRDAGGraph *topDag, transfoJob *job, int *brv);
 
 #endif/*ADD_VERTICES_H*/

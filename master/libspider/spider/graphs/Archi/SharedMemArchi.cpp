@@ -35,58 +35,57 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include "SharedMemArchi.h"
-#include <tools/Stack.h>
 
 SharedMemArchi::SharedMemArchi(int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct) {
-	nPE_ = nPE;
-	//printf("SPIDER %d\n", nPE_);
-	nPEType_ = nPEType;
-	spiderPe_ = spiderPe;
-	peType_ = CREATE_MUL(ARCHI_STACK, nPE_, int);
-	peActive_ = CREATE_MUL(ARCHI_STACK, nPE_, bool);
-	peName_ = CREATE_MUL(ARCHI_STACK, nPE_, char*);
-	peTypeASend_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
-	peTypeBSend_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
-	peTypeARecv_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
-	peTypeBRecv_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
-	mapFct_ = mapFct;
+    nPE_ = nPE;
+    //printf("SPIDER %d\n", nPE_);
+    nPEType_ = nPEType;
+    spiderPe_ = spiderPe;
+    peType_ = CREATE_MUL(ARCHI_STACK, nPE_, int);
+    peActive_ = CREATE_MUL(ARCHI_STACK, nPE_, bool);
+    peName_ = CREATE_MUL(ARCHI_STACK, nPE_, char*);
+    peTypeASend_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
+    peTypeBSend_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
+    peTypeARecv_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
+    peTypeBRecv_ = CREATE_MUL(ARCHI_STACK, nPEType_, float);
+    mapFct_ = mapFct;
 
-	nPEperType_ = CREATE_MUL(ARCHI_STACK, nPEType_, int);
-	
-	memset(nPEperType_,0,nPEType_ * sizeof(*nPEperType_));
-	memset(peActive_,false,nPE_ * sizeof(bool));
+    nPEperType_ = CREATE_MUL(ARCHI_STACK, nPEType_, int);
+
+    memset(nPEperType_, 0, nPEType_ * sizeof(*nPEperType_));
+    memset(peActive_, false, nPE_ * sizeof(bool));
 }
 
 
 SharedMemArchi::~SharedMemArchi() {
-	for(int i=0; i<nPE_; i++)
-		StackMonitor::free(ARCHI_STACK, peName_[i]);
+    for (int i = 0; i < nPE_; i++)
+        StackMonitor::free(ARCHI_STACK, peName_[i]);
 
-	/** Free allocated arrays **/
-	StackMonitor::free(ARCHI_STACK, peType_);
-	StackMonitor::free(ARCHI_STACK, peActive_);
-	StackMonitor::free(ARCHI_STACK, peName_);
-	StackMonitor::free(ARCHI_STACK, peTypeASend_);
-	StackMonitor::free(ARCHI_STACK, peTypeBSend_);
-	StackMonitor::free(ARCHI_STACK, peTypeARecv_);
-	StackMonitor::free(ARCHI_STACK, peTypeBRecv_);
+    /** Free allocated arrays **/
+    StackMonitor::free(ARCHI_STACK, peType_);
+    StackMonitor::free(ARCHI_STACK, peActive_);
+    StackMonitor::free(ARCHI_STACK, peName_);
+    StackMonitor::free(ARCHI_STACK, peTypeASend_);
+    StackMonitor::free(ARCHI_STACK, peTypeBSend_);
+    StackMonitor::free(ARCHI_STACK, peTypeARecv_);
+    StackMonitor::free(ARCHI_STACK, peTypeBRecv_);
 
-	StackMonitor::free(ARCHI_STACK, nPEperType_);
+    StackMonitor::free(ARCHI_STACK, nPEperType_);
 
-	/** Reset values **/
-	nPE_ = 0;
-	nPEType_ = 0;
-	peType_ = 0;
-	peName_ = 0;
-	peTypeASend_ = 0;
-	peTypeBSend_ = 0;
-	peTypeARecv_ = 0;
-	peTypeBRecv_ = 0;
+    /** Reset values **/
+    nPE_ = 0;
+    nPEType_ = 0;
+    peType_ = 0;
+    peName_ = 0;
+    peTypeASend_ = 0;
+    peTypeBSend_ = 0;
+    peTypeARecv_ = 0;
+    peTypeBRecv_ = 0;
 
-	nPEperType_ = 0;
+    nPEperType_ = 0;
 }
 
 
-int SharedMemArchi::getNPE() const{
-	return nPE_;
+int SharedMemArchi::getNPE() const {
+    return nPE_;
 }

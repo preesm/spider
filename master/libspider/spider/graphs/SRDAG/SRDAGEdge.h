@@ -45,92 +45,119 @@
 //#include "SRDAGGraph.h"
 //#include <parser/Expression.h>
 
-class SRDAGEdge: public SetElement {
+class SRDAGEdge : public SetElement {
 public:
-	/** Constructors */
-	SRDAGEdge();
-	SRDAGEdge(SRDAGGraph* graph, int globalId);
-	~SRDAGEdge();
+    /** Constructors */
+    SRDAGEdge();
 
-	/** Getters */
-	inline int getId() const;
-	inline SRDAGVertex* getSrc() const;
-	inline SRDAGVertex* getSnk() const;
-	inline int getSrcPortIx() const;
-	inline int getSnkPortIx() const;
-	inline int getRate() const;
-	inline int getAlloc() const;
-	inline int getAllocIx() const;
-	inline int getNToken() const;
+    SRDAGEdge(SRDAGGraph *graph, int globalId);
 
-	/** Setters */
-	inline void setRate(int rate);
-	inline void setAlloc(int rate);
-	inline void setAllocIx(int allocIx);
-	inline void setNToken(int nToken);
+    ~SRDAGEdge();
 
-	/** Connections Fcts */
-	void connectSrc(SRDAGVertex* src, int srcPortId);
-	void connectSnk(SRDAGVertex* snk, int snkPortId);
-	void disconnectSrc();
-	void disconnectSnk();
+    /** Getters */
+    inline int getId() const;
+
+    inline SRDAGVertex *getSrc() const;
+
+    inline SRDAGVertex *getSnk() const;
+
+    inline int getSrcPortIx() const;
+
+    inline int getSnkPortIx() const;
+
+    inline int getRate() const;
+
+    inline int getAlloc() const;
+
+    inline int getAllocIx() const;
+
+    inline int getNToken() const;
+
+    /** Setters */
+    inline void setRate(int rate);
+
+    inline void setAlloc(int rate);
+
+    inline void setAllocIx(int allocIx);
+
+    inline void setNToken(int nToken);
+
+    /** Connections Fcts */
+    void connectSrc(SRDAGVertex *src, int srcPortId);
+
+    void connectSnk(SRDAGVertex *snk, int snkPortId);
+
+    void disconnectSrc();
+
+    void disconnectSnk();
 
 private:
-	//static int globalId;
+    //static int globalId;
 
-	int id_;
-	SRDAGGraph* graph_;
+    int id_;
+    SRDAGGraph *graph_;
 
-	SRDAGVertex* src_;
-	int srcPortIx_;
-	SRDAGVertex* snk_;
-	int snkPortIx_;
+    SRDAGVertex *src_;
+    int srcPortIx_;
+    SRDAGVertex *snk_;
+    int snkPortIx_;
 
-	int rate_;
-	int alloc_;
-	int allocIx_;
-	int nToken_;
+    int rate_;
+    int alloc_;
+    int allocIx_;
+    int nToken_;
 };
 
 inline int SRDAGEdge::getId() const {
-	return id_;
-}
-inline SRDAGVertex* SRDAGEdge::getSrc() const {
-	return src_;
-}
-inline SRDAGVertex* SRDAGEdge::getSnk() const {
-	return snk_;
-}
-inline int SRDAGEdge::getSrcPortIx() const {
-	return srcPortIx_;
-}
-inline int SRDAGEdge::getSnkPortIx() const {
-	return snkPortIx_;
-}
-inline int SRDAGEdge::getRate() const{
-	return rate_;
-}
-inline int SRDAGEdge::getAlloc() const{
-	return alloc_;
-}
-inline int SRDAGEdge::getAllocIx() const{
-	return allocIx_;
-}
-inline int SRDAGEdge::getNToken() const{
-	return nToken_;
+    return id_;
 }
 
-inline void SRDAGEdge::setRate(int rate){
-	rate_ = rate;
+inline SRDAGVertex *SRDAGEdge::getSrc() const {
+    return src_;
 }
-inline void SRDAGEdge::setAlloc(int alloc){
-	alloc_ = alloc;
+
+inline SRDAGVertex *SRDAGEdge::getSnk() const {
+    return snk_;
 }
-inline void SRDAGEdge::setAllocIx(int allocIx){
-	allocIx_ = allocIx;
+
+inline int SRDAGEdge::getSrcPortIx() const {
+    return srcPortIx_;
 }
-inline void SRDAGEdge::setNToken(int nToken){
-	nToken_ = nToken;
+
+inline int SRDAGEdge::getSnkPortIx() const {
+    return snkPortIx_;
+}
+
+inline int SRDAGEdge::getRate() const {
+    return rate_;
+}
+
+inline int SRDAGEdge::getAlloc() const {
+    return alloc_;
+}
+
+inline int SRDAGEdge::getAllocIx() const {
+    return allocIx_;
+}
+
+inline int SRDAGEdge::getNToken() const {
+    return nToken_;
+}
+
+inline void SRDAGEdge::setRate(int rate) {
+    rate_ = rate;
+}
+
+inline void SRDAGEdge::setAlloc(int alloc) {
+    alloc_ = alloc;
+}
+
+inline void SRDAGEdge::setAllocIx(int allocIx) {
+    allocIx_ = allocIx;
+}
+
+inline void SRDAGEdge::setNToken(int nToken) {
+    nToken_ = nToken;
 }
 
 

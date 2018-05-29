@@ -37,249 +37,271 @@
 #define SPIDER_H
 
 class Archi;
+
 class PiSDFVertex;
+
 class PiSDFParam;
+
 class PiSDFGraph;
+
 class PiSDFEdge;
+
 class SRDAGGraph;
+
 class MemAlloc;
+
 class Scheduler;
 
 
 typedef enum PiSDFSubType {
-	PISDF_SUBTYPE_NORMAL,
-	PISDF_SUBTYPE_BROADCAST,
-	PISDF_SUBTYPE_ROUNDBUFFER,
-	PISDF_SUBTYPE_FORK,
-	PISDF_SUBTYPE_JOIN,
-	PISDF_SUBTYPE_END,
-	PISDF_SUBTYPE_INPUT_IF,
-	PISDF_SUBTYPE_OUTPUT_IF
+    PISDF_SUBTYPE_NORMAL,
+    PISDF_SUBTYPE_BROADCAST,
+    PISDF_SUBTYPE_ROUNDBUFFER,
+    PISDF_SUBTYPE_FORK,
+    PISDF_SUBTYPE_JOIN,
+    PISDF_SUBTYPE_END,
+    PISDF_SUBTYPE_INPUT_IF,
+    PISDF_SUBTYPE_OUTPUT_IF
 } PiSDFSubType;
 
 #define MAX_STATS_VERTICES 1000
 #define MAX_STATS_PE_TYPES 3
 
-typedef unsigned long long 	Time;
-typedef long 			Param;
+typedef unsigned long long Time;
+typedef long Param;
 
 typedef void (*lrtFct)(
-		void* inputFIFOs[],
-		void* outputFIFOs[],
-		Param inParams[],
-		Param outParams[]);
+        void *inputFIFOs[],
+        void *outputFIFOs[],
+        Param inParams[],
+        Param outParams[]);
 
-typedef enum{
-	MEMALLOC_DUMMY,
-	MEMALLOC_SPECIAL_ACTOR
-}MemAllocType;
+typedef enum {
+    MEMALLOC_DUMMY,
+    MEMALLOC_SPECIAL_ACTOR
+} MemAllocType;
 
-typedef enum{
-	SCHEDULER_LIST,
-	SCHEDULER_LIST_ON_THE_GO,
-	ROUND_ROBIN,
-	ROUND_ROBIN_SCATTERED
-}SchedulerType;
+typedef enum {
+    SCHEDULER_LIST,
+    SCHEDULER_LIST_ON_THE_GO,
+    ROUND_ROBIN,
+    ROUND_ROBIN_SCATTERED
+} SchedulerType;
 
-typedef enum{
-	STACK_STATIC,
-	STACK_DYNAMIC
-}StackType;
+typedef enum {
+    STACK_STATIC,
+    STACK_DYNAMIC
+} StackType;
 
-typedef struct{
-	StackType type;
-	const char* name;
+typedef struct {
+    StackType type;
+    const char *name;
 
-	void* start;
-	int size;
+    void *start;
+    int size;
 } StackConfig;
 
-typedef struct{
-	int nLrt;
-	int shMemSize;
-	lrtFct* fcts;
-	int nLrtFcts;
+typedef struct {
+    int nLrt;
+    int shMemSize;
+    lrtFct *fcts;
+    int nLrtFcts;
 } PlatformConfig;
 
-typedef struct{
-	MemAllocType memAllocType;
-	void* memAllocStart;
-	int memAllocSize;
+typedef struct {
+    MemAllocType memAllocType;
+    void *memAllocStart;
+    int memAllocSize;
 
-	SchedulerType schedulerType;
+    SchedulerType schedulerType;
 
-	StackConfig archiStack;
-	StackConfig pisdfStack;
-	StackConfig srdagStack;
-	StackConfig transfoStack;
-	StackConfig lrtStack;
+    StackConfig archiStack;
+    StackConfig pisdfStack;
+    StackConfig srdagStack;
+    StackConfig transfoStack;
+    StackConfig lrtStack;
 
-	bool useGraphOptim;
-	bool useActorPrecedence;
-	bool verbose;
-	bool traceEnabled;
+    bool useGraphOptim;
+    bool useActorPrecedence;
+    bool verbose;
+    bool traceEnabled;
 
-	PlatformConfig platform;
+    PlatformConfig platform;
 } SpiderConfig;
 
-typedef struct{
-	Time globalEndTime;
+typedef struct {
+    Time globalEndTime;
 
-	Time execTime;
-	Time schedTime;
+    Time execTime;
+    Time schedTime;
 
-	Time mappingTime;
-	Time optimTime;
-	Time graphTime;
+    Time mappingTime;
+    Time optimTime;
+    Time graphTime;
 
-	Time actorTimes[MAX_STATS_VERTICES][MAX_STATS_PE_TYPES];
-	Time actorFisrt[MAX_STATS_VERTICES];
-	Time actorLast[MAX_STATS_VERTICES];
-	Time actorIterations[MAX_STATS_VERTICES][MAX_STATS_PE_TYPES];
+    Time actorTimes[MAX_STATS_VERTICES][MAX_STATS_PE_TYPES];
+    Time actorFisrt[MAX_STATS_VERTICES];
+    Time actorLast[MAX_STATS_VERTICES];
+    Time actorIterations[MAX_STATS_VERTICES][MAX_STATS_PE_TYPES];
 
-	PiSDFVertex* actors[MAX_STATS_VERTICES];
-	int nPiSDFActor;
+    PiSDFVertex *actors[MAX_STATS_VERTICES];
+    int nPiSDFActor;
 
-	int nSRDAGActor;
-	int nSRDAGEdge;
-	int nExecSRDAGActor;
+    int nSRDAGActor;
+    int nSRDAGEdge;
+    int nExecSRDAGActor;
 
-	Time forkTime;
-	Time joinTime;
-	Time rbTime;
-	Time brTime;
+    Time forkTime;
+    Time joinTime;
+    Time rbTime;
+    Time brTime;
 
-	int memoryUsed;
+    int memoryUsed;
 
-	Time latencies;
-}ExecutionStat;
+    Time latencies;
+} ExecutionStat;
 
-namespace Spider{
-	void init(SpiderConfig& cfg);
-	void clean();
+namespace Spider {
+    void init(SpiderConfig &cfg);
 
-	void setMemAllocType(MemAllocType type, int start, int size);
-	void setSchedulerType(SchedulerType type);
+    void clean();
 
-	void setVerbose(bool verbose);
-	void setGraphOptim(bool useGraphOptim);
-	void setActorPrecedence(bool useActorPrecedence);
-	void setTraceEnabled(bool traceEnabled);
+    void setMemAllocType(MemAllocType type, int start, int size);
 
-	bool getVerbose();
-	bool getGraphOptim();
-	bool getActorPrecedence();
-	bool getTraceEnabled();
+    void setSchedulerType(SchedulerType type);
 
-	void setArchi(Archi* archi);
-	void setGraph(PiSDFGraph* pisdf);
+    void setVerbose(bool verbose);
 
-	void iterate();
-	void idle();
+    void setGraphOptim(bool useGraphOptim);
 
-	void printGantt(
-			const char* ganttPath,
-			const char* latexPath,
-			ExecutionStat* stat);
+    void setActorPrecedence(bool useActorPrecedence);
 
-	void printSRDAG(const char* srdagPath);
-	void printPiSDF(const char* pisdfPath);
+    void setTraceEnabled(bool traceEnabled);
 
-	void printActorsStat(ExecutionStat* stat);
+    bool getVerbose();
 
-	PiSDFGraph* getGraph();
-	Archi* getArchi();
+    bool getGraphOptim();
 
-	/* PiSDF Graph Generation */
-	PiSDFGraph* createGraph(
-			int nEdges,
-			int nParams,
-			int nInIfs,
-			int nOutIfs,
-			int nConfigs,
-			int nBodies);
+    bool getActorPrecedence();
 
-	PiSDFVertex* addBodyVertex(
-				PiSDFGraph* graph,
-				const char* vertexName, int fctId,
-				int nInEdge, int nOutEdge,
-				int nInParam);
+    bool getTraceEnabled();
 
-	PiSDFVertex* addHierVertex(
-			PiSDFGraph* graph,
-			const char* vertexName,
-			PiSDFGraph* subgraph,
-			int nInEdge, int nOutEdge,
-			int nInParam);
+    void setArchi(Archi *archi);
 
-	PiSDFVertex* addSpecialVertex(
-			PiSDFGraph* graph,
-			PiSDFSubType subType,
-			int nInEdge, int nOutEdge,
-			int nInParam);
+    void setGraph(PiSDFGraph *pisdf);
 
-	PiSDFVertex* addConfigVertex(
-			PiSDFGraph* graph,
-			const char* vertexName, int fctId,
-			PiSDFSubType subType,
-			int nInEdge, int nOutEdge,
-			int nInParam, int nOutParam);
+    void iterate();
 
-	PiSDFVertex* addInputIf(
-			PiSDFGraph* graph,
-			const char* name,
-			int nInParam);
+    void idle();
 
-	PiSDFVertex* addOutputIf(
-			PiSDFGraph* graph,
-			const char* name,
-			int nInParam);
+    void printGantt(
+            const char *ganttPath,
+            const char *latexPath,
+            ExecutionStat *stat);
 
-	PiSDFParam* addStaticParam(
-			PiSDFGraph* graph,
-			const char* name,
-			const char* expr);
+    void printSRDAG(const char *srdagPath);
 
-	PiSDFParam* addStaticParam(
-			PiSDFGraph* graph,
-			const char* name,
-			Param value);
+    void printPiSDF(const char *pisdfPath);
 
-	PiSDFParam* addHeritedParam(
-			PiSDFGraph* graph,
-			const char* name,
-			int parentId);
+    void printActorsStat(ExecutionStat *stat);
 
-	PiSDFParam* addDynamicParam(
-			PiSDFGraph* graph,
-			const char* name);
+    PiSDFGraph *getGraph();
 
-	PiSDFParam* addStaticDependentParam(
-			PiSDFGraph* graph,
-			const char* name,
-			const char* expr);
+    Archi *getArchi();
 
-	PiSDFParam* addDynamicDependentParam(
-			PiSDFGraph* graph,
-			const char* name,
-			const char* expr);
+    /* PiSDF Graph Generation */
+    PiSDFGraph *createGraph(
+            int nEdges,
+            int nParams,
+            int nInIfs,
+            int nOutIfs,
+            int nConfigs,
+            int nBodies);
 
-	PiSDFEdge* connect(
-			PiSDFGraph* graph,
-			PiSDFVertex* source, int sourcePortId, const char* production,
-			PiSDFVertex* sink, int sinkPortId, const char* consumption,
-			const char* delay, PiSDFVertex* setter=0, PiSDFVertex* getter=0);
+    PiSDFVertex *addBodyVertex(
+            PiSDFGraph *graph,
+            const char *vertexName, int fctId,
+            int nInEdge, int nOutEdge,
+            int nInParam);
 
-	void addInParam(PiSDFVertex* vertex, int ix, PiSDFParam* param);
-	void addOutParam(PiSDFVertex* vertex, int ix, PiSDFParam* param);
+    PiSDFVertex *addHierVertex(
+            PiSDFGraph *graph,
+            const char *vertexName,
+            PiSDFGraph *subgraph,
+            int nInEdge, int nOutEdge,
+            int nInParam);
 
-	void setTimingOnType(PiSDFVertex* vertex, int peType, const char* timing);
-	void isExecutableOnAllPE(PiSDFVertex* vertex);
-	void isExecutableOnPE(PiSDFVertex* vertex, int pe);
+    PiSDFVertex *addSpecialVertex(
+            PiSDFGraph *graph,
+            PiSDFSubType subType,
+            int nInEdge, int nOutEdge,
+            int nInParam);
 
-	void isExecutableOnPEType(PiSDFVertex* vertex, int peType);
+    PiSDFVertex *addConfigVertex(
+            PiSDFGraph *graph,
+            const char *vertexName, int fctId,
+            PiSDFSubType subType,
+            int nInEdge, int nOutEdge,
+            int nInParam, int nOutParam);
 
-	void cleanPiSDF();
+    PiSDFVertex *addInputIf(
+            PiSDFGraph *graph,
+            const char *name,
+            int nInParam);
+
+    PiSDFVertex *addOutputIf(
+            PiSDFGraph *graph,
+            const char *name,
+            int nInParam);
+
+    PiSDFParam *addStaticParam(
+            PiSDFGraph *graph,
+            const char *name,
+            const char *expr);
+
+    PiSDFParam *addStaticParam(
+            PiSDFGraph *graph,
+            const char *name,
+            Param value);
+
+    PiSDFParam *addHeritedParam(
+            PiSDFGraph *graph,
+            const char *name,
+            int parentId);
+
+    PiSDFParam *addDynamicParam(
+            PiSDFGraph *graph,
+            const char *name);
+
+    PiSDFParam *addStaticDependentParam(
+            PiSDFGraph *graph,
+            const char *name,
+            const char *expr);
+
+    PiSDFParam *addDynamicDependentParam(
+            PiSDFGraph *graph,
+            const char *name,
+            const char *expr);
+
+    PiSDFEdge *connect(
+            PiSDFGraph *graph,
+            PiSDFVertex *source, int sourcePortId, const char *production,
+            PiSDFVertex *sink, int sinkPortId, const char *consumption,
+            const char *delay, PiSDFVertex *setter = 0, PiSDFVertex *getter = 0);
+
+    void addInParam(PiSDFVertex *vertex, int ix, PiSDFParam *param);
+
+    void addOutParam(PiSDFVertex *vertex, int ix, PiSDFParam *param);
+
+    void setTimingOnType(PiSDFVertex *vertex, int peType, const char *timing);
+
+    void isExecutableOnAllPE(PiSDFVertex *vertex);
+
+    void isExecutableOnPE(PiSDFVertex *vertex, int pe);
+
+    void isExecutableOnPEType(PiSDFVertex *vertex, int peType);
+
+    void cleanPiSDF();
 };
 
 #endif//SPIDER_H

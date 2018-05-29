@@ -40,20 +40,22 @@
 
 class SpecialActorMemAlloc : public MemAlloc {
 public:
-	SpecialActorMemAlloc(int start, int size):
-		MemAlloc(start, size),
-		currentMem_(start),
-		nbFifos_(0){}
+    SpecialActorMemAlloc(int start, int size) :
+            MemAlloc(start, size),
+            currentMem_(start),
+            nbFifos_(0) {}
 
-	~SpecialActorMemAlloc(){}
+    ~SpecialActorMemAlloc() {}
 
-	virtual void reset();
-	virtual void alloc(List<SRDAGVertex*>* listOfVertices);
-	virtual int getMemUsed();
+    virtual void reset();
+
+    virtual void alloc(List<SRDAGVertex *> *listOfVertices);
+
+    virtual int getMemUsed();
 
 protected:
-	int currentMem_;
-	int nbFifos_;
+    int currentMem_;
+    int nbFifos_;
 
 };
 

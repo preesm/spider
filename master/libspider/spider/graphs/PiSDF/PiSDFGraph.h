@@ -40,147 +40,178 @@
 
 class PiSDFGraph {
 public:
-	PiSDFGraph(
-			int nEdges, int nParams,
-			int nInputIf, int nOutputIf,
-			int nConfig, int nBody);
-	virtual ~PiSDFGraph();
+    PiSDFGraph(
+            int nEdges, int nParams,
+            int nInputIf, int nOutputIf,
+            int nConfig, int nBody);
 
-	PiSDFVertex* addBodyVertex(
-			const char* vertexName, int fctId,
-			int nInEdge, int nOutEdge,
-			int nInParam);
+    virtual ~PiSDFGraph();
 
-	PiSDFVertex* addHierVertex(
-			const char* vertexName,
-			PiSDFGraph* graph,
-			int nInEdge, int nOutEdge,
-			int nInParam);
+    PiSDFVertex *addBodyVertex(
+            const char *vertexName, int fctId,
+            int nInEdge, int nOutEdge,
+            int nInParam);
 
-	PiSDFVertex* addSpecialVertex(
-			PiSDFSubType subType,
-			int nInEdge, int nOutEdge,
-			int nInParam);
+    PiSDFVertex *addHierVertex(
+            const char *vertexName,
+            PiSDFGraph *graph,
+            int nInEdge, int nOutEdge,
+            int nInParam);
 
-	PiSDFVertex* addConfigVertex(
-			const char* vertexName, int fctId,
-			PiSDFSubType subType,
-			int nInEdge, int nOutEdge,
-			int nInParam, int nOutParam);
+    PiSDFVertex *addSpecialVertex(
+            PiSDFSubType subType,
+            int nInEdge, int nOutEdge,
+            int nInParam);
 
-	PiSDFVertex* addInputIf(
-			const char* name,
-			int nInParam);
+    PiSDFVertex *addConfigVertex(
+            const char *vertexName, int fctId,
+            PiSDFSubType subType,
+            int nInEdge, int nOutEdge,
+            int nInParam, int nOutParam);
 
-	PiSDFVertex* addOutputIf(
-			const char* name,
-			int nInParam);
+    PiSDFVertex *addInputIf(
+            const char *name,
+            int nInParam);
 
-	PiSDFParam* addStaticParam(const char* name, const char* expr);
-	PiSDFParam* addStaticParam(const char* name, int value);
-	PiSDFParam* addHeritedParam(const char* name, int parentId);
-	PiSDFParam* addDynamicParam(const char* name);
-	PiSDFParam* addStaticDependentParam(const char* name, const char* expr);
-	PiSDFParam* addDynamicDependentParam(const char* name, const char* expr);
+    PiSDFVertex *addOutputIf(
+            const char *name,
+            int nInParam);
 
-	/** Element getters */
-	inline PiSDFEdge* getEdge(int ix);
-	inline PiSDFParam* getParam(int ix);
-	inline PiSDFVertex* getBody(int ix);
-	inline PiSDFVertex* getConfig(int ix);
-	inline PiSDFVertex* getInputIf(int ix);
-	inline PiSDFVertex* getOutputIf(int ix);
+    PiSDFParam *addStaticParam(const char *name, const char *expr);
 
-	inline const PiSDFParam* const * getParams() const;
-	inline int getNParam() const;
-	inline int getNEdge() const;
-	inline int getNInIf() const;
-	inline int getNOutIf() const;
-	inline int getNConfig() const;
-	inline int getNBody() const;
+    PiSDFParam *addStaticParam(const char *name, int value);
 
-	/** General getters */
-	inline PiSDFVertex* getParentVertex();
+    PiSDFParam *addHeritedParam(const char *name, int parentId);
 
-	/** General setters */
-	inline void setParentVertex(PiSDFVertex* parent);
+    PiSDFParam *addDynamicParam(const char *name);
 
-	/** Print Fct */
-	void print(const char *path);
+    PiSDFParam *addStaticDependentParam(const char *name, const char *expr);
 
-	/** Connect Fct */
-	PiSDFEdge* connect(
-			PiSDFVertex* source, int sourcePortId, const char* production,
-			PiSDFVertex* sink, int sinkPortId, const char* consumption,
-			const char* delay, PiSDFVertex* setter=0, PiSDFVertex* getter=0);
+    PiSDFParam *addDynamicDependentParam(const char *name, const char *expr);
 
-	void delVertex(PiSDFVertex* vertex);
-	void delParam(PiSDFParam* param);
-	void delEdge(PiSDFEdge* edge);
+    /** Element getters */
+    inline PiSDFEdge *getEdge(int ix);
+
+    inline PiSDFParam *getParam(int ix);
+
+    inline PiSDFVertex *getBody(int ix);
+
+    inline PiSDFVertex *getConfig(int ix);
+
+    inline PiSDFVertex *getInputIf(int ix);
+
+    inline PiSDFVertex *getOutputIf(int ix);
+
+    inline const PiSDFParam *const *getParams() const;
+
+    inline int getNParam() const;
+
+    inline int getNEdge() const;
+
+    inline int getNInIf() const;
+
+    inline int getNOutIf() const;
+
+    inline int getNConfig() const;
+
+    inline int getNBody() const;
+
+    /** General getters */
+    inline PiSDFVertex *getParentVertex();
+
+    /** General setters */
+    inline void setParentVertex(PiSDFVertex *parent);
+
+    /** Print Fct */
+    void print(const char *path);
+
+    /** Connect Fct */
+    PiSDFEdge *connect(
+            PiSDFVertex *source, int sourcePortId, const char *production,
+            PiSDFVertex *sink, int sinkPortId, const char *consumption,
+            const char *delay, PiSDFVertex *setter = 0, PiSDFVertex *getter = 0);
+
+    void delVertex(PiSDFVertex *vertex);
+
+    void delParam(PiSDFParam *param);
+
+    void delEdge(PiSDFEdge *edge);
 
 private:
-	PiSDFVertex* parent_;
+    PiSDFVertex *parent_;
 
-	PiSDFEdgeSet edges_;
-	PiSDFParamSet params_;
-	PiSDFVertexSet bodies_;
-	PiSDFVertexSet configs_;
-	PiSDFVertexSet inputIfs_;
-	PiSDFVertexSet outputIfs_;
+    PiSDFEdgeSet edges_;
+    PiSDFParamSet params_;
+    PiSDFVertexSet bodies_;
+    PiSDFVertexSet configs_;
+    PiSDFVertexSet inputIfs_;
+    PiSDFVertexSet outputIfs_;
 
-	PiSDFEdge* addEdge();
+    PiSDFEdge *addEdge();
 };
 
 /** Inline Fcts */
 
 /** Element getters */
-inline PiSDFEdge* PiSDFGraph::getEdge(int ix){
-	return edges_[ix];
-}
-inline PiSDFParam* PiSDFGraph::getParam(int ix){
-	return params_[ix];
-}
-inline PiSDFVertex* PiSDFGraph::getBody(int ix){
-	return bodies_[ix];
-}
-inline PiSDFVertex* PiSDFGraph::getConfig(int ix){
-	return configs_[ix];
-}
-inline PiSDFVertex* PiSDFGraph::getInputIf(int ix){
-	return inputIfs_[ix];
-}
-inline PiSDFVertex* PiSDFGraph::getOutputIf(int ix){
-	return outputIfs_[ix];
+inline PiSDFEdge *PiSDFGraph::getEdge(int ix) {
+    return edges_[ix];
 }
 
-inline const PiSDFParam* const * PiSDFGraph::getParams() const {
-	return params_.getArray();
+inline PiSDFParam *PiSDFGraph::getParam(int ix) {
+    return params_[ix];
 }
-inline int PiSDFGraph::getNParam() const{
-	return params_.getN();
+
+inline PiSDFVertex *PiSDFGraph::getBody(int ix) {
+    return bodies_[ix];
 }
-inline int PiSDFGraph::getNEdge() const{
-	return edges_.getN();
+
+inline PiSDFVertex *PiSDFGraph::getConfig(int ix) {
+    return configs_[ix];
 }
-inline int PiSDFGraph::getNInIf() const{
-	return inputIfs_.getN();
+
+inline PiSDFVertex *PiSDFGraph::getInputIf(int ix) {
+    return inputIfs_[ix];
 }
-inline int PiSDFGraph::getNOutIf() const{
-	return outputIfs_.getN();
+
+inline PiSDFVertex *PiSDFGraph::getOutputIf(int ix) {
+    return outputIfs_[ix];
 }
-inline int PiSDFGraph::getNConfig() const{
-	return configs_.getN();
+
+inline const PiSDFParam *const *PiSDFGraph::getParams() const {
+    return params_.getArray();
 }
-inline int PiSDFGraph::getNBody() const{
-	return bodies_.getN();
+
+inline int PiSDFGraph::getNParam() const {
+    return params_.getN();
+}
+
+inline int PiSDFGraph::getNEdge() const {
+    return edges_.getN();
+}
+
+inline int PiSDFGraph::getNInIf() const {
+    return inputIfs_.getN();
+}
+
+inline int PiSDFGraph::getNOutIf() const {
+    return outputIfs_.getN();
+}
+
+inline int PiSDFGraph::getNConfig() const {
+    return configs_.getN();
+}
+
+inline int PiSDFGraph::getNBody() const {
+    return bodies_.getN();
 }
 
 /** General getters */
-inline PiSDFVertex* PiSDFGraph::getParentVertex(){
-	return parent_;
+inline PiSDFVertex *PiSDFGraph::getParentVertex() {
+    return parent_;
 }
-inline void PiSDFGraph::setParentVertex(PiSDFVertex* parent){
-	parent_ = parent;
+
+inline void PiSDFGraph::setParentVertex(PiSDFVertex *parent) {
+    parent_ = parent;
 }
 
 #endif/*PISDF_GRAPH_H*/

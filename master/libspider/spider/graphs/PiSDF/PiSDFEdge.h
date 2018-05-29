@@ -44,128 +44,147 @@
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <parser/Expression.h>
 
-class PiSDFEdge: public SetElement{
+class PiSDFEdge : public SetElement {
 public:
-	/** Constructors */
-	PiSDFEdge(PiSDFGraph* graph);
-	~PiSDFEdge();
+    /** Constructors */
+    PiSDFEdge(PiSDFGraph *graph);
 
-	/** Getters */
-	inline int getId() const;
-	inline PiSDFVertex* getSrc() const;
-	inline PiSDFVertex* getSnk() const;
-	inline int getSrcPortIx() const;
-	inline int getSnkPortIx() const;
+    ~PiSDFEdge();
 
-	/** Setters */
-	inline void setDelay(const char* delay, PiSDFVertex* setter, PiSDFVertex* getter);
+    /** Getters */
+    inline int getId() const;
 
-	/** Connections Fcts */
-	void connectSrc(PiSDFVertex* src, int srcPortId, const char* prod);
-	void connectSnk(PiSDFVertex* snk, int snkPortId, const char* cons);
+    inline PiSDFVertex *getSrc() const;
 
-	/** Add Param Fcts */
-	inline void addInParam(int ix, PiSDFParam* param);
+    inline PiSDFVertex *getSnk() const;
 
-	/** Compute Fcts */
-	inline int resolveProd(transfoJob* job) const;
-	inline int resolveCons(transfoJob* job) const;
-	inline int resolveDelay(transfoJob* job);
+    inline int getSrcPortIx() const;
 
-	inline void getProdExpr(char* out, int sizeOut);
-	inline void getConsExpr(char* out, int sizeOut);
-	inline void getDelayExpr(char* out, int sizeOut);
+    inline int getSnkPortIx() const;
 
-	inline PiSDFVertex* getDelaySetter();
-	inline PiSDFVertex* getDelayGetter();
+    /** Setters */
+    inline void setDelay(const char *delay, PiSDFVertex *setter, PiSDFVertex *getter);
+
+    /** Connections Fcts */
+    void connectSrc(PiSDFVertex *src, int srcPortId, const char *prod);
+
+    void connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons);
+
+    /** Add Param Fcts */
+    inline void addInParam(int ix, PiSDFParam *param);
+
+    /** Compute Fcts */
+    inline int resolveProd(transfoJob *job) const;
+
+    inline int resolveCons(transfoJob *job) const;
+
+    inline int resolveDelay(transfoJob *job);
+
+    inline void getProdExpr(char *out, int sizeOut);
+
+    inline void getConsExpr(char *out, int sizeOut);
+
+    inline void getDelayExpr(char *out, int sizeOut);
+
+    inline PiSDFVertex *getDelaySetter();
+
+    inline PiSDFVertex *getDelayGetter();
 
 private:
-	static int globalId;
+    static int globalId;
 
-	int id_;
-	PiSDFGraph* graph_;
+    int id_;
+    PiSDFGraph *graph_;
 
-	PiSDFVertex* src_;
-	int srcPortIx_;
-	PiSDFVertex* snk_;
-	int snkPortIx_;
+    PiSDFVertex *src_;
+    int srcPortIx_;
+    PiSDFVertex *snk_;
+    int snkPortIx_;
 
-	/* Production and Consumption */
-	Expression* prod_;
-	Expression* cons_;
+    /* Production and Consumption */
+    Expression *prod_;
+    Expression *cons_;
 
-	/* Parameterized Delays */
-	Expression* delay_;
-	PiSDFVertex* setter_;
-	PiSDFVertex* getter_;
+    /* Parameterized Delays */
+    Expression *delay_;
+    PiSDFVertex *setter_;
+    PiSDFVertex *getter_;
 };
 
-inline int PiSDFEdge::getId() const{
-	return id_;
+inline int PiSDFEdge::getId() const {
+    return id_;
 }
-inline PiSDFVertex* PiSDFEdge::getSrc() const {
-	return src_;
+
+inline PiSDFVertex *PiSDFEdge::getSrc() const {
+    return src_;
 }
-inline PiSDFVertex* PiSDFEdge::getSnk() const {
-	return snk_;
+
+inline PiSDFVertex *PiSDFEdge::getSnk() const {
+    return snk_;
 }
+
 inline int PiSDFEdge::getSrcPortIx() const {
-	return srcPortIx_;
+    return srcPortIx_;
 }
+
 inline int PiSDFEdge::getSnkPortIx() const {
-	return snkPortIx_;
+    return snkPortIx_;
 }
 
-inline void PiSDFEdge::setDelay(const char* expr, PiSDFVertex* setter, PiSDFVertex* getter){
-	if(delay_ != 0){
-		delay_->~Expression();
-		StackMonitor::free(PISDF_STACK, delay_);
-		delay_ = 0;
-	}
-	delay_ = CREATE(PISDF_STACK, Expression)(expr, graph_->getParams(), graph_->getNParam());
+inline void PiSDFEdge::setDelay(const char *expr, PiSDFVertex *setter, PiSDFVertex *getter) {
+    if (delay_ != 0) {
+        delay_->~Expression();
+        StackMonitor::free(PISDF_STACK, delay_);
+        delay_ = 0;
+    }
+    delay_ = CREATE(PISDF_STACK, Expression)(expr, graph_->getParams(), graph_->getNParam());
 
-	if(setter != 0
-			&& setter->getType() == PISDF_TYPE_IF
-			&& setter->getSubType() == PISDF_SUBTYPE_INPUT_IF){
-		setter_ = setter;
-		setter->connectOutEdge(0, this);
-	}
-	if(getter != 0
-			&& getter->getType() == PISDF_TYPE_IF
-			&& getter->getSubType() == PISDF_SUBTYPE_OUTPUT_IF){
-		getter_ = getter;
-		getter->connectInEdge(0, this);
-	}
+    if (setter != 0
+        && setter->getType() == PISDF_TYPE_IF
+        && setter->getSubType() == PISDF_SUBTYPE_INPUT_IF) {
+        setter_ = setter;
+        setter->connectOutEdge(0, this);
+    }
+    if (getter != 0
+        && getter->getType() == PISDF_TYPE_IF
+        && getter->getSubType() == PISDF_SUBTYPE_OUTPUT_IF) {
+        getter_ = getter;
+        getter->connectInEdge(0, this);
+    }
 }
 
-inline int PiSDFEdge::resolveProd(transfoJob* job) const {
-	return prod_->evaluate(src_->getInParams(), job);
+inline int PiSDFEdge::resolveProd(transfoJob *job) const {
+    return prod_->evaluate(src_->getInParams(), job);
 }
-inline int PiSDFEdge::resolveCons(transfoJob* job) const {
-	return cons_->evaluate(snk_->getInParams(), job);
+
+inline int PiSDFEdge::resolveCons(transfoJob *job) const {
+    return cons_->evaluate(snk_->getInParams(), job);
 }
-inline int PiSDFEdge::resolveDelay(transfoJob* job){
-	return delay_->evaluate(graph_->getParams(), job);
+
+inline int PiSDFEdge::resolveDelay(transfoJob *job) {
+    return delay_->evaluate(graph_->getParams(), job);
 }
 
 /** TODO take care of prod_ cons_ delay_ != 0 */
 
-inline void PiSDFEdge::getProdExpr(char* out, int sizeOut){
-	prod_->toString(src_->getInParams(), src_->getNInParam(), out, sizeOut);
-}
-inline void PiSDFEdge::getConsExpr(char* out, int sizeOut){
-	cons_->toString(snk_->getInParams(), snk_->getNInParam(), out, sizeOut);
-}
-inline void PiSDFEdge::getDelayExpr(char* out, int sizeOut){
-	delay_->toString(graph_->getParams(), graph_->getNParam(), out, sizeOut);
+inline void PiSDFEdge::getProdExpr(char *out, int sizeOut) {
+    prod_->toString(src_->getInParams(), src_->getNInParam(), out, sizeOut);
 }
 
-inline PiSDFVertex* PiSDFEdge::getDelaySetter(){
-	return setter_;
+inline void PiSDFEdge::getConsExpr(char *out, int sizeOut) {
+    cons_->toString(snk_->getInParams(), snk_->getNInParam(), out, sizeOut);
 }
 
-inline PiSDFVertex* PiSDFEdge::getDelayGetter(){
-	return getter_;
+inline void PiSDFEdge::getDelayExpr(char *out, int sizeOut) {
+    delay_->toString(graph_->getParams(), graph_->getNParam(), out, sizeOut);
+}
+
+inline PiSDFVertex *PiSDFEdge::getDelaySetter() {
+    return setter_;
+}
+
+inline PiSDFVertex *PiSDFEdge::getDelayGetter() {
+    return getter_;
 }
 
 #endif/*PISDF_EDGE_H*/

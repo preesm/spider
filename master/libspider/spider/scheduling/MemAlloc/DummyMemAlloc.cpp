@@ -37,46 +37,38 @@
  */
 #include "DummyMemAlloc.h"
 
-#include <graphs/SRDAG/SRDAGCommon.h>
-#include <graphs/SRDAG/SRDAGGraph.h>
-#include <graphs/SRDAG/SRDAGVertex.h>
 
-#include <platform.h>
-
-#include <cmath>
-
-
-void DummyMemAlloc::reset(){
-	currentMem_ = this->memStart_;
-	nbFifos_ = 0;
+void DummyMemAlloc::reset() {
+    currentMem_ = this->memStart_;
+    nbFifos_ = 0;
 }
 
-static inline int getAlignSize(int size){
-	//return std::ceil(size/1.0/getpagesize())*getpagesize();
-	float minAlloc = (float) Platform::get()->getMinAllocSize();
-	return (int)ceil(((float)size)/minAlloc)*minAlloc;
+static inline int getAlignSize(int size) {
+    //return std::ceil(size/1.0/getpagesize())*getpagesize();
+    float minAlloc = (float) Platform::get()->getMinAllocSize();
+    return (int) ceil(((float) size) / minAlloc) * minAlloc;
 }
 
-void DummyMemAlloc::alloc(List<SRDAGVertex*>* listOfVertices){
-	for(int i=0; i<listOfVertices->getNb(); i++){
-		SRDAGVertex* vertex = listOfVertices->operator [](i);
-		if(vertex->getState() == SRDAG_EXEC){
-			for(int j=0; j<vertex->getNConnectedOutEdge(); j++){
-				SRDAGEdge* edge = vertex->getOutEdge(j);
-				if(edge->getAlloc() == -1){
-					int size = edge->getRate();
-					size = getAlignSize(size);
-					if(currentMem_+size > memStart_ + memSize_)
-						throw std::runtime_error("Not Enough Shared Memory\n");
-					edge->setAlloc(currentMem_);
-					edge->setAllocIx(nbFifos_++);
-					currentMem_ += size;
-				}
-			}
-		}
-	}
+void DummyMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
+    for (int i = 0; i < listOfVertices->getNb(); i++) {
+        SRDAGVertex *vertex = listOfVertices->operator[](i);
+        if (vertex->getState() == SRDAG_EXEC) {
+            for (int j = 0; j < vertex->getNConnectedOutEdge(); j++) {
+                SRDAGEdge *edge = vertex->getOutEdge(j);
+                if (edge->getAlloc() == -1) {
+                    int size = edge->getRate();
+                    size = getAlignSize(size);
+                    if (currentMem_ + size > memStart_ + memSize_)
+                        throw std::runtime_error("Not Enough Shared Memory\n");
+                    edge->setAlloc(currentMem_);
+                    edge->setAllocIx(nbFifos_++);
+                    currentMem_ += size;
+                }
+            }
+        }
+    }
 }
 
-int DummyMemAlloc::getMemUsed(){
-	return currentMem_ - memStart_;
+int DummyMemAlloc::getMemUsed() {
+    return currentMem_ - memStart_;
 }

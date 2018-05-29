@@ -41,50 +41,53 @@ struct transfoJob;
 
 class Expression {
 public:
-	Expression(const char* expr, const PiSDFParam* const * params, int nParam);
-	virtual ~Expression();
+    Expression(const char *expr, const PiSDFParam *const *params, int nParam);
 
-	int evaluate(const PiSDFParam* const * paramList, transfoJob* job, bool* ok = 0) const;
-	int evaluate(const int* vertexParamValues, int nParam) const;
-	void toString(
-			const PiSDFParam * const * params, int nParam,
-			char* out, int outSizeMax);
+    virtual ~Expression();
+
+    int evaluate(const PiSDFParam *const *paramList, transfoJob *job, bool *ok = 0) const;
+
+    int evaluate(const int *vertexParamValues, int nParam) const;
+
+    void toString(
+            const PiSDFParam *const *params, int nParam,
+            char *out, int outSizeMax);
 
 private:
-	typedef enum{
-		OPERATOR,
-		VALUE,
-		PARAMETER,
-		LEFT_PAR,
-		RIGHT_PAR
-	} Type;
+    typedef enum {
+        OPERATOR,
+        VALUE,
+        PARAMETER,
+        LEFT_PAR,
+        RIGHT_PAR
+    } Type;
 
-	typedef enum{
-		ADD,
-		SUB,
-		MUL,
-		DIV,
-		CEIL,
-		FLOOR,
-		POW
-	} OpType;
+    typedef enum {
+        ADD,
+        SUB,
+        MUL,
+        DIV,
+        CEIL,
+        FLOOR,
+        POW
+    } OpType;
 
-	typedef struct{
-		Type 	type;
-		OpType 	opType;
-		int 	value;
-		int 	paramIx;
-	} Token;
+    typedef struct {
+        Type type;
+        OpType opType;
+        int value;
+        int paramIx;
+    } Token;
 
-	Token* stack_;
-	int nElt_;
+    Token *stack_;
+    int nElt_;
 
-	bool getNextToken(
-			Token* token,
-			const char** expr,
-			const PiSDFParam* const * params, int nParam);
+    bool getNextToken(
+            Token *token,
+            const char **expr,
+            const PiSDFParam *const *params, int nParam);
 
-	int evaluateNTokens(const char* expr);
+    int evaluateNTokens(const char *expr);
 };
 
 #endif/*PARSER_EXPRESSION_H*/

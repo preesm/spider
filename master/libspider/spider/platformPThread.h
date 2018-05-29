@@ -44,14 +44,15 @@
 // semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
 // making compilation error with the IDE's own declaration of said types
 #include <semaphore.h>
-#ifdef _MSC_VER
-	#ifdef int64_t
-	#undef int64_t
-	#endif
 
-	#ifdef uint64_t
-	#undef uint64_t
-	#endif
+#ifdef _MSC_VER
+#ifdef int64_t
+#undef int64_t
+#endif
+
+#ifdef uint64_t
+#undef uint64_t
+#endif
 #endif
 
 #include <queue>
@@ -60,188 +61,200 @@
 
 struct Arg_lrt;
 
-class PlatformPThread: public Platform{
+class PlatformPThread : public Platform {
 public:
-	/** File Handling */
-	virtual FILE* fopen(const char* name);
-	virtual void fprintf(FILE* id, const char* fmt, ...);
-	virtual void fclose(FILE* id);
+    /** File Handling */
+    virtual FILE *fopen(const char *name);
 
-	/** Shared Memory Handling */
-	virtual void* virt_to_phy(void* address);
-	virtual int getMinAllocSize();
-	virtual int getCacheLineSize();
+    virtual void fprintf(FILE *id, const char *fmt, ...);
 
-	/** Time Handling */
-	virtual void rstTime();
-	virtual void rstTime(struct ClearTimeMsg* msg);
-	virtual Time getTime();
+    virtual void fclose(FILE *id);
 
-	virtual void rstJobIx();
+    /** Shared Memory Handling */
+    virtual void *virt_to_phy(void *address);
 
-	/** Platform Core Handling **/
-	virtual void idleLrt(int i);
-	virtual void wakeLrt(int i);
-	virtual void idle();
+    virtual int getMinAllocSize();
 
-	/** Platform getter/setter */
-	inline LRT* getLrt();
-	inline LrtCommunicator* getLrtCommunicator();
-	inline SpiderCommunicator* getSpiderCommunicator();
+    virtual int getCacheLineSize();
 
-	inline void setStack(SpiderStack id, Stack* stack);
-	inline Stack* getStack(SpiderStack id);
-	inline Stack* getStack(int id);
+    /** Time Handling */
+    virtual void rstTime();
 
-	inline int getThreadNumber();
+    virtual void rstTime(struct ClearTimeMsg *msg);
 
-	/* Fonction de thread */
-	void lrtPThread(Arg_lrt *argument_lrt);
+    virtual Time getTime();
 
-	explicit PlatformPThread(SpiderConfig& config);
+    virtual void rstJobIx();
 
-	virtual ~PlatformPThread();
+    /** Platform Core Handling **/
+    virtual void idleLrt(int i);
+
+    virtual void wakeLrt(int i);
+
+    virtual void idle();
+
+    /** Platform getter/setter */
+    inline LRT *getLrt();
+
+    inline LrtCommunicator *getLrtCommunicator();
+
+    inline SpiderCommunicator *getSpiderCommunicator();
+
+    inline void setStack(SpiderStack id, Stack *stack);
+
+    inline Stack *getStack(SpiderStack id);
+
+    inline Stack *getStack(int id);
+
+    inline int getThreadNumber();
+
+    /* Fonction de thread */
+    void lrtPThread(Arg_lrt *argument_lrt);
+
+    explicit PlatformPThread(SpiderConfig &config);
+
+    virtual ~PlatformPThread();
 
 
 private:
-	static Time mappingTime(int nActors, int nPe);
+    static Time mappingTime(int nActors, int nPe);
 
-	int nLrt_;
-	pthread_t* thread_ID_tab_;
+    int nLrt_;
+    pthread_t *thread_ID_tab_;
 
-	//Pointeurs vers les stacks
-	Stack* stackPisdf;
-	Stack* stackSrdag;
-	Stack* stackTransfo;
-	Stack** stackLrt;
-	Stack** stackArchi;
+    //Pointeurs vers les stacks
+    Stack *stackPisdf;
+    Stack *stackSrdag;
+    Stack *stackTransfo;
+    Stack **stackLrt;
+    Stack **stackArchi;
 
-	//Pointeurs vers les fifo
-	std::queue<unsigned char>** fifoSpidertoLRT;
-	std::queue<unsigned char>** fifoLRTtoSpider;
-	std::queue<unsigned char> fifoTrace;
+    //Pointeurs vers les fifo
+    std::queue<unsigned char> **fifoSpidertoLRT;
+    std::queue<unsigned char> **fifoLRTtoSpider;
+    std::queue<unsigned char> fifoTrace;
 
-	//Semaphores
-	sem_t semTrace;
-	sem_t* semFifoSpidertoLRT;
-	sem_t* semFifoLRTtoSpider;
+    //Semaphores
+    sem_t semTrace;
+    sem_t *semFifoSpidertoLRT;
+    sem_t *semFifoLRTtoSpider;
 
-	LRT** lrt_;
-	LrtCommunicator** lrtCom_;
-	SpiderCommunicator* spiderCom_;
+    LRT **lrt_;
+    LrtCommunicator **lrtCom_;
+    SpiderCommunicator *spiderCom_;
 };
 
 
-inline void PlatformPThread::setStack(SpiderStack id, Stack* stack){
-	switch(id){
-	case PISDF_STACK :
-		stackPisdf = stack;
-		break;
-	case SRDAG_STACK :
-		stackSrdag = stack;
-		break;
-	case TRANSFO_STACK :
-		stackTransfo = stack;
-		break;
-	case ARCHI_STACK :
-		stackArchi[getThreadNumber()] = stack;
-		break;
-	case LRT_STACK :
-		stackLrt[getThreadNumber()] = stack;
-		break;
-	default :
-		throw std::runtime_error("Error in stack index\n");
-	}
+inline void PlatformPThread::setStack(SpiderStack id, Stack *stack) {
+    switch (id) {
+        case PISDF_STACK :
+            stackPisdf = stack;
+            break;
+        case SRDAG_STACK :
+            stackSrdag = stack;
+            break;
+        case TRANSFO_STACK :
+            stackTransfo = stack;
+            break;
+        case ARCHI_STACK :
+            stackArchi[getThreadNumber()] = stack;
+            break;
+        case LRT_STACK :
+            stackLrt[getThreadNumber()] = stack;
+            break;
+        default :
+            throw std::runtime_error("Error in stack index\n");
+    }
 }
 
-inline Stack* PlatformPThread::getStack(SpiderStack id){
-	switch(id){
-	case PISDF_STACK :
-		return stackPisdf;
-		break;
-	case SRDAG_STACK :
-		return stackSrdag;
-		break;
-	case TRANSFO_STACK :
-		return stackTransfo;
-		break;
-	case ARCHI_STACK :
-		return stackArchi[getThreadNumber()];
-		break;
-	case LRT_STACK :
-		return stackLrt[getThreadNumber()];
-		break;
-	default :
-		throw std::runtime_error("Error in stack index\n");
-	}
+inline Stack *PlatformPThread::getStack(SpiderStack id) {
+    switch (id) {
+        case PISDF_STACK :
+            return stackPisdf;
+            break;
+        case SRDAG_STACK :
+            return stackSrdag;
+            break;
+        case TRANSFO_STACK :
+            return stackTransfo;
+            break;
+        case ARCHI_STACK :
+            return stackArchi[getThreadNumber()];
+            break;
+        case LRT_STACK :
+            return stackLrt[getThreadNumber()];
+            break;
+        default :
+            throw std::runtime_error("Error in stack index\n");
+    }
 }
 
-inline Stack* PlatformPThread::getStack(int id){
-	switch(id){
-	case PISDF_STACK :
-		return stackPisdf;
-		break;
-	case SRDAG_STACK :
-		return stackSrdag;
-		break;
-	case TRANSFO_STACK :
-		return stackTransfo;
-		break;
-	case ARCHI_STACK :
-		return stackArchi[getThreadNumber()];
-		break;
-	case LRT_STACK :
-		return stackLrt[getThreadNumber()];
-		break;
-	default :
-		throw std::runtime_error("Error in stack index\n");
-	}
+inline Stack *PlatformPThread::getStack(int id) {
+    switch (id) {
+        case PISDF_STACK :
+            return stackPisdf;
+            break;
+        case SRDAG_STACK :
+            return stackSrdag;
+            break;
+        case TRANSFO_STACK :
+            return stackTransfo;
+            break;
+        case ARCHI_STACK :
+            return stackArchi[getThreadNumber()];
+            break;
+        case LRT_STACK :
+            return stackLrt[getThreadNumber()];
+            break;
+        default :
+            throw std::runtime_error("Error in stack index\n");
+    }
 }
 
-inline int PlatformPThread::getThreadNumber(){
-	for(int i = 0;i < nLrt_;i++){
-		if (pthread_equal(thread_ID_tab_[i], pthread_self()) != 0)
-			return i;
-	}
-	throw std::runtime_error("Error undefined ID\n");
+inline int PlatformPThread::getThreadNumber() {
+    for (int i = 0; i < nLrt_; i++) {
+        if (pthread_equal(thread_ID_tab_[i], pthread_self()) != 0)
+            return i;
+    }
+    throw std::runtime_error("Error undefined ID\n");
 }
 
-inline LRT* PlatformPThread::getLrt(){
-	return lrt_[getThreadNumber()];
+inline LRT *PlatformPThread::getLrt() {
+    return lrt_[getThreadNumber()];
 }
 
-inline LrtCommunicator* PlatformPThread::getLrtCommunicator(){
-	return lrtCom_[getThreadNumber()];
+inline LrtCommunicator *PlatformPThread::getLrtCommunicator() {
+    return lrtCom_[getThreadNumber()];
 }
 
-inline SpiderCommunicator* PlatformPThread::getSpiderCommunicator(){
-	if(spiderCom_)
-		return spiderCom_;
-	else
-		throw std::runtime_error("Error undefined spider communicator\n");
+inline SpiderCommunicator *PlatformPThread::getSpiderCommunicator() {
+    if (spiderCom_)
+        return spiderCom_;
+    else
+        throw std::runtime_error("Error undefined spider communicator\n");
 }
 
 
 // Structure de passage d'argument dans le thread
 typedef struct Arg_lrt {
-	PlatformPThread *instance;
-	std::queue<unsigned char>* fifoSpidertoLRT;
-	std::queue<unsigned char>* fifoLRTtoSpider;
-	std::queue<unsigned char>* fifoTrace;
-	sem_t* semTrace;
-	sem_t* semFifoSpidertoLRT;
-	sem_t* semFifoLRTtoSpider;
-	int shMemSize;
-	lrtFct* fcts;
-	int nLrtFcts;
-	int indice;
-	int nLrt;
-	StackConfig archiStack;
-	StackConfig lrtStack;
-}Arg_lrt;
+    PlatformPThread *instance;
+    std::queue<unsigned char> *fifoSpidertoLRT;
+    std::queue<unsigned char> *fifoLRTtoSpider;
+    std::queue<unsigned char> *fifoTrace;
+    sem_t *semTrace;
+    sem_t *semFifoSpidertoLRT;
+    sem_t *semFifoLRTtoSpider;
+    int shMemSize;
+    lrtFct *fcts;
+    int nLrtFcts;
+    int indice;
+    int nLrt;
+    StackConfig archiStack;
+    StackConfig lrtStack;
+} Arg_lrt;
 
 // Fonction wrapper pour lancer un thread sur une méthode d'objet
-void* lrtPThread_helper(void *voidArgs);
+void *lrtPThread_helper(void *voidArgs);
 
 
 #endif/*PLATFORM_PTHREADS_H*/

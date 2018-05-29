@@ -35,15 +35,11 @@
 #include "topologyMatrix.h"
 #include "GraphTransfo.h"
 
-#include <tools/Stack.h>
 #include <tools/Rational.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-
-static inline int compute_gcd(int a, int b){
-	int t;
-    while (b != 0){
+static inline int compute_gcd(int a, int b) {
+    int t;
+    while (b != 0) {
         t = b;
         b = a % b;
         a = t;
@@ -51,14 +47,14 @@ static inline int compute_gcd(int a, int b){
     return a;
 }
 
-static inline int compute_lcm(int a, int b){
-	if(a*b == 0) return 1;
-	return abs(a*b)/compute_gcd(a,b);
+static inline int compute_lcm(int a, int b) {
+    if (a * b == 0) return 1;
+    return abs(a * b) / compute_gcd(a, b);
 }
 
-int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices){
-	Rational* ratioMatrix = CREATE_MUL(TRANSFO_STACK, nbVertices*nbEdges, Rational);
-	Rational* ratioResult = CREATE_MUL(TRANSFO_STACK, nbVertices, Rational);
+int nullSpace(int *topo_matrix, int *brv, int nbEdges, int nbVertices) {
+    Rational *ratioMatrix = CREATE_MUL(TRANSFO_STACK, nbVertices * nbEdges, Rational);
+    Rational *ratioResult = CREATE_MUL(TRANSFO_STACK, nbVertices, Rational);
 
 //	printf("Topo Matrix:\n");
 //	for(int i=0; i<nbEdges; i++){
@@ -69,10 +65,10 @@ int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices){
 //		printf("\n");
 //	}
 
-	/* Copy matrix into ratioMatrix */
-	for(int i=0; i<nbEdges*nbVertices; i++){
-		ratioMatrix[i] = topo_matrix[i];
-	}
+    /* Copy matrix into ratioMatrix */
+    for (int i = 0; i < nbEdges * nbVertices; i++) {
+        ratioMatrix[i] = topo_matrix[i];
+    }
 
 //	printf("Topo Matrix: Rational\n");
 //	for(int i=0; i<nbEdges; i++){
@@ -83,77 +79,77 @@ int nullSpace(int* topo_matrix, int* brv, int nbEdges, int nbVertices){
 //		printf("\n");
 //	}
 
-	for (int i=0; i < nbEdges; i++) {
-		Rational pivotMax = ratioMatrix[i*nbVertices+i].getAbs();
-		int maxIndex = i;
+    for (int i = 0; i < nbEdges; i++) {
+        Rational pivotMax = ratioMatrix[i * nbVertices + i].getAbs();
+        int maxIndex = i;
 
-		for (int t = i+1; t < nbEdges; t++) {
-			Rational newPivot = ratioMatrix[t*nbVertices+i].getAbs();
-			if (newPivot > pivotMax) {
-				maxIndex = t;
-				pivotMax = newPivot;
-			}
-		}
+        for (int t = i + 1; t < nbEdges; t++) {
+            Rational newPivot = ratioMatrix[t * nbVertices + i].getAbs();
+            if (newPivot > pivotMax) {
+                maxIndex = t;
+                pivotMax = newPivot;
+            }
+        }
 
-		if (pivotMax != 0 && maxIndex != i) {
-			/* Switch Rows */
-			Rational tmp;
-			for (int t = 0; t < nbVertices; t++) {
-				tmp = ratioMatrix[maxIndex*nbVertices+t];
-				ratioMatrix[maxIndex*nbVertices+t] = ratioMatrix[i*nbVertices+t];
-				ratioMatrix[i*nbVertices+t] = tmp;
-			}
-		} else if (maxIndex == i && (pivotMax != 0)) {
-			/* Do nothing */
-		} else {
-			break;
-		}
+        if (pivotMax != 0 && maxIndex != i) {
+            /* Switch Rows */
+            Rational tmp;
+            for (int t = 0; t < nbVertices; t++) {
+                tmp = ratioMatrix[maxIndex * nbVertices + t];
+                ratioMatrix[maxIndex * nbVertices + t] = ratioMatrix[i * nbVertices + t];
+                ratioMatrix[i * nbVertices + t] = tmp;
+            }
+        } else if (maxIndex == i && (pivotMax != 0)) {
+            /* Do nothing */
+        } else {
+            break;
+        }
 
-		Rational odlPivot = ratioMatrix[i*nbVertices+i];
-		for (int t = i; t < nbVertices; t++) {
-			ratioMatrix[i*nbVertices+t] = ratioMatrix[i*nbVertices+t] / odlPivot;
-		}
+        Rational odlPivot = ratioMatrix[i * nbVertices + i];
+        for (int t = i; t < nbVertices; t++) {
+            ratioMatrix[i * nbVertices + t] = ratioMatrix[i * nbVertices + t] / odlPivot;
+        }
 
-		for (int j = i + 1; j < nbEdges; j++) {
-			if (ratioMatrix[j*nbVertices+i] != 0) {
-				Rational oldji = ratioMatrix[j*nbVertices+i];
+        for (int j = i + 1; j < nbEdges; j++) {
+            if (ratioMatrix[j * nbVertices + i] != 0) {
+                Rational oldji = ratioMatrix[j * nbVertices + i];
 
-				for (int k = 0; k < nbVertices; k++) {
-					ratioMatrix[j*nbVertices+k] =
-							ratioMatrix[j*nbVertices+k] - (oldji * ratioMatrix[i*nbVertices+k]);
-				}
-			}
-		}
-	}
+                for (int k = 0; k < nbVertices; k++) {
+                    ratioMatrix[j * nbVertices + k] =
+                            ratioMatrix[j * nbVertices + k] - (oldji * ratioMatrix[i * nbVertices + k]);
+                }
+            }
+        }
+    }
 
-	for (int i = 0; i < nbVertices; i++) {
-		ratioResult[i] = 1;
-	}
+    for (int i = 0; i < nbVertices; i++) {
+        ratioResult[i] = 1;
+    }
 
-	for(int i = nbEdges-1; i >= 0; i--){
-		Rational val = 0;
+    for (int i = nbEdges - 1; i >= 0; i--) {
+        Rational val = 0;
 
-		for (int k = i + 1; k < nbVertices; k++) {
-			val = val + (ratioMatrix[i*nbVertices+k] * ratioResult[k]);
-		}
-		if (val != 0) {
-			if(ratioMatrix[i*nbVertices+i] == 0){
-				throw std::runtime_error("elt diagonal zero\n");
-			}
-			ratioResult[i] = val.getAbs() / ratioMatrix[i*nbVertices+i];
-		}
-	}
+        for (int k = i + 1; k < nbVertices; k++) {
+            val = val + (ratioMatrix[i * nbVertices + k] * ratioResult[k]);
+        }
+        if (val != 0) {
+            if (ratioMatrix[i * nbVertices + i] == 0) {
+                throw std::runtime_error("elt diagonal zero\n");
+            }
+            ratioResult[i] = val.getAbs() / ratioMatrix[i * nbVertices + i];
+        }
+    }
 
-	int lcm = 1;
-	for(int i=0; i<nbVertices; i++){
-		lcm = compute_lcm(lcm, ratioResult[i].getDenominator());
-	}
-	for(int i=0; i<nbVertices; i++){
-		brv[i] = abs(ratioResult[i].getNominator() * lcm / ratioResult[i].getDenominator());
-	}
+    int lcm = 1;
+    for (int i = 0; i < nbVertices; i++) {
+        lcm = compute_lcm(lcm, ratioResult[i].getDenominator());
+    }
+    for (int i = 0; i < nbVertices; i++) {
+        brv[i] = abs(ratioResult[i].getNominator() * lcm / ratioResult[i].getDenominator());
+    }
 
-	StackMonitor::free(TRANSFO_STACK, ratioMatrix);
-	StackMonitor::free(TRANSFO_STACK, ratioResult);
+    StackMonitor::free(TRANSFO_STACK, ratioMatrix);
+    StackMonitor::free(TRANSFO_STACK, ratioResult);
 
-	return 0;
+    return 0;
 }

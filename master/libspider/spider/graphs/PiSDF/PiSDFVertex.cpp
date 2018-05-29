@@ -36,69 +36,68 @@
  */
 
 #include <graphs/PiSDF/PiSDFVertex.h>
-#include <string.h>
 
 /** Static Var def */
 int PiSDFVertex::globalId = 0;
 
 /** Constructor */
 PiSDFVertex::PiSDFVertex(
-		const char* name, int fctId,
-		int typeId,
-		PiSDFType type, PiSDFSubType subType,
-		PiSDFGraph* graph, PiSDFGraph* subGraph,
-		int nInEdge, int nOutEdge,
-		int nInParam, int nOutParam){
+        const char *name, int fctId,
+        int typeId,
+        PiSDFType type, PiSDFSubType subType,
+        PiSDFGraph *graph, PiSDFGraph *subGraph,
+        int nInEdge, int nOutEdge,
+        int nInParam, int nOutParam) {
 
-	id_ = globalId++;
-	typeId_ = typeId;
-	fctId_ = fctId;
-	type_ = type;
-	name_ = name;
+    id_ = globalId++;
+    typeId_ = typeId;
+    fctId_ = fctId;
+    type_ = type;
+    name_ = name;
 
-	subType_ = subType;
-	graph_ = graph;
-	subGraph_ = subGraph;
+    subType_ = subType;
+    graph_ = graph;
+    subGraph_ = subGraph;
 
-	nInEdge_ = nInEdge;
-	inEdges_ = CREATE_MUL(PISDF_STACK, nInEdge_, PiSDFEdge*);
-	memset(inEdges_, 0, nInEdge_*sizeof(PiSDFEdge*));
+    nInEdge_ = nInEdge;
+    inEdges_ = CREATE_MUL(PISDF_STACK, nInEdge_, PiSDFEdge*);
+    memset(inEdges_, 0, nInEdge_ * sizeof(PiSDFEdge *));
 
-	nOutEdge_ = nOutEdge;
-	outEdges_ = CREATE_MUL(PISDF_STACK, nOutEdge_, PiSDFEdge*);
-	memset(outEdges_, 0, nOutEdge_*sizeof(PiSDFEdge*));
+    nOutEdge_ = nOutEdge;
+    outEdges_ = CREATE_MUL(PISDF_STACK, nOutEdge_, PiSDFEdge*);
+    memset(outEdges_, 0, nOutEdge_ * sizeof(PiSDFEdge *));
 
-	nInParam_ = nInParam;
-	inParams_ = CREATE_MUL(PISDF_STACK, nInParam, PiSDFParam*);
-	memset(inParams_, 0, nInParam*sizeof(PiSDFParam*));
+    nInParam_ = nInParam;
+    inParams_ = CREATE_MUL(PISDF_STACK, nInParam, PiSDFParam*);
+    memset(inParams_, 0, nInParam * sizeof(PiSDFParam *));
 
-	nOutParam_ = nOutParam;
-	outParams_ = CREATE_MUL(PISDF_STACK, nOutParam, PiSDFParam*);
-	memset(outParams_, 0, nOutParam*sizeof(PiSDFParam*));
+    nOutParam_ = nOutParam;
+    outParams_ = CREATE_MUL(PISDF_STACK, nOutParam, PiSDFParam*);
+    memset(outParams_, 0, nOutParam * sizeof(PiSDFParam *));
 
-	nPeMax_ = Spider::getArchi()->getNPE();
-	nPeTypeMax_ = Spider::getArchi()->getNPETypes();
+    nPeMax_ = Spider::getArchi()->getNPE();
+    nPeTypeMax_ = Spider::getArchi()->getNPETypes();
 
-	constraints_ = CREATE_MUL(PISDF_STACK, nPeMax_, bool);
-	memset(constraints_, false, nPeMax_*sizeof(bool));
+    constraints_ = CREATE_MUL(PISDF_STACK, nPeMax_, bool);
+    memset(constraints_, false, nPeMax_ * sizeof(bool));
 
-	timings_ = CREATE_MUL(PISDF_STACK, nPeTypeMax_, Expression*);
-	memset(timings_, 0, nPeTypeMax_*sizeof(Expression*));
+    timings_ = CREATE_MUL(PISDF_STACK, nPeTypeMax_, Expression*);
+    memset(timings_, 0, nPeTypeMax_ * sizeof(Expression *));
 }
 
-PiSDFVertex::~PiSDFVertex(){
-	StackMonitor::free(PISDF_STACK,inEdges_);
-	StackMonitor::free(PISDF_STACK,outEdges_);
-	StackMonitor::free(PISDF_STACK,inParams_);
-	StackMonitor::free(PISDF_STACK,outParams_);
-	StackMonitor::free(PISDF_STACK,constraints_);
+PiSDFVertex::~PiSDFVertex() {
+    StackMonitor::free(PISDF_STACK, inEdges_);
+    StackMonitor::free(PISDF_STACK, outEdges_);
+    StackMonitor::free(PISDF_STACK, inParams_);
+    StackMonitor::free(PISDF_STACK, outParams_);
+    StackMonitor::free(PISDF_STACK, constraints_);
 
-	for(int i=0; i<nPeTypeMax_; i++){
-		if(timings_[i]){
-			timings_[i]->~Expression();
-			StackMonitor::free(PISDF_STACK,timings_[i]);
-			timings_[i] = 0;
-		}
-	}
-	StackMonitor::free(PISDF_STACK,timings_);
+    for (int i = 0; i < nPeTypeMax_; i++) {
+        if (timings_[i]) {
+            timings_[i]->~Expression();
+            StackMonitor::free(PISDF_STACK, timings_[i]);
+            timings_[i] = 0;
+        }
+    }
+    StackMonitor::free(PISDF_STACK, timings_);
 }

@@ -43,96 +43,115 @@
 
 class Expression;
 
-class PiSDFParam : public SetElement{
+class PiSDFParam : public SetElement {
 public:
-	/** Constructor */
-	PiSDFParam(
-			const char* name,
-			int typeIx,
-			PiSDFGraph* graph,
-			PiSDFParamType type,
-			const char* expr);
-	~PiSDFParam();
+    /** Constructor */
+    PiSDFParam(
+            const char *name,
+            int typeIx,
+            PiSDFGraph *graph,
+            PiSDFParamType type,
+            const char *expr);
 
-	/** Getters */
-	inline int getIx() const;
-	inline int getTypeIx() const;
-	inline const char* getName() const;
-	inline PiSDFParamType getType() const;
-	inline int getStaticValue() const;
-	inline int getParentId() const;
-	inline Expression* getExpression();
+    ~PiSDFParam();
 
-	/** Setters */
-	inline void setValue(int value);
-	inline void setParentId(int parentId);
-	inline void setSetter(PiSDFVertex* setter, int portIx);
-	inline void setExpression(Expression* expr);
+    /** Getters */
+    inline int getIx() const;
+
+    inline int getTypeIx() const;
+
+    inline const char *getName() const;
+
+    inline PiSDFParamType getType() const;
+
+    inline int getStaticValue() const;
+
+    inline int getParentId() const;
+
+    inline Expression *getExpression();
+
+    /** Setters */
+    inline void setValue(int value);
+
+    inline void setParentId(int parentId);
+
+    inline void setSetter(PiSDFVertex *setter, int portIx);
+
+    inline void setExpression(Expression *expr);
 
 private:
-	static int globalIx;
+    static int globalIx;
 
-	int id_;
-	int typeIx_;
-	const char* name_;
-	PiSDFGraph* graph_;
-	PiSDFParamType type_;
+    int id_;
+    int typeIx_;
+    const char *name_;
+    PiSDFGraph *graph_;
+    PiSDFParamType type_;
 
-	// STATIC
-	int value_;
+    // STATIC
+    int value_;
 
-	// HERITED
-	int parentId_;
+    // HERITED
+    int parentId_;
 
-	// DYNAMIC
-	PiSDFVertex* setter_;
-	int portIx_;
+    // DYNAMIC
+    PiSDFVertex *setter_;
+    int portIx_;
 
-	// DEPENDENT
-	Expression* expr_;
+    // DEPENDENT
+    Expression *expr_;
 };
 
 /** Inline Fcts */
 /** Getters */
-inline int PiSDFParam::getIx() const{
-	return id_;
+inline int PiSDFParam::getIx() const {
+    return id_;
 }
-inline int PiSDFParam::getTypeIx() const{
-	return typeIx_;
+
+inline int PiSDFParam::getTypeIx() const {
+    return typeIx_;
 }
-inline const char* PiSDFParam::getName() const{
-	return name_;
+
+inline const char *PiSDFParam::getName() const {
+    return name_;
 }
-inline PiSDFParamType PiSDFParam::getType() const{
-	return type_;
+
+inline PiSDFParamType PiSDFParam::getType() const {
+    return type_;
 }
-inline int PiSDFParam::getStaticValue() const{
-	if(type_ != PISDF_PARAM_STATIC)
-		throw std::runtime_error("Error: Not Static param used as Static param\n");
-	return value_;
+
+inline int PiSDFParam::getStaticValue() const {
+    if (type_ != PISDF_PARAM_STATIC)
+        throw std::runtime_error("Error: Not Static param used as Static param\n");
+    return value_;
 }
-inline int PiSDFParam::getParentId() const{
-	if(type_ != PISDF_PARAM_HERITED)
-		throw std::runtime_error("Error: Not Herited param used as Herited param\n");
-	return parentId_;
+
+inline int PiSDFParam::getParentId() const {
+    if (type_ != PISDF_PARAM_HERITED)
+        throw std::runtime_error("Error: Not Herited param used as Herited param\n");
+    return parentId_;
 }
-inline Expression* PiSDFParam::getExpression(){
-	return expr_;
+
+inline Expression *PiSDFParam::getExpression() {
+    return expr_;
 }
 
 /** Setters */
-inline void PiSDFParam::setValue(int value){
-	value_ = value;
+inline void PiSDFParam::setValue(int value) {
+    value_ = value;
 }
-inline void PiSDFParam::setParentId(int parentId){
-	parentId_ = parentId;
+
+inline void PiSDFParam::setParentId(int parentId) {
+    parentId_ = parentId;
 }
-inline void PiSDFParam::setSetter(PiSDFVertex* setter, int portIx){
-	setter_ = setter;
-	portIx_ = portIx;
+
+inline void PiSDFParam::setSetter(PiSDFVertex *setter, int portIx) {
+    setter_ = setter;
+    portIx_ = portIx;
 }
-inline void PiSDFParam::setExpression(Expression* expr){
-	expr_ = expr;
+
+inline void PiSDFParam::setExpression(Expression *expr) {
+    expr_ = expr;
 }
 
 #endif/*PISDF_PARAM_H*/

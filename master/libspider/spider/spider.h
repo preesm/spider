@@ -60,6 +60,7 @@ typedef enum PiSDFSubType {
     PISDF_SUBTYPE_FORK,
     PISDF_SUBTYPE_JOIN,
     PISDF_SUBTYPE_END,
+    PISDF_SUBTYPE_DELAY,
     PISDF_SUBTYPE_INPUT_IF,
     PISDF_SUBTYPE_OUTPUT_IF
 } PiSDFSubType;
@@ -287,7 +288,7 @@ namespace Spider {
             PiSDFGraph *graph,
             PiSDFVertex *source, int sourcePortId, const char *production,
             PiSDFVertex *sink, int sinkPortId, const char *consumption,
-            const char *delay, PiSDFVertex *setter = 0, PiSDFVertex *getter = 0);
+            const char *delay, PiSDFVertex *setter = 0, PiSDFVertex *getter = 0, PiSDFVertex *delayActor = 0);
 
     void addInParam(PiSDFVertex *vertex, int ix, PiSDFParam *param);
 

@@ -55,6 +55,7 @@ typedef struct node {
     SRDAGEdge *edge;
 } node;
 
+
 void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
     for (int sr_ca_Ix = 0; sr_ca_Ix < job->graph->getNConfig(); sr_ca_Ix++) {
         SRDAGVertex *sr_ca = job->configs[sr_ca_Ix];
@@ -171,7 +172,201 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
     }
 }
 
-void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
+
+typedef struct SrcConnection {
+    SRDAGVertex *src;
+    int prod;
+    int portIx;
+} SrcConnection;
+
+typedef struct SnkConnection {
+    SRDAGEdge *edge;
+    int cons;
+} SnkConnection;
+
+/**
+ * @brief Add all instances of the source vertex of a given edge to the SrcConnection structure
+ *
+ * @param job                 The job
+ * @param edge                The original PiSDF edge
+ * @param srcConnections      The srcConnections array of SrcConnection strutures
+ * @param nbSourceRepetitions Repetition vector value of the source vertex
+ * @param sourceProduction    Production value of the source
+ */
+static inline void addSRSourceVertices(transfoJob *job,
+                                       PiSDFEdge *edge,
+                                       SrcConnection *srcConnections,
+                                       int nbSourceRepetitions,
+                                       int sourceProduction) {
+    int srcID = edge->getSrc()->getTypeId();
+    int srcPortIx = edge->getSrcPortIx();
+    for (int i = 0; i < nbSourceRepetitions; i++) {
+        srcConnections[i].src = job->bodies[srcID][i];
+        srcConnections[i].portIx = srcPortIx;
+        srcConnections[i].prod = sourceProduction;
+    }
+}
+
+/**
+ * @brief Add all instances of the setter vertex of a delay to the single rate top graph
+ *
+ * @param topSrdag       The top sr-dag graph
+ * @param job            The job
+ * @param brv            The repetition vector values
+ * @param edge           The original PiSDF edge
+ * @param srcConnections The srcConnections array of SrcConnection strutures
+ */
+static void linkSRDelaySetterVertices(SRDAGGraph *topSrdag,
+                                      transfoJob *job,
+                                      int *brv,
+                                      PiSDFEdge *edge,
+                                      SrcConnection *srcConnections) {
+    // Value of the delay
+    int nbDelays = edge->resolveDelay(job);
+    // Setter actor that initialize the data tokens of the delay
+    PiSDFVertex *delaySetter = edge->getDelaySetter();
+    // Virtual actor used for analyses purposes
+    PiSDFVertex *delayVirtual = edge->getDelayVirtual();
+    // Check consistency through the value of the BRV of the virtual actor
+    if (brv[delayVirtual->getTypeId()] > 1) {
+        throw std::runtime_error("Delay virtual actor should have brv value of 1.");
+    }
+    // If the setter is an interface, we should just retrieve the connection
+    if (delaySetter->getType() == PISDF_TYPE_IF) {
+        SRDAGEdge *setterEdge = job->inputIfs[delaySetter->getTypeId()];
+        if (setterEdge->getRate() == nbDelays) {
+            srcConnections[0].src = setterEdge->getSrc();
+            if (srcConnections[0].src == 0) {
+                srcConnections[0].src = topSrdag->addRoundBuffer();
+                job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcConnections[0].src, 0);
+                srcConnections[0].portIx = 0;
+            } else {
+                srcConnections[0].portIx = setterEdge->getSrcPortIx();
+            }
+        } else {
+            throw std::runtime_error("Interface setter for a delay must have same rate.");
+        }
+    } else {
+        int nbSetterRepetitions = brv[delaySetter->getTypeId()];
+        int setterPortIx = delayVirtual->getInEdge(0)->getSrcPortIx();
+        srcConnections[0].prod = nbDelays;
+        if (nbSetterRepetitions > 1) {
+            // We need to add a join
+            srcConnections[0].src = topSrdag->addJoin(MAX_IO_EDGES);
+            srcConnections[0].portIx = 0;
+
+            int setterProd = nbDelays / nbSetterRepetitions;
+            for (int j = 0; j < nbSetterRepetitions; ++j) {
+                topSrdag->addEdge(job->bodies[delaySetter->getTypeId()][j],
+                                  setterPortIx,
+                                  srcConnections[0].src,
+                                  j,
+                                  setterProd);
+            }
+        } else {
+            // We don't need to add a join
+            srcConnections[0].src = job->bodies[delaySetter->getTypeId()][0];
+            srcConnections[0].portIx = setterPortIx;
+        }
+    }
+}
+
+/**
+ * @brief Add all instances of the sink vertex of a given edge to the SnkConnection structure
+ *
+ * @param job                 The job
+ * @param edge                The original PiSDF edge
+ * @param snkConnections      The snkConnections array of SnkConnection strutures
+ * @param nbSourceRepetitions Repetition vector value of the sink vertex
+ * @param sinkConsumption     Consumption value of the sink
+ */
+static inline void addSRSinkVertices(SRDAGGraph *topSrdag,
+                                     transfoJob *job,
+                                     PiSDFEdge *edge,
+                                     SnkConnection *snkConnections,
+                                     int nbSinkRepetitions,
+                                     int sinkConsumption) {
+    int snkID = edge->getSnk()->getTypeId();
+    int snkPortIx = edge->getSnkPortIx();
+    for (int i = 0; i < nbSinkRepetitions; i++) {
+        snkConnections[i].edge = topSrdag->addEdge();
+        snkConnections[i].edge->connectSnk(job->bodies[snkID][i], snkPortIx);
+        snkConnections[i].cons = sinkConsumption;
+    }
+}
+
+
+/**
+ * @brief Add all instances of the getter vertex of a delay to the single rate top graph
+ *
+ * @param topSrdag       The top sr-dag graph
+ * @param job            The job
+ * @param brv            The repetition vector values
+ * @param edge           The original PiSDF edge
+ * @param snkConnections The snkConnections array of SnkConnection strutures
+ */
+static void linkSRDelayGetterVertices(SRDAGGraph *topSrdag,
+                                      transfoJob *job,
+                                      int *brv,
+                                      PiSDFEdge *edge,
+                                      SnkConnection *snkConnections) {
+    // Value of the delay
+    int nbDelays = edge->resolveDelay(job);
+    // Setter actor that initialize the data tokens of the delay
+    PiSDFVertex *delayGetter = edge->getDelayGetter();
+    // Virtual actor used for analyses purposes
+    PiSDFVertex *delayVirtual = edge->getDelayVirtual();
+    // Check consistency through the value of the BRV of the virtual actor
+    if (brv[delayVirtual->getTypeId()] > 1) {
+        throw std::runtime_error("Delay virtual actor should have brv value of 1.");
+    }
+    // If the setter is an interface, we should just retrieve the connection
+    if (delayGetter->getType() == PISDF_TYPE_IF) {
+        SRDAGEdge *getterEdge = job->outputIfs[delayGetter->getTypeId()];
+        if (getterEdge->getRate() == nbDelays) {
+            snkConnections[0].edge = getterEdge;
+            snkConnections[0].cons = nbDelays;
+        } else {
+            throw std::runtime_error("Interface getter for a delay must have same rate.");
+        }
+    } else {
+        int nbGetterRepetitions = brv[delayGetter->getTypeId()];
+        int getterPortIx = delayVirtual->getOutEdge(0)->getSnkPortIx();
+        snkConnections[0].edge = topSrdag->addEdge();
+        snkConnections[0].cons = nbDelays;
+        if (nbGetterRepetitions > 1) {
+            // We need to add a fork
+            SRDAGVertex *forkVertex = topSrdag->addFork(MAX_IO_EDGES);
+            snkConnections[0].edge->connectSnk(forkVertex, 0);
+
+            int getterProd = nbDelays / nbGetterRepetitions;
+            for (int j = 0; j < nbGetterRepetitions; ++j) {
+                topSrdag->addEdge(forkVertex,
+                                  j,
+                                  job->bodies[delayGetter->getTypeId()][j],
+                                  getterPortIx,
+                                  getterProd);
+            }
+        } else {
+            // We don't need to add a fork
+            snkConnections[0].edge->connectSnk(job->bodies[delayGetter->getTypeId()][0], getterPortIx);
+        }
+    }
+}
+
+
+
+
+/**
+ * @brief Link all vertices of current graph contained in the transformation job
+ *
+ * @param topSrdag The top sr-dag graph
+ * @param job      The job
+ * @param brv      The repetition vector values
+ */
+void linkSRVertices(SRDAGGraph *topSrdag,
+                    transfoJob *job,
+                    int *brv) {
     PiSDFGraph *currentPiSDF = job->graph;
 
     for (int i = 0; i < currentPiSDF->getNEdge(); i++) {
@@ -179,6 +374,12 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
 
         // Already treated edge
         if (edge->getSnk()->getType() == PISDF_TYPE_CONFIG)
+            continue;
+
+        // We deal with delay virtual actor specifically
+        if (edge->getSnk()->getSubType() == PISDF_SUBTYPE_DELAY)
+            continue;
+        if (edge->getSrc()->getSubType() == PISDF_SUBTYPE_DELAY)
             continue;
 
         int nbDelays = edge->resolveDelay(job);
@@ -206,17 +407,6 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
         int sinkIndex = 0;
         int curSourceToken;
         int curSinkToken;
-
-        typedef struct SrcConnection {
-            SRDAGVertex *src;
-            int prod;
-            int portIx;
-        } SrcConnection;
-
-        typedef struct SnkConnection {
-            SRDAGEdge *edge;
-            int cons;
-        } SnkConnection;
 
         SrcConnection *srcConnections = nullptr;
         SnkConnection *snkConnections = nullptr;
@@ -310,44 +500,35 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
             case PISDF_TYPE_BODY:
                 if (nbDelays == 0) {
                     srcConnections = CREATE_MUL(TRANSFO_STACK, nbSourceRepetitions, SrcConnection);
-                    for (int i = 0; i < nbSourceRepetitions; i++) {
-                        srcConnections[i].src = job->bodies[edge->getSrc()->getTypeId()][i];
-                        srcConnections[i].portIx = piSrcIx;
-                        srcConnections[i].prod = sourceProduction;
-                    }
+                    // Add the source instances
+                    addSRSourceVertices(job,                     /* Transformation job */
+                                        edge,                    /* PiSDF original edge */
+                                        &srcConnections[0],      /* Start from first position */
+                                        nbSourceRepetitions,     /* BRV value of the source */
+                                        sourceProduction);       /* Source production*/
                 } else {
                     nbSourceRepetitions++;
                     srcConnections = CREATE_MUL(TRANSFO_STACK, nbSourceRepetitions, SrcConnection);
-
+                    // 1. Deal with the delay initialization
                     if (edge->getDelaySetter()) {
-                        // TODO 1. Codegen -> ajouter les delays actors comme des acteurs "normaux"
-                        // TODO 2. Dans spider, faire le link entre delay et DELAY_VERTEX (à l'init)
-                        // TODO 3. ICI, supprimer le DELAY_VERTEX et reconnecter le setter / getter comme il faut
-                        PiSDFVertex *ifDelaySetter = edge->getDelaySetter();
-                        SRDAGEdge *setterEdge = job->inputIfs[ifDelaySetter->getTypeId()];
-                        if (setterEdge->getRate() == nbDelays) {
-                            srcConnections[0].src = setterEdge->getSrc();
-                            if (srcConnections[0].src == 0) {
-                                srcConnections[0].src = topSrdag->addRoundBuffer();
-                                job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcConnections[0].src, 0);
-                                srcConnections[0].portIx = 0;
-                            } else {
-                                srcConnections[0].portIx = setterEdge->getSrcPortIx();
-                            }
-                        } else {
-                            throw std::runtime_error("Setter of a delay must be of the same rate than delay");
-                        }
+                        // Add setter vertex instances
+                        linkSRDelaySetterVertices(topSrdag,        /* Top graph */
+                                                  job,             /* Transformation job */
+                                                  brv,             /* Basic Repetition Vector values */
+                                                  edge,            /* PiSDF original edge */
+                                                  srcConnections); /* The SrcConnection structures */
                     } else {
+                        // Add init vertex
                         srcConnections[0].src = topSrdag->addInit();
                         srcConnections[0].portIx = 0;
+                        srcConnections[0].prod = nbDelays;
                     }
-                    srcConnections[0].prod = nbDelays;
-
-                    for (int i = 1; i < nbSourceRepetitions; i++) {
-                        srcConnections[i].src = job->bodies[edge->getSrc()->getTypeId()][i - 1];
-                        srcConnections[i].portIx = piSrcIx;
-                        srcConnections[i].prod = sourceProduction;
-                    }
+                    // 2. Add the source instances
+                    addSRSourceVertices(job,                     /* Transformation job */
+                                        edge,                    /* PiSDF original edge */
+                                        &srcConnections[1],      /* Start from second position */
+                                        nbSourceRepetitions - 1, /* BRV value of the source */
+                                        sourceProduction);       /* Source production*/
                 }
                 break;
         }
@@ -382,52 +563,53 @@ void linkSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
                 if (nbDelays == 0) {
                     if (sinkNeedEnd) {
                         snkConnections = CREATE_MUL(TRANSFO_STACK, nbSinkRepetitions + 1, SnkConnection);
-
-                        for (int i = 0; i < nbSinkRepetitions; i++) {
-                            snkConnections[i].edge = topSrdag->addEdge();
-                            snkConnections[i].edge->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i],
-                                                               edge->getSnkPortIx());
-                            snkConnections[i].cons = sinkConsumption;
-                        }
+                        // 1. Add sink instances
+                        addSRSinkVertices(topSrdag,          /* Top graph */
+                                          job,               /* Transformation job */
+                                          edge,              /* PiSDF original edge */
+                                          snkConnections,    /* Start from first position */
+                                          nbSinkRepetitions, /* BRV value of the sink */
+                                          sinkConsumption);  /* Sink consumption*/
+                        // 2. Add end vertex
                         snkConnections[nbSinkRepetitions].edge = topSrdag->addEdge();
                         snkConnections[nbSinkRepetitions].edge->connectSnk(topSrdag->addEnd(), 0);
                         snkConnections[nbSinkRepetitions].cons = sourceProduction - sinkConsumption * nbSinkRepetitions;
                         nbSinkRepetitions++;
                     } else {
                         snkConnections = CREATE_MUL(TRANSFO_STACK, nbSinkRepetitions, SnkConnection);
-
-                        for (int i = 0; i < nbSinkRepetitions; i++) {
-                            snkConnections[i].edge = topSrdag->addEdge();
-                            snkConnections[i].edge->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i],
-                                                               edge->getSnkPortIx());
-                            snkConnections[i].cons = sinkConsumption;
-                        }
+                        // Add sink instances
+                        addSRSinkVertices(topSrdag,          /* Top graph */
+                                          job,               /* Transformation job */
+                                          edge,              /* PiSDF original edge */
+                                          snkConnections,    /* Start from first position */
+                                          nbSinkRepetitions, /* BRV value of the sink */
+                                          sinkConsumption);  /* Sink consumption*/
                     }
                 } else {
                     snkConnections = CREATE_MUL(TRANSFO_STACK, nbSinkRepetitions + 1, SnkConnection);
+                    // 1. Add sink instances
+                    addSRSinkVertices(topSrdag,          /* Top graph */
+                                      job,               /* Transformation job */
+                                      edge,              /* PiSDF original edge */
+                                      snkConnections,    /* Start from first position */
+                                      nbSinkRepetitions, /* BRV value of the sink */
+                                      sinkConsumption);  /* Sink consumption*/
 
-                    for (int i = 0; i < nbSinkRepetitions; i++) {
-                        snkConnections[i].edge = topSrdag->addEdge();
-                        snkConnections[i].edge->connectSnk(job->bodies[edge->getSnk()->getTypeId()][i],
-                                                           edge->getSnkPortIx());
-                        snkConnections[i].cons = sinkConsumption;
-                    }
-
+                    // 2. Deal with the delay end
                     if (edge->getDelayGetter()) {
-                        PiSDFVertex *ifDelayGetter = edge->getDelayGetter();
-                        SRDAGEdge *getterEdge = job->outputIfs[ifDelayGetter->getTypeId()];
-                        if (getterEdge->getRate() == nbDelays) {
-                            snkConnections[nbSinkRepetitions].edge = getterEdge;
-                            snkConnections[nbSinkRepetitions].cons = nbDelays;
-                        } else {
-                            throw std::runtime_error("Getter of a delay must be of the same rate than delay");
-                        }
+                        // Add getter vertex instances
+                        linkSRDelayGetterVertices(topSrdag,                            /* Top graph */
+                                                  job,                                 /* Transformation job */
+                                                  brv,                                 /* Basic Repetition Vector values */
+                                                  edge,                                /* PiSDF original edge */
+                                                  &snkConnections[nbSinkRepetitions]); /* The SnkConnection structure */
                     } else {
+                        // Add end vertex
                         snkConnections[nbSinkRepetitions].edge = topSrdag->addEdge();
                         snkConnections[nbSinkRepetitions].edge->connectSnk(topSrdag->addEnd(), 0);
                         snkConnections[nbSinkRepetitions].cons = nbDelays;
                     }
-
+                    // Update the number of sink
                     nbSinkRepetitions++;
                 }
                 break;

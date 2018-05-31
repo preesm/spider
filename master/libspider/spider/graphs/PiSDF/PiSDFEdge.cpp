@@ -44,14 +44,16 @@ PiSDFEdge::PiSDFEdge(PiSDFGraph *graph) {
     id_ = globalId++;
     graph_ = graph;
 
-    src_ = 0;
+    src_ = nullptr;
     srcPortIx_ = -1;
-    snk_ = 0;
+    snk_ = nullptr;
     snkPortIx_ = -1;
 
     prod_ = cons_ = delay_ = 0;
-    setter_ = 0;
-    getter_ = 0;
+    setter_ = nullptr;
+    getter_ = nullptr;
+    getter_ = nullptr;
+    virtual_ = nullptr;
 }
 
 PiSDFEdge::~PiSDFEdge() {

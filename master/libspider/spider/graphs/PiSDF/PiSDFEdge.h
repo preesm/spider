@@ -63,7 +63,7 @@ public:
     inline int getSnkPortIx() const;
 
     /** Setters */
-    inline void setDelay(const char *delay, PiSDFVertex *setter, PiSDFVertex *getter);
+    inline void setDelay(const char *delay, PiSDFVertex *setter, PiSDFVertex *getter, PiSDFVertex *delayActor);
 
     /** Connections Fcts */
     void connectSrc(PiSDFVertex *src, int srcPortId, const char *prod);
@@ -90,6 +90,8 @@ public:
 
     inline PiSDFVertex *getDelayGetter();
 
+    inline PiSDFVertex *getDelayVirtual();
+
 private:
     static int globalId;
 
@@ -109,6 +111,7 @@ private:
     Expression *delay_;
     PiSDFVertex *setter_;
     PiSDFVertex *getter_;
+    PiSDFVertex *virtual_;
 };
 
 inline int PiSDFEdge::getId() const {
@@ -131,7 +134,7 @@ inline int PiSDFEdge::getSnkPortIx() const {
     return snkPortIx_;
 }
 
-inline void PiSDFEdge::setDelay(const char *expr, PiSDFVertex *setter, PiSDFVertex *getter) {
+inline void PiSDFEdge::setDelay(const char *expr, PiSDFVertex *setter, PiSDFVertex *getter, PiSDFVertex *delayActor) {
     if (delay_ != 0) {
         delay_->~Expression();
         StackMonitor::free(PISDF_STACK, delay_);
@@ -139,17 +142,19 @@ inline void PiSDFEdge::setDelay(const char *expr, PiSDFVertex *setter, PiSDFVert
     }
     delay_ = CREATE(PISDF_STACK, Expression)(expr, graph_->getParams(), graph_->getNParam());
 
-    if (setter != 0
-        && setter->getType() == PISDF_TYPE_IF
-        && setter->getSubType() == PISDF_SUBTYPE_INPUT_IF) {
-        setter_ = setter;
-        setter->connectOutEdge(0, this);
+    if ((setter || getter) && !delayActor) {
+        throw std::runtime_error("delay can not have setter nor getter without special delay actor vertex.");
     }
-    if (getter != 0
-        && getter->getType() == PISDF_TYPE_IF
-        && getter->getSubType() == PISDF_SUBTYPE_OUTPUT_IF) {
+
+    if (setter) {
+        setter_ = setter;
+        virtual_ = delayActor;
+        //setter->connectOutEdge(0, this);
+    }
+    if (getter) {
         getter_ = getter;
-        getter->connectInEdge(0, this);
+        virtual_ = delayActor;
+        //getter->connectInEdge(0, this);
     }
 }
 
@@ -185,6 +190,10 @@ inline PiSDFVertex *PiSDFEdge::getDelaySetter() {
 
 inline PiSDFVertex *PiSDFEdge::getDelayGetter() {
     return getter_;
+}
+
+inline PiSDFVertex *PiSDFEdge::getDelayVirtual() {
+    return virtual_;
 }
 
 #endif/*PISDF_EDGE_H*/

@@ -647,11 +647,11 @@ PiSDFEdge *Spider::connect(
         PiSDFGraph *graph,
         PiSDFVertex *source, int sourcePortId, const char *production,
         PiSDFVertex *sink, int sinkPortId, const char *consumption,
-        const char *delay, PiSDFVertex *setter, PiSDFVertex *getter) {
+        const char *delay, PiSDFVertex *setter, PiSDFVertex *getter, PiSDFVertex *delayActor) {
     return graph->connect(
             source, sourcePortId, production,
             sink, sinkPortId, consumption,
-            delay, setter, getter);
+            delay, setter, getter, delayActor);
 }
 
 void Spider::addInParam(PiSDFVertex *vertex, int ix, PiSDFParam *param) {

@@ -169,10 +169,12 @@ PiSDFParam *PiSDFGraph::addStaticParam(const char *name, const char *expr) {
             name, params_.getN(),
             this, PISDF_PARAM_STATIC,
             NULL);
-
-    // TODO set value
-    throw std::runtime_error("addStaticParam: Unimplemented");
-
+    try {
+        param->setValue(std::stoi(expr));
+    } catch (std::exception &e) {
+        printf("%s\n", e.what());
+        throw std::runtime_error("addStaticParam: failed to convert to int");
+    }
     params_.add(param);
     return param;
 }
@@ -237,11 +239,12 @@ PiSDFEdge *PiSDFGraph::connect(
         PiSDFVertex *snk, int snkPortId, const char *cons,
         const char *delay,
         PiSDFVertex *setter,
-        PiSDFVertex *getter) {
+        PiSDFVertex *getter,
+        PiSDFVertex *delayActor) {
     PiSDFEdge *edge = this->addEdge();
     edge->connectSrc(src, srcPortId, prod);
     edge->connectSnk(snk, snkPortId, cons);
-    edge->setDelay(delay, setter, getter);
+    edge->setDelay(delay, setter, getter, delayActor);
     src->connectOutEdge(srcPortId, edge);
     snk->connectInEdge(snkPortId, edge);
     return edge;

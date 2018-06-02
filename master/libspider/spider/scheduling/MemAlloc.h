@@ -61,12 +61,11 @@ public:
         setReservedSize(reservedSize);
     }
 
-    inline void setReservedSize(int reservedSize) {
-        if (reservedSize > memSize_) {
-            throw std::runtime_error("Memory allocation for reserved memory superior to total allocated memory.");
-        }
-        memReserved_ = reservedSize;
-    }
+    inline void setReservedSize(int reservedSize);
+
+    inline int getMemAllocSize() const;
+
+    inline const char *getMemAllocSizeFormatted() const;
 
     virtual ~MemAlloc() {}
 
@@ -75,5 +74,31 @@ protected:
     int memReserved_;
     int memSize_;
 };
+
+inline int MemAlloc::getMemAllocSize() const {
+    return memSize_;
+}
+
+inline const char *MemAlloc::getMemAllocSizeFormatted() const {
+    char memAllocSizeFormatted[10] = {0};
+    if (memSize_ < 1024) {
+        sprintf(memAllocSizeFormatted, "%5.1f B", memSize_ / 1.);
+    } else if (memSize_ < 1024 * 1024) {
+        sprintf(memAllocSizeFormatted, "%5.1f KB", memSize_ / 1024.);
+    } else if (memSize_ < 1024 * 1024 * 1024) {
+        sprintf(memAllocSizeFormatted, "%5.1f MB", memSize_ / (1024. * 1024.));
+    } else {
+        sprintf(memAllocSizeFormatted, "%5.1f GB", memSize_ / (1024. * 1024. * 1024.));
+    }
+    std::string retValue(memAllocSizeFormatted);
+    return retValue.c_str();
+}
+
+inline void MemAlloc::setReservedSize(int reservedSize) {
+    if (reservedSize > memSize_) {
+        throw std::runtime_error("Memory allocation for reserved memory superior to total allocated memory.");
+    }
+    memReserved_ = reservedSize;
+}
 
 #endif/*MEM_ALLOC_H*/

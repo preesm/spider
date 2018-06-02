@@ -165,6 +165,8 @@ typedef struct {
 namespace Spider {
     void init(SpiderConfig &cfg);
 
+    void initReservedMemory();
+
     void clean();
 
     void setMemAllocType(MemAllocType type, int start, int size);
@@ -288,7 +290,11 @@ namespace Spider {
             PiSDFGraph *graph,
             PiSDFVertex *source, int sourcePortId, const char *production,
             PiSDFVertex *sink, int sinkPortId, const char *consumption,
-            const char *delay, PiSDFVertex *setter = 0, PiSDFVertex *getter = 0, PiSDFVertex *delayActor = 0);
+            const char *delay,
+            PiSDFVertex *setter = 0,
+            PiSDFVertex *getter = 0,
+            PiSDFVertex *delayActor = 0,
+            bool isDelayPersistent = false);
 
     void addInParam(PiSDFVertex *vertex, int ix, PiSDFParam *param);
 

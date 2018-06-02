@@ -240,11 +240,12 @@ PiSDFEdge *PiSDFGraph::connect(
         const char *delay,
         PiSDFVertex *setter,
         PiSDFVertex *getter,
-        PiSDFVertex *delayActor) {
+        PiSDFVertex *delayActor,
+        bool isDelayPersistent) {
     PiSDFEdge *edge = this->addEdge();
     edge->connectSrc(src, srcPortId, prod);
     edge->connectSnk(snk, snkPortId, cons);
-    edge->setDelay(delay, setter, getter, delayActor);
+    edge->setDelay(delay, setter, getter, delayActor, isDelayPersistent);
     src->connectOutEdge(srcPortId, edge);
     snk->connectInEdge(snkPortId, edge);
     return edge;

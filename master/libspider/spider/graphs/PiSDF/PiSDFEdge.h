@@ -62,8 +62,16 @@ public:
 
     inline int getSnkPortIx() const;
 
+    inline int getMemoryReservedAlloc() const;
+
     /** Setters */
-    inline void setDelay(const char *delay, PiSDFVertex *setter, PiSDFVertex *getter, PiSDFVertex *delayActor);
+    inline void setDelay(const char *delay,
+                         PiSDFVertex *setter,
+                         PiSDFVertex *getter,
+                         PiSDFVertex *delayActor,
+                         bool isDelayPersistent);
+
+    inline void setMemoryReservedAlloc(int memReservedAlloc);
 
     /** Connections Fcts */
     void connectSrc(PiSDFVertex *src, int srcPortId, const char *prod);
@@ -92,6 +100,8 @@ public:
 
     inline PiSDFVertex *getDelayVirtual();
 
+    inline bool isDelayPersistent();
+
 private:
     static int globalId;
 
@@ -112,6 +122,8 @@ private:
     PiSDFVertex *setter_;
     PiSDFVertex *getter_;
     PiSDFVertex *virtual_;
+    bool isPersistent_;
+    int memReservedAlloc_;
 };
 
 inline int PiSDFEdge::getId() const {
@@ -134,13 +146,21 @@ inline int PiSDFEdge::getSnkPortIx() const {
     return snkPortIx_;
 }
 
-inline void PiSDFEdge::setDelay(const char *expr, PiSDFVertex *setter, PiSDFVertex *getter, PiSDFVertex *delayActor) {
+inline int PiSDFEdge::getMemoryReservedAlloc() const {
+    return memReservedAlloc_;
+}
+
+inline void PiSDFEdge::setDelay(const char *delay,
+                                PiSDFVertex *setter,
+                                PiSDFVertex *getter,
+                                PiSDFVertex *delayActor,
+                                bool isDelayPersistent) {
     if (delay_ != 0) {
         delay_->~Expression();
         StackMonitor::free(PISDF_STACK, delay_);
         delay_ = 0;
     }
-    delay_ = CREATE(PISDF_STACK, Expression)(expr, graph_->getParams(), graph_->getNParam());
+    delay_ = CREATE(PISDF_STACK, Expression)(delay, graph_->getParams(), graph_->getNParam());
 
     if ((setter || getter) && !delayActor) {
         throw std::runtime_error("delay can not have setter nor getter without special delay actor vertex.");
@@ -156,6 +176,11 @@ inline void PiSDFEdge::setDelay(const char *expr, PiSDFVertex *setter, PiSDFVert
         virtual_ = delayActor;
         //getter->connectInEdge(0, this);
     }
+    isPersistent_ = isDelayPersistent;
+}
+
+inline void PiSDFEdge::setMemoryReservedAlloc(int memReservedAlloc) {
+    memReservedAlloc_ = memReservedAlloc;
 }
 
 inline int PiSDFEdge::resolveProd(transfoJob *job) const {
@@ -194,6 +219,10 @@ inline PiSDFVertex *PiSDFEdge::getDelayGetter() {
 
 inline PiSDFVertex *PiSDFEdge::getDelayVirtual() {
     return virtual_;
+}
+
+inline bool PiSDFEdge::isDelayPersistent() {
+    return isPersistent_;
 }
 
 #endif/*PISDF_EDGE_H*/

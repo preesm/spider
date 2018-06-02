@@ -123,7 +123,7 @@ SRDAGVertex *SRDAGGraph::addInit() {
             0 /*Ref*/, 0, 0,
             0 /*nInEdge*/,
             1 /*nOutEdge*/,
-            0 /*nInParam*/,
+            2 /*nInParam*/,
             0 /*nOutParam*/);
     vertices_.add(vertex);
     return vertex;
@@ -136,7 +136,7 @@ SRDAGVertex *SRDAGGraph::addEnd() {
             0 /*Ref*/, 0, 0,
             1 /*nInEdge*/,
             0 /*nOutEdge*/,
-            0 /*nInParam*/,
+            2 /*nInParam: 0 -> isDelayPersistent, 1 -> memory address of the fifo (if any)*/,
             0 /*nOutParam*/);
     vertices_.add(vertex);
     return vertex;

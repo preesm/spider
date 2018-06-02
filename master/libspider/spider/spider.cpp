@@ -40,6 +40,7 @@
 #include <graphs/PiSDF/PiSDFCommon.h>
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/PiSDF/PiSDFGraph.h>
+#include <graphs/PiSDF/PiSDFEdge.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
 
 #include <scheduling/MemAlloc.h>
@@ -102,6 +103,56 @@ void Spider::init(SpiderConfig &cfg) {
     platform = new PlatformPThread(cfg);
 }
 
+void Spider::initReservedMemory() {
+    PiSDFVertex *root = pisdf_->getBody(0);
+    PiSDFGraph *graph = root->getSubGraph();
+    // Create transfor job
+    transfoJob *job = CREATE(TRANSFO_STACK, transfoJob);
+    memset(job, 0, sizeof(transfoJob));
+    job->graph = graph;
+    job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), int);
+    for (int paramIx = 0; paramIx < job->graph->getNParam(); paramIx++) {
+        PiSDFParam *param = job->graph->getParam(paramIx);
+        switch (param->getType()) {
+            case PISDF_PARAM_STATIC:
+                job->paramValues[paramIx] = param->getStaticValue();
+                break;
+            case PISDF_PARAM_HERITED:
+                break;
+            case PISDF_PARAM_DYNAMIC:
+                // Do nothing, cannot be evaluated yet
+                job->paramValues[paramIx] = -1;
+                break;
+            case PISDF_PARAM_DEPENDENT_STATIC:
+                job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
+                break;
+            case PISDF_PARAM_DEPENDENT_DYNAMIC:
+                job->paramValues[paramIx] = -1;
+                break;
+        }
+    }
+    // Compute the needed reserved memory for delays
+    memAlloc_->reset();
+    int memReserved = 0;
+    for (int i = 0; i < graph->getNEdge(); i++) {
+        PiSDFEdge *edge = graph->getEdge(i);
+        int nbDelays = edge->resolveDelay(job);
+        if (nbDelays > 0 && edge->isDelayPersistent()) {
+            // Compute memory offset
+            int memAllocAddr = memAlloc_->getMemUsed();
+            edge->setMemoryReservedAlloc(memAllocAddr);
+            // Get reserved aligned size
+            memReserved += memAlloc_->getReservedAlloc(nbDelays);
+        }
+    }
+    printf("INFO: Reserved %d of the shared memory for persistent delays.\n", memReserved);
+    memAlloc_->setReservedSize(memReserved);
+    memAlloc_->reset();
+    // Free memory
+    StackMonitor::free(TRANSFO_STACK, job->paramValues);
+    StackMonitor::free(TRANSFO_STACK, job);
+}
+
 void Spider::clean() {
 
     if (srdag_ != 0)
@@ -132,7 +183,6 @@ void Spider::iterate() {
     delete srdag_;
     StackMonitor::freeAll(SRDAG_STACK);
     memAlloc_->reset();
-
     srdag_ = new SRDAGGraph();
 
 
@@ -647,11 +697,11 @@ PiSDFEdge *Spider::connect(
         PiSDFGraph *graph,
         PiSDFVertex *source, int sourcePortId, const char *production,
         PiSDFVertex *sink, int sinkPortId, const char *consumption,
-        const char *delay, PiSDFVertex *setter, PiSDFVertex *getter, PiSDFVertex *delayActor) {
+        const char *delay, PiSDFVertex *setter, PiSDFVertex *getter, PiSDFVertex *delayActor, bool isDelayPersistent) {
     return graph->connect(
             source, sourcePortId, production,
             sink, sinkPortId, consumption,
-            delay, setter, getter, delayActor);
+            delay, setter, getter, delayActor, isDelayPersistent);
 }
 
 void Spider::addInParam(PiSDFVertex *vertex, int ix, PiSDFParam *param) {

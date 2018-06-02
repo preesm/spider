@@ -511,6 +511,9 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                     srcConnections = CREATE_MUL(TRANSFO_STACK, nbSourceRepetitions, SrcConnection);
                     // 1. Deal with the delay initialization
                     if (edge->getDelaySetter()) {
+                        if (edge->isDelayPersistent()) {
+                            throw std::runtime_error("Persistent delay can not have setter actor.");
+                        }
                         // Add setter vertex instances
                         linkSRDelaySetterVertices(topSrdag,        /* Top graph */
                                                   job,             /* Transformation job */
@@ -522,6 +525,12 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                         srcConnections[0].src = topSrdag->addInit();
                         srcConnections[0].portIx = 0;
                         srcConnections[0].prod = nbDelays;
+                        // Set persistence property
+                        srcConnections[0].src->addInParam(0, edge->isDelayPersistent());
+                        if (edge->isDelayPersistent()) {
+                            // Set memory address of the delay
+                            srcConnections[0].src->addInParam(1, edge->getMemoryReservedAlloc());
+                        }
                     }
                     // 2. Add the source instances
                     addSRSourceVertices(job,                     /* Transformation job */
@@ -597,6 +606,9 @@ void linkSRVertices(SRDAGGraph *topSrdag,
 
                     // 2. Deal with the delay end
                     if (edge->getDelayGetter()) {
+                        if (edge->isDelayPersistent()) {
+                            throw std::runtime_error("Persistent delay can not have getter actor.");
+                        }
                         // Add getter vertex instances
                         linkSRDelayGetterVertices(topSrdag,                            /* Top graph */
                                                   job,                                 /* Transformation job */
@@ -606,8 +618,15 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                     } else {
                         // Add end vertex
                         snkConnections[nbSinkRepetitions].edge = topSrdag->addEdge();
-                        snkConnections[nbSinkRepetitions].edge->connectSnk(topSrdag->addEnd(), 0);
+                        SRDAGVertex *endVertex = topSrdag->addEnd();
+                        snkConnections[nbSinkRepetitions].edge->connectSnk(endVertex, 0);
                         snkConnections[nbSinkRepetitions].cons = nbDelays;
+                        // Set persistence property
+                        endVertex->addInParam(0, edge->isDelayPersistent());
+                        if (edge->isDelayPersistent()) {
+                            // Set memory address of the delay
+                            endVertex->addInParam(1, edge->getMemoryReservedAlloc());
+                        }
                     }
                     // Update the number of sink
                     nbSinkRepetitions++;

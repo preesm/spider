@@ -100,7 +100,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
             break;
         case SRDAG_INIT:
         case SRDAG_END:
-            nParams = 1;
+            nParams = 3;
             break;
     }
 
@@ -193,9 +193,18 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
             break;
         case SRDAG_INIT:
             inParams[0] = vertex->getOutEdge(0)->getRate();
+            // Set persistence property
+            inParams[1] = vertex->getInParam(0);
+            // Set memory address
+            inParams[2] = vertex->getInParam(1);
+
             break;
         case SRDAG_END:
             inParams[0] = vertex->getInEdge(0)->getRate();
+            // Set persistence property
+            inParams[1] = vertex->getInParam(0);
+            // Set memory address
+            inParams[2] = vertex->getInParam(1);
             break;
     }
 

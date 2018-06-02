@@ -51,6 +51,8 @@ public:
 
     virtual void alloc(List<SRDAGVertex *> *listOfVertices);
 
+    virtual int getReservedAlloc(int size);
+
     virtual int getMemUsed();
 
 protected:

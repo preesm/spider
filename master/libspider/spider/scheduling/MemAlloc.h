@@ -51,14 +51,28 @@ public:
 
     virtual void alloc(List<SRDAGVertex *> *listOfVertices) = 0;
 
+    virtual int getReservedAlloc(int size) = 0;
+
     virtual int getMemUsed() = 0;
 
-    MemAlloc(int start, int size) : memStart_(start), memSize_(size) {}
+    MemAlloc(int start, int size) : memStart_(start), memSize_(size), memReserved_(0) {}
+
+    MemAlloc(int start, int size, int reservedSize) : memStart_(start), memSize_(size) {
+        setReservedSize(reservedSize);
+    }
+
+    inline void setReservedSize(int reservedSize) {
+        if (reservedSize > memSize_) {
+            throw std::runtime_error("Memory allocation for reserved memory superior to total allocated memory.");
+        }
+        memReserved_ = reservedSize;
+    }
 
     virtual ~MemAlloc() {}
 
 protected:
     int memStart_;
+    int memReserved_;
     int memSize_;
 };
 

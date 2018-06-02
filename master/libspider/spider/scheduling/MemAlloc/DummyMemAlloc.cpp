@@ -39,7 +39,7 @@
 
 
 void DummyMemAlloc::reset() {
-    currentMem_ = this->memStart_;
+    currentMem_ = this->memStart_ + this->memReserved_;
     nbFifos_ = 0;
 }
 
@@ -48,6 +48,7 @@ static inline int getAlignSize(int size) {
     float minAlloc = (float) Platform::get()->getMinAllocSize();
     return (int) ceil(((float) size) / minAlloc) * minAlloc;
 }
+
 
 void DummyMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
     for (int i = 0; i < listOfVertices->getNb(); i++) {
@@ -67,6 +68,15 @@ void DummyMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
             }
         }
     }
+}
+
+int DummyMemAlloc::getReservedAlloc(int size) {
+    int alignedSize = getAlignSize(size);
+    if (currentMem_ + alignedSize > memStart_ + memSize_) {
+        throw std::runtime_error("Not Enough Shared Memory\n");
+    }
+    currentMem_ += alignedSize;
+    return alignedSize;
 }
 
 int DummyMemAlloc::getMemUsed() {

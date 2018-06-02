@@ -100,7 +100,7 @@ static void setAffinity(int cpuId) {
 
 
 PlatformPThread::PlatformPThread(SpiderConfig &config) {
-    if (platform_) throw std::runtime_error("Try to create 2 platforms");
+    if (platform_) { throw std::runtime_error("Try to create 2 platforms"); }
     platform_ = this;
 
     //printfSpider();
@@ -484,7 +484,7 @@ void PlatformPThread::idle() {
 }
 
 Time PlatformPThread::mappingTime(int nActors, int nPe) {
-    return 1000 * nActors;
+    return (Time)1000 * nActors;
 }
 
 

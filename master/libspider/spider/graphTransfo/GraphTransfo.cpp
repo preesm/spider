@@ -78,7 +78,6 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx) {
                 job->paramValues[paramIx] = -1;
                 break;
         }
-//		printf("%s <= %d\n", param->getName(), job->paramValues[paramIx]);
     }
 
     /* Add edge interfaces in job */

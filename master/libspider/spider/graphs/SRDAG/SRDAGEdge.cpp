@@ -52,8 +52,6 @@ SRDAGEdge::SRDAGEdge() {
 
     rate_ = -1;
     alloc_ = -1;
-    allocIx_ = -1;
-    nToken_ = 1;
 }
 
 SRDAGEdge::SRDAGEdge(SRDAGGraph *graph, int globalId) {
@@ -70,8 +68,6 @@ SRDAGEdge::SRDAGEdge(SRDAGGraph *graph, int globalId) {
 
     rate_ = -1;
     alloc_ = -1;
-    allocIx_ = -1;
-    nToken_ = 1;
 }
 
 SRDAGEdge::~SRDAGEdge() {

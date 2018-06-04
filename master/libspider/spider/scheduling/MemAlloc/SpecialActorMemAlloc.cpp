@@ -39,22 +39,13 @@
 #define getpagesize() 4096
 #else
 
-#include <unistd.h>
-
 #endif
 
 
 #include "SpecialActorMemAlloc.h"
 
-void SpecialActorMemAlloc::reset() {
-    currentMem_ = this->memStart_;
-    nbFifos_ = 0;
-}
 
-static inline int getAlignSize(int size) {
-    return std::ceil(size / 1.0 / getpagesize()) * getpagesize();
-}
-
+// TODO For more perfs, try to not execute optimized special actors
 void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
     /** Look for Broadcast **/
     for (int i = 0; i < listOfVertices->getNb(); i++) {
@@ -65,51 +56,33 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
             if (br->getInEdge(0)->getAlloc() == -1) {
                 /** Not allocated at all Broadcast */
                 SRDAGEdge *inEdge = br->getInEdge(0);
-                int fifoIx = nbFifos_++;
-                int size = inEdge->getRate();
-                size = getAlignSize(size);
-                if (currentMem_ + size > memStart_ + memSize_)
-                    throw std::runtime_error("Not Enough Shared Memory\n");
-                inEdge->setAlloc(currentMem_);
-                inEdge->setAllocIx(fifoIx);
-                inEdge->setNToken(br->getNConnectedOutEdge());
-                currentMem_ += size;
+                allocEdge(inEdge);
+                int alloc = br->getInEdge(0)->getAlloc();
 
                 for (int j = 0; j < br->getNConnectedOutEdge(); j++) {
                     SRDAGEdge *outEdge = br->getOutEdge(j);
-
-                    int alloc = br->getInEdge(0)->getAlloc();
 
                     if (outEdge->getAlloc() != -1)
                         throw std::runtime_error("Overwrite MemAlloc\n");
 
                     outEdge->setAlloc(alloc);
-                    outEdge->setAllocIx(fifoIx);
                 }
-
-                br->setState(SRDAG_RUN);
             } else {
                 bool outputNotAllocated = true;
                 for (int j = 0; j < br->getNConnectedOutEdge(); j++)
                     outputNotAllocated = outputNotAllocated && br->getInEdge(0)->getAlloc() != -1;
                 if (outputNotAllocated) {
                     /** Not allocated at all Broadcast */
-                    SRDAGEdge *inEdge = br->getInEdge(0);
-                    int size = inEdge->getRate();
+                    int alloc = br->getInEdge(0)->getAlloc();
 
                     for (int j = 0; j < br->getNConnectedOutEdge(); j++) {
                         SRDAGEdge *outEdge = br->getOutEdge(j);
-
-                        int alloc = br->getInEdge(0)->getAlloc();
 
                         if (outEdge->getAlloc() != -1)
                             throw std::runtime_error("Overwrite MemAlloc\n");
 
                         outEdge->setAlloc(alloc);
-                        outEdge->setNToken(0);
                     }
-
-                    br->setState(SRDAG_RUN);
                 }
             }
         }
@@ -129,15 +102,7 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
             if (isCleanFork && fork->getInEdge(0)->getAlloc() == -1) {
                 /** Not allocated at all Fork */
                 SRDAGEdge *inEdge = fork->getInEdge(0);
-                int fifoIx = nbFifos_++;
-                int size = inEdge->getRate();
-                size = getAlignSize(size);
-                if (currentMem_ + size > memStart_ + memSize_)
-                    throw std::runtime_error("Not Enough Shared Memory\n");
-                inEdge->setAlloc(currentMem_);
-                inEdge->setAllocIx(fifoIx);
-                inEdge->setNToken(fork->getNConnectedOutEdge());
-                currentMem_ += size;
+                allocEdge(inEdge);
 
                 int offset = 0;
                 for (int j = 0; j < fork->getNConnectedOutEdge(); j++) {
@@ -149,12 +114,9 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
                         throw std::runtime_error("Overwrite MemAlloc\n");
 
                     outEdge->setAlloc(alloc);
-                    outEdge->setAllocIx(fifoIx);
 
                     offset += outEdge->getRate();
                 }
-
-                fork->setState(SRDAG_RUN);
             }
         }
     }
@@ -174,15 +136,7 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
             if (isCleanJoin) {
                 /* Alloc Output edge */
                 SRDAGEdge *outEdge = join->getOutEdge(0);
-                int size = outEdge->getRate();
-                int fifoIx = nbFifos_++;
-                size = getAlignSize(size);
-                if (currentMem_ + size > memStart_ + memSize_)
-                    throw std::runtime_error("Not Enough Shared Memory\n");
-                outEdge->setAlloc(currentMem_);
-                outEdge->setAllocIx(fifoIx);
-                outEdge->setNToken(join->getNConnectedInEdge());
-                currentMem_ += size;
+                allocEdge(outEdge);
 
                 /** Alloc input Edges */
                 int offset = 0;
@@ -191,12 +145,9 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
 
                     int alloc = join->getOutEdge(0)->getAlloc() + offset;
                     inEdge->setAlloc(alloc);
-                    inEdge->setAllocIx(fifoIx);
 
                     offset += inEdge->getRate();
                 }
-
-                join->setState(SRDAG_RUN);
             }
         }
     }
@@ -208,21 +159,9 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
             for (int j = 0; j < vertex->getNConnectedOutEdge(); j++) {
                 SRDAGEdge *edge = vertex->getOutEdge(j);
                 if (edge->getAlloc() == -1) {
-                    int size = edge->getRate();
-                    size = getAlignSize(size);
-                    if (currentMem_ + size > memStart_ + memSize_)
-                        throw std::runtime_error("Not Enough Shared Memory\n");
-                    edge->setAlloc(currentMem_);
-                    currentMem_ += size;
-                }
-                if (edge->getAllocIx() == -1) {
-                    edge->setAllocIx(nbFifos_++);
+                    allocEdge(edge);
                 }
             }
         }
     }
-}
-
-int SpecialActorMemAlloc::getMemUsed() {
-    return currentMem_ - memStart_;
 }

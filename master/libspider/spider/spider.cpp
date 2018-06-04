@@ -147,14 +147,15 @@ void Spider::initReservedMemory() {
     }
     printf("INFO: Reserved ");
     if (memReserved < 1024) {
-        printf("%5.1f B / %s of the shared memory.\n", memReserved * 1., memAlloc_->getMemAllocSizeFormatted());
+        printf("%5.1f B / %s of the shared memory ", memReserved * 1., memAlloc_->getMemAllocSizeFormatted());
     } else if (memReserved < 1024 * 1024) {
-        printf("%5.1f KB / %s of the shared memory.\n", memReserved / 1024., memAlloc_->getMemAllocSizeFormatted());
+        printf("%5.1f KB / %s of the shared memory ", memReserved / 1024., memAlloc_->getMemAllocSizeFormatted());
     } else if (memReserved < 1024 * 1024 * 1024) {
-        printf("%5.1f MB / %s of the shared memory.\n", memReserved / (1024. * 1024.), memAlloc_->getMemAllocSizeFormatted());
+        printf("%5.1f MB / %s of the shared memory ", memReserved / (1024. * 1024.), memAlloc_->getMemAllocSizeFormatted());
     } else {
-        printf("%5.1f GB / %s of the shared memory.\n", memReserved / (1024. * 1024. * 1024.), memAlloc_->getMemAllocSizeFormatted());
+        printf("%5.1f GB / %s of the shared memory ", memReserved / (1024. * 1024. * 1024.), memAlloc_->getMemAllocSizeFormatted());
     }
+    printf("for delays.\n");
 
     memAlloc_->setReservedSize(memReserved);
     memAlloc_->reset();

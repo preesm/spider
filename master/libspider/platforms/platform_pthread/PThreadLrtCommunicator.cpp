@@ -38,172 +38,167 @@
 #include "PThreadLrtCommunicator.h"
 
 #ifndef _WIN32
-#include <unistd.h>
+
 #endif
 
-#include <fcntl.h>
-#include <cstdlib>
-#include <stdio.h>
 #include <platform.h>
 
-#include <monitor/StackMonitor.h>
-
-#include <pthread.h>
-
 PThreadLrtCommunicator::PThreadLrtCommunicator(
-		int msgSizeMax,
-		std::queue<unsigned char>* fIn,
-		std::queue<unsigned char>* fOut,
-		std::queue<unsigned char>* fTrace,
-		sem_t *semTrace,
-		sem_t *semFifoSpidertoLRT,
-		sem_t *semFifoLRTtoSpider,
-		void* jobTab,
-		void* dataMem
-	){
-	fIn_ = fIn;
-	fOut_ = fOut;
-	fTrace_ = fTrace;
+        int msgSizeMax,
+        std::queue<unsigned char> *fIn,
+        std::queue<unsigned char> *fOut,
+        std::queue<unsigned char> *fTrace,
+        sem_t *semTrace,
+        sem_t *semFifoSpidertoLRT,
+        sem_t *semFifoLRTtoSpider,
+        void *jobTab,
+        void *dataMem
+) {
+    fIn_ = fIn;
+    fOut_ = fOut;
+    fTrace_ = fTrace;
 
-	semTrace_ = semTrace;
-	semFifoLRTtoSpider_ = semFifoLRTtoSpider;
-	semFifoSpidertoLRT_ = semFifoSpidertoLRT;
+    semTrace_ = semTrace;
+    semFifoLRTtoSpider_ = semFifoLRTtoSpider;
+    semFifoSpidertoLRT_ = semFifoSpidertoLRT;
 
-	msgSizeMax_ = msgSizeMax;
+    msgSizeMax_ = msgSizeMax;
 
-	msgBufferRecv_ = (void*) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
-	curMsgSizeRecv_ = 0;
+    msgBufferRecv_ = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
+    curMsgSizeRecv_ = 0;
 
-	msgBufferSend_ = (void*) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
-	curMsgSizeSend_ = 0;
+    msgBufferSend_ = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
+    curMsgSizeSend_ = 0;
 
-	jobTab_ = (unsigned long*)jobTab;
-	shMem_ = (unsigned char*)dataMem;
+    jobTab_ = (unsigned long *) jobTab;
+    shMem_ = (unsigned char *) dataMem;
 }
 
-PThreadLrtCommunicator::~PThreadLrtCommunicator(){
-	StackMonitor::free(ARCHI_STACK, msgBufferRecv_);
-	StackMonitor::free(ARCHI_STACK, msgBufferSend_);
+PThreadLrtCommunicator::~PThreadLrtCommunicator() {
+    StackMonitor::free(ARCHI_STACK, msgBufferRecv_);
+    StackMonitor::free(ARCHI_STACK, msgBufferSend_);
 }
 
-void* PThreadLrtCommunicator::ctrl_start_send(int size){
-	if(curMsgSizeSend_)
-		throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
-	curMsgSizeSend_ = size;
-	return msgBufferSend_;
+void *PThreadLrtCommunicator::ctrl_start_send(int size) {
+    if (curMsgSizeSend_)
+        throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
+    curMsgSizeSend_ = size;
+    return msgBufferSend_;
 }
 
-void PThreadLrtCommunicator::ctrl_end_send(int size){
-	unsigned long s = curMsgSizeSend_;
+void PThreadLrtCommunicator::ctrl_end_send(int size) {
+    unsigned long s = curMsgSizeSend_;
 
-	//Prise du semaphore de fOut_
-	sem_wait(semFifoLRTtoSpider_);
+    //Prise du semaphore de fOut_
+    sem_wait(semFifoLRTtoSpider_);
 
-	//Envoi de la taille du message à venir
-	for (unsigned int i = 0;i < sizeof(unsigned long);i++) fOut_->push(s >> (sizeof(unsigned long)-1-i)*8 & 0xFF);
+    //Envoi de la taille du message à venir
+    for (unsigned int i = 0; i < sizeof(unsigned long); i++)
+        fOut_->push(s >> (sizeof(unsigned long) - 1 - i) * 8 & 0xFF);
 
-	//Envoi du message
-	for (int i = 0;i < curMsgSizeSend_;i++) fOut_->push((*(((char*)msgBufferSend_)+i)) & 0xFF);
+    //Envoi du message
+    for (int i = 0; i < curMsgSizeSend_; i++) fOut_->push((*(((char *) msgBufferSend_) + i)) & 0xFF);
 
-	//Relachement du semaphore de fOut_
-	sem_post(semFifoLRTtoSpider_);
+    //Relachement du semaphore de fOut_
+    sem_post(semFifoLRTtoSpider_);
 
-	curMsgSizeSend_ = 0;
+    curMsgSizeSend_ = 0;
 }
 
-int PThreadLrtCommunicator::ctrl_start_recv(void** data){
-	unsigned long size = 0;
+int PThreadLrtCommunicator::ctrl_start_recv(void **data) {
+    unsigned long size = 0;
 
 
-	//Prise du semaphore de fIn_
-	sem_wait(semFifoSpidertoLRT_);
+    //Prise du semaphore de fIn_
+    sem_wait(semFifoSpidertoLRT_);
 
 
-	if (fIn_->empty()) {
-		sem_post(semFifoSpidertoLRT_);
-		return 0;
-	}
+    if (fIn_->empty()) {
+        sem_post(semFifoSpidertoLRT_);
+        return 0;
+    }
 
 
-	//Reception/reconstitution de la taille du message à venir
-	for(unsigned int nb = 0;nb < sizeof(unsigned long);nb++) {
-		size = size << 8;
-		size += fIn_->front();
-		fIn_->pop();
-	}
+    //Reception/reconstitution de la taille du message à venir
+    for (unsigned int nb = 0; nb < sizeof(unsigned long); nb++) {
+        size = size << 8;
+        size += fIn_->front();
+        fIn_->pop();
+    }
 
-	if(size > (unsigned long)msgSizeMax_)
-		throw std::runtime_error("Msg too big\n");
+    if (size > (unsigned long) msgSizeMax_)
+        throw std::runtime_error("Msg too big\n");
 
-	curMsgSizeRecv_ = size;
+    curMsgSizeRecv_ = size;
 
-	//Reception du message
-	for (unsigned int recv = 0;recv < size;recv++){
-		*(((char*) msgBufferRecv_) + recv) = fIn_->front();
-		fIn_->pop();
-	}
+    //Reception du message
+    for (unsigned int recv = 0; recv < size; recv++) {
+        *(((char *) msgBufferRecv_) + recv) = fIn_->front();
+        fIn_->pop();
+    }
 
-	//Relachement du semaphore de fIn_
-	sem_post(semFifoSpidertoLRT_);
+    //Relachement du semaphore de fIn_
+    sem_post(semFifoSpidertoLRT_);
 
-	*data = msgBufferRecv_;
-	return curMsgSizeRecv_;
+    *data = msgBufferRecv_;
+    return curMsgSizeRecv_;
 }
 
-void PThreadLrtCommunicator::ctrl_end_recv(){
-	curMsgSizeRecv_ = 0;
+void PThreadLrtCommunicator::ctrl_end_recv() {
+    curMsgSizeRecv_ = 0;
 }
 
-void* PThreadLrtCommunicator::trace_start_send(int size){
-	if(curMsgSizeSend_)
-		throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
-	curMsgSizeSend_ = size;
-	return msgBufferSend_;
+void *PThreadLrtCommunicator::trace_start_send(int size) {
+    if (curMsgSizeSend_)
+        throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
+    curMsgSizeSend_ = size;
+    return msgBufferSend_;
 }
 
-void PThreadLrtCommunicator::trace_end_send(int size){
-	unsigned long s = curMsgSizeSend_;
+void PThreadLrtCommunicator::trace_end_send(int size) {
+    unsigned long s = curMsgSizeSend_;
 
-	int err = sem_wait(semTrace_);
-	if(err != 0){
-		perror("PThreadLrtCommunicator::trace_end_send");
-		exit(-1);
-	}
+    int err = sem_wait(semTrace_);
+    if (err != 0) {
+        perror("PThreadLrtCommunicator::trace_end_send");
+        exit(-1);
+    }
 
-	//Envoi de la taille de la trace
-	for (unsigned int i = 0;i < sizeof(unsigned long);i++) fTrace_->push(s >> (sizeof(unsigned long)-1-i)*8 & 0xFF);
+    //Envoi de la taille de la trace
+    for (unsigned int i = 0; i < sizeof(unsigned long); i++)
+        fTrace_->push(s >> (sizeof(unsigned long) - 1 - i) * 8 & 0xFF);
 
-	//Envoi de la trace
-	for (int i = 0;i < curMsgSizeSend_;i++) fTrace_->push(*(((char*) msgBufferSend_ ) +i) & 0xFF);
+    //Envoi de la trace
+    for (int i = 0; i < curMsgSizeSend_; i++) fTrace_->push(*(((char *) msgBufferSend_) + i) & 0xFF);
 
-	sem_post(semTrace_);
+    sem_post(semTrace_);
 
-	curMsgSizeSend_ = 0;
+    curMsgSizeSend_ = 0;
 }
 
-void PThreadLrtCommunicator::data_end_send(Fifo* f){
-	// Nothing to do
+void PThreadLrtCommunicator::data_end_send(Fifo *f) {
+    // Nothing to do
 }
 
-void* PThreadLrtCommunicator::data_recv(Fifo* f){
-	return (void*) Platform::get()->virt_to_phy((void*)(intptr_t)(f->alloc));
+void *PThreadLrtCommunicator::data_recv(Fifo *f) {
+    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (f->alloc));
 }
 
-void* PThreadLrtCommunicator::data_start_send(Fifo* f){
-	return (void*) Platform::get()->virt_to_phy((void*)(intptr_t)(f->alloc));
+void *PThreadLrtCommunicator::data_start_send(Fifo *f) {
+    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (f->alloc));
 }
 
-void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx){
-	jobTab_[lrtIx] = jobIx;
+void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx) {
+    jobTab_[lrtIx] = jobIx;
 }
 
-long PThreadLrtCommunicator::getLrtJobIx(int lrtIx){
-	return jobTab_[lrtIx];
+long PThreadLrtCommunicator::getLrtJobIx(int lrtIx) {
+    return jobTab_[lrtIx];
 }
 
-void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int* blkLrtIx, int* blkLrtJobIx, int jobIx){
+void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx) {
 
-	for(int i=0; i < nbDependency; i++){
-		while(blkLrtJobIx[i] >= getLrtJobIx(blkLrtIx[i]));
-	}
+    for (int i = 0; i < nbDependency; i++) {
+        while (blkLrtJobIx[i] >= getLrtJobIx(blkLrtIx[i]));
+    }
 }

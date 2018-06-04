@@ -37,12 +37,13 @@
  */
 #include <platform.h>
 
-Platform* Platform::platform_ = 0;
+Platform *Platform::platform_ = 0;
 
-Platform::Platform(){
+Platform::Platform() {
 
 }
-Platform::~Platform(){
+
+Platform::~Platform() {
 
 }
 

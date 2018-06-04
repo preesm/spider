@@ -39,10 +39,11 @@
 #include <Message.h>
 
 namespace TimeMonitor {
-	void startMonitoring();
-	void endMonitoring(TraceSpiderType type);
+    void startMonitoring();
 
-	const char* getTaskName(TraceSpiderType type);
+    void endMonitoring(TraceSpiderType type);
+
+    const char *getTaskName(TraceSpiderType type);
 };
 
 #endif /* MONITOR_TIMEMONITOR_H */

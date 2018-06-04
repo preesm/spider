@@ -42,62 +42,80 @@
 #include <stdexcept>
 
 class LRT;
+
 class LrtCommunicator;
+
 class SpiderCommunicator;
+
 struct ClearTimeMsg;
 
-class Platform{
+class Platform {
 public:
-	/** File Handling */
-	virtual FILE* fopen(const char* name) = 0;
-	virtual void fprintf(FILE* id, const char* fmt, ...) = 0;
-	virtual void fclose(FILE* id) = 0;
+    /** File Handling */
+    virtual FILE *fopen(const char *name) = 0;
 
-	/** Memory Handling */
-	virtual void* virt_to_phy(void* address) = 0;
-	virtual int getMinAllocSize() = 0;
-	virtual int getCacheLineSize() = 0;
+    virtual void fprintf(FILE *id, const char *fmt, ...) = 0;
 
-	/** Time Handling */
-	virtual void rstTime(struct ClearTimeMsg* msg) = 0;
-	virtual void rstTime() = 0;
-	virtual Time getTime() = 0;
+    virtual void fclose(FILE *id) = 0;
 
-	virtual void rstJobIx() = 0;
+    /** Memory Handling */
+    virtual void *virt_to_phy(void *address) = 0;
 
-	/** Platform getter/setter */
-	static inline Platform* get();
-	virtual LRT* getLrt() = 0;
-	virtual LrtCommunicator* getLrtCommunicator() = 0;
-	virtual SpiderCommunicator* getSpiderCommunicator() = 0;
-	virtual void setStack(SpiderStack id, Stack* stack) = 0;
-	virtual Stack* getStack(SpiderStack id) = 0;
-	virtual Stack* getStack(int id) = 0;
+    virtual int getMinAllocSize() = 0;
 
-	virtual inline int getMaxActorAllocSize(int pe);
+    virtual int getCacheLineSize() = 0;
 
-	/** Platform Core Handling **/
-	virtual void idleLrt(int i) = 0;
-	virtual void wakeLrt(int i) = 0;
-	virtual void idle() = 0;
+    /** Time Handling */
+    virtual void rstTime(struct ClearTimeMsg *msg) = 0;
+
+    virtual void rstTime() = 0;
+
+    virtual Time getTime() = 0;
+
+    virtual void rstJobIx() = 0;
+
+    /** Platform getter/setter */
+    static inline Platform *get();
+
+    virtual LRT *getLrt() = 0;
+
+    virtual LrtCommunicator *getLrtCommunicator() = 0;
+
+    virtual SpiderCommunicator *getSpiderCommunicator() = 0;
+
+    virtual void setStack(SpiderStack id, Stack *stack) = 0;
+
+    virtual Stack *getStack(SpiderStack id) = 0;
+
+    virtual Stack *getStack(int id) = 0;
+
+    virtual inline int getMaxActorAllocSize(int pe);
+
+    /** Platform Core Handling **/
+    virtual void idleLrt(int i) = 0;
+
+    virtual void wakeLrt(int i) = 0;
+
+    virtual void idle() = 0;
 
 protected:
-	Platform();
-	virtual ~Platform();
+    Platform();
 
-	static Platform* platform_;
+    virtual ~Platform();
+
+    static Platform *platform_;
 };
 
-inline Platform* Platform::get(){
-	if(platform_)
-		return platform_;
-	else
-		throw std::runtime_error("Error undefined platform\n");
+inline Platform *Platform::get() {
+    if (platform_)
+        return platform_;
+    else
+        throw std::runtime_error("Error undefined platform\n");
 }
 
 // If unimplemented in child
-inline int Platform::getMaxActorAllocSize(int pe){
-	return 1024 * 1024 * 1024;
+inline int Platform::getMaxActorAllocSize(int pe) {
+    return 1024 * 1024 * 1024;
 }
 
 #endif/*PLATFORM_H*/

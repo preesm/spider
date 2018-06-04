@@ -37,39 +37,37 @@
 #include "specialActors.h"
 
 #include <string.h>
-#include <stdio.h>
-#include <stdexcept>
 
-void saJoin(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	int nbFifoIn, nbFifoOut, i, index;
-	int nbTknIn, nbTknOut;
+void saJoin(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
+    int nbFifoIn, nbFifoOut, i, index;
+    int nbTknIn, nbTknOut;
 
 #if VERBOSE
-	printf("Join\n");
+    printf("Join\n");
 #endif
 
-	nbFifoIn = inParams[0];
-	nbFifoOut = inParams[1];
+    nbFifoIn = inParams[0];
+    nbFifoOut = inParams[1];
 
-	index = 0;
-	if(nbFifoOut == 1) {
-		/* Join */
-		nbTknOut = inParams[2];
+    index = 0;
+    if (nbFifoOut == 1) {
+        /* Join */
+        nbTknOut = inParams[2];
 
-		for(i=0; i<nbFifoIn; i++) {
-			nbTknIn = inParams[i + 3];
+        for (i = 0; i < nbFifoIn; i++) {
+            nbTknIn = inParams[i + 3];
 
-			if(((char*)outputFIFOs[0])+index != inputFIFOs[i])
-				memcpy(((char*)outputFIFOs[0])+index, inputFIFOs[i], nbTknIn);
-			index += nbTknIn;
-		}
+            if (((char *) outputFIFOs[0]) + index != inputFIFOs[i])
+                memcpy(((char *) outputFIFOs[0]) + index, inputFIFOs[i], nbTknIn);
+            index += nbTknIn;
+        }
 
-	} else {
-		throw std::runtime_error("Error in Join\n");
-	}
+    } else {
+        throw std::runtime_error("Error in Join\n");
+    }
 
-	if(index != nbTknOut) {
-		throw std::runtime_error("Join error: Remaining tokens.\n");
-	}
+    if (index != nbTknOut) {
+        throw std::runtime_error("Join error: Remaining tokens.\n");
+    }
 }
 

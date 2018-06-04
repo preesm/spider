@@ -39,21 +39,24 @@
 
 #include <tools/Stack.h>
 
-class DynStack : public Stack{
+class DynStack : public Stack {
 public:
-	DynStack(const char* name);
-	virtual ~DynStack();
+    DynStack(const char *name);
 
-	virtual void* alloc(int size);
-	virtual void free(void* var);
-	virtual void freeAll();
+    virtual ~DynStack();
 
-	virtual void printStat();
+    virtual void *alloc(int size);
+
+    virtual void free(void *var);
+
+    virtual void freeAll();
+
+    virtual void printStat();
 
 private:
-	long long curUsedSize_;
-	long long maxSize_;
-	int nb_;
+    long long curUsedSize_;
+    long long maxSize_;
+    int nb_;
 };
 
 #endif//STATIC_STACK_H

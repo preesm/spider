@@ -64,8 +64,8 @@ static void PAPIInitMultiplex() {
     }
 
 
-    std::string cmpInfoName (cmpinfo->name);
-    std::string hwInfoModel (hw_info->model_string);
+    std::string cmpInfoName(cmpinfo->name);
+    std::string hwInfoModel(hw_info->model_string);
     if (cmpInfoName.find("perfctr.c") && (hwInfoModel == "POWER6")) {
         int retVal = PAPI_set_domain(PAPI_DOM_ALL);
         if (retVal != PAPI_OK) {
@@ -86,7 +86,7 @@ PapifyEventLib::PapifyEventLib() {
     }
 
     // Place for initialization in case one makes use of threads
-    retVal = PAPI_thread_init((unsigned long (*)())(pthread_self));
+    retVal = PAPI_thread_init((unsigned long (*)()) (pthread_self));
     if (retVal != PAPI_OK) {
         throwError(__FILE__, __LINE__, retVal);
     }
@@ -103,17 +103,17 @@ PapifyEventLib::PapifyEventLib() {
     }
 }
 
-void PapifyEventLib::throwError(const char* file, int line, const char *message) {
+void PapifyEventLib::throwError(const char *file, int line, const char *message) {
     fprintf(stderr, "File: %s\n", file);
     fprintf(stderr, "Line: %d\n", line);
     fprintf(stderr, "%s\n", message);
     throw message;
 }
 
-void PapifyEventLib::throwError(const char* file, int line, int papiErrorCode) {
-    const char* papiError = PAPI_strerror(papiErrorCode);
+void PapifyEventLib::throwError(const char *file, int line, int papiErrorCode) {
+    const char *papiError = PAPI_strerror(papiErrorCode);
     if (papiError) {
-        std::string errorMessage = std::string("PAPI Error: ") +  std::string(papiError);
+        std::string errorMessage = std::string("PAPI Error: ") + std::string(papiError);
         throwError(file, line, errorMessage.c_str());
     }
     throwError(file, line, "an error occured");
@@ -123,12 +123,12 @@ void PapifyEventLib::throwError(const char* file, int line, int papiErrorCode) {
 int PapifyEventLib::PAPIEventSetInit(int numberOfEvents,
                                      std::vector<const char *> &moniteredEventSet,
                                      int eventSetID,
-                                     const char* PEType,
+                                     const char *PEType,
                                      long long PEId,
                                      std::vector<int> &PAPIEventCodeSet) {
     // 1. Retrieve the PAPI event codes
     for (int i = 0; i < numberOfEvents; ++i) {
-        const char* eventName = moniteredEventSet[i];
+        const char *eventName = moniteredEventSet[i];
         int retVal = PAPI_event_name_to_code(eventName, &PAPIEventCodeSet[i]);
         if (retVal != PAPI_OK) {
             throwError(__FILE__, __LINE__, retVal);
@@ -145,7 +145,7 @@ int PapifyEventLib::PAPIEventSetInit(int numberOfEvents,
 }
 
 int PapifyEventLib::registerNewThread(int numberOfEvents,
-                                      const char* PEType,
+                                      const char *PEType,
                                       long long PEId,
                                       int eventSetID,
                                       std::vector<int> &PAPIEventCodeSet) {
@@ -194,12 +194,11 @@ int PapifyEventLib::registerNewThread(int numberOfEvents,
 }
 
 
-
 void PapifyEventLib::getPAPIEventCodeSet(std::vector<const char *> &moniteredEventSet,
                                          std::vector<int> &PAPIEventCodeSet) {
     unsigned long numberOfEvents = moniteredEventSet.size();
     for (unsigned long i = 0; i < numberOfEvents; ++i) {
-        const char* eventName = moniteredEventSet[i];
+        const char *eventName = moniteredEventSet[i];
         int retVal = PAPI_event_name_to_code(eventName, &PAPIEventCodeSet[i]);
         if (retVal != PAPI_OK) {
             throwError(__FILE__, __LINE__, retVal);

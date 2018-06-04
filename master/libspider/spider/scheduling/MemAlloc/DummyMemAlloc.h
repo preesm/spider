@@ -40,20 +40,24 @@
 
 class DummyMemAlloc : public MemAlloc {
 public:
-	DummyMemAlloc(int start, int size):
-		MemAlloc(start, size),
-		currentMem_(start),
-		nbFifos_(0){}
+    DummyMemAlloc(int start, int size) :
+            MemAlloc(start, size),
+            currentMem_(start),
+            nbFifos_(0) {}
 
-	~DummyMemAlloc(){}
+    ~DummyMemAlloc() {}
 
-	virtual void reset();
-	virtual void alloc(List<SRDAGVertex*>* listOfVertices);
-	virtual int getMemUsed();
+    virtual void reset();
+
+    virtual void alloc(List<SRDAGVertex *> *listOfVertices);
+
+    virtual int getReservedAlloc(int size);
+
+    virtual int getMemUsed();
 
 protected:
-	int currentMem_;
-	int nbFifos_;
+    int currentMem_;
+    int nbFifos_;
 
 };
 

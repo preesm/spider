@@ -34,15 +34,20 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
+#include <cstring>
 #include "specialActors.h"
 
-#include <stdio.h>
-
-void saEnd(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-//	Param nbTokens = inParams[0];
-
+void saEnd(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
+    bool isPersistent = inParams[1] == 1;
+    if (isPersistent) {
+        Param nbTokens = inParams[0];
+        void *fifoAddr = Platform::get()->virt_to_phy((void *) (intptr_t) (inParams[2]));
+        if (fifoAddr && fifoAddr != inputFIFOs[0]) {
+            memcpy(fifoAddr, inputFIFOs[0], nbTokens);
+        }
+    }
 #if VERBOSE
-	printf("End\n");
+    printf("End\n");
 #endif
 }
 

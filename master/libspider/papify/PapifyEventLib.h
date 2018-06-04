@@ -58,7 +58,7 @@ public:
      * @param line          Line of the error
      * @param message The message
      */
-    static void throwError(const char* file,int line, const char* message);
+    static void throwError(const char *file, int line, const char *message);
 
     /**
      * @brief Throw an error related to PapifyEventLib
@@ -67,7 +67,7 @@ public:
      * @param line          Line of the error
      * @param papiErrorCode The error code
      */
-    static void throwError(const char* file, int line, int papiErrorCode);
+    static void throwError(const char *file, int line, int papiErrorCode);
 
     /**
      * @brief Init a PAPI event set corresponding to the event passed in parameter.
@@ -80,18 +80,19 @@ public:
      * @return the id of the event set
      */
     int PAPIEventSetInit(int numberOfEvents,
-                         std::vector<const char *>& moniteredEventSet,
+                         std::vector<const char *> &moniteredEventSet,
                          int eventSetID,
-                         const char* PEType,
+                         const char *PEType,
                          long long PEId,
                          std::vector<int> &PAPIEventCodeSet);
+
     /**
      * @brief Retrieve the PAPI code equivalent to the PAPI name code
      * @param moniteredEventSet  The event set names (provided to the method)
      * @param PAPIEventCodeSet   The event set codes (initialized by the method)
      *
      */
-    void getPAPIEventCodeSet(std::vector<const char*> & moniteredEventSet,
+    void getPAPIEventCodeSet(std::vector<const char *> &moniteredEventSet,
                              std::vector<int> &PAPIEventCodeSet);
 
     /**
@@ -99,7 +100,7 @@ public:
      * @param PEId
      */
     int registerNewThread(int numberOfEvents,
-                          const char* PEType,
+                          const char *PEType,
                           long long PEId,
                           int eventSetID,
                           std::vector<int> &PAPIEventCodeSet);
@@ -211,8 +212,9 @@ public:
     inline void configUnlock() {
         pthread_mutex_unlock(configLock_);
     }
+
 private:
-    pthread_mutex_t* configLock_;
+    pthread_mutex_t *configLock_;
     std::map<long long, std::vector<int> > PEEventSets_;
     std::map<long long, bool> PEEventSetRunning_;
     std::map<long long, int> PEEventSetRunningID_;

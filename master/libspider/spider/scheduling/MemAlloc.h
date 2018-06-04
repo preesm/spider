@@ -47,16 +47,58 @@
 
 class MemAlloc {
 public:
-	virtual void reset() = 0;
-	virtual void alloc(List<SRDAGVertex*>* listOfVertices) = 0;
-	virtual int getMemUsed() = 0;
+    virtual void reset() = 0;
 
-	MemAlloc(int start, int size): memStart_(start), memSize_(size){}
-	virtual ~MemAlloc(){}
+    virtual void alloc(List<SRDAGVertex *> *listOfVertices) = 0;
+
+    virtual int getReservedAlloc(int size) = 0;
+
+    virtual int getMemUsed() = 0;
+
+    MemAlloc(int start, int size) : memStart_(start), memSize_(size), memReserved_(0) {}
+
+    MemAlloc(int start, int size, int reservedSize) : memStart_(start), memSize_(size) {
+        setReservedSize(reservedSize);
+    }
+
+    inline void setReservedSize(int reservedSize);
+
+    inline int getMemAllocSize() const;
+
+    inline const char *getMemAllocSizeFormatted() const;
+
+    virtual ~MemAlloc() {}
 
 protected:
-	int memStart_;
-	int memSize_;
+    int memStart_;
+    int memReserved_;
+    int memSize_;
 };
+
+inline int MemAlloc::getMemAllocSize() const {
+    return memSize_;
+}
+
+inline const char *MemAlloc::getMemAllocSizeFormatted() const {
+    char memAllocSizeFormatted[10] = {0};
+    if (memSize_ < 1024) {
+        sprintf(memAllocSizeFormatted, "%5.1f B", memSize_ / 1.);
+    } else if (memSize_ < 1024 * 1024) {
+        sprintf(memAllocSizeFormatted, "%5.1f KB", memSize_ / 1024.);
+    } else if (memSize_ < 1024 * 1024 * 1024) {
+        sprintf(memAllocSizeFormatted, "%5.1f MB", memSize_ / (1024. * 1024.));
+    } else {
+        sprintf(memAllocSizeFormatted, "%5.1f GB", memSize_ / (1024. * 1024. * 1024.));
+    }
+    std::string retValue(memAllocSizeFormatted);
+    return retValue.c_str();
+}
+
+inline void MemAlloc::setReservedSize(int reservedSize) {
+    if (reservedSize > memSize_) {
+        throw std::runtime_error("Memory allocation for reserved memory superior to total allocated memory.");
+    }
+    memReserved_ = reservedSize;
+}
 
 #endif/*MEM_ALLOC_H*/

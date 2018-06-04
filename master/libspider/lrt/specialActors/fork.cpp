@@ -37,38 +37,36 @@
 #include "specialActors.h"
 
 #include <string.h>
-#include <stdio.h>
-#include <stdexcept>
 
-void saFork(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]){
-	int nbFifoIn, nbFifoOut, i, index;
-	int nbTknIn = inParams[2];
+void saFork(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
+    int nbFifoIn, nbFifoOut, i, index;
+    int nbTknIn = inParams[2];
 
 #if VERBOSE
-	printf("Fork\n");
+    printf("Fork\n");
 #endif
 
-	nbFifoIn = inParams[0];
-	nbFifoOut = inParams[1];
+    nbFifoIn = inParams[0];
+    nbFifoOut = inParams[1];
 
-	index = 0;
-	if(nbFifoIn == 1) {
-		/* Fork */
-		for(i=0; i<nbFifoOut; i++) {
-			int nbTknOut = inParams[i + 3];
+    index = 0;
+    if (nbFifoIn == 1) {
+        /* Fork */
+        for (i = 0; i < nbFifoOut; i++) {
+            int nbTknOut = inParams[i + 3];
 
-			if(outputFIFOs[i] != ((char*)inputFIFOs[0])+index) {
-				memcpy(outputFIFOs[i], ((char*)inputFIFOs[0])+index, nbTknOut);
-			}
+            if (outputFIFOs[i] != ((char *) inputFIFOs[0]) + index) {
+                memcpy(outputFIFOs[i], ((char *) inputFIFOs[0]) + index, nbTknOut);
+            }
 
-			index += nbTknOut;
-		}
-	}else {
-		throw std::runtime_error("Error in Fork\n");
-	}
+            index += nbTknOut;
+        }
+    } else {
+        throw std::runtime_error("Error in Fork\n");
+    }
 
-	if(index != nbTknIn) {
-		throw std::runtime_error("Fork error: Remaining tokens.\n");
-	}
+    if (index != nbTknIn) {
+        throw std::runtime_error("Fork error: Remaining tokens.\n");
+    }
 }
 

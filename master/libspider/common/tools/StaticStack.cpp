@@ -38,83 +38,79 @@
 #include <tools/StaticStack.h>
 #include <platform.h>
 
-#include <stdio.h>
 #include <algorithm>
-#include <math.h>
-#include <stdexcept>
 
-StaticStack::StaticStack(const char* name, void* ptr, int size):
-		Stack(name) {
-	size_ = size;
-	stack_ = (char*)ptr;
-	curPtr_ = (char*)ptr;
-	maxUsed_ = 0;
-	used_ = 0;
+StaticStack::StaticStack(const char *name, void *ptr, int size) :
+        Stack(name) {
+    size_ = size;
+    stack_ = (char *) ptr;
+    curPtr_ = (char *) ptr;
+    maxUsed_ = 0;
+    used_ = 0;
 }
 
-StaticStack::~StaticStack(){
-	freeAll();
-	printStat();
+StaticStack::~StaticStack() {
+    freeAll();
+    printStat();
 }
 
-static inline int getAlignSize(int size){
-	float minAlloc = (float) Platform::get()->getMinAllocSize();
-	return (int)ceil(((float)size)/minAlloc)*minAlloc;
+static inline int getAlignSize(int size) {
+    float minAlloc = (float) Platform::get()->getMinAllocSize();
+    return (int) ceil(((float) size) / minAlloc) * minAlloc;
 }
 
-void *StaticStack::alloc(int size){
-	size = getAlignSize(size);
-	void* res;
-	if(used_+size > size_)
-	{
-		printf("Stack %s is full at %d, want at least %d\n",getName(),size_,used_+size);
-		throw std::runtime_error("Insufficient memory size of the Stack\n");
-	}
-	res = curPtr_;
-	curPtr_ += size;
-	used_ += size;
-	return res;
+void *StaticStack::alloc(int size) {
+    size = getAlignSize(size);
+    void *res;
+    if (used_ + size > size_) {
+        printf("Stack %s is full at %d, want at least %d\n", getName(), size_, used_ + size);
+        throw std::runtime_error("Insufficient memory size of the Stack\n");
+    }
+    res = curPtr_;
+    curPtr_ += size;
+    used_ += size;
+    return res;
 }
 
-void StaticStack::free(void* var){
+void StaticStack::free(void *var) {
 }
 
-void StaticStack::freeAll(){
-	maxUsed_ = std::max(maxUsed_, used_);
-	curPtr_ = stack_;
-	used_ = 0;
+void StaticStack::freeAll() {
+    maxUsed_ = std::max(maxUsed_, used_);
+    curPtr_ = stack_;
+    used_ = 0;
 }
 
 
-void StaticStack::printStat(){
+void StaticStack::printStat() {
 #ifdef VERBOSE_STACK
-	printf("%s: ", getName());
+    printf("%s: ", getName());
 
-	if(maxUsed_ < 1024)
-		printf("\t%5.1f B", maxUsed_/1.);
-	else if(maxUsed_ < 1024*1024)
-		printf("\t%5.1f KB", maxUsed_/1024.);
-	else if(maxUsed_ < 1024*1024*1024)
-		printf("\t%5.1f MB", maxUsed_/1024./1024.);
-	else
-		printf("\t%5.1f GB", maxUsed_/1024./1024./1024.);
+    if(maxUsed_ < 1024)
+        printf("\t%5.1f B", maxUsed_/1.);
+    else if(maxUsed_ < 1024*1024)
+        printf("\t%5.1f KB", maxUsed_/1024.);
+    else if(maxUsed_ < 1024*1024*1024)
+        printf("\t%5.1f MB", maxUsed_/1024./1024.);
+    else
+        printf("\t%5.1f GB", maxUsed_/1024./1024./1024.);
 
-	printf(" / ");
+    printf(" / ");
 
-	if(size_ < 1024)
-		printf("\t%5.1f B", size_/1.);
-	else if(size_ < 1024*1024)
-		printf("\t%5.1f KB", size_/1024.);
-	else if(size_ < 1024*1024*1024)
-		printf("\t%5.1f MB", size_/1024./1024.);
-	else
-		printf("\t%5.1f GB", size_/1024./1024./1024.);
+    if(size_ < 1024)
+        printf("\t%5.1f B", size_/1.);
+    else if(size_ < 1024*1024)
+        printf("\t%5.1f KB", size_/1024.);
+    else if(size_ < 1024*1024*1024)
+        printf("\t%5.1f MB", size_/1024./1024.);
+    else
+        printf("\t%5.1f GB", size_/1024./1024./1024.);
 
-	printf(" (%2d %%)", (int)(maxUsed_*100.0/size_));
+    printf(" (%2d %%)", (int)(maxUsed_*100.0/size_));
 
-	if(used_)
-		printf(", \t%d still in use", used_);
+    if(used_)
+        printf(", \t%d still in use", used_);
 
-	printf("\n");
+    printf("\n");
 #endif
 }

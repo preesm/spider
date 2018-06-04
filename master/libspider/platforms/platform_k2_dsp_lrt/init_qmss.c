@@ -55,22 +55,22 @@ extern Qmss_GlobalConfigParams qmssGblCfgParams;
 /* CPPI device specific configuration */
 extern Cppi_GlobalConfigParams cppiGblCfgParams;
 
-void printQueueState(){
-	int Queue;
+void printQueueState() {
+    int Queue;
 
 #define PRINT_QUEUE(id) if(Qmss_getQueueEntryCount(id) > 0) \
-	printf("%4d: %d\n", id, Qmss_getQueueEntryCount(id))
+    printf("%4d: %d\n", id, Qmss_getQueueEntryCount(id))
 
-	printf("\nQueue State:\n");
-	/* Special Queues */
-	PRINT_QUEUE(QUEUE_TX_FFTC_A);
-	PRINT_QUEUE(QUEUE_TX_FFTC_B);
+    printf("\nQueue State:\n");
+    /* Special Queues */
+    PRINT_QUEUE(QUEUE_TX_FFTC_A);
+    PRINT_QUEUE(QUEUE_TX_FFTC_B);
 
-	/* General Purpose Queues */
-	for(Queue = QUEUE_FIRST; Queue < QUEUE_LAST; Queue++){
-		PRINT_QUEUE(Queue);
-	}
-	printf("\n");
+    /* General Purpose Queues */
+    for (Queue = QUEUE_FIRST; Queue < QUEUE_LAST; Queue++) {
+        PRINT_QUEUE(Queue);
+    }
+    printf("\n");
 }
 
 /**
@@ -79,63 +79,63 @@ void printQueueState(){
  * 	- Define Memory regions
  * 	-
  */
-void init_qmss(int useMsmc){
-	int result;
-    Qmss_InitCfg 			qmss_initCfg;
+void init_qmss(int useMsmc) {
+    int result;
+    Qmss_InitCfg qmss_initCfg;
 
     /* Descriptor base addresses */
-    void* data_desc_base  = (void*)align((int)msmc_mem_base);
-    void* ctrl_desc_base  = (void*)align((int)data_desc_base + DATA_DESC_NUM*DATA_DESC_SIZE);
-    void* trace_desc_base = (void*)align((int)ctrl_desc_base + CTRL_DESC_NUM*CTRL_DESC_SIZE);
-    void* fftc_desc_base  = (void*)align((int)trace_desc_base + TRACE_DESC_NUM*TRACE_DESC_SIZE);
+    void *data_desc_base = (void *) align((int) msmc_mem_base);
+    void *ctrl_desc_base = (void *) align((int) data_desc_base + DATA_DESC_NUM * DATA_DESC_SIZE);
+    void *trace_desc_base = (void *) align((int) ctrl_desc_base + CTRL_DESC_NUM * CTRL_DESC_SIZE);
+    void *fftc_desc_base = (void *) align((int) trace_desc_base + TRACE_DESC_NUM * TRACE_DESC_SIZE);
 
-    if(useMsmc){
-    	data_mem_base = align((int)fftc_desc_base + FFTC_DESC_NUM*FFTC_DESC_SIZE);
-    }else{
-    	data_mem_base = align((int)ddr_mem_base);
+    if (useMsmc) {
+        data_mem_base = align((int) fftc_desc_base + FFTC_DESC_NUM * FFTC_DESC_SIZE);
+    } else {
+        data_mem_base = align((int) ddr_mem_base);
     }
 
     /* Initialize QMSS Driver */
-    memset (&qmss_initCfg, 0, sizeof (Qmss_InitCfg));
+    memset(&qmss_initCfg, 0, sizeof(Qmss_InitCfg));
 
     /* Use internal linking RAM */
-	qmss_initCfg.linkingRAM0Base  = 0;
-	qmss_initCfg.linkingRAM0Size  = 0;
-	qmss_initCfg.linkingRAM1Base  = 0;
-	qmss_initCfg.maxDescNum       = DATA_DESC_NUM + CTRL_DESC_NUM + TRACE_DESC_NUM + FFTC_DESC_NUM;
+    qmss_initCfg.linkingRAM0Base = 0;
+    qmss_initCfg.linkingRAM0Size = 0;
+    qmss_initCfg.linkingRAM1Base = 0;
+    qmss_initCfg.maxDescNum = DATA_DESC_NUM + CTRL_DESC_NUM + TRACE_DESC_NUM + FFTC_DESC_NUM;
 
-	qmss_initCfg.pdspFirmware[0].pdspId   = Qmss_PdspId_PDSP1;
-	qmss_initCfg.pdspFirmware[0].firmware = &acc48_le;
-	qmss_initCfg.pdspFirmware[0].size     = sizeof (acc48_le);
+    qmss_initCfg.pdspFirmware[0].pdspId = Qmss_PdspId_PDSP1;
+    qmss_initCfg.pdspFirmware[0].firmware = &acc48_le;
+    qmss_initCfg.pdspFirmware[0].size = sizeof(acc48_le);
 
     /* Bypass hardware initialization as it is done within Kernel */
-    qmss_initCfg.qmssHwStatus     =   QMSS_HW_INIT_COMPLETE;
+    qmss_initCfg.qmssHwStatus = QMSS_HW_INIT_COMPLETE;
 
-	if ((result = Qmss_init (&qmss_initCfg, &qmssGblCfgParams)) != QMSS_SOK){
-		printf ("initQmss: Error initializing Queue Manager SubSystem, Error code : %d\n", result);
-		abort();
-	}
+    if ((result = Qmss_init(&qmss_initCfg, &qmssGblCfgParams)) != QMSS_SOK) {
+        printf("initQmss: Error initializing Queue Manager SubSystem, Error code : %d\n", result);
+        abort();
+    }
 
-	if ((result = Qmss_start ()) != QMSS_SOK){
-		printf ("initQmss: Error starting Queue Manager SubSystem, Error code : %d\n", result);
-		abort();
-	}
+    if ((result = Qmss_start()) != QMSS_SOK) {
+        printf("initQmss: Error starting Queue Manager SubSystem, Error code : %d\n", result);
+        abort();
+    }
 
-    if ((result = Cppi_init (&cppiGblCfgParams)) != CPPI_SOK){
-        printf ("Error initializing CPPI LLD, Error code : %d\n", result);
+    if ((result = Cppi_init(&cppiGblCfgParams)) != CPPI_SOK) {
+        printf("Error initializing CPPI LLD, Error code : %d\n", result);
         abort();
     }
 }
 
-void clean_qmss(){
-	Qmss_Result result;
+void clean_qmss() {
+    Qmss_Result result;
 
-	/* Exit Cppi */
-	Cppi_exit ();
+    /* Exit Cppi */
+    Cppi_exit();
 
-	/* Exit Qmss */
-	if ((result = Qmss_exit ()) != 0){
-		printf ("Error : Qmss exit error %d\n", result);
-		abort();
-	}
+    /* Exit Qmss */
+    if ((result = Qmss_exit()) != 0) {
+        printf("Error : Qmss exit error %d\n", result);
+        abort();
+    }
 }

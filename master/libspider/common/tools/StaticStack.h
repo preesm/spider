@@ -39,24 +39,27 @@
 
 #include <tools/Stack.h>
 
-class StaticStack : public Stack{
+class StaticStack : public Stack {
 public:
-	StaticStack(const char* name, void* ptr, int size);
-	~StaticStack();
+    StaticStack(const char *name, void *ptr, int size);
 
-	virtual void* alloc(int size);
-	virtual void free(void* var);
-	virtual void freeAll();
+    ~StaticStack();
 
-	virtual void printStat();
+    virtual void *alloc(int size);
+
+    virtual void free(void *var);
+
+    virtual void freeAll();
+
+    virtual void printStat();
 
 private:
-	int size_;
-	char* stack_;
-	char* curPtr_;
-	int used_;
+    int size_;
+    char *stack_;
+    char *curPtr_;
+    int used_;
 
-	int maxUsed_;
+    int maxUsed_;
 };
 
 #endif//STATIC_STACK_H

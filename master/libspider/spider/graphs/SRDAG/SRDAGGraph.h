@@ -44,73 +44,90 @@
 
 class SRDAGGraph {
 public:
-	SRDAGGraph();
-	virtual ~SRDAGGraph();
+    SRDAGGraph();
 
-	SRDAGVertex* addVertex(PiSDFVertex* reference, int refId, int iterId);
-	SRDAGVertex* addBroadcast(int nOutput, PiSDFVertex* reference=0);
-	SRDAGVertex* addFork(int nOutput);
-	SRDAGVertex* addJoin(int nInput);
-	SRDAGVertex* addInit();
-	SRDAGVertex* addEnd();
-	SRDAGVertex* addRoundBuffer();
+    virtual ~SRDAGGraph();
 
-	SRDAGEdge* addEdge();
-	SRDAGEdge* addEdge(
-			SRDAGVertex* src, int srcPortIx,
-			SRDAGVertex* snk, int snkPortIx,
-			int rate);
+    SRDAGVertex *addVertex(PiSDFVertex *reference, int refId, int iterId);
 
-	void delVertex(SRDAGVertex* vertex);
-	void delEdge(SRDAGEdge* edge);
+    SRDAGVertex *addBroadcast(int nOutput, PiSDFVertex *reference = 0);
 
-	/** Element getters */
-	inline SRDAGEdge* getEdge(int ix);
-	inline SRDAGVertex* getVertex(int ix);
-	inline SRDAGVertex* getVertexFromIx(int ix);
+    SRDAGVertex *addFork(int nOutput);
 
-	/** Size getters */
-	inline int getNEdge() const;
-	inline int getNVertex() const;
-	int getNExecVertex();
+    SRDAGVertex *addJoin(int nInput);
 
-	/** Print Fct */
-	void print(const char *path);
-	bool check();
+    SRDAGVertex *addInit();
 
-	void updateState();
+    SRDAGVertex *addEnd();
+
+    SRDAGVertex *addRoundBuffer();
+
+    SRDAGEdge *addEdge();
+
+    SRDAGEdge *addEdge(
+            SRDAGVertex *src, int srcPortIx,
+            SRDAGVertex *snk, int snkPortIx,
+            int rate);
+
+    void delVertex(SRDAGVertex *vertex);
+
+    void delEdge(SRDAGEdge *edge);
+
+    /** Element getters */
+    inline SRDAGEdge *getEdge(int ix);
+
+    inline SRDAGVertex *getVertex(int ix);
+
+    inline SRDAGVertex *getVertexFromIx(int ix);
+
+    /** Size getters */
+    inline int getNEdge() const;
+
+    inline int getNVertex() const;
+
+    int getNExecVertex();
+
+    /** Print Fct */
+    void print(const char *path);
+
+    bool check();
+
+    void updateState();
 
 private:
-	int idEdge_;
-	int idVertex_;
+    int idEdge_;
+    int idVertex_;
 
-	SRDAGEdgeSet edges_;
-	SRDAGVertexSet vertices_;
+    SRDAGEdgeSet edges_;
+    SRDAGVertexSet vertices_;
 };
 
 /** Inline Fcts */
 
 /** Element getters */
-inline SRDAGEdge* SRDAGGraph::getEdge(int ix){
-	return edges_[ix];
+inline SRDAGEdge *SRDAGGraph::getEdge(int ix) {
+    return edges_[ix];
 }
-inline SRDAGVertex* SRDAGGraph::getVertex(int ix){
-	return vertices_[ix];
+
+inline SRDAGVertex *SRDAGGraph::getVertex(int ix) {
+    return vertices_[ix];
 }
-inline SRDAGVertex* SRDAGGraph::getVertexFromIx(int ix){
-	for(int i=0; i< vertices_.getN(); i++){
-		if(vertices_[i]->getId() == ix)
-			return vertices_[i];
-	}
-	throw std::runtime_error("Vertex not found\n");
+
+inline SRDAGVertex *SRDAGGraph::getVertexFromIx(int ix) {
+    for (int i = 0; i < vertices_.getN(); i++) {
+        if (vertices_[i]->getId() == ix)
+            return vertices_[i];
+    }
+    throw std::runtime_error("Vertex not found\n");
 }
 
 /** Size getters */
 inline int SRDAGGraph::getNEdge() const {
-	return edges_.getN();
+    return edges_.getN();
 }
-inline int SRDAGGraph::getNVertex() const{
-	return vertices_.getN();
+
+inline int SRDAGGraph::getNVertex() const {
+    return vertices_.getN();
 }
 
 #endif/*SRDAG_GRAPH_H*/

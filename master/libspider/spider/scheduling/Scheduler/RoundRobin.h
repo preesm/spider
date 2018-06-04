@@ -45,22 +45,26 @@
 
 class RoundRobin : public Scheduler {
 public:
-	RoundRobin();
-	virtual ~RoundRobin();
+    RoundRobin();
 
-	void schedule(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi);
-	void scheduleOnlyConfig(SRDAGGraph* graph, MemAlloc* memAlloc, Schedule* schedule, Archi* archi);
+    virtual ~RoundRobin();
+
+    void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi);
+
+    void scheduleOnlyConfig(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi);
 
 private:
-	SRDAGGraph* srdag_;
-	Schedule* schedule_;
-	Archi* archi_;
+    SRDAGGraph *srdag_;
+    Schedule *schedule_;
+    Archi *archi_;
 
-	List<SRDAGVertex*>* list_;
+    List<SRDAGVertex *> *list_;
 
-	int computeSchedLevel(SRDAGVertex* vertex);
-	void scheduleVertex(SRDAGVertex* vertex);
-	void addPrevActors(SRDAGVertex* vertex, List<SRDAGVertex*> *list);
+    int computeSchedLevel(SRDAGVertex *vertex);
+
+    void scheduleVertex(SRDAGVertex *vertex);
+
+    void addPrevActors(SRDAGVertex *vertex, List<SRDAGVertex *> *list);
 
 };
 

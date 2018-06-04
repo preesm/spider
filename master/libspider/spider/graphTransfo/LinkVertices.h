@@ -40,6 +40,7 @@
 #include "GraphTransfo.h"
 
 void linkCAVertices(SRDAGGraph *topDag, transfoJob *job);
+
 void linkSRVertices(SRDAGGraph *topDag, transfoJob *job, int *brv);
 
 #endif//LINK_VERTICES

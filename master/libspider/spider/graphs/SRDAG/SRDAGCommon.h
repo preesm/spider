@@ -40,35 +40,38 @@
 #include <tools/Set.h>
 
 class SRDAGEdge;
+
 class SRDAGParam;
+
 class SRDAGGraph;
+
 class SRDAGVertex;
 
-#define BROADCAST_F_IX 		0
-#define FORK_F_IX 			1
-#define JOIN_F_IX 			2
-#define ROUNDBUFFER_F_IX 	3
-#define INIT_F_IX 			4
-#define END_F_IX 			5
+#define BROADCAST_F_IX        0
+#define FORK_F_IX            1
+#define JOIN_F_IX            2
+#define ROUNDBUFFER_F_IX    3
+#define INIT_F_IX            4
+#define END_F_IX            5
 
 typedef enum SRDAGType {
-	SRDAG_NORMAL,
-	SRDAG_BROADCAST,
-	SRDAG_JOIN,
-	SRDAG_FORK,
-	SRDAG_ROUNDBUFFER,
-	SRDAG_INIT,
-	SRDAG_END
+    SRDAG_NORMAL,
+    SRDAG_BROADCAST,
+    SRDAG_JOIN,
+    SRDAG_FORK,
+    SRDAG_ROUNDBUFFER,
+    SRDAG_INIT,
+    SRDAG_END
 } SRDAGType;
 
 typedef enum SRDAGState {
-	SRDAG_NEXEC,
-	SRDAG_EXEC,
-	SRDAG_RUN
+    SRDAG_NEXEC,
+    SRDAG_EXEC,
+    SRDAG_RUN
 } SRDAGState;
 
 /** Set types */
-typedef Set<SRDAGEdge*> SRDAGEdgeSet;
-typedef Set<SRDAGVertex*> SRDAGVertexSet;
+typedef Set<SRDAGEdge *> SRDAGEdgeSet;
+typedef Set<SRDAGVertex *> SRDAGVertexSet;
 
 #endif/*SRDAG_COMMON_H*/

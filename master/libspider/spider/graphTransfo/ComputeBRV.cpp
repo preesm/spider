@@ -33,63 +33,54 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include "ComputeBRV.h"
-#include "GraphTransfo.h"
 #include "topologyMatrix.h"
 
-#include <graphs/PiSDF/PiSDFGraph.h>
-#include <graphs/PiSDF/PiSDFVertex.h>
 #include <graphs/PiSDF/PiSDFEdge.h>
 
-#include <graphs/SRDAG/SRDAGGraph.h>
-#include <graphs/SRDAG/SRDAGVertex.h>
-#include <graphs/SRDAG/SRDAGEdge.h>
-
-#include <string.h>
-#include <stdio.h>
 #include <cmath>
 #include <algorithm>
 
-void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv){
-	int nbVertices = job->graph->getNBody();
+void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
+    int nbVertices = job->graph->getNBody();
 
-	/* Compute nbEdges */
-	int nbEdges = 0;
-	for(int i=0; i<job->graph->getNEdge(); i++){
-		PiSDFEdge* edge = job->graph->getEdge(i);
-		if(edge->getSrc() != edge->getSnk()
-			&& edge->getSrc()->getType() ==  PISDF_TYPE_BODY
-			&& edge->getSnk()->getType() ==  PISDF_TYPE_BODY){
-			nbEdges++;
-		}
-	}
+    /* Compute nbEdges */
+    int nbEdges = 0;
+    for (int i = 0; i < job->graph->getNEdge(); i++) {
+        PiSDFEdge *edge = job->graph->getEdge(i);
+        if (edge->getSrc() != edge->getSnk()
+            && edge->getSrc()->getType() == PISDF_TYPE_BODY
+            && edge->getSnk()->getType() == PISDF_TYPE_BODY) {
+            nbEdges++;
+        }
+    }
 
-    int* topo_matrix = CREATE_MUL(TRANSFO_STACK, nbEdges*nbVertices, int);
-	memset(topo_matrix, 0, nbEdges*nbVertices*sizeof(int));
+    int *topo_matrix = CREATE_MUL(TRANSFO_STACK, nbEdges * nbVertices, int);
+    memset(topo_matrix, 0, nbEdges * nbVertices * sizeof(int));
 
-	/* Fill the topology matrix(nbEdges x nbVertices) */
-	nbEdges = 0; // todo do better with the nbEdges var
-	for(int i=0; i < job->graph->getNEdge(); i++){
-		PiSDFEdge* edge = job->graph->getEdge(i);
-		if(edge->getSrc() != edge->getSnk()
-			&& edge->getSrc()->getType() ==  PISDF_TYPE_BODY
-			&& edge->getSnk()->getType() ==  PISDF_TYPE_BODY){
-			int prod = edge->resolveProd(job);
-			int cons = edge->resolveCons(job);
+    /* Fill the topology matrix(nbEdges x nbVertices) */
+    nbEdges = 0; // todo do better with the nbEdges var
+    for (int i = 0; i < job->graph->getNEdge(); i++) {
+        PiSDFEdge *edge = job->graph->getEdge(i);
+        if (edge->getSrc() != edge->getSnk()
+            && edge->getSrc()->getType() == PISDF_TYPE_BODY
+            && edge->getSnk()->getType() == PISDF_TYPE_BODY) {
+            int prod = edge->resolveProd(job);
+            int cons = edge->resolveCons(job);
 
-			if(prod < 0 || cons < 0 ){
-				char name[100];
-				edge->getProdExpr(name, 100);
-				printf("Prod : %s = %d\n", name, prod);
-				edge->getConsExpr(name, 100);
-				printf("Cons : %s = %d\n", name, cons);
-				throw std::runtime_error("Error Bad prod/cons resolved\n");
-			}
+            if (prod < 0 || cons < 0) {
+                char name[100];
+                edge->getProdExpr(name, 100);
+                printf("Prod : %s = %d\n", name, prod);
+                edge->getConsExpr(name, 100);
+                printf("Cons : %s = %d\n", name, cons);
+                throw std::runtime_error("Error Bad prod/cons resolved\n");
+            }
 
-			topo_matrix[nbEdges*nbVertices + edge->getSrc()->getTypeId()] = prod;
-			topo_matrix[nbEdges*nbVertices + edge->getSnk()->getTypeId()] = -cons;
-			nbEdges++;
-		}
-	}
+            topo_matrix[nbEdges * nbVertices + edge->getSrc()->getTypeId()] = prod;
+            topo_matrix[nbEdges * nbVertices + edge->getSnk()->getTypeId()] = -cons;
+            nbEdges++;
+        }
+    }
 
 //	printf("topoMatrix:\n");
 //	for(int i=0; i<nbEdges; i++){
@@ -99,55 +90,55 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int* brv){
 //		printf("\n");
 //	}
 
-	/* Compute nullSpace */
-	nullSpace(topo_matrix, brv, nbEdges, nbVertices);
+    /* Compute nullSpace */
+    nullSpace(topo_matrix, brv, nbEdges, nbVertices);
 
-	/* Updating the productions of the round buffer vertices. */
-	int coef=1;
+    /* Updating the productions of the round buffer vertices. */
+    int coef = 1;
 
-	/* Looking on interfaces */
-	for(int i=0; i < job->graph->getNInIf(); i++){
-		PiSDFVertex* inIf = job->graph->getInputIf(i);
-		PiSDFEdge* edge = inIf->getOutEdge(0);
-		/* Only if IF<->Body edge */
-		if(edge->getSnk()->getType() == PISDF_TYPE_BODY){
-			float prod = edge->resolveProd(job);
-			float cons = edge->resolveCons(job);
-			float nbRepet = brv[edge->getSnk()->getTypeId()];
-			coef = std::max(coef, (int)std::ceil(prod/(cons*nbRepet)));
-		}
-	}
-	for(int i=0; i < job->graph->getNOutIf(); i++){
-		PiSDFVertex* outIf = job->graph->getOutputIf(i);
-		PiSDFEdge* edge = outIf->getInEdge(0);
-		/* Only if Body<->IF edge */
-		if(edge->getSrc()->getType() == PISDF_TYPE_BODY){
-			float prod = edge->resolveProd(job);
-			float cons = edge->resolveCons(job);
-			float nbRepet = brv[edge->getSrc()->getTypeId()];
-			coef = std::max(coef, (int)std::ceil(cons/(prod*nbRepet)));
-		}
-	}
-	/* Looking on implicit RB between Config and Body */
-	for(int i=0; i < job->graph->getNConfig(); i++){
-		PiSDFVertex* config = job->graph->getConfig(i);
-		for(int i=0; i<config->getNOutEdge(); i++){
-			PiSDFEdge* edge = config->getOutEdge(i);
-			/* Only if Config<->Body edge */
-			if(edge->getSnk()->getType() == PISDF_TYPE_BODY){
-				float prod = edge->resolveProd(job);
-				float cons = edge->resolveCons(job);
-				float nbRepet = brv[edge->getSnk()->getTypeId()];
-				coef = std::max(coef, (int)std::ceil(prod/(cons*nbRepet)));
-			}
-		}
-	}
+    /* Looking on interfaces */
+    for (int i = 0; i < job->graph->getNInIf(); i++) {
+        PiSDFVertex *inIf = job->graph->getInputIf(i);
+        PiSDFEdge *edge = inIf->getOutEdge(0);
+        /* Only if IF<->Body edge */
+        if (edge->getSnk()->getType() == PISDF_TYPE_BODY) {
+            float prod = edge->resolveProd(job);
+            float cons = edge->resolveCons(job);
+            float nbRepet = brv[edge->getSnk()->getTypeId()];
+            coef = std::max(coef, (int) std::ceil(prod / (cons * nbRepet)));
+        }
+    }
+    for (int i = 0; i < job->graph->getNOutIf(); i++) {
+        PiSDFVertex *outIf = job->graph->getOutputIf(i);
+        PiSDFEdge *edge = outIf->getInEdge(0);
+        /* Only if Body<->IF edge */
+        if (edge->getSrc()->getType() == PISDF_TYPE_BODY) {
+            float prod = edge->resolveProd(job);
+            float cons = edge->resolveCons(job);
+            float nbRepet = brv[edge->getSrc()->getTypeId()];
+            coef = std::max(coef, (int) std::ceil(cons / (prod * nbRepet)));
+        }
+    }
+    /* Looking on implicit RB between Config and Body */
+    for (int i = 0; i < job->graph->getNConfig(); i++) {
+        PiSDFVertex *config = job->graph->getConfig(i);
+        for (int i = 0; i < config->getNOutEdge(); i++) {
+            PiSDFEdge *edge = config->getOutEdge(i);
+            /* Only if Config<->Body edge */
+            if (edge->getSnk()->getType() == PISDF_TYPE_BODY) {
+                float prod = edge->resolveProd(job);
+                float cons = edge->resolveCons(job);
+                float nbRepet = brv[edge->getSnk()->getTypeId()];
+                coef = std::max(coef, (int) std::ceil(prod / (cons * nbRepet)));
+            }
+        }
+    }
 
-	for(int i=0; i<nbVertices; i++){
-		brv[i] *= coef;
-	}
+    for (int i = 0; i < nbVertices; i++) {
+        brv[i] *= coef;
+    }
 
-	StackMonitor::free(TRANSFO_STACK,topo_matrix);
+    StackMonitor::free(TRANSFO_STACK, topo_matrix);
 
 //	printf("brv:\n");
 //	for(int i=0; i<nbVertices; i++){

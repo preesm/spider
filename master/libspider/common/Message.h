@@ -40,36 +40,36 @@
 
 #include <spider.h>
 
-typedef enum{
-	MSG_START_JOB=1,
-	MSG_PARAM_VALUE=2,
-	MSG_CLEAR_TIME=3,
-	MSG_RESET_LRT=4,
-	MSG_END_ITER=5,
-	MSG_STOP_LRT=6
-}CtrlMsgType;
+typedef enum {
+    MSG_START_JOB = 1,
+    MSG_PARAM_VALUE = 2,
+    MSG_CLEAR_TIME = 3,
+    MSG_RESET_LRT = 4,
+    MSG_END_ITER = 5,
+    MSG_STOP_LRT = 6
+} CtrlMsgType;
 
-typedef enum{
-	TRACE_JOB=1,
-	TRACE_SPIDER=2
-}TraceMsgType;
+typedef enum {
+    TRACE_JOB = 1,
+    TRACE_SPIDER = 2
+} TraceMsgType;
 
-typedef enum{
-	TRACE_SPIDER_GRAPH=1,
-	TRACE_SPIDER_ALLOC=2,
-	TRACE_SPIDER_SCHED=3,
-	TRACE_SPIDER_OPTIM=4,
-	TRACE_SPIDER_TMP0,
-	TRACE_SPIDER_TMP1,
-	TRACE_SPIDER_TMP2,
-	TRACE_SPIDER_TMP3
-}TraceSpiderType;
+typedef enum {
+    TRACE_SPIDER_GRAPH = 1,
+    TRACE_SPIDER_ALLOC = 2,
+    TRACE_SPIDER_SCHED = 3,
+    TRACE_SPIDER_OPTIM = 4,
+    TRACE_SPIDER_TMP0,
+    TRACE_SPIDER_TMP1,
+    TRACE_SPIDER_TMP2,
+    TRACE_SPIDER_TMP3
+} TraceSpiderType;
 
 typedef struct {
-	unsigned long msgIx;
+    unsigned long msgIx;
 //	unsigned char msgIx:2;
 //	unsigned char reserved:6;
-}UndefinedMsg;
+} UndefinedMsg;
 
 typedef struct {
 //	unsigned char msgIx:2;
@@ -80,64 +80,64 @@ typedef struct {
 //	unsigned char nbOutEdge:8;
 //	unsigned char nbInParam:8;
 //	unsigned char nbOutParam:8;
-	unsigned long msgIx;
-	unsigned long srdagIx;
-	unsigned long specialActor;
-	unsigned long fctIx;
-	unsigned long traceEnabled;
-	unsigned long nbInEdge;
-	unsigned long nbOutEdge;
-	unsigned long nbInParam;
-	unsigned long nbOutParam;
-}StartJobMsg;
+    unsigned long msgIx;
+    unsigned long srdagIx;
+    unsigned long specialActor;
+    unsigned long fctIx;
+    unsigned long traceEnabled;
+    unsigned long nbInEdge;
+    unsigned long nbOutEdge;
+    unsigned long nbInParam;
+    unsigned long nbOutParam;
+} StartJobMsg;
 
 typedef struct {
-	unsigned long msgIx;
-	unsigned long spiderTask;
-	unsigned long srdagIx;
-	unsigned long lrtIx;
-	Time start;
-	Time end;
-}TraceMsg;
+    unsigned long msgIx;
+    unsigned long spiderTask;
+    unsigned long srdagIx;
+    unsigned long lrtIx;
+    Time start;
+    Time end;
+} TraceMsg;
 
 typedef struct {
-	unsigned long id:32; // Deprecated
-	unsigned long alloc:32;
-	unsigned long size:32;
-	unsigned long ntoken:32;
-	unsigned long blkLrtIx:32;
-	unsigned long blkLrtJobIx:32;
+    unsigned long id:32; // Deprecated
+    unsigned long alloc:32;
+    unsigned long size:32;
+    unsigned long ntoken:32;
+    unsigned long blkLrtIx:32;
+    unsigned long blkLrtJobIx:32;
 } Fifo;
 
 typedef struct {
-	unsigned long msgIx;
-	unsigned long srdagIx;
+    unsigned long msgIx;
+    unsigned long srdagIx;
 //	unsigned char msgIx:2;
 //	unsigned long srdagIx:30;
-}ParamValueMsg;
+} ParamValueMsg;
 
-typedef struct ClearTimeMsg{
-	unsigned long msgIx;
+typedef struct ClearTimeMsg {
+    unsigned long msgIx;
 //	unsigned char msgIx:2;
 //	unsigned char reserved:6;
 } ClearTimeMsg;
 
 typedef struct {
-	unsigned long msgIx;
+    unsigned long msgIx;
 //	unsigned char msgIx:2;
 //	unsigned char reserved:6;
-}ResetLrtMsg;
+} ResetLrtMsg;
 
 typedef struct {
-	unsigned long msgIx;
+    unsigned long msgIx;
 //	unsigned char msgIx:2;
 //	unsigned char reserved:6;
-}EndIterMsg;
+} EndIterMsg;
 
 typedef struct {
-	unsigned long msgIx;
+    unsigned long msgIx;
 //	unsigned char msgIx:2;
 //	unsigned char reserved:6;
-}StopLrtMsg;
+} StopLrtMsg;
 
 #endif/*MESSAGE_H*/

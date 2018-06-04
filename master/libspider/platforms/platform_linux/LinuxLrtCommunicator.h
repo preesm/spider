@@ -43,55 +43,60 @@
 #include <Message.h>
 #include <tools/Stack.h>
 
-class LinuxLrtCommunicator: public LrtCommunicator{
+class LinuxLrtCommunicator : public LrtCommunicator {
 public:
-	LinuxLrtCommunicator(
-			int msgSizeMax,
-			int fIn,
-			int fOut,
-			int fTrace,
-			sem_t *semFifo,
-			sem_t *semTrace,
-			void* fifos,
-			void* dataMem,
-			int nbFifos
-		);
+    LinuxLrtCommunicator(
+            int msgSizeMax,
+            int fIn,
+            int fOut,
+            int fTrace,
+            sem_t *semFifo,
+            sem_t *semTrace,
+            void *fifos,
+            void *dataMem,
+            int nbFifos
+    );
 
-	~LinuxLrtCommunicator();
+    ~LinuxLrtCommunicator();
 
-	void* ctrl_start_send(int size);
-	void ctrl_end_send(int size);
+    void *ctrl_start_send(int size);
 
-	int ctrl_start_recv(void** data);
-	void ctrl_end_recv();
+    void ctrl_end_send(int size);
 
-	void* trace_start_send(int size);
-	void trace_end_send(int size);
+    int ctrl_start_recv(void **data);
 
-	long data_start_send(Fifo* f);
-	void data_end_send(Fifo* f);
+    void ctrl_end_recv();
 
-	long data_recv(Fifo* f);
+    void *trace_start_send(int size);
 
-	void setLrtJobIx(int jobIx, int lrtIx);
-	unsigned long getLrtJobIx(int lrt);
+    void trace_end_send(int size);
+
+    long data_start_send(Fifo *f);
+
+    void data_end_send(Fifo *f);
+
+    long data_recv(Fifo *f);
+
+    void setLrtJobIx(int jobIx, int lrtIx);
+
+    unsigned long getLrtJobIx(int lrt);
 
 private:
-	int fIn_, fOut_, fTrace_;
-	sem_t* semTrace_;
-	sem_t* semFifo_;
+    int fIn_, fOut_, fTrace_;
+    sem_t *semTrace_;
+    sem_t *semFifo_;
 
-	int msgSizeMax_;
+    int msgSizeMax_;
 
-	void* msgBufferSend_;
-	int curMsgSizeSend_;
+    void *msgBufferSend_;
+    int curMsgSizeSend_;
 
-	void* msgBufferRecv_;
-	int curMsgSizeRecv_;
+    void *msgBufferRecv_;
+    int curMsgSizeRecv_;
 
-	int nbFifos_;
-	unsigned long* fifos_;
-	unsigned char* shMem_;
+    int nbFifos_;
+    unsigned long *fifos_;
+    unsigned char *shMem_;
 
 };
 

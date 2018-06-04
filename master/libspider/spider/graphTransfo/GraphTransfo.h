@@ -47,21 +47,21 @@
 
 #define MAX_IO_EDGES 300
 
-typedef struct transfoJob{
-	PiSDFGraph* graph;
-	int graphIter;
-	int* paramValues;
-	SRDAGEdge** inputIfs;
-	SRDAGEdge** outputIfs;
-	SRDAGVertex** configs;
-	SRDAGVertex*** bodies;
+typedef struct transfoJob {
+    PiSDFGraph *graph;
+    int graphIter;
+    int *paramValues;
+    SRDAGEdge **inputIfs;
+    SRDAGEdge **outputIfs;
+    SRDAGVertex **configs;
+    SRDAGVertex ***bodies;
 } transfoJob;
 
 void jit_ms(
-		PiSDFGraph* topPisdf,
-		Archi* archi,
-		SRDAGGraph *topSrdag,
-		MemAlloc* memAlloc,
-		Scheduler* scheduler);
+        PiSDFGraph *topPisdf,
+        Archi *archi,
+        SRDAGGraph *topSrdag,
+        MemAlloc *memAlloc,
+        Scheduler *scheduler);
 
 #endif/*GRAPH_TRANSFO_H*/

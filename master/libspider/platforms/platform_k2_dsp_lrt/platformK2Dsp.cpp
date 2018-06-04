@@ -49,7 +49,7 @@
 #include <lrt.h>
 #include <K2DspLrtCommunicator.h>
 
-extern "C"{
+extern "C" {
 #include <ti/csl/device/k2h/src/cslr_device.h>
 #include <ti/csl/cslr_tmr.h>
 #include <ti/csl/csl_types.h>
@@ -60,72 +60,72 @@ extern "C"{
 }
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
-#define SHARED_MEM_KEY		8452
+#define SHARED_MEM_KEY        8452
 
 #define MAX_MSG_SIZE 10*1024
 
 //static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 
 static CSL_TmrRegsOvly regs;
-static void* shMem;
+static void *shMem;
 
 #define ENABLE_CACHE 1
 
 static inline void initTime();
 
-PlatformK2Dsp::PlatformK2Dsp(int shMemSize, SharedMemMode useMsmc, Stack *stack, lrtFct* fcts, int nLrtFcts){
-	CACHE_setL1PSize(CACHE_L1_32KCACHE);
-	CACHE_setL1DSize(CACHE_L1_32KCACHE);
-	CACHE_setL2Size (CACHE_0KCACHE);
+PlatformK2Dsp::PlatformK2Dsp(int shMemSize, SharedMemMode useMsmc, Stack *stack, lrtFct *fcts, int nLrtFcts) {
+    CACHE_setL1PSize(CACHE_L1_32KCACHE);
+    CACHE_setL1DSize(CACHE_L1_32KCACHE);
+    CACHE_setL2Size(CACHE_0KCACHE);
 
-	if(platform_)
-		throw std::runtime_error("Try to create 2 platforms");
+    if (platform_)
+        throw std::runtime_error("Try to create 2 platforms");
 
-	platform_ = this;
-	stack_ = stack;
+    platform_ = this;
+    stack_ = stack;
 
-	/** Initialize shared memory & QMSS*/
-	init_hw();
-	init_qmss(useMsmc);
+    /** Initialize shared memory & QMSS*/
+    init_hw();
+    init_qmss(useMsmc);
 
-	shMem = (void*) (data_mem_base+0x400); // todo send base Address
-	printf("Base Data @%#x\n", shMem);
+    shMem = (void *) (data_mem_base + 0x400); // todo send base Address
+    printf("Base Data @%#x\n", shMem);
 //	if(data_mem_size < shMemSize)
 //		throw "Request too many shared memory";
-	initTime();
+    initTime();
 
-	/** Create LRT */
-	lrtCom_ = CREATE(stack, K2DspLrtCommunicator)();
-	lrt_ = CREATE(stack, LRT)(CSL_chipReadDNUM());
-	lrt_->setFctTbl(fcts, nLrtFcts);
+    /** Create LRT */
+    lrtCom_ = CREATE(stack, K2DspLrtCommunicator)();
+    lrt_ = CREATE(stack, LRT)(CSL_chipReadDNUM());
+    lrt_->setFctTbl(fcts, nLrtFcts);
 
-	/** launch LRT */
-	lrt_->runInfinitly();
+    /** launch LRT */
+    lrt_->runInfinitly();
 }
 
-PlatformK2Dsp::~PlatformK2Dsp(){
-	lrt_->~LRT();
-	((K2DspLrtCommunicator*)lrtCom_)->~K2DspLrtCommunicator();
+PlatformK2Dsp::~PlatformK2Dsp() {
+    lrt_->~LRT();
+    ((K2DspLrtCommunicator *) lrtCom_)->~K2DspLrtCommunicator();
 
-	stack_->free(lrt_);
-	stack_->free(lrtCom_);
+    stack_->free(lrt_);
+    stack_->free(lrtCom_);
 }
 
-int PlatformK2Dsp::getMinAllocSize(){
-	return 128;
+int PlatformK2Dsp::getMinAllocSize() {
+    return 128;
 }
 
-int PlatformK2Dsp::getCacheLineSize(){
-	return 128;
+int PlatformK2Dsp::getCacheLineSize() {
+    return 128;
 }
 
 /** File Handling */
-int PlatformK2Dsp::fopen(const char* name){
+int PlatformK2Dsp::fopen(const char *name) {
 //	return open(name, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH | S_IWOTH);
-	return -1;
+    return -1;
 }
 
-void PlatformK2Dsp::fprintf(int id, const char* fmt, ...){
+void PlatformK2Dsp::fprintf(int id, const char *fmt, ...) {
 //	va_list ap;
 //	va_start(ap, fmt);
 //	int n = vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, fmt, ap);
@@ -134,48 +134,49 @@ void PlatformK2Dsp::fprintf(int id, const char* fmt, ...){
 //	}
 //	write(id, buffer, n);
 }
-void PlatformK2Dsp::fclose(int id){
+
+void PlatformK2Dsp::fclose(int id) {
 //	close(id);
 }
 
-void* PlatformK2Dsp::virt_to_phy(void* address){
-	return (void*)((int)shMem + (int)address);
+void *PlatformK2Dsp::virt_to_phy(void *address) {
+    return (void *) ((int) shMem + (int) address);
 }
 
 /** Time Handling */
-static inline void initTime(){
-	/* Init base address */
-	regs = (CSL_TmrRegsOvly)CSL_TIMER_0_REGS;
+static inline void initTime() {
+    /* Init base address */
+    regs = (CSL_TmrRegsOvly) CSL_TIMER_0_REGS;
 }
 
 static uint64_t base;
 
-void PlatformK2Dsp::rstTime(ClearTimeMsg* msg){
-	/* Nothing to do, time reset do not send messages */
-	CSL_Uint64 val;
-	val = regs->CNTHI;
-	val = (val<<32) + regs->CNTLO;
-	timeBase_ = val;
+void PlatformK2Dsp::rstTime(ClearTimeMsg *msg) {
+    /* Nothing to do, time reset do not send messages */
+    CSL_Uint64 val;
+    val = regs->CNTHI;
+    val = (val << 32) + regs->CNTLO;
+    timeBase_ = val;
 
     /* Initialize timer for clock */
-    TSCL= 0,TSCH=0;
+    TSCL = 0, TSCH = 0;
     base = _itoll(TSCH, TSCL);
 }
 
-void PlatformK2Dsp::rstTime(){
-	/* Should not be done by LRT */
+void PlatformK2Dsp::rstTime() {
+    /* Should not be done by LRT */
 }
 
-Time PlatformK2Dsp::getTime(){
-	uint64_t t = (_itoll(TSCH, TSCL)-base);
-	return (t+timeBase_*6)/1.2/1000; /* 200MHz to 1GHz */
+Time PlatformK2Dsp::getTime() {
+    uint64_t t = (_itoll(TSCH, TSCL) - base);
+    return (t + timeBase_ * 6) / 1.2 / 1000; /* 200MHz to 1GHz */
 }
 
-void PlatformK2Dsp::idleLrt(int lrt){
+void PlatformK2Dsp::idleLrt(int lrt) {
 }
 
-void PlatformK2Dsp::wakeLrt(int lrt){
+void PlatformK2Dsp::wakeLrt(int lrt) {
 }
 
-void PlatformK2Dsp::idle(){
+void PlatformK2Dsp::idle() {
 }

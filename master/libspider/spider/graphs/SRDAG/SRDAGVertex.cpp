@@ -36,116 +36,114 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #ifdef _MSC_VER
-	#if (_MSC_VER < 1900)
-	#define snprintf _snprintf 
-	#endif
+#if (_MSC_VER < 1900)
+#define snprintf _snprintf
+#endif
 #endif
 
 #include <graphs/SRDAG/SRDAGVertex.h>
-#include <stdio.h>
-#include <string.h>
 
 /** Static Var def */
 //int SRDAGVertex::globalId = 0;
 
 /** Constructor */
 SRDAGVertex::SRDAGVertex(
-		int globalId,
-		SRDAGType type,	SRDAGGraph* graph,
-		PiSDFVertex* reference,
-		int refId, int iterId,
-		int nInEdge, int nOutEdge,
-		int nInParam, int nOutParam){
-	
+        int globalId,
+        SRDAGType type, SRDAGGraph *graph,
+        PiSDFVertex *reference,
+        int refId, int iterId,
+        int nInEdge, int nOutEdge,
+        int nInParam, int nOutParam) {
 
-	//id_ = globalId++;
-	id_ = globalId;
 
-	type_ = type;
-	state_ = SRDAG_NEXEC;
-	graph_ = graph;
-	reference_ = reference;
-	refId_ = refId;
-	iterId_ = iterId;
+    //id_ = globalId++;
+    id_ = globalId;
 
-	nMaxInEdge_ = nInEdge;
-	inEdges_ = CREATE_MUL(SRDAG_STACK, nMaxInEdge_, SRDAGEdge*);
-	memset(inEdges_, 0, nMaxInEdge_*sizeof(SRDAGEdge*));
+    type_ = type;
+    state_ = SRDAG_NEXEC;
+    graph_ = graph;
+    reference_ = reference;
+    refId_ = refId;
+    iterId_ = iterId;
 
-	nMaxOutEdge_ = nOutEdge;
-	outEdges_ = CREATE_MUL(SRDAG_STACK, nMaxOutEdge_, SRDAGEdge*);
-	memset(outEdges_, 0, nMaxOutEdge_*sizeof(SRDAGEdge*));
+    nMaxInEdge_ = nInEdge;
+    inEdges_ = CREATE_MUL(SRDAG_STACK, nMaxInEdge_, SRDAGEdge*);
+    memset(inEdges_, 0, nMaxInEdge_ * sizeof(SRDAGEdge *));
 
-	nCurInEdge_ = 0;
-	nCurOutEdge_ = 0;
+    nMaxOutEdge_ = nOutEdge;
+    outEdges_ = CREATE_MUL(SRDAG_STACK, nMaxOutEdge_, SRDAGEdge*);
+    memset(outEdges_, 0, nMaxOutEdge_ * sizeof(SRDAGEdge *));
 
-	nInParam_ = nInParam;
-	inParams_ = CREATE_MUL(SRDAG_STACK, nInParam_, int);
-	memset(inParams_, 0, nInParam*sizeof(int));
+    nCurInEdge_ = 0;
+    nCurOutEdge_ = 0;
 
-	nOutParam_ = nOutParam;
-	outParams_ = CREATE_MUL(SRDAG_STACK, nOutParam_, int*);
-	memset(outParams_, 0, nOutParam*sizeof(int**));
+    nInParam_ = nInParam;
+    inParams_ = CREATE_MUL(SRDAG_STACK, nInParam_, int);
+    memset(inParams_, 0, nInParam * sizeof(int));
 
-	start_ = end_ = -1;
-	schedLvl_ = -1;
-	slave_ = -1;
-	slaveJobIx_ = -1;
+    nOutParam_ = nOutParam;
+    outParams_ = CREATE_MUL(SRDAG_STACK, nOutParam_, int*);
+    memset(outParams_, 0, nOutParam * sizeof(int **));
+
+    start_ = end_ = -1;
+    schedLvl_ = -1;
+    slave_ = -1;
+    slaveJobIx_ = -1;
 }
 
-SRDAGVertex::~SRDAGVertex(){
-	StackMonitor::free(SRDAG_STACK,inEdges_);
-	StackMonitor::free(SRDAG_STACK,outEdges_);
-	StackMonitor::free(SRDAG_STACK,inParams_);
-	StackMonitor::free(SRDAG_STACK,outParams_);
+SRDAGVertex::~SRDAGVertex() {
+    StackMonitor::free(SRDAG_STACK, inEdges_);
+    StackMonitor::free(SRDAG_STACK, outEdges_);
+    StackMonitor::free(SRDAG_STACK, inParams_);
+    StackMonitor::free(SRDAG_STACK, outParams_);
 }
 
-void SRDAGVertex::toString(char* name, int sizeMax) const{
+void SRDAGVertex::toString(char *name, int sizeMax) const {
 
-	switch(type_){
-	case SRDAG_NORMAL:
-		snprintf(name, sizeMax, "%s", reference_->getName());
-		break;
-	case SRDAG_FORK:
-		snprintf(name, sizeMax, "Fork");
-		break;
-	case SRDAG_JOIN:
-		snprintf(name, sizeMax, "Join");
-		break;
-	case SRDAG_ROUNDBUFFER:
-		snprintf(name, sizeMax, "RB");
-		break;
-	case SRDAG_BROADCAST:
-		snprintf(name, sizeMax, "BR");
-		break;
-	case SRDAG_INIT:
-		snprintf(name, sizeMax, "Init");
-		break;
-	case SRDAG_END:
-		snprintf(name, sizeMax, "End");
-		break;
-	}
+    switch (type_) {
+        case SRDAG_NORMAL:
+            snprintf(name, sizeMax, "%s", reference_->getName());
+            break;
+        case SRDAG_FORK:
+            snprintf(name, sizeMax, "Fork");
+            break;
+        case SRDAG_JOIN:
+            snprintf(name, sizeMax, "Join");
+            break;
+        case SRDAG_ROUNDBUFFER:
+            snprintf(name, sizeMax, "RB");
+            break;
+        case SRDAG_BROADCAST:
+            snprintf(name, sizeMax, "BR");
+            break;
+        case SRDAG_INIT:
+            snprintf(name, sizeMax, "Init");
+            break;
+        case SRDAG_END:
+            snprintf(name, sizeMax, "End");
+            break;
+    }
 }
 
-void SRDAGVertex::updateState(){
-	if(state_ == SRDAG_NEXEC){
-		/* Check Input Edges */
-		for (int i = 0; i < getNConnectedInEdge(); i++){
-			SRDAGVertex* predecessor = getInEdge(i)->getSrc();
+void SRDAGVertex::updateState() {
+    if (state_ == SRDAG_NEXEC) {
+        /* Check Input Edges */
+        for (int i = 0; i < getNConnectedInEdge(); i++) {
+            SRDAGVertex *predecessor = getInEdge(i)->getSrc();
 
-			if(!predecessor || predecessor->isHierarchical()){
-				state_ = SRDAG_NEXEC;
-				return;
-			}
+            if (!predecessor || predecessor->isHierarchical()) {
+                state_ = SRDAG_NEXEC;
+                return;
+            }
 
-			if(predecessor->state_ == SRDAG_NEXEC){
-				predecessor->updateState();
-				if(predecessor->state_ == SRDAG_NEXEC){
-					state_ = SRDAG_NEXEC;
-					return;
-				}
-			}
-		}
-		state_ = SRDAG_EXEC;
-	}
+            if (predecessor->state_ == SRDAG_NEXEC) {
+                predecessor->updateState();
+                if (predecessor->state_ == SRDAG_NEXEC) {
+                    state_ = SRDAG_NEXEC;
+                    return;
+                }
+            }
+        }
+        state_ = SRDAG_EXEC;
+    }
 }

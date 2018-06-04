@@ -36,7 +36,9 @@
 #define PAPIFY_ACTION_H
 
 #if (!defined(NO_DLFCN) && !defined(_BGL) && !defined(_BGP))
+
 #include <dlfcn.h>
+
 #endif
 
 #include <vector>
@@ -57,21 +59,22 @@ public:
      * @param eventSetID        ID of the event set
      * @param monitorTime       Precise if papify should also monitor time for this actor
      */
-    PapifyAction(const char* PEType,
+    PapifyAction(const char *PEType,
                  long long PEId,
-                 const char* actorName,
+                 const char *actorName,
                  int numberOfEvents,
-                 std::vector<const char*>& moniteredEventSet,
+                 std::vector<const char *> &moniteredEventSet,
                  int eventSetID,
                  bool monitorTime,
-                 PapifyEventLib* papifyEventLib);
+                 PapifyEventLib *papifyEventLib);
+
     /**
      * @brief Initialize a new PapifyAction object by copying properties of an other one
      *
      * @param papifyAction  Original PapifyAction
      * @param PEId          The PE id
      */
-    PapifyAction(PapifyAction& papifyAction, long long PEId);
+    PapifyAction(PapifyAction &papifyAction, long long PEId);
 
     ~PapifyAction();
 
@@ -102,38 +105,39 @@ public:
      *
      * @remark Assumption is made that the header of the files is already written
      */
-    void writeEvents(FILE* file);
+    void writeEvents(FILE *file);
 
-    inline PapifyEventLib* getPapifyEventLib() {
+    inline PapifyEventLib *getPapifyEventLib() {
         return papifyEventLib_;
     }
+
 private:
     long long PEId_;
-    const char* PEType_;
-    const char* actorName_;
+    const char *PEType_;
+    const char *actorName_;
 
     // PapifyEventLib handler
-    PapifyEventLib* papifyEventLib_;
+    PapifyEventLib *papifyEventLib_;
 
     // PAPI event code
     std::vector<int> PAPIEventCodeSet_;
     // PAPI event set ID
     int PAPIEventSetID_;
     // Number of event to be monitored
-    int  numberOfEvents_;
+    int numberOfEvents_;
     // Counters values associated with the events
     std::vector<long long> counterValues_;      // Values of the counters (after differentiation)
     std::vector<long long> counterValuesStart_; // Starting point
     std::vector<long long> counterValuesStop_;  // End point (required to measure events by differences)
     // ID of the event set this PapifyAction belongs
-    int  eventSetID_;
+    int eventSetID_;
     // Timing monitoring can be done on its own
     bool monitorTiming_;
     long long timeStart;
     long long timeStop;
 
     // The file for writing the results
-    FILE* outputFile_;
+    FILE *outputFile_;
 };
 
 #endif // PAPIFY_ACTION_H

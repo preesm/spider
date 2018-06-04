@@ -65,7 +65,7 @@
 #include <LinuxSpiderCommunicator.h>
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
-#define SHARED_MEM_KEY		8452 //0x2104
+#define SHARED_MEM_KEY        8452 //0x2104
 
 #define SHMMAX_SYS_FILE "/proc/sys/kernel/shmmax"
 
@@ -74,334 +74,335 @@
 
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
-static void* shMem;
-static void* dataMem;
+static void *shMem;
+static void *dataMem;
 
-static SharedMemArchi* archi_;
+static SharedMemArchi *archi_;
 
-void PlatformLinux::sig_handler(int signo){
-	switch(signo){
-	case SIG_IDLE:
-		Platform::get()->getLrt()->setIdle(true);
-		break;
-	case SIG_WAKE:
-		Platform::get()->getLrt()->setIdle(false);
-		break;
-	default:
-		break;
-	}
+void PlatformLinux::sig_handler(int signo) {
+    switch (signo) {
+        case SIG_IDLE:
+            Platform::get()->getLrt()->setIdle(true);
+            break;
+        case SIG_WAKE:
+            Platform::get()->getLrt()->setIdle(false);
+            break;
+        default:
+            break;
+    }
 }
 
-static void initShMem(int shMemSize){
-	/** Open Shared Memory */
-	int shmid;
-	key_t key = SHARED_MEM_KEY;
+static void initShMem(int shMemSize) {
+    /** Open Shared Memory */
+    int shmid;
+    key_t key = SHARED_MEM_KEY;
 
-	printf("Creating shared memory...\n");
+    printf("Creating shared memory...\n");
 
-	/** Get the segment. */
-	if ((shmid = shmget(key, shMemSize, IPC_CREAT | 0666)) < 0) {
-		/* Bad memory size */
-		if(errno == EINVAL){
-			printf("Error openning shared memory, try:\n");
-			printf("\tsudo ipcrm -M 0x2104\n");
-			printf("\tsudo sysctl -w kernel.shmmax=%d\n", shMemSize);
-			exit(-1);
-		}
-		perror("shmget");
-		exit(1);
-	}
+    /** Get the segment. */
+    if ((shmid = shmget(key, shMemSize, IPC_CREAT | 0666)) < 0) {
+        /* Bad memory size */
+        if (errno == EINVAL) {
+            printf("Error openning shared memory, try:\n");
+            printf("\tsudo ipcrm -M 0x2104\n");
+            printf("\tsudo sysctl -w kernel.shmmax=%d\n", shMemSize);
+            exit(-1);
+        }
+        perror("shmget");
+        exit(1);
+    }
 
-	/** Now we attach the segment to our data space. */
-	if ((shMem = (void*)shmat(shmid, NULL, 0)) == (void *) -1) {
-		perror("shmat");
-		exit(1);
-	}
+    /** Now we attach the segment to our data space. */
+    if ((shMem = (void *) shmat(shmid, NULL, 0)) == (void *) -1) {
+        perror("shmat");
+        exit(1);
+    }
 
-	dataMem = (void*)((long)shMem + sizeof(unsigned int)*NFIFOS);
+    dataMem = (void *) ((long) shMem + sizeof(unsigned int) * NFIFOS);
 
-	memset(shMem, 0, shMemSize);
+    memset(shMem, 0, shMemSize);
 }
 
-static void setAffinity(int cpuId){
-	cpu_set_t mask;
-	int status;
+static void setAffinity(int cpuId) {
+    cpu_set_t mask;
+    int status;
 
-	CPU_ZERO(&mask);
-	CPU_SET(cpuId, &mask);
-	status = sched_setaffinity(0, sizeof(mask), &mask);
-	if (status != 0)
-	{
-		perror("sched_setaffinity");
-	}
+    CPU_ZERO(&mask);
+    CPU_SET(cpuId, &mask);
+    status = sched_setaffinity(0, sizeof(mask), &mask);
+    if (status != 0) {
+        perror("sched_setaffinity");
+    }
 }
 
-PlatformLinux::PlatformLinux(int nLrt, int shMemSize, lrtFct* fcts, int nLrtFcts, StackConfig archiStack,
-		StackConfig lrtStack, StackConfig pisdfStack, StackConfig srdagStack, StackConfig transfoStack){
-	int pipeSpidertoLRT[2*nLrt];
-	int pipeLRTtoSpider[2*nLrt];
-	int pipeTrace[2];
-	sem_t* semFifo;
-	sem_t* semTrace;
+PlatformLinux::PlatformLinux(int nLrt, int shMemSize, lrtFct *fcts, int nLrtFcts, StackConfig archiStack,
+                             StackConfig lrtStack, StackConfig pisdfStack, StackConfig srdagStack,
+                             StackConfig transfoStack) {
+    int pipeSpidertoLRT[2 * nLrt];
+    int pipeLRTtoSpider[2 * nLrt];
+    int pipeTrace[2];
+    sem_t *semFifo;
+    sem_t *semTrace;
 
-	if(platform_) throw std::runtime_error("Try to create 2 platforms");
-	platform_ = this;
+    if (platform_) throw std::runtime_error("Try to create 2 platforms");
+    platform_ = this;
 
-	StackMonitor::initStack(PISDF_STACK, pisdfStack);
-	StackMonitor::initStack(SRDAG_STACK, srdagStack);
-	StackMonitor::initStack(TRANSFO_STACK, transfoStack);
-	StackMonitor::initStack(LRT_STACK, lrtStack);
-	StackMonitor::initStack(ARCHI_STACK, archiStack);
+    StackMonitor::initStack(PISDF_STACK, pisdfStack);
+    StackMonitor::initStack(SRDAG_STACK, srdagStack);
+    StackMonitor::initStack(TRANSFO_STACK, transfoStack);
+    StackMonitor::initStack(LRT_STACK, lrtStack);
+    StackMonitor::initStack(ARCHI_STACK, archiStack);
 
-	cpIds_ = CREATE_MUL(ARCHI_STACK, nLrt, int);
+    cpIds_ = CREATE_MUL(ARCHI_STACK, nLrt, int);
 
-	cpIds_[0] = getpid();
+    cpIds_[0] = getpid();
 
-	sem_unlink("spider_fifo");
-	sem_unlink("spider_trace");
+    sem_unlink("spider_fifo");
+    sem_unlink("spider_trace");
 
-	semFifo = sem_open("spider_fifo", O_CREAT | O_EXCL, ACCESSPERMS, 1);
-	semTrace = sem_open("spider_trace", O_CREAT | O_EXCL, ACCESSPERMS, 1);
+    semFifo = sem_open("spider_fifo", O_CREAT | O_EXCL, ACCESSPERMS, 1);
+    semTrace = sem_open("spider_trace", O_CREAT | O_EXCL, ACCESSPERMS, 1);
 
-	if(semFifo == 0 || semTrace == 0){
-		printf("Error creating semaphores\n");
-		throw std::runtime_error("Error creating semaphores\n");
-	}
+    if (semFifo == 0 || semTrace == 0) {
+        printf("Error creating semaphores\n");
+        throw std::runtime_error("Error creating semaphores\n");
+    }
 
-	if (pipe2(pipeTrace, O_NONBLOCK) == -1) {
-		perror("pipe");
-		exit(EXIT_FAILURE);
-	}
+    if (pipe2(pipeTrace, O_NONBLOCK) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
 
-	printf("Pipe Trace: %d <= %d\n", pipeTrace[0], pipeTrace[1]);
+    printf("Pipe Trace: %d <= %d\n", pipeTrace[0], pipeTrace[1]);
 
-	for(int i=0; i<nLrt; i++){
-		/** Open Pipes */
-		if (pipe2(pipeSpidertoLRT+2*i, O_NONBLOCK) == -1
-				|| pipe2(pipeLRTtoSpider+2*i, O_NONBLOCK) == -1) {
-			perror("pipe");
-			exit(EXIT_FAILURE);
-		}
-		fcntl(pipeSpidertoLRT[2*i  ], F_SETPIPE_SZ, 1024*1024);
-		fcntl(pipeSpidertoLRT[2*i+1], F_SETPIPE_SZ, 1024*1024);
-		fcntl(pipeLRTtoSpider[2*i  ], F_SETPIPE_SZ, 1024*1024);
-		fcntl(pipeLRTtoSpider[2*i+1], F_SETPIPE_SZ, 1024*1024);
-		printf("Pipe Spider=>LRT %d: %d <= %d\n", i, pipeSpidertoLRT[2*i], pipeSpidertoLRT[2*i+1]);
-		printf("Pipe LRT=>Spider %d: %d <= %d\n", i, pipeLRTtoSpider[2*i], pipeLRTtoSpider[2*i+1]);
-	}
+    for (int i = 0; i < nLrt; i++) {
+        /** Open Pipes */
+        if (pipe2(pipeSpidertoLRT + 2 * i, O_NONBLOCK) == -1
+            || pipe2(pipeLRTtoSpider + 2 * i, O_NONBLOCK) == -1) {
+            perror("pipe");
+            exit(EXIT_FAILURE);
+        }
+        fcntl(pipeSpidertoLRT[2 * i], F_SETPIPE_SZ, 1024 * 1024);
+        fcntl(pipeSpidertoLRT[2 * i + 1], F_SETPIPE_SZ, 1024 * 1024);
+        fcntl(pipeLRTtoSpider[2 * i], F_SETPIPE_SZ, 1024 * 1024);
+        fcntl(pipeLRTtoSpider[2 * i + 1], F_SETPIPE_SZ, 1024 * 1024);
+        printf("Pipe Spider=>LRT %d: %d <= %d\n", i, pipeSpidertoLRT[2 * i], pipeSpidertoLRT[2 * i + 1]);
+        printf("Pipe LRT=>Spider %d: %d <= %d\n", i, pipeLRTtoSpider[2 * i], pipeLRTtoSpider[2 * i + 1]);
+    }
 
-	for(int i=1; i<nLrt; i++){
-		pid_t cpid = fork();
-		if (cpid == -1) {
-			perror("fork");
-			exit(EXIT_FAILURE);
-		}
+    for (int i = 1; i < nLrt; i++) {
+        pid_t cpid = fork();
+        if (cpid == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
 
-		if (cpid == 0) { /* Child */
-			/** Close unused pipe */
+        if (cpid == 0) { /* Child */
+            /** Close unused pipe */
 
-			/** Initialize shared memory */
-			initShMem(shMemSize);
+            /** Initialize shared memory */
+            initShMem(shMemSize);
 
-			/** Register Signals */
-			signal(SIG_IDLE, sig_handler);
-			signal(SIG_WAKE, sig_handler);
+            /** Register Signals */
+            signal(SIG_IDLE, sig_handler);
+            signal(SIG_WAKE, sig_handler);
 
-			/** Create LRT */
-			lrtCom_ = (LrtCommunicator*) CREATE(ARCHI_STACK, LinuxLrtCommunicator)(
-					MAX_MSG_SIZE,
-					pipeSpidertoLRT[2*i],
-					pipeLRTtoSpider[2*i+1],
-					pipeTrace[1],
-					semFifo,
-					semTrace,
-					shMem,
-					dataMem,
-					NFIFOS);
-			lrt_ = CREATE(ARCHI_STACK, LRT)(i);
-			setAffinity(i);
-			lrt_->setFctTbl(fcts, nLrtFcts);
+            /** Create LRT */
+            lrtCom_ = (LrtCommunicator *) CREATE(ARCHI_STACK, LinuxLrtCommunicator)(
+                    MAX_MSG_SIZE,
+                    pipeSpidertoLRT[2 * i],
+                    pipeLRTtoSpider[2 * i + 1],
+                    pipeTrace[1],
+                    semFifo,
+                    semTrace,
+                    shMem,
+                    dataMem,
+                    NFIFOS);
+            lrt_ = CREATE(ARCHI_STACK, LRT)(i);
+            setAffinity(i);
+            lrt_->setFctTbl(fcts, nLrtFcts);
 
-			/** launch LRT */
-			lrt_->runInfinitly();
+            /** launch LRT */
+            lrt_->runInfinitly();
 
-			exit(EXIT_SUCCESS);
-		} else { /* Parent */
-			cpIds_[i] = cpid;
-		}
-	}
+            exit(EXIT_SUCCESS);
+        } else { /* Parent */
+            cpIds_[i] = cpid;
+        }
+    }
 
-	/** Close unused pipe */
+    /** Close unused pipe */
 
-	/** Initialize shared memory */
-	initShMem(shMemSize);
-	memset(shMem,0,shMemSize);
+    /** Initialize shared memory */
+    initShMem(shMemSize);
+    memset(shMem, 0, shMemSize);
 
-	/** Register Signals */
-	signal(SIG_IDLE, sig_handler);
-	signal(SIG_WAKE, sig_handler);
+    /** Register Signals */
+    signal(SIG_IDLE, sig_handler);
+    signal(SIG_WAKE, sig_handler);
 
-	/** Initialize LRT and Communicators */
-	spiderCom_ = CREATE(ARCHI_STACK, LinuxSpiderCommunicator)(
-			MAX_MSG_SIZE,
-			nLrt,
-			semTrace,
-			pipeTrace[1],
-			pipeTrace[0]);
+    /** Initialize LRT and Communicators */
+    spiderCom_ = CREATE(ARCHI_STACK, LinuxSpiderCommunicator)(
+            MAX_MSG_SIZE,
+            nLrt,
+            semTrace,
+            pipeTrace[1],
+            pipeTrace[0]);
 
-	for(int i=0; i<nLrt; i++)
-		((LinuxSpiderCommunicator*)spiderCom_)->setLrtCom(i, pipeLRTtoSpider[2*i], pipeSpidertoLRT[2*i+1]);
+    for (int i = 0; i < nLrt; i++)
+        ((LinuxSpiderCommunicator *) spiderCom_)->setLrtCom(i, pipeLRTtoSpider[2 * i], pipeSpidertoLRT[2 * i + 1]);
 
-	lrtCom_ = CREATE(ARCHI_STACK, LinuxLrtCommunicator)(
-			MAX_MSG_SIZE,
-			pipeSpidertoLRT[0],
-			pipeLRTtoSpider[1],
-			pipeTrace[1],
-			semFifo,
-			semTrace,
-			shMem,
-			dataMem,
-			NFIFOS);
-	lrt_ = CREATE(ARCHI_STACK, LRT)(0);
-	setAffinity(0);
-	lrt_->setFctTbl(fcts, nLrtFcts);
+    lrtCom_ = CREATE(ARCHI_STACK, LinuxLrtCommunicator)(
+            MAX_MSG_SIZE,
+            pipeSpidertoLRT[0],
+            pipeLRTtoSpider[1],
+            pipeTrace[1],
+            semFifo,
+            semTrace,
+            shMem,
+            dataMem,
+            NFIFOS);
+    lrt_ = CREATE(ARCHI_STACK, LRT)(0);
+    setAffinity(0);
+    lrt_->setFctTbl(fcts, nLrtFcts);
 
 
-	/** Create Archi */
-	archi_ = CREATE(ARCHI_STACK, SharedMemArchi)(
-				/* Nb PE */		nLrt,
-				/* Nb PE Type*/ 1,
-				/* Spider Pe */ 0,
-				/*MappingTime*/ this->mappingTime);
+    /** Create Archi */
+    archi_ = CREATE(ARCHI_STACK, SharedMemArchi)(
+            /* Nb PE */        nLrt,
+            /* Nb PE Type*/ 1,
+            /* Spider Pe */ 0,
+            /*MappingTime*/ this->mappingTime);
 
-	archi_->setPETypeRecvSpeed(0, 1, 10);
-	archi_->setPETypeSendSpeed(0, 1, 10);
-	archi_->setPEType(0, 0);
-	archi_->activatePE(0);
+    archi_->setPETypeRecvSpeed(0, 1, 10);
+    archi_->setPETypeSendSpeed(0, 1, 10);
+    archi_->setPEType(0, 0);
+    archi_->activatePE(0);
 
-	char name[40];
-	sprintf(name, "PID %d (Spider)", cpIds_[0]);
-	archi_->setName(0, name);
-	for(int i=1; i<nLrt; i++){
-		sprintf(name, "PID %d (LRT %d)", cpIds_[i], i);
-		archi_->setPEType(i, 0);
-		archi_->setName(i, name);
-		archi_->activatePE(i);
-	}
+    char name[40];
+    sprintf(name, "PID %d (Spider)", cpIds_[0]);
+    archi_->setName(0, name);
+    for (int i = 1; i < nLrt; i++) {
+        sprintf(name, "PID %d (LRT %d)", cpIds_[i], i);
+        archi_->setPEType(i, 0);
+        archi_->setName(i, name);
+        archi_->activatePE(i);
+    }
 
-	Spider::setArchi(archi_);
+    Spider::setArchi(archi_);
 
-	this->rstTime();
+    this->rstTime();
 }
 
-PlatformLinux::~PlatformLinux(){
-	for(int lrt=1; lrt<archi_->getNPE(); lrt++){
-		int size = sizeof(StopLrtMsg);
-		StopLrtMsg* msg = (StopLrtMsg*) getSpiderCommunicator()->ctrl_start_send(lrt, size);
+PlatformLinux::~PlatformLinux() {
+    for (int lrt = 1; lrt < archi_->getNPE(); lrt++) {
+        int size = sizeof(StopLrtMsg);
+        StopLrtMsg *msg = (StopLrtMsg *) getSpiderCommunicator()->ctrl_start_send(lrt, size);
 
-		msg->msgIx = MSG_STOP_LRT;
+        msg->msgIx = MSG_STOP_LRT;
 
-		getSpiderCommunicator()->ctrl_end_send(lrt, size);
-	}
+        getSpiderCommunicator()->ctrl_end_send(lrt, size);
+    }
 
-	wait(0);
+    wait(0);
 
-	lrt_->~LRT();
-	((LinuxSpiderCommunicator*)spiderCom_)->~LinuxSpiderCommunicator();
-	((LinuxLrtCommunicator*)lrtCom_)->~LinuxLrtCommunicator();
-	archi_->~SharedMemArchi();
+    lrt_->~LRT();
+    ((LinuxSpiderCommunicator *) spiderCom_)->~LinuxSpiderCommunicator();
+    ((LinuxLrtCommunicator *) lrtCom_)->~LinuxLrtCommunicator();
+    archi_->~SharedMemArchi();
 
-	StackMonitor::free(ARCHI_STACK, lrt_);
-	StackMonitor::free(ARCHI_STACK, spiderCom_);
-	StackMonitor::free(ARCHI_STACK, lrtCom_);
-	StackMonitor::free(ARCHI_STACK, archi_);
-	StackMonitor::free(ARCHI_STACK, cpIds_);
+    StackMonitor::free(ARCHI_STACK, lrt_);
+    StackMonitor::free(ARCHI_STACK, spiderCom_);
+    StackMonitor::free(ARCHI_STACK, lrtCom_);
+    StackMonitor::free(ARCHI_STACK, archi_);
+    StackMonitor::free(ARCHI_STACK, cpIds_);
 
-	StackMonitor::cleanAllStack();
+    StackMonitor::cleanAllStack();
 }
 
 /** File Handling */
-FILE* PlatformLinux::fopen(const char* name){
-	return std::fopen(name, "w+");
+FILE *PlatformLinux::fopen(const char *name) {
+    return std::fopen(name, "w+");
 }
 
-void PlatformLinux::fprintf(FILE* id, const char* fmt, ...){
-	ssize_t l;
+void PlatformLinux::fprintf(FILE *id, const char *fmt, ...) {
+    ssize_t l;
 
-	va_list ap;
-	va_start(ap, fmt);
-	int n = vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, fmt, ap);
-	if(n >= PLATFORM_FPRINTF_BUFFERSIZE){
-		printf("PLATFORM_FPRINTF_BUFFERSIZE too small\n");
-	}
-	for (int i = 0; i < n; i++) fputc(buffer[i], id);
-}
-void PlatformLinux::fclose(FILE* id){
-	if (id != NULL){
-		std::fclose(id);
-		id = NULL;
-	}
+    va_list ap;
+    va_start(ap, fmt);
+    int n = vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, fmt, ap);
+    if (n >= PLATFORM_FPRINTF_BUFFERSIZE) {
+        printf("PLATFORM_FPRINTF_BUFFERSIZE too small\n");
+    }
+    for (int i = 0; i < n; i++) fputc(buffer[i], id);
 }
 
-void* PlatformLinux::virt_to_phy(void* address){
-	return (void*)((long)dataMem + (long)address);
+void PlatformLinux::fclose(FILE *id) {
+    if (id != NULL) {
+        std::fclose(id);
+        id = NULL;
+    }
 }
 
-int PlatformLinux::getCacheLineSize(){
-	return 0;
+void *PlatformLinux::virt_to_phy(void *address) {
+    return (void *) ((long) dataMem + (long) address);
 }
 
-int PlatformLinux::getMinAllocSize(){
-	return getpagesize();
+int PlatformLinux::getCacheLineSize() {
+    return 0;
+}
+
+int PlatformLinux::getMinAllocSize() {
+    return getpagesize();
 }
 
 /** Time Handling */
-void PlatformLinux::rstTime(struct ClearTimeMsg* msg){
-	struct timespec* ts = (struct timespec*)(msg+1);
-	start = *ts;
+void PlatformLinux::rstTime(struct ClearTimeMsg *msg) {
+    struct timespec *ts = (struct timespec *) (msg + 1);
+    start = *ts;
 }
 
-void PlatformLinux::rstJobIx(){
-	// Not Implemented
+void PlatformLinux::rstJobIx() {
+    // Not Implemented
 }
 
-void PlatformLinux::rstTime(){
-	clock_gettime(CLOCK_MONOTONIC, &start);
+void PlatformLinux::rstTime() {
+    clock_gettime(CLOCK_MONOTONIC, &start);
 
-	for(int lrt=1; lrt<archi_->getNPE(); lrt++){
-		int size = sizeof(ClearTimeMsg)+sizeof(struct timespec);
-		ClearTimeMsg* msg = (ClearTimeMsg*) getSpiderCommunicator()->ctrl_start_send(lrt, size);
-		struct timespec* ts = (struct timespec*)(msg+1);
+    for (int lrt = 1; lrt < archi_->getNPE(); lrt++) {
+        int size = sizeof(ClearTimeMsg) + sizeof(struct timespec);
+        ClearTimeMsg *msg = (ClearTimeMsg *) getSpiderCommunicator()->ctrl_start_send(lrt, size);
+        struct timespec *ts = (struct timespec *) (msg + 1);
 
-		msg->msgIx = MSG_CLEAR_TIME;
-		*ts = start;
+        msg->msgIx = MSG_CLEAR_TIME;
+        *ts = start;
 
-		getSpiderCommunicator()->ctrl_end_send(lrt, size);
-	}
+        getSpiderCommunicator()->ctrl_end_send(lrt, size);
+    }
 }
 
-Time PlatformLinux::getTime(){
-	struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC, &ts);
-	long long val = ts.tv_sec - start.tv_sec;
-	val *= 1000000000;
-	val += ts.tv_nsec - start.tv_nsec;
-	return val;
+Time PlatformLinux::getTime() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    long long val = ts.tv_sec - start.tv_sec;
+    val *= 1000000000;
+    val += ts.tv_nsec - start.tv_nsec;
+    return val;
 }
 
-void PlatformLinux::idleLrt(int lrt){
-	kill(cpIds_[lrt], SIG_IDLE);
+void PlatformLinux::idleLrt(int lrt) {
+    kill(cpIds_[lrt], SIG_IDLE);
 }
 
-void PlatformLinux::wakeLrt(int lrt){
-	kill(cpIds_[lrt], SIG_WAKE);
+void PlatformLinux::wakeLrt(int lrt) {
+    kill(cpIds_[lrt], SIG_WAKE);
 }
 
-void PlatformLinux::idle(){
-	while(lrt_->isIdle())
-		sleep((unsigned)-1);
+void PlatformLinux::idle() {
+    while (lrt_->isIdle())
+        sleep((unsigned) -1);
 }
 
-Time PlatformLinux::mappingTime(int nActors){
-	return 1000*nActors;
+Time PlatformLinux::mappingTime(int nActors) {
+    return 1000 * nActors;
 }

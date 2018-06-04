@@ -41,76 +41,79 @@
 #include <tools/SetElement.h>
 #include <stdexcept>
 
-template<typename TYPE> class Set {
+template<typename TYPE>
+class Set {
 public:
-	Set(int nbmax, SpiderStack stackId){
-		if(nbmax > 0){
-			array = CREATE_MUL(stackId, nbmax, TYPE);
+    Set(int nbmax, SpiderStack stackId) {
+        if (nbmax > 0) {
+            array = CREATE_MUL(stackId, nbmax, TYPE);
 
-			/* Test if TYPE is a SetElement */
-			SetElement* elt = dynamic_cast<SetElement*>(array[0]);
-		}else{
-			array = 0;
-		}
-		nb    = 0;
-		nbMax = nbmax;
-		stackId_ = stackId;
-	}
+            /* Test if TYPE is a SetElement */
+            SetElement *elt = dynamic_cast<SetElement *>(array[0]);
+        } else {
+            array = 0;
+        }
+        nb = 0;
+        nbMax = nbmax;
+        stackId_ = stackId;
+    }
 
-	~Set(){
-		if(nbMax != 0)
-			StackMonitor::free(stackId_, array);
-	}
+    ~Set() {
+        if (nbMax != 0)
+            StackMonitor::free(stackId_, array);
+    }
 
-	inline void add(TYPE value);
-	inline void del(TYPE value);
+    inline void add(TYPE value);
 
-	inline TYPE operator[](int ix);
+    inline void del(TYPE value);
 
-	inline int getN() const;
-	inline TYPE const * const getArray() const;
+    inline TYPE operator[](int ix);
+
+    inline int getN() const;
+
+    inline TYPE const *const getArray() const;
 
 private:
-	SpiderStack stackId_;
-	TYPE* array;
-	int nb;
-	int nbMax;
+    SpiderStack stackId_;
+    TYPE *array;
+    int nb;
+    int nbMax;
 
 //	friend class SetIterator;
 };
 
 template<typename TYPE>
-inline int Set<TYPE>::getN() const{
-	return nb;
+inline int Set<TYPE>::getN() const {
+    return nb;
 }
 
-template <typename TYPE>
-inline void Set<TYPE>::add(TYPE value){
-	if(nb >= nbMax)
-		throw std::runtime_error("Not enough space in Set\n");
+template<typename TYPE>
+inline void Set<TYPE>::add(TYPE value) {
+    if (nb >= nbMax)
+        throw std::runtime_error("Not enough space in Set\n");
 
-	((SetElement*)value)->setSetIx(nb);
-	array[nb++] = value;
+    ((SetElement *) value)->setSetIx(nb);
+    array[nb++] = value;
 }
 
-template <typename TYPE>
-inline void Set<TYPE>::del(TYPE value){
-	int ix = ((SetElement*)value)->getSetIx();
-	array[ix] = array[--nb];
-	((SetElement*)array[ix])->setSetIx(ix);
+template<typename TYPE>
+inline void Set<TYPE>::del(TYPE value) {
+    int ix = ((SetElement *) value)->getSetIx();
+    array[ix] = array[--nb];
+    ((SetElement *) array[ix])->setSetIx(ix);
 }
 
-template <typename TYPE>
-inline TYPE Set<TYPE>::operator[] (int ix){
-	if(ix < 0 || ix >= nb)
-		throw std::runtime_error("Set: operator[] get bad ix");
-	else
-		return array[ix];
+template<typename TYPE>
+inline TYPE Set<TYPE>::operator[](int ix) {
+    if (ix < 0 || ix >= nb)
+        throw std::runtime_error("Set: operator[] get bad ix");
+    else
+        return array[ix];
 }
 
-template <typename TYPE>
-inline TYPE const * const Set<TYPE>::getArray() const{
-	return array;
+template<typename TYPE>
+inline TYPE const *const Set<TYPE>::getArray() const {
+    return array;
 }
 
 #endif // SET_H

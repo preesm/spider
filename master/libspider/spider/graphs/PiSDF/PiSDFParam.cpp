@@ -43,49 +43,49 @@
 int PiSDFParam::globalIx = 0;
 
 PiSDFParam::PiSDFParam(
-		const char* name,
-		int typeIx,
-		PiSDFGraph* graph,
-		PiSDFParamType type,
-		const char* expr){
-	id_ = globalIx++;
-	typeIx_ = typeIx;
-	name_ = name;
-	graph_ = graph;
-	type_ = type;
-	value_ = -1;
-	parentId_ = -1;
-	setter_ = 0;
-	portIx_ = -1;
+        const char *name,
+        int typeIx,
+        PiSDFGraph *graph,
+        PiSDFParamType type,
+        const char *expr) {
+    id_ = globalIx++;
+    typeIx_ = typeIx;
+    name_ = name;
+    graph_ = graph;
+    type_ = type;
+    value_ = -1;
+    parentId_ = -1;
+    setter_ = 0;
+    portIx_ = -1;
 
-	switch(type){
-	case PISDF_PARAM_DEPENDENT_STATIC:
-	case PISDF_PARAM_DEPENDENT_DYNAMIC:
-		expr_ = CREATE(PISDF_STACK, Expression)(
-				expr,
-				graph->getParams(),
-				graph->getNParam());
-		break;
-	case PISDF_PARAM_STATIC:
-	case PISDF_PARAM_HERITED:
-	case PISDF_PARAM_DYNAMIC:
-	default:
-		expr_ = 0;
-		break;
-	}
+    switch (type) {
+        case PISDF_PARAM_DEPENDENT_STATIC:
+        case PISDF_PARAM_DEPENDENT_DYNAMIC:
+            expr_ = CREATE(PISDF_STACK, Expression)(
+                    expr,
+                    graph->getParams(),
+                    graph->getNParam());
+            break;
+        case PISDF_PARAM_STATIC:
+        case PISDF_PARAM_HERITED:
+        case PISDF_PARAM_DYNAMIC:
+        default:
+            expr_ = 0;
+            break;
+    }
 }
 
-PiSDFParam::~PiSDFParam(){
-	switch(this->type_){
-	case PISDF_PARAM_DEPENDENT_STATIC:
-	case PISDF_PARAM_DEPENDENT_DYNAMIC:
-		expr_->~Expression();
-		StackMonitor::free(PISDF_STACK, expr_);
-		break;
-	case PISDF_PARAM_STATIC:
-	case PISDF_PARAM_HERITED:
-	case PISDF_PARAM_DYNAMIC:
-	default:
-		break;
-	}
+PiSDFParam::~PiSDFParam() {
+    switch (this->type_) {
+        case PISDF_PARAM_DEPENDENT_STATIC:
+        case PISDF_PARAM_DEPENDENT_DYNAMIC:
+            expr_->~Expression();
+            StackMonitor::free(PISDF_STACK, expr_);
+            break;
+        case PISDF_PARAM_STATIC:
+        case PISDF_PARAM_HERITED:
+        case PISDF_PARAM_DYNAMIC:
+        default:
+            break;
+    }
 }

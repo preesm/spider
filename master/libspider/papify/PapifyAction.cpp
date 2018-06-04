@@ -35,7 +35,6 @@
 #include <papi.h>
 #include <string>
 #include "PapifyAction.h"
-#include "PapifyEventLib.h"
 
 PapifyAction::~PapifyAction() {
     if (outputFile_) {
@@ -44,17 +43,17 @@ PapifyAction::~PapifyAction() {
 }
 
 PapifyAction::PapifyAction(PapifyAction &papifyAction, long long PEId) {
-    PEId_           = PEId;
-    PEType_         = papifyAction.PEType_;
-    actorName_      = papifyAction.actorName_;
-    eventSetID_     = papifyAction.eventSetID_;
+    PEId_ = PEId;
+    PEType_ = papifyAction.PEType_;
+    actorName_ = papifyAction.actorName_;
+    eventSetID_ = papifyAction.eventSetID_;
     numberOfEvents_ = papifyAction.numberOfEvents_;
-    monitorTiming_  = papifyAction.monitorTiming_;
+    monitorTiming_ = papifyAction.monitorTiming_;
     papifyEventLib_ = papifyAction.getPapifyEventLib();
 
-    counterValues_      = std::vector<long long int>((unsigned long)this->numberOfEvents_);
-    counterValuesStart_ = std::vector<long long int>((unsigned long)this->numberOfEvents_);
-    counterValuesStop_  = std::vector<long long int>((unsigned long)this->numberOfEvents_);
+    counterValues_ = std::vector<long long int>((unsigned long) this->numberOfEvents_);
+    counterValuesStart_ = std::vector<long long int>((unsigned long) this->numberOfEvents_);
+    counterValuesStop_ = std::vector<long long int>((unsigned long) this->numberOfEvents_);
 
     // Initialize the the PAPIEventCodeSet
     PAPIEventCodeSet_ = papifyAction.PAPIEventCodeSet_;
@@ -63,7 +62,7 @@ PapifyAction::PapifyAction(PapifyAction &papifyAction, long long PEId) {
     papifyEventLib_->configLock();
     papifyEventLib_->registerProcessingElement(PEId_);
     if (this->numberOfEvents_ > 0) {
-        this->PAPIEventCodeSet_.resize((unsigned long)numberOfEvents_);
+        this->PAPIEventCodeSet_.resize((unsigned long) numberOfEvents_);
         if (!papifyEventLib_->doesEventSetExists(PEId_, eventSetID_)) {
             // 1. Create and get the PAPI event set ID
             PAPIEventSetID_ = papifyEventLib_->registerNewThread(numberOfEvents_,
@@ -86,34 +85,35 @@ PapifyAction::PapifyAction(const char *PEType,
                            long long PEId,
                            const char *actorName,
                            int numberOfEvents,
-                           std::vector<const char *>& moniteredEventSet,
+                           std::vector<const char *> &moniteredEventSet,
                            int eventSetID,
-                           bool monitorTime ,
-                           PapifyEventLib* papifyEventLib) {
-    PEType_         = PEType;
-    PEId_           = PEId;
-    actorName_      = actorName;
-    eventSetID_     = eventSetID;
+                           bool monitorTime,
+                           PapifyEventLib *papifyEventLib) {
+    PEType_ = PEType;
+    PEId_ = PEId;
+    actorName_ = actorName;
+    eventSetID_ = eventSetID;
     numberOfEvents_ = numberOfEvents;
-    monitorTiming_  = monitorTime;
+    monitorTiming_ = monitorTime;
     papifyEventLib_ = papifyEventLib;
 
-    counterValues_      = std::vector<long long>((unsigned long)numberOfEvents_);
-    counterValuesStart_ = std::vector<long long>((unsigned long)numberOfEvents_);
-    counterValuesStop_  = std::vector<long long>((unsigned long)numberOfEvents_);
+    counterValues_ = std::vector<long long>((unsigned long) numberOfEvents_);
+    counterValuesStart_ = std::vector<long long>((unsigned long) numberOfEvents_);
+    counterValuesStop_ = std::vector<long long>((unsigned long) numberOfEvents_);
 
     papifyEventLib->configLock();
     papifyEventLib->registerProcessingElement(PEId_);
     if (numberOfEvents > 0) {
-        this->PAPIEventCodeSet_.resize((unsigned long)numberOfEvents);
+        this->PAPIEventCodeSet_.resize((unsigned long) numberOfEvents);
         if (!papifyEventLib->doesEventSetExists(PEId_, eventSetID)) {
             // 1. Create and get the PAPI event set ID
-            PAPIEventSetID_ = papifyEventLib->PAPIEventSetInit(numberOfEvents,         /* Number of events being monitored */
-                                                               moniteredEventSet,      /* Vector of the event to be monitored */
-                                                               eventSetID,             /* User event set ID (specified at compile time) */
-                                                               PEType,                 /* Type of the processing element */
-                                                               PEId_,
-                                                               PAPIEventCodeSet_  /* PAPI event code set associated to the event monitored */);
+            PAPIEventSetID_ = papifyEventLib->PAPIEventSetInit(
+                    numberOfEvents,         /* Number of events being monitored */
+                    moniteredEventSet,      /* Vector of the event to be monitored */
+                    eventSetID,             /* User event set ID (specified at compile time) */
+                    PEType,                 /* Type of the processing element */
+                    PEId_,
+                    PAPIEventCodeSet_  /* PAPI event code set associated to the event monitored */);
         } else {
             // Get the PAPI event set ID
             PAPIEventSetID_ = papifyEventLib->getPAPIEventSetID(PEId_, eventSetID);
@@ -160,7 +160,7 @@ void PapifyAction::stopMonitor() {
             PapifyEventLib::throwError(__FILE__, __LINE__, retVal);
         }
         // Compute the difference between the start end value and the start value of the counters
-        for(int i = 0; i < numberOfEvents_; ++i) {
+        for (int i = 0; i < numberOfEvents_; ++i) {
             counterValues_[i] = counterValuesStop_[i] - counterValuesStart_[i];
         }
     }
@@ -168,12 +168,12 @@ void PapifyAction::stopMonitor() {
 
 void PapifyAction::writeEvents() {
     if (!outputFile_) {
-        std::string fileName= std::string("papify-output/papify_output_") +
-                              std::string("LRT_") +
-                              std::to_string(PEId_) +
-                              std::string("__") +
-                              actorName_ +
-                              std::string(".csv");
+        std::string fileName = std::string("papify-output/papify_output_") +
+                               std::string("LRT_") +
+                               std::to_string(PEId_) +
+                               std::string("__") +
+                               actorName_ +
+                               std::string(".csv");
         outputFile_ = fopen(fileName.c_str(), "w");
         if (!outputFile_) {
             PapifyEventLib::throwError(__FILE__, __LINE__, "failed to open output file");

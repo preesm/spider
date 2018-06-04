@@ -39,11 +39,16 @@
 
 #include "../lrt.h"
 
-void saBroadcast(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]);
-void saFork(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]);
-void saJoin(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]);
-void saRoundbuffer(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]);
-void saInit(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]);
-void saEnd(void* inputFIFOs[], void* outputFIFOs[], Param inParams[], Param outParams[]);
+void saBroadcast(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]);
+
+void saFork(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]);
+
+void saJoin(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]);
+
+void saRoundbuffer(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]);
+
+void saInit(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]);
+
+void saEnd(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]);
 
 #endif/*SPECIAL_ACTORS_H*/

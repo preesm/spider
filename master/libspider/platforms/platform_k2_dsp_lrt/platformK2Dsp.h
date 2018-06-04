@@ -41,39 +41,49 @@
 #include <tools/Stack.h>
 #include <lrt.h>
 
-typedef enum{
-	USE_MSMC = 1,
-	USE_DDR = 0
+typedef enum {
+    USE_MSMC = 1,
+    USE_DDR = 0
 } SharedMemMode;
 
-class PlatformK2Dsp: public Platform{
+class PlatformK2Dsp : public Platform {
 public:
-	/** File Handling */
-	virtual int fopen(const char* name);
-	virtual void fprintf(int id, const char* fmt, ...);
-	virtual void fclose(int id);
+    /** File Handling */
+    virtual int fopen(const char *name);
 
-	/** Shared Memory Handling */
-	virtual void* virt_to_phy(void* address);
-	virtual int getMinAllocSize();
-	virtual int getCacheLineSize();
+    virtual void fprintf(int id, const char *fmt, ...);
 
-	/** Time Handling */
-	virtual void rstTime();
-	virtual void rstTime(ClearTimeMsg* msg);
-	virtual Time getTime();
+    virtual void fclose(int id);
 
-	/** Platform Core Handling **/
-	virtual void idleLrt(int i);
-	virtual void wakeLrt(int i);
-	virtual void idle();
+    /** Shared Memory Handling */
+    virtual void *virt_to_phy(void *address);
 
-	PlatformK2Dsp(int shMemSize, SharedMemMode useMsmc,  Stack *stack, lrtFct* fcts, int nLrtFcts);
-	virtual ~PlatformK2Dsp();
+    virtual int getMinAllocSize();
+
+    virtual int getCacheLineSize();
+
+    /** Time Handling */
+    virtual void rstTime();
+
+    virtual void rstTime(ClearTimeMsg *msg);
+
+    virtual Time getTime();
+
+    /** Platform Core Handling **/
+    virtual void idleLrt(int i);
+
+    virtual void wakeLrt(int i);
+
+    virtual void idle();
+
+    PlatformK2Dsp(int shMemSize, SharedMemMode useMsmc, Stack *stack, lrtFct *fcts, int nLrtFcts);
+
+    virtual ~PlatformK2Dsp();
+
 private:
 
-	Stack* stack_;
-	Time timeBase_;
+    Stack *stack_;
+    Time timeBase_;
 };
 
 #endif/*PLATFORM_K2_DSP_H*/

@@ -47,102 +47,102 @@
 #define NB_MAX_ACTOR (200)
 
 typedef void (*lrtFct)(
-		void* inputFIFOs[],
-		void* outputFIFOs[],
-		Param inParams[],
-		Param outParams[]);
+        void *inputFIFOs[],
+        void *outputFIFOs[],
+        Param inParams[],
+        Param outParams[]);
 
-
-class LRT{
+class LRT {
 public:
-	LRT(int ix);
-	virtual ~LRT();
+    LRT(int ix);
 
-	void setFctTbl(const lrtFct fct[], int nFct);
+    virtual ~LRT();
 
-	int  runOneJob();
-	void runUntilNoMoreJobs();
-	void runInfinitly();
+    void setFctTbl(const lrtFct fct[], int nFct);
 
-	/**
-	 * Add a papify action associated to a specific job function call
-	 *
-	 * @param fct  the job function
-	 * @param papifyActions  the papifyActions structure
-	 */
-	void addPapifyJobInfo(lrtFct const & fct , PapifyAction* papifyAction);
+    int runOneJob();
 
-	inline void setIdle(bool idle);
-	inline void setJobIx(int jobIx);
-	inline bool isIdle();
+    void runUntilNoMoreJobs();
 
-	inline void rstJobIx();
+    void runInfinitly();
 
-	inline int getIx() const;
-	inline int getJobIx() const;
-	inline void setUsePapify();
+    inline void setIdle(bool idle);
+
+    inline void setJobIx(int jobIx);
+
+    inline bool isIdle();
+
+    inline void rstJobIx();
+
+    inline int getIx() const;
+
+    inline int getJobIx() const;
+
+    inline void setUsePapify();
+
+    void addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction);
 
 protected:
-	void sendTrace(int srdagIx, Time start, Time end);
+    void sendTrace(int srdagIx, Time start, Time end);
 
 private:
-	int ix_;
-	int nFct_;
-	const lrtFct* fcts_;
-	bool run_;
-	bool idle_;
-	bool usePapify_;
-	int jobIx_;
-	int jobIxTotal_;
+    int ix_;
+    int nFct_;
+    const lrtFct *fcts_;
+    bool run_;
+    bool idle_;
+    bool usePapify_;
+    int jobIx_;
+    int jobIxTotal_;
 
-	int tabBlkLrtIx[NB_MAX_ACTOR];
-	int tabBlkLrtJobIx[NB_MAX_ACTOR];
+    int tabBlkLrtIx[NB_MAX_ACTOR];
+    int tabBlkLrtJobIx[NB_MAX_ACTOR];
 
-	std::map<lrtFct, PapifyAction*> jobPapifyActions_;
+    std::map<lrtFct, PapifyAction *> jobPapifyActions_;
 #ifdef VERBOSE_TIME
-	Time time_waiting_job;
-	Time time_waiting_prev_actor;
-	Time time_waiting_input_comm;
-	Time time_compute;
-	Time time_waiting_output_comm;
-	Time time_global;
+    Time time_waiting_job;
+    Time time_waiting_prev_actor;
+    Time time_waiting_input_comm;
+    Time time_compute;
+    Time time_waiting_output_comm;
+    Time time_global;
 
-	Time time_alloc_data;
+    Time time_alloc_data;
 
-	Time time_other;
+    Time time_other;
 
-	Time start_waiting_job;
+    Time start_waiting_job;
 
-	int nb_iter;
+    int nb_iter;
 #endif
 };
 
-inline int LRT::getIx() const{
-	return ix_;
+inline int LRT::getIx() const {
+    return ix_;
 }
 
-inline int LRT::getJobIx() const{
-	return jobIx_;
+inline int LRT::getJobIx() const {
+    return jobIx_;
 }
 
-inline void LRT::setIdle(bool idle){
-	idle_ = idle;
+inline void LRT::setIdle(bool idle) {
+    idle_ = idle;
 }
 
-inline bool LRT::isIdle(){
-	return idle_;
+inline bool LRT::isIdle() {
+    return idle_;
 }
 
-inline void LRT::setJobIx(int jobIx){
-	jobIx_ = jobIx;
+inline void LRT::setJobIx(int jobIx) {
+    jobIx_ = jobIx;
 }
 
-inline void LRT::rstJobIx(){
-	jobIx_ = 0;
+inline void LRT::rstJobIx() {
+    jobIx_ = 0;
 }
 
 inline void LRT::setUsePapify() {
-	usePapify_ = true;
+    usePapify_ = true;
 }
 
 #endif/*LRT_H*/

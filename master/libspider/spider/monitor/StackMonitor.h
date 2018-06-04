@@ -43,13 +43,13 @@
 #include <tools/DynStack.h>
 #include <tools/StaticStack.h>
 
-typedef enum{
-	PISDF_STACK,
-	SRDAG_STACK,
-	ARCHI_STACK,
-	TRANSFO_STACK,
-	LRT_STACK,
-	STACK_COUNT
+typedef enum {
+    PISDF_STACK,
+    SRDAG_STACK,
+    ARCHI_STACK,
+    TRANSFO_STACK,
+    LRT_STACK,
+    STACK_COUNT
 } SpiderStack;
 
 
@@ -57,14 +57,19 @@ typedef enum{
 #define CREATE_MUL(stackId, size, type) new(StackMonitor::alloc(stackId, size*sizeof(type))) type[size]
 
 namespace StackMonitor {
-	void initStack(SpiderStack id, StackConfig cfg);
-	void clean(SpiderStack id);
-	void cleanAllStack();
-	void* alloc(SpiderStack id, int size);
-	void free(SpiderStack id, void* ptr);
-	void freeAll(SpiderStack id);
+    void initStack(SpiderStack id, StackConfig cfg);
 
-	void printStackStats();
+    void clean(SpiderStack id);
+
+    void cleanAllStack();
+
+    void *alloc(SpiderStack id, int size);
+
+    void free(SpiderStack id, void *ptr);
+
+    void freeAll(SpiderStack id);
+
+    void printStackStats();
 };
 
 #endif /* STACKMONITOR_H */

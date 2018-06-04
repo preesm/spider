@@ -355,8 +355,6 @@ static void linkSRDelayGetterVertices(SRDAGGraph *topSrdag,
 }
 
 
-
-
 /**
  * @brief Link all vertices of current graph contained in the transformation job
  *
@@ -698,7 +696,6 @@ void linkSRVertices(SRDAGGraph *topSrdag,
             SRDAGEdge *srcEdge;
             if ((srcEdge = srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx)) != 0) {
                 snkConnections[sinkIndex].edge->setAlloc(srcEdge->getAlloc());
-                snkConnections[sinkIndex].edge->setAllocIx(srcEdge->getAllocIx());
                 snkConnections[sinkIndex].edge->setRate(srcEdge->getRate());
 
                 topSrdag->delEdge(srcEdge);

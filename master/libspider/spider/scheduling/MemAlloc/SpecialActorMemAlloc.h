@@ -36,28 +36,17 @@
 #ifndef SPECIAL_ACTOR_MEM_ALLOC_H
 #define SPECIAL_ACTOR_MEM_ALLOC_H
 
-#include "../MemAlloc.h"
+#include "DummyMemAlloc.h"
 
-class SpecialActorMemAlloc : public MemAlloc {
+class SpecialActorMemAlloc : public DummyMemAlloc {
 public:
     SpecialActorMemAlloc(int start, int size) :
-            MemAlloc(start, size),
-            currentMem_(start),
-            nbFifos_(0) {}
+            DummyMemAlloc(start, size) {}
 
     ~SpecialActorMemAlloc() {}
 
-    virtual void reset();
-
     virtual void alloc(List<SRDAGVertex *> *listOfVertices);
 
-    virtual int getReservedAlloc(int size) { return -1; }
-
-    virtual int getMemUsed();
-
-protected:
-    int currentMem_;
-    int nbFifos_;
 
 };
 

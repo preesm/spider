@@ -96,7 +96,6 @@ void Spider::init(SpiderConfig &cfg) {
     setMemAllocType(cfg.memAllocType, (long) cfg.memAllocStart, cfg.memAllocSize);
     setSchedulerType(cfg.schedulerType);
 
-    setActorPrecedence(cfg.useActorPrecedence);
     setVerbose(cfg.verbose);
     setTraceEnabled(cfg.traceEnabled);
 
@@ -151,9 +150,11 @@ void Spider::initReservedMemory() {
     } else if (memReserved < 1024 * 1024) {
         printf("%5.1f KB / %s of the shared memory ", memReserved / 1024., memAlloc_->getMemAllocSizeFormatted());
     } else if (memReserved < 1024 * 1024 * 1024) {
-        printf("%5.1f MB / %s of the shared memory ", memReserved / (1024. * 1024.), memAlloc_->getMemAllocSizeFormatted());
+        printf("%5.1f MB / %s of the shared memory ", memReserved / (1024. * 1024.),
+               memAlloc_->getMemAllocSizeFormatted());
     } else {
-        printf("%5.1f GB / %s of the shared memory ", memReserved / (1024. * 1024. * 1024.), memAlloc_->getMemAllocSizeFormatted());
+        printf("%5.1f GB / %s of the shared memory ", memReserved / (1024. * 1024. * 1024.),
+               memAlloc_->getMemAllocSizeFormatted());
     }
     printf("for delays.\n");
 

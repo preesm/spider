@@ -149,7 +149,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     sem_init(&semTrace, 0, 1);
 
 
-    //remplissage sturcture de passage de parametre dans les threads
+    //remplissage structure de passage de parametre dans les threads
     for (int i = 1; i < nLrt_; i++) {
         arg_lrt[i - 1].fifoSpidertoLRT = fifoSpidertoLRT[i];
         arg_lrt[i - 1].fifoLRTtoSpider = fifoLRTtoSpider[i];
@@ -484,7 +484,7 @@ void PlatformPThread::idle() {
 }
 
 Time PlatformPThread::mappingTime(int nActors, int nPe) {
-    return (Time)1000 * nActors;
+    return (Time) 1000 * nActors;
 }
 
 

@@ -197,11 +197,11 @@ void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx) {
 }
 
 long PThreadLrtCommunicator::getLrtJobIx(int lrtIx) {
+    // TODO Protect from invalid read: long are not atomic !!!
     return jobTab_[lrtIx];
 }
 
 void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx) {
-
     for (int i = 0; i < nbDependency; i++) {
         while (blkLrtJobIx[i] >= getLrtJobIx(blkLrtIx[i]));
     }

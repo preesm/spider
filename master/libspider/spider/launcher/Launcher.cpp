@@ -131,33 +131,16 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
 
     for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
         SRDAGEdge *edge = vertex->getInEdge(i);
-        inFifos[i].id = edge->getAllocIx(); // Deprecated
         inFifos[i].alloc = edge->getAlloc();
         inFifos[i].size = edge->getRate();
         inFifos[i].blkLrtIx = edge->getSrc()->getSlave();
         inFifos[i].blkLrtJobIx = edge->getSrc()->getSlaveJobIx();
-
-        if (Spider::getActorPrecedence() &&
-            edge->getSrc()->getSlave() == edge->getSnk()->getSlave()) {
-            inFifos[i].ntoken = 0;
-//			if(edge->getSrc()->getSlave()>=4)
-//				printf("N token = 0\n");
-        } else
-            inFifos[i].ntoken = edge->getNToken();
     }
 
     for (int i = 0; i < vertex->getNConnectedOutEdge(); i++) {
         SRDAGEdge *edge = vertex->getOutEdge(i);
-        outFifos[i].id = edge->getAllocIx();
         outFifos[i].alloc = edge->getAlloc();
         outFifos[i].size = edge->getRate();
-
-        if (Spider::getActorPrecedence()
-            && edge->getSrc() && edge->getSnk()
-            && edge->getSrc()->getSlave() == edge->getSnk()->getSlave())
-            outFifos[i].ntoken = 0;
-        else
-            outFifos[i].ntoken = edge->getNToken();
     }
 
     switch (vertex->getType()) {

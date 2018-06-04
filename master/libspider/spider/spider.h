@@ -123,7 +123,6 @@ typedef struct {
     StackConfig lrtStack;
 
     bool useGraphOptim;
-    bool useActorPrecedence;
     bool verbose;
     bool traceEnabled;
 

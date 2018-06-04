@@ -96,7 +96,6 @@ void Spider::init(SpiderConfig &cfg) {
     setMemAllocType(cfg.memAllocType, (long) cfg.memAllocStart, cfg.memAllocSize);
     setSchedulerType(cfg.schedulerType);
 
-    setActorPrecedence(cfg.useActorPrecedence);
     setVerbose(cfg.verbose);
     setTraceEnabled(cfg.traceEnabled);
 

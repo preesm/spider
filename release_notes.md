@@ -14,5 +14,6 @@ Spider Changelog
 * Adding persistent delays.
 * Implementation of SAMOS contribution.
 * Add Blocking wait on JobQueue
+* Added Papify automatic instrumentation to spider
 
 ### Bug fix

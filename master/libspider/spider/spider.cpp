@@ -180,14 +180,6 @@ void Spider::clean() {
     //StackMonitor::cleanAllStack();
 }
 
-void Spider::idle() {
-    for (int lrt = 0; lrt < archi_->getNPE(); lrt++) {
-        if (lrt != archi_->getSpiderPeIx()) {
-            archi_->desactivatePE(lrt);
-        }
-    }
-}
-
 void Spider::iterate() {
     Platform::get()->rstTime();
     /** Set all slave jobIx to 0 */

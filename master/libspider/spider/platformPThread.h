@@ -86,13 +86,6 @@ public:
 
     virtual void rstJobIx();
 
-    /** Platform Core Handling **/
-    virtual void idleLrt(int i);
-
-    virtual void wakeLrt(int i);
-
-    virtual void idle();
-
     /** Platform getter/setter */
     inline LRT *getLrt();
 

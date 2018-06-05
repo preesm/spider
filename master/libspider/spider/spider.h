@@ -194,8 +194,6 @@ namespace Spider {
 
     void iterate();
 
-    void idle();
-
     void printGantt(
             const char *ganttPath,
             const char *latexPath,

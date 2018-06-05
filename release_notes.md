@@ -13,5 +13,6 @@ Spider Changelog
 * Cleaning all useless and redundant includes.
 * Adding persistent delays.
 * Implementation of SAMOS contribution.
+* Add Blocking wait on JobQueue
 
 ### Bug fix

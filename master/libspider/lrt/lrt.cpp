@@ -39,6 +39,7 @@
 #include <LrtCommunicator.h>
 
 #include <string.h>
+#include <unistd.h>
 
 #ifndef _WIN32
 

@@ -67,9 +67,9 @@ public:
             std::queue<unsigned char> *fIn,
             std::queue<unsigned char> *fOut,
             std::queue<unsigned char> *fTrace,
-            sem_t *semTrace,
-            sem_t *semFifoSpidertoLRT,
-            sem_t *semFifoLRTtoSpider,
+            sem_t *mutexTrace,
+            sem_t *mutexFifoSpidertoLRT,
+            sem_t *mutexFifoLRTtoSpider,
             void *fifos,
             void *dataMem
     );
@@ -105,9 +105,9 @@ private:
     std::queue<unsigned char> *fOut_;
     std::queue<unsigned char> *fTrace_;
 
-    sem_t *semTrace_;
-    sem_t *semFifoSpidertoLRT_;
-    sem_t *semFifoLRTtoSpider_;
+    sem_t *mutexTrace_;
+    sem_t *mutexFifoSpidertoLRT_;
+    sem_t *mutexFifoLRTtoSpider_;
 
     int msgSizeMax_;
 

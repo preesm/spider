@@ -138,15 +138,15 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     Arg_lrt *arg_lrt = (Arg_lrt *) malloc((nLrt_ - 1) * sizeof(Arg_lrt));
 
     //Declaration tableau de semaphore
-    semFifoSpidertoLRT = (sem_t *) malloc(nLrt_ * sizeof(sem_t));
-    semFifoLRTtoSpider = (sem_t *) malloc(nLrt_ * sizeof(sem_t));
+    mutexFifoSpidertoLRT = (sem_t *) malloc(nLrt_ * sizeof(sem_t));
+    mutexFifoLRTtoSpider = (sem_t *) malloc(nLrt_ * sizeof(sem_t));
 
     //Initialisation des semaphores
     for (int i = 0; i < nLrt_; i++) {
-        sem_init(&semFifoSpidertoLRT[i], 0, 1);
-        sem_init(&semFifoLRTtoSpider[i], 0, 1);
+        sem_init(&mutexFifoSpidertoLRT[i], 0, 1);
+        sem_init(&mutexFifoLRTtoSpider[i], 0, 1);
     }
-    sem_init(&semTrace, 0, 1);
+    sem_init(&mutexTrace, 0, 1);
 
 
     //remplissage structure de passage de parametre dans les threads
@@ -154,9 +154,9 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
         arg_lrt[i - 1].fifoSpidertoLRT = fifoSpidertoLRT[i];
         arg_lrt[i - 1].fifoLRTtoSpider = fifoLRTtoSpider[i];
         arg_lrt[i - 1].fifoTrace = &fifoTrace;
-        arg_lrt[i - 1].semTrace = &semTrace;
-        arg_lrt[i - 1].semFifoSpidertoLRT = &semFifoSpidertoLRT[i];
-        arg_lrt[i - 1].semFifoLRTtoSpider = &semFifoLRTtoSpider[i];
+        arg_lrt[i - 1].mutexTrace = &mutexTrace;
+        arg_lrt[i - 1].mutexFifoSpidertoLRT = &mutexFifoSpidertoLRT[i];
+        arg_lrt[i - 1].mutexFifoLRTtoSpider = &mutexFifoLRTtoSpider[i];
         arg_lrt[i - 1].shMemSize = config.platform.shMemSize;
         arg_lrt[i - 1].fcts = config.platform.fcts;
         arg_lrt[i - 1].nLrtFcts = config.platform.nLrtFcts;
@@ -198,9 +198,9 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
             MAX_MSG_SIZE,
             nLrt_,
-            &semTrace,
-            semFifoSpidertoLRT,
-            semFifoLRTtoSpider,
+            &mutexTrace,
+            mutexFifoSpidertoLRT,
+            mutexFifoLRTtoSpider,
             &fifoTrace,
             &fifoTrace);
 
@@ -214,9 +214,9 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             fifoSpidertoLRT[0],
             fifoLRTtoSpider[0],
             &fifoTrace,
-            &semTrace,
-            &semFifoSpidertoLRT[0],
-            &semFifoLRTtoSpider[0],
+            &mutexTrace,
+            &mutexFifoSpidertoLRT[0],
+            &mutexFifoLRTtoSpider[0],
             jobTab,
             dataMem);
 
@@ -307,18 +307,18 @@ PlatformPThread::~PlatformPThread() {
     pthread_barrier_destroy(&pthread_barrier_init_and_end_thread);
 
     //Destroying semaphores
-    sem_destroy(&semTrace);
+    sem_destroy(&mutexTrace);
 
     for (int i = 0; i < nLrt_; i++) {
-        sem_destroy(&semFifoSpidertoLRT[i]);
-        sem_destroy(&semFifoLRTtoSpider[i]);
+        sem_destroy(&mutexFifoSpidertoLRT[i]);
+        sem_destroy(&mutexFifoLRTtoSpider[i]);
     }
 
     //Desallocation des tableaux dynamiques
     free(thread_ID_tab_);
 
-    free(semFifoSpidertoLRT);
-    free(semFifoLRTtoSpider);
+    free(mutexFifoSpidertoLRT);
+    free(mutexFifoLRTtoSpider);
 
     free(lrt_);
     free(lrtCom_);
@@ -516,9 +516,9 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt) {
             argument_lrt->fifoSpidertoLRT,
             argument_lrt->fifoLRTtoSpider,
             argument_lrt->fifoTrace,
-            argument_lrt->semTrace,
-            argument_lrt->semFifoSpidertoLRT,
-            argument_lrt->semFifoLRTtoSpider,
+            argument_lrt->mutexTrace,
+            argument_lrt->mutexFifoSpidertoLRT,
+            argument_lrt->mutexFifoLRTtoSpider,
             jobTab,
             dataMem);
     lrt_[indice] = CREATE(ARCHI_STACK, LRT)(indice);

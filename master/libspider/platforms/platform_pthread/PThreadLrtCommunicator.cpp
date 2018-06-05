@@ -52,9 +52,9 @@ PThreadLrtCommunicator::PThreadLrtCommunicator(
         std::queue<unsigned char> *fIn,
         std::queue<unsigned char> *fOut,
         std::queue<unsigned char> *fTrace,
-        sem_t *semTrace,
-        sem_t *semFifoSpidertoLRT,
-        sem_t *semFifoLRTtoSpider,
+        sem_t *mutexTrace,
+        sem_t *mutexFifoSpidertoLRT,
+        sem_t *mutexFifoLRTtoSpider,
         void *jobTab,
         void *dataMem
 ) {
@@ -62,9 +62,9 @@ PThreadLrtCommunicator::PThreadLrtCommunicator(
     fOut_ = fOut;
     fTrace_ = fTrace;
 
-    semTrace_ = semTrace;
-    semFifoLRTtoSpider_ = semFifoLRTtoSpider;
-    semFifoSpidertoLRT_ = semFifoSpidertoLRT;
+    mutexTrace_ = mutexTrace;
+    mutexFifoLRTtoSpider_ = mutexFifoLRTtoSpider;
+    mutexFifoSpidertoLRT_ = mutexFifoSpidertoLRT;
 
     msgSizeMax_ = msgSizeMax;
 
@@ -93,8 +93,8 @@ void *PThreadLrtCommunicator::ctrl_start_send(int size) {
 void PThreadLrtCommunicator::ctrl_end_send(int size) {
     unsigned long s = curMsgSizeSend_;
 
-    //Prise du semaphore de fOut_
-    sem_wait(semFifoLRTtoSpider_);
+    /** Take Mutex protecting the Queue */
+    sem_wait(mutexFifoLRTtoSpider_);
 
     //Envoi de la taille du message à venir
     for (unsigned int i = 0; i < sizeof(unsigned long); i++)
@@ -103,8 +103,8 @@ void PThreadLrtCommunicator::ctrl_end_send(int size) {
     //Envoi du message
     for (int i = 0; i < curMsgSizeSend_; i++) fOut_->push((*(((char *) msgBufferSend_) + i)) & 0xFF);
 
-    //Relachement du semaphore de fOut_
-    sem_post(semFifoLRTtoSpider_);
+    /** Relax Mutex protecting the Queue */
+    sem_post(mutexFifoLRTtoSpider_);
 
     curMsgSizeSend_ = 0;
 }
@@ -113,12 +113,12 @@ int PThreadLrtCommunicator::ctrl_start_recv(void **data) {
     unsigned long size = 0;
 
 
-    //Prise du semaphore de fIn_
-    sem_wait(semFifoSpidertoLRT_);
+    /** Take Mutex protecting the Queue */
+    sem_wait(mutexFifoSpidertoLRT_);
 
 
     if (fIn_->empty()) {
-        sem_post(semFifoSpidertoLRT_);
+        sem_post(mutexFifoSpidertoLRT_);
         return 0;
     }
 
@@ -141,8 +141,8 @@ int PThreadLrtCommunicator::ctrl_start_recv(void **data) {
         fIn_->pop();
     }
 
-    //Relachement du semaphore de fIn_
-    sem_post(semFifoSpidertoLRT_);
+    /** Relax Mutex protecting the Queue */
+    sem_post(mutexFifoSpidertoLRT_);
 
     *data = msgBufferRecv_;
     return curMsgSizeRecv_;
@@ -162,7 +162,7 @@ void *PThreadLrtCommunicator::trace_start_send(int size) {
 void PThreadLrtCommunicator::trace_end_send(int size) {
     unsigned long s = curMsgSizeSend_;
 
-    int err = sem_wait(semTrace_);
+    int err = sem_wait(mutexTrace_);
     if (err != 0) {
         perror("PThreadLrtCommunicator::trace_end_send");
         exit(-1);
@@ -175,7 +175,7 @@ void PThreadLrtCommunicator::trace_end_send(int size) {
     //Envoi de la trace
     for (int i = 0; i < curMsgSizeSend_; i++) fTrace_->push(*(((char *) msgBufferSend_) + i) & 0xFF);
 
-    sem_post(semTrace_);
+    sem_post(mutexTrace_);
 
     curMsgSizeSend_ = 0;
 }

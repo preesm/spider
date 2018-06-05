@@ -138,6 +138,7 @@ private:
     sem_t mutexTrace;
     sem_t *mutexFifoSpidertoLRT;
     sem_t *mutexFifoLRTtoSpider;
+    sem_t *semFifoSpidertoLRT;
 
     LRT **lrt_;
     LrtCommunicator **lrtCom_;
@@ -244,6 +245,7 @@ typedef struct Arg_lrt {
     sem_t *mutexTrace;
     sem_t *mutexFifoSpidertoLRT;
     sem_t *mutexFifoLRTtoSpider;
+    sem_t *semFifoSpidertoLRT;
     int shMemSize;
     lrtFct *fcts;
     int nLrtFcts;

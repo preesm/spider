@@ -55,6 +55,7 @@ PThreadLrtCommunicator::PThreadLrtCommunicator(
         sem_t *mutexTrace,
         sem_t *mutexFifoSpidertoLRT,
         sem_t *mutexFifoLRTtoSpider,
+        sem_t *semFifoSpidertoLRT,
         void *jobTab,
         void *dataMem
 ) {
@@ -65,6 +66,7 @@ PThreadLrtCommunicator::PThreadLrtCommunicator(
     mutexTrace_ = mutexTrace;
     mutexFifoLRTtoSpider_ = mutexFifoLRTtoSpider;
     mutexFifoSpidertoLRT_ = mutexFifoSpidertoLRT;
+    semFifoSpidertoLRT_ = semFifoSpidertoLRT;
 
     msgSizeMax_ = msgSizeMax;
 
@@ -112,16 +114,13 @@ void PThreadLrtCommunicator::ctrl_end_send(int size) {
 int PThreadLrtCommunicator::ctrl_start_recv(void **data) {
     unsigned long size = 0;
 
-
-    /** Take Mutex protecting the Queue */
-    sem_wait(mutexFifoSpidertoLRT_);
-
-
-    if (fIn_->empty()) {
-        sem_post(mutexFifoSpidertoLRT_);
+    /** Take sem (representing 1 message in the queue */
+    if(sem_trywait(semFifoSpidertoLRT_)){
         return 0;
     }
 
+    /** Take Mutex protecting the Queue */
+    sem_wait(mutexFifoSpidertoLRT_);
 
     //Reception/reconstitution de la taille du message à venir
     for (unsigned int nb = 0; nb < sizeof(unsigned long); nb++) {
@@ -146,6 +145,39 @@ int PThreadLrtCommunicator::ctrl_start_recv(void **data) {
 
     *data = msgBufferRecv_;
     return curMsgSizeRecv_;
+}
+
+void PThreadLrtCommunicator::ctrl_start_recv_block(void **data){
+    unsigned long size = 0;
+
+    /** Take sem (representing 1 message in the queue */
+    sem_wait(semFifoSpidertoLRT_);
+
+    /** Take Mutex protecting the Queue */
+    sem_wait(mutexFifoSpidertoLRT_);
+
+    //Reception/reconstitution de la taille du message à venir
+    for (unsigned int nb = 0; nb < sizeof(unsigned long); nb++) {
+        size = size << 8;
+        size += fIn_->front();
+        fIn_->pop();
+    }
+
+    if (size > (unsigned long) msgSizeMax_)
+        throw std::runtime_error("Msg too big\n");
+
+    curMsgSizeRecv_ = size;
+
+    //Reception du message
+    for (unsigned int recv = 0; recv < size; recv++) {
+        *(((char *) msgBufferRecv_) + recv) = fIn_->front();
+        fIn_->pop();
+    }
+
+    /** Relax Mutex protecting the Queue */
+    sem_post(mutexFifoSpidertoLRT_);
+
+    *data = msgBufferRecv_;
 }
 
 void PThreadLrtCommunicator::ctrl_end_recv() {

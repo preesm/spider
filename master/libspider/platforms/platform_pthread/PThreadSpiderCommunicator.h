@@ -64,6 +64,7 @@ class PThreadSpiderCommunicator : public SpiderCommunicator {
 public:
     PThreadSpiderCommunicator(int msgSizeMax, int nLrt,
                               sem_t *mutexTrace, sem_t *mutexFifoSpidertoLRT, sem_t *mutexFifoLRTtoSpider,
+                              sem_t *semFifoSpidertoLRT,
                               std::queue<unsigned char> *fTraceWr, std::queue<unsigned char> *fTraceRd);
 
     ~PThreadSpiderCommunicator();
@@ -95,6 +96,7 @@ private:
     sem_t *mutexTrace_;
     sem_t *mutexFifoSpidertoLRT_;
     sem_t *mutexFifoLRTtoSpider_;
+    sem_t *semFifoSpidertoLRT_;
 
     int msgSizeMax_;
 

@@ -70,6 +70,7 @@ public:
             sem_t *mutexTrace,
             sem_t *mutexFifoSpidertoLRT,
             sem_t *mutexFifoLRTtoSpider,
+            sem_t *semFifoSpidertoLRT,
             void *fifos,
             void *dataMem
     );
@@ -81,6 +82,8 @@ public:
     void ctrl_end_send(int size);
 
     int ctrl_start_recv(void **data);
+
+    void ctrl_start_recv_block(void **data);
 
     void ctrl_end_recv();
 
@@ -108,6 +111,7 @@ private:
     sem_t *mutexTrace_;
     sem_t *mutexFifoSpidertoLRT_;
     sem_t *mutexFifoLRTtoSpider_;
+    sem_t *semFifoSpidertoLRT_;
 
     int msgSizeMax_;
 

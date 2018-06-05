@@ -49,6 +49,7 @@ PThreadSpiderCommunicator::PThreadSpiderCommunicator(
         sem_t *mutexTrace,
         sem_t *mutexFifoSpidertoLRT,
         sem_t *mutexFifoLRTtoSpider,
+        sem_t *semFifoSpidertoLRT,
         std::queue<unsigned char> *fTraceWr,
         std::queue<unsigned char> *fTraceRd) {
 
@@ -60,6 +61,7 @@ PThreadSpiderCommunicator::PThreadSpiderCommunicator(
     mutexTrace_ = mutexTrace;
     mutexFifoSpidertoLRT_ = mutexFifoSpidertoLRT;
     mutexFifoLRTtoSpider_ = mutexFifoLRTtoSpider;
+    semFifoSpidertoLRT_ = semFifoSpidertoLRT;
 
     msgSizeMax_ = msgSizeMax;
 
@@ -107,6 +109,9 @@ void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int size) {
 
     /** Relax Mutex protecting the Queue */
     sem_post(&mutexFifoSpidertoLRT_[lrtIx]);
+
+    /** Post token representing 1 message in the queue */
+    sem_post(&semFifoSpidertoLRT_[lrtIx]);
 
     curMsgSizeSend_ = 0;
 }

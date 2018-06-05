@@ -42,8 +42,7 @@ class DummyMemAlloc : public MemAlloc {
 public:
     DummyMemAlloc(int start, int size) :
             MemAlloc(start, size),
-            currentMem_(start),
-            nbFifos_(0) {}
+            currentMem_(start) {}
 
     ~DummyMemAlloc() {}
 
@@ -57,7 +56,8 @@ public:
 
 protected:
     int currentMem_;
-    int nbFifos_;
+
+    void allocEdge(SRDAGEdge *edge);
 
 };
 

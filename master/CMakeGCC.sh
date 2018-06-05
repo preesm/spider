@@ -11,6 +11,6 @@ cd make
 # Run cmake gui to debug cmake problem
 cmake ../..
 
-make
+make -j$(grep -c ^processor /proc/cpuinfo)
 
 cp libSpider.so ../../

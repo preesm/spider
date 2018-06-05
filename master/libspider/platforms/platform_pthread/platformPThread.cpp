@@ -138,15 +138,17 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     Arg_lrt *arg_lrt = (Arg_lrt *) malloc((nLrt_ - 1) * sizeof(Arg_lrt));
 
     //Declaration tableau de semaphore
+    mutexFifoSpidertoLRT = (sem_t *) malloc(nLrt_ * sizeof(sem_t));
+    mutexFifoLRTtoSpider = (sem_t *) malloc(nLrt_ * sizeof(sem_t));
     semFifoSpidertoLRT = (sem_t *) malloc(nLrt_ * sizeof(sem_t));
-    semFifoLRTtoSpider = (sem_t *) malloc(nLrt_ * sizeof(sem_t));
 
     //Initialisation des semaphores
     for (int i = 0; i < nLrt_; i++) {
-        sem_init(&semFifoSpidertoLRT[i], 0, 1);
-        sem_init(&semFifoLRTtoSpider[i], 0, 1);
+        sem_init(&mutexFifoSpidertoLRT[i], 0, 1);
+        sem_init(&mutexFifoLRTtoSpider[i], 0, 1);
+        sem_init(&semFifoSpidertoLRT[i], 0, 0);
     }
-    sem_init(&semTrace, 0, 1);
+    sem_init(&mutexTrace, 0, 1);
 
     // TODO use "usePapify" only for monitored LRTs / HW PEs
 #ifndef PAPI_AVAILABLE
@@ -183,9 +185,10 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
         arg_lrt[i - 1].fifoSpidertoLRT = fifoSpidertoLRT[i];
         arg_lrt[i - 1].fifoLRTtoSpider = fifoLRTtoSpider[i];
         arg_lrt[i - 1].fifoTrace = &fifoTrace;
-        arg_lrt[i - 1].semTrace = &semTrace;
+        arg_lrt[i - 1].mutexTrace = &mutexTrace;
+        arg_lrt[i - 1].mutexFifoSpidertoLRT = &mutexFifoSpidertoLRT[i];
+        arg_lrt[i - 1].mutexFifoLRTtoSpider = &mutexFifoLRTtoSpider[i];
         arg_lrt[i - 1].semFifoSpidertoLRT = &semFifoSpidertoLRT[i];
-        arg_lrt[i - 1].semFifoLRTtoSpider = &semFifoLRTtoSpider[i];
         arg_lrt[i - 1].shMemSize = config.platform.shMemSize;
         arg_lrt[i - 1].fcts = config.platform.fcts;
         arg_lrt[i - 1].nLrtFcts = config.platform.nLrtFcts;
@@ -206,39 +209,38 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     thread_ID_tab_[0] = pthread_self();
     pthread_barrier_init(&pthread_barrier_init_and_end_thread, NULL, nLrt_);
 
-    // Starting the threads
-    for (int i = 1; i < nLrt_; ++i) {
+    //Lancement des threads
+    for (int i = 1; i < nLrt_; i++) {
         pthread_create(&thread_lrt[i - 1], NULL, &lrtPThread_helper, &arg_lrt[i - 1]);
     }
 
-    // Waiting for every threads to register itself in thread_ID_tab_
+    //waiting for every threads to register itself in thread_ID_tab_
     pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
 
-    // Declaring thread specific stacks
+    //Declaration des stacks spécific au thread
     config.archiStack.size /= nLrt_;
     StackMonitor::initStack(ARCHI_STACK, config.archiStack);
 
     config.lrtStack.size /= nLrt_;
     StackMonitor::initStack(LRT_STACK, config.lrtStack);
 
-    // Initialize shared memory
+    /** Initialize shared memory */
     memset(jobTab, 0, config.platform.shMemSize);
 
-    // Initialize LRT and Communicators
+    /** Initialize LRT and Communicators */
     spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
             MAX_MSG_SIZE,
             nLrt_,
-            &semTrace,
+            &mutexTrace,
+            mutexFifoSpidertoLRT,
+            mutexFifoLRTtoSpider,
             semFifoSpidertoLRT,
-            semFifoLRTtoSpider,
             &fifoTrace,
             &fifoTrace);
 
 
-    for (int i = 0; i < nLrt_; i++) {
-        PThreadSpiderCommunicator *spiderCom = (PThreadSpiderCommunicator *) spiderCom_;
-        spiderCom->setLrtCom(i, fifoLRTtoSpider[i], fifoSpidertoLRT[i]);
-    }
+    for (int i = 0; i < nLrt_; i++)
+        ((PThreadSpiderCommunicator *) spiderCom_)->setLrtCom(i, fifoLRTtoSpider[i], fifoSpidertoLRT[i]);
 
 
     lrtCom_[0] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
@@ -246,9 +248,10 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             fifoSpidertoLRT[0],
             fifoLRTtoSpider[0],
             &fifoTrace,
-            &semTrace,
+            &mutexTrace,
+            &mutexFifoSpidertoLRT[0],
+            &mutexFifoLRTtoSpider[0],
             &semFifoSpidertoLRT[0],
-            &semFifoLRTtoSpider[0],
             jobTab,
             dataMem);
 
@@ -265,6 +268,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
     // Wait for all LRTs to be ready to start
     pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
+
 
     setAffinity(0);
     lrt_[0]->setFctTbl(config.platform.fcts, config.platform.nLrtFcts);
@@ -309,14 +313,12 @@ PlatformPThread::~PlatformPThread() {
         getSpiderCommunicator()->ctrl_end_send(lrt, size);
     }
 
-    // Wait for every LRT to end
+    //wait for every LRT to end
     pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
 
 
-    // Wait for each thread to free its lrt and archi stacks and to reach its end
-    for (int i = 1; i < nLrt_; i++) {
-        pthread_join(thread_ID_tab_[i], NULL);
-    }
+    //wait for each thread to free its lrt and archi stacks and to reach its end
+    for (int i = 1; i < nLrt_; i++) pthread_join(thread_ID_tab_[i], NULL);
 
 
     // Free Papify information
@@ -356,18 +358,18 @@ PlatformPThread::~PlatformPThread() {
     pthread_barrier_destroy(&pthread_barrier_init_and_end_thread);
 
     //Destroying semaphores
-    sem_destroy(&semTrace);
+    sem_destroy(&mutexTrace);
 
     for (int i = 0; i < nLrt_; i++) {
-        sem_destroy(&semFifoSpidertoLRT[i]);
-        sem_destroy(&semFifoLRTtoSpider[i]);
+        sem_destroy(&mutexFifoSpidertoLRT[i]);
+        sem_destroy(&mutexFifoLRTtoSpider[i]);
     }
 
     //Desallocation des tableaux dynamiques
     free(thread_ID_tab_);
 
-    free(semFifoSpidertoLRT);
-    free(semFifoLRTtoSpider);
+    free(mutexFifoSpidertoLRT);
+    free(mutexFifoLRTtoSpider);
 
     free(lrt_);
     free(lrtCom_);
@@ -514,24 +516,6 @@ Time PlatformPThread::getTime() {
     return val_steady;
 }
 
-void PlatformPThread::idleLrt(int lrt) {
-    lrt_[lrt]->setIdle(true);
-}
-
-void PlatformPThread::wakeLrt(int lrt) {
-    lrt_[lrt]->setIdle(false);
-}
-
-void PlatformPThread::idle() {
-    while (lrt_[0]->isIdle()) {
-#ifdef _WIN32
-        Sleep((unsigned)-1);
-#else
-        sleep((unsigned) -1);
-#endif
-    }
-}
-
 Time PlatformPThread::mappingTime(int nActors, int nPe) {
     return (Time) 1000 * nActors;
 }
@@ -565,9 +549,10 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt) {
             argument_lrt->fifoSpidertoLRT,
             argument_lrt->fifoLRTtoSpider,
             argument_lrt->fifoTrace,
-            argument_lrt->semTrace,
+            argument_lrt->mutexTrace,
+            argument_lrt->mutexFifoSpidertoLRT,
+            argument_lrt->mutexFifoLRTtoSpider,
             argument_lrt->semFifoSpidertoLRT,
-            argument_lrt->semFifoLRTtoSpider,
             jobTab,
             dataMem);
     lrt_[index] = CREATE(ARCHI_STACK, LRT)(index);
@@ -588,7 +573,6 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt) {
 
     /** launch LRT */
     lrt_[index]->runInfinitly();
-
 
 
     //wait for every LRT to end

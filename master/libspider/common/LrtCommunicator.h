@@ -50,6 +50,8 @@ public:
 
     virtual int ctrl_start_recv(void **data) = 0;
 
+    virtual void ctrl_start_recv_block(void **data) = 0;
+
     virtual void ctrl_end_recv() = 0;
 
     virtual void *trace_start_send(int size) = 0;

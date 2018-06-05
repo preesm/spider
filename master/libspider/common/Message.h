@@ -101,10 +101,8 @@ typedef struct {
 } TraceMsg;
 
 typedef struct {
-    unsigned long id:32; // Deprecated
     unsigned long alloc:32;
     unsigned long size:32;
-    unsigned long ntoken:32;
     unsigned long blkLrtIx:32;
     unsigned long blkLrtJobIx:32;
 } Fifo;

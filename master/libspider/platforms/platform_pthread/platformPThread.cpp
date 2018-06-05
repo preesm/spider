@@ -470,24 +470,6 @@ Time PlatformPThread::getTime() {
     return val_steady;
 }
 
-void PlatformPThread::idleLrt(int lrt) {
-    lrt_[lrt]->setIdle(true);
-}
-
-void PlatformPThread::wakeLrt(int lrt) {
-    lrt_[lrt]->setIdle(false);
-}
-
-void PlatformPThread::idle() {
-    while (lrt_[0]->isIdle()) {
-#ifdef _WIN32
-        Sleep((unsigned)-1);
-#else
-        sleep((unsigned) -1);
-#endif
-    }
-}
-
 Time PlatformPThread::mappingTime(int nActors, int nPe) {
     return (Time) 1000 * nActors;
 }

@@ -39,7 +39,6 @@
 #include <LrtCommunicator.h>
 
 #include <string.h>
-#include <unistd.h>
 
 #ifndef _WIN32
 
@@ -68,7 +67,6 @@ LRT::LRT(int ix) {
     nFct_ = 0;
     ix_ = ix;
     run_ = false;
-    idle_ = false;
     jobIx_ = 0;
     jobIxTotal_ = 0;
 

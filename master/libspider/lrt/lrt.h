@@ -61,11 +61,7 @@ public:
 
     void runInfinitly();
 
-    inline void setIdle(bool idle);
-
     inline void setJobIx(int jobIx);
-
-    inline bool isIdle();
 
     inline void rstJobIx();
 
@@ -81,7 +77,6 @@ private:
     int nFct_;
     const lrtFct *fcts_;
     bool run_;
-    bool idle_;
     int jobIx_;
     int jobIxTotal_;
 
@@ -114,14 +109,6 @@ inline int LRT::getIx() const {
 
 inline int LRT::getJobIx() const {
     return jobIx_;
-}
-
-inline void LRT::setIdle(bool idle) {
-    idle_ = idle;
-}
-
-inline bool LRT::isIdle() {
-    return idle_;
 }
 
 inline void LRT::setJobIx(int jobIx) {

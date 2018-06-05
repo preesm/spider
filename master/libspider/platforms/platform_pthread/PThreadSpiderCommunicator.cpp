@@ -94,9 +94,6 @@ void *PThreadSpiderCommunicator::ctrl_start_send(int lrtIx, int size) {
 void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int size) {
     unsigned long s = curMsgSizeSend_;
 
-    static unsigned long size_fifo[4] = {0};
-
-
     /** Take Mutex protecting the Queue */
     sem_wait(&mutexFifoSpidertoLRT_[lrtIx]);
 
@@ -105,9 +102,8 @@ void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int size) {
         fOut_[lrtIx]->push(s >> (sizeof(unsigned long) - 1 - i) * 8 & 0xFF);
 
     //Envoie du message
-    for (int i = 0; i < curMsgSizeSend_; i++) fOut_[lrtIx]->push(*(((char *) msgBufferSend_) + i) & 0xFF);
-
-    if (fOut_[lrtIx]->size() > size_fifo[lrtIx]) size_fifo[lrtIx] = fOut_[lrtIx]->size();
+    for (int i = 0; i < curMsgSizeSend_; i++)
+        fOut_[lrtIx]->push(*(((char *) msgBufferSend_) + i) & 0xFF);
 
     /** Relax Mutex protecting the Queue */
     sem_post(&mutexFifoSpidertoLRT_[lrtIx]);

@@ -39,8 +39,10 @@
 #define PLATFORM_PTHREAD_H
 
 #include "platform.h"
-#include "../papify/PapifyAction.h"
 #include <signal.h>
+#ifdef PAPI_AVAILABLE
+#include "../papify/PapifyAction.h"
+#endif
 
 // semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
 // making compilation error with the IDE's own declaration of said types
@@ -140,8 +142,10 @@ private:
     LrtCommunicator **lrtCom_;
     SpiderCommunicator *spiderCom_;
 
+#ifdef PAPI_AVAILABLE
     // Papify information
     std::map<lrtFct, PapifyAction *> papifyJobInfo;
+#endif
 };
 
 

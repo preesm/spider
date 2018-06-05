@@ -41,8 +41,10 @@
 #include <tools/Stack.h>
 #include <platform.h>
 
+#ifdef PAPI_AVAILABLE
 #include <map>
 #include "../papify/PapifyAction.h"
+#endif
 
 #define NB_MAX_ACTOR (200)
 
@@ -74,7 +76,9 @@ public:
 
     inline void setUsePapify();
 
+#ifdef PAPI_AVAILABLE
     void addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction);
+#endif
 
 protected:
     void sendTrace(int srdagIx, Time start, Time end);
@@ -91,9 +95,10 @@ private:
     int tabBlkLrtIx[NB_MAX_ACTOR];
     int tabBlkLrtJobIx[NB_MAX_ACTOR];
 
-    void runReceivedJob(void* msg);
-
+    void runReceivedJob(void *msg);
+#ifdef PAPI_AVAILABLE
     std::map<lrtFct, PapifyAction *> jobPapifyActions_;
+#endif
 #ifdef VERBOSE_TIME
     Time time_waiting_job;
     Time time_waiting_prev_actor;

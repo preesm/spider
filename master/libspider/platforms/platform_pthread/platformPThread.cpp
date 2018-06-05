@@ -153,11 +153,11 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     // TODO use "usePapify" only for monitored LRTs / HW PEs
 #ifndef PAPI_AVAILABLE
     // If PAPI is not available on the current platform, force disable it
-    if (usePapify) {
+    if (config.usePapify) {
         printf("WARNING: Spider was not compiled on a platform with PAPI, thus the monitoring is disabled.\n");
     }
-    usePapify = false;
-#endif
+    config.usePapify = false;
+#else
     if (config.usePapify) {
         // Initializing Papify
         PapifyEventLib *papifyEventLib = new PapifyEventLib();
@@ -178,7 +178,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             }
         }
     }
-
+#endif
 
     // Filling up parameters for each threads
     for (int i = 1; i < nLrt_; i++) {
@@ -258,6 +258,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     lrt_[0] = CREATE(ARCHI_STACK, LRT)(0);
 
     // Check papify profiles
+#ifdef PAPI_AVAILABLE
     if (config.usePapify) {
         lrt_[0]->setUsePapify();
         std::map<lrtFct, PapifyAction *>::iterator it;
@@ -265,6 +266,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             lrt_[0]->addPapifyJobInfo(it->first, it->second);
         }
     }
+#endif
 
     // Wait for all LRTs to be ready to start
     pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
@@ -320,13 +322,14 @@ PlatformPThread::~PlatformPThread() {
     //wait for each thread to free its lrt and archi stacks and to reach its end
     for (int i = 1; i < nLrt_; i++) pthread_join(thread_ID_tab_[i], NULL);
 
-
+#ifdef PAPI_AVAILABLE
     // Free Papify information
     if (!papifyJobInfo.empty()) {
         std::map<lrtFct, PapifyAction *>::iterator it;
         // Delete the event lib manager
         delete papifyJobInfo.begin()->second->getPapifyEventLib();
     }
+#endif
 
     lrt_[0]->~LRT();
     ((PThreadLrtCommunicator *) lrtCom_[0])->~PThreadLrtCommunicator();
@@ -559,6 +562,7 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt) {
     setAffinity(index);
     lrt_[index]->setFctTbl(argument_lrt->fcts, argument_lrt->nLrtFcts);
 
+#ifdef PAPI_AVAILABLE
     // Enable papify if need to
     if (argument_lrt->usePapify) {
         lrt_[index]->setUsePapify();
@@ -567,6 +571,7 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt) {
             lrt_[index]->addPapifyJobInfo(it->first, new PapifyAction(*it->second, index));
         }
     }
+#endif
 
     // Wait for all LRTs to be created
     pthread_barrier_wait(&pthread_barrier_init_and_end_thread);

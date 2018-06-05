@@ -116,6 +116,15 @@ LRT::~LRT() {
     (float)time_global / CHIP_FREQ / nb_iter);
 
 #endif
+#ifdef PAPI_AVAILABLE
+    if (usePapify_) {
+        std::map<lrtFct, PapifyAction *>::iterator it;
+        // Delete all actor monitors
+        for (it = jobPapifyActions_.begin(); it != jobPapifyActions_.end(); ++it) {
+            delete it->second;
+        }
+    }
+#endif
 }
 
 void LRT::setFctTbl(const lrtFct fct[], int nFct) {
@@ -215,34 +224,37 @@ inline void LRT::runReceivedJob(void *msg) {
 
             start = Platform::get()->getTime();
 
-                if (jobMsg->specialActor && jobMsg->fctIx < 6) {
-                    specialActors[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
-                } else if ((int) jobMsg->fctIx < nFct_) {
-                    if (usePapify_) {
-                        try {
-                            // We can monitor the events
-                            PapifyAction *papifyAction = nullptr;
-                            papifyAction = jobPapifyActions_.at(fcts_[jobMsg->fctIx]);
-                            // Start monitoring
-                            papifyAction->startMonitor();
-                            // Do the monitored job
-                            fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
-                            // Stop monitoring
-                            papifyAction->stopMonitor();
-                            // Writes the monitoring results
-                            papifyAction->writeEvents();
-                        } catch (std::out_of_range &e) {
-                            // This job does not have papify events associated with  it
-                            fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
-                        }
-                    } else {
-                        // We don't use papify
+            if (jobMsg->specialActor && jobMsg->fctIx < 6) {
+                specialActors[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
+            } else if ((int) jobMsg->fctIx < nFct_) {
+                if (usePapify_) {
+#ifdef PAPI_AVAILABLE
+                    // TODO, find better way to do that
+                    try {
+                        // We can monitor the events
+                        PapifyAction *papifyAction = nullptr;
+                        papifyAction = jobPapifyActions_.at(fcts_[jobMsg->fctIx]);
+                        // Start monitoring
+                        papifyAction->startMonitor();
+                        // Do the monitored job
+                        fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
+                        // Stop monitoring
+                        papifyAction->stopMonitor();
+                        // Writes the monitoring results
+                        papifyAction->writeEvents();
+                    } catch (std::out_of_range &e) {
+                        // This job does not have papify events associated with  it
                         fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
                     }
+#endif
                 } else {
-                    printf("Cannot find actor function\n");
-                    while (1);
+                    // We don't use papify
+                    fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
                 }
+            } else {
+                printf("Cannot find actor function\n");
+                while (1);
+            }
 
             Time end = Platform::get()->getTime();
 
@@ -385,7 +397,8 @@ void LRT::runInfinitly() {
 #endif
 }
 
-
+#ifdef PAPI_AVAILABLE
 void LRT::addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction) {
     this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
 }
+#endif

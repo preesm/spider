@@ -168,7 +168,7 @@ void PapifyAction::stopMonitor() {
 
 void PapifyAction::writeEvents() {
     if (!outputFile_) {
-        std::string fileName = std::string("papify-output/papify_output_") +
+        std::string fileName = std::string("papify-output/") +
                                std::string("LRT_") +
                                std::to_string(PEId_) +
                                std::string("__") +
@@ -194,7 +194,7 @@ void PapifyAction::writeEvents() {
 
 void PapifyAction::writeEvents(FILE *file) {
     if (file) {
-        fprintf(outputFile_, "%lld,%s, %llu, %llu", PEId_, actorName_, timeStart, timeStop);
+        fprintf(outputFile_, "%lld,%s,%llu,%llu", PEId_, actorName_, timeStart, timeStop);
         for (int i = 0; i < numberOfEvents_; ++i) {
             fprintf(outputFile_, ",%lld", counterValues_[i]);
         }

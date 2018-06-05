@@ -107,7 +107,7 @@ void PapifyEventLib::throwError(const char *file, int line, const char *message)
     fprintf(stderr, "File: %s\n", file);
     fprintf(stderr, "Line: %d\n", line);
     fprintf(stderr, "%s\n", message);
-    throw message;
+    throw std::runtime_error(message);
 }
 
 void PapifyEventLib::throwError(const char *file, int line, int papiErrorCode) {

@@ -135,9 +135,10 @@ private:
     std::queue<unsigned char> fifoTrace;
 
     //Semaphores
-    sem_t semTrace;
+    sem_t mutexTrace;
+    sem_t *mutexFifoSpidertoLRT;
+    sem_t *mutexFifoLRTtoSpider;
     sem_t *semFifoSpidertoLRT;
-    sem_t *semFifoLRTtoSpider;
 
     LRT **lrt_;
     LrtCommunicator **lrtCom_;
@@ -241,9 +242,10 @@ typedef struct Arg_lrt {
     std::queue<unsigned char> *fifoSpidertoLRT;
     std::queue<unsigned char> *fifoLRTtoSpider;
     std::queue<unsigned char> *fifoTrace;
-    sem_t *semTrace;
+    sem_t *mutexTrace;
+    sem_t *mutexFifoSpidertoLRT;
+    sem_t *mutexFifoLRTtoSpider;
     sem_t *semFifoSpidertoLRT;
-    sem_t *semFifoLRTtoSpider;
     int shMemSize;
     lrtFct *fcts;
     int nLrtFcts;

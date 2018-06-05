@@ -67,7 +67,6 @@ LRT::LRT(int ix) {
     nFct_ = 0;
     ix_ = ix;
     run_ = false;
-    idle_ = false;
     jobIx_ = 0;
     jobIxTotal_ = 0;
 
@@ -137,220 +136,215 @@ void LRT::sendTrace(int srdagIx, Time start, Time end) {
     Platform::get()->getLrtCommunicator()->trace_end_send(sizeof(TraceMsgType));
 }
 
+inline void LRT::runReceivedJob(void *msg) {
 
-int LRT::runOneJob() {
-    void *msg;
+#ifdef VERBOSE_TIME
+    time_waiting_job += Platform::get()->getTime() - start_waiting_job;
+#endif
 
     Platform::get()->getLrtCommunicator()->unlockLrt(getJobIx());
 
-    if (Platform::get()->getLrtCommunicator()->ctrl_start_recv(&msg)) {
+    switch (((UndefinedMsg *) msg)->msgIx) {
+        case MSG_START_JOB: {
+
+            StartJobMsg *jobMsg = (StartJobMsg *) msg;
+            Fifo *inFifos = (Fifo *) ((char *) jobMsg + 1 * sizeof(StartJobMsg));
+            Fifo *outFifos = (Fifo *) ((char *) inFifos + jobMsg->nbInEdge * sizeof(Fifo));
+            Param *inParams = (Param *) ((char *) outFifos + jobMsg->nbOutEdge * sizeof(Fifo));
+
+            void **inFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbInEdge, void*);
+            void **outFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbOutEdge, void*);
+            Param *outParams = CREATE_MUL(LRT_STACK, jobMsg->nbOutParam, Param);
+
+            Time start;
 
 #ifdef VERBOSE_TIME
-        time_waiting_job += Platform::get()->getTime() - start_waiting_job;
+            start = Platform::get()->getTime();
 #endif
 
-        switch (((UndefinedMsg *) msg)->msgIx) {
-            case MSG_START_JOB: {
-
-                StartJobMsg *jobMsg = (StartJobMsg *) msg;
-                Fifo *inFifos = (Fifo *) ((char *) jobMsg + 1 * sizeof(StartJobMsg));
-                Fifo *outFifos = (Fifo *) ((char *) inFifos + jobMsg->nbInEdge * sizeof(Fifo));
-                Param *inParams = (Param *) ((char *) outFifos + jobMsg->nbOutEdge * sizeof(Fifo));
-
-                void **inFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbInEdge, void*);
-                void **outFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbOutEdge, void*);
-                Param *outParams = CREATE_MUL(LRT_STACK, jobMsg->nbOutParam, Param);
-
-                Time start;
-
-#ifdef VERBOSE_TIME
-                start = Platform::get()->getTime();
-#endif
-
-                for (int i = 0; i < (int) jobMsg->nbInEdge; i++) {
-                    tabBlkLrtIx[i] = inFifos[i].blkLrtIx; // lrt to wait
-                    tabBlkLrtJobIx[i] = inFifos[i].blkLrtJobIx; // total job ticket for this lrt to wait
-                }
-
-                Platform::get()->getLrtCommunicator()->waitForLrtUnlock((int) jobMsg->nbInEdge, tabBlkLrtIx,
-                                                                        tabBlkLrtJobIx, getJobIx());
-
-#ifdef VERBOSE_TIME
-                time_waiting_prev_actor += Platform::get()->getTime() - start;
-#endif
-
-
-#ifdef VERBOSE_TIME
-                start = Platform::get()->getTime();
-#endif
-
-                Platform::get()->getLrtCommunicator()->allocateDataBuffer(jobMsg->nbInEdge, inFifos, jobMsg->nbOutEdge,
-                                                                          outFifos);
-
-#ifdef VERBOSE_TIME
-                time_alloc_data += Platform::get()->getTime() - start;
-#endif
-
-
-                for (int i = 0; i < (int) jobMsg->nbInEdge; i++) {
-#ifdef VERBOSE_TIME
-                    Time start = Platform::get()->getTime();
-#endif
-
-                    inFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_recv(&inFifos[i]); // in com
-
-#ifdef VERBOSE_TIME
-                    time_waiting_input_comm += Platform::get()->getTime() - start;
-#endif
-                }
-
-
-                for (int i = 0; i < (int) jobMsg->nbOutEdge; i++) {
-#ifdef VERBOSE_TIME
-                    Time start = Platform::get()->getTime();
-#endif
-
-                    outFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_start_send(&outFifos[i]); // in com
-
-#ifdef VERBOSE_TIME
-                    time_waiting_input_comm += Platform::get()->getTime() - start;
-#endif
-                }
-
-
-                start = Platform::get()->getTime();
-
-                if (jobMsg->specialActor && jobMsg->fctIx < 6)
-                    specialActors[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
-                else if ((int) jobMsg->fctIx < nFct_)
-                    fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
-                else {
-                    printf("Cannot find actor function\n");
-                    while (1);
-                }
-
-                Time end = Platform::get()->getTime();
-
-#ifdef VERBOSE_TIME
-                time_compute += end - start;
-#endif
-
-                if (jobMsg->traceEnabled)
-                    sendTrace(jobMsg->srdagIx, start, end);
-
-
-                for (int i = 0; i < (int) jobMsg->nbOutEdge; i++) {
-#ifdef VERBOSE_TIME
-                    Time start = Platform::get()->getTime();
-#endif
-
-                    Platform::get()->getLrtCommunicator()->data_end_send(&outFifos[i]); // out com
-
-#ifdef VERBOSE_TIME
-                    time_waiting_output_comm += Platform::get()->getTime() - start;
-#endif
-                }
-
-
-                Platform::get()->getLrtCommunicator()->freeDataBuffer(jobMsg->nbInEdge, jobMsg->nbOutEdge);
-
-
-                if (jobMsg->nbOutParam != 0) {
-                    int size = sizeof(ParamValueMsg) + jobMsg->nbOutParam * sizeof(Param);
-
-#ifdef VERBOSE_TIME
-                    Time start = Platform::get()->getTime();
-#endif
-
-                    ParamValueMsg *msgParam = (ParamValueMsg *) Platform::get()->getLrtCommunicator()->ctrl_start_send(
-                            size); // out com
-
-#ifdef VERBOSE_TIME
-                    time_waiting_output_comm += Platform::get()->getTime() - start;
-#endif
-
-                    Param *params = (Param *) (msgParam + 1);
-
-                    msgParam->msgIx = MSG_PARAM_VALUE;
-                    msgParam->srdagIx = jobMsg->srdagIx;
-                    memcpy(params, outParams, jobMsg->nbOutParam * sizeof(Param));
-
-#ifdef VERBOSE_TIME
-                    start = Platform::get()->getTime();
-#endif
-
-                    Platform::get()->getLrtCommunicator()->ctrl_end_send(size); // out com
-
-#ifdef VERBOSE_TIME
-                    time_waiting_output_comm += Platform::get()->getTime() - start;
-#endif
-                }
-
-                setJobIx(getJobIx() + 1);
-                jobIxTotal_++;
-
-                Platform::get()->getLrtCommunicator()->setLrtJobIx(getIx(), getJobIx());
-
-                StackMonitor::free(LRT_STACK, inFifosAlloc);
-                StackMonitor::free(LRT_STACK, outFifosAlloc);
-                StackMonitor::free(LRT_STACK, outParams);
-                StackMonitor::freeAll(LRT_STACK);
-
-                break;
+            for (int i = 0; i < (int) jobMsg->nbInEdge; i++) {
+                tabBlkLrtIx[i] = inFifos[i].blkLrtIx; // lrt to wait
+                tabBlkLrtJobIx[i] = inFifos[i].blkLrtJobIx; // total job ticket for this lrt to wait
             }
-            case MSG_CLEAR_TIME: {
-                ClearTimeMsg *timeMsg = (ClearTimeMsg *) msg;
-                Platform::get()->rstTime(timeMsg);
-                break;
-            }
-            case MSG_END_ITER: {
+
+            Platform::get()->getLrtCommunicator()->waitForLrtUnlock((int) jobMsg->nbInEdge, tabBlkLrtIx,
+                                                                    tabBlkLrtJobIx, getJobIx());
+
 #ifdef VERBOSE_TIME
-                nb_iter++;
+            time_waiting_prev_actor += Platform::get()->getTime() - start;
 #endif
 
-                EndIterMsg *msg = (EndIterMsg *) Platform::get()->getLrtCommunicator()->ctrl_start_send(
-                        sizeof(EndIterMsg));
-                msg->msgIx = MSG_END_ITER;
-                Platform::get()->getLrtCommunicator()->ctrl_end_send(sizeof(EndIterMsg));
-                break;
-            }
-            case MSG_RESET_LRT: {
 
-                rstJobIx();
+#ifdef VERBOSE_TIME
+            start = Platform::get()->getTime();
+#endif
 
-                Platform::get()->getLrtCommunicator()->rstLrtJobIx(getIx());
-                ResetLrtMsg *msg = (ResetLrtMsg *) Platform::get()->getLrtCommunicator()->ctrl_start_send(
-                        sizeof(ResetLrtMsg));
-                msg->msgIx = MSG_RESET_LRT;
-                Platform::get()->getLrtCommunicator()->ctrl_end_send(sizeof(ResetLrtMsg));
-                break;
+            Platform::get()->getLrtCommunicator()->allocateDataBuffer(jobMsg->nbInEdge, inFifos, jobMsg->nbOutEdge,
+                                                                      outFifos);
+
+#ifdef VERBOSE_TIME
+            time_alloc_data += Platform::get()->getTime() - start;
+#endif
+
+
+            for (int i = 0; i < (int) jobMsg->nbInEdge; i++) {
+#ifdef VERBOSE_TIME
+                Time start = Platform::get()->getTime();
+#endif
+
+                inFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_recv(&inFifos[i]); // in com
+
+#ifdef VERBOSE_TIME
+                time_waiting_input_comm += Platform::get()->getTime() - start;
+#endif
             }
-            case MSG_STOP_LRT:
-                run_ = false;
-                break;
-            case MSG_PARAM_VALUE:
-            default:
-                printf("Unexpected message received\n");
+
+
+            for (int i = 0; i < (int) jobMsg->nbOutEdge; i++) {
+#ifdef VERBOSE_TIME
+                Time start = Platform::get()->getTime();
+#endif
+
+                outFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_start_send(&outFifos[i]); // in com
+
+#ifdef VERBOSE_TIME
+                time_waiting_input_comm += Platform::get()->getTime() - start;
+#endif
+            }
+
+
+            start = Platform::get()->getTime();
+
+            if (jobMsg->specialActor && jobMsg->fctIx < 6)
+                specialActors[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
+            else if ((int) jobMsg->fctIx < nFct_)
+                fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
+            else {
+                printf("Cannot find actor function\n");
                 while (1);
-        }
-        Platform::get()->getLrtCommunicator()->ctrl_end_recv();
+            }
+
+            Time end = Platform::get()->getTime();
 
 #ifdef VERBOSE_TIME
-        start_waiting_job = Platform::get()->getTime();
+            time_compute += end - start;
 #endif
-        return 1;
+
+            if (jobMsg->traceEnabled)
+                sendTrace(jobMsg->srdagIx, start, end);
+
+
+            for (int i = 0; i < (int) jobMsg->nbOutEdge; i++) {
+#ifdef VERBOSE_TIME
+                Time start = Platform::get()->getTime();
+#endif
+
+                Platform::get()->getLrtCommunicator()->data_end_send(&outFifos[i]); // out com
+
+#ifdef VERBOSE_TIME
+                time_waiting_output_comm += Platform::get()->getTime() - start;
+#endif
+            }
+
+
+            Platform::get()->getLrtCommunicator()->freeDataBuffer(jobMsg->nbInEdge, jobMsg->nbOutEdge);
+
+
+            if (jobMsg->nbOutParam != 0) {
+                int size = sizeof(ParamValueMsg) + jobMsg->nbOutParam * sizeof(Param);
+
+#ifdef VERBOSE_TIME
+                Time start = Platform::get()->getTime();
+#endif
+
+                ParamValueMsg *msgParam = (ParamValueMsg *) Platform::get()->getLrtCommunicator()->ctrl_start_send(
+                        size); // out com
+
+#ifdef VERBOSE_TIME
+                time_waiting_output_comm += Platform::get()->getTime() - start;
+#endif
+
+                Param *params = (Param *) (msgParam + 1);
+
+                msgParam->msgIx = MSG_PARAM_VALUE;
+                msgParam->srdagIx = jobMsg->srdagIx;
+                memcpy(params, outParams, jobMsg->nbOutParam * sizeof(Param));
+
+#ifdef VERBOSE_TIME
+                start = Platform::get()->getTime();
+#endif
+
+                Platform::get()->getLrtCommunicator()->ctrl_end_send(size); // out com
+
+#ifdef VERBOSE_TIME
+                time_waiting_output_comm += Platform::get()->getTime() - start;
+#endif
+            }
+
+            setJobIx(getJobIx() + 1);
+            jobIxTotal_++;
+
+            Platform::get()->getLrtCommunicator()->setLrtJobIx(getIx(), getJobIx());
+
+            StackMonitor::free(LRT_STACK, inFifosAlloc);
+            StackMonitor::free(LRT_STACK, outFifosAlloc);
+            StackMonitor::free(LRT_STACK, outParams);
+            StackMonitor::freeAll(LRT_STACK);
+
+            break;
+        }
+        case MSG_CLEAR_TIME: {
+            ClearTimeMsg *timeMsg = (ClearTimeMsg *) msg;
+            Platform::get()->rstTime(timeMsg);
+            break;
+        }
+        case MSG_END_ITER: {
+#ifdef VERBOSE_TIME
+            nb_iter++;
+#endif
+
+            EndIterMsg *msg = (EndIterMsg *) Platform::get()->getLrtCommunicator()->ctrl_start_send(
+                    sizeof(EndIterMsg));
+            msg->msgIx = MSG_END_ITER;
+            Platform::get()->getLrtCommunicator()->ctrl_end_send(sizeof(EndIterMsg));
+            break;
+        }
+        case MSG_RESET_LRT: {
+
+            rstJobIx();
+
+            Platform::get()->getLrtCommunicator()->rstLrtJobIx(getIx());
+            ResetLrtMsg *msg = (ResetLrtMsg *) Platform::get()->getLrtCommunicator()->ctrl_start_send(
+                    sizeof(ResetLrtMsg));
+            msg->msgIx = MSG_RESET_LRT;
+            Platform::get()->getLrtCommunicator()->ctrl_end_send(sizeof(ResetLrtMsg));
+            break;
+        }
+        case MSG_STOP_LRT:
+            run_ = false;
+            break;
+        case MSG_PARAM_VALUE:
+        default:
+            printf("Unexpected message received\n");
+            while (1);
     }
-    return 0;
+    Platform::get()->getLrtCommunicator()->ctrl_end_recv();
+
+#ifdef VERBOSE_TIME
+    start_waiting_job = Platform::get()->getTime();
+#endif
 }
 
 void LRT::runUntilNoMoreJobs() {
-    // Time start = Platform::get()->getTime();
-    while (runOneJob());
-    // time_global += Platform::get()->getTime() - start;
-    // printf("LRT%d Time global %llu\n",ix_,time_global);
+    void *msg;
+
+    while (Platform::get()->getLrtCommunicator()->ctrl_start_recv(&msg)) {
+        runReceivedJob(msg);
+    }
 }
 
 void LRT::runInfinitly() {
+    void *msg;
     run_ = true;
 
 #ifdef VERBOSE_TIME
@@ -361,12 +355,10 @@ void LRT::runInfinitly() {
     start_waiting_job = Platform::get()->getTime();
 #endif
 
-    do {
-        runOneJob();
-        if (idle_) {
-            Platform::get()->idle();
-        }
-    } while (run_);
+    while (run_) {
+        Platform::get()->getLrtCommunicator()->ctrl_start_recv_block(&msg);
+        runReceivedJob(msg);
+    }
 
 #ifdef VERBOSE_TIME
     time_global += Platform::get()->getTime() - start;

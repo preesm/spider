@@ -57,17 +57,11 @@ public:
 
     void setFctTbl(const lrtFct fct[], int nFct);
 
-    int runOneJob();
-
     void runUntilNoMoreJobs();
 
     void runInfinitly();
 
-    inline void setIdle(bool idle);
-
     inline void setJobIx(int jobIx);
-
-    inline bool isIdle();
 
     inline void rstJobIx();
 
@@ -83,12 +77,13 @@ private:
     int nFct_;
     const lrtFct *fcts_;
     bool run_;
-    bool idle_;
     int jobIx_;
     int jobIxTotal_;
 
     int tabBlkLrtIx[NB_MAX_ACTOR];
     int tabBlkLrtJobIx[NB_MAX_ACTOR];
+
+    void runReceivedJob(void* msg);
 
 #ifdef VERBOSE_TIME
     Time time_waiting_job;
@@ -114,14 +109,6 @@ inline int LRT::getIx() const {
 
 inline int LRT::getJobIx() const {
     return jobIx_;
-}
-
-inline void LRT::setIdle(bool idle) {
-    idle_ = idle;
-}
-
-inline bool LRT::isIdle() {
-    return idle_;
 }
 
 inline void LRT::setJobIx(int jobIx) {

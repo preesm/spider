@@ -46,9 +46,10 @@
 PThreadSpiderCommunicator::PThreadSpiderCommunicator(
         int msgSizeMax,
         int nLrt,
-        sem_t *semTrace,
+        sem_t *mutexTrace,
+        sem_t *mutexFifoSpidertoLRT,
+        sem_t *mutexFifoLRTtoSpider,
         sem_t *semFifoSpidertoLRT,
-        sem_t *semFifoLRTtoSpider,
         std::queue<unsigned char> *fTraceWr,
         std::queue<unsigned char> *fTraceRd) {
 
@@ -57,9 +58,10 @@ PThreadSpiderCommunicator::PThreadSpiderCommunicator(
     fTraceRd_ = fTraceRd;
     fTraceWr_ = fTraceWr;
 
-    semTrace_ = semTrace;
+    mutexTrace_ = mutexTrace;
+    mutexFifoSpidertoLRT_ = mutexFifoSpidertoLRT;
+    mutexFifoLRTtoSpider_ = mutexFifoLRTtoSpider;
     semFifoSpidertoLRT_ = semFifoSpidertoLRT;
-    semFifoLRTtoSpider_ = semFifoLRTtoSpider;
 
     msgSizeMax_ = msgSizeMax;
 
@@ -94,22 +96,21 @@ void *PThreadSpiderCommunicator::ctrl_start_send(int lrtIx, int size) {
 void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int size) {
     unsigned long s = curMsgSizeSend_;
 
-    static unsigned long size_fifo[4] = {0};
-
-
-    //prise du semaphore de fOut_[lrtIx]
-    sem_wait(&semFifoSpidertoLRT_[lrtIx]);
+    /** Take Mutex protecting the Queue */
+    sem_wait(&mutexFifoSpidertoLRT_[lrtIx]);
 
     //Envoi de la taille du message à venir
     for (unsigned int i = 0; i < sizeof(unsigned long); i++)
         fOut_[lrtIx]->push(s >> (sizeof(unsigned long) - 1 - i) * 8 & 0xFF);
 
     //Envoie du message
-    for (int i = 0; i < curMsgSizeSend_; i++) fOut_[lrtIx]->push(*(((char *) msgBufferSend_) + i) & 0xFF);
+    for (int i = 0; i < curMsgSizeSend_; i++)
+        fOut_[lrtIx]->push(*(((char *) msgBufferSend_) + i) & 0xFF);
 
-    if (fOut_[lrtIx]->size() > size_fifo[lrtIx]) size_fifo[lrtIx] = fOut_[lrtIx]->size();
+    /** Relax Mutex protecting the Queue */
+    sem_post(&mutexFifoSpidertoLRT_[lrtIx]);
 
-    //Relachement du semaphore de fOut_[lrtIx]
+    /** Post token representing 1 message in the queue */
     sem_post(&semFifoSpidertoLRT_[lrtIx]);
 
     curMsgSizeSend_ = 0;
@@ -118,14 +119,14 @@ void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int size) {
 int PThreadSpiderCommunicator::ctrl_start_recv(int lrtIx, void **data) {
     unsigned long size = 0;
 
-    //Prise du semaphore de fIn_[lrtIx]
-    sem_wait(&semFifoLRTtoSpider_[lrtIx]);
+    /** Take Mutex protecting the Queue */
+    sem_wait(&mutexFifoLRTtoSpider_[lrtIx]);
 
 
     //Rien à faire si fifo vide
     if (fIn_[lrtIx]->empty()) {
 
-        sem_post(&semFifoLRTtoSpider_[lrtIx]);
+        sem_post(&mutexFifoLRTtoSpider_[lrtIx]);
 
         return 0;
     }
@@ -149,8 +150,8 @@ int PThreadSpiderCommunicator::ctrl_start_recv(int lrtIx, void **data) {
         fIn_[lrtIx]->pop();
     }
 
-    //Relachement du semaphore de fIn_[lrtIx]
-    sem_post(&semFifoLRTtoSpider_[lrtIx]);
+    /** Relax Mutex protecting the Queue */
+    sem_post(&mutexFifoLRTtoSpider_[lrtIx]);
 
     *data = msgBufferRecv_;
     return curMsgSizeRecv_;
@@ -172,7 +173,7 @@ void PThreadSpiderCommunicator::trace_end_send(int size) {
 
     static unsigned int size_trace;
 
-    int err = sem_wait(semTrace_);
+    int err = sem_wait(mutexTrace_);
 
     if (err != 0) {
         perror("PThreadSpiderCommunicator::trace_end_send");
@@ -186,7 +187,7 @@ void PThreadSpiderCommunicator::trace_end_send(int size) {
     //Envoi de la trace
     for (int i = 0; i < curMsgSizeSend_; i++) fTraceWr_->push((*(((char *) msgBufferSend_) + i)) & 0xFF);
 
-    sem_post(semTrace_);
+    sem_post(mutexTrace_);
 
     curMsgSizeSend_ = 0;
 }

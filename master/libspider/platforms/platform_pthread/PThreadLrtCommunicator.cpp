@@ -115,7 +115,7 @@ int PThreadLrtCommunicator::ctrl_start_recv(void **data) {
     unsigned long size = 0;
 
     /** Take sem (representing 1 message in the queue */
-    if(sem_trywait(semFifoSpidertoLRT_)){
+    if (sem_trywait(semFifoSpidertoLRT_)) {
         return 0;
     }
 
@@ -147,7 +147,7 @@ int PThreadLrtCommunicator::ctrl_start_recv(void **data) {
     return curMsgSizeRecv_;
 }
 
-void PThreadLrtCommunicator::ctrl_start_recv_block(void **data){
+void PThreadLrtCommunicator::ctrl_start_recv_block(void **data) {
     unsigned long size = 0;
 
     /** Take sem (representing 1 message in the queue */

@@ -136,7 +136,7 @@ void LRT::sendTrace(int srdagIx, Time start, Time end) {
     Platform::get()->getLrtCommunicator()->trace_end_send(sizeof(TraceMsgType));
 }
 
-inline void LRT::runReceivedJob(void *msg){
+inline void LRT::runReceivedJob(void *msg) {
 
 #ifdef VERBOSE_TIME
     time_waiting_job += Platform::get()->getTime() - start_waiting_job;
@@ -338,7 +338,7 @@ inline void LRT::runReceivedJob(void *msg){
 void LRT::runUntilNoMoreJobs() {
     void *msg;
 
-    while (Platform::get()->getLrtCommunicator()->ctrl_start_recv(&msg)){
+    while (Platform::get()->getLrtCommunicator()->ctrl_start_recv(&msg)) {
         runReceivedJob(msg);
     }
 }
@@ -355,7 +355,7 @@ void LRT::runInfinitly() {
     start_waiting_job = Platform::get()->getTime();
 #endif
 
-    while (run_){
+    while (run_) {
         Platform::get()->getLrtCommunicator()->ctrl_start_recv_block(&msg);
         runReceivedJob(msg);
     }

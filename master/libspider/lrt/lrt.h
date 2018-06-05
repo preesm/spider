@@ -57,8 +57,6 @@ public:
 
     void setFctTbl(const lrtFct fct[], int nFct);
 
-    int runOneJob();
-
     void runUntilNoMoreJobs();
 
     void runInfinitly();
@@ -89,6 +87,8 @@ private:
 
     int tabBlkLrtIx[NB_MAX_ACTOR];
     int tabBlkLrtJobIx[NB_MAX_ACTOR];
+
+    void runReceivedJob(void* msg);
 
 #ifdef VERBOSE_TIME
     Time time_waiting_job;

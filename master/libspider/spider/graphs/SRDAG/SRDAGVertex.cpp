@@ -129,7 +129,12 @@ void SRDAGVertex::updateState() {
     if (state_ == SRDAG_NEXEC) {
         /* Check Input Edges */
         for (int i = 0; i < getNConnectedInEdge(); i++) {
+            SRDAGEdge *edge = getInEdge(i);
             SRDAGVertex *predecessor = getInEdge(i)->getSrc();
+
+            /* Case when you don't wait any token from predecessor (Null Edge) */
+            if (edge->getRate() == 0)
+                continue;
 
             if (!predecessor || predecessor->isHierarchical()) {
                 state_ = SRDAG_NEXEC;

@@ -57,7 +57,7 @@ void saJoin(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param out
         for (i = 0; i < nbFifoIn; i++) {
             nbTknIn = inParams[i + 3];
 
-            if (((char *) outputFIFOs[0]) + index != inputFIFOs[i])
+            if (nbTknIn && ((char *) outputFIFOs[0]) + index != inputFIFOs[i])
                 memcpy(((char *) outputFIFOs[0]) + index, inputFIFOs[i], nbTknIn);
             index += nbTknIn;
         }

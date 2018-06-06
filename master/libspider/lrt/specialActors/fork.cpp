@@ -39,8 +39,7 @@
 #include <string.h>
 
 void saFork(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
-    int nbFifoIn, nbFifoOut, i, index;
-    int nbTknIn = inParams[2];
+    int nbFifoIn, nbFifoOut, nbTknIn, i, index;
 
 #if VERBOSE
     printf("Fork\n");
@@ -48,6 +47,7 @@ void saFork(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param out
 
     nbFifoIn = inParams[0];
     nbFifoOut = inParams[1];
+    nbTknIn = inParams[2];
 
     index = 0;
     if (nbFifoIn == 1) {
@@ -55,7 +55,7 @@ void saFork(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param out
         for (i = 0; i < nbFifoOut; i++) {
             int nbTknOut = inParams[i + 3];
 
-            if (outputFIFOs[i] != ((char *) inputFIFOs[0]) + index) {
+            if (nbTknOut && outputFIFOs[i] != ((char *) inputFIFOs[0]) + index) {
                 memcpy(outputFIFOs[i], ((char *) inputFIFOs[0]) + index, nbTknOut);
             }
 

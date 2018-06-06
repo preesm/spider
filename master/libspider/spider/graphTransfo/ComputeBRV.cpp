@@ -40,16 +40,58 @@
 #include <cmath>
 #include <algorithm>
 
+static bool isBodyExecutable(PiSDFVertex *body, transfoJob *job) {
+    bool notExec = true;
+
+    /* Test if all In/Out is equal to 0 */
+    for (int j = 0; notExec && j < body->getNInEdge(); j++) {
+        PiSDFEdge *inEdge = body->getInEdge(j);
+        int cons = inEdge->resolveCons(job);
+        notExec = notExec && (cons == 0);
+    }
+    for (int j = 0; notExec && j < body->getNOutEdge(); j++) {
+        PiSDFEdge *outEdge = body->getOutEdge(j);
+        int prod = outEdge->resolveProd(job);
+        notExec = notExec && (prod == 0);
+    }
+
+    return !notExec;
+}
+
+static bool isEdgeValid(PiSDFEdge *edge, transfoJob *job) {
+    int prod = edge->resolveProd(job);
+    int cons = edge->resolveCons(job);
+
+    if ((prod == 0 && cons != 0) || (cons == 0 && prod != 0))
+        throw "Bad Edge Prod/Cons, One is =0 et other is !=0";
+
+    if (edge->getSrc() != edge->getSnk()
+        && edge->getSrc()->getType() == PISDF_TYPE_BODY && isBodyExecutable(edge->getSrc(), job)
+        && edge->getSnk()->getType() == PISDF_TYPE_BODY && isBodyExecutable(edge->getSnk(), job)
+            )
+        return true;
+
+    return false;
+}
+
 void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
-    int nbVertices = job->graph->getNBody();
+    int *vertexIxs = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
+
+    /* Compute nbVertices */
+    int nbVertices = 0;
+    for (int i = 0; i < job->graph->getNBody(); i++) {
+        PiSDFVertex *body = job->graph->getBody(i);
+        if (isBodyExecutable(body, job)) {
+            vertexIxs[body->getTypeId()] = nbVertices++;
+        } else
+            vertexIxs[body->getTypeId()] = -1;
+    }
 
     /* Compute nbEdges */
     int nbEdges = 0;
     for (int i = 0; i < job->graph->getNEdge(); i++) {
         PiSDFEdge *edge = job->graph->getEdge(i);
-        if (edge->getSrc() != edge->getSnk()
-            && edge->getSrc()->getType() == PISDF_TYPE_BODY
-            && edge->getSnk()->getType() == PISDF_TYPE_BODY) {
+        if (isEdgeValid(edge, job)) {
             nbEdges++;
         }
     }
@@ -61,9 +103,7 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
     nbEdges = 0; // todo do better with the nbEdges var
     for (int i = 0; i < job->graph->getNEdge(); i++) {
         PiSDFEdge *edge = job->graph->getEdge(i);
-        if (edge->getSrc() != edge->getSnk()
-            && edge->getSrc()->getType() == PISDF_TYPE_BODY
-            && edge->getSnk()->getType() == PISDF_TYPE_BODY) {
+        if (isEdgeValid(edge, job)) {
             int prod = edge->resolveProd(job);
             int cons = edge->resolveCons(job);
 
@@ -76,8 +116,8 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
                 throw std::runtime_error("Error Bad prod/cons resolved\n");
             }
 
-            topo_matrix[nbEdges * nbVertices + edge->getSrc()->getTypeId()] = prod;
-            topo_matrix[nbEdges * nbVertices + edge->getSnk()->getTypeId()] = -cons;
+            topo_matrix[nbEdges * nbVertices + vertexIxs[edge->getSrc()->getTypeId()]] = prod;
+            topo_matrix[nbEdges * nbVertices + vertexIxs[edge->getSnk()->getTypeId()]] = -cons;
             nbEdges++;
         }
     }
@@ -90,8 +130,18 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
 //		printf("\n");
 //	}
 
+    int *smallBrv = CREATE_MUL(TRANSFO_STACK, nbVertices, int);
+
     /* Compute nullSpace */
-    nullSpace(topo_matrix, brv, nbEdges, nbVertices);
+    nullSpace(topo_matrix, smallBrv, nbEdges, nbVertices);
+
+    /* Convert Small Brv to Complete One */
+    for (int i = 0; i < job->graph->getNBody(); i++) {
+        if (vertexIxs[i] == -1)
+            brv[i] = 0;
+        else
+            brv[i] = smallBrv[vertexIxs[i]];
+    }
 
     /* Updating the productions of the round buffer vertices. */
     int coef = 1;
@@ -105,7 +155,8 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
             float prod = edge->resolveProd(job);
             float cons = edge->resolveCons(job);
             float nbRepet = brv[edge->getSnk()->getTypeId()];
-            coef = std::max(coef, (int) std::ceil(prod / (cons * nbRepet)));
+            if (nbRepet != 0)
+                coef = std::max(coef, (int) std::ceil(prod / (cons * nbRepet)));
         }
     }
     for (int i = 0; i < job->graph->getNOutIf(); i++) {
@@ -116,7 +167,8 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
             float prod = edge->resolveProd(job);
             float cons = edge->resolveCons(job);
             float nbRepet = brv[edge->getSrc()->getTypeId()];
-            coef = std::max(coef, (int) std::ceil(cons / (prod * nbRepet)));
+            if (nbRepet != 0)
+                coef = std::max(coef, (int) std::ceil(cons / (prod * nbRepet)));
         }
     }
     /* Looking on implicit RB between Config and Body */
@@ -129,7 +181,8 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
                 float prod = edge->resolveProd(job);
                 float cons = edge->resolveCons(job);
                 float nbRepet = brv[edge->getSnk()->getTypeId()];
-                coef = std::max(coef, (int) std::ceil(prod / (cons * nbRepet)));
+                if (nbRepet != 0)
+                    coef = std::max(coef, (int) std::ceil(prod / (cons * nbRepet)));
             }
         }
     }
@@ -139,6 +192,8 @@ void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
     }
 
     StackMonitor::free(TRANSFO_STACK, topo_matrix);
+    StackMonitor::free(TRANSFO_STACK, vertexIxs);
+    StackMonitor::free(TRANSFO_STACK, smallBrv);
 
 //	printf("brv:\n");
 //	for(int i=0; i<nbVertices; i++){

@@ -40,6 +40,7 @@
 
 #include "platform.h"
 #include <signal.h>
+
 #ifdef PAPI_AVAILABLE
 #include "../papify/PapifyAction.h"
 #endif

@@ -199,8 +199,9 @@ void ListScheduler::scheduleVertex(SRDAGVertex *vertex) {
     Time minimumStartTime = 0;
 
     for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
-        minimumStartTime = std::max(minimumStartTime,
-                                    vertex->getInEdge(i)->getSrc()->getEndTime());
+        if (vertex->getInEdge(i)->getRate() != 0)
+            minimumStartTime = std::max(minimumStartTime,
+                                        vertex->getInEdge(i)->getSrc()->getEndTime());
 //		if(vertex->getInEdge(i)->getSrc()->getSlave() == -1){
 //			throw "Try to start a vertex when previous one is not scheduled\n";
 //		}

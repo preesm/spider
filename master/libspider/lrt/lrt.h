@@ -96,6 +96,7 @@ private:
     int tabBlkLrtJobIx[NB_MAX_ACTOR];
 
     void runReceivedJob(void *msg);
+
 #ifdef PAPI_AVAILABLE
     std::map<lrtFct, PapifyAction *> jobPapifyActions_;
 #endif

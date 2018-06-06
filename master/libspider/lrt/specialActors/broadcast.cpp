@@ -47,7 +47,7 @@ void saBroadcast(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Para
 #endif
 
     for (int i = 0; i < nbOut; i++) {
-        if (outputFIFOs[i] != inputFIFOs[0])
+        if (outputFIFOs[i] != inputFIFOs[0] && outputFIFOs[i] != 0)
             memcpy(outputFIFOs[i], inputFIFOs[0], nbToken);
     }
 }

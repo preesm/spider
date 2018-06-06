@@ -203,6 +203,9 @@ inline void LRT::runReceivedJob(void *msg) {
 
                 inFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_recv(&inFifos[i]); // in com
 
+                if (inFifos[i].size == 0)
+                    inFifosAlloc[i] = NULL;
+
 #ifdef VERBOSE_TIME
                 time_waiting_input_comm += Platform::get()->getTime() - start;
 #endif
@@ -215,6 +218,9 @@ inline void LRT::runReceivedJob(void *msg) {
 #endif
 
                 outFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_start_send(&outFifos[i]); // in com
+
+                if (outFifos[i].size == 0)
+                    outFifosAlloc[i] = NULL;
 
 #ifdef VERBOSE_TIME
                 time_waiting_input_comm += Platform::get()->getTime() - start;

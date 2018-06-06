@@ -367,8 +367,9 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                     int *brv) {
     PiSDFGraph *currentPiSDF = job->graph;
 
-    for (int i = 0; i < currentPiSDF->getNEdge(); i++) {
-        PiSDFEdge *edge = currentPiSDF->getEdge(i);
+
+    for (int edgeIx = 0; edgeIx < currentPiSDF->getNEdge(); edgeIx++) {
+        PiSDFEdge *edge = currentPiSDF->getEdge(edgeIx);
 
         // Already treated edge
         if (edge->getSnk()->getType() == PISDF_TYPE_CONFIG)
@@ -398,8 +399,32 @@ void linkSRVertices(SRDAGGraph *topSrdag,
             nbSinkRepetitions = brv[edge->getSnk()->getTypeId()];
         }
 
+        // Unused edge
+        if (nbSourceRepetitions == 0 && nbSinkRepetitions == 0)
+            continue;
+
         int sourceProduction = edge->resolveProd(job);
         int sinkConsumption = edge->resolveCons(job);
+
+        if (sourceProduction == 0 && sinkConsumption == 0) {
+            /* Put Empty Src Port */
+            for (int srcRep = 0; srcRep < nbSourceRepetitions; srcRep++) {
+                SRDAGVertex *src = job->bodies[edge->getSrc()->getTypeId()][srcRep];
+                int portIx = edge->getSrcPortIx();
+                SRDAGEdge *emptyEdge = topSrdag->addEdge();
+                emptyEdge->setRate(0);
+                emptyEdge->connectSrc(src, portIx);
+            }
+            /* Put Empty Snk Port */
+            for (int snkRep = 0; snkRep < nbSinkRepetitions; snkRep++) {
+                SRDAGVertex *snk = job->bodies[edge->getSnk()->getTypeId()][snkRep];
+                int portIx = edge->getSnkPortIx();
+                SRDAGEdge *emptyEdge = topSrdag->addEdge();
+                emptyEdge->setRate(0);
+                emptyEdge->connectSnk(snk, portIx);
+            }
+            continue;
+        }
 
         int sourceIndex = 0;
         int sinkIndex = 0;

@@ -56,6 +56,45 @@ void printOptimsStats() {
     if (!joinforkUsed) printf("JoinFork Unused\n");
 }
 
+static int removeNullEdge(SRDAGGraph *topDag) {
+    for (int i = 0; i < topDag->getNEdge(); i++) {
+        SRDAGEdge *nullEdge = topDag->getEdge(i);
+        if (nullEdge->getRate() == 0) {
+            SRDAGVertex *src = nullEdge->getSrc();
+            SRDAGVertex *snk = nullEdge->getSnk();
+            if (src && src->getType() == SRDAG_FORK && src->getState() == SRDAG_EXEC && snk == NULL) {
+                int forkNOut = src->getNConnectedOutEdge();
+                int forkPortIx = nullEdge->getSrcPortIx();
+                nullEdge->disconnectSrc();
+                topDag->delEdge(nullEdge);
+
+                /* Shift on Fork */
+                for (int k = forkPortIx + 1; k < forkNOut; k++) {
+                    SRDAGEdge *edge = src->getOutEdge(k);
+                    edge->disconnectSrc();
+                    edge->connectSrc(src, k - 1);
+                }
+                return true;
+            }
+            if (snk && snk->getType() == SRDAG_JOIN && snk->getState() == SRDAG_EXEC && src == NULL) {
+                int joinNIn = snk->getNConnectedInEdge();
+                int joinPortIx = nullEdge->getSnkPortIx();
+                nullEdge->disconnectSnk();
+                topDag->delEdge(nullEdge);
+
+                /* Shift on Fork */
+                for (int k = joinPortIx + 1; k < joinNIn; k++) {
+                    SRDAGEdge *edge = snk->getInEdge(k);
+                    edge->disconnectSnk();
+                    edge->connectSnk(snk, k - 1);
+                }
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 static int reduceRB(SRDAGGraph *topDag) {
     for (int i = 0; i < topDag->getNVertex(); i++) {
         SRDAGVertex *rb = topDag->getVertex(i);
@@ -675,6 +714,11 @@ void optims(SRDAGGraph *topDag) {
     do {
         res = false;
         resTotal = false;
+
+        do {
+            res = removeNullEdge(topDag);
+            resTotal = res || resTotal;
+        } while (res);
 
         do {
             res = reduceRB(topDag);

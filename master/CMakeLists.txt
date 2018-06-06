@@ -98,6 +98,9 @@ if (PAPI_FOUND)
             libspider/papify/PapifyAction.h
             libspider/papify/PapifyEventLib.cpp
             libspider/papify/PapifyEventLib.h)
+else()
+	set(PAPI_LIBRARIES "")
+	set(PAPI_INCLUDE_DIRS "")
 endif()
 
 

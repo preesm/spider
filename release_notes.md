@@ -15,5 +15,6 @@ Spider Changelog
 * Implementation of SAMOS contribution.
 * Add Blocking wait on JobQueue
 * Added Papify automatic instrumentation to spider
+* Add handling of NullActors (with prod/cons equal to 0)
 
 ### Bug fix

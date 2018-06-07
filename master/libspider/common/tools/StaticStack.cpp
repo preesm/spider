@@ -39,6 +39,7 @@
 #include <platform.h>
 
 #include <algorithm>
+#include <cmath>
 
 StaticStack::StaticStack(const char *name, void *ptr, int size) :
         Stack(name) {
@@ -56,7 +57,7 @@ StaticStack::~StaticStack() {
 
 static inline int getAlignSize(int size) {
     float minAlloc = (float) Platform::get()->getMinAllocSize();
-    return (int) ceil(((float) size) / minAlloc) * minAlloc;
+    return (int) std::ceil(((float) size) / minAlloc) * minAlloc;
 }
 
 void *StaticStack::alloc(int size) {

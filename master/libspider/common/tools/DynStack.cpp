@@ -39,6 +39,7 @@
 #include <platform.h>
 
 #include <algorithm>
+#include <cmath>
 
 DynStack::DynStack(const char *name) : Stack(name) {
     curUsedSize_ = 0;
@@ -52,7 +53,7 @@ DynStack::~DynStack() {
 
 static inline int getAlignSize(int size) {
     float minAlloc = Platform::get()->getMinAllocSize();
-    return std::ceil(size / minAlloc) * minAlloc;
+    return (int) std::ceil(size / minAlloc) * minAlloc;
 }
 
 void *DynStack::alloc(int size) {

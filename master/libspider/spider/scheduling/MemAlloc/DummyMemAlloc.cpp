@@ -37,6 +37,7 @@
  */
 #include "DummyMemAlloc.h"
 
+#include <cmath>
 
 void DummyMemAlloc::reset() {
     currentMem_ = this->memStart_ + this->memReserved_;
@@ -45,7 +46,7 @@ void DummyMemAlloc::reset() {
 static inline int getAlignSize(int size) {
     //return std::ceil(size/1.0/getpagesize())*getpagesize();
     float minAlloc = (float) Platform::get()->getMinAllocSize();
-    return (int) ceil(((float) size) / minAlloc) * minAlloc;
+    return (int) std::ceil(((float) size) / minAlloc) * minAlloc;
 }
 
 

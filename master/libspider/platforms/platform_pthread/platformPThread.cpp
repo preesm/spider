@@ -425,8 +425,12 @@ void PlatformPThread::rstJobIx() {
         void *msg = NULL;
 
         do {
-            while (getSpiderCommunicator()->ctrl_start_recv(i, &msg) == 0);
-        } while (((UndefinedMsg *) msg)->msgIx != MSG_END_ITER);
+            getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
+            if(((UndefinedMsg *) msg)->msgIx == MSG_END_ITER)
+                break;
+            else
+                getSpiderCommunicator()->ctrl_end_recv(i);
+        } while (1);
         getSpiderCommunicator()->ctrl_end_recv(i);
     }
 
@@ -447,8 +451,12 @@ void PlatformPThread::rstJobIx() {
     for (int i = 1; i < nLrt_; i++) {
         void *msg = NULL;
         do {
-            while (getSpiderCommunicator()->ctrl_start_recv(i, &msg) == 0);
-        } while (((UndefinedMsg *) msg)->msgIx != MSG_RESET_LRT);
+            getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
+            if(((UndefinedMsg *) msg)->msgIx == MSG_RESET_LRT)
+                break;
+            else
+                getSpiderCommunicator()->ctrl_end_recv(i);
+        } while (1);
         getSpiderCommunicator()->ctrl_end_recv(i);
     }
 }

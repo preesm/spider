@@ -69,6 +69,7 @@ LRT::LRT(int ix) {
     run_ = false;
     jobIx_ = 0;
     jobIxTotal_ = 0;
+    usePapify_ = false;
 
 #ifdef VERBOSE_TIME
     time_waiting_job = 0;

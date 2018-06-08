@@ -60,17 +60,15 @@
 #include <tools/Stack.h>
 #include <queue>
 
+#include "ControlQueue.h"
+#include "TraceQueue.h"
+
 class PThreadLrtCommunicator : public LrtCommunicator {
 public:
     PThreadLrtCommunicator(
-            int msgSizeMax,
-            std::queue<unsigned char> *fIn,
-            std::queue<unsigned char> *fOut,
-            std::queue<unsigned char> *fTrace,
-            sem_t *mutexTrace,
-            sem_t *mutexFifoSpidertoLRT,
-            sem_t *mutexFifoLRTtoSpider,
-            sem_t *semFifoSpidertoLRT,
+            ControlQueue *spider2LrtQueue,
+            ControlQueue *lrt2SpiderQueue,
+            TraceQueue *traceQueue,
             void *fifos,
             void *dataMem
     );
@@ -104,22 +102,10 @@ public:
     void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx);
 
 private:
-    std::queue<unsigned char> *fIn_;
-    std::queue<unsigned char> *fOut_;
-    std::queue<unsigned char> *fTrace_;
 
-    sem_t *mutexTrace_;
-    sem_t *mutexFifoSpidertoLRT_;
-    sem_t *mutexFifoLRTtoSpider_;
-    sem_t *semFifoSpidertoLRT_;
-
-    int msgSizeMax_;
-
-    void *msgBufferSend_;
-    int curMsgSizeSend_;
-
-    void *msgBufferRecv_;
-    int curMsgSizeRecv_;
+    ControlQueue *spider2LrtQueue_;
+    ControlQueue *lrt2SpiderQueue_;
+    TraceQueue *traceQueue_;
 
     unsigned long *jobTab_;
     unsigned char *shMem_;

@@ -1,7 +1,6 @@
 /**
  * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2017) :
  *
- * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2016)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
@@ -33,84 +32,74 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef PLATFORM_H
-#define PLATFORM_H
+#ifndef SPIDER_TRACEQUEUE_H
+#define SPIDER_TRACEQUEUE_H
 
-#include "spider.h"
-#include <monitor/StackMonitor.h>
-#include <stdio.h>
-#include <stdexcept>
+#include <queue>
+#include <mutex>
+#include <semaphore.h>
 
-class LRT;
-
-class LrtCommunicator;
-
-class SpiderCommunicator;
-
-struct ClearTimeMsg;
-
-class Platform {
+/**
+ * Thread safe mono directional queue with only one reader but multiple writers (nLrt + Spider).
+ */
+class TraceQueue {
 public:
-    /** File Handling */
-    virtual FILE *fopen(const char *name) = 0;
+    /**
+     * Constructor.
+     * @param msgSizeMax largest possible message size.
+     * @param nLrt Number of Lrts.
+     */
+    TraceQueue(int msgSizeMax, int nLrt);
 
-    virtual void fprintf(FILE *id, const char *fmt, ...) = 0;
+    /**
+     * Destructor.
+     */
+    virtual ~TraceQueue();
 
-    virtual void fclose(FILE *id) = 0;
+    /**
+     * Prepare a message to be send.
+     * @param lrtIx Index of the sending LRT (nLrt is espected for Spider)
+     * @param size Size needed by the message.
+     * @return Ptr to data were to write the message.
+     */
+    void *push_start(int lrtIx, int size);
 
-    /** Memory Handling */
-    virtual void *virt_to_phy(void *address) = 0;
+    /**
+     * Actually send the message prepared in @push_start.
+     * @param lrtIx Index of the sending LRT (nLrt is espected for Spider)
+     * @param size Size needed by the message.
+     */
+    void push_end(int lrtIx, int size);
 
-    virtual int getMinAllocSize() = 0;
+    /**
+     * Receive a message from the queue.
+     * @param data Ptr to the message will be store in this argument.
+     * @param blocking True if the @pop_start should wait for a message if none is available.
+     * @return 0 if no message have been received, size of the message otherwise.
+     */
+    int pop_start(void **data, bool blocking);
 
-    virtual int getCacheLineSize() = 0;
+    /**
+     * Free the data to allow the reception of a new message.
+     * data from @pop_start should not be used after this call.
+     */
+    void pop_end();
 
-    /** Time Handling */
-    virtual void rstTime(struct ClearTimeMsg *msg) = 0;
+private:
+    std::queue<unsigned char> queue_;
+    std::mutex queue_mutex_;
+    sem_t queue_sem_;
 
-    virtual void rstTime() = 0;
+    int msgSizeMax_;
+    int nLrt_;
 
-    virtual Time getTime() = 0;
+    void **msgBufferSend_;
+    int *curMsgSizeSend_;
 
-    virtual void rstJobIx() = 0;
+    void *msgBufferRecv_;
+    int curMsgSizeRecv_;
 
-    /** Platform getter/setter */
-    static inline Platform *get();
-
-    virtual LRT *getLrt() = 0;
-
-    virtual int getLrtIx() = 0;
-
-    virtual int getNLrt() = 0;
-
-    virtual LrtCommunicator *getLrtCommunicator() = 0;
-
-    virtual SpiderCommunicator *getSpiderCommunicator() = 0;
-
-    virtual void setStack(SpiderStack id, Stack *stack) = 0;
-
-    virtual Stack *getStack(SpiderStack id) = 0;
-
-    virtual inline int getMaxActorAllocSize(int pe);
-
-protected:
-    Platform();
-
-    virtual ~Platform();
-
-    static Platform *platform_;
 };
 
-inline Platform *Platform::get() {
-    if (platform_)
-        return platform_;
-    else
-        throw std::runtime_error("Error undefined platform\n");
-}
 
-// If unimplemented in child
-inline int Platform::getMaxActorAllocSize(int pe) {
-    return 1024 * 1024 * 1024;
-}
-
-#endif/*PLATFORM_H*/
+#endif //SPIDER_TRACEQUEUE_H

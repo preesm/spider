@@ -58,24 +58,25 @@
 #endif
 #endif
 
-#include <queue>
+#include <ControlQueue.h>
+#include <TraceQueue.h>
 
 class PThreadSpiderCommunicator : public SpiderCommunicator {
 public:
-    PThreadSpiderCommunicator(int msgSizeMax, int nLrt,
-                              sem_t *mutexTrace, sem_t *mutexFifoSpidertoLRT, sem_t *mutexFifoLRTtoSpider,
-                              sem_t *semFifoSpidertoLRT,
-                              std::queue<unsigned char> *fTraceWr, std::queue<unsigned char> *fTraceRd);
+    PThreadSpiderCommunicator(int nLrt,
+                              ControlQueue **spider2LrtQueues,
+                              ControlQueue **lrt2SpiderQueues,
+                              TraceQueue *traceQueue);
 
     ~PThreadSpiderCommunicator();
-
-    void setLrtCom(int lrtIx, std::queue<unsigned char> *fIn, std::queue<unsigned char> *fOut);
 
     void *ctrl_start_send(int lrtIx, int size);
 
     void ctrl_end_send(int lrtIx, int size);
 
     int ctrl_start_recv(int lrtIx, void **data);
+
+    void ctrl_start_recv_block(int lrtIx, void **data);
 
     void ctrl_end_recv(int lrtIx);
 
@@ -85,25 +86,14 @@ public:
 
     int trace_start_recv(void **data);
 
+    void trace_start_recv_block(void **data);
+
     void trace_end_recv();
 
 private:
-    std::queue<unsigned char> **fIn_;
-    std::queue<unsigned char> **fOut_;
-    std::queue<unsigned char> *fTraceRd_;
-    std::queue<unsigned char> *fTraceWr_;
-
-    sem_t *mutexTrace_;
-    sem_t *mutexFifoSpidertoLRT_;
-    sem_t *mutexFifoLRTtoSpider_;
-    sem_t *semFifoSpidertoLRT_;
-
-    int msgSizeMax_;
-
-    void *msgBufferRecv_;
-    int curMsgSizeRecv_;
-    void *msgBufferSend_;
-    int curMsgSizeSend_;
+    ControlQueue **spider2LrtQueues_;
+    ControlQueue **lrt2SpiderQueues_;
+    TraceQueue *traceQueue_;
 };
 
 #endif/*PTHREADS_SPIDER_COMMUNICATOR_H*/

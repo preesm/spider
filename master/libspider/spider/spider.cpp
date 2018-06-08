@@ -425,131 +425,130 @@ void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionS
     TraceMsg *traceMsg;
     int n = Launcher::get()->getNLaunched();
     while (n) {
-        if (Platform::get()->getSpiderCommunicator()->trace_start_recv((void **) &traceMsg)) {
-            switch (traceMsg->msgIx) {
-                case TRACE_JOB: {
-                    SRDAGVertex *vertex = srdag_->getVertexFromIx(traceMsg->srdagIx);
+        Platform::get()->getSpiderCommunicator()->trace_start_recv_block((void **) &traceMsg);
+        switch (traceMsg->msgIx) {
+            case TRACE_JOB: {
+                SRDAGVertex *vertex = srdag_->getVertexFromIx(traceMsg->srdagIx);
 
-                    traceMsg->start /= CHIP_FREQ;
-                    traceMsg->end /= CHIP_FREQ;
+                traceMsg->start /= CHIP_FREQ;
+                traceMsg->end /= CHIP_FREQ;
 
-                    Time execTime = traceMsg->end - traceMsg->start;
+                Time execTime = traceMsg->end - traceMsg->start;
 
-                    static Time baseTime = 0;
-                    // if(strcmp(vertex->getReference()->getName(),"src") == 0){
-                    // 	baseTime = traceMsg->start;
-                    // }
+                static Time baseTime = 0;
+                // if(strcmp(vertex->getReference()->getName(),"src") == 0){
+                // 	baseTime = traceMsg->start;
+                // }
 
 
-                    printGantt_SRDAGVertex(
-                            ganttFile,
-                            latexFile,
-                            archi_,
-                            vertex,
-                            traceMsg->start - baseTime,
-                            traceMsg->end - baseTime,
-                            traceMsg->lrtIx,
-                            latexScaling);
+                printGantt_SRDAGVertex(
+                        ganttFile,
+                        latexFile,
+                        archi_,
+                        vertex,
+                        traceMsg->start - baseTime,
+                        traceMsg->end - baseTime,
+                        traceMsg->lrtIx,
+                        latexScaling);
 
-                    /* Update Stats */
-                    stat->globalEndTime = std::max(traceMsg->end - baseTime, stat->globalEndTime);
-                    stat->nExecSRDAGActor++;
+                /* Update Stats */
+                stat->globalEndTime = std::max(traceMsg->end - baseTime, stat->globalEndTime);
+                stat->nExecSRDAGActor++;
 
-                    switch (vertex->getType()) {
-                        case SRDAG_NORMAL: {
-                            int i;
-                            int lrtType = archi_->getPEType(traceMsg->lrtIx);
-                            for (i = 0; i < stat->nPiSDFActor; i++) {
-                                if (stat->actors[i] == vertex->getReference()) {
-                                    stat->actorTimes[i][lrtType] += execTime;
-                                    stat->actorIterations[i][lrtType]++;
-
-                                    stat->actorFisrt[i] = std::min(stat->actorFisrt[i], traceMsg->start);
-                                    stat->actorLast[i] = std::max(stat->actorLast[i], traceMsg->end);
-                                    break;
-                                }
-                            }
-                            if (i == stat->nPiSDFActor) {
-                                stat->actors[stat->nPiSDFActor] = vertex->getReference();
-
-                                memset(stat->actorTimes[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES * sizeof(Time));
-                                memset(stat->actorIterations[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES * sizeof(Time));
-
-                                stat->actorTimes[stat->nPiSDFActor][lrtType] += execTime;
+                switch (vertex->getType()) {
+                    case SRDAG_NORMAL: {
+                        int i;
+                        int lrtType = archi_->getPEType(traceMsg->lrtIx);
+                        for (i = 0; i < stat->nPiSDFActor; i++) {
+                            if (stat->actors[i] == vertex->getReference()) {
+                                stat->actorTimes[i][lrtType] += execTime;
                                 stat->actorIterations[i][lrtType]++;
-                                stat->nPiSDFActor++;
 
-                                stat->actorFisrt[i] = traceMsg->start;
-                                stat->actorLast[i] = traceMsg->end;
+                                stat->actorFisrt[i] = std::min(stat->actorFisrt[i], traceMsg->start);
+                                stat->actorLast[i] = std::max(stat->actorLast[i], traceMsg->end);
+                                break;
                             }
-                            break;
                         }
-                        case SRDAG_BROADCAST:
-                            stat->brTime += execTime;
-                            break;
-                        case SRDAG_FORK:
-                            stat->forkTime += execTime;
-                            break;
-                        case SRDAG_JOIN:
-                            stat->joinTime += execTime;
-                            break;
-                        case SRDAG_ROUNDBUFFER:
-                            stat->rbTime += execTime;
-                            break;
-                        case SRDAG_INIT:
-                        case SRDAG_END:
-                            break;
+                        if (i == stat->nPiSDFActor) {
+                            stat->actors[stat->nPiSDFActor] = vertex->getReference();
+
+                            memset(stat->actorTimes[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES * sizeof(Time));
+                            memset(stat->actorIterations[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES * sizeof(Time));
+
+                            stat->actorTimes[stat->nPiSDFActor][lrtType] += execTime;
+                            stat->actorIterations[i][lrtType]++;
+                            stat->nPiSDFActor++;
+
+                            stat->actorFisrt[i] = traceMsg->start;
+                            stat->actorLast[i] = traceMsg->end;
+                        }
+                        break;
                     }
-
-                    break;
+                    case SRDAG_BROADCAST:
+                        stat->brTime += execTime;
+                        break;
+                    case SRDAG_FORK:
+                        stat->forkTime += execTime;
+                        break;
+                    case SRDAG_JOIN:
+                        stat->joinTime += execTime;
+                        break;
+                    case SRDAG_ROUNDBUFFER:
+                        stat->rbTime += execTime;
+                        break;
+                    case SRDAG_INIT:
+                    case SRDAG_END:
+                        break;
                 }
-                case TRACE_SPIDER: {
 
-                    static int i = 0;
-
-                    traceMsg->start /= CHIP_FREQ;
-                    traceMsg->end /= CHIP_FREQ;
-
-                    /* Gantt File */
-                    Platform::get()->fprintf(ganttFile, "\t<event\n");
-                    Platform::get()->fprintf(ganttFile, "\t\tstart=\"%llu\"\n", traceMsg->start);
-                    Platform::get()->fprintf(ganttFile, "\t\tend=\"%llu\"\n", traceMsg->end);
-                    Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n",
-                                             TimeMonitor::getTaskName((TraceSpiderType) traceMsg->spiderTask));
-                    Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi_->getPEName(traceMsg->lrtIx));
-                    Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", regenerateColor(i++));
-                    Platform::get()->fprintf(ganttFile, "\t\t>Step_%lu.</event>\n", traceMsg->spiderTask);
-
-                    stat->schedTime = std::max(traceMsg->end, stat->schedTime);
-
-                    switch (traceMsg->spiderTask) {
-                        case TRACE_SPIDER_GRAPH:
-                            stat->graphTime += traceMsg->end - traceMsg->start;
-                            break;
-                        case TRACE_SPIDER_ALLOC:
-                            throw std::runtime_error("Unhandle trace");
-                        case TRACE_SPIDER_SCHED:
-                            stat->mappingTime += traceMsg->end - traceMsg->start;
-                            break;
-                        case TRACE_SPIDER_OPTIM:
-                            stat->optimTime += traceMsg->end - traceMsg->start;
-                            break;
-                    }
-
-                    /* Latex File */
-                    Platform::get()->fprintf(latexFile, "%f,", traceMsg->start / latexScaling); /* Start */
-                    Platform::get()->fprintf(latexFile, "%f,", traceMsg->end / latexScaling); /* Duration */
-                    Platform::get()->fprintf(latexFile, "%d,", 0); /* Core index */
-                    Platform::get()->fprintf(latexFile, "colorSched\n", 15); /* Color */
-                    break;
-                }
-                default:
-                    printf("msgIx %lu\n", traceMsg->msgIx);
-                    throw std::runtime_error("Unhandled trace msg");
+                break;
             }
-            Platform::get()->getSpiderCommunicator()->trace_end_recv();
-            n--;
+            case TRACE_SPIDER: {
+
+                static int i = 0;
+
+                traceMsg->start /= CHIP_FREQ;
+                traceMsg->end /= CHIP_FREQ;
+
+                /* Gantt File */
+                Platform::get()->fprintf(ganttFile, "\t<event\n");
+                Platform::get()->fprintf(ganttFile, "\t\tstart=\"%llu\"\n", traceMsg->start);
+                Platform::get()->fprintf(ganttFile, "\t\tend=\"%llu\"\n", traceMsg->end);
+                Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n",
+                                         TimeMonitor::getTaskName((TraceSpiderType) traceMsg->spiderTask));
+                Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi_->getPEName(traceMsg->lrtIx));
+                Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", regenerateColor(i++));
+                Platform::get()->fprintf(ganttFile, "\t\t>Step_%lu.</event>\n", traceMsg->spiderTask);
+
+                stat->schedTime = std::max(traceMsg->end, stat->schedTime);
+
+                switch (traceMsg->spiderTask) {
+                    case TRACE_SPIDER_GRAPH:
+                        stat->graphTime += traceMsg->end - traceMsg->start;
+                        break;
+                    case TRACE_SPIDER_ALLOC:
+                        throw std::runtime_error("Unhandle trace");
+                    case TRACE_SPIDER_SCHED:
+                        stat->mappingTime += traceMsg->end - traceMsg->start;
+                        break;
+                    case TRACE_SPIDER_OPTIM:
+                        stat->optimTime += traceMsg->end - traceMsg->start;
+                        break;
+                }
+
+                /* Latex File */
+                Platform::get()->fprintf(latexFile, "%f,", traceMsg->start / latexScaling); /* Start */
+                Platform::get()->fprintf(latexFile, "%f,", traceMsg->end / latexScaling); /* Duration */
+                Platform::get()->fprintf(latexFile, "%d,", 0); /* Core index */
+                Platform::get()->fprintf(latexFile, "colorSched\n", 15); /* Color */
+                break;
+            }
+            default:
+                printf("msgIx %lu\n", traceMsg->msgIx);
+                throw std::runtime_error("Unhandled trace msg");
         }
+        Platform::get()->getSpiderCommunicator()->trace_end_recv();
+        n--;
     }
     Launcher::get()->rstNLaunched();
 

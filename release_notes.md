@@ -1,12 +1,14 @@
 Spider Changelog
 ================
 
-## Release version X.Y.Z
-*XXXX.XX.XX*
+## Release version 1.1.1
+*2018.06.11*
 
 ### New Feature
 
 ### Changes
+* Add release scripts;
+* Add travis file;
 
 ### Bug fix
 

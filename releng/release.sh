@@ -67,7 +67,7 @@ sed -i -e "s/XXXX\.XX\.XX/$TODAY_DATE/g" release_notes.md
 RELEASE_LINES=$(cat release_notes.md | grep -n Release | head -n 2 | cut -d':' -f 1 | xargs)
 NEW_RELEASE_LINE=$(echo $RELEASE_LINES | cut -d' ' -f 1)
 PREV_RELEASE_LINE=$(echo $RELEASE_LINES | cut -d' ' -f 2)
-RELEASE_BODY=$(cat release_notes.md | head -n $((PREV_RELEASE_LINE - 1)) | tail -n +${NEW_RELEASE_LINE} | tr '\n' '\r' | sed 's/\r/\\n/g')
+RELEASE_BODY=$(cat release_notes.md | head -n $((PREV_RELEASE_LINE - 1)) | tail -n +${NEW_RELEASE_LINE} | tr '\n' '\r' | sed 's/\r/\\r\\n/g')
 
 git stash
 
@@ -93,7 +93,7 @@ git checkout $MAIN_BRANCH
 git merge --no-ff $DEV_BRANCH -m "merge branch '$DEV_BRANCH' for new version $NEW_VERSION"
 git tag v$NEW_VERSION
 
-sleep 0.2
+sleep 1
 
 #move to snapshot version in develop and push
 git checkout $DEV_BRANCH

@@ -7,6 +7,7 @@ Spider Changelog
 ### New Feature
 
 ### Changes
+* Fix release scripts;
 
 ### Bug fix
 

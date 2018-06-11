@@ -48,6 +48,12 @@ LCANS=`echo "${ANS}" | tr '[:upper:]' '[:lower:]'`
 
 NEW_VERSION=$1
 
+RELEASE_LINES=$(cat release_notes.md | grep -n Release | head -n 2 | cut -d':' -f 1 | xargs)
+NEW_RELEASE_LINE=$(echo $RELEASE_LINES | cut -d' ' -f 1)
+PREV_RELEASE_LINE=$(echo $RELEASE_LINES | cut -d' ' -f 2)
+RELEASE_BODY=$(cat release_notes.md | head -n $((PREV_RELEASE_LINE - 1)) | tail -n +${NEW_RELEASE_LINE})
+
+
 CURRENT_BRANCH=$(cd `dirname $0` && echo `git branch`)
 ORIG_DIR=`pwd`
 TODAY_DATE=`date +%Y.%m.%d`
@@ -135,7 +141,7 @@ GENERATE_POST_BODY() {
 {
   "tag_name": "${TAG}",
   "name": "${TAG}",
-  "body": "",
+  "body": "${RELEASE_BODY}",
   "draft": false,
   "prerelease": false
 }

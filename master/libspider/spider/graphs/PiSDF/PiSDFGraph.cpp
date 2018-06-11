@@ -48,7 +48,7 @@ PiSDFGraph::PiSDFGraph(
         bodies_(nBody, PISDF_STACK),
         configs_(nConfig, PISDF_STACK),
         inputIfs_(nInputIf, PISDF_STACK),
-        outputIfs_(nInputIf, PISDF_STACK) {
+        outputIfs_(nOutputIf, PISDF_STACK) {
     parent_ = 0;
 }
 

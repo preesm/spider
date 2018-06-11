@@ -1,8 +1,10 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2015) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
  *
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF

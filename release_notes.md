@@ -1,6 +1,17 @@
 Spider Changelog
 ================
 
+## Release version 1.1.2
+*2018.06.11*
+
+### New Feature
+
+### Changes
+* Update release scripts;
+
+### Bug fix
+
+
 ## Release version 1.1.1
 *2018.06.11*
 

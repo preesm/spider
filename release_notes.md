@@ -8,6 +8,7 @@ Spider Changelog
 
 ### Changes
 * Add release scripts;
+* Add travis file;
 
 ### Bug fix
 

@@ -19,6 +19,26 @@ fi
 echo "Testing Github permission"
 git ls-remote git@github.com:${REPO}.git > /dev/null
 
+# then test github oauth access token
+echo "Testing Github OAuth token validity"
+if [ ! -e ~/.ghtoken ]; then
+  echo "Error: could not locate '~/.ghtoken' for reading the Github OAuth token"
+  echo "Visit 'https://github.com/settings/tokens/new' and generate a new token with rights on 'repo',"
+  echo "then create the file '~/.ghtoken' with the token value as its only content."
+  exit 1
+fi
+OAUTH_TOKEN=$(cat ~/.ghtoken)
+STATUS=$(curl -s -i -H "Authorization: $OAUTH_TOKEN to" https://api.github.com/repos/${REPO}/releases | grep "^Status:" | cut -d' ' -f 2)
+if [ "$STATUS" != "200" ]; then
+  echo "Error: given token in '~/.ghtoken' is invalid or revoked."
+  echo "  STATUS = $STATUS"
+  echo "Visit 'https://github.com/settings/tokens/new' and generate a new token with rights on 'repo',"
+  echo "then replace the content of '~/.ghtoken' with the token value."
+  exit 1
+fi
+
+
+exit 0
 
 #warning
 echo "Warning: this script will delete ignored files and remove all changes in $DEV_BRANCH and $MAIN_BRANCH"
@@ -106,3 +126,40 @@ git push --tags
 git push
 git checkout $DEV_BRANCH
 git push
+
+
+
+TAG=v$NEW_VERSION
+GENERATE_POST_BODY() {
+  cat <<EOF
+{
+  "tag_name": "${TAG}",
+  "name": "${TAG}",
+  "body": "",
+  "draft": false,
+  "prerelease": false
+}
+EOF
+}
+
+# create GitHub release using API
+echo ""
+echo "Create release"
+API_RESPONSE=$(curl --silent -H "Authorization: token ${OAUTH_TOKEN}" --data "$(GENERATE_POST_BODY)" -X POST "https://api.github.com/repos/${REPO}/releases")
+
+echo ""
+echo "Extract Upload URL"
+UPLOAD_URL=$(echo ${API_RESPONSE} | \
+  sed '0,/{/s/{//' | rev | tac | sed '0,/}/s/}//' | rev | tac | \
+  perl -0777 -pe 's/\[[^\]]*\]//igs' | \
+  perl -0777 -pe 's/\{[^\{\}]*\}//igs' | \
+  perl -0777 -pe 's/\{[^\{\}]*\}//igs' | \
+  perl -0777 -pe 's/.*"upload_url": "([^,]+)",?.*/\1/g')
+
+echo "   => ${UPLOAD_URL}"
+
+# TODO add assets to upload
+for FILE in ; do
+  echo " * upload $FILE"
+  curl -H "Authorization: token $OAUTH_TOKEN" -H "Content-Type: $(file -b --mime-type $FILE)" -X POST "$UPLOAD_URL?name=$(basename $FILE)" --upload-file $FILE > /dev/null
+done

@@ -37,9 +37,6 @@ if [ "$STATUS" != "200" ]; then
   exit 1
 fi
 
-
-exit 0
-
 #warning
 echo "Warning: this script will delete ignored files and remove all changes in $DEV_BRANCH and $MAIN_BRANCH"
 read -p "Do you want to conitnue ? [NO/yes] " ANS

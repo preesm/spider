@@ -45,12 +45,6 @@ LCANS=`echo "${ANS}" | tr '[:upper:]' '[:lower:]'`
 
 NEW_VERSION=$1
 
-RELEASE_LINES=$(cat release_notes.md | grep -n Release | head -n 2 | cut -d':' -f 1 | xargs)
-NEW_RELEASE_LINE=$(echo $RELEASE_LINES | cut -d' ' -f 1)
-PREV_RELEASE_LINE=$(echo $RELEASE_LINES | cut -d' ' -f 2)
-RELEASE_BODY=$(cat release_notes.md | head -n $((PREV_RELEASE_LINE - 1)) | tail -n +${NEW_RELEASE_LINE})
-
-
 CURRENT_BRANCH=$(cd `dirname $0` && echo `git branch`)
 ORIG_DIR=`pwd`
 TODAY_DATE=`date +%Y.%m.%d`
@@ -69,6 +63,12 @@ git clean -xdf
 ./releng/update-version.sh $NEW_VERSION
 sed -i -e "s/X\.Y\.Z/$NEW_VERSION/g" release_notes.md
 sed -i -e "s/XXXX\.XX\.XX/$TODAY_DATE/g" release_notes.md
+
+RELEASE_LINES=$(cat release_notes.md | grep -n Release | head -n 2 | cut -d':' -f 1 | xargs)
+NEW_RELEASE_LINE=$(echo $RELEASE_LINES | cut -d' ' -f 1)
+PREV_RELEASE_LINE=$(echo $RELEASE_LINES | cut -d' ' -f 2)
+RELEASE_BODY=$(cat release_notes.md | head -n $((PREV_RELEASE_LINE - 1)) | tail -n +${NEW_RELEASE_LINE} | tr '\n' '\r' | sed 's/\r/\\n/g')
+
 git stash
 
 # Fix headers

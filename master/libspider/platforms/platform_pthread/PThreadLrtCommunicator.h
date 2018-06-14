@@ -62,15 +62,15 @@
 
 #include "ControlQueue.h"
 #include "TraceQueue.h"
+#include "DataQueues.h"
 
 class PThreadLrtCommunicator : public LrtCommunicator {
 public:
     PThreadLrtCommunicator(
             ControlQueue *spider2LrtQueue,
             ControlQueue *lrt2SpiderQueue,
-            TraceQueue *traceQueue,
-            void *fifos,
-            void *dataMem
+            DataQueues *dataQueues,
+            TraceQueue *traceQueue
     );
 
     ~PThreadLrtCommunicator();
@@ -97,18 +97,15 @@ public:
 
     void setLrtJobIx(int lrtIx, int jobIx);
 
-    long getLrtJobIx(int lrtIx);
-
     void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx);
+
 
 private:
 
     ControlQueue *spider2LrtQueue_;
     ControlQueue *lrt2SpiderQueue_;
+    DataQueues *dataQueues_;
     TraceQueue *traceQueue_;
-
-    unsigned long *jobTab_;
-    unsigned char *shMem_;
 };
 
 #endif/*PTHREAD_LRT_COMMUNICATOR_H*/

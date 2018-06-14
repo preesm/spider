@@ -46,16 +46,13 @@
 PThreadLrtCommunicator::PThreadLrtCommunicator(
         ControlQueue *spider2LrtQueue,
         ControlQueue *lrt2SpiderQueue,
-        TraceQueue *traceQueue,
-        void *jobTab,
-        void *dataMem
+        DataQueues *dataQueues,
+        TraceQueue *traceQueue
 ) {
     spider2LrtQueue_ = spider2LrtQueue;
     lrt2SpiderQueue_ = lrt2SpiderQueue;
+    dataQueues_ = dataQueues;
     traceQueue_ = traceQueue;
-
-    jobTab_ = (unsigned long *) jobTab;
-    shMem_ = (unsigned char *) dataMem;
 }
 
 PThreadLrtCommunicator::~PThreadLrtCommunicator() {
@@ -102,16 +99,11 @@ void *PThreadLrtCommunicator::data_start_send(Fifo *f) {
 }
 
 void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx) {
-    jobTab_[lrtIx] = jobIx;
-}
-
-long PThreadLrtCommunicator::getLrtJobIx(int lrtIx) {
-    // TODO Protect from invalid read: long are not atomic !!!
-    return jobTab_[lrtIx];
+    dataQueues_->updateLrtJobStamp(lrtIx, jobIx);
 }
 
 void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx) {
     for (int i = 0; i < nbDependency; i++) {
-        while (blkLrtJobIx[i] >= getLrtJobIx(blkLrtIx[i]));
+        dataQueues_->waitOnJobStamp(Platform::get()->getLrtIx(), blkLrtIx[i], blkLrtJobIx[i], true);
     }
 }

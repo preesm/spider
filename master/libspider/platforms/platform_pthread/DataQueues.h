@@ -1,10 +1,7 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2017) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2017) :
  *
- * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2016)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -35,50 +32,54 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef LRT_COMMUNICATOR_H
-#define LRT_COMMUNICATOR_H
+#ifndef SPIDER_DATAQUEUES_H
+#define SPIDER_DATAQUEUES_H
 
-#include "Message.h"
+#include <mutex>
+#include <semaphore.h>
 
-class LrtCommunicator {
+/**
+ * Handles LRT synchronisation for data communications.
+ */
+class DataQueues {
+
 public:
-    virtual ~LrtCommunicator() {}
 
-    virtual void *ctrl_start_send(int size) = 0;
+    /**
+     * Constructor.
+     * @param nLrt Number of Lrt in the platform.
+     */
+    DataQueues(int nLrt);
 
-    virtual void ctrl_end_send(int size) = 0;
+    /**
+     * Destructor.
+     */
+    ~DataQueues();
 
-    virtual int ctrl_start_recv(void **data) = 0;
+    /**
+     * Update the job stamp of a lrt.
+     * @param lrtIx Lrt index.
+     * @param jobStamp New job stamp value.
+     */
+    void updateLrtJobStamp(int lrtIx, int jobStamp);
 
-    virtual void ctrl_start_recv_block(void **data) = 0;
+    /**
+     * Wait a lrt to be at a specific job stamp.
+     * @param lrtIx Demanding lrt index.
+     * @param waitingLrtIx Target lrt index.
+     * @param jobStamp Job stamp to wait.
+     * @param blocking True if the call is blocking.
+     * @return 0 if lrt is at the specific job stamp, 1 otherwise.
+     */
+    int waitOnJobStamp(int lrtIx, int waitingLrtIx, int jobStamp, bool blocking);
 
-    virtual void ctrl_end_recv() = 0;
+private:
 
-    virtual void *trace_start_send(int size) = 0;
-
-    virtual void trace_end_send(int size) = 0;
-
-    virtual void *data_start_send(Fifo *f) = 0;
-
-    virtual void data_end_send(Fifo *f) = 0;
-
-    virtual void *data_recv(Fifo *f) = 0;
-
-    virtual void allocateDataBuffer(int nbInput, Fifo *fIn, int nbOutput, Fifo *fOut) {};
-
-    virtual void freeDataBuffer(int nbInput, int nbOutput) {};
-
-    virtual void setLrtJobIx(int lrtIx, int jobIx) = 0;
-
-    virtual void rstLrtJobIx(int lrtIx) {};
-
-    virtual void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx) = 0;
-
-    virtual void unlockLrt(int jobIx) {};
-
-
-protected:
-    LrtCommunicator() {}
+    int nLrt_;
+    sem_t *waitingSems_;
+    int **jobStamps_;
+    std::mutex *jobStampMutex_;
 };
 
-#endif/*LRT_COMMUNICATOR_H*/
+
+#endif //SPIDER_DATAQUEUES_H

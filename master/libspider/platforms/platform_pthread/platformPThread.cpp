@@ -72,7 +72,6 @@
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
 
-static void *jobTab;
 static void *dataMem;
 
 static std::chrono::time_point<std::chrono::steady_clock> start_steady;
@@ -134,6 +133,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
         lrt2SpiderQueues_[i] = CREATE(ARCHI_STACK, ControlQueue)(MAX_MSG_SIZE);
     }
 
+    dataQueues_ = CREATE(ARCHI_STACK, DataQueues)(nLrt_);
     traceQueue_ = CREATE(ARCHI_STACK, TraceQueue)(MAX_MSG_SIZE, nLrt_);
 
     //declaration des threads et structures de passage de paramètre
@@ -171,17 +171,15 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 #endif
 
     //TODO have shMem a multiple of getMinAllocSize
-    jobTab = malloc(config.platform.shMemSize);
-    dataMem = (void *) ((long) jobTab + sizeof(unsigned int) * nLrt_);
+    dataMem = malloc(config.platform.shMemSize);
 
     // Filling up parameters for each threads
     for (int i = 1; i < nLrt_; i++) {
         lrtCom_[i] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
                 spider2LrtQueues_[i],
                 lrt2SpiderQueues_[i],
-                traceQueue_,
-                jobTab,
-                dataMem);
+                dataQueues_,
+                traceQueue_);
         lrt_[i] = CREATE(ARCHI_STACK, LRT)(i);
 
         arg_lrt_[i - 1].lrtCom = lrtCom_[i];
@@ -219,7 +217,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     StackMonitor::initStack(LRT_STACK, lrtStackConfig);
 
     /** Initialize shared memory */
-    memset(jobTab, 0, config.platform.shMemSize);
+    memset(dataMem, 0, config.platform.shMemSize);
 
     /** Initialize LRT and Communicators */
     spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
@@ -231,9 +229,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     lrtCom_[0] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
             spider2LrtQueues_[0],
             lrt2SpiderQueues_[0],
-            traceQueue_,
-            jobTab,
-            dataMem);
+            dataQueues_,
+            traceQueue_);
 
     lrt_[0] = CREATE(ARCHI_STACK, LRT)(0);
 
@@ -331,11 +328,14 @@ PlatformPThread::~PlatformPThread() {
         StackMonitor::free(ARCHI_STACK, spider2LrtQueues_[i]);
         StackMonitor::free(ARCHI_STACK, lrt2SpiderQueues_[i]);
     }
+    dataQueues_->~DataQueues();
     traceQueue_->~TraceQueue();
 
     StackMonitor::free(ARCHI_STACK, spider2LrtQueues_);
     StackMonitor::free(ARCHI_STACK, lrt2SpiderQueues_);
+    StackMonitor::free(ARCHI_STACK, dataQueues_);
     StackMonitor::free(ARCHI_STACK, traceQueue_);
+
 
     //Desallocation des tableaux dynamiques
     StackMonitor::free(ARCHI_STACK, lrt_);
@@ -361,7 +361,7 @@ PlatformPThread::~PlatformPThread() {
     //Destroying synchronisation barrier
     pthread_barrier_destroy(&pthread_barrier_init_and_end_thread);
 
-    free(jobTab);
+    free(dataMem);
 }
 
 /** File Handling */
@@ -445,7 +445,9 @@ void PlatformPThread::rstJobIx() {
     Platform::get()->getLrt()->setJobIx(0);
 
     //reseting jobTab
-    memset(jobTab, 0, sizeof(unsigned int) * nLrt_);
+    for(int i=0; i<nLrt_; i++){
+        lrtCom_[0]->setLrtJobIx(i,0);
+    }
 
     //Waiting for slave LRTs to reset their jobIx counter
     for (int i = 1; i < nLrt_; i++) {

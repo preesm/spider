@@ -1,6 +1,7 @@
 @REM
-@REM Copyright or © or Copr. IETR/INSA - Rennes (2017) :
+@REM Copyright or © or Copr. IETR/INSA - Rennes (2017 - 2018) :
 @REM
+@REM Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
 @REM Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
 @REM
 @REM Spider is a dataflow based runtime used to execute dynamic PiSDF
@@ -32,6 +33,8 @@
 @REM The fact that you are presently reading this means that you have had
 @REM knowledge of the CeCILL license and that you accept its terms.
 @REM
+
+
 
 @echo off
 mkdir bin

@@ -1,6 +1,8 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2017) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2018) :
  *
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2016)
  *
@@ -46,7 +48,7 @@ PiSDFGraph::PiSDFGraph(
         bodies_(nBody, PISDF_STACK),
         configs_(nConfig, PISDF_STACK),
         inputIfs_(nInputIf, PISDF_STACK),
-        outputIfs_(nInputIf, PISDF_STACK) {
+        outputIfs_(nOutputIf, PISDF_STACK) {
     parent_ = 0;
 }
 

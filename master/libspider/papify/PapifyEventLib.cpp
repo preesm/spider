@@ -1,9 +1,11 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2017) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2018) :
  *
- * Daniel Madronal <daniel.madronal@upm.es> (2017-2018)
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
  *
+ * Spider is a dataflow based runtime used to execute dynamic PiSDF
+ * applications. The Preesm tool may be used to design PiSDF applications.
  *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
@@ -31,7 +33,6 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
 #include <papi.h>
 #include <string>
 #include "PapifyEventLib.h"

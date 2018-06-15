@@ -163,6 +163,8 @@ notifications:
     on_success: change
     on_failure: always
   slack:
+    on_success: change
+    on_failure: always
     rooms:
       - vaader-ietr:iLrCNf4jussBcDgnl8EvN2j5#spider
 

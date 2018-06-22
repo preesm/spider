@@ -64,7 +64,7 @@ void *PThreadLrtCommunicator::ctrl_start_send(int size) {
     return lrt2SpiderQueue_->push_start(size);
 }
 
-void PThreadLrtCommunicator::ctrl_end_send(int size) {
+void PThreadLrtCommunicator::ctrl_end_send(int /*size*/) {
     return lrt2SpiderQueue_->push_end(size);
 }
 
@@ -84,11 +84,11 @@ void *PThreadLrtCommunicator::trace_start_send(int size) {
     return traceQueue_->push_start(Platform::get()->getLrtIx(), size);
 }
 
-void PThreadLrtCommunicator::trace_end_send(int size) {
+void PThreadLrtCommunicator::trace_end_send(int /*size*/) {
     return traceQueue_->push_end(Platform::get()->getLrtIx(), size);
 }
 
-void PThreadLrtCommunicator::data_end_send(Fifo *f) {
+void PThreadLrtCommunicator::data_end_send(Fifo */*f*/) {
     // Nothing to do
 }
 
@@ -104,7 +104,7 @@ void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx) {
     dataQueues_->updateLrtJobStamp(lrtIx, jobIx);
 }
 
-void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx) {
+void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int /*jobIx*/) {
     for (int i = 0; i < nbDependency; i++) {
         dataQueues_->waitOnJobStamp(Platform::get()->getLrtIx(), blkLrtIx[i], blkLrtJobIx[i], true);
     }

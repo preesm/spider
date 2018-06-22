@@ -41,7 +41,7 @@
 #include <string.h>
 #include <algorithm>
 
-void saRoundbuffer(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
+void saRoundbuffer(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
     int nbTknIn = inParams[0];
     int nbTknOut = inParams[1];
 

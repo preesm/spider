@@ -41,7 +41,6 @@
 #include <platform.h>
 
 #include <algorithm>
-#include <cmath>
 
 StaticStack::StaticStack(const char *name, void *ptr, int size) :
         Stack(name) {
@@ -75,7 +74,7 @@ void *StaticStack::alloc(int size) {
     return res;
 }
 
-void StaticStack::free(void *var) {
+void StaticStack::free(void */*var*/) {
 }
 
 void StaticStack::freeAll() {

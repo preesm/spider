@@ -40,7 +40,7 @@
 
 #include <string.h>
 
-void saFork(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
+void saFork(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
     int nbFifoIn, nbFifoOut, nbTknIn, i, index;
 
 #if VERBOSE

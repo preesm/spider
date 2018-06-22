@@ -49,9 +49,6 @@ public:
     Set(int nbmax, SpiderStack stackId) {
         if (nbmax > 0) {
             array = CREATE_MUL(stackId, nbmax, TYPE);
-
-            /* Test if TYPE is a SetElement */
-            SetElement *elt = dynamic_cast<SetElement *>(array[0]);
         } else {
             array = 0;
         }
@@ -73,7 +70,7 @@ public:
 
     inline int getN() const;
 
-    inline TYPE const *const getArray() const;
+    inline TYPE const *getArray() const;
 
 private:
     SpiderStack stackId_;
@@ -114,7 +111,7 @@ inline TYPE Set<TYPE>::operator[](int ix) {
 }
 
 template<typename TYPE>
-inline TYPE const *const Set<TYPE>::getArray() const {
+inline TYPE const *Set<TYPE>::getArray() const {
     return array;
 }
 

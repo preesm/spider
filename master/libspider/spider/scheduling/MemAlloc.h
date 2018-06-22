@@ -73,8 +73,8 @@ public:
 
 protected:
     int memStart_;
-    int memReserved_;
     int memSize_;
+    int memReserved_;
 };
 
 inline int MemAlloc::getMemAllocSize() const {

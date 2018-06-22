@@ -40,7 +40,7 @@
 
 #include <string.h>
 
-void saJoin(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
+void saJoin(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
     int nbFifoIn, nbFifoOut, i, index;
     int nbTknIn, nbTknOut;
 

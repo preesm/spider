@@ -111,7 +111,7 @@ inline Platform *Platform::get() {
 }
 
 // If unimplemented in child
-inline int Platform::getMaxActorAllocSize(int pe) {
+inline int Platform::getMaxActorAllocSize(int /*pe*/) {
     return 1024 * 1024 * 1024;
 }
 

@@ -39,8 +39,6 @@
  */
 #include "DummyMemAlloc.h"
 
-#include <cmath>
-
 void DummyMemAlloc::reset() {
     currentMem_ = this->memStart_ + this->memReserved_;
 }
@@ -53,7 +51,6 @@ static inline int getAlignSize(int size) {
 
 
 void DummyMemAlloc::allocEdge(SRDAGEdge *edge) {
-    int alloc;
     int size = edge->getRate();
     size = getAlignSize(size);
     if (currentMem_ + size > memStart_ + memSize_)

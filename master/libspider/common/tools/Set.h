@@ -70,7 +70,7 @@ public:
 
     inline int getN() const;
 
-    inline TYPE const *const getArray() const;
+    inline TYPE const *getArray() const;
 
 private:
     SpiderStack stackId_;
@@ -111,7 +111,7 @@ inline TYPE Set<TYPE>::operator[](int ix) {
 }
 
 template<typename TYPE>
-inline TYPE const *const Set<TYPE>::getArray() const {
+inline TYPE const *Set<TYPE>::getArray() const {
     return array;
 }
 

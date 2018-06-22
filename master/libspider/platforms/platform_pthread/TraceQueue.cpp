@@ -73,7 +73,7 @@ void *TraceQueue::push_start(int lrtIx, int size) {
     return msgBufferSend_[lrtIx];
 }
 
-void TraceQueue::push_end(int lrtIx, int size) {
+void TraceQueue::push_end(int lrtIx, int /*size*/) {
     unsigned long s = curMsgSizeSend_[lrtIx];
 
     /** Take Mutex protecting the Queue */

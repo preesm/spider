@@ -65,8 +65,7 @@
 
 class PThreadSpiderCommunicator : public SpiderCommunicator {
 public:
-    PThreadSpiderCommunicator(int nLrt,
-                              ControlQueue **spider2LrtQueues,
+    PThreadSpiderCommunicator(ControlQueue **spider2LrtQueues,
                               ControlQueue **lrt2SpiderQueues,
                               TraceQueue *traceQueue);
 

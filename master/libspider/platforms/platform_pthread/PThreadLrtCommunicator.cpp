@@ -64,7 +64,7 @@ void *PThreadLrtCommunicator::ctrl_start_send(int size) {
     return lrt2SpiderQueue_->push_start(size);
 }
 
-void PThreadLrtCommunicator::ctrl_end_send(int /*size*/) {
+void PThreadLrtCommunicator::ctrl_end_send(int size) {
     return lrt2SpiderQueue_->push_end(size);
 }
 
@@ -84,7 +84,7 @@ void *PThreadLrtCommunicator::trace_start_send(int size) {
     return traceQueue_->push_start(Platform::get()->getLrtIx(), size);
 }
 
-void PThreadLrtCommunicator::trace_end_send(int /*size*/) {
+void PThreadLrtCommunicator::trace_end_send(int size) {
     return traceQueue_->push_end(Platform::get()->getLrtIx(), size);
 }
 

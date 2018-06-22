@@ -62,7 +62,7 @@ void *ControlQueue::push_start(int size) {
     return msgBufferSend_;
 }
 
-void ControlQueue::push_end(int size) {
+void ControlQueue::push_end(int /*size*/) {
     unsigned long s = curMsgSizeSend_;
 
     /** Take Mutex protecting the Queue */

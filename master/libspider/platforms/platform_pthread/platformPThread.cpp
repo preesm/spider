@@ -224,7 +224,6 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
     /** Initialize LRT and Communicators */
     spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
-            nLrt_,
             spider2LrtQueues_,
             lrt2SpiderQueues_,
             traceQueue_);

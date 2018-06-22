@@ -41,11 +41,9 @@
 
 #include <platform.h>
 
-PThreadSpiderCommunicator::PThreadSpiderCommunicator(int nLrt,
-                                                     ControlQueue **spider2LrtQueues,
+PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlQueue **spider2LrtQueues,
                                                      ControlQueue **lrt2SpiderQueues,
                                                      TraceQueue *traceQueue) {
-
     spider2LrtQueues_ = spider2LrtQueues;
     lrt2SpiderQueues_ = lrt2SpiderQueues;
     traceQueue_ = traceQueue;
@@ -54,11 +52,11 @@ PThreadSpiderCommunicator::PThreadSpiderCommunicator(int nLrt,
 PThreadSpiderCommunicator::~PThreadSpiderCommunicator() {
 }
 
-void *PThreadSpiderCommunicator::ctrl_start_send(int /*lrtIx*/, int size) {
+void *PThreadSpiderCommunicator::ctrl_start_send(int lrtIx, int size) {
     return spider2LrtQueues_[lrtIx]->push_start(size);
 }
 
-void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int /*size*/) {
+void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int size) {
     return spider2LrtQueues_[lrtIx]->push_end(size);
 }
 
@@ -70,7 +68,7 @@ void PThreadSpiderCommunicator::ctrl_start_recv_block(int lrtIx, void **data) {
     lrt2SpiderQueues_[lrtIx]->pop_start(data, true);
 }
 
-void PThreadSpiderCommunicator::ctrl_end_recv(int /*lrtIx*/) {
+void PThreadSpiderCommunicator::ctrl_end_recv(int lrtIx) {
     return lrt2SpiderQueues_[lrtIx]->pop_end();
 }
 
@@ -78,7 +76,7 @@ void *PThreadSpiderCommunicator::trace_start_send(int size) {
     return traceQueue_->push_start(Platform::get()->getNLrt(), size);
 }
 
-void PThreadSpiderCommunicator::trace_end_send(int /*size*/) {
+void PThreadSpiderCommunicator::trace_end_send(int size) {
     return traceQueue_->push_end(Platform::get()->getNLrt(), size);
 }
 

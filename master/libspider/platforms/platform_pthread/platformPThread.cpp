@@ -522,7 +522,7 @@ Time PlatformPThread::getTime() {
     return val_steady;
 }
 
-Time PlatformPThread::mappingTime(int nActors, int nPe) {
+Time PlatformPThread::mappingTime(int nActors, int /*nPe*/) {
     return (Time) 1000 * nActors;
 }
 

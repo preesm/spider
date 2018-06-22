@@ -110,11 +110,11 @@ inline int SharedMemArchi::getPEType(int ix) const {
     return peType_[ix];
 }
 
-inline Time SharedMemArchi::getTimeSend(int src, int dest, int size) const {
+inline Time SharedMemArchi::getTimeSend(int src, int /*dest*/, int size) const {
     return peTypeASend_[peType_[src]] * size + peTypeASend_[peType_[src]];
 }
 
-inline Time SharedMemArchi::getTimeRecv(int src, int dest, int size) const {
+inline Time SharedMemArchi::getTimeRecv(int /*src*/, int dest, int size) const {
     return peTypeARecv_[peType_[dest]] * size + peTypeARecv_[peType_[dest]];
 }
 

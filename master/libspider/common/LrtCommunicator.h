@@ -66,19 +66,19 @@ public:
 
     virtual void *data_recv(Fifo *f) = 0;
 
-    virtual void allocateDataBuffer(int nbInput, Fifo *fIn, int nbOutput, Fifo *fOut) {};
+    virtual void allocateDataBuffer(int /*nbInput*/, Fifo */*fIn*/, int /*nbOutput*/, Fifo */*fOut*/) {};
 
-    virtual void freeDataBuffer(int nbInput, int nbOutput) {};
+    virtual void freeDataBuffer(int /*nbInput*/, int /*nbOutput*/) {};
 
-    virtual void setLrtJobIx(int lrtIx, int jobIx) {};
+    virtual void setLrtJobIx(int /*lrtIx*/, int /*jobIx*/) {};
 
     virtual long getLrtJobIx(int lrtIx) = 0;
 
-    virtual void rstLrtJobIx(int lrtIx) {};
+    virtual void rstLrtJobIx(int /*lrtIx*/) {};
 
-    virtual void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx) {};
+    virtual void waitForLrtUnlock(int /*nbDependency*/, int */*blkLrtIx*/, int */*blkLrtJobIx*/, int /*jobIx*/) {};
 
-    virtual void unlockLrt(int jobIx) {};
+    virtual void unlockLrt(int /*jobIx*/) {};
 
 
 protected:

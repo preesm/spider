@@ -255,7 +255,6 @@ void RoundRobinScattered::scheduleVertex(SRDAGVertex *vertex) {
 
     int bestSlave = -1;
     Time bestStartTime = 0;
-    Time bestWaitTime = 0;
     Time bestEndTime = (Time) -1; // Very high value.
 
 

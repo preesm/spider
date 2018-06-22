@@ -40,7 +40,7 @@
 
 #include <string.h>
 
-void saBroadcast(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
+void saBroadcast(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
     int nbToken = inParams[0];
     int nbOut = inParams[1];
 

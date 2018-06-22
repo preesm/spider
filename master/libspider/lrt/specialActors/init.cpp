@@ -40,7 +40,7 @@
 
 #include <string.h>
 
-void saInit(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
+void saInit(void */*inputFIFOs*/[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
     Param nbTokens = inParams[0];
     bool isPersistent = inParams[1] == 1;
     if (isPersistent) {

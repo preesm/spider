@@ -76,7 +76,7 @@ static bool isEdgeValid(PiSDFEdge *edge, transfoJob *job) {
     return false;
 }
 
-void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
+void computeBRV(SRDAGGraph */*topSrdag*/, transfoJob *job, int *brv) {
     int *vertexIxs = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
 
     /* Compute nbVertices */

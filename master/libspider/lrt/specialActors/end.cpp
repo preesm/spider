@@ -39,7 +39,7 @@
 #include <cstring>
 #include "specialActors.h"
 
-void saEnd(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
+void saEnd(void *inputFIFOs[], void */*outputFIFOs*/[], Param inParams[], Param /*outParams*/[]) {
     bool isPersistent = inParams[1] == 1;
     if (isPersistent) {
         Param nbTokens = inParams[0];

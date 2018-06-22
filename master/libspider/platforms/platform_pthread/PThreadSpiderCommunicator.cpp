@@ -85,14 +85,14 @@ void PThreadSpiderCommunicator::setLrtCom(int lrtIx, std::queue<unsigned char> *
     fOut_[lrtIx] = fOut;
 }
 
-void *PThreadSpiderCommunicator::ctrl_start_send(int lrtIx, int size) {
+void *PThreadSpiderCommunicator::ctrl_start_send(int /*lrtIx*/, int size) {
     if (curMsgSizeSend_)
         throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
     curMsgSizeSend_ = size;
     return msgBufferSend_;
 }
 
-void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int size) {
+void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int /*size*/) {
     unsigned long s = curMsgSizeSend_;
 
     /** Take Mutex protecting the Queue */
@@ -156,7 +156,7 @@ int PThreadSpiderCommunicator::ctrl_start_recv(int lrtIx, void **data) {
     return curMsgSizeRecv_;
 }
 
-void PThreadSpiderCommunicator::ctrl_end_recv(int lrtIx) {
+void PThreadSpiderCommunicator::ctrl_end_recv(int /*lrtIx*/) {
     curMsgSizeRecv_ = 0;
 }
 
@@ -167,7 +167,7 @@ void *PThreadSpiderCommunicator::trace_start_send(int size) {
     return msgBufferSend_;
 }
 
-void PThreadSpiderCommunicator::trace_end_send(int size) {
+void PThreadSpiderCommunicator::trace_end_send(int /*size*/) {
     unsigned long s = curMsgSizeSend_;
 
     static unsigned int size_trace;

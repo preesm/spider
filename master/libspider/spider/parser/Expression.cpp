@@ -273,9 +273,9 @@ void Expression::toString(
             case OPERATOR:
                 // pop out 2
                 snprintf(out, outSizeMax, "( %s %s %s )",
-                        outputStack[outputStackSize - 1],
-                        operatorSign[stack_[i].opType],
-                        outputStack[outputStackSize - 2]);
+                         outputStack[outputStackSize - 1],
+                         operatorSign[stack_[i].opType],
+                         outputStack[outputStackSize - 2]);
                 strncpy(outputStack[outputStackSize - 2], out, EXPR_LEN_MAX);
                 outputStackSize--;
                 break;

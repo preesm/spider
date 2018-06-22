@@ -44,7 +44,7 @@ void saInit(void */*inputFIFOs*/[], void *outputFIFOs[], Param inParams[], Param
     Param nbTokens = inParams[0];
     bool isPersistent = inParams[1] == 1;
     if (isPersistent) {
-        void *fifoAddr = Platform::get()->virt_to_phy((void *) (intptr_t)(inParams[2]));
+        void *fifoAddr = Platform::get()->virt_to_phy((void *) (intptr_t) (inParams[2]));
         if (fifoAddr && outputFIFOs[0] != fifoAddr) {
             memcpy(outputFIFOs[0], fifoAddr, nbTokens);
         }

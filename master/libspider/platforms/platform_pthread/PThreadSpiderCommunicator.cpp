@@ -170,8 +170,6 @@ void *PThreadSpiderCommunicator::trace_start_send(int size) {
 void PThreadSpiderCommunicator::trace_end_send(int /*size*/) {
     unsigned long s = curMsgSizeSend_;
 
-    static unsigned int size_trace;
-
     int err = sem_wait(mutexTrace_);
 
     if (err != 0) {
@@ -203,8 +201,6 @@ int PThreadSpiderCommunicator::trace_start_recv(void **data) {
         size += fTraceRd_->front();
         fTraceRd_->pop();
     }
-
-    if (nb < 0) return 0;
 
     if (size > (unsigned long) msgSizeMax_)
         throw std::runtime_error("Msg too big\n");

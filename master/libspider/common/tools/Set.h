@@ -49,9 +49,6 @@ public:
     Set(int nbmax, SpiderStack stackId) {
         if (nbmax > 0) {
             array = CREATE_MUL(stackId, nbmax, TYPE);
-
-            /* Test if TYPE is a SetElement */
-            SetElement *elt = dynamic_cast<SetElement *>(array[0]);
         } else {
             array = 0;
         }

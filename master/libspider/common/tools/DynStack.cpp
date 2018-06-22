@@ -41,7 +41,6 @@
 #include <platform.h>
 
 #include <algorithm>
-#include <cmath>
 
 DynStack::DynStack(const char *name) : Stack(name) {
     curUsedSize_ = 0;

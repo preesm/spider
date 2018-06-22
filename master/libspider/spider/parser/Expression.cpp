@@ -244,6 +244,8 @@ int Expression::evaluate(const int *vertexParamValues, int nParam) const {
                 stackPtr++;
                 break;
             case PARAMETER:
+                if (inputPtr->paramIx < 0 || inputPtr->paramIx >= nParam)
+                    throw std::runtime_error("Invalid parameter id in expression");
                 *stackPtr = vertexParamValues[inputPtr->paramIx];
                 if (*stackPtr == -1)
                     return -1; // Not resolved TODO handle better not resolved dependent params
@@ -270,26 +272,28 @@ void Expression::toString(
         switch (stack_[i].type) {
             case OPERATOR:
                 // pop out 2
-                sprintf(out, "( %s %s %s )",
+                snprintf(out, outSizeMax, "( %s %s %s )",
                         outputStack[outputStackSize - 1],
                         operatorSign[stack_[i].opType],
                         outputStack[outputStackSize - 2]);
-                strcpy(outputStack[outputStackSize - 2], out);
+                strncpy(outputStack[outputStackSize - 2], out, EXPR_LEN_MAX);
                 outputStackSize--;
                 break;
             case VALUE:
                 // Push value to output stack
-                sprintf(outputStack[outputStackSize++], "%d", stack_[i].value);
+                snprintf(outputStack[outputStackSize++], EXPR_LEN_MAX, "%d", stack_[i].value);
                 break;
             case PARAMETER:
+                if (stack_[i].paramIx < 0 || stack_[i].paramIx >= nParam)
+                    throw std::runtime_error("Invalid parameter id in expression");
                 // Push parameter name to output stack
-                sprintf(outputStack[outputStackSize++], "%s", params[stack_[i].paramIx]->getName());
+                snprintf(outputStack[outputStackSize++], EXPR_LEN_MAX, "%s", params[stack_[i].paramIx]->getName());
                 break;
             default:
                 throw std::runtime_error("Error: Parenthesis in evaluated var\n");
         }
     }
-    strcpy(out, outputStack[0]);
+    strncpy(out, outputStack[0], outSizeMax);
 }
 
 int Expression::evaluateNTokens(const char *expr) {

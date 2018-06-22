@@ -39,6 +39,8 @@
  */
 #include "DummyMemAlloc.h"
 
+#include <cmath>
+
 void DummyMemAlloc::reset() {
     currentMem_ = this->memStart_ + this->memReserved_;
 }

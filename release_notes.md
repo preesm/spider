@@ -7,6 +7,7 @@ Spider Changelog
 ### New Feature
 
 ### Changes
+* Updating Papify to display warning when exceeding number of available counters.
 
 ### Bug fix
 

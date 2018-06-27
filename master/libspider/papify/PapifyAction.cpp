@@ -195,7 +195,7 @@ void PapifyAction::writeEvents() {
 
 void PapifyAction::writeEvents(FILE *file) {
     if (file) {
-        fprintf(outputFile_, "%lld,%s,%llu,%llu", PEId_, actorName_, timeStart, timeStop);
+        fprintf(outputFile_, "%lld,%s,%lld,%lld", PEId_, actorName_, timeStart, timeStop);
         for (int i = 0; i < numberOfEvents_; ++i) {
             fprintf(outputFile_, ",%lld", counterValues_[i]);
         }

@@ -38,23 +38,23 @@
 #include <semaphore.h>
 #include <string.h>
 
-DataQueues::DataQueues(int nLrt){
+DataQueues::DataQueues(int nLrt) {
     nLrt_ = nLrt;
     jobStampMutex_ = CREATE_MUL(ARCHI_STACK, nLrt_, std::mutex);
     jobStamps_ = CREATE_MUL(ARCHI_STACK, nLrt_, int*);
-    for(int i=0; i<nLrt_; i++){
+    for (int i = 0; i < nLrt_; i++) {
         jobStamps_[i] = CREATE_MUL(ARCHI_STACK, nLrt_, int);
-        memset(jobStamps_[i], 0, nLrt_* sizeof(int));
+        memset(jobStamps_[i], 0, nLrt_ * sizeof(int));
     }
     waitingSems_ = CREATE_MUL(ARCHI_STACK, nLrt_, sem_t);
-    for(int i=0; i<nLrt_; i++){
+    for (int i = 0; i < nLrt_; i++) {
         sem_init(&waitingSems_[i], 0, 0);
     }
 }
 
 DataQueues::~DataQueues() {
     StackMonitor::free(ARCHI_STACK, waitingSems_);
-    for(int i=0; i<nLrt_; i++){
+    for (int i = 0; i < nLrt_; i++) {
         StackMonitor::free(ARCHI_STACK, jobStamps_[i]);
     }
     StackMonitor::free(ARCHI_STACK, jobStamps_);
@@ -62,17 +62,17 @@ DataQueues::~DataQueues() {
 
 }
 
-void DataQueues::updateLrtJobStamp(int lrtIx, int jobStamp){
+void DataQueues::updateLrtJobStamp(int lrtIx, int jobStamp) {
     jobStampMutex_[lrtIx].lock();
 
     /** Update the job stamp */
     jobStamps_[lrtIx][lrtIx] = jobStamp;
 
     /** Unlock registered lrts  */
-    for(int i=0; i<nLrt_; i++){
-        if(i != lrtIx &&
-                jobStamps_[lrtIx][i] != 0 &&
-                jobStamps_[lrtIx][i] <= jobStamp){
+    for (int i = 0; i < nLrt_; i++) {
+        if (i != lrtIx &&
+            jobStamps_[lrtIx][i] != 0 &&
+            jobStamps_[lrtIx][i] <= jobStamp) {
             /** Clear registered job stamp */
             jobStamps_[lrtIx][i] = 0;
 
@@ -84,19 +84,19 @@ void DataQueues::updateLrtJobStamp(int lrtIx, int jobStamp){
     jobStampMutex_[lrtIx].unlock();
 }
 
-int DataQueues::waitOnJobStamp(int lrtIx, int waitingLrtIx, int jobStamp, bool blocking){
+int DataQueues::waitOnJobStamp(int lrtIx, int waitingLrtIx, int jobStamp, bool blocking) {
     jobStampMutex_[waitingLrtIx].lock();
 
-    if(jobStamps_[waitingLrtIx][waitingLrtIx] >= jobStamp){
+    if (jobStamps_[waitingLrtIx][waitingLrtIx] >= jobStamp) {
         /** Lrt is already at job stamp, no need to wait */
         jobStampMutex_[waitingLrtIx].unlock();
         return 0;
-    }else{
-        if(!blocking) {
+    } else {
+        if (!blocking) {
             /** If not blocking, return 1 */
             jobStampMutex_[waitingLrtIx].unlock();
             return 1;
-        }else{
+        } else {
             /** Register to a specific jobStamp */
             jobStamps_[waitingLrtIx][lrtIx] = jobStamp;
             jobStampMutex_[waitingLrtIx].unlock();

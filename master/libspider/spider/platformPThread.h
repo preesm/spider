@@ -137,7 +137,7 @@ private:
 
     ControlQueue **spider2LrtQueues_;
     ControlQueue **lrt2SpiderQueues_;
-    DataQueues * dataQueues_;
+    DataQueues *dataQueues_;
     TraceQueue *traceQueue_;
 
     LRT **lrt_;

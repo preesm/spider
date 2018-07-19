@@ -5,11 +5,12 @@ Spider Changelog
 *XXXX.XX.XX*
 
 ### New Feature
+* Complete Refacto of PThread Platform: all communications are now blocking, threads will not take 100% CPU for synchronization.
 
 ### Changes
 
 ### Bug fix
-
+* Fix Graph transformation for actors with repetition is equal to 0.
 
 ## Release version 1.1.4
 *2018.06.11*

@@ -21,6 +21,7 @@ Spider Changelog
 * Fix release scripts;
 
 ### Bug fix
+* Fix graph optims while using persitent delays;
 
 
 ## Release version 1.1.3

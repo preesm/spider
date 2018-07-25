@@ -39,10 +39,11 @@
 #include "specialActors.h"
 
 #include <string.h>
+#include <graphs/PiSDF/PiSDFCommon.h>
 
 void saInit(void */*inputFIFOs*/[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
     Param nbTokens = inParams[0];
-    bool isPersistent = inParams[1] == 1;
+    bool isPersistent = inParams[1] == PISDF_DELAY_PERSISTENT;
     if (isPersistent) {
         void *fifoAddr = Platform::get()->virt_to_phy((void *) (intptr_t) (inParams[2]));
         if (fifoAddr && outputFIFOs[0] != fifoAddr) {

@@ -38,7 +38,7 @@
  */
 #include "specialActors.h"
 
-#include <string.h>
+#include <cstring>
 #include <graphs/PiSDF/PiSDFCommon.h>
 
 void saInit(void */*inputFIFOs*/[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
@@ -47,10 +47,10 @@ void saInit(void */*inputFIFOs*/[], void *outputFIFOs[], Param inParams[], Param
     if (isPersistent) {
         void *fifoAddr = Platform::get()->virt_to_phy((void *) (intptr_t) (inParams[2]));
         if (fifoAddr && outputFIFOs[0] != fifoAddr) {
-            memcpy(outputFIFOs[0], fifoAddr, nbTokens);
+            std::memcpy(outputFIFOs[0], fifoAddr, nbTokens);
         }
     } else {
-        memset(outputFIFOs[0], 0, nbTokens);
+        std::memset(outputFIFOs[0], 0, nbTokens);
     }
 
 #if VERBOSE

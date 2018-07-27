@@ -134,16 +134,18 @@ void Spider::initReservedMemory() {
     }
     // Compute the needed reserved memory for delays
     memAlloc_->reset();
-    int memReserved = 0;
+
+    int memReserved = memAlloc_->getReservedAlloc(1);
     for (int i = 0; i < graph->getNEdge(); i++) {
         PiSDFEdge *edge = graph->getEdge(i);
         int nbDelays = edge->resolveDelay(job);
         if (nbDelays > 0 && edge->isDelayPersistent()) {
             // Compute memory offset
             int memAllocAddr = memAlloc_->getMemUsed();
-            edge->setMemoryReservedAlloc(memAllocAddr);
+            edge->setMemoryDelayAlloc(memAllocAddr);
             // Get reserved aligned size
             memReserved += memAlloc_->getReservedAlloc(nbDelays);
+//            fprintf(stderr, "NDelays: %d; Adress: %d; MemReserved: %d\n", nbDelays, memAllocAddr, memReserved);
         }
     }
     printf("INFO: Reserved ");

@@ -67,6 +67,7 @@
 
 #include <lrt.h>
 #include <PThreadSpiderCommunicator.h>
+#include <spider.h>
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
 
@@ -138,7 +139,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
     //declaration des threads et structures de passage de paramètre
     pthread_t *thread_lrt = (pthread_t *) malloc((nLrt_ - 1) * sizeof(pthread_t));
-    Arg_lrt *arg_lrt = (Arg_lrt *) malloc((nLrt_ - 1) * sizeof(Arg_lrt));
+    Arg_lrt *arg_lrt = (Arg_lrt *) malloc((nLrt_) * sizeof(Arg_lrt));
 
     //Declaration tableau de semaphore
     mutexFifoSpidertoLRT = (sem_t *) malloc(nLrt_ * sizeof(sem_t));
@@ -184,24 +185,30 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 #endif
 
     // Filling up parameters for each threads
-    for (int i = 1; i < nLrt_; i++) {
-        arg_lrt[i - 1].fifoSpidertoLRT = fifoSpidertoLRT[i];
-        arg_lrt[i - 1].fifoLRTtoSpider = fifoLRTtoSpider[i];
-        arg_lrt[i - 1].fifoTrace = &fifoTrace;
-        arg_lrt[i - 1].mutexTrace = &mutexTrace;
-        arg_lrt[i - 1].mutexFifoSpidertoLRT = &mutexFifoSpidertoLRT[i];
-        arg_lrt[i - 1].mutexFifoLRTtoSpider = &mutexFifoLRTtoSpider[i];
-        arg_lrt[i - 1].semFifoSpidertoLRT = &semFifoSpidertoLRT[i];
-        arg_lrt[i - 1].shMemSize = config.platform.shMemSize;
-        arg_lrt[i - 1].fcts = config.platform.fcts;
-        arg_lrt[i - 1].nLrtFcts = config.platform.nLrtFcts;
-        arg_lrt[i - 1].index = i;
-        arg_lrt[i - 1].nLrt = nLrt_;
-        arg_lrt[i - 1].instance = this;
-        arg_lrt[i - 1].archiStack = config.archiStack;
-        arg_lrt[i - 1].lrtStack = config.lrtStack;
-        arg_lrt[i - 1].usePapify = config.usePapify;
+    int offsetPe = 0;
+    for (int pe = 0; pe < config.platform.nPeType; ++pe) {
+        for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
+            arg_lrt[i + offsetPe].fifoSpidertoLRT = fifoSpidertoLRT[i + offsetPe];
+            arg_lrt[i + offsetPe].fifoLRTtoSpider = fifoLRTtoSpider[i + + offsetPe];
+            arg_lrt[i + offsetPe].fifoTrace = &fifoTrace;
+            arg_lrt[i + offsetPe].mutexTrace = &mutexTrace;
+            arg_lrt[i + offsetPe].mutexFifoSpidertoLRT = &mutexFifoSpidertoLRT[i + offsetPe];
+            arg_lrt[i + offsetPe].mutexFifoLRTtoSpider = &mutexFifoLRTtoSpider[i + + offsetPe];
+            arg_lrt[i + offsetPe].semFifoSpidertoLRT = &semFifoSpidertoLRT[i + offsetPe];
+            arg_lrt[i + offsetPe].shMemSize = config.platform.shMemSize;
+            arg_lrt[i + offsetPe].fcts = config.platform.fcts;
+            arg_lrt[i + offsetPe].nLrtFcts = config.platform.nLrtFcts;
+            arg_lrt[i + offsetPe].index = i + offsetPe;
+            arg_lrt[i + offsetPe].coreAffinity = config.platform.coreAffinities[pe][i];
+            arg_lrt[i + offsetPe].nLrt = nLrt_;
+            arg_lrt[i + offsetPe].instance = this;
+            arg_lrt[i + offsetPe].archiStack = config.archiStack;
+            arg_lrt[i + offsetPe].lrtStack = config.lrtStack;
+            arg_lrt[i + offsetPe].usePapify = config.usePapify;
+        }
+        offsetPe += config.platform.pesPerPeType[pe];
     }
+
 
 
     //TODO have shMem a multiple of getMinAllocSize
@@ -214,7 +221,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
     //Lancement des threads
     for (int i = 1; i < nLrt_; i++) {
-        pthread_create(&thread_lrt[i - 1], NULL, &lrtPThread_helper, &arg_lrt[i - 1]);
+        pthread_create(&thread_lrt[i - 1], NULL, &lrtPThread_helper, &arg_lrt[i]);
     }
 
     //waiting for every threads to register itself in thread_ID_tab_
@@ -280,26 +287,36 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
 
     /** Create Archi */
+    int mainPE = 0;
+    int mainPEType = 0;
     archi_ = CREATE(ARCHI_STACK, SharedMemArchi)(
             /* Nb PE */        nLrt_,
-            /* Nb PE Type*/ 1,
-            /* Spider Pe */ 0,
+            /* Nb PE Type*/ config.platform.nPeType,
+            /* Spider Pe */ mainPE,
             /*MappingTime*/ this->mappingTime);
 
-    archi_->setPETypeRecvSpeed(0, 1, 10);
-    archi_->setPETypeSendSpeed(0, 1, 10);
-    archi_->setPEType(0, 0);
-    archi_->activatePE(0);
+    archi_->setPEType(mainPE, mainPEType);
+    archi_->activatePE(mainPE);
 
     char name[40];
     sprintf(name, "TID %ld (Spider)", thread_ID_tab_[0]);
-    archi_->setName(0, name);
-    for (int i = 1; i < nLrt_; i++) {
-        sprintf(name, "TID %ld (LRT %d)", thread_ID_tab_[i], i);
-        archi_->setPEType(i, 0);
-        archi_->setName(i, name);
-        archi_->activatePE(i);
+    archi_->setName(mainPE, name);
+    offsetPe = 0;
+    for (int pe = 0; pe < config.platform.nPeType; ++pe) {
+        archi_->setPETypeRecvSpeed(pe, 1, 10);
+        archi_->setPETypeSendSpeed(pe, 1, 10);
+        for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
+            if (pe == mainPEType && (i + offsetPe) == mainPE) {
+                continue;
+            }
+            sprintf(name, "TID %ld (LRT %d)", thread_ID_tab_[i + offsetPe], i + offsetPe);
+            archi_->setPEType(i + offsetPe, pe);
+            archi_->setName(i + offsetPe, name);
+            archi_->activatePE(i + offsetPe);
+        }
+        offsetPe += config.platform.pesPerPeType[pe];
     }
+
     Spider::setArchi(archi_);
 
     free(thread_lrt);
@@ -523,7 +540,7 @@ Time PlatformPThread::getTime() {
 }
 
 Time PlatformPThread::mappingTime(int nActors, int /*nPe*/) {
-    return (Time) 1000 * nActors;
+    return (Time) 0 * nActors;
 }
 
 
@@ -562,7 +579,7 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt) {
             jobTab,
             dataMem);
     lrt_[index] = CREATE(ARCHI_STACK, LRT)(index);
-    setAffinity(index);
+    setAffinity(argument_lrt->coreAffinity);
     lrt_[index]->setFctTbl(argument_lrt->fcts, argument_lrt->nLrtFcts);
 
 #ifdef PAPI_AVAILABLE

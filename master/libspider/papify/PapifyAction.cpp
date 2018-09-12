@@ -186,7 +186,7 @@ void PapifyAction::writeEvents() {
             if (retVal != PAPI_OK) {
                 PapifyEventLib::throwError(__FILE__, __LINE__, retVal);
             }
-            fprintf(outputFile_, ",%s,", eventName);
+            fprintf(outputFile_, ",%s", eventName);
         }
         fprintf(outputFile_, "\n");
     }

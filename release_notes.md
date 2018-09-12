@@ -8,6 +8,7 @@ Spider Changelog
 
 ### Changes
 * Updating Papify to display warning when exceeding number of available counters.
+* Adding support of heteregeneous hardware in Spider.
 
 ### Bug fix
 

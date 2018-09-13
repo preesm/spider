@@ -12,7 +12,7 @@ Spider Changelog
 * Adding support of delays in hierarchical graphs.
 
 ### Bug fix
-
+* Fixed reduce Join-End graph optimization and persistent delays behavior.
 
 ## Release version 1.1.4
 *2018.06.11*

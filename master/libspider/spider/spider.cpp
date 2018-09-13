@@ -104,10 +104,8 @@ void Spider::init(SpiderConfig &cfg) {
     platform = new PlatformPThread(cfg);
 }
 
-void Spider::initReservedMemory() {
-    PiSDFVertex *root = pisdf_->getBody(0);
-    PiSDFGraph *graph = root->getSubGraph();
-    // Create transfor job
+
+int static getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) {
     transfoJob *job = CREATE(TRANSFO_STACK, transfoJob);
     memset(job, 0, sizeof(transfoJob));
     job->graph = graph;
@@ -119,6 +117,7 @@ void Spider::initReservedMemory() {
                 job->paramValues[paramIx] = param->getStaticValue();
                 break;
             case PISDF_PARAM_HERITED:
+                job->paramValues[paramIx] = graph->getParentVertex()->getInParam(param->getParentId())->getValue();
                 break;
             case PISDF_PARAM_DYNAMIC:
                 // Do nothing, cannot be evaluated yet
@@ -132,10 +131,8 @@ void Spider::initReservedMemory() {
                 break;
         }
     }
-    // Compute the needed reserved memory for delays
-    memAlloc_->reset();
-
-    int memReserved = memAlloc_->getReservedAlloc(1);
+    int memReserved = currentMemReserved;
+    // Compute the total memory allocation needed for delays in current graph
     for (int i = 0; i < graph->getNEdge(); i++) {
         PiSDFEdge *edge = graph->getEdge(i);
         int nbDelays = edge->resolveDelay(job);
@@ -145,9 +142,28 @@ void Spider::initReservedMemory() {
             edge->setMemoryDelayAlloc(memAllocAddr);
             // Get reserved aligned size
             memReserved += memAlloc_->getReservedAlloc(nbDelays);
-//            fprintf(stderr, "NDelays: %d; Adress: %d; MemReserved: %d\n", nbDelays, memAllocAddr, memReserved);
         }
     }
+    StackMonitor::free(TRANSFO_STACK, job->paramValues);
+    StackMonitor::free(TRANSFO_STACK, job);
+    // Compute the total memory allocation needed for delays in subgraph
+    for (int j = 0; j < graph->getNBody(); ++j) {
+        PiSDFVertex *vertex = graph->getBody(j);
+        if (vertex->isHierarchical()) {
+            memReserved += getReservedMemoryForGraph(vertex->getSubGraph(), currentMemReserved);
+        }
+    }
+    return memReserved;
+}
+
+void Spider::initReservedMemory() {
+    PiSDFVertex *root = pisdf_->getBody(0);
+    PiSDFGraph *graph = root->getSubGraph();
+    // Compute the needed reserved memory for delays
+    memAlloc_->reset();
+    int memReserved = memAlloc_->getReservedAlloc(1);
+    // Recursively go through the hierarchy
+    memReserved += getReservedMemoryForGraph(graph, 0);
     printf("INFO: Reserved ");
     if (memReserved < 1024) {
         printf("%5.1f B / %s of the shared memory ", memReserved * 1., memAlloc_->getMemAllocSizeFormatted());
@@ -164,9 +180,6 @@ void Spider::initReservedMemory() {
 
     memAlloc_->setReservedSize(memReserved);
     memAlloc_->reset();
-    // Free memory
-    StackMonitor::free(TRANSFO_STACK, job->paramValues);
-    StackMonitor::free(TRANSFO_STACK, job);
 }
 
 void Spider::clean() {

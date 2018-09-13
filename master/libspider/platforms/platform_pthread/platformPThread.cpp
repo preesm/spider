@@ -540,7 +540,7 @@ Time PlatformPThread::getTime() {
 }
 
 Time PlatformPThread::mappingTime(int nActors, int /*nPe*/) {
-    return (Time) 0 * nActors;
+    return (Time) 1 * nActors;
 }
 
 

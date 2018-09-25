@@ -1,6 +1,19 @@
 Spider Changelog
 ================
 
+## Release version 1.2.0
+*2018.09.25*
+
+### New Feature
+
+### Changes
+* Updating Papify to display warning when exceeding number of available counters.
+* Adding support of heteregeneous hardware in Spider.
+* Adding support of delays in hierarchical graphs.
+
+### Bug fix
+* Fixed reduce Join-End graph optimization and persistent delays behavior.
+
 ## Release version 1.1.4
 *2018.06.11*
 
@@ -10,6 +23,7 @@ Spider Changelog
 * Fix release scripts;
 
 ### Bug fix
+* Fix graph optims while using persitent delays;
 
 
 ## Release version 1.1.3

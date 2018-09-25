@@ -36,7 +36,7 @@ function fixFile {
 	case $EXTENSION in
 		BAT)
 			#"@rem "
-			COMMENT="@rem "
+			COMMENT="@REM "
 			;;
 		C |	CPP | H | JAVA | XTEND | BSH)
 			#" * "

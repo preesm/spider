@@ -65,7 +65,7 @@ static bool isEdgeValid(PiSDFEdge *edge, transfoJob *job) {
     int cons = edge->resolveCons(job);
 
     if ((prod == 0 && cons != 0) || (cons == 0 && prod != 0))
-        throw "Bad Edge Prod/Cons, One is =0 et other is !=0";
+        throw std::runtime_error("Bad Edge Prod/Cons, One is =0 et other is !=0\n");
 
     if (edge->getSrc() != edge->getSnk()
         && edge->getSrc()->getType() == PISDF_TYPE_BODY && isBodyExecutable(edge->getSrc(), job)
@@ -76,7 +76,7 @@ static bool isEdgeValid(PiSDFEdge *edge, transfoJob *job) {
     return false;
 }
 
-void computeBRV(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
+void computeBRV(SRDAGGraph */*topSrdag*/, transfoJob *job, int *brv) {
     int *vertexIxs = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
 
     /* Compute nbVertices */

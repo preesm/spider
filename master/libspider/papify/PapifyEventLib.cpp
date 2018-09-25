@@ -150,32 +150,50 @@ int PapifyEventLib::registerNewThread(int numberOfEvents,
                                       long long PEId,
                                       int eventSetID,
                                       std::vector<int> &PAPIEventCodeSet) {
-    // Register thread
+    // 1. Register thread
     int retVal = PAPI_register_thread();
     if (retVal != PAPI_OK) {
         throwError(__FILE__, __LINE__, retVal);
         return -1;
     }
-    // Create the event set
+    // 2. Create the event set
     int PAPIEventSetID = PAPI_NULL;
     retVal = PAPI_create_eventset(&PAPIEventSetID);
     if (retVal != PAPI_OK) {
         throwError(__FILE__, __LINE__, retVal);
         return -1;
     }
-    // Assign the event set to the PE component
+    // 3. Assign the event set to the PE component
     retVal = PAPI_assign_eventset_component(PAPIEventSetID, PAPI_get_component_index(PEType));
     if (retVal == PAPI_ENOCMP) {
         retVal = PAPI_assign_eventset_component(PAPIEventSetID, 0);
     }
 
-    // 3. Set the unified multiplex
-    retVal = PAPI_set_multiplex(PAPIEventSetID);
-    if (retVal != PAPI_OK) {
-        throwError(__FILE__, __LINE__, retVal);
-        return -1;
+    // 4. Checking if multiplexing is necessary or not
+    int maxNumberHwCounters = PAPI_get_opt(PAPI_MAX_HWCTRS, NULL);
+
+    if (maxNumberHwCounters < numberOfEvents) {
+        PAPI_option_t opt;
+        opt.multiplex.eventset = PAPIEventSetID;
+        opt.multiplex.ns = 100;
+        opt.itimer.ns = 100;
+        retVal = PAPI_set_opt(PAPI_DEF_ITIMER_NS, &opt);
+        if (retVal != PAPI_OK) {
+            throwError(__FILE__, __LINE__, retVal);
+            return -1;
+        }
+        retVal = PAPI_set_opt(PAPI_MULTIPLEX, &opt);
+        if (retVal != PAPI_OK) {
+            throwError(__FILE__, __LINE__, retVal);
+            return -1;
+        }
+        fprintf(stdout, "Monitoring %d events --> Multiplexing (Max HW counters = %d).\n", numberOfEvents,
+                maxNumberHwCounters);
+    } else {
+        fprintf(stdout, "Monitoring %d events --> No multiplexing needed.\n", numberOfEvents);
     }
 
+    // 5. Register the events
     for (int i = 0; i < numberOfEvents; ++i) {
         PAPI_event_info_t info;
         retVal = PAPI_get_event_info(PAPIEventCodeSet[i], &info);
@@ -189,6 +207,7 @@ int PapifyEventLib::registerNewThread(int numberOfEvents,
             return -1;
         }
     }
+
     // The hash table between the user event set ID and the PAPI event set ID
     PEEventSets_[PEId][eventSetID] = PAPIEventSetID;
     return PAPIEventSetID;

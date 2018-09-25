@@ -37,15 +37,16 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include <cstring>
+#include <graphs/PiSDF/PiSDFCommon.h>
 #include "specialActors.h"
 
-void saEnd(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param outParams[]) {
-    bool isPersistent = inParams[1] == 1;
+void saEnd(void *inputFIFOs[], void */*outputFIFO*/[], Param inParams[], Param /*outParams*/[]) {
+    bool isPersistent = inParams[1] == PISDF_DELAY_PERSISTENT;
     if (isPersistent) {
         Param nbTokens = inParams[0];
-        void *fifoAddr = Platform::get()->virt_to_phy((void *) (intptr_t)(inParams[2]));
+        void *fifoAddr = Platform::get()->virt_to_phy((void *) (intptr_t) (inParams[2]));
         if (fifoAddr && fifoAddr != inputFIFOs[0]) {
-            memcpy(fifoAddr, inputFIFOs[0], nbTokens);
+            std::memcpy(fifoAddr, inputFIFOs[0], nbTokens);
         }
     }
 #if VERBOSE

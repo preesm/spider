@@ -90,7 +90,7 @@ void *PThreadLrtCommunicator::ctrl_start_send(int size) {
     return msgBufferSend_;
 }
 
-void PThreadLrtCommunicator::ctrl_end_send(int size) {
+void PThreadLrtCommunicator::ctrl_end_send(int /*size*/) {
     unsigned long s = curMsgSizeSend_;
 
     /** Take Mutex protecting the Queue */
@@ -189,7 +189,7 @@ void *PThreadLrtCommunicator::trace_start_send(int size) {
     return msgBufferSend_;
 }
 
-void PThreadLrtCommunicator::trace_end_send(int size) {
+void PThreadLrtCommunicator::trace_end_send(int /*size*/) {
     unsigned long s = curMsgSizeSend_;
 
     int err = sem_wait(mutexTrace_);
@@ -210,16 +210,16 @@ void PThreadLrtCommunicator::trace_end_send(int size) {
     curMsgSizeSend_ = 0;
 }
 
-void PThreadLrtCommunicator::data_end_send(Fifo *f) {
+void PThreadLrtCommunicator::data_end_send(Fifo */*f*/) {
     // Nothing to do
 }
 
 void *PThreadLrtCommunicator::data_recv(Fifo *f) {
-    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t)(f->alloc));
+    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (f->alloc));
 }
 
 void *PThreadLrtCommunicator::data_start_send(Fifo *f) {
-    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t)(f->alloc));
+    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (f->alloc));
 }
 
 void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx) {
@@ -231,7 +231,7 @@ long PThreadLrtCommunicator::getLrtJobIx(int lrtIx) {
     return jobTab_[lrtIx];
 }
 
-void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx) {
+void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int /*jobIx*/) {
     for (int i = 0; i < nbDependency; i++) {
         while (blkLrtJobIx[i] >= getLrtJobIx(blkLrtIx[i]));
     }

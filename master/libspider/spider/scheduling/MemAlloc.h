@@ -4,7 +4,7 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
@@ -73,8 +73,8 @@ public:
 
 protected:
     int memStart_;
-    int memReserved_;
     int memSize_;
+    int memReserved_;
 };
 
 inline int MemAlloc::getMemAllocSize() const {

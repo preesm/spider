@@ -90,7 +90,9 @@ pthread_barrier_t pthread_barrier_init_and_end_thread;
 void printfSpider(void);
 
 static void setAffinity(int cpuId) {
-
+#ifdef WIN32
+    fprintf(stdout, "CPU affinity is not supported on Windows platforms. Ignoring argument %d.\n", cpuId);
+#else
     cpu_set_t mask;
     int status;
 
@@ -100,6 +102,7 @@ static void setAffinity(int cpuId) {
     if (status != 0) {
         perror("sched_setaffinity");
     }
+#endif
 }
 
 

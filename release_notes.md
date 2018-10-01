@@ -1,8 +1,8 @@
 Spider Changelog
 ================
 
-## Release version X.Y.Z
-*XXXX.XX.XX*
+## Release version 1.2.1
+*2018.10.01*
 
 ### New Feature
 

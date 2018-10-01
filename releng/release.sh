@@ -162,7 +162,7 @@ UPLOAD_URL=$(echo ${API_RESPONSE} | \
 echo "   => ${UPLOAD_URL}"
 
 # TODO add assets to upload
-for FILE in ; do
+for FILE in spider-$NEW_VERSION.zip; do
   echo " * upload $FILE"
   curl -H "Authorization: token $OAUTH_TOKEN" -H "Content-Type: $(file -b --mime-type $FILE)" -X POST "$UPLOAD_URL?name=$(basename $FILE)" --upload-file $FILE > /dev/null
 done

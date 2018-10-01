@@ -1,6 +1,17 @@
 Spider Changelog
 ================
 
+## Release version 1.2.1
+*2018.10.01*
+
+### New Feature
+
+### Changes
+* Add pre-compiled binaries for linux32/64 and win32 in release assets;
+
+### Bug fix
+
+
 ## Release version 1.2.0
 *2018.09.25*
 

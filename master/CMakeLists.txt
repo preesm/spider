@@ -2,6 +2,28 @@ cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(${CROSS_COMPILE_MINGW})
+  set(CMAKE_SYSTEM_NAME Windows)
+  set(TOOLCHAIN_PREFIX x86_64-w64-mingw32)
+
+  # cross compilers to use for C and C++
+  set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}-gcc)
+  set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}-g++)
+  set(CMAKE_Fortran_COMPILER ${TOOLCHAIN_PREFIX}-gfortran)
+  set(CMAKE_RC_COMPILER ${TOOLCHAIN_PREFIX}-windres)
+
+  # target environment on the build host system
+  #   set 1st to dir with the cross compiler's C/C++ headers/libs
+  set(CMAKE_FIND_ROOT_PATH /usr/${TOOLCHAIN_PREFIX})
+
+  # modify default behavior of FIND_XXX() commands to
+  # search for headers/libs in the target environment and
+  # search for programs in the build host environment
+  set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+  set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+  set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+endif()
+
 # *******************************************
 # ************* CMake Content ***************
 # *******************************************
@@ -55,12 +77,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/lib/cmak
 # *******************************************
 # ************ Pthread LIBRARY **************
 # *******************************************
-if (WIN32)
+if (WIN32 AND NOT MINGW)
   set(THREADS_USE_PTHREADS_WIN32 true)
 	# pthread included AFTER Sdl to avoid unnecessary warnings
 	file(GLOB PTHREADDIR "${LIBS_DIR}/pthread-[\\.|0-9]*")
 	set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PTHREADDIR})
-	Find_Package ( THREADS REQUIRED )
+	Find_Package ( Threads REQUIRED )
 else()
 	Find_Package ( Threads REQUIRED )
 endif()
@@ -167,3 +189,4 @@ file(
 
 add_library(Spider SHARED ${source_files} ${header_files} ${papify_sources})
 target_link_libraries(Spider ${CMAKE_THREAD_LIBS_INIT} ${PAPI_LIBRARIES})
+set(CMAKE_CXX_FLAGS "-fpermissive")

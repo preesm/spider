@@ -39,12 +39,11 @@ cp "${TMPDIR}"/pthread-2.10.0/include/*.h "${DIR}"/master/lib/pthread-2.10/inclu
 rm -rf "${TMPDIR}"
 
 
-rm -rf "${WIN32_BUILD_DIR}"
-mkdir -p "${WIN32_BUILD_DIR}"
-exit 0
-(cd "${WIN32_BUILD_DIR}" && cmake .. -DCROSS_COMPILE_MINGW=true && make)
-
-
 rm -rf "${LINUX_BUILD_DIR}"
 mkdir -p "${LINUX_BUILD_DIR}"
-(cd "${LINUX_BUILD_DIR}" && cmake .. && make)
+(cd "${LINUX_BUILD_DIR}" && cmake .. && make -j8)
+
+
+rm -rf "${WIN32_BUILD_DIR}"
+mkdir -p "${WIN32_BUILD_DIR}"
+(cd "${WIN32_BUILD_DIR}" && cmake .. -DCROSS_COMPILE_MINGW=true && make -j8)

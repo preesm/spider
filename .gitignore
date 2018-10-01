@@ -48,6 +48,8 @@ Thumbs.db
 # Temporary files and generated files #
 #######################################
 bin/
+build_*/
+pthread-[0-9].*/
 target/
 generated/
 xtend-gen/

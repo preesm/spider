@@ -111,7 +111,11 @@ endif()
 # ************ PAPI LIBRARY *****************
 # *******************************************
 
-find_package(PAPI)
+if (${SKIP_PAPI})
+	MESSAGE("Skipping Papi")
+else()
+  find_package(PAPI)
+endif()
 
 if (PAPI_FOUND)
     add_definitions(-DPAPI_AVAILABLE)
@@ -193,4 +197,11 @@ set(CMAKE_CXX_FLAGS "-fpermissive")
 
 if (NOT MINGW AND NOT ${CMAKE_GENERATOR} MATCHES "Visual Studio.*")
   set(CMAKE_CXX_FLAGS "-fPIC")
+  if (${32BITS})
+    set_target_properties(Spider PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+  else()
+    if(${64BITS})
+      set_target_properties(Spider PROPERTIES COMPILE_FLAGS "-m64" LINK_FLAGS "-m64")
+    endif()
+  endif()
 endif()

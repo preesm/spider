@@ -1,7 +1,0 @@
-Package: preesm-gantt
-Version: 1.0
-Section: web
-Priority: optional
-Architecture: all
-Maintainer: Julien Heulot
-Description: Preesm Gantt Displayer

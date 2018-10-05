@@ -178,8 +178,8 @@ void jit_ms(
                 }
 
                 int *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
-                computeBRV(topSrdag, job, brv);
-
+//                computeBRV(topSrdag, job, brv);
+                computeBRV(job, brv);
                 if (Spider::getVerbose()) {
                     /* Display BRV values */
                     printf("\nBRV Values:\n");
@@ -247,8 +247,8 @@ void jit_ms(
 
             /* Compute BRV */
             int *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
-            computeBRV(topSrdag, job, brv);
-
+//            computeBRV(topSrdag, job, brv);
+            computeBRV(job, brv);
             if (Spider::getVerbose()) {
                 /* Display BRV values */
                 printf("\nBRV Values:\n");

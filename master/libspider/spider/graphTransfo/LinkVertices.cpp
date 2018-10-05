@@ -490,6 +490,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
         int forkIx = -1;
         int joinIx = -1;
 
+
         // Fill source/sink repetition list
         switch (edge->getSrc()->getType()) {
             case PISDF_TYPE_CONFIG:
@@ -713,13 +714,11 @@ void linkSRVertices(SRDAGGraph *topSrdag,
 
         curSourceToken = srcConnections[0].prod;
         curSinkToken = snkConnections[0].cons;
-
         // Iterating until all consumptions are "satisfied".
         while (sourceIndex < nbSourceRepetitions
                || sinkIndex < nbSinkRepetitions) {
             // Production/consumption rate for the current source/target.
             int rest = std::min(curSourceToken, curSinkToken); // Minimum.
-
             /*
              * Adding explode/implode vertices if required.
              */

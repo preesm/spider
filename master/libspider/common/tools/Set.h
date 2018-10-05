@@ -66,6 +66,8 @@ public:
 
     inline void del(TYPE value);
 
+    inline bool contains(TYPE value);
+
     inline TYPE operator[](int ix);
 
     inline int getN() const;
@@ -96,6 +98,16 @@ inline void Set<TYPE>::add(TYPE value) {
 }
 
 template<typename TYPE>
+inline bool Set<TYPE>::contains(TYPE value) {
+    for (int i = 0; i < nb; ++i) {
+        if (array[i] == value) {
+            return true;
+        }
+    }
+    return false;
+}
+
+template<typename TYPE>
 inline void Set<TYPE>::del(TYPE value) {
     int ix = ((SetElement *) value)->getSetIx();
     array[ix] = array[--nb];
@@ -109,6 +121,8 @@ inline TYPE Set<TYPE>::operator[](int ix) {
     else
         return array[ix];
 }
+
+
 
 template<typename TYPE>
 inline TYPE const *Set<TYPE>::getArray() const {

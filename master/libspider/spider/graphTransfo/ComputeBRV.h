@@ -43,4 +43,6 @@
 
 void computeBRV(SRDAGGraph *topDag, transfoJob *job, int *brv);
 
+void computeBRV(transfoJob *job, int *brv);
+
 #endif//COMPUTE_BRV

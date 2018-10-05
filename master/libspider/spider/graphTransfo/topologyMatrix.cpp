@@ -58,28 +58,28 @@ int nullSpace(int *topo_matrix, int *brv, int nbEdges, int nbVertices) {
     Rational *ratioMatrix = CREATE_MUL(TRANSFO_STACK, nbVertices * nbEdges, Rational);
     Rational *ratioResult = CREATE_MUL(TRANSFO_STACK, nbVertices, Rational);
 
-//	printf("Topo Matrix:\n");
-//	for(int i=0; i<nbEdges; i++){
-//		for(int j=0; j<nbVertices; j++){
-//			printf("%d : ", topo_matrix[i*nbVertices+j]);
-//		}
-////		printf("\033[2D");
-//		printf("\n");
-//	}
+	printf("Topo Matrix:\n");
+	for(int i=0; i<nbEdges; i++){
+		for(int j=0; j<nbVertices; j++){
+			printf("%d : ", topo_matrix[i*nbVertices+j]);
+		}
+//		printf("\033[2D");
+		printf("\n");
+	}
 
     /* Copy matrix into ratioMatrix */
     for (int i = 0; i < nbEdges * nbVertices; i++) {
         ratioMatrix[i] = topo_matrix[i];
     }
 
-//	printf("Topo Matrix: Rational\n");
-//	for(int i=0; i<nbEdges; i++){
-//		for(int j=0; j<nbVertices; j++){
-//			printf("%d,%d : ", ratioMatrix[i*nbVertices+j].getNominator(), ratioMatrix[i*nbVertices+j].getDenominator());
-//		}
-////		printf("\033[2D");
-//		printf("\n");
-//	}
+	printf("Topo Matrix: Rational\n");
+	for(int i=0; i<nbEdges; i++){
+		for(int j=0; j<nbVertices; j++){
+			printf("%d,%d : ", ratioMatrix[i*nbVertices+j].getNominator(), ratioMatrix[i*nbVertices+j].getDenominator());
+		}
+//		printf("\033[2D");
+		printf("\n");
+	}
 
     for (int i = 0; i < nbEdges; i++) {
         Rational pivotMax = ratioMatrix[i * nbVertices + i].getAbs();

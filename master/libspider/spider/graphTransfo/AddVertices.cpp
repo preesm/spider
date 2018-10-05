@@ -49,7 +49,6 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
 
         switch (pi_vertex->getSubType()) {
             case PISDF_SUBTYPE_NORMAL:
-                printf("%s %d\n", pi_vertex->getName(), brv[bodyIx]);
                 for (int j = 0; j < brv[bodyIx]; j++) {
                     job->bodies[bodyIx][j] = topSrdag->addVertex(pi_vertex, j, job->graphIter);
                     for (int i = 0; i < pi_vertex->getNInParam(); i++) {

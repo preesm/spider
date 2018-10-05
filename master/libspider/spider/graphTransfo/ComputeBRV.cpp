@@ -125,13 +125,13 @@ void computeBRV(SRDAGGraph */*topSrdag*/, transfoJob *job, int *brv) {
         }
     }
 
-    printf("topoMatrix:\n");
-    for (int i = 0; i < nbEdges; i++) {
-        for (int j = 0; j < nbVertices; j++) {
-            printf("%4d ", topo_matrix[i * nbVertices + j]);
-        }
-        printf("\n");
-    }
+//    printf("topoMatrix:\n");
+//    for (int i = 0; i < nbEdges; i++) {
+//        for (int j = 0; j < nbVertices; j++) {
+//            printf("%4d ", topo_matrix[i * nbVertices + j]);
+//        }
+//        printf("\n");
+//    }
 
     int *smallBrv = CREATE_MUL(TRANSFO_STACK, nbVertices, int);
 
@@ -205,96 +205,65 @@ void computeBRV(SRDAGGraph */*topSrdag*/, transfoJob *job, int *brv) {
 //	printf("\n");
 }
 
-static void fillVertexSet(PiSDFVertexSet &vertexSet, PiSDFVertex *vertex) {
-    // 0. Do the output edges
-    for (int i = 0; i < vertex->getNOutEdge(); ++i) {
-        PiSDFEdge *edge = vertex->getOutEdge(i);
-        if (!edge) {
-            throw new std::runtime_error("Null edge detected on vertex [" + std::string(vertex->getName()) + "].");
+static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
+    int currentSize = 0;
+    int n = vertexSet.getN() - 1;
+    do {
+        currentSize = vertexSet.getN();
+        PiSDFVertex *current = vertexSet.getArray()[n];
+        // 0. Do the output edges
+        for (int i = 0; i < current->getNOutEdge(); ++i) {
+            PiSDFEdge *edge = current->getOutEdge(i);
+            if (!edge) {
+                throw new std::runtime_error("Null edge detected on vertex [" + std::string(current->getName()) + "].");
+            }
+            PiSDFVertex *targetVertex = edge->getSnk();
+            if (!vertexSet.contains(targetVertex)) {
+                vertexSet.add(targetVertex);
+            }
+            sizeEdgeSet++;
         }
-        PiSDFVertex *targetVertex = edge->getSnk();
-        if (!vertexSet.contains(targetVertex)) {
-            vertexSet.add(targetVertex);
-            fillVertexSet(vertexSet, targetVertex);
+        // 1. Do the input edges
+        for (int i = 0; i < current->getNInEdge(); ++i) {
+            PiSDFEdge *edge = current->getInEdge(i);
+            if (!edge) {
+                throw new std::runtime_error("Null edge detected on vertex [" + std::string(current->getName()) + "].");
+            }
+            PiSDFVertex *sourceVertex = edge->getSrc();
+            if (!vertexSet.contains(sourceVertex)) {
+                vertexSet.add(sourceVertex);
+            }
         }
-    }
-    // 1. Do the input edges
-    for (int i = 0; i < vertex->getNInEdge(); ++i) {
-        PiSDFEdge *edge = vertex->getInEdge(i);
-        if (!edge) {
-            throw new std::runtime_error("Null edge detected on vertex [" + std::string(vertex->getName()) + "].");
-        }
-        PiSDFVertex *sourceVertex = edge->getSrc();
-        if (!vertexSet.contains(sourceVertex)) {
-            vertexSet.add(sourceVertex);
-            fillVertexSet(vertexSet, sourceVertex);
-        }
-    }
+        n++;
+    }while((vertexSet.getN() != currentSize) || (n != vertexSet.getN()));
 }
 
-static void fillReps(transfoJob *job, PiSDFVertex &vertex, Rational &n, std::map<std::string, Rational > &reps) {
-    // Update value in the HashMap
-    reps[std::string(vertex.getName())] = n;
-
-    // 0. Do the output edges
-    for (int i = 0; i < vertex.getNOutEdge(); ++i) {
-        PiSDFEdge *edge = vertex.getOutEdge(i);
-        if (!edge) {
-            throw new std::runtime_error("Null edge detected on vertex [" + std::string(vertex.getName()) + "].");
-        }
-        PiSDFVertex *targetVertex = edge->getSnk();
-        if (targetVertex->getType() == PISDF_TYPE_IF) {
+static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, int size) {
+    Rational n(1);
+    for (int i = 0; i < edgeSet.getN(); ++i) {
+        PiSDFEdge *edge = edgeSet.getArray()[i];
+        PiSDFVertex *source = edge->getSrc();
+        PiSDFVertex *sink = edge->getSnk();
+        if (source->getType() == PISDF_TYPE_IF || sink->getType() == PISDF_TYPE_IF) {
             continue;
         }
-        Rational &fa = reps[std::string(targetVertex->getName())];
+        int cons = edge->resolveCons(job);
+        int prod = edge->resolveProd(job);
+        int sinkIx = sink->getTypeId() % size;
+        Rational &fa = reps[sinkIx];
         if (fa.getNominator() == 0) {
-            int prod = edge->resolveProd(job);
-            int cons = edge->resolveCons(job);
             Rational tmp(prod, cons);
-            Rational r = n * tmp;
-            fillReps(job, *targetVertex, r, reps);
+            reps[sinkIx] = n * tmp;
+            n = reps[sinkIx];
         }
-    }
-    // 1. Do the input edges
-    for (int i = 0; i < vertex.getNInEdge(); ++i) {
-        PiSDFEdge *edge = vertex.getInEdge(i);
-        if (!edge) {
-            throw new std::runtime_error("Null edge detected on vertex [" + std::string(vertex.getName()) + "].");
-        }
-        PiSDFVertex *sourceVertex = edge->getSrc();
-        if (sourceVertex->getType() == PISDF_TYPE_IF) {
-            continue;
-        }
-        Rational &fa = reps[std::string(sourceVertex->getName())];
-        if (fa.getNominator() == 0) {
-            int prod = edge->resolveProd(job);
-            int cons = edge->resolveCons(job);
+        int sourceIx = source->getTypeId() % size;
+        Rational &sa = reps[sourceIx];
+        if (sa.getNominator() == 0) {
             Rational tmp(cons, prod);
-            Rational r = n * tmp;
-            fillReps(job, *sourceVertex, r, reps);
+            reps[sourceIx] = n * tmp;
         }
     }
 }
-
-static inline long long compute_gcd(long long a, long long b) {
-    long long t;
-    while (b != 0) {
-        t = b;
-        b = a % b;
-        a = t;
-    }
-    return a;
-}
-
-static inline long long compute_lcm(long long a, long long b) {
-    if (a * b == 0) {
-        return 1;
-    }
-    long long tmp = a * b;
-    tmp = tmp < 0 ? -tmp : tmp;
-    return tmp / compute_gcd(a, b);
-}
-
 
 static void fillEdgeSet(PiSDFEdgeSet &edgeSet, PiSDFVertex *const *vertices, int size) {
     for (int i = 0; i < size; ++i) {
@@ -352,51 +321,39 @@ static void updateFromOutputIF(transfoJob *job, PiSDFVertex *vertex, int *brv, l
     }
 }
 
-
-static int getEdgeSetSize(PiSDFVertex *const *vertices, int size) {
-    int maxSize = 0;
-    for (int i = 0; i < size; ++i) {
-        printf("%s -- %d \n", vertices[i]->getName(), maxSize);
-        maxSize += vertices[i]->getNInEdge();
-        maxSize += vertices[i]->getNOutEdge();
-    }
-    return maxSize;
-}
-
-static void lcmBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long offset, long size, int *brv) {
-    // 0. Get vertices set
-    PiSDFVertex *const *vertices = vertexSet.getArray() + offset;
+static void lcmBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv) {
+    // 0. Get vertices and edges set
+    PiSDFVertex *const *vertices = vertexSet.getArray() + nDoneVertices;
+    PiSDFEdgeSet edgeSet(nEdges, TRANSFO_STACK);
+    fillEdgeSet(edgeSet, vertices, nVertices);
     // 1. Initialize the reps map
-    std::map<std::string, Rational > reps;
-    for (long i = 0; i < size; ++i) {
-        reps.insert(std::make_pair(std::string(vertices[i]->getName()), Rational(0, 1)));
+    Rational *reps = CREATE_MUL(TRANSFO_STACK, nVertices, Rational);
+    for (long i = 0; i < nVertices; ++i) {
+        reps[i] = Rational();
     }
 
-    Rational initRational(1, 1);
-    fillReps(job, *vertices[0], initRational, reps);
+    fillReps(job, edgeSet, reps, nVertices);
+
     // 2. Compute lcm
-    long long lcm = 1;
-    for (auto const &r : reps) {
-        lcm = compute_lcm(lcm, r.second.getDenominator());
+    long lcm = 1;
+    for (long i = 0; i < nVertices; ++i) {
+        lcm = Rational::compute_lcm(lcm, reps[i].getDenominator());
     }
 
     // 3. Compute and set BRV values
-    for (long i = 0; i < size; ++i) {
+    for (long i = 0; i < nVertices; ++i) {
         PiSDFVertex *vertex = vertices[i];
         // Ignore interfaces for now
         if (vertex->getType() == PISDF_TYPE_IF) {
             continue;
         }
-        Rational &r = reps.at(vertex->getName());
+        Rational &r = reps[vertex->getTypeId() % nVertices];
         long nom = r.getNominator();
         long denom = r.getDenominator();
         brv[vertex->getTypeId()] = ((nom * lcm) / denom);
     }
 
     // 4. Check consistency
-    int maxSize = getEdgeSetSize(vertices, size);
-    PiSDFEdgeSet edgeSet(maxSize, TRANSFO_STACK);
-    fillEdgeSet(edgeSet, vertices, size);
     for (int i = 0; i < edgeSet.getN(); ++i) {
         PiSDFEdge *edge = edgeSet.getArray()[i];
         PiSDFVertex *source = edge->getSrc();
@@ -409,7 +366,7 @@ static void lcmBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long offset, long
         int sourceRV = brv[source->getTypeId()];
         int sinkRV = brv[sink->getTypeId()];
         if ((prod * sourceRV) != (cons * sinkRV)) {
-            throw new std::runtime_error("Graph is not consistent: edge from [" + std::string(source->getName()) + "] "
+            throw std::runtime_error("Graph is not consistent: edge from [" + std::string(source->getName()) + "] "
                                                                                                                    "with production [" +
                                          std::to_string(prod * sourceRV) + "] != [" + std::to_string(cons * sinkRV) +
                                          "].");
@@ -419,7 +376,7 @@ static void lcmBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long offset, long
     // 5. Update rv values with interfaces
     long scaleFactor = 1;
     // 5.1 Get scale factor
-    for (long i = 0; i < size; ++i) {
+    for (long i = 0; i < nVertices; ++i) {
         PiSDFVertex *vertex = vertices[i];
         if (vertex->getType() == PISDF_TYPE_IF && vertex->getSubType() == PISDF_SUBTYPE_INPUT_IF) {
             updateFromInputIF(job, vertex, brv, scaleFactor);
@@ -429,32 +386,42 @@ static void lcmBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long offset, long
     }
     // 5.2 Apply scale factor
     if (scaleFactor != 1) {
-        for (long i = 0; i < size; ++i) {
+        for (long i = 0; i < nVertices; ++i) {
             PiSDFVertex *vertex = vertices[i];
             brv[vertex->getTypeId()] *= scaleFactor;
         }
+    }
+    StackMonitor::free(TRANSFO_STACK, reps);
+    while(edgeSet.getN() > 0) {
+        edgeSet.del(edgeSet[0]);
     }
 }
 
 void computeBRV(transfoJob *job, int *brv) {
     // Retrieve the graph
     PiSDFGraph *graph = job->graph;
-    PiSDFVertexSet vertexSet(graph->getNBody() + graph->getNInIf() + graph->getNOutIf(), TRANSFO_STACK);
+    int nTotalVertices = graph->getNBody() + graph->getNInIf() + graph->getNOutIf();
+    PiSDFVertexSet vertexSet(nTotalVertices, TRANSFO_STACK);
 
     // 0. First we need to get all different connected components
-    long verticesOffset = 0;
+    long nDoneVertices = 0;
     for (int i = 0; i < graph->getNBody(); i++) {
         PiSDFVertex *vertex = graph->getBody(i);
         if (!vertexSet.contains(vertex)) {
+            long nEdges = 0;
             vertexSet.add(vertex);
             // 1. Fill up the vertexSet
-            fillVertexSet(vertexSet, vertex);
+            fillVertexSet(vertexSet, nEdges);
             // 1.1 Update the offset in the vertexSet
-            long size = vertexSet.getN() - verticesOffset;
+            long nVertices = vertexSet.getN() - nDoneVertices;
             // 2. Compute the BRV of current set
-            lcmBRV(job, vertexSet, verticesOffset, size, brv);
-            verticesOffset = vertexSet.getN();
+            lcmBRV(job, vertexSet, nDoneVertices, nVertices, nEdges, brv);
+            // 3. Update the number of treated vertices
+            nDoneVertices = vertexSet.getN();
         }
+    }
+    while(vertexSet.getN() > 0) {
+        vertexSet.del(vertexSet[0]);
     }
 }
 

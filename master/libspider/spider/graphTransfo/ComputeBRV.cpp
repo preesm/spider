@@ -198,11 +198,11 @@ void computeBRV(SRDAGGraph */*topSrdag*/, transfoJob *job, int *brv) {
     StackMonitor::free(TRANSFO_STACK, vertexIxs);
     StackMonitor::free(TRANSFO_STACK, smallBrv);
 
-//	printf("brv:\n");
-//	for(int i=0; i<nbVertices; i++){
-//		printf("%4d ", brv[i]);
-//	}
-//	printf("\n");
+    printf("brv:\n");
+    for (int i = 0; i < nbVertices; i++) {
+        fprintf(stderr, "%4d ", brv[i]);
+    }
+    printf("\n");
 }
 
 static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
@@ -235,10 +235,10 @@ static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
             }
         }
         n++;
-    }while((vertexSet.getN() != currentSize) || (n != vertexSet.getN()));
+    } while ((vertexSet.getN() != currentSize) || (n != vertexSet.getN()));
 }
 
-static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, int size) {
+static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, long offset) {
     Rational n(1);
     for (int i = 0; i < edgeSet.getN(); ++i) {
         PiSDFEdge *edge = edgeSet.getArray()[i];
@@ -249,16 +249,21 @@ static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, int
         }
         int cons = edge->resolveCons(job);
         int prod = edge->resolveProd(job);
-        int sinkIx = sink->getTypeId() % size;
+        long sinkIx = sink->getSetIx() - offset;
         Rational &fa = reps[sinkIx];
+        long sourceIx = source->getSetIx() - offset;
+        Rational &sa = reps[sourceIx];
         if (fa.getNominator() == 0) {
+            if (sa.getNominator() != 0) {
+                n = reps[sourceIx];
+            }
             Rational tmp(prod, cons);
             reps[sinkIx] = n * tmp;
-            n = reps[sinkIx];
         }
-        int sourceIx = source->getTypeId() % size;
-        Rational &sa = reps[sourceIx];
         if (sa.getNominator() == 0) {
+            if (fa.getNominator() != 0) {
+                n = reps[sinkIx];
+            }
             Rational tmp(cons, prod);
             reps[sourceIx] = n * tmp;
         }
@@ -321,7 +326,8 @@ static void updateFromOutputIF(transfoJob *job, PiSDFVertex *vertex, int *brv, l
     }
 }
 
-static void lcmBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv) {
+static void
+lcmBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv) {
     // 0. Get vertices and edges set
     PiSDFVertex *const *vertices = vertexSet.getArray() + nDoneVertices;
     PiSDFEdgeSet edgeSet(nEdges, TRANSFO_STACK);
@@ -329,10 +335,11 @@ static void lcmBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertice
     // 1. Initialize the reps map
     Rational *reps = CREATE_MUL(TRANSFO_STACK, nVertices, Rational);
     for (long i = 0; i < nVertices; ++i) {
+        // Init a rational with num: 0, den: 1
         reps[i] = Rational();
     }
 
-    fillReps(job, edgeSet, reps, nVertices);
+    fillReps(job, edgeSet, reps, nDoneVertices);
 
     // 2. Compute lcm
     long lcm = 1;
@@ -347,7 +354,7 @@ static void lcmBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertice
         if (vertex->getType() == PISDF_TYPE_IF) {
             continue;
         }
-        Rational &r = reps[vertex->getTypeId() % nVertices];
+        Rational &r = reps[i];
         long nom = r.getNominator();
         long denom = r.getDenominator();
         brv[vertex->getTypeId()] = ((nom * lcm) / denom);
@@ -367,9 +374,9 @@ static void lcmBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertice
         int sinkRV = brv[sink->getTypeId()];
         if ((prod * sourceRV) != (cons * sinkRV)) {
             throw std::runtime_error("Graph is not consistent: edge from [" + std::string(source->getName()) + "] "
-                                                                                                                   "with production [" +
-                                         std::to_string(prod * sourceRV) + "] != [" + std::to_string(cons * sinkRV) +
-                                         "].");
+                                                                                                               "with production [" +
+                                     std::to_string(prod * sourceRV) + "] != [" + std::to_string(cons * sinkRV) +
+                                     "].");
         }
     }
 
@@ -392,7 +399,7 @@ static void lcmBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertice
         }
     }
     StackMonitor::free(TRANSFO_STACK, reps);
-    while(edgeSet.getN() > 0) {
+    while (edgeSet.getN() > 0) {
         edgeSet.del(edgeSet[0]);
     }
 }
@@ -420,7 +427,7 @@ void computeBRV(transfoJob *job, int *brv) {
             nDoneVertices = vertexSet.getN();
         }
     }
-    while(vertexSet.getN() > 0) {
+    while (vertexSet.getN() > 0) {
         vertexSet.del(vertexSet[0]);
     }
 }

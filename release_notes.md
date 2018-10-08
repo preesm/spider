@@ -26,6 +26,7 @@ Spider Changelog
 ### Changes
 * Add pre-compiled binaries for linux32/64 and win32 in release assets;
 * Removed ganttDisplay from spider repository. See https://github.com/preesm/gantt-display. 
+* Changed BRV computation from matrix topology to LCM method.
 
 ### Bug fix
 

@@ -206,7 +206,7 @@ void computeBRV(SRDAGGraph */*topSrdag*/, transfoJob *job, int *brv) {
     printf("\n");
 }
 
-static void fillVertexSet(transfoJob* job, PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
+static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
     int currentSize = 0;
     int n = vertexSet.getN() - 1;
     do {
@@ -219,7 +219,7 @@ static void fillVertexSet(transfoJob* job, PiSDFVertexSet &vertexSet, long &size
                 throw std::runtime_error("Null edge detected on vertex [" + std::string(current->getName()) + "].");
             }
             PiSDFVertex *targetVertex = edge->getSnk();
-            if (!vertexSet.contains(targetVertex) && isBodyExecutable(targetVertex, job)) {
+            if (!vertexSet.contains(targetVertex)) {
                 vertexSet.add(targetVertex);
             }
             sizeEdgeSet++;
@@ -231,7 +231,7 @@ static void fillVertexSet(transfoJob* job, PiSDFVertexSet &vertexSet, long &size
                 throw std::runtime_error("Null edge detected on vertex [" + std::string(current->getName()) + "].");
             }
             PiSDFVertex *sourceVertex = edge->getSrc();
-            if (!vertexSet.contains(sourceVertex) && isBodyExecutable(sourceVertex, job)) {
+            if (!vertexSet.contains(sourceVertex)) {
                 vertexSet.add(sourceVertex);
             }
         }
@@ -249,11 +249,11 @@ void computeBRV(transfoJob *job, int *brv) {
     long nDoneVertices = 0;
     for (int i = 0; i < graph->getNBody(); i++) {
         PiSDFVertex *vertex = graph->getBody(i);
-        if (!vertexSet.contains(vertex) && isBodyExecutable(vertex, job)) {
+        if (!vertexSet.contains(vertex)) {
             long nEdges = 0;
             vertexSet.add(vertex);
             // 1. Fill up the vertexSet
-            fillVertexSet(job, vertexSet, nEdges);
+            fillVertexSet(vertexSet, nEdges);
             // 1.1 Update the offset in the vertexSet
             long nVertices = vertexSet.getN() - nDoneVertices;
             // 2. Compute the BRV of current set

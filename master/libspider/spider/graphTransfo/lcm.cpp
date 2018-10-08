@@ -74,14 +74,14 @@ static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, lon
         Rational &fa = reps[sinkIx];
         long sourceIx = source->getSetIx() - offset;
         Rational &sa = reps[sourceIx];
-        if (fa.getNominator() == 0) {
+        if (fa.getNominator() == 0 && cons != 0) {
             if (sa.getNominator() != 0) {
                 n = reps[sourceIx];
             }
             Rational tmp(prod, cons);
             reps[sinkIx] = n * tmp;
         }
-        if (sa.getNominator() == 0) {
+        if (sa.getNominator() == 0 && prod != 0) {
             if (fa.getNominator() != 0) {
                 n = reps[sinkIx];
             }
@@ -98,17 +98,11 @@ static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, lon
  * @param vertices  The vertices of the connected components.
  * @param nVertices The number of vertices inside the connected components.
  */
-static void fillEdgeSet(transfoJob *job, PiSDFEdgeSet &edgeSet, PiSDFVertex *const *vertices, int nVertices) {
+static void fillEdgeSet(PiSDFEdgeSet &edgeSet, PiSDFVertex *const *vertices, int nVertices) {
     for (int v = 0; v < nVertices; ++v) {
         // We only need to go though the output edges of every vertices
         for (int e = 0; e < vertices[v]->getNOutEdge(); ++e) {
             PiSDFEdge *edge = vertices[v]->getOutEdge(e);
-            int prod = edge->resolveProd(job);
-            int cons = edge->resolveCons(job);
-            // Ignore edges connected to disables vertices
-            if (prod == 0 || cons == 0) {
-                continue;
-            }
             edgeSet.add(edge);
         }
     }
@@ -185,42 +179,6 @@ static void checkConsistency(transfoJob *job, PiSDFEdgeSet &edgeSet, int *brv) {
     }
 }
 
-//static void updateFromInputIF(transfoJob *job, PiSDFVertex *vertex, int *brv, long &scaleFactor) {
-//    PiSDFEdge *edge = vertex->getOutEdge(0);
-//    PiSDFVertex *sink = edge->getSnk();
-//    if (sink->getType() == PISDF_TYPE_BODY) {
-//        int sinkRV = brv[sink->getTypeId()];
-//        int prod = edge->resolveProd(job);
-//        int cons = edge->resolveCons(job);
-//        long tmp = cons * sinkRV * scaleFactor;
-//        if (tmp < prod) {
-//            long scaleScaleFactor = prod / tmp;
-//            if ((scaleScaleFactor * tmp) < prod) {
-//                scaleScaleFactor++;
-//            }
-//            scaleFactor *= scaleScaleFactor;
-//        }
-//    }
-//}
-//
-//static void updateFromOutputIF(transfoJob *job, PiSDFVertex *vertex, int *brv, long &scaleFactor) {
-//    PiSDFEdge *edge = vertex->getInEdge(0);
-//    PiSDFVertex *source = edge->getSrc();
-//    if (source->getType() == PISDF_TYPE_BODY) {
-//        int sourceRV = brv[source->getTypeId()];
-//        int prod = edge->resolveProd(job);
-//        int cons = edge->resolveCons(job);
-//        long tmp = prod * sourceRV * scaleFactor;
-//        if (tmp < cons) {
-//            long scaleScaleFactor = cons / tmp;
-//            if ((scaleScaleFactor * tmp) < cons) {
-//                scaleScaleFactor++;
-//            }
-//            scaleFactor *= scaleScaleFactor;
-//        }
-//    }
-//}
-
 static void updateFromIF(transfoJob *job, PiSDFVertex *vertex, int *brv, long &scaleFactor) {
     PiSDFEdge *edge = vertex->getAllEdges()[0];
     PiSDFVertex *source = edge->getSrc();
@@ -240,7 +198,7 @@ static void updateFromIF(transfoJob *job, PiSDFVertex *vertex, int *brv, long &s
     } else {
         return;
     }
-    if (tmp < cmp) {
+    if (tmp != 0 && tmp < cmp) {
         long scaleScaleFactor = cmp / tmp;
         if ((scaleScaleFactor * tmp) < cmp) {
             scaleScaleFactor++;
@@ -258,7 +216,7 @@ static void updateFromCFG(transfoJob *job, PiSDFVertex *vertex, int *brv, long &
         if (sink->getType() == PISDF_TYPE_BODY) {
             int sinkRV = brv[sink->getTypeId()];
             long tmp = cons * sinkRV * scaleFactor;
-            if (tmp < prod) {
+            if (tmp != 0 && tmp < prod) {
                 long scaleScaleFactor = prod / tmp;
                 if ((scaleScaleFactor * tmp) < prod) {
                     scaleScaleFactor++;
@@ -303,7 +261,7 @@ lcmBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long
 // 0. Get vertices and edges set
     PiSDFVertex *const *vertices = vertexSet.getArray() + nDoneVertices;
     PiSDFEdgeSet edgeSet(nEdges, TRANSFO_STACK);
-    fillEdgeSet(job, edgeSet, vertices, nVertices);
+    fillEdgeSet(edgeSet, vertices, nVertices);
     // 1. Initialize the reps map
     Rational *reps = CREATE_MUL(TRANSFO_STACK, nVertices, Rational);
     for (long i = 0; i < nVertices; ++i) {

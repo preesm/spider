@@ -249,7 +249,7 @@ void computeBRV(transfoJob *job, int *brv) {
     long nDoneVertices = 0;
     for (int i = 0; i < graph->getNBody(); i++) {
         PiSDFVertex *vertex = graph->getBody(i);
-        if (!vertexSet.contains(vertex)) {
+        if (!vertexSet.contains(vertex) && isBodyExecutable(vertex, job)) {
             long nEdges = 0;
             vertexSet.add(vertex);
             // 1. Fill up the vertexSet

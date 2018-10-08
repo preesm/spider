@@ -98,11 +98,17 @@ static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, lon
  * @param vertices  The vertices of the connected components.
  * @param nVertices The number of vertices inside the connected components.
  */
-static void fillEdgeSet(PiSDFEdgeSet &edgeSet, PiSDFVertex *const *vertices, int nVertices) {
+static void fillEdgeSet(transfoJob *job, PiSDFEdgeSet &edgeSet, PiSDFVertex *const *vertices, int nVertices) {
     for (int v = 0; v < nVertices; ++v) {
         // We only need to go though the output edges of every vertices
         for (int e = 0; e < vertices[v]->getNOutEdge(); ++e) {
             PiSDFEdge *edge = vertices[v]->getOutEdge(e);
+            int prod = edge->resolveProd(job);
+            int cons = edge->resolveCons(job);
+            // Ignore edges connected to disables vertices
+            if (prod == 0 || cons == 0) {
+                continue;
+            }
             edgeSet.add(edge);
         }
     }
@@ -297,7 +303,7 @@ lcmBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long
 // 0. Get vertices and edges set
     PiSDFVertex *const *vertices = vertexSet.getArray() + nDoneVertices;
     PiSDFEdgeSet edgeSet(nEdges, TRANSFO_STACK);
-    fillEdgeSet(edgeSet, vertices, nVertices);
+    fillEdgeSet(job, edgeSet, vertices, nVertices);
     // 1. Initialize the reps map
     Rational *reps = CREATE_MUL(TRANSFO_STACK, nVertices, Rational);
     for (long i = 0; i < nVertices; ++i) {

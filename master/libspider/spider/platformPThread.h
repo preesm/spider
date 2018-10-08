@@ -47,7 +47,9 @@
 #include "ControlQueue.h"
 
 #ifdef PAPI_AVAILABLE
+
 #include "../papify/PapifyAction.h"
+
 #endif
 
 // semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,

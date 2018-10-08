@@ -405,7 +405,9 @@ void LRT::runInfinitly() {
 }
 
 #ifdef PAPI_AVAILABLE
+
 void LRT::addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction) {
     this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
 }
+
 #endif

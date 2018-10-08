@@ -44,8 +44,10 @@
 #include <platform.h>
 
 #ifdef PAPI_AVAILABLE
+
 #include <map>
 #include "../papify/PapifyAction.h"
+
 #endif
 
 #define NB_MAX_ACTOR (200)
@@ -79,7 +81,9 @@ public:
     inline void setUsePapify();
 
 #ifdef PAPI_AVAILABLE
+
     void addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction);
+
 #endif
 
 protected:

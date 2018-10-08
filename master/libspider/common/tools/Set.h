@@ -122,8 +122,6 @@ inline TYPE Set<TYPE>::operator[](int ix) {
         return array[ix];
 }
 
-
-
 template<typename TYPE>
 inline TYPE const *Set<TYPE>::getArray() const {
     return array;

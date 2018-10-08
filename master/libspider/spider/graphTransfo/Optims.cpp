@@ -299,7 +299,8 @@ static bool removeBr(SRDAGGraph *topDag) {
             for (int j = 0; j < br->getNConnectedOutEdge(); j++) {
                 SRDAGEdge *delEdge = br->getOutEdge(j);
                 SRDAGVertex *endVertex = delEdge->getSnk();
-                if (endVertex && endVertex->getType() == SRDAG_END && endVertex->getInParam(0) == PISDF_DELAY_NONPERSISTENT) {
+                if (endVertex && endVertex->getType() == SRDAG_END &&
+                    endVertex->getInParam(0) == PISDF_DELAY_NONPERSISTENT) {
                     int nbOutput = br->getNConnectedOutEdge();
 
                     delEdge->disconnectSrc();

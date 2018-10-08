@@ -39,7 +39,22 @@
 #define TOPOLOGY_MATRIX_H
 
 #include <tools/Stack.h>
+#include <graphs/PiSDF/PiSDFCommon.h>
+#include "GraphTransfo.h"
 
-int nullSpace(int *topo_matrix, int *brv, int nbEdges, int nbVertices);
+/**
+ * Compute the repetition vector of actors that belong to a given connected component,
+ * using method of Matrix of topology.
+ *
+ * @param job             Pointer to the transformation job.
+ * @param vertexSet       Global vertex set of the entire graph.
+ * @param nDoneVertices   Offset of the current connected component inside the vertexSet.
+ * @param nVertices       Number of vertices contained inside the connected component.
+ * @param nEdges          Number of edges in current connected component.
+ * @param brv             Repetition vector to be filled.
+ *
+ * @throw std::runtime_exception when graph is not consistent
+ */
+void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv);
 
 #endif

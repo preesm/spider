@@ -61,12 +61,12 @@ PiSDFVertex::PiSDFVertex(
     subGraph_ = subGraph;
 
     nInEdge_ = nInEdge;
-    inEdges_ = CREATE_MUL(PISDF_STACK, nInEdge_, PiSDFEdge*);
-    memset(inEdges_, 0, nInEdge_ * sizeof(PiSDFEdge *));
-
     nOutEdge_ = nOutEdge;
-    outEdges_ = CREATE_MUL(PISDF_STACK, nOutEdge_, PiSDFEdge*);
-    memset(outEdges_, 0, nOutEdge_ * sizeof(PiSDFEdge *));
+    nEdge_ = nInEdge_ + nOutEdge_;
+    allEdges_ = CREATE_MUL(PISDF_STACK, nEdge_, PiSDFEdge *);
+    memset(allEdges_, 0, nEdge_ * sizeof(PiSDFEdge *));
+    inEdges_ = allEdges_;
+    outEdges_ = allEdges_ + nInEdge_;
 
     nInParam_ = nInParam;
     inParams_ = CREATE_MUL(PISDF_STACK, nInParam, PiSDFParam*);
@@ -87,8 +87,9 @@ PiSDFVertex::PiSDFVertex(
 }
 
 PiSDFVertex::~PiSDFVertex() {
-    StackMonitor::free(PISDF_STACK, inEdges_);
-    StackMonitor::free(PISDF_STACK, outEdges_);
+    inEdges_ = nullptr;
+    outEdges_ = nullptr;
+    StackMonitor::free(PISDF_STACK, allEdges_);
     StackMonitor::free(PISDF_STACK, inParams_);
     StackMonitor::free(PISDF_STACK, outParams_);
     StackMonitor::free(PISDF_STACK, constraints_);

@@ -80,6 +80,8 @@ public:
 
     inline PiSDFEdge *getOutEdge(int ix);
 
+    inline PiSDFEdge * const * getAllEdges() const;
+
     /** Connect Fcts */
     inline void connectInEdge(int ix, PiSDFEdge *edge);
 
@@ -139,8 +141,12 @@ private:
     PiSDFGraph *graph_;
     PiSDFGraph *subGraph_;
 
-    int nInEdge_, nOutEdge_;
-    PiSDFEdge **inEdges_, **outEdges_;
+    int nEdge_;
+    int nInEdge_;
+    int nOutEdge_;
+    PiSDFEdge **allEdges_;
+    PiSDFEdge **inEdges_;
+    PiSDFEdge **outEdges_;
 
     int nInParam_, nOutParam_;
     PiSDFParam **inParams_, **outParams_;
@@ -203,6 +209,10 @@ inline PiSDFEdge *PiSDFVertex::getOutEdge(int ix) {
         return outEdges_[ix];
     else
         throw std::runtime_error("PiSDFVertex: Bad ix in getOutEdge");
+}
+
+inline PiSDFEdge * const * PiSDFVertex::getAllEdges() const {
+    return allEdges_;
 }
 
 /** Connect Fcts */

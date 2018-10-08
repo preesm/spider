@@ -444,11 +444,11 @@ void PlatformPThread::rstJobIx() {
     }
 
     //reseting master LRT jobIx counter
-    Platform::get()->getLrt()->setJobIx(0);
+    Platform::get()->getLrt()->setJobIx(-1);
 
     //reseting jobTab
     for(int i=0; i<nLrt_; i++){
-        lrtCom_[0]->setLrtJobIx(i,0);
+        lrtCom_[0]->setLrtJobIx(i,-1);
     }
 
     //Waiting for slave LRTs to reset their jobIx counter

@@ -133,7 +133,7 @@ inline void LRT::setJobIx(int jobIx) {
 }
 
 inline void LRT::rstJobIx() {
-    jobIx_ = 0;
+    jobIx_ = -1;
 }
 
 inline void LRT::setUsePapify() {

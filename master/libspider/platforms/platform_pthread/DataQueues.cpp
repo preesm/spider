@@ -44,7 +44,8 @@ DataQueues::DataQueues(int nLrt) {
     jobStamps_ = CREATE_MUL(ARCHI_STACK, nLrt_, int*);
     for (int i = 0; i < nLrt_; i++) {
         jobStamps_[i] = CREATE_MUL(ARCHI_STACK, nLrt_, int);
-        memset(jobStamps_[i], 0, nLrt_ * sizeof(int));
+        for(int j = 0; j<nLrt_; j++)
+            jobStamps_[i][j] = -1;
     }
     waitingSems_ = CREATE_MUL(ARCHI_STACK, nLrt_, sem_t);
     for (int i = 0; i < nLrt_; i++) {
@@ -71,10 +72,10 @@ void DataQueues::updateLrtJobStamp(int lrtIx, int jobStamp) {
     /** Unlock registered lrts  */
     for (int i = 0; i < nLrt_; i++) {
         if (i != lrtIx &&
-            jobStamps_[lrtIx][i] != 0 &&
+            jobStamps_[lrtIx][i] >= 0 &&
             jobStamps_[lrtIx][i] <= jobStamp) {
             /** Clear registered job stamp */
-            jobStamps_[lrtIx][i] = 0;
+            jobStamps_[lrtIx][i] = -1;
 
             /** Unlock the lrt */
             sem_post(&waitingSems_[i]);

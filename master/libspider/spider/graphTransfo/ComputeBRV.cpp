@@ -206,7 +206,7 @@ void computeBRV(SRDAGGraph */*topSrdag*/, transfoJob *job, int *brv) {
     printf("\n");
 }
 
-static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
+static void fillVertexSet(transfoJob* job, PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
     int currentSize = 0;
     int n = vertexSet.getN() - 1;
     do {
@@ -219,7 +219,7 @@ static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
                 throw std::runtime_error("Null edge detected on vertex [" + std::string(current->getName()) + "].");
             }
             PiSDFVertex *targetVertex = edge->getSnk();
-            if (!vertexSet.contains(targetVertex)) {
+            if (!vertexSet.contains(targetVertex) && isBodyExecutable(targetVertex, job)) {
                 vertexSet.add(targetVertex);
             }
             sizeEdgeSet++;
@@ -231,7 +231,7 @@ static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
                 throw std::runtime_error("Null edge detected on vertex [" + std::string(current->getName()) + "].");
             }
             PiSDFVertex *sourceVertex = edge->getSrc();
-            if (!vertexSet.contains(sourceVertex)) {
+            if (!vertexSet.contains(sourceVertex) && isBodyExecutable(sourceVertex, job)) {
                 vertexSet.add(sourceVertex);
             }
         }
@@ -253,7 +253,7 @@ void computeBRV(transfoJob *job, int *brv) {
             long nEdges = 0;
             vertexSet.add(vertex);
             // 1. Fill up the vertexSet
-            fillVertexSet(vertexSet, nEdges);
+            fillVertexSet(job, vertexSet, nEdges);
             // 1.1 Update the offset in the vertexSet
             long nVertices = vertexSet.getN() - nDoneVertices;
             // 2. Compute the BRV of current set

@@ -38,6 +38,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include "DummyMemAlloc.h"
+#include <cmath>
 
 void DummyMemAlloc::reset() {
     currentMem_ = this->memStart_ + this->memReserved_;

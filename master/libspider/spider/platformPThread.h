@@ -242,6 +242,7 @@ typedef struct Arg_lrt {
     int nLrt;
     StackConfig lrtStack;
     bool usePapify;
+    int coreAffinity;
 } Arg_lrt;
 
 // Fonction wrapper pour lancer un thread sur une méthode d'objet

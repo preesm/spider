@@ -12,6 +12,31 @@ Spider Changelog
 ### Bug fix
 * Fix Graph transformation for actors with repetition is equal to 0.
 
+## Release version 1.2.1
+*2018.10.01*
+
+### New Feature
+
+### Changes
+* Add pre-compiled binaries for linux32/64 and win32 in release assets;
+* Removed ganttDisplay from spider repository. See https://github.com/preesm/gantt-display. 
+
+### Bug fix
+
+
+## Release version 1.2.0
+*2018.09.25*
+
+### New Feature
+
+### Changes
+* Updating Papify to display warning when exceeding number of available counters.
+* Adding support of heteregeneous hardware in Spider.
+* Adding support of delays in hierarchical graphs.
+
+### Bug fix
+* Fixed reduce Join-End graph optimization and persistent delays behavior.
+
 ## Release version 1.1.4
 *2018.06.11*
 
@@ -21,6 +46,7 @@ Spider Changelog
 * Fix release scripts;
 
 ### Bug fix
+* Fix graph optims while using persitent delays;
 
 
 ## Release version 1.1.3

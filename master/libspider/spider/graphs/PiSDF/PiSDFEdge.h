@@ -64,7 +64,7 @@ public:
 
     inline int getSnkPortIx() const;
 
-    inline int getMemoryReservedAlloc() const;
+    inline int getDelayAlloc() const;
 
     /** Setters */
     inline void setDelay(const char *delay,
@@ -73,7 +73,7 @@ public:
                          PiSDFVertex *delayActor,
                          bool isDelayPersistent);
 
-    inline void setMemoryReservedAlloc(int memReservedAlloc);
+    inline void setMemoryDelayAlloc(int memDelayAlloc);
 
     /** Connections Fcts */
     void connectSrc(PiSDFVertex *src, int srcPortId, const char *prod);
@@ -124,8 +124,8 @@ private:
     PiSDFVertex *setter_;
     PiSDFVertex *getter_;
     PiSDFVertex *virtual_;
-    bool isPersistent_;
-    int memReservedAlloc_;
+    bool isDelayPersistent_;
+    int memDelayAlloc_;
 };
 
 inline int PiSDFEdge::getId() const {
@@ -148,8 +148,8 @@ inline int PiSDFEdge::getSnkPortIx() const {
     return snkPortIx_;
 }
 
-inline int PiSDFEdge::getMemoryReservedAlloc() const {
-    return memReservedAlloc_;
+inline int PiSDFEdge::getDelayAlloc() const {
+    return memDelayAlloc_;
 }
 
 inline void PiSDFEdge::setDelay(const char *delay,
@@ -178,11 +178,11 @@ inline void PiSDFEdge::setDelay(const char *delay,
         virtual_ = delayActor;
         //getter->connectInEdge(0, this);
     }
-    isPersistent_ = isDelayPersistent;
+    isDelayPersistent_ = isDelayPersistent;
 }
 
-inline void PiSDFEdge::setMemoryReservedAlloc(int memReservedAlloc) {
-    memReservedAlloc_ = memReservedAlloc;
+inline void PiSDFEdge::setMemoryDelayAlloc(int memDelayAlloc) {
+    memDelayAlloc_ = memDelayAlloc;
 }
 
 inline int PiSDFEdge::resolveProd(transfoJob *job) const {
@@ -224,7 +224,7 @@ inline PiSDFVertex *PiSDFEdge::getDelayVirtual() {
 }
 
 inline bool PiSDFEdge::isDelayPersistent() {
-    return isPersistent_;
+    return isDelayPersistent_;
 }
 
 #endif/*PISDF_EDGE_H*/

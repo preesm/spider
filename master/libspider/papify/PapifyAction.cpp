@@ -179,14 +179,14 @@ void PapifyAction::writeEvents() {
         if (!outputFile_) {
             PapifyEventLib::throwError(__FILE__, __LINE__, "failed to open output file");
         }
-        fprintf(outputFile_, "PE,Actor,tinit,tend,");
+        fprintf(outputFile_, "PE,Actor,tini,tend");
         char eventName[PAPI_MAX_STR_LEN];
         for (int i = 0; i < numberOfEvents_; ++i) {
             int retVal = PAPI_event_code_to_name(PAPIEventCodeSet_[i], eventName);
             if (retVal != PAPI_OK) {
                 PapifyEventLib::throwError(__FILE__, __LINE__, retVal);
             }
-            fprintf(outputFile_, "%s,", eventName);
+            fprintf(outputFile_, ",%s", eventName);
         }
         fprintf(outputFile_, "\n");
     }
@@ -195,7 +195,7 @@ void PapifyAction::writeEvents() {
 
 void PapifyAction::writeEvents(FILE *file) {
     if (file) {
-        fprintf(outputFile_, "%lld,%s,%llu,%llu", PEId_, actorName_, timeStart, timeStop);
+        fprintf(outputFile_, "%lld,%s,%lld,%lld", PEId_, actorName_, timeStart, timeStop);
         for (int i = 0; i < numberOfEvents_; ++i) {
             fprintf(outputFile_, ",%lld", counterValues_[i]);
         }

@@ -299,7 +299,7 @@ static bool removeBr(SRDAGGraph *topDag) {
             for (int j = 0; j < br->getNConnectedOutEdge(); j++) {
                 SRDAGEdge *delEdge = br->getOutEdge(j);
                 SRDAGVertex *endVertex = delEdge->getSnk();
-                if (endVertex && endVertex->getType() == SRDAG_END) {
+                if (endVertex && endVertex->getType() == SRDAG_END && endVertex->getInParam(0) == PISDF_DELAY_NONPERSISTENT) {
                     int nbOutput = br->getNConnectedOutEdge();
 
                     delEdge->disconnectSrc();
@@ -524,12 +524,22 @@ static int reduceJoinEnd(SRDAGGraph *topDag) {
             SRDAGVertex *end = join->getOutEdge(0)->getSnk();
             if (end && end->getState() == SRDAG_EXEC && end->getType() == SRDAG_END) {
                 int nEdges = join->getNConnectedInEdge();
+                // Check if the End was linked to a persistent delay or not
+                bool isPersistent = end->getInParam(0) == PISDF_DELAY_PERSISTENT;
+                int memAllocStart = -1;
+                if (isPersistent) {
+                    memAllocStart = end->getInParam(1);
+                }
                 for (int j = 0; j < nEdges; j++) {
                     SRDAGEdge *edge = join->getInEdge(j);
                     SRDAGVertex *newEnd = topDag->addEnd();
                     newEnd->setState(SRDAG_EXEC);
                     edge->disconnectSnk();
                     edge->connectSnk(newEnd, 0);
+                    newEnd->addInParam(0, isPersistent);
+                    // If the End was not persistent, it will be useless info anyway
+                    newEnd->addInParam(1, memAllocStart);
+                    memAllocStart += edge->getRate();
                 }
 
                 SRDAGEdge *edge = join->getOutEdge(0);

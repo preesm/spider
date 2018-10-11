@@ -72,6 +72,8 @@ public:
 
     inline Expression *getExpression();
 
+    inline int getValue() const;
+
     /** Setters */
     inline void setValue(int value);
 
@@ -132,6 +134,10 @@ inline int PiSDFParam::getParentId() const {
     if (type_ != PISDF_PARAM_HERITED)
         throw std::runtime_error("Error: Not Herited param used as Herited param\n");
     return parentId_;
+}
+
+inline int PiSDFParam::getValue() const {
+    return value_;
 }
 
 inline Expression *PiSDFParam::getExpression() {

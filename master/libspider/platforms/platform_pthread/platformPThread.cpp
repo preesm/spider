@@ -67,6 +67,7 @@
 
 #include <lrt.h>
 #include <PThreadSpiderCommunicator.h>
+#include <spider.h>
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
 
@@ -88,7 +89,9 @@ pthread_barrier_t pthread_barrier_init_and_end_thread;
 void printfSpider(void);
 
 static void setAffinity(int cpuId) {
-
+#ifdef WIN32
+    fprintf(stdout, "CPU affinity is not supported on Windows platforms. Ignoring argument %d.\n", cpuId);
+#else
     cpu_set_t mask;
     int status;
 
@@ -98,6 +101,7 @@ static void setAffinity(int cpuId) {
     if (status != 0) {
         perror("sched_setaffinity");
     }
+#endif
 }
 
 
@@ -177,27 +181,32 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     dataMem = malloc(config.platform.shMemSize);
 
     // Filling up parameters for each threads
-    for (int i = 1; i < nLrt_; i++) {
-        lrtCom_[i] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
-                spider2LrtQueues_[i],
-                lrt2SpiderQueues_[i],
-                dataQueues_,
-                traceQueue_);
-        lrt_[i] = CREATE(ARCHI_STACK, LRT)(i);
+    int offsetPe = 0;
+    for (int pe = 0; pe < config.platform.nPeType; ++pe) {
+        for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
+            
+		    lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
+		            spider2LrtQueues_[i + offsetPe],
+		            lrt2SpiderQueues_[i + offsetPe],
+		            dataQueues_,
+		            traceQueue_);
+		    lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i);
 
-        arg_lrt_[i - 1].lrtCom = lrtCom_[i];
-        arg_lrt_[i - 1].lrt = lrt_[i];
-        arg_lrt_[i - 1].shMemSize = config.platform.shMemSize;
-        arg_lrt_[i - 1].fcts = config.platform.fcts;
-        arg_lrt_[i - 1].nLrtFcts = config.platform.nLrtFcts;
-        arg_lrt_[i - 1].index = i;
-        arg_lrt_[i - 1].nLrt = nLrt_;
-        arg_lrt_[i - 1].instance = this;
-        arg_lrt_[i - 1].lrtStack.name = config.lrtStack.name;
-        arg_lrt_[i - 1].lrtStack.type = config.lrtStack.type;
-        arg_lrt_[i - 1].lrtStack.start = (void *) ((char *) config.lrtStack.start + i * config.lrtStack.size / nLrt_);
-        arg_lrt_[i - 1].lrtStack.size = config.lrtStack.size / nLrt_;
-        arg_lrt_[i - 1].usePapify = config.usePapify;
+		    arg_lrt_[i + offsetPe].lrtCom = lrtCom_[i + offsetPe];
+		    arg_lrt_[i + offsetPe].lrt = lrt_[i + offsetPe];
+		    arg_lrt_[i + offsetPe].shMemSize = config.platform.shMemSize;
+		    arg_lrt_[i + offsetPe].fcts = config.platform.fcts;
+		    arg_lrt_[i + offsetPe].nLrtFcts = config.platform.nLrtFcts;
+		    arg_lrt_[i + offsetPe].index = i + offsetPe;
+		    arg_lrt_[i + offsetPe].nLrt = nLrt_;
+		    arg_lrt_[i + offsetPe].instance = this;
+            arg_lrt_[i + offsetPe].coreAffinity = config.platform.coreAffinities[pe][i];
+		    arg_lrt_[i + offsetPe].lrtStack.name = config.lrtStack.name;
+		    arg_lrt_[i + offsetPe].lrtStack.type = config.lrtStack.type;
+		    arg_lrt_[i + offsetPe].lrtStack.start = (void *) ((char *) config.lrtStack.start + (i + offsetPe) * config.lrtStack.size / nLrt_);
+		    arg_lrt_[i + offsetPe].lrtStack.size = config.lrtStack.size / nLrt_;
+		    arg_lrt_[i + offsetPe].usePapify = config.usePapify;
+		}
     }
 
     thread_ID_tab_[0] = pthread_self();
@@ -205,7 +214,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
     //Lancement des threads
     for (int i = 1; i < nLrt_; i++) {
-        pthread_create(&thread_lrt_[i - 1], NULL, &lrtPThread_helper, &arg_lrt_[i - 1]);
+        pthread_create(&thread_lrt_[i - 1], NULL, &lrtPThread_helper, &arg_lrt_[i]);
     }
 
     //waiting for every threads to register itself in thread_ID_tab_
@@ -256,26 +265,36 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
 
     /** Create Archi */
+    int mainPE = 0;
+    int mainPEType = 0;
     archi_ = CREATE(ARCHI_STACK, SharedMemArchi)(
             /* Nb PE */        nLrt_,
-            /* Nb PE Type*/ 1,
-            /* Spider Pe */ 0,
+            /* Nb PE Type*/ config.platform.nPeType,
+            /* Spider Pe */ mainPE,
             /*MappingTime*/ this->mappingTime);
 
-    archi_->setPETypeRecvSpeed(0, 1, 10);
-    archi_->setPETypeSendSpeed(0, 1, 10);
-    archi_->setPEType(0, 0);
-    archi_->activatePE(0);
+    archi_->setPEType(mainPE, mainPEType);
+    archi_->activatePE(mainPE);
 
     char name[40];
     sprintf(name, "TID %ld (Spider)", thread_ID_tab_[0]);
-    archi_->setName(0, name);
-    for (int i = 1; i < nLrt_; i++) {
-        sprintf(name, "TID %ld (LRT %d)", thread_ID_tab_[i], i);
-        archi_->setPEType(i, 0);
-        archi_->setName(i, name);
-        archi_->activatePE(i);
+    archi_->setName(mainPE, name);
+    offsetPe = 0;
+    for (int pe = 0; pe < config.platform.nPeType; ++pe) {
+        archi_->setPETypeRecvSpeed(pe, 1, 10);
+        archi_->setPETypeSendSpeed(pe, 1, 10);
+        for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
+            if (pe == mainPEType && (i + offsetPe) == mainPE) {
+                continue;
+            }
+            sprintf(name, "TID %ld (LRT %d)", thread_ID_tab_[i + offsetPe], i + offsetPe);
+            archi_->setPEType(i + offsetPe, pe);
+            archi_->setName(i + offsetPe, name);
+            archi_->activatePE(i + offsetPe);
+        }
+        offsetPe += config.platform.pesPerPeType[pe];
     }
+
     Spider::setArchi(archi_);
 
     this->rstTime();
@@ -505,7 +524,7 @@ Time PlatformPThread::getTime() {
 }
 
 Time PlatformPThread::mappingTime(int nActors, int /*nPe*/) {
-    return (Time) 1000 * nActors;
+    return (Time) 1 * nActors;
 }
 
 
@@ -522,9 +541,8 @@ void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt) {
     //Declaration des stacks spécific au thread
     StackMonitor::initStack(LRT_STACK, argument_lrt->lrtStack);
 
+    setAffinity(argument_lrt->coreAffinity);
 
-    /** Create LRT */
-    setAffinity(index);
     lrt_[index]->setFctTbl(argument_lrt->fcts, argument_lrt->nLrtFcts);
 
 #ifdef PAPI_AVAILABLE

@@ -602,7 +602,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                         srcConnections[0].src->addInParam(0, edge->isDelayPersistent());
                         if (edge->isDelayPersistent()) {
                             // Set memory address of the delay
-                            srcConnections[0].src->addInParam(1, edge->getMemoryReservedAlloc());
+                            srcConnections[0].src->addInParam(1, edge->getDelayAlloc());
                         }
                     }
                     // 2. Add the source instances
@@ -698,7 +698,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                         endVertex->addInParam(0, edge->isDelayPersistent());
                         if (edge->isDelayPersistent()) {
                             // Set memory address of the delay
-                            endVertex->addInParam(1, edge->getMemoryReservedAlloc());
+                            endVertex->addInParam(1, edge->getDelayAlloc());
                         }
                     }
                     // Update the number of sink

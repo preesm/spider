@@ -61,6 +61,11 @@ typedef enum PiSDFType {
     PISDF_TYPE_BODY, PISDF_TYPE_CONFIG, PISDF_TYPE_IF
 } PiSDFType;
 
+typedef enum PiSDFDelayType {
+    PISDF_DELAY_PERSISTENT = 1,
+    PISDF_DELAY_NONPERSISTENT = 0
+} PiSDFDelayType;
+
 /** Set types */
 typedef Set<PiSDFEdge *> PiSDFEdgeSet;
 typedef Set<PiSDFParam *> PiSDFParamSet;

@@ -2,6 +2,28 @@ cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(${CROSS_COMPILE_MINGW})
+  set(CMAKE_SYSTEM_NAME Windows)
+  set(TOOLCHAIN_PREFIX x86_64-w64-mingw32)
+
+  # cross compilers to use for C and C++
+  set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}-gcc)
+  set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}-g++)
+  set(CMAKE_Fortran_COMPILER ${TOOLCHAIN_PREFIX}-gfortran)
+  set(CMAKE_RC_COMPILER ${TOOLCHAIN_PREFIX}-windres)
+
+  # target environment on the build host system
+  #   set 1st to dir with the cross compiler's C/C++ headers/libs
+  set(CMAKE_FIND_ROOT_PATH /usr/${TOOLCHAIN_PREFIX})
+
+  # modify default behavior of FIND_XXX() commands to
+  # search for headers/libs in the target environment and
+  # search for programs in the build host environment
+  set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+  set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+  set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+endif()
+
 # *******************************************
 # ************* CMake Content ***************
 # *******************************************
@@ -30,18 +52,18 @@ project(Spider)
 # Set to 1 to activate debug compilation (0 for release)
 
 if(NOT ${CMAKE_GENERATOR} MATCHES "Visual Studio.*")
-	set(DEBUG 0)
+	set(DEBUG 1)
 
 	if(${DEBUG})
 			MESSAGE("Generate Debug project")
 			set(CMAKE_BUILD_TYPE Debug)
 			set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Debug)
-			set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -pg -Wall -Wextra -fPIC")
+			set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -pg -Wall -Wextra")
 	else()
 			MESSAGE("Generate Release project")
 			set(CMAKE_BUILD_TYPE Release)
 			set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Release)
-			set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Wall -Wextra -fPIC")
+			set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Wall -Wextra")
 	endif()
 else()
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -55,12 +77,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/lib/cmak
 # *******************************************
 # ************ Pthread LIBRARY **************
 # *******************************************
-if (WIN32)
+if (WIN32 AND NOT MINGW)
   set(THREADS_USE_PTHREADS_WIN32 true)
 	# pthread included AFTER Sdl to avoid unnecessary warnings
 	file(GLOB PTHREADDIR "${LIBS_DIR}/pthread-[\\.|0-9]*")
 	set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PTHREADDIR})
-	Find_Package ( THREADS REQUIRED )
+	Find_Package ( Threads REQUIRED )
 else()
 	Find_Package ( Threads REQUIRED )
 endif()
@@ -89,7 +111,11 @@ endif()
 # ************ PAPI LIBRARY *****************
 # *******************************************
 
-find_package(PAPI)
+if (${SKIP_PAPI})
+	MESSAGE("Skipping Papi")
+else()
+  find_package(PAPI)
+endif()
 
 if (PAPI_FOUND)
     add_definitions(-DPAPI_AVAILABLE)
@@ -167,3 +193,15 @@ file(
 
 add_library(Spider SHARED ${source_files} ${header_files} ${papify_sources})
 target_link_libraries(Spider ${CMAKE_THREAD_LIBS_INIT} ${PAPI_LIBRARIES})
+set(CMAKE_CXX_FLAGS "-fpermissive")
+
+if (NOT MINGW AND NOT ${CMAKE_GENERATOR} MATCHES "Visual Studio.*")
+  set(CMAKE_CXX_FLAGS "-fPIC")
+  if (${32BITS})
+    set_target_properties(Spider PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+  else()
+    if(${64BITS})
+      set_target_properties(Spider PROPERTIES COMPILE_FLAGS "-m64" LINK_FLAGS "-m64")
+    endif()
+  endif()
+endif()

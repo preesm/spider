@@ -54,6 +54,11 @@ static inline int getAlignSize(int size) {
 
 void DummyMemAlloc::allocEdge(SRDAGEdge *edge) {
     int size = edge->getRate();
+    if(size == 0){
+        /** Sync only edge */
+        edge->setAlloc(-1);
+        return;
+    }
     size = getAlignSize(size);
     if (currentMem_ + size > memStart_ + memSize_)
         throw std::runtime_error("Not Enough Shared Memory\n");

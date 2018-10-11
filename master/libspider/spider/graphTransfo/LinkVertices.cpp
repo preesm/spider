@@ -480,6 +480,8 @@ void linkSRVertices(SRDAGGraph *topSrdag,
         int sinkIndex = 0;
         int curSourceToken;
         int curSinkToken;
+        SRDAGVertex* persistentInit = NULL;
+        SRDAGVertex* persistentEnd = NULL;
 
         SrcConnection *srcConnections = nullptr;
         SnkConnection *snkConnections = nullptr;
@@ -603,6 +605,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                         if (edge->isDelayPersistent()) {
                             // Set memory address of the delay
                             srcConnections[0].src->addInParam(1, edge->getDelayAlloc());
+                            persistentInit = srcConnections[0].src;
                         }
                     }
                     // 2. Add the source instances
@@ -699,6 +702,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                         if (edge->isDelayPersistent()) {
                             // Set memory address of the delay
                             endVertex->addInParam(1, edge->getDelayAlloc());
+                            persistentEnd = endVertex;
                         }
                     }
                     // Update the number of sink
@@ -801,6 +805,10 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                 sinkIndex++;
                 curSinkToken = snkConnections[sinkIndex].cons;
             }
+        }
+
+        if(persistentInit && persistentEnd){
+            topSrdag->addEdge(persistentInit, 1, persistentEnd, 1, 0);
         }
 
         StackMonitor::free(TRANSFO_STACK, srcConnections);

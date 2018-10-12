@@ -54,20 +54,29 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
         SRDAGVertex *br = listOfVertices->operator[](i);
         if (br->getState() == SRDAG_EXEC
             && br->getType() == SRDAG_BROADCAST) {
-
             if (br->getInEdge(0)->getAlloc() == -1) {
-                /** Not allocated at all Broadcast */
+
+                /** Look if one output is allocated */
+                int alloc = -1;
+
+                for(int j = 0; j < br->getNConnectedOutEdge(); j++){
+                    SRDAGEdge *outEdge = br->getOutEdge(j);
+                    if(outEdge->getAlloc() != -1){
+                        alloc = outEdge->getAlloc();
+                        break;
+                    }
+                }
+
                 SRDAGEdge *inEdge = br->getInEdge(0);
-                allocEdge(inEdge);
-                int alloc = br->getInEdge(0)->getAlloc();
+                if(alloc == -1) {
+                    allocEdge(inEdge);
+                    alloc = br->getInEdge(0)->getAlloc();
+                }
 
                 for (int j = 0; j < br->getNConnectedOutEdge(); j++) {
                     SRDAGEdge *outEdge = br->getOutEdge(j);
-
-                    if (outEdge->getAlloc() != -1)
-                        throw std::runtime_error("Overwrite MemAlloc\n");
-
-                    outEdge->setAlloc(alloc);
+                    if (outEdge->getAlloc() == -1)
+                        outEdge->setAlloc(alloc);
                 }
             } else {
                 bool outputNotAllocated = true;

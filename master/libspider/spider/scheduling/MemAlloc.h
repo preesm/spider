@@ -67,7 +67,7 @@ public:
 
     inline int getMemAllocSize() const;
 
-    inline const char *getMemAllocSizeFormatted() const;
+    inline void printMemAllocSizeFormatted() const;
 
     virtual ~MemAlloc() {}
 
@@ -81,19 +81,16 @@ inline int MemAlloc::getMemAllocSize() const {
     return memSize_;
 }
 
-inline const char *MemAlloc::getMemAllocSizeFormatted() const {
-    char memAllocSizeFormatted[10] = {0};
+inline void MemAlloc::printMemAllocSizeFormatted() const {
     if (memSize_ < 1024) {
-        sprintf(memAllocSizeFormatted, "%5.1f B", memSize_ / 1.);
+        printf("%5.1f B", memSize_ / 1.);
     } else if (memSize_ < 1024 * 1024) {
-        sprintf(memAllocSizeFormatted, "%5.1f KB", memSize_ / 1024.);
+        printf("%5.1f KB", memSize_ / 1024.);
     } else if (memSize_ < 1024 * 1024 * 1024) {
-        sprintf(memAllocSizeFormatted, "%5.1f MB", memSize_ / (1024. * 1024.));
+        printf("%5.1f MB", memSize_ / (1024. * 1024.));
     } else {
-        sprintf(memAllocSizeFormatted, "%5.1f GB", memSize_ / (1024. * 1024. * 1024.));
+        printf("%5.1f GB", memSize_ / (1024. * 1024. * 1024.));
     }
-    std::string retValue(memAllocSizeFormatted);
-    return retValue.c_str();
 }
 
 inline void MemAlloc::setReservedSize(int reservedSize) {

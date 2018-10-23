@@ -14,6 +14,7 @@ Spider Changelog
 * Fix Graph transformation for actors with repetition is equal to 0.
 * Fix Floor and Ceil Expression Resolution.
 * Use float for Expression Resolution as Preesm does.
+* Fix display of reserved memory usage.
 
 ## Release version 1.2.1
 *2018.10.01*

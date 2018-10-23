@@ -6,6 +6,7 @@ Spider Changelog
 
 ### New Feature
 * Complete Refacto of PThread Platform: all communications are now blocking, threads will not take 100% CPU for synchronization.
+* SRDAG output shows persistent delay inormation
 
 ### Changes
 

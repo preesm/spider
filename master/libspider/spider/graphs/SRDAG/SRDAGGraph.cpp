@@ -249,12 +249,24 @@ void SRDAGGraph::print(const char *path) {
         char name[100];
         SRDAGVertex *vertex = vertices_[i];
         vertex->toString(name, 100);
-        Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)\n%s",
-                                 vertex->getId(),
-                                 vertex->getId(),
-                                 name,
-                                 vertex->getFctId(),
-                                 stateStrings[vertex->getState()]);
+        if(vertex->getType() == SRDAG_INIT || vertex->getType() == SRDAG_END){
+            Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)\n%s\n%s %#x",
+                                     vertex->getId(),
+                                     vertex->getId(),
+                                     name,
+                                     vertex->getFctId(),
+                                     stateStrings[vertex->getState()],
+                                     vertex->getInParam(0) == 0 ? "Discard":"Persistent",
+                                     vertex->getInParam(1)
+                                     );
+        } else {
+            Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)\n%s",
+                                     vertex->getId(),
+                                     vertex->getId(),
+                                     name,
+                                     vertex->getFctId(),
+                                     stateStrings[vertex->getState()]);
+        }
         Platform::get()->fprintf(file, "\",color=");
         switch (vertex->getState()) {
             case SRDAG_EXEC:

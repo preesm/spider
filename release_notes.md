@@ -15,6 +15,7 @@ Spider Changelog
 * Fix Floor and Ceil Expression Resolution.
 * Use float for Expression Resolution as Preesm does.
 * Fix display of reserved memory usage.
+* Avoid reallocation of already allocated fifo in memory allocation.
 
 ## Release version 1.2.1
 *2018.10.01*

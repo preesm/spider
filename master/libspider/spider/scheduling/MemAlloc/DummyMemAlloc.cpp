@@ -71,7 +71,8 @@ void DummyMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
         SRDAGVertex *vertex = listOfVertices->operator[](i);
         if (vertex->getState() == SRDAG_EXEC) {
             for (int j = 0; j < vertex->getNConnectedOutEdge(); j++) {
-                allocEdge(vertex->getOutEdge(j));
+                if (vertex->getOutEdge(j)->getAlloc() == -1)
+                    allocEdge(vertex->getOutEdge(j));
             }
         }
     }

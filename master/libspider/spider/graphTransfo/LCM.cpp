@@ -56,10 +56,6 @@ static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, lon
         PiSDFEdge *edge = edgeSet.getArray()[i];
         PiSDFVertex *source = edge->getSrc();
         PiSDFVertex *sink = edge->getSnk();
-        // Interfaces are taken into account in the repetition vector at first
-        if (source->getType() == PISDF_TYPE_IF || sink->getType() == PISDF_TYPE_IF) {
-            continue;
-        }
         int cons = edge->resolveCons(job);
         int prod = edge->resolveProd(job);
         // Check if the edge is valid
@@ -123,6 +119,9 @@ static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, long 
         // Ignore interfaces for now
         if (vertex->getType() == PISDF_TYPE_IF) {
             continue;
+        } else if (vertex->getType() == PISDF_TYPE_CONFIG) {
+            brv[vertex->getTypeId()] = 1;
+            continue;
         }
         Rational &r = reps[i];
         long nom = r.getNominator();
@@ -146,12 +145,13 @@ static void checkConsistency(transfoJob *job, PiSDFEdgeSet &edgeSet, int *brv) {
         PiSDFVertex *sink = edge->getSnk();
         if ((source->getType() == PISDF_TYPE_IF) || (sink->getType() == PISDF_TYPE_IF)) {
             continue;
-        } else if ((source->getType() == PISDF_TYPE_CONFIG) && brv[source->getTypeId()] > 1) {
-            throw std::runtime_error(std::string("ERROR: config actor [") + std::string(source->getName()) +
-                                     std::string("] can not have an RV value > 1."));
         }
         int prod = edge->resolveProd(job);
         int cons = edge->resolveCons(job);
+        if ((sink->getType() == PISDF_TYPE_CONFIG) && prod > cons) {
+            throw std::runtime_error(std::string("ERROR: config actor [") + std::string(source->getName()) +
+                                     std::string("] does not consume all the tokens produce on its input data port."));
+        }
         int sourceRV = brv[source->getTypeId()];
         int sinkRV = brv[sink->getTypeId()];
         if ((prod * sourceRV) != (cons * sinkRV)) {
@@ -188,10 +188,7 @@ lcmBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long
     // 4. Check consistency
     checkConsistency(job, edgeSet, brv);
 
-    // 5. Update RV values with interfaces
-    updateBRV(job, nVertices, brv, vertices);
-
-    // 6. Free the memory
+    // 5. Free the memory
     StackMonitor::free(TRANSFO_STACK, reps);
     while (edgeSet.getN() > 0) {
         edgeSet.del(edgeSet[0]);

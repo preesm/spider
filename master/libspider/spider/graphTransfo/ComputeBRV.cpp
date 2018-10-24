@@ -79,7 +79,7 @@ static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
 
 void computeBRV(transfoJob *job, int *brv) {
     // Retrieve the graph
-    PiSDFGraph *graph = job->graph;
+    PiSDFGraph *const graph = job->graph;
     int nTotalVertices = graph->getNBody() + graph->getNInIf() + graph->getNOutIf();
     PiSDFVertexSet vertexSet(nTotalVertices, TRANSFO_STACK);
 

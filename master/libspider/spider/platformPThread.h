@@ -43,6 +43,9 @@
 #include "platform.h"
 #include <signal.h>
 
+#include "TraceQueue.h"
+#include "ControlQueue.h"
+
 #ifdef PAPI_AVAILABLE
 #include "../papify/PapifyAction.h"
 #endif
@@ -97,6 +100,10 @@ public:
     /** Platform getter/setter */
     inline LRT *getLrt();
 
+    inline int getLrtIx();
+
+    inline int getNLrt();
+
     inline LrtCommunicator *getLrtCommunicator();
 
     inline SpiderCommunicator *getSpiderCommunicator();
@@ -104,8 +111,6 @@ public:
     inline void setStack(SpiderStack id, Stack *stack);
 
     inline Stack *getStack(SpiderStack id);
-
-    inline Stack *getStack(int id);
 
     inline int getThreadNumber();
 
@@ -127,23 +132,20 @@ private:
     Stack *stackPisdf;
     Stack *stackSrdag;
     Stack *stackTransfo;
+    Stack *stackArchi;
     Stack **stackLrt;
-    Stack **stackArchi;
 
-    //Pointeurs vers les fifo
-    std::queue<unsigned char> **fifoSpidertoLRT;
-    std::queue<unsigned char> **fifoLRTtoSpider;
-    std::queue<unsigned char> fifoTrace;
-
-    //Semaphores
-    sem_t mutexTrace;
-    sem_t *mutexFifoSpidertoLRT;
-    sem_t *mutexFifoLRTtoSpider;
-    sem_t *semFifoSpidertoLRT;
+    ControlQueue **spider2LrtQueues_;
+    ControlQueue **lrt2SpiderQueues_;
+    DataQueues *dataQueues_;
+    TraceQueue *traceQueue_;
 
     LRT **lrt_;
     LrtCommunicator **lrtCom_;
     SpiderCommunicator *spiderCom_;
+
+    pthread_t *thread_lrt_;
+    Arg_lrt *arg_lrt_;
 
 #ifdef PAPI_AVAILABLE
     // Papify information
@@ -164,7 +166,7 @@ inline void PlatformPThread::setStack(SpiderStack id, Stack *stack) {
             stackTransfo = stack;
             break;
         case ARCHI_STACK :
-            stackArchi[getThreadNumber()] = stack;
+            stackArchi = stack;
             break;
         case LRT_STACK :
             stackLrt[getThreadNumber()] = stack;
@@ -186,29 +188,7 @@ inline Stack *PlatformPThread::getStack(SpiderStack id) {
             return stackTransfo;
             break;
         case ARCHI_STACK :
-            return stackArchi[getThreadNumber()];
-            break;
-        case LRT_STACK :
-            return stackLrt[getThreadNumber()];
-            break;
-        default :
-            throw std::runtime_error("Error in stack index\n");
-    }
-}
-
-inline Stack *PlatformPThread::getStack(int id) {
-    switch (id) {
-        case PISDF_STACK :
-            return stackPisdf;
-            break;
-        case SRDAG_STACK :
-            return stackSrdag;
-            break;
-        case TRANSFO_STACK :
-            return stackTransfo;
-            break;
-        case ARCHI_STACK :
-            return stackArchi[getThreadNumber()];
+            return stackArchi;
             break;
         case LRT_STACK :
             return stackLrt[getThreadNumber()];
@@ -230,6 +210,14 @@ inline LRT *PlatformPThread::getLrt() {
     return lrt_[getThreadNumber()];
 }
 
+inline int PlatformPThread::getLrtIx() {
+    return getThreadNumber();
+}
+
+inline int PlatformPThread::getNLrt() {
+    return nLrt_;
+}
+
 inline LrtCommunicator *PlatformPThread::getLrtCommunicator() {
     return lrtCom_[getThreadNumber()];
 }
@@ -245,19 +233,13 @@ inline SpiderCommunicator *PlatformPThread::getSpiderCommunicator() {
 // Structure de passage d'argument dans le thread
 typedef struct Arg_lrt {
     PlatformPThread *instance;
-    std::queue<unsigned char> *fifoSpidertoLRT;
-    std::queue<unsigned char> *fifoLRTtoSpider;
-    std::queue<unsigned char> *fifoTrace;
-    sem_t *mutexTrace;
-    sem_t *mutexFifoSpidertoLRT;
-    sem_t *mutexFifoLRTtoSpider;
-    sem_t *semFifoSpidertoLRT;
+    LrtCommunicator *lrtCom;
+    LRT *lrt;
     int shMemSize;
     lrtFct *fcts;
     int nLrtFcts;
     int index;
     int nLrt;
-    StackConfig archiStack;
     StackConfig lrtStack;
     bool usePapify;
     int coreAffinity;

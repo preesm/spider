@@ -124,8 +124,8 @@ SRDAGVertex *SRDAGGraph::addInit() {
             SRDAG_INIT, this,
             0 /*Ref*/, 0, 0,
             0 /*nInEdge*/,
-            1 /*nOutEdge*/,
-            2 /*nInParam*/,
+            2 /*nOutEdge*/,
+            2 /*nInParam: 0 -> isDelayPersistent, 1 -> memory address of the fifo (if any)*/,
             0 /*nOutParam*/);
     vertices_.add(vertex);
     return vertex;
@@ -136,7 +136,7 @@ SRDAGVertex *SRDAGGraph::addEnd() {
             idVertex_++,
             SRDAG_END, this,
             0 /*Ref*/, 0, 0,
-            1 /*nInEdge*/,
+            2 /*nInEdge*/,
             0 /*nOutEdge*/,
             2 /*nInParam: 0 -> isDelayPersistent, 1 -> memory address of the fifo (if any)*/,
             0 /*nOutParam*/);
@@ -249,12 +249,24 @@ void SRDAGGraph::print(const char *path) {
         char name[100];
         SRDAGVertex *vertex = vertices_[i];
         vertex->toString(name, 100);
-        Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)\n%s",
-                                 vertex->getId(),
-                                 vertex->getId(),
-                                 name,
-                                 vertex->getFctId(),
-                                 stateStrings[vertex->getState()]);
+        if(vertex->getType() == SRDAG_INIT || vertex->getType() == SRDAG_END){
+            Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)\n%s\n%s %#x",
+                                     vertex->getId(),
+                                     vertex->getId(),
+                                     name,
+                                     vertex->getFctId(),
+                                     stateStrings[vertex->getState()],
+                                     vertex->getInParam(0) == 0 ? "Discard":"Persistent",
+                                     vertex->getInParam(1)
+                                     );
+        } else {
+            Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)\n%s",
+                                     vertex->getId(),
+                                     vertex->getId(),
+                                     name,
+                                     vertex->getFctId(),
+                                     stateStrings[vertex->getState()]);
+        }
         Platform::get()->fprintf(file, "\",color=");
         switch (vertex->getState()) {
             case SRDAG_EXEC:

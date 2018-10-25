@@ -69,8 +69,7 @@ LRT::LRT(int ix) {
     nFct_ = 0;
     ix_ = ix;
     run_ = false;
-    jobIx_ = 0;
-    jobIxTotal_ = 0;
+    jobIx_ = -1;
     usePapify_ = false;
 
 #ifdef VERBOSE_TIME
@@ -322,10 +321,9 @@ inline void LRT::runReceivedJob(void *msg) {
 #endif
             }
 
-            setJobIx(getJobIx() + 1);
-            jobIxTotal_++;
-
-            Platform::get()->getLrtCommunicator()->setLrtJobIx(getIx(), getJobIx());
+            jobIx_++;
+//            printf("LRT%d finished SR%d\n", ix_, jobMsg->srdagIx);
+            Platform::get()->getLrtCommunicator()->setLrtJobIx(getIx(), jobIx_);
 
             StackMonitor::free(LRT_STACK, inFifosAlloc);
             StackMonitor::free(LRT_STACK, outFifosAlloc);

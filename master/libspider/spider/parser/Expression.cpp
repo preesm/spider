@@ -44,12 +44,14 @@
 #define REVERSE_POLISH_STACK_MAX_ELEMENTS 100
 #define EXPR_LEN_MAX 1000
 
-static int precedence[5] = {
+static int precedence[7] = {
         2, //OP_ADD
         2, //OP_SUB
         3, //OP_MUL
         3, //OP_DIV
-        4  //OP_POW
+        4, //OP_POW
+        4, //OP_FLOOR
+        4  //OP_CEIL
 };
 
 static const char *operatorSign[5] = {
@@ -102,6 +104,9 @@ Expression::Expression(
                 }
                 ixStack--;
                 break;
+            default:
+                throw std::runtime_error("Error while parsing expression\n");
+                break;
         }
     }
 
@@ -117,8 +122,8 @@ Expression::~Expression() {
 }
 
 int Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, bool *ok) const {
-    int stack[MAX_NVAR_ELEMENTS];
-    int *stackPtr = stack;
+    float stack[MAX_NVAR_ELEMENTS];
+    float *stackPtr = stack;
     const Token *inputPtr = stack_;
 
     while (stack_ + nElt_ > inputPtr) {
@@ -129,43 +134,41 @@ int Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, bo
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) += *stackPtr;
-                        }
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                     case SUB:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) -= *stackPtr;
-                        }
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                     case MUL:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) *= *stackPtr;
-                        }
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                     case DIV:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) /= *stackPtr;
-                        }
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                     case POW:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) = pow((double) *(stackPtr - 1), *stackPtr);
-                        }
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                     case FLOOR:
-                        if (stackPtr - stack >= 2) {
-                            stackPtr--;
-                            *(stackPtr - 1) = floor(*stackPtr);
-                        }
+                        if (stackPtr - stack >= 1) {
+                            *(stackPtr - 1) = floor(*(stackPtr - 1));
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                     case CEIL:
-                        if (stackPtr - stack >= 2) {
-                            stackPtr--;
-                            *(stackPtr - 1) = ceil(*stackPtr);
-                        }
+                        if (stackPtr - stack >= 1) {
+                            *(stackPtr - 1) = ceil(*(stackPtr - 1));
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                 }
                 break;
@@ -183,12 +186,12 @@ int Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, bo
         inputPtr++;
     }
     if (ok) *ok = true;
-    return stack[0];
+    return (int)stack[0];
 }
 
 int Expression::evaluate(const int *vertexParamValues, int nParam) const {
-    int stack[MAX_NVAR_ELEMENTS];
-    int *stackPtr = stack;
+    float stack[MAX_NVAR_ELEMENTS];
+    float *stackPtr = stack;
     const Token *inputPtr = stack_;
 
     while (stack_ + nElt_ > inputPtr) {
@@ -199,43 +202,41 @@ int Expression::evaluate(const int *vertexParamValues, int nParam) const {
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) += *stackPtr;
-                        }
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                     case SUB:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) -= *stackPtr;
-                        }
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                     case MUL:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) *= *stackPtr;
-                        }
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                     case DIV:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) /= *stackPtr;
-                        }
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                     case POW:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) = pow((double) *(stackPtr - 1), *stackPtr);
-                        }
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                     case FLOOR:
-                        if (stackPtr - stack >= 2) {
-                            stackPtr--;
-                            *(stackPtr - 1) = floor(*stackPtr);
-                        }
+                        if (stackPtr - stack >= 1) {
+                            *(stackPtr - 1) = floor(*(stackPtr - 1));
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                     case CEIL:
-                        if (stackPtr - stack >= 2) {
-                            stackPtr--;
-                            *(stackPtr - 1) = ceil(*stackPtr);
-                        }
+                        if (stackPtr - stack >= 1) {
+                            *(stackPtr - 1) = ceil(*(stackPtr - 1));
+                        } else throw std::runtime_error("Invalid operator in expression\n");
                         break;
                 }
                 break;
@@ -416,6 +417,7 @@ bool Expression::getNextToken(
                 if (nb == strlen(operatorStrings[i]) &&
                     strncasecmp(operatorStrings[i], name, nb) == 0) {
                     token->opType = operatorTypes[i];
+                    token->type = OPERATOR;
                     return true;
                 }
             }

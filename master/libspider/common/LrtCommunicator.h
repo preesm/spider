@@ -72,8 +72,6 @@ public:
 
     virtual void setLrtJobIx(int /*lrtIx*/, int /*jobIx*/) {};
 
-    virtual long getLrtJobIx(int lrtIx) = 0;
-
     virtual void rstLrtJobIx(int /*lrtIx*/) {};
 
     virtual void waitForLrtUnlock(int /*nbDependency*/, int */*blkLrtIx*/, int */*blkLrtJobIx*/, int /*jobIx*/) {};

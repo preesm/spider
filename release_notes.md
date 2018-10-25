@@ -5,11 +5,18 @@ Spider Changelog
 *XXXX.XX.XX*
 
 ### New Feature
+* Complete Refacto of PThread Platform: all communications are now blocking, threads will not take 100% CPU for synchronization.
+* SRDAG output shows persistent delay inormation
 
 ### Changes
+* Enhance Special Actor Memory allocation allowing reduced footprint.
 
 ### Bug fix
-
+* Fix Graph transformation for actors with repetition is equal to 0.
+* Fix Floor and Ceil Expression Resolution.
+* Use float for Expression Resolution as Preesm does.
+* Fix display of reserved memory usage.
+* Avoid reallocation of already allocated fifo in memory allocation.
 
 ## Release version 1.2.1
 *2018.10.01*

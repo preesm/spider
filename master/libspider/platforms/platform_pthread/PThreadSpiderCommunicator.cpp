@@ -38,186 +38,56 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include "PThreadSpiderCommunicator.h"
-#include <monitor/StackMonitor.h>
 
 #include <platform.h>
 
-PThreadSpiderCommunicator::PThreadSpiderCommunicator(
-        int msgSizeMax,
-        int nLrt,
-        sem_t *mutexTrace,
-        sem_t *mutexFifoSpidertoLRT,
-        sem_t *mutexFifoLRTtoSpider,
-        sem_t *semFifoSpidertoLRT,
-        std::queue<unsigned char> *fTraceWr,
-        std::queue<unsigned char> *fTraceRd) {
-
-    fIn_ = (std::queue<unsigned char> **) malloc(nLrt * sizeof(std::queue<unsigned char> *));
-    fOut_ = (std::queue<unsigned char> **) malloc(nLrt * sizeof(std::queue<unsigned char> *));
-    fTraceRd_ = fTraceRd;
-    fTraceWr_ = fTraceWr;
-
-    mutexTrace_ = mutexTrace;
-    mutexFifoSpidertoLRT_ = mutexFifoSpidertoLRT;
-    mutexFifoLRTtoSpider_ = mutexFifoLRTtoSpider;
-    semFifoSpidertoLRT_ = semFifoSpidertoLRT;
-
-    msgSizeMax_ = msgSizeMax;
-
-    msgBufferRecv_ = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
-    curMsgSizeRecv_ = 0;
-    msgBufferSend_ = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
-    curMsgSizeSend_ = 0;
+PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlQueue **spider2LrtQueues,
+                                                     ControlQueue **lrt2SpiderQueues,
+                                                     TraceQueue *traceQueue) {
+    spider2LrtQueues_ = spider2LrtQueues;
+    lrt2SpiderQueues_ = lrt2SpiderQueues;
+    traceQueue_ = traceQueue;
 }
 
 PThreadSpiderCommunicator::~PThreadSpiderCommunicator() {
-//	StackMonitor::free(ARCHI_STACK, fIn_);
-//	StackMonitor::free(ARCHI_STACK, fOut_);
-    StackMonitor::free(ARCHI_STACK, msgBufferRecv_);
-    StackMonitor::free(ARCHI_STACK, msgBufferSend_);
-
-    free(fIn_);
-    free(fOut_);
 }
 
-void PThreadSpiderCommunicator::setLrtCom(int lrtIx, std::queue<unsigned char> *fIn, std::queue<unsigned char> *fOut) {
-    fIn_[lrtIx] = fIn;
-    fOut_[lrtIx] = fOut;
+void *PThreadSpiderCommunicator::ctrl_start_send(int lrtIx, int size) {
+    return spider2LrtQueues_[lrtIx]->push_start(size);
 }
 
-void *PThreadSpiderCommunicator::ctrl_start_send(int /*lrtIx*/, int size) {
-    if (curMsgSizeSend_)
-        throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
-    curMsgSizeSend_ = size;
-    return msgBufferSend_;
-}
-
-void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int /*size*/) {
-    unsigned long s = curMsgSizeSend_;
-
-    /** Take Mutex protecting the Queue */
-    sem_wait(&mutexFifoSpidertoLRT_[lrtIx]);
-
-    //Envoi de la taille du message à venir
-    for (unsigned int i = 0; i < sizeof(unsigned long); i++)
-        fOut_[lrtIx]->push(s >> (sizeof(unsigned long) - 1 - i) * 8 & 0xFF);
-
-    //Envoie du message
-    for (int i = 0; i < curMsgSizeSend_; i++)
-        fOut_[lrtIx]->push(*(((char *) msgBufferSend_) + i) & 0xFF);
-
-    /** Relax Mutex protecting the Queue */
-    sem_post(&mutexFifoSpidertoLRT_[lrtIx]);
-
-    /** Post token representing 1 message in the queue */
-    sem_post(&semFifoSpidertoLRT_[lrtIx]);
-
-    curMsgSizeSend_ = 0;
+void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int size) {
+    return spider2LrtQueues_[lrtIx]->push_end(size);
 }
 
 int PThreadSpiderCommunicator::ctrl_start_recv(int lrtIx, void **data) {
-    unsigned long size = 0;
-
-    /** Take Mutex protecting the Queue */
-    sem_wait(&mutexFifoLRTtoSpider_[lrtIx]);
-
-
-    //Rien à faire si fifo vide
-    if (fIn_[lrtIx]->empty()) {
-
-        sem_post(&mutexFifoLRTtoSpider_[lrtIx]);
-
-        return 0;
-    }
-
-
-    //Reception/reconstitution de la taille du message à venir
-    for (unsigned int nb = 0; nb < sizeof(unsigned long); nb++) {
-        size = size << 8;
-        size += fIn_[lrtIx]->front();
-        fIn_[lrtIx]->pop();
-    }
-
-    if (size > (unsigned long) msgSizeMax_)
-        throw std::runtime_error("Msg too big\n");
-
-    curMsgSizeRecv_ = size;
-
-    //Reception du message
-    for (unsigned int recv = 0; recv < size; recv++) {
-        *(((char *) msgBufferRecv_) + recv) = fIn_[lrtIx]->front();
-        fIn_[lrtIx]->pop();
-    }
-
-    /** Relax Mutex protecting the Queue */
-    sem_post(&mutexFifoLRTtoSpider_[lrtIx]);
-
-    *data = msgBufferRecv_;
-    return curMsgSizeRecv_;
+    return lrt2SpiderQueues_[lrtIx]->pop_start(data, false);
 }
 
-void PThreadSpiderCommunicator::ctrl_end_recv(int /*lrtIx*/) {
-    curMsgSizeRecv_ = 0;
+void PThreadSpiderCommunicator::ctrl_start_recv_block(int lrtIx, void **data) {
+    lrt2SpiderQueues_[lrtIx]->pop_start(data, true);
+}
+
+void PThreadSpiderCommunicator::ctrl_end_recv(int lrtIx) {
+    return lrt2SpiderQueues_[lrtIx]->pop_end();
 }
 
 void *PThreadSpiderCommunicator::trace_start_send(int size) {
-    if (curMsgSizeSend_)
-        throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
-    curMsgSizeSend_ = size;
-    return msgBufferSend_;
+    return traceQueue_->push_start(Platform::get()->getNLrt(), size);
 }
 
-void PThreadSpiderCommunicator::trace_end_send(int /*size*/) {
-    unsigned long s = curMsgSizeSend_;
-
-    int err = sem_wait(mutexTrace_);
-
-    if (err != 0) {
-        perror("PThreadSpiderCommunicator::trace_end_send");
-        exit(-1);
-    }
-
-    //Envoi de la taille de la trace à venir
-    for (unsigned int i = 0; i < sizeof(unsigned long); i++)
-        fTraceWr_->push(s >> (sizeof(unsigned long) - 1 - i) * 8 & 0xFF);
-
-    //Envoi de la trace
-    for (int i = 0; i < curMsgSizeSend_; i++) fTraceWr_->push((*(((char *) msgBufferSend_) + i)) & 0xFF);
-
-    sem_post(mutexTrace_);
-
-    curMsgSizeSend_ = 0;
+void PThreadSpiderCommunicator::trace_end_send(int size) {
+    return traceQueue_->push_end(Platform::get()->getNLrt(), size);
 }
 
 int PThreadSpiderCommunicator::trace_start_recv(void **data) {
-    unsigned long size = 0;
-    unsigned int nb = 0;
+    return traceQueue_->pop_start(data, false);
+}
 
-    if (fTraceRd_->empty()) return 0;
-
-    for (nb = 0; nb < sizeof(unsigned long); nb++) {
-        while (fTraceRd_->empty());
-        size = size << 8;
-        size += fTraceRd_->front();
-        fTraceRd_->pop();
-    }
-
-    if (size > (unsigned long) msgSizeMax_)
-        throw std::runtime_error("Msg too big\n");
-
-    curMsgSizeRecv_ = size;
-
-    unsigned int recv;
-    for (recv = 0; recv < size; recv++) {
-        while (fTraceRd_->empty());
-        *(((char *) msgBufferRecv_) + recv) = fTraceRd_->front();
-        fTraceRd_->pop();
-    }
-
-    *data = msgBufferRecv_;
-    return curMsgSizeRecv_;
+void PThreadSpiderCommunicator::trace_start_recv_block(void **data) {
+    traceQueue_->pop_start(data, true);
 }
 
 void PThreadSpiderCommunicator::trace_end_recv() {
-    curMsgSizeRecv_ = 0;
+    return traceQueue_->pop_end();
 }

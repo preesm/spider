@@ -1,10 +1,7 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2017) :
  *
- * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2016)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -35,25 +32,71 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef SPECIAL_ACTOR_MEM_ALLOC_H
-#define SPECIAL_ACTOR_MEM_ALLOC_H
+#ifndef SPIDER_CONTROLQUEUE_H
+#define SPIDER_CONTROLQUEUE_H
 
-#include "DummyMemAlloc.h"
 
-class SpecialActorMemAlloc : public DummyMemAlloc {
+#include <mutex>
+#include <queue>
+#include <semaphore.h>
+
+/**
+ * Thread safe mono directional queue with only one reader and one writer.
+ */
+class ControlQueue {
+
 public:
-    SpecialActorMemAlloc(int start, int size) :
-            DummyMemAlloc(start, size) {}
+    /**
+     * Constructor.
+     * @param msgSizeMax largest possible message size.
+     */
+    ControlQueue(int msgSizeMax);
 
-    ~SpecialActorMemAlloc() {}
+    /**
+     * Destructor.
+     */
+    virtual ~ControlQueue();
 
-    virtual void alloc(List<SRDAGVertex *> *listOfVertices);
+    /**
+     * Prepare a message to be send.
+     * @param size Size needed by the message.
+     * @return Ptr to data were to write the message.
+     */
+    void *push_start(int size);
+
+    /**
+     * Actually send the message prepared in @push_start.
+     * @param size Size needed by the message.
+     */
+    void push_end(int size);
+
+    /**
+     * Receive a message from the queue.
+     * @param data Ptr to the message will be store in this argument.
+     * @param blocking True if the @pop_start should wait for a message if none is available.
+     * @return 0 if no message have been received, size of the message otherwise.
+     */
+    int pop_start(void **data, bool blocking);
+
+    /**
+     * Free the data to allow the reception of a new message.
+     * data from @pop_start should not be used after this call.
+     */
+    void pop_end();
 
 private:
-    void allocFork(SRDAGVertex* fork);
-    void allocJoin(SRDAGVertex* join);
-    void allocBroadcast(SRDAGVertex* br);
+    std::queue<unsigned char> queue_;
+    std::mutex queue_mutex_;
+    sem_t queue_sem_;
 
+    int msgSizeMax_;
+
+    void *msgBufferSend_;
+    int curMsgSizeSend_;
+
+    void *msgBufferRecv_;
+    int curMsgSizeRecv_;
 };
 
-#endif/*SPECIAL_ACTOR_MEM_ALLOC_H*/
+
+#endif //SPIDER_CONTROLQUEUE_H

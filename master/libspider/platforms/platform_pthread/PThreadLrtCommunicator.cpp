@@ -46,168 +46,46 @@
 #include <platform.h>
 
 PThreadLrtCommunicator::PThreadLrtCommunicator(
-        int msgSizeMax,
-        std::queue<unsigned char> *fIn,
-        std::queue<unsigned char> *fOut,
-        std::queue<unsigned char> *fTrace,
-        sem_t *mutexTrace,
-        sem_t *mutexFifoSpidertoLRT,
-        sem_t *mutexFifoLRTtoSpider,
-        sem_t *semFifoSpidertoLRT,
-        void *jobTab,
-        void *dataMem
+        ControlQueue *spider2LrtQueue,
+        ControlQueue *lrt2SpiderQueue,
+        DataQueues *dataQueues,
+        TraceQueue *traceQueue
 ) {
-    fIn_ = fIn;
-    fOut_ = fOut;
-    fTrace_ = fTrace;
-
-    mutexTrace_ = mutexTrace;
-    mutexFifoLRTtoSpider_ = mutexFifoLRTtoSpider;
-    mutexFifoSpidertoLRT_ = mutexFifoSpidertoLRT;
-    semFifoSpidertoLRT_ = semFifoSpidertoLRT;
-
-    msgSizeMax_ = msgSizeMax;
-
-    msgBufferRecv_ = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
-    curMsgSizeRecv_ = 0;
-
-    msgBufferSend_ = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
-    curMsgSizeSend_ = 0;
-
-    jobTab_ = (unsigned long *) jobTab;
-    shMem_ = (unsigned char *) dataMem;
+    spider2LrtQueue_ = spider2LrtQueue;
+    lrt2SpiderQueue_ = lrt2SpiderQueue;
+    dataQueues_ = dataQueues;
+    traceQueue_ = traceQueue;
 }
 
 PThreadLrtCommunicator::~PThreadLrtCommunicator() {
-    StackMonitor::free(ARCHI_STACK, msgBufferRecv_);
-    StackMonitor::free(ARCHI_STACK, msgBufferSend_);
 }
 
 void *PThreadLrtCommunicator::ctrl_start_send(int size) {
-    if (curMsgSizeSend_)
-        throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
-    curMsgSizeSend_ = size;
-    return msgBufferSend_;
+    return lrt2SpiderQueue_->push_start(size);
 }
 
-void PThreadLrtCommunicator::ctrl_end_send(int /*size*/) {
-    unsigned long s = curMsgSizeSend_;
-
-    /** Take Mutex protecting the Queue */
-    sem_wait(mutexFifoLRTtoSpider_);
-
-    //Envoi de la taille du message à venir
-    for (unsigned int i = 0; i < sizeof(unsigned long); i++)
-        fOut_->push(s >> (sizeof(unsigned long) - 1 - i) * 8 & 0xFF);
-
-    //Envoi du message
-    for (int i = 0; i < curMsgSizeSend_; i++) fOut_->push((*(((char *) msgBufferSend_) + i)) & 0xFF);
-
-    /** Relax Mutex protecting the Queue */
-    sem_post(mutexFifoLRTtoSpider_);
-
-    curMsgSizeSend_ = 0;
+void PThreadLrtCommunicator::ctrl_end_send(int size) {
+    return lrt2SpiderQueue_->push_end(size);
 }
 
 int PThreadLrtCommunicator::ctrl_start_recv(void **data) {
-    unsigned long size = 0;
-
-    /** Take sem (representing 1 message in the queue */
-    if (sem_trywait(semFifoSpidertoLRT_)) {
-        return 0;
-    }
-
-    /** Take Mutex protecting the Queue */
-    sem_wait(mutexFifoSpidertoLRT_);
-
-    //Reception/reconstitution de la taille du message à venir
-    for (unsigned int nb = 0; nb < sizeof(unsigned long); nb++) {
-        size = size << 8;
-        size += fIn_->front();
-        fIn_->pop();
-    }
-
-    if (size > (unsigned long) msgSizeMax_)
-        throw std::runtime_error("Msg too big\n");
-
-    curMsgSizeRecv_ = size;
-
-    //Reception du message
-    for (unsigned int recv = 0; recv < size; recv++) {
-        *(((char *) msgBufferRecv_) + recv) = fIn_->front();
-        fIn_->pop();
-    }
-
-    /** Relax Mutex protecting the Queue */
-    sem_post(mutexFifoSpidertoLRT_);
-
-    *data = msgBufferRecv_;
-    return curMsgSizeRecv_;
+    return spider2LrtQueue_->pop_start(data, false);
 }
 
 void PThreadLrtCommunicator::ctrl_start_recv_block(void **data) {
-    unsigned long size = 0;
-
-    /** Take sem (representing 1 message in the queue */
-    sem_wait(semFifoSpidertoLRT_);
-
-    /** Take Mutex protecting the Queue */
-    sem_wait(mutexFifoSpidertoLRT_);
-
-    //Reception/reconstitution de la taille du message à venir
-    for (unsigned int nb = 0; nb < sizeof(unsigned long); nb++) {
-        size = size << 8;
-        size += fIn_->front();
-        fIn_->pop();
-    }
-
-    if (size > (unsigned long) msgSizeMax_)
-        throw std::runtime_error("Msg too big\n");
-
-    curMsgSizeRecv_ = size;
-
-    //Reception du message
-    for (unsigned int recv = 0; recv < size; recv++) {
-        *(((char *) msgBufferRecv_) + recv) = fIn_->front();
-        fIn_->pop();
-    }
-
-    /** Relax Mutex protecting the Queue */
-    sem_post(mutexFifoSpidertoLRT_);
-
-    *data = msgBufferRecv_;
+    spider2LrtQueue_->pop_start(data, true);
 }
 
 void PThreadLrtCommunicator::ctrl_end_recv() {
-    curMsgSizeRecv_ = 0;
+    return spider2LrtQueue_->pop_end();
 }
 
 void *PThreadLrtCommunicator::trace_start_send(int size) {
-    if (curMsgSizeSend_)
-        throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
-    curMsgSizeSend_ = size;
-    return msgBufferSend_;
+    return traceQueue_->push_start(Platform::get()->getLrtIx(), size);
 }
 
-void PThreadLrtCommunicator::trace_end_send(int /*size*/) {
-    unsigned long s = curMsgSizeSend_;
-
-    int err = sem_wait(mutexTrace_);
-    if (err != 0) {
-        perror("PThreadLrtCommunicator::trace_end_send");
-        exit(-1);
-    }
-
-    //Envoi de la taille de la trace
-    for (unsigned int i = 0; i < sizeof(unsigned long); i++)
-        fTrace_->push(s >> (sizeof(unsigned long) - 1 - i) * 8 & 0xFF);
-
-    //Envoi de la trace
-    for (int i = 0; i < curMsgSizeSend_; i++) fTrace_->push(*(((char *) msgBufferSend_) + i) & 0xFF);
-
-    sem_post(mutexTrace_);
-
-    curMsgSizeSend_ = 0;
+void PThreadLrtCommunicator::trace_end_send(int size) {
+    return traceQueue_->push_end(Platform::get()->getLrtIx(), size);
 }
 
 void PThreadLrtCommunicator::data_end_send(Fifo */*f*/) {
@@ -223,16 +101,11 @@ void *PThreadLrtCommunicator::data_start_send(Fifo *f) {
 }
 
 void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx) {
-    jobTab_[lrtIx] = jobIx;
-}
-
-long PThreadLrtCommunicator::getLrtJobIx(int lrtIx) {
-    // TODO Protect from invalid read: long are not atomic !!!
-    return jobTab_[lrtIx];
+    dataQueues_->updateLrtJobStamp(lrtIx, jobIx);
 }
 
 void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int /*jobIx*/) {
     for (int i = 0; i < nbDependency; i++) {
-        while (blkLrtJobIx[i] >= getLrtJobIx(blkLrtIx[i]));
+        dataQueues_->waitOnJobStamp(Platform::get()->getLrtIx(), blkLrtIx[i], blkLrtJobIx[i], true);
     }
 }

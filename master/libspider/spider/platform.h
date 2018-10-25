@@ -81,6 +81,10 @@ public:
 
     virtual LRT *getLrt() = 0;
 
+    virtual int getLrtIx() = 0;
+
+    virtual int getNLrt() = 0;
+
     virtual LrtCommunicator *getLrtCommunicator() = 0;
 
     virtual SpiderCommunicator *getSpiderCommunicator() = 0;
@@ -88,8 +92,6 @@ public:
     virtual void setStack(SpiderStack id, Stack *stack) = 0;
 
     virtual Stack *getStack(SpiderStack id) = 0;
-
-    virtual Stack *getStack(int id) = 0;
 
     virtual inline int getMaxActorAllocSize(int pe);
 

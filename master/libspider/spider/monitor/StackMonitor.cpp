@@ -58,7 +58,7 @@ void StackMonitor::clean(SpiderStack id) {
 
 void StackMonitor::cleanAllStack() {
     for (int i = 0; i < STACK_COUNT; i++) {
-        delete Platform::get()->getStack(i);
+        delete Platform::get()->getStack((SpiderStack) i);
     }
 }
 

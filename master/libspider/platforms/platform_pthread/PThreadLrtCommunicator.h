@@ -62,19 +62,17 @@
 #include <tools/Stack.h>
 #include <queue>
 
+#include "ControlQueue.h"
+#include "TraceQueue.h"
+#include "DataQueues.h"
+
 class PThreadLrtCommunicator : public LrtCommunicator {
 public:
     PThreadLrtCommunicator(
-            int msgSizeMax,
-            std::queue<unsigned char> *fIn,
-            std::queue<unsigned char> *fOut,
-            std::queue<unsigned char> *fTrace,
-            sem_t *mutexTrace,
-            sem_t *mutexFifoSpidertoLRT,
-            sem_t *mutexFifoLRTtoSpider,
-            sem_t *semFifoSpidertoLRT,
-            void *fifos,
-            void *dataMem
+            ControlQueue *spider2LrtQueue,
+            ControlQueue *lrt2SpiderQueue,
+            DataQueues *dataQueues,
+            TraceQueue *traceQueue
     );
 
     ~PThreadLrtCommunicator();
@@ -101,30 +99,15 @@ public:
 
     void setLrtJobIx(int lrtIx, int jobIx);
 
-    long getLrtJobIx(int lrtIx);
-
     void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx);
 
+
 private:
-    std::queue<unsigned char> *fIn_;
-    std::queue<unsigned char> *fOut_;
-    std::queue<unsigned char> *fTrace_;
 
-    sem_t *mutexTrace_;
-    sem_t *mutexFifoSpidertoLRT_;
-    sem_t *mutexFifoLRTtoSpider_;
-    sem_t *semFifoSpidertoLRT_;
-
-    int msgSizeMax_;
-
-    void *msgBufferSend_;
-    int curMsgSizeSend_;
-
-    void *msgBufferRecv_;
-    int curMsgSizeRecv_;
-
-    unsigned long *jobTab_;
-    unsigned char *shMem_;
+    ControlQueue *spider2LrtQueue_;
+    ControlQueue *lrt2SpiderQueue_;
+    DataQueues *dataQueues_;
+    TraceQueue *traceQueue_;
 };
 
 #endif/*PTHREAD_LRT_COMMUNICATOR_H*/

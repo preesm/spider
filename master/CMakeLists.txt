@@ -52,7 +52,7 @@ project(Spider)
 # Set to 1 to activate debug compilation (0 for release)
 
 if(NOT ${CMAKE_GENERATOR} MATCHES "Visual Studio.*")
-	set(DEBUG 0)
+	set(DEBUG 1)
 
 	if(${DEBUG})
 			MESSAGE("Generate Debug project")

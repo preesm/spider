@@ -9,6 +9,7 @@ Spider Changelog
 * SRDAG output shows persistent delay inormation
 
 ### Changes
+* Enhance Special Actor Memory allocation allowing reduced footprint.
 
 ### Bug fix
 * Fix Graph transformation for actors with repetition is equal to 0.

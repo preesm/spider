@@ -49,6 +49,10 @@ public:
 
     virtual void alloc(List<SRDAGVertex *> *listOfVertices);
 
+private:
+    void allocFork(SRDAGVertex* fork);
+    void allocJoin(SRDAGVertex* join);
+    void allocBroadcast(SRDAGVertex* br);
 
 };
 

@@ -45,124 +45,128 @@
 
 
 #include "SpecialActorMemAlloc.h"
+#include <graphs/SRDAG/SRDAGGraph.h>
+#include <graphs/SRDAG/SRDAGCommon.h>
 
+void SpecialActorMemAlloc::allocFork(SRDAGVertex* fork){
+    /** Try to find a judicious allocation */
+    SRDAGEdge* inEdge = fork->getInEdge(0);
+    int alloc = inEdge->getAlloc();
+    /** Look if one output is allocated */
+    for (int j = 0; alloc == -1 && j < fork->getNConnectedOutEdge(); j++) {
+        SRDAGEdge *outEdge = fork->getOutEdge(j);
+        if (outEdge->getAlloc() != -1)
+            alloc = outEdge->getAlloc();
+    }
+    /** Else allocate input */
+    if (alloc == -1) {
+        allocEdge(inEdge);
+        alloc = inEdge->getAlloc();
+    }
 
-// TODO For more perfs, try to not execute optimized special actors
-void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
-    /** Look for Broadcast **/
-    for (int i = 0; i < listOfVertices->getNb(); i++) {
-        SRDAGVertex *br = listOfVertices->operator[](i);
-        if (br->getState() == SRDAG_EXEC
-            && br->getType() == SRDAG_BROADCAST) {
-            if (br->getInEdge(0)->getAlloc() == -1) {
+    /** Set allocation of all in/out edges */
+    inEdge->setAlloc(alloc);
 
-                /** Look if one output is allocated */
-                int alloc = -1;
+    int offset = 0;
+    for (int j = 0; j < fork->getNConnectedOutEdge(); j++) {
+        SRDAGEdge *outEdge = fork->getOutEdge(j);
+        if (outEdge->getAlloc() == -1)
+            outEdge->setAlloc(alloc + offset);
 
-                for(int j = 0; j < br->getNConnectedOutEdge(); j++){
-                    SRDAGEdge *outEdge = br->getOutEdge(j);
-                    if(outEdge->getAlloc() != -1){
-                        alloc = outEdge->getAlloc();
-                        break;
-                    }
-                }
+        offset += outEdge->getRate();
+    }
+}
 
-                SRDAGEdge *inEdge = br->getInEdge(0);
-                if(alloc == -1) {
-                    allocEdge(inEdge);
-                    alloc = br->getInEdge(0)->getAlloc();
-                }
-
-                for (int j = 0; j < br->getNConnectedOutEdge(); j++) {
-                    SRDAGEdge *outEdge = br->getOutEdge(j);
-                    if (outEdge->getAlloc() == -1)
-                        outEdge->setAlloc(alloc);
-                }
-            } else {
-                bool outputNotAllocated = true;
-                for (int j = 0; j < br->getNConnectedOutEdge(); j++)
-                    outputNotAllocated = outputNotAllocated && br->getInEdge(0)->getAlloc() != -1;
-                if (outputNotAllocated) {
-                    /** Not allocated at all Broadcast */
-                    int alloc = br->getInEdge(0)->getAlloc();
-
-                    for (int j = 0; j < br->getNConnectedOutEdge(); j++) {
-                        SRDAGEdge *outEdge = br->getOutEdge(j);
-
-                        if (outEdge->getAlloc() != -1)
-                            throw std::runtime_error("Overwrite MemAlloc\n");
-
-                        outEdge->setAlloc(alloc);
-                    }
-                }
+void SpecialActorMemAlloc::allocJoin(SRDAGVertex* join){
+    /** Try to find a judicious allocation */
+    SRDAGEdge* outEdge = join->getOutEdge(0);
+    int alloc = outEdge->getAlloc();
+    if (alloc == -1) {
+        /** Look if one output is allocated */
+        for (int j = 0; j < join->getNConnectedInEdge(); j++) {
+            SRDAGEdge *inEdge = join->getInEdge(j);
+            if (inEdge->getAlloc() != -1) {
+                alloc = inEdge->getAlloc();
+                break;
             }
+        }
+        /** Else allocate output */
+        if (alloc == -1) {
+            allocEdge(outEdge);
+            alloc = outEdge->getAlloc();
         }
     }
 
+    /** Set allocation of all in/out edges */
+    outEdge->setAlloc(alloc);
+
+    int offset = 0;
+    for (int j = 0; j < join->getNConnectedInEdge(); j++) {
+        SRDAGEdge *inEdge = join->getInEdge(j);
+        if (inEdge->getAlloc() == -1)
+            inEdge->setAlloc(alloc + offset);
+
+        offset += inEdge->getRate();
+    }
+}
+
+void SpecialActorMemAlloc::allocBroadcast(SRDAGVertex* br){
+    SRDAGEdge *inEdge = br->getInEdge(0);
+
+    /** Try to find a judicious allocation */
+    int alloc = inEdge->getAlloc();
+    if (alloc == -1) {
+        /** Look if one output is allocated */
+        for (int j = 0; j < br->getNConnectedOutEdge(); j++) {
+            SRDAGEdge *outEdge = br->getOutEdge(j);
+            if (outEdge->getAlloc() != -1) {
+                alloc = outEdge->getAlloc();
+                break;
+            }
+        }
+        /** Else allocate input */
+        if (alloc == -1) {
+            allocEdge(inEdge);
+            alloc = br->getInEdge(0)->getAlloc();
+        }
+    }
+
+    /** Set allocation of all in/out edges */
+    inEdge->setAlloc(alloc);
+
+    for (int j = 0; j < br->getNConnectedOutEdge(); j++) {
+        SRDAGEdge *outEdge = br->getOutEdge(j);
+        if (outEdge->getAlloc() == -1)
+            outEdge->setAlloc(alloc);
+    }
+}
+
+// TODO For more perfs, try to not execute optimized special actors
+void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
     /** Look for Fork **/
     for (int i = 0; i < listOfVertices->getNb(); i++) {
         SRDAGVertex *fork = listOfVertices->operator[](i);
         if (fork->getState() == SRDAG_EXEC
-            && fork->getType() == SRDAG_FORK) {
-
-            bool isCleanFork = fork->getInEdge(0)->getAlloc() == -1;
-            for (int j = 0; j < fork->getNConnectedOutEdge(); j++) {
-                isCleanFork = isCleanFork && fork->getOutEdge(j)->getAlloc() == -1;
-            }
-
-            if (isCleanFork && fork->getInEdge(0)->getAlloc() == -1) {
-                /** Not allocated at all Fork */
-                SRDAGEdge *inEdge = fork->getInEdge(0);
-                allocEdge(inEdge);
-
-                int offset = 0;
-                for (int j = 0; j < fork->getNConnectedOutEdge(); j++) {
-                    SRDAGEdge *outEdge = fork->getOutEdge(j);
-
-                    int alloc = fork->getInEdge(0)->getAlloc() + offset;
-
-                    if (outEdge->getAlloc() != -1)
-                        throw std::runtime_error("Overwrite MemAlloc\n");
-
-                    outEdge->setAlloc(alloc);
-
-                    offset += outEdge->getRate();
-                }
-            }
-        }
+            && fork->getType() == SRDAG_FORK)
+            allocFork(fork);
     }
 
     /** Look for Join **/
     for (int i = 0; i < listOfVertices->getNb(); i++) {
         SRDAGVertex *join = listOfVertices->operator[](i);
         if (join->getState() == SRDAG_EXEC
-            && join->getType() == SRDAG_JOIN) {
-            /** Alloc output edge **/
-
-            bool isCleanJoin = join->getOutEdge(0)->getAlloc() == -1;
-            for (int j = 0; j < join->getNConnectedInEdge(); j++) {
-                isCleanJoin = isCleanJoin && join->getInEdge(j)->getAlloc() == -1;
-            }
-
-            if (isCleanJoin) {
-                /* Alloc Output edge */
-                SRDAGEdge *outEdge = join->getOutEdge(0);
-                allocEdge(outEdge);
-
-                /** Alloc input Edges */
-                int offset = 0;
-                for (int j = 0; j < join->getNConnectedInEdge(); j++) {
-                    SRDAGEdge *inEdge = join->getInEdge(j);
-
-                    int alloc = join->getOutEdge(0)->getAlloc() + offset;
-                    inEdge->setAlloc(alloc);
-
-                    offset += inEdge->getRate();
-                }
-            }
-        }
+            && join->getType() == SRDAG_JOIN)
+            allocJoin(join);
     }
 
+    /** Look for Broadcast **/
+    for (int i = 0; i < listOfVertices->getNb(); i++) {
+        SRDAGVertex *br = listOfVertices->operator[](i);
+        if (br->getState() == SRDAG_EXEC
+            && br->getType() == SRDAG_BROADCAST) {
+            allocBroadcast(br);
+        }
+    }
 
     for (int i = 0; i < listOfVertices->getNb(); i++) {
         SRDAGVertex *vertex = listOfVertices->operator[](i);

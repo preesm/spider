@@ -76,7 +76,6 @@
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
 
-static void *jobTab;
 static void *dataMem;
 
 static std::chrono::time_point<std::chrono::steady_clock> start_steady;

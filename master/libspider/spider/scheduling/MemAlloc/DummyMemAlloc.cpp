@@ -54,7 +54,7 @@ static inline int getAlignSize(int size) {
 
 void DummyMemAlloc::allocEdge(SRDAGEdge *edge) {
     int size = edge->getRate();
-    if(size == 0){
+    if(size <= 0){
         /** Sync only edge */
         edge->setAlloc(-1);
         return;

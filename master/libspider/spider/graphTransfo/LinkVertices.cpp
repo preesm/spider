@@ -808,7 +808,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
         }
 
         if(persistentInit && persistentEnd){
-            topSrdag->addEdge(persistentInit, 1, persistentEnd, 1, 0);
+            topSrdag->addEdge(persistentInit, 1, persistentEnd, 1, -1);
         }
 
         StackMonitor::free(TRANSFO_STACK, srcConnections);

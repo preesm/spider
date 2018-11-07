@@ -180,19 +180,14 @@ inline Stack *PlatformPThread::getStack(SpiderStack id) {
     switch (id) {
         case PISDF_STACK :
             return stackPisdf;
-            break;
         case SRDAG_STACK :
             return stackSrdag;
-            break;
         case TRANSFO_STACK :
             return stackTransfo;
-            break;
         case ARCHI_STACK :
             return stackArchi;
-            break;
         case LRT_STACK :
             return stackLrt[getThreadNumber()];
-            break;
         default :
             throw std::runtime_error("Error in stack index\n");
     }

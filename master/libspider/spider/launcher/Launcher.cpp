@@ -133,30 +133,16 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
 
     for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
         SRDAGEdge *edge = vertex->getInEdge(i);
-        if (edge->getRate() != 0) {
-            inFifos[i].alloc = edge->getAlloc();
-            inFifos[i].size = edge->getRate();
-            inFifos[i].blkLrtIx = edge->getSrc()->getSlave();
-            inFifos[i].blkLrtJobIx = edge->getSrc()->getSlaveJobIx();
-        } else {
-            inFifos[i].alloc = 0;
-            inFifos[i].size = 0;
-            inFifos[i].blkLrtIx = 0;
-            inFifos[i].blkLrtJobIx = 0;
-        }
+        inFifos[i].alloc = edge->getAlloc();
+        inFifos[i].size = edge->getRate();
+        inFifos[i].blkLrtIx = edge->getSrc()->getSlave();
+        inFifos[i].blkLrtJobIx = edge->getSrc()->getSlaveJobIx();
     }
 
     for (int i = 0; i < vertex->getNConnectedOutEdge(); i++) {
         SRDAGEdge *edge = vertex->getOutEdge(i);
-        if (edge->getRate() != 0) {
-            outFifos[i].alloc = edge->getAlloc();
-            outFifos[i].size = edge->getRate();
-        } else {
-            inFifos[i].alloc = 0;
-            inFifos[i].size = 0;
-            inFifos[i].blkLrtIx = 0;
-            inFifos[i].blkLrtJobIx = 0;
-        }
+        outFifos[i].alloc = edge->getAlloc();
+        outFifos[i].size = edge->getRate();
     }
 
     switch (vertex->getType()) {

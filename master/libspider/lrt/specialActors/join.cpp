@@ -41,35 +41,40 @@
 #include <string.h>
 
 void saJoin(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
-    int nbFifoIn, nbFifoOut, i, index;
-    int nbTknIn, nbTknOut;
-
 #if VERBOSE
-    printf("Join\n");
+    fprintf(stderr, "INFO: Entering Join...\n");
 #endif
 
-    nbFifoIn = inParams[0];
-    nbFifoOut = inParams[1];
+    int nbFifoIn = (int) inParams[0];
+    int nbFifoOut = (int) inParams[1];
+    int nbTknOut = (int) inParams[2];
+    int index = 0;
 
-    index = 0;
+    // 0. Check the number of output FIFOs
     if (nbFifoOut == 1) {
         /* Join */
-        nbTknOut = inParams[2];
+        for (int i = 0; i < nbFifoIn; i++) {
+            int nbTknIn = (int) inParams[i + 3];
 
-        for (i = 0; i < nbFifoIn; i++) {
-            nbTknIn = inParams[i + 3];
-
-            if (nbTknIn && ((char *) outputFIFOs[0]) + index != inputFIFOs[i])
-                memcpy(((char *) outputFIFOs[0]) + index, inputFIFOs[i], nbTknIn);
+            if (nbTknIn && ((char *) outputFIFOs[0]) + index != inputFIFOs[i]) {
+                memcpy(((char *) outputFIFOs[0]) + index, inputFIFOs[i], (size_t) nbTknIn);
+            }
             index += nbTknIn;
         }
 
     } else {
-        throw std::runtime_error("Error in Join\n");
+        throw std::runtime_error(
+                "ERROR: Join should have exactly one output FIFO --> nOutputFIFOs: " + std::to_string(nbFifoOut));
     }
 
+    // 1. Check that Sum(nbTknIn) == nbTknOut
     if (index != nbTknOut) {
-        throw std::runtime_error("Join error: Remaining tokens.\n");
+        throw std::runtime_error("ERROR: Join has remaining tokens. nTokensIN: " + std::to_string(index) +
+                                 std::string(" | nTokensOUT: ") + std::to_string(nbTknOut));
     }
+
+#if VERBOSE
+    fprintf(stderr, "INFO: Exiting Join...\n");
+#endif
 }
 

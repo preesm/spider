@@ -41,16 +41,21 @@
 #include <string.h>
 
 void saBroadcast(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
-    int nbToken = inParams[0];
-    int nbOut = inParams[1];
-
 #if VERBOSE
-    printf("Broadcast\n");
+    fprintf(stderr, "INFO: Entering Broadcast...\n");
 #endif
 
+    int nbToken = (int) inParams[0];
+    int nbOut = (int) inParams[1];
+
     for (int i = 0; i < nbOut; i++) {
-        if (outputFIFOs[i] != inputFIFOs[0] && outputFIFOs[i] != 0)
-            memcpy(outputFIFOs[i], inputFIFOs[0], nbToken);
+        if (outputFIFOs[i] != inputFIFOs[0] && outputFIFOs[i] != 0) {
+            memcpy(outputFIFOs[i], inputFIFOs[0], (size_t) nbToken);
+        }
     }
+
+#if VERBOSE
+    fprintf(stderr, "INFO: Exiting Broadcast...\n");
+#endif
 }
 

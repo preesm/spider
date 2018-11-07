@@ -90,8 +90,10 @@ inline int Set<TYPE>::getN() const {
 
 template<typename TYPE>
 inline void Set<TYPE>::add(TYPE value) {
-    if (nb >= nbMax)
+    if (nb >= nbMax) {
+        printf("Exceeding set size: requested: %d -- max: %d\n", nb, nbMax);
         throw std::runtime_error("Not enough space in Set\n");
+    }
 
     ((SetElement *) value)->setSetIx(nb);
     array[nb++] = value;

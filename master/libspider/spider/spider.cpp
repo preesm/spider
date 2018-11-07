@@ -164,20 +164,20 @@ void Spider::initReservedMemory() {
     int memReserved = memAlloc_->getReservedAlloc(1);
     // Recursively go through the hierarchy
     memReserved += getReservedMemoryForGraph(graph, 0);
-    printf("INFO: Reserved ");
+    fprintf(stderr, "INFO: Reserved ");
     if (memReserved < 1024) {
-        printf("%5.1f B", memReserved * 1.);
+        fprintf(stderr, "%5.1f B", memReserved * 1.);
     } else if (memReserved < 1024 * 1024) {
-        printf("%5.1f KB", memReserved / 1024.);
+        fprintf(stderr, "%5.1f KB", memReserved / 1024.);
     } else if (memReserved < 1024 * 1024 * 1024) {
-        printf("%5.1f MB", memReserved / (1024. * 1024.));
+        fprintf(stderr, "%5.1f MB", memReserved / (1024. * 1024.));
     } else {
-        printf("%5.1f GB", memReserved / (1024. * 1024. * 1024.));
+        fprintf(stderr, "%5.1f GB", memReserved / (1024. * 1024. * 1024.));
     }
-    printf("(%#x) / ", memReserved);
+    fprintf(stderr, "(%#x) / ", memReserved);
     memAlloc_->printMemAllocSizeFormatted();
-    printf("of the shared memory\n");
-    printf("for delays.\n");
+    fprintf(stderr, " of the shared memory\n");
+    fprintf(stderr, "for delays.\n");
 
     memAlloc_->setReservedSize(memReserved);
     memAlloc_->reset();

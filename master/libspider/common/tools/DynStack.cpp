@@ -67,8 +67,9 @@ void *DynStack::alloc(int size) {
     nb_++;
 
     void *address = malloc(size);
-    if (address == 0)
+    if (!address) {
         throw std::runtime_error("MemAlloc failed");
+    }
     int *sizeAddress = (int *) address;
     void *dataAddress = (void *) (sizeAddress + 1);
     *sizeAddress = size;
@@ -78,7 +79,7 @@ void *DynStack::alloc(int size) {
 
 void DynStack::freeAll() {
     if (nb_ != 0) {
-        printf("DynStack Warning (%s): FreeAll called with %d allocated item\n", getName(), nb_);
+        fprintf(stderr, "WARNING: DynStack [%s], FreeAll called with %d remaining allocated item(s).\n", getName(), nb_);
     }
 }
 
@@ -97,19 +98,22 @@ void DynStack::free(void *var) {
 }
 
 void DynStack::printStat() {
-    printf("%s: ", getName());
+    fprintf(stderr, "INFO:    [%s] usage: ", getName());
 
-    if (maxSize_ < 1024)
-        printf("\t%5.1f B", maxSize_ / 1.);
-    else if (maxSize_ < 1024 * 1024)
-        printf("\t%5.1f KB", maxSize_ / 1024.);
-    else if (maxSize_ < 1024 * 1024 * 1024)
-        printf("\t%5.1f MB", maxSize_ / 1024. / 1024.);
-    else
-        printf("\t%5.1f GB", maxSize_ / 1024. / 1024. / 1024.);
+    const char* units[4] = { "B", "KB", "MB", "GB"};
 
-    if (nb_)
-        printf(", \t%d still in use", nb_);
+    float normalizedSize = maxSize_;
+    int unitIndex = 0;
+    while(normalizedSize >= 1024 && unitIndex < 3) {
+        normalizedSize /= 1024.;
+        unitIndex++;
+    }
+    fprintf(stderr, "\t%5.1f %s", normalizedSize, units[unitIndex]);
+
+
+    if (nb_) {
+        fprintf(stderr, ", \t%lld B still in use", curUsedSize_);
+    }
 
     printf("\n");
 }

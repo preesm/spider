@@ -82,15 +82,15 @@ inline int MemAlloc::getMemAllocSize() const {
 }
 
 inline void MemAlloc::printMemAllocSizeFormatted() const {
-    if (memSize_ < 1024) {
-        printf("%5.1f B", memSize_ / 1.);
-    } else if (memSize_ < 1024 * 1024) {
-        printf("%5.1f KB", memSize_ / 1024.);
-    } else if (memSize_ < 1024 * 1024 * 1024) {
-        printf("%5.1f MB", memSize_ / (1024. * 1024.));
-    } else {
-        printf("%5.1f GB", memSize_ / (1024. * 1024. * 1024.));
+    const char* units[4] = { "B", "KB", "MB", "GB"};
+
+    float normalizedSize = memSize_;
+    int unitIndex = 0;
+    while(normalizedSize >= 1024 && unitIndex < 3) {
+        normalizedSize /= 1024.;
+        unitIndex++;
     }
+    fprintf(stderr, "%5.1f %s", normalizedSize, units[unitIndex]);
 }
 
 inline void MemAlloc::setReservedSize(int reservedSize) {

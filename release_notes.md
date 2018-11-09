@@ -10,6 +10,7 @@ Spider Changelog
 
 ### Changes
 * Enhance Special Actor Memory allocation allowing reduced footprint.
+* Improved details of error messages;
 
 ### Bug fix
 * Fix Graph transformation for actors with repetition is equal to 0.

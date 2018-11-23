@@ -65,9 +65,12 @@ public:
 
     bool check();
 
+    void execute();
+
 private:
     int nPE_;
     int nJobMax_;
+    int nJobs_;
     int *nJobPerPE_;
     Time *readyTime_;
     SRDAGVertex **schedules_;

@@ -44,7 +44,6 @@
 #include <Message.h>
 #include <SpiderCommunicator.h>
 #include <tools/Stack.h>
-#include <sys/types.h>
 
 // semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
 // making compilation error with the IDE's own declaration of said types
@@ -67,15 +66,15 @@ class PThreadSpiderCommunicator : public SpiderCommunicator {
 public:
     PThreadSpiderCommunicator(ControlQueue **spider2LrtQueues,
                               ControlQueue **lrt2SpiderQueues,
-                              TraceQueue *traceQueue);
+                              TraceQueue *traceQueue, int nLrt);
 
     ~PThreadSpiderCommunicator();
 
-    void *ctrl_start_send(int lrtIx, int size);
+    void *ctrl_start_send(int lrtIx, std::uint64_t size);
 
-    void ctrl_end_send(int lrtIx, int size);
+    void ctrl_end_send(int lrtIx, std::uint64_t size);
 
-    int ctrl_start_recv(int lrtIx, void **data);
+    std::uint64_t ctrl_start_recv(int lrtIx, void **data);
 
     void ctrl_start_recv_block(int lrtIx, void **data);
 
@@ -91,10 +90,13 @@ public:
 
     void trace_end_recv();
 
+    void rst_ctrl_queue();
+
 private:
     ControlQueue **spider2LrtQueues_;
     ControlQueue **lrt2SpiderQueues_;
     TraceQueue *traceQueue_;
+    int nLrt_;
 };
 
 #endif/*PTHREADS_SPIDER_COMMUNICATOR_H*/

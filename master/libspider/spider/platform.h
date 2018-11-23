@@ -107,7 +107,7 @@ inline Platform *Platform::get() {
     if (platform_)
         return platform_;
     else
-        throw std::runtime_error("Error undefined platform\n");
+        throw std::runtime_error("Error undefined platform_\n");
 }
 
 // If unimplemented in child

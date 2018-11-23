@@ -82,28 +82,28 @@ LinuxLrtCommunicator::~LinuxLrtCommunicator() {
     StackMonitor::free(ARCHI_STACK, msgBufferSend_);
 }
 
-void *LinuxLrtCommunicator::ctrl_start_send(int size) {
+void *LinuxLrtCommunicator::ctrl_start_send(std::uint64_t size) {
     if (curMsgSizeSend_)
         throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
     curMsgSizeSend_ = size;
     return msgBufferSend_;
 }
 
-void LinuxLrtCommunicator::ctrl_end_send(int size) {
-    unsigned long s = curMsgSizeSend_;
+void LinuxLrtCommunicator::ctrl_end_send(std::uint64_t size) {
+    std::uint64_t s = curMsgSizeSend_;
     ssize_t l;
-    l = write(fOut_, &s, sizeof(unsigned long));
+    l = write(fOut_, &s, sizeof(std::uint64_t));
     l = write(fOut_, msgBufferSend_, curMsgSizeSend_);
     curMsgSizeSend_ = 0;
 }
 
-int LinuxLrtCommunicator::ctrl_start_recv(void **data) {
-    unsigned long size;
-    int nb = read(fIn_, &size, sizeof(unsigned long));
+std::uint64_t LinuxLrtCommunicator::ctrl_start_recv(void **data) {
+    std::uint64_t size;
+    int nb = read(fIn_, &size, sizeof(std::uint64_t));
 
     if (nb < 0) return 0;
 
-    if (size > (unsigned long) msgSizeMax_)
+    if (size > (std::uint64_t) msgSizeMax_)
         throw std::runtime_error("Msg too big\n");
 
     curMsgSizeRecv_ = size;

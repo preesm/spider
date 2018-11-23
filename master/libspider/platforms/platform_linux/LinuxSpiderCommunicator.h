@@ -52,11 +52,11 @@ public:
 
     void setLrtCom(int lrtIx, int fIn, int fOut);
 
-    void *ctrl_start_send(int lrtIx, int size);
+    void *ctrl_start_send(int lrtIx, std::uint64_t size);
 
-    void ctrl_end_send(int lrtIx, int size);
+    void ctrl_end_send(int lrtIx, std::uint64_t size);
 
-    int ctrl_start_recv(int lrtIx, void **data);
+    std::uint64_t ctrl_start_recv(int lrtIx, void **data);
 
     void ctrl_end_recv(int lrtIx);
 

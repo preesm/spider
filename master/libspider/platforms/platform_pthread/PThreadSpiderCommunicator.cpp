@@ -43,24 +43,32 @@
 
 PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlQueue **spider2LrtQueues,
                                                      ControlQueue **lrt2SpiderQueues,
-                                                     TraceQueue *traceQueue) {
+                                                     TraceQueue *traceQueue, int nLrt) {
     spider2LrtQueues_ = spider2LrtQueues;
     lrt2SpiderQueues_ = lrt2SpiderQueues;
     traceQueue_ = traceQueue;
+    nLrt_ = nLrt;
 }
 
 PThreadSpiderCommunicator::~PThreadSpiderCommunicator() {
 }
 
-void *PThreadSpiderCommunicator::ctrl_start_send(int lrtIx, int size) {
+void PThreadSpiderCommunicator::rst_ctrl_queue() {
+    fprintf(stderr, "nLrt: %d\n", nLrt_);
+    for (int i = 0; i < nLrt_; ++i) {
+        spider2LrtQueues_[i]->rst();
+    }
+}
+
+void *PThreadSpiderCommunicator::ctrl_start_send(int lrtIx, std::uint64_t size) {
     return spider2LrtQueues_[lrtIx]->push_start(size);
 }
 
-void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int size) {
+void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, std::uint64_t size) {
     return spider2LrtQueues_[lrtIx]->push_end(size);
 }
 
-int PThreadSpiderCommunicator::ctrl_start_recv(int lrtIx, void **data) {
+std::uint64_t PThreadSpiderCommunicator::ctrl_start_recv(int lrtIx, void **data) {
     return lrt2SpiderQueues_[lrtIx]->pop_start(data, false);
 }
 

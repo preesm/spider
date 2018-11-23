@@ -37,26 +37,22 @@
 
 #include <lrt.h>
 
-TraceQueue::TraceQueue(int msgSizeMax, int nLrt) {
+TraceQueue::TraceQueue(std::uint64_t msgSizeMax, int nLrt) {
     msgSizeMax_ = msgSizeMax;
     nLrt_ = nLrt;
 
-    msgBufferRecv_ = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
+    msgBufferRecv_ = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, std::uint8_t);
     curMsgSizeRecv_ = 0;
 
     msgBufferSend_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, void*);
-    curMsgSizeSend_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, int);
+    curMsgSizeSend_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, std::uint64_t);
     for (int i = 0; i < nLrt_ + 1; i++) {
-        msgBufferSend_[i] = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
+        msgBufferSend_[i] = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, std::uint8_t);
         curMsgSizeSend_[i] = 0;
     }
-
-    sem_init(&queue_sem_, 0, 0);
 }
 
 TraceQueue::~TraceQueue() {
-    sem_destroy(&queue_sem_);
-
     StackMonitor::free(ARCHI_STACK, msgBufferRecv_);
 
     for (int i = 0; i < nLrt_ + 1; i++) {
@@ -66,70 +62,29 @@ TraceQueue::~TraceQueue() {
     StackMonitor::free(ARCHI_STACK, curMsgSizeSend_);
 }
 
-void *TraceQueue::push_start(int lrtIx, int size) {
-    if (curMsgSizeSend_[lrtIx])
-        throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
+void *TraceQueue::push_start(int lrtIx, std::uint64_t size) {
+    if (curMsgSizeSend_[lrtIx]) {
+        throw std::runtime_error("ERROR: Trying to send a msg when previous one is not sent");
+    }
     curMsgSizeSend_[lrtIx] = size;
     return msgBufferSend_[lrtIx];
 }
 
-void TraceQueue::push_end(int lrtIx, int /*size*/) {
-    unsigned long s = curMsgSizeSend_[lrtIx];
+void TraceQueue::push_end(int lrtIx, std::uint64_t /*size*/) {
+    if (lrtIx >= nLrt_ || lrtIx < 0) {
+        throw std::runtime_error("ERROR: Bad lrtIx for TraceQueue.");
+    }
 
-    /** Take Mutex protecting the Queue */
-    queue_mutex_.lock();
+    /** Push data to the queue */
+    spiderQueue_.push(curMsgSizeSend_[lrtIx], msgBufferSend_);
 
-    /** First bytes correspond to message size */
-    for (unsigned int i = 0; i < sizeof(unsigned long); i++)
-        queue_.push(s >> (sizeof(unsigned long) - 1 - i) * 8 & 0xFF);
-
-    /** Send the message */
-    for (int i = 0; i < curMsgSizeSend_[lrtIx]; i++)
-        queue_.push(*(((char *) msgBufferSend_[lrtIx]) + i) & 0xFF);
-
-    /** Relax Mutex protecting the Queue */
-    queue_mutex_.unlock();
-
-    /** Post 1 token in semaphore representing a message */
-    sem_post(&queue_sem_);
-
+    /** Reset curMsgSizeSend_ to allow sending new data */
     curMsgSizeSend_[lrtIx] = 0;
 }
 
-int TraceQueue::pop_start(void **data, bool blocking) {
-    unsigned long size = 0;
-
-    /** Take sem (representing 1 message in the queue */
-    if (blocking)
-        sem_wait(&queue_sem_);
-    else if (sem_trywait(&queue_sem_))
-        return 0;
-
-    /** Take Mutex protecting the Queue */
-    queue_mutex_.lock();
-
-    /** Retrieve message size */
-    for (unsigned int nb = 0; nb < sizeof(unsigned long); nb++) {
-        size = size << 8;
-        size += queue_.front();
-        queue_.pop();
-    }
-
-    /** Check size */
-    if (size > (unsigned long) msgSizeMax_)
-        throw std::runtime_error("Msg too big\n");
-
-    curMsgSizeRecv_ = size;
-
-    /** Retrieve the message */
-    for (unsigned int recv = 0; recv < size; recv++) {
-        *(((char *) msgBufferRecv_) + recv) = queue_.front();
-        queue_.pop();
-    }
-
-    /** Relax Mutex protecting the Queue */
-    queue_mutex_.unlock();
-
+std::uint64_t TraceQueue::pop_start(void **data, bool blocking) {
+    /** Read data from the queue */
+    curMsgSizeRecv_ = spiderQueue_.pop(&msgBufferRecv_, blocking, msgSizeMax_);
     *data = msgBufferRecv_;
     return curMsgSizeRecv_;
 }

@@ -46,6 +46,7 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 
 #include <spider.h>
+#include <scheduling/Schedule.h>
 
 #define MAX_IO_EDGES 300
 
@@ -65,5 +66,10 @@ void jit_ms(
         SRDAGGraph *topSrdag,
         MemAlloc *memAlloc,
         Scheduler *scheduler);
+
+Schedule *static_scheduler(SRDAGGraph *topSrdag,
+                           MemAlloc *memAlloc,
+                           Scheduler *scheduler);
+
 
 #endif/*GRAPH_TRANSFO_H*/

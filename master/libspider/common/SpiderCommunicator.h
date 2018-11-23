@@ -40,16 +40,17 @@
 #define SPIDER_COMMUNICATOR_H
 
 #include "Message.h"
+#include <cstdint>
 
 class SpiderCommunicator {
 public:
     virtual ~SpiderCommunicator() {}
 
-    virtual void *ctrl_start_send(int lrtIx, int size) = 0;
+    virtual void *ctrl_start_send(int lrtIx, std::uint64_t size) = 0;
 
-    virtual void ctrl_end_send(int lrtIx, int size) = 0;
+    virtual void ctrl_end_send(int lrtIx, std::uint64_t size) = 0;
 
-    virtual int ctrl_start_recv(int lrtIx, void **data) = 0;
+    virtual std::uint64_t ctrl_start_recv(int lrtIx, void **data) = 0;
 
     virtual void ctrl_start_recv_block(int lrtIx, void **data) = 0;
 
@@ -64,6 +65,8 @@ public:
     virtual void trace_start_recv_block(void **data) = 0;
 
     virtual void trace_end_recv() = 0;
+
+    virtual void rst_ctrl_queue() = 0;
 
 protected:
     SpiderCommunicator() {}

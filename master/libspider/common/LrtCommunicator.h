@@ -40,17 +40,18 @@
 #ifndef LRT_COMMUNICATOR_H
 #define LRT_COMMUNICATOR_H
 
+#include <cstdint>
 #include "Message.h"
 
 class LrtCommunicator {
 public:
     virtual ~LrtCommunicator() {}
 
-    virtual void *ctrl_start_send(int size) = 0;
+    virtual void *ctrl_start_send(std::uint64_t size) = 0;
 
-    virtual void ctrl_end_send(int size) = 0;
+    virtual void ctrl_end_send(std::uint64_t size) = 0;
 
-    virtual int ctrl_start_recv(void **data) = 0;
+    virtual std::uint64_t ctrl_start_recv(void **data) = 0;
 
     virtual void ctrl_start_recv_block(void **data) = 0;
 
@@ -78,6 +79,7 @@ public:
 
     virtual void unlockLrt(int /*jobIx*/) {};
 
+    virtual void rstCtrl() = 0;
 
 protected:
     LrtCommunicator() {}

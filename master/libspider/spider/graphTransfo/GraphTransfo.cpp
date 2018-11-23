@@ -306,3 +306,90 @@ void jit_ms(
     StackMonitor::free(TRANSFO_STACK, schedule);
     StackMonitor::freeAll(TRANSFO_STACK);
 }
+
+Schedule *static_scheduler(SRDAGGraph *topSrdag,
+                           MemAlloc *memAlloc,
+                           Scheduler *scheduler) {
+    PiSDFGraph *topGraph = Spider::getGraph();
+
+    Schedule *schedule = CREATE(TRANSFO_STACK, Schedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
+
+    /* Add initial top actor */
+    PiSDFVertex *root = topGraph->getBody(0);
+    if (!root->isHierarchical()) {
+        throw std::runtime_error("ERROR: Top graph is empty!");
+    }
+    topSrdag->addVertex(root, 0, 0);
+    topSrdag->updateState();
+
+
+    // Check nb of config //
+
+    /* Look for hierrachical actor in topDag */
+    TimeMonitor::startMonitoring();
+
+    SRDAGVertex *nextHierVx = getNextHierVx(topSrdag);
+
+    do {
+        /* Fill the transfoJob data */
+        transfoJob *job = CREATE(TRANSFO_STACK, transfoJob);
+        initJob(job, nextHierVx);
+
+        /* Remove Hierachical vertex */
+        topSrdag->delVertex(nextHierVx);
+
+        if (Spider::getVerbose()) {
+            /* Display Param values */
+            Platform::get()->fprintf(stdout, "\nParam Values:\n");
+            for (int i = 0; i < job->graph->getNParam(); i++) {
+                Platform::get()->fprintf(stdout, "%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
+            }
+        }
+
+        int *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
+        computeBRV(job, brv);
+        if (Spider::getVerbose()) {
+            /* Display BRV values */
+            Platform::get()->fprintf(stdout, "\nBRV Values:\n");
+            for (int i = 0; i < job->graph->getNBody(); i++) {
+                Platform::get()->fprintf(stdout, "%s: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+            }
+        }
+
+        addSRVertices(topSrdag, job, brv);
+
+        linkSRVertices(topSrdag, job, brv);
+
+        freeJob(job);
+
+        StackMonitor::free(TRANSFO_STACK, brv);
+        StackMonitor::free(TRANSFO_STACK, job);
+
+        /* Find next hierarchical vertex */
+        topSrdag->updateState();
+        nextHierVx = getNextHierVx(topSrdag);
+
+    } while (nextHierVx);
+
+    TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
+
+    if (Spider::getGraphOptim()) {
+        TimeMonitor::startMonitoring();
+        optims(topSrdag);
+        TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
+    }
+
+    /* Resolve params must be done by itself */
+    Launcher::get()->resolveParams(Spider::getArchi(), topSrdag);
+
+    topSrdag->updateState();
+
+    /* Schedule and launch execution */
+    TimeMonitor::startMonitoring();
+    scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchi());
+    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
+
+    Platform::get()->getLrt()->runUntilNoMoreJobs();
+
+    return schedule;
+}

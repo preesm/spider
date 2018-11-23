@@ -43,7 +43,7 @@
 RoundRobin::RoundRobin() {
 
 #ifndef __k1__
-    printf("RoundRobin was not tested on this platform\n");
+    printf("RoundRobin was not tested on this platform_\n");
 #endif
 
     if (Spider::getGraphOptim()) {

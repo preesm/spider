@@ -60,7 +60,7 @@
 
 #include <Message.h>
 #include <tools/Stack.h>
-#include <queue>
+#include <cstdint>
 
 #include "ControlQueue.h"
 #include "TraceQueue.h"
@@ -77,11 +77,13 @@ public:
 
     ~PThreadLrtCommunicator();
 
-    void *ctrl_start_send(int size);
+    void rstCtrl();
 
-    void ctrl_end_send(int size);
+    void *ctrl_start_send(std::uint64_t size);
 
-    int ctrl_start_recv(void **data);
+    void ctrl_end_send(std::uint64_t size);
+
+    std::uint64_t ctrl_start_recv(void **data);
 
     void ctrl_start_recv_block(void **data);
 
@@ -101,13 +103,13 @@ public:
 
     void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx);
 
-
 private:
 
     ControlQueue *spider2LrtQueue_;
     ControlQueue *lrt2SpiderQueue_;
     DataQueues *dataQueues_;
     TraceQueue *traceQueue_;
+    int queueSize_;
 };
 
 #endif/*PTHREAD_LRT_COMMUNICATOR_H*/

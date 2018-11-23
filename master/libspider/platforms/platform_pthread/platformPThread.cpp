@@ -106,7 +106,9 @@ static void setAffinity(int cpuId) {
 
 
 PlatformPThread::PlatformPThread(SpiderConfig &config) {
-    if (platform_) { throw std::runtime_error("Try to create 2 platforms"); }
+    if (platform_) {
+        throw std::runtime_error("Try to create 2 platforms");
+    }
     platform_ = this;
 
     //printfSpider();
@@ -136,8 +138,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     lrt2SpiderQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_, ControlQueue*);
 
     for (int i = 0; i < nLrt_; i++) {
-        spider2LrtQueues_[i] = CREATE(ARCHI_STACK, ControlQueue)(MAX_MSG_SIZE);
-        lrt2SpiderQueues_[i] = CREATE(ARCHI_STACK, ControlQueue)(MAX_MSG_SIZE);
+        spider2LrtQueues_[i] = CREATE(ARCHI_STACK, ControlQueue)(MAX_MSG_SIZE, false);
+        lrt2SpiderQueues_[i] = CREATE(ARCHI_STACK, ControlQueue)(MAX_MSG_SIZE, false);
     }
 
     dataQueues_ = CREATE(ARCHI_STACK, DataQueues)(nLrt_);
@@ -149,9 +151,9 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
     // TODO use "usePapify" only for monitored LRTs / HW PEs
 #ifndef PAPI_AVAILABLE
-    // If PAPI is not available on the current platform, force disable it
+    // If PAPI is not available on the current platform_, force disable it
     if (config.usePapify) {
-        printf("WARNING: Spider was not compiled on a platform with PAPI, thus the monitoring is disabled.\n");
+        printf("WARNING: Spider was not compiled on a platform_ with PAPI, thus the monitoring is disabled.\n");
     }
     config.usePapify = false;
 #else
@@ -184,29 +186,30 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     int offsetPe = 0;
     for (int pe = 0; pe < config.platform.nPeType; ++pe) {
         for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
-            
-		    lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
-		            spider2LrtQueues_[i + offsetPe],
-		            lrt2SpiderQueues_[i + offsetPe],
-		            dataQueues_,
-		            traceQueue_);
-		    lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i);
 
-		    arg_lrt_[i + offsetPe].lrtCom = lrtCom_[i + offsetPe];
-		    arg_lrt_[i + offsetPe].lrt = lrt_[i + offsetPe];
-		    arg_lrt_[i + offsetPe].shMemSize = config.platform.shMemSize;
-		    arg_lrt_[i + offsetPe].fcts = config.platform.fcts;
-		    arg_lrt_[i + offsetPe].nLrtFcts = config.platform.nLrtFcts;
-		    arg_lrt_[i + offsetPe].index = i + offsetPe;
-		    arg_lrt_[i + offsetPe].nLrt = nLrt_;
-		    arg_lrt_[i + offsetPe].instance = this;
+            lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
+                    spider2LrtQueues_[i + offsetPe],
+                    lrt2SpiderQueues_[i + offsetPe],
+                    dataQueues_,
+                    traceQueue_);
+            lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i);
+
+            arg_lrt_[i + offsetPe].lrtCom = lrtCom_[i + offsetPe];
+            arg_lrt_[i + offsetPe].lrt = lrt_[i + offsetPe];
+            arg_lrt_[i + offsetPe].shMemSize = config.platform.shMemSize;
+            arg_lrt_[i + offsetPe].fcts = config.platform.fcts;
+            arg_lrt_[i + offsetPe].nLrtFcts = config.platform.nLrtFcts;
+            arg_lrt_[i + offsetPe].index = i + offsetPe;
+            arg_lrt_[i + offsetPe].nLrt = nLrt_;
+            arg_lrt_[i + offsetPe].instance = this;
             arg_lrt_[i + offsetPe].coreAffinity = config.platform.coreAffinities[pe][i];
-		    arg_lrt_[i + offsetPe].lrtStack.name = config.lrtStack.name;
-		    arg_lrt_[i + offsetPe].lrtStack.type = config.lrtStack.type;
-		    arg_lrt_[i + offsetPe].lrtStack.start = (void *) ((char *) config.lrtStack.start + (i + offsetPe) * config.lrtStack.size / nLrt_);
-		    arg_lrt_[i + offsetPe].lrtStack.size = config.lrtStack.size / nLrt_;
-		    arg_lrt_[i + offsetPe].usePapify = config.usePapify;
-		}
+            arg_lrt_[i + offsetPe].lrtStack.name = config.lrtStack.name;
+            arg_lrt_[i + offsetPe].lrtStack.type = config.lrtStack.type;
+            arg_lrt_[i + offsetPe].lrtStack.start = (void *) ((char *) config.lrtStack.start +
+                                                              (i + offsetPe) * config.lrtStack.size / nLrt_);
+            arg_lrt_[i + offsetPe].lrtStack.size = config.lrtStack.size / nLrt_;
+            arg_lrt_[i + offsetPe].usePapify = config.usePapify;
+        }
     }
 
     thread_ID_tab_[0] = pthread_self();
@@ -235,7 +238,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
             spider2LrtQueues_,
             lrt2SpiderQueues_,
-            traceQueue_);
+            traceQueue_, nLrt_);
 
     lrtCom_[0] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
             spider2LrtQueues_[0],
@@ -447,7 +450,7 @@ void PlatformPThread::rstJobIx() {
 
         do {
             getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
-            if(((UndefinedMsg *) msg)->msgIx == MSG_END_ITER)
+            if (((UndefinedMsg *) msg)->msgIx == MSG_END_ITER)
                 break;
             else
                 getSpiderCommunicator()->ctrl_end_recv(i);
@@ -466,8 +469,8 @@ void PlatformPThread::rstJobIx() {
     Platform::get()->getLrt()->setJobIx(-1);
 
     //reseting jobTab
-    for(int i=0; i<nLrt_; i++){
-        lrtCom_[0]->setLrtJobIx(i,-1);
+    for (int i = 0; i < nLrt_; i++) {
+        lrtCom_[0]->setLrtJobIx(i, -1);
     }
 
     //Waiting for slave LRTs to reset their jobIx counter
@@ -475,7 +478,7 @@ void PlatformPThread::rstJobIx() {
         void *msg = NULL;
         do {
             getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
-            if(((UndefinedMsg *) msg)->msgIx == MSG_RESET_LRT)
+            if (((UndefinedMsg *) msg)->msgIx == MSG_RESET_LRT)
                 break;
             else
                 getSpiderCommunicator()->ctrl_end_recv(i);

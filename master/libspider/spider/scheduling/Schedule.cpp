@@ -37,11 +37,16 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
+#include <launcher/Launcher.h>
 #include "Schedule.h"
+#include <lrt.h>
+#include "LrtCommunicator.h"
+#include "SpiderCommunicator.h"
 
 Schedule::Schedule(int nPE, int nJobMax) {
     nPE_ = nPE;
     nJobMax_ = nJobMax;
+    nJobs_ = 0;
     nJobPerPE_ = CREATE_MUL(TRANSFO_STACK, nPE_, int);
     readyTime_ = CREATE_MUL(TRANSFO_STACK, nPE_, Time);
     schedules_ = CREATE_MUL(TRANSFO_STACK, nPE_ * nJobMax_, SRDAGVertex*);
@@ -65,6 +70,7 @@ void Schedule::addJob(int pe, SRDAGVertex *job, Time start, Time end) {
     schedules_[pe * nJobMax_ + nJobPerPE_[pe]] = job;
     job->setSlaveJobIx(nJobPerPE_[pe]);
     nJobPerPE_[pe]++;
+    nJobs_++;
     readyTime_[pe] = std::max(readyTime_[pe], end);
     job->setStartTime(start);
     job->setEndTime(end);
@@ -143,4 +149,16 @@ bool Schedule::check() {
     }
 
     return result;
+}
+
+void Schedule::execute() {
+//    Platform::get()->getSpiderCommunicator()->rst_ctrl_queue();
+    for (int pe = 0; pe < nPE_; pe++) {
+        for (int job = 0; job < nJobPerPE_[pe]; job++) {
+            SRDAGVertex *vertex = getJob(pe, job);
+            vertex->setState(SRDAG_EXEC);
+            Launcher::get()->launchVertex(vertex);
+        }
+    }
+    Platform::get()->getLrt()->runUntilNoMoreJobs();
 }

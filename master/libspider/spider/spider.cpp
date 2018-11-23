@@ -77,19 +77,43 @@
 #define CHIP_FREQ (1)
 #endif
 
-static Archi *archi_;
-static PiSDFGraph *pisdf_;
-static SRDAGGraph *srdag_;
+static Archi *archi_ = nullptr;
+static PiSDFGraph *pisdf_ = nullptr;
+static SRDAGGraph *srdag_ = nullptr;
 
-static MemAlloc *memAlloc_;
-static Scheduler *scheduler_;
-//static PlatformMPPA* platform;
-static PlatformPThread *platform;
+static MemAlloc *memAlloc_ = nullptr;
+static Scheduler *scheduler_ = nullptr;
+//static PlatformMPPA* platform_;
+static PlatformPThread *platform_ = nullptr;
+static Schedule *schedule_ = nullptr;
 
 static bool verbose_;
 static bool useGraphOptim_;
 static bool useActorPrecedence_;
 static bool traceEnabled_;
+static bool isStatic_;
+
+static bool isGraphStatic(PiSDFGraph *const graph) {
+    for (int i = 0; i < graph->getNParam(); ++i) {
+        auto param = graph->getParam(i);
+        switch (param->getType()) {
+            case PISDF_PARAM_DYNAMIC:
+                return false;
+            default:
+                break;
+        }
+    }
+    for (int j = 0; j < graph->getNBody(); ++j) {
+        PiSDFVertex *vertex = graph->getBody(j);
+        if (vertex->isHierarchical()) {
+            auto isChildStatic = isGraphStatic(vertex->getSubGraph());
+            if (!isChildStatic) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
 void Spider::init(SpiderConfig &cfg) {
 
@@ -101,11 +125,37 @@ void Spider::init(SpiderConfig &cfg) {
     setVerbose(cfg.verbose);
     setTraceEnabled(cfg.traceEnabled);
 
-    platform = new PlatformPThread(cfg);
+    platform_ = new PlatformPThread(cfg);
+}
+
+void Spider::iterate() {
+    Platform::get()->rstTime();
+    Time start = Platform::get()->getTime();
+    /** Set all slave jobIx to 0 */
+
+    if (isStatic_) {
+        if (!srdag_) {
+            srdag_ = new SRDAGGraph();
+            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
+        } else {
+            schedule_->execute();
+        }
+    } else {
+        delete srdag_;
+        StackMonitor::freeAll(SRDAG_STACK);
+        memAlloc_->reset();
+        srdag_ = new SRDAGGraph();
+        jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
+    }
+    Time end = Platform::get()->getTime();
+    fprintf(stderr, "Execution Time: %lf\n", (end - start) / 1000000.0);
+
+    //Mise à zéro compteur job
+    Platform::get()->rstJobIx();
 }
 
 
-int static getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) {
+static int getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) {
     transfoJob *job = CREATE(TRANSFO_STACK, transfoJob);
     memset(job, 0, sizeof(transfoJob));
     job->graph = graph;
@@ -185,34 +235,19 @@ void Spider::initReservedMemory() {
 
 void Spider::clean() {
 
-    if (srdag_ != 0)
-        delete srdag_;
-    if (memAlloc_ != 0)
-        delete memAlloc_;
-    if (scheduler_ != 0)
-        delete scheduler_;
+    if (schedule_) {
+        schedule_->~Schedule();
+        StackMonitor::free(TRANSFO_STACK, schedule_);
+        StackMonitor::freeAll(TRANSFO_STACK);
+    }
 
-    if (platform != 0)
-        delete platform;
-
+    delete srdag_;
+    delete memAlloc_;
+    delete scheduler_;
+    delete platform_;
     //StackMonitor::cleanAllStack();
 }
 
-void Spider::iterate() {
-    Platform::get()->rstTime();
-    /** Set all slave jobIx to 0 */
-
-    delete srdag_;
-    StackMonitor::freeAll(SRDAG_STACK);
-    memAlloc_->reset();
-    srdag_ = new SRDAGGraph();
-
-
-    jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
-
-    //Mise à zéro compteur job
-    Platform::get()->rstJobIx();
-}
 
 void Spider::setGraphOptim(bool useGraphOptim) {
     useGraphOptim_ = useGraphOptim;
@@ -252,6 +287,14 @@ void Spider::setArchi(Archi *archi) {
 
 void Spider::setGraph(PiSDFGraph *graph) {
     pisdf_ = graph;
+
+    // Detect the static property of the graph
+    isStatic_ = isGraphStatic(pisdf_);
+    if (isStatic_) {
+        Platform::get()->fprintf(stderr, "Graph [%s] is static.\n", pisdf_->getBody(0)->getName());
+    } else {
+        Platform::get()->fprintf(stderr, "Graph [%s] is not fully static.\n", pisdf_->getBody(0)->getName());
+    }
 }
 
 PiSDFGraph *Spider::getGraph() {
@@ -305,17 +348,19 @@ void Spider::printPiSDF(const char *pisdfPath) {
 }
 
 void Spider::printActorsStat(ExecutionStat *stat) {
-    printf("\t%15s:\n", "Actors");
+    Platform::get()->fprintf(stdout, "\t%15s:\n", "Actors");
     for (int j = 0; j < stat->nPiSDFActor; j++) {
-        printf("\t%15s:", stat->actors[j]->getName());
-        for (int k = 0; k < archi_->getNPETypes(); k++)
-            if (stat->actorIterations[j][k])
-                printf("\t%lld (x%lld)",
-                       stat->actorTimes[j][k] / stat->actorIterations[j][k],
-                       stat->actorIterations[j][k]);
-            else
-                printf("\t%d (x%d)", 0, 0);
-        printf("\n");
+        Platform::get()->fprintf(stdout, "\t%15s:", stat->actors[j]->getName());
+        for (int k = 0; k < archi_->getNPETypes(); k++) {
+            if (stat->actorIterations[j][k]) {
+                Platform::get()->fprintf(stdout, "\t%lld (x%lld)",
+                                         stat->actorTimes[j][k] / stat->actorIterations[j][k],
+                                         stat->actorIterations[j][k]);
+            } else {
+                Platform::get()->fprintf(stdout, "\t%d (x%d)", 0, 0);
+            }
+        }
+        Platform::get()->fprintf(stdout, "\n");
     }
 }
 

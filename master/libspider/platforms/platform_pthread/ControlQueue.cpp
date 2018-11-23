@@ -36,89 +36,44 @@
 
 #include <platform.h>
 
-ControlQueue::ControlQueue(int msgSizeMax) {
+ControlQueue::ControlQueue(std::uint64_t msgSizeMax, bool isCircular) : spiderQueue_(isCircular) {
     msgSizeMax_ = msgSizeMax;
 
-    msgBufferRecv_ = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
+    msgBufferRecv_ = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, std::uint8_t);
     curMsgSizeRecv_ = 0;
 
-    msgBufferSend_ = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, char);
+    msgBufferSend_ = (void *) CREATE_MUL(ARCHI_STACK, msgSizeMax, std::uint8_t);
     curMsgSizeSend_ = 0;
-
-    sem_init(&queue_sem_, 0, 0);
 }
 
 ControlQueue::~ControlQueue() {
-    sem_destroy(&queue_sem_);
-
     StackMonitor::free(ARCHI_STACK, msgBufferRecv_);
     StackMonitor::free(ARCHI_STACK, msgBufferSend_);
 }
 
-void *ControlQueue::push_start(int size) {
-    if (curMsgSizeSend_)
-        throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
+void *ControlQueue::push_start(std::uint64_t size) {
+    if (curMsgSizeSend_) {
+        throw std::runtime_error("ERROR: Trying to send a msg when previous one is not sent.");
+    }
     curMsgSizeSend_ = size;
     return msgBufferSend_;
 }
 
-void ControlQueue::push_end(int /*size*/) {
-    unsigned long s = curMsgSizeSend_;
+void ControlQueue::push_end(std::uint64_t /*size*/) {
+    /** Push data to the queue */
+    spiderQueue_.push(curMsgSizeSend_, msgBufferSend_);
 
-    /** Take Mutex protecting the Queue */
-    queue_mutex_.lock();
-
-    /** First bytes correspond to message size */
-    for (unsigned int i = 0; i < sizeof(unsigned long); i++)
-        queue_.push(s >> (sizeof(unsigned long) - 1 - i) * 8 & 0xFF);
-
-    /** Send the message */
-    for (int i = 0; i < curMsgSizeSend_; i++)
-        queue_.push((*(((char *) msgBufferSend_) + i)) & 0xFF);
-
-    /** Relax Mutex protecting the Queue */
-    queue_mutex_.unlock();
-
-    /** Post 1 token in semaphore representing a message */
-    sem_post(&queue_sem_);
-
+    /** Reset curMsgSizeSend_ to allow sending new data */
     curMsgSizeSend_ = 0;
 }
 
-int ControlQueue::pop_start(void **data, bool blocking) {
-    unsigned long size = 0;
+void ControlQueue::rst() {
+    spiderQueue_.clear();
+}
 
-    /** Take sem (representing 1 message in the queue */
-    if (blocking)
-        sem_wait(&queue_sem_);
-    else if (sem_trywait(&queue_sem_))
-        return 0;
-
-    /** Take Mutex protecting the Queue */
-    queue_mutex_.lock();
-
-    /** Retrieve message size */
-    for (unsigned int nb = 0; nb < sizeof(unsigned long); nb++) {
-        size = size << 8;
-        size += queue_.front();
-        queue_.pop();
-    }
-
-    /** Check size */
-    if (size > (unsigned long) msgSizeMax_)
-        throw std::runtime_error("Msg too big\n");
-
-    curMsgSizeRecv_ = size;
-
-    /** Retrieve the message */
-    for (unsigned int recv = 0; recv < size; recv++) {
-        *(((char *) msgBufferRecv_) + recv) = queue_.front();
-        queue_.pop();
-    }
-
-    /** Relax Mutex protecting the Queue */
-    queue_mutex_.unlock();
-
+std::uint64_t ControlQueue::pop_start(void **data, bool blocking) {
+    /** Read data from the queue */
+    curMsgSizeRecv_ = spiderQueue_.pop(&msgBufferRecv_, blocking, msgSizeMax_);
     *data = msgBufferRecv_;
     return curMsgSizeRecv_;
 }

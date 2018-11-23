@@ -60,15 +60,19 @@ PThreadLrtCommunicator::PThreadLrtCommunicator(
 PThreadLrtCommunicator::~PThreadLrtCommunicator() {
 }
 
-void *PThreadLrtCommunicator::ctrl_start_send(int size) {
+void PThreadLrtCommunicator::rstCtrl() {
+    lrt2SpiderQueue_->rst();
+}
+
+void *PThreadLrtCommunicator::ctrl_start_send(std::uint64_t size) {
     return lrt2SpiderQueue_->push_start(size);
 }
 
-void PThreadLrtCommunicator::ctrl_end_send(int size) {
+void PThreadLrtCommunicator::ctrl_end_send(std::uint64_t size) {
     return lrt2SpiderQueue_->push_end(size);
 }
 
-int PThreadLrtCommunicator::ctrl_start_recv(void **data) {
+std::uint64_t PThreadLrtCommunicator::ctrl_start_recv(void **data) {
     return spider2LrtQueue_->pop_start(data, false);
 }
 
@@ -77,6 +81,7 @@ void PThreadLrtCommunicator::ctrl_start_recv_block(void **data) {
 }
 
 void PThreadLrtCommunicator::ctrl_end_recv() {
+    queueSize_++;
     return spider2LrtQueue_->pop_end();
 }
 

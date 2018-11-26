@@ -40,6 +40,7 @@
 
 #include <map>
 #include <vector>
+#include <cstdint>
 
 class Archi;
 
@@ -73,8 +74,8 @@ typedef enum PiSDFSubType {
 #define MAX_STATS_VERTICES 1000
 #define MAX_STATS_PE_TYPES 3
 
-typedef unsigned long long Time;
-typedef long Param;
+typedef std::uint64_t Time;
+typedef std::int64_t Param;
 
 typedef void (*lrtFct)(
         void *inputFIFOs[],

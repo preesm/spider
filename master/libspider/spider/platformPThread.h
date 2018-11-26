@@ -93,11 +93,15 @@ public:
     /** Time Handling */
     virtual void rstTime();
 
-    virtual void rstTime(struct ClearTimeMsg *msg);
+    virtual void rstTime(ClearTimeMessage *msg);
 
     virtual Time getTime();
 
     virtual void rstJobIx();
+
+    virtual void rstJobIxSend();
+
+    virtual void rstJobIxRecv();
 
     /** Platform getter/setter */
     inline LRT *getLrt();

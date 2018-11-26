@@ -40,6 +40,7 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#include <cstdint>
 #include <spider.h>
 
 typedef enum {
@@ -67,40 +68,6 @@ typedef enum {
     TRACE_SPIDER_TMP3
 } TraceSpiderType;
 
-typedef struct {
-    unsigned long msgIx;
-//	unsigned char msgIx:2;
-//	unsigned char reserved:6;
-} UndefinedMsg;
-
-typedef struct {
-//	unsigned char msgIx:2;
-//	unsigned long  srdagIx:29;
-//	unsigned char  specialActor:1;
-//	unsigned short fctIx:16;
-//	unsigned char nbInEdge:8;
-//	unsigned char nbOutEdge:8;
-//	unsigned char nbInParam:8;
-//	unsigned char nbOutParam:8;
-    unsigned long msgIx;
-    unsigned long srdagIx;
-    unsigned long specialActor;
-    unsigned long fctIx;
-    unsigned long traceEnabled;
-    unsigned long nbInEdge;
-    unsigned long nbOutEdge;
-    unsigned long nbInParam;
-    unsigned long nbOutParam;
-} StartJobMsg;
-
-typedef struct {
-    unsigned long msgIx;
-    unsigned long spiderTask;
-    unsigned long srdagIx;
-    unsigned long lrtIx;
-    Time start;
-    Time end;
-} TraceMsg;
 
 typedef struct {
     unsigned long alloc:32;
@@ -109,35 +76,43 @@ typedef struct {
     unsigned long blkLrtJobIx:32;
 } Fifo;
 
-typedef struct {
-    unsigned long msgIx;
-    unsigned long srdagIx;
-//	unsigned char msgIx:2;
-//	unsigned long srdagIx:30;
-} ParamValueMsg;
 
-typedef struct ClearTimeMsg {
-    unsigned long msgIx;
-//	unsigned char msgIx:2;
-//	unsigned char reserved:6;
-} ClearTimeMsg;
+class Message {
+public:
+    std::uint32_t id_;
+};
 
-typedef struct {
-    unsigned long msgIx;
-//	unsigned char msgIx:2;
-//	unsigned char reserved:6;
-} ResetLrtMsg;
+class ClearTimeMessage : public Message {
+public:
+    struct timespec timespec_;
+};
 
-typedef struct {
-    unsigned long msgIx;
-//	unsigned char msgIx:2;
-//	unsigned char reserved:6;
-} EndIterMsg;
 
-typedef struct {
-    unsigned long msgIx;
-//	unsigned char msgIx:2;
-//	unsigned char reserved:6;
-} StopLrtMsg;
+class JobMessage : public Message {
+public:
+    bool specialActor_;
+    bool traceEnabled_;
+    unsigned long srdagID_;
+    unsigned long fctID_;
+    unsigned long nbInEdge_;
+    unsigned long nbOutEdge_;
+    unsigned long nbInParam_;
+    unsigned long nbOutParam_;
+};
+
+class TraceMessage : public Message {
+public:
+    unsigned long srdagID_;
+    unsigned long spiderTask_;
+    unsigned long lrtID_;
+    Time start_;
+    Time end_;
+};
+
+class ParamValueMessage : public Message {
+public:
+    unsigned long srdagID_;
+    Param *params_;
+};
 
 #endif/*MESSAGE_H*/

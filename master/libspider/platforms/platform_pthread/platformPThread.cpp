@@ -138,7 +138,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     lrt2SpiderQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_, ControlQueue*);
 
     for (int i = 0; i < nLrt_; i++) {
-        spider2LrtQueues_[i] = CREATE(ARCHI_STACK, ControlQueue)(MAX_MSG_SIZE, false);
+        spider2LrtQueues_[i] = CREATE(ARCHI_STACK, ControlQueue)(MAX_MSG_SIZE, true);
         lrt2SpiderQueues_[i] = CREATE(ARCHI_STACK, ControlQueue)(MAX_MSG_SIZE, false);
     }
 
@@ -305,11 +305,9 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
 PlatformPThread::~PlatformPThread() {
     for (int lrt = 1; lrt < archi_->getNPE(); lrt++) {
-        int size = sizeof(StopLrtMsg);
-        StopLrtMsg *msg = (StopLrtMsg *) getSpiderCommunicator()->ctrl_start_send(lrt, size);
-
-        msg->msgIx = MSG_STOP_LRT;
-
+        int size = sizeof(Message);
+        auto msg = (Message *) getSpiderCommunicator()->ctrl_start_send(lrt, size);
+        msg->id_ = MSG_STOP_LRT;
         getSpiderCommunicator()->ctrl_end_send(lrt, size);
     }
 
@@ -435,13 +433,12 @@ int PlatformPThread::getMinAllocSize() {
 #endif
 }
 
-
-void PlatformPThread::rstJobIx() {
+void PlatformPThread::rstJobIxSend() {
     //Sending a msg to all slave LRTs, end of graph iteration
     for (int i = 1; i < nLrt_; i++) {
-        EndIterMsg *msg = (EndIterMsg *) getSpiderCommunicator()->ctrl_start_send(i, sizeof(EndIterMsg));
-        msg->msgIx = MSG_END_ITER;
-        getSpiderCommunicator()->ctrl_end_send(i, sizeof(EndIterMsg));
+        auto msg = (Message *) getSpiderCommunicator()->ctrl_start_send(i, sizeof(Message));
+        msg->id_ = MSG_END_ITER;
+        getSpiderCommunicator()->ctrl_end_send(i, sizeof(Message));
     }
 
     //Waiting for slave LRTs to finish their job queue
@@ -450,7 +447,7 @@ void PlatformPThread::rstJobIx() {
 
         do {
             getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
-            if (((UndefinedMsg *) msg)->msgIx == MSG_END_ITER)
+            if (((Message *) msg)->id_ == MSG_END_ITER)
                 break;
             else
                 getSpiderCommunicator()->ctrl_end_recv(i);
@@ -460,9 +457,62 @@ void PlatformPThread::rstJobIx() {
 
     //Sending a msg to all slave LRTs, reset jobIx counter
     for (int i = 1; i < nLrt_; i++) {
-        ResetLrtMsg *msg = (ResetLrtMsg *) getSpiderCommunicator()->ctrl_start_send(i, sizeof(ResetLrtMsg));
-        msg->msgIx = MSG_RESET_LRT;
-        getSpiderCommunicator()->ctrl_end_send(i, sizeof(ResetLrtMsg));
+        auto msg = (Message *) getSpiderCommunicator()->ctrl_start_send(i, sizeof(Message));
+        msg->id_ = MSG_RESET_LRT;
+        getSpiderCommunicator()->ctrl_end_send(i, sizeof(Message));
+    }
+}
+
+void PlatformPThread::rstJobIxRecv() {
+    //reseting master LRT jobIx counter
+    Platform::get()->getLrt()->setJobIx(-1);
+
+    // Reseting jobTab
+    for (int i = 0; i < nLrt_; i++) {
+        lrtCom_[0]->setLrtJobIx(i, -1);
+    }
+
+    //Waiting for slave LRTs to reset their jobIx counter
+    for (int i = 1; i < nLrt_; i++) {
+        void *msg = NULL;
+        do {
+            getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
+            if (((Message *) msg)->id_ == MSG_RESET_LRT)
+                break;
+            else
+                getSpiderCommunicator()->ctrl_end_recv(i);
+        } while (1);
+        getSpiderCommunicator()->ctrl_end_recv(i);
+    }
+}
+
+void PlatformPThread::rstJobIx() {
+    //Sending a msg to all slave LRTs, end of graph iteration
+    for (int i = 1; i < nLrt_; i++) {
+        auto msg = (Message *) getSpiderCommunicator()->ctrl_start_send(i, sizeof(Message));
+        msg->id_ = MSG_END_ITER;
+        getSpiderCommunicator()->ctrl_end_send(i, sizeof(Message));
+    }
+
+    //Waiting for slave LRTs to finish their job queue
+    for (int i = 1; i < nLrt_; i++) {
+        void *msg = NULL;
+
+        do {
+            getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
+            if (((Message *) msg)->id_ == MSG_END_ITER)
+                break;
+            else
+                getSpiderCommunicator()->ctrl_end_recv(i);
+        } while (1);
+        getSpiderCommunicator()->ctrl_end_recv(i);
+    }
+
+    //Sending a msg to all slave LRTs, reset jobIx counter
+    for (int i = 1; i < nLrt_; i++) {
+        auto msg = (Message *) getSpiderCommunicator()->ctrl_start_send(i, sizeof(Message));
+        msg->id_ = MSG_RESET_LRT;
+        getSpiderCommunicator()->ctrl_end_send(i, sizeof(Message));
     }
 
     //reseting master LRT jobIx counter
@@ -478,7 +528,7 @@ void PlatformPThread::rstJobIx() {
         void *msg = NULL;
         do {
             getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
-            if (((UndefinedMsg *) msg)->msgIx == MSG_RESET_LRT)
+            if (((Message *) msg)->id_ == MSG_RESET_LRT)
                 break;
             else
                 getSpiderCommunicator()->ctrl_end_recv(i);
@@ -488,9 +538,8 @@ void PlatformPThread::rstJobIx() {
 }
 
 /** Time Handling */
-void PlatformPThread::rstTime(struct ClearTimeMsg *msg) {
-    struct timespec *ts = (struct timespec *) (msg + 1);
-    start = *ts;
+void PlatformPThread::rstTime(ClearTimeMessage *msg) {
+    start = msg->timespec_;
 }
 
 void PlatformPThread::rstTime() {
@@ -501,14 +550,10 @@ void PlatformPThread::rstTime() {
 
 
     for (int lrt = 1; lrt < archi_->getNPE(); lrt++) {
-        int size = sizeof(ClearTimeMsg) + sizeof(struct timespec);
-        ClearTimeMsg *msg = (ClearTimeMsg *) getSpiderCommunicator()->ctrl_start_send(lrt, size);
-        struct timespec *ts = (struct timespec *) (msg + 1);
-
-        msg->msgIx = MSG_CLEAR_TIME;
-        *ts = start;
-
-        getSpiderCommunicator()->ctrl_end_send(lrt, size);
+        auto msg = (ClearTimeMessage *) getSpiderCommunicator()->ctrl_start_send(lrt, sizeof(ClearTimeMessage));
+        msg->id_ = MSG_CLEAR_TIME;
+        msg->timespec_ = start;
+        getSpiderCommunicator()->ctrl_end_send(lrt, sizeof(ClearTimeMessage));
     }
 }
 

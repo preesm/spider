@@ -129,29 +129,35 @@ void Spider::init(SpiderConfig &cfg) {
 }
 
 void Spider::iterate() {
-    Platform::get()->rstTime();
-    Time start = Platform::get()->getTime();
     /** Set all slave jobIx to 0 */
 
     if (isStatic_) {
+        Time start = Platform::get()->getTime();
         if (!srdag_) {
+            Platform::get()->rstTime();
             srdag_ = new SRDAGGraph();
             schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
+            Platform::get()->rstJobIxSend();
+            Platform::get()->rstJobIxRecv();
         } else {
             schedule_->execute();
+            Platform::get()->rstJobIxRecv();
         }
+        Time end = Platform::get()->getTime();
+        fprintf(stderr, "Execution Time: %lf\n", (end - start) / 1000000.0);
     } else {
+        Platform::get()->rstTime();
+        Time start = Platform::get()->getTime();
         delete srdag_;
         StackMonitor::freeAll(SRDAG_STACK);
         memAlloc_->reset();
         srdag_ = new SRDAGGraph();
         jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
+        Time end = Platform::get()->getTime();
+        fprintf(stderr, "Execution Time: %lf\n", (end - start) / 1000000.0);
+        //Mise à zéro compteur job
+        Platform::get()->rstJobIx();
     }
-    Time end = Platform::get()->getTime();
-    fprintf(stderr, "Execution Time: %lf\n", (end - start) / 1000000.0);
-
-    //Mise à zéro compteur job
-    Platform::get()->rstJobIx();
 }
 
 
@@ -411,8 +417,8 @@ static inline void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Arch
 
     sprintf(temp_str,
             "\t<event\n"
-            "\t\tstart=\"%llu\"\n"
-            "\t\tend=\"%llu\"\n"
+            "\t\tstart=\"%lu\"\n"
+            "\t\tend=\"%lu\"\n"
             "\t\ttitle=\"%s_%d_%d\"\n"
             "\t\tmapping=\"%s\"\n"
             "\t\tcolor=\"%s\"\n"
@@ -485,18 +491,18 @@ void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionS
 
     stat->memoryUsed = memAlloc_->getMemUsed();
 
-    TraceMsg *traceMsg;
+    TraceMessage *traceMsg;
     int n = Launcher::get()->getNLaunched();
     while (n) {
         Platform::get()->getSpiderCommunicator()->trace_start_recv_block((void **) &traceMsg);
-        switch (traceMsg->msgIx) {
+        switch (traceMsg->id_) {
             case TRACE_JOB: {
-                SRDAGVertex *vertex = srdag_->getVertexFromIx(traceMsg->srdagIx);
+                SRDAGVertex *vertex = srdag_->getVertexFromIx(traceMsg->srdagID_);
 
-                traceMsg->start /= CHIP_FREQ;
-                traceMsg->end /= CHIP_FREQ;
+                traceMsg->start_ /= CHIP_FREQ;
+                traceMsg->end_ /= CHIP_FREQ;
 
-                Time execTime = traceMsg->end - traceMsg->start;
+                Time execTime = traceMsg->end_ - traceMsg->start_;
 
                 static Time baseTime = 0;
                 // if(strcmp(vertex->getReference()->getName(),"src") == 0){
@@ -509,26 +515,26 @@ void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionS
                         latexFile,
                         archi_,
                         vertex,
-                        traceMsg->start - baseTime,
-                        traceMsg->end - baseTime,
-                        traceMsg->lrtIx,
+                        traceMsg->start_ - baseTime,
+                        traceMsg->end_ - baseTime,
+                        traceMsg->lrtID_,
                         latexScaling);
 
                 /* Update Stats */
-                stat->globalEndTime = std::max(traceMsg->end - baseTime, stat->globalEndTime);
+                stat->globalEndTime = std::max(traceMsg->end_ - baseTime, stat->globalEndTime);
                 stat->nExecSRDAGActor++;
 
                 switch (vertex->getType()) {
                     case SRDAG_NORMAL: {
                         int i;
-                        int lrtType = archi_->getPEType(traceMsg->lrtIx);
+                        int lrtType = archi_->getPEType(traceMsg->lrtID_);
                         for (i = 0; i < stat->nPiSDFActor; i++) {
                             if (stat->actors[i] == vertex->getReference()) {
                                 stat->actorTimes[i][lrtType] += execTime;
                                 stat->actorIterations[i][lrtType]++;
 
-                                stat->actorFisrt[i] = std::min(stat->actorFisrt[i], traceMsg->start);
-                                stat->actorLast[i] = std::max(stat->actorLast[i], traceMsg->end);
+                                stat->actorFisrt[i] = std::min(stat->actorFisrt[i], traceMsg->start_);
+                                stat->actorLast[i] = std::max(stat->actorLast[i], traceMsg->end_);
                                 break;
                             }
                         }
@@ -542,8 +548,8 @@ void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionS
                             stat->actorIterations[i][lrtType]++;
                             stat->nPiSDFActor++;
 
-                            stat->actorFisrt[i] = traceMsg->start;
-                            stat->actorLast[i] = traceMsg->end;
+                            stat->actorFisrt[i] = traceMsg->start_;
+                            stat->actorLast[i] = traceMsg->end_;
                         }
                         break;
                     }
@@ -570,44 +576,45 @@ void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionS
 
                 static int i = 0;
 
-                traceMsg->start /= CHIP_FREQ;
-                traceMsg->end /= CHIP_FREQ;
+                traceMsg->start_ /= CHIP_FREQ;
+                traceMsg->end_ /= CHIP_FREQ;
 
                 /* Gantt File */
                 Platform::get()->fprintf(ganttFile, "\t<event\n");
-                Platform::get()->fprintf(ganttFile, "\t\tstart=\"%llu\"\n", traceMsg->start);
-                Platform::get()->fprintf(ganttFile, "\t\tend=\"%llu\"\n", traceMsg->end);
+                Platform::get()->fprintf(ganttFile, "\t\tstart=\"%llu\"\n", traceMsg->start_);
+                Platform::get()->fprintf(ganttFile, "\t\tend=\"%llu\"\n", traceMsg->end_);
                 Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n",
-                                         TimeMonitor::getTaskName((TraceSpiderType) traceMsg->spiderTask));
-                Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi_->getPEName(traceMsg->lrtIx));
+                                         TimeMonitor::getTaskName((TraceSpiderType) traceMsg->spiderTask_));
+                Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi_->getPEName(traceMsg->lrtID_));
                 Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", regenerateColor(i++));
-                Platform::get()->fprintf(ganttFile, "\t\t>Step_%lu.</event>\n", traceMsg->spiderTask);
+                Platform::get()->fprintf(ganttFile, "\t\t>Step_%lu.</event>\n", traceMsg->spiderTask_);
 
-                stat->schedTime = std::max(traceMsg->end, stat->schedTime);
+                stat->schedTime = std::max(traceMsg->end_, stat->schedTime);
 
-                switch (traceMsg->spiderTask) {
+                switch (traceMsg->spiderTask_) {
                     case TRACE_SPIDER_GRAPH:
-                        stat->graphTime += traceMsg->end - traceMsg->start;
+                        stat->graphTime += traceMsg->end_ - traceMsg->start_;
                         break;
-                    case TRACE_SPIDER_ALLOC:
-                        throw std::runtime_error("Unhandle trace");
                     case TRACE_SPIDER_SCHED:
-                        stat->mappingTime += traceMsg->end - traceMsg->start;
+                        stat->mappingTime += traceMsg->end_ - traceMsg->start_;
                         break;
                     case TRACE_SPIDER_OPTIM:
-                        stat->optimTime += traceMsg->end - traceMsg->start;
+                        stat->optimTime += traceMsg->end_ - traceMsg->start_;
                         break;
+                    case TRACE_SPIDER_ALLOC:
+                    default:
+                        throw std::runtime_error("Unhandle trace");
                 }
 
                 /* Latex File */
-                Platform::get()->fprintf(latexFile, "%f,", traceMsg->start / latexScaling); /* Start */
-                Platform::get()->fprintf(latexFile, "%f,", traceMsg->end / latexScaling); /* Duration */
+                Platform::get()->fprintf(latexFile, "%f,", traceMsg->start_ / latexScaling); /* Start */
+                Platform::get()->fprintf(latexFile, "%f,", traceMsg->end_ / latexScaling); /* Duration */
                 Platform::get()->fprintf(latexFile, "%d,", 0); /* Core index */
                 Platform::get()->fprintf(latexFile, "colorSched\n", 15); /* Color */
                 break;
             }
             default:
-                printf("msgIx %lu\n", traceMsg->msgIx);
+                printf("msgIx %u\n", traceMsg->id_);
                 throw std::runtime_error("Unhandled trace msg");
         }
         Platform::get()->getSpiderCommunicator()->trace_end_recv();

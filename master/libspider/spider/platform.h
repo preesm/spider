@@ -42,6 +42,7 @@
 #include <monitor/StackMonitor.h>
 #include <stdio.h>
 #include <stdexcept>
+#include <Message.h>
 
 class LRT;
 
@@ -68,13 +69,17 @@ public:
     virtual int getCacheLineSize() = 0;
 
     /** Time Handling */
-    virtual void rstTime(struct ClearTimeMsg *msg) = 0;
+    virtual void rstTime(ClearTimeMessage *msg) = 0;
 
     virtual void rstTime() = 0;
 
     virtual Time getTime() = 0;
 
     virtual void rstJobIx() = 0;
+
+    virtual void rstJobIxSend() = 0;
+
+    virtual void rstJobIxRecv() = 0;
 
     /** Platform getter/setter */
     static inline Platform *get();

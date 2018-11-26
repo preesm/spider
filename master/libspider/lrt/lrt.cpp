@@ -135,14 +135,14 @@ void LRT::setFctTbl(const lrtFct fct[], int nFct) {
 }
 
 void LRT::sendTrace(int srdagIx, Time start, Time end) {
-    TraceMsg *msgTrace = (TraceMsg *) Platform::get()->getLrtCommunicator()->trace_start_send(sizeof(TraceMsg));
+    auto msgTrace = (TraceMessage *) Platform::get()->getLrtCommunicator()->trace_start_send(sizeof(TraceMessage));
 
-    msgTrace->msgIx = TRACE_JOB;
-    msgTrace->srdagIx = srdagIx;
-    msgTrace->spiderTask = (unsigned long) -1;
-    msgTrace->start = start;
-    msgTrace->end = end;
-    msgTrace->lrtIx = ix_;
+    msgTrace->id_ = TRACE_JOB;
+    msgTrace->srdagID_ = srdagIx;
+    msgTrace->spiderTask_ = (std::uint32_t) -1;
+    msgTrace->start_ = start;
+    msgTrace->end_ = end;
+    msgTrace->lrtID_ = ix_;
 
     Platform::get()->getLrtCommunicator()->trace_end_send(sizeof(TraceMsgType));
 }
@@ -154,18 +154,18 @@ inline void LRT::runReceivedJob(void *msg) {
 #endif
 
     Platform::get()->getLrtCommunicator()->unlockLrt(getJobIx());
-
-    switch (((UndefinedMsg *) msg)->msgIx) {
+    auto message = (Message *) msg;
+    switch (message->id_) {
         case MSG_START_JOB: {
 
-            StartJobMsg *jobMsg = (StartJobMsg *) msg;
-            Fifo *inFifos = (Fifo *) ((char *) jobMsg + 1 * sizeof(StartJobMsg));
-            Fifo *outFifos = (Fifo *) ((char *) inFifos + jobMsg->nbInEdge * sizeof(Fifo));
-            Param *inParams = (Param *) ((char *) outFifos + jobMsg->nbOutEdge * sizeof(Fifo));
+            auto jobMsg = (JobMessage *) message;
+            auto inFifos = (Fifo *) ((char *) jobMsg + 1 * sizeof(JobMessage));
+            auto outFifos = (Fifo *) ((char *) inFifos + jobMsg->nbInEdge_ * sizeof(Fifo));
+            auto inParams = (Param *) ((char *) outFifos + jobMsg->nbOutEdge_ * sizeof(Fifo));
 
-            void **inFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbInEdge, void*);
-            void **outFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbOutEdge, void*);
-            Param *outParams = CREATE_MUL(LRT_STACK, jobMsg->nbOutParam, Param);
+            void **inFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbInEdge_, void*);
+            void **outFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbOutEdge_, void*);
+            auto outParams = CREATE_MUL(LRT_STACK, jobMsg->nbOutParam_, Param);
 
             Time start;
 
@@ -173,12 +173,13 @@ inline void LRT::runReceivedJob(void *msg) {
             start = Platform::get()->getTime();
 #endif
 
-            for (int i = 0; i < (int) jobMsg->nbInEdge; i++) {
+
+            for (int i = 0; i < (int) jobMsg->nbInEdge_; i++) {
                 tabBlkLrtIx[i] = inFifos[i].blkLrtIx; // lrt to wait
                 tabBlkLrtJobIx[i] = inFifos[i].blkLrtJobIx; // total job ticket for this lrt to wait
             }
 
-            Platform::get()->getLrtCommunicator()->waitForLrtUnlock((int) jobMsg->nbInEdge, tabBlkLrtIx,
+            Platform::get()->getLrtCommunicator()->waitForLrtUnlock((int) jobMsg->nbInEdge_, tabBlkLrtIx,
                                                                     tabBlkLrtJobIx, getJobIx());
 
 #ifdef VERBOSE_TIME
@@ -190,7 +191,7 @@ inline void LRT::runReceivedJob(void *msg) {
             start = Platform::get()->getTime();
 #endif
 
-            Platform::get()->getLrtCommunicator()->allocateDataBuffer(jobMsg->nbInEdge, inFifos, jobMsg->nbOutEdge,
+            Platform::get()->getLrtCommunicator()->allocateDataBuffer(jobMsg->nbInEdge_, inFifos, jobMsg->nbOutEdge_,
                                                                       outFifos);
 
 #ifdef VERBOSE_TIME
@@ -198,7 +199,7 @@ inline void LRT::runReceivedJob(void *msg) {
 #endif
 
 
-            for (int i = 0; i < (int) jobMsg->nbInEdge; i++) {
+            for (int i = 0; i < (int) jobMsg->nbInEdge_; i++) {
 #ifdef VERBOSE_TIME
                 Time start = Platform::get()->getTime();
 #endif
@@ -214,7 +215,7 @@ inline void LRT::runReceivedJob(void *msg) {
             }
 
 
-            for (int i = 0; i < (int) jobMsg->nbOutEdge; i++) {
+            for (int i = 0; i < (int) jobMsg->nbOutEdge_; i++) {
 #ifdef VERBOSE_TIME
                 Time start = Platform::get()->getTime();
 #endif
@@ -232,36 +233,36 @@ inline void LRT::runReceivedJob(void *msg) {
 
             start = Platform::get()->getTime();
 
-            if (jobMsg->specialActor && jobMsg->fctIx < 6) {
-                specialActors[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
-            } else if ((int) jobMsg->fctIx < nFct_) {
+            if (jobMsg->specialActor_ && jobMsg->fctID_ < 6) {
+                specialActors[jobMsg->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
+            } else if ((int) jobMsg->fctID_ < nFct_) {
                 if (usePapify_) {
 #ifdef PAPI_AVAILABLE
                     // TODO, find better way to do that
                     try {
                         // We can monitor the events
                         PapifyAction *papifyAction = nullptr;
-                        papifyAction = jobPapifyActions_.at(fcts_[jobMsg->fctIx]);
+                        papifyAction = jobPapifyActions_.at(fcts_[jobMsg->fctID_]);
                         // Start monitoring
                         papifyAction->startMonitor();
                         // Do the monitored job
-                        fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
+                        fcts_[jobMsg->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
                         // Stop monitoring
                         papifyAction->stopMonitor();
                         // Writes the monitoring results
                         papifyAction->writeEvents();
                     } catch (std::out_of_range &e) {
                         // This job does not have papify events associated with  it
-                        fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
+                        fcts_[jobMsg->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
                     }
 #endif
                 } else {
                     // We don't use papify
-                    fcts_[jobMsg->fctIx](inFifosAlloc, outFifosAlloc, inParams, outParams);
+                    fcts_[jobMsg->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
                 }
             } else {
-                printf("Cannot find actor function\n");
-                while (1);
+                fprintf(stderr, "Cannot find actor function\n");
+                break;
             }
 
             Time end = Platform::get()->getTime();
@@ -270,11 +271,11 @@ inline void LRT::runReceivedJob(void *msg) {
             time_compute += end - start;
 #endif
 
-            if (jobMsg->traceEnabled)
-                sendTrace(jobMsg->srdagIx, start, end);
+            if (jobMsg->traceEnabled_)
+                sendTrace(jobMsg->srdagID_, start, end);
 
 
-            for (int i = 0; i < (int) jobMsg->nbOutEdge; i++) {
+            for (int i = 0; i < (int) jobMsg->nbOutEdge_; i++) {
 #ifdef VERBOSE_TIME
                 Time start = Platform::get()->getTime();
 #endif
@@ -287,28 +288,25 @@ inline void LRT::runReceivedJob(void *msg) {
             }
 
 
-            Platform::get()->getLrtCommunicator()->freeDataBuffer(jobMsg->nbInEdge, jobMsg->nbOutEdge);
+            Platform::get()->getLrtCommunicator()->freeDataBuffer(jobMsg->nbInEdge_, jobMsg->nbOutEdge_);
 
 
-            if (jobMsg->nbOutParam != 0) {
-                int size = sizeof(ParamValueMsg) + jobMsg->nbOutParam * sizeof(Param);
-
+            if (jobMsg->nbOutParam_) {
+                auto size = sizeof(ParamValueMessage) + jobMsg->nbOutParam_ * sizeof(Param);
 #ifdef VERBOSE_TIME
                 Time start = Platform::get()->getTime();
 #endif
 
-                ParamValueMsg *msgParam = (ParamValueMsg *) Platform::get()->getLrtCommunicator()->ctrl_start_send(
-                        size); // out com
+                auto msgParam = (ParamValueMessage *) Platform::get()->getLrtCommunicator()->ctrl_start_send(size);
 
 #ifdef VERBOSE_TIME
                 time_waiting_output_comm += Platform::get()->getTime() - start;
 #endif
-
-                Param *params = (Param *) (msgParam + 1);
-
-                msgParam->msgIx = MSG_PARAM_VALUE;
-                msgParam->srdagIx = jobMsg->srdagIx;
-                memcpy(params, outParams, jobMsg->nbOutParam * sizeof(Param));
+                /** Copying the parameters in the message */
+                msgParam->params_ = (Param *) (msgParam + 1);
+                memcpy(msgParam->params_, outParams, jobMsg->nbOutParam_ * sizeof(Param));
+                msgParam->id_ = MSG_PARAM_VALUE;
+                msgParam->srdagID_ = jobMsg->srdagID_;
 
 #ifdef VERBOSE_TIME
                 start = Platform::get()->getTime();
@@ -333,30 +331,24 @@ inline void LRT::runReceivedJob(void *msg) {
             break;
         }
         case MSG_CLEAR_TIME: {
-            ClearTimeMsg *timeMsg = (ClearTimeMsg *) msg;
-            Platform::get()->rstTime(timeMsg);
+            Platform::get()->rstTime((ClearTimeMessage *) message);
             break;
         }
         case MSG_END_ITER: {
 #ifdef VERBOSE_TIME
             nb_iter++;
 #endif
-
-            EndIterMsg *msg = (EndIterMsg *) Platform::get()->getLrtCommunicator()->ctrl_start_send(
-                    sizeof(EndIterMsg));
-            msg->msgIx = MSG_END_ITER;
-            Platform::get()->getLrtCommunicator()->ctrl_end_send(sizeof(EndIterMsg));
+            auto endMsg = (Message *) Platform::get()->getLrtCommunicator()->ctrl_start_send(sizeof(Message));
+            endMsg->id_ = MSG_END_ITER;
+            Platform::get()->getLrtCommunicator()->ctrl_end_send(sizeof(Message));
             break;
         }
         case MSG_RESET_LRT: {
-
             rstJobIx();
-
             Platform::get()->getLrtCommunicator()->rstLrtJobIx(getIx());
-            ResetLrtMsg *msg = (ResetLrtMsg *) Platform::get()->getLrtCommunicator()->ctrl_start_send(
-                    sizeof(ResetLrtMsg));
-            msg->msgIx = MSG_RESET_LRT;
-            Platform::get()->getLrtCommunicator()->ctrl_end_send(sizeof(ResetLrtMsg));
+            auto rstMsg = (Message *) Platform::get()->getLrtCommunicator()->ctrl_start_send(sizeof(Message));
+            rstMsg->id_ = MSG_RESET_LRT;
+            Platform::get()->getLrtCommunicator()->ctrl_end_send(sizeof(Message));
             break;
         }
         case MSG_STOP_LRT:
@@ -364,8 +356,8 @@ inline void LRT::runReceivedJob(void *msg) {
             break;
         case MSG_PARAM_VALUE:
         default:
-            printf("Unexpected message received\n");
-            while (1);
+            fprintf(stderr, "ERROR: unexpectype type of message received [%u]\n", message->id_);
+            break;
     }
     Platform::get()->getLrtCommunicator()->ctrl_end_recv();
 

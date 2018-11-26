@@ -65,24 +65,22 @@ Launcher *Launcher::get() {
 }
 
 void Launcher::send_ResetLrtMsg(int lrtIx) {
-    ResetLrtMsg *msg = (ResetLrtMsg *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx,
-                                                                                                 sizeof(ResetLrtMsg));
-    msg->msgIx = MSG_RESET_LRT;
-    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ResetLrtMsg));
+    auto msg = (Message *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(Message));
+    msg->id_ = MSG_RESET_LRT;
+    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(Message));
 }
 
 void Launcher::send_EndIterMsg(int lrtIx) {
-    EndIterMsg *msg = (EndIterMsg *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx,
-                                                                                               sizeof(EndIterMsg));
-    msg->msgIx = MSG_END_ITER;
-    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(EndIterMsg));
+    auto msg = (Message *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(Message));
+    msg->id_ = MSG_END_ITER;
+    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(Message));
 }
 
 void Launcher::send_ClearTimeMsg(int lrtIx) {
-    ClearTimeMsg *msg = (ClearTimeMsg *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx,
-                                                                                                   sizeof(ClearTimeMsg));
-    msg->msgIx = MSG_CLEAR_TIME;
-    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMsg));
+    auto msg = (ClearTimeMessage *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx,
+                                                                                              sizeof(ClearTimeMessage));
+    msg->id_ = MSG_CLEAR_TIME;
+    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMessage));
 }
 
 void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
@@ -106,7 +104,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
             break;
     }
 
-    int size = 1 * sizeof(StartJobMsg)
+    int size = 1 * sizeof(JobMessage)
                + vertex->getNConnectedInEdge() * sizeof(Fifo)
                + vertex->getNConnectedOutEdge() * sizeof(Fifo)
                + nParams * sizeof(Param);
@@ -115,21 +113,21 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
             size
     );
 
-    StartJobMsg *msg = (StartJobMsg *) msgAdd;
-    Fifo *inFifos = (Fifo *) ((char *) msgAdd + 1 * sizeof(StartJobMsg));
+    auto msg = (JobMessage *) msgAdd;
+    Fifo *inFifos = (Fifo *) ((char *) msgAdd + 1 * sizeof(JobMessage));
     Fifo *outFifos = (Fifo *) ((char *) inFifos + vertex->getNConnectedInEdge() * sizeof(Fifo));
     Param *inParams = (Param *) ((char *) outFifos + vertex->getNConnectedOutEdge() * sizeof(Fifo));
 
-    msg->msgIx = MSG_START_JOB;
-    msg->srdagIx = vertex->getId();
-    msg->specialActor = vertex->getType() != SRDAG_NORMAL;
-    msg->fctIx = vertex->getFctId();
-    msg->traceEnabled = Spider::getTraceEnabled();
+    msg->id_ = MSG_START_JOB;
+    msg->srdagID_ = vertex->getId();
+    msg->specialActor_ = vertex->getType() != SRDAG_NORMAL;
+    msg->fctID_ = vertex->getFctId();
+    msg->traceEnabled_ = Spider::getTraceEnabled();
 
-    msg->nbInEdge = vertex->getNConnectedInEdge();
-    msg->nbOutEdge = vertex->getNConnectedOutEdge();
-    msg->nbInParam = nParams;
-    msg->nbOutParam = vertex->getNOutParam();
+    msg->nbInEdge_ = vertex->getNConnectedInEdge();
+    msg->nbOutEdge_ = vertex->getNConnectedOutEdge();
+    msg->nbInParam_ = nParams;
+    msg->nbOutParam_ = vertex->getNOutParam();
 
     for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
         SRDAGEdge *edge = vertex->getInEdge(i);
@@ -201,15 +199,14 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
 void Launcher::resolveParams(Archi *archi, SRDAGGraph *topDag) {
     int slave = 0;
     while (curNParam_ != 0) {
-        ParamValueMsg *msg;
+        ParamValueMessage *msg;
         if (Platform::get()->getSpiderCommunicator()->ctrl_start_recv(slave, (void **) (&msg))) {
-            if (msg->msgIx != MSG_PARAM_VALUE)
+            if (msg->id_ != MSG_PARAM_VALUE)
                 throw std::runtime_error("Unexpected Msg received\n");
-            SRDAGVertex *cfgVertex = topDag->getVertexFromIx(msg->srdagIx);
-            Param *params = (Param *) (msg + 1);
+            SRDAGVertex *cfgVertex = topDag->getVertexFromIx(msg->srdagID_);
             for (int j = 0; j < cfgVertex->getNOutParam(); j++) {
                 int *param = cfgVertex->getOutParam(j);
-                *param = params[j];
+                *param = msg->params_[j];
                 if (Spider::getVerbose())
                     printf("Recv param %s = %d\n", cfgVertex->getReference()->getOutParam(j)->getName(), *param);
             }
@@ -221,14 +218,14 @@ void Launcher::resolveParams(Archi *archi, SRDAGGraph *topDag) {
 }
 
 void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end) {
-    TraceMsg *msgTrace = (TraceMsg *) Platform::get()->getSpiderCommunicator()->trace_start_send(sizeof(TraceMsg));
+    auto msgTrace = (TraceMessage *) Platform::get()->getSpiderCommunicator()->trace_start_send(sizeof(TraceMessage));
 
-    msgTrace->msgIx = TRACE_SPIDER;
-    msgTrace->spiderTask = type;
-    msgTrace->srdagIx = -1;
-    msgTrace->start = start;
-    msgTrace->end = end;
-    msgTrace->lrtIx = Platform::get()->getLrt()->getIx();
+    msgTrace->id_ = TRACE_SPIDER;
+    msgTrace->spiderTask_ = type;
+    msgTrace->srdagID_ = -1;
+    msgTrace->start_ = start;
+    msgTrace->end_ = end;
+    msgTrace->lrtID_ = Platform::get()->getLrt()->getIx();
 
     Platform::get()->getSpiderCommunicator()->trace_end_send(sizeof(TraceMsgType));
     nLaunched_++;

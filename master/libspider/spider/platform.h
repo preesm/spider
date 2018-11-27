@@ -84,14 +84,34 @@ public:
     /** Platform getter/setter */
     static inline Platform *get();
 
+    /**
+     * @brief Get current LRT
+     * @return Pointer to current LRT class
+     */
     virtual LRT *getLrt() = 0;
 
+    /**
+     * @brief Get current LRT ID
+     * @return ID of current LRT
+     */
     virtual int getLrtIx() = 0;
 
+    /**
+     * @brief Get number of LRT
+     * @return Number of LRT
+     */
     virtual int getNLrt() = 0;
 
+    /**
+     * @brief Get current LRT communicator
+     * @return LRT current communicator
+     */
     virtual LrtCommunicator *getLrtCommunicator() = 0;
 
+    /**
+     * @brief Get Spider communicator
+     * @return spider communicator
+     */
     virtual SpiderCommunicator *getSpiderCommunicator() = 0;
 
     virtual void setStack(SpiderStack id, Stack *stack) = 0;

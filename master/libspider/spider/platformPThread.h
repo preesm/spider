@@ -72,69 +72,113 @@
 
 #include <map>
 
-struct Arg_lrt;
 
 class PlatformPThread : public Platform {
 public:
     /** File Handling */
-    virtual FILE *fopen(const char *name);
+    FILE *fopen(const char *name) override;
 
-    virtual void fprintf(FILE *id, const char *fmt, ...);
+    void fprintf(FILE *id, const char *fmt, ...) override;
 
-    virtual void fclose(FILE *id);
+    void fclose(FILE *id) override;
 
     /** Shared Memory Handling */
-    virtual void *virt_to_phy(void *address);
+    void *virt_to_phy(void *address) override;
 
-    virtual int getMinAllocSize();
+    int getMinAllocSize() override;
 
-    virtual int getCacheLineSize();
+    int getCacheLineSize() override;
 
     /** Time Handling */
-    virtual void rstTime();
+    void rstTime() override;
 
-    virtual void rstTime(ClearTimeMessage *msg);
+    void rstTime(ClearTimeMessage *msg) override;
 
-    virtual Time getTime();
+    Time getTime() override;
 
-    virtual void rstJobIx();
+    void rstJobIx() override;
 
-    virtual void rstJobIxSend();
+    void rstJobIxSend() override;
 
-    virtual void rstJobIxRecv();
+    void rstJobIxRecv() override;
 
     /** Platform getter/setter */
-    inline LRT *getLrt();
+    /**
+     * @brief Get current LRT
+     * @return Pointer to current LRT class
+     */
+    inline LRT *getLrt() override {
+        return lrt_[getThreadNumber()];
+    }
 
-    inline int getLrtIx();
+    /**
+     * @brief Get current LRT ID
+     * @return ID of current LRT
+     */
+    inline int getLrtIx() override {
+        return getThreadNumber();
+    }
 
-    inline int getNLrt();
+    /**
+     * @brief Get number of LRT
+     * @return Number of LRT
+     */
+    inline int getNLrt() override {
+        return nLrt_;
+    }
 
-    inline LrtCommunicator *getLrtCommunicator();
+    /**
+     * @brief Get current LRT communicator
+     * @return LRT current communicator
+     */
+    inline LrtCommunicator *getLrtCommunicator() override {
+        return lrtCom_[getThreadNumber()];
+    }
 
-    inline SpiderCommunicator *getSpiderCommunicator();
+    /**
+     * @brief Get Spider communicator
+     * @return spider communicator
+     */
+    inline SpiderCommunicator *getSpiderCommunicator() override {
+        if (spiderCom_)
+            return spiderCom_;
+        else
+            throw std::runtime_error("Error undefined spider communicator\n");
+    }
 
-    inline void setStack(SpiderStack id, Stack *stack);
+    inline void setStack(SpiderStack id, Stack *stack) override;
 
-    inline Stack *getStack(SpiderStack id);
-
-    inline int getThreadNumber();
+    inline Stack *getStack(SpiderStack id) override;
 
     /* Fonction de thread */
-    void lrtPThread(Arg_lrt *argument_lrt);
-
     explicit PlatformPThread(SpiderConfig &config);
 
     virtual ~PlatformPThread();
 
+    inline void registerLRT(int lrtID, pthread_t &thread) {
+        lrtThreadsArray[lrtID] = thread;
+    }
+
+    inline std::map<lrtFct, PapifyAction *> &getPapifyInfo() {
+        return papifyJobInfo;
+    }
 
 private:
+    inline int getThreadNumber() {
+        for (unsigned int i = 0; i < nLrt_; i++) {
+            if (pthread_equal(lrtThreadsArray[i], pthread_self()) != 0)
+                return i;
+        }
+        throw std::runtime_error("ERROR: Thread ID not found.\n");
+    }
+
     static Time mappingTime(int nActors, int nPe);
+    void initStacks(SpiderConfig &config);
 
-    int nLrt_;
-    pthread_t *thread_ID_tab_;
+    unsigned int nLrt_;
+    pthread_t *lrtThreadsArray;
 
-    //Pointeurs vers les stacks
+    /** Stack pointers */
     Stack *stackPisdf;
     Stack *stackSrdag;
     Stack *stackTransfo;
@@ -151,14 +195,11 @@ private:
     SpiderCommunicator *spiderCom_;
 
     pthread_t *thread_lrt_;
-    Arg_lrt *arg_lrt_;
-
 #ifdef PAPI_AVAILABLE
     // Papify information
     std::map<lrtFct, PapifyAction *> papifyJobInfo;
 #endif
 };
-
 
 inline void PlatformPThread::setStack(SpiderStack id, Stack *stack) {
     switch (id) {
@@ -178,7 +219,7 @@ inline void PlatformPThread::setStack(SpiderStack id, Stack *stack) {
             stackLrt[getThreadNumber()] = stack;
             break;
         default :
-            throw std::runtime_error("Error in stack index\n");
+            throw std::runtime_error("ERROR: invalid stack index.\n");
     }
 }
 
@@ -195,59 +236,25 @@ inline Stack *PlatformPThread::getStack(SpiderStack id) {
         case LRT_STACK :
             return stackLrt[getThreadNumber()];
         default :
-            throw std::runtime_error("Error in stack index\n");
+            throw std::runtime_error("ERROR: invalid stack index.\n");
     }
 }
 
-inline int PlatformPThread::getThreadNumber() {
-    for (int i = 0; i < nLrt_; i++) {
-        if (pthread_equal(thread_ID_tab_[i], pthread_self()) != 0)
-            return i;
-    }
-    throw std::runtime_error("Error undefined ID\n");
-}
 
-inline LRT *PlatformPThread::getLrt() {
-    return lrt_[getThreadNumber()];
-}
-
-inline int PlatformPThread::getLrtIx() {
-    return getThreadNumber();
-}
-
-inline int PlatformPThread::getNLrt() {
-    return nLrt_;
-}
-
-inline LrtCommunicator *PlatformPThread::getLrtCommunicator() {
-    return lrtCom_[getThreadNumber()];
-}
-
-inline SpiderCommunicator *PlatformPThread::getSpiderCommunicator() {
-    if (spiderCom_)
-        return spiderCom_;
-    else
-        throw std::runtime_error("Error undefined spider communicator\n");
-}
-
-
-// Structure de passage d'argument dans le thread
-typedef struct Arg_lrt {
-    PlatformPThread *instance;
-    LrtCommunicator *lrtCom;
+/**
+ * @brief Stucture for the initialization of a pthread LRT
+ */
+typedef struct LRTInfo {
     LRT *lrt;
-    int shMemSize;
     lrtFct *fcts;
-    int nLrtFcts;
-    int index;
-    int nLrt;
-    StackConfig lrtStack;
-    bool usePapify;
+    int lrtID;
+    int nFcts;
     int coreAffinity;
-} Arg_lrt;
-
-// Fonction wrapper pour lancer un thread sur une méthode d'objet
-void *lrtPThread_helper(void *voidArgs);
+    bool usePapify;
+    StackConfig lrtStack;
+    PlatformPThread *platform;
+    pthread_barrier_t *pthreadBarrier;
+}LRTInfo;
 
 
 #endif/*PLATFORM_PTHREADS_H*/

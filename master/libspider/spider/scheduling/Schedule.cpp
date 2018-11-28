@@ -152,7 +152,7 @@ bool Schedule::check() {
 }
 
 void Schedule::execute() {
-//    Platform::get()->getSpiderCommunicator()->rst_ctrl_queue();
+    Platform::get()->getSpiderCommunicator()->rst_ctrl_queue();
     for (int pe = 0; pe < nPE_; pe++) {
         for (int job = 0; job < nJobPerPE_[pe]; job++) {
             SRDAGVertex *vertex = getJob(pe, job);
@@ -160,5 +160,6 @@ void Schedule::execute() {
             Launcher::get()->launchVertex(vertex);
         }
     }
-    Platform::get()->getLrt()->runUntilNoMoreJobs();
+//    Platform::get()->getLrt()->runUntilNoMoreJobs();
+    Platform::get()->getLrt()->run(false);
 }

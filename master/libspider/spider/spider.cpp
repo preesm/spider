@@ -134,10 +134,10 @@ void Spider::iterate() {
     if (isStatic_) {
         Time start = Platform::get()->getTime();
         if (!srdag_) {
-            Platform::get()->rstTime();
+//            Platform::get()->rstTime();
             srdag_ = new SRDAGGraph();
             schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
-            Platform::get()->rstJobIxSend();
+//            Platform::get()->rstJobIxSend();
             Platform::get()->rstJobIxRecv();
         } else {
             schedule_->execute();

@@ -37,52 +37,71 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef LRT_COMMUNICATOR_H
-#define LRT_COMMUNICATOR_H
 
-#include <cstdint>
-#include "Message.h"
+#ifndef SPIDER_NOTIFICATIONQUEUE_H
+#define SPIDER_NOTIFICATIONQUEUE_H
 
-class LrtCommunicator {
+#include <queue>
+#include <mutex>
+#include <semaphore.h>
+#include <monitor/StackMonitor.h>
+
+/**
+ * @brief Thread safe implementation of std::queue
+ */
+class NotificationQueue {
 public:
-    virtual ~LrtCommunicator() {}
+    /**
+     * @brief Constructor
+     */
+    NotificationQueue();
 
-    virtual void *ctrl_start_send(std::uint64_t size) = 0;
+    /**
+     * @brief Destructor
+     */
+    ~NotificationQueue();
 
-    virtual void ctrl_end_send(std::uint64_t size) = 0;
 
-    virtual std::uint64_t ctrl_start_recv(void **data) = 0;
+    /**
+     * @brief Push bufferSize values to the queue with the bufferSize
+     *
+     * @param bufferSize Size of the buffer to push
+     * @param buffer     Buffer containing the bufferSize <T> values to push
+     *
+     * @remark The queue semaphore is only posted once. It is user responsability to know what is inside the queue.
+     */
+    void push(std::uint64_t &bufferSize, void *buffer);
 
-    virtual void ctrl_start_recv_block(void **data) = 0;
+    /**
+     * @brief Pop data from the queue if it contains any. This method consider buffer data in the queue.
+     * Method reads buffer size from first N bytes (depending on sizeof(T)) and then reads buffer into data.
+     *
+     * @param data      Buffer to be filled with buffer data
+     * @param blocking  Flag to wait (true) if queue is empty or return (false).
+     * @param maxSize   Maximum size allowed for the read buffer.
+     *
+     * @return Size of the read buffer, 0 if queue is empty and blocking is set to false.
+     */
+    std::uint64_t pop(void **data, bool blocking, std::uint64_t &maxSize);
 
-    virtual void ctrl_end_recv() = 0;
+    /**
+     * @brief Read one value in the queue if it contains any.
+     *
+     * @param data      Pointer to data to be filled with queue content.
+     * @param blocking  Flag to wait (true) if queue is empty or return (false).
+     */
+    std::uint8_t  pop(std::uint8_t *data, bool blocking);
 
-    virtual void *trace_start_send(int size) = 0;
 
-    virtual void trace_end_send(int size) = 0;
+    /**
+     * @brief Clear the queue (thread safe)
+     */
+    void clear(void);
 
-    virtual void *data_start_send(Fifo *f) = 0;
-
-    virtual void data_end_send(Fifo *f) = 0;
-
-    virtual void *data_recv(Fifo *f) = 0;
-
-    virtual void allocateDataBuffer(int /*nbInput*/, Fifo */*fIn*/, int /*nbOutput*/, Fifo */*fOut*/) {};
-
-    virtual void freeDataBuffer(int /*nbInput*/, int /*nbOutput*/) {};
-
-    virtual void setLrtJobIx(int /*lrtIx*/, int /*jobIx*/) {};
-
-    virtual void rstLrtJobIx(int /*lrtIx*/) {};
-
-    virtual void waitForLrtUnlock(int /*nbDependency*/, int */*blkLrtIx*/, int */*blkLrtJobIx*/, int /*jobIx*/) {};
-
-    virtual void unlockLrt(int /*jobIx*/) {};
-
-    virtual void rstCtrl() {};
-
-protected:
-    LrtCommunicator() {}
+private:
+    std::queue<std::uint8_t> queue_;
+    std::mutex queueMutex_;
+    sem_t queueCounter_;
 };
 
-#endif/*LRT_COMMUNICATOR_H*/
+#endif //SPIDER_NOTIFICATIONQUEUE_H

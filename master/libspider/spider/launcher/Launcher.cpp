@@ -43,6 +43,7 @@
 #include <algorithm>
 
 #include <lrt.h>
+#include <PThreadSpiderCommunicator.h>
 
 Launcher Launcher::instance_;
 
@@ -104,20 +105,26 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
             break;
     }
 
-    int size = 1 * sizeof(JobMessage)
-               + vertex->getNConnectedInEdge() * sizeof(Fifo)
-               + vertex->getNConnectedOutEdge() * sizeof(Fifo)
-               + nParams * sizeof(Param);
-    long msgAdd = (long) Platform::get()->getSpiderCommunicator()->ctrl_start_send(
-            lrtIx,
-            size
-    );
+//    int size = 1 * sizeof(JobMessage)
+//               + vertex->getNConnectedInEdge() * sizeof(Fifo)
+//               + vertex->getNConnectedOutEdge() * sizeof(Fifo)
+//               + nParams * sizeof(Param);
+//    long msgAdd = (long) Platform::get()->getSpiderCommunicator()->ctrl_start_send(
+//            lrtIx,
+//            size
+//    );
 
-    auto msg = (JobMessage *) msgAdd;
-    Fifo *inFifos = (Fifo *) ((char *) msgAdd + 1 * sizeof(JobMessage));
-    Fifo *outFifos = (Fifo *) ((char *) inFifos + vertex->getNConnectedInEdge() * sizeof(Fifo));
-    Param *inParams = (Param *) ((char *) outFifos + vertex->getNConnectedOutEdge() * sizeof(Fifo));
 
+//    auto msg = (JobMessage *) msgAdd;
+//    Fifo *inFifos = (Fifo *) ((char *) msgAdd + 1 * sizeof(JobMessage));
+//    Fifo *outFifos = (Fifo *) ((char *) inFifos + vertex->getNConnectedInEdge() * sizeof(Fifo));
+//    Param *inParams = (Param *) ((char *) outFifos + vertex->getNConnectedOutEdge() * sizeof(Fifo));
+
+    auto inFifos = CREATE_MUL(ARCHI_STACK, vertex->getNConnectedInEdge(), Fifo);
+    auto outFifos = CREATE_MUL(ARCHI_STACK, vertex->getNConnectedOutEdge(), Fifo);
+    auto inParams = CREATE_MUL(ARCHI_STACK, nParams, Param);
+
+    auto msg = new JobMessage;
     msg->id_ = MSG_START_JOB;
     msg->srdagID_ = vertex->getId();
     msg->specialActor_ = vertex->getType() != SRDAG_NORMAL;
@@ -128,6 +135,9 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
     msg->nbOutEdge_ = vertex->getNConnectedOutEdge();
     msg->nbInParam_ = nParams;
     msg->nbOutParam_ = vertex->getNOutParam();
+    msg->inFifos_ = inFifos;
+    msg->outFifos_ = outFifos;
+    msg->inParams_ = inParams;
 
     for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
         SRDAGEdge *edge = vertex->getInEdge(i);
@@ -193,7 +203,18 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
 
     curNParam_ += vertex->getNOutParam();
 
-    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, size);
+    auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
+    /** Push the job message **/
+    auto jobID = spiderCommunicator->pushJobMessage(&msg);
+    NotificationMessage notificationMessage;
+    notificationMessage.id_ = JOB_NOTIFICATION;
+    notificationMessage.subType_ = JOB_ADD;
+    notificationMessage.index_ = jobID;
+
+    /** Send notification **/
+    spiderCommunicator->pushNotification(lrtIx + 1, &notificationMessage);
+
+//    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, size);
 }
 
 void Launcher::resolveParams(Archi *archi, SRDAGGraph *topDag) {

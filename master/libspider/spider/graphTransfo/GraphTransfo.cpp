@@ -326,7 +326,7 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
     // Check nb of config //
 
     /* Look for hierrachical actor in topDag */
-    TimeMonitor::startMonitoring();
+//    TimeMonitor::startMonitoring();
 
     SRDAGVertex *nextHierVx = getNextHierVx(topSrdag);
 
@@ -371,25 +371,24 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
 
     } while (nextHierVx);
 
-    TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
+//    TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
     if (Spider::getGraphOptim()) {
-        TimeMonitor::startMonitoring();
+//        TimeMonitor::startMonitoring();
         optims(topSrdag);
-        TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
+//        TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
     }
-
-    /* Resolve params must be done by itself */
-    Launcher::get()->resolveParams(Spider::getArchi(), topSrdag);
 
     topSrdag->updateState();
 
     /* Schedule and launch execution */
-    TimeMonitor::startMonitoring();
+//    TimeMonitor::startMonitoring();
     scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchi());
-    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
+//    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
-    Platform::get()->getLrt()->runUntilNoMoreJobs();
+//    Platform::get()->getLrt()->runUntilNoMoreJobs();
+
+    Platform::get()->getLrt()->run(false);
 
     return schedule;
 }

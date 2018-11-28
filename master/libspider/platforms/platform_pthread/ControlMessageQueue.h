@@ -37,52 +37,46 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef LRT_COMMUNICATOR_H
-#define LRT_COMMUNICATOR_H
+
+#ifndef SPIDER_CONTROLMESSAGEQUEUE_H
+#define SPIDER_CONTROLMESSAGEQUEUE_H
+
 
 #include <cstdint>
-#include "Message.h"
+#include <queue>
+#include <Message.h>
+#include <mutex>
 
-class LrtCommunicator {
+template <class T>
+class ControlMessageQueue {
 public:
-    virtual ~LrtCommunicator() {}
+    ControlMessageQueue();
 
-    virtual void *ctrl_start_send(std::uint64_t size) = 0;
+    ~ControlMessageQueue();
 
-    virtual void ctrl_end_send(std::uint64_t size) = 0;
+    /**
+     * @brief Retrieve the message of given id.
+     * @param message  Message to be filled.
+     * @param id       Id of the job.
+     */
+    std::uint8_t pop(T *message, std::int32_t id);
 
-    virtual std::uint64_t ctrl_start_recv(void **data) = 0;
+    /**
+     * @brief  Push a message in the queue
+     * @param message message to push
+     * @return ID of the JobMessage in the Queue
+     */
+    std::int32_t push(T *message);
 
-    virtual void ctrl_start_recv_block(void **data) = 0;
-
-    virtual void ctrl_end_recv() = 0;
-
-    virtual void *trace_start_send(int size) = 0;
-
-    virtual void trace_end_send(int size) = 0;
-
-    virtual void *data_start_send(Fifo *f) = 0;
-
-    virtual void data_end_send(Fifo *f) = 0;
-
-    virtual void *data_recv(Fifo *f) = 0;
-
-    virtual void allocateDataBuffer(int /*nbInput*/, Fifo */*fIn*/, int /*nbOutput*/, Fifo */*fOut*/) {};
-
-    virtual void freeDataBuffer(int /*nbInput*/, int /*nbOutput*/) {};
-
-    virtual void setLrtJobIx(int /*lrtIx*/, int /*jobIx*/) {};
-
-    virtual void rstLrtJobIx(int /*lrtIx*/) {};
-
-    virtual void waitForLrtUnlock(int /*nbDependency*/, int */*blkLrtIx*/, int */*blkLrtJobIx*/, int /*jobIx*/) {};
-
-    virtual void unlockLrt(int /*jobIx*/) {};
-
-    virtual void rstCtrl() {};
-
-protected:
-    LrtCommunicator() {}
+private:
+    /** Queue of the first available free space in Job queue */
+    std::queue<std::int32_t> indexesQueue_;
+    std::mutex indexesQueueMutex_;
+    std::int32_t getNextFreeIndex();
+    void setNextFreeIndex(std::int32_t index);
+    /** Queue of JobMessage */
+    std::vector<T> msgQueue_;
+    std::mutex msgQueueMutex_;
 };
 
-#endif/*LRT_COMMUNICATOR_H*/
+#endif //SPIDER_CONTROLMESSAGEQUEUE_H

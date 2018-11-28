@@ -71,6 +71,8 @@
 #include <PThreadLrtCommunicator.h>
 
 #include <map>
+#include <ControlMessageQueue.h>
+#include <NotificationQueue.h>
 
 
 class PlatformPThread : public Platform {
@@ -159,9 +161,11 @@ public:
         lrtThreadsArray[lrtID] = thread;
     }
 
+#ifdef PAPI_AVAILABLE
     inline std::map<lrtFct, PapifyAction *> &getPapifyInfo() {
         return papifyJobInfo;
     }
+#endif
 
 private:
     inline int getThreadNumber() {
@@ -185,8 +189,13 @@ private:
     Stack *stackArchi;
     Stack **stackLrt;
 
-    ControlQueue **spider2LrtQueues_;
-    ControlQueue **lrt2SpiderQueues_;
+    ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
+    ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue_;
+    NotificationQueue **lrtNotificationQueues_;
+
+
+//    ControlQueue **spider2LrtQueues_;
+//    ControlQueue **lrt2SpiderQueues_;
     DataQueues *dataQueues_;
     TraceQueue *traceQueue_;
 

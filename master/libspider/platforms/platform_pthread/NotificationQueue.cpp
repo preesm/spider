@@ -1,0 +1,138 @@
+/**
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ *
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
+ * Clément Guy <clement.guy@insa-rennes.fr> (2014)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
+ * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
+ *
+ * Spider is a dataflow based runtime used to execute dynamic PiSDF
+ * applications. The Preesm tool may be used to design PiSDF applications.
+ *
+ * This software is governed by the CeCILL  license under French law and
+ * abiding by the rules of distribution of free software.  You can  use,
+ * modify and/ or redistribute the software under the terms of the CeCILL
+ * license as circulated by CEA, CNRS and INRIA at the following URL
+ * "http://www.cecill.info".
+ *
+ * As a counterpart to the access to the source code and  rights to copy,
+ * modify and redistribute granted by the license, users are provided only
+ * with a limited warranty  and the software's author,  the holder of the
+ * economic rights,  and the successive licensors  have only  limited
+ * liability.
+ *
+ * In this respect, the user's attention is drawn to the risks associated
+ * with loading,  using,  modifying and/or developing or reproducing the
+ * software by the user in light of its specific status of free software,
+ * that may mean  that it is complicated to manipulate,  and  that  also
+ * therefore means  that it is reserved for developers  and  experienced
+ * professionals having in-depth computer knowledge. Users are therefore
+ * encouraged to load and test the software's suitability as regards their
+ * requirements in conditions enabling the security of their systems and/or
+ * data to be ensured and,  more generally, to use and operate it in the
+ * same conditions as regards security.
+ *
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL license and that you accept its terms.
+ */
+
+#include "NotificationQueue.h"
+
+NotificationQueue::NotificationQueue() {
+    sem_init(&queueCounter_, 0, 0);
+}
+
+NotificationQueue::~NotificationQueue() {
+    sem_destroy(&queueCounter_);
+}
+
+void NotificationQueue::push(std::uint64_t &bufferSize, void *buffer) {
+    /** Creating a scope for lock_guard */
+    {
+        /** Locking mutex with guard (in case of exception) */
+        std::lock_guard<std::mutex> lock(queueMutex_);
+
+        /** Filling queue with buffer size bytes */
+        auto bufferSizeAsArray = (std::uint8_t *) (&bufferSize);
+        for (std::uint8_t i = 0; i < sizeof(std::uint64_t); ++i) {
+            queue_.push(bufferSizeAsArray[(sizeof(std::uint64_t) - 1) - i]);
+        }
+
+        /** Filling queue with buffer data */
+        auto convertedBuffer = (std::uint8_t *) buffer;
+        for (std::uint64_t i = 0; i < bufferSize; i++) {
+            auto currentValue = convertedBuffer[i];
+            queue_.push(currentValue);
+        }
+    }
+
+    /** Posting queue semaphore to signal item is added inside */
+    sem_post(&queueCounter_);
+}
+
+std::uint64_t NotificationQueue::pop(void **data, bool blocking, std::uint64_t &maxSize) {
+    /** Wait until a item is pushed in the queue */
+    if (blocking) {
+        sem_wait(&queueCounter_);
+    } else if (sem_trywait(&queueCounter_)) {
+        /** If queue is empty return */
+        return 0;
+    }
+    /** Locking mutex with guard (in case of exception) */
+    std::lock_guard<std::mutex> lock(queueMutex_);
+
+    /** If a thread has cleared the queue */
+    if (queue_.empty()) {
+        return 0;
+    }
+
+    /** Retrieve buffer size */
+    std::uint64_t bufferSize = 0;
+    for (std::uint8_t nb = 0; nb < sizeof(std::uint64_t); nb++) {
+        bufferSize = bufferSize << sizeof(std::uint64_t);
+        bufferSize += queue_.front();
+        queue_.pop();
+    }
+
+    /** Check size */
+    if (bufferSize > maxSize) {
+        throw std::runtime_error("ERROR: Trying to read a message in a SpiderQueue too big.\n");
+    }
+
+    /** Retrieve the item from the queue */
+    auto convertedBufferRcv = (std::uint8_t *) (*data);
+    for (std::uint64_t recv = 0; recv < bufferSize; recv++) {
+        convertedBufferRcv[recv] = queue_.front();
+        queue_.pop();
+    }
+    return bufferSize;
+}
+
+std::uint8_t NotificationQueue::pop(std::uint8_t *data, bool blocking) {
+    /** Wait until a item is pushed in the queue */
+    if (blocking) {
+        sem_wait(&queueCounter_);
+    } else if (sem_trywait(&queueCounter_)) {
+        /** If queue is empty return */
+        return 0;
+    }
+
+    /** Locking mutex with guard (in case of exception) */
+    std::lock_guard<std::mutex> lock(queueMutex_);
+
+    /** Retrieving data */
+    (*data) = queue_.front();
+    /** Removing the element from the queue */
+    queue_.pop();
+    return 1;
+}
+
+
+void NotificationQueue::clear() {
+    std::lock_guard<std::mutex> lock(queueMutex_);
+    while (!queue_.empty()) {
+        queue_.pop();
+    }
+}

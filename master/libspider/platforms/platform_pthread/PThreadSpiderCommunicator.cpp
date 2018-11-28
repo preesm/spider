@@ -41,43 +41,64 @@
 
 #include <platform.h>
 
-PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlQueue **spider2LrtQueues,
-                                                     ControlQueue **lrt2SpiderQueues,
-                                                     TraceQueue *traceQueue, int nLrt) {
-    spider2LrtQueues_ = spider2LrtQueues;
-    lrt2SpiderQueues_ = lrt2SpiderQueues;
-    traceQueue_ = traceQueue;
-    nLrt_ = nLrt;
-}
+//PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlQueue **spider2LrtQueues,
+//                                                     ControlQueue **lrt2SpiderQueues,
+//                                                     TraceQueue *traceQueue, int nLrt) {
+//    spider2LrtQueues_ = spider2LrtQueues;
+//    lrt2SpiderQueues_ = lrt2SpiderQueues;
+//    traceQueue_ = traceQueue;
+//    nLrt_ = nLrt;
+//}
 
 PThreadSpiderCommunicator::~PThreadSpiderCommunicator() {
 }
 
-void PThreadSpiderCommunicator::rst_ctrl_queue() {
-    fprintf(stderr, "nLrt: %d\n", nLrt_);
-    for (int i = 0; i < nLrt_; ++i) {
-        spider2LrtQueues_[i]->rst();
-    }
+//void PThreadSpiderCommunicator::rst_ctrl_queue() {
+//    fprintf(stderr, "nLrt: %d\n", nLrt_);
+//    for (int i = 0; i < nLrt_; ++i) {
+//        spider2LrtQueues_[i]->rst();
+//    }
+//}
+
+//void *PThreadSpiderCommunicator::ctrl_start_send(int lrtIx, std::uint64_t size) {
+//    return spider2LrtQueues_[lrtIx]->push_start(size);
+//}
+//
+//void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, std::uint64_t size) {
+//    return spider2LrtQueues_[lrtIx]->push_end(size);
+//}
+//
+//std::uint64_t PThreadSpiderCommunicator::ctrl_start_recv(int lrtIx, void **data) {
+//    return lrt2SpiderQueues_[lrtIx]->pop_start(data, false);
+//}
+//
+//void PThreadSpiderCommunicator::ctrl_start_recv_block(int lrtIx, void **data) {
+//    lrt2SpiderQueues_[lrtIx]->pop_start(data, true);
+//}
+//
+//void PThreadSpiderCommunicator::ctrl_end_recv(int lrtIx) {
+//    return lrt2SpiderQueues_[lrtIx]->pop_end();
+//}
+
+PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
+                                                     ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue,
+                                                     NotificationQueue **notificationQueue, TraceQueue *traceQueue,
+                                                     int nLrt) {
+    spider2LrtJobQueue_ = spider2LrtJobQueue;
+    spider2LrtLRTQueue_ = spider2LrtLRTQueue;
+    notificationQueue_ = notificationQueue;
+    traceQueue_ = traceQueue;
+    nLrt_ = nLrt;
 }
 
-void *PThreadSpiderCommunicator::ctrl_start_send(int lrtIx, std::uint64_t size) {
-    return spider2LrtQueues_[lrtIx]->push_start(size);
+std::uint64_t PThreadSpiderCommunicator::popNotification(int lrtID, NotificationMessage *msg, bool blocking) {
+    std::uint64_t size = sizeof(NotificationMessage);
+    return notificationQueue_[lrtID]->pop((void **) &msg, blocking, size);
 }
 
-void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, std::uint64_t size) {
-    return spider2LrtQueues_[lrtIx]->push_end(size);
-}
-
-std::uint64_t PThreadSpiderCommunicator::ctrl_start_recv(int lrtIx, void **data) {
-    return lrt2SpiderQueues_[lrtIx]->pop_start(data, false);
-}
-
-void PThreadSpiderCommunicator::ctrl_start_recv_block(int lrtIx, void **data) {
-    lrt2SpiderQueues_[lrtIx]->pop_start(data, true);
-}
-
-void PThreadSpiderCommunicator::ctrl_end_recv(int lrtIx) {
-    return lrt2SpiderQueues_[lrtIx]->pop_end();
+void PThreadSpiderCommunicator::pushNotification(int lrtID, NotificationMessage *msg) {
+    std::uint64_t size = sizeof(NotificationMessage);
+    notificationQueue_[lrtID]->push(size, msg);
 }
 
 void *PThreadSpiderCommunicator::trace_start_send(int size) {
@@ -99,3 +120,13 @@ void PThreadSpiderCommunicator::trace_start_recv_block(void **data) {
 void PThreadSpiderCommunicator::trace_end_recv() {
     return traceQueue_->pop_end();
 }
+
+std::int32_t PThreadSpiderCommunicator::pushJobMessage(JobMessage **message) {
+    return spider2LrtJobQueue_->push(message);
+}
+
+std::int32_t PThreadSpiderCommunicator::pushLRTMessage(LRTMessage **message) {
+    return spider2LrtLRTQueue_->push(message);
+}
+
+

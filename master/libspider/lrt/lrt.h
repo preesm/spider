@@ -42,10 +42,14 @@
 
 #include <tools/Stack.h>
 #include <platform.h>
+#include <NotificationQueue.h>
+#include <tools/SpiderQueue.h>
 
 #ifdef PAPI_AVAILABLE
 
 #include <map>
+#include <NotificationQueue.h>
+#include <tools/SpiderQueue.h>
 #include "../papify/PapifyAction.h"
 
 #endif
@@ -69,6 +73,8 @@ public:
     void runUntilNoMoreJobs();
 
     void runInfinitly();
+
+    void run(bool loop);
 
     inline void setJobIx(int jobIx);
 
@@ -122,6 +128,19 @@ private:
 
     int nb_iter;
 #endif
+
+    bool repeatJobQueue_;
+    bool repeatIteration_;
+    bool freeze_;
+    std::int32_t lastJobID_;
+    std::vector<JobMessage*> *jobQueue_;
+    std::uint32_t jobQueueIndex_;
+    std::uint32_t jobQueueSize_;
+    void fetchLRTNotification(NotificationMessage &message);
+    void fetchJobNotification(NotificationMessage &message);
+    void runOneJob(JobMessage *message);
+//    SpiderQueue<std::uint8_t> *lrtQueue_;
+//    SpiderQueue<std::uint8_t> *traceQueue_;
 };
 
 inline int LRT::getIx() const {

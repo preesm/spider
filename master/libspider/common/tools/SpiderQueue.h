@@ -104,16 +104,18 @@ public:
     void clear(void);
 
 private:
-    std::queue<T> queue_;
+    std::vector<T> queue_;
     std::mutex queueMutex_;
     sem_t queueCounter_;
     std::uint8_t queueBufferSizeNBytes_;
-    size_t queueIndex_;
+    std::uint32_t queueIndex_;
+    std::uint32_t queueSize_;
+
     bool isCircular_;
 };
 
 template<typename T>
-SpiderQueue<T>::SpiderQueue() {
+SpiderQueue<T>::SpiderQueue() : queueIndex_(0), queueSize_(0), isCircular_(false) {
     if (sizeof(std::uint64_t) % sizeof(T)) {
         throw std::runtime_error("ERROR: SpiderQueue item is not byte aligned with sizeof(std::uint64_t).");
     } else if (sizeof(T) > sizeof(std::uint64_t)) {
@@ -121,12 +123,10 @@ SpiderQueue<T>::SpiderQueue() {
     }
     queueBufferSizeNBytes_ = sizeof(std::uint64_t) / sizeof(T);
     sem_init(&queueCounter_, 0, 0);
-    isCircular_ = false;
-    queueIndex_ = 0;
 }
 
 template<typename T>
-SpiderQueue<T>::SpiderQueue(bool isCircular) {
+SpiderQueue<T>::SpiderQueue(bool isCircular) : queueIndex_(0), queueSize_(0), isCircular_(isCircular) {
     if (sizeof(std::uint64_t) % sizeof(T)) {
         throw std::runtime_error("ERROR: SpiderQueue item is not byte aligned with sizeof(std::uint64_t).");
     } else if (sizeof(T) > sizeof(std::uint64_t)) {
@@ -134,8 +134,6 @@ SpiderQueue<T>::SpiderQueue(bool isCircular) {
     }
     queueBufferSizeNBytes_ = sizeof(std::uint64_t) / sizeof(T);
     sem_init(&queueCounter_, 0, 0);
-    isCircular_ = isCircular;
-    queueIndex_ = 0;
 }
 
 template<typename T>
@@ -150,7 +148,11 @@ void SpiderQueue<T>::push(T &value) {
         std::lock_guard<std::mutex> lock(queueMutex_);
 
         /** Pushing value */
-        queue_.push(value);
+        //queue_.push(value);
+        queue_.push_back(value);
+
+        /** Increase queueSize_ */
+        queueSize_++;
     }
     /** Posting queue semaphore to signal item is added inside */
     sem_post(&queueCounter_);
@@ -166,19 +168,36 @@ void SpiderQueue<T>::push(std::uint64_t &bufferSize, void *buffer) {
         /** Filling queue with buffer size bytes */
         auto bufferSizeAsArray = (T *) (&bufferSize);
         for (std::uint8_t i = 0; i < queueBufferSizeNBytes_; ++i) {
-            queue_.push(bufferSizeAsArray[(queueBufferSizeNBytes_ - 1) - i]);
+            //queue_.push(bufferSizeAsArray[(queueBufferSizeNBytes_ - 1) - i]);
+            queue_.push_back(bufferSizeAsArray[(queueBufferSizeNBytes_ - 1) - i]);
         }
 
         /** Filling queue with buffer data */
         auto convertedBuffer = (T *) buffer;
         for (std::uint64_t i = 0; i < bufferSize; i++) {
             auto currentValue = convertedBuffer[i];
-            queue_.push(currentValue);
+            //queue_.push(currentValue);
+            queue_.push_back(currentValue);
         }
+
+        /** Increase queueSize_ */
+        queueSize_++;
     }
 
     /** Posting queue semaphore to signal item is added inside */
     sem_post(&queueCounter_);
+}
+
+template <typename T>
+static inline T popCircular(std::vector<T> & queue, std::uint32_t &index) {
+    return queue[index++];
+}
+
+template <typename T>
+static inline T popNonCircular(std::vector<T> & queue, std::uint32_t &/*index*/) {
+    auto value = queue.front();
+    queue.erase(queue.begin());
+    return value;
 }
 
 
@@ -199,13 +218,18 @@ std::uint64_t SpiderQueue<T>::pop(void **data, bool blocking, std::uint64_t &max
         return 0;
     }
 
+    T (*pop_fct)(std::vector<T>&, std::uint32_t&) = popNonCircular;
+    if (isCircular_) {
+        pop_fct = popCircular;
+    }
     /** Retrieve buffer size */
     std::uint64_t bufferSize = 0;
     for (std::uint8_t nb = 0; nb < queueBufferSizeNBytes_; nb++) {
         bufferSize = bufferSize << queueBufferSizeNBytes_;
-        auto front = queue_.front();
-        bufferSize += front;
-        queue_.pop();
+        //auto front = queue_.front();
+        //bufferSize += front;
+        bufferSize += pop_fct(queue_, queueIndex_);
+        //queue_.pop();
     }
 
     /** Check size */
@@ -216,9 +240,10 @@ std::uint64_t SpiderQueue<T>::pop(void **data, bool blocking, std::uint64_t &max
     /** Retrieve the item from the queue */
     auto convertedBufferRcv = (T *) (*data);
     for (std::uint64_t recv = 0; recv < bufferSize; recv++) {
-        auto front = queue_.front();
-        convertedBufferRcv[recv] = front;
-        queue_.pop();
+        //auto front = queue_.front();
+        //convertedBufferRcv[recv] = front;
+        //queue_.pop();
+        convertedBufferRcv[recv] = pop_fct(queue_, queueIndex_);
     }
     return bufferSize;
 }
@@ -237,20 +262,24 @@ void SpiderQueue<T>::pop(T *data, bool blocking) {
     std::lock_guard<std::mutex> lock(queueMutex_);
 
     /** Retrieving data */
-    (*data) = queue_.front();
-
+    //(*data) = queue_.front();
+    (*data) = queue_[queueIndex_++];
     /** Removing the element from the queue */
-    queue_.pop();
+   // queue_.pop();
 }
 
 template <typename T>
 void SpiderQueue<T>::clear() {
     std::lock_guard<std::mutex> lock(queueMutex_);
     queueIndex_ = 0;
-    while(!queue_.empty()) {
-        queue_.pop();
+    if (!isCircular_) {
+        queue_.clear();
+        queueSize_ = 0;
+    } else {
+        for (std::uint32_t i = 0; i < queueSize_; ++i) {
+            sem_post(&queueCounter_);
+        }
     }
-    fprintf(stderr, "clear -- %lu\n", queue_.size());
 }
 
 #endif //SPIDER_SPIDERQUEUE_H

@@ -65,29 +65,49 @@
 #include "ControlQueue.h"
 #include "TraceQueue.h"
 #include "DataQueues.h"
+#include "ControlMessageQueue.h"
+#include "NotificationQueue.h"
 
 class PThreadLrtCommunicator : public LrtCommunicator {
 public:
+//    PThreadLrtCommunicator(
+//            ControlQueue *spider2LrtQueue,
+//            ControlQueue *lrt2SpiderQueue,
+//            DataQueues *dataQueues,
+//            TraceQueue *traceQueue
+//    );
+
     PThreadLrtCommunicator(
-            ControlQueue *spider2LrtQueue,
-            ControlQueue *lrt2SpiderQueue,
+            ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
+            ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue,
+            NotificationQueue *notificationQueue,
             DataQueues *dataQueues,
             TraceQueue *traceQueue
     );
 
+    std::uint64_t popNotification(NotificationMessage *msg, bool blocking);
+
+    void pushNotification(NotificationMessage *msg);
+
+    void getJobMessage(JobMessage **msg, std::int32_t id);
+
+    void getLRTMessage(LRTMessage **msg, std::int32_t id);
+
     ~PThreadLrtCommunicator();
 
-    void rstCtrl();
+    void rstCtrl() {};
 
-    void *ctrl_start_send(std::uint64_t size);
+    void *ctrl_start_send(std::uint64_t /*size*/) {
+        return nullptr;
+    }
 
-    void ctrl_end_send(std::uint64_t size);
+    void ctrl_end_send(std::uint64_t) {};
 
-    std::uint64_t ctrl_start_recv(void **data);
+    std::uint64_t ctrl_start_recv(void **) { return 0; };
 
-    void ctrl_start_recv_block(void **data);
+    void ctrl_start_recv_block(void **) {};
 
-    void ctrl_end_recv();
+    void ctrl_end_recv() {};
 
     void *trace_start_send(int size);
 
@@ -105,8 +125,11 @@ public:
 
 private:
 
-    ControlQueue *spider2LrtQueue_;
-    ControlQueue *lrt2SpiderQueue_;
+//    ControlQueue *spider2LrtQueue_;
+//    ControlQueue *lrt2SpiderQueue_;
+    ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
+    ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue_;
+    NotificationQueue *notificationQueue_;
     DataQueues *dataQueues_;
     TraceQueue *traceQueue_;
     int queueSize_;

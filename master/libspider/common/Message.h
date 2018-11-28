@@ -42,6 +42,7 @@
 
 #include <cstdint>
 #include <spider.h>
+#include "monitor/StackMonitor.h"
 
 typedef enum {
     MSG_START_JOB = 1,
@@ -98,6 +99,14 @@ public:
     unsigned long nbOutEdge_;
     unsigned long nbInParam_;
     unsigned long nbOutParam_;
+    Fifo *inFifos_;
+    Fifo *outFifos_;
+    Param *inParams_;
+    ~JobMessage() {
+        StackMonitor::free(ARCHI_STACK, inFifos_);
+        StackMonitor::free(ARCHI_STACK, outFifos_);
+        StackMonitor::free(ARCHI_STACK, inParams_);
+    }
 };
 
 class TraceMessage : public Message {
@@ -114,5 +123,48 @@ public:
     unsigned long srdagID_;
     Param *params_;
 };
+
+class NotificationMessage : public Message {
+public:
+    std::uint8_t subType_;
+    std::int32_t index_;
+};
+
+class LRTMessage {
+public:
+    std::uint8_t  lastJobID_; // ID of the last job the LRT should consider for a graph iteration
+    bool flag_; // Flag depending on the nature of the message
+    ~LRTMessage() = default;
+};
+
+typedef enum {
+    LRT_NOTIFICATION,
+    TRACE_NOTIFICATION,
+    JOB_NOTIFICATION
+}NotificationType;
+
+typedef enum {
+    LRT_END_ITERATION,
+    LRT_REPEAT_ITERATION,
+    LRT_FINISHED_ITERATION,
+    LRT_RST_ITERATION,
+    LRT_STOP,
+    LRT_PAUSE,
+    LRT_RESUME,
+}LrtNotifications;
+
+typedef enum {
+    TRACE_ENABLE,
+    TRACE_DISABLE,
+    TRACE_RST,
+    TRACE_SEND
+}TraceNotification;
+
+typedef enum {
+    JOB_ADD,
+    JOB_CLEAR_QUEUE,
+    JOB_DO_AND_KEEP,
+    JOB_DO_AND_DISCARD
+}JobNotification;
 
 #endif/*MESSAGE_H*/

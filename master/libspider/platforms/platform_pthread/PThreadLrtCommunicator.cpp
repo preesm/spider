@@ -45,44 +45,76 @@
 
 #include <platform.h>
 
-PThreadLrtCommunicator::PThreadLrtCommunicator(
-        ControlQueue *spider2LrtQueue,
-        ControlQueue *lrt2SpiderQueue,
-        DataQueues *dataQueues,
-        TraceQueue *traceQueue
-) {
-    spider2LrtQueue_ = spider2LrtQueue;
-    lrt2SpiderQueue_ = lrt2SpiderQueue;
-    dataQueues_ = dataQueues;
-    traceQueue_ = traceQueue;
-}
+//PThreadLrtCommunicator::PThreadLrtCommunicator(
+//        ControlQueue *spider2LrtQueue,
+//        ControlQueue *lrt2SpiderQueue,
+//        DataQueues *dataQueues,
+//        TraceQueue *traceQueue
+//) {
+//    spider2LrtQueue_ = spider2LrtQueue;
+//    lrt2SpiderQueue_ = lrt2SpiderQueue;
+//    dataQueues_ = dataQueues;
+//    traceQueue_ = traceQueue;
+//}
 
 PThreadLrtCommunicator::~PThreadLrtCommunicator() {
 }
 
-void PThreadLrtCommunicator::rstCtrl() {
-    lrt2SpiderQueue_->rst();
+//void PThreadLrtCommunicator::rstCtrl() {
+//    lrt2SpiderQueue_->rst();
+//}
+//
+//void *PThreadLrtCommunicator::ctrl_start_send(std::uint64_t size) {
+//    return lrt2SpiderQueue_->push_start(size);
+//}
+//
+//void PThreadLrtCommunicator::ctrl_end_send(std::uint64_t size) {
+//    return lrt2SpiderQueue_->push_end(size);
+//}
+//
+//std::uint64_t PThreadLrtCommunicator::ctrl_start_recv(void **data) {
+//    return spider2LrtQueue_->pop_start(data, false);
+//}
+//
+//void PThreadLrtCommunicator::ctrl_start_recv_block(void **data) {
+//    spider2LrtQueue_->pop_start(data, true);
+//}
+//
+//void PThreadLrtCommunicator::ctrl_end_recv() {
+//    queueSize_++;
+//    return spider2LrtQueue_->pop_end();
+//}
+
+PThreadLrtCommunicator::PThreadLrtCommunicator(
+        ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
+        ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue,
+        NotificationQueue *notificationQueue,
+        DataQueues *dataQueues,
+        TraceQueue *traceQueue
+) {
+    spider2LrtJobQueue_ = spider2LrtJobQueue;
+    spider2LrtLRTQueue_ = spider2LrtLRTQueue;
+    notificationQueue_ = notificationQueue;
+    dataQueues_ = dataQueues;
+    traceQueue_ = traceQueue;
 }
 
-void *PThreadLrtCommunicator::ctrl_start_send(std::uint64_t size) {
-    return lrt2SpiderQueue_->push_start(size);
+std::uint64_t PThreadLrtCommunicator::popNotification(NotificationMessage *msg, bool blocking) {
+    std::uint64_t size = sizeof(NotificationMessage);
+    return notificationQueue_->pop((void **) &msg, blocking, size);
 }
 
-void PThreadLrtCommunicator::ctrl_end_send(std::uint64_t size) {
-    return lrt2SpiderQueue_->push_end(size);
+void PThreadLrtCommunicator::pushNotification(NotificationMessage *msg) {
+    std::uint64_t size = sizeof(NotificationMessage);
+    notificationQueue_->push(size, msg);
 }
 
-std::uint64_t PThreadLrtCommunicator::ctrl_start_recv(void **data) {
-    return spider2LrtQueue_->pop_start(data, false);
+void PThreadLrtCommunicator::getLRTMessage(LRTMessage **msg, std::int32_t id) {
+    spider2LrtLRTQueue_->pop(msg, id);
 }
 
-void PThreadLrtCommunicator::ctrl_start_recv_block(void **data) {
-    spider2LrtQueue_->pop_start(data, true);
-}
-
-void PThreadLrtCommunicator::ctrl_end_recv() {
-    queueSize_++;
-    return spider2LrtQueue_->pop_end();
+void PThreadLrtCommunicator::getJobMessage(JobMessage **msg, std::int32_t id) {
+    spider2LrtJobQueue_->pop(msg, id);
 }
 
 void *PThreadLrtCommunicator::trace_start_send(int size) {
@@ -114,3 +146,6 @@ void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, i
         dataQueues_->waitOnJobStamp(Platform::get()->getLrtIx(), blkLrtIx[i], blkLrtJobIx[i], true);
     }
 }
+
+
+

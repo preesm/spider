@@ -37,52 +37,76 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef LRT_COMMUNICATOR_H
-#define LRT_COMMUNICATOR_H
 
-#include <cstdint>
-#include "Message.h"
+#include "ControlMessageQueue.h"
 
-class LrtCommunicator {
-public:
-    virtual ~LrtCommunicator() {}
+template<class T>
+ControlMessageQueue<T>::ControlMessageQueue() {
+}
 
-    virtual void *ctrl_start_send(std::uint64_t size) = 0;
+template<class T>
+ControlMessageQueue<T>::~ControlMessageQueue() {
+    while (!msgQueue_.empty()) {
+        delete msgQueue_.front();
+        msgQueue_.erase(msgQueue_.begin());
+    }
+}
 
-    virtual void ctrl_end_send(std::uint64_t size) = 0;
+template<class T>
+void ControlMessageQueue<T>::setNextFreeIndex(std::int32_t index) {
+    /** Lock the mutex with guard */
+    std::lock_guard<std::mutex> lockGuard(indexesQueueMutex_);
+    indexesQueue_.push(index);
+}
 
-    virtual std::uint64_t ctrl_start_recv(void **data) = 0;
+template<class T>
+std::uint8_t ControlMessageQueue<T>::pop(T *message, std::int32_t id) {
+    {
+        /** Lock the mutex with guard */
+        std::lock_guard<std::mutex> lockGuard(msgQueueMutex_);
+        if (id < 0 || id >= (std::int32_t) msgQueue_.size()) {
+            return 0;
+        }
+        (*message) = msgQueue_[id];
+    }
+    setNextFreeIndex(id);
+    return 1;
+}
 
-    virtual void ctrl_start_recv_block(void **data) = 0;
 
-    virtual void ctrl_end_recv() = 0;
+template<class T>
+std::int32_t ControlMessageQueue<T>::getNextFreeIndex() {
+    /** Lock the mutex with guard */
+    std::lock_guard<std::mutex> lockGuard(indexesQueueMutex_);
+    std::int32_t nextFreeIndex = -1;
+    if (!indexesQueue_.empty()) {
+        nextFreeIndex = indexesQueue_.front();
+        indexesQueue_.pop();
+    }
+    return nextFreeIndex;
+}
 
-    virtual void *trace_start_send(int size) = 0;
+template<class T>
+std::int32_t ControlMessageQueue<T>::push(T *message) {
+    /** Get Next free index of the queue (if any) */
+    std::int32_t freeIndex = getNextFreeIndex();
+    /** Lock the mutex with guard */
+    std::lock_guard<std::mutex> lockGuard(msgQueueMutex_);
+    std::int32_t jobID = 0;
+    if (freeIndex >= 0) {
+        jobID = freeIndex;
+        //  msgQueue_[jobID]->~T();
+        delete msgQueue_[jobID];
+        msgQueue_[jobID] = *message;
+    } else {
+        msgQueue_.push_back(*message);
+        jobID = (std::int32_t) msgQueue_.size() - 1;
+    }
+    return jobID;
+}
 
-    virtual void trace_end_send(int size) = 0;
+template
+class ControlMessageQueue<JobMessage *>;
 
-    virtual void *data_start_send(Fifo *f) = 0;
-
-    virtual void data_end_send(Fifo *f) = 0;
-
-    virtual void *data_recv(Fifo *f) = 0;
-
-    virtual void allocateDataBuffer(int /*nbInput*/, Fifo */*fIn*/, int /*nbOutput*/, Fifo */*fOut*/) {};
-
-    virtual void freeDataBuffer(int /*nbInput*/, int /*nbOutput*/) {};
-
-    virtual void setLrtJobIx(int /*lrtIx*/, int /*jobIx*/) {};
-
-    virtual void rstLrtJobIx(int /*lrtIx*/) {};
-
-    virtual void waitForLrtUnlock(int /*nbDependency*/, int */*blkLrtIx*/, int */*blkLrtJobIx*/, int /*jobIx*/) {};
-
-    virtual void unlockLrt(int /*jobIx*/) {};
-
-    virtual void rstCtrl() {};
-
-protected:
-    LrtCommunicator() {}
-};
-
-#endif/*LRT_COMMUNICATOR_H*/
+template
+class ControlMessageQueue<LRTMessage *>;

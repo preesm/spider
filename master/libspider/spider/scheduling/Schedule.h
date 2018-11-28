@@ -67,6 +67,8 @@ public:
 
     void execute();
 
+    inline int getNJobs(int pe) const;
+
 private:
     int nPE_;
     int nJobMax_;
@@ -74,8 +76,6 @@ private:
     int *nJobPerPE_;
     Time *readyTime_;
     SRDAGVertex **schedules_;
-
-    inline int getNJobs(int pe) const;
 
     inline SRDAGVertex *getJob(int pe, int ix) const;
 };

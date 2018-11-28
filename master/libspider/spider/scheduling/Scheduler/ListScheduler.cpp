@@ -39,6 +39,7 @@
 
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <launcher/Launcher.h>
+#include <PThreadSpiderCommunicator.h>
 
 ListScheduler::ListScheduler() {
     srdag_ = 0;
@@ -162,6 +163,22 @@ void ListScheduler::schedule(
 
     for (int i = 0; i < list_->getNb(); i++) {
         this->scheduleVertex((*list_)[i]);
+    }
+
+    /** Sends the ID of last job to slaves **/
+    auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
+    for (int i = 0; i < archi->getNPE(); ++i) {
+        /** Send LRTMessage **/
+        auto lrtMessage = new LRTMessage;
+        lrtMessage->lastJobID_ = schedule_->getNJobs(i);
+        auto index = spiderCommunicator->pushLRTMessage(&lrtMessage);
+        /** Send Notification for End Notification **/
+        NotificationMessage message;
+        message.id_ = LRT_NOTIFICATION;
+        message.subType_ = LRT_END_ITERATION;
+        message.index_ = index;
+        spiderCommunicator->pushNotification(i + 1, &message);
+
     }
 
     for (int i = 0; i < list_->getNb(); i++) {

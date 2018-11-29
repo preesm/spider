@@ -18,6 +18,7 @@ Spider Changelog
 * Use float for Expression Resolution as Preesm does.
 * Fix display of reserved memory usage.
 * Avoid reallocation of already allocated fifo in memory allocation.
+* Fix double allocation of lrt[0] and lrtCom_[0] in platform pthread.
 
 ## Release version 1.2.1
 *2018.10.01*

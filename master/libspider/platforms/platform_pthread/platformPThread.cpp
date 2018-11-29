@@ -237,14 +237,6 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             lrt2SpiderQueues_,
             traceQueue_);
 
-    lrtCom_[0] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
-            spider2LrtQueues_[0],
-            lrt2SpiderQueues_[0],
-            dataQueues_,
-            traceQueue_);
-
-    lrt_[0] = CREATE(ARCHI_STACK, LRT)(0);
-
     // Check papify profiles
 #ifdef PAPI_AVAILABLE
     if (config.usePapify) {

@@ -56,7 +56,6 @@
 #include <pthread.h>
 
 
-#include <cstring>
 #include <cstdio>
 
 #include <platformPThread.h>
@@ -68,6 +67,7 @@
 #include <lrt.h>
 #include <PThreadSpiderCommunicator.h>
 #include <spider.h>
+#include <tools/Rational.h>
 #include "ControlMessageQueue.h"
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 200
@@ -134,7 +134,6 @@ void *lrtPthreadRunner(void *args) {
     /** Wait for all LRTs to be created */
     pthread_barrier_wait(lrtInfo->pthreadBarrier);
     /** Run LRT */
-//    lrtInfo->lrt->runInfinitly();
     lrtInfo->lrt->run(true);
     /** Cleaning LRT specific stacks */
     StackMonitor::freeAll(LRT_STACK);
@@ -152,6 +151,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
         throw std::runtime_error("ERROR: A platform already exist.");
     }
     platform_ = this;
+
 
     nLrt_ = (unsigned int) config.platform.nLrt;
 
@@ -172,14 +172,6 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     for (unsigned int i = 0; i < nLrt_ + 1; ++i) {
         lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue);
     }
-
-//    spider2LrtQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_, ControlQueue*);
-//    lrt2SpiderQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_, ControlQueue*);
-
-//    for (unsigned int i = 0; i < nLrt_; i++) {
-//        spider2LrtQueues_[i] = CREATE(ARCHI_STACK, ControlQueue)(MAX_MSG_SIZE, true);
-//        lrt2SpiderQueues_[i] = CREATE(ARCHI_STACK, ControlQueue)(MAX_MSG_SIZE, false);
-//    }
 
     /** FIFOs allocation */
     dataQueues_ = CREATE(ARCHI_STACK, DataQueues)(nLrt_);
@@ -219,20 +211,15 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     }
 #endif
 
-    //TODO have shMem a multiple of getMinAllocSize
-    dataMem = malloc(config.platform.shMemSize);
-
+    // Find LCM of share memory size and minAllocSize
+    auto minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize, getpagesize());
+    dataMem = operator new((size_t) minAlignedSharedMemory);
     /** Filling up parameters for each threads */
     pthread_barrier_init(&pthreadLRTBarrier, nullptr, nLrt_);
     int offsetPe = 0;
     for (int pe = 0; pe < config.platform.nPeType; ++pe) {
         for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
 
-//            lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
-//                    spider2LrtQueues_[i + offsetPe],
-//                    lrt2SpiderQueues_[i + offsetPe],
-//                    dataQueues_,
-//                    traceQueue_);
 
             lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
                     spider2LrtJobQueue_,
@@ -240,6 +227,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
                     lrtNotificationQueues_[i + offsetPe + 1],
                     dataQueues_,
                     traceQueue_);
+
             lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i);
 
             lrtInfoArray[i + offsetPe].lrt = lrt_[i + offsetPe];
@@ -279,27 +267,14 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     StackMonitor::initStack(LRT_STACK, lrtStackConfig);
 
     /** Initialize shared memory */
-    memset(dataMem, 0, config.platform.shMemSize);
+    memset(dataMem, 0, (size_t) minAlignedSharedMemory);
 
     /** Initialize LRT and Communicators */
-//    spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
-//            spider2LrtQueues_,
-//            lrt2SpiderQueues_,
-//            traceQueue_, nLrt_);
-//
-//    lrtCom_[0] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
-//            spider2LrtQueues_[0],
-//            lrt2SpiderQueues_[0],
-//            dataQueues_,
-//            traceQueue_);
-
-//    lrt_[0] = CREATE(ARCHI_STACK, LRT)(0);
-
     spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
             spider2LrtJobQueue_,
             spider2LrtLRTQueue_,
             lrtNotificationQueues_,
-            traceQueue_, nLrt_);
+            traceQueue_);
 
     // Check papify profiles
 #ifdef PAPI_AVAILABLE
@@ -324,7 +299,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     int mainPE = 0;
     int mainPEType = 0;
     archi_ = CREATE(ARCHI_STACK, SharedMemArchi)(
-            /* Nb PE */        nLrt_,
+            /* Nb PE */     nLrt_,
             /* Nb PE Type*/ config.platform.nPeType,
             /* Spider Pe */ mainPE,
             /*MappingTime*/ this->mappingTime);
@@ -357,11 +332,10 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 }
 
 PlatformPThread::~PlatformPThread() {
-    for (int lrt = 1; lrt < archi_->getNPE(); lrt++) {
-        int size = sizeof(Message);
-        auto msg = (Message *) getSpiderCommunicator()->ctrl_start_send(lrt, size);
-        msg->id_ = MSG_STOP_LRT;
-        getSpiderCommunicator()->ctrl_end_send(lrt, size);
+    for (unsigned int i = 1; i < nLrt_; ++i) {
+        NotificationMessage message(LRT_NOTIFICATION, LRT_STOP);
+        auto spiderCommunicator = (PThreadSpiderCommunicator *) getSpiderCommunicator();
+        spiderCommunicator->pushNotification(i + 1, &message);
     }
 
     //wait for every LRT to end
@@ -369,8 +343,9 @@ PlatformPThread::~PlatformPThread() {
 
 
     //wait for each thread to free its lrt and archi stacks and to reach its end
-    for (unsigned int i = 1; i < nLrt_; i++)
-        pthread_join(lrtThreadsArray[i], NULL);
+    for (unsigned int i = 1; i < nLrt_; i++) {
+        pthread_join(lrtThreadsArray[i], nullptr);
+    }
 
 #ifdef PAPI_AVAILABLE
     /** Free Papify information */
@@ -383,7 +358,6 @@ PlatformPThread::~PlatformPThread() {
 
     for (unsigned int i = 0; i < nLrt_; i++) {
         lrt_[i]->~LRT();
-        ((PThreadLrtCommunicator *) lrtCom_[i])->~PThreadLrtCommunicator();
         StackMonitor::free(ARCHI_STACK, lrt_[i]);
         StackMonitor::free(ARCHI_STACK, lrtCom_[i]);
     }
@@ -402,25 +376,13 @@ PlatformPThread::~PlatformPThread() {
         StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
     }
     StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
-    spider2LrtJobQueue_->~ControlMessageQueue<JobMessage *>();
     StackMonitor::free(ARCHI_STACK, spider2LrtJobQueue_);
-    spider2LrtLRTQueue_->~ControlMessageQueue<LRTMessage *>();
     StackMonitor::free(ARCHI_STACK, spider2LrtLRTQueue_);
 
 
-
-//    for (unsigned int i = 0; i < nLrt_; i++) {
-//        spider2LrtQueues_[i]->~ControlQueue();
-//        lrt2SpiderQueues_[i]->~ControlQueue();
-//        StackMonitor::free(ARCHI_STACK, spider2LrtQueues_[i]);
-//        StackMonitor::free(ARCHI_STACK, lrt2SpiderQueues_[i]);
-//    }
     dataQueues_->~DataQueues();
     traceQueue_->~TraceQueue();
 
-
-//    StackMonitor::free(ARCHI_STACK, spider2LrtQueues_);
-//    StackMonitor::free(ARCHI_STACK, lrt2SpiderQueues_);
     StackMonitor::free(ARCHI_STACK, dataQueues_);
     StackMonitor::free(ARCHI_STACK, traceQueue_);
 
@@ -449,7 +411,7 @@ PlatformPThread::~PlatformPThread() {
     //Destroying synchronisation barrier
     pthread_barrier_destroy(&pthreadLRTBarrier);
 
-    free(dataMem);
+    operator delete(dataMem);
 }
 
 /** File Handling */
@@ -530,36 +492,15 @@ void PlatformPThread::rstJobIxSend() {
 }
 
 void PlatformPThread::rstJobIxRecv() {
-    //reseting master LRT jobIx counter
-//    Platform::get()->getLrt()->setJobIx(-1);
-//
-//    // Reseting jobTab
-//    for (unsigned int i = 0; i < nLrt_; i++) {
-//        lrtCom_[0]->setLrtJobIx(i, -1);
-//    }
-//
-//    //Waiting for slave LRTs to reset their jobIx counter
-//    for (unsigned int i = 1; i < nLrt_; i++) {
-//        void *msg = NULL;
-//        do {
-//            getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
-//            if (((Message *) msg)->id_ == MSG_RESET_LRT)
-//                break;
-//            else
-//                getSpiderCommunicator()->ctrl_end_recv(i);
-//        } while (1);
-//        getSpiderCommunicator()->ctrl_end_recv(i);
-//    }
     auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
-    NotificationMessage message;
-    message.id_ = JOB_NOTIFICATION;
-    message.subType_ = JOB_CLEAR_QUEUE;
+    NotificationMessage message(JOB_NOTIFICATION, JOB_CLEAR_QUEUE);
     for (unsigned int i = 0; i < nLrt_; ++i) {
         NotificationMessage finishedMessage;
-        /** Wait for LRT to finish its jobs **/
+        /** Wait for LRTs to finish their jobs **/
         while (true) {
-            spiderCommunicator->popNotification(i, &finishedMessage, true);
-            if (finishedMessage.id_ == LRT_NOTIFICATION && finishedMessage.subType_ == LRT_FINISHED_ITERATION) {
+            spiderCommunicator->popNotification(0, &finishedMessage, true);
+            if (finishedMessage.getType() == LRT_NOTIFICATION &&
+                finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
                 break;
             }
         }

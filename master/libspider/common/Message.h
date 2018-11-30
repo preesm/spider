@@ -70,16 +70,18 @@ typedef enum {
 } TraceSpiderType;
 
 
-typedef struct {
-    unsigned long alloc:32;
-    unsigned long size:32;
-    unsigned long blkLrtIx:32;
-    unsigned long blkLrtJobIx:32;
-} Fifo;
+class Fifo {
+public:
+    std::uint32_t alloc;
+    std::uint32_t size;
+    std::uint32_t blkLrtIx;
+    std::uint32_t blkLrtJobIx;
+};
 
 
 class Message {
 public:
+    Message() : id_((std::uint32_t) -1) {};
     std::uint32_t id_;
 };
 
@@ -89,19 +91,23 @@ public:
 };
 
 
-class JobMessage : public Message {
+class JobMessage {
 public:
-    bool specialActor_;
-    bool traceEnabled_;
-    unsigned long srdagID_;
-    unsigned long fctID_;
-    unsigned long nbInEdge_;
-    unsigned long nbOutEdge_;
-    unsigned long nbInParam_;
-    unsigned long nbOutParam_;
-    Fifo *inFifos_;
-    Fifo *outFifos_;
-    Param *inParams_;
+    JobMessage() = default;
+
+    std::uint32_t id_ = 0;
+    bool specialActor_ = false;
+    bool traceEnabled_ = false;
+    std::uint64_t srdagID_ = 0;
+    std::uint64_t fctID_ = 0;
+    std::uint64_t nbInEdge_ = 0;
+    std::uint64_t nbOutEdge_ = 0;
+    std::uint64_t nbInParam_ = 0;
+    std::uint64_t nbOutParam_ = 0;
+    Fifo *inFifos_ = nullptr;
+    Fifo *outFifos_ = nullptr;
+    Param *inParams_ = nullptr;
+
     ~JobMessage() {
         StackMonitor::free(ARCHI_STACK, inFifos_);
         StackMonitor::free(ARCHI_STACK, outFifos_);
@@ -124,15 +130,9 @@ public:
     Param *params_;
 };
 
-class NotificationMessage : public Message {
-public:
-    std::uint8_t subType_;
-    std::int32_t index_;
-};
-
 class LRTMessage {
 public:
-    std::uint8_t  lastJobID_; // ID of the last job the LRT should consider for a graph iteration
+    std::int32_t lastJobID_; // ID of the last job the LRT should consider for a graph iteration
     bool flag_; // Flag depending on the nature of the message
     ~LRTMessage() = default;
 };
@@ -140,8 +140,9 @@ public:
 typedef enum {
     LRT_NOTIFICATION,
     TRACE_NOTIFICATION,
-    JOB_NOTIFICATION
-}NotificationType;
+    JOB_NOTIFICATION,
+    UNDEFINED_NOTIFICATION
+} NotificationType;
 
 typedef enum {
     LRT_END_ITERATION,
@@ -151,20 +152,49 @@ typedef enum {
     LRT_STOP,
     LRT_PAUSE,
     LRT_RESUME,
-}LrtNotifications;
+} LrtNotifications;
 
 typedef enum {
     TRACE_ENABLE,
     TRACE_DISABLE,
     TRACE_RST,
     TRACE_SEND
-}TraceNotification;
+} TraceNotification;
 
 typedef enum {
     JOB_ADD,
     JOB_CLEAR_QUEUE,
     JOB_DO_AND_KEEP,
     JOB_DO_AND_DISCARD
-}JobNotification;
+} JobNotification;
+
+
+class NotificationMessage {
+public:
+    explicit NotificationMessage(std::uint8_t type = NotificationType::UNDEFINED_NOTIFICATION,
+                                 std::uint8_t subType = NotificationType::UNDEFINED_NOTIFICATION,
+                                 std::int32_t index = -1) {
+        type_ = type;
+        subType_ = subType;
+        index_ = index;
+    }
+
+    inline std::uint8_t getType() {
+        return type_;
+    }
+
+    inline std::uint8_t getSubType() {
+        return subType_;
+    }
+
+    inline std::int32_t getIndex() {
+        return index_;
+    }
+
+private:
+    std::uint8_t type_ = 0;
+    std::uint8_t subType_ = (std::uint8_t) -1;
+    std::int32_t index_ = -1;
+};
 
 #endif/*MESSAGE_H*/

@@ -55,6 +55,8 @@
 #endif
 
 #include "specialActors/specialActors.h"
+#include "lrt.h"
+
 
 static lrtFct specialActors[6] = {
         &saBroadcast,
@@ -74,7 +76,6 @@ LRT::LRT(int ix) {
     jobIx_ = -1;
     usePapify_ = false;
 
-    jobQueue_ = CREATE(ARCHI_STACK, std::vector<JobMessage*>);
     repeatJobQueue_ = false;
     freeze_ = false;
     repeatIteration_ = false;
@@ -99,7 +100,8 @@ LRT::LRT(int ix) {
 }
 
 LRT::~LRT() {
-    StackMonitor::free(ARCHI_STACK, jobQueue_);
+    /** Clearing the jobQueue_ **/
+    clearJobQueue();
     /* Nothing to Unalloc */
 #ifdef VERBOSE
     printf("LRT %3d did %d jobs\n",ix_,jobIxTotal_);
@@ -408,14 +410,13 @@ void LRT::runInfinitly() {
 }
 
 void LRT::fetchLRTNotification(NotificationMessage &message) {
-    switch (message.subType_) {
+    switch (message.getSubType()) {
         case LRT_END_ITERATION: {
             // pop message
             auto communicator = (PThreadLrtCommunicator *) (Platform::get()->getLrtCommunicator());
-            std::int32_t index = message.index_;
             LRTMessage *msg;
             // pop message from global queue
-            communicator->getLRTMessage(&msg, index);
+            communicator->getLRTMessage(&msg, message.getIndex());
             // set last job id
             lastJobID_ = msg->lastJobID_;
         }
@@ -426,13 +427,12 @@ void LRT::fetchLRTNotification(NotificationMessage &message) {
         case LRT_REPEAT_ITERATION: {
             // pop message
             auto communicator = (PThreadLrtCommunicator *) (Platform::get()->getLrtCommunicator());
-            std::int32_t index = message.index_;
             LRTMessage *msg;
             // pop message from global queue
-            communicator->getLRTMessage(&msg, index);
+            communicator->getLRTMessage(&msg, message.getIndex());
             // set last job id
             lastJobID_ = msg->lastJobID_;
-            // set repeat mode (continuous or once)
+            // set repeat mode (continuous)
             repeatIteration_ = msg->flag_;
         }
             break;
@@ -447,6 +447,8 @@ void LRT::fetchLRTNotification(NotificationMessage &message) {
         case LRT_STOP:
             // stop lrt
             run_ = false;
+            clearJobQueue();
+//            fprintf(stderr, "INFO: LRT: %d -- cleared queue\n", getIx());
             break;
         default:
             throw std::runtime_error("ERROR: unhandled type of LRT notification.\n");
@@ -456,16 +458,16 @@ void LRT::fetchLRTNotification(NotificationMessage &message) {
 
 void LRT::fetchJobNotification(NotificationMessage &message) {
     /** Get the ID of the job in the global queue */
-    switch (message.subType_) {
+    switch (message.getSubType()) {
         case JOB_ADD: {
             auto communicator = (PThreadLrtCommunicator *) (Platform::get()->getLrtCommunicator());
-            std::int32_t index = message.index_;
             JobMessage *msg;
             // pop message from global queue
-            communicator->getJobMessage(&msg, index);
-            // push message in local queue (don't execute right now in case more important notification comes along)
-            jobQueue_->push_back(msg);
+            communicator->getJobMessage(&msg, message.getIndex());
+            // push message in local queue (don't execute right now in case more important notification comes along
+            jobQueue_.push_back(msg);
             jobQueueSize_++;
+//            fprintf(stderr, "INFO: LRT: %d -- queueSize: %u\n", getIx(), jobQueueSize_);
         }
             break;
         case JOB_DO_AND_KEEP:
@@ -477,22 +479,25 @@ void LRT::fetchJobNotification(NotificationMessage &message) {
             repeatJobQueue_ = false;
             break;
         case JOB_CLEAR_QUEUE:
-            // remove every job from the queue (if any)
-            jobQueue_->clear();
-            jobQueueSize_ = 0;
-            jobQueueIndex_ = 0;
-            jobIx_ = -1;
+            clearJobQueue();
             break;
         default:
             throw std::runtime_error("ERROR: unhandled type of JOB notification.\n");
     }
 }
 
-void LRT::runOneJob(JobMessage *message) {
-//    auto inFifos = (Fifo *) ((char *) message + 1 * sizeof(JobMessage));
-//    auto outFifos = (Fifo *) ((char *) inFifos + message->nbInEdge_ * sizeof(Fifo));
-//    auto inParams = (Param *) ((char *) outFifos + message->nbOutEdge_ * sizeof(Fifo));
+void LRT::clearJobQueue() {
+    for (auto &it : (jobQueue_)) {
+        it->~JobMessage();
+        StackMonitor::free(ARCHI_STACK, it);
+    }
+    jobQueue_.clear();
+    jobQueueSize_ = 0;
+    jobQueueIndex_ = 0;
+    jobIx_ = -1;
+}
 
+void LRT::runJob(JobMessage *message) {
     auto inFifos = message->inFifos_;
     auto outFifos = message->outFifos_;
     auto inParams = message->inParams_;
@@ -507,6 +512,8 @@ void LRT::runOneJob(JobMessage *message) {
         tabBlkLrtIx[i] = inFifos[i].blkLrtIx; // lrt to wait
         tabBlkLrtJobIx[i] = inFifos[i].blkLrtJobIx; // total job ticket for this lrt to wait
     }
+//    fprintf(stderr, "INFO: LRT: %d -- waiting for LRT: %d and Job: %d\n", Platform::get()->getLrtIx(), tabBlkLrtIx[0],
+//            tabBlkLrtJobIx[0]);
     Platform::get()->getLrtCommunicator()->waitForLrtUnlock((int) message->nbInEdge_, tabBlkLrtIx,
                                                             tabBlkLrtJobIx, jobIx_);
 
@@ -631,7 +638,7 @@ void LRT::runOneJob(JobMessage *message) {
 //        /** Copying the parameters in the message */
 //        msgParam->params_ = (Param *) (msgParam + 1);
 //        memcpy(msgParam->params_, outParams, message->nbOutParam_ * sizeof(Param));
-//        msgParam->id_ = MSG_PARAM_VALUE;
+//        msgParam->type_ = MSG_PARAM_VALUE;
 //        msgParam->srdagID_ = message->srdagID_;
 //
 //#ifdef VERBOSE_TIME
@@ -647,7 +654,7 @@ void LRT::runOneJob(JobMessage *message) {
 
 
     jobIx_++;
-    Platform::get()->getLrtCommunicator()->setLrtJobIx(getIx(), jobIx_);
+    Platform::get()->getLrtCommunicator()->setLrtJobIx(Platform::get()->getLrtIx(), jobIx_);
     /** Freeing local memory **/
     StackMonitor::free(LRT_STACK, inFifosAlloc);
     StackMonitor::free(LRT_STACK, outFifosAlloc);
@@ -655,15 +662,46 @@ void LRT::runOneJob(JobMessage *message) {
     StackMonitor::freeAll(LRT_STACK);
 }
 
+
+void LRT::jobRunner() {
+    auto message = jobQueue_[jobQueueIndex_++];
+    // Run job
+//    fprintf(stderr, "INFO: LRT: %d -- Running Job: %d\n", Platform::get()->getLrtIx(), jobIx_ + 1);
+    runJob(message);
+//    fprintf(stderr, "INFO: LRT: %d -- Finished Job: %d\n", Platform::get()->getLrtIx(), jobIx_);
+    // Check if it is last job of current iteration
+    if (lastJobID_ && jobIx_ == lastJobID_) {
+        // Send finished iteration message
+        NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION);
+        auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
+        spiderCommunicator->pushNotification(0, &finishedMessage);
+        if (repeatJobQueue_) {
+            jobIx_ = -1;
+            jobQueueIndex_ = 0;
+        }
+    }
+}
+
 void LRT::run(bool loop) {
+#ifdef VERBOSE_TIME
+    Time start = Platform::get()->getTime();
+#endif
+
+#ifdef VERBOSE_TIME
+    start_waiting_job = Platform::get()->getTime();
+#endif
     run_ = true;
-    do {
-        // 0. Check for the presence of notification
-        bool blocking = jobQueueIndex_ == (jobQueueSize_) && (jobQueueSize_ > 0);
+    bool doneWithCurrentJobs = false;
+    while (run_) {
+        /** Should wait for notifications if no more jobs are available and that we are in loop mode **/
+        bool blocking = loop && doneWithCurrentJobs;
+        // TODO: change this specific behavior to all communicator
         auto communicator = (PThreadLrtCommunicator *) (Platform::get()->getLrtCommunicator());
+        /** 0. Check for the presence of notification **/
         NotificationMessage notificationMessage;
         while (communicator->popNotification(&notificationMessage, blocking)) {
-            switch (notificationMessage.id_) {
+            blocking = false;
+            switch (notificationMessage.getType()) {
                 case LRT_NOTIFICATION:
                     fetchLRTNotification(notificationMessage);
                     break;
@@ -676,32 +714,24 @@ void LRT::run(bool loop) {
                     throw std::runtime_error("ERROR: unhandled type of notification.\n");
             }
         }
-        // 1. If no notification and JOB queue is not empty
+        /** 1. If no notification and JOB queue is not empty **/
         if (jobQueueIndex_ < jobQueueSize_) {
-            auto message = (*jobQueue_)[jobQueueIndex_];
-            // Run job
-            runOneJob(message);
-            // Check if it is last job of iteration
-            if (jobIx_ == lastJobID_ - 1) {
-                if (!loop) {
-                    run_ = false;
-                }
-                // Send finished iteration message
-                NotificationMessage finishedMessage;
-                finishedMessage.id_ = LRT_NOTIFICATION;
-                finishedMessage.subType_ = LRT_FINISHED_ITERATION;
-                auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
-                spiderCommunicator->pushNotification(0, &finishedMessage);
-                if (repeatJobQueue_) {
-                    jobIx_ = 0;
-                    jobQueueIndex_ = 0;
-                }
-            } else {
-                jobQueueIndex_++;
-            }
+//            fprintf(stderr, "INFO: LRT: %d -- Got %d Jobs to do -- Got %d Jobs in queue -- Done %d.\n",
+//                    Platform::get()->getLrtIx(), lastJobID_ + 1,
+//                    jobQueueSize_, jobQueueIndex_);
+            jobRunner();
         }
-    } while(run_);
+        doneWithCurrentJobs = (jobQueueSize_ > 0) && (jobQueueSize_ == jobQueueIndex_);
+        if (!loop && doneWithCurrentJobs) {
+            break;
+        }
+    }
+
+#ifdef VERBOSE_TIME
+    time_global += Platform::get()->getTime() - start;
+#endif
 }
+
 
 #ifdef PAPI_AVAILABLE
 

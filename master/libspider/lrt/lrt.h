@@ -133,14 +133,14 @@ private:
     bool repeatIteration_;
     bool freeze_;
     std::int32_t lastJobID_;
-    std::vector<JobMessage*> *jobQueue_;
+    std::vector<JobMessage*> jobQueue_;
     std::uint32_t jobQueueIndex_;
     std::uint32_t jobQueueSize_;
     void fetchLRTNotification(NotificationMessage &message);
     void fetchJobNotification(NotificationMessage &message);
-    void runOneJob(JobMessage *message);
-//    SpiderQueue<std::uint8_t> *lrtQueue_;
-//    SpiderQueue<std::uint8_t> *traceQueue_;
+    void runJob(JobMessage *message);
+    void jobRunner();
+    void clearJobQueue();
 };
 
 inline int LRT::getIx() const {

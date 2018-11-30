@@ -80,7 +80,7 @@ PiSDFVertex *PiSDFGraph::addBodyVertex(
             vertexName, fctId,
             bodies_.getN(),
             PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
-            this, 0,
+            this, nullptr,
             nInEdge, nOutEdge,
             nInParam, 0);
     bodies_.add(body);

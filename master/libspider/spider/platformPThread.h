@@ -193,9 +193,6 @@ private:
     ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue_;
     NotificationQueue **lrtNotificationQueues_;
 
-
-//    ControlQueue **spider2LrtQueues_;
-//    ControlQueue **lrt2SpiderQueues_;
     DataQueues *dataQueues_;
     TraceQueue *traceQueue_;
 

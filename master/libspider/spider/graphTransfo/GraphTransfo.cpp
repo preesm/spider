@@ -386,8 +386,6 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
     scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchi());
 //    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
-//    Platform::get()->getLrt()->runUntilNoMoreJobs();
-
     Platform::get()->getLrt()->run(false);
 
     return schedule;

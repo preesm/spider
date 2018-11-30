@@ -312,9 +312,8 @@ Archi *Spider::getArchi() {
 }
 
 void Spider::setMemAllocType(MemAllocType type, int start, int size) {
-    if (memAlloc_ != 0) {
-        delete memAlloc_;
-    }
+    /** If a memAlloc_ already existed, we delete it**/
+    delete memAlloc_;
     switch (type) {
         case MEMALLOC_DUMMY:
             memAlloc_ = new DummyMemAlloc(start, size);
@@ -322,13 +321,14 @@ void Spider::setMemAllocType(MemAllocType type, int start, int size) {
         case MEMALLOC_SPECIAL_ACTOR:
             memAlloc_ = new SpecialActorMemAlloc(start, size);
             break;
+        default:
+            throw std::runtime_error("ERROR: unsupported type of Memory Allocation.\n");
     }
 }
 
 void Spider::setSchedulerType(SchedulerType type) {
-    if (scheduler_ != 0) {
-        delete scheduler_;
-    }
+    /** If a scheduler_ already existed, we delete it**/
+    delete scheduler_;
     switch (type) {
         case SCHEDULER_LIST:
             scheduler_ = new ListScheduler();
@@ -804,10 +804,9 @@ void Spider::isExecutableOnPEType(PiSDFVertex *vertex, int peType) {
 }
 
 void Spider::cleanPiSDF() {
-    PiSDFGraph *graph = pisdf_;
-    if (graph != 0) {
-        graph->~PiSDFGraph();
-        StackMonitor::free(PISDF_STACK, graph);
+    if (pisdf_) {
+        pisdf_->~PiSDFGraph();
+        StackMonitor::free(PISDF_STACK, pisdf_);
         StackMonitor::freeAll(PISDF_STACK);
     }
 }

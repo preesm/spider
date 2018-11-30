@@ -170,17 +170,17 @@ void ListScheduler::schedule(
     for (int i = 0; i < archi->getNPE(); ++i) {
         /** Send LRTMessage **/
         auto lrtMessage = new LRTMessage;
-        lrtMessage->lastJobID_ = schedule_->getNJobs(i);
+        lrtMessage->lastJobID_ = schedule_->getNJobs(i) - 1;
         auto index = spiderCommunicator->pushLRTMessage(&lrtMessage);
         /** Send Notification for End Notification **/
-        NotificationMessage message;
-        message.id_ = LRT_NOTIFICATION;
-        message.subType_ = LRT_END_ITERATION;
-        message.index_ = index;
+        NotificationMessage message(LRT_NOTIFICATION, LRT_END_ITERATION, index);
         spiderCommunicator->pushNotification(i + 1, &message);
-
+        /** Set Repeat Mode **/
+//        NotificationMessage repeatMessage;
+//        repeatMessage.type_ = JOB_NOTIFICATION;
+//        repeatMessage.subType_ = JOB_DO_AND_KEEP;
+//        spiderCommunicator->pushNotification(i + 1, &repeatMessage);
     }
-
     for (int i = 0; i < list_->getNb(); i++) {
         Launcher::get()->launchVertex((*list_)[i]);
     }

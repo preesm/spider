@@ -129,15 +129,13 @@ inline void SharedMemArchi::setPETypeRecvSpeed(int type, float a, float b) {
 }
 
 inline void SharedMemArchi::setName(int pe, const char *name) {
-    int size = strlen(name) + 1;
-    char *newName = CREATE_MUL(ARCHI_STACK, size, char);
-    peName_[pe] = newName;
-    strcpy(newName, name);
+    auto size = strlen(name) + 1;
+    peName_[pe] = CREATE_MUL(ARCHI_STACK, size, char);
+    strcpy(peName_[pe], name);
 }
 
 inline void SharedMemArchi::setPEType(int pe, int type) {
     peType_[pe] = type;
-
     nPEperType_[type]++;
 }
 

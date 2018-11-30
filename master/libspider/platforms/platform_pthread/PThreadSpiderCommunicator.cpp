@@ -82,13 +82,11 @@ PThreadSpiderCommunicator::~PThreadSpiderCommunicator() {
 
 PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
                                                      ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue,
-                                                     NotificationQueue **notificationQueue, TraceQueue *traceQueue,
-                                                     int nLrt) {
+                                                     NotificationQueue **notificationQueue, TraceQueue *traceQueue) {
     spider2LrtJobQueue_ = spider2LrtJobQueue;
     spider2LrtLRTQueue_ = spider2LrtLRTQueue;
     notificationQueue_ = notificationQueue;
     traceQueue_ = traceQueue;
-    nLrt_ = nLrt;
 }
 
 bool PThreadSpiderCommunicator::popNotification(int lrtID, NotificationMessage *msg, bool blocking) {

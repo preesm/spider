@@ -70,8 +70,7 @@ public:
             ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
             ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue,
             NotificationQueue **notificationQueue,
-            TraceQueue *traceQueue, int nLrt
-    );
+            TraceQueue *traceQueue);
 
     bool popNotification(int lrtID, NotificationMessage *msg, bool blocking);
 
@@ -89,11 +88,11 @@ public:
 
     void ctrl_end_send(int, std::uint64_t) {};
 
-    std::uint64_t ctrl_start_recv(int , void **) { return  0; };
+    std::uint64_t ctrl_start_recv(int, void **) { return 0; };
 
-    void ctrl_start_recv_block(int , void **) {};
+    void ctrl_start_recv_block(int, void **) {};
 
-    void ctrl_end_recv(int ) {};
+    void ctrl_end_recv(int) {};
 
     void *trace_start_send(int size);
 

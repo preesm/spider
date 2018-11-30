@@ -419,6 +419,7 @@ void LRT::fetchLRTNotification(NotificationMessage &message) {
             communicator->getLRTMessage(&msg, message.getIndex());
             // set last job id
             lastJobID_ = msg->lastJobID_;
+            delete msg;
         }
             break;
         case LRT_RST_ITERATION:
@@ -434,6 +435,7 @@ void LRT::fetchLRTNotification(NotificationMessage &message) {
             lastJobID_ = msg->lastJobID_;
             // set repeat mode (continuous)
             repeatIteration_ = msg->flag_;
+            delete msg;
         }
             break;
         case LRT_PAUSE:
@@ -512,8 +514,12 @@ void LRT::runJob(JobMessage *message) {
         tabBlkLrtIx[i] = inFifos[i].blkLrtIx; // lrt to wait
         tabBlkLrtJobIx[i] = inFifos[i].blkLrtJobIx; // total job ticket for this lrt to wait
     }
-//    fprintf(stderr, "INFO: LRT: %d -- waiting for LRT: %d and Job: %d\n", Platform::get()->getLrtIx(), tabBlkLrtIx[0],
-//            tabBlkLrtJobIx[0]);
+
+#ifdef VERBOSE_JOBS
+    fprintf(stderr, "INFO: LRT: %d -- waiting for LRT: %d and Job: %d\n", Platform::get()->getLrtIx(), tabBlkLrtIx[0],
+            tabBlkLrtJobIx[0]);
+#endif
+
     Platform::get()->getLrtCommunicator()->waitForLrtUnlock((int) message->nbInEdge_, tabBlkLrtIx,
                                                             tabBlkLrtJobIx, jobIx_);
 
@@ -666,15 +672,24 @@ void LRT::runJob(JobMessage *message) {
 void LRT::jobRunner() {
     auto message = jobQueue_[jobQueueIndex_++];
     // Run job
-//    fprintf(stderr, "INFO: LRT: %d -- Running Job: %d\n", Platform::get()->getLrtIx(), jobIx_ + 1);
+#ifdef VERBOSE_JOBS
+    fprintf(stderr, "INFO: LRT: %d -- Running Job: %d\n", Platform::get()->getLrtIx(), jobIx_ + 1);
+#endif
+
     runJob(message);
-//    fprintf(stderr, "INFO: LRT: %d -- Finished Job: %d\n", Platform::get()->getLrtIx(), jobIx_);
+
+#ifdef VERBOSE_JOBS
+    fprintf(stderr, "INFO: LRT: %d -- Finished Job: %d\n", Platform::get()->getLrtIx(), jobIx_);
+#endif
     // Check if it is last job of current iteration
-    if (lastJobID_ && jobIx_ == lastJobID_) {
+    if ((lastJobID_ >= 0) && jobIx_ == lastJobID_) {
         // Send finished iteration message
-        NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION);
         auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
-        spiderCommunicator->pushNotification(0, &finishedMessage);
+        NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION);
+        spiderCommunicator->pushNotification(Platform::get()->getNLrt(), &finishedMessage);
+#ifdef VERBOSE_JOBS
+        fprintf(stderr, "INFO: LRT: %d -- finished iteration.\n", getIx());
+#endif
         if (repeatJobQueue_) {
             jobIx_ = -1;
             jobQueueIndex_ = 0;
@@ -716,9 +731,11 @@ void LRT::run(bool loop) {
         }
         /** 1. If no notification and JOB queue is not empty **/
         if (jobQueueIndex_ < jobQueueSize_) {
-//            fprintf(stderr, "INFO: LRT: %d -- Got %d Jobs to do -- Got %d Jobs in queue -- Done %d.\n",
-//                    Platform::get()->getLrtIx(), lastJobID_ + 1,
-//                    jobQueueSize_, jobQueueIndex_);
+#ifdef VERBOSE_JOBS
+            fprintf(stderr, "INFO: LRT: %d -- Got %d Jobs to do -- Got %d Jobs in queue -- Done %d.\n",
+                    Platform::get()->getLrtIx(), lastJobID_ + 1,
+                    jobQueueSize_, jobQueueIndex_);
+#endif
             jobRunner();
         }
         doneWithCurrentJobs = (jobQueueSize_ > 0) && (jobQueueSize_ == jobQueueIndex_);

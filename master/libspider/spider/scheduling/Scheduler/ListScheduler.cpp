@@ -174,7 +174,7 @@ void ListScheduler::schedule(
         auto index = spiderCommunicator->pushLRTMessage(&lrtMessage);
         /** Send Notification for End Notification **/
         NotificationMessage message(LRT_NOTIFICATION, LRT_END_ITERATION, index);
-        spiderCommunicator->pushNotification(i + 1, &message);
+        spiderCommunicator->pushNotification(i , &message);
         /** Set Repeat Mode **/
 //        NotificationMessage repeatMessage;
 //        repeatMessage.type_ = JOB_NOTIFICATION;

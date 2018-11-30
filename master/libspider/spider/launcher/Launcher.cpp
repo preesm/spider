@@ -193,7 +193,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
     auto jobID = spiderCommunicator->pushJobMessage(&msg);
     NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, jobID);
     /** Send notification **/
-    spiderCommunicator->pushNotification(lrtIx + 1, &notificationMessage);
+    spiderCommunicator->pushNotification(lrtIx, &notificationMessage);
 //    fprintf(stderr, "INFO: LRT: %d -- job pushed.\n", lrtIx);
 }
 

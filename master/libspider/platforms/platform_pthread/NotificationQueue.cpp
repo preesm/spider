@@ -46,6 +46,9 @@ NotificationQueue::NotificationQueue() {
 }
 
 NotificationQueue::~NotificationQueue() {
+    while(!queue_.empty()) {
+        queue_.pop();
+    }
     sem_destroy(&queueCounter_);
 }
 

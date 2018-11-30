@@ -224,7 +224,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
                     spider2LrtJobQueue_,
                     spider2LrtLRTQueue_,
-                    lrtNotificationQueues_[i + offsetPe + 1],
+                    lrtNotificationQueues_[i + offsetPe],
                     dataQueues_,
                     traceQueue_);
 
@@ -335,7 +335,7 @@ PlatformPThread::~PlatformPThread() {
     for (unsigned int i = 1; i < nLrt_; ++i) {
         NotificationMessage message(LRT_NOTIFICATION, LRT_STOP);
         auto spiderCommunicator = (PThreadSpiderCommunicator *) getSpiderCommunicator();
-        spiderCommunicator->pushNotification(i + 1, &message);
+        spiderCommunicator->pushNotification(i, &message);
     }
 
     //wait for every LRT to end
@@ -361,7 +361,6 @@ PlatformPThread::~PlatformPThread() {
         StackMonitor::free(ARCHI_STACK, lrt_[i]);
         StackMonitor::free(ARCHI_STACK, lrtCom_[i]);
     }
-    ((PThreadSpiderCommunicator *) spiderCom_)->~PThreadSpiderCommunicator();
     StackMonitor::free(ARCHI_STACK, spiderCom_);
 
 
@@ -373,6 +372,7 @@ PlatformPThread::~PlatformPThread() {
 
     /** Freeing queues **/
     for (unsigned int i = 0; i < nLrt_ + 1; ++i) {
+        lrtNotificationQueues_[i]->~NotificationQueue();
         StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
     }
     StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
@@ -498,14 +498,14 @@ void PlatformPThread::rstJobIxRecv() {
         NotificationMessage finishedMessage;
         /** Wait for LRTs to finish their jobs **/
         while (true) {
-            spiderCommunicator->popNotification(0, &finishedMessage, true);
+            spiderCommunicator->popNotification(Platform::get()->getNLrt(), &finishedMessage, true);
             if (finishedMessage.getType() == LRT_NOTIFICATION &&
                 finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
                 break;
             }
         }
         /** Send message to clear job queue **/
-        spiderCommunicator->pushNotification(i + 1, &message);
+        spiderCommunicator->pushNotification(i, &message);
     }
 }
 

@@ -70,12 +70,6 @@
 
 class PThreadLrtCommunicator : public LrtCommunicator {
 public:
-//    PThreadLrtCommunicator(
-//            ControlQueue *spider2LrtQueue,
-//            ControlQueue *lrt2SpiderQueue,
-//            DataQueues *dataQueues,
-//            TraceQueue *traceQueue
-//    );
 
     PThreadLrtCommunicator(
             ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
@@ -85,7 +79,7 @@ public:
             TraceQueue *traceQueue
     );
 
-    std::uint64_t popNotification(NotificationMessage *msg, bool blocking);
+    bool popNotification(NotificationMessage *msg, bool blocking);
 
     void pushNotification(NotificationMessage *msg);
 
@@ -124,15 +118,11 @@ public:
     void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx);
 
 private:
-
-//    ControlQueue *spider2LrtQueue_;
-//    ControlQueue *lrt2SpiderQueue_;
     ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue_;
     NotificationQueue *notificationQueue_;
     DataQueues *dataQueues_;
     TraceQueue *traceQueue_;
-    int queueSize_;
 };
 
 #endif/*PTHREAD_LRT_COMMUNICATOR_H*/

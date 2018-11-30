@@ -47,19 +47,37 @@
 #include <Message.h>
 #include <mutex>
 
-template <class T>
+/**
+ * @brief Thread safe Message Queue using std::vector for message storage and std::queue for index management;
+ *        This implementation is index based for retrieval of message.
+ *        Index is returned at push and is needed for pop.
+ * @tparam T Type of message
+ */
+
+template<class T>
 class ControlMessageQueue {
 public:
-    ControlMessageQueue();
+    ControlMessageQueue() = default;
 
-    ~ControlMessageQueue();
+    ~ControlMessageQueue() {
+        msgQueueMutex_.lock();
+        /** Clearing the message queue **/
+        msgQueue_.clear();
+        msgQueueMutex_.unlock();
+        indexesQueueMutex_.lock();
+        /** Clearing the indexes queue **/
+        while (!indexesQueue_.empty()) {
+            indexesQueue_.pop();
+        }
+        indexesQueueMutex_.unlock();
+    }
 
     /**
      * @brief Retrieve the message of given id.
      * @param message  Message to be filled.
      * @param id       Id of the job.
      */
-    std::uint8_t pop(T *message, std::int32_t id);
+    bool pop(T *message, std::int32_t id);
 
     /**
      * @brief  Push a message in the queue
@@ -69,14 +87,34 @@ public:
     std::int32_t push(T *message);
 
 private:
-    /** Queue of the first available free space in Job queue */
+    /** Queue of the first available free space in queue */
     std::queue<std::int32_t> indexesQueue_;
     std::mutex indexesQueueMutex_;
+
+    /**
+     * @brief Thread safe function to get next free index in queue
+     * @return next free index (if any), -1 if none are available
+     */
     std::int32_t getNextFreeIndex();
+
+    /**
+     * @brief Thread safe function to set add a free index in queue
+     * @param index Index to add
+     */
     void setNextFreeIndex(std::int32_t index);
+
     /** Queue of JobMessage */
     std::vector<T> msgQueue_;
     std::mutex msgQueueMutex_;
 };
+
+/**
+ * @brief Defining templates here due to some linker issues.
+ */
+template
+class ControlMessageQueue<JobMessage *>;
+
+template
+class ControlMessageQueue<LRTMessage *>;
 
 #endif //SPIDER_CONTROLMESSAGEQUEUE_H

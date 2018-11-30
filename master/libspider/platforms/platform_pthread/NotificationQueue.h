@@ -44,10 +44,10 @@
 #include <queue>
 #include <mutex>
 #include <semaphore.h>
-#include <monitor/StackMonitor.h>
+#include <Message.h>
 
 /**
- * @brief Thread safe implementation of std::queue
+ * @brief Thread safe and passive implementation of std::queue (using semaphore to wake waiting thread on queue)
  */
 class NotificationQueue {
 public:
@@ -63,26 +63,12 @@ public:
 
 
     /**
-     * @brief Push bufferSize values to the queue with the bufferSize
+     * @brief Push data type value into the queue
      *
-     * @param bufferSize Size of the buffer to push
-     * @param buffer     Buffer containing the bufferSize <T> values to push
+     * @param data     Buffer containing the bufferSize <T> values to push
      *
-     * @remark The queue semaphore is only posted once. It is user responsability to know what is inside the queue.
      */
-    void push(std::uint64_t &bufferSize, void *buffer);
-
-    /**
-     * @brief Pop data from the queue if it contains any. This method consider buffer data in the queue.
-     * Method reads buffer size from first N bytes (depending on sizeof(T)) and then reads buffer into data.
-     *
-     * @param data      Buffer to be filled with buffer data
-     * @param blocking  Flag to wait (true) if queue is empty or return (false).
-     * @param maxSize   Maximum size allowed for the read buffer.
-     *
-     * @return Size of the read buffer, 0 if queue is empty and blocking is set to false.
-     */
-    std::uint64_t pop(void **data, bool blocking, std::uint64_t &maxSize);
+    void push(NotificationMessage *data);
 
     /**
      * @brief Read one value in the queue if it contains any.
@@ -90,16 +76,17 @@ public:
      * @param data      Pointer to data to be filled with queue content.
      * @param blocking  Flag to wait (true) if queue is empty or return (false).
      */
-    std::uint8_t  pop(std::uint8_t *data, bool blocking);
+    bool  pop(NotificationMessage *data, bool blocking);
 
 
     /**
      * @brief Clear the queue (thread safe)
      */
-    void clear(void);
+    void clear();
 
 private:
-    std::queue<std::uint8_t> queue_;
+    std::uint64_t queueSize_;
+    std::queue<NotificationMessage> queue_;
     std::mutex queueMutex_;
     sem_t queueCounter_;
 };

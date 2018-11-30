@@ -41,6 +41,7 @@
 #include "NotificationQueue.h"
 
 NotificationQueue::NotificationQueue() {
+    queueSize_ = 0;
     sem_init(&queueCounter_, 0, 0);
 }
 
@@ -48,85 +49,36 @@ NotificationQueue::~NotificationQueue() {
     sem_destroy(&queueCounter_);
 }
 
-void NotificationQueue::push(std::uint64_t &bufferSize, void *buffer) {
+void NotificationQueue::push(NotificationMessage *data) {
     /** Creating a scope for lock_guard */
     {
         /** Locking mutex with guard (in case of exception) */
         std::lock_guard<std::mutex> lock(queueMutex_);
-
-        /** Filling queue with buffer size bytes */
-        auto bufferSizeAsArray = (std::uint8_t *) (&bufferSize);
-        for (std::uint8_t i = 0; i < sizeof(std::uint64_t); ++i) {
-            queue_.push(bufferSizeAsArray[(sizeof(std::uint64_t) - 1) - i]);
-        }
-
-        /** Filling queue with buffer data */
-        auto convertedBuffer = (std::uint8_t *) buffer;
-        for (std::uint64_t i = 0; i < bufferSize; i++) {
-            auto currentValue = convertedBuffer[i];
-            queue_.push(currentValue);
-        }
+        /** Filling queue with data */
+        queue_.push((*data));
+        queueSize_++;
     }
 
     /** Posting queue semaphore to signal item is added inside */
     sem_post(&queueCounter_);
 }
 
-std::uint64_t NotificationQueue::pop(void **data, bool blocking, std::uint64_t &maxSize) {
+bool NotificationQueue::pop(NotificationMessage *data, bool blocking) {
     /** Wait until a item is pushed in the queue */
     if (blocking) {
         sem_wait(&queueCounter_);
     } else if (sem_trywait(&queueCounter_)) {
         /** If queue is empty return */
-        return 0;
+        return false;
     }
     /** Locking mutex with guard (in case of exception) */
     std::lock_guard<std::mutex> lock(queueMutex_);
-
-    /** If a thread has cleared the queue */
-    if (queue_.empty()) {
-        return 0;
-    }
-
-    /** Retrieve buffer size */
-    std::uint64_t bufferSize = 0;
-    for (std::uint8_t nb = 0; nb < sizeof(std::uint64_t); nb++) {
-        bufferSize = bufferSize << sizeof(std::uint64_t);
-        bufferSize += queue_.front();
-        queue_.pop();
-    }
-
-    /** Check size */
-    if (bufferSize > maxSize) {
-        throw std::runtime_error("ERROR: Trying to read a message in a SpiderQueue too big.\n");
-    }
-
-    /** Retrieve the item from the queue */
-    auto convertedBufferRcv = (std::uint8_t *) (*data);
-    for (std::uint64_t recv = 0; recv < bufferSize; recv++) {
-        convertedBufferRcv[recv] = queue_.front();
-        queue_.pop();
-    }
-    return bufferSize;
-}
-
-std::uint8_t NotificationQueue::pop(std::uint8_t *data, bool blocking) {
-    /** Wait until a item is pushed in the queue */
-    if (blocking) {
-        sem_wait(&queueCounter_);
-    } else if (sem_trywait(&queueCounter_)) {
-        /** If queue is empty return */
-        return 0;
-    }
-
-    /** Locking mutex with guard (in case of exception) */
-    std::lock_guard<std::mutex> lock(queueMutex_);
-
     /** Retrieving data */
     (*data) = queue_.front();
     /** Removing the element from the queue */
     queue_.pop();
-    return 1;
+    queueSize_--;
+    return true;
 }
 
 
@@ -135,4 +87,5 @@ void NotificationQueue::clear() {
     while (!queue_.empty()) {
         queue_.pop();
     }
+    queueSize_ = 0;
 }

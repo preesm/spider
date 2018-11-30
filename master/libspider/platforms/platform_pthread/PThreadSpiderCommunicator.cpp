@@ -91,14 +91,12 @@ PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlMessageQueue<JobMess
     nLrt_ = nLrt;
 }
 
-std::uint64_t PThreadSpiderCommunicator::popNotification(int lrtID, NotificationMessage *msg, bool blocking) {
-    std::uint64_t size = sizeof(NotificationMessage);
-    return notificationQueue_[lrtID]->pop((void **) &msg, blocking, size);
+bool PThreadSpiderCommunicator::popNotification(int lrtID, NotificationMessage *msg, bool blocking) {
+    return notificationQueue_[lrtID]->pop(msg, blocking);
 }
 
 void PThreadSpiderCommunicator::pushNotification(int lrtID, NotificationMessage *msg) {
-    std::uint64_t size = sizeof(NotificationMessage);
-    notificationQueue_[lrtID]->push(size, msg);
+    notificationQueue_[lrtID]->push(msg);
 }
 
 void *PThreadSpiderCommunicator::trace_start_send(int size) {

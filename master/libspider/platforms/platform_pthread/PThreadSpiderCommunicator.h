@@ -66,10 +66,6 @@
 
 class PThreadSpiderCommunicator : public SpiderCommunicator {
 public:
-//    PThreadSpiderCommunicator(ControlQueue **spider2LrtQueues,
-//                              ControlQueue **lrt2SpiderQueues,
-//                              TraceQueue *traceQueue, int nLrt);
-
     PThreadSpiderCommunicator(
             ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
             ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue,
@@ -77,7 +73,7 @@ public:
             TraceQueue *traceQueue, int nLrt
     );
 
-    std::uint64_t popNotification(int lrtID, NotificationMessage *msg, bool blocking);
+    bool popNotification(int lrtID, NotificationMessage *msg, bool blocking);
 
     void pushNotification(int lrtID, NotificationMessage *msg);
 
@@ -112,13 +108,10 @@ public:
     void rst_ctrl_queue() {};
 
 private:
-//    ControlQueue **spider2LrtQueues_;
-//    ControlQueue **lrt2SpiderQueues_;
     ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue_;
     NotificationQueue **notificationQueue_;
     TraceQueue *traceQueue_;
-    int nLrt_;
 };
 
 #endif/*PTHREADS_SPIDER_COMMUNICATOR_H*/

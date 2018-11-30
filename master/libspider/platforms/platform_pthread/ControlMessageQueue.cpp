@@ -40,17 +40,6 @@
 
 #include "ControlMessageQueue.h"
 
-template<class T>
-ControlMessageQueue<T>::ControlMessageQueue() {
-}
-
-template<class T>
-ControlMessageQueue<T>::~ControlMessageQueue() {
-    while (!msgQueue_.empty()) {
-        delete msgQueue_.front();
-        msgQueue_.erase(msgQueue_.begin());
-    }
-}
 
 template<class T>
 void ControlMessageQueue<T>::setNextFreeIndex(std::int32_t index) {
@@ -60,17 +49,15 @@ void ControlMessageQueue<T>::setNextFreeIndex(std::int32_t index) {
 }
 
 template<class T>
-std::uint8_t ControlMessageQueue<T>::pop(T *message, std::int32_t id) {
-    {
-        /** Lock the mutex with guard */
-        std::lock_guard<std::mutex> lockGuard(msgQueueMutex_);
-        if (id < 0 || id >= (std::int32_t) msgQueue_.size()) {
-            return 0;
-        }
-        (*message) = msgQueue_[id];
+bool ControlMessageQueue<T>::pop(T *message, std::int32_t id) {
+    if (id < 0) {
+        return false;
     }
+    /** No need to lock msgQueueMutex as the id is unique and access to std::vector is thread safe in read only **/
+    (*message) = msgQueue_[id];
+    /** Set the position in queue as available for new content */
     setNextFreeIndex(id);
-    return 1;
+    return true;
 }
 
 
@@ -92,21 +79,11 @@ std::int32_t ControlMessageQueue<T>::push(T *message) {
     std::int32_t freeIndex = getNextFreeIndex();
     /** Lock the mutex with guard */
     std::lock_guard<std::mutex> lockGuard(msgQueueMutex_);
-    std::int32_t jobID = 0;
     if (freeIndex >= 0) {
-        jobID = freeIndex;
-        //  msgQueue_[jobID]->~T();
-        delete msgQueue_[jobID];
-        msgQueue_[jobID] = *message;
-    } else {
-        msgQueue_.push_back(*message);
-        jobID = (std::int32_t) msgQueue_.size() - 1;
+        msgQueue_[freeIndex] = (*message);
+        return freeIndex;
     }
+    msgQueue_.push_back((*message));
+    std::int32_t jobID = (std::int32_t) msgQueue_.size() - 1;
     return jobID;
 }
-
-template
-class ControlMessageQueue<JobMessage *>;
-
-template
-class ControlMessageQueue<LRTMessage *>;

@@ -99,14 +99,12 @@ PThreadLrtCommunicator::PThreadLrtCommunicator(
     traceQueue_ = traceQueue;
 }
 
-std::uint64_t PThreadLrtCommunicator::popNotification(NotificationMessage *msg, bool blocking) {
-    std::uint64_t size = sizeof(NotificationMessage);
-    return notificationQueue_->pop((void **) &msg, blocking, size);
+bool PThreadLrtCommunicator::popNotification(NotificationMessage *msg, bool blocking) {
+    return notificationQueue_->pop(msg, blocking);
 }
 
 void PThreadLrtCommunicator::pushNotification(NotificationMessage *msg) {
-    std::uint64_t size = sizeof(NotificationMessage);
-    notificationQueue_->push(size, msg);
+    notificationQueue_->push(msg);
 }
 
 void PThreadLrtCommunicator::getLRTMessage(LRTMessage **msg, std::int32_t id) {

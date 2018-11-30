@@ -40,6 +40,7 @@
 #define DYN_STACK_H
 
 #include <tools/Stack.h>
+#include <mutex>
 
 class DynStack : public Stack {
 public:
@@ -59,6 +60,8 @@ private:
     long long curUsedSize_;
     long long maxSize_;
     int nb_;
+
+    std::mutex memoryMutex_;
 };
 
 #endif//STATIC_STACK_H

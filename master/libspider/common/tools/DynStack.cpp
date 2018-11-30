@@ -59,6 +59,7 @@ static inline int getAlignSize(int size) {
 }
 
 void *DynStack::alloc(int size) {
+    std::lock_guard<std::mutex> lock(memoryMutex_);
     size += sizeof(int);
 
     size = getAlignSize(size);
@@ -68,7 +69,7 @@ void *DynStack::alloc(int size) {
 
     void *address = malloc(size);
     if (!address) {
-        throw std::runtime_error("MemAlloc failed");
+        throw std::runtime_error("ERROR: DynStack memory allocation failed.\n");
     }
     int *sizeAddress = (int *) address;
     void *dataAddress = (void *) (sizeAddress + 1);
@@ -84,6 +85,7 @@ void DynStack::freeAll() {
 }
 
 void DynStack::free(void *var) {
+    std::lock_guard<std::mutex> lock(memoryMutex_);
     void *dataAddress = var;
     void *address = (void *) (((int *) dataAddress) - 1);
     int size = *((int *) address);

@@ -42,7 +42,7 @@
 
 #include <platform.h>
 
-typedef Time(*MappingTimeFct)(int, int);
+using MappingTimeFct = Time (*)(int, int);
 
 class Archi {
 protected:

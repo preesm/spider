@@ -67,8 +67,8 @@ typedef enum PiSDFDelayType {
 } PiSDFDelayType;
 
 /** Set types */
-typedef Set<PiSDFEdge *> PiSDFEdgeSet;
-typedef Set<PiSDFParam *> PiSDFParamSet;
-typedef Set<PiSDFVertex *> PiSDFVertexSet;
+using PiSDFEdgeSet = Set<PiSDFEdge *>;
+using PiSDFParamSet = Set<PiSDFParam *>;
+using PiSDFVertexSet = Set<PiSDFVertex *>;
 
 #endif/*PISDF_COMMON_H*/

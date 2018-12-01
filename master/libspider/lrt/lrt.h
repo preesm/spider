@@ -56,11 +56,7 @@
 
 #define NB_MAX_ACTOR (200)
 
-typedef void (*lrtFct)(
-        void *inputFIFOs[],
-        void *outputFIFOs[],
-        Param inParams[],
-        Param outParams[]);
+using lrtFct = void (*)(void **, void **, Param *, Param *);
 
 class LRT {
 public:
@@ -70,9 +66,9 @@ public:
 
     void setFctTbl(const lrtFct fct[], int nFct);
 
-    void runUntilNoMoreJobs();
+    void runUntilNoMoreJobs() {};
 
-    void runInfinitly();
+    void runInfinitly() {};
 
     void run(bool loop);
 

@@ -57,7 +57,7 @@ PiSDFParam::PiSDFParam(
     type_ = type;
     value_ = -1;
     parentId_ = -1;
-    setter_ = 0;
+    setter_ = nullptr;
     portIx_ = -1;
 
     switch (type) {
@@ -72,7 +72,7 @@ PiSDFParam::PiSDFParam(
         case PISDF_PARAM_HERITED:
         case PISDF_PARAM_DYNAMIC:
         default:
-            expr_ = 0;
+            expr_ = nullptr;
             break;
     }
 }

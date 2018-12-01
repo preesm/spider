@@ -71,8 +71,8 @@ void *DynStack::alloc(int size) {
     if (!address) {
         throw std::runtime_error("ERROR: DynStack memory allocation failed.\n");
     }
-    int *sizeAddress = (int *) address;
-    void *dataAddress = (void *) (sizeAddress + 1);
+    auto *sizeAddress = (int *) address;
+    auto *dataAddress = (void *) (sizeAddress + 1);
     *sizeAddress = size;
 
     return dataAddress;
@@ -87,7 +87,7 @@ void DynStack::freeAll() {
 void DynStack::free(void *var) {
     std::lock_guard<std::mutex> lock(memoryMutex_);
     void *dataAddress = var;
-    void *address = (void *) (((int *) dataAddress) - 1);
+    auto *address = (void *) (((int *) dataAddress) - 1);
     int size = *((int *) address);
 
     maxSize_ = std::max(maxSize_, curUsedSize_);

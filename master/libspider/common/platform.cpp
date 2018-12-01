@@ -39,7 +39,7 @@
  */
 #include <platform.h>
 
-Platform *Platform::platform_ = 0;
+Platform *Platform::platform_ = nullptr;
 
 Platform::Platform() {
 

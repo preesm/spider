@@ -111,7 +111,6 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
     auto inParams = CREATE_MUL(ARCHI_STACK, nParams, Param);
 
     auto msg = CREATE(ARCHI_STACK, JobMessage);
-    msg->id_ = JOB_NOTIFICATION;
     msg->srdagID_ = vertex->getId();
     msg->specialActor_ = vertex->getType() != SRDAG_NORMAL;
     msg->fctID_ = vertex->getFctId();
@@ -190,10 +189,10 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
 
     auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
     /** Push the job message **/
-    auto jobID = spiderCommunicator->pushJobMessage(&msg);
+    auto jobID = spiderCommunicator->push_job_message(&msg);
     NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, jobID);
     /** Send notification **/
-    spiderCommunicator->pushNotification(lrtIx, &notificationMessage);
+    spiderCommunicator->push_notification(lrtIx, &notificationMessage);
 //    fprintf(stderr, "INFO: LRT: %d -- job pushed.\n", lrtIx);
 }
 

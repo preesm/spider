@@ -58,7 +58,7 @@ StaticStack::~StaticStack() {
 }
 
 static inline int getAlignSize(int size) {
-    float minAlloc = (float) Platform::get()->getMinAllocSize();
+    auto minAlloc = (float) Platform::get()->getMinAllocSize();
     return (int) std::ceil(((float) size) / minAlloc) * minAlloc;
 }
 

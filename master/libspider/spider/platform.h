@@ -40,7 +40,7 @@
 
 #include "spider.h"
 #include <monitor/StackMonitor.h>
-#include <stdio.h>
+#include <cstdio>
 #include <stdexcept>
 #include <Message.h>
 

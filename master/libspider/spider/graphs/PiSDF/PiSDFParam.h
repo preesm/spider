@@ -55,7 +55,7 @@ public:
             PiSDFParamType type,
             const char *expr);
 
-    ~PiSDFParam();
+    ~PiSDFParam() override;
 
     /** Getters */
     inline int getIx() const;

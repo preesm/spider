@@ -40,7 +40,7 @@
 #include <lrt.h>
 #include <LrtCommunicator.h>
 
-#include <string.h>
+#include <cstring>
 #include <PThreadLrtCommunicator.h>
 #include <PThreadSpiderCommunicator.h>
 
@@ -69,7 +69,7 @@ static lrtFct specialActors[6] = {
 
 LRT::LRT(int ix) {
     /* TODO add some heapMemory */
-    fcts_ = 0;
+    fcts_ = nullptr;
     nFct_ = 0;
     ix_ = ix;
     run_ = false;
@@ -176,8 +176,8 @@ inline void LRT::runReceivedJob(void *msg) {
             auto outFifos = (Fifo *) ((char *) inFifos + jobMsg->nbInEdge_ * sizeof(Fifo));
             auto inParams = (Param *) ((char *) outFifos + jobMsg->nbOutEdge_ * sizeof(Fifo));
 
-            void **inFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbInEdge_, void*);
-            void **outFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbOutEdge_, void*);
+            auto **inFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbInEdge_, void*);
+            auto **outFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nbOutEdge_, void*);
             auto outParams = CREATE_MUL(LRT_STACK, jobMsg->nbOutParam_, Param);
 
             Time start;
@@ -220,7 +220,7 @@ inline void LRT::runReceivedJob(void *msg) {
                 inFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_recv(&inFifos[i]); // in com
 
                 if (inFifos[i].size == 0)
-                    inFifosAlloc[i] = NULL;
+                    inFifosAlloc[i] = nullptr;
 
 #ifdef VERBOSE_TIME
                 time_waiting_input_comm += Platform::get()->getTime() - start;
@@ -236,7 +236,7 @@ inline void LRT::runReceivedJob(void *msg) {
                 outFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_start_send(&outFifos[i]); // in com
 
                 if (outFifos[i].size == 0)
-                    outFifosAlloc[i] = NULL;
+                    outFifosAlloc[i] = nullptr;
 
 #ifdef VERBOSE_TIME
                 time_waiting_input_comm += Platform::get()->getTime() - start;
@@ -379,36 +379,6 @@ inline void LRT::runReceivedJob(void *msg) {
 #endif
 }
 
-void LRT::runUntilNoMoreJobs() {
-    void *msg;
-
-    while (Platform::get()->getLrtCommunicator()->ctrl_start_recv(&msg)) {
-        runReceivedJob(msg);
-    }
-}
-
-void LRT::runInfinitly() {
-    void *msg;
-    run_ = true;
-
-#ifdef VERBOSE_TIME
-    Time start = Platform::get()->getTime();
-#endif
-
-#ifdef VERBOSE_TIME
-    start_waiting_job = Platform::get()->getTime();
-#endif
-
-    while (run_) {
-        Platform::get()->getLrtCommunicator()->ctrl_start_recv_block(&msg);
-        runReceivedJob(msg);
-    }
-
-#ifdef VERBOSE_TIME
-    time_global += Platform::get()->getTime() - start;
-#endif
-}
-
 void LRT::fetchLRTNotification(NotificationMessage &message) {
     switch (message.getSubType()) {
         case LRT_END_ITERATION: {
@@ -416,7 +386,7 @@ void LRT::fetchLRTNotification(NotificationMessage &message) {
             auto communicator = (PThreadLrtCommunicator *) (Platform::get()->getLrtCommunicator());
             LRTMessage *msg;
             // pop message from global queue
-            communicator->getLRTMessage(&msg, message.getIndex());
+            communicator->pop_lrt_message(&msg, message.getIndex());
             // set last job id
             lastJobID_ = msg->lastJobID_;
             delete msg;
@@ -430,7 +400,7 @@ void LRT::fetchLRTNotification(NotificationMessage &message) {
             auto communicator = (PThreadLrtCommunicator *) (Platform::get()->getLrtCommunicator());
             LRTMessage *msg;
             // pop message from global queue
-            communicator->getLRTMessage(&msg, message.getIndex());
+            communicator->pop_lrt_message(&msg, message.getIndex());
             // set last job id
             lastJobID_ = msg->lastJobID_;
             // set repeat mode (continuous)
@@ -450,7 +420,6 @@ void LRT::fetchLRTNotification(NotificationMessage &message) {
             // stop lrt
             run_ = false;
             clearJobQueue();
-//            fprintf(stderr, "INFO: LRT: %d -- cleared queue\n", getIx());
             break;
         default:
             throw std::runtime_error("ERROR: unhandled type of LRT notification.\n");
@@ -465,11 +434,10 @@ void LRT::fetchJobNotification(NotificationMessage &message) {
             auto communicator = (PThreadLrtCommunicator *) (Platform::get()->getLrtCommunicator());
             JobMessage *msg;
             // pop message from global queue
-            communicator->getJobMessage(&msg, message.getIndex());
+            communicator->pop_job_message(&msg, message.getIndex());
             // push message in local queue (don't execute right now in case more important notification comes along
             jobQueue_.push_back(msg);
             jobQueueSize_++;
-//            fprintf(stderr, "INFO: LRT: %d -- queueSize: %u\n", getIx(), jobQueueSize_);
         }
             break;
         case JOB_DO_AND_KEEP:
@@ -504,8 +472,8 @@ void LRT::runJob(JobMessage *message) {
     auto outFifos = message->outFifos_;
     auto inParams = message->inParams_;
 
-    void **inFifosAlloc = CREATE_MUL(LRT_STACK, message->nbInEdge_, void*);
-    void **outFifosAlloc = CREATE_MUL(LRT_STACK, message->nbOutEdge_, void*);
+    auto **inFifosAlloc = CREATE_MUL(LRT_STACK, message->nbInEdge_, void*);
+    auto **outFifosAlloc = CREATE_MUL(LRT_STACK, message->nbOutEdge_, void*);
     auto outParams = CREATE_MUL(LRT_STACK, message->nbOutParam_, Param);
 
 //    Time start;
@@ -668,7 +636,6 @@ void LRT::runJob(JobMessage *message) {
     StackMonitor::freeAll(LRT_STACK);
 }
 
-
 void LRT::jobRunner() {
     auto message = jobQueue_[jobQueueIndex_++];
     // Run job
@@ -686,7 +653,7 @@ void LRT::jobRunner() {
         // Send finished iteration message
         auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
         NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION);
-        spiderCommunicator->pushNotification(Platform::get()->getNLrt(), &finishedMessage);
+        spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
 #ifdef VERBOSE_JOBS
         fprintf(stderr, "INFO: LRT: %d -- finished iteration.\n", getIx());
 #endif
@@ -714,7 +681,7 @@ void LRT::run(bool loop) {
         auto communicator = (PThreadLrtCommunicator *) (Platform::get()->getLrtCommunicator());
         /** 0. Check for the presence of notification **/
         NotificationMessage notificationMessage;
-        while (communicator->popNotification(&notificationMessage, blocking)) {
+        while (communicator->pop_notification(&notificationMessage, blocking)) {
             blocking = false;
             switch (notificationMessage.getType()) {
                 case LRT_NOTIFICATION:

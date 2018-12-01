@@ -92,12 +92,12 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx) {
 }
 
 static void freeJob(transfoJob *job) {
-    if (job->configs != 0)
+    if (job->configs != nullptr)
         StackMonitor::free(TRANSFO_STACK, job->configs);
 
-    if (job->bodies != 0) {
+    if (job->bodies != nullptr) {
         for (int i = 0; i < job->graph->getNBody(); i++) {
-            if (job->bodies[i] != 0) {
+            if (job->bodies[i] != nullptr) {
                 StackMonitor::free(TRANSFO_STACK, job->bodies[i]);
             }
         }
@@ -116,7 +116,7 @@ static SRDAGVertex *getNextHierVx(SRDAGGraph *topDag) {
             return vertex;
         }
     }
-    return 0;
+    return nullptr;
 }
 
 void jit_ms(
@@ -128,7 +128,7 @@ void jit_ms(
 
     /* Initialize topDag */
 
-    Schedule *schedule = CREATE(TRANSFO_STACK, Schedule)(archi->getNPE(), SCHEDULE_SIZE);
+    auto *schedule = CREATE(TRANSFO_STACK, Schedule)(archi->getNPE(), SCHEDULE_SIZE);
 
     /* Add initial top actor */
     PiSDFVertex *root = topPisdf->getBody(0);
@@ -154,7 +154,7 @@ void jit_ms(
 
         do {
             /* Fill the transfoJob data */
-            transfoJob *job = CREATE(TRANSFO_STACK, transfoJob);
+            auto *job = CREATE(TRANSFO_STACK, transfoJob);
             initJob(job, nextHierVx);
 
             /* Remove Hierachical vertex */
@@ -177,7 +177,7 @@ void jit_ms(
                     }
                 }
 
-                int *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
+                auto *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
                 computeBRV(job, brv);
                 if (Spider::getVerbose()) {
                     /* Display BRV values */
@@ -245,7 +245,7 @@ void jit_ms(
             }
 
             /* Compute BRV */
-            int *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
+            auto *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
             computeBRV(job, brv);
             if (Spider::getVerbose()) {
                 /* Display BRV values */
@@ -284,7 +284,7 @@ void jit_ms(
         TimeMonitor::startMonitoring();
 
 //        printf("Finish one iter\n");
-    } while (1);
+    } while (true);
 
     topSrdag->updateState();
     TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
@@ -312,7 +312,7 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
                            Scheduler *scheduler) {
     PiSDFGraph *topGraph = Spider::getGraph();
 
-    Schedule *schedule = CREATE(TRANSFO_STACK, Schedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
+    auto *schedule = CREATE(TRANSFO_STACK, Schedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
 
     /* Add initial top actor */
     PiSDFVertex *root = topGraph->getBody(0);
@@ -332,7 +332,7 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
 
     do {
         /* Fill the transfoJob data */
-        transfoJob *job = CREATE(TRANSFO_STACK, transfoJob);
+        auto *job = CREATE(TRANSFO_STACK, transfoJob);
         initJob(job, nextHierVx);
 
         /* Remove Hierachical vertex */
@@ -346,7 +346,7 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
             }
         }
 
-        int *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
+        auto *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
         computeBRV(job, brv);
         if (Spider::getVerbose()) {
             /* Display BRV values */

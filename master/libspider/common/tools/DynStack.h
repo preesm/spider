@@ -46,15 +46,15 @@ class DynStack : public Stack {
 public:
     DynStack(const char *name);
 
-    virtual ~DynStack();
+    ~DynStack() override;
 
-    virtual void *alloc(int size);
+    void *alloc(int size) override;
 
-    virtual void free(void *var);
+    void free(void *var) override;
 
-    virtual void freeAll();
+    void freeAll() override;
 
-    virtual void printStat();
+    void printStat() override;
 
 private:
     long long curUsedSize_;

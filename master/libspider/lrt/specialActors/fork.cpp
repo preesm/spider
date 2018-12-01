@@ -38,23 +38,23 @@
  */
 #include "specialActors.h"
 
-#include <string.h>
+#include <cstring>
 
 void saFork(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
 #if VERBOSE
     fprintf(stderr, "INFO: Entering Fork...\n");
 #endif
 
-    int nbFifoIn = (int) inParams[0];
-    int nbFifoOut = (int) inParams[1];
-    int nbTknIn = (int) inParams[2];
+    auto nbFifoIn = (int) inParams[0];
+    auto nbFifoOut = (int) inParams[1];
+    auto nbTknIn = (int) inParams[2];
     int index = 0;
 
     // 0. Check the number of input FIFOs
     if (nbFifoIn == 1) {
         /* Fork */
         for (int i = 0; i < nbFifoOut; i++) {
-            int nbTknOut = (int) inParams[i + 3];
+            auto nbTknOut = (int) inParams[i + 3];
             if (nbTknOut && outputFIFOs[i] != ((char *) inputFIFOs[0]) + index) {
                 memcpy(outputFIFOs[i], ((char *) inputFIFOs[0]) + index, (size_t) nbTknOut);
             }

@@ -49,7 +49,7 @@ PiSDFGraph::PiSDFGraph(
         configs_(nConfig, PISDF_STACK),
         inputIfs_(nInputIf, PISDF_STACK),
         outputIfs_(nOutputIf, PISDF_STACK) {
-    parent_ = 0;
+    parent_ = nullptr;
 }
 
 PiSDFGraph::~PiSDFGraph() {
@@ -76,7 +76,7 @@ PiSDFVertex *PiSDFGraph::addBodyVertex(
         const char *vertexName, int fctId,
         int nInEdge, int nOutEdge,
         int nInParam) {
-    PiSDFVertex *body = CREATE(PISDF_STACK, PiSDFVertex)(
+    auto *body = CREATE(PISDF_STACK, PiSDFVertex)(
             vertexName, fctId,
             bodies_.getN(),
             PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
@@ -92,11 +92,11 @@ PiSDFVertex *PiSDFGraph::addHierVertex(
         PiSDFGraph *graph,
         int nInEdge, int nOutEdge,
         int nInParam) {
-    PiSDFVertex *body = CREATE(PISDF_STACK, PiSDFVertex)(
+    auto *body = CREATE(PISDF_STACK, PiSDFVertex)(
             vertexName, -1,
             bodies_.getN(),
             PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
-            this, 0,
+            this, nullptr,
             nInEdge, nOutEdge,
             nInParam, 0);
     body->setSubGraph(graph);
@@ -109,11 +109,11 @@ PiSDFVertex *PiSDFGraph::addSpecialVertex(
         PiSDFSubType type,
         int nInEdge, int nOutEdge,
         int nInParam) {
-    PiSDFVertex *body = CREATE(PISDF_STACK, PiSDFVertex)(
-            0, -1,
+    auto *body = CREATE(PISDF_STACK, PiSDFVertex)(
+            nullptr, -1,
             bodies_.getN(),
             PISDF_TYPE_BODY, type,
-            this, 0,
+            this, nullptr,
             nInEdge, nOutEdge,
             nInParam, 0);
     bodies_.add(body);
@@ -125,11 +125,11 @@ PiSDFVertex *PiSDFGraph::addConfigVertex(
         PiSDFSubType subType,
         int nInEdge, int nOutEdge,
         int nInParam, int nOutParam) {
-    PiSDFVertex *config = CREATE(PISDF_STACK, PiSDFVertex)(
+    auto *config = CREATE(PISDF_STACK, PiSDFVertex)(
             vertexName, fctId,
             configs_.getN(),
             PISDF_TYPE_CONFIG, subType,
-            this, 0,
+            this, nullptr,
             nInEdge, nOutEdge,
             nInParam, nOutParam);
     configs_.add(config);
@@ -140,11 +140,11 @@ PiSDFVertex *PiSDFGraph::addConfigVertex(
 PiSDFVertex *PiSDFGraph::addInputIf(
         const char *name,
         int nInParam) {
-    PiSDFVertex *inIf = CREATE(PISDF_STACK, PiSDFVertex)(
+    auto *inIf = CREATE(PISDF_STACK, PiSDFVertex)(
             name, -1,
             inputIfs_.getN(),
             PISDF_TYPE_IF, PISDF_SUBTYPE_INPUT_IF,
-            this, 0,
+            this, nullptr,
             0, 1,
             nInParam, 0);
     inputIfs_.add(inIf);
@@ -154,11 +154,11 @@ PiSDFVertex *PiSDFGraph::addInputIf(
 PiSDFVertex *PiSDFGraph::addOutputIf(
         const char *name,
         int nInParam) {
-    PiSDFVertex *outIf = CREATE(PISDF_STACK, PiSDFVertex)(
+    auto *outIf = CREATE(PISDF_STACK, PiSDFVertex)(
             name, -1,
             outputIfs_.getN(),
             PISDF_TYPE_IF, PISDF_SUBTYPE_OUTPUT_IF,
-            this, 0,
+            this, nullptr,
             1, 0,
             nInParam, 0);
     outputIfs_.add(outIf);
@@ -167,10 +167,10 @@ PiSDFVertex *PiSDFGraph::addOutputIf(
 
 
 PiSDFParam *PiSDFGraph::addStaticParam(const char *name, const char *expr) {
-    PiSDFParam *param = CREATE(PISDF_STACK, PiSDFParam)(
+    auto *param = CREATE(PISDF_STACK, PiSDFParam)(
             name, params_.getN(),
             this, PISDF_PARAM_STATIC,
-            NULL);
+            nullptr);
     try {
         param->setValue(std::stoi(expr));
     } catch (std::exception &e) {
@@ -182,36 +182,36 @@ PiSDFParam *PiSDFGraph::addStaticParam(const char *name, const char *expr) {
 }
 
 PiSDFParam *PiSDFGraph::addStaticParam(const char *name, int value) {
-    PiSDFParam *param = CREATE(PISDF_STACK, PiSDFParam)(
+    auto *param = CREATE(PISDF_STACK, PiSDFParam)(
             name, params_.getN(),
             this, PISDF_PARAM_STATIC,
-            NULL);
+            nullptr);
     param->setValue(value);
     params_.add(param);
     return param;
 }
 
 PiSDFParam *PiSDFGraph::addHeritedParam(const char *name, int parentId) {
-    PiSDFParam *param = CREATE(PISDF_STACK, PiSDFParam)(
+    auto *param = CREATE(PISDF_STACK, PiSDFParam)(
             name, params_.getN(),
             this, PISDF_PARAM_HERITED,
-            NULL);
+            nullptr);
     param->setParentId(parentId);
     params_.add(param);
     return param;
 }
 
 PiSDFParam *PiSDFGraph::addDynamicParam(const char *name) {
-    PiSDFParam *param = CREATE(PISDF_STACK, PiSDFParam)(
+    auto *param = CREATE(PISDF_STACK, PiSDFParam)(
             name, params_.getN(),
             this, PISDF_PARAM_DYNAMIC,
-            NULL);
+            nullptr);
     params_.add(param);
     return param;
 }
 
 PiSDFParam *PiSDFGraph::addDynamicDependentParam(const char *name, const char *expr) {
-    PiSDFParam *param = CREATE(PISDF_STACK, PiSDFParam)(
+    auto *param = CREATE(PISDF_STACK, PiSDFParam)(
             name, params_.getN(),
             this, PISDF_PARAM_DEPENDENT_DYNAMIC,
             expr);
@@ -221,7 +221,7 @@ PiSDFParam *PiSDFGraph::addDynamicDependentParam(const char *name, const char *e
 }
 
 PiSDFParam *PiSDFGraph::addStaticDependentParam(const char *name, const char *expr) {
-    PiSDFParam *param = CREATE(PISDF_STACK, PiSDFParam)(
+    auto *param = CREATE(PISDF_STACK, PiSDFParam)(
             name, params_.getN(),
             this, PISDF_PARAM_DEPENDENT_STATIC,
             expr);
@@ -231,7 +231,7 @@ PiSDFParam *PiSDFGraph::addStaticDependentParam(const char *name, const char *ex
 }
 
 PiSDFEdge *PiSDFGraph::addEdge() {
-    PiSDFEdge *edge = CREATE(PISDF_STACK, PiSDFEdge)(this);
+    auto *edge = CREATE(PISDF_STACK, PiSDFEdge)(this);
     edges_.add(edge);
     return edge;
 }
@@ -288,7 +288,7 @@ void PiSDFGraph::delEdge(PiSDFEdge *edge) {
 /** Print Fct */
 void PiSDFGraph::print(const char *path) {
     FILE *file = Platform::get()->fopen(path);
-    if (file == NULL) {
+    if (file == nullptr) {
         printf("cannot open %s\n", path);
         return;
     }

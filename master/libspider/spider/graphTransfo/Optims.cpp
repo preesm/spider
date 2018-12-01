@@ -64,7 +64,7 @@ static int removeNullEdge(SRDAGGraph *topDag) {
         if (nullEdge->getRate() == 0) {
             SRDAGVertex *src = nullEdge->getSrc();
             SRDAGVertex *snk = nullEdge->getSnk();
-            if (src && src->getType() == SRDAG_FORK && src->getState() == SRDAG_EXEC && snk == NULL) {
+            if (src && src->getType() == SRDAG_FORK && src->getState() == SRDAG_EXEC && snk == nullptr) {
                 int forkNOut = src->getNConnectedOutEdge();
                 int forkPortIx = nullEdge->getSrcPortIx();
                 nullEdge->disconnectSrc();
@@ -78,7 +78,7 @@ static int removeNullEdge(SRDAGGraph *topDag) {
                 }
                 return true;
             }
-            if (snk && snk->getType() == SRDAG_JOIN && snk->getState() == SRDAG_EXEC && src == NULL) {
+            if (snk && snk->getType() == SRDAG_JOIN && snk->getState() == SRDAG_EXEC && src == nullptr) {
                 int joinNIn = snk->getNConnectedInEdge();
                 int joinPortIx = nullEdge->getSnkPortIx();
                 nullEdge->disconnectSnk();
@@ -119,7 +119,7 @@ static int reduceRB(SRDAGGraph *topDag) {
                 return 1;
             } else if (inTkn < outTkn) {
                 /* Duplicate Token Using Br/Join Pattern */
-                int nBrOut = (int) ceil(((float) outTkn) / inTkn);
+                auto nBrOut = (int) ceil(((float) outTkn) / inTkn);
                 SRDAGVertex *br = topDag->addBroadcast(MAX_IO_EDGES);
                 SRDAGVertex *join = topDag->addJoin(MAX_IO_EDGES);
                 int rest = outTkn;
@@ -688,7 +688,7 @@ static int reduceJoinFork(SRDAGGraph *topDag) {
                         if (sources[i]->getType() == SRDAG_FORK) {
                             SRDAGVertex *rem_fork = sources[i];
                             for (int j = 0; j < rem_fork->getNConnectedOutEdge(); j++) {
-                                if (rem_fork->getOutEdge(j) == 0) {
+                                if (rem_fork->getOutEdge(j) == nullptr) {
                                     for (int k = j + 1; k < rem_fork->getNOutEdge(); k++) {
                                         SRDAGEdge *edge = rem_fork->getOutEdge(k);
                                         if (edge) {

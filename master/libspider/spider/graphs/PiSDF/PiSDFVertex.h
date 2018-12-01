@@ -56,7 +56,7 @@ public:
             int nInEdge, int nOutEdge,
             int nInParam, int nOutParam);
 
-    ~PiSDFVertex();
+    ~PiSDFVertex() override;
 
     /** Parameters getters */
     inline int getNInParam() const;
@@ -219,7 +219,7 @@ inline PiSDFEdge * const * PiSDFVertex::getAllEdges() const {
 inline void PiSDFVertex::connectInEdge(int ix, PiSDFEdge *edge) {
     if (ix >= nInEdge_ || ix < 0)
         throw std::runtime_error("PiSDFVertex: Bad ix in connectInEdge");
-    else if (inEdges_[ix] != 0)
+    else if (inEdges_[ix] != nullptr)
         throw std::runtime_error("PiSDFVertex: Try to erase already connected input edge");
     else
         inEdges_[ix] = edge;
@@ -228,7 +228,7 @@ inline void PiSDFVertex::connectInEdge(int ix, PiSDFEdge *edge) {
 inline void PiSDFVertex::connectOutEdge(int ix, PiSDFEdge *edge) {
     if (ix >= nOutEdge_ || ix < 0)
         throw std::runtime_error("PiSDFVertex: Bad ix in connectOutEdge");
-    else if (outEdges_[ix] != 0)
+    else if (outEdges_[ix] != nullptr)
         throw std::runtime_error("PiSDFVertex: Try to erase already connected output edge");
     else
         outEdges_[ix] = edge;
@@ -238,7 +238,7 @@ inline void PiSDFVertex::connectOutEdge(int ix, PiSDFEdge *edge) {
 inline void PiSDFVertex::addInParam(int ix, PiSDFParam *param) {
     if (ix >= nInParam_ || ix < 0)
         throw std::runtime_error("PiSDFVertex: Bad ix in addInParam");
-    else if (inParams_[ix] != 0)
+    else if (inParams_[ix] != nullptr)
         throw std::runtime_error("PiSDFVertex: Try to erase already connected input param");
     else
         inParams_[ix] = param;
@@ -247,7 +247,7 @@ inline void PiSDFVertex::addInParam(int ix, PiSDFParam *param) {
 inline void PiSDFVertex::addOutParam(int ix, PiSDFParam *param) {
     if (ix >= nOutParam_ || ix < 0)
         throw std::runtime_error("PiSDFVertex: Bad ix in addOutParam");
-    else if (outParams_[ix] != 0)
+    else if (outParams_[ix] != nullptr)
         throw std::runtime_error("PiSDFVertex: Try to erase already connected output param");
     else
         outParams_[ix] = param;
@@ -305,7 +305,7 @@ inline PiSDFGraph *PiSDFVertex::getSubGraph() const {
 }
 
 inline bool PiSDFVertex::isHierarchical() const {
-    return subGraph_ != 0;
+    return subGraph_ != nullptr;
 }
 
 inline void PiSDFVertex::setSubGraph(PiSDFGraph *subGraph) {
@@ -325,7 +325,7 @@ inline Time PiSDFVertex::getTimingOnType(int peType, const int *vertexParamValue
         throw std::runtime_error("PiSDFVertex: accessing bad PE type ix\n");
     }
 
-    if (timings_[peType] == NULL) return 0;
+    if (timings_[peType] == nullptr) return 0;
     return timings_[peType]->evaluate(vertexParamValues, nParam);
 }
 
@@ -339,10 +339,10 @@ inline void PiSDFVertex::setTimingOnType(int peType, const char *timing) {
         throw std::runtime_error("PiSDFVertex: accessing bad PE type ix\n");
     }
 
-    if (timings_[peType] != 0) {
+    if (timings_[peType] != nullptr) {
         timings_[peType]->~Expression();
         StackMonitor::free(PISDF_STACK, timings_[peType]);
-        timings_[peType] = 0;
+        timings_[peType] = nullptr;
     }
     timings_[peType] = CREATE(PISDF_STACK, Expression)(timing, this->getInParams(), this->getNInParam());
 }

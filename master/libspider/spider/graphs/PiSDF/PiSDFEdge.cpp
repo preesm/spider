@@ -51,7 +51,7 @@ PiSDFEdge::PiSDFEdge(PiSDFGraph *graph) {
     snk_ = nullptr;
     snkPortIx_ = -1;
 
-    prod_ = cons_ = delay_ = 0;
+    prod_ = cons_ = delay_ = nullptr;
     setter_ = nullptr;
     getter_ = nullptr;
     getter_ = nullptr;
@@ -61,48 +61,48 @@ PiSDFEdge::PiSDFEdge(PiSDFGraph *graph) {
 }
 
 PiSDFEdge::~PiSDFEdge() {
-    if (delay_ != 0) {
+    if (delay_ != nullptr) {
         delay_->~Expression();
         StackMonitor::free(PISDF_STACK, delay_);
-        delay_ = 0;
+        delay_ = nullptr;
     }
-    if (prod_ != 0) {
+    if (prod_ != nullptr) {
         prod_->~Expression();
         StackMonitor::free(PISDF_STACK, prod_);
-        prod_ = 0;
+        prod_ = nullptr;
     }
-    if (cons_ != 0) {
+    if (cons_ != nullptr) {
         cons_->~Expression();
         StackMonitor::free(PISDF_STACK, cons_);
-        cons_ = 0;
+        cons_ = nullptr;
     }
 
 }
 
 void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod) {
-    if (src_ != 0)
+    if (src_ != nullptr)
         throw std::runtime_error("PiSDFEdge: try to connect to an already connected edge");
     src_ = src;
     srcPortIx_ = srcPortId;
 
-    if (prod_ != 0) {
+    if (prod_ != nullptr) {
         prod_->~Expression();
         StackMonitor::free(PISDF_STACK, prod_);
-        prod_ = 0;
+        prod_ = nullptr;
     }
     prod_ = CREATE(PISDF_STACK, Expression)(prod, src->getInParams(), src->getNInParam());
 }
 
 void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons) {
-    if (snk_ != 0)
+    if (snk_ != nullptr)
         throw std::runtime_error("PiSDFEdge: try to connect to an already connected edge");
     snk_ = snk;
     snkPortIx_ = snkPortId;
 
-    if (cons_ != 0) {
+    if (cons_ != nullptr) {
         cons_->~Expression();
         StackMonitor::free(PISDF_STACK, cons_);
-        cons_ = 0;
+        cons_ = nullptr;
     }
     cons_ = CREATE(PISDF_STACK, Expression)(cons, snk->getInParams(), snk->getNInParam());
 }

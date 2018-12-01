@@ -51,7 +51,7 @@ public:
     /** Constructors */
     PiSDFEdge(PiSDFGraph *graph);
 
-    ~PiSDFEdge();
+    ~PiSDFEdge() override;
 
     /** Getters */
     inline int getId() const;
@@ -157,10 +157,10 @@ inline void PiSDFEdge::setDelay(const char *delay,
                                 PiSDFVertex *getter,
                                 PiSDFVertex *delayActor,
                                 bool isDelayPersistent) {
-    if (delay_ != 0) {
+    if (delay_ != nullptr) {
         delay_->~Expression();
         StackMonitor::free(PISDF_STACK, delay_);
-        delay_ = 0;
+        delay_ = nullptr;
     }
     delay_ = CREATE(PISDF_STACK, Expression)(delay, graph_->getParams(), graph_->getNParam());
 

@@ -38,7 +38,7 @@
 #include <parser/Expression.h>
 #include <graphTransfo/GraphTransfo.h>
 
-#include <math.h>
+#include <cmath>
 
 #define MAX_NVAR_ELEMENTS 100
 #define REVERSE_POLISH_STACK_MAX_ELEMENTS 100
@@ -300,7 +300,7 @@ void Expression::toString(
 int Expression::evaluateNTokens(const char *expr) {
     const char **ptr = &expr;
     int i = 0;
-    while (getNextToken(0, ptr, 0, 0)) {
+    while (getNextToken(nullptr, ptr, nullptr, 0)) {
         i++;
     }
     return i;
@@ -321,7 +321,7 @@ bool Expression::getNextToken(
 
     // check for minus
     if (**ptr == '-') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = OPERATOR;
             token->opType = SUB;
         }
@@ -331,7 +331,7 @@ bool Expression::getNextToken(
 
     // check for plus
     if (**ptr == '+') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = OPERATOR;
             token->opType = ADD;
         }
@@ -341,7 +341,7 @@ bool Expression::getNextToken(
 
     // check for mult
     if (**ptr == '*') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = OPERATOR;
             token->opType = MUL;
         }
@@ -351,7 +351,7 @@ bool Expression::getNextToken(
 
     // check for power
     if (**ptr == '^') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = OPERATOR;
             token->opType = POW;
         }
@@ -361,7 +361,7 @@ bool Expression::getNextToken(
 
     // check for div
     if (**ptr == '/') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = OPERATOR;
             token->opType = DIV;
         }
@@ -371,14 +371,14 @@ bool Expression::getNextToken(
 
     // check for parentheses
     if (**ptr == '(') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = LEFT_PAR;
         }
         (*ptr)++;
         return true;
     }
     if (**ptr == ')') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = RIGHT_PAR;
         }
         (*ptr)++;
@@ -393,7 +393,7 @@ bool Expression::getNextToken(
             value += **ptr - '0';
             (*ptr)++;
         }
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = VALUE;
             token->value = value;
         }
@@ -409,7 +409,7 @@ bool Expression::getNextToken(
             (*ptr)++;
         }
 
-        if (token != 0) {
+        if (token != nullptr) {
             // Check if it is an OPERATOR
             const char *operatorStrings[2] = {"floor", "ceil"};
             OpType operatorTypes[2] = {FLOOR, CEIL};

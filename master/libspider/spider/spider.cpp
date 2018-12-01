@@ -162,7 +162,7 @@ void Spider::iterate() {
 
 
 static int getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) {
-    transfoJob *job = CREATE(TRANSFO_STACK, transfoJob);
+    auto *job = CREATE(TRANSFO_STACK, transfoJob);
     memset(job, 0, sizeof(transfoJob));
     job->graph = graph;
     job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), int);
@@ -412,7 +412,7 @@ static inline void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Arch
     static int i = 0;
     vertex->toString(name, 100);
 
-    char *temp_str = (char *) malloc(300 * sizeof(char));
+    auto *temp_str = (char *) malloc(300 * sizeof(char));
 
 
     sprintf(temp_str,

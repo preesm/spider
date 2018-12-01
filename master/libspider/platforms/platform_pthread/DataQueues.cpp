@@ -36,7 +36,7 @@
 #include "DataQueues.h"
 #include <monitor/StackMonitor.h>
 #include <semaphore.h>
-#include <string.h>
+#include <cstring>
 
 DataQueues::DataQueues(int nLrt) {
     nLrt_ = nLrt;

@@ -45,9 +45,9 @@ public:
     SpecialActorMemAlloc(int start, int size) :
             DummyMemAlloc(start, size) {}
 
-    ~SpecialActorMemAlloc() {}
+    ~SpecialActorMemAlloc() override {}
 
-    virtual void alloc(List<SRDAGVertex *> *listOfVertices);
+    void alloc(List<SRDAGVertex *> *listOfVertices) override;
 
 private:
     void allocFork(SRDAGVertex* fork);

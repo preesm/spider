@@ -50,7 +50,7 @@ public:
         if (nbmax > 0) {
             array = CREATE_MUL(stackId, nbmax, TYPE);
         } else {
-            array = 0;
+            array = nullptr;
         }
         nb = 0;
         nbMax = nbmax;

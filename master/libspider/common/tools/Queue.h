@@ -40,7 +40,7 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include <stdio.h>
+#include <cstdio>
 #include <cstdlib>
 
 #include "Stack.h"
@@ -58,8 +58,8 @@ public:
 
     Queue(SpiderStack stackId) {
         stackId_ = stackId;
-        first_ = 0;
-        last_ = 0;
+        first_ = nullptr;
+        last_ = nullptr;
     }
 
     inline bool isEmpty() const;
@@ -83,16 +83,16 @@ private:
 
 template<typename TYPE>
 inline bool Queue<TYPE>::isEmpty() const {
-    return first_ == 0;
+    return first_ == nullptr;
 }
 
 template<typename TYPE>
 inline void Queue<TYPE>::push(TYPE value) {
-    struct QueueItem *newItem = CREATE(stackId_, struct QueueItem);
+    auto *newItem = CREATE(stackId_, struct QueueItem);
     newItem->cur = value;
-    newItem->next = 0;
+    newItem->next = nullptr;
 
-    if (last_ == 0)
+    if (last_ == nullptr)
         first_ = last_ = newItem;
     else {
         last_->next = newItem;
@@ -102,15 +102,15 @@ inline void Queue<TYPE>::push(TYPE value) {
 
 template<typename TYPE>
 inline TYPE Queue<TYPE>::pop() {
-    if (first_ == 0)
+    if (first_ == nullptr)
         throw std::runtime_error("Try to pop an empty Queue\n");
 
     struct QueueItem *old = first_;
     TYPE val = first_->cur;
     first_ = first_->next;
     StackMonitor::free(stackId_, old);
-    if (first_ == 0)
-        last_ = 0;
+    if (first_ == nullptr)
+        last_ = nullptr;
     return val;
 }
 

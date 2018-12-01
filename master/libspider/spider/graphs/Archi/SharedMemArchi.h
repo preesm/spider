@@ -48,29 +48,29 @@ class SharedMemArchi : public Archi {
 public:
     SharedMemArchi(int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct);
 
-    virtual ~SharedMemArchi();
+    ~SharedMemArchi() override;
 
-    virtual int getNPE() const;
+    int getNPE() const override;
 
-    virtual inline const char *getPEName(int ix) const;
+    inline const char *getPEName(int ix) const override;
 
-    virtual inline int getNPETypes() const;
+    inline int getNPETypes() const override;
 
-    virtual inline int getPEType(int ix) const;
+    inline int getPEType(int ix) const override;
 
-    virtual inline void desactivatePE(int pe);
+    inline void desactivatePE(int pe) override;
 
-    virtual inline void activatePE(int pe);
+    inline void activatePE(int pe) override;
 
-    virtual inline bool isActivated(int pe) const;
+    inline bool isActivated(int pe) const override;
 
-    virtual inline Time getTimeSend(int src, int dest, int size) const;
+    inline Time getTimeSend(int src, int dest, int size) const override;
 
-    virtual inline Time getTimeRecv(int src, int dest, int size) const;
+    inline Time getTimeRecv(int src, int dest, int size) const override;
 
-    virtual inline int getSpiderPeIx() const;
+    inline int getSpiderPeIx() const override;
 
-    virtual inline MappingTimeFct getMappingTimeFct() const;
+    inline MappingTimeFct getMappingTimeFct() const override;
 
     inline void setPETypeSendSpeed(int type, float a, float b);
 
@@ -80,7 +80,7 @@ public:
 
     inline void setPEType(int pe, int type);
 
-    virtual inline int getNPEforType(int type);
+    inline int getNPEforType(int type) override;
 
 private:
     int nPE_;

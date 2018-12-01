@@ -46,7 +46,7 @@ void DummyMemAlloc::reset() {
 
 static inline int getAlignSize(int size) {
     //return std::ceil(size/1.0/getpagesize())*getpagesize();
-    float minAlloc = (float) Platform::get()->getMinAllocSize();
+    auto minAlloc = (float) Platform::get()->getMinAllocSize();
     return (int) std::ceil(((float) size) / minAlloc) * minAlloc;
 }
 

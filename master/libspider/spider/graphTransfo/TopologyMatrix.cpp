@@ -43,8 +43,8 @@
 
 
 static int nullSpace(int *topo_matrix, int *brv, int nbEdges, int nbVertices) {
-    Rational *ratioMatrix = CREATE_MUL(TRANSFO_STACK, nbVertices * nbEdges, Rational);
-    Rational *ratioResult = CREATE_MUL(TRANSFO_STACK, nbVertices, Rational);
+    auto *ratioMatrix = CREATE_MUL(TRANSFO_STACK, nbVertices * nbEdges, Rational);
+    auto *ratioResult = CREATE_MUL(TRANSFO_STACK, nbVertices, Rational);
 
 //	printf("Topo Matrix:\n");
 //	for(int i=0; i<nbEdges; i++){
@@ -135,7 +135,7 @@ static int nullSpace(int *topo_matrix, int *brv, int nbEdges, int nbVertices) {
         lcm = Rational::compute_lcm(lcm, ratioResult[i].getDenominator());
     }
     for (int i = 0; i < nbVertices; i++) {
-        brv[i] = abs(ratioResult[i].getNominator() * lcm / ratioResult[i].getDenominator());
+        brv[i] = std::abs(ratioResult[i].getNominator() * lcm / ratioResult[i].getDenominator());
     }
 
     StackMonitor::free(TRANSFO_STACK, ratioMatrix);
@@ -179,7 +179,7 @@ static bool isEdgeValid(PiSDFEdge *edge, transfoJob *job) {
 void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges,
                       int *brv) {
     PiSDFVertex *const *vertices = vertexSet.getArray() + nDoneVertices;
-    int *vertexIxs = CREATE_MUL(TRANSFO_STACK, nVertices, int);
+    auto *vertexIxs = CREATE_MUL(TRANSFO_STACK, nVertices, int);
     PiSDFEdgeSet edgeSet(nEdges, TRANSFO_STACK);
     fillEdgeSet(edgeSet, vertices, nVertices);
 
@@ -206,7 +206,7 @@ void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVert
         }
     }
 
-    int *topo_matrix = CREATE_MUL(TRANSFO_STACK, nbEdges * nbVertices, int);
+    auto *topo_matrix = CREATE_MUL(TRANSFO_STACK, nbEdges * nbVertices, int);
     memset(topo_matrix, 0, nbEdges * nbVertices * sizeof(int));
 
     /* Fill the topology matrix(nbEdges x nbVertices) */
@@ -241,7 +241,7 @@ void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVert
 //        printf("\n");
 //    }
 
-    int *smallBrv = CREATE_MUL(TRANSFO_STACK, nbVertices, int);
+    auto *smallBrv = CREATE_MUL(TRANSFO_STACK, nbVertices, int);
 
     /* Compute nullSpace */
     nullSpace(topo_matrix, smallBrv, nbEdges, nbVertices);

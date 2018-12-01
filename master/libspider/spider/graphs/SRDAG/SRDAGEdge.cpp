@@ -45,11 +45,11 @@
 
 SRDAGEdge::SRDAGEdge() {
     id_ = -1;
-    graph_ = 0;
+    graph_ = nullptr;
 
-    src_ = 0;
+    src_ = nullptr;
     srcPortIx_ = -1;
-    snk_ = 0;
+    snk_ = nullptr;
     snkPortIx_ = -1;
 
     rate_ = -1;
@@ -63,9 +63,9 @@ SRDAGEdge::SRDAGEdge(SRDAGGraph *graph, int globalId) {
 
     graph_ = graph;
 
-    src_ = 0;
+    src_ = nullptr;
     srcPortIx_ = -1;
-    snk_ = 0;
+    snk_ = nullptr;
     snkPortIx_ = -1;
 
     rate_ = -1;
@@ -77,7 +77,7 @@ SRDAGEdge::~SRDAGEdge() {
 }
 
 void SRDAGEdge::connectSrc(SRDAGVertex *src, int srcPortId) {
-    if (src_ != 0)
+    if (src_ != nullptr)
         throw std::runtime_error("SRDAGEdge: try to connect to an already connected edge");
     src_ = src;
     srcPortIx_ = srcPortId;
@@ -85,7 +85,7 @@ void SRDAGEdge::connectSrc(SRDAGVertex *src, int srcPortId) {
 }
 
 void SRDAGEdge::connectSnk(SRDAGVertex *snk, int snkPortId) {
-    if (snk_ != 0)
+    if (snk_ != nullptr)
         throw std::runtime_error("SRDAGEdge: try to connect to an already connected edge");
     snk_ = snk;
     snkPortIx_ = snkPortId;
@@ -93,17 +93,17 @@ void SRDAGEdge::connectSnk(SRDAGVertex *snk, int snkPortId) {
 }
 
 void SRDAGEdge::disconnectSrc() {
-    if (src_ == 0)
+    if (src_ == nullptr)
         throw std::runtime_error("SRDAGEdge: try to disconnect a not connected edge");
     src_->disconnectOutEdge(srcPortIx_);
-    src_ = 0;
+    src_ = nullptr;
     srcPortIx_ = -1;
 }
 
 void SRDAGEdge::disconnectSnk() {
-    if (snk_ == 0)
+    if (snk_ == nullptr)
         throw std::runtime_error("SRDAGEdge: try to disconnect a not connected edge");
     snk_->disconnectInEdge(snkPortIx_);
-    snk_ = 0;
+    snk_ = nullptr;
     snkPortIx_ = -1;
 }

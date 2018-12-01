@@ -95,15 +95,14 @@ class JobMessage {
 public:
     JobMessage() = default;
 
-    std::uint32_t id_ = 0;
     bool specialActor_ = false;
     bool traceEnabled_ = false;
-    std::uint64_t srdagID_ = 0;
-    std::uint64_t fctID_ = 0;
-    std::uint64_t nbInEdge_ = 0;
-    std::uint64_t nbOutEdge_ = 0;
-    std::uint64_t nbInParam_ = 0;
-    std::uint64_t nbOutParam_ = 0;
+    std::int32_t srdagID_ = 0;
+    std::int32_t fctID_ = 0;
+    std::int32_t nbInEdge_ = 0;
+    std::int32_t nbOutEdge_ = 0;
+    std::int32_t nbInParam_ = 0;
+    std::int32_t nbOutParam_ = 0;
     Fifo *inFifos_ = nullptr;
     Fifo *outFifos_ = nullptr;
     Param *inParams_ = nullptr;
@@ -134,7 +133,6 @@ class LRTMessage {
 public:
     std::int32_t lastJobID_; // ID of the last job the LRT should consider for a graph iteration
     bool flag_; // Flag depending on the nature of the message
-    ~LRTMessage() = default;
 };
 
 typedef enum {
@@ -171,19 +169,19 @@ typedef enum {
 
 class NotificationMessage {
 public:
-    explicit NotificationMessage(std::uint8_t type = NotificationType::UNDEFINED_NOTIFICATION,
-                                 std::uint8_t subType = NotificationType::UNDEFINED_NOTIFICATION,
+    explicit NotificationMessage(std::uint16_t type = NotificationType::UNDEFINED_NOTIFICATION,
+                                 std::uint16_t subType = NotificationType::UNDEFINED_NOTIFICATION,
                                  std::int32_t index = -1) {
         type_ = type;
         subType_ = subType;
         index_ = index;
     }
 
-    inline std::uint8_t getType() {
+    inline std::uint16_t getType() {
         return type_;
     }
 
-    inline std::uint8_t getSubType() {
+    inline std::uint16_t getSubType() {
         return subType_;
     }
 
@@ -192,9 +190,9 @@ public:
     }
 
 private:
-    std::uint8_t type_ = 0;
-    std::uint8_t subType_ = (std::uint8_t) -1;
-    std::int32_t index_ = -1;
+    std::uint16_t type_;
+    std::uint16_t subType_;
+    std::int32_t index_;
 };
 
 #endif/*MESSAGE_H*/

@@ -38,18 +38,18 @@
  */
 #include "specialActors.h"
 
-#include <string.h>
+#include <cstring>
 
 void saBroadcast(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
 #if VERBOSE
     fprintf(stderr, "INFO: Entering Broadcast...\n");
 #endif
 
-    int nbToken = (int) inParams[0];
-    int nbOut = (int) inParams[1];
+    auto nbToken = (int) inParams[0];
+    auto nbOut = (int) inParams[1];
 
     for (int i = 0; i < nbOut; i++) {
-        if (outputFIFOs[i] != inputFIFOs[0] && outputFIFOs[i] != 0) {
+        if (outputFIFOs[i] != inputFIFOs[0] && outputFIFOs[i] != nullptr) {
             memcpy(outputFIFOs[i], inputFIFOs[0], (size_t) nbToken);
         }
     }

@@ -49,11 +49,11 @@ class ListSchedulerOnTheGo : public Scheduler {
 public:
     ListSchedulerOnTheGo();
 
-    virtual ~ListSchedulerOnTheGo();
+    ~ListSchedulerOnTheGo() override;
 
-    void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi);
+    void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi) override;
 
-    void scheduleOnlyConfig(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi);
+    void scheduleOnlyConfig(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi) override;
 
 private:
     SRDAGGraph *srdag_;

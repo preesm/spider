@@ -41,7 +41,7 @@
 #define PLATFORM_PTHREAD_H
 
 #include "platform.h"
-#include <signal.h>
+#include <csignal>
 
 #include "TraceQueue.h"
 #include "ControlQueue.h"
@@ -155,7 +155,7 @@ public:
     /* Fonction de thread */
     explicit PlatformPThread(SpiderConfig &config);
 
-    virtual ~PlatformPThread();
+    ~PlatformPThread() override;
 
     inline void registerLRT(int lrtID, pthread_t &thread) {
         lrtThreadsArray[lrtID] = thread;

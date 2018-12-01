@@ -50,9 +50,6 @@
 //    nLrt_ = nLrt;
 //}
 
-PThreadSpiderCommunicator::~PThreadSpiderCommunicator() {
-}
-
 //void PThreadSpiderCommunicator::rst_ctrl_queue() {
 //    fprintf(stderr, "nLrt: %d\n", nLrt_);
 //    for (int i = 0; i < nLrt_; ++i) {
@@ -89,12 +86,20 @@ PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlMessageQueue<JobMess
     traceQueue_ = traceQueue;
 }
 
-bool PThreadSpiderCommunicator::popNotification(int lrtID, NotificationMessage *msg, bool blocking) {
+bool PThreadSpiderCommunicator::pop_notification(int lrtID, NotificationMessage *msg, bool blocking) {
     return notificationQueue_[lrtID]->pop(msg, blocking);
 }
 
-void PThreadSpiderCommunicator::pushNotification(int lrtID, NotificationMessage *msg) {
+void PThreadSpiderCommunicator::push_notification(int lrtID, NotificationMessage *msg) {
     notificationQueue_[lrtID]->push(msg);
+}
+
+std::int32_t PThreadSpiderCommunicator::push_job_message(JobMessage **message) {
+    return spider2LrtJobQueue_->push(message);
+}
+
+std::int32_t PThreadSpiderCommunicator::push_lrt_message(LRTMessage **message) {
+    return spider2LrtLRTQueue_->push(message);
 }
 
 void *PThreadSpiderCommunicator::trace_start_send(int size) {
@@ -115,14 +120,6 @@ void PThreadSpiderCommunicator::trace_start_recv_block(void **data) {
 
 void PThreadSpiderCommunicator::trace_end_recv() {
     return traceQueue_->pop_end();
-}
-
-std::int32_t PThreadSpiderCommunicator::pushJobMessage(JobMessage **message) {
-    return spider2LrtJobQueue_->push(message);
-}
-
-std::int32_t PThreadSpiderCommunicator::pushLRTMessage(LRTMessage **message) {
-    return spider2LrtLRTQueue_->push(message);
 }
 
 

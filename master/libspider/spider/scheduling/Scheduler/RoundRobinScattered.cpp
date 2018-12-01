@@ -52,10 +52,10 @@ RoundRobinScattered::RoundRobinScattered() {
     }
 
 
-    srdag_ = 0;
-    schedule_ = 0;
-    archi_ = 0;
-    list_ = 0;
+    srdag_ = nullptr;
+    schedule_ = nullptr;
+    archi_ = nullptr;
+    list_ = nullptr;
 }
 
 RoundRobinScattered::~RoundRobinScattered() {
@@ -218,7 +218,7 @@ int RoundRobinScattered::computeSchedLevel(SRDAGVertex *vertex) {
         for (int i = 0; i < vertex->getNConnectedOutEdge(); i++) {
             SRDAGVertex *succ = vertex->getOutEdge(i)->getSnk();
             if (succ && succ->getState() != SRDAG_NEXEC) {
-                Time minExecTime = (Time) -1;
+                auto minExecTime = (Time) -1;
                 for (int j = 0; j < archi_->getNPETypes(); j++) {
 
                     Time execTime = succ->executionTimeOn(archi_->getPEType(j));
@@ -255,7 +255,7 @@ void RoundRobinScattered::scheduleVertex(SRDAGVertex *vertex) {
 
     int bestSlave = -1;
     Time bestStartTime = 0;
-    Time bestEndTime = (Time) -1; // Very high value.
+    auto bestEndTime = (Time) -1; // Very high value.
 
 
     //Getting alloc size to determine if PE can handle it

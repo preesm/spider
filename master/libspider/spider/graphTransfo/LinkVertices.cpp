@@ -64,7 +64,7 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
         PiSDFVertex *pi_ca = sr_ca->getReference();
 
         for (int inEdgeIx = 0; inEdgeIx < pi_ca->getNInEdge(); inEdgeIx++) {
-            if (sr_ca->getInEdge(inEdgeIx) != 0) {
+            if (sr_ca->getInEdge(inEdgeIx) != nullptr) {
                 /* Edge already present, do nothing */
             } else {
                 PiSDFEdge *pi_edge = pi_ca->getInEdge(inEdgeIx);
@@ -96,7 +96,7 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
                         SRDAGVertex *sr_src = job->configs[pi_src->getTypeId()];
                         SRDAGEdge *sr_edge = sr_src->getOutEdge(pi_edge->getSrcPortIx());
 
-                        if (sr_edge == 0) {
+                        if (sr_edge == nullptr) {
                             sr_edge = topSrdag->addEdge();
                             sr_edge->connectSrc(sr_src, pi_edge->getSrcPortIx());
                             sr_edge->setRate(prod);
@@ -115,7 +115,7 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
         }
 
         for (int outEdgeIx = 0; outEdgeIx < pi_ca->getNOutEdge(); outEdgeIx++) {
-            if (sr_ca->getOutEdge(outEdgeIx) != 0) {
+            if (sr_ca->getOutEdge(outEdgeIx) != nullptr) {
                 /* Edge already present, do nothing */
             } else {
                 PiSDFEdge *pi_edge = pi_ca->getOutEdge(outEdgeIx);
@@ -147,7 +147,7 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
                         SRDAGVertex *sr_snk = job->configs[pi_snk->getTypeId()];
                         SRDAGEdge *sr_edge = sr_snk->getInEdge(pi_edge->getSnkPortIx());
 
-                        if (sr_edge == 0) {
+                        if (sr_edge == nullptr) {
                             sr_edge = topSrdag->addEdge();
                             sr_edge->connectSnk(sr_snk, pi_edge->getSnkPortIx());
                             sr_edge->setRate(cons);
@@ -238,7 +238,7 @@ static void linkSRDelaySetterVertices(SRDAGGraph *topSrdag,
         SRDAGEdge *setterEdge = job->inputIfs[delaySetter->getTypeId()];
         if (setterEdge->getRate() == nbDelays) {
             srcConnections[0].src = setterEdge->getSrc();
-            if (srcConnections[0].src == 0) {
+            if (srcConnections[0].src == nullptr) {
                 srcConnections[0].src = topSrdag->addRoundBuffer();
                 job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcConnections[0].src, 0);
                 srcConnections[0].portIx = 0;
@@ -480,8 +480,8 @@ void linkSRVertices(SRDAGGraph *topSrdag,
         int sinkIndex = 0;
         int curSourceToken;
         int curSinkToken;
-        SRDAGVertex* persistentInit = NULL;
-        SRDAGVertex* persistentEnd = NULL;
+        SRDAGVertex* persistentInit = nullptr;
+        SRDAGVertex* persistentEnd = nullptr;
 
         SrcConnection *srcConnections = nullptr;
         SnkConnection *snkConnections = nullptr;
@@ -544,7 +544,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                     // No need of Broadcast
                     srcConnections = CREATE_MUL(TRANSFO_STACK, 1, SrcConnection);
                     srcConnections[0].src = job->inputIfs[edge->getSrc()->getTypeId()]->getSrc();
-                    if (srcConnections[0].src == 0) {
+                    if (srcConnections[0].src == nullptr) {
                         srcConnections[0].src = topSrdag->addRoundBuffer();
                         job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcConnections[0].src, 0);
                         srcConnections[0].portIx = 0;
@@ -729,7 +729,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                 SRDAGVertex *fork_vertex = topSrdag->addFork(MAX_IO_EDGES);
                 forkIx = fork_vertex->getId();
 
-                if (srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx) != 0)
+                if (srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx) != nullptr)
                     srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx)->connectSnk(
                             fork_vertex, 0);
                 else
@@ -772,7 +772,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
 
             //Creating the new edge between normal vertices or between a normal and an explode/implode one.
             SRDAGEdge *srcEdge;
-            if ((srcEdge = srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx)) != 0) {
+            if ((srcEdge = srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx)) != nullptr) {
                 snkConnections[sinkIndex].edge->setAlloc(srcEdge->getAlloc());
                 snkConnections[sinkIndex].edge->setRate(srcEdge->getRate());
 

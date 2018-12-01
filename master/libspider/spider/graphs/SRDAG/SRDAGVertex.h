@@ -58,7 +58,7 @@ public:
             int nInEdge, int nOutEdge,
             int nInParam, int nOutParam);
 
-    ~SRDAGVertex();
+    ~SRDAGVertex() override;
 
     /** Parameters getters */
     inline int getNInParam() const;
@@ -281,7 +281,7 @@ inline SRDAGEdge *const *SRDAGVertex::getOutEdges() {
 inline void SRDAGVertex::connectInEdge(SRDAGEdge *edge, int ix) {
     if (ix >= nMaxInEdge_ || ix < 0) {
         throwBadIndexError("connectInEdge", ix, nMaxInEdge_);
-    } else if (inEdges_[ix] != 0) {
+    } else if (inEdges_[ix] != nullptr) {
         PiSDFVertex *reference = this->getReference();
         if (reference) {
             throw std::runtime_error(std::string("ERROR: SRDAGVertex [") + std::string(reference->getName()) +
@@ -298,7 +298,7 @@ inline void SRDAGVertex::connectInEdge(SRDAGEdge *edge, int ix) {
 inline void SRDAGVertex::connectOutEdge(SRDAGEdge *edge, int ix) {
     if (ix >= nMaxOutEdge_ || ix < 0) {
         throwBadIndexError("connectOutEdge", ix, nMaxOutEdge_);
-    } else if (outEdges_[ix] != 0) {
+    } else if (outEdges_[ix] != nullptr) {
         PiSDFVertex *reference = this->getReference();
         if (reference) {
             throw std::runtime_error(std::string("ERROR: SRDAGVertex [") + std::string(reference->getName()) +
@@ -315,10 +315,10 @@ inline void SRDAGVertex::connectOutEdge(SRDAGEdge *edge, int ix) {
 inline void SRDAGVertex::disconnectInEdge(int ix) {
     if (ix >= nMaxInEdge_ || ix < 0) {
         throwBadIndexError("disconnectInEdge", ix, nMaxInEdge_);
-    } else if (inEdges_[ix] == 0)
+    } else if (inEdges_[ix] == nullptr)
         throw std::runtime_error("SRDAGVertex: Try to disconnect empty input edge");
     else {
-        inEdges_[ix] = 0;
+        inEdges_[ix] = nullptr;
         nCurInEdge_--;
     }
 }
@@ -326,10 +326,10 @@ inline void SRDAGVertex::disconnectInEdge(int ix) {
 inline void SRDAGVertex::disconnectOutEdge(int ix) {
     if (ix >= nMaxOutEdge_ || ix < 0) {
         throwBadIndexError("disconnectOutEdge", ix, nMaxOutEdge_);
-    } else if (outEdges_[ix] == 0)
+    } else if (outEdges_[ix] == nullptr)
         throw std::runtime_error("SRDAGVertex: Try to disconnect empty output edge");
     else {
-        outEdges_[ix] = 0;
+        outEdges_[ix] = nullptr;
         nCurOutEdge_--;
     }
 }
@@ -347,7 +347,7 @@ inline void SRDAGVertex::addInParam(int ix, int param) {
 inline void SRDAGVertex::addOutParam(int ix, int *param) {
     if (ix >= nOutParam_ || ix < 0) {
         throwBadIndexError("addOutParam", ix, nOutParam_);
-    } else if (outParams_[ix] != 0)
+    } else if (outParams_[ix] != nullptr)
         throw std::runtime_error("SRDAGVertex: Try to erase already connected output param");
     else
         outParams_[ix] = param;
@@ -402,7 +402,7 @@ inline PiSDFGraph *SRDAGVertex::getSubGraph() const {
     if (type_ == SRDAG_NORMAL)
         return reference_->getSubGraph();
     else
-        return 0;
+        return nullptr;
 }
 
 inline PiSDFVertex *SRDAGVertex::getReference() const {

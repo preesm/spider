@@ -52,7 +52,7 @@ public:
 
     SRDAGVertex *addVertex(PiSDFVertex *reference, int refId, int iterId);
 
-    SRDAGVertex *addBroadcast(int nOutput, PiSDFVertex *reference = 0);
+    SRDAGVertex *addBroadcast(int nOutput, PiSDFVertex *reference = nullptr);
 
     SRDAGVertex *addFork(int nOutput);
 

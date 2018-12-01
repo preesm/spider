@@ -98,7 +98,7 @@ PiSDFVertex::~PiSDFVertex() {
         if (timings_[i]) {
             timings_[i]->~Expression();
             StackMonitor::free(PISDF_STACK, timings_[i]);
-            timings_[i] = 0;
+            timings_[i] = nullptr;
         }
     }
     StackMonitor::free(PISDF_STACK, timings_);

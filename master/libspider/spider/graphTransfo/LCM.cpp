@@ -171,7 +171,7 @@ lcmBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long
     PiSDFEdgeSet edgeSet(nEdges, TRANSFO_STACK);
     fillEdgeSet(edgeSet, vertices, nVertices);
     // 1. Initialize the reps map
-    Rational *reps = CREATE_MUL(TRANSFO_STACK, nVertices, Rational);
+    auto *reps = CREATE_MUL(TRANSFO_STACK, nVertices, Rational);
     for (long i = 0; i < nVertices; ++i) {
         // Init a rational with num: 0, den: 1
         reps[i] = Rational();

@@ -42,10 +42,10 @@
 #include <PThreadSpiderCommunicator.h>
 
 ListScheduler::ListScheduler() {
-    srdag_ = 0;
-    schedule_ = 0;
-    archi_ = 0;
-    list_ = 0;
+    srdag_ = nullptr;
+    schedule_ = nullptr;
+    archi_ = nullptr;
+    list_ = nullptr;
 }
 
 ListScheduler::~ListScheduler() {
@@ -102,9 +102,9 @@ void ListScheduler::scheduleOnlyConfig(
 
     schedule_->setAllMinReadyTime(Platform::get()->getTime());
     schedule_->setReadyTime(
-            /* Spider Pe */        archi->getSpiderPeIx(),
-            /* End of Mapping */Platform::get()->getTime() +
-                                archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
+            /* Spider Pe */      archi->getSpiderPeIx(),
+            /* End of Mapping */ Platform::get()->getTime() +
+                                 archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
 
 //	Launcher::setActorsNb(schedList.getNb());
 
@@ -149,12 +149,6 @@ void ListScheduler::schedule(
     }
 
     list_->sort(compareSchedLevel);
-
-//	for (int i=0; i<list_->getNb(); i++){
-//		printf("%d (%d), ", (*list_)[i]->getId(), (*list_)[i]->getSchedLvl());
-//	}
-//	printf("\n");
-
     schedule_->setAllMinReadyTime(Platform::get()->getTime());
     schedule_->setReadyTime(
             /* Spider Pe */        archi->getSpiderPeIx(),
@@ -171,15 +165,15 @@ void ListScheduler::schedule(
         /** Send LRTMessage **/
         auto lrtMessage = new LRTMessage;
         lrtMessage->lastJobID_ = schedule_->getNJobs(i) - 1;
-        auto index = spiderCommunicator->pushLRTMessage(&lrtMessage);
+        auto index = spiderCommunicator->push_lrt_message(&lrtMessage);
         /** Send Notification for End Notification **/
         NotificationMessage message(LRT_NOTIFICATION, LRT_END_ITERATION, index);
-        spiderCommunicator->pushNotification(i , &message);
+        spiderCommunicator->push_notification(i, &message);
         /** Set Repeat Mode **/
 //        NotificationMessage repeatMessage;
 //        repeatMessage.type_ = JOB_NOTIFICATION;
 //        repeatMessage.subType_ = JOB_DO_AND_KEEP;
-//        spiderCommunicator->pushNotification(i + 1, &repeatMessage);
+//        spiderCommunicator->push_notification(i + 1, &repeatMessage);
     }
     for (int i = 0; i < list_->getNb(); i++) {
         Launcher::get()->launchVertex((*list_)[i]);
@@ -235,7 +229,7 @@ void ListScheduler::scheduleVertex(SRDAGVertex *vertex) {
     int bestSlave = -1;
     Time bestStartTime = 0;
     Time bestWaitTime = 0;
-    Time bestEndTime = (Time) -1; // Very high value.
+    auto bestEndTime = (Time) -1; // Very high value.
 
     // Getting a slave for the vertex.
     for (int pe = 0; pe < archi_->getNPE(); pe++) {

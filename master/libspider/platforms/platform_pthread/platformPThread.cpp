@@ -60,7 +60,7 @@
 
 #include <platformPThread.h>
 
-#include <stdarg.h>
+#include <cstdarg>
 
 #include <graphs/Archi/SharedMemArchi.h>
 
@@ -89,7 +89,7 @@ static SharedMemArchi *archi_;
 pthread_barrier_t pthreadLRTBarrier;
 
 
-void printfSpider(void);
+void printfSpider();
 
 static void setAffinity(int cpuId) {
 #ifdef WIN32
@@ -214,6 +214,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     // Find LCM of share memory size and minAllocSize
     auto minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize, getpagesize());
     dataMem = operator new((size_t) minAlignedSharedMemory);
+    fprintf(stderr, "INFO: sizeof(JobMessage): %lu\n", sizeof(JobMessage));
+
     /** Filling up parameters for each threads */
     pthread_barrier_init(&pthreadLRTBarrier, nullptr, nLrt_);
     int offsetPe = 0;
@@ -335,7 +337,7 @@ PlatformPThread::~PlatformPThread() {
     for (unsigned int i = 1; i < nLrt_; ++i) {
         NotificationMessage message(LRT_NOTIFICATION, LRT_STOP);
         auto spiderCommunicator = (PThreadSpiderCommunicator *) getSpiderCommunicator();
-        spiderCommunicator->pushNotification(i, &message);
+        spiderCommunicator->push_notification(i, &message);
     }
 
     //wait for every LRT to end
@@ -438,9 +440,9 @@ void PlatformPThread::fprintf(FILE *id, const char *fmt, ...) {
 }
 
 void PlatformPThread::fclose(FILE *id) {
-    if (id != NULL) {
+    if (id != nullptr) {
         std::fclose(id);
-        id = NULL;
+        id = nullptr;
     }
 }
 
@@ -471,7 +473,7 @@ void PlatformPThread::rstJobIxSend() {
 
     //Waiting for slave LRTs to finish their job queue
     for (unsigned int i = 1; i < nLrt_; i++) {
-        void *msg = NULL;
+        void *msg = nullptr;
 
         do {
             getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
@@ -479,7 +481,7 @@ void PlatformPThread::rstJobIxSend() {
                 break;
             else
                 getSpiderCommunicator()->ctrl_end_recv(i);
-        } while (1);
+        } while (true);
         getSpiderCommunicator()->ctrl_end_recv(i);
     }
 
@@ -498,14 +500,14 @@ void PlatformPThread::rstJobIxRecv() {
         NotificationMessage finishedMessage;
         /** Wait for LRTs to finish their jobs **/
         while (true) {
-            spiderCommunicator->popNotification(Platform::get()->getNLrt(), &finishedMessage, true);
+            spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, true);
             if (finishedMessage.getType() == LRT_NOTIFICATION &&
                 finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
                 break;
             }
         }
         /** Send message to clear job queue **/
-        spiderCommunicator->pushNotification(i, &message);
+        spiderCommunicator->push_notification(i, &message);
     }
 }
 
@@ -519,7 +521,7 @@ void PlatformPThread::rstJobIx() {
 
     //Waiting for slave LRTs to finish their job queue
     for (unsigned int i = 1; i < nLrt_; i++) {
-        void *msg = NULL;
+        void *msg = nullptr;
 
         do {
             getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
@@ -527,7 +529,7 @@ void PlatformPThread::rstJobIx() {
                 break;
             else
                 getSpiderCommunicator()->ctrl_end_recv(i);
-        } while (1);
+        } while (true);
         getSpiderCommunicator()->ctrl_end_recv(i);
     }
 
@@ -548,14 +550,14 @@ void PlatformPThread::rstJobIx() {
 
     //Waiting for slave LRTs to reset their jobIx counter
     for (unsigned int i = 1; i < nLrt_; i++) {
-        void *msg = NULL;
+        void *msg = nullptr;
         do {
             getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
             if (((Message *) msg)->id_ == MSG_RESET_LRT)
                 break;
             else
                 getSpiderCommunicator()->ctrl_end_recv(i);
-        } while (1);
+        } while (true);
         getSpiderCommunicator()->ctrl_end_recv(i);
     }
 }

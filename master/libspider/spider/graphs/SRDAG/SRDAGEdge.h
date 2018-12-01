@@ -54,7 +54,7 @@ public:
 
     SRDAGEdge(SRDAGGraph *graph, int globalId);
 
-    ~SRDAGEdge();
+    ~SRDAGEdge() override;
 
     /** Getters */
     inline int getId() const;

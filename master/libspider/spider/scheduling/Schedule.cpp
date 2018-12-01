@@ -160,6 +160,5 @@ void Schedule::execute() {
             Launcher::get()->launchVertex(vertex);
         }
     }
-//    Platform::get()->getLrt()->runUntilNoMoreJobs();
     Platform::get()->getLrt()->run(false);
 }

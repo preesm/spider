@@ -47,7 +47,7 @@ public:
 
     virtual ~Expression();
 
-    int evaluate(const PiSDFParam *const *paramList, transfoJob *job, bool *ok = 0) const;
+    int evaluate(const PiSDFParam *const *paramList, transfoJob *job, bool *ok = nullptr) const;
 
     int evaluate(const int *vertexParamValues, int nParam) const;
 

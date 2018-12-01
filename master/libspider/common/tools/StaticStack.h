@@ -45,15 +45,15 @@ class StaticStack : public Stack {
 public:
     StaticStack(const char *name, void *ptr, int size);
 
-    ~StaticStack();
+    ~StaticStack() override;
 
-    virtual void *alloc(int size);
+    void *alloc(int size) override;
 
-    virtual void free(void *var);
+    void free(void *var) override;
 
-    virtual void freeAll();
+    void freeAll() override;
 
-    virtual void printStat();
+    void printStat() override;
 
 private:
     int size_;

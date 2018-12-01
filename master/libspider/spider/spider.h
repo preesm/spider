@@ -74,14 +74,10 @@ typedef enum PiSDFSubType {
 #define MAX_STATS_VERTICES 1000
 #define MAX_STATS_PE_TYPES 3
 
-typedef std::uint64_t Time;
-typedef std::int64_t Param;
+using Time = std::uint64_t;
+using Param = std::int64_t;
 
-typedef void (*lrtFct)(
-        void *inputFIFOs[],
-        void *outputFIFOs[],
-        Param inParams[],
-        Param outParams[]);
+using lrtFct = void (*)(void **, void **, Param *, Param *);
 
 typedef enum {
     MEMALLOC_DUMMY,
@@ -310,9 +306,9 @@ namespace Spider {
             PiSDFVertex *source, int sourcePortId, const char *production,
             PiSDFVertex *sink, int sinkPortId, const char *consumption,
             const char *delay,
-            PiSDFVertex *setter = 0,
-            PiSDFVertex *getter = 0,
-            PiSDFVertex *delayActor = 0,
+            PiSDFVertex *setter = nullptr,
+            PiSDFVertex *getter = nullptr,
+            PiSDFVertex *delayActor = nullptr,
             bool isDelayPersistent = false);
 
     void addInParam(PiSDFVertex *vertex, int ix, PiSDFParam *param);

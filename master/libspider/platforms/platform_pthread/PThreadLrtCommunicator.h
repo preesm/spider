@@ -70,7 +70,6 @@
 
 class PThreadLrtCommunicator : public LrtCommunicator {
 public:
-
     PThreadLrtCommunicator(
             ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
             ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue,
@@ -79,43 +78,43 @@ public:
             TraceQueue *traceQueue
     );
 
-    bool popNotification(NotificationMessage *msg, bool blocking);
+    ~PThreadLrtCommunicator() override = default;
 
-    void pushNotification(NotificationMessage *msg);
+    bool pop_notification(NotificationMessage *msg, bool blocking);
 
-    void getJobMessage(JobMessage **msg, std::int32_t id);
+    void push_notification(NotificationMessage *msg);
 
-    void getLRTMessage(LRTMessage **msg, std::int32_t id);
+    void pop_job_message(JobMessage **msg, std::int32_t id);
 
-    ~PThreadLrtCommunicator();
+    void pop_lrt_message(LRTMessage **msg, std::int32_t id);
 
-    void rstCtrl() {};
+    void rstCtrl() override {};
 
-    void *ctrl_start_send(std::uint64_t /*size*/) {
+    void *ctrl_start_send(std::uint64_t /*size*/) override {
         return nullptr;
     }
 
-    void ctrl_end_send(std::uint64_t) {};
+    void ctrl_end_send(std::uint64_t) override {};
 
-    std::uint64_t ctrl_start_recv(void **) { return 0; };
+    std::uint64_t ctrl_start_recv(void **) override { return 0; };
 
-    void ctrl_start_recv_block(void **) {};
+    void ctrl_start_recv_block(void **) override {};
 
-    void ctrl_end_recv() {};
+    void ctrl_end_recv() override {};
 
-    void *trace_start_send(int size);
+    void *trace_start_send(int size) override;
 
-    void trace_end_send(int size);
+    void trace_end_send(int size) override;
 
-    void *data_start_send(Fifo *f);
+    void *data_start_send(Fifo *f) override;
 
-    void data_end_send(Fifo *f);
+    void data_end_send(Fifo *f) override;
 
-    void *data_recv(Fifo *f);
+    void *data_recv(Fifo *f) override;
 
-    void setLrtJobIx(int lrtIx, int jobIx);
+    void setLrtJobIx(int lrtIx, int jobIx) override;
 
-    void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx);
+    void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx) override;
 
 private:
     ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;

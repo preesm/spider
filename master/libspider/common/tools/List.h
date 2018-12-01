@@ -76,14 +76,14 @@ inline List<T>::List(SpiderStack stackId, int size) {
     nb = 0;
     nbMax = size;
     if (size == 0)
-        array = 0;
+        array = nullptr;
     else
         array = CREATE_MUL(stackId_, size, T);
 }
 
 template<class T>
 inline List<T>::~List() {
-    if (array != 0)
+    if (array != nullptr)
         StackMonitor::free(stackId_, array);
 }
 
@@ -127,7 +127,7 @@ inline int List<T>::myqsort_part(int p, int r, int (*comp)(T, T)) {
     T pivot = array[p];
     int i = p - 1, j = r + 1;
     T temp;
-    while (1) {
+    while (true) {
         do
             j--;
         while (comp(array[j], pivot) > 0);

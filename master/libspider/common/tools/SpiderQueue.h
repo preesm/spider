@@ -101,7 +101,7 @@ public:
     /**
      * @brief Clear the queue (thread safe)
      */
-    void clear(void);
+    void clear();
 
 private:
     std::vector<T> queue_;

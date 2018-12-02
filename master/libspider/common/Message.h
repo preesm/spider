@@ -129,12 +129,6 @@ public:
     Param *params_;
 };
 
-class LRTMessage {
-public:
-    std::int32_t lastJobID_; // ID of the last job the LRT should consider for a graph iteration
-    bool flag_; // Flag depending on the nature of the message
-};
-
 typedef enum {
     LRT_NOTIFICATION,
     TRACE_NOTIFICATION,
@@ -143,13 +137,14 @@ typedef enum {
 } NotificationType;
 
 typedef enum {
-    LRT_END_ITERATION,
-    LRT_REPEAT_ITERATION,
-    LRT_FINISHED_ITERATION,
-    LRT_RST_ITERATION,
-    LRT_STOP,
-    LRT_PAUSE,
-    LRT_RESUME,
+    LRT_END_ITERATION,        // Cross-check signal sent after last JOB (if JOB_LAST_ID was not received)
+    LRT_REPEAT_ITERATION_EN,  // Signal LRT to repeat its complete iteration (indefinitely)
+    LRT_REPEAT_ITERATION_DIS, // Signal LRT to stop repeating iteration
+    LRT_FINISHED_ITERATION,   // Signal that given LRT has finished its iteration
+    LRT_RST_ITERATION,        // Signal LRT to restart current iteration
+    LRT_STOP,                 // Signal LRT to stop
+    LRT_PAUSE,                // Signal LRT to freeze
+    LRT_RESUME,               // Signal LRT to un-freeze
 } LrtNotifications;
 
 typedef enum {
@@ -160,10 +155,9 @@ typedef enum {
 } TraceNotification;
 
 typedef enum {
-    JOB_ADD,
-    JOB_CLEAR_QUEUE,
-    JOB_DO_AND_KEEP,
-    JOB_DO_AND_DISCARD
+    JOB_ADD,            // Signal LRT that a job is available in shared queue
+    JOB_LAST_ID,        // Signal LRT what is the last job ID
+    JOB_CLEAR_QUEUE,    // Signal LRT to clear its job queue (if LRT_REPEAT_ITERATION_EN, signal is ignored)
 } JobNotification;
 
 

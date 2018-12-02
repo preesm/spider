@@ -381,43 +381,28 @@ inline void LRT::runReceivedJob(void *msg) {
 
 void LRT::fetchLRTNotification(NotificationMessage &message) {
     switch (message.getSubType()) {
-        case LRT_END_ITERATION: {
-            // pop message
-            auto communicator = (PThreadLrtCommunicator *) (Platform::get()->getLrtCommunicator());
-            LRTMessage *msg;
-            // pop message from global queue
-            communicator->pop_lrt_message(&msg, message.getIndex());
-            // set last job id
-            lastJobID_ = msg->lastJobID_;
-            delete msg;
-        }
+        case LRT_END_ITERATION:
+            if ((lastJobID_ < 0) || (jobQueueSize_ - 1) > (std::uint32_t) lastJobID_) {
+                lastJobID_ = jobQueueSize_ - 1;
+            }
             break;
         case LRT_RST_ITERATION:
-            // reset job id
+            jobIx_ = -1;
+            jobQueueIndex_ = 0;
             break;
-        case LRT_REPEAT_ITERATION: {
-            // pop message
-            auto communicator = (PThreadLrtCommunicator *) (Platform::get()->getLrtCommunicator());
-            LRTMessage *msg;
-            // pop message from global queue
-            communicator->pop_lrt_message(&msg, message.getIndex());
-            // set last job id
-            lastJobID_ = msg->lastJobID_;
-            // set repeat mode (continuous)
-            repeatIteration_ = msg->flag_;
-            delete msg;
-        }
+        case LRT_REPEAT_ITERATION_EN:
+            repeatIteration_ = true;
+            break;
+        case LRT_REPEAT_ITERATION_DIS:
+            repeatIteration_ = false;
             break;
         case LRT_PAUSE:
-            // freeze lrt
             freeze_ = true;
             break;
         case LRT_RESUME:
-            // unfreeze lrt
             freeze_ = false;
             break;
         case LRT_STOP:
-            // stop lrt
             run_ = false;
             clearJobQueue();
             break;
@@ -440,16 +425,11 @@ void LRT::fetchJobNotification(NotificationMessage &message) {
             jobQueueSize_++;
         }
             break;
-        case JOB_DO_AND_KEEP:
-            repeatJobQueue_ = true;
-            break;
-        case JOB_DO_AND_DISCARD:
-            // set flag to not use circular job queue
-            // check consistency with LRT_REPEAT_ITERATION
-            repeatJobQueue_ = false;
-            break;
         case JOB_CLEAR_QUEUE:
             clearJobQueue();
+            break;
+        case JOB_LAST_ID:
+            lastJobID_ = message.getIndex();
             break;
         default:
             throw std::runtime_error("ERROR: unhandled type of JOB notification.\n");

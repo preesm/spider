@@ -166,7 +166,6 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
     /** Create the different queues */
     spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<JobMessage *>);
-    spider2LrtLRTQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<LRTMessage *>);
     lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue*);
 
     for (unsigned int i = 0; i < nLrt_ + 1; ++i) {
@@ -225,7 +224,6 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
             lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
                     spider2LrtJobQueue_,
-                    spider2LrtLRTQueue_,
                     lrtNotificationQueues_[i + offsetPe],
                     dataQueues_,
                     traceQueue_);
@@ -274,7 +272,6 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     /** Initialize LRT and Communicators */
     spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
             spider2LrtJobQueue_,
-            spider2LrtLRTQueue_,
             lrtNotificationQueues_,
             traceQueue_);
 
@@ -379,7 +376,6 @@ PlatformPThread::~PlatformPThread() {
     }
     StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
     StackMonitor::free(ARCHI_STACK, spider2LrtJobQueue_);
-    StackMonitor::free(ARCHI_STACK, spider2LrtLRTQueue_);
 
 
     dataQueues_->~DataQueues();

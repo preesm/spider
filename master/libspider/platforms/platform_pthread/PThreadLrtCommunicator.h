@@ -72,7 +72,6 @@ class PThreadLrtCommunicator : public LrtCommunicator {
 public:
     PThreadLrtCommunicator(
             ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
-            ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue,
             NotificationQueue *notificationQueue,
             DataQueues *dataQueues,
             TraceQueue *traceQueue
@@ -85,8 +84,6 @@ public:
     void push_notification(NotificationMessage *msg);
 
     void pop_job_message(JobMessage **msg, std::int32_t id);
-
-    void pop_lrt_message(LRTMessage **msg, std::int32_t id);
 
     void rstCtrl() override {};
 
@@ -118,7 +115,6 @@ public:
 
 private:
     ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
-    ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue_;
     NotificationQueue *notificationQueue_;
     DataQueues *dataQueues_;
     TraceQueue *traceQueue_;

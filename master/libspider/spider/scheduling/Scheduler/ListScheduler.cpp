@@ -160,23 +160,21 @@ void ListScheduler::schedule(
     }
 
     /** Sends the ID of last job to slaves **/
+
+    for (int i = 0; i < list_->getNb(); i++) {
+        Launcher::get()->launchVertex((*list_)[i]);
+    }
+
     auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
     for (int i = 0; i < archi->getNPE(); ++i) {
-        /** Send LRTMessage **/
-        auto lrtMessage = new LRTMessage;
-        lrtMessage->lastJobID_ = schedule_->getNJobs(i) - 1;
-        auto index = spiderCommunicator->push_lrt_message(&lrtMessage);
         /** Send Notification for End Notification **/
-        NotificationMessage message(LRT_NOTIFICATION, LRT_END_ITERATION, index);
+        NotificationMessage message(LRT_NOTIFICATION, LRT_END_ITERATION);
         spiderCommunicator->push_notification(i, &message);
         /** Set Repeat Mode **/
 //        NotificationMessage repeatMessage;
 //        repeatMessage.type_ = JOB_NOTIFICATION;
 //        repeatMessage.subType_ = JOB_DO_AND_KEEP;
 //        spiderCommunicator->push_notification(i + 1, &repeatMessage);
-    }
-    for (int i = 0; i < list_->getNb(); i++) {
-        Launcher::get()->launchVertex((*list_)[i]);
     }
 
 

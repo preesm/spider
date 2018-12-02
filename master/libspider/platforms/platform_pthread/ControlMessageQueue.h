@@ -114,7 +114,4 @@ private:
 template
 class ControlMessageQueue<JobMessage *>;
 
-template
-class ControlMessageQueue<LRTMessage *>;
-
 #endif //SPIDER_CONTROLMESSAGEQUEUE_H

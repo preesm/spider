@@ -190,7 +190,6 @@ private:
     Stack **stackLrt;
 
     ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
-    ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue_;
     NotificationQueue **lrtNotificationQueues_;
 
     DataQueues *dataQueues_;

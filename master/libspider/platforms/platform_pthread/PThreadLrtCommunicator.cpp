@@ -84,13 +84,11 @@
 
 PThreadLrtCommunicator::PThreadLrtCommunicator(
         ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
-        ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue,
         NotificationQueue *notificationQueue,
         DataQueues *dataQueues,
         TraceQueue *traceQueue
 ) {
     spider2LrtJobQueue_ = spider2LrtJobQueue;
-    spider2LrtLRTQueue_ = spider2LrtLRTQueue;
     notificationQueue_ = notificationQueue;
     dataQueues_ = dataQueues;
     traceQueue_ = traceQueue;
@@ -102,10 +100,6 @@ bool PThreadLrtCommunicator::pop_notification(NotificationMessage *msg, bool blo
 
 void PThreadLrtCommunicator::push_notification(NotificationMessage *msg) {
     notificationQueue_->push(msg);
-}
-
-void PThreadLrtCommunicator::pop_lrt_message(LRTMessage **msg, std::int32_t id) {
-    spider2LrtLRTQueue_->pop(msg, id);
 }
 
 void PThreadLrtCommunicator::pop_job_message(JobMessage **msg, std::int32_t id) {

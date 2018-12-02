@@ -78,10 +78,8 @@
 //}
 
 PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
-                                                     ControlMessageQueue<LRTMessage *> *spider2LrtLRTQueue,
                                                      NotificationQueue **notificationQueue, TraceQueue *traceQueue) {
     spider2LrtJobQueue_ = spider2LrtJobQueue;
-    spider2LrtLRTQueue_ = spider2LrtLRTQueue;
     notificationQueue_ = notificationQueue;
     traceQueue_ = traceQueue;
 }
@@ -96,10 +94,6 @@ void PThreadSpiderCommunicator::push_notification(int lrtID, NotificationMessage
 
 std::int32_t PThreadSpiderCommunicator::push_job_message(JobMessage **message) {
     return spider2LrtJobQueue_->push(message);
-}
-
-std::int32_t PThreadSpiderCommunicator::push_lrt_message(LRTMessage **message) {
-    return spider2LrtLRTQueue_->push(message);
 }
 
 void *PThreadSpiderCommunicator::trace_start_send(int size) {

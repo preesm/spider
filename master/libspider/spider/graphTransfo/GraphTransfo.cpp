@@ -144,7 +144,7 @@ void jit_ms(
     // Check nb of config //
 
     /* Look for hierrachical actor in topDag */
-    TimeMonitor::startMonitoring();
+    // TimeMonitor::startMonitoring();
 
     do {
         SRDAGVertex *nextHierVx = getNextHierVx(topSrdag);
@@ -203,25 +203,25 @@ void jit_ms(
 
         } while (nextHierVx);
 
-        TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
+        // TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
         if (Spider::getGraphOptim()) {
-            TimeMonitor::startMonitoring();
+            // TimeMonitor::startMonitoring();
             optims(topSrdag);
-            TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
+            // TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
         }
 
         /* Schedule and launch execution */
-        TimeMonitor::startMonitoring();
+        // TimeMonitor::startMonitoring();
         scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi);
-        TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
+        // TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
         Platform::get()->getLrt()->runUntilNoMoreJobs();
 
         /* Resolve params must be done by itself */
         Launcher::get()->resolveParams(archi, topSrdag);
 
-        TimeMonitor::startMonitoring();
+        // TimeMonitor::startMonitoring();
 
         while (!jobQueue.isEmpty()) {
 
@@ -266,39 +266,39 @@ void jit_ms(
             StackMonitor::free(TRANSFO_STACK, brv);
             StackMonitor::free(TRANSFO_STACK, job);
 
-            TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
-            TimeMonitor::startMonitoring();
+            // TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
+            // TimeMonitor::startMonitoring();
         }
 
         // TODO
         topSrdag->updateState();
 
-        TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
+        // TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
         if (Spider::getGraphOptim()) {
-            TimeMonitor::startMonitoring();
+            // TimeMonitor::startMonitoring();
             optims(topSrdag);
-            TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
+            // TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
         }
 
-        TimeMonitor::startMonitoring();
+        // TimeMonitor::startMonitoring();
 
 //        printf("Finish one iter\n");
     } while (true);
 
     topSrdag->updateState();
-    TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
+    // TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
     if (Spider::getGraphOptim()) {
-        TimeMonitor::startMonitoring();
+        // TimeMonitor::startMonitoring();
         optims(topSrdag);
-        TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
+        // TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
     }
 
     /* Schedule and launch execution */
-    TimeMonitor::startMonitoring();
+    // TimeMonitor::startMonitoring();
     scheduler->schedule(topSrdag, memAlloc, schedule, archi);
-    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
+    // TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
     Platform::get()->getLrt()->runUntilNoMoreJobs();
 
@@ -326,7 +326,7 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
     // Check nb of config //
 
     /* Look for hierrachical actor in topDag */
-//    TimeMonitor::startMonitoring();
+//    // TimeMonitor::startMonitoring();
 
     SRDAGVertex *nextHierVx = getNextHierVx(topSrdag);
 
@@ -371,20 +371,20 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
 
     } while (nextHierVx);
 
-//    TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
+//    // TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
     if (Spider::getGraphOptim()) {
-//        TimeMonitor::startMonitoring();
+//        // TimeMonitor::startMonitoring();
         optims(topSrdag);
-//        TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
+//        // TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
     }
 
     topSrdag->updateState();
 
     /* Schedule and launch execution */
-//    TimeMonitor::startMonitoring();
+//    // TimeMonitor::startMonitoring();
     scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchi());
-//    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
+//    // TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
     Platform::get()->getLrt()->run(false);
 

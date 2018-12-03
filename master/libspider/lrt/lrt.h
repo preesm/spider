@@ -66,7 +66,7 @@ public:
 
     void setFctTbl(const lrtFct fct[], int nFct);
 
-    void runUntilNoMoreJobs() {};
+    void runUntilNoMoreJobs() { run(false); };
 
     void runInfinitly() {};
 

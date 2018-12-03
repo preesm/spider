@@ -197,24 +197,6 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
 }
 
 void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
-//    int slave = 0;
-//    while (curNParam_ != 0) {
-//        ParamValueMessage *msg;
-//        if (Platform::get()->getSpiderCommunicator()->ctrl_start_recv(slave, (void **) (&msg))) {
-//            if (msg->id_ != MSG_PARAM_VALUE)
-//                throw std::runtime_error("Unexpected Msg received\n");
-//            SRDAGVertex *cfgVertex = topDag->getVertexFromIx(msg->srdagID_);
-//            for (int j = 0; j < cfgVertex->getNOutParam(); j++) {
-//                int *param = cfgVertex->getOutParam(j);
-//                *param = msg->params_[j];
-//                if (Spider::getVerbose())
-//                    printf("Recv param %s = %d\n", cfgVertex->getReference()->getOutParam(j)->getName(), *param);
-//            }
-//            curNParam_ -= cfgVertex->getNOutParam();
-//            Platform::get()->getSpiderCommunicator()->ctrl_end_recv(slave);
-//        }
-//        slave = (slave + 1) % archi->getNPE();
-//    }
     while (curNParam_) {
         NotificationMessage message;
         if (Platform::get()->getSpiderCommunicator()->pop_notification(Platform::get()->getNLrt(), &message, true)) {
@@ -232,10 +214,11 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
                     (*param) = receivedParams[i];
                     if (Spider::getVerbose()) {
                         auto *parameterName = vertex->getReference()->getOutParam(i)->getName();
-                        fprintf(stderr, "INFO: Parameter: %s -- Value: %ld\n", parameterName, receivedParams[i]);
+                        fprintf(stderr, "INFO: Received Parameter: %s -- Value: %ld\n", parameterName, receivedParams[i]);
                     }
                 }
                 curNParam_ -= vertex->getNOutParam();
+                parameterMessage->~ParameterMessage();
                 StackMonitor::free(ARCHI_STACK, parameterMessage);
             } else {
                 /** Push back the message in the queue, it will be treated later **/

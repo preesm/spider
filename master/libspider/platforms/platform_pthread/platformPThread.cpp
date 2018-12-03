@@ -214,7 +214,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     // Find LCM of share memory size and minAllocSize
     auto minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize, getpagesize());
     dataMem = operator new((size_t) minAlignedSharedMemory);
-    
+
     /** Filling up parameters for each threads */
     pthread_barrier_init(&pthreadLRTBarrier, nullptr, nLrt_);
     int offsetPe = 0;
@@ -501,11 +501,14 @@ void PlatformPThread::rstJobIxRecv() {
             spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, true);
             if (finishedMessage.getType() == LRT_NOTIFICATION &&
                 finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
+#ifdef VERBOSE_JOBS
+                fprintf(stderr, "INFO: LRT: %d -- received end signal.\n", finishedMessage.getIndex());
+#endif
+                /** Send message to clear job queue **/
+                spiderCommunicator->push_notification(finishedMessage.getIndex(), &message);
                 break;
             }
         }
-        /** Send message to clear job queue **/
-        spiderCommunicator->push_notification(i, &message);
     }
 }
 

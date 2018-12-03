@@ -165,18 +165,8 @@ void ListScheduler::schedule(
         Launcher::get()->launchVertex((*list_)[i]);
     }
 
-    auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
-    for (int i = 0; i < archi->getNPE(); ++i) {
-        /** Send Notification for End Notification **/
-        NotificationMessage message(LRT_NOTIFICATION, LRT_END_ITERATION);
-        spiderCommunicator->push_notification(i, &message);
-        /** Set Repeat Mode **/
-//        NotificationMessage repeatMessage;
-//        repeatMessage.type_ = JOB_NOTIFICATION;
-//        repeatMessage.subType_ = JOB_DO_AND_KEEP;
-//        spiderCommunicator->push_notification(i + 1, &repeatMessage);
-    }
-
+    /** Send of iteration notification **/
+    schedule_->sendEndNotification();
 
     list_->~List();
     StackMonitor::free(TRANSFO_STACK, list_);

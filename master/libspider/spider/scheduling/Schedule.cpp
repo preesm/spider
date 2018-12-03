@@ -159,5 +159,13 @@ void Schedule::execute() {
             Launcher::get()->launchVertex(vertex);
         }
     }
+    sendEndNotification();
     Platform::get()->getLrt()->run(false);
+}
+
+void Schedule::sendEndNotification() {
+    for (int pe = 0; pe < nPE_; ++pe) {
+        NotificationMessage message(LRT_NOTIFICATION, LRT_END_ITERATION);
+        Platform::get()->getSpiderCommunicator()->push_notification(pe, &message);
+    }
 }

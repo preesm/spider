@@ -177,10 +177,8 @@ void RoundRobinScattered::schedule(
         Launcher::get()->launchVertex((*list_)[i]);
     }
 
-    // for(int i=0; i<list_->getNb(); i++){
-    // 	Launcher::get()->launchVertex((*list_)[i]);
-    // }
-
+    /** Send of iteration notification **/
+    schedule_->sendEndNotification();
 
     list_->~List();
     StackMonitor::free(TRANSFO_STACK, list_);

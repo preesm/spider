@@ -66,16 +66,16 @@ public:
 
     inline PiSDFParamType getType() const;
 
-    inline int getStaticValue() const;
+    inline Param getStaticValue() const;
 
     inline int getParentId() const;
 
     inline Expression *getExpression();
 
-    inline int getValue() const;
+    inline Param getValue() const;
 
     /** Setters */
-    inline void setValue(int value);
+    inline void setValue(Param value);
 
     inline void setParentId(int parentId);
 
@@ -93,7 +93,7 @@ private:
     PiSDFParamType type_;
 
     // STATIC
-    int value_;
+    Param value_;
 
     // HERITED
     int parentId_;
@@ -124,7 +124,7 @@ inline PiSDFParamType PiSDFParam::getType() const {
     return type_;
 }
 
-inline int PiSDFParam::getStaticValue() const {
+inline Param PiSDFParam::getStaticValue() const {
     if (type_ != PISDF_PARAM_STATIC)
         throw std::runtime_error("Error: Not Static param used as Static param\n");
     return value_;
@@ -136,7 +136,7 @@ inline int PiSDFParam::getParentId() const {
     return parentId_;
 }
 
-inline int PiSDFParam::getValue() const {
+inline Param PiSDFParam::getValue() const {
     return value_;
 }
 
@@ -145,7 +145,7 @@ inline Expression *PiSDFParam::getExpression() {
 }
 
 /** Setters */
-inline void PiSDFParam::setValue(int value) {
+inline void PiSDFParam::setValue(Param value) {
     value_ = value;
 }
 

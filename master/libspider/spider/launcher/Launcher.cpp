@@ -65,23 +65,23 @@ Launcher *Launcher::get() {
     return &instance_;
 }
 
-void Launcher::send_ResetLrtMsg(int lrtIx) {
-    auto msg = (Message *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(Message));
-    msg->id_ = MSG_RESET_LRT;
-    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(Message));
+void Launcher::send_ResetLrtMsg(int) {
+//    auto msg = (Message *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(Message));
+//    msg->id_ = MSG_RESET_LRT;
+//    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(Message));
 }
 
-void Launcher::send_EndIterMsg(int lrtIx) {
-    auto msg = (Message *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(Message));
-    msg->id_ = MSG_END_ITER;
-    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(Message));
+void Launcher::send_EndIterMsg(int) {
+//    auto msg = (Message *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(Message));
+//    msg->id_ = MSG_END_ITER;
+//    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(Message));
 }
 
-void Launcher::send_ClearTimeMsg(int lrtIx) {
-    auto msg = (ClearTimeMessage *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx,
-                                                                                              sizeof(ClearTimeMessage));
-    msg->id_ = MSG_CLEAR_TIME;
-    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMessage));
+void Launcher::send_ClearTimeMsg(int) {
+//    auto msg = (ClearTimeMessage *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx,
+//                                                                                              sizeof(ClearTimeMessage));
+//    msg->id_ = MSG_CLEAR_TIME;
+//    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMessage));
 }
 
 void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
@@ -116,10 +116,10 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
     msg->fctID_ = vertex->getFctId();
     msg->traceEnabled_ = Spider::getTraceEnabled();
 
-    msg->nbInEdge_ = vertex->getNConnectedInEdge();
-    msg->nbOutEdge_ = vertex->getNConnectedOutEdge();
-    msg->nbInParam_ = nParams;
-    msg->nbOutParam_ = vertex->getNOutParam();
+    msg->nEdgeIN_ = vertex->getNConnectedInEdge();
+    msg->nEdgeOUT_ = vertex->getNConnectedOutEdge();
+    msg->nParamIN_ = nParams;
+    msg->nParamOUT_ = vertex->getNOutParam();
     msg->inFifos_ = inFifos;
     msg->outFifos_ = outFifos;
     msg->inParams_ = inParams;
@@ -196,24 +196,52 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
 //    fprintf(stderr, "INFO: LRT: %d -- job pushed.\n", lrtIx);
 }
 
-void Launcher::resolveParams(Archi *archi, SRDAGGraph *topDag) {
-    int slave = 0;
-    while (curNParam_ != 0) {
-        ParamValueMessage *msg;
-        if (Platform::get()->getSpiderCommunicator()->ctrl_start_recv(slave, (void **) (&msg))) {
-            if (msg->id_ != MSG_PARAM_VALUE)
-                throw std::runtime_error("Unexpected Msg received\n");
-            SRDAGVertex *cfgVertex = topDag->getVertexFromIx(msg->srdagID_);
-            for (int j = 0; j < cfgVertex->getNOutParam(); j++) {
-                int *param = cfgVertex->getOutParam(j);
-                *param = msg->params_[j];
-                if (Spider::getVerbose())
-                    printf("Recv param %s = %d\n", cfgVertex->getReference()->getOutParam(j)->getName(), *param);
+void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
+//    int slave = 0;
+//    while (curNParam_ != 0) {
+//        ParamValueMessage *msg;
+//        if (Platform::get()->getSpiderCommunicator()->ctrl_start_recv(slave, (void **) (&msg))) {
+//            if (msg->id_ != MSG_PARAM_VALUE)
+//                throw std::runtime_error("Unexpected Msg received\n");
+//            SRDAGVertex *cfgVertex = topDag->getVertexFromIx(msg->srdagID_);
+//            for (int j = 0; j < cfgVertex->getNOutParam(); j++) {
+//                int *param = cfgVertex->getOutParam(j);
+//                *param = msg->params_[j];
+//                if (Spider::getVerbose())
+//                    printf("Recv param %s = %d\n", cfgVertex->getReference()->getOutParam(j)->getName(), *param);
+//            }
+//            curNParam_ -= cfgVertex->getNOutParam();
+//            Platform::get()->getSpiderCommunicator()->ctrl_end_recv(slave);
+//        }
+//        slave = (slave + 1) % archi->getNPE();
+//    }
+    while (curNParam_) {
+        NotificationMessage message;
+        if (Platform::get()->getSpiderCommunicator()->pop_notification(Platform::get()->getNLrt(), &message, true)) {
+            if (message.getType() == JOB_NOTIFICATION && message.getSubType() == JOB_SENT_PARAM) {
+                ParameterMessage *parameterMessage;
+                Platform::get()->getSpiderCommunicator()->pop_parameter_message(&parameterMessage, message.getIndex());
+                SRDAGVertex *vertex = topDag->getVertexFromIx(parameterMessage->getVertexID());
+                if (vertex->getNOutParam() != parameterMessage->getNParam()) {
+                    throw std::runtime_error(
+                            "ERROR: number of parameters received not consistent with expected value.");
+                }
+                auto *receivedParams = parameterMessage->getParams();
+                for (int i = 0; i < vertex->getNOutParam(); ++i) {
+                    auto *param = vertex->getOutParam(i);
+                    (*param) = receivedParams[i];
+                    if (Spider::getVerbose()) {
+                        auto *parameterName = vertex->getReference()->getOutParam(i)->getName();
+                        fprintf(stderr, "INFO: Parameter: %s -- Value: %ld\n", parameterName, receivedParams[i]);
+                    }
+                }
+                curNParam_ -= vertex->getNOutParam();
+                StackMonitor::free(ARCHI_STACK, parameterMessage);
+            } else {
+                /** Push back the message in the queue, it will be treated later **/
+                Platform::get()->getSpiderCommunicator()->push_notification(Platform::get()->getNLrt(), &message);
             }
-            curNParam_ -= cfgVertex->getNOutParam();
-            Platform::get()->getSpiderCommunicator()->ctrl_end_recv(slave);
         }
-        slave = (slave + 1) % archi->getNPE();
     }
 }
 

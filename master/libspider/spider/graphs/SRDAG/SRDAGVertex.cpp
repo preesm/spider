@@ -80,12 +80,12 @@ SRDAGVertex::SRDAGVertex(
     nCurOutEdge_ = 0;
 
     nInParam_ = nInParam;
-    inParams_ = CREATE_MUL(SRDAG_STACK, nInParam_, int);
-    memset(inParams_, 0, nInParam * sizeof(int));
+    inParams_ = CREATE_MUL(SRDAG_STACK, nInParam_, Param);
+    memset(inParams_, 0, nInParam * sizeof(Param));
 
     nOutParam_ = nOutParam;
-    outParams_ = CREATE_MUL(SRDAG_STACK, nOutParam_, int*);
-    memset(outParams_, 0, nOutParam * sizeof(int **));
+    outParams_ = CREATE_MUL(SRDAG_STACK, nOutParam_, Param*);
+    memset(outParams_, 0, nOutParam * sizeof(Param **));
 
     start_ = end_ = -1;
     schedLvl_ = -1;

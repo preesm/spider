@@ -65,13 +65,13 @@ public:
 
     inline int getNOutParam() const;
 
-    inline int getInParam(int ix) const;
+    inline Param getInParam(int ix) const;
 
-    inline int *getOutParam(int ix);
+    inline Param *getOutParam(int ix);
 
-    inline const int *getInParams() const;
+    inline const Param *getInParams() const;
 
-    inline const int *const *getOutParams() const;
+    inline const Param *const *getOutParams() const;
 
     /** Data edge getters */
     inline int getNInEdge() const;
@@ -91,9 +91,9 @@ public:
     inline SRDAGEdge *const *getOutEdges();
 
     /** Add Param Fcts */
-    inline void addInParam(int ix, int param);
+    inline void addInParam(int ix, Param param);
 
-    inline void addOutParam(int ix, int *param);
+    inline void addOutParam(int ix, Param *param);
 
     /** General getters */
     inline int getId() const;
@@ -179,8 +179,8 @@ private:
     SRDAGEdge **inEdges_, **outEdges_;
 
     int nInParam_, nOutParam_;
-    int *inParams_;
-    int **outParams_;
+    Param *inParams_;
+    Param **outParams_;
 
     Time start_, end_;
     int schedLvl_;
@@ -207,7 +207,7 @@ inline int SRDAGVertex::getNOutParam() const {
     return nOutParam_;
 }
 
-inline int SRDAGVertex::getInParam(int ix) const {
+inline Param SRDAGVertex::getInParam(int ix) const {
     if (ix < nInParam_ && ix >= 0) {
         return inParams_[ix];
     } else {
@@ -216,7 +216,7 @@ inline int SRDAGVertex::getInParam(int ix) const {
     return -1;
 }
 
-inline int *SRDAGVertex::getOutParam(int ix) {
+inline Param *SRDAGVertex::getOutParam(int ix) {
     if (ix < nOutParam_ && ix >= 0)
         return outParams_[ix];
     else {
@@ -225,11 +225,11 @@ inline int *SRDAGVertex::getOutParam(int ix) {
     return nullptr;
 }
 
-inline const int *SRDAGVertex::getInParams() const {
+inline const Param *SRDAGVertex::getInParams() const {
     return inParams_;
 }
 
-inline const int *const *SRDAGVertex::getOutParams() const {
+inline const Param *const *SRDAGVertex::getOutParams() const {
     return outParams_;
 }
 
@@ -335,7 +335,7 @@ inline void SRDAGVertex::disconnectOutEdge(int ix) {
 }
 
 /** Add Param Fcts */
-inline void SRDAGVertex::addInParam(int ix, int param) {
+inline void SRDAGVertex::addInParam(int ix, Param param) {
     if (ix >= nInParam_ || ix < 0) {
         throwBadIndexError("addInParam", ix, nInParam_);
     } else if (inParams_[ix] != 0)
@@ -344,7 +344,7 @@ inline void SRDAGVertex::addInParam(int ix, int param) {
         inParams_[ix] = param;
 }
 
-inline void SRDAGVertex::addOutParam(int ix, int *param) {
+inline void SRDAGVertex::addOutParam(int ix, Param *param) {
     if (ix >= nOutParam_ || ix < 0) {
         throwBadIndexError("addOutParam", ix, nOutParam_);
     } else if (outParams_[ix] != nullptr)

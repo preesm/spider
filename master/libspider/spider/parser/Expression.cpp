@@ -121,7 +121,7 @@ Expression::~Expression() {
     StackMonitor::free(PISDF_STACK, stack_);
 }
 
-int Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, bool *ok) const {
+Param Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, bool *ok) const {
     float stack[MAX_NVAR_ELEMENTS];
     float *stackPtr = stack;
     const Token *inputPtr = stack_;
@@ -186,10 +186,10 @@ int Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, bo
         inputPtr++;
     }
     if (ok) *ok = true;
-    return (int)stack[0];
+    return (Param) stack[0];
 }
 
-int Expression::evaluate(const int *vertexParamValues, int nParam) const {
+Param Expression::evaluate(const Param *vertexParamValues, int nParam) const {
     float stack[MAX_NVAR_ELEMENTS];
     float *stackPtr = stack;
     const Token *inputPtr = stack_;

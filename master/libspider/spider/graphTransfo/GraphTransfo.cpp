@@ -59,7 +59,7 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx) {
     job->graphIter = nextHierVx->getRefId();
 
     /* Add Static and Herited parameter values */
-    job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), int);
+    job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), Param);
     for (int paramIx = 0; paramIx < job->graph->getNParam(); paramIx++) {
         PiSDFParam *param = job->graph->getParam(paramIx);
         switch (param->getType()) {
@@ -171,9 +171,9 @@ void jit_ms(
             } else {
                 if (Spider::getVerbose()) {
                     /* Display Param values */
-                    printf("\nParam Values:\n");
+                    fprintf(stderr, "\nINFO: Parameter values:\n");
                     for (int i = 0; i < job->graph->getNParam(); i++) {
-                        printf("%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
+                        fprintf(stderr, "INFO: >> Name: %s -- Value: %ld\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
                     }
                 }
 
@@ -181,9 +181,9 @@ void jit_ms(
                 computeBRV(job, brv);
                 if (Spider::getVerbose()) {
                     /* Display BRV values */
-                    printf("\nBRV Values:\n");
+                    fprintf(stderr, "\nINFO: BRV values:\n");
                     for (int i = 0; i < job->graph->getNBody(); i++) {
-                        printf("%s: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+                        fprintf(stderr, "INFO: >> Vertex: %s -- RV: %d\n", job->graph->getBody(i)->getName(), brv[i]);
                     }
                 }
 
@@ -238,9 +238,9 @@ void jit_ms(
 
             if (Spider::getVerbose()) {
                 /* Display Param values */
-                printf("\nParam Values:\n");
+                fprintf(stderr, "\nINFO: Parameter values:\n");
                 for (int i = 0; i < job->graph->getNParam(); i++) {
-                    printf("%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
+                    fprintf(stderr, "INFO: >> Name: %s -- Value: %ld\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
                 }
             }
 
@@ -249,9 +249,9 @@ void jit_ms(
             computeBRV(job, brv);
             if (Spider::getVerbose()) {
                 /* Display BRV values */
-                printf("\nBRV Values:\n");
+                fprintf(stderr, "\nINFO: BRV values:\n");
                 for (int i = 0; i < job->graph->getNBody(); i++) {
-                    printf("%s: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+                    fprintf(stderr, "INFO: >> Vertex: %s -- RV: %d\n", job->graph->getBody(i)->getName(), brv[i]);
                 }
             }
 

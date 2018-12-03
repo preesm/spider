@@ -165,7 +165,7 @@ static int getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) 
     auto *job = CREATE(TRANSFO_STACK, transfoJob);
     memset(job, 0, sizeof(transfoJob));
     job->graph = graph;
-    job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), int);
+    job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), Param);
     for (int paramIx = 0; paramIx < job->graph->getNParam(); paramIx++) {
         PiSDFParam *param = job->graph->getParam(paramIx);
         switch (param->getType()) {

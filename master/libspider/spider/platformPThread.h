@@ -77,6 +77,17 @@
 
 class PlatformPThread : public Platform {
 public:
+    /**
+     * @brief Constructor
+     * @param config Reference to the config
+     */
+    explicit PlatformPThread(SpiderConfig &config);
+
+    /**
+     * @brief Destructor
+     */
+    ~PlatformPThread() override;
+
     /** File Handling */
     FILE *fopen(const char *name) override;
 
@@ -152,11 +163,6 @@ public:
 
     inline Stack *getStack(SpiderStack id) override;
 
-    /* Fonction de thread */
-    explicit PlatformPThread(SpiderConfig &config);
-
-    ~PlatformPThread() override;
-
     inline void registerLRT(int lrtID, pthread_t &thread) {
         lrtThreadsArray[lrtID] = thread;
     }
@@ -190,6 +196,7 @@ private:
     Stack **stackLrt;
 
     ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
+    ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
     NotificationQueue **lrtNotificationQueues_;
 
     DataQueues *dataQueues_;

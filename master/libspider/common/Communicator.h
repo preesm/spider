@@ -37,71 +37,31 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include "PThreadLrtCommunicator.h"
 
-#ifndef _WIN32
+#ifndef SPIDER_COMMUNICATOR_H
+#define SPIDER_COMMUNICATOR_H
 
-#endif
+#include <cstdint>
+#include "Message.h"
 
-#include <platform.h>
+class Communicator {
+public:
+    virtual ~Communicator() {}
 
-PThreadLrtCommunicator::PThreadLrtCommunicator(
-        ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
-        NotificationQueue *notificationQueue,
-        DataQueues *dataQueues,
-        TraceQueue *traceQueue
-) {
-    spider2LrtJobQueue_ = spider2LrtJobQueue;
-    notificationQueue_ = notificationQueue;
-    dataQueues_ = dataQueues;
-    traceQueue_ = traceQueue;
-}
+    virtual void push_notification(NotificationMessage *msg) = 0;
 
-void PThreadLrtCommunicator::push_notification(NotificationMessage *msg) {
-    notificationQueue_->push(msg);
-}
+    virtual bool pop_notification(NotificationMessage *msg, bool blocking) = 0;
 
-bool PThreadLrtCommunicator::pop_notification(NotificationMessage *msg, bool blocking) {
-    return notificationQueue_->pop(msg, blocking);
-}
+    virtual std::int32_t push_job_message(JobMessage **message) = 0;
 
-std::int32_t PThreadLrtCommunicator::push_job_message(JobMessage **message) {
-    return spider2LrtJobQueue_->push(message);
-}
+    virtual void pop_job_message(JobMessage **msg, std::int32_t id) = 0;
 
-void PThreadLrtCommunicator::pop_job_message(JobMessage **msg, std::int32_t id) {
-    spider2LrtJobQueue_->pop(msg, id);
-}
+    virtual void *trace_start_send(int size) = 0;
 
-void *PThreadLrtCommunicator::trace_start_send(int size) {
-    return traceQueue_->push_start(Platform::get()->getLrtIx(), size);
-}
+    virtual void trace_end_send(int size) = 0;
 
-void PThreadLrtCommunicator::trace_end_send(int size) {
-    return traceQueue_->push_end(Platform::get()->getLrtIx(), size);
-}
+protected:
+    Communicator() {}
+};
 
-void PThreadLrtCommunicator::data_end_send(Fifo */*f*/) {
-    // Nothing to do
-}
-
-void *PThreadLrtCommunicator::data_recv(Fifo *f) {
-    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (f->alloc));
-}
-
-void *PThreadLrtCommunicator::data_start_send(Fifo *f) {
-    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (f->alloc));
-}
-
-void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx) {
-    dataQueues_->updateLrtJobStamp(lrtIx, jobIx);
-}
-
-void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int /*jobIx*/) {
-    for (int i = 0; i < nbDependency; i++) {
-        dataQueues_->waitOnJobStamp(Platform::get()->getLrtIx(), blkLrtIx[i], blkLrtJobIx[i], true);
-    }
-}
-
-
-
+#endif //SPIDER_COMMUNICATOR_H

@@ -72,10 +72,10 @@ typedef enum {
 
 class Fifo {
 public:
-    std::uint32_t alloc;
-    std::uint32_t size;
-    std::uint32_t blkLrtIx;
-    std::uint32_t blkLrtJobIx;
+    std::int32_t alloc;
+    std::int32_t size;
+    std::int32_t blkLrtIx;
+    std::int32_t blkLrtJobIx;
 };
 
 
@@ -90,30 +90,6 @@ public:
     struct timespec timespec_;
 };
 
-
-class JobMessage {
-public:
-    JobMessage() = default;
-
-    bool specialActor_ = false;
-    bool traceEnabled_ = false;
-    std::int32_t srdagID_ = 0;
-    std::int32_t fctID_ = 0;
-    std::int32_t nbInEdge_ = 0;
-    std::int32_t nbOutEdge_ = 0;
-    std::int32_t nbInParam_ = 0;
-    std::int32_t nbOutParam_ = 0;
-    Fifo *inFifos_ = nullptr;
-    Fifo *outFifos_ = nullptr;
-    Param *inParams_ = nullptr;
-
-    ~JobMessage() {
-        StackMonitor::free(ARCHI_STACK, inFifos_);
-        StackMonitor::free(ARCHI_STACK, outFifos_);
-        StackMonitor::free(ARCHI_STACK, inParams_);
-    }
-};
-
 class TraceMessage : public Message {
 public:
     unsigned long srdagID_;
@@ -123,11 +99,11 @@ public:
     Time end_;
 };
 
-class ParamValueMessage : public Message {
-public:
-    unsigned long srdagID_;
-    Param *params_;
-};
+//class ParamValueMessage : public Message {
+//public:
+//    unsigned long srdagID_;
+//    Param *params_;
+//};
 
 typedef enum {
     LRT_NOTIFICATION,
@@ -158,8 +134,62 @@ typedef enum {
     JOB_ADD,            // Signal LRT that a job is available in shared queue
     JOB_LAST_ID,        // Signal LRT what is the last job ID
     JOB_CLEAR_QUEUE,    // Signal LRT to clear its job queue (if LRT_REPEAT_ITERATION_EN, signal is ignored)
+    JOB_SENT_PARAM,     // Signal that LRT sent a ParameterMessage
 } JobNotification;
 
+
+class JobMessage {
+public:
+    JobMessage() = default;
+
+    bool specialActor_ = false;
+    bool traceEnabled_ = false;
+    std::int32_t srdagID_ = 0;
+    std::int32_t fctID_ = 0;
+    std::int32_t nEdgeIN_ = 0;
+    std::int32_t nEdgeOUT_ = 0;
+    std::int32_t nParamIN_ = 0;
+    std::int32_t nParamOUT_ = 0;
+    Fifo *inFifos_ = nullptr;
+    Fifo *outFifos_ = nullptr;
+    Param *inParams_ = nullptr;
+
+    ~JobMessage() {
+        StackMonitor::free(ARCHI_STACK, inFifos_);
+        StackMonitor::free(ARCHI_STACK, outFifos_);
+        StackMonitor::free(ARCHI_STACK, inParams_);
+    }
+};
+
+class ParameterMessage {
+public:
+    explicit ParameterMessage(std::int32_t vertexID, std::int32_t nParam) {
+        vertexID_ = vertexID;
+        nParam_ = nParam;
+        params = CREATE_MUL(ARCHI_STACK, nParam, Param);
+    }
+
+    ~ParameterMessage() {
+        StackMonitor::free(ARCHI_STACK, params);
+    }
+
+    inline std::int32_t getVertexID() {
+        return vertexID_;
+    }
+
+    inline std::int32_t getNParam() {
+        return nParam_;
+    }
+
+    inline Param * getParams() {
+        return params;
+    }
+
+private:
+    std::int32_t vertexID_;
+    std::int32_t nParam_;
+    Param *params;
+};
 
 class NotificationMessage {
 public:

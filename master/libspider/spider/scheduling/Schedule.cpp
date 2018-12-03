@@ -152,7 +152,6 @@ bool Schedule::check() {
 }
 
 void Schedule::execute() {
-    Platform::get()->getSpiderCommunicator()->rst_ctrl_queue();
     for (int pe = 0; pe < nPE_; pe++) {
         for (int job = 0; job < nJobPerPE_[pe]; job++) {
             SRDAGVertex *vertex = getJob(pe, job);

@@ -68,28 +68,22 @@ class PThreadSpiderCommunicator : public SpiderCommunicator {
 public:
     PThreadSpiderCommunicator(
             ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
+            ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
             NotificationQueue **notificationQueue,
             TraceQueue *traceQueue);
 
-    bool pop_notification(int lrtID, NotificationMessage *msg, bool blocking);
-
-    void push_notification(int lrtID, NotificationMessage *msg);
-
-    std::int32_t push_job_message(JobMessage **message);
-
     ~PThreadSpiderCommunicator() override  = default ;
 
-    void *ctrl_start_send(int /*lrtIx*/, std::uint64_t /*size*/) override {
-        return nullptr;
-    }
+    void push_notification(int lrtID, NotificationMessage *msg) override;
 
-    void ctrl_end_send(int, std::uint64_t) override {};
+    bool pop_notification(int lrtID, NotificationMessage *msg, bool blocking) override;
 
-    std::uint64_t ctrl_start_recv(int, void **) override { return 0; };
+    std::int32_t push_job_message(JobMessage **message) override;
+    void pop_job_message(JobMessage **msg, std::int32_t id) override;
 
-    void ctrl_start_recv_block(int, void **) override {};
+    std::int32_t push_parameter_message(ParameterMessage **message) override;
 
-    void ctrl_end_recv(int) override {};
+    void pop_parameter_message(ParameterMessage **msg, std::int32_t id) override;
 
     void *trace_start_send(int size) override;
 
@@ -101,10 +95,9 @@ public:
 
     void trace_end_recv() override;
 
-    void rst_ctrl_queue() override {};
-
 private:
     ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
+    ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
     NotificationQueue **notificationQueue_;
     TraceQueue *traceQueue_;
 };

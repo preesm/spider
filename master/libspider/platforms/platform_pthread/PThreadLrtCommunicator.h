@@ -79,25 +79,13 @@ public:
 
     ~PThreadLrtCommunicator() override = default;
 
-    bool pop_notification(NotificationMessage *msg, bool blocking);
+    void push_notification(NotificationMessage *msg) override;
 
-    void push_notification(NotificationMessage *msg);
+    bool pop_notification(NotificationMessage *msg, bool blocking) override;
 
-    void pop_job_message(JobMessage **msg, std::int32_t id);
+    std::int32_t push_job_message(JobMessage **message) override;
 
-    void rstCtrl() override {};
-
-    void *ctrl_start_send(std::uint64_t /*size*/) override {
-        return nullptr;
-    }
-
-    void ctrl_end_send(std::uint64_t) override {};
-
-    std::uint64_t ctrl_start_recv(void **) override { return 0; };
-
-    void ctrl_start_recv_block(void **) override {};
-
-    void ctrl_end_recv() override {};
+    void pop_job_message(JobMessage **msg, std::int32_t id) override;
 
     void *trace_start_send(int size) override;
 

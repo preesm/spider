@@ -36,29 +36,24 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef SPIDER_COMMUNICATOR_H
-#define SPIDER_COMMUNICATOR_H
+#ifndef SPIDER_SPIDER_COMMUNICATOR_H
+#define SPIDER_SPIDER_COMMUNICATOR_H
 
 #include "Message.h"
+#include "Communicator.h"
 #include <cstdint>
 
-class SpiderCommunicator {
+class SpiderCommunicator : public Communicator {
 public:
     virtual ~SpiderCommunicator() {}
 
-    virtual void *ctrl_start_send(int lrtIx, std::uint64_t size) = 0;
+    virtual void push_notification(int lrtID, NotificationMessage *msg) = 0;
 
-    virtual void ctrl_end_send(int lrtIx, std::uint64_t size) = 0;
+    virtual bool pop_notification(int lrtID, NotificationMessage *msg, bool blocking) = 0;
 
-    virtual std::uint64_t ctrl_start_recv(int lrtIx, void **data) = 0;
+    virtual std::int32_t push_parameter_message(ParameterMessage **msg) = 0;
 
-    virtual void ctrl_start_recv_block(int lrtIx, void **data) = 0;
-
-    virtual void ctrl_end_recv(int lrtIx) = 0;
-
-    virtual void *trace_start_send(int size) = 0;
-
-    virtual void trace_end_send(int size) = 0;
+    virtual void pop_parameter_message(ParameterMessage **msg, std::int32_t id) = 0;
 
     virtual int trace_start_recv(void **data) = 0;
 
@@ -66,7 +61,11 @@ public:
 
     virtual void trace_end_recv() = 0;
 
-    virtual void rst_ctrl_queue() = 0;
+private:
+    // Since we are redefining these methods to use with an LRT ID in addition we prevent the use of these methods
+    void push_notification(NotificationMessage *) override {};
+
+    bool pop_notification(NotificationMessage *, bool) override { return false; };
 
 protected:
     SpiderCommunicator() {}

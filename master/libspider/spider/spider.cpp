@@ -131,33 +131,27 @@ void Spider::init(SpiderConfig &cfg) {
 void Spider::iterate() {
     /** Set all slave jobIx to 0 */
 
-    if (isStatic_) {
-        Time start = Platform::get()->getTime();
-        if (!srdag_) {
 //            Platform::get()->rstTime();
+    Time start = Platform::get()->getTime();
+    if (!isStatic_) {
+        if (!srdag_) {
             srdag_ = new SRDAGGraph();
             schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
-//            Platform::get()->rstJobIxSend();
             Platform::get()->rstJobIxRecv();
         } else {
             schedule_->execute();
             Platform::get()->rstJobIxRecv();
         }
-        Time end = Platform::get()->getTime();
-        fprintf(stderr, "Execution Time: %lf\n", (end - start) / 1000000.0);
     } else {
-        Platform::get()->rstTime();
-        Time start = Platform::get()->getTime();
         delete srdag_;
         StackMonitor::freeAll(SRDAG_STACK);
         memAlloc_->reset();
         srdag_ = new SRDAGGraph();
         jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
-        Time end = Platform::get()->getTime();
-        fprintf(stderr, "Execution Time: %lf\n", (end - start) / 1000000.0);
-        //Mise à zéro compteur job
-        Platform::get()->rstJobIx();
+        Platform::get()->rstJobIxRecv();
     }
+    Time end = Platform::get()->getTime();
+    fprintf(stderr, "Execution Time: %lf\n", (end - start) / 1000000.0);
 }
 
 
@@ -336,10 +330,10 @@ void Spider::setSchedulerType(SchedulerType type) {
         case SCHEDULER_LIST_ON_THE_GO:
             scheduler_ = new ListSchedulerOnTheGo();
             break;
-        case ROUND_ROBIN:
+        case SCHEDULER_ROUND_ROBIN:
             scheduler_ = new RoundRobin();
             break;
-        case ROUND_ROBIN_SCATTERED:
+        case SCHEDULER_ROUND_ROBIN_SCATTERED:
             scheduler_ = new RoundRobinScattered();
             break;
     }

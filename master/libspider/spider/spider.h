@@ -87,8 +87,8 @@ typedef enum {
 typedef enum {
     SCHEDULER_LIST,
     SCHEDULER_LIST_ON_THE_GO,
-    ROUND_ROBIN,
-    ROUND_ROBIN_SCATTERED
+    SCHEDULER_ROUND_ROBIN,
+    SCHEDULER_ROUND_ROBIN_SCATTERED
 } SchedulerType;
 
 typedef enum {

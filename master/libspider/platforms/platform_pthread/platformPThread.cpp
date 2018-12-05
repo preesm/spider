@@ -190,7 +190,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 		            lrt2SpiderQueues_[i + offsetPe],
 		            dataQueues_,
 		            traceQueue_);
-		    lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i);
+		    lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i + offsetPe);
 
 		    arg_lrt_[i + offsetPe].lrtCom = lrtCom_[i + offsetPe];
 		    arg_lrt_[i + offsetPe].lrt = lrt_[i + offsetPe];
@@ -207,6 +207,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 		    arg_lrt_[i + offsetPe].lrtStack.size = config.lrtStack.size / nLrt_;
 		    arg_lrt_[i + offsetPe].usePapify = config.usePapify;
 		}
+		offsetPe += config.platform.pesPerPeType[pe];
     }
 
     thread_ID_tab_[0] = pthread_self();

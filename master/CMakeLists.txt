@@ -126,17 +126,17 @@ else()
   find_package(PAPI)
 endif()
 
-#if (PAPI_FOUND)
-#    add_definitions(-DPAPI_AVAILABLE)
-#    set(papify_sources
-#            libspider/papify/PapifyAction.cpp
-#            libspider/papify/PapifyAction.h
-#            libspider/papify/PapifyEventLib.cpp
-#            libspider/papify/PapifyEventLib.h)
-#else()
-#	set(PAPI_LIBRARIES "")
-#	set(PAPI_INCLUDE_DIRS "")
-#endif()
+if (PAPI_FOUND)
+    add_definitions(-DPAPI_AVAILABLE)
+    set(papify_sources
+            libspider/papify/PapifyAction.cpp
+            libspider/papify/PapifyAction.h
+            libspider/papify/PapifyEventLib.cpp
+            libspider/papify/PapifyEventLib.h)
+else()
+	set(PAPI_LIBRARIES "")
+	set(PAPI_INCLUDE_DIRS "")
+endif()
 
 
 # *******************************************

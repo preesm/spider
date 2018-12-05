@@ -307,7 +307,7 @@ void RoundRobinScattered::scheduleVertex(SRDAGVertex *vertex) {
 
     //try to map on type 0 PE
 
-    while ((bestSlave == -1)) {
+    while (bestSlave == -1) {
 
         if (!archi_->isActivated(pe_io % npe_io)) {
             continue;

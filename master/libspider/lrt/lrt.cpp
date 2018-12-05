@@ -74,6 +74,7 @@ LRT::LRT(int ix) {
     nFct_ = 0;
     ix_ = ix;
     jobIx_ = -1;
+    jobIxTotal_ = 0;
     run_ = false;
     usePapify_ = false;
 
@@ -558,18 +559,18 @@ void LRT::runJob(JobMessage *message) {
                     try {
                         // We can monitor the events
                         PapifyAction *papifyAction = nullptr;
-                        papifyAction = jobPapifyActions_.at(fcts_[jobMsg->fctID_]);
+                        papifyAction = jobPapifyActions_.at(fcts_[message->fctID_]);
                         // Start monitoring
                         papifyAction->startMonitor();
                         // Do the monitored job
-                        fcts_[jobMsg->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
+                        fcts_[message->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
                         // Stop monitoring
                         papifyAction->stopMonitor();
                         // Writes the monitoring results
                         papifyAction->writeEvents();
                     } catch (std::out_of_range &e) {
                         // This job does not have papify events associated with  it
-                        fcts_[jobMsg->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
+                        fcts_[message->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
                     }
 #endif
         } else {

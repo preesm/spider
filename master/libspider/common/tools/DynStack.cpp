@@ -67,7 +67,7 @@ void *DynStack::alloc(int size) {
     maxSize_ = std::max(maxSize_, curUsedSize_);
     nb_++;
 
-    void *address = malloc(size);
+    void *address = operator new(size);
     if (!address) {
         throw std::runtime_error("ERROR: DynStack memory allocation failed.\n");
     }
@@ -95,7 +95,7 @@ void DynStack::free(void *var) {
 //	if(size == 0){
 //		printf("Error %s free'd already free'd memory\n", getName());
 //	}
-    std::free(address);
+    operator delete(address);
     nb_--;
 }
 

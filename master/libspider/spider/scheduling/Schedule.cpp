@@ -160,7 +160,7 @@ void Schedule::execute() {
         }
     }
     sendEndNotification();
-    Platform::get()->getLrt()->run(false);
+    Platform::get()->getLrt()->runUntilNoMoreJobs();
 }
 
 void Schedule::sendEndNotification() {

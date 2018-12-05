@@ -90,14 +90,7 @@ public:
     struct timespec timespec_;
 };
 
-class TraceMessage : public Message {
-public:
-    unsigned long srdagID_;
-    unsigned long spiderTask_;
-    unsigned long lrtID_;
-    Time start_;
-    Time end_;
-};
+
 
 //class ParamValueMessage : public Message {
 //public:
@@ -127,7 +120,7 @@ typedef enum {
     TRACE_ENABLE,
     TRACE_DISABLE,
     TRACE_RST,
-    TRACE_SEND
+    TRACE_SENT
 } TraceNotification;
 
 typedef enum {
@@ -143,7 +136,6 @@ public:
     JobMessage() = default;
 
     bool specialActor_ = false;
-    bool traceEnabled_ = false;
     std::int32_t srdagID_ = 0;
     std::int32_t fctID_ = 0;
     std::int32_t nEdgeIN_ = 0;
@@ -159,6 +151,15 @@ public:
         StackMonitor::free(ARCHI_STACK, outFifos_);
         StackMonitor::free(ARCHI_STACK, inParams_);
     }
+};
+
+class TraceMessage {
+public:
+    std::int32_t srdagID_;
+    std::int32_t spiderTask_;
+    std::int32_t lrtID_;
+    Time start_;
+    Time end_;
 };
 
 class ParameterMessage {

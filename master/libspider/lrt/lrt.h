@@ -66,11 +66,13 @@ public:
 
     void setFctTbl(const lrtFct fct[], int nFct);
 
-    void runUntilNoMoreJobs() { run(false); };
+    void runUntilNoMoreJobs() {
+        run(false);
+    };
 
-    void runInfinitly() {};
-
-    void run(bool loop);
+    void runInfinitly() {
+        run(true);
+    };
 
     inline void setJobIx(int jobIx);
 
@@ -103,8 +105,6 @@ private:
     int tabBlkLrtIx[NB_MAX_ACTOR];
     int tabBlkLrtJobIx[NB_MAX_ACTOR];
 
-    void runReceivedJob(void *msg);
-
 #ifdef PAPI_AVAILABLE
     std::map<lrtFct, PapifyAction *> jobPapifyActions_;
 #endif
@@ -126,17 +126,26 @@ private:
 #endif
 
     bool repeatJobQueue_;
-    bool repeatIteration_;
     bool freeze_;
+    bool traceEnabled_;
     std::int32_t lastJobID_;
-    std::vector<JobMessage*> jobQueue_;
+    std::vector<JobMessage *> jobQueue_;
     std::uint32_t jobQueueIndex_;
     std::uint32_t jobQueueSize_;
+
     void fetchLRTNotification(NotificationMessage &message);
+
     void fetchJobNotification(NotificationMessage &message);
+
+    void fetchTraceNotification(NotificationMessage &message);
+
     void runJob(JobMessage *message);
+
     void jobRunner();
+
     void clearJobQueue();
+
+    void run(bool loop);
 };
 
 inline int LRT::getIx() const {

@@ -81,7 +81,7 @@ static void *dataMem;
 
 static std::chrono::time_point<std::chrono::steady_clock> start_steady;
 
-static std::chrono::time_point<std::chrono::steady_clock> origin_steady = std::chrono::steady_clock::now();
+static auto origin_steady = std::chrono::steady_clock::now();
 
 static SharedMemArchi *archi_;
 
@@ -134,7 +134,7 @@ void *lrtPthreadRunner(void *args) {
     /** Wait for all LRTs to be created */
     pthread_barrier_wait(lrtInfo->pthreadBarrier);
     /** Run LRT */
-    lrtInfo->lrt->run(true);
+    lrtInfo->lrt->runInfinitly();
     /** Cleaning LRT specific stacks */
     StackMonitor::freeAll(LRT_STACK);
     StackMonitor::clean(LRT_STACK);
@@ -332,9 +332,9 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 }
 
 PlatformPThread::~PlatformPThread() {
+    auto spiderCommunicator = getSpiderCommunicator();
     for (unsigned int i = 1; i < nLrt_; ++i) {
         NotificationMessage message(LRT_NOTIFICATION, LRT_STOP);
-        auto spiderCommunicator = (PThreadSpiderCommunicator *) getSpiderCommunicator();
         spiderCommunicator->push_notification(i, &message);
     }
 
@@ -375,6 +375,8 @@ PlatformPThread::~PlatformPThread() {
         lrtNotificationQueues_[i]->~NotificationQueue();
         StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
     }
+    spider2LrtJobQueue_->~ControlMessageQueue<JobMessage *>();
+    lrt2SpiderParamQueue_->~ControlMessageQueue<ParameterMessage *>();
     StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
     StackMonitor::free(ARCHI_STACK, spider2LrtJobQueue_);
     StackMonitor::free(ARCHI_STACK, lrt2SpiderParamQueue_);
@@ -416,7 +418,6 @@ PlatformPThread::~PlatformPThread() {
 
 /** File Handling */
 FILE *PlatformPThread::fopen(const char *name) {
-
     return std::fopen(name, "w+");
 }
 

@@ -77,9 +77,9 @@ LRT::LRT(int ix) {
     jobIx_ = -1;
     usePapify_ = false;
 
+    traceEnabled_ = false;
     repeatJobQueue_ = false;
     freeze_ = false;
-    repeatIteration_ = false;
     lastJobID_ = -1;
     jobQueueIndex_ = 0;
     jobQueueSize_ = 0;
@@ -161,7 +161,7 @@ void LRT::sendTrace(int srdagIx, Time start, Time end) {
     Platform::get()->getLrtCommunicator()->trace_end_send(sizeof(TraceMsgType));
 }
 
-inline void LRT::runReceivedJob(void *) {
+//inline void LRT::runReceivedJob(void *) {
 
 //#ifdef VERBOSE_TIME
 //    time_waiting_job += Platform::get()->getTime() - start_waiting_job;
@@ -379,7 +379,7 @@ inline void LRT::runReceivedJob(void *) {
 //#ifdef VERBOSE_TIME
 //    start_waiting_job = Platform::get()->getTime();
 //#endif
-}
+//}
 
 void LRT::fetchLRTNotification(NotificationMessage &message) {
     switch (message.getSubType()) {
@@ -396,10 +396,10 @@ void LRT::fetchLRTNotification(NotificationMessage &message) {
             jobQueueIndex_ = 0;
             break;
         case LRT_REPEAT_ITERATION_EN:
-            repeatIteration_ = true;
+            repeatJobQueue_ = true;
             break;
         case LRT_REPEAT_ITERATION_DIS:
-            repeatIteration_ = false;
+            repeatJobQueue_ = false;
             break;
         case LRT_PAUSE:
             freeze_ = true;
@@ -438,6 +438,21 @@ void LRT::fetchJobNotification(NotificationMessage &message) {
             break;
         default:
             throw std::runtime_error("ERROR: unhandled type of JOB notification.\n");
+    }
+}
+
+void LRT::fetchTraceNotification(NotificationMessage &message) {
+    switch (message.getSubType()) {
+        case TRACE_ENABLE:
+            traceEnabled_ = true;
+            break;
+        case TRACE_DISABLE:
+            traceEnabled_ = false;
+            break;
+        case TRACE_RST:
+            break;
+        default:
+            throw std::runtime_error("ERROR: unhandled type of TRACE notification.\n");
     }
 }
 
@@ -676,6 +691,7 @@ void LRT::run(bool loop) {
                     fetchLRTNotification(notificationMessage);
                     break;
                 case TRACE_NOTIFICATION:
+                    fetchTraceNotification(notificationMessage);
                     break;
                 case JOB_NOTIFICATION:
                     fetchJobNotification(notificationMessage);

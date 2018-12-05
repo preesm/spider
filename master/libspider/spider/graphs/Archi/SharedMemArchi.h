@@ -58,7 +58,7 @@ public:
 
     inline int getPEType(int ix) const override;
 
-    inline void desactivatePE(int pe) override;
+    inline void deactivatePE(int pe) override;
 
     inline void activatePE(int pe) override;
 
@@ -140,16 +140,12 @@ inline void SharedMemArchi::setPEType(int pe, int type) {
 }
 
 
-inline void SharedMemArchi::desactivatePE(int pe) {
-    if (peActive_[pe]) {
-        peActive_[pe] = false;
-    }
+inline void SharedMemArchi::deactivatePE(int pe) {
+    peActive_[pe] = false;
 }
 
 inline void SharedMemArchi::activatePE(int pe) {
-    if (!peActive_[pe]) {
-        peActive_[pe] = true;
-    }
+    peActive_[pe] = true;
 }
 
 inline bool SharedMemArchi::isActivated(int pe) const {

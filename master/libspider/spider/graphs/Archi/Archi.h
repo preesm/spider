@@ -60,7 +60,7 @@ public:
 
     virtual int getPEType(int ix) const = 0;
 
-    virtual void desactivatePE(int pe) = 0;
+    virtual void deactivatePE(int pe) = 0;
 
     virtual void activatePE(int pe) = 0;
 

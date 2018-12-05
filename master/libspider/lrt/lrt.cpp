@@ -73,8 +73,8 @@ LRT::LRT(int ix) {
     fcts_ = nullptr;
     nFct_ = 0;
     ix_ = ix;
-    run_ = false;
     jobIx_ = -1;
+    run_ = false;
     usePapify_ = false;
 
     traceEnabled_ = false;
@@ -83,6 +83,8 @@ LRT::LRT(int ix) {
     lastJobID_ = -1;
     jobQueueIndex_ = 0;
     jobQueueSize_ = 0;
+    spiderCommunicator_ = Platform::get()->getSpiderCommunicator();
+    lrtCommunicator_ = Platform::get()->getLrtCommunicator();
 
 #ifdef VERBOSE_TIME
     time_waiting_job = 0;
@@ -103,12 +105,11 @@ LRT::LRT(int ix) {
 LRT::~LRT() {
     /** Clearing the jobQueue_ **/
     clearJobQueue();
-    /* Nothing to Unalloc */
-#ifdef VERBOSE
-    printf("LRT %3d did %d jobs\n",ix_,jobIxTotal_);
-#endif
 
-    //printf("LRT %3d did %d jobs\n",ix_,jobIxTotal_);
+    /** Reseting pointers **/
+    // TODO: move free and destruction of stuff from platform to here ?
+    spiderCommunicator_ = nullptr;
+    lrtCommunicator_ = nullptr;
 
 #ifdef VERBOSE_TIME
     time_other = time_global - time_waiting_job - time_waiting_prev_actor - time_alloc_data - time_waiting_input_comm - time_compute - time_waiting_output_comm;
@@ -130,7 +131,6 @@ LRT::~LRT() {
     (float)time_other / CHIP_FREQ / nb_iter,
     (float)time_other*100/time_global,
     (float)time_global / CHIP_FREQ / nb_iter);
-
 #endif
 #ifdef PAPI_AVAILABLE
     if (usePapify_) {
@@ -149,16 +149,16 @@ void LRT::setFctTbl(const lrtFct fct[], int nFct) {
 }
 
 void LRT::sendTrace(int srdagIx, Time start, Time end) {
-    auto msgTrace = (TraceMessage *) Platform::get()->getLrtCommunicator()->trace_start_send(sizeof(TraceMessage));
+    auto msgTrace = (TraceMessage *) lrtCommunicator_->trace_start_send(sizeof(TraceMessage));
 
-    msgTrace->id_ = TRACE_JOB;
+//    msgTrace->id_ = TRACE_JOB;
     msgTrace->srdagID_ = srdagIx;
     msgTrace->spiderTask_ = (std::uint32_t) -1;
     msgTrace->start_ = start;
     msgTrace->end_ = end;
     msgTrace->lrtID_ = ix_;
 
-    Platform::get()->getLrtCommunicator()->trace_end_send(sizeof(TraceMsgType));
+    lrtCommunicator_->trace_end_send(sizeof(TraceMsgType));
 }
 
 //inline void LRT::runReceivedJob(void *) {
@@ -421,17 +421,18 @@ void LRT::fetchJobNotification(NotificationMessage &message) {
     /** Get the ID of the job in the global queue */
     switch (message.getSubType()) {
         case JOB_ADD: {
-            auto communicator = (PThreadLrtCommunicator *) (Platform::get()->getLrtCommunicator());
             JobMessage *msg;
             // pop message from global queue
-            communicator->pop_job_message(&msg, message.getIndex());
+            lrtCommunicator_->pop_job_message(&msg, message.getIndex());
             // push message in local queue (don't execute right now in case more important notification comes along
             jobQueue_.push_back(msg);
             jobQueueSize_++;
         }
             break;
         case JOB_CLEAR_QUEUE:
-            clearJobQueue();
+            if (!repeatJobQueue_) {
+                clearJobQueue();
+            }
             break;
         case JOB_LAST_ID:
             lastJobID_ = message.getIndex();
@@ -492,7 +493,7 @@ void LRT::runJob(JobMessage *message) {
             tabBlkLrtJobIx[0]);
 #endif
 
-    Platform::get()->getLrtCommunicator()->waitForLrtUnlock((int) message->nEdgeIN_, tabBlkLrtIx,
+    lrtCommunicator_->waitForLrtUnlock((int) message->nEdgeIN_, tabBlkLrtIx,
                                                             tabBlkLrtJobIx, jobIx_);
 
 #ifdef VERBOSE_TIME
@@ -504,7 +505,7 @@ void LRT::runJob(JobMessage *message) {
     start = Platform::get()->getTime();
 #endif
 
-    Platform::get()->getLrtCommunicator()->allocateDataBuffer(message->nEdgeIN_, inFifos, message->nEdgeOUT_,
+    lrtCommunicator_->allocateDataBuffer(message->nEdgeIN_, inFifos, message->nEdgeOUT_,
                                                               outFifos);
 
 #ifdef VERBOSE_TIME
@@ -517,7 +518,7 @@ void LRT::runJob(JobMessage *message) {
         Time start = Platform::get()->getTime();
 #endif
 
-        inFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_recv(&inFifos[i]); // in com
+        inFifosAlloc[i] = lrtCommunicator_->data_recv(&inFifos[i]); // in com
 
         if (inFifos[i].size == 0) {
             inFifosAlloc[i] = nullptr;
@@ -534,7 +535,7 @@ void LRT::runJob(JobMessage *message) {
         Time start = Platform::get()->getTime();
 #endif
 
-        outFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_start_send(&outFifos[i]); // in com
+        outFifosAlloc[i] = lrtCommunicator_->data_start_send(&outFifos[i]); // in com
 
         if (outFifos[i].size == 0) {
             outFifosAlloc[i] = nullptr;
@@ -594,7 +595,7 @@ void LRT::runJob(JobMessage *message) {
         Time start = Platform::get()->getTime();
 #endif
 
-        Platform::get()->getLrtCommunicator()->data_end_send(&outFifos[i]); // out com
+        lrtCommunicator_->data_end_send(&outFifos[i]); // out com
 
 #ifdef VERBOSE_TIME
         time_waiting_output_comm += Platform::get()->getTime() - start;
@@ -610,7 +611,7 @@ void LRT::runJob(JobMessage *message) {
 #endif
         /** Copying the parameters in the message */
         memcpy(parameterMessage->getParams(), outParams, message->nParamOUT_ * sizeof(Param));
-        auto index = Platform::get()->getSpiderCommunicator()->push_parameter_message(&parameterMessage);
+        auto index = spiderCommunicator_->push_parameter_message(&parameterMessage);
         parameterMessage = nullptr;
 
 #ifdef VERBOSE_TIME
@@ -622,7 +623,7 @@ void LRT::runJob(JobMessage *message) {
 #endif
         /** Sending notification **/
         NotificationMessage parameterNotification(JOB_NOTIFICATION, JOB_SENT_PARAM, index);
-        Platform::get()->getSpiderCommunicator()->push_notification(Platform::get()->getNLrt(), &parameterNotification);
+        spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &parameterNotification);
 
 #ifdef VERBOSE_TIME
         time_waiting_output_comm += Platform::get()->getTime() - start;
@@ -631,7 +632,7 @@ void LRT::runJob(JobMessage *message) {
 
 
     jobIx_++;
-    Platform::get()->getLrtCommunicator()->setLrtJobIx(Platform::get()->getLrtIx(), jobIx_);
+    lrtCommunicator_->setLrtJobIx(Platform::get()->getLrtIx(), jobIx_);
     /** Freeing local memory **/
     StackMonitor::free(LRT_STACK, inFifosAlloc);
     StackMonitor::free(LRT_STACK, outFifosAlloc);
@@ -654,9 +655,10 @@ void LRT::jobRunner() {
     // Check if it is last job of current iteration
     if ((lastJobID_ >= 0) && jobIx_ == lastJobID_) {
         // Send finished iteration message
-        auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
+        auto *lrtCommunicator = Platform::get()->getLrtCommunicator();
         NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION, getIx());
-        spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
+        spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &finishedMessage);
+        lrtCommunicator->setLrtJobIx(getIx(), -1);
 #ifdef VERBOSE_JOBS
         fprintf(stderr, "INFO: LRT: %d -- finished iteration.\n", getIx());
 #endif

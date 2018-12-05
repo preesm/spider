@@ -132,6 +132,8 @@ private:
     std::vector<JobMessage *> jobQueue_;
     std::uint32_t jobQueueIndex_;
     std::uint32_t jobQueueSize_;
+    SpiderCommunicator *spiderCommunicator_;
+    LrtCommunicator *lrtCommunicator_;
 
     void fetchLRTNotification(NotificationMessage &message);
 

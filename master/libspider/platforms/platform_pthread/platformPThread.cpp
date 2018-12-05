@@ -113,12 +113,16 @@ void *lrtPthreadRunner(void *args) {
     /** Registering LRT */
     pthread_t self = pthread_self();
     lrtInfo->platform->registerLRT(lrtInfo->lrtID, self);
+
     /** Waiting for every threads to register itself */
     pthread_barrier_wait(lrtInfo->pthreadBarrier);
+
     /** Initialize the LRT specific stack */
     StackMonitor::initStack(LRT_STACK, lrtInfo->lrtStack);
+
     /** Set core affinity (if supported by the OS) */
     setAffinity(lrtInfo->coreAffinity);
+
     /** Set the function table */
     lrtInfo->lrt->setFctTbl(lrtInfo->fcts, lrtInfo->nFcts);
 #ifdef PAPI_AVAILABLE
@@ -493,8 +497,8 @@ void PlatformPThread::rstJobIxSend() {
 }
 
 void PlatformPThread::rstJobIxRecv() {
-    auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
-    NotificationMessage message(JOB_NOTIFICATION, JOB_CLEAR_QUEUE);
+    auto spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    NotificationMessage clearJobMessage(JOB_NOTIFICATION, JOB_CLEAR_QUEUE);
     for (unsigned int i = 0; i < nLrt_; ++i) {
         NotificationMessage finishedMessage;
         /** Wait for LRTs to finish their jobs **/
@@ -506,7 +510,7 @@ void PlatformPThread::rstJobIxRecv() {
                 fprintf(stderr, "INFO: LRT: %d -- received end signal.\n", finishedMessage.getIndex());
 #endif
                 /** Send message to clear job queue **/
-                spiderCommunicator->push_notification(finishedMessage.getIndex(), &message);
+                spiderCommunicator->push_notification(finishedMessage.getIndex(), &clearJobMessage);
                 break;
             }
         }

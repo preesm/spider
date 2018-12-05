@@ -114,7 +114,7 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
     msg->srdagID_ = vertex->getId();
     msg->specialActor_ = vertex->getType() != SRDAG_NORMAL;
     msg->fctID_ = vertex->getFctId();
-    msg->traceEnabled_ = Spider::getTraceEnabled();
+//    msg->traceEnabled_ = Spider::getTraceEnabled();
 
     msg->nEdgeIN_ = vertex->getNConnectedInEdge();
     msg->nEdgeOUT_ = vertex->getNConnectedOutEdge();
@@ -231,7 +231,7 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
 void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end) {
     auto msgTrace = (TraceMessage *) Platform::get()->getSpiderCommunicator()->trace_start_send(sizeof(TraceMessage));
 
-    msgTrace->id_ = TRACE_SPIDER;
+//    msgTrace->id_ = TRACE_SPIDER;
     msgTrace->spiderTask_ = type;
     msgTrace->srdagID_ = -1;
     msgTrace->start_ = start;

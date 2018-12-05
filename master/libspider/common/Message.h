@@ -155,6 +155,7 @@ public:
 
 class TraceMessage {
 public:
+    std::uint32_t id_;
     std::int32_t srdagID_;
     std::int32_t spiderTask_;
     std::int32_t lrtID_;

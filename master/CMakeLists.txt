@@ -24,6 +24,15 @@ if(${CROSS_COMPILE_MINGW})
   set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 endif()
 
+
+# Macro to get short file name (vs full path) at compile time
+# The additional / is important to remove the last character from the path.
+# Note that it does not matter if the OS uses / or \, because we are only
+# saving the path size.
+string(LENGTH "${CMAKE_SOURCE_DIR}/" SOURCE_PATH_SIZE)
+add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
+add_definitions("-D__FILENAME__=(__FILE__ + ${SOURCE_PATH_SIZE})")
+
 # *******************************************
 # ************* CMake Content ***************
 # *******************************************
@@ -58,7 +67,7 @@ if(NOT ${CMAKE_GENERATOR} MATCHES "Visual Studio.*")
 			MESSAGE("Generate Debug project")
 			set(CMAKE_BUILD_TYPE Debug)
 			set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Debug)
-			set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -pg -Wall -Wextra")
+			set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -pg -Wall -Wextra -Werror")
 	else()
 			MESSAGE("Generate Release project")
 			set(CMAKE_BUILD_TYPE Release)
@@ -117,17 +126,17 @@ else()
   find_package(PAPI)
 endif()
 
-if (PAPI_FOUND)
-    add_definitions(-DPAPI_AVAILABLE)
-    set(papify_sources
-            libspider/papify/PapifyAction.cpp
-            libspider/papify/PapifyAction.h
-            libspider/papify/PapifyEventLib.cpp
-            libspider/papify/PapifyEventLib.h)
-else()
-	set(PAPI_LIBRARIES "")
-	set(PAPI_INCLUDE_DIRS "")
-endif()
+#if (PAPI_FOUND)
+#    add_definitions(-DPAPI_AVAILABLE)
+#    set(papify_sources
+#            libspider/papify/PapifyAction.cpp
+#            libspider/papify/PapifyAction.h
+#            libspider/papify/PapifyEventLib.cpp
+#            libspider/papify/PapifyEventLib.h)
+#else()
+#	set(PAPI_LIBRARIES "")
+#	set(PAPI_INCLUDE_DIRS "")
+#endif()
 
 
 # *******************************************

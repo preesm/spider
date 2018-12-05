@@ -124,7 +124,7 @@ static int nullSpace(int *topo_matrix, int *brv, int nbEdges, int nbVertices) {
         }
         if (val != 0) {
             if (ratioMatrix[i * nbVertices + i] == 0) {
-                throw std::runtime_error("elt diagonal zero\n");
+                throwSpiderException("Diagonal element of topology matrix [%d][%d] is null.", i, i);
             }
             ratioResult[i] = val.getAbs() / ratioMatrix[i * nbVertices + i];
         }
@@ -166,8 +166,9 @@ static bool isEdgeValid(PiSDFEdge *edge, transfoJob *job) {
     int prod = edge->resolveProd(job);
     int cons = edge->resolveCons(job);
 
-    if ((prod == 0 && cons != 0) || (cons == 0 && prod != 0))
-        throw std::runtime_error("Bad Edge Prod/Cons, One is =0 et other is !=0\n");
+    if ((prod == 0 && cons != 0) || (cons == 0 && prod != 0)) {
+        throwSpiderException("Bad Edge Prod/Cons, Prod: %d et Cons: %d.", prod, cons);
+    }
 
 
     return edge->getSrc() != edge->getSnk()
@@ -220,10 +221,10 @@ void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVert
             if (prod < 0 || cons < 0) {
                 char name[100];
                 edge->getProdExpr(name, 100);
-                printf("Prod : %s = %d\n", name, prod);
+                fprintf(stderr, "Prod: %s = %d\n", name, prod);
                 edge->getConsExpr(name, 100);
-                printf("Cons : %s = %d\n", name, cons);
-                throw std::runtime_error("Error Bad prod/cons resolved\n");
+                fprintf(stderr, "Cons: %s = %d\n", name, cons);
+                throwSpiderException("Error Bad prod/cons resolved.");
             }
             long sourceIx = edge->getSrc()->getSetIx() - nDoneVertices;
             long sinkIx = edge->getSnk()->getSetIx() - nDoneVertices;

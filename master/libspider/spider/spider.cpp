@@ -125,6 +125,7 @@ void Spider::init(SpiderConfig &cfg) {
     setVerbose(cfg.verbose);
     setTraceEnabled(cfg.traceEnabled);
 
+    //TODO: add a switch between the different platform
     platform_ = new PlatformPThread(cfg);
 }
 
@@ -316,7 +317,7 @@ void Spider::setMemAllocType(MemAllocType type, int start, int size) {
             memAlloc_ = new SpecialActorMemAlloc(start, size);
             break;
         default:
-            throw std::runtime_error("ERROR: unsupported type of Memory Allocation.\n");
+            throwSpiderException("Unsupported type of Memory Allocation.\n");
     }
 }
 
@@ -456,10 +457,14 @@ static inline void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Arch
 
 void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionStat *stat) {
     FILE *ganttFile = Platform::get()->fopen(ganttPath);
-    if (ganttFile == nullptr) throw std::runtime_error("Error opening ganttFile");
+    if (ganttFile == nullptr) {
+        throwSpiderException("Failed to open ganttFile.");
+    }
 
     FILE *latexFile = Platform::get()->fopen(latexPath);
-    if (latexFile == nullptr) throw std::runtime_error("Error opening latexFile");
+    if (latexFile == nullptr) {
+        throwSpiderException("Failed to open latexFile.");
+    }
 
     float latexScaling = 1000;
 
@@ -597,7 +602,7 @@ void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionS
                         break;
                     case TRACE_SPIDER_ALLOC:
                     default:
-                        throw std::runtime_error("Unhandle trace");
+                        throwSpiderException("Unhandle type of SpiderTrace: %d.", traceMsg->spiderTask_);
                 }
 
                 /* Latex File */
@@ -608,8 +613,7 @@ void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionS
                 break;
             }
             default:
-                printf("msgIx %u\n", traceMsg->id_);
-                throw std::runtime_error("Unhandled trace msg");
+                throwSpiderException("Unhandled type of Trace: %d", traceMsg->id_);
         }
         Platform::get()->getSpiderCommunicator()->trace_end_recv();
         n--;

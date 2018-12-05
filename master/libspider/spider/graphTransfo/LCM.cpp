@@ -65,7 +65,7 @@ static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, lon
                     std::string("] with prod = [" + std::to_string(prod) + std::string("] to sink [") +
                                 std::string(sink->getName()) + std::string("] with cons = [") + std::to_string(cons) +
                                 std::string("]."));
-            throw std::runtime_error(errorMsg);
+            throwSpiderException(errorMsg.c_str());
         }
         long sinkIx = sink->getSetIx() - offset;
         Rational &fa = reps[sinkIx];
@@ -149,16 +149,14 @@ static void checkConsistency(transfoJob *job, PiSDFEdgeSet &edgeSet, int *brv) {
         int prod = edge->resolveProd(job);
         int cons = edge->resolveCons(job);
         if ((sink->getType() == PISDF_TYPE_CONFIG) && prod > cons) {
-            throw std::runtime_error(std::string("ERROR: config actor [") + std::string(source->getName()) +
-                                     std::string("] does not consume all the tokens produce on its input data port."));
+            throwSpiderException("Config actor [%s] does not consume all the tokens produce on its input port.",
+                                 source->getName());
         }
         int sourceRV = brv[source->getTypeId()];
         int sinkRV = brv[sink->getTypeId()];
         if ((prod * sourceRV) != (cons * sinkRV)) {
-            throw std::runtime_error("Graph is not consistent: edge from [" + std::string(source->getName()) + "] "
-                                                                                                               "with production [" +
-                                     std::to_string(prod * sourceRV) + "] != [" + std::to_string(cons * sinkRV) +
-                                     "].");
+            throwSpiderException("Edge [%s] -> [%s]. prod(%d) * sourceRV(%d) != cons(%d) * sinkRV(%d).",
+                                 source->getName(), sink->getName(), prod, sourceRV, cons, sinkRV);
         }
     }
 }

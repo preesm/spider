@@ -4,6 +4,7 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
@@ -36,97 +37,44 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef SET_H
-#define SET_H
+#ifndef SPIDER_SPIDEREXCEPTION_H
+#define SPIDER_SPIDEREXCEPTION_H
 
-#include <monitor/StackMonitor.h>
-#include <tools/SetElement.h>
 #include <stdexcept>
-#include <SpiderException.h>
+#include <cstdarg>
+#include <cstring>
 
-template<typename TYPE>
-class Set {
+// Size of 50 minimum is required for the error message associated
+#define SPIDER_EXCEPTION_BUFFER_SIZE 300
+
+#define throwSpiderException(...) \
+    throw SpiderException("SpiderException: %s::%s: %s", __FILENAME__, __FUNCTION__, __VA_ARGS__)
+
+class SpiderException : public std::exception {
 public:
-    Set(int nbmax, SpiderStack stackId) {
-        if (nbmax > 0) {
-            array = CREATE_MUL(stackId, nbmax, TYPE);
-        } else {
-            array = nullptr;
+    explicit SpiderException(const char *msg, ...) : exceptionMessage_{} {
+        va_list args;
+        va_start(args, msg);
+#ifdef _WIN32
+        int n = _vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, fmt, ap);
+#else
+        int n = vsnprintf(exceptionMessage_, SPIDER_EXCEPTION_BUFFER_SIZE, msg, args);
+#endif
+        if (n > SPIDER_EXCEPTION_BUFFER_SIZE) {
+            fprintf(stderr, "SpiderException: ERROR: exception message too big.\n");
+            fprintf(stderr, "Partially recovered exception: ");
+            fflush(stderr);
         }
-        nb = 0;
-        nbMax = nbmax;
-        stackId_ = stackId;
     }
 
-    ~Set() {
-        if (nbMax != 0)
-            StackMonitor::free(stackId_, array);
+    const char *what() const noexcept override {
+        return exceptionMessage_;
     }
-
-    inline void add(TYPE value);
-
-    inline void del(TYPE value);
-
-    inline bool contains(TYPE value);
-
-    inline TYPE operator[](int ix);
-
-    inline int getN() const;
-
-    inline TYPE const *getArray() const;
 
 private:
-    SpiderStack stackId_;
-    TYPE *array;
-    int nb;
-    int nbMax;
-
-//	friend class SetIterator;
+    char exceptionMessage_[SPIDER_EXCEPTION_BUFFER_SIZE];
 };
 
-template<typename TYPE>
-inline int Set<TYPE>::getN() const {
-    return nb;
-}
 
-template<typename TYPE>
-inline void Set<TYPE>::add(TYPE value) {
-    if (nb >= nbMax) {
-        throwSpiderException("Can not add element to set. Requested: %d -- Max: %d", nb + 1, nbMax);
-    }
-    ((SetElement *) value)->setSetIx(nb);
-    array[nb++] = value;
-}
 
-template<typename TYPE>
-inline bool Set<TYPE>::contains(TYPE value) {
-    for (int i = 0; i < nb; ++i) {
-        if (array[i] == value) {
-            return true;
-        }
-    }
-    return false;
-}
-
-template<typename TYPE>
-inline void Set<TYPE>::del(TYPE value) {
-    int ix = ((SetElement *) value)->getSetIx();
-    array[ix] = array[--nb];
-    ((SetElement *) array[ix])->setSetIx(ix);
-}
-
-template<typename TYPE>
-inline TYPE Set<TYPE>::operator[](int ix) {
-    if (ix < 0 || ix >= nb) {
-        throwSpiderException("operator[] got bad index: %d -- Set size: %d", ix, nb);
-    } else {
-        return array[ix];
-    }
-}
-
-template<typename TYPE>
-inline TYPE const *Set<TYPE>::getArray() const {
-    return array;
-}
-
-#endif // SET_H
+#endif //SPIDER_SPIDEREXCEPTION_H

@@ -174,8 +174,7 @@ PiSDFParam *PiSDFGraph::addStaticParam(const char *name, const char *expr) {
     try {
         param->setValue(std::stoi(expr));
     } catch (std::exception &e) {
-        printf("%s\n", e.what());
-        throw std::runtime_error("addStaticParam: failed to convert to int");
+        throwSpiderException("Failed to convert to int --> [%s]", e.what());
     }
     params_.add(param);
     return param;

@@ -42,6 +42,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <SpiderException.h>
 
 DynStack::DynStack(const char *name) : Stack(name) {
     curUsedSize_ = 0;
@@ -54,33 +55,34 @@ DynStack::~DynStack() {
 }
 
 static inline int getAlignSize(int size) {
-    float minAlloc = Platform::get()->getMinAllocSize();
+    auto minAlloc = Platform::get()->getMinAllocSize();
     return (int) std::ceil(size / minAlloc) * minAlloc;
 }
 
 void *DynStack::alloc(int size) {
     std::lock_guard<std::mutex> lock(memoryMutex_);
-    size += sizeof(int);
+    int alignedSize = size + sizeof(int);
 
-    size = getAlignSize(size);
-    curUsedSize_ += size;
+    alignedSize = getAlignSize(alignedSize);
+    curUsedSize_ += alignedSize;
     maxSize_ = std::max(maxSize_, curUsedSize_);
     nb_++;
 
-    void *address = operator new(size);
+    void *address = operator new((size_t ) alignedSize);
     if (!address) {
-        throw std::runtime_error("ERROR: DynStack memory allocation failed.\n");
+        throwSpiderException("failed to allocate %d bytes", alignedSize);
     }
     auto *sizeAddress = (int *) address;
     auto *dataAddress = (void *) (sizeAddress + 1);
-    *sizeAddress = size;
+    *sizeAddress = alignedSize;
 
     return dataAddress;
 }
 
 void DynStack::freeAll() {
     if (nb_ != 0) {
-        fprintf(stderr, "WARNING: DynStack [%s], FreeAll called with %d remaining allocated item(s).\n", getName(), nb_);
+        fprintf(stderr, "WARNING: DynStack [%s], FreeAll called with %d remaining allocated item(s).\n", getName(),
+                nb_);
     }
 }
 
@@ -102,11 +104,11 @@ void DynStack::free(void *var) {
 void DynStack::printStat() {
     fprintf(stderr, "INFO:    [%s] usage: ", getName());
 
-    const char* units[4] = { "B", "KB", "MB", "GB"};
+    const char *units[4] = {"B", "KB", "MB", "GB"};
 
     float normalizedSize = maxSize_;
     int unitIndex = 0;
-    while(normalizedSize >= 1024 && unitIndex < 3) {
+    while (normalizedSize >= 1024 && unitIndex < 3) {
         normalizedSize /= 1024.;
         unitIndex++;
     }

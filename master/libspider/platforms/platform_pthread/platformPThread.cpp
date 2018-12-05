@@ -152,10 +152,9 @@ static LRTInfo *lrtInfoArray = nullptr;
 
 PlatformPThread::PlatformPThread(SpiderConfig &config) {
     if (platform_) {
-        throw std::runtime_error("ERROR: A platform already exist.");
+        throwSpiderException("Cannot create new platform, a platform already exist.");
     }
     platform_ = this;
-
 
     nLrt_ = (unsigned int) config.platform.nLrt;
     /** Init of the different stacks **/

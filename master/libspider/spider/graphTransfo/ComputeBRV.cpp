@@ -54,7 +54,7 @@ static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
         for (int i = 0; i < current->getNOutEdge(); ++i) {
             PiSDFEdge *edge = current->getOutEdge(i);
             if (!edge) {
-                throw std::runtime_error("Null edge detected on vertex [" + std::string(current->getName()) + "].");
+                throwSpiderException("Vertex [%s] has NULL edge", current->getName());
             }
             PiSDFVertex *targetVertex = edge->getSnk();
             if (!vertexSet.contains(targetVertex)) {
@@ -66,7 +66,7 @@ static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
         for (int i = 0; i < current->getNInEdge(); ++i) {
             PiSDFEdge *edge = current->getInEdge(i);
             if (!edge) {
-                throw std::runtime_error("Null edge detected on vertex [" + std::string(current->getName()) + "].");
+                throwSpiderException("Vertex [%s] has NULL edge", current->getName());
             }
             PiSDFVertex *sourceVertex = edge->getSrc();
             if (!vertexSet.contains(sourceVertex)) {

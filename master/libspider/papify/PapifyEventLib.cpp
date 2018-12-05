@@ -36,6 +36,7 @@
 #include <papi.h>
 #include <string>
 #include "PapifyEventLib.h"
+#include "SpiderException.h"
 
 PapifyEventLib::~PapifyEventLib() {
     if (configLock_) {
@@ -107,8 +108,7 @@ PapifyEventLib::PapifyEventLib() {
 void PapifyEventLib::throwError(const char *file, int line, const char *message) {
     fprintf(stderr, "File: %s\n", file);
     fprintf(stderr, "Line: %d\n", line);
-    fprintf(stderr, "%s\n", message);
-    throw std::runtime_error(message);
+    throwSpiderException(message);
 }
 
 void PapifyEventLib::throwError(const char *file, int line, int papiErrorCode) {

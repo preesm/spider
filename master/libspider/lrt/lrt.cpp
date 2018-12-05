@@ -412,7 +412,7 @@ void LRT::fetchLRTNotification(NotificationMessage &message) {
             clearJobQueue();
             break;
         default:
-            throw std::runtime_error("ERROR: unhandled type of LRT notification.\n");
+            throwSpiderException("Unhandled type of LRT notification: %u\n", message.getSubType());
     }
 
 }
@@ -438,7 +438,7 @@ void LRT::fetchJobNotification(NotificationMessage &message) {
             lastJobID_ = message.getIndex();
             break;
         default:
-            throw std::runtime_error("ERROR: unhandled type of JOB notification.\n");
+            throwSpiderException("Unhandled type of JOB notification: %u\n", message.getSubType());
     }
 }
 
@@ -453,7 +453,7 @@ void LRT::fetchTraceNotification(NotificationMessage &message) {
         case TRACE_RST:
             break;
         default:
-            throw std::runtime_error("ERROR: unhandled type of TRACE notification.\n");
+            throwSpiderException("Unhandled type of TRACE notification: %u\n", message.getSubType());
     }
 }
 
@@ -577,7 +577,7 @@ void LRT::runJob(JobMessage *message) {
             fcts_[message->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
         }
     } else {
-        throw std::runtime_error("ERROR: invalid function id.\n");
+        throwSpiderException("Invalid function id: %d -- Range=[0;%d[.\n", message->fctID_, nFct_);
     }
 
 //    Time end = Platform::get()->getTime();
@@ -699,7 +699,7 @@ void LRT::run(bool loop) {
                     fetchJobNotification(notificationMessage);
                     break;
                 default:
-                    throw std::runtime_error("ERROR: unhandled type of notification.\n");
+                    throwSpiderException("Unhandled type of notification: %d.", notificationMessage.getType());
             }
         }
         /** 1. If no notification and JOB queue is not empty **/

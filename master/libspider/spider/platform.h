@@ -43,6 +43,7 @@
 #include <cstdio>
 #include <stdexcept>
 #include <Message.h>
+#include <SpiderException.h>
 
 class LRT;
 
@@ -131,8 +132,9 @@ protected:
 inline Platform *Platform::get() {
     if (platform_)
         return platform_;
-    else
-        throw std::runtime_error("Error undefined platform_\n");
+    else {
+        throwSpiderException("Undefined platform.");
+    }
 }
 
 // If unimplemented in child

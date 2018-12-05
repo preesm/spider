@@ -73,6 +73,7 @@
 #include <map>
 #include <ControlMessageQueue.h>
 #include <NotificationQueue.h>
+#include <SpiderException.h>
 
 
 class PlatformPThread : public Platform {
@@ -153,10 +154,12 @@ public:
      * @return spider communicator
      */
     inline SpiderCommunicator *getSpiderCommunicator() override {
-        if (spiderCom_)
+        if (spiderCom_) {
             return spiderCom_;
-        else
-            throw std::runtime_error("Error undefined spider communicator\n");
+        }
+        else {
+            throw SpiderException("ERROR: SpiderCommunicator uninitialized.\n");
+        }
     }
 
     inline void setStack(SpiderStack id, Stack *stack) override;
@@ -179,7 +182,7 @@ private:
             if (pthread_equal(lrtThreadsArray[i], pthread_self()) != 0)
                 return i;
         }
-        throw std::runtime_error("ERROR: Thread ID not found.\n");
+        throwSpiderException("Thread ID not found: %lu.", pthread_self());
     }
 
     static Time mappingTime(int nActors, int nPe);
@@ -231,7 +234,7 @@ inline void PlatformPThread::setStack(SpiderStack id, Stack *stack) {
             stackLrt[getThreadNumber()] = stack;
             break;
         default :
-            throw std::runtime_error("ERROR: invalid stack index.\n");
+            throwSpiderException("Invalid stack index: %d.", id);
     }
 }
 
@@ -248,7 +251,7 @@ inline Stack *PlatformPThread::getStack(SpiderStack id) {
         case LRT_STACK :
             return stackLrt[getThreadNumber()];
         default :
-            throw std::runtime_error("ERROR: invalid stack index.\n");
+            throwSpiderException("Invalid stack index: %d.", id);
     }
 }
 

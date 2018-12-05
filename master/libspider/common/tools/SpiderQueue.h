@@ -40,6 +40,7 @@
 #include <mutex>
 #include <semaphore.h>
 #include <monitor/StackMonitor.h>
+#include <SpiderException.h>
 
 /**
  * @brief Thread safe implementation of std::queue with circular pop capability
@@ -117,9 +118,9 @@ private:
 template<typename T>
 SpiderQueue<T>::SpiderQueue() : queueIndex_(0), queueSize_(0), isCircular_(false) {
     if (sizeof(std::uint64_t) % sizeof(T)) {
-        throw std::runtime_error("ERROR: SpiderQueue item is not byte aligned with sizeof(std::uint64_t).");
+        throwSpiderException("SpiderQueue item is not byte aligned with sizeof(std::uint64_t).");
     } else if (sizeof(T) > sizeof(std::uint64_t)) {
-        throw std::runtime_error("ERROR: byte size of SpiderQueue item should be <= sizeof(std::uint64_t).");
+        throwSpiderException("Byte size of SpiderQueue item should be <= sizeof(std::uint64_t).");
     }
     queueBufferSizeNBytes_ = sizeof(std::uint64_t) / sizeof(T);
     sem_init(&queueCounter_, 0, 0);
@@ -128,9 +129,9 @@ SpiderQueue<T>::SpiderQueue() : queueIndex_(0), queueSize_(0), isCircular_(false
 template<typename T>
 SpiderQueue<T>::SpiderQueue(bool isCircular) : queueIndex_(0), queueSize_(0), isCircular_(isCircular) {
     if (sizeof(std::uint64_t) % sizeof(T)) {
-        throw std::runtime_error("ERROR: SpiderQueue item is not byte aligned with sizeof(std::uint64_t).");
+        throwSpiderException("SpiderQueue item is not byte aligned with sizeof(std::uint64_t).");
     } else if (sizeof(T) > sizeof(std::uint64_t)) {
-        throw std::runtime_error("ERROR: byte size of SpiderQueue item should be <= sizeof(std::uint64_t).");
+        throwSpiderException("Byte size of SpiderQueue item should be <= sizeof(std::uint64_t).");
     }
     queueBufferSizeNBytes_ = sizeof(std::uint64_t) / sizeof(T);
     sem_init(&queueCounter_, 0, 0);
@@ -234,7 +235,7 @@ std::uint64_t SpiderQueue<T>::pop(void **data, bool blocking, std::uint64_t &max
 
     /** Check size */
     if (bufferSize > maxSize) {
-        throw std::runtime_error("ERROR: Trying to read a message in a SpiderQueue too big.\n");
+        throwSpiderException("Trying to read a message too big. Message size: %lu -- Max size: %lu.", bufferSize, maxSize);
     }
 
     /** Retrieve the item from the queue */

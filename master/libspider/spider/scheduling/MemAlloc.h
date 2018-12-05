@@ -95,7 +95,7 @@ inline void MemAlloc::printMemAllocSizeFormatted() const {
 
 inline void MemAlloc::setReservedSize(int reservedSize) {
     if (reservedSize > memSize_) {
-        throw std::runtime_error("Memory allocation for reserved memory superior to total allocated memory.");
+        throwSpiderException("Reserved memory (%d) > memory size (%d).", reservedSize, memSize_);
     }
     memReserved_ = reservedSize;
 }

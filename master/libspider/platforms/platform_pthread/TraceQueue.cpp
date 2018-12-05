@@ -64,7 +64,7 @@ TraceQueue::~TraceQueue() {
 
 void *TraceQueue::push_start(int lrtIx, std::uint64_t size) {
     if (curMsgSizeSend_[lrtIx]) {
-        throw std::runtime_error("ERROR: Trying to send a msg when previous one is not sent");
+        throwSpiderException("Can not send new message while previous one is not sent.");
     }
     curMsgSizeSend_[lrtIx] = size;
     return msgBufferSend_[lrtIx];
@@ -72,7 +72,7 @@ void *TraceQueue::push_start(int lrtIx, std::uint64_t size) {
 
 void TraceQueue::push_end(int lrtIx, std::uint64_t /*size*/) {
     if (lrtIx >= nLrt_ || lrtIx < 0) {
-        throw std::runtime_error("ERROR: Bad lrtIx for TraceQueue.");
+        throwSpiderException("Bad lrtIx for TraceQueue. Value: %d -- Max: %d", lrtIx, nLrt_);
     }
 
     /** Push data to the queue */

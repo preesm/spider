@@ -46,6 +46,7 @@
 #include "Stack.h"
 #include <monitor/StackMonitor.h>
 #include <stdexcept>
+#include <SpiderException.h>
 
 template<typename TYPE>
 class Queue {
@@ -102,9 +103,9 @@ inline void Queue<TYPE>::push(TYPE value) {
 
 template<typename TYPE>
 inline TYPE Queue<TYPE>::pop() {
-    if (first_ == nullptr)
-        throw std::runtime_error("Try to pop an empty Queue\n");
-
+    if (first_ == nullptr) {
+        throwSpiderException("Can not pop element, Queue is empty.");
+    }
     struct QueueItem *old = first_;
     TYPE val = first_->cur;
     first_ = first_->next;

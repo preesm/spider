@@ -53,7 +53,7 @@ ControlQueue::~ControlQueue() {
 
 void *ControlQueue::push_start(std::uint64_t size) {
     if (curMsgSizeSend_) {
-        throw std::runtime_error("ERROR: Trying to send a msg when previous one is not sent.");
+        throwSpiderException("Can not send new message while previous one is not sent.");
     }
     curMsgSizeSend_ = size;
     return msgBufferSend_;

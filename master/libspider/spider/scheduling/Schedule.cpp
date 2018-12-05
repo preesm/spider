@@ -62,10 +62,12 @@ Schedule::~Schedule() {
 }
 
 void Schedule::addJob(int pe, SRDAGVertex *job, Time start, Time end) {
-    if (pe < 0 || pe >= nPE_)
-        throw std::runtime_error("Schedule: Accessing bad PE\n");
-    if (nJobPerPE_[pe] >= nJobMax_)
-        throw std::runtime_error("Schedule: too much jobs\n");
+    if (pe < 0 || pe >= nPE_) {
+        throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
+    }
+    if (nJobPerPE_[pe] >= nJobMax_) {
+        throwSpiderException("PE: %d -> nJobs: %d > nJobMax: %d.", nJobPerPE_[pe], nJobMax_);
+    }
 
     schedules_[pe * nJobMax_ + nJobPerPE_[pe]] = job;
     job->setSlaveJobIx(nJobPerPE_[pe]);

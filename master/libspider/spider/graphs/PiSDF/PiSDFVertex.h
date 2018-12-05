@@ -80,7 +80,7 @@ public:
 
     inline PiSDFEdge *getOutEdge(int ix);
 
-    inline PiSDFEdge * const * getAllEdges() const;
+    inline PiSDFEdge *const *getAllEdges() const;
 
     /** Connect Fcts */
     inline void connectInEdge(int ix, PiSDFEdge *edge);
@@ -167,17 +167,16 @@ inline int PiSDFVertex::getNOutParam() const {
 }
 
 inline const PiSDFParam *PiSDFVertex::getInParam(int ix) const {
-    if (ix < nInParam_ && ix >= 0)
+    if (ix < nInParam_ && ix >= 0) {
         return inParams_[ix];
-    else
-        throw std::runtime_error("PiSDFVertex: Bad ix in getInParam");
+    }
+    throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nInParam_);
 }
 
 inline const PiSDFParam *PiSDFVertex::getOutParam(int ix) const {
     if (ix < nOutParam_ && ix >= 0)
         return outParams_[ix];
-    else
-        throw std::runtime_error("PiSDFVertex: Bad ix in getOutParam");
+    throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nOutParam_);
 }
 
 inline const PiSDFParam *const *PiSDFVertex::getInParams() const {
@@ -200,36 +199,34 @@ inline int PiSDFVertex::getNOutEdge() const {
 inline PiSDFEdge *PiSDFVertex::getInEdge(int ix) {
     if (ix < nInEdge_ && ix >= 0)
         return inEdges_[ix];
-    else
-        throw std::runtime_error("PiSDFVertex: Bad ix in getInEdge");
+    throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nInEdge_);
 }
 
 inline PiSDFEdge *PiSDFVertex::getOutEdge(int ix) {
     if (ix < nOutEdge_ && ix >= 0)
         return outEdges_[ix];
-    else
-        throw std::runtime_error("PiSDFVertex: Bad ix in getOutEdge");
+    throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nOutEdge_);
 }
 
-inline PiSDFEdge * const * PiSDFVertex::getAllEdges() const {
+inline PiSDFEdge *const *PiSDFVertex::getAllEdges() const {
     return allEdges_;
 }
 
 /** Connect Fcts */
 inline void PiSDFVertex::connectInEdge(int ix, PiSDFEdge *edge) {
     if (ix >= nInEdge_ || ix < 0)
-        throw std::runtime_error("PiSDFVertex: Bad ix in connectInEdge");
+        throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nInEdge_);
     else if (inEdges_[ix] != nullptr)
-        throw std::runtime_error("PiSDFVertex: Try to erase already connected input edge");
+        throwSpiderException("Vertex [%s] --> Trying to erase already connected input edge.", name_);
     else
         inEdges_[ix] = edge;
 }
 
 inline void PiSDFVertex::connectOutEdge(int ix, PiSDFEdge *edge) {
     if (ix >= nOutEdge_ || ix < 0)
-        throw std::runtime_error("PiSDFVertex: Bad ix in connectOutEdge");
+        throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nOutEdge_);
     else if (outEdges_[ix] != nullptr)
-        throw std::runtime_error("PiSDFVertex: Try to erase already connected output edge");
+        throwSpiderException("Vertex [%s] --> Trying to erase already connected output edge.", name_);
     else
         outEdges_[ix] = edge;
 }
@@ -237,18 +234,18 @@ inline void PiSDFVertex::connectOutEdge(int ix, PiSDFEdge *edge) {
 /** Add Param Fcts */
 inline void PiSDFVertex::addInParam(int ix, PiSDFParam *param) {
     if (ix >= nInParam_ || ix < 0)
-        throw std::runtime_error("PiSDFVertex: Bad ix in addInParam");
+        throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nInParam_);
     else if (inParams_[ix] != nullptr)
-        throw std::runtime_error("PiSDFVertex: Try to erase already connected input param");
+        throwSpiderException("Vertex [%s] --> Trying to erase already connected input param.", name_);
     else
         inParams_[ix] = param;
 }
 
 inline void PiSDFVertex::addOutParam(int ix, PiSDFParam *param) {
     if (ix >= nOutParam_ || ix < 0)
-        throw std::runtime_error("PiSDFVertex: Bad ix in addOutParam");
+        throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nOutParam_);
     else if (outParams_[ix] != nullptr)
-        throw std::runtime_error("PiSDFVertex: Try to erase already connected output param");
+        throwSpiderException("Vertex [%s] --> Trying to erase already connected output param.", name_);
     else
         outParams_[ix] = param;
 }
@@ -315,14 +312,13 @@ inline void PiSDFVertex::setSubGraph(PiSDFGraph *subGraph) {
 /** Constraints/timings */
 inline bool PiSDFVertex::canExecuteOn(int pe) {
     if (pe < 0 || pe >= nPeMax_)
-        throw std::runtime_error("PiSDFVertex: accessing bad PE ix\n");
+        throwSpiderException("Bad PE index. Value: %d -- Max: %d", pe, nPeMax_);
     return constraints_[pe];
 }
 
 inline Time PiSDFVertex::getTimingOnType(int peType, const Param *vertexParamValues, int nParam) {
     if (peType < 0 || peType >= nPeTypeMax_) {
-        printf("PiSDFVertex: get accessing bad PE type ix %d\n", peType);
-        throw std::runtime_error("PiSDFVertex: accessing bad PE type ix\n");
+        throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_);
     }
 
     if (timings_[peType] == nullptr) return 0;
@@ -335,8 +331,7 @@ inline const bool *PiSDFVertex::getConstraints() const {
 
 inline void PiSDFVertex::setTimingOnType(int peType, const char *timing) {
     if (peType < 0 || peType >= nPeTypeMax_) {
-        printf("PiSDFVertex: set accessing bad PE type ix %d\n", peType);
-        throw std::runtime_error("PiSDFVertex: accessing bad PE type ix\n");
+        throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_);
     }
 
     if (timings_[peType] != nullptr) {
@@ -352,9 +347,9 @@ inline void PiSDFVertex::isExecutableOnAllPE() {
 }
 
 inline void PiSDFVertex::isExecutableOnPE(int pe) {
-    if (pe < 0)
-        throw std::runtime_error("PiSDFVertex: accessing bad PE ix\n");
-    else if (pe >= nPeMax_) return;
+    if (pe < 0 || pe > nPeMax_){
+        throwSpiderException("Bad PE index. Value: %d -- Max: %d", pe, nPeMax_);
+    }
     constraints_[pe] = true;
 }
 

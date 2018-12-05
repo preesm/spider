@@ -94,7 +94,7 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
                 }
                 break;
             default:
-                throw std::runtime_error("Unexpected Interface vertex in AddVertices\n");
+                throwSpiderException("Unexpected vertex type.");
         }
     }
 }

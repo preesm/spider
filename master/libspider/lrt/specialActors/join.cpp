@@ -63,14 +63,12 @@ void saJoin(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*o
         }
 
     } else {
-        throw std::runtime_error(
-                "ERROR: Join should have exactly one output FIFO --> nOutputFIFOs: " + std::to_string(nbFifoOut));
+        throwSpiderException("Join should have exactly one output FIFO --> nOutputFIFOs: %d.", nbFifoOut);
     }
 
     // 1. Check that Sum(nbTknIn) == nbTknOut
     if (index != nbTknOut) {
-        throw std::runtime_error("ERROR: Join has remaining tokens. nTokensIN: " + std::to_string(index) +
-                                 std::string(" | nTokensOUT: ") + std::to_string(nbTknOut));
+        throwSpiderException("Join has remaining tokens --> nTokensIN: %d | nTokensOUT: %d.", index, nbTknOut);
     }
 
 #if VERBOSE

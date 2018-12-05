@@ -41,6 +41,7 @@
 
 #include <monitor/StackMonitor.h>
 #include <stdexcept>
+#include <SpiderException.h>
 
 template<class T>
 class List {
@@ -87,10 +88,12 @@ inline List<T>::~List() {
         StackMonitor::free(stackId_, array);
 }
 
+
 template<class T>
 inline T &List<T>::operator[](int ix) {
-    if (ix < 0 || ix >= nb)
-        throw std::runtime_error("List: Accesing unitialized element\n");
+    if (ix < 0 || ix >= nb) {
+        throwSpiderException("Accesing unitialized element. Ix = %d -- Size = %d", ix, nb);
+    }
     return array[ix];
 }
 
@@ -101,8 +104,9 @@ inline int List<T>::getNb() {
 
 template<class T>
 inline void List<T>::add(T e) {
-    if (nb >= nbMax)
-        throw std::runtime_error("List: Full !\n");
+    if (nb >= nbMax) {
+        throwSpiderException("Can not add element, list is full.");
+    }
     array[nb] = e;
     nb++;
 }

@@ -205,8 +205,8 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
                 Platform::get()->getSpiderCommunicator()->pop_parameter_message(&parameterMessage, message.getIndex());
                 SRDAGVertex *vertex = topDag->getVertexFromIx(parameterMessage->getVertexID());
                 if (vertex->getNOutParam() != parameterMessage->getNParam()) {
-                    throw std::runtime_error(
-                            "ERROR: number of parameters received not consistent with expected value.");
+                    throwSpiderException("Expected %d parameters -- got %d", vertex->getNOutParam(),
+                                         parameterMessage->getParams());
                 }
                 auto *receivedParams = parameterMessage->getParams();
                 for (int i = 0; i < vertex->getNOutParam(); ++i) {
@@ -214,7 +214,8 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
                     (*param) = receivedParams[i];
                     if (Spider::getVerbose()) {
                         auto *parameterName = vertex->getReference()->getOutParam(i)->getName();
-                        fprintf(stderr, "INFO: Received Parameter: %s -- Value: %ld\n", parameterName, receivedParams[i]);
+                        fprintf(stderr, "INFO: Received Parameter: %s -- Value: %ld\n", parameterName,
+                                receivedParams[i]);
                     }
                 }
                 curNParam_ -= vertex->getNOutParam();

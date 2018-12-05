@@ -44,15 +44,16 @@
 #ifndef RATIONAL_H_
 #define RATIONAL_H_
 
-#include <stdexcept>
+#include <cstdint>
+#include <SpiderException.h>
 
 class Rational {
 private:
-    long long nominator;
-    long long denominator;
+    std::int64_t nominator;
+    std::int64_t denominator;
 
     inline void reduce() {
-        long gcd = compute_gcd(this->nominator, this->denominator);
+        std::int64_t gcd = compute_gcd(this->nominator, this->denominator);
         nominator /= gcd;
         denominator /= gcd;
         if (denominator < 0) {
@@ -67,18 +68,18 @@ public:
         denominator = 1;
     }
 
-    inline Rational(long i) {
+    inline Rational(std::int64_t i) {
         nominator = i;
         denominator = 1;
     }
 
-    inline Rational(long nom, long den) {
+    inline Rational(std::int64_t nom, std::int64_t den) {
         nominator = nom;
         denominator = den;
     }
 
-    static inline long compute_gcd(long a, long b) {
-        long t;
+    static inline std::int64_t compute_gcd(std::int64_t a, std::int64_t b) {
+        std::int64_t t;
         while (b != 0) {
             t = b;
             b = a % b;
@@ -87,13 +88,13 @@ public:
         return a;
     }
 
-    static inline long compute_lcm(long a, long b) {
+    static inline std::int64_t compute_lcm(std::int64_t a, std::int64_t b) {
         return labs(a * b) / compute_gcd(a, b);
     }
 
     inline Rational operator+(const Rational b) const {
         Rational res;
-        long lcm = compute_lcm(this->denominator, b.denominator);
+        std::int64_t lcm = compute_lcm(this->denominator, b.denominator);
         res.denominator = lcm;
         res.nominator = lcm * this->nominator / this->denominator
                         + lcm * b.nominator / b.denominator;
@@ -103,7 +104,7 @@ public:
 
     inline Rational operator-(const Rational b) const {
         Rational res;
-        long lcm = compute_lcm(this->denominator, b.denominator);
+        std::int64_t lcm = compute_lcm(this->denominator, b.denominator);
         res.denominator = lcm;
         res.nominator = this->nominator * lcm / this->denominator
                         - b.nominator * lcm / b.denominator;
@@ -136,22 +137,22 @@ public:
     }
 
     inline bool operator>(const Rational b) const {
-        long lcm = compute_lcm(denominator, b.denominator);
+        std::int64_t lcm = compute_lcm(denominator, b.denominator);
         return nominator * (denominator / lcm) > b.nominator * (b.denominator / lcm);
     }
 
     inline bool operator<(const Rational b) const {
-        long lcm = compute_lcm(denominator, b.denominator);
+        std::int64_t lcm = compute_lcm(denominator, b.denominator);
         return nominator * (denominator / lcm) < b.nominator * (b.denominator / lcm);
     }
 
     inline bool operator>=(const Rational b) const {
-        long lcm = compute_lcm(denominator, b.denominator);
+        std::int64_t lcm = compute_lcm(denominator, b.denominator);
         return nominator * (denominator / lcm) >= b.nominator * (b.denominator / lcm);
     }
 
     inline bool operator<=(const Rational b) const {
-        long lcm = compute_lcm(denominator, b.denominator);
+        std::int64_t lcm = compute_lcm(denominator, b.denominator);
         return nominator * (denominator / lcm) <= b.nominator * (b.denominator / lcm);
     }
 
@@ -162,17 +163,18 @@ public:
         return res;
     }
 
-    inline long toInt() const {
-        if (denominator == 1)
+    inline std::int64_t toLong() const {
+        if (denominator == 1) {
             return nominator;
-        throw std::runtime_error("Error conv Rational to int without denominator = 1\n");
+        }
+        throwSpiderException("Can not convert Rational to std::int64_t with denominator != 1.");
     }
 
-    inline long getDenominator() const {
+    inline std::int64_t getDenominator() const {
         return denominator;
     }
 
-    inline long getNominator() const {
+    inline std::int64_t getNominator() const {
         return nominator;
     }
 };

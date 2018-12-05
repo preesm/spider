@@ -42,6 +42,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <SpiderException.h>
 
 StaticStack::StaticStack(const char *name, void *ptr, int size) :
         Stack(name) {
@@ -66,8 +67,7 @@ void *StaticStack::alloc(int size) {
     size = getAlignSize(size);
     void *res;
     if (used_ + size > size_) {
-        printf("Stack %s is full at %d, want at least %d\n", getName(), size_, used_ + size);
-        throw std::runtime_error("Insufficient memory size of the Stack\n");
+        throwSpiderException("Stack %s is full at %d, want at least %d.\n", getName(), size_, used_ + size);
     }
     res = curPtr_;
     curPtr_ += size;

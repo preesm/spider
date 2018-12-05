@@ -182,8 +182,12 @@ int ListScheduler::computeSchedLevel(SRDAGVertex *vertex) {
                 for (int j = 0; j < archi_->getNPE(); j++) {
                     if (succ->isExecutableOn(j)) {
                         Time execTime = succ->executionTimeOn(archi_->getPEType(j));
-                        if (execTime == 0)
-                            throw std::runtime_error("ListScheduler: Null execution time may cause problems\n");
+                        if (execTime == 0) {
+                            if (succ->getReference()) {
+                                throwSpiderException("Vertex: %s -- NULL execution time.", succ->getReference()->getName());
+                            }
+                            throwSpiderException("Vertex has NULL execution time.", succ->getReference()->getName());
+                        }
                         minExecTime = std::min(minExecTime, execTime);
                     }
                 }

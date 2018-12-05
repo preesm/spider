@@ -699,7 +699,7 @@ static int reduceJoinFork(SRDAGGraph *topDag) {
                                 }
                             }
                         } else {
-                            throw std::runtime_error("A non-End vertex have a cons of 0\n");
+                            throwSpiderException("A non-Fork vertex have a cons of 0.");
                         }
                     }
                 }
@@ -709,7 +709,7 @@ static int reduceJoinFork(SRDAGGraph *topDag) {
                         if (sinks[i]->getType() == SRDAG_END) {
                             topDag->delVertex(sinks[i]);
                         } else {
-                            throw std::runtime_error("A non-End vertex have a cons of 0\n");
+                            throwSpiderException("A non-End vertex have a cons of 0.");
                         }
                     }
                 }

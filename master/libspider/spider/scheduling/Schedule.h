@@ -89,28 +89,33 @@ inline void Schedule::setAllMinReadyTime(Time time) {
 }
 
 inline void Schedule::setReadyTime(int pe, Time time) {
-    if (pe < 0 || pe >= nPE_)
-        throw std::runtime_error("Schedule: Accessing bad PE\n");
+    if (pe < 0 || pe >= nPE_) {
+        throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
+    }
     readyTime_[pe] = time;
 }
 
 inline Time Schedule::getReadyTime(int pe) const {
-    if (pe < 0 || pe >= nPE_)
-        throw std::runtime_error("Schedule: Accessing bad PE\n");
+    if (pe < 0 || pe >= nPE_) {
+        throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
+    }
     return readyTime_[pe];
 }
 
 inline int Schedule::getNJobs(int pe) const {
-    if (pe < 0 || pe >= nPE_)
-        throw std::runtime_error("Schedule: Accessing bad PE\n");
+    if (pe < 0 || pe >= nPE_) {
+        throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
+    }
     return nJobPerPE_[pe];
 }
 
 inline SRDAGVertex *Schedule::getJob(int pe, int ix) const {
-    if (pe < 0 || pe >= nPE_)
-        throw std::runtime_error("Schedule: Accessing bad PE\n");
-    if (ix < 0 || ix >= nJobPerPE_[pe])
-        throw std::runtime_error("Schedule: Accessing bad Job\n");
+    if (pe < 0 || pe >= nPE_) {
+        throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
+    }
+    if (ix < 0 || ix >= nJobPerPE_[pe]) {
+        throwSpiderException("Bad Job value. Value: %d -- Max: %d.", pe, nJobPerPE_[pe]);
+    }
 
     return schedules_[pe * nJobMax_ + ix];
 }

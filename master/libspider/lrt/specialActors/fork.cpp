@@ -61,14 +61,12 @@ void saFork(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*o
             index += nbTknOut;
         }
     } else {
-        throw std::runtime_error(
-                "ERROR: Fork should have exactly one input FIFO --> nInputFIFOs: " + std::to_string(nbFifoIn));
+        throwSpiderException("Fork should have exactly one input FIFO --> nInputFIFOs: %d.", nbFifoIn);
     }
 
     // 1. Check that nbTknIn == Sum(nbTknOut)
     if (index != nbTknIn) {
-        throw std::runtime_error("ERROR: Fork has remaining tokens --> nTokensIN: " + std::to_string(nbTknIn) +
-                                 std::string(" | nTokensOUT: ") + std::to_string(index));
+        throwSpiderException("Fork has remaining tokens --> nTokensIN: %d | nTokensOUT: %d.", nbTknIn, index);
     }
 
 #if VERBOSE

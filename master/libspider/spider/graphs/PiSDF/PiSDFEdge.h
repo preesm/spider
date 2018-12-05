@@ -165,7 +165,7 @@ inline void PiSDFEdge::setDelay(const char *delay,
     delay_ = CREATE(PISDF_STACK, Expression)(delay, graph_->getParams(), graph_->getNParam());
 
     if ((setter || getter) && !delayActor) {
-        throw std::runtime_error("delay can not have setter nor getter without special delay actor vertex.");
+        throwSpiderException("Delay can not have setter nor getter without special delay actor vertex.");
     }
 
     if (setter) {

@@ -317,7 +317,7 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
     /* Add initial top actor */
     PiSDFVertex *root = topGraph->getBody(0);
     if (!root->isHierarchical()) {
-        throw std::runtime_error("ERROR: Top graph is empty!");
+        throwSpiderException("Top graph is empty!");
     }
     topSrdag->addVertex(root, 0, 0);
     topSrdag->updateState();

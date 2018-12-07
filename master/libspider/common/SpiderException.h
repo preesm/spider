@@ -44,11 +44,14 @@
 #include <cstdarg>
 #include <cstring>
 
+
+
 // Size of 50 minimum is required for the error message associated
 #define SPIDER_EXCEPTION_BUFFER_SIZE 300
 
-#define throwSpiderException(...) \
-    throw SpiderException("SpiderException: %s::%s: %s", __FILENAME__, __FUNCTION__, __VA_ARGS__)
+#define throwHelper(msg, ...)\
+    throw SpiderException("SpiderException: %s::%s: " msg, __FILENAME__, __func__, __VA_ARGS__)
+#define throwSpiderException(...) throwHelper(__VA_ARGS__, 0)
 
 class SpiderException : public std::exception {
 public:
@@ -56,7 +59,7 @@ public:
         va_list args;
         va_start(args, msg);
 #ifdef _WIN32
-        int n = _vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, fmt, ap);
+        int n = _vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, msg, args);
 #else
         int n = vsnprintf(exceptionMessage_, SPIDER_EXCEPTION_BUFFER_SIZE, msg, args);
 #endif
@@ -74,7 +77,6 @@ public:
 private:
     char exceptionMessage_[SPIDER_EXCEPTION_BUFFER_SIZE];
 };
-
 
 
 #endif //SPIDER_SPIDEREXCEPTION_H

@@ -158,7 +158,7 @@ public:
             return spiderCom_;
         }
         else {
-            throw SpiderException("ERROR: SpiderCommunicator uninitialized.\n");
+            throwSpiderException("SpiderCommunicator uninitialized.\n");
         }
     }
 
@@ -200,7 +200,8 @@ private:
 
     ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
-    NotificationQueue **lrtNotificationQueues_;
+    NotificationQueue<NotificationMessage> **lrtNotificationQueues_;
+    NotificationQueue<DataNotificationMessage> **lrt2LRTDataNotificationQueue_;
 
     DataQueues *dataQueues_;
     TraceQueue *traceQueue_;

@@ -60,12 +60,9 @@ static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, lon
         int prod = edge->resolveProd(job);
         // Check if the edge is valid
         if ((prod == 0 && cons != 0) || (cons == 0 && prod != 0)) {
-            std::string errorMsg =
-                    std::string("ERROR: Non valid edge prod / cons. From source [") + std::string(source->getName()) +
-                    std::string("] with prod = [" + std::to_string(prod) + std::string("] to sink [") +
-                                std::string(sink->getName()) + std::string("] with cons = [") + std::to_string(cons) +
-                                std::string("]."));
-            throwSpiderException(errorMsg.c_str());
+            throwSpiderException(
+                    "Non valid edge prod / cons. From source [%s] with prod = [%d] to sink [%s] with cons = [%d]",
+                    source->getName(), prod, sink->getName(), cons);
         }
         long sinkIx = sink->getSetIx() - offset;
         Rational &fa = reps[sinkIx];

@@ -125,6 +125,10 @@ void *lrtPthreadRunner(void *args) {
 
     /** Set the function table */
     lrtInfo->lrt->setFctTbl(lrtInfo->fcts, lrtInfo->nFcts);
+
+    /** Set communicators **/
+    lrtInfo->lrt->setCommunicators();
+
 #ifdef PAPI_AVAILABLE
     /** Enable PAPIFY if needed to */
     if (lrtInfo->usePapify) {
@@ -170,11 +174,17 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     /** Create the different queues */
     spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<JobMessage *>);
     lrt2SpiderParamQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ParameterMessage *>);
-    lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue*);
+    lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue<NotificationMessage>*);
+    lrt2LRTDataNotificationQueue_ = CREATE_MUL(ARCHI_STACK, nLrt_, NotificationQueue<DataNotificationMessage>*);
 
     for (unsigned int i = 0; i < nLrt_ + 1; ++i) {
-        lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue);
+        lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
     }
+
+    for (unsigned int i = 0; i < nLrt_; ++i) {
+        lrt2LRTDataNotificationQueue_[i] = CREATE(ARCHI_STACK, NotificationQueue<DataNotificationMessage>);
+    }
+
 
     /** FIFOs allocation */
     dataQueues_ = CREATE(ARCHI_STACK, DataQueues)(nLrt_);
@@ -183,6 +193,14 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     /** Threads structure */
     thread_lrt_ = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, pthread_t);
     lrtInfoArray = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, LRTInfo);
+
+    /** Initialize SpiderCommunicator */
+    spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
+            spider2LrtJobQueue_,
+            lrt2SpiderParamQueue_,
+            lrtNotificationQueues_,
+            lrt2LRTDataNotificationQueue_,
+            traceQueue_);
 
     // TODO use "usePapify" only for monitored LRTs / HW PEs
 #ifndef PAPI_AVAILABLE
@@ -272,13 +290,6 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     /** Initialize shared memory */
     memset(dataMem, 0, (size_t) minAlignedSharedMemory);
 
-    /** Initialize LRT and Communicators */
-    spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
-            spider2LrtJobQueue_,
-            lrt2SpiderParamQueue_,
-            lrtNotificationQueues_,
-            traceQueue_);
-
     // Check papify profiles
 #ifdef PAPI_AVAILABLE
     if (config.usePapify) {
@@ -296,6 +307,9 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
     setAffinity(0);
     lrt_[0]->setFctTbl(config.platform.fcts, config.platform.nLrtFcts);
+
+    /** Set Communicators of master **/
+    lrt_[0]->setCommunicators();
 
 
     /** Create Archi */
@@ -378,9 +392,14 @@ PlatformPThread::~PlatformPThread() {
         lrtNotificationQueues_[i]->~NotificationQueue();
         StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
     }
+    for (unsigned int j = 0; j < nLrt_; ++j) {
+        lrt2LRTDataNotificationQueue_[j]->~NotificationQueue();
+        StackMonitor::free(ARCHI_STACK, lrt2LRTDataNotificationQueue_[j]);
+    }
     spider2LrtJobQueue_->~ControlMessageQueue<JobMessage *>();
     lrt2SpiderParamQueue_->~ControlMessageQueue<ParameterMessage *>();
     StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
+    StackMonitor::free(ARCHI_STACK, lrt2LRTDataNotificationQueue_);
     StackMonitor::free(ARCHI_STACK, spider2LrtJobQueue_);
     StackMonitor::free(ARCHI_STACK, lrt2SpiderParamQueue_);
 

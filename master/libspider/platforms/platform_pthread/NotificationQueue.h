@@ -49,6 +49,7 @@
 /**
  * @brief Thread safe and passive implementation of std::queue (using semaphore to wake waiting thread on queue)
  */
+template<typename T>
 class NotificationQueue {
 public:
     /**
@@ -68,7 +69,7 @@ public:
      * @param data     Buffer containing the bufferSize <T> values to push
      *
      */
-    void push(NotificationMessage *data);
+    void push(T *data);
 
     /**
      * @brief Read one value in the queue if it contains any.
@@ -76,7 +77,7 @@ public:
      * @param data      Pointer to data to be filled with queue content.
      * @param blocking  Flag to wait (true) if queue is empty or return (false).
      */
-    bool  pop(NotificationMessage *data, bool blocking);
+    bool pop(T *data, bool blocking);
 
 
     /**
@@ -86,9 +87,15 @@ public:
 
 private:
     std::uint64_t queueSize_;
-    std::queue<NotificationMessage> queue_;
+    std::queue<T> queue_;
     std::mutex queueMutex_;
     sem_t queueCounter_;
 };
+
+template
+class NotificationQueue<NotificationMessage>;
+
+template
+class NotificationQueue<DataNotificationMessage>;
 
 #endif //SPIDER_NOTIFICATIONQUEUE_H

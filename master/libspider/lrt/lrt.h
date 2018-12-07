@@ -50,6 +50,7 @@
 #include <map>
 #include <NotificationQueue.h>
 #include <tools/SpiderQueue.h>
+#include <PThreadSpiderCommunicator.h>
 #include "../papify/PapifyAction.h"
 
 #endif
@@ -64,8 +65,6 @@ public:
 
     virtual ~LRT();
 
-    void setFctTbl(const lrtFct fct[], int nFct);
-
     void runUntilNoMoreJobs() {
         run(false);
     };
@@ -73,6 +72,8 @@ public:
     void runInfinitly() {
         run(true);
     };
+
+    inline void setFctTbl(const lrtFct fct[], int nFct);
 
     inline void setJobIx(int jobIx);
 
@@ -83,6 +84,8 @@ public:
     inline int getJobIx() const;
 
     inline void setUsePapify();
+
+    inline void setCommunicators();
 
 #ifdef PAPI_AVAILABLE
 
@@ -125,30 +128,75 @@ private:
     int nb_iter;
 #endif
 
+    int nLrt_;
     bool repeatJobQueue_;
     bool freeze_;
     bool traceEnabled_;
-    std::int32_t lastJobID_;
     std::vector<JobMessage *> jobQueue_;
     std::uint32_t jobQueueIndex_;
     std::uint32_t jobQueueSize_;
+    std::int32_t lastJobID_;
     SpiderCommunicator *spiderCommunicator_;
     LrtCommunicator *lrtCommunicator_;
+    std::vector<std::int32_t> jobStamps_;
 
+    bool checkLRTJobStamps(std::vector<std::int32_t> &jobsToWait);
+
+    inline void updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp) {
+        if (lrtID < 0 || lrtID >= nLrt_) {
+            throwSpiderException("Bad id. Value: %d -- Max: %d.", lrtID, nLrt_ - 1);
+        }
+        jobStamps_[lrtID] = jobStamp;
+    }
+
+    inline void
+    notifyLRTJobStamp(std::int32_t lrtID, DataNotificationMessage *msg, std::vector<bool> &notifiedLRT) {
+        if (lrtID >= 0 &&
+            lrtID != getIx() &&
+            !notifiedLRT[lrtID]) {
+            ((PThreadSpiderCommunicator *) spiderCommunicator_)->push_data_notification(lrtID, msg);
+            notifiedLRT[lrtID] = true;
+        }
+    }
+
+    /**
+     * @brief Fetch an LRT notification message
+     * @param message message to fetch
+     */
     void fetchLRTNotification(NotificationMessage &message);
 
+    /**
+     * @brief Fetch a JOB notification message
+     * @param message message to fetch
+     */
     void fetchJobNotification(NotificationMessage &message);
 
+    /**
+     * @brief Fetch a TRACE notification message
+     * @param message message to fetch
+     */
     void fetchTraceNotification(NotificationMessage &message);
 
+    /**
+     * @brief Run a JOB message
+     * @param message message of the JOB to run
+     */
     void runJob(JobMessage *message);
 
     void jobRunner();
 
+    /**
+     * @brief Clear the JOB queue
+     */
     void clearJobQueue();
 
     void run(bool loop);
 };
+
+inline void LRT::setFctTbl(const lrtFct fct[], int nFct) {
+    fcts_ = fct;
+    nFct_ = nFct;
+}
 
 inline int LRT::getIx() const {
     return ix_;
@@ -168,6 +216,11 @@ inline void LRT::rstJobIx() {
 
 inline void LRT::setUsePapify() {
     usePapify_ = true;
+}
+
+inline void LRT::setCommunicators() {
+    lrtCommunicator_ = Platform::get()->getLrtCommunicator();
+    spiderCommunicator_ = Platform::get()->getSpiderCommunicator();
 }
 
 #endif/*LRT_H*/

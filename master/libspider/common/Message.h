@@ -165,14 +165,18 @@ public:
 
 class ParameterMessage {
 public:
-    explicit ParameterMessage(std::int32_t vertexID, std::int32_t nParam) {
+    explicit ParameterMessage(std::int32_t vertexID, std::int32_t nParam, Param *params = nullptr) {
         vertexID_ = vertexID;
         nParam_ = nParam;
-        params = CREATE_MUL(ARCHI_STACK, nParam, Param);
+        if (!params) {
+            params_ = CREATE_MUL(ARCHI_STACK, nParam, Param);
+        } else {
+            params_ = params;
+        }
     }
 
     ~ParameterMessage() {
-        StackMonitor::free(ARCHI_STACK, params);
+        StackMonitor::free(ARCHI_STACK, params_);
     }
 
     inline std::int32_t getVertexID() {
@@ -183,14 +187,14 @@ public:
         return nParam_;
     }
 
-    inline Param * getParams() {
-        return params;
+    inline Param *getParams() {
+        return params_;
     }
 
 private:
     std::int32_t vertexID_;
     std::int32_t nParam_;
-    Param *params;
+    Param *params_;
 };
 
 class NotificationMessage {
@@ -219,6 +223,26 @@ private:
     std::uint16_t type_;
     std::uint16_t subType_;
     std::int32_t index_;
+};
+
+class DataNotificationMessage {
+public:
+    explicit DataNotificationMessage(std::int32_t lrtID = -1, std::int32_t jobStamp = -1) {
+        id_ = lrtID;
+        jobStamp_ = jobStamp;
+    }
+
+    inline std::int32_t getID() {
+        return id_;
+    }
+
+    inline std::int32_t getJobStamp() {
+        return jobStamp_;
+    }
+
+private:
+    std::int32_t id_;
+    std::int32_t jobStamp_;
 };
 
 #endif/*MESSAGE_H*/

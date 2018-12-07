@@ -72,7 +72,7 @@ class PThreadLrtCommunicator : public LrtCommunicator {
 public:
     PThreadLrtCommunicator(
             ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
-            NotificationQueue *notificationQueue,
+            NotificationQueue<NotificationMessage> *notificationQueue,
             DataQueues *dataQueues,
             TraceQueue *traceQueue
     );
@@ -103,7 +103,7 @@ public:
 
 private:
     ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
-    NotificationQueue *notificationQueue_;
+    NotificationQueue<NotificationMessage> *notificationQueue_;
     DataQueues *dataQueues_;
     TraceQueue *traceQueue_;
 };

@@ -69,7 +69,8 @@ public:
     PThreadSpiderCommunicator(
             ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
             ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
-            NotificationQueue **notificationQueue,
+            NotificationQueue<NotificationMessage> **notificationQueue,
+            NotificationQueue<DataNotificationMessage> **lrt2LRTDataNotificationQueue,
             TraceQueue *traceQueue);
 
     ~PThreadSpiderCommunicator() override  = default ;
@@ -95,10 +96,19 @@ public:
 
     void trace_end_recv() override;
 
+    bool pop_data_notification(int lrtID, DataNotificationMessage *msg) {
+        return lrt2LRTDataNotificationQueue_[lrtID]->pop(msg, true);
+    }
+
+    void push_data_notification(int lrtID, DataNotificationMessage *msg) {
+        lrt2LRTDataNotificationQueue_[lrtID]->push(msg);
+    }
+
 private:
     ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
-    NotificationQueue **notificationQueue_;
+    NotificationQueue<DataNotificationMessage> **lrt2LRTDataNotificationQueue_;
+    NotificationQueue<NotificationMessage> **notificationQueue_;
     TraceQueue *traceQueue_;
 };
 

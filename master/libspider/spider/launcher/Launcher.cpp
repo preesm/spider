@@ -136,6 +136,11 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
         SRDAGEdge *edge = vertex->getOutEdge(i);
         outFifos[i].alloc = edge->getAlloc();
         outFifos[i].size = edge->getRate();
+        if (edge->getSnk()) {
+            outFifos[i].blkLrtIx = edge->getSnk()->getSlave();
+        } else {
+            outFifos[i].blkLrtIx = -1;
+        }
     }
 
     switch (vertex->getType()) {

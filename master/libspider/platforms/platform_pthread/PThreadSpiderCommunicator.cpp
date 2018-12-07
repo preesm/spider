@@ -79,11 +79,13 @@
 
 PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
                                                      ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
-                                                     NotificationQueue **notificationQueue,
+                                                     NotificationQueue<NotificationMessage> **notificationQueue,
+                                                     NotificationQueue<DataNotificationMessage> **lrt2LRTDataNotificationQueue,
                                                      TraceQueue *traceQueue) {
     spider2LrtJobQueue_ = spider2LrtJobQueue;
     lrt2SpiderParamQueue_ = lrt2SpiderParamQueue;
     notificationQueue_ = notificationQueue;
+    lrt2LRTDataNotificationQueue_ = lrt2LRTDataNotificationQueue;
     traceQueue_ = traceQueue;
 }
 

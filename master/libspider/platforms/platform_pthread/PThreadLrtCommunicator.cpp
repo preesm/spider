@@ -47,7 +47,7 @@
 
 PThreadLrtCommunicator::PThreadLrtCommunicator(
         ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
-        NotificationQueue *notificationQueue,
+        NotificationQueue<NotificationMessage> *notificationQueue,
         DataQueues *dataQueues,
         TraceQueue *traceQueue
 ) {
@@ -94,13 +94,13 @@ void *PThreadLrtCommunicator::data_start_send(Fifo *f) {
 }
 
 void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx) {
-    dataQueues_->updateLrtJobStamp(lrtIx, jobIx);
+//    dataQueues_->updateLrtJobStamp(lrtIx, jobIx);
 }
 
 void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int /*jobIx*/) {
-    for (int i = 0; i < nbDependency; i++) {
-        dataQueues_->waitOnJobStamp(Platform::get()->getLrtIx(), blkLrtIx[i], blkLrtJobIx[i], true);
-    }
+//    for (int i = 0; i < nbDependency; i++) {
+//        dataQueues_->waitOnJobStamp(Platform::get()->getLrtIx(), blkLrtIx[i], blkLrtJobIx[i], true);
+//    }
 }
 
 

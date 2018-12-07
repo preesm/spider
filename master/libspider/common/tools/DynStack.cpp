@@ -55,7 +55,7 @@ DynStack::~DynStack() {
 }
 
 static inline int getAlignSize(int size) {
-    auto minAlloc = Platform::get()->getMinAllocSize();
+    float minAlloc = Platform::get()->getMinAllocSize();
     return (int) std::ceil(size / minAlloc) * minAlloc;
 }
 

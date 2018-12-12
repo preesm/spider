@@ -78,8 +78,6 @@ public:
 
     virtual void rstJobIx() = 0;
 
-    virtual void rstJobIxSend() = 0;
-
     virtual void rstJobIxRecv() = 0;
 
     /** Platform getter/setter */

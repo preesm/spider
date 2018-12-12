@@ -67,49 +67,54 @@
 class PThreadSpiderCommunicator : public SpiderCommunicator {
 public:
     PThreadSpiderCommunicator(
-            ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
+            ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
             ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
             NotificationQueue<NotificationMessage> **notificationQueue,
-            NotificationQueue<DataNotificationMessage> **lrt2LRTDataNotificationQueue,
-            TraceQueue *traceQueue);
+            NotificationQueue<JobNotificationMessage> **lrt2LRTDataNotificationQueue,
+            ControlMessageQueue<TraceMessage *> *traceQueue);
 
-    ~PThreadSpiderCommunicator() override  = default ;
+    ~PThreadSpiderCommunicator() override = default;
 
     void push_notification(int lrtID, NotificationMessage *msg) override;
 
     bool pop_notification(int lrtID, NotificationMessage *msg, bool blocking) override;
 
-    std::int32_t push_job_message(JobMessage **message) override;
-    void pop_job_message(JobMessage **msg, std::int32_t id) override;
+    std::int32_t push_job_message(JobInfoMessage **message) override;
+
+    void pop_job_message(JobInfoMessage **msg, std::int32_t id) override;
 
     std::int32_t push_parameter_message(ParameterMessage **message) override;
 
     void pop_parameter_message(ParameterMessage **msg, std::int32_t id) override;
 
-    void *trace_start_send(int size) override;
+    std::int32_t push_trace_message(TraceMessage **message) override;
 
-    void trace_end_send(int size) override;
+    void pop_trace_message(TraceMessage **message, std::int32_t id) override;
 
-    int trace_start_recv(void **data) override;
+//    void *trace_start_send(int size) override;
+//
+//    void trace_end_send(int size) override;
+//
+//    int trace_start_recv(void **data) override;
+//
+//    void trace_start_recv_block(void **data) override;
+//
+//    void trace_end_recv() override;
 
-    void trace_start_recv_block(void **data) override;
-
-    void trace_end_recv() override;
-
-    bool pop_data_notification(int lrtID, DataNotificationMessage *msg) {
+    bool pop_data_notification(int lrtID, JobNotificationMessage *msg) {
         return lrt2LRTDataNotificationQueue_[lrtID]->pop(msg, true);
     }
 
-    void push_data_notification(int lrtID, DataNotificationMessage *msg) {
+    void push_data_notification(int lrtID, JobNotificationMessage *msg) {
         lrt2LRTDataNotificationQueue_[lrtID]->push(msg);
     }
 
 private:
-    ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
+    ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
-    NotificationQueue<DataNotificationMessage> **lrt2LRTDataNotificationQueue_;
+    ControlMessageQueue<TraceMessage *> *traceQueue_;
+    NotificationQueue<JobNotificationMessage> **lrt2LRTDataNotificationQueue_;
     NotificationQueue<NotificationMessage> **notificationQueue_;
-    TraceQueue *traceQueue_;
 };
 
 #endif/*PTHREADS_SPIDER_COMMUNICATOR_H*/

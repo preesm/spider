@@ -126,7 +126,7 @@ typedef struct {
 
 typedef struct {
     MemAllocType memAllocType;
-    void *memAllocStart;
+    int memAllocStart;
     int memAllocSize;
 
     SchedulerType schedulerType;

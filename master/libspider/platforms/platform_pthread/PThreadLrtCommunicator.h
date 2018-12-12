@@ -71,10 +71,10 @@
 class PThreadLrtCommunicator : public LrtCommunicator {
 public:
     PThreadLrtCommunicator(
-            ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
+            ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
             NotificationQueue<NotificationMessage> *notificationQueue,
-            DataQueues *dataQueues,
-            TraceQueue *traceQueue
+            NotificationQueue<JobNotificationMessage> **lrt2LRTDataNotificationQueue,
+            DataQueues *dataQueues
     );
 
     ~PThreadLrtCommunicator() override = default;
@@ -83,13 +83,17 @@ public:
 
     bool pop_notification(NotificationMessage *msg, bool blocking) override;
 
-    std::int32_t push_job_message(JobMessage **message) override;
+    std::int32_t push_job_message(JobInfoMessage **message) override;
 
-    void pop_job_message(JobMessage **msg, std::int32_t id) override;
+    void pop_job_message(JobInfoMessage **msg, std::int32_t id) override;
 
-    void *trace_start_send(int size) override;
+    bool pop_data_notification(int lrtID, JobNotificationMessage *msg) override;
 
-    void trace_end_send(int size) override;
+    void push_data_notification(int lrtID, JobNotificationMessage *msg) override;
+
+//    void *trace_start_send(int size) override;
+//
+//    void trace_end_send(int size) override;
 
     void *data_start_send(Fifo *f) override;
 
@@ -97,15 +101,11 @@ public:
 
     void *data_recv(Fifo *f) override;
 
-    void setLrtJobIx(int lrtIx, int jobIx) override;
-
-    void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx) override;
-
 private:
-    ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
+    ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     NotificationQueue<NotificationMessage> *notificationQueue_;
+    NotificationQueue<JobNotificationMessage> **lrt2LRTDataNotificationQueue_;
     DataQueues *dataQueues_;
-    TraceQueue *traceQueue_;
 };
 
 #endif/*PTHREAD_LRT_COMMUNICATOR_H*/

@@ -96,6 +96,6 @@ template
 class NotificationQueue<NotificationMessage>;
 
 template
-class NotificationQueue<DataNotificationMessage>;
+class NotificationQueue<JobNotificationMessage>;
 
 #endif //SPIDER_NOTIFICATIONQUEUE_H

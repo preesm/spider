@@ -150,237 +150,25 @@ LRT::~LRT() {
 }
 
 void LRT::sendTrace(int srdagIx, Time start, Time end) {
-    auto msgTrace = (TraceMessage *) lrtCommunicator_->trace_start_send(sizeof(TraceMessage));
+//    auto msgTrace = (TraceMessage *) lrtCommunicator_->trace_start_send(sizeof(TraceMessage));
+//
+//    msgTrace->vertexID_ = srdagIx;
+//    msgTrace->spiderTask_ = (std::uint32_t) -1;
+//    msgTrace->startTime_ = start;
+//    msgTrace->endTime_ = end;
+//    msgTrace->lrtID_ = ix_;
 
-//    msgTrace->id_ = TRACE_JOB;
-    msgTrace->srdagID_ = srdagIx;
-    msgTrace->spiderTask_ = (std::uint32_t) -1;
-    msgTrace->start_ = start;
-    msgTrace->end_ = end;
-    msgTrace->lrtID_ = ix_;
+//    lrtCommunicator_->trace_end_send(sizeof(TraceMsgType));
 
-    lrtCommunicator_->trace_end_send(sizeof(TraceMsgType));
+    // Push message
+    auto *traceMessage = CREATE(ARCHI_STACK, TraceMessage)(srdagIx, -1, getIx(), start, end);
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    auto index = spiderCommunicator->push_trace_message(&traceMessage);
+
+    // Push notification
+    auto notificationMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_LRT, index);
+    spiderCommunicator->push_notification(Platform::get()->getNLrt(), &notificationMessage);
 }
-
-//inline void LRT::runReceivedJob(void *) {
-
-//#ifdef VERBOSE_TIME
-//    time_waiting_job += Platform::get()->getTime() - start_waiting_job;
-//#endif
-//
-//    Platform::get()->getLrtCommunicator()->unlockLrt(getJobIx());
-//    auto message = (Message *) msg;
-//    switch (message->id_) {
-//        case MSG_START_JOB: {
-//
-//            auto jobMsg = (JobMessage *) message;
-//            auto inFifos = (Fifo *) ((char *) jobMsg + 1 * sizeof(JobMessage));
-//            auto outFifos = (Fifo *) ((char *) inFifos + jobMsg->nEdgeIN_ * sizeof(Fifo));
-//            auto inParams = (Param *) ((char *) outFifos + jobMsg->nEdgeOUT_ * sizeof(Fifo));
-//
-//            auto **inFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nEdgeIN_, void*);
-//            auto **outFifosAlloc = CREATE_MUL(LRT_STACK, jobMsg->nEdgeOUT_, void*);
-//            auto outParams = CREATE_MUL(LRT_STACK, jobMsg->nParamOUT_, Param);
-//
-//            Time start;
-//
-//#ifdef VERBOSE_TIME
-//            start = Platform::get()->getTime();
-//#endif
-//
-//
-//            for (int i = 0; i < (int) jobMsg->nEdgeIN_; i++) {
-//                tabBlkLrtIx[i] = inFifos[i].blkLrtIx; // lrt to wait
-//                tabBlkLrtJobIx[i] = inFifos[i].blkLrtJobIx; // total job ticket for this lrt to wait
-//            }
-//
-//            Platform::get()->getLrtCommunicator()->waitForLrtUnlock((int) jobMsg->nEdgeIN_, tabBlkLrtIx,
-//                                                                    tabBlkLrtJobIx, getJobIx());
-//
-//#ifdef VERBOSE_TIME
-//            time_waiting_prev_actor += Platform::get()->getTime() - start;
-//#endif
-//
-//
-//#ifdef VERBOSE_TIME
-//            start = Platform::get()->getTime();
-//#endif
-//
-//            Platform::get()->getLrtCommunicator()->allocateDataBuffer(jobMsg->nEdgeIN_, inFifos, jobMsg->nEdgeOUT_,
-//                                                                      outFifos);
-//
-//#ifdef VERBOSE_TIME
-//            time_alloc_data += Platform::get()->getTime() - start;
-//#endif
-//
-//
-//            for (int i = 0; i < (int) jobMsg->nEdgeIN_; i++) {
-//#ifdef VERBOSE_TIME
-//                Time start = Platform::get()->getTime();
-//#endif
-//
-//                inFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_recv(&inFifos[i]); // in com
-//
-//                if (inFifos[i].size == 0)
-//                    inFifosAlloc[i] = nullptr;
-//
-//#ifdef VERBOSE_TIME
-//                time_waiting_input_comm += Platform::get()->getTime() - start;
-//#endif
-//            }
-//
-//
-//            for (int i = 0; i < (int) jobMsg->nEdgeOUT_; i++) {
-//#ifdef VERBOSE_TIME
-//                Time start = Platform::get()->getTime();
-//#endif
-//
-//                outFifosAlloc[i] = Platform::get()->getLrtCommunicator()->data_start_send(&outFifos[i]); // in com
-//
-//                if (outFifos[i].size == 0)
-//                    outFifosAlloc[i] = nullptr;
-//
-//#ifdef VERBOSE_TIME
-//                time_waiting_input_comm += Platform::get()->getTime() - start;
-//#endif
-//            }
-//
-//
-//            start = Platform::get()->getTime();
-//
-//            if (jobMsg->specialActor_ && jobMsg->fctID_ < 6) {
-//                specialActors[jobMsg->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
-//            } else if ((int) jobMsg->fctID_ < nFct_) {
-//                if (usePapify_) {
-//#ifdef PAPI_AVAILABLE
-//                    // TODO, find better way to do that
-//                    try {
-//                        // We can monitor the events
-//                        PapifyAction *papifyAction = nullptr;
-//                        papifyAction = jobPapifyActions_.at(fcts_[jobMsg->fctID_]);
-//                        // Start monitoring
-//                        papifyAction->startMonitor();
-//                        // Do the monitored job
-//                        fcts_[jobMsg->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
-//                        // Stop monitoring
-//                        papifyAction->stopMonitor();
-//                        // Writes the monitoring results
-//                        papifyAction->writeEvents();
-//                    } catch (std::out_of_range &e) {
-//                        // This job does not have papify events associated with  it
-//                        fcts_[jobMsg->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
-//                    }
-//#endif
-//                } else {
-//                    // We don't use papify
-//                    fcts_[jobMsg->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
-//                }
-//            } else {
-//                fprintf(stderr, "Cannot find actor function\n");
-//                break;
-//            }
-//
-//            Time end = Platform::get()->getTime();
-//
-//#ifdef VERBOSE_TIME
-//            time_compute += end - start;
-//#endif
-//
-//            if (jobMsg->traceEnabled_)
-//                sendTrace(jobMsg->srdagID_, start, end);
-//
-//
-//            for (int i = 0; i < (int) jobMsg->nEdgeOUT_; i++) {
-//#ifdef VERBOSE_TIME
-//                Time start = Platform::get()->getTime();
-//#endif
-//
-//                Platform::get()->getLrtCommunicator()->data_end_send(&outFifos[i]); // out com
-//
-//#ifdef VERBOSE_TIME
-//                time_waiting_output_comm += Platform::get()->getTime() - start;
-//#endif
-//            }
-//
-//
-//            Platform::get()->getLrtCommunicator()->freeDataBuffer(jobMsg->nEdgeIN_, jobMsg->nEdgeOUT_);
-//
-//
-//            if (jobMsg->nParamOUT_) {
-//                auto size = sizeof(ParamValueMessage) + jobMsg->nParamOUT_ * sizeof(Param);
-//#ifdef VERBOSE_TIME
-//                Time start = Platform::get()->getTime();
-//#endif
-//
-//                auto msgParam = (ParamValueMessage *) Platform::get()->getLrtCommunicator()->ctrl_start_send(size);
-//
-//
-//#ifdef VERBOSE_TIME
-//                time_waiting_output_comm += Platform::get()->getTime() - start;
-//#endif
-//                /** Copying the parameters in the message */
-//                msgParam->params_ = (Param *) (msgParam + 1);
-//                memcpy(msgParam->params_, outParams, jobMsg->nParamOUT_ * sizeof(Param));
-//                msgParam->id_ = MSG_PARAM_VALUE;
-//                msgParam->srdagID_ = jobMsg->srdagID_;
-//
-//#ifdef VERBOSE_TIME
-//                start = Platform::get()->getTime();
-//#endif
-//
-//                Platform::get()->getLrtCommunicator()->ctrl_end_send(size); // out com
-//
-//#ifdef VERBOSE_TIME
-//                time_waiting_output_comm += Platform::get()->getTime() - start;
-//#endif
-//            }
-//
-//            jobIx_++;
-////            printf("LRT%d finished SR%d\n", ix_, jobMsg->srdagIx);
-//            Platform::get()->getLrtCommunicator()->setLrtJobIx(getIx(), jobIx_);
-//
-//            StackMonitor::free(LRT_STACK, inFifosAlloc);
-//            StackMonitor::free(LRT_STACK, outFifosAlloc);
-//            StackMonitor::free(LRT_STACK, outParams);
-//            StackMonitor::freeAll(LRT_STACK);
-//
-//            break;
-//        }
-//        case MSG_CLEAR_TIME: {
-//            Platform::get()->rstTime((ClearTimeMessage *) message);
-//            break;
-//        }
-//        case MSG_END_ITER: {
-//#ifdef VERBOSE_TIME
-//            nb_iter++;
-//#endif
-//            auto endMsg = (Message *) Platform::get()->getLrtCommunicator()->ctrl_start_send(sizeof(Message));
-//            endMsg->id_ = MSG_END_ITER;
-//            Platform::get()->getLrtCommunicator()->ctrl_end_send(sizeof(Message));
-//            break;
-//        }
-//        case MSG_RESET_LRT: {
-//            rstJobIx();
-//            Platform::get()->getLrtCommunicator()->rstLrtJobIx(getIx());
-//            auto rstMsg = (Message *) Platform::get()->getLrtCommunicator()->ctrl_start_send(sizeof(Message));
-//            rstMsg->id_ = MSG_RESET_LRT;
-//            Platform::get()->getLrtCommunicator()->ctrl_end_send(sizeof(Message));
-//            break;
-//        }
-//        case MSG_STOP_LRT:
-//            run_ = false;
-//            break;
-//        case MSG_PARAM_VALUE:
-//        default:
-//            fprintf(stderr, "ERROR: unexpected type of message received [%u]\n", message->id_);
-//            break;
-//    }
-//    Platform::get()->getLrtCommunicator()->ctrl_end_recv();
-//
-//#ifdef VERBOSE_TIME
-//    start_waiting_job = Platform::get()->getTime();
-//#endif
-//}
 
 bool LRT::checkLRTJobStamps(std::vector<std::int32_t> &jobsToWait) {
     for (int i = 0; i < nLrt_; ++i) {
@@ -439,7 +227,7 @@ void LRT::fetchJobNotification(NotificationMessage &message) {
     /** Get the ID of the job in the global queue */
     switch (message.getSubType()) {
         case JOB_ADD: {
-            JobMessage *msg;
+            JobInfoMessage *msg;
             // pop message from global queue
             lrtCommunicator_->pop_job_message(&msg, message.getIndex());
             // push message in local queue (don't execute right now in case more important notification comes along
@@ -477,7 +265,7 @@ void LRT::fetchTraceNotification(NotificationMessage &message) {
 
 void LRT::clearJobQueue() {
     for (auto &it : (jobQueue_)) {
-        it->~JobMessage();
+        it->~JobInfoMessage();
         StackMonitor::free(ARCHI_STACK, it);
     }
     jobQueue_.clear();
@@ -490,7 +278,7 @@ void LRT::clearJobQueue() {
 #endif
 }
 
-void LRT::runJob(JobMessage *message) {
+void LRT::runJob(JobInfoMessage *message) {
     auto inFifos = message->inFifos_;
     auto outFifos = message->outFifos_;
     auto inParams = message->inParams_;
@@ -499,7 +287,7 @@ void LRT::runJob(JobMessage *message) {
     auto **outFifosAlloc = CREATE_MUL(LRT_STACK, message->nEdgeOUT_, void*);
     auto outParams = CREATE_MUL(ARCHI_STACK, message->nParamOUT_, Param);
 
-//    Time start;
+    Time start;
     std::vector<std::int32_t> jobsToWait(nLrt_, -1);
 
     for (int i = 0; i < message->nEdgeIN_; i++) {
@@ -508,7 +296,7 @@ void LRT::runJob(JobMessage *message) {
 
     // Waiting for JobStamps to be updated
     while (!checkLRTJobStamps(jobsToWait)) {
-        DataNotificationMessage msg;
+        JobNotificationMessage msg;
         if (((PThreadSpiderCommunicator *) spiderCommunicator_)->pop_data_notification(getIx(), &msg)) {
             updateLRTJobStamp(msg.getID(), msg.getJobStamp());
         }
@@ -566,7 +354,7 @@ void LRT::runJob(JobMessage *message) {
     }
 
 
-//    start = Platform::get()->getTime();
+    start = Platform::get()->getTime();
 
     if (message->specialActor_ && message->fctID_ < 6) {
         specialActors[message->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
@@ -599,19 +387,20 @@ void LRT::runJob(JobMessage *message) {
         throwSpiderException("Invalid function id: %d -- Range=[0;%d[.\n", message->fctID_, nFct_);
     }
 
-//    Time end = Platform::get()->getTime();
+    Time end = Platform::get()->getTime();
 
 #ifdef VERBOSE_TIME
     time_compute += end - start;
 #endif
 
-//    if (message->traceEnabled_)
-//        sendTrace(message->srdagID_, start, end);
+    if (traceEnabled_) {
+        sendTrace(message->srdagID_, start, end);
+    }
 
 
-    DataNotificationMessage msg(getIx(), jobIx_ + 1);
+    JobNotificationMessage msg(getIx(), jobIx_ + 1);
 
-    std::vector<bool> notifiedLRT(nLrt_, false);
+    std::vector<bool> notifiedLRT((size_t) nLrt_, false);
 
     for (int i = 0; i < message->nEdgeOUT_; i++) {
 #ifdef VERBOSE_TIME
@@ -619,14 +408,8 @@ void LRT::runJob(JobMessage *message) {
 #endif
         lrtCommunicator_->data_end_send(&outFifos[i]); // out com
 
-//        if (message->outFifos_[i].blkLrtIx > 0 &&
-//            message->outFifos_[i].blkLrtIx != getIx() &&
-//            !jobsToWait[message->outFifos_[i].blkLrtIx]) {
-//            ((PThreadSpiderCommunicator *) spiderCommunicator_)->push_data_notification(message->outFifos_[i].blkLrtIx,
-//                                                                                        &msg);
-//            jobsToWait[message->outFifos_[i].blkLrtIx] = 1;
-//        }
         notifyLRTJobStamp(message->outFifos_[i].blkLrtIx, &msg, notifiedLRT);
+
 #ifdef VERBOSE_TIME
         time_waiting_output_comm += Platform::get()->getTime() - start;
 #endif
@@ -634,12 +417,13 @@ void LRT::runJob(JobMessage *message) {
 
 
     if (message->nParamOUT_) {
+        // TODO: change ARCHI_STACK to something not shared
         auto *parameterMessage = CREATE(ARCHI_STACK, ParameterMessage)(message->srdagID_, message->nParamOUT_,
                                                                        outParams);
 #ifdef VERBOSE_TIME
         Time start = Platform::get()->getTime();
 #endif
-        /** Copying the parameters in the message */
+        /** Sending the parameter message */
         auto index = spiderCommunicator_->push_parameter_message(&parameterMessage);
         parameterMessage = nullptr;
 

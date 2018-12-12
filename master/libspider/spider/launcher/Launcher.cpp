@@ -37,13 +37,13 @@
  */
 #include "Launcher.h"
 #include <SpiderCommunicator.h>
+#include <LrtCommunicator.h>
 
 #include <graphs/SRDAG/SRDAGGraph.h>
 
 #include <algorithm>
 
 #include <lrt.h>
-#include <PThreadSpiderCommunicator.h>
 
 Launcher Launcher::instance_;
 
@@ -55,7 +55,7 @@ Launcher::Launcher() {
 void Launcher::launchVertex(SRDAGVertex *vertex) {
     if (vertex->getState() == SRDAG_EXEC) {
         int slave = vertex->getSlave();
-        send_StartJobMsg(slave, vertex);
+        sendJobInfoMessage(slave, vertex);
         nLaunched_++;
         vertex->setState(SRDAG_RUN);
     }
@@ -84,8 +84,8 @@ void Launcher::send_ClearTimeMsg(int) {
 //    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMessage));
 }
 
-void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
-    /** retreive Infos for msg */
+void Launcher::sendJobInfoMessage(int lrtIx, SRDAGVertex *vertex) {
+    /** Retrieve Information for msg */
     int nParams = 0;
     switch (vertex->getType()) {
         case SRDAG_NORMAL:
@@ -105,16 +105,14 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
             break;
     }
 
-//    auto sizeFifo = sizeof(Fifo);
-    auto inFifos = CREATE_MUL(ARCHI_STACK, vertex->getNConnectedInEdge(), Fifo);
-    auto outFifos = CREATE_MUL(ARCHI_STACK, vertex->getNConnectedOutEdge(), Fifo);
-    auto inParams = CREATE_MUL(ARCHI_STACK, nParams, Param);
+    auto *inFifos = CREATE_MUL(ARCHI_STACK, vertex->getNConnectedInEdge(), Fifo);
+    auto *outFifos = CREATE_MUL(ARCHI_STACK, vertex->getNConnectedOutEdge(), Fifo);
+    auto *inParams = CREATE_MUL(ARCHI_STACK, nParams, Param);
 
-    auto msg = CREATE(ARCHI_STACK, JobMessage);
+    auto *msg = CREATE(ARCHI_STACK, JobInfoMessage);
     msg->srdagID_ = vertex->getId();
     msg->specialActor_ = vertex->getType() != SRDAG_NORMAL;
     msg->fctID_ = vertex->getFctId();
-//    msg->traceEnabled_ = Spider::getTraceEnabled();
 
     msg->nEdgeIN_ = vertex->getNConnectedInEdge();
     msg->nEdgeOUT_ = vertex->getNConnectedOutEdge();
@@ -179,7 +177,6 @@ void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
             inParams[1] = vertex->getInParam(0);
             // Set memory address
             inParams[2] = vertex->getInParam(1);
-
             break;
         case SRDAG_END:
             inParams[0] = vertex->getInEdge(0)->getRate();
@@ -235,17 +232,43 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
 }
 
 void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end) {
-    auto msgTrace = (TraceMessage *) Platform::get()->getSpiderCommunicator()->trace_start_send(sizeof(TraceMessage));
+    // Push message
+    auto *traceMessage = CREATE(ARCHI_STACK, TraceMessage)(-1, type, Platform::get()->getLrtIx(), start, end);
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    auto index = spiderCommunicator->push_trace_message(&traceMessage);
 
-//    msgTrace->id_ = TRACE_SPIDER;
-    msgTrace->spiderTask_ = type;
-    msgTrace->srdagID_ = -1;
-    msgTrace->start_ = start;
-    msgTrace->end_ = end;
-    msgTrace->lrtID_ = Platform::get()->getLrt()->getIx();
-
-    Platform::get()->getSpiderCommunicator()->trace_end_send(sizeof(TraceMsgType));
+    // Push notification
+    auto notificationMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_SPIDER, index);
+    spiderCommunicator->push_notification(Platform::get()->getNLrt(), &notificationMessage);
     nLaunched_++;
+}
+
+void Launcher::sendEnableTrace(int lrtID) {
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    auto enableTraceMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_ENABLE);
+    if (lrtID < 0) {
+        for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
+            spiderCommunicator->push_notification(i, &enableTraceMessage);
+        }
+    } else if (lrtID < Platform::get()->getNLrt()) {
+        spiderCommunicator->push_notification(lrtID, &enableTraceMessage);
+    } else{
+        throwSpiderException("Bad LRT id: %d", lrtID);
+    }
+}
+
+void Launcher::sendDisableTrace(int lrtID) {
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    auto enableTraceMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_DISABLE);
+    if (lrtID < 0) {
+        for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
+            spiderCommunicator->push_notification(i, &enableTraceMessage);
+        }
+    } else if (lrtID < Platform::get()->getNLrt()) {
+        spiderCommunicator->push_notification(lrtID, &enableTraceMessage);
+    } else{
+        throwSpiderException("Bad LRT id: %d", lrtID);
+    }
 }
 
 int Launcher::getNLaunched() {

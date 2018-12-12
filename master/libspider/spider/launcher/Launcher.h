@@ -55,6 +55,18 @@ public:
 
     void sendTraceSpider(TraceSpiderType type, Time start, Time end);
 
+    /**
+     * @brief Send a notification to all (or given) LRT to enable TRACE
+     * @param lrtID LRT to send the notification to (-1 to send to every LRT)
+     */
+    void sendEnableTrace(int lrtID);
+
+    /**
+     * @brief Send a notification to all (or given) LRT to disable TRACE
+     * @param lrtID LRT to send the notification to (-1 to send to every LRT)
+     */
+    void sendDisableTrace(int lrtID);
+
     int getNLaunched();
 
     void rstNLaunched();
@@ -69,7 +81,7 @@ private:
 
     void send_ClearTimeMsg(int lrtIx);
 
-    void send_StartJobMsg(int lrtIx, SRDAGVertex *vertex);
+    void sendJobInfoMessage(int lrtIx, SRDAGVertex *vertex);
 
     void send_EndIterMsg(int lrtIx);
 

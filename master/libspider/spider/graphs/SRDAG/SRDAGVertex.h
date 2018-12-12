@@ -498,6 +498,7 @@ inline Time SRDAGVertex::executionTimeOn(int peType) const {
         case SRDAG_ROUNDBUFFER:
         case SRDAG_INIT:
         case SRDAG_END:
+            // TODO: update execution time based on model and measure values
             return 1;
         default:
             throwSpiderException("Unhandled case.");

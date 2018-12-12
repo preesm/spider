@@ -53,10 +53,6 @@ typedef enum {
     MSG_STOP_LRT = 6
 } CtrlMsgType;
 
-typedef enum {
-    TRACE_JOB = 1,
-    TRACE_SPIDER = 2
-} TraceMsgType;
 
 typedef enum {
     TRACE_SPIDER_GRAPH = 1,
@@ -78,31 +74,18 @@ public:
     std::int32_t blkLrtJobIx;
 };
 
-
-class Message {
+class ClearTimeMessage {
 public:
-    Message() : id_((std::uint32_t) -1) {};
     std::uint32_t id_;
-};
-
-class ClearTimeMessage : public Message {
-public:
     struct timespec timespec_;
 };
 
 
-
-//class ParamValueMessage : public Message {
-//public:
-//    unsigned long srdagID_;
-//    Param *params_;
-//};
-
 typedef enum {
-    LRT_NOTIFICATION,
-    TRACE_NOTIFICATION,
-    JOB_NOTIFICATION,
-    UNDEFINED_NOTIFICATION
+    LRT_NOTIFICATION,         // Signal that notification is about LRT state
+    TRACE_NOTIFICATION,       // Signal that notification is about TRACE system
+    JOB_NOTIFICATION,         // Signal that notification is about JOB information
+    UNDEFINED_NOTIFICATION    // Signal that notification is undefined
 } NotificationType;
 
 typedef enum {
@@ -114,26 +97,84 @@ typedef enum {
     LRT_STOP,                 // Signal LRT to stop
     LRT_PAUSE,                // Signal LRT to freeze
     LRT_RESUME,               // Signal LRT to un-freeze
-} LrtNotifications;
+} LRTNotificationType;
 
 typedef enum {
-    TRACE_ENABLE,
-    TRACE_DISABLE,
-    TRACE_RST,
-    TRACE_SENT
-} TraceNotification;
+    TRACE_ENABLE,    // Signal LRT to enable its trace
+    TRACE_DISABLE,   // Signal LRT to disable its trace
+    TRACE_RST,       // Signal LRT to reset its trace
+    TRACE_SENT,      // Signal that a trace has been sent
+    TRACE_LRT,
+    TRACE_SPIDER
+} TraceNotificationType;
 
 typedef enum {
     JOB_ADD,            // Signal LRT that a job is available in shared queue
     JOB_LAST_ID,        // Signal LRT what is the last job ID
     JOB_CLEAR_QUEUE,    // Signal LRT to clear its job queue (if LRT_REPEAT_ITERATION_EN, signal is ignored)
     JOB_SENT_PARAM,     // Signal that LRT sent a ParameterMessage
-} JobNotification;
+} JobNotificationType;
 
-
-class JobMessage {
+/**
+ * @brief Generic notification message class
+ */
+class NotificationMessage {
 public:
-    JobMessage() = default;
+    explicit NotificationMessage(std::uint16_t type = NotificationType::UNDEFINED_NOTIFICATION,
+                                 std::uint16_t subType = NotificationType::UNDEFINED_NOTIFICATION,
+                                 std::int32_t index = -1) {
+        type_ = type;
+        subType_ = subType;
+        index_ = index;
+    }
+
+    inline std::uint16_t getType() {
+        return type_;
+    }
+
+    inline std::uint16_t getSubType() {
+        return subType_;
+    }
+
+    inline std::int32_t getIndex() {
+        return index_;
+    }
+
+private:
+    std::uint16_t type_;
+    std::uint16_t subType_;
+    std::int32_t index_;
+};
+
+/**
+ * @brief JOB synchronization notification message class
+ */
+class JobNotificationMessage {
+public:
+    explicit JobNotificationMessage(std::int32_t lrtID = -1, std::int32_t jobStamp = -1) {
+        id_ = lrtID;
+        jobStamp_ = jobStamp;
+    }
+
+    inline std::int32_t getID() {
+        return id_;
+    }
+
+    inline std::int32_t getJobStamp() {
+        return jobStamp_;
+    }
+
+private:
+    std::int32_t id_;
+    std::int32_t jobStamp_;
+};
+
+/**
+ * @brief Information message about JOB to run
+ */
+class JobInfoMessage {
+public:
+    JobInfoMessage() = default;
 
     bool specialActor_ = false;
     std::int32_t srdagID_ = 0;
@@ -146,23 +187,16 @@ public:
     Fifo *outFifos_ = nullptr;
     Param *inParams_ = nullptr;
 
-    ~JobMessage() {
+    ~JobInfoMessage() {
         StackMonitor::free(ARCHI_STACK, inFifos_);
         StackMonitor::free(ARCHI_STACK, outFifos_);
         StackMonitor::free(ARCHI_STACK, inParams_);
     }
 };
 
-class TraceMessage {
-public:
-    std::uint32_t id_;
-    std::int32_t srdagID_;
-    std::int32_t spiderTask_;
-    std::int32_t lrtID_;
-    Time start_;
-    Time end_;
-};
-
+/**
+ * @brief message containing generated parameters
+ */
 class ParameterMessage {
 public:
     explicit ParameterMessage(std::int32_t vertexID, std::int32_t nParam, Param *params = nullptr) {
@@ -197,52 +231,51 @@ private:
     Param *params_;
 };
 
-class NotificationMessage {
+/**
+ * @brief message containing TRACE information
+ */
+class TraceMessage {
 public:
-    explicit NotificationMessage(std::uint16_t type = NotificationType::UNDEFINED_NOTIFICATION,
-                                 std::uint16_t subType = NotificationType::UNDEFINED_NOTIFICATION,
-                                 std::int32_t index = -1) {
-        type_ = type;
-        subType_ = subType;
-        index_ = index;
+
+    explicit TraceMessage(std::int32_t vertexID = -1, std::int32_t spiderTask = -1, std::int32_t lrtID = -1,
+                          Time start = 0, Time end = 0) {
+        vertexID_ = vertexID;
+        spiderTask_ = spiderTask;
+        lrtID_ = lrtID;
+        startTime_ = start;
+        endTime_ = end;
     }
 
-    inline std::uint16_t getType() {
-        return type_;
+    inline std::int32_t getLRTID() {
+        return lrtID_;
     }
 
-    inline std::uint16_t getSubType() {
-        return subType_;
+    inline Time getStartTime() {
+        return startTime_;
     }
 
-    inline std::int32_t getIndex() {
-        return index_;
+    inline Time getEndTime() {
+        return endTime_;
+    }
+
+    inline Time getEllapsedTime() {
+        return endTime_ - startTime_;
+    }
+
+    inline std::int32_t getVertexID() {
+        return vertexID_;
+    }
+
+    inline std::int32_t getSpiderTask() {
+        return spiderTask_;
     }
 
 private:
-    std::uint16_t type_;
-    std::uint16_t subType_;
-    std::int32_t index_;
-};
-
-class DataNotificationMessage {
-public:
-    explicit DataNotificationMessage(std::int32_t lrtID = -1, std::int32_t jobStamp = -1) {
-        id_ = lrtID;
-        jobStamp_ = jobStamp;
-    }
-
-    inline std::int32_t getID() {
-        return id_;
-    }
-
-    inline std::int32_t getJobStamp() {
-        return jobStamp_;
-    }
-
-private:
-    std::int32_t id_;
-    std::int32_t jobStamp_;
+    std::int32_t vertexID_;
+    std::int32_t spiderTask_;
+    std::int32_t lrtID_;
+    Time startTime_;
+    Time endTime_;
 };
 
 #endif/*MESSAGE_H*/

@@ -40,6 +40,7 @@
 #include <launcher/Launcher.h>
 #include "Schedule.h"
 #include <lrt.h>
+#include <monitor/TimeMonitor.h>
 #include "LrtCommunicator.h"
 #include "SpiderCommunicator.h"
 
@@ -154,6 +155,7 @@ bool Schedule::check() {
 }
 
 void Schedule::execute() {
+    TimeMonitor::startMonitoring();
     for (int pe = 0; pe < nPE_; pe++) {
         for (int job = 0; job < nJobPerPE_[pe]; job++) {
             SRDAGVertex *vertex = getJob(pe, job);
@@ -162,6 +164,7 @@ void Schedule::execute() {
         }
     }
     sendEndNotification();
+    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
     Platform::get()->getLrt()->runUntilNoMoreJobs();
 }
 

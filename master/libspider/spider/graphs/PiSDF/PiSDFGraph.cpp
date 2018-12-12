@@ -288,8 +288,7 @@ void PiSDFGraph::delEdge(PiSDFEdge *edge) {
 void PiSDFGraph::print(const char *path) {
     FILE *file = Platform::get()->fopen(path);
     if (file == nullptr) {
-        printf("cannot open %s\n", path);
-        return;
+        throwSpiderException("failed to open file: %s", path);
     }
 
     // Writing header

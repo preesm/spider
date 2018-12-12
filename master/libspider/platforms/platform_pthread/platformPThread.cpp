@@ -70,7 +70,7 @@
 #include <tools/Rational.h>
 #include "ControlMessageQueue.h"
 
-#define PLATFORM_FPRINTF_BUFFERSIZE 200
+#define PLATFORM_FPRINTF_BUFFERSIZE 2000
 
 #define MAX_MSG_SIZE 10*1024
 
@@ -172,24 +172,24 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
 
     /** Create the different queues */
-    spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<JobMessage *>);
+    spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<JobInfoMessage *>);
     lrt2SpiderParamQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ParameterMessage *>);
     lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue<NotificationMessage>*);
-    lrt2LRTDataNotificationQueue_ = CREATE_MUL(ARCHI_STACK, nLrt_, NotificationQueue<DataNotificationMessage>*);
+    lrt2LRTDataNotificationQueue_ = CREATE_MUL(ARCHI_STACK, nLrt_, NotificationQueue<JobNotificationMessage>*);
 
     for (unsigned int i = 0; i < nLrt_ + 1; ++i) {
         lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
     }
 
     for (unsigned int i = 0; i < nLrt_; ++i) {
-        lrt2LRTDataNotificationQueue_[i] = CREATE(ARCHI_STACK, NotificationQueue<DataNotificationMessage>);
+        lrt2LRTDataNotificationQueue_[i] = CREATE(ARCHI_STACK, NotificationQueue<JobNotificationMessage>);
     }
 
 
     /** FIFOs allocation */
     dataQueues_ = CREATE(ARCHI_STACK, DataQueues)(nLrt_);
     /** TraceQueue allocation */
-    traceQueue_ = CREATE(ARCHI_STACK, TraceQueue)(MAX_MSG_SIZE, nLrt_);
+    traceQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<TraceMessage *>);
     /** Threads structure */
     thread_lrt_ = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, pthread_t);
     lrtInfoArray = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, LRTInfo);
@@ -246,8 +246,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
                     spider2LrtJobQueue_,
                     lrtNotificationQueues_[i + offsetPe],
-                    dataQueues_,
-                    traceQueue_);
+                    lrt2LRTDataNotificationQueue_,
+                    dataQueues_);
 
             lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i);
 
@@ -396,19 +396,19 @@ PlatformPThread::~PlatformPThread() {
         lrt2LRTDataNotificationQueue_[j]->~NotificationQueue();
         StackMonitor::free(ARCHI_STACK, lrt2LRTDataNotificationQueue_[j]);
     }
-    spider2LrtJobQueue_->~ControlMessageQueue<JobMessage *>();
-    lrt2SpiderParamQueue_->~ControlMessageQueue<ParameterMessage *>();
+    spider2LrtJobQueue_->~ControlMessageQueue();
+    lrt2SpiderParamQueue_->~ControlMessageQueue();
+    traceQueue_->~ControlMessageQueue();
     StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
     StackMonitor::free(ARCHI_STACK, lrt2LRTDataNotificationQueue_);
     StackMonitor::free(ARCHI_STACK, spider2LrtJobQueue_);
     StackMonitor::free(ARCHI_STACK, lrt2SpiderParamQueue_);
+    StackMonitor::free(ARCHI_STACK, traceQueue_);
 
 
     dataQueues_->~DataQueues();
-    traceQueue_->~TraceQueue();
 
     StackMonitor::free(ARCHI_STACK, dataQueues_);
-    StackMonitor::free(ARCHI_STACK, traceQueue_);
 
 
     //Desallocation des tableaux dynamiques
@@ -484,38 +484,8 @@ int PlatformPThread::getMinAllocSize() {
 #endif
 }
 
-void PlatformPThread::rstJobIxSend() {
-    //Sending a msg to all slave LRTs, end of graph iteration
-//    for (unsigned int i = 1; i < nLrt_; i++) {
-//        auto msg = (Message *) getSpiderCommunicator()->ctrl_start_send(i, sizeof(Message));
-//        msg->id_ = MSG_END_ITER;
-//        getSpiderCommunicator()->ctrl_end_send(i, sizeof(Message));
-//    }
-//
-//    //Waiting for slave LRTs to finish their job queue
-//    for (unsigned int i = 1; i < nLrt_; i++) {
-//        void *msg = nullptr;
-//
-//        do {
-//            getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
-//            if (((Message *) msg)->id_ == MSG_END_ITER)
-//                break;
-//            else
-//                getSpiderCommunicator()->ctrl_end_recv(i);
-//        } while (true);
-//        getSpiderCommunicator()->ctrl_end_recv(i);
-//    }
-//
-//    //Sending a msg to all slave LRTs, reset jobIx counter
-//    for (unsigned int i = 1; i < nLrt_; i++) {
-//        auto msg = (Message *) getSpiderCommunicator()->ctrl_start_send(i, sizeof(Message));
-//        msg->id_ = MSG_RESET_LRT;
-//        getSpiderCommunicator()->ctrl_end_send(i, sizeof(Message));
-//    }
-}
-
 void PlatformPThread::rstJobIxRecv() {
-    auto spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     NotificationMessage clearJobMessage(JOB_NOTIFICATION, JOB_CLEAR_QUEUE);
     for (unsigned int i = 0; i < nLrt_; ++i) {
         NotificationMessage finishedMessage;
@@ -530,60 +500,15 @@ void PlatformPThread::rstJobIxRecv() {
                 /** Send message to clear job queue **/
                 spiderCommunicator->push_notification(finishedMessage.getIndex(), &clearJobMessage);
                 break;
+            } else {
+                /** Save the notification for later **/
+                spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
             }
         }
     }
 }
 
 void PlatformPThread::rstJobIx() {
-//    //Sending a msg to all slave LRTs, end of graph iteration
-//    for (unsigned int i = 1; i < nLrt_; i++) {
-//        auto msg = (Message *) getSpiderCommunicator()->ctrl_start_send(i, sizeof(Message));
-//        msg->id_ = MSG_END_ITER;
-//        getSpiderCommunicator()->ctrl_end_send(i, sizeof(Message));
-//    }
-//
-//    //Waiting for slave LRTs to finish their job queue
-//    for (unsigned int i = 1; i < nLrt_; i++) {
-//        void *msg = nullptr;
-//
-//        do {
-//            getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
-//            if (((Message *) msg)->id_ == MSG_END_ITER)
-//                break;
-//            else
-//                getSpiderCommunicator()->ctrl_end_recv(i);
-//        } while (true);
-//        getSpiderCommunicator()->ctrl_end_recv(i);
-//    }
-//
-//    //Sending a msg to all slave LRTs, reset jobIx counter
-//    for (unsigned int i = 1; i < nLrt_; i++) {
-//        auto msg = (Message *) getSpiderCommunicator()->ctrl_start_send(i, sizeof(Message));
-//        msg->id_ = MSG_RESET_LRT;
-//        getSpiderCommunicator()->ctrl_end_send(i, sizeof(Message));
-//    }
-//
-//    //reseting master LRT jobIx counter
-//    Platform::get()->getLrt()->setJobIx(-1);
-//
-//    //reseting jobTab
-//    for (unsigned int i = 0; i < nLrt_; i++) {
-//        lrtCom_[0]->setLrtJobIx(i, -1);
-//    }
-//
-//    //Waiting for slave LRTs to reset their jobIx counter
-//    for (unsigned int i = 1; i < nLrt_; i++) {
-//        void *msg = nullptr;
-//        do {
-//            getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
-//            if (((Message *) msg)->id_ == MSG_RESET_LRT)
-//                break;
-//            else
-//                getSpiderCommunicator()->ctrl_end_recv(i);
-//        } while (true);
-//        getSpiderCommunicator()->ctrl_end_recv(i);
-//    }
 }
 
 /** Time Handling */
@@ -592,11 +517,11 @@ void PlatformPThread::rstTime(ClearTimeMessage *msg) {
 }
 
 void PlatformPThread::rstTime() {
-//    start_steady = std::chrono::steady_clock::now();
-//
-//    start.tv_sec = (start_steady - origin_steady).count() / 1000000000;
-//    start.tv_nsec = (start_steady - origin_steady).count() - (start_steady - origin_steady).count() / 1000000000;
-//
+    start_steady = std::chrono::steady_clock::now();
+
+    start.tv_sec = (start_steady - origin_steady).count() / 1000000000;
+    start.tv_nsec = (start_steady - origin_steady).count() - (start_steady - origin_steady).count() / 1000000000;
+
 //
 //    for (int lrt = 1; lrt < archi_->getNPE(); lrt++) {
 //        auto msg = (ClearTimeMessage *) getSpiderCommunicator()->ctrl_start_send(lrt, sizeof(ClearTimeMessage));

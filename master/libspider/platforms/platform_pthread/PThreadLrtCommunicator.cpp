@@ -46,15 +46,15 @@
 #include <platform.h>
 
 PThreadLrtCommunicator::PThreadLrtCommunicator(
-        ControlMessageQueue<JobMessage *> *spider2LrtJobQueue,
+        ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
         NotificationQueue<NotificationMessage> *notificationQueue,
-        DataQueues *dataQueues,
-        TraceQueue *traceQueue
+        NotificationQueue<JobNotificationMessage> **lrt2LRTDataNotificationQueue,
+        DataQueues *dataQueues
 ) {
     spider2LrtJobQueue_ = spider2LrtJobQueue;
     notificationQueue_ = notificationQueue;
+    lrt2LRTDataNotificationQueue_ = lrt2LRTDataNotificationQueue;
     dataQueues_ = dataQueues;
-    traceQueue_ = traceQueue;
 }
 
 void PThreadLrtCommunicator::push_notification(NotificationMessage *msg) {
@@ -65,21 +65,22 @@ bool PThreadLrtCommunicator::pop_notification(NotificationMessage *msg, bool blo
     return notificationQueue_->pop(msg, blocking);
 }
 
-std::int32_t PThreadLrtCommunicator::push_job_message(JobMessage **message) {
+std::int32_t PThreadLrtCommunicator::push_job_message(JobInfoMessage **message) {
     return spider2LrtJobQueue_->push(message);
 }
 
-void PThreadLrtCommunicator::pop_job_message(JobMessage **msg, std::int32_t id) {
+void PThreadLrtCommunicator::pop_job_message(JobInfoMessage **msg, std::int32_t id) {
     spider2LrtJobQueue_->pop(msg, id);
 }
 
-void *PThreadLrtCommunicator::trace_start_send(int size) {
-    return traceQueue_->push_start(Platform::get()->getLrtIx(), size);
-}
 
-void PThreadLrtCommunicator::trace_end_send(int size) {
-    return traceQueue_->push_end(Platform::get()->getLrtIx(), size);
-}
+//void *PThreadLrtCommunicator::trace_start_send(int size) {
+//    return traceQueue_->push_start(Platform::get()->getLrtIx(), size);
+//}
+//
+//void PThreadLrtCommunicator::trace_end_send(int size) {
+//    return traceQueue_->push_end(Platform::get()->getLrtIx(), size);
+//}
 
 void PThreadLrtCommunicator::data_end_send(Fifo */*f*/) {
     // Nothing to do
@@ -93,14 +94,18 @@ void *PThreadLrtCommunicator::data_start_send(Fifo *f) {
     return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (f->alloc));
 }
 
-void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx) {
-//    dataQueues_->updateLrtJobStamp(lrtIx, jobIx);
+bool PThreadLrtCommunicator::pop_data_notification(int lrtID, JobNotificationMessage *msg) {
+    if (lrtID < 0 || lrtID >= Platform::get()->getNLrt()) {
+        throwSpiderException("bad LRT ID: %d", lrtID);
+    }
+    return lrt2LRTDataNotificationQueue_[lrtID]->pop(msg, true);
 }
 
-void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int /*jobIx*/) {
-//    for (int i = 0; i < nbDependency; i++) {
-//        dataQueues_->waitOnJobStamp(Platform::get()->getLrtIx(), blkLrtIx[i], blkLrtJobIx[i], true);
-//    }
+void PThreadLrtCommunicator::push_data_notification(int lrtID, JobNotificationMessage *msg) {
+    if (lrtID < 0 || lrtID >= Platform::get()->getNLrt()) {
+        throwSpiderException("bad LRT ID: %d", lrtID);
+    }
+    lrt2LRTDataNotificationQueue_[lrtID]->push(msg);
 }
 
 

@@ -51,7 +51,7 @@
 
 #define throwHelper(msg, ...)\
     throw SpiderException("SpiderException: %s::%s: " msg, __FILENAME__, __func__, __VA_ARGS__)
-#define throwSpiderException(...) throwHelper(__VA_ARGS__, 0)
+#define throwSpiderException(...) throwHelper(__VA_ARGS__, '\0')
 
 class SpiderException : public std::exception {
 public:

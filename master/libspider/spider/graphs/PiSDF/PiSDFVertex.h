@@ -321,7 +321,9 @@ inline Time PiSDFVertex::getTimingOnType(int peType, const Param *vertexParamVal
         throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_);
     }
 
-    if (timings_[peType] == nullptr) return 0;
+    if (timings_[peType] == nullptr) {
+        return 0;
+    }
     return (Time) timings_[peType]->evaluate(vertexParamValues, nParam);
 }
 

@@ -132,7 +132,7 @@ private:
     bool repeatJobQueue_;
     bool freeze_;
     bool traceEnabled_;
-    std::vector<JobMessage *> jobQueue_;
+    std::vector<JobInfoMessage *> jobQueue_;
     std::uint32_t jobQueueIndex_;
     std::uint32_t jobQueueSize_;
     std::int32_t lastJobID_;
@@ -150,7 +150,7 @@ private:
     }
 
     inline void
-    notifyLRTJobStamp(std::int32_t lrtID, DataNotificationMessage *msg, std::vector<bool> &notifiedLRT) {
+    notifyLRTJobStamp(std::int32_t lrtID, JobNotificationMessage *msg, std::vector<bool> &notifiedLRT) {
         if (lrtID >= 0 &&
             lrtID != getIx() &&
             !notifiedLRT[lrtID]) {
@@ -181,7 +181,7 @@ private:
      * @brief Run a JOB message
      * @param message message of the JOB to run
      */
-    void runJob(JobMessage *message);
+    void runJob(JobInfoMessage *message);
 
     void jobRunner();
 

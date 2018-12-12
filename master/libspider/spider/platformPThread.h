@@ -112,8 +112,6 @@ public:
 
     void rstJobIx() override;
 
-    void rstJobIxSend() override;
-
     void rstJobIxRecv() override;
 
     /** Platform getter/setter */
@@ -198,13 +196,13 @@ private:
     Stack *stackArchi;
     Stack **stackLrt;
 
-    ControlMessageQueue<JobMessage *> *spider2LrtJobQueue_;
+    ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
+    ControlMessageQueue<TraceMessage *> *traceQueue_;
     NotificationQueue<NotificationMessage> **lrtNotificationQueues_;
-    NotificationQueue<DataNotificationMessage> **lrt2LRTDataNotificationQueue_;
+    NotificationQueue<JobNotificationMessage> **lrt2LRTDataNotificationQueue_;
 
     DataQueues *dataQueues_;
-    TraceQueue *traceQueue_;
 
     LRT **lrt_;
     LrtCommunicator **lrtCom_;

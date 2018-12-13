@@ -175,14 +175,14 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<JobInfoMessage *>);
     lrt2SpiderParamQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ParameterMessage *>);
     lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue<NotificationMessage>*);
-    lrt2LRTDataNotificationQueue_ = CREATE_MUL(ARCHI_STACK, nLrt_, NotificationQueue<JobNotificationMessage>*);
+    lrt2LRTJobNotificationQueue_ = CREATE_MUL(ARCHI_STACK, nLrt_, NotificationQueue<JobNotificationMessage>*);
 
     for (unsigned int i = 0; i < nLrt_ + 1; ++i) {
         lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
     }
 
     for (unsigned int i = 0; i < nLrt_; ++i) {
-        lrt2LRTDataNotificationQueue_[i] = CREATE(ARCHI_STACK, NotificationQueue<JobNotificationMessage>);
+        lrt2LRTJobNotificationQueue_[i] = CREATE(ARCHI_STACK, NotificationQueue<JobNotificationMessage>);
     }
 
 
@@ -199,7 +199,6 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             spider2LrtJobQueue_,
             lrt2SpiderParamQueue_,
             lrtNotificationQueues_,
-            lrt2LRTDataNotificationQueue_,
             traceQueue_);
 
     // TODO use "usePapify" only for monitored LRTs / HW PEs
@@ -246,7 +245,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
                     spider2LrtJobQueue_,
                     lrtNotificationQueues_[i + offsetPe],
-                    lrt2LRTDataNotificationQueue_,
+                    lrt2LRTJobNotificationQueue_,
                     dataQueues_);
 
             lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i);
@@ -393,14 +392,14 @@ PlatformPThread::~PlatformPThread() {
         StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
     }
     for (unsigned int j = 0; j < nLrt_; ++j) {
-        lrt2LRTDataNotificationQueue_[j]->~NotificationQueue();
-        StackMonitor::free(ARCHI_STACK, lrt2LRTDataNotificationQueue_[j]);
+        lrt2LRTJobNotificationQueue_[j]->~NotificationQueue();
+        StackMonitor::free(ARCHI_STACK, lrt2LRTJobNotificationQueue_[j]);
     }
     spider2LrtJobQueue_->~ControlMessageQueue();
     lrt2SpiderParamQueue_->~ControlMessageQueue();
     traceQueue_->~ControlMessageQueue();
     StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
-    StackMonitor::free(ARCHI_STACK, lrt2LRTDataNotificationQueue_);
+    StackMonitor::free(ARCHI_STACK, lrt2LRTJobNotificationQueue_);
     StackMonitor::free(ARCHI_STACK, spider2LrtJobQueue_);
     StackMonitor::free(ARCHI_STACK, lrt2SpiderParamQueue_);
     StackMonitor::free(ARCHI_STACK, traceQueue_);
@@ -502,6 +501,7 @@ void PlatformPThread::rstJobIxRecv() {
                 break;
             } else {
                 /** Save the notification for later **/
+                fprintf(stderr, "INFO: I HAVE OTHER NOTIF\n");
                 spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
             }
         }

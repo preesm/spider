@@ -134,6 +134,7 @@ void Launcher::sendJobInfoMessage(int lrtIx, SRDAGVertex *vertex) {
         SRDAGEdge *edge = vertex->getOutEdge(i);
         outFifos[i].alloc = edge->getAlloc();
         outFifos[i].size = edge->getRate();
+        // TODO: only put the last job dependency
         if (edge->getSnk()) {
             outFifos[i].blkLrtIx = edge->getSnk()->getSlave();
         } else {
@@ -252,7 +253,7 @@ void Launcher::sendEnableTrace(int lrtID) {
         }
     } else if (lrtID < Platform::get()->getNLrt()) {
         spiderCommunicator->push_notification(lrtID, &enableTraceMessage);
-    } else{
+    } else {
         throwSpiderException("Bad LRT id: %d", lrtID);
     }
 }
@@ -266,7 +267,7 @@ void Launcher::sendDisableTrace(int lrtID) {
         }
     } else if (lrtID < Platform::get()->getNLrt()) {
         spiderCommunicator->push_notification(lrtID, &enableTraceMessage);
-    } else{
+    } else {
         throwSpiderException("Bad LRT id: %d", lrtID);
     }
 }

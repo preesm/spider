@@ -217,7 +217,11 @@ void jit_ms(
         scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi);
         TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
+        // Run
         Platform::get()->getLrt()->runUntilNoMoreJobs();
+
+        // Wait for all LRT to have finished
+        Platform::get()->rstJobIxRecv();
 
         /* Resolve params must be done by itself */
         Launcher::get()->resolveParams(archi, topSrdag);

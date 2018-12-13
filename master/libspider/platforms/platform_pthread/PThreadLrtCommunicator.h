@@ -73,7 +73,7 @@ public:
     PThreadLrtCommunicator(
             ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
             NotificationQueue<NotificationMessage> *notificationQueue,
-            NotificationQueue<JobNotificationMessage> **lrt2LRTDataNotificationQueue,
+            NotificationQueue<JobNotificationMessage> **lrt2LRTJobNotificationQueue,
             DataQueues *dataQueues
     );
 
@@ -104,7 +104,7 @@ public:
 private:
     ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     NotificationQueue<NotificationMessage> *notificationQueue_;
-    NotificationQueue<JobNotificationMessage> **lrt2LRTDataNotificationQueue_;
+    NotificationQueue<JobNotificationMessage> **lrt2LRTJobNotificationQueue_;
     DataQueues *dataQueues_;
 };
 

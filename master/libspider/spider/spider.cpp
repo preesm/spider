@@ -494,7 +494,7 @@ static void writeGanttForVertex(TraceMessage *message, FILE *ganttFile, FILE *la
             auto *pisdfVertexRef = vertex->getReference();
             // Update execution time of the PiSDF actor
             auto timingOnPe = std::to_string(execTime);
-            //pisdfVertexRef->setTimingOnType(archi_->getPEType(vertex->getSlave()), timingOnPe.c_str());
+//            pisdfVertexRef->setTimingOnType(archi_->getPEType(vertex->getSlave()), timingOnPe.c_str());
             // Update global stats
             for (i = 0; i < stat->nPiSDFActor; i++) {
                 if (stat->actors[i] == pisdfVertexRef) {

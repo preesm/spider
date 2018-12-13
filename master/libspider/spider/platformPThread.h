@@ -200,7 +200,7 @@ private:
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
     ControlMessageQueue<TraceMessage *> *traceQueue_;
     NotificationQueue<NotificationMessage> **lrtNotificationQueues_;
-    NotificationQueue<JobNotificationMessage> **lrt2LRTDataNotificationQueue_;
+    NotificationQueue<JobNotificationMessage> **lrt2LRTJobNotificationQueue_;
 
     DataQueues *dataQueues_;
 

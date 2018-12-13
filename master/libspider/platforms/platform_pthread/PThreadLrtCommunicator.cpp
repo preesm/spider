@@ -48,12 +48,12 @@
 PThreadLrtCommunicator::PThreadLrtCommunicator(
         ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
         NotificationQueue<NotificationMessage> *notificationQueue,
-        NotificationQueue<JobNotificationMessage> **lrt2LRTDataNotificationQueue,
+        NotificationQueue<JobNotificationMessage> **lrt2LRTJobNotificationQueue,
         DataQueues *dataQueues
 ) {
     spider2LrtJobQueue_ = spider2LrtJobQueue;
     notificationQueue_ = notificationQueue;
-    lrt2LRTDataNotificationQueue_ = lrt2LRTDataNotificationQueue;
+    lrt2LRTJobNotificationQueue_ = lrt2LRTJobNotificationQueue;
     dataQueues_ = dataQueues;
 }
 
@@ -98,14 +98,14 @@ bool PThreadLrtCommunicator::pop_data_notification(int lrtID, JobNotificationMes
     if (lrtID < 0 || lrtID >= Platform::get()->getNLrt()) {
         throwSpiderException("bad LRT ID: %d", lrtID);
     }
-    return lrt2LRTDataNotificationQueue_[lrtID]->pop(msg, true);
+    return lrt2LRTJobNotificationQueue_[lrtID]->pop(msg, true);
 }
 
 void PThreadLrtCommunicator::push_data_notification(int lrtID, JobNotificationMessage *msg) {
     if (lrtID < 0 || lrtID >= Platform::get()->getNLrt()) {
         throwSpiderException("bad LRT ID: %d", lrtID);
     }
-    lrt2LRTDataNotificationQueue_[lrtID]->push(msg);
+    lrt2LRTJobNotificationQueue_[lrtID]->push(msg);
 }
 
 

@@ -118,6 +118,10 @@ void ListScheduler::scheduleOnlyConfig(
         Launcher::get()->launchVertex((*list_)[i]);
     }
 
+    /** Send of iteration notification **/
+    schedule_->sendEndNotification();
+
+
     list_->~List();
     StackMonitor::free(TRANSFO_STACK, list_);
 }

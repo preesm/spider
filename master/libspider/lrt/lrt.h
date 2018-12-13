@@ -142,22 +142,9 @@ private:
 
     bool checkLRTJobStamps(std::vector<std::int32_t> &jobsToWait);
 
-    inline void updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp) {
-        if (lrtID < 0 || lrtID >= nLrt_) {
-            throwSpiderException("Bad id. Value: %d -- Max: %d.", lrtID, nLrt_ - 1);
-        }
-        jobStamps_[lrtID] = jobStamp;
-    }
+    void updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp);
 
-    inline void
-    notifyLRTJobStamp(std::int32_t lrtID, JobNotificationMessage *msg, std::vector<bool> &notifiedLRT) {
-        if (lrtID >= 0 &&
-            lrtID != getIx() &&
-            !notifiedLRT[lrtID]) {
-            ((PThreadSpiderCommunicator *) spiderCommunicator_)->push_data_notification(lrtID, msg);
-            notifiedLRT[lrtID] = true;
-        }
-    }
+    void notifyLRTJobStamp(std::int32_t lrtID, JobNotificationMessage *msg, std::vector<bool> &notifiedLRT);
 
     /**
      * @brief Fetch an LRT notification message

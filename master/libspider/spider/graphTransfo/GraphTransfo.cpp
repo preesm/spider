@@ -217,6 +217,10 @@ void jit_ms(
         scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi);
         TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
+        if (Spider::getVerbose()) {
+            fprintf(stderr, "INFO: Launching config actors...\n");
+        }
+
         // Run
         Platform::get()->getLrt()->runUntilNoMoreJobs();
 
@@ -225,6 +229,10 @@ void jit_ms(
 
         /* Resolve params must be done by itself */
         Launcher::get()->resolveParams(archi, topSrdag);
+
+        if (Spider::getVerbose()) {
+            fprintf(stderr, "INFO: Resolved parameters.\n");
+        }
 
         TimeMonitor::startMonitoring();
 

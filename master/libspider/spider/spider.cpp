@@ -137,7 +137,7 @@ void Spider::iterate() {
     Platform::get()->rstTime();
     // Time measurement -- START
     Time start = Platform::get()->getTime();
-    if (!isStatic_) {
+    if (isStatic_) {
         if (!srdag_) {
             /** On first iteraton, the schedule is created **/
             srdag_ = new SRDAGGraph();

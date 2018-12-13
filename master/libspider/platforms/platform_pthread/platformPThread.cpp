@@ -248,7 +248,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
                     lrt2LRTJobNotificationQueue_,
                     dataQueues_);
 
-            lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i);
+            lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i + offsetPe);
 
             lrtInfoArray[i + offsetPe].lrt = lrt_[i + offsetPe];
             lrtInfoArray[i + offsetPe].fcts = config.platform.fcts;
@@ -266,6 +266,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             /** Papify related information */
             lrtInfoArray[i + offsetPe].usePapify = config.usePapify;
         }
+        offsetPe += config.platform.pesPerPeType[pe];
     }
 
     lrtThreadsArray[0] = pthread_self();
@@ -501,7 +502,6 @@ void PlatformPThread::rstJobIxRecv() {
                 break;
             } else {
                 /** Save the notification for later **/
-                fprintf(stderr, "INFO: I HAVE OTHER NOTIF\n");
                 spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
             }
         }

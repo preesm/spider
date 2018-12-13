@@ -190,13 +190,12 @@ void Launcher::sendJobInfoMessage(int lrtIx, SRDAGVertex *vertex) {
 
     curNParam_ += vertex->getNOutParam();
 
-    auto spiderCommunicator = (PThreadSpiderCommunicator *) Platform::get()->getSpiderCommunicator();
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     /** Push the job message **/
     auto jobID = spiderCommunicator->push_job_message(&msg);
     NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, jobID);
     /** Send notification **/
     spiderCommunicator->push_notification(lrtIx, &notificationMessage);
-//    fprintf(stderr, "INFO: LRT: %d -- job pushed.\n", lrtIx);
 }
 
 void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {

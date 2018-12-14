@@ -344,8 +344,6 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     }
 
     Spider::setArchi(archi_);
-
-    //this->rstTime();
 }
 
 PlatformPThread::~PlatformPThread() {

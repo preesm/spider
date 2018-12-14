@@ -44,6 +44,7 @@
 #include <algorithm>
 
 #include <lrt.h>
+#include <cinttypes>
 
 Launcher Launcher::instance_;
 
@@ -216,7 +217,7 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
                     (*param) = receivedParams[i];
                     if (Spider::getVerbose()) {
                         auto *parameterName = vertex->getReference()->getOutParam(i)->getName();
-                        fprintf(stderr, "INFO: Received Parameter: %s -- Value: %ld\n", parameterName,
+                        fprintf(stderr, "INFO: Received Parameter: %s -- Value: %" PRId64"\n", parameterName,
                                 receivedParams[i]);
                     }
                 }

@@ -50,6 +50,7 @@
 #include <lrt.h>
 
 #include <launcher/Launcher.h>
+#include <cinttypes>
 
 #define SCHEDULE_SIZE 10000
 
@@ -173,7 +174,7 @@ void jit_ms(
                     /* Display Param values */
                     fprintf(stderr, "\nINFO: Parameter values:\n");
                     for (int i = 0; i < job->graph->getNParam(); i++) {
-                        fprintf(stderr, "INFO: >> Name: %s -- Value: %ld\n", job->graph->getParam(i)->getName(),
+                        fprintf(stderr, "INFO: >> Name: %s -- Value: %" PRId64"\n", job->graph->getParam(i)->getName(),
                                 job->paramValues[i]);
                     }
                 }
@@ -262,7 +263,7 @@ void jit_ms(
                 /* Display Param values */
                 fprintf(stderr, "\nINFO: Parameter values:\n");
                 for (int i = 0; i < job->graph->getNParam(); i++) {
-                    fprintf(stderr, "INFO: >> Name: %s -- Value: %ld\n", job->graph->getParam(i)->getName(),
+                    fprintf(stderr, "INFO: >> Name: %s -- Value: %" PRId64"\n", job->graph->getParam(i)->getName(),
                             job->paramValues[i]);
                 }
             }

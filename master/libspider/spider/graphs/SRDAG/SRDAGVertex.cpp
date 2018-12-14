@@ -132,6 +132,9 @@ void SRDAGVertex::updateState() {
         /* Check Input Edges */
         for (int i = 0; i < getNConnectedInEdge(); i++) {
             SRDAGEdge *edge = getInEdge(i);
+            if (!edge) {
+                continue;
+            }
             SRDAGVertex *predecessor = getInEdge(i)->getSrc();
 
             /* Case when you don't wait any token from predecessor (Null Edge) */

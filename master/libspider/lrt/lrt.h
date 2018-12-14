@@ -140,7 +140,7 @@ private:
     LrtCommunicator *lrtCommunicator_;
     std::vector<std::int32_t> jobStamps_;
 
-    bool checkLRTJobStamps(std::vector<std::int32_t> &jobsToWait);
+    bool compareLRTJobStamps(std::vector<std::int32_t> &jobsToWait);
 
     void updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp);
 
@@ -150,19 +150,19 @@ private:
      * @brief Fetch an LRT notification message
      * @param message message to fetch
      */
-    void fetchLRTNotification(NotificationMessage &message);
+    void handleLRTNotification(NotificationMessage &message);
 
     /**
      * @brief Fetch a JOB notification message
      * @param message message to fetch
      */
-    void fetchJobNotification(NotificationMessage &message);
+    void handleJobNotification(NotificationMessage &message);
 
     /**
      * @brief Fetch a TRACE notification message
      * @param message message to fetch
      */
-    void fetchTraceNotification(NotificationMessage &message);
+    void handleTraceNotification(NotificationMessage &message);
 
     /**
      * @brief Run a JOB message

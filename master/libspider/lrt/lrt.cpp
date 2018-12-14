@@ -169,7 +169,7 @@ void LRT::sendTrace(int srdagIx, Time start, Time end) {
     spiderCommunicator->push_notification(Platform::get()->getNLrt(), &notificationMessage);
 }
 
-bool LRT::checkLRTJobStamps(std::vector<std::int32_t> &jobsToWait) {
+bool LRT::compareLRTJobStamps(std::vector<std::int32_t> &jobsToWait) {
     for (int i = 0; i < nLrt_; ++i) {
         auto jobToWait = jobsToWait[i];
         if (i == getIx() && jobToWait > getJobIx()) {
@@ -210,7 +210,7 @@ void LRT::notifyLRTJobStamp(std::int32_t lrtID, JobNotificationMessage *msg, std
     }
 }
 
-void LRT::fetchLRTNotification(NotificationMessage &message) {
+void LRT::handleLRTNotification(NotificationMessage &message) {
     switch (message.getSubType()) {
         case LRT_END_ITERATION:
             if ((lastJobID_ < 0) || (jobQueueSize_ - 1) > (std::uint32_t) lastJobID_) {
@@ -219,7 +219,8 @@ void LRT::fetchLRTNotification(NotificationMessage &message) {
                 fprintf(stderr, "INFO: LRT: %d -- lastJobID: %d\n", getIx(), lastJobID_);
 #endif
             }
-            if (lastJobID_ < 0) {
+            // If we don't have any job to do or we already finished what we were supposed to do
+            if (lastJobID_ <= jobIx_) {
                 NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION, getIx());
                 spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &finishedMessage);
             }
@@ -250,7 +251,7 @@ void LRT::fetchLRTNotification(NotificationMessage &message) {
 
 }
 
-void LRT::fetchJobNotification(NotificationMessage &message) {
+void LRT::handleJobNotification(NotificationMessage &message) {
     /** Get the ID of the job in the global queue */
     switch (message.getSubType()) {
         case JOB_ADD: {
@@ -270,12 +271,22 @@ void LRT::fetchJobNotification(NotificationMessage &message) {
         case JOB_LAST_ID:
             lastJobID_ = message.getIndex();
             break;
+        case JOB_BROADCAST_JOBSTAMP: {
+            JobNotificationMessage msg(getIx(), jobIx_);
+            for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
+                if (i == getIx()) {
+                    continue;
+                }
+                lrtCommunicator_->push_data_notification(i, &msg);
+            }
+            break;
+        }
         default:
             throwSpiderException("Unhandled type of JOB notification: %u\n", message.getSubType());
     }
 }
 
-void LRT::fetchTraceNotification(NotificationMessage &message) {
+void LRT::handleTraceNotification(NotificationMessage &message) {
     switch (message.getSubType()) {
         case TRACE_ENABLE:
             traceEnabled_ = true;
@@ -298,8 +309,8 @@ void LRT::clearJobQueue() {
     jobQueue_.clear();
     jobQueueSize_ = 0;
     jobQueueIndex_ = 0;
-    jobIx_ = -1;
     lastJobID_ = -1;
+    jobIx_ = -1;
 #ifdef VERBOSE_JOBS
     fprintf(stderr, "INFO: LRT: %d -- cleared jobQueue_.\n", Platform::get()->getLrtIx());
 #endif
@@ -323,7 +334,7 @@ void LRT::runJob(JobInfoMessage *message) {
     }
 
     // Waiting for JobStamps to be updated
-    while (!checkLRTJobStamps(jobsToWait)) {
+    while (!compareLRTJobStamps(jobsToWait)) {
         JobNotificationMessage msg;
         if (lrtCommunicator_->pop_data_notification(getIx(), &msg)) {
             updateLRTJobStamp(msg.getID(), msg.getJobStamp());
@@ -408,7 +419,6 @@ void LRT::runJob(JobInfoMessage *message) {
             }
 #endif
         } else {
-            // We don't use papify
             fcts_[message->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
         }
     } else {
@@ -532,13 +542,13 @@ void LRT::run(bool loop) {
             blocking = false;
             switch (notificationMessage.getType()) {
                 case LRT_NOTIFICATION:
-                    fetchLRTNotification(notificationMessage);
+                    handleLRTNotification(notificationMessage);
                     break;
                 case TRACE_NOTIFICATION:
-                    fetchTraceNotification(notificationMessage);
+                    handleTraceNotification(notificationMessage);
                     break;
                 case JOB_NOTIFICATION:
-                    fetchJobNotification(notificationMessage);
+                    handleJobNotification(notificationMessage);
                     break;
                 default:
                     throwSpiderException("Unhandled type of notification: %d.", notificationMessage.getType());

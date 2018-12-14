@@ -109,10 +109,11 @@ typedef enum {
 } TraceNotificationType;
 
 typedef enum {
-    JOB_ADD,            // Signal LRT that a job is available in shared queue
-    JOB_LAST_ID,        // Signal LRT what is the last job ID
-    JOB_CLEAR_QUEUE,    // Signal LRT to clear its job queue (if LRT_REPEAT_ITERATION_EN, signal is ignored)
-    JOB_SENT_PARAM,     // Signal that LRT sent a ParameterMessage
+    JOB_ADD,                // Signal LRT that a job is available in shared queue
+    JOB_LAST_ID,            // Signal LRT what is the last job ID
+    JOB_CLEAR_QUEUE,        // Signal LRT to clear its job queue (if LRT_REPEAT_ITERATION_EN, signal is ignored)
+    JOB_SENT_PARAM,         // Signal that LRT sent a ParameterMessage
+    JOB_BROADCAST_JOBSTAMP, // Signal LRT to broadcast its job stamp to everybody
 } JobNotificationType;
 
 /**

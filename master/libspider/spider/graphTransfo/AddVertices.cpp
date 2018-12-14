@@ -66,8 +66,8 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
                             char prodExpr[100], consExpr[100];
                             pi_vertex->getInEdge(0)->getConsExpr(consExpr, 100);
                             pi_vertex->getOutEdge(tmp)->getProdExpr(prodExpr, 100);
-                            printf("Warning: Broadcast have different production/consumption: prod: %d != cons (%d) \n",
-                                   prod, cons);
+//                            printf("Warning: Broadcast have different production/consumption: prod: %d != cons (%d) \n",
+//                                   prod, cons);
                         }
                     }
                     job->bodies[bodyIx][j] = topSrdag->addBroadcast(MAX_IO_EDGES);

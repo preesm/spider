@@ -52,6 +52,8 @@ public:
 
     int getNPE() const override;
 
+    int getNActivatedPE() const override;
+
     inline const char *getPEName(int ix) const override;
 
     inline int getNPETypes() const override;
@@ -104,6 +106,14 @@ inline const char *SharedMemArchi::getPEName(int ix) const {
 
 inline int SharedMemArchi::getNPETypes() const {
     return nPEType_;
+}
+
+inline int SharedMemArchi::getNActivatedPE() const {
+    int nActivated = 0;
+    for (int i = 0; i < nPE_; ++i) {
+        nActivated += peActive_[i];
+    }
+    return nActivated;
 }
 
 inline int SharedMemArchi::getPEType(int ix) const {

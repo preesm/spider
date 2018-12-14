@@ -154,8 +154,7 @@ public:
     inline SpiderCommunicator *getSpiderCommunicator() override {
         if (spiderCom_) {
             return spiderCom_;
-        }
-        else {
+        } else {
             throwSpiderException("SpiderCommunicator uninitialized.\n");
         }
     }
@@ -169,9 +168,11 @@ public:
     }
 
 #ifdef PAPI_AVAILABLE
+
     inline std::map<lrtFct, PapifyAction *> &getPapifyInfo() {
         return papifyJobInfo;
     }
+
 #endif
 
 private:
@@ -184,6 +185,7 @@ private:
     }
 
     static Time mappingTime(int nActors, int nPe);
+
     void initStacks(SpiderConfig &config);
 
     unsigned int nLrt_;
@@ -268,7 +270,7 @@ typedef struct LRTInfo {
     StackConfig lrtStack;
     PlatformPThread *platform;
     pthread_barrier_t *pthreadBarrier;
-}LRTInfo;
+} LRTInfo;
 
 
 #endif/*PLATFORM_PTHREADS_H*/

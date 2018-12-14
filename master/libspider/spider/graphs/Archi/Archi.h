@@ -54,6 +54,8 @@ public:
 
     virtual int getNPE() const = 0;
 
+    virtual int getNActivatedPE() const = 0;
+
     virtual const char *getPEName(int ix) const = 0;
 
     virtual int getNPETypes() const = 0;

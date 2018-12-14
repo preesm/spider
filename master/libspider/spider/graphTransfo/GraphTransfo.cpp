@@ -225,7 +225,16 @@ void jit_ms(
         Platform::get()->getLrt()->runUntilNoMoreJobs();
 
         // Wait for all LRT to have finished
-        Platform::get()->rstJobIxRecv();
+//        Platform::get()->rstJobIxRecv();
+
+        // Broadcast jobIx to everybody
+        NotificationMessage broadcast(JOB_NOTIFICATION, JOB_BROADCAST_JOBSTAMP);
+        for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
+            if (i == Platform::get()->getLrtIx()) {
+                continue;
+            }
+            Platform::get()->getSpiderCommunicator()->push_notification(i, &broadcast);
+        }
 
         /* Resolve params must be done by itself */
         Launcher::get()->resolveParams(archi, topSrdag);
@@ -282,6 +291,10 @@ void jit_ms(
 
             TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
             TimeMonitor::startMonitoring();
+        }
+
+        if (Spider::getVerbose()) {
+            fprintf(stderr, "INFO: Finished resolving everything.\n");
         }
 
         // TODO

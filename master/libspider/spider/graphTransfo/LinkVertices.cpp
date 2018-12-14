@@ -416,54 +416,54 @@ void linkSRVertices(SRDAGGraph *topSrdag,
         if (nbSourceRepetitions == 0 && nbSinkRepetitions == 0)
             continue;
 
-        if (nbSourceRepetitions == 0) {
-            if (sinkConsumption != 0) {
-                throwSpiderException("Actor [%s] consumes tokens from non executed actor [%s].",
-                                     edge->getSnk()->getName(), edge->getSrc()->getName());
-            } else {
-                if (edge->getSnk()->getSubType() == PISDF_SUBTYPE_JOIN) {
-                    continue;
-                } else {
-                    /* Create an empty edge */
-                    for (int snkRep = 0; snkRep < nbSinkRepetitions; snkRep++) {
-                        SRDAGVertex *snk = job->bodies[edge->getSnk()->getTypeId()][snkRep];
-                        int portIx = edge->getSnkPortIx();
-                        SRDAGEdge *emptyEdge = topSrdag->addEdge();
-                        emptyEdge->setRate(0);
-                        emptyEdge->connectSnk(snk, portIx);
-                    }
-                    continue;
-                }
-            }
-        }
-        if (nbSinkRepetitions == 0) {
-            if (sourceProduction != 0) {
-                for (int srcRep = 0; srcRep < nbSourceRepetitions; srcRep++) {
-                    SRDAGVertex *src = job->bodies[edge->getSnk()->getTypeId()][srcRep];
-                    int portIx = edge->getSrcPortIx();
-                    SRDAGVertex *end = topSrdag->addEnd();
-                    SRDAGEdge *edge = topSrdag->addEdge();
-                    edge->setRate(sourceProduction);
-                    edge->connectSrc(src, portIx);
-                    edge->connectSnk(end, 0);
-                }
-            } else {
-                if (edge->getSrc()->getSubType() == PISDF_SUBTYPE_FORK
-                    || edge->getSrc()->getSubType() == PISDF_SUBTYPE_BROADCAST) {
-                    continue;
-                } else {
-                    /* Create an empty edge */
-                    for (int srcRep = 0; srcRep < nbSourceRepetitions; srcRep++) {
-                        SRDAGVertex *src = job->bodies[edge->getSnk()->getTypeId()][srcRep];
-                        int portIx = edge->getSrcPortIx();
-                        SRDAGEdge *emptyEdge = topSrdag->addEdge();
-                        emptyEdge->setRate(0);
-                        emptyEdge->connectSrc(src, portIx);
-                    }
-                    continue;
-                }
-            }
-        }
+//        if (nbSourceRepetitions == 0) {
+//            if (sinkConsumption != 0) {
+//                throwSpiderException("Actor [%s] consumes tokens from non executed actor [%s].",
+//                                     edge->getSnk()->getName(), edge->getSrc()->getName());
+//            } else {
+//                if (edge->getSnk()->getSubType() == PISDF_SUBTYPE_JOIN) {
+//                    continue;
+//                } else {
+//                    /* Create an empty edge */
+//                    for (int snkRep = 0; snkRep < nbSinkRepetitions; snkRep++) {
+//                        SRDAGVertex *snk = job->bodies[edge->getSnk()->getTypeId()][snkRep];
+//                        int portIx = edge->getSnkPortIx();
+//                        SRDAGEdge *emptyEdge = topSrdag->addEdge();
+//                        emptyEdge->setRate(0);
+//                        emptyEdge->connectSnk(snk, portIx);
+//                    }
+//                    continue;
+//                }
+//            }
+//        }
+//        if (nbSinkRepetitions == 0) {
+//            if (sourceProduction != 0) {
+//                for (int srcRep = 0; srcRep < nbSourceRepetitions; srcRep++) {
+//                    SRDAGVertex *src = job->bodies[edge->getSnk()->getTypeId()][srcRep];
+//                    int portIx = edge->getSrcPortIx();
+//                    SRDAGVertex *end = topSrdag->addEnd();
+//                    SRDAGEdge *edge = topSrdag->addEdge();
+//                    edge->setRate(sourceProduction);
+//                    edge->connectSrc(src, portIx);
+//                    edge->connectSnk(end, 0);
+//                }
+//            } else {
+//                if (edge->getSrc()->getSubType() == PISDF_SUBTYPE_FORK
+//                    || edge->getSrc()->getSubType() == PISDF_SUBTYPE_BROADCAST) {
+//                    continue;
+//                } else {
+//                    /* Create an empty edge */
+//                    for (int srcRep = 0; srcRep < nbSourceRepetitions; srcRep++) {
+//                        SRDAGVertex *src = job->bodies[edge->getSnk()->getTypeId()][srcRep];
+//                        int portIx = edge->getSrcPortIx();
+//                        SRDAGEdge *emptyEdge = topSrdag->addEdge();
+//                        emptyEdge->setRate(0);
+//                        emptyEdge->connectSrc(src, portIx);
+//                    }
+//                    continue;
+//                }
+//            }
+//        }
 
         if (sourceProduction == 0 && sinkConsumption == 0) {
             /* Put Empty Src Port */

@@ -122,6 +122,9 @@ void ListSchedulerOnTheGo::scheduleOnlyConfig(
         Launcher::get()->launchVertex((*list_)[i]);
     }
 
+    /** Send Broadcast notification **/
+    Launcher::get()->sendBroadCastNotification();
+
     list_->~List();
     StackMonitor::free(TRANSFO_STACK, list_);
 }
@@ -173,7 +176,7 @@ void ListSchedulerOnTheGo::schedule(
     }
 
     /** Send of iteration notification **/
-    schedule_->sendEndNotification();
+    Launcher::get()->sendEndNotification();
 
 
     list_->~List();

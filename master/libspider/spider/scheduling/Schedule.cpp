@@ -150,7 +150,6 @@ bool Schedule::check() {
             }
         }
     }
-
     return result;
 }
 
@@ -163,14 +162,8 @@ void Schedule::execute() {
             Launcher::get()->launchVertex(vertex);
         }
     }
-    sendEndNotification();
+    Launcher::get()->sendEndNotification();
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
     Platform::get()->getLrt()->runUntilNoMoreJobs();
 }
 
-void Schedule::sendEndNotification() {
-    for (int pe = 0; pe < nPE_; ++pe) {
-        NotificationMessage message(LRT_NOTIFICATION, LRT_END_ITERATION);
-        Platform::get()->getSpiderCommunicator()->push_notification(pe, &message);
-    }
-}

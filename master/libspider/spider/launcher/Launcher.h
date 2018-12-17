@@ -67,6 +67,16 @@ public:
      */
     void sendDisableTrace(int lrtID);
 
+    /**
+     * @brief Send a notification to all LRT to signal that they won't receive other jobs
+     */
+    void sendEndNotification();
+
+    /**
+     * @brief Send a notification to all LRT to broadcast their job stamp to other LRT
+     */
+    void sendBroadCastNotification();
+
     int getNLaunched();
 
     void rstNLaunched();
@@ -82,8 +92,6 @@ private:
     void send_ClearTimeMsg(int lrtIx);
 
     void sendJobInfoMessage(int lrtIx, SRDAGVertex *vertex);
-
-    void send_EndIterMsg(int lrtIx);
 
     void send_ResetLrtMsg(int lrtIx);
 

@@ -118,8 +118,8 @@ void ListScheduler::scheduleOnlyConfig(
         Launcher::get()->launchVertex((*list_)[i]);
     }
 
-//    /** Send of iteration notification **/
-//    schedule_->sendEndNotification();
+//    /** Send broadcast notification for LRT **/
+//    Launcher::get()->sendBroadCastNotification();
 
 
     list_->~List();
@@ -170,7 +170,7 @@ void ListScheduler::schedule(
     }
 
     /** Send of iteration notification **/
-    schedule_->sendEndNotification();
+    Launcher::get()->sendEndNotification();
 
     list_->~List();
     StackMonitor::free(TRANSFO_STACK, list_);

@@ -72,12 +72,6 @@ void Launcher::send_ResetLrtMsg(int) {
 //    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(Message));
 }
 
-void Launcher::send_EndIterMsg(int) {
-//    auto msg = (Message *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(Message));
-//    msg->id_ = MSG_END_ITER;
-//    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(Message));
-}
-
 void Launcher::send_ClearTimeMsg(int) {
 //    auto msg = (ClearTimeMessage *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx,
 //                                                                                              sizeof(ClearTimeMessage));
@@ -272,6 +266,23 @@ void Launcher::sendDisableTrace(int lrtID) {
     }
 }
 
+void Launcher::sendEndNotification() {
+    for (int pe = 0; pe < Spider::getArchi()->getNActivatedPE(); ++pe) {
+        NotificationMessage message(LRT_NOTIFICATION, LRT_END_ITERATION);
+        Platform::get()->getSpiderCommunicator()->push_notification(pe, &message);
+    }
+}
+
+void Launcher::sendBroadCastNotification() {
+    NotificationMessage broadcast(JOB_NOTIFICATION, JOB_BROADCAST_JOBSTAMP);
+    for (int i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
+        if (i == Platform::get()->getLrtIx()) {
+            continue;
+        }
+        Platform::get()->getSpiderCommunicator()->push_notification(i, &broadcast);
+    }
+}
+
 int Launcher::getNLaunched() {
     return nLaunched_;
 }
@@ -279,3 +290,5 @@ int Launcher::getNLaunched() {
 void Launcher::rstNLaunched() {
     nLaunched_ = 0;
 }
+
+

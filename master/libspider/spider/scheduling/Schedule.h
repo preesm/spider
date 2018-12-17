@@ -67,8 +67,6 @@ public:
 
     void execute();
 
-    void sendEndNotification();
-
     inline int getNJobs(int pe) const;
 
 private:

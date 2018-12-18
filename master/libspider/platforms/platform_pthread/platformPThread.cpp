@@ -486,11 +486,11 @@ int PlatformPThread::getMinAllocSize() {
 void PlatformPThread::rstJobIxRecv() {
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     NotificationMessage clearJobMessage(JOB_NOTIFICATION, JOB_CLEAR_QUEUE);
-    for (int i = 0; i < archi_->getNActivatedPE(); ++i) {
+    for (int i = 0; i < archi_->getNActivatedPE() - 1; ++i) {
         NotificationMessage finishedMessage;
         /** Wait for LRTs to finish their jobs **/
         while (true) {
-            spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, true);
+            spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, false);
             if (finishedMessage.getType() == LRT_NOTIFICATION &&
                 finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
 #ifdef VERBOSE_JOBS

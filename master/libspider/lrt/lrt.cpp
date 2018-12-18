@@ -149,16 +149,6 @@ LRT::~LRT() {
 }
 
 void LRT::sendTrace(int srdagIx, Time start, Time end) {
-//    auto msgTrace = (TraceMessage *) lrtCommunicator_->trace_start_send(sizeof(TraceMessage));
-//
-//    msgTrace->vertexID_ = srdagIx;
-//    msgTrace->spiderTask_ = (std::uint32_t) -1;
-//    msgTrace->startTime_ = start;
-//    msgTrace->endTime_ = end;
-//    msgTrace->lrtID_ = ix_;
-
-//    lrtCommunicator_->trace_end_send(sizeof(TraceMsgType));
-
     // Push message
     auto *traceMessage = CREATE(ARCHI_STACK, TraceMessage)(srdagIx, -1, getIx(), start, end);
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
@@ -213,17 +203,10 @@ void LRT::notifyLRTJobStamp(std::int32_t lrtID, JobNotificationMessage *msg, std
 void LRT::handleLRTNotification(NotificationMessage &message) {
     switch (message.getSubType()) {
         case LRT_END_ITERATION:
-            if ((lastJobID_ < 0) || (jobQueueSize_ - 1) > (std::uint32_t) lastJobID_) {
-                lastJobID_ = jobQueueSize_ - 1;
+            lastJobID_ = message.getIndex();
 #ifdef VERBOSE_JOBS
-                fprintf(stderr, "INFO: LRT: %d -- lastJobID: %d\n", getIx(), lastJobID_);
+            fprintf(stderr, "INFO: LRT: %d -- lastJobID: %d\n", getIx(), lastJobID_);
 #endif
-            }
-            // If we don't have any job to do or we already finished what we were supposed to do
-            if (lastJobID_ <= jobIx_) {
-                NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION, getIx());
-                spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &finishedMessage);
-            }
             break;
         case LRT_RST_ITERATION:
             jobIx_ = -1;
@@ -243,7 +226,6 @@ void LRT::handleLRTNotification(NotificationMessage &message) {
             break;
         case LRT_STOP:
             run_ = false;
-            clearJobQueue();
             break;
         default:
             throwSpiderException("Unhandled type of LRT notification: %u\n", message.getSubType());
@@ -303,8 +285,9 @@ void LRT::handleTraceNotification(NotificationMessage &message) {
 
 void LRT::clearJobQueue() {
     for (auto &it : (jobQueue_)) {
-        it->~JobInfoMessage();
-        StackMonitor::free(ARCHI_STACK, it);
+//        it->~JobInfoMessage();
+//        StackMonitor::free(ARCHI_STACK, it);
+        delete it;
     }
     jobQueue_.clear();
     jobQueueSize_ = 0;
@@ -566,7 +549,7 @@ void LRT::run(bool loop) {
                     Platform::get()->getLrtIx(), lastJobID_ + 1,
                     jobQueueSize_, jobQueueIndex_);
 #endif
-            auto message = jobQueue_[jobQueueIndex_++];
+            auto *message = jobQueue_[jobQueueIndex_++];
 #ifdef VERBOSE_JOBS
             fprintf(stderr, "INFO: LRT: %d -- Running Job: %d\n", Platform::get()->getLrtIx(), jobIx_ + 1);
 #endif
@@ -576,22 +559,22 @@ void LRT::run(bool loop) {
 #ifdef VERBOSE_JOBS
             fprintf(stderr, "INFO: LRT: %d -- Finished Job: %d\n", Platform::get()->getLrtIx(), jobIx_);
 #endif
-            // Check if it is last job of current iteration
-            if ((lastJobID_ >= 0) && jobIx_ == lastJobID_) {
-                // Send finished iteration message
-                NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION, getIx());
-                spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &finishedMessage);
-                /** Reset local jobStamps **/
-                for (int i = 0; i < nLrt_; ++i) {
-                    jobStamps_[i] = -1;
-                }
+        }
+        // Check if it is last job of current iteration
+        if ((lastJobID_ >= 0) && jobIx_ == lastJobID_) {
+            /** Send finished iteration message **/
+            NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION, getIx());
+            spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &finishedMessage);
+            /** Reset local jobStamps **/
+            jobStamps_.assign(jobStamps_.size(), -1);
 #ifdef VERBOSE_JOBS
-                fprintf(stderr, "INFO: LRT: %d -- finished iteration.\n", getIx());
+            fprintf(stderr, "INFO: LRT: %d -- finished iteration.\n", getIx());
 #endif
-                if (repeatJobQueue_) {
-                    jobIx_ = -1;
-                    jobQueueIndex_ = 0;
-                }
+            if (repeatJobQueue_) {
+                jobIx_ = -1;
+                jobQueueIndex_ = 0;
+            } else {
+                clearJobQueue();
             }
         }
         doneWithCurrentJobs = (jobQueueSize_ == jobQueueIndex_);

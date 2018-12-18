@@ -162,7 +162,7 @@ void Schedule::execute() {
             Launcher::get()->launchVertex(vertex);
         }
     }
-    Launcher::get()->sendEndNotification();
+    Launcher::get()->sendEndNotification(this);
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
     Platform::get()->getLrt()->runUntilNoMoreJobs();
 }

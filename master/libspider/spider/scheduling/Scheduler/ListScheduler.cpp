@@ -170,7 +170,7 @@ void ListScheduler::schedule(
     }
 
     /** Send of iteration notification **/
-    Launcher::get()->sendEndNotification();
+    Launcher::get()->sendEndNotification(schedule_);
 
     list_->~List();
     StackMonitor::free(TRANSFO_STACK, list_);

@@ -69,8 +69,10 @@ public:
 
     /**
      * @brief Send a notification to all LRT to signal that they won't receive other jobs
+     *
+     * @param schedule Schedule containing information for last job of each PE
      */
-    void sendEndNotification();
+    void sendEndNotification(Schedule *schedule);
 
     /**
      * @brief Send a notification to all LRT to broadcast their job stamp to other LRT

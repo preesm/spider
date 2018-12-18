@@ -88,8 +88,12 @@ public:
         return a;
     }
 
+    static inline std::int64_t abs(std::int64_t x) {
+        return x < 0 ? -x : x;
+    }
+
     static inline std::int64_t compute_lcm(std::int64_t a, std::int64_t b) {
-        return labs(a * b) / compute_gcd(a, b);
+        return abs(a * b) / compute_gcd(a, b);
     }
 
     inline Rational operator+(const Rational b) const {
@@ -116,6 +120,14 @@ public:
         Rational res;
         res.nominator = this->nominator * b.nominator;
         res.denominator = this->denominator * b.denominator;
+        res.reduce();
+        return res;
+    }
+
+    inline Rational operator*(const std::int64_t b) const {
+        Rational res;
+        res.nominator = this->nominator * b;
+        res.denominator = this->denominator;
         res.reduce();
         return res;
     }
@@ -158,12 +170,12 @@ public:
 
     inline Rational getAbs() const {
         Rational res;
-        res.nominator = labs(nominator);
-        res.denominator = labs(denominator);
+        res.nominator = abs(nominator);
+        res.denominator = abs(denominator);
         return res;
     }
 
-    inline std::int64_t toLong() const {
+    inline std::int64_t toInt64() const {
         if (denominator == 1) {
             return nominator;
         }

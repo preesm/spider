@@ -233,6 +233,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
     // Find LCM of share memory size and minAllocSize
     auto minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize, getpagesize());
+    fprintf(stderr, "INFO: sharedMemorySize: %lu\n", minAlignedSharedMemory);
     dataMem = operator new((size_t) minAlignedSharedMemory);
 
     /** Filling up parameters for each threads */
@@ -466,7 +467,7 @@ void PlatformPThread::fclose(FILE *id) {
 }
 
 void *PlatformPThread::virt_to_phy(void *address) {
-    return (void *) ((long) dataMem + (long) address);
+    return (void *) ((intptr_t) dataMem + (intptr_t) address);
 }
 
 int PlatformPThread::getCacheLineSize() {
@@ -496,7 +497,7 @@ void PlatformPThread::rstJobIxRecv() {
                 fprintf(stderr, "INFO: LRT: %d -- received end signal.\n", finishedMessage.getIndex());
 #endif
                 /** Send message to clear job queue **/
-                spiderCommunicator->push_notification(finishedMessage.getIndex(), &clearJobMessage);
+                //spiderCommunicator->push_notification(finishedMessage.getIndex(), &clearJobMessage);
                 break;
             } else {
                 /** Save the notification for later **/

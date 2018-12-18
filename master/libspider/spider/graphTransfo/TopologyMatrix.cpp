@@ -130,12 +130,12 @@ static int nullSpace(int *topo_matrix, int *brv, int nbEdges, int nbVertices) {
         }
     }
 
-    long lcm = 1;
+    std::int64_t lcm = 1;
     for (int i = 0; i < nbVertices; i++) {
         lcm = Rational::compute_lcm(lcm, ratioResult[i].getDenominator());
     }
     for (int i = 0; i < nbVertices; i++) {
-        brv[i] = std::abs(ratioResult[i].getNominator() * lcm / ratioResult[i].getDenominator());
+        brv[i] = (int) Rational::abs(ratioResult[i].getNominator() * lcm / ratioResult[i].getDenominator());
     }
 
     StackMonitor::free(TRANSFO_STACK, ratioMatrix);

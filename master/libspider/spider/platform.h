@@ -66,7 +66,7 @@ public:
     /** Memory Handling */
     virtual void *virt_to_phy(void *address) = 0;
 
-    virtual int getMinAllocSize() = 0;
+    virtual long getMinAllocSize() = 0;
 
     virtual int getCacheLineSize() = 0;
 

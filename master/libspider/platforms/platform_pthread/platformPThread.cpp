@@ -226,7 +226,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 #endif
 
     // Find LCM of share memory size and minAllocSize
-    std::int64_t minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize, getpagesize());
+    std::int64_t minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize, Platform::getMinAllocSize());
     fprintf(stderr, "INFO: Page aligned shared memory size: %" PRId64"\n", minAlignedSharedMemory);
     dataMem = operator new((size_t) minAlignedSharedMemory);
 
@@ -468,12 +468,12 @@ int PlatformPThread::getCacheLineSize() {
     return 0;
 }
 
-int PlatformPThread::getMinAllocSize() {
+long PlatformPThread::getMinAllocSize() {
 #ifdef _WIN32
     //workaround because Windows
     return 4096;
 #else
-    return getpagesize();
+    return sysconf(_SC_PAGESIZE);
 #endif
 }
 

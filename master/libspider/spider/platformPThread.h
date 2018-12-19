@@ -94,7 +94,7 @@ public:
     /** Shared Memory Handling */
     void *virt_to_phy(void *address) override;
 
-    int getMinAllocSize() override;
+    long getMinAllocSize() override;
 
     int getCacheLineSize() override;
 

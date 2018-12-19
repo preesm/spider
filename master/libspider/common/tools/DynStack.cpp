@@ -37,12 +37,10 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include <tools/DynStack.h>
-#include <platform.h>
-
-#include <algorithm>
 #include <cmath>
+#include <tools/DynStack.h>
 #include <SpiderException.h>
+#include <platform.h>
 
 DynStack::DynStack(const char *name) : Stack(name) {
     curUsedSize_ = 0;
@@ -68,7 +66,7 @@ void *DynStack::alloc(int size) {
     maxSize_ = std::max(maxSize_, curUsedSize_);
     nb_++;
 
-    void *address = operator new((size_t ) alignedSize);
+    void *address = operator new((size_t) alignedSize);
     if (!address) {
         throwSpiderException("failed to allocate %d bytes", alignedSize);
     }

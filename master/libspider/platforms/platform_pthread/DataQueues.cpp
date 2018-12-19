@@ -35,8 +35,6 @@
 
 #include "DataQueues.h"
 #include <monitor/StackMonitor.h>
-#include <semaphore.h>
-#include <cstring>
 
 DataQueues::DataQueues(int nLrt) {
     nLrt_ = nLrt;
@@ -44,7 +42,7 @@ DataQueues::DataQueues(int nLrt) {
     jobStamps_ = CREATE_MUL(ARCHI_STACK, nLrt_, int*);
     for (int i = 0; i < nLrt_; i++) {
         jobStamps_[i] = CREATE_MUL(ARCHI_STACK, nLrt_, int);
-        for(int j = 0; j<nLrt_; j++)
+        for (int j = 0; j < nLrt_; j++)
             jobStamps_[i][j] = -1;
     }
     waitingSems_ = CREATE_MUL(ARCHI_STACK, nLrt_, sem_t);

@@ -59,8 +59,6 @@
 #endif
 #endif
 
-#include <ControlQueue.h>
-#include <TraceQueue.h>
 #include "ControlMessageQueue.h"
 #include "NotificationQueue.h"
 

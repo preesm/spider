@@ -38,10 +38,8 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include <lrt.h>
-#include <SpiderCommunicator.h>
-#include <LrtCommunicator.h>
-
-#include <cstring>
+#include <specialActors/specialActors.h>
+#include <Message.h>
 
 #ifndef _WIN32
 
@@ -52,9 +50,6 @@
 #else
 #define CHIP_FREQ (1)
 #endif
-
-#include "specialActors/specialActors.h"
-#include "lrt.h"
 
 //#define VERBOSE_JOBS
 
@@ -151,12 +146,11 @@ LRT::~LRT() {
 void LRT::sendTrace(int srdagIx, Time start, Time end) {
     // Push message
     auto *traceMessage = CREATE(ARCHI_STACK, TraceMessage)(srdagIx, -1, getIx(), start, end);
-    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
-    auto index = spiderCommunicator->push_trace_message(&traceMessage);
+    auto index = spiderCommunicator_->push_trace_message(&traceMessage);
 
     // Push notification
     auto notificationMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_LRT, index);
-    spiderCommunicator->push_notification(Platform::get()->getNLrt(), &notificationMessage);
+    spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &notificationMessage);
 }
 
 bool LRT::compareLRTJobStamps(std::vector<std::int32_t> &jobsToWait) {
@@ -285,9 +279,8 @@ void LRT::handleTraceNotification(NotificationMessage &message) {
 
 void LRT::clearJobQueue() {
     for (auto &it : (jobQueue_)) {
-//        it->~JobInfoMessage();
-//        StackMonitor::free(ARCHI_STACK, it);
-        delete it;
+        it->~JobInfoMessage();
+        StackMonitor::free(ARCHI_STACK, it);
     }
     jobQueue_.clear();
     jobQueueSize_ = 0;
@@ -475,36 +468,6 @@ void LRT::runJob(JobInfoMessage *message) {
     StackMonitor::freeAll(LRT_STACK);
 }
 
-void LRT::jobRunner() {
-    auto message = jobQueue_[jobQueueIndex_++];
-    // Run job
-#ifdef VERBOSE_JOBS
-    fprintf(stderr, "INFO: LRT: %d -- Running Job: %d\n", Platform::get()->getLrtIx(), jobIx_ + 1);
-#endif
-
-    runJob(message);
-
-#ifdef VERBOSE_JOBS
-    fprintf(stderr, "INFO: LRT: %d -- Finished Job: %d\n", Platform::get()->getLrtIx(), jobIx_);
-#endif
-    // Check if it is last job of current iteration
-    if ((lastJobID_ >= 0) && jobIx_ == lastJobID_) {
-        // Send finished iteration message
-        NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION, getIx());
-        spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &finishedMessage);
-        /** Reset local jobStamps **/
-        for (int i = 0; i < nLrt_; ++i) {
-            jobStamps_[i] = -1;
-        }
-#ifdef VERBOSE_JOBS
-        fprintf(stderr, "INFO: LRT: %d -- finished iteration.\n", getIx());
-#endif
-        if (repeatJobQueue_) {
-            jobIx_ = -1;
-            jobQueueIndex_ = 0;
-        }
-    }
-}
 
 void LRT::run(bool loop) {
 #ifdef VERBOSE_TIME

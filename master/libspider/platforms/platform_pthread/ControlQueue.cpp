@@ -34,8 +34,6 @@
  */
 #include "ControlQueue.h"
 
-#include <platform.h>
-
 ControlQueue::ControlQueue(std::uint64_t msgSizeMax, bool isCircular) : spiderQueue_(isCircular) {
     msgSizeMax_ = msgSizeMax;
 

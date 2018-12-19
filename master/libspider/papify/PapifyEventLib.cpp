@@ -35,8 +35,8 @@
  */
 #include <papi.h>
 #include <string>
+#include <SpiderException.h>
 #include "PapifyEventLib.h"
-#include "SpiderException.h"
 
 PapifyEventLib::~PapifyEventLib() {
     if (configLock_) {

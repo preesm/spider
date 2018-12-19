@@ -35,8 +35,6 @@
 
 #include "TraceQueue.h"
 
-#include <lrt.h>
-
 TraceQueue::TraceQueue(std::uint64_t msgSizeMax, int nLrt) {
     msgSizeMax_ = msgSizeMax;
     nLrt_ = nLrt;

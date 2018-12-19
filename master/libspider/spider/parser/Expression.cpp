@@ -35,10 +35,9 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include <parser/Expression.h>
-#include <graphTransfo/GraphTransfo.h>
-
 #include <cmath>
+#include <graphTransfo/GraphTransfo.h>
+#include <parser/Expression.h>
 
 #define MAX_NVAR_ELEMENTS 100
 #define REVERSE_POLISH_STACK_MAX_ELEMENTS 100

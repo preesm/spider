@@ -34,14 +34,9 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include "ComputeBRV.h"
-#include "TopologyMatrix.h"
-#include "LCM.h"
-
 #include <graphs/PiSDF/PiSDFEdge.h>
-
-#include <cmath>
-#include <algorithm>
+#include <graphTransfo/ComputeBRV.h>
+#include <graphTransfo/LCM.h>
 
 
 static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {

@@ -38,9 +38,6 @@
  */
 #include "specialActors.h"
 
-#include <cstring>
-#include <algorithm>
-
 void saRoundbuffer(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
 #if VERBOSE
     fprintf(stderr, "INFO: Entering Roundbuffer...\n");

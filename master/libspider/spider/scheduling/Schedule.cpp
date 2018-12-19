@@ -37,12 +37,9 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include <launcher/Launcher.h>
-#include "Schedule.h"
-#include <lrt.h>
 #include <monitor/TimeMonitor.h>
-#include "LrtCommunicator.h"
-#include "SpiderCommunicator.h"
+#include <launcher/Launcher.h>
+#include <lrt.h>
 
 Schedule::Schedule(int nPE, int nJobMax) {
     nPE_ = nPE;

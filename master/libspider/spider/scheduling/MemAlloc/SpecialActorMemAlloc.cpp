@@ -45,12 +45,10 @@
 
 
 #include "SpecialActorMemAlloc.h"
-#include <graphs/SRDAG/SRDAGGraph.h>
-#include <graphs/SRDAG/SRDAGCommon.h>
 
-void SpecialActorMemAlloc::allocFork(SRDAGVertex* fork){
+void SpecialActorMemAlloc::allocFork(SRDAGVertex *fork) {
     /** Try to find a judicious allocation */
-    SRDAGEdge* inEdge = fork->getInEdge(0);
+    SRDAGEdge *inEdge = fork->getInEdge(0);
     int alloc = inEdge->getAlloc();
     /** Look if one output is allocated */
     for (int j = 0; alloc == -1 && j < fork->getNConnectedOutEdge(); j++) {
@@ -77,9 +75,9 @@ void SpecialActorMemAlloc::allocFork(SRDAGVertex* fork){
     }
 }
 
-void SpecialActorMemAlloc::allocJoin(SRDAGVertex* join){
+void SpecialActorMemAlloc::allocJoin(SRDAGVertex *join) {
     /** Try to find a judicious allocation */
-    SRDAGEdge* outEdge = join->getOutEdge(0);
+    SRDAGEdge *outEdge = join->getOutEdge(0);
     int alloc = outEdge->getAlloc();
     if (alloc == -1) {
         /** Look if one output is allocated */
@@ -110,7 +108,7 @@ void SpecialActorMemAlloc::allocJoin(SRDAGVertex* join){
     }
 }
 
-void SpecialActorMemAlloc::allocBroadcast(SRDAGVertex* br){
+void SpecialActorMemAlloc::allocBroadcast(SRDAGVertex *br) {
     SRDAGEdge *inEdge = br->getInEdge(0);
 
     /** Try to find a judicious allocation */

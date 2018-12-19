@@ -125,14 +125,14 @@ inline PiSDFParamType PiSDFParam::getType() const {
 }
 
 inline Param PiSDFParam::getStaticValue() const {
-    if (type_ != PISDF_PARAM_STATIC){
+    if (type_ != PISDF_PARAM_STATIC) {
         throwSpiderException("Dynamic param [%s] used as Static param.", name_);
     }
     return value_;
 }
 
 inline int PiSDFParam::getParentId() const {
-    if (type_ != PISDF_PARAM_HERITED){
+    if (type_ != PISDF_PARAM_HERITED) {
         throwSpiderException("Not Herited param [%s] used as Herited param.", name_);
     }
     return parentId_;

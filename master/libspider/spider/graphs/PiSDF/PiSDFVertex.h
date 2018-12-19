@@ -349,7 +349,7 @@ inline void PiSDFVertex::isExecutableOnAllPE() {
 }
 
 inline void PiSDFVertex::isExecutableOnPE(int pe) {
-    if (pe < 0 || pe > nPeMax_){
+    if (pe < 0 || pe > nPeMax_) {
         throwSpiderException("Bad PE index. Value: %d -- Max: %d", pe, nPeMax_);
     }
     constraints_[pe] = true;

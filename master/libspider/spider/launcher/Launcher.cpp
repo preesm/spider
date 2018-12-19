@@ -35,18 +35,10 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include "Launcher.h"
 #include <cinttypes>
-#include <algorithm>
-
-#include <SpiderCommunicator.h>
-#include <LrtCommunicator.h>
-
 #include <graphs/SRDAG/SRDAGGraph.h>
-
-#include <spider.h>
-#include <scheduling/Schedule.h>
-#include <lrt.h>
+#include <SpiderCommunicator.h>
+#include <launcher/Launcher.h>
 
 Launcher Launcher::instance_;
 
@@ -102,14 +94,11 @@ void Launcher::sendJobInfoMessage(int lrtIx, SRDAGVertex *vertex) {
             break;
     }
 
-//    auto *inFifos = CREATE_MUL(ARCHI_STACK, vertex->getNConnectedInEdge(), Fifo);
-//    auto *outFifos = CREATE_MUL(ARCHI_STACK, vertex->getNConnectedOutEdge(), Fifo);
-//    auto *inParams = CREATE_MUL(ARCHI_STACK, nParams, Param);
-    auto *inFifos = new Fifo[vertex->getNConnectedInEdge()];
-    auto *outFifos = new Fifo[vertex->getNConnectedOutEdge()];
-    auto *inParams = new Param[nParams];
+    auto *inFifos = CREATE_MUL(ARCHI_STACK, vertex->getNConnectedInEdge(), Fifo);
+    auto *outFifos = CREATE_MUL(ARCHI_STACK, vertex->getNConnectedOutEdge(), Fifo);
+    auto *inParams = CREATE_MUL(ARCHI_STACK, nParams, Param);
 
-    auto *msg = new JobInfoMessage;//CREATE(ARCHI_STACK, JobInfoMessage);
+    auto *msg = CREATE(ARCHI_STACK, JobInfoMessage);
     msg->srdagID_ = vertex->getId();
     msg->specialActor_ = vertex->getType() != SRDAG_NORMAL;
     msg->fctID_ = vertex->getFctId();

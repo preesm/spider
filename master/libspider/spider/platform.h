@@ -38,10 +38,11 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#include "spider.h"
-#include <monitor/StackMonitor.h>
 #include <cstdio>
 #include <stdexcept>
+
+#include <spider.h>
+#include <monitor/StackMonitor.h>
 #include <Message.h>
 #include <SpiderException.h>
 

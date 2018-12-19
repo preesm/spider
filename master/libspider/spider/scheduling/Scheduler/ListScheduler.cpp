@@ -39,7 +39,6 @@
 
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <launcher/Launcher.h>
-#include <PThreadSpiderCommunicator.h>
 
 ListScheduler::ListScheduler() {
     srdag_ = nullptr;
@@ -188,7 +187,8 @@ int ListScheduler::computeSchedLevel(SRDAGVertex *vertex) {
                         Time execTime = succ->executionTimeOn(archi_->getPEType(j));
                         if (execTime == 0) {
                             if (succ->getReference()) {
-                                throwSpiderException("Vertex: %s -- NULL execution time.", succ->getReference()->getName());
+                                throwSpiderException("Vertex: %s -- NULL execution time.",
+                                                     succ->getReference()->getName());
                             }
                             throwSpiderException("Vertex has NULL execution time.", succ->getReference()->getName());
                         }

@@ -34,12 +34,12 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include <cmath>
 #include <algorithm>
-#include "tools/Rational.h"
-#include "graphs/PiSDF/PiSDFEdge.h"
-#include "TopologyMatrix.h"
-#include "CommonBRV.h"
+#include <cmath>
+#include <graphTransfo/TopologyMatrix.h>
+#include <graphs/PiSDF/PiSDFEdge.h>
+#include <graphTransfo/CommonBRV.h>
+#include <tools/Rational.h>
 
 
 static int nullSpace(int *topo_matrix, int *brv, int nbEdges, int nbVertices) {

@@ -38,8 +38,6 @@
  */
 #include "specialActors.h"
 
-#include <cstring>
-
 void saJoin(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
 #if VERBOSE
     fprintf(stderr, "INFO: Entering Join...\n");

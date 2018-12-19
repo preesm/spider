@@ -82,11 +82,11 @@ inline int MemAlloc::getMemAllocSize() const {
 }
 
 inline void MemAlloc::printMemAllocSizeFormatted() const {
-    const char* units[4] = { "B", "KB", "MB", "GB"};
+    const char *units[4] = {"B", "KB", "MB", "GB"};
 
     float normalizedSize = memSize_;
     int unitIndex = 0;
-    while(normalizedSize >= 1024 && unitIndex < 3) {
+    while (normalizedSize >= 1024 && unitIndex < 3) {
         normalizedSize /= 1024.;
         unitIndex++;
     }

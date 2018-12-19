@@ -35,22 +35,19 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include "GraphTransfo.h"
-#include "LinkVertices.h"
-#include "AddVertices.h"
-#include "ComputeBRV.h"
-#include "Optims.h"
-
-#include <tools/Queue.h>
-
-#include <scheduling/MemAlloc.h>
-#include <scheduling/Scheduler.h>
-
-#include <monitor/TimeMonitor.h>
-#include <lrt.h>
-
-#include <launcher/Launcher.h>
 #include <cinttypes>
+
+#include <graphTransfo/GraphTransfo.h>
+#include <graphTransfo/LinkVertices.h>
+#include <graphTransfo/AddVertices.h>
+#include <graphTransfo/ComputeBRV.h>
+#include <scheduling/Scheduler.h>
+#include <monitor/TimeMonitor.h>
+#include <scheduling/MemAlloc.h>
+#include <graphTransfo/Optims.h>
+#include <launcher/Launcher.h>
+#include <tools/Queue.h>
+#include <lrt.h>
 
 #define SCHEDULE_SIZE 10000
 

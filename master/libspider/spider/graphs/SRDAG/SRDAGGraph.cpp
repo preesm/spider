@@ -39,8 +39,6 @@
 #include <graphs/SRDAG/SRDAGEdge.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
 
-#include <algorithm>
-
 #define MAX_VERTEX (10000)
 #define MAX_EDGE (10000)
 
@@ -249,16 +247,16 @@ void SRDAGGraph::print(const char *path) {
         char name[100];
         SRDAGVertex *vertex = vertices_[i];
         vertex->toString(name, 100);
-        if(vertex->getType() == SRDAG_INIT || vertex->getType() == SRDAG_END){
+        if (vertex->getType() == SRDAG_INIT || vertex->getType() == SRDAG_END) {
             Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)\n%s\n%s %#x",
                                      vertex->getId(),
                                      vertex->getId(),
                                      name,
                                      vertex->getFctId(),
                                      stateStrings[vertex->getState()],
-                                     vertex->getInParam(0) == 0 ? "Discard":"Persistent",
+                                     vertex->getInParam(0) == 0 ? "Discard" : "Persistent",
                                      vertex->getInParam(1)
-                                     );
+            );
         } else {
             Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)\n%s",
                                      vertex->getId(),

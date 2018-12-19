@@ -37,32 +37,31 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
+#include <cinttypes>
 #include "spider.h"
 
 #include <graphs/PiSDF/PiSDFCommon.h>
 #include <graphs/SRDAG/SRDAGCommon.h>
+#include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/PiSDF/PiSDFGraph.h>
 #include <graphs/PiSDF/PiSDFEdge.h>
-#include <graphs/SRDAG/SRDAGGraph.h>
 
-#include <scheduling/MemAlloc.h>
-#include <scheduling/MemAlloc/DummyMemAlloc.h>
 #include <scheduling/MemAlloc/SpecialActorMemAlloc.h>
+#include <scheduling/MemAlloc/DummyMemAlloc.h>
 #include <scheduling/Scheduler.h>
+#include <scheduling/MemAlloc.h>
 
-#include <scheduling/Scheduler/ListScheduler.h>
 #include <scheduling/Scheduler/ListSchedulerOnTheGo.h>
-#include <scheduling/Scheduler/RoundRobin.h>
 #include <scheduling/Scheduler/RoundRobinScattered.h>
+#include <scheduling/Scheduler/ListScheduler.h>
+#include <scheduling/Scheduler/RoundRobin.h>
 
 #include <graphTransfo/GraphTransfo.h>
 
-#include <monitor/TimeMonitor.h>
-
 #include <SpiderCommunicator.h>
 
+#include <monitor/TimeMonitor.h>
 #include <launcher/Launcher.h>
-#include <cinttypes>
 
 #include "platformPThread.h"
 

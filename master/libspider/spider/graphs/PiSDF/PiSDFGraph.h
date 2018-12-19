@@ -131,7 +131,8 @@ public:
     PiSDFEdge *connect(
             PiSDFVertex *source, int sourcePortId, const char *production,
             PiSDFVertex *sink, int sinkPortId, const char *consumption,
-            const char *delay, PiSDFVertex *setter = nullptr, PiSDFVertex *getter = nullptr, PiSDFVertex *delayActor = nullptr,
+            const char *delay, PiSDFVertex *setter = nullptr, PiSDFVertex *getter = nullptr,
+            PiSDFVertex *delayActor = nullptr,
             bool isDelayPersistent = false);
 
     void delVertex(PiSDFVertex *vertex);

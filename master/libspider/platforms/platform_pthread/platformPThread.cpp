@@ -35,14 +35,22 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
+
+#include <pthread.h>
 #include <chrono>
+#include <cinttypes>
+#include <cstring>
+#include <cstdio>
+
+#include <platformPThread.h>
+#include <graphs/Archi/SharedMemArchi.h>
+#include <tools/Rational.h>
+#include <lrt.h>
 
 #ifdef _WIN32
 #include <windows.h>
 #else
-
 #include <unistd.h>
-
 #endif // _WIN32
 
 #ifdef _MSC_VER
@@ -52,23 +60,6 @@
 #define snprintf _snprintf
 #endif
 #endif
-
-#include <pthread.h>
-
-
-#include <cstdio>
-
-#include <platformPThread.h>
-
-#include <cstdarg>
-
-#include <graphs/Archi/SharedMemArchi.h>
-
-#include <lrt.h>
-#include <PThreadSpiderCommunicator.h>
-#include <spider.h>
-#include <tools/Rational.h>
-#include "ControlMessageQueue.h"
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 2000
 

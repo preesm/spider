@@ -80,7 +80,7 @@ PiSDFEdge::~PiSDFEdge() {
 }
 
 void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod) {
-    if (src_ != nullptr){
+    if (src_ != nullptr) {
         throwSpiderException("Trying to connect to an already connected edge");
     }
     src_ = src;
@@ -95,7 +95,7 @@ void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod) {
 }
 
 void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons) {
-    if (snk_ != nullptr){
+    if (snk_ != nullptr) {
         throwSpiderException("Trying to connect to an already connected edge");
     }
     snk_ = snk;

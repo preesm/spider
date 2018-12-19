@@ -39,7 +39,6 @@
 #include <graphs/PiSDF/PiSDFEdge.h>
 
 #include <cmath>
-#include <algorithm>
 
 typedef enum {
     VERTEX, EDGE

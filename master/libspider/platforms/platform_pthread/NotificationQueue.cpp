@@ -40,21 +40,21 @@
 
 #include "NotificationQueue.h"
 
-template <typename T>
+template<typename T>
 NotificationQueue<T>::NotificationQueue() {
     queueSize_ = 0;
     sem_init(&queueCounter_, 0, 0);
 }
 
-template <typename T>
+template<typename T>
 NotificationQueue<T>::~NotificationQueue() {
-    while(!queue_.empty()) {
+    while (!queue_.empty()) {
         queue_.pop();
     }
     sem_destroy(&queueCounter_);
 }
 
-template <typename T>
+template<typename T>
 void NotificationQueue<T>::push(T *data) {
     /** Creating a scope for lock_guard */
     {
@@ -69,7 +69,7 @@ void NotificationQueue<T>::push(T *data) {
     sem_post(&queueCounter_);
 }
 
-template <typename T>
+template<typename T>
 bool NotificationQueue<T>::pop(T *data, bool blocking) {
     /** Wait until a item is pushed in the queue */
     if (blocking) {
@@ -89,7 +89,7 @@ bool NotificationQueue<T>::pop(T *data, bool blocking) {
 }
 
 
-template <typename T>
+template<typename T>
 void NotificationQueue<T>::clear() {
     std::lock_guard<std::mutex> lock(queueMutex_);
     while (!queue_.empty()) {

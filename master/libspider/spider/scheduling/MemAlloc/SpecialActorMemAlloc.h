@@ -50,9 +50,11 @@ public:
     void alloc(List<SRDAGVertex *> *listOfVertices) override;
 
 private:
-    void allocFork(SRDAGVertex* fork);
-    void allocJoin(SRDAGVertex* join);
-    void allocBroadcast(SRDAGVertex* br);
+    void allocFork(SRDAGVertex *fork);
+
+    void allocJoin(SRDAGVertex *join);
+
+    void allocBroadcast(SRDAGVertex *br);
 
 };
 

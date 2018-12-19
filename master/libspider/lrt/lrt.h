@@ -40,17 +40,13 @@
 #ifndef LRT_H
 #define LRT_H
 
+#include <map>
 #include <tools/Stack.h>
 #include <platform.h>
-#include <NotificationQueue.h>
-#include <tools/SpiderQueue.h>
+#include <SpiderCommunicator.h>
+#include <LrtCommunicator.h>
 
 #ifdef PAPI_AVAILABLE
-
-#include <map>
-#include <NotificationQueue.h>
-#include <tools/SpiderQueue.h>
-#include <PThreadSpiderCommunicator.h>
 #include "../papify/PapifyAction.h"
 
 #endif
@@ -169,8 +165,6 @@ private:
      * @param message message of the JOB to run
      */
     void runJob(JobInfoMessage *message);
-
-    void jobRunner();
 
     /**
      * @brief Clear the JOB queue

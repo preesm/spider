@@ -132,6 +132,7 @@ void Spider::init(SpiderConfig &cfg) {
     if (traceEnabled_) {
         Launcher::get()->sendEnableTrace(-1);
     }
+//    Logger::enable(LOG_JOB);
 }
 
 void Spider::iterate() {
@@ -157,7 +158,7 @@ void Spider::iterate() {
     Platform::get()->rstJobIxRecv();
     // Time measurement -- END
     Time end = Platform::get()->getTime();
-    fprintf(stderr, "Execution Time: %lf\n", (end - start) / 1000000.0);
+//    fprintf(stderr, "Execution Time: %lf\n", (end - start) / 1000000.0);
 }
 
 
@@ -495,7 +496,7 @@ static void writeGanttForVertex(TraceMessage *message, FILE *ganttFile, FILE *la
             auto *pisdfVertexRef = vertex->getReference();
             // Update execution time of the PiSDF actor
             auto timingOnPe = std::to_string(execTime);
-//            pisdfVertexRef->setTimingOnType(archi_->getPEType(vertex->getSlave()), timingOnPe.c_str());
+            pisdfVertexRef->setTimingOnType(archi_->getPEType(vertex->getSlave()), timingOnPe.c_str());
             // Update global stats
             for (i = 0; i < stat->nPiSDFActor; i++) {
                 if (stat->actors[i] == pisdfVertexRef) {

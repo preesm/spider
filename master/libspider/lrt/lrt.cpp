@@ -240,6 +240,9 @@ void LRT::handleJobNotification(NotificationMessage &message) {
             lastJobID_ = message.getIndex();
             break;
         case JOB_BROADCAST_JOBSTAMP: {
+            if (jobIx_ < 0) {
+                break;
+            }
             JobNotificationMessage msg(getIx(), jobIx_);
             for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
                 if (i == getIx()) {
@@ -490,9 +493,10 @@ void LRT::run(bool loop) {
                     throwSpiderException("Unhandled type of notification: %d.", notificationMessage.getType());
             }
         }
+        /** Sanity check **/
         if (lastJobID_ >= 0 && jobQueueSize_ > (std::uint32_t) (lastJobID_ + 1)) {
             throwSpiderException(
-                    "QueuSize mismatch with number of job to do. LRT: %d -- queueSize: %d -- lastJobID: %d", getIx(),
+                    "QueuSize mismatch with number of jobs to do. LRT: %d -- queueSize: %d -- lastJobID: %d", getIx(),
                     jobQueueSize_, lastJobID_);
         }
         /** 1. If no notification and JOB queue is not empty **/
@@ -506,11 +510,14 @@ void LRT::run(bool loop) {
             runJob(message);
             Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- Finished Job: %d\n", Platform::get()->getLrtIx(), jobIx_);
         }
-        // Check if it is last job of current iteration
-        if ((lastJobID_ >= 0) && jobIx_ == lastJobID_) {
-            /** Send finished iteration message **/
-            NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION, getIx());
-            spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &finishedMessage);
+        /** 2. Check if end of iteration of end of current jobs **/
+        bool doneWithIteration = lastJobID_ >= 0 && jobIx_ == lastJobID_;
+        if (doneWithIteration) {
+            if (loop) {
+                /** Send finished iteration message **/
+                NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION, getIx());
+                spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &finishedMessage);
+            }
             /** Reset local jobStamps **/
             jobStamps_.assign(jobStamps_.size(), -1);
             Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- finished iteration.\n", getIx());

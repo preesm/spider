@@ -226,7 +226,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 #endif
 
     // Find LCM of share memory size and minAllocSize
-    std::int64_t minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize, Platform::getMinAllocSize());
+    std::int64_t minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize,
+                                                                PlatformPThread::getMinAllocSize());
     fprintf(stderr, "INFO: Page aligned shared memory size: %" PRId64"\n", minAlignedSharedMemory);
     dataMem = operator new((size_t) minAlignedSharedMemory);
 
@@ -479,21 +480,19 @@ long PlatformPThread::getMinAllocSize() {
 
 void PlatformPThread::rstJobIxRecv() {
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
-    NotificationMessage clearJobMessage(JOB_NOTIFICATION, JOB_CLEAR_QUEUE);
+    NotificationMessage finishedMessage;
+    /** Wait for LRTs to finish their jobs **/
     for (int i = 0; i < archi_->getNActivatedPE() - 1; ++i) {
-        NotificationMessage finishedMessage;
-        /** Wait for LRTs to finish their jobs **/
         while (true) {
-            spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, false);
+            spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, true);
             if (finishedMessage.getType() == LRT_NOTIFICATION &&
                 finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
                 Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- received end signal from LRT: %d.\n", getLrtIx(),
                               finishedMessage.getIndex());
-                /** Send message to clear job queue **/
-                //spiderCommunicator->push_notification(finishedMessage.getIndex(), &clearJobMessage);
                 break;
             } else {
                 /** Save the notification for later **/
+//                Logger::print(LOG_GENERAL, LOG_INFO, "received other notification. Type: %d -- Subtype: %d\n", finishedMessage.getType(), finishedMessage.getSubType());
                 spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
             }
         }

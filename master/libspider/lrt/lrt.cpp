@@ -38,8 +38,8 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include <lrt.h>
+#include <Logger.h>
 #include <specialActors/specialActors.h>
-#include <Message.h>
 
 #ifndef _WIN32
 
@@ -50,8 +50,6 @@
 #else
 #define CHIP_FREQ (1)
 #endif
-
-//#define VERBOSE_JOBS
 
 static lrtFct specialActors[6] = {
         &saBroadcast,
@@ -160,10 +158,9 @@ bool LRT::compareLRTJobStamps(std::vector<std::int32_t> &jobsToWait) {
             throwSpiderException("waiting for future self job. Current jobStamp: %d -- waitedJob: %d", getJobIx(),
                                  jobToWait);
         } else if ((jobToWait >= 0) && jobToWait > jobStamps_[i]) {
-#ifdef VERBOSE_JOBS
-            fprintf(stderr, "INFO: LRT: %d -- waiting for LRT: %d and Job: %d -- Current JobStamp: %d\n", getIx(), i,
-                    jobToWait, jobStamps_[i]);
-#endif
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- waiting for LRT: %d and Job: %d -- Current JobStamp: %d\n",
+                          getIx(), i,
+                          jobToWait, jobStamps_[i]);
             return false;
         }
     }
@@ -175,10 +172,9 @@ void LRT::updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp) {
         throwSpiderException("Bad id. Value: %d -- Max: %d.", lrtID, nLrt_ - 1);
     }
     jobStamps_[lrtID] = jobStamp;
-#ifdef VERBOSE_JOBS
-    fprintf(stderr, "INFO: LRT: %d -- updating local jobStamp of LRT: %d -- new JobStamp: %d\n", getIx(), lrtID,
-            jobStamps_[lrtID]);
-#endif
+    Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- updating local jobStamp of LRT: %d -- new JobStamp: %d\n", getIx(),
+                  lrtID,
+                  jobStamps_[lrtID]);
 }
 
 void LRT::notifyLRTJobStamp(std::int32_t lrtID, JobNotificationMessage *msg, std::vector<bool> &notifiedLRT) {
@@ -186,10 +182,8 @@ void LRT::notifyLRTJobStamp(std::int32_t lrtID, JobNotificationMessage *msg, std
         lrtID != getIx() &&
         !notifiedLRT[lrtID]) {
         lrtCommunicator_->push_data_notification(lrtID, msg);
-#ifdef VERBOSE_JOBS
-        fprintf(stderr, "INFO: LRT: %d -- notifying LRT: %d -- sent jobStamp: %d\n", getIx(), lrtID,
-                msg->getJobStamp());
-#endif
+        Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- notifying LRT: %d -- sent jobStamp: %d\n", getIx(), lrtID,
+                      msg->getJobStamp());
         notifiedLRT[lrtID] = true;
     }
 }
@@ -198,9 +192,7 @@ void LRT::handleLRTNotification(NotificationMessage &message) {
     switch (message.getSubType()) {
         case LRT_END_ITERATION:
             lastJobID_ = message.getIndex();
-#ifdef VERBOSE_JOBS
-            fprintf(stderr, "INFO: LRT: %d -- lastJobID: %d\n", getIx(), lastJobID_);
-#endif
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- lastJobID: %d\n", getIx(), lastJobID_);
             break;
         case LRT_RST_ITERATION:
             jobIx_ = -1;
@@ -287,9 +279,7 @@ void LRT::clearJobQueue() {
     jobQueueIndex_ = 0;
     lastJobID_ = -1;
     jobIx_ = -1;
-#ifdef VERBOSE_JOBS
-    fprintf(stderr, "INFO: LRT: %d -- cleared jobQueue_.\n", Platform::get()->getLrtIx());
-#endif
+    Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- cleared jobQueue_.\n", Platform::get()->getLrtIx());
 }
 
 
@@ -507,21 +497,14 @@ void LRT::run(bool loop) {
         }
         /** 1. If no notification and JOB queue is not empty **/
         if (jobQueueIndex_ < jobQueueSize_) {
-#ifdef VERBOSE_JOBS
-            fprintf(stderr, "INFO: LRT: %d -- Got %d Jobs to do -- Got %d Jobs in queue -- Done %d.\n",
-                    Platform::get()->getLrtIx(), lastJobID_ + 1,
-                    jobQueueSize_, jobQueueIndex_);
-#endif
-            auto *message = jobQueue_[jobQueueIndex_++];
-#ifdef VERBOSE_JOBS
-            fprintf(stderr, "INFO: LRT: %d -- Running Job: %d\n", Platform::get()->getLrtIx(), jobIx_ + 1);
-#endif
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- Got %d Jobs to do -- Got %d Jobs in queue -- Done %d.\n",
+                          Platform::get()->getLrtIx(), lastJobID_ + 1,
+                          jobQueueSize_, jobQueueIndex_);
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- Running Job: %d\n", Platform::get()->getLrtIx(), jobIx_ + 1);
             /** Run the job **/
+            auto *message = jobQueue_[jobQueueIndex_++];
             runJob(message);
-
-#ifdef VERBOSE_JOBS
-            fprintf(stderr, "INFO: LRT: %d -- Finished Job: %d\n", Platform::get()->getLrtIx(), jobIx_);
-#endif
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- Finished Job: %d\n", Platform::get()->getLrtIx(), jobIx_);
         }
         // Check if it is last job of current iteration
         if ((lastJobID_ >= 0) && jobIx_ == lastJobID_) {
@@ -530,9 +513,7 @@ void LRT::run(bool loop) {
             spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &finishedMessage);
             /** Reset local jobStamps **/
             jobStamps_.assign(jobStamps_.size(), -1);
-#ifdef VERBOSE_JOBS
-            fprintf(stderr, "INFO: LRT: %d -- finished iteration.\n", getIx());
-#endif
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- finished iteration.\n", getIx());
             if (repeatJobQueue_) {
                 jobIx_ = -1;
                 jobQueueIndex_ = 0;
@@ -542,9 +523,7 @@ void LRT::run(bool loop) {
         }
         doneWithCurrentJobs = (jobQueueSize_ == jobQueueIndex_);
         if (doneWithCurrentJobs && !loop) {
-#ifdef VERBOSE_JOBS
-            fprintf(stderr, "INFO: LRT: %d -- exiting iteration.\n", getIx());
-#endif
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- exiting iteration.\n", getIx());
             break;
         }
     }

@@ -50,7 +50,10 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+
 #include <unistd.h>
+#include <Logger.h>
+
 #endif // _WIN32
 
 #ifdef _MSC_VER
@@ -484,9 +487,8 @@ void PlatformPThread::rstJobIxRecv() {
             spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, false);
             if (finishedMessage.getType() == LRT_NOTIFICATION &&
                 finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
-#ifdef VERBOSE_JOBS
-                fprintf(stderr, "INFO: LRT: %d -- received end signal.\n", finishedMessage.getIndex());
-#endif
+                Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- received end signal from LRT: %d.\n", getLrtIx(),
+                              finishedMessage.getIndex());
                 /** Send message to clear job queue **/
                 //spiderCommunicator->push_notification(finishedMessage.getIndex(), &clearJobMessage);
                 break;

@@ -41,6 +41,7 @@
 #include <tools/DynStack.h>
 #include <SpiderException.h>
 #include <platform.h>
+#include <Logger.h>
 
 DynStack::DynStack(const char *name) : Stack(name) {
     curUsedSize_ = 0;
@@ -79,8 +80,9 @@ void *DynStack::alloc(int size) {
 
 void DynStack::freeAll() {
     if (nb_ != 0) {
-        fprintf(stderr, "WARNING: DynStack [%s], FreeAll called with %d remaining allocated item(s).\n", getName(),
-                nb_);
+        Logger::print(LOG_GENERAL, LOG_WARNING, "DynStack [%s], FreeAll called with %d remaining allocated item(s).\n",
+                      getName(),
+                      nb_);
     }
 }
 
@@ -100,7 +102,6 @@ void DynStack::free(void *var) {
 }
 
 void DynStack::printStat() {
-    fprintf(stderr, "INFO:    [%s] usage: ", getName());
 
     const char *units[4] = {"B", "KB", "MB", "GB"};
 
@@ -110,11 +111,10 @@ void DynStack::printStat() {
         normalizedSize /= 1024.;
         unitIndex++;
     }
-    fprintf(stderr, "\t%5.1f %s", normalizedSize, units[unitIndex]);
-
+    Logger::print(LOG_GENERAL, LOG_INFO, "[%s] usage: \t%5.1f %s", getName(), normalizedSize, units[unitIndex]);
 
     if (nb_) {
-        fprintf(stderr, ", \t%lld B still in use", curUsedSize_);
+        Logger::print(LOG_GENERAL, LOG_WARNING, "[%s]: \t%lld B still in use", getName(), curUsedSize_);
     }
 
     printf("\n");

@@ -62,6 +62,7 @@
 
 #include <monitor/TimeMonitor.h>
 #include <launcher/Launcher.h>
+#include <Logger.h>
 
 #include "platformPThread.h"
 

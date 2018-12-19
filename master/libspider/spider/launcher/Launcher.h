@@ -42,7 +42,7 @@
 
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/Archi/Archi.h>
-
+#include <scheduling/Schedule.h>
 #include <Message.h>
 
 class Launcher {

@@ -232,8 +232,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 #endif
 
     // Find LCM of share memory size and minAllocSize
-    auto minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize, getpagesize());
-    fprintf(stderr, "INFO: sharedMemorySize: %lu\n", minAlignedSharedMemory);
+    std::int64_t minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize, getpagesize());
+    fprintf(stderr, "INFO: Page aligned shared memory size: %" PRId64"\n", minAlignedSharedMemory);
     dataMem = operator new((size_t) minAlignedSharedMemory);
 
     /** Filling up parameters for each threads */

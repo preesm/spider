@@ -41,6 +41,7 @@
 #include <semaphore.h>
 #include <monitor/StackMonitor.h>
 #include <SpiderException.h>
+#include <cinttypes>
 
 /**
  * @brief Thread safe implementation of std::queue with circular pop capability
@@ -189,13 +190,13 @@ void SpiderQueue<T>::push(std::uint64_t &bufferSize, void *buffer) {
     sem_post(&queueCounter_);
 }
 
-template <typename T>
-static inline T popCircular(std::vector<T> & queue, std::uint32_t &index) {
+template<typename T>
+static inline T popCircular(std::vector<T> &queue, std::uint32_t &index) {
     return queue[index++];
 }
 
-template <typename T>
-static inline T popNonCircular(std::vector<T> & queue, std::uint32_t &/*index*/) {
+template<typename T>
+static inline T popNonCircular(std::vector<T> &queue, std::uint32_t &/*index*/) {
     auto value = queue.front();
     queue.erase(queue.begin());
     return value;
@@ -219,7 +220,7 @@ std::uint64_t SpiderQueue<T>::pop(void **data, bool blocking, std::uint64_t &max
         return 0;
     }
 
-    T (*pop_fct)(std::vector<T>&, std::uint32_t&) = popNonCircular;
+    T (*pop_fct)(std::vector<T> &, std::uint32_t &) = popNonCircular;
     if (isCircular_) {
         pop_fct = popCircular;
     }
@@ -235,7 +236,12 @@ std::uint64_t SpiderQueue<T>::pop(void **data, bool blocking, std::uint64_t &max
 
     /** Check size */
     if (bufferSize > maxSize) {
-        throwSpiderException("Trying to read a message too big. Message size: %lu -- Max size: %lu.", bufferSize, maxSize);
+        throwSpiderException("Trying to read a message too big. Message size: %"
+                                     PRIu64
+                                     " -- Max size: %"
+                                     PRIu64
+                                     ".",
+                             bufferSize, maxSize);
     }
 
     /** Retrieve the item from the queue */
@@ -266,10 +272,10 @@ void SpiderQueue<T>::pop(T *data, bool blocking) {
     //(*data) = queue_.front();
     (*data) = queue_[queueIndex_++];
     /** Removing the element from the queue */
-   // queue_.pop();
+    // queue_.pop();
 }
 
-template <typename T>
+template<typename T>
 void SpiderQueue<T>::clear() {
     std::lock_guard<std::mutex> lock(queueMutex_);
     queueIndex_ = 0;

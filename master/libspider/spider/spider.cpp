@@ -62,6 +62,7 @@
 #include <SpiderCommunicator.h>
 
 #include <launcher/Launcher.h>
+#include <cinttypes>
 
 #include "platformPThread.h"
 
@@ -415,8 +416,8 @@ static void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Archi *arch
 
     sprintf(temp_str,
             "\t<event\n"
-            "\t\tstart=\"%lu\"\n"
-            "\t\tend=\"%lu\"\n"
+            "\t\tstart=\"%" PRIu64"\"\n"
+            "\t\tend=\"%" PRIu64"\"\n"
             "\t\ttitle=\"%s_%d_%d\"\n"
             "\t\tmapping=\"%s\"\n"
             "\t\tcolor=\"%s\"\n"
@@ -543,14 +544,14 @@ static void writeGanttForSpiderTasks(TraceMessage *message, FILE *ganttFile, FIL
     int i = 0;
 
     /** Scale the different values of measured time to chip time **/
-    auto startTimeScaled = message->getStartTime() / CHIP_FREQ;
-    auto endTimeScaled = message->getEndTime() / CHIP_FREQ;
-    auto ellapsedTimeScaled = message->getEllapsedTime() / CHIP_FREQ;
+    Time startTimeScaled = message->getStartTime() / CHIP_FREQ;
+    Time endTimeScaled = message->getEndTime() / CHIP_FREQ;
+    Time ellapsedTimeScaled = message->getEllapsedTime() / CHIP_FREQ;
 
     /* Gantt File */
     Platform::get()->fprintf(ganttFile, "\t<event\n");
-    Platform::get()->fprintf(ganttFile, "\t\tstart=\"%lu\"\n", startTimeScaled);
-    Platform::get()->fprintf(ganttFile, "\t\tend=\"%lu\"\n", endTimeScaled);
+    Platform::get()->fprintf(ganttFile, "\t\tstart=\"%" PRIu64"\"\n", startTimeScaled);
+    Platform::get()->fprintf(ganttFile, "\t\tend=\"%" PRIu64"\"\n", endTimeScaled);
     Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n",
                              TimeMonitor::getTaskName((TraceSpiderType) message->getSpiderTask()));
     Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi_->getPEName(message->getLRTID()));

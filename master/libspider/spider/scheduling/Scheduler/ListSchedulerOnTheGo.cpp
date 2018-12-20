@@ -123,7 +123,7 @@ void ListSchedulerOnTheGo::scheduleOnlyConfig(
     }
 
     /** Send Broadcast notification **/
-    Launcher::get()->sendBroadCastNotification();
+    Launcher::get()->sendBroadCastNotification(true);
 
     list_->~List();
     StackMonitor::free(TRANSFO_STACK, list_);

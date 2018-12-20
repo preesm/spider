@@ -128,6 +128,7 @@ private:
     bool repeatJobQueue_;
     bool freeze_;
     bool traceEnabled_;
+    bool shouldBroadcast_;
     std::vector<JobInfoMessage *> jobQueue_;
     std::uint32_t jobQueueIndex_;
     std::uint32_t jobQueueSize_;
@@ -172,6 +173,8 @@ private:
     void clearJobQueue();
 
     void run(bool loop);
+
+    void broadcastJobStamp();
 };
 
 inline void LRT::setFctTbl(const lrtFct fct[], int nFct) {

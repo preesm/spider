@@ -117,8 +117,8 @@ void ListScheduler::scheduleOnlyConfig(
         Launcher::get()->launchVertex((*list_)[i]);
     }
 
-//    /** Send broadcast notification for LRT **/
-//    Launcher::get()->sendBroadCastNotification();
+    /** Send Broadcast notification **/
+    Launcher::get()->sendBroadCastNotification(true);
 
 
     list_->~List();

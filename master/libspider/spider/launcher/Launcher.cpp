@@ -267,8 +267,13 @@ void Launcher::sendEndNotification(Schedule *schedule) {
     }
 }
 
-void Launcher::sendBroadCastNotification() {
-    NotificationMessage broadcast(JOB_NOTIFICATION, JOB_BROADCAST_JOBSTAMP);
+void Launcher::sendBroadCastNotification(bool delayBroadcoast) {
+    NotificationMessage broadcast;
+    if (delayBroadcoast) {
+        broadcast = NotificationMessage(JOB_NOTIFICATION, JOB_DELAY_BROADCAST_JOBSTAMP);
+    } else {
+        broadcast = NotificationMessage(JOB_NOTIFICATION, JOB_BROADCAST_JOBSTAMP);
+    }
     for (int i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
         if (i == Platform::get()->getLrtIx()) {
             continue;

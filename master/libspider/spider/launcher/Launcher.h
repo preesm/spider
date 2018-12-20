@@ -77,7 +77,7 @@ public:
     /**
      * @brief Send a notification to all LRT to broadcast their job stamp to other LRT
      */
-    void sendBroadCastNotification();
+    void sendBroadCastNotification(bool delayBroadcoast);
 
     int getNLaunched();
 

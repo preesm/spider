@@ -126,7 +126,7 @@ void RoundRobinScattered::scheduleOnlyConfig(
         Launcher::get()->launchVertex((*list_)[i]);
     }
     /** Send broadcast notification **/
-    Launcher::get()->sendBroadCastNotification();
+    Launcher::get()->sendBroadCastNotification(true);
 
     list_->~List();
     StackMonitor::free(TRANSFO_STACK, list_);

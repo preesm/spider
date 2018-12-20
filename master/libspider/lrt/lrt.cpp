@@ -73,6 +73,7 @@ LRT::LRT(int ix) {
     traceEnabled_ = false;
     repeatJobQueue_ = false;
     freeze_ = false;
+    shouldBroadcast_ = false;
     lastJobID_ = -1;
     jobQueueIndex_ = 0;
     jobQueueSize_ = 0;
@@ -239,21 +240,28 @@ void LRT::handleJobNotification(NotificationMessage &message) {
         case JOB_LAST_ID:
             lastJobID_ = message.getIndex();
             break;
-        case JOB_BROADCAST_JOBSTAMP: {
-            if (jobIx_ < 0) {
-                break;
-            }
-            JobNotificationMessage msg(getIx(), jobIx_);
-            for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
-                if (i == getIx()) {
-                    continue;
-                }
-                lrtCommunicator_->push_data_notification(i, &msg);
-            }
+        case JOB_DELAY_BROADCAST_JOBSTAMP:
+            shouldBroadcast_ = true;
             break;
-        }
+        case JOB_BROADCAST_JOBSTAMP:
+            broadcastJobStamp();
+            break;
         default:
             throwSpiderException("Unhandled type of JOB notification: %u\n", message.getSubType());
+    }
+}
+
+void LRT::broadcastJobStamp() {
+    shouldBroadcast_ = false;
+    if (jobIx_ < 0) {
+        return;
+    }
+    JobNotificationMessage msg(getIx(), jobIx_);
+    for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
+        if (i == getIx()) {
+            continue;
+        }
+        lrtCommunicator_->push_data_notification(i, &msg);
     }
 }
 
@@ -529,9 +537,14 @@ void LRT::run(bool loop) {
             }
         }
         doneWithCurrentJobs = (jobQueueSize_ == jobQueueIndex_);
-        if (doneWithCurrentJobs && !loop) {
-            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- exiting iteration.\n", getIx());
-            break;
+        if (doneWithCurrentJobs) {
+            if (shouldBroadcast_) {
+                broadcastJobStamp();
+            }
+            if (!loop) {
+                Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- exiting iteration.\n", getIx());
+                break;
+            }
         }
     }
 

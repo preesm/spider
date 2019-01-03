@@ -222,7 +222,6 @@ void jit_ms(
         // Run
         Platform::get()->getLrt()->runUntilNoMoreJobs();
 
-
         /* Resolve params must be done by itself */
         Launcher::get()->resolveParams(archi, topSrdag);
 

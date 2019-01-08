@@ -507,7 +507,7 @@ void LRT::run(bool loop) {
                     "QueuSize mismatch with number of jobs to do. LRT: %d -- queueSize: %d -- lastJobID: %d", getIx(),
                     jobQueueSize_, lastJobID_);
         }
-        /** 1. If no notification and JOB queue is not empty **/
+        /** 1. If JOB queue is not empty **/
         if (jobQueueIndex_ < jobQueueSize_) {
             Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- Got %d Jobs to do -- Got %d Jobs in queue -- Done %d.\n",
                           Platform::get()->getLrtIx(), lastJobID_ + 1,

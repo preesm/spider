@@ -88,17 +88,6 @@ public:
 
     void pop_trace_message(TraceMessage **message, std::int32_t id) override;
 
-//    void *trace_start_send(int size) override;
-//
-//    void trace_end_send(int size) override;
-//
-//    int trace_start_recv(void **data) override;
-//
-//    void trace_start_recv_block(void **data) override;
-//
-//    void trace_end_recv() override;
-
-
 private:
     ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;

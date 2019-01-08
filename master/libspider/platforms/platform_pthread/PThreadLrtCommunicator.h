@@ -89,10 +89,6 @@ public:
 
     void push_data_notification(int lrtID, JobNotificationMessage *msg) override;
 
-//    void *trace_start_send(int size) override;
-//
-//    void trace_end_send(int size) override;
-
     void *data_start_send(Fifo *f) override;
 
     void data_end_send(Fifo *f) override;

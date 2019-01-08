@@ -141,10 +141,11 @@ void Spider::iterate() {
     Time start = Platform::get()->getTime();
     if (isStatic_) {
         if (!srdag_) {
-            /** On first iteraton, the schedule is created **/
+            /** On first iteration, the schedule is created **/
             srdag_ = new SRDAGGraph();
             schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
         } else {
+            /** If a static schedule exist, we just play it **/
             schedule_->execute();
         }
     } else {

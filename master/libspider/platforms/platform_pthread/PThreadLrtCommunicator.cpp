@@ -73,15 +73,6 @@ void PThreadLrtCommunicator::pop_job_message(JobInfoMessage **msg, std::int32_t 
     spider2LrtJobQueue_->pop(msg, id);
 }
 
-
-//void *PThreadLrtCommunicator::trace_start_send(int size) {
-//    return traceQueue_->push_start(Platform::get()->getLrtIx(), size);
-//}
-//
-//void PThreadLrtCommunicator::trace_end_send(int size) {
-//    return traceQueue_->push_end(Platform::get()->getLrtIx(), size);
-//}
-
 void PThreadLrtCommunicator::data_end_send(Fifo */*f*/) {
     // Nothing to do
 }

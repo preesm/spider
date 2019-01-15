@@ -272,29 +272,30 @@ namespace Spider {
             const char *name,
             int nInParam);
 
-    PiSDFParam *addStaticParam(
-            PiSDFGraph *graph,
-            const char *name,
-            const char *expr);
+    void addSubGraph(PiSDFVertex *hierVertex, PiSDFGraph *subgraph);
 
-    PiSDFParam *addStaticParam(
-            PiSDFGraph *graph,
-            const char *name,
-            Param value);
+    PiSDFParam *addStaticParam(PiSDFGraph *graph,
+                               const char *name,
+                               Param value);
 
-    PiSDFParam *addHeritedParam(
-            PiSDFGraph *graph,
-            const char *name,
-            int parentId);
+    PiSDFParam *addStaticDependentParam(PiSDFGraph *graph,
+                                        const char *name,
+                                        const char *expr,
+                                        std::initializer_list<PiSDFParam *> dependencies);
 
-    PiSDFParam *addDynamicParam(
-            PiSDFGraph *graph,
-            const char *name);
+    PiSDFParam *addHeritedParam(PiSDFGraph *graph,
+                                const char *name,
+                                int parentId);
 
-    PiSDFParam *addStaticDependentParam(
-            PiSDFGraph *graph,
-            const char *name,
-            const char *expr);
+    PiSDFParam *addDynamicParam(PiSDFGraph *graph,
+                                const char *name);
+
+    PiSDFParam *addPiSDFParameter(PiSDFGraph *graph,
+                                  const char *name,
+                                  const char *expr,
+                                  PiSDFVertex *setter,
+                                  int portID,
+                                  std::initializer_list<PiSDFParam *> dependencies);
 
     PiSDFParam *addDynamicDependentParam(
             PiSDFGraph *graph,

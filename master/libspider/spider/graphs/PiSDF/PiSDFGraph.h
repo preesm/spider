@@ -79,6 +79,7 @@ public:
             const char *name,
             int nInParam);
 
+
     PiSDFParam *addStaticParam(const char *name, const char *expr);
 
     PiSDFParam *addStaticParam(const char *name, int value);
@@ -90,6 +91,8 @@ public:
     PiSDFParam *addStaticDependentParam(const char *name, const char *expr);
 
     PiSDFParam *addDynamicDependentParam(const char *name, const char *expr);
+
+    inline void addPiSDFParam(PiSDFParam *param);
 
     /** Element getters */
     inline PiSDFEdge *getEdge(int ix);
@@ -216,6 +219,10 @@ inline PiSDFVertex *PiSDFGraph::getParentVertex() {
 
 inline void PiSDFGraph::setParentVertex(PiSDFVertex *parent) {
     parent_ = parent;
+}
+
+inline void PiSDFGraph::addPiSDFParam(PiSDFParam *param) {
+    params_.add(param);
 }
 
 #endif/*PISDF_GRAPH_H*/

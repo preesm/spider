@@ -60,24 +60,27 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx) {
     job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), Param);
     for (int paramIx = 0; paramIx < job->graph->getNParam(); paramIx++) {
         PiSDFParam *param = job->graph->getParam(paramIx);
-        switch (param->getType()) {
-            case PISDF_PARAM_STATIC:
-                job->paramValues[paramIx] = param->getStaticValue();
-                break;
-            case PISDF_PARAM_HERITED:
-                job->paramValues[paramIx] = nextHierVx->getInParam(param->getParentId());
-                break;
-            case PISDF_PARAM_DYNAMIC:
-                // Do nothing, cannot be evaluated yet
-                job->paramValues[paramIx] = -1;
-                break;
-            case PISDF_PARAM_DEPENDENT_STATIC:
-                job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
-                break;
-            case PISDF_PARAM_DEPENDENT_DYNAMIC:
-                job->paramValues[paramIx] = -1;
-                break;
-        }
+        job->paramValues[paramIx] = param->getValue();
+        // For dependent parameters
+        param->resetEvaluation();
+//        switch (param->getType()) {
+//            case PISDF_PARAM_STATIC:
+//                job->paramValues[paramIx] = param->getStaticValue();
+//                break;
+//            case PISDF_PARAM_HERITED:
+//                job->paramValues[paramIx] = nextHierVx->getInParam(param->getParentId());
+//                break;
+//            case PISDF_PARAM_DYNAMIC:
+//                // Do nothing, cannot be evaluated yet
+//                job->paramValues[paramIx] = -1;
+//                break;
+//            case PISDF_PARAM_DEPENDENT_STATIC:
+//                job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
+//                break;
+//            case PISDF_PARAM_DEPENDENT_DYNAMIC:
+//                job->paramValues[paramIx] = -1;
+//                break;
+//        }
     }
 
     /* Add edge interfaces in job */
@@ -239,9 +242,10 @@ void jit_ms(
             /* Recompute Dependent Dynamic Params */
             for (int paramIx = 0; paramIx < job->graph->getNParam(); paramIx++) {
                 PiSDFParam *param = job->graph->getParam(paramIx);
-                if (param->getType() == PISDF_PARAM_DEPENDENT_DYNAMIC) {
-                    job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
-                }
+                job->paramValues[paramIx] = param->getValue();
+//                if (param->getType() == PISDF_PARAM_DEPENDENT_DYNAMIC) {
+//                    job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
+//                }
             }
 
             if (Spider::getVerbose()) {

@@ -58,7 +58,7 @@ SRDAGVertex::SRDAGVertex(
         int nInParam, int nOutParam) {
 
 
-    //id_ = globalId++;
+    //globalID_ = globalId++;
     id_ = globalId;
 
     type_ = type;

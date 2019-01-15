@@ -39,6 +39,7 @@
 #include <graphs/SRDAG/SRDAGGraph.h>
 #include <SpiderCommunicator.h>
 #include <launcher/Launcher.h>
+#include <Logger.h>
 
 Launcher Launcher::instance_;
 
@@ -62,14 +63,14 @@ Launcher *Launcher::get() {
 
 void Launcher::send_ResetLrtMsg(int) {
 //    auto msg = (Message *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(Message));
-//    msg->id_ = MSG_RESET_LRT;
+//    msg->globalID_ = MSG_RESET_LRT;
 //    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(Message));
 }
 
 void Launcher::send_ClearTimeMsg(int) {
 //    auto msg = (ClearTimeMessage *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx,
 //                                                                                              sizeof(ClearTimeMessage));
-//    msg->id_ = MSG_CLEAR_TIME;
+//    msg->globalID_ = MSG_CLEAR_TIME;
 //    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMessage));
 }
 
@@ -195,6 +196,7 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
                 ParameterMessage *parameterMessage;
                 Platform::get()->getSpiderCommunicator()->pop_parameter_message(&parameterMessage, message.getIndex());
                 SRDAGVertex *vertex = topDag->getVertexFromIx(parameterMessage->getVertexID());
+                auto *referenceVertex = vertex->getReference();
                 if (vertex->getNOutParam() != parameterMessage->getNParam()) {
                     throwSpiderException("Expected %d parameters -- got %d", vertex->getNOutParam(),
                                          parameterMessage->getParams());
@@ -203,10 +205,13 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
                 for (int i = 0; i < vertex->getNOutParam(); ++i) {
                     auto *param = vertex->getOutParam(i);
                     (*param) = receivedParams[i];
+                    auto *referenceParameter = (PiSDFParam *) referenceVertex->getOutParam(i);
+                    referenceParameter->setValue((*param));
                     if (Spider::getVerbose()) {
                         auto *parameterName = vertex->getReference()->getOutParam(i)->getName();
-                        fprintf(stderr, "INFO: Received Parameter: %s -- Value: %" PRId64"\n", parameterName,
-                                receivedParams[i]);
+                        Logger::print(LOG_GENERAL, LOG_INFO, "Received Parameter: %s -- Value: %" PRId64"\n",
+                                      parameterName,
+                                      receivedParams[i]);
                     }
                 }
                 curNParam_ -= vertex->getNOutParam();

@@ -52,7 +52,7 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
                 for (int j = 0; j < brv[bodyIx]; j++) {
                     job->bodies[bodyIx][j] = topSrdag->addVertex(pi_vertex, j, job->graphIter);
                     for (int i = 0; i < pi_vertex->getNInParam(); i++) {
-                        job->bodies[bodyIx][j]->addInParam(i, job->paramValues[pi_vertex->getInParam(i)->getTypeIx()]);
+                        job->bodies[bodyIx][j]->addInParam(i, job->paramValues[pi_vertex->getInParam(i)->getLocalID()]);
                     }
                 }
                 break;
@@ -110,10 +110,10 @@ void addCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
             job->configs[configIx] = topSrdag->addVertex(config, 0, job->graphIter);
 
             for (int i = 0; i < config->getNInParam(); i++) {
-                job->configs[configIx]->addInParam(i, job->paramValues[config->getInParam(i)->getTypeIx()]);
+                job->configs[configIx]->addInParam(i, job->paramValues[config->getInParam(i)->getLocalID()]);
             }
             for (int i = 0; i < config->getNOutParam(); i++) {
-                job->configs[configIx]->addOutParam(i, &(job->paramValues[config->getOutParam(i)->getTypeIx()]));
+                job->configs[configIx]->addOutParam(i, &(job->paramValues[config->getOutParam(i)->getLocalID()]));
             }
         }
     }

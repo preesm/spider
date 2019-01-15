@@ -38,6 +38,8 @@
 #include <cmath>
 #include <graphTransfo/GraphTransfo.h>
 #include <parser/Expression.h>
+#include "Expression.h"
+
 
 #define MAX_NVAR_ELEMENTS 100
 #define REVERSE_POLISH_STACK_MAX_ELEMENTS 100
@@ -189,7 +191,7 @@ Param Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, 
                 stackPtr++;
                 break;
             case PARAMETER:
-                *stackPtr = job->paramValues[paramList[inputPtr->paramIx]->getTypeIx()];
+                *stackPtr = job->paramValues[paramList[inputPtr->paramIx]->getLocalID()];
                 stackPtr++;
                 break;
             default:
@@ -199,6 +201,89 @@ Param Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, 
     }
     if (ok) *ok = true;
     return (Param) stack[0];
+}
+
+Param Expression::evaluate() const {
+    float stack[MAX_NVAR_ELEMENTS];
+    float *stackPtr = stack;
+    const Token *inputPtr = stack_;
+
+    while (stack_ + nElt_ > inputPtr) {
+        switch (inputPtr->type) {
+            case OPERATOR:
+                switch (inputPtr->opType) {
+                    case ADD:
+                        if (stackPtr - stack >= 2) {
+                            stackPtr--;
+                            *(stackPtr - 1) += *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                    case SUB:
+                        if (stackPtr - stack >= 2) {
+                            stackPtr--;
+                            *(stackPtr - 1) -= *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                    case MUL:
+                        if (stackPtr - stack >= 2) {
+                            stackPtr--;
+                            *(stackPtr - 1) *= *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                    case DIV:
+                        if (stackPtr - stack >= 2) {
+                            stackPtr--;
+                            *(stackPtr - 1) /= *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                    case POW:
+                        if (stackPtr - stack >= 2) {
+                            stackPtr--;
+                            *(stackPtr - 1) = pow((double) *(stackPtr - 1), *stackPtr);
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                    case FLOOR:
+                        if (stackPtr - stack >= 1) {
+                            *(stackPtr - 1) = floor(*(stackPtr - 1));
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                    case CEIL:
+                        if (stackPtr - stack >= 1) {
+                            *(stackPtr - 1) = ceil(*(stackPtr - 1));
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                }
+                break;
+            case VALUE:
+                *stackPtr = inputPtr->value;
+                stackPtr++;
+                break;
+            case PARAMETER:
+                *stackPtr = inputPtr->param->getValue();
+                if (*stackPtr == -1)
+                    return -1; // Not resolved TODO handle better not resolved dependent params
+                stackPtr++;
+                break;
+            default:
+                throwSpiderException("Parenthesis in evaluated var.");
+        }
+        inputPtr++;
+    }
+    return stack[0];
 }
 
 Param Expression::evaluate(const Param *vertexParamValues, int nParam) const {
@@ -454,7 +539,8 @@ bool Expression::getNextToken(
                 token->type = PARAMETER;
                 if (nb == strlen(params[i]->getName())
                     && strncmp(params[i]->getName(), name, nb) == 0) {
-                    token->paramIx = i/*params[i]->getTypeIx()*/;
+                    token->paramIx = i/*params[i]->getLocalID()*/;
+                    token->param = (PiSDFParam*) params[i];
                     return true;
                 }
             }
@@ -465,4 +551,6 @@ bool Expression::getNextToken(
     }
     throwSpiderException("Failed parsing..");
 }
+
+
 

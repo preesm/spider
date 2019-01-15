@@ -38,6 +38,7 @@
 #define PARSER_EXPRESSION_H
 
 #include <graphs/PiSDF/PiSDFParam.h>
+//#include "spider.h"
 
 struct transfoJob;
 
@@ -51,11 +52,17 @@ public:
 
     Param evaluate(const Param *vertexParamValues, int nParam) const;
 
+    Param evaluate() const;
+
     void toString(
             const PiSDFParam *const *params, int nParam,
             char *out, int outSizeMax);
 
 private:
+//    ParamSymbolTable symbolTable_;
+//    ParamExpression expression_;
+//    exprtk::parser<Param>  parser_;
+
     typedef enum {
         OPERATOR,
         VALUE,
@@ -79,6 +86,7 @@ private:
         OpType opType;
         int value;
         int paramIx;
+        PiSDFParam *param;
     } Token;
 
     Token *stack_;

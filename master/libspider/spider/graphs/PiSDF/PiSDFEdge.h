@@ -84,11 +84,11 @@ public:
     inline void addInParam(int ix, PiSDFParam *param);
 
     /** Compute Fcts */
-    inline int resolveProd(transfoJob *job) const;
+    inline Param resolveProd(transfoJob *job) const;
 
-    inline int resolveCons(transfoJob *job) const;
+    inline Param resolveCons(transfoJob *job) const;
 
-    inline int resolveDelay(transfoJob *job);
+    inline Param resolveDelay(transfoJob *job);
 
     inline void getProdExpr(char *out, int sizeOut);
 
@@ -185,15 +185,15 @@ inline void PiSDFEdge::setMemoryDelayAlloc(int memDelayAlloc) {
     memDelayAlloc_ = memDelayAlloc;
 }
 
-inline int PiSDFEdge::resolveProd(transfoJob *job) const {
+inline Param PiSDFEdge::resolveProd(transfoJob *job) const {
     return prod_->evaluate(src_->getInParams(), job);
 }
 
-inline int PiSDFEdge::resolveCons(transfoJob *job) const {
+inline Param PiSDFEdge::resolveCons(transfoJob *job) const {
     return cons_->evaluate(snk_->getInParams(), job);
 }
 
-inline int PiSDFEdge::resolveDelay(transfoJob *job) {
+inline Param PiSDFEdge::resolveDelay(transfoJob *job) {
     return delay_->evaluate(graph_->getParams(), job);
 }
 

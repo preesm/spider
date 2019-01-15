@@ -58,7 +58,7 @@ SRDAGEdge::SRDAGEdge() {
 
 SRDAGEdge::SRDAGEdge(SRDAGGraph *graph, int globalId) {
 
-    //id_ = globalId++;
+    //globalID_ = globalId++;
     id_ = globalId;
 
     graph_ = graph;

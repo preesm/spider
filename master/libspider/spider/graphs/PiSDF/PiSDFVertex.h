@@ -246,8 +246,10 @@ inline void PiSDFVertex::addOutParam(int ix, PiSDFParam *param) {
         throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nOutParam_);
     else if (outParams_[ix] != nullptr)
         throwSpiderException("Vertex [%s] --> Trying to erase already connected output param.", name_);
-    else
+    else {
         outParams_[ix] = param;
+        param->setSetter(this, ix);
+    }
 }
 
 /** General getters */

@@ -171,25 +171,6 @@ static int getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) 
     for (int paramIx = 0; paramIx < job->graph->getNParam(); paramIx++) {
         PiSDFParam *param = job->graph->getParam(paramIx);
         job->paramValues[paramIx] = param->getValue();
-
-//        switch (param->getType()) {
-//            case PISDF_PARAM_STATIC:
-//                job->paramValues[paramIx] = param->getStaticValue();
-//                break;
-//            case PISDF_PARAM_HERITED:
-//                job->paramValues[paramIx] = graph->getParentVertex()->getInParam(param->getParentId())->getValue();
-//                break;
-//            case PISDF_PARAM_DYNAMIC:
-//                // Do nothing, cannot be evaluated yet
-//                job->paramValues[paramIx] = -1;
-//                break;
-//            case PISDF_PARAM_DEPENDENT_STATIC:
-//                job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
-//                break;
-//            case PISDF_PARAM_DEPENDENT_DYNAMIC:
-//                job->paramValues[paramIx] = -1;
-//                break;
-//        }
     }
     int memReserved = currentMemReserved;
     // Compute the total memory allocation needed for delays in current graph
@@ -748,13 +729,6 @@ PiSDFVertex *Spider::addOutputIf(
             nInParam);
 }
 
-PiSDFParam *Spider::addDynamicDependentParam(
-        PiSDFGraph *graph,
-        const char *name,
-        const char *expr) {
-    return graph->addDynamicDependentParam(name, expr);
-}
-
 PiSDFEdge *Spider::connect(
         PiSDFGraph *graph,
         PiSDFVertex *source, int sourcePortId, const char *production,
@@ -810,24 +784,14 @@ PiSDFParam *Spider::addStaticParam(PiSDFGraph *graph,
     return param;
 }
 
-PiSDFParam *Spider::addStaticDependentParam(PiSDFGraph *graph,
-                                            const char *name,
-                                            const char *expr,
-                                            std::initializer_list<PiSDFParam *> dependencies) {
-    auto *param = CREATE(PISDF_STACK, PiSDFParam)(name, expr, PISDF_PARAM_STATIC, graph, graph->getNParam(),
-                                                  dependencies);
-    graph->addPiSDFParam(param);
-    return param;
-}
 
-PiSDFParam *Spider::addHeritedParam(
-        PiSDFGraph *graph,
-        const char *name,
-        int parentId) {
+PiSDFParam *Spider::addInheritedParam(PiSDFGraph *graph,
+                                      const char *name,
+                                      int parentId) {
     auto *parentVertex = graph->getParentVertex();
     auto *heritedParam = (PiSDFParam *) parentVertex->getInParam(parentId);
     auto *param = CREATE(PISDF_STACK, PiSDFParam)(name, "", PISDF_PARAM_HERITED, graph, graph->getNParam());
-    param->setHeritedParemeter(heritedParam);
+    param->setInheritedParameter(heritedParam);
     graph->addPiSDFParam(param);
     return param;
 }
@@ -839,16 +803,27 @@ PiSDFParam *Spider::addDynamicParam(PiSDFGraph *graph,
     return param;
 }
 
-PiSDFParam *Spider::addPiSDFParameter(PiSDFGraph *graph,
-                                      const char *name,
-                                      const char *expr,
-                                      PiSDFVertex *setter,
-                                      int portID,
-                                      std::initializer_list<PiSDFParam *> dependencies) {
-    auto *param = CREATE(PISDF_STACK, PiSDFParam)(name, expr, PISDF_PARAM_DYNAMIC, graph, graph->getNParam(),
-                                                  dependencies);
-    param->setSetter(setter, portID);
+static inline PiSDFParam *addDependentParam(PiSDFGraph *graph,
+                                            const char *name,
+                                            const char *expr,
+                                            std::initializer_list<PiSDFParam *> dependencies,
+                                            PiSDFParamType type) {
+    auto *param = CREATE(PISDF_STACK, PiSDFParam)(name, expr, type, graph, graph->getNParam(), dependencies);
     graph->addPiSDFParam(param);
     return param;
+}
+
+PiSDFParam *Spider::addStaticDependentParam(PiSDFGraph *graph,
+                                            const char *name,
+                                            const char *expr,
+                                            std::initializer_list<PiSDFParam *> dependencies) {
+    return addDependentParam(graph, name, expr, dependencies, PISDF_PARAM_STATIC);
+}
+
+PiSDFParam *Spider::addDynamicDependentParam(PiSDFGraph *graph,
+                                             const char *name,
+                                             const char *expr,
+                                             std::initializer_list<PiSDFParam *> dependencies) {
+    return addDependentParam(graph, name, expr, dependencies, PISDF_PARAM_DYNAMIC);
 }
 

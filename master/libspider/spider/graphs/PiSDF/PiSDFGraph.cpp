@@ -166,51 +166,9 @@ PiSDFVertex *PiSDFGraph::addOutputIf(
 }
 
 
-PiSDFParam *PiSDFGraph::addStaticParam(const char *name, const char *expr) {
-    auto *param = CREATE(PISDF_STACK, PiSDFParam)(
-            name, nullptr, PISDF_PARAM_STATIC, this, params_.getN());
-    try {
-        param->setValue(std::stoi(expr));
-    } catch (std::exception &e) {
-        throwSpiderException("Failed to convert to int --> [%s]", e.what());
-    }
-    params_.add(param);
-    return param;
-}
-
-PiSDFParam *PiSDFGraph::addStaticParam(const char *name, int value) {
-    auto *param = CREATE(PISDF_STACK, PiSDFParam)(
-            name, nullptr, PISDF_PARAM_STATIC, this, params_.getN());
-    param->setValue(value);
-    params_.add(param);
-    return param;
-}
-
-PiSDFParam *PiSDFGraph::addHeritedParam(const char *name, int parentId) {
-    auto *param = CREATE(PISDF_STACK, PiSDFParam)(
-            name, nullptr, PISDF_PARAM_HERITED, this, params_.getN());
-    param->setParentId(parentId);
-    params_.add(param);
-    return param;
-}
-
-PiSDFParam *PiSDFGraph::addDynamicParam(const char *name) {
-    auto *param = CREATE(PISDF_STACK, PiSDFParam)(
-            name, nullptr, PISDF_PARAM_DYNAMIC, this, params_.getN());
-    params_.add(param);
-    return param;
-}
-
 PiSDFParam *PiSDFGraph::addDynamicDependentParam(const char *name, const char *expr) {
     auto *param = CREATE(PISDF_STACK, PiSDFParam)(
             name, expr, PISDF_PARAM_DEPENDENT_DYNAMIC, this, params_.getN());
-    params_.add(param);
-    return param;
-}
-
-PiSDFParam *PiSDFGraph::addStaticDependentParam(const char *name, const char *expr) {
-    auto *param = CREATE(PISDF_STACK, PiSDFParam)(
-            name, expr, PISDF_PARAM_DEPENDENT_STATIC, this, params_.getN());
     params_.add(param);
     return param;
 }

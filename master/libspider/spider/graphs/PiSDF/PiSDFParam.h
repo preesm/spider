@@ -74,28 +74,16 @@ public:
 
     inline PiSDFParamType getType() const;
 
-    inline Param getStaticValue() const;
-
-    inline int getParentId() const;
-
-    inline Expression *getExpression();
-
     inline Param getValue();
 
-//    inline Param getValue() const;
+    inline bool isDynamic();
 
     /** Setters */
     inline void setValue(Param value);
 
-    inline void resetEvaluation();
-
-    inline void setParentId(int parentId);
-
-    inline void setHeritedParemeter(PiSDFParam *heritedParameter);
+    inline void setInheritedParameter(PiSDFParam *inheritedParameter);
 
     inline void setSetter(PiSDFVertex *setter, int portIx);
-
-    inline void setExpression(Expression *expr);
 
 private:
     /**
@@ -136,7 +124,7 @@ private:
     /**
     * @brief Pointer to original parameter if parameter if of type HERITED.
     */
-    PiSDFParam *heritedParam_;
+    PiSDFParam *inheritedParam_;
 
     /**
      * @brief Vertex setting the parameter's value if it is of type DYNAMIC.
@@ -153,16 +141,12 @@ private:
      */
     Expression *expr_;
 
+    /**
+     * @brief Evaluate the expression of the parameter (if any)
+     * @return evaluated expression, current value if parameter has no expression
+     */
     Param evaluateExpression();
 
-    /**
-     * @brief Flag indicating that the expression has already been evaluated.
-     */
-    bool isEvaluated;
-
-
-
-    int parentId_;
     int portIx_;
 };
 
@@ -185,48 +169,17 @@ inline PiSDFParamType PiSDFParam::getType() const {
 }
 
 inline Param PiSDFParam::getValue() {
-    if (heritedParam_) {
-        value_ = heritedParam_->getValue();
-    } else if (!dependencies_.empty() && !isEvaluated) {
-        isEvaluated = true;
+    if (inheritedParam_) {
+        value_ = inheritedParam_->getValue();
+    } else if (!dependencies_.empty()) {
         value_ = evaluateExpression();
     }
     return value_;
 }
 
-
-inline Param PiSDFParam::getStaticValue() const {
-    if (type_ != PISDF_PARAM_STATIC) {
-        throwSpiderException("Dynamic param [%s] used as Static param.", name_.c_str());
-    }
-    return value_;
-}
-
-inline int PiSDFParam::getParentId() const {
-    if (type_ != PISDF_PARAM_HERITED) {
-        throwSpiderException("Not Herited param [%s] used as Herited param.", name_.c_str());
-    }
-    return parentId_;
-}
-
-inline Expression *PiSDFParam::getExpression() {
-    return expr_;
-}
-
 /** Setters */
 inline void PiSDFParam::setValue(Param value) {
     value_ = value;
-}
-
-inline void PiSDFParam::resetEvaluation() {
-    if (!dependencies_.empty()) {
-        isEvaluated = false;
-        value_ = -1;
-    }
-}
-
-inline void PiSDFParam::setParentId(int parentId) {
-    parentId_ = parentId;
 }
 
 inline void PiSDFParam::setSetter(PiSDFVertex *setter, int portIx) {
@@ -239,12 +192,12 @@ inline void PiSDFParam::setSetter(PiSDFVertex *setter, int portIx) {
     portIx_ = portIx;
 }
 
-inline void PiSDFParam::setExpression(Expression *expr) {
-    expr_ = expr;
+inline void PiSDFParam::setInheritedParameter(PiSDFParam *inheritedParameter) {
+    inheritedParam_ = inheritedParameter;
 }
 
-inline void PiSDFParam::setHeritedParemeter(PiSDFParam *heritedParameter) {
-    heritedParam_ = heritedParameter;
+inline bool PiSDFParam::isDynamic() {
+    return type_ == PISDF_PARAM_DYNAMIC;
 }
 
 

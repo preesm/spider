@@ -40,6 +40,8 @@
 #include <graphs/PiSDF/PiSDFGraph.h>
 #include <graphs/PiSDF/PiSDFParam.h>
 #include <parser/Expression.h>
+#include "PiSDFParam.h"
+
 
 /** Static Var def */
 static std::int32_t globalID = 0;
@@ -56,26 +58,9 @@ PiSDFParam::PiSDFParam(
     localID_ = localID;
     graph_ = graph;
     type_ = type;
-    heritedParam_ = nullptr;
+    inheritedParam_ = nullptr;
     setter_ = nullptr;
     value_ = -1;
-    parentId_ = -1;
-    portIx_ = -1;
-//    switch (type) {
-//        case PISDF_PARAM_DEPENDENT_STATIC:
-//        case PISDF_PARAM_DEPENDENT_DYNAMIC:
-//            expr_ = CREATE(PISDF_STACK, Expression)(
-//                    expr,
-//                    graph->getParams(),
-//                    graph->getNParam());
-//            break;
-//        case PISDF_PARAM_STATIC:
-//        case PISDF_PARAM_HERITED:
-//        case PISDF_PARAM_DYNAMIC:
-//        default:
-//            expr_ = nullptr;
-//            break;
-//    }
 }
 
 
@@ -132,17 +117,8 @@ Param PiSDFParam::evaluateExpression() {
     if (expr_) {
         return expr_->evaluate();
     }
-    return -1;
+    return value_;
 }
-
-//inline Param PiSDFParam::getValue() const {
-//    if (heritedParam_) {
-//        return heritedParam_->getValue();
-//    } else if (!dependencies_.empty() && !isEvaluated) {
-//        return expr_->evaluate();
-//    }
-//    return value_;
-//}
 
 PiSDFParam::~PiSDFParam() {
     if (expr_) {

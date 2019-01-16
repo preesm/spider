@@ -92,14 +92,14 @@ static bool verbose_;
 static bool useGraphOptim_;
 static bool useActorPrecedence_;
 static bool traceEnabled_;
-static bool isStatic_;
 
 static bool isGraphStatic(PiSDFGraph *const graph) {
+    bool isStatic = true;
     for (int i = 0; i < graph->getNParam(); ++i) {
         auto *param = graph->getParam(i);
         switch (param->getType()) {
             case PISDF_PARAM_DYNAMIC:
-                return false;
+                isStatic = false;
             default:
                 break;
         }
@@ -107,13 +107,12 @@ static bool isGraphStatic(PiSDFGraph *const graph) {
     for (int j = 0; j < graph->getNBody(); ++j) {
         PiSDFVertex *vertex = graph->getBody(j);
         if (vertex->isHierarchical()) {
-            auto isChildStatic = isGraphStatic(vertex->getSubGraph());
-            if (!isChildStatic) {
-                return false;
-            }
+            auto *subGraph = vertex->getSubGraph();
+            subGraph->setGraphStaticProperty(isGraphStatic(subGraph));
+            isStatic &= subGraph->isGraphStatic();
         }
     }
-    return true;
+    return isStatic;
 }
 
 void Spider::init(SpiderConfig &cfg) {
@@ -139,7 +138,7 @@ void Spider::iterate() {
     Platform::get()->rstTime();
     // Time measurement -- START
     Time start = Platform::get()->getTime();
-    if (isStatic_) {
+    if (pisdf_->isGraphStatic()) {
         if (!srdag_) {
             /** On first iteration, the schedule is created **/
             srdag_ = new SRDAGGraph();
@@ -279,8 +278,9 @@ void Spider::setGraph(PiSDFGraph *graph) {
     pisdf_ = graph;
 
     // Detect the static property of the graph
-    isStatic_ = isGraphStatic(pisdf_->getBody(0)->getSubGraph());
-    if (isStatic_) {
+    pisdf_->setGraphStaticProperty(isGraphStatic(pisdf_->getBody(0)->getSubGraph()));
+
+    if (pisdf_->isGraphStatic()) {
         Platform::get()->fprintf(stderr, "Graph [%s] is static.\n", pisdf_->getBody(0)->getName());
     } else {
         Platform::get()->fprintf(stderr, "Graph [%s] is not fully static.\n", pisdf_->getBody(0)->getName());

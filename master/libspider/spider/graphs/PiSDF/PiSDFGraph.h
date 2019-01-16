@@ -79,9 +79,6 @@ public:
             const char *name,
             int nInParam);
 
-
-    PiSDFParam *addDynamicDependentParam(const char *name, const char *expr);
-
     inline void addPiSDFParam(PiSDFParam *param);
 
     /** Element getters */
@@ -114,8 +111,20 @@ public:
     /** General getters */
     inline PiSDFVertex *getParentVertex();
 
+    /**
+     * @brief Get graph static property
+     * @return true if the graph is static, false else
+     */
+    inline bool isGraphStatic();
+
     /** General setters */
     inline void setParentVertex(PiSDFVertex *parent);
+
+    /**
+     * @brief Set the graph static property
+     * @param isStatic true if the graph is static, false else
+     */
+    inline void setGraphStaticProperty(bool isStatic);
 
     /** Print Fct */
     void print(const char *path);
@@ -145,6 +154,8 @@ private:
     PiSDFVertexSet outputIfs_;
 
     PiSDFEdge *addEdge();
+
+    bool isStatic_;
 };
 
 /** Inline Fcts */
@@ -213,6 +224,15 @@ inline void PiSDFGraph::setParentVertex(PiSDFVertex *parent) {
 
 inline void PiSDFGraph::addPiSDFParam(PiSDFParam *param) {
     params_.add(param);
+}
+
+inline bool PiSDFGraph::isGraphStatic() {
+    return isStatic_;
+}
+
+/** General setter **/
+inline void PiSDFGraph::setGraphStaticProperty(bool isStatic) {
+    isStatic_ = isStatic;
 }
 
 #endif/*PISDF_GRAPH_H*/

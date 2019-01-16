@@ -77,6 +77,7 @@ PiSDFParam::PiSDFParam(
     localID_ = localID;
     graph_ = graph;
     type_ = type;
+    inheritedParam_ = nullptr;
     setter_ = nullptr;
     value_ = -1;
 //    using ParamSymbolTable = exprtk::symbol_table<double>;

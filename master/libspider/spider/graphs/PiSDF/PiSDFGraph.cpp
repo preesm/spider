@@ -50,6 +50,7 @@ PiSDFGraph::PiSDFGraph(
         inputIfs_(nInputIf, PISDF_STACK),
         outputIfs_(nOutputIf, PISDF_STACK) {
     parent_ = nullptr;
+    isStatic_ = false;
 }
 
 PiSDFGraph::~PiSDFGraph() {
@@ -163,14 +164,6 @@ PiSDFVertex *PiSDFGraph::addOutputIf(
             nInParam, 0);
     outputIfs_.add(outIf);
     return outIf;
-}
-
-
-PiSDFParam *PiSDFGraph::addDynamicDependentParam(const char *name, const char *expr) {
-    auto *param = CREATE(PISDF_STACK, PiSDFParam)(
-            name, expr, PISDF_PARAM_DEPENDENT_DYNAMIC, this, params_.getN());
-    params_.add(param);
-    return param;
 }
 
 PiSDFEdge *PiSDFGraph::addEdge() {

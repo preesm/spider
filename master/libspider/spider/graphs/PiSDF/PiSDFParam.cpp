@@ -80,33 +80,15 @@ PiSDFParam::PiSDFParam(
     inheritedParam_ = nullptr;
     setter_ = nullptr;
     value_ = -1;
-//    using ParamSymbolTable = exprtk::symbol_table<double>;
-//    using ParamExpression = exprtk::expression<double>;
-//    using ParamParser = exprtk::parser<double>;
-//
-//    ParamSymbolTable symbolTable;
-//    ParamExpression expression;
-//    ParamParser parser;
-//
-//    // 0. Build the symbol table
-//    for (auto p : dependencies_) {
-//        symbolTable.add_variable(p->getName(), p->getValue());
-//    }
-//    symbolTable.add_constants();
-//
-//    // 1. Register the symbols
-//    expression.register_symbol_table(symbolTable);
-//
-//    // 2. Compile the expression
-//    parser.compile(expressionString_, expression);
+    // 1. Creates the expression
     expr_ = CREATE(PISDF_STACK, Expression)(expressionString_.c_str(), dependencies_.data(), dependencies.size());
     // If parameter is static, it can be resolved now
     if (type == PISDF_PARAM_STATIC) {
-        // 3. Resolve expression
+        // 2. Resolve expression
         value_ = expr_->evaluate();
-        // 4. Clear dependencies, we won't need them anymore
+        // 3. Clear dependencies, we won't need them anymore
         dependencies_.clear();
-        // 5. Delete the expression, we won't need it anymore
+        // 4. Delete the expression, we won't need it anymore
         expr_->~Expression();
         StackMonitor::free(PISDF_STACK, expr_);
         expr_ = nullptr;

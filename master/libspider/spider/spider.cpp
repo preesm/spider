@@ -93,17 +93,18 @@ static bool useGraphOptim_;
 static bool useActorPrecedence_;
 static bool traceEnabled_;
 
-static bool isGraphStatic(PiSDFGraph *const graph) {
-    bool isStatic = true;
+static bool containsDynamicParam(PiSDFGraph *const graph) {
     for (int i = 0; i < graph->getNParam(); ++i) {
         auto *param = graph->getParam(i);
-        switch (param->getType()) {
-            case PISDF_PARAM_DYNAMIC:
-                isStatic = false;
-            default:
-                break;
+        if (param->isDynamic()) {
+            return true;
         }
     }
+    return false;
+}
+
+static bool isGraphStatic(PiSDFGraph *const graph) {
+    bool isStatic = !containsDynamicParam(graph);
     for (int j = 0; j < graph->getNBody(); ++j) {
         PiSDFVertex *vertex = graph->getBody(j);
         if (vertex->isHierarchical()) {

@@ -54,12 +54,6 @@ public:
             int nInEdge, int nOutEdge,
             int nInParam);
 
-    PiSDFVertex *addHierVertex(
-            const char *vertexName,
-            PiSDFGraph *graph,
-            int nInEdge, int nOutEdge,
-            int nInParam);
-
     PiSDFVertex *addSpecialVertex(
             PiSDFSubType subType,
             int nInEdge, int nOutEdge,

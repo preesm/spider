@@ -88,24 +88,6 @@ PiSDFVertex *PiSDFGraph::addBodyVertex(
     return body;
 }
 
-PiSDFVertex *PiSDFGraph::addHierVertex(
-        const char *vertexName,
-        PiSDFGraph *graph,
-        int nInEdge, int nOutEdge,
-        int nInParam) {
-    auto *body = CREATE(PISDF_STACK, PiSDFVertex)(
-            vertexName, -1,
-            bodies_.getN(),
-            PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
-            this, nullptr,
-            nInEdge, nOutEdge,
-            nInParam, 0);
-    body->setSubGraph(graph);
-    graph->setParentVertex(body);
-    bodies_.add(body);
-    return body;
-}
-
 PiSDFVertex *PiSDFGraph::addSpecialVertex(
         PiSDFSubType type,
         int nInEdge, int nOutEdge,

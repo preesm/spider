@@ -670,19 +670,6 @@ void Spider::addSubGraph(PiSDFVertex *hierVertex, PiSDFGraph *subgraph) {
     subgraph->setParentVertex(hierVertex);
 }
 
-PiSDFVertex *Spider::addHierVertex(
-        PiSDFGraph *graph,
-        const char *vertexName,
-        PiSDFGraph *subgraph,
-        int nInEdge, int nOutEdge,
-        int nInParam) {
-    return graph->addHierVertex(
-            vertexName,
-            subgraph,
-            nInEdge,
-            nOutEdge,
-            nInParam);
-}
 
 PiSDFVertex *Spider::addSpecialVertex(
         PiSDFGraph *graph,

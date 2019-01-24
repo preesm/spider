@@ -40,23 +40,42 @@
 #include <monitor/TimeMonitor.h>
 #include <launcher/Launcher.h>
 #include <lrt.h>
+#include "Schedule.h"
+
 
 Schedule::Schedule(int nPE, int nJobMax) {
     nPE_ = nPE;
     nJobMax_ = nJobMax;
     nJobs_ = 0;
-    nJobPerPE_ = CREATE_MUL(TRANSFO_STACK, nPE_, int);
-    readyTime_ = CREATE_MUL(TRANSFO_STACK, nPE_, Time);
+//    nJobPerPE_ = CREATE_MUL(TRANSFO_STACK, nPE_, int);
+//    readyTime_ = CREATE_MUL(TRANSFO_STACK, nPE_, Time);
     schedules_ = CREATE_MUL(TRANSFO_STACK, nPE_ * nJobMax_, SRDAGVertex*);
 
-    memset(nJobPerPE_, 0, nPE_ * sizeof(int));
-    memset(readyTime_, 0, nPE_ * sizeof(Time));
+    // Creates array of jobs
+    jobs_ = CREATE_MUL(TRANSFO_STACK, nPE_, std::vector<ScheduleJob *>);
+    nJobPerPE_.reserve((unsigned long) nPE_);
+    readyTime_.reserve((unsigned long) nPE_);
+    for (int i = 0; i < nPE_; ++i) {
+        jobs_[i].reserve((unsigned long) nJobMax_);
+        nJobPerPE_.push_back(0);
+        readyTime_.push_back(0);
+    }
 }
 
 Schedule::~Schedule() {
-    StackMonitor::free(TRANSFO_STACK, nJobPerPE_);
-    StackMonitor::free(TRANSFO_STACK, readyTime_);
+    clearJobs();
+    StackMonitor::free(TRANSFO_STACK, jobs_);
     StackMonitor::free(TRANSFO_STACK, schedules_);
+}
+
+void Schedule::clearJobs() {
+    for (int i = 0; i < nPE_; ++i) {
+        for (auto &job:jobs_[i]) {
+            job->~ScheduleJob();
+            StackMonitor::free(TRANSFO_STACK, job);
+        }
+        jobs_[i].clear();
+    }
 }
 
 void Schedule::addJob(int pe, SRDAGVertex *job, Time start, Time end) {
@@ -76,31 +95,64 @@ void Schedule::addJob(int pe, SRDAGVertex *job, Time start, Time end) {
     job->setEndTime(end);
 }
 
+ScheduleJob *Schedule::findJobFromVertex(SRDAGVertex *vertex) {
+    if (vertex) {
+        for (int i = 0; i < nPE_; ++i) {
+            for (auto &job: jobs_[i]) {
+                if (job->getVertex() == vertex) {
+                    return job;
+                }
+            }
+        }
+    }
+    return nullptr;
+}
+
+void Schedule::addJob(ScheduleJob *job) {
+    int pe = job->getPE();
+    if (pe < 0 || pe >= nPE_) {
+        throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
+    }
+    if ((int) jobs_[pe].size() >= nJobMax_) {
+        throwSpiderException("PE: %d -> nJobs: %d > nJobMax: %d.", nJobPerPE_[pe], nJobMax_);
+    }
+    if (!jobs_[pe].empty()) {
+        job->setPreviousJob(jobs_[pe].back());
+    }
+    jobs_[pe].push_back(job);
+    nJobs_++;
+    readyTime_[pe] = std::max(readyTime_[pe], job->getEndTime());
+    auto *vertex = job->getVertex();
+    vertex->setSlave(job->getPE());
+    vertex->setSlaveJobIx(nJobPerPE_[pe]++);
+    vertex->setStartTime(job->getStartTime());
+    vertex->setEndTime(job->getEndTime());
+
+    // Update job predecessor info
+    for (int i = 0; i < vertex->getNConnectedInEdge(); ++i) {
+        auto *edge = vertex->getInEdge(i);
+        auto *inVertex = edge->getSrc();
+        auto *precJob = findJobFromVertex(inVertex);
+        if (precJob) {
+            job->addPredecessor(precJob);
+            precJob->addSuccessor(job);
+        }
+    }
+}
+
 void Schedule::print(const char *path) {
     FILE *file = Platform::get()->fopen(path);
-    char name[100];
+    char name[kMaxJobNameSize];
 
     // Writing header
     Platform::get()->fprintf(file, "<data>\n");
 
     // Exporting for gantt display
     for (int pe = 0; pe < nPE_; pe++) {
-        for (int job = 0; job < nJobPerPE_[pe]; job++) {
-            SRDAGVertex *vertex = getJob(pe, job);
-
-            vertex->toString(name, 100);
-            Platform::get()->fprintf(file, "\t<event\n");
-            Platform::get()->fprintf(file, "\t\tstart=\"%d\"\n", vertex->getStartTime());
-            Platform::get()->fprintf(file, "\t\tend=\"%d\"\n", vertex->getEndTime());
-            Platform::get()->fprintf(file, "\t\ttitle=\"%s\"\n", name);
-            Platform::get()->fprintf(file, "\t\tmapping=\"PE%d\"\n", pe);
-
-            int ired = (vertex->getId() & 0x3) * 50 + 100;
-            int igreen = ((vertex->getId() >> 2) & 0x3) * 50 + 100;
-            int iblue = ((vertex->getId() >> 4) & 0x3) * 50 + 100;
-            Platform::get()->fprintf(file, "\t\tcolor=\"#%02x%02x%02x\"\n", ired, igreen, iblue);
-
-            Platform::get()->fprintf(file, "\t\t>%s.</event>\n", name);
+        for (auto &job : jobs_[pe]) {
+            auto *vertex = job->getVertex();
+            vertex->toString(name, kMaxJobNameSize);
+            job->print(file, name);
         }
     }
     Platform::get()->fprintf(file, "</data>\n");
@@ -153,8 +205,8 @@ bool Schedule::check() {
 void Schedule::execute() {
     TimeMonitor::startMonitoring();
     for (int pe = 0; pe < nPE_; pe++) {
-        for (int job = 0; job < nJobPerPE_[pe]; job++) {
-            SRDAGVertex *vertex = getJob(pe, job);
+        for (auto &job : jobs_[pe]) {
+            SRDAGVertex *vertex = job->getVertex();
             vertex->setState(SRDAG_EXEC);
             Launcher::get()->launchVertex(vertex);
         }
@@ -162,5 +214,12 @@ void Schedule::execute() {
     Launcher::get()->sendEndNotification(this);
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
     Platform::get()->getLrt()->runUntilNoMoreJobs();
+}
+
+std::vector<ScheduleJob *> &Schedule::getJobs(int pe) {
+    if (pe < 0 || pe >= nPE_) {
+        throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
+    }
+    return jobs_[pe];
 }
 

@@ -329,7 +329,10 @@ void RoundRobinScattered::scheduleVertex(SRDAGVertex *vertex) {
     }
     //printf("=> choose pe %d\n", bestSlave);
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
-    schedule_->addJob(bestSlave, vertex, bestStartTime, bestEndTime);
+    auto *job = CREATE(TRANSFO_STACK, ScheduleJob)(vertex, bestSlave, bestSlave);
+    job->setStartTime(bestStartTime);
+    job->setEndTime(bestEndTime);
+    schedule_->addJob(job);
 
     //if (vertex->getType() == SRDAG_NORMAL) printf("%s scheduled on PE %d\n",vertex->getReference()->getName(),bestSlave);
 

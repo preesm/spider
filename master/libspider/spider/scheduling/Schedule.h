@@ -44,10 +44,11 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 
 #include <algorithm>
+#include "ScheduleJob.h"
 
 class Schedule {
 public:
-    Schedule();
+    Schedule() = default;
 
     Schedule(int nPE, int nJobMax);
 
@@ -61,6 +62,10 @@ public:
 
     void addJob(int pe, SRDAGVertex *job, Time start, Time end);
 
+    void addJob(ScheduleJob *job);
+
+    inline std::vector<ScheduleJob *> &getJobs(int pe);
+
     void print(const char *path);
 
     bool check();
@@ -73,11 +78,17 @@ private:
     int nPE_;
     int nJobMax_;
     int nJobs_;
-    int *nJobPerPE_;
-    Time *readyTime_;
+    std::vector<int> nJobPerPE_;
+    std::vector<Time> readyTime_;
     SRDAGVertex **schedules_;
 
+    std::vector<ScheduleJob *> *jobs_;
+
     inline SRDAGVertex *getJob(int pe, int ix) const;
+
+    ScheduleJob *findJobFromVertex(SRDAGVertex *vertex);
+
+    void clearJobs();
 };
 
 inline void Schedule::setAllMinReadyTime(Time time) {

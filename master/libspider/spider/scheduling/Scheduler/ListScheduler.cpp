@@ -146,7 +146,7 @@ void ListScheduler::schedule(
     list_->sort(compareSchedLevel);
     schedule_->setAllMinReadyTime(Platform::get()->getTime());
     schedule_->setReadyTime(
-            /* Spider Pe */        archi->getSpiderPeIx(),
+            /* Spider Pe */     archi->getSpiderPeIx(),
             /* End of Mapping */Platform::get()->getTime() +
                                 archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
 
@@ -247,7 +247,6 @@ void ListScheduler::scheduleVertex(SRDAGVertex *vertex) {
             Time endTime = startTime + execTime + comInTime + comOutTime;
             //printf("Actor %d, Pe %d/%d: minimu_start %ld, ready time %ld, start time %ld, exec time %ld, endTime %ld\n", vertex->getId(), pe, archi_->getNPE(), minimumStartTime, schedule_->getReadyTime(pe), startTime + comInTime, execTime, endTime);
             if (endTime < bestEndTime || (endTime == bestEndTime && waitTime < bestWaitTime)) {
-
                 bestSlave = pe;
                 bestEndTime = endTime;
                 bestStartTime = startTime;
@@ -257,13 +256,15 @@ void ListScheduler::scheduleVertex(SRDAGVertex *vertex) {
     }
 
     if (bestSlave == -1) {
-        printf("No slave found to execute one instance of %s\n", vertex->getReference()->getName());
+        throwSpiderException("No slave found to execute one instance of vertex [%s].",
+                             vertex->getReference()->getName());
     }
     //printf("=> choose pe %d\n", bestSlave);
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
-    schedule_->addJob(bestSlave, vertex, bestStartTime, bestEndTime);
+    auto *job = CREATE(TRANSFO_STACK, ScheduleJob)(vertex, bestSlave, bestSlave);
+    job->setStartTime(bestStartTime);
+    job->setEndTime(bestEndTime);
+    schedule_->addJob(job);
+    //Logger::print(LOG_SCHEDULE, LOG_INFO, "Function [%d] scheduled on PE [%d].\n",vertex->getFctId(),bestSlave);
 
-    //printf("fctId %d scheduled on PE %d\n",vertex->getFctId(),bestSlave);
-
-    vertex->setSlave(bestSlave);
 }

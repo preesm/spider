@@ -46,7 +46,7 @@
 #include <platform.h>
 
 PThreadLrtCommunicator::PThreadLrtCommunicator(
-        ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
+        ControlMessageQueue<ScheduleJob *> *spider2LrtJobQueue,
         NotificationQueue<NotificationMessage> *notificationQueue,
         NotificationQueue<JobNotificationMessage> **lrt2LRTJobNotificationQueue,
         DataQueues *dataQueues
@@ -66,10 +66,20 @@ bool PThreadLrtCommunicator::pop_notification(NotificationMessage *msg, bool blo
 }
 
 std::int32_t PThreadLrtCommunicator::push_job_message(JobInfoMessage **message) {
-    return spider2LrtJobQueue_->push(message);
+//    return spider2LrtJobQueue_->push(message);
+    return 0;
 }
 
 void PThreadLrtCommunicator::pop_job_message(JobInfoMessage **msg, std::int32_t id) {
+//    spider2LrtJobQueue_->pop(msg, id);
+}
+
+
+std::int32_t PThreadLrtCommunicator::push_job_message(ScheduleJob **message) {
+    return spider2LrtJobQueue_->push(message);
+}
+
+void PThreadLrtCommunicator::pop_job_message(ScheduleJob **msg, int32_t id) {
     spider2LrtJobQueue_->pop(msg, id);
 }
 
@@ -77,12 +87,12 @@ void PThreadLrtCommunicator::data_end_send(Fifo */*f*/) {
     // Nothing to do
 }
 
-void *PThreadLrtCommunicator::data_recv(Fifo *f) {
-    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (f->alloc));
+void *PThreadLrtCommunicator::data_recv(std::int32_t alloc) {
+    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (alloc));
 }
 
-void *PThreadLrtCommunicator::data_start_send(Fifo *f) {
-    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (f->alloc));
+void *PThreadLrtCommunicator::data_start_send(std::int32_t alloc) {
+    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (alloc));
 }
 
 bool PThreadLrtCommunicator::pop_data_notification(int lrtID, JobNotificationMessage *msg) {
@@ -98,6 +108,9 @@ void PThreadLrtCommunicator::push_data_notification(int lrtID, JobNotificationMe
     }
     lrt2LRTJobNotificationQueue_[lrtID]->push(msg);
 }
+
+
+
 
 
 

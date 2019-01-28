@@ -46,6 +46,7 @@
 #include <queue>
 #include <Message.h>
 #include <mutex>
+#include <scheduling/ScheduleJob.h>
 
 /**
  * @brief Thread safe Message Queue using std::vector for message storage and std::queue for index management;
@@ -113,6 +114,9 @@ private:
  */
 template
 class ControlMessageQueue<JobInfoMessage *>;
+
+template
+class ControlMessageQueue<ScheduleJob *>;
 
 template
 class ControlMessageQueue<ParameterMessage *>;

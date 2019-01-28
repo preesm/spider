@@ -154,13 +154,12 @@ void ListScheduler::schedule(
         this->scheduleVertex((*list_)[i]);
     }
 
-    /** Sends the ID of last job to slaves **/
-    for (int i = 0; i < list_->getNb(); i++) {
-        Launcher::get()->launchVertex((*list_)[i]);
-    }
+//    for (int i = 0; i < list_->getNb(); i++) {
+//        Launcher::get()->launchVertex((*list_)[i]);
+//    }
 
-    /** Send of iteration notification **/
-    Launcher::get()->sendEndNotification(schedule_);
+//    /** Send of iteration notification **/
+//    Launcher::get()->sendEndNotification(schedule_);
 
     list_->~List();
     StackMonitor::free(TRANSFO_STACK, list_);

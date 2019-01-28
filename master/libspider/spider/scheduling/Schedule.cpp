@@ -47,9 +47,6 @@ Schedule::Schedule(int nPE, int nJobMax) {
     nPE_ = nPE;
     nJobMax_ = nJobMax;
     nJobs_ = 0;
-//    nJobPerPE_ = CREATE_MUL(TRANSFO_STACK, nPE_, int);
-//    readyTime_ = CREATE_MUL(TRANSFO_STACK, nPE_, Time);
-    schedules_ = CREATE_MUL(TRANSFO_STACK, nPE_ * nJobMax_, SRDAGVertex*);
 
     // Creates array of jobs
     jobs_ = CREATE_MUL(TRANSFO_STACK, nPE_, std::vector<ScheduleJob *>);
@@ -65,7 +62,6 @@ Schedule::Schedule(int nPE, int nJobMax) {
 Schedule::~Schedule() {
     clearJobs();
     StackMonitor::free(TRANSFO_STACK, jobs_);
-    StackMonitor::free(TRANSFO_STACK, schedules_);
 }
 
 void Schedule::clearJobs() {
@@ -76,23 +72,6 @@ void Schedule::clearJobs() {
         }
         jobs_[i].clear();
     }
-}
-
-void Schedule::addJob(int pe, SRDAGVertex *job, Time start, Time end) {
-    if (pe < 0 || pe >= nPE_) {
-        throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
-    }
-    if (nJobPerPE_[pe] >= nJobMax_) {
-        throwSpiderException("PE: %d -> nJobs: %d > nJobMax: %d.", nJobPerPE_[pe], nJobMax_);
-    }
-
-    schedules_[pe * nJobMax_ + nJobPerPE_[pe]] = job;
-    job->setSlaveJobIx(nJobPerPE_[pe]);
-    nJobPerPE_[pe]++;
-    nJobs_++;
-    readyTime_[pe] = std::max(readyTime_[pe], end);
-    job->setStartTime(start);
-    job->setEndTime(end);
 }
 
 ScheduleJob *Schedule::findJobFromVertex(SRDAGVertex *vertex) {
@@ -142,7 +121,6 @@ void Schedule::addJob(ScheduleJob *job) {
 
 void Schedule::print(const char *path) {
     FILE *file = Platform::get()->fopen(path);
-    char name[kMaxJobNameSize];
 
     // Writing header
     Platform::get()->fprintf(file, "<data>\n");
@@ -150,9 +128,7 @@ void Schedule::print(const char *path) {
     // Exporting for gantt display
     for (int pe = 0; pe < nPE_; pe++) {
         for (auto &job : jobs_[pe]) {
-            auto *vertex = job->getVertex();
-            vertex->toString(name, kMaxJobNameSize);
-            job->print(file, name);
+            job->print(file);
         }
     }
     Platform::get()->fprintf(file, "</data>\n");
@@ -161,54 +137,49 @@ void Schedule::print(const char *path) {
 }
 
 bool Schedule::check() {
-    bool result = true;
 
     /* Check core concurrency */
-    for (int pe = 0; pe < nPE_ && result; pe++) {
-        for (int i = 0; i < nJobPerPE_[pe] - 1 && result; i++) {
-            SRDAGVertex *vertex = getJob(pe, i);
-            SRDAGVertex *nextVertex = getJob(pe, i + 1);
-
-            if (vertex->getEndTime() > nextVertex->getStartTime()) {
-                result = false;
-                char name[100];
-                vertex->toString(name, 100);
-                printf("Schedule: Superposition: task %s ", name);
-                nextVertex->toString(name, 100);
-                printf("and %s\n", name);
+    for (int pe = 0; pe < nPE_; ++pe) {
+        auto &jobsOfPE = jobs_[pe];
+        auto *currentJob = jobsOfPE.front();
+        auto *nextJob = currentJob->getNextJob();
+        while (nextJob) {
+            if (currentJob->getEndTime() > nextJob->getStartTime()) {
+                auto *currentJobVertex = currentJob->getVertex();
+                auto *nextJobVertex = nextJob->getVertex();
+                throwSpiderException("Superposition of tasks [%s] and [%s] on PE [%d].", currentJobVertex->toString(),
+                                     nextJobVertex->toString(), pe);
             }
+            currentJob = nextJob;
+            nextJob = currentJob->getNextJob();
         }
     }
 
     /* Check Communications */
-    for (int pe = 0; pe < nPE_ && result; pe++) {
-        for (int i = 0; i < nJobPerPE_[pe] - 1 && result; i++) {
-            SRDAGVertex *vertex = getJob(pe, i);
-
-            for (int j = 0; j < vertex->getNConnectedInEdge() && result; j++) {
-                SRDAGVertex *precVertex = vertex->getInEdge(j)->getSrc();
-
-                if (vertex->getStartTime() < precVertex->getEndTime()) {
-                    result = false;
-                    char name[100];
-                    vertex->toString(name, 100);
-                    printf("Schedule: Communication: task %s ", name);
-                    precVertex->toString(name, 100);
-                    printf("and %s\n", name);
+    for (int pe = 0; pe < nPE_; ++pe) {
+        for (auto &job : jobs_[pe]) {
+            for (auto &precJob : job->getPredecessors()) {
+                auto *currentJobVertex = job->getVertex();
+                auto *precJobVertex = precJob->getVertex();
+                if (precJob->getEndTime() > job->getStartTime()) {
+                    throwSpiderException("Task [%s] (PE %d) depending on task [%s] (PE %d) overlaps in time.",
+                                         currentJobVertex->toString(),
+                                         job->getPE(), precJobVertex->toString(), precJob->getPE());
                 }
             }
         }
     }
-    return result;
+    return true;
 }
 
 void Schedule::execute() {
     TimeMonitor::startMonitoring();
     for (int pe = 0; pe < nPE_; pe++) {
         for (auto &job : jobs_[pe]) {
-            SRDAGVertex *vertex = job->getVertex();
-            vertex->setState(SRDAG_EXEC);
-            Launcher::get()->launchVertex(vertex);
+//            SRDAGVertex *vertex = job->getVertex();
+//            vertex->setState(SRDAG_EXEC);
+//            Launcher::get()->launchVertex(vertex);
+            Launcher::get()->sendJob(&job);
         }
     }
     Launcher::get()->sendEndNotification(this);
@@ -216,7 +187,7 @@ void Schedule::execute() {
     Platform::get()->getLrt()->runUntilNoMoreJobs();
 }
 
-std::vector<ScheduleJob *> &Schedule::getJobs(int pe) {
+std::vector<ScheduleJob *> &Schedule::getPEJobs(int pe) {
     if (pe < 0 || pe >= nPE_) {
         throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
     }

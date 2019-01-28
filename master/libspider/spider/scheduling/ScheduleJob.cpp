@@ -50,6 +50,11 @@ ScheduleJob::ScheduleJob(SRDAGVertex *vertex, int pe, int lrt) {
     endTime_ = (Time) -1;
     successors_.reserve((size_t) vertex->getNConnectedOutEdge());
     predecessors_.reserve((size_t) vertex->getNConnectedInEdge());
+    int nLrt = Platform::get()->getNLrt();
+    jobsToWait_ = CREATE_MUL(TRANSFO_STACK, nLrt, std::int32_t);
+    for (int i = 0; i < nLrt; ++i) {
+        jobsToWait_[i] = -1;
+    }
 }
 
 ScheduleJob::~ScheduleJob() {
@@ -58,6 +63,9 @@ ScheduleJob::~ScheduleJob() {
     nextJob_ = nullptr;
     successors_.clear();
     predecessors_.clear();
+    if (jobsToWait_) {
+        StackMonitor::free(TRANSFO_STACK, jobsToWait_);
+    }
 }
 
 bool ScheduleJob::isBeforeJob(ScheduleJob *job) {
@@ -75,7 +83,7 @@ bool ScheduleJob::isAfterJob(ScheduleJob *job) {
     return job->isBeforeJob(this);
 }
 
-void ScheduleJob::print(FILE *file, const char *name) {
+void ScheduleJob::print(FILE *file) {
     int red = (vertex_->getId() & 0x3) * 50 + 100;
     int green = ((vertex_->getId() >> 2) & 0x3) * 50 + 100;
     int blue = ((vertex_->getId() >> 4) & 0x3) * 50 + 100;
@@ -83,10 +91,23 @@ void ScheduleJob::print(FILE *file, const char *name) {
     Platform::get()->fprintf(file, "\t<event\n");
     Platform::get()->fprintf(file, "\t\tstart=\"%" PRId64"\"\n", startTime_);
     Platform::get()->fprintf(file, "\t\tend=\"%" PRId64"\"\n", endTime_);
-    Platform::get()->fprintf(file, "\t\ttitle=\"%s\"\n", name);
+    Platform::get()->fprintf(file, "\t\ttitle=\"%s\"\n", vertex_->toString());
     Platform::get()->fprintf(file, "\t\tmapping=\"PE%d\"\n", pe_);
     Platform::get()->fprintf(file, "\t\tcolor=\"#%02x%02x%02x\"\n", red, green, blue);
-    Platform::get()->fprintf(file, "\t\t>%s.</event>\n", name);
+    Platform::get()->fprintf(file, "\t\t>%s.</event>\n", vertex_->toString());
+}
+
+void ScheduleJob::updateJobsToWait() {
+    /** Reset job to wait for each LRT **/
+    for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
+        jobsToWait_[i] = -1;
+    }
+    /** Search for the minimal job dependency required **/
+    for (auto &job : predecessors_) {
+        auto *vertex = job->getVertex();
+        int lrt = job->getLRT();
+        jobsToWait_[lrt] = std::max(jobsToWait_[lrt], vertex->getSlaveJobIx());
+    }
 }
 
 

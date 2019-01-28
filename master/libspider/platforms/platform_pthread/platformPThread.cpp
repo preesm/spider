@@ -166,7 +166,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
 
     /** Create the different queues */
-    spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<JobInfoMessage *>);
+    spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ScheduleJob *>);
     lrt2SpiderParamQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ParameterMessage *>);
     lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue<NotificationMessage>*);
     lrt2LRTJobNotificationQueue_ = CREATE_MUL(ARCHI_STACK, nLrt_, NotificationQueue<JobNotificationMessage>*);
@@ -536,8 +536,8 @@ Time PlatformPThread::getTime() {
     return val_steady;
 }
 
-Time PlatformPThread::mappingTime(int nActors, int /*nPe*/) {
-    return (Time) 1 * nActors;
+Time PlatformPThread::mappingTime(int /*nActors*/, int /*nPe*/) {
+    return 1;
 }
 
 void PlatformPThread::initStacks(SpiderConfig &config) {

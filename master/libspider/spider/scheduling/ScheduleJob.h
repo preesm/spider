@@ -42,8 +42,6 @@
 
 #include <graphs/SRDAG/SRDAGVertex.h>
 
-const int kMaxJobNameSize = 100;
-
 class ScheduleJob {
 public:
     ScheduleJob(SRDAGVertex *vertex, int pe, int lrt);
@@ -106,6 +104,10 @@ public:
         return predecessors_;
     }
 
+    inline std::int32_t *getJobs2Wait() const {
+        return jobsToWait_;
+    }
+
     /** Methods **/
     bool isBeforeJob(ScheduleJob *job);
 
@@ -119,7 +121,9 @@ public:
         predecessors_.push_back(job);
     }
 
-    void print(FILE *file, const char *name);
+    void updateJobsToWait();
+
+    void print(FILE *file);
 
 private:
     /**
@@ -158,6 +162,10 @@ private:
      * @brief Job direct predecessors dependencies
      */
     std::vector<ScheduleJob *> predecessors_;
+    /**
+     * @brief Indexes of jobs to wait
+     */
+    std::int32_t *jobsToWait_;
 };
 
 #endif //SPIDER_SCHEDULEJOB_H

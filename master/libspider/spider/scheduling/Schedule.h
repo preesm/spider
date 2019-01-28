@@ -60,11 +60,9 @@ public:
 
     inline Time getReadyTime(int pe) const;
 
-    void addJob(int pe, SRDAGVertex *job, Time start, Time end);
-
     void addJob(ScheduleJob *job);
 
-    inline std::vector<ScheduleJob *> &getJobs(int pe);
+    inline std::vector<ScheduleJob *> &getPEJobs(int pe);
 
     void print(const char *path);
 
@@ -80,11 +78,7 @@ private:
     int nJobs_;
     std::vector<int> nJobPerPE_;
     std::vector<Time> readyTime_;
-    SRDAGVertex **schedules_;
-
     std::vector<ScheduleJob *> *jobs_;
-
-    inline SRDAGVertex *getJob(int pe, int ix) const;
 
     ScheduleJob *findJobFromVertex(SRDAGVertex *vertex);
 
@@ -116,17 +110,6 @@ inline int Schedule::getNJobs(int pe) const {
         throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
     }
     return nJobPerPE_[pe];
-}
-
-inline SRDAGVertex *Schedule::getJob(int pe, int ix) const {
-    if (pe < 0 || pe >= nPE_) {
-        throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
-    }
-    if (ix < 0 || ix >= nJobPerPE_[pe]) {
-        throwSpiderException("Bad Job value. Value: %d -- Max: %d.", pe, nJobPerPE_[pe]);
-    }
-
-    return schedules_[pe * nJobMax_ + ix];
 }
 
 #endif/*SCHEDULE_H*/

@@ -40,6 +40,8 @@
 #include <SpiderCommunicator.h>
 #include <launcher/Launcher.h>
 #include <Logger.h>
+#include "Launcher.h"
+
 
 Launcher Launcher::instance_;
 
@@ -188,6 +190,20 @@ void Launcher::sendJobInfoMessage(int lrtIx, SRDAGVertex *vertex) {
     spiderCommunicator->push_notification(lrtIx, &notificationMessage);
 }
 
+
+void Launcher::sendJob(ScheduleJob **job) {
+    /** 0. Update the jobs it needs to wait from other LRTs **/
+    (*job)->updateJobsToWait();
+
+    /** 1. Push the job **/
+    auto *spiderCommunicator= Platform::get()->getSpiderCommunicator();
+    auto jobID = spiderCommunicator->push_job_message(job);
+
+    /** 2. Send notification **/
+    NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, jobID);
+    spiderCommunicator->push_notification((*job)->getLRT(), &notificationMessage);
+}
+
 void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
     while (curNParam_) {
         NotificationMessage message;
@@ -294,5 +310,6 @@ int Launcher::getNLaunched() {
 void Launcher::rstNLaunched() {
     nLaunched_ = 0;
 }
+
 
 

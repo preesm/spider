@@ -45,6 +45,7 @@
 #include <platform.h>
 #include <SpiderCommunicator.h>
 #include <LrtCommunicator.h>
+#include <scheduling/ScheduleJob.h>
 
 #ifdef PAPI_AVAILABLE
 #include "../papify/PapifyAction.h"
@@ -129,7 +130,7 @@ private:
     bool freeze_;
     bool traceEnabled_;
     bool shouldBroadcast_;
-    std::vector<JobInfoMessage *> jobQueue_;
+    std::vector<ScheduleJob *> jobQueue_;
     std::uint32_t jobQueueIndex_;
     std::uint32_t jobQueueSize_;
     std::int32_t lastJobID_;
@@ -137,7 +138,7 @@ private:
     LrtCommunicator *lrtCommunicator_;
     std::vector<std::int32_t> jobStamps_;
 
-    bool compareLRTJobStamps(std::vector<std::int32_t> &jobsToWait);
+    bool compareLRTJobStamps(std::int32_t *jobsToWait);
 
     void updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp);
 
@@ -166,6 +167,10 @@ private:
      * @param message message of the JOB to run
      */
     void runJob(JobInfoMessage *message);
+
+    Param *getInParams(SRDAGVertex *vertex);
+
+    void runJob(ScheduleJob *job);
 
     /**
      * @brief Clear the JOB queue

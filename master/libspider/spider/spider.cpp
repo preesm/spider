@@ -118,6 +118,8 @@ static bool isGraphStatic(PiSDFGraph *const graph) {
 
 void Spider::init(SpiderConfig &cfg) {
 
+    fprintf(stderr, "INFO: sizeof(ScheduleJob): %lu -- sizeof(std::vector<ScheduleJob *>): %lu\n", sizeof(ScheduleJob), sizeof(std::vector<ScheduleJob *>));
+
     setGraphOptim(cfg.useGraphOptim);
 
     setMemAllocType(cfg.memAllocType, cfg.memAllocStart, cfg.memAllocSize);

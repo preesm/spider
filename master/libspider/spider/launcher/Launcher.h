@@ -51,6 +51,8 @@ public:
 
     void launchVertex(SRDAGVertex *vertex);
 
+    void sendJob(ScheduleJob **job);
+
     void resolveParams(Archi *archi, SRDAGGraph *topDag);
 
     void sendTraceSpider(TraceSpiderType type, Time start, Time end);

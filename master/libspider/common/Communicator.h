@@ -44,6 +44,8 @@
 #include <cstdint>
 #include "Message.h"
 
+class ScheduleJob;
+
 class Communicator {
 public:
     virtual ~Communicator() {}
@@ -55,6 +57,10 @@ public:
     virtual std::int32_t push_job_message(JobInfoMessage **message) = 0;
 
     virtual void pop_job_message(JobInfoMessage **msg, std::int32_t id) = 0;
+
+    virtual std::int32_t push_job_message(ScheduleJob **) { return 0; };
+
+    virtual void pop_job_message(ScheduleJob **, std::int32_t) {};
 
 //    virtual void *trace_start_send(int size) = 0;
 //

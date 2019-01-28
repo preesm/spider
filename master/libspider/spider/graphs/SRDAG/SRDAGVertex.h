@@ -143,6 +143,8 @@ public:
 
     void toString(char *name, int sizeMax) const;
 
+    const char *toString();
+
 
     /** Constraints/Timings Fcts */
     inline bool isExecutableOn(int pe) const;

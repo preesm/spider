@@ -127,6 +127,27 @@ void SRDAGVertex::toString(char *name, int sizeMax) const {
     }
 }
 
+const char *SRDAGVertex::toString() {
+    switch (type_) {
+        case SRDAG_NORMAL:
+            return reference_->getName();
+        case SRDAG_FORK:
+            return "Fork";
+        case SRDAG_JOIN:
+            return "Join";
+        case SRDAG_ROUNDBUFFER:
+            return "RB";
+        case SRDAG_BROADCAST:
+            return "BR";
+        case SRDAG_INIT:
+            return "Init";
+        case SRDAG_END:
+            return "End";
+        default:
+            return "unknown";
+    }
+}
+
 void SRDAGVertex::updateState() {
     if (state_ == SRDAG_NEXEC) {
         /* Check Input Edges */

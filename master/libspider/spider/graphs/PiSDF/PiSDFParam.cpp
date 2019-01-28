@@ -60,6 +60,7 @@ PiSDFParam::PiSDFParam(
     type_ = type;
     inheritedParam_ = nullptr;
     setter_ = nullptr;
+    expr_ = nullptr;
     value_ = -1;
 }
 

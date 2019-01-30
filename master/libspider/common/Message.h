@@ -115,6 +115,7 @@ typedef enum {
     JOB_SENT_PARAM,                 // Signal that LRT sent a ParameterMessage
     JOB_BROADCAST_JOBSTAMP,         // Signal LRT to broadcast its job stamp to everybody
     JOB_DELAY_BROADCAST_JOBSTAMP,   // Signal LRT to broadcast its job stamp to everybody after last job has been done
+    JOB_UPDATE_JOBSTAMP,            // Signal LRT that an update of job stamp is pending
 } JobNotificationType;
 
 /**

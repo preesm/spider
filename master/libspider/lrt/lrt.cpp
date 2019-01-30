@@ -42,10 +42,12 @@
 #include <specialActors/specialActors.h>
 #include "lrt.h"
 
+#ifdef __USE_GNU
 
-#ifndef _WIN32
+#include <csignal>
 
 #endif
+
 
 #ifdef __k1__
 #define CHIP_FREQ ((float)(__bsp_frequency)/1000)
@@ -61,6 +63,8 @@ static lrtFct specialActors[6] = {
         &saInit,
         &saEnd
 };
+
+extern int stopThreads;
 
 LRT::LRT(int ix) {
     /* TODO add some heapMemory */
@@ -155,35 +159,47 @@ void LRT::sendTrace(int srdagIx, Time start, Time end) {
 }
 
 bool LRT::compareLRTJobStamps(std::int32_t *jobsToWait) {
+    if (jobsToWait[getIx()] > getJobIx()) {
+        Logger::print(LOG_JOB, LOG_ERROR,
+                      "LRT: %d -- waiting for future self job. Current jobStamp: %d -- waitedJob: %d",
+                      getIx(),
+                      getJobIx(),
+                      jobsToWait[getIx()]);
+        return false;
+    }
+    bool canRun = true;
     for (int i = 0; i < nLrt_; ++i) {
-        auto jobToWait = jobsToWait[i];
-        if (i == getIx() && jobToWait > getJobIx()) {
-            throwSpiderException("waiting for future self job. Current jobStamp: %d -- waitedJob: %d", getJobIx(),
-                                 jobToWait);
-        } else if ((jobToWait >= 0) && jobToWait > jobStamps_[i]) {
-            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- waiting for LRT: %d and Job: %d -- Current JobStamp: %d\n",
-                          getIx(), i,
-                          jobToWait, jobStamps_[i]);
-            return false;
+        canRun &= jobsToWait[i] <= jobStamps_[i];
+    }
+    if (!canRun && Logger::isLoggerEnabled(LOG_JOB)) {
+        for (int i = 0; i < nLrt_; ++i) {
+            if (jobsToWait[i] >= 0 && jobsToWait[i] > jobStamps_[i]) {
+                Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- waiting for LRT: %d and Job: %d -- Current JobStamp: %d\n",
+                              getIx(), i,
+                              jobsToWait[i], jobStamps_[i]);
+            }
         }
     }
-    return true;
+    return canRun;
 }
 
 void LRT::updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp) {
     if (lrtID < 0 || lrtID >= nLrt_) {
-        throwSpiderException("Bad id. Value: %d -- Max: %d.", lrtID, nLrt_ - 1);
+        throwSpiderException("Bad LRT id. Value: %d -- Max: %d.", lrtID, nLrt_ - 1);
     }
     jobStamps_[lrtID] = jobStamp;
-    Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- updating local jobStamp of LRT: %d -- new JobStamp: %d\n", getIx(),
+    Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- updating local jobStamp of LRT: %d -- new JobStamp: %d\n",
+                  getIx(),
                   lrtID,
-                  jobStamps_[lrtID]);
+                  jobStamp);
 }
 
 void LRT::notifyLRTJobStamp(std::int32_t lrtID, JobNotificationMessage *msg, std::vector<bool> &notifiedLRT) {
     if (lrtID >= 0 &&
         lrtID != getIx() &&
         !notifiedLRT[lrtID]) {
+        NotificationMessage message(JOB_NOTIFICATION, JOB_UPDATE_JOBSTAMP);
+        spiderCommunicator_->push_notification(lrtID, &message);
         lrtCommunicator_->push_data_notification(lrtID, msg);
         Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- notifying LRT: %d -- sent jobStamp: %d\n", getIx(), lrtID,
                       msg->getJobStamp());
@@ -191,390 +207,16 @@ void LRT::notifyLRTJobStamp(std::int32_t lrtID, JobNotificationMessage *msg, std
     }
 }
 
-void LRT::handleLRTNotification(NotificationMessage &message) {
-    switch (message.getSubType()) {
-        case LRT_END_ITERATION:
-            lastJobID_ = message.getIndex();
-            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- lastJobID: %d\n", getIx(), lastJobID_);
-            break;
-        case LRT_RST_ITERATION:
-            jobIx_ = -1;
-            jobQueueIndex_ = 0;
-            break;
-        case LRT_REPEAT_ITERATION_EN:
-            repeatJobQueue_ = true;
-            break;
-        case LRT_REPEAT_ITERATION_DIS:
-            repeatJobQueue_ = false;
-            break;
-        case LRT_PAUSE:
-            freeze_ = true;
-            break;
-        case LRT_RESUME:
-            freeze_ = false;
-            break;
-        case LRT_STOP:
-            run_ = false;
-            break;
-        default:
-            throwSpiderException("Unhandled type of LRT notification: %u\n", message.getSubType());
-    }
-
-}
-
-void LRT::handleJobNotification(NotificationMessage &message) {
-    /** Get the ID of the job in the global queue */
-    switch (message.getSubType()) {
-        case JOB_ADD: {
-//            JobInfoMessage *msg;
-            // pop message from global queue
-//            lrtCommunicator_->pop_job_message(&msg, message.getIndex());
-            // push message in local queue (don't execute right now in case more important notification comes along
-//            jobQueue_.push_back(msg);
-            ScheduleJob *job;
-            lrtCommunicator_->pop_job_message(&job, message.getIndex());
-            jobQueue_.push_back(job);
-            jobQueueSize_++;
-        }
-            break;
-        case JOB_CLEAR_QUEUE:
-            if (!repeatJobQueue_) {
-                clearJobQueue();
-            }
-            break;
-        case JOB_LAST_ID:
-            lastJobID_ = message.getIndex();
-            break;
-        case JOB_DELAY_BROADCAST_JOBSTAMP:
-            shouldBroadcast_ = true;
-            break;
-        case JOB_BROADCAST_JOBSTAMP:
-            broadcastJobStamp();
-            break;
-        default:
-            throwSpiderException("Unhandled type of JOB notification: %u\n", message.getSubType());
-    }
-}
-
-void LRT::broadcastJobStamp() {
-    shouldBroadcast_ = false;
-    if (jobIx_ < 0) {
-        return;
-    }
-    JobNotificationMessage msg(getIx(), jobIx_);
-    for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
-        if (i == getIx()) {
-            continue;
-        }
-        lrtCommunicator_->push_data_notification(i, &msg);
-    }
-}
-
-void LRT::handleTraceNotification(NotificationMessage &message) {
-    switch (message.getSubType()) {
-        case TRACE_ENABLE:
-            traceEnabled_ = true;
-            break;
-        case TRACE_DISABLE:
-            traceEnabled_ = false;
-            break;
-        case TRACE_RST:
-            break;
-        default:
-            throwSpiderException("Unhandled type of TRACE notification: %u\n", message.getSubType());
-    }
-}
-
-void LRT::clearJobQueue() {
-//    for (auto &it : (jobQueue_)) {
-//        it->~ScheduleJob();
-//        StackMonitor::free(ARCHI_STACK, it);
-//    }
-    jobQueue_.clear();
-    jobQueueSize_ = 0;
-    jobQueueIndex_ = 0;
-    lastJobID_ = -1;
-    jobIx_ = -1;
-    Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- cleared jobQueue_.\n", Platform::get()->getLrtIx());
-}
-
-
-void LRT::runJob(JobInfoMessage *message) {
-    auto inFifos = message->inFifos_;
-    auto outFifos = message->outFifos_;
-    auto inParams = message->inParams_;
-
-    auto **inFifosAlloc = CREATE_MUL(LRT_STACK, message->nEdgeIN_, void*);
-    auto **outFifosAlloc = CREATE_MUL(LRT_STACK, message->nEdgeOUT_, void*);
-    auto outParams = CREATE_MUL(ARCHI_STACK, message->nParamOUT_, Param);
-
-    Time start;
-    std::vector<std::int32_t> jobsToWait(nLrt_, -1);
-
-    for (int i = 0; i < message->nEdgeIN_; i++) {
-        jobsToWait[inFifos[i].blkLrtIx] = std::max(jobsToWait[inFifos[i].blkLrtIx], inFifos[i].blkLrtJobIx);
-    }
-
-    // Waiting for JobStamps to be updated
-    while (!compareLRTJobStamps(jobsToWait.data())) {
-        JobNotificationMessage msg;
-        if (lrtCommunicator_->pop_data_notification(getIx(), &msg)) {
-            updateLRTJobStamp(msg.getID(), msg.getJobStamp());
-        }
-    }
-
-
-#ifdef VERBOSE_TIME
-    time_waiting_prev_actor += Platform::get()->getTime() - start;
-#endif
-
-
-#ifdef VERBOSE_TIME
-    start = Platform::get()->getTime();
-#endif
-
-    lrtCommunicator_->allocateDataBuffer(message->nEdgeIN_, inFifos, message->nEdgeOUT_,
-                                         outFifos);
-
-#ifdef VERBOSE_TIME
-    time_alloc_data += Platform::get()->getTime() - start;
-#endif
-
-
-    for (int i = 0; i < message->nEdgeIN_; i++) {
-#ifdef VERBOSE_TIME
-        Time start = Platform::get()->getTime();
-#endif
-
-        inFifosAlloc[i] = lrtCommunicator_->data_recv(inFifos[i].alloc); // in com
-
-        if (inFifos[i].size == 0) {
-            inFifosAlloc[i] = nullptr;
-        }
-
-#ifdef VERBOSE_TIME
-        time_waiting_input_comm += Platform::get()->getTime() - start;
-#endif
-    }
-
-
-    for (int i = 0; i < message->nEdgeOUT_; i++) {
-#ifdef VERBOSE_TIME
-        Time start = Platform::get()->getTime();
-#endif
-
-        outFifosAlloc[i] = lrtCommunicator_->data_start_send(outFifos[i].alloc); // in com
-
-        if (outFifos[i].size == 0) {
-            outFifosAlloc[i] = nullptr;
-        }
-
-#ifdef VERBOSE_TIME
-        time_waiting_input_comm += Platform::get()->getTime() - start;
-#endif
-    }
-
-
-    start = Platform::get()->getTime();
-
-    if (message->specialActor_ && message->fctID_ < 6) {
-        specialActors[message->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
-    } else if ((int) message->fctID_ < nFct_) {
-        if (usePapify_) {
-#ifdef PAPI_AVAILABLE
-            // TODO, find better way to do that
-            try {
-                // We can monitor the events
-                PapifyAction *papifyAction = nullptr;
-                papifyAction = jobPapifyActions_.at(fcts_[message->fctID_]);
-                // Start monitoring
-                papifyAction->startMonitor();
-                // Do the monitored job
-                fcts_[message->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
-                // Stop monitoring
-                papifyAction->stopMonitor();
-                // Writes the monitoring results
-                papifyAction->writeEvents();
-            } catch (std::out_of_range &e) {
-                // This job does not have papify events associated with  it
-                fcts_[message->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
-            }
-#endif
-        } else {
-            fcts_[message->fctID_](inFifosAlloc, outFifosAlloc, inParams, outParams);
-        }
-    } else {
-        throwSpiderException("Invalid function id: %d -- Range=[0;%d[.\n", message->fctID_, nFct_);
-    }
-
-    Time end = Platform::get()->getTime();
-
-#ifdef VERBOSE_TIME
-    time_compute += end - start;
-#endif
-
-    if (traceEnabled_) {
-        sendTrace(message->srdagID_, start, end);
-    }
-
-
-    JobNotificationMessage msg(getIx(), jobIx_ + 1);
-
-    std::vector<bool> notifiedLRT((size_t) nLrt_, false);
-
-    for (int i = 0; i < message->nEdgeOUT_; i++) {
-#ifdef VERBOSE_TIME
-        Time start = Platform::get()->getTime();
-#endif
-        lrtCommunicator_->data_end_send(&outFifos[i]); // out com
-
-        notifyLRTJobStamp(message->outFifos_[i].blkLrtIx, &msg, notifiedLRT);
-
-#ifdef VERBOSE_TIME
-        time_waiting_output_comm += Platform::get()->getTime() - start;
-#endif
-    }
-
-
-    if (message->nParamOUT_) {
-        // TODO: change ARCHI_STACK to something not shared
-        auto *parameterMessage = CREATE(ARCHI_STACK, ParameterMessage)(message->srdagID_, message->nParamOUT_,
-                                                                       outParams);
-#ifdef VERBOSE_TIME
-        Time start = Platform::get()->getTime();
-#endif
-        /** Sending the parameter message */
-        auto index = spiderCommunicator_->push_parameter_message(&parameterMessage);
-        parameterMessage = nullptr;
-
-#ifdef VERBOSE_TIME
-        time_waiting_output_comm += Platform::get()->getTime() - start;
-#endif
-
-#ifdef VERBOSE_TIME
-        start = Platform::get()->getTime();
-#endif
-        /** Sending notification **/
-        NotificationMessage parameterNotification(JOB_NOTIFICATION, JOB_SENT_PARAM, index);
-        spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &parameterNotification);
-
-#ifdef VERBOSE_TIME
-        time_waiting_output_comm += Platform::get()->getTime() - start;
-#endif
-    } else {
-        StackMonitor::free(ARCHI_STACK, outParams);
-    }
-
-
-    jobIx_++;
-    jobStamps_[getIx()] = jobIx_;
-    /** Freeing local memory **/
-    StackMonitor::free(LRT_STACK, inFifosAlloc);
-    StackMonitor::free(LRT_STACK, outFifosAlloc);
-    StackMonitor::freeAll(LRT_STACK);
-}
-
-
-void LRT::run(bool loop) {
-#ifdef VERBOSE_TIME
-    Time start = Platform::get()->getTime();
-#endif
-
-#ifdef VERBOSE_TIME
-    start_waiting_job = Platform::get()->getTime();
-#endif
-    run_ = true;
-    bool doneWithCurrentJobs = false;
-    while (run_) {
-        /** Should wait for notifications if no more jobs are available and that we are in loop mode **/
-        bool blocking = loop && doneWithCurrentJobs;
-        /** 0. Check for the presence of notification **/
-        NotificationMessage notificationMessage;
-        while (lrtCommunicator_->pop_notification(&notificationMessage, blocking)) {
-            blocking = false;
-            switch (notificationMessage.getType()) {
-                case LRT_NOTIFICATION:
-                    handleLRTNotification(notificationMessage);
-                    break;
-                case TRACE_NOTIFICATION:
-                    handleTraceNotification(notificationMessage);
-                    break;
-                case JOB_NOTIFICATION:
-                    handleJobNotification(notificationMessage);
-                    break;
-                default:
-                    throwSpiderException("Unhandled type of notification: %d.", notificationMessage.getType());
-            }
-        }
-        /** Sanity check **/
-        if (lastJobID_ >= 0 && jobQueueSize_ > (std::uint32_t) (lastJobID_ + 1)) {
-            throwSpiderException(
-                    "QueuSize mismatch with number of jobs to do. LRT: %d -- queueSize: %d -- lastJobID: %d", getIx(),
-                    jobQueueSize_, lastJobID_);
-        }
-        /** 1. If JOB queue is not empty **/
-        if (jobQueueIndex_ < jobQueueSize_) {
-            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- Got %d Jobs to do -- Got %d Jobs in queue -- Done %d.\n",
-                          Platform::get()->getLrtIx(), lastJobID_ + 1,
-                          jobQueueSize_, jobQueueIndex_);
-            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- Running Job: %d\n", Platform::get()->getLrtIx(), jobIx_ + 1);
-            /** Run the job **/
-            auto *message = jobQueue_[jobQueueIndex_++];
-            runJob(message);
-            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- Finished Job: %d\n", Platform::get()->getLrtIx(), jobIx_);
-        }
-        /** 2. Check if end of iteration of end of current jobs **/
-        bool doneWithIteration = lastJobID_ >= 0 && jobIx_ == lastJobID_;
-        if (doneWithIteration) {
-            if (loop) {
-                /** Send finished iteration message **/
-                NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION, getIx());
-                spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &finishedMessage);
-            }
-            /** Reset local jobStamps **/
-            jobStamps_.assign(jobStamps_.size(), -1);
-            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- finished iteration.\n", getIx());
-            if (repeatJobQueue_) {
-                jobIx_ = -1;
-                jobQueueIndex_ = 0;
-            } else {
-                clearJobQueue();
-            }
-        }
-        doneWithCurrentJobs = (jobQueueSize_ == jobQueueIndex_);
-        if (doneWithCurrentJobs) {
-            if (shouldBroadcast_) {
-                broadcastJobStamp();
-            }
-            if (!loop) {
-                Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- exiting iteration.\n", getIx());
-                break;
-            }
-        }
-    }
-
-#ifdef VERBOSE_TIME
-    time_global += Platform::get()->getTime() - start;
-#endif
-}
-
-
-#ifdef PAPI_AVAILABLE
-
-void LRT::addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction) {
-    this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
-}
-
 void LRT::runJob(ScheduleJob *job) {
     Time start;
 
     // Waiting for JobStamps to be updated
-    while (!compareLRTJobStamps(job->getJobs2Wait())) {
-        JobNotificationMessage msg;
-        if (lrtCommunicator_->pop_data_notification(getIx(), &msg)) {
-            updateLRTJobStamp(msg.getID(), msg.getJobStamp());
-        }
-    }
+//    while (!compareLRTJobStamps(job->getJobs2Wait())) {
+//        JobNotificationMessage msg;
+//        if (lrtCommunicator_->pop_data_notification(getIx(), &msg)) {
+//            updateLRTJobStamp(msg.getID(), msg.getJobStamp());
+//        }
+//    }
 
 
 #ifdef VERBOSE_TIME
@@ -591,7 +233,7 @@ void LRT::runJob(ScheduleJob *job) {
 
     auto **inFifosAlloc = CREATE_MUL(LRT_STACK, jobVertex->getNConnectedInEdge(), void*);
     auto **outFifosAlloc = CREATE_MUL(LRT_STACK, jobVertex->getNConnectedOutEdge(), void*);
-    auto outParams = CREATE_MUL(ARCHI_STACK, jobVertex->getNOutParam(), Param);
+    auto *outParams = CREATE_MUL(ARCHI_STACK, jobVertex->getNOutParam(), Param);
 
 #ifdef VERBOSE_TIME
     time_alloc_data += Platform::get()->getTime() - start;
@@ -681,8 +323,10 @@ void LRT::runJob(ScheduleJob *job) {
         sendTrace(jobVertex->getId(), start, end);
     }
 
-
-    JobNotificationMessage msg(getIx(), jobIx_ + 1);
+    /** Updating jobIx_ and notifying other LRT (if needed) **/
+    jobIx_++;
+    jobStamps_[getIx()] = jobIx_;
+    JobNotificationMessage msg(getIx(), jobIx_);
 
     std::vector<bool> notifiedLRT((size_t) nLrt_, false);
 
@@ -694,7 +338,7 @@ void LRT::runJob(ScheduleJob *job) {
 #endif
 
         auto *jobs2Wait = jobSuc->getJobs2Wait();
-        if (jobs2Wait[getIx()] >= 0) {
+        if (jobs2Wait[getIx()] == jobIx_) {
             notifyLRTJobStamp(jobSuc->getLRT(), &msg, notifiedLRT);
         }
 
@@ -734,13 +378,244 @@ void LRT::runJob(ScheduleJob *job) {
     }
 
 
-    jobIx_++;
-    jobStamps_[getIx()] = jobIx_;
+
     /** Freeing local memory **/
     StackMonitor::free(LRT_STACK, inFifosAlloc);
     StackMonitor::free(LRT_STACK, outFifosAlloc);
     StackMonitor::freeAll(LRT_STACK);
 }
+
+void LRT::broadcastJobStamp() {
+    shouldBroadcast_ = false;
+    if (jobIx_ < 0) {
+        return;
+    }
+    JobNotificationMessage msg(getIx(), jobIx_);
+    for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
+        if (i == getIx()) {
+            continue;
+        }
+        lrtCommunicator_->push_data_notification(i, &msg);
+    }
+}
+
+void LRT::clearJobQueue() {
+    jobQueue_.clear();
+    jobQueueSize_ = 0;
+    jobQueueIndex_ = 0;
+    lastJobID_ = -1;
+    jobIx_ = -1;
+    Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- cleared jobQueue_.\n", Platform::get()->getLrtIx());
+}
+
+void LRT::handleLRTNotification(NotificationMessage &message) {
+    switch (message.getSubType()) {
+        case LRT_END_ITERATION:
+            lastJobID_ = message.getIndex();
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- lastJobID: %d\n", getIx(), lastJobID_);
+            break;
+        case LRT_RST_ITERATION:
+            jobIx_ = -1;
+            jobQueueIndex_ = 0;
+            break;
+        case LRT_REPEAT_ITERATION_EN:
+            repeatJobQueue_ = true;
+            break;
+        case LRT_REPEAT_ITERATION_DIS:
+            repeatJobQueue_ = false;
+            break;
+        case LRT_PAUSE:
+            freeze_ = true;
+            break;
+        case LRT_RESUME:
+            freeze_ = false;
+            break;
+        case LRT_STOP:
+            Logger::print(LOG_GENERAL, LOG_INFO, "LRT: %d -- received LRT_STOP.\n");
+            run_ = false;
+            break;
+        default:
+            throwSpiderException("Unhandled type of LRT notification: %u\n", message.getSubType());
+    }
+
+}
+
+void LRT::handleJobNotification(NotificationMessage &message) {
+    /** Get the ID of the job in the global queue */
+    switch (message.getSubType()) {
+        case JOB_ADD: {
+            ScheduleJob *job;
+            // pop message from global queue
+            lrtCommunicator_->pop_job_message(&job, message.getIndex());
+            // push message in local queue (don't execute right now in case more important notification comes along
+            jobQueue_.push_back(job);
+            jobQueueSize_++;
+        }
+            break;
+        case JOB_CLEAR_QUEUE:
+            if (!repeatJobQueue_) {
+                clearJobQueue();
+            }
+            break;
+        case JOB_LAST_ID:
+            lastJobID_ = message.getIndex();
+            break;
+        case JOB_DELAY_BROADCAST_JOBSTAMP:
+            shouldBroadcast_ = true;
+            break;
+        case JOB_BROADCAST_JOBSTAMP:
+            broadcastJobStamp();
+            break;
+        case JOB_UPDATE_JOBSTAMP: {
+            JobNotificationMessage msg;
+            if (lrtCommunicator_->pop_data_notification(getIx(), &msg)) {
+                updateLRTJobStamp(msg.getID(), msg.getJobStamp());
+            } else {
+                Logger::print(LOG_JOB, LOG_ERROR,
+                              "LRT: %d received JOB_UPDATE_JOBSTAMP notification but no job stamp found.", getIx());
+            }
+        }
+            break;
+        default:
+            throwSpiderException("Unhandled type of JOB notification: %u\n", message.getSubType());
+    }
+}
+
+void LRT::handleTraceNotification(NotificationMessage &message) {
+    switch (message.getSubType()) {
+        case TRACE_ENABLE:
+            traceEnabled_ = true;
+            break;
+        case TRACE_DISABLE:
+            traceEnabled_ = false;
+            break;
+        case TRACE_RST:
+            break;
+        default:
+            throwSpiderException("Unhandled type of TRACE notification: %u\n", message.getSubType());
+    }
+}
+
+bool LRT::checkNotifications(bool shouldWait) {
+#ifdef __USE_GNU
+    sigset_t waiting_mask;
+    sigpending(&waiting_mask);
+    if (sigismember(&waiting_mask, SIGINT)) {
+        stopThreads = 1;
+    }
+#endif
+    NotificationMessage notificationMessage;
+    if (lrtCommunicator_->pop_notification(&notificationMessage, shouldWait)) {
+        switch (notificationMessage.getType()) {
+            case LRT_NOTIFICATION:
+                handleLRTNotification(notificationMessage);
+                break;
+            case TRACE_NOTIFICATION:
+                handleTraceNotification(notificationMessage);
+                break;
+            case JOB_NOTIFICATION:
+                handleJobNotification(notificationMessage);
+                break;
+            default:
+                throwSpiderException("Unhandled type of notification: %d.", notificationMessage.getType());
+        }
+        return true;
+    }
+    return false;
+}
+
+static inline void jobQueueSanityCheck(std::int32_t lastJobID, std::uint32_t jobQueueSize, int lrtId) {
+    if (lastJobID >= 0 && jobQueueSize > (std::uint32_t) (lastJobID + 1)) {
+        throwSpiderException(
+                "QueuSize mismatch with number of jobs to do. LRT: %d -- queueSize: %d -- lastJobID: %d", lrtId,
+                jobQueueSize, lastJobID);
+    }
+}
+
+void LRT::run(bool loop) {
+#ifdef VERBOSE_TIME
+    Time start = Platform::get()->getTime();
+#endif
+
+#ifdef VERBOSE_TIME
+    start_waiting_job = Platform::get()->getTime();
+#endif
+    bool doneWithCurrentJobs = false;
+    bool canRunJob = true;
+    while (run_) {
+        /** Should wait for notifications if no more jobs are available and that we are in loop mode **/
+        bool blocking = (loop && doneWithCurrentJobs) || !canRunJob;
+        /** 0. Check for the presence of notifications **/
+        while (checkNotifications(blocking)) {
+            blocking = false;
+        }
+        /** Check if we have to exit **/
+        if (!run_) {
+            break;
+        }
+        /** Sanity check **/
+        jobQueueSanityCheck(lastJobID_, jobQueueSize_, getIx());
+        /** 1. If JOB queue is not empty **/
+        bool gotJobToDo = jobQueueIndex_ < jobQueueSize_;
+        if (gotJobToDo) {
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- Got %d Jobs to do -- Got %d Jobs in queue -- Done %d.\n",
+                          Platform::get()->getLrtIx(), lastJobID_ + 1,
+                          jobQueueSize_, jobQueueIndex_);
+            /** Pop the job **/
+            auto *job = jobQueue_[jobQueueIndex_];
+            /** Can Run the job ? **/
+            canRunJob = compareLRTJobStamps(job->getJobs2Wait());
+            if (canRunJob) {
+                jobQueueIndex_++;
+                Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- Running Job: %d\n", Platform::get()->getLrtIx(),
+                              jobIx_ + 1);
+                /** Run the job **/
+                runJob(job);
+                Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- Finished Job: %d\n", Platform::get()->getLrtIx(), jobIx_);
+            }
+        }
+        /** 2. Check if end of iteration of end of current jobs **/
+        bool doneWithIteration = lastJobID_ >= 0 && jobIx_ == lastJobID_;
+        if (doneWithIteration) {
+            if (loop) {
+                /** Send finished iteration message **/
+                NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION, getIx());
+                spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &finishedMessage);
+            }
+            /** Reset local jobStamps **/
+            jobStamps_.assign(jobStamps_.size(), -1);
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- finished iteration.\n", getIx());
+            if (repeatJobQueue_) {
+                jobIx_ = -1;
+                jobQueueIndex_ = 0;
+            } else {
+                clearJobQueue();
+            }
+        }
+        doneWithCurrentJobs = (jobQueueSize_ == jobQueueIndex_);
+        if (doneWithCurrentJobs) {
+            if (shouldBroadcast_) {
+                broadcastJobStamp();
+            }
+            if (!loop) {
+                Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- exiting iteration.\n", getIx());
+                break;
+            }
+        }
+    }
+
+#ifdef VERBOSE_TIME
+    time_global += Platform::get()->getTime() - start;
+#endif
+}
+
+
+#ifdef PAPI_AVAILABLE
+
+void LRT::addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction) {
+    this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
+}
+
 
 Param *LRT::getInParams(SRDAGVertex *vertex) {
     int nParams = 0;

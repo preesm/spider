@@ -82,7 +82,6 @@ static SharedMemArchi *archi_;
 
 pthread_barrier_t pthreadLRTBarrier;
 
-
 void printfSpider();
 
 static void setAffinity(int cpuId) {
@@ -146,7 +145,27 @@ void *lrtPthreadRunner(void *args) {
     pthread_exit(EXIT_SUCCESS);
 }
 
-static LRTInfo *lrtInfoArray = nullptr;
+void PlatformPThread::createAndLaunchThreads() {
+#ifdef __USE_GNU
+    /** Blocking SIGINT signals ot handle it properly **/
+    sigset_t childMask;
+    if ((sigemptyset(&childMask) == -1) || (sigaddset(&childMask, SIGINT) == -1)) {
+        throwSpiderException("Failed to initialize signal mask.");
+    }
+    if (pthread_sigmask(SIG_BLOCK, &childMask, nullptr) == -1) {
+        throwSpiderException("Failed to block SIGINT signal.");
+    }
+#else
+    Logger::print(LOG_GENERAL, LOG_WARNING,
+                  "Windows environment detected, console interruption will not be catched properly.\n");
+#endif
+
+    /** Starting the threads */
+    for (unsigned int i = 1; i < nLrt_; i++) {
+        pthread_create(&thread_lrt_[i - 1], nullptr, &lrtPthreadRunner, &lrtInfoArray_[i]);
+    }
+}
+
 
 PlatformPThread::PlatformPThread(SpiderConfig &config) {
     if (platform_) {
@@ -186,7 +205,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     traceQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<TraceMessage *>);
     /** Threads structure */
     thread_lrt_ = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, pthread_t);
-    lrtInfoArray = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, LRTInfo);
+    lrtInfoArray_ = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, LRTInfo);
 
     /** Initialize SpiderCommunicator */
     spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
@@ -246,31 +265,30 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
             lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i + offsetPe);
 
-            lrtInfoArray[i + offsetPe].lrt = lrt_[i + offsetPe];
-            lrtInfoArray[i + offsetPe].fcts = config.platform.fcts;
-            lrtInfoArray[i + offsetPe].nFcts = config.platform.nLrtFcts;
-            lrtInfoArray[i + offsetPe].lrtID = i + offsetPe;
-            lrtInfoArray[i + offsetPe].platform = this;
-            lrtInfoArray[i + offsetPe].coreAffinity = config.platform.coreAffinities[pe][i];
-            lrtInfoArray[i + offsetPe].pthreadBarrier = &pthreadLRTBarrier;
+            lrtInfoArray_[i + offsetPe].lrt = lrt_[i + offsetPe];
+            lrtInfoArray_[i + offsetPe].fcts = config.platform.fcts;
+            lrtInfoArray_[i + offsetPe].nFcts = config.platform.nLrtFcts;
+            lrtInfoArray_[i + offsetPe].lrtID = i + offsetPe;
+            lrtInfoArray_[i + offsetPe].platform = this;
+            lrtInfoArray_[i + offsetPe].coreAffinity = config.platform.coreAffinities[pe][i];
+            lrtInfoArray_[i + offsetPe].pthreadBarrier = &pthreadLRTBarrier;
             /** Stack related information */
-            lrtInfoArray[i + offsetPe].lrtStack.name = config.lrtStack.name;
-            lrtInfoArray[i + offsetPe].lrtStack.type = config.lrtStack.type;
-            lrtInfoArray[i + offsetPe].lrtStack.start = (void *) ((char *) config.lrtStack.start +
-                                                                  (i + offsetPe) * config.lrtStack.size / nLrt_);
-            lrtInfoArray[i + offsetPe].lrtStack.size = config.lrtStack.size / nLrt_;
+            lrtInfoArray_[i + offsetPe].lrtStack.name = config.lrtStack.name;
+            lrtInfoArray_[i + offsetPe].lrtStack.type = config.lrtStack.type;
+            lrtInfoArray_[i + offsetPe].lrtStack.start = (void *) ((char *) config.lrtStack.start +
+                                                                   (i + offsetPe) * config.lrtStack.size / nLrt_);
+            lrtInfoArray_[i + offsetPe].lrtStack.size = config.lrtStack.size / nLrt_;
             /** Papify related information */
-            lrtInfoArray[i + offsetPe].usePapify = config.usePapify;
+            lrtInfoArray_[i + offsetPe].usePapify = config.usePapify;
         }
         offsetPe += config.platform.pesPerPeType[pe];
     }
 
     lrtThreadsArray[0] = pthread_self();
 
-    /** Starting the threads */
-    for (unsigned int i = 1; i < nLrt_; i++) {
-        pthread_create(&thread_lrt_[i - 1], nullptr, &lrtPthreadRunner, &lrtInfoArray[i]);
-    }
+    /** Starting threads **/
+    createAndLaunchThreads();
+
 
     //waiting for every threads to register itself in lrtThreadsArray
     pthread_barrier_wait(&pthreadLRTBarrier);
@@ -379,7 +397,7 @@ PlatformPThread::~PlatformPThread() {
 
     StackMonitor::free(ARCHI_STACK, archi_);
     StackMonitor::free(ARCHI_STACK, thread_lrt_);
-    StackMonitor::free(ARCHI_STACK, lrtInfoArray);
+    StackMonitor::free(ARCHI_STACK, lrtInfoArray_);
 
     /** Freeing queues **/
     for (unsigned int i = 0; i < nLrt_ + 1; ++i) {
@@ -492,7 +510,6 @@ void PlatformPThread::rstJobIxRecv() {
                 break;
             } else {
                 /** Save the notification for later **/
-//                Logger::print(LOG_GENERAL, LOG_INFO, "received other notification. Type: %d -- Subtype: %d\n", finishedMessage.getType(), finishedMessage.getSubType());
                 spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
             }
         }
@@ -512,14 +529,6 @@ void PlatformPThread::rstTime() {
 
     start.tv_sec = (start_steady - origin_steady).count() / 1000000000;
     start.tv_nsec = (start_steady - origin_steady).count() - (start_steady - origin_steady).count() / 1000000000;
-
-//
-//    for (int lrt = 1; lrt < archi_->getNPE(); lrt++) {
-//        auto msg = (ClearTimeMessage *) getSpiderCommunicator()->ctrl_start_send(lrt, sizeof(ClearTimeMessage));
-//        msg->id_ = MSG_CLEAR_TIME;
-//        msg->timespec_ = start;
-//        getSpiderCommunicator()->ctrl_end_send(lrt, sizeof(ClearTimeMessage));
-//    }
 }
 
 Time PlatformPThread::getTime() {

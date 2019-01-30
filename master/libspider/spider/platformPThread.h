@@ -183,6 +183,8 @@ private:
 
     void initStacks(SpiderConfig &config);
 
+    void createAndLaunchThreads();
+
     unsigned int nLrt_;
     pthread_t *lrtThreadsArray;
 
@@ -210,6 +212,8 @@ private:
     // Papify information
     std::map<lrtFct, PapifyAction *> papifyJobInfo;
 #endif
+
+   struct LRTInfo *lrtInfoArray_;
 };
 
 inline void PlatformPThread::setStack(SpiderStack id, Stack *stack) {

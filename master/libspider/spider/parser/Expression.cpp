@@ -59,7 +59,7 @@ static const char *operatorSign[5] = {
         "+", //OP_ADD
         "-", //OP_SUB
         "*", //OP_MUL
-        "/" //OP_DIV,
+        "/", //OP_DIV,
         "^" //OP_POW
 };
 

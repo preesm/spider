@@ -37,53 +37,26 @@
  */
 #include <Logger.h>
 
-static bool jobLogEnabled = false;
-static bool timeLogEnabled = false;
-static bool generalLogEnabled = true;
+static bool loggersValue[kNLogger];
 
 static std::mutex lock;
 
-static void setValue(LoggerType type, bool value) {
-    switch (type) {
-        case LOG_JOB:
-            jobLogEnabled = value;
-            break;
-        case LOG_TIME:
-            timeLogEnabled = value;
-            break;
-        case LOG_GENERAL:
-            generalLogEnabled = value;
-            break;
-        default:
-            fprintf(stderr, "ERROR: Invalid logger type.\n");
-    }
-}
-
-static inline bool getValue(LoggerType type) {
-    switch (type) {
-        case LOG_JOB:
-            return jobLogEnabled;
-        case LOG_TIME:
-            return timeLogEnabled;
-        case LOG_GENERAL:
-            return generalLogEnabled;
-        default:
-            fprintf(stderr, "ERROR: Invalid logger type.\n");
-            break;
-    }
-    return false;
+void Logger::initializeLogger() {
+    loggersValue[LOG_JOB] = false;
+    loggersValue[LOG_TIME] = false;
+    loggersValue[LOG_GENERAL] = true;
 }
 
 void Logger::enable(LoggerType type) {
-    setValue(type, true);
+    loggersValue[type] = true;
 }
 
 void Logger::disable(LoggerType type) {
-    setValue(type, false);
+    loggersValue[type] = false;
 }
 
 inline bool Logger::isLoggerEnabled(LoggerType type) {
-    return getValue(type);
+    return loggersValue[type];
 }
 
 

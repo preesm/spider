@@ -63,10 +63,12 @@ public:
     virtual ~LRT();
 
     void runUntilNoMoreJobs() {
+        run_ = true;
         run(false);
     };
 
     void runInfinitly() {
+        run_ = true;
         run(true);
     };
 
@@ -138,11 +140,33 @@ private:
     LrtCommunicator *lrtCommunicator_;
     std::vector<std::int32_t> jobStamps_;
 
+    /**
+     * @brief Compare local job stamps of all LRT with given array.
+     * @param jobsToWait Array of job stamps to compare.
+     * @return true if all local values are superior or equal to jobsToWait, false else.
+     */
     bool compareLRTJobStamps(std::int32_t *jobsToWait);
 
+    /**
+     * @brief Update local value of an LRT job stamp.
+     * @param lrtID     ID of the LRT to update value of.
+     * @param jobStamp  New local job stamp of LRT[lrtID].
+     */
     void updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp);
 
+    /**
+     * @brief Send notification of current job stamp to an LRT
+     * @param lrtID        LRT to which we send the notification.
+     * @param msg
+     * @param notifiedLRT  Array of already notified LRT
+     */
     void notifyLRTJobStamp(std::int32_t lrtID, JobNotificationMessage *msg, std::vector<bool> &notifiedLRT);
+
+    /**
+     * @brief Run a scheduled job
+     * @param job Job to run
+     */
+    void runJob(ScheduleJob *job);
 
     /**
      * @brief Fetch an LRT notification message
@@ -163,21 +187,22 @@ private:
     void handleTraceNotification(NotificationMessage &message);
 
     /**
-     * @brief Run a JOB message
-     * @param message message of the JOB to run
+     * @brief Check for received notifications and treat them if any.
+     * @param shouldWait Flag to wait for notification if none are available.
+     * @return
      */
-    void runJob(JobInfoMessage *message);
+    bool checkNotifications(bool shouldWait);
+
+    void run(bool loop);
 
     Param *getInParams(SRDAGVertex *vertex);
 
-    void runJob(ScheduleJob *job);
 
     /**
      * @brief Clear the JOB queue
      */
     void clearJobQueue();
 
-    void run(bool loop);
 
     void broadcastJobStamp();
 };

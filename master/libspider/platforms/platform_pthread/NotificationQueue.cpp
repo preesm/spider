@@ -71,7 +71,7 @@ void NotificationQueue<T>::push(T *data) {
 
 template<typename T>
 bool NotificationQueue<T>::pop(T *data, bool blocking) {
-    /** Wait until a item is pushed in the queue */
+    /** Wait until an item is pushed in the queue */
     if (blocking) {
         sem_wait(&queueCounter_);
     } else if (sem_trywait(&queueCounter_)) {

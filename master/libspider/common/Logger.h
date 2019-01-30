@@ -40,10 +40,12 @@
 
 #include <platform.h>
 
+const int kNLogger = 3;
+
 typedef enum {
-    LOG_JOB,
-    LOG_TIME,
-    LOG_GENERAL,
+    LOG_JOB = 0,
+    LOG_TIME = 1,
+    LOG_GENERAL = 2,
 }LoggerType;
 
 typedef enum {
@@ -53,6 +55,7 @@ typedef enum {
 }LoggerLevel;
 
 namespace Logger {
+    void initializeLogger();
     bool isLoggerEnabled(LoggerType type);
     void enable(LoggerType type);
     void disable(LoggerType type);

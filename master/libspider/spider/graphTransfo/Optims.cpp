@@ -1,3 +1,5 @@
+#include <cmath>
+
 /**
  * Copyright or © or Copr. IETR/INSA - Rennes (2015 - 2018) :
  *
@@ -57,7 +59,7 @@ void printOptimsStats() {
     if (!joinforkUsed) printf("JoinFork Unused\n");
 }
 
-static int removeNullEdge(SRDAGGraph *topDag) {
+static bool removeNullEdge(SRDAGGraph *topDag) {
     for (int i = 0; i < topDag->getNEdge(); i++) {
         SRDAGEdge *nullEdge = topDag->getEdge(i);
         if (nullEdge->getRate() == 0) {
@@ -96,7 +98,7 @@ static int removeNullEdge(SRDAGGraph *topDag) {
     return false;
 }
 
-static int reduceRB(SRDAGGraph *topDag) {
+static bool reduceRB(SRDAGGraph *topDag) {
     for (int i = 0; i < topDag->getNVertex(); i++) {
         SRDAGVertex *rb = topDag->getVertex(i);
         if (rb && rb->getState() == SRDAG_EXEC && rb->getType() == SRDAG_ROUNDBUFFER) {
@@ -115,10 +117,10 @@ static int reduceRB(SRDAGGraph *topDag) {
                 inEdge->disconnectSnk();
                 inEdge->connectSnk(nextVertex, edgeIx);
                 topDag->delVertex(rb);
-                return 1;
+                return true;
             } else if (inTkn < outTkn) {
                 /* Duplicate Token Using Br/Join Pattern */
-                auto nBrOut = (int) ceil(((float) outTkn) / inTkn);
+                auto nBrOut = static_cast<std::int32_t>(std::ceil(((float) outTkn) / inTkn));
                 SRDAGVertex *br = topDag->addBroadcast(MAX_IO_EDGES);
                 SRDAGVertex *join = topDag->addJoin(MAX_IO_EDGES);
                 int rest = outTkn;
@@ -171,10 +173,10 @@ static int reduceRB(SRDAGGraph *topDag) {
             }
         }
     }
-    return 0;
+    return false;
 }
 
-static int reduceJoinJoin(SRDAGGraph *topDag) {
+static bool reduceJoinJoin(SRDAGGraph *topDag) {
     for (int i = 0; i < topDag->getNVertex(); i++) {
         SRDAGVertex *join0 = topDag->getVertex(i);
         if (join0 && join0->getState() == SRDAG_EXEC && join0->getType() == SRDAG_JOIN) {
@@ -206,14 +208,14 @@ static int reduceJoinJoin(SRDAGGraph *topDag) {
                 topDag->delVertex(join0);
 
                 joinjoinUsed = true;
-                return 1;
+                return true;
             }
         }
     }
-    return 0;
+    return false;
 }
 
-static int reduceForkFork(SRDAGGraph *topDag) {
+static bool reduceForkFork(SRDAGGraph *topDag) {
     for (int i = 0; i < topDag->getNVertex(); i++) {
         SRDAGVertex *secFork = topDag->getVertex(i);
         if (secFork && secFork->getType() == SRDAG_FORK) {
@@ -245,14 +247,14 @@ static int reduceForkFork(SRDAGGraph *topDag) {
                 topDag->delVertex(secFork);
 
                 forkforkUsed = true;
-                return 1;
+                return true;
             }
         }
     }
-    return 0;
+    return false;
 }
 
-static int reduceBrBr(SRDAGGraph *topDag) {
+static bool reduceBrBr(SRDAGGraph *topDag) {
     for (int i = 0; i < topDag->getNVertex(); i++) {
         SRDAGVertex *secBr = topDag->getVertex(i);
         if (secBr && secBr->getType() == SRDAG_BROADCAST) {
@@ -283,11 +285,11 @@ static int reduceBrBr(SRDAGGraph *topDag) {
                 topDag->delVertex(secBr);
 
                 brbrUsed = true;
-                return 1;
+                return true;
             }
         }
     }
-    return 0;
+    return false;
 }
 
 static bool removeBr(SRDAGGraph *topDag) {
@@ -449,7 +451,6 @@ static bool removeFork(SRDAGGraph *topDag) {
 }
 
 static bool removeJoin(SRDAGGraph *topDag) {
-    bool result = false;
     for (int i = 0; i < topDag->getNVertex(); i++) {
         SRDAGVertex *join = topDag->getVertex(i);
         if (join && join->getState() == SRDAG_EXEC && join->getType() == SRDAG_JOIN) {
@@ -487,17 +488,12 @@ static bool removeJoin(SRDAGGraph *topDag) {
                 joinUsed = true;
                 return true;
             }
-
-            if (result) {
-                joinUsed = true;
-                return true;
-            }
         }
     }
-    return result;
+    return false;
 }
 
-static int reduceInitEnd(SRDAGGraph *topDag) {
+static bool reduceInitEnd(SRDAGGraph *topDag) {
     for (int i = 0; i < topDag->getNVertex(); i++) {
         SRDAGVertex *init = topDag->getVertex(i);
         if (init && init->getState() == SRDAG_EXEC && init->getType() == SRDAG_INIT) {
@@ -510,14 +506,14 @@ static int reduceInitEnd(SRDAGGraph *topDag) {
                 topDag->delVertex(end);
                 topDag->delVertex(init);
                 initendUsed = true;
-                return 1;
+                return true;
             }
         }
     }
-    return 0;
+    return false;
 }
 
-static int reduceJoinEnd(SRDAGGraph *topDag) {
+static bool reduceJoinEnd(SRDAGGraph *topDag) {
     for (int i = 0; i < topDag->getNVertex(); i++) {
         SRDAGVertex *join = topDag->getVertex(i);
         if (join && join->getState() == SRDAG_EXEC && join->getType() == SRDAG_JOIN) {
@@ -526,7 +522,7 @@ static int reduceJoinEnd(SRDAGGraph *topDag) {
                 int nEdges = join->getNConnectedInEdge();
                 // Check if the End was linked to a persistent delay or not
                 bool isPersistent = end->getInParam(0) == PISDF_DELAY_PERSISTENT;
-                int memAllocStart = -1;
+                Param memAllocStart = -1;
                 if (isPersistent) {
                     memAllocStart = end->getInParam(1);
                 }
@@ -548,14 +544,14 @@ static int reduceJoinEnd(SRDAGGraph *topDag) {
                 topDag->delEdge(edge);
                 topDag->delVertex(end);
                 topDag->delVertex(join);
-                return 1;
+                return true;
             }
         }
     }
-    return 0;
+    return false;
 }
 
-static int reduceJoinFork(SRDAGGraph *topDag) {
+static bool reduceJoinFork(SRDAGGraph *topDag) {
     for (int i = 0; i < topDag->getNVertex(); i++) {
         SRDAGVertex *join = topDag->getVertex(i);
         if (join && join->getType() == SRDAG_JOIN && join->getState() != SRDAG_RUN) {
@@ -683,9 +679,9 @@ static int reduceJoinFork(SRDAGGraph *topDag) {
                 if (sourceIndex != nbSourceRepetitions) {
                     /* Check Unhandled vertices */
                     /* Shift on Fork */
-                    for (int i = sourceIndex; i < nbSourceRepetitions; i++) {
-                        if (sources[i]->getType() == SRDAG_FORK) {
-                            SRDAGVertex *rem_fork = sources[i];
+                    for (int index1 = sourceIndex; index1 < nbSourceRepetitions; index1++) {
+                        if (sources[index1]->getType() == SRDAG_FORK) {
+                            SRDAGVertex *rem_fork = sources[index1];
                             for (int j = 0; j < rem_fork->getNConnectedOutEdge(); j++) {
                                 if (rem_fork->getOutEdge(j) == nullptr) {
                                     for (int k = j + 1; k < rem_fork->getNOutEdge(); k++) {
@@ -704,9 +700,9 @@ static int reduceJoinFork(SRDAGGraph *topDag) {
                 }
                 if (sinkIndex != nbSinkRepetitions) {
                     /* Check Unhandled vertices */
-                    for (int i = sinkIndex; i < nbSinkRepetitions; i++) {
-                        if (sinks[i]->getType() == SRDAG_END) {
-                            topDag->delVertex(sinks[i]);
+                    for (int index1 = sinkIndex; index1 < nbSinkRepetitions; index1++) {
+                        if (sinks[index1]->getType() == SRDAG_END) {
+                            topDag->delVertex(sinks[index1]);
                         } else {
                             throwSpiderException("A non-End vertex have a cons of 0.");
                         }
@@ -714,17 +710,16 @@ static int reduceJoinFork(SRDAGGraph *topDag) {
                 }
 
                 joinforkUsed = true;
-                return 1;
+                return true;
             }
         }
     }
-    return 0;
+    return false;
 }
 
 void optims(SRDAGGraph *topDag) {
     bool res, resTotal;
     do {
-        res = false;
         resTotal = false;
 
         do {

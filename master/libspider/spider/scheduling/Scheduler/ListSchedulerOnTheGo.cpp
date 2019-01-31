@@ -51,9 +51,7 @@ ListSchedulerOnTheGo::ListSchedulerOnTheGo() {
     list_ = nullptr;
 }
 
-ListSchedulerOnTheGo::~ListSchedulerOnTheGo() {
-
-}
+ListSchedulerOnTheGo::~ListSchedulerOnTheGo() = default;
 
 static int compareSchedLevel(SRDAGVertex *vertexA, SRDAGVertex *vertexB) {
     return vertexB->getSchedLvl() - vertexA->getSchedLvl();

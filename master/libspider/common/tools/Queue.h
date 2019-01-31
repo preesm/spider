@@ -57,7 +57,7 @@ public:
         last_ = 0;
     }
 
-    Queue(SpiderStack stackId) {
+    explicit Queue(SpiderStack stackId) {
         stackId_ = stackId;
         first_ = nullptr;
         last_ = nullptr;

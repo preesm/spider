@@ -73,12 +73,12 @@ public:
     inline int getNJobs(int pe) const;
 
 private:
-    int nPE_;
-    int nJobMax_;
-    int nJobs_;
+    int nPE_{};
+    int nJobMax_{};
+    int nJobs_{};
     std::vector<int> nJobPerPE_;
     std::vector<Time> readyTime_;
-    std::vector<ScheduleJob *> *jobs_;
+    std::vector<ScheduleJob *> *jobs_{};
 
     ScheduleJob *findJobFromVertex(SRDAGVertex *vertex);
 

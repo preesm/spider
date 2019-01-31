@@ -44,7 +44,7 @@
 
 class DynStack : public Stack {
 public:
-    DynStack(const char *name);
+    explicit DynStack(const char *name);
 
     ~DynStack() override;
 

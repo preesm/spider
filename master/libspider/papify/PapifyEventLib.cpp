@@ -54,13 +54,13 @@ static void PAPIInitMultiplex() {
 
     /* For now, assume multiplexing on CPU compnent only */
     const PAPI_component_info_t *cmpinfo = PAPI_get_component_info(0);
-    if (cmpinfo == NULL) {
+    if (cmpinfo == nullptr) {
         PapifyEventLib::throwError(__FILE__, __LINE__, "PAPI_get_component_info failed.");
         return;
     }
 
     const PAPI_hw_info_t *hw_info = PAPI_get_hardware_info();
-    if (hw_info == NULL) {
+    if (hw_info == nullptr) {
         PapifyEventLib::throwError(__FILE__, __LINE__, "PAPI_get_hardware_info failed.");
         return;
     }
@@ -100,7 +100,7 @@ PapifyEventLib::PapifyEventLib() {
     // Initialize the zero time variable
     zeroTime_ = PAPI_get_real_usec();
     configLock_ = new pthread_mutex_t;
-    if (pthread_mutex_init(configLock_, NULL)) {
+    if (pthread_mutex_init(configLock_, nullptr)) {
         throwError(__FILE__, __LINE__, "mutex init failed.");
     }
 }
@@ -137,7 +137,7 @@ int PapifyEventLib::PAPIEventSetInit(int numberOfEvents,
     }
 
     // 2. Create the unified event list
-    int eventCodeSetMaxSize = PAPI_get_opt(PAPI_MAX_MPX_CTRS, NULL);
+    int eventCodeSetMaxSize = PAPI_get_opt(PAPI_MAX_MPX_CTRS, nullptr);
     if (eventCodeSetMaxSize < numberOfEvents) {
         throwError(__FILE__, __LINE__, "eventCodeSetMaxSize < eventCodeSetSize, too many performance events defined!");
         return -1;
@@ -170,7 +170,7 @@ int PapifyEventLib::registerNewThread(int numberOfEvents,
     }
 
     // 4. Checking if multiplexing is necessary or not
-    int maxNumberHwCounters = PAPI_get_opt(PAPI_MAX_HWCTRS, NULL);
+    int maxNumberHwCounters = PAPI_get_opt(PAPI_MAX_HWCTRS, nullptr);
 
     if (maxNumberHwCounters < numberOfEvents) {
         PAPI_option_t opt;

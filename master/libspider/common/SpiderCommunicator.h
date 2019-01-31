@@ -45,7 +45,7 @@
 
 class SpiderCommunicator : public Communicator {
 public:
-    virtual ~SpiderCommunicator() {}
+    ~SpiderCommunicator() override = default;
 
     virtual void push_notification(int lrtID, NotificationMessage *msg) = 0;
 
@@ -72,7 +72,7 @@ private:
     bool pop_notification(NotificationMessage *, bool) override { return false; };
 
 protected:
-    SpiderCommunicator() {}
+    SpiderCommunicator() = default;
 };
 
 #endif/*SPIDER_COMMUNICATOR_H*/

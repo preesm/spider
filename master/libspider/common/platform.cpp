@@ -41,11 +41,7 @@
 
 Platform *Platform::platform_ = nullptr;
 
-Platform::Platform() {
+Platform::Platform() = default;
 
-}
-
-Platform::~Platform() {
-
-}
+Platform::~Platform() = default;
 

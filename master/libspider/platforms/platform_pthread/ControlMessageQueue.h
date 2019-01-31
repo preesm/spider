@@ -116,9 +116,6 @@ template
 class ControlMessageQueue<JobInfoMessage *>;
 
 template
-class ControlMessageQueue<ScheduleJob *>;
-
-template
 class ControlMessageQueue<ParameterMessage *>;
 
 template

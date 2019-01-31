@@ -46,9 +46,9 @@ using MappingTimeFct = Time (*)(int, int);
 
 class Archi {
 protected:
-    Archi() {}
+    Archi() = default;
 
-    virtual ~Archi() {}
+    virtual ~Archi() = default;
 
 public:
 

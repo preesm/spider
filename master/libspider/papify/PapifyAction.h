@@ -82,13 +82,13 @@ public:
     /**
      * @brief start the monitoring of the events
      */
-    void startMonitor(void);
+    void startMonitor();
 
     /**
      * @brief stop the monitoring of the events;
      *
      */
-    void stopMonitor(void);
+    void stopMonitor();
 
     /**
      * @brief Write the events values

@@ -48,7 +48,7 @@ class ScheduleJob;
 
 class Communicator {
 public:
-    virtual ~Communicator() {}
+    virtual ~Communicator() = default;
 
     virtual void push_notification(NotificationMessage *msg) = 0;
 
@@ -64,7 +64,7 @@ public:
 
 
 protected:
-    Communicator() {}
+    Communicator() = default;
 };
 
 #endif //SPIDER_COMMUNICATOR_H

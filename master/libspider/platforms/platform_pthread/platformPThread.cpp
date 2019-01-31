@@ -66,7 +66,7 @@
 
 #define PLATFORM_FPRINTF_BUFFERSIZE 2000
 
-#define MAX_MSG_SIZE 10*1024
+#define MAX_MSG_SIZE (10*1024)
 
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;

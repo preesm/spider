@@ -49,7 +49,7 @@
 class PiSDFEdge : public SetElement {
 public:
     /** Constructors */
-    PiSDFEdge(PiSDFGraph *graph);
+    explicit PiSDFEdge(PiSDFGraph *graph);
 
     ~PiSDFEdge() override;
 

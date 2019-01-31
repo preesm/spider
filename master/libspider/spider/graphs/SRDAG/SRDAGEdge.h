@@ -74,7 +74,7 @@ public:
     /** Setters */
     inline void setRate(int rate);
 
-    inline void setAlloc(int rate);
+    inline void setAlloc(int alloc);
 
     /** Connections Fcts */
     void connectSrc(SRDAGVertex *src, int srcPortId);

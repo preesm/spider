@@ -50,7 +50,7 @@ public:
 
     ~List();
 
-    T &operator[](int n);
+    T &operator[](int ix);
 
     int getNb();
 

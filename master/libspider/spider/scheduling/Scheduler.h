@@ -47,9 +47,9 @@
 
 class Scheduler {
 public:
-    Scheduler() {}
+    Scheduler() = default;
 
-    virtual ~Scheduler() {}
+    virtual ~Scheduler() = default;
 
     virtual void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi) = 0;
 

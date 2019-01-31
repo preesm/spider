@@ -49,7 +49,7 @@ public:
      * Constructor.
      * @param nLrt Number of Lrt in the platform.
      */
-    DataQueues(int nLrt);
+    explicit DataQueues(int nLrt);
 
     /**
      * Destructor.

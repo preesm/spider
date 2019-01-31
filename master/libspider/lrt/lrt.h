@@ -58,7 +58,7 @@ using lrtFct = void (*)(void **, void **, Param *, Param *);
 
 class LRT {
 public:
-    LRT(int ix);
+    explicit LRT(int ix);
 
     virtual ~LRT();
 

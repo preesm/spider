@@ -1,3 +1,7 @@
+#include <cmath>
+
+#include <cmath>
+
 /**
  * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2018) :
  *
@@ -165,21 +169,21 @@ Param Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, 
                     case POW:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
-                            *(stackPtr - 1) = pow((double) *(stackPtr - 1), *stackPtr);
+                            *(stackPtr - 1) = static_cast<float>(pow((double) *(stackPtr - 1), *stackPtr));
                         } else {
                             throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case FLOOR:
                         if (stackPtr - stack >= 1) {
-                            *(stackPtr - 1) = floor(*(stackPtr - 1));
+                            *(stackPtr - 1) = std::floor(*(stackPtr - 1));
                         } else {
                             throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case CEIL:
                         if (stackPtr - stack >= 1) {
-                            *(stackPtr - 1) = ceil(*(stackPtr - 1));
+                            *(stackPtr - 1) = std::ceil(*(stackPtr - 1));
                         } else {
                             throwSpiderException("Invalid operator in expression.");
                         }
@@ -247,21 +251,21 @@ Param Expression::evaluate() const {
                     case POW:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
-                            *(stackPtr - 1) = pow((double) *(stackPtr - 1), *stackPtr);
+                            *(stackPtr - 1) = static_cast<float>(pow((double) *(stackPtr - 1), *stackPtr));
                         } else {
                             throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case FLOOR:
                         if (stackPtr - stack >= 1) {
-                            *(stackPtr - 1) = floor(*(stackPtr - 1));
+                            *(stackPtr - 1) = std::floor(*(stackPtr - 1));
                         } else {
                             throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case CEIL:
                         if (stackPtr - stack >= 1) {
-                            *(stackPtr - 1) = ceil(*(stackPtr - 1));
+                            *(stackPtr - 1) = std::ceil(*(stackPtr - 1));
                         } else {
                             throwSpiderException("Invalid operator in expression.");
                         }
@@ -283,7 +287,7 @@ Param Expression::evaluate() const {
         }
         inputPtr++;
     }
-    return stack[0];
+    return static_cast<Param>(stack[0]);
 }
 
 Param Expression::evaluate(const Param *vertexParamValues, int nParam) const {
@@ -330,21 +334,21 @@ Param Expression::evaluate(const Param *vertexParamValues, int nParam) const {
                     case POW:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
-                            *(stackPtr - 1) = pow((double) *(stackPtr - 1), *stackPtr);
+                            *(stackPtr - 1) = static_cast<float>(pow((double) *(stackPtr - 1), *stackPtr));
                         } else {
                             throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case FLOOR:
                         if (stackPtr - stack >= 1) {
-                            *(stackPtr - 1) = floor(*(stackPtr - 1));
+                            *(stackPtr - 1) = std::floor(*(stackPtr - 1));
                         } else {
                             throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case CEIL:
                         if (stackPtr - stack >= 1) {
-                            *(stackPtr - 1) = ceil(*(stackPtr - 1));
+                            *(stackPtr - 1) = std::ceil(*(stackPtr - 1));
                         } else {
                             throwSpiderException("Invalid operator in expression.");
                         }
@@ -369,12 +373,12 @@ Param Expression::evaluate(const Param *vertexParamValues, int nParam) const {
         }
         inputPtr++;
     }
-    return stack[0];
+    return static_cast<Param>(stack[0]);
 }
 
 void Expression::toString(
         const PiSDFParam *const *params, int nParam,
-        char *out, int outSizeMax) {
+        char *out, size_t outSizeMax) {
     static char outputStack[REVERSE_POLISH_STACK_MAX_ELEMENTS + 1][EXPR_LEN_MAX];
     int outputStackSize = 0;
 //	Token* varStackPtr = stack_;

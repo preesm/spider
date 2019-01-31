@@ -56,7 +56,7 @@ public:
 
     void toString(
             const PiSDFParam *const *params, int nParam,
-            char *out, int outSizeMax);
+            char *out, size_t outSizeMax);
 
 private:
 //    ParamSymbolTable symbolTable_;

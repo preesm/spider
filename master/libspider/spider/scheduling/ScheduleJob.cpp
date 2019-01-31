@@ -84,9 +84,9 @@ bool ScheduleJob::isAfterJob(ScheduleJob *job) {
 }
 
 void ScheduleJob::print(FILE *file) {
-    int red = (vertex_->getId() & 0x3) * 50 + 100;
-    int green = ((vertex_->getId() >> 2) & 0x3) * 50 + 100;
-    int blue = ((vertex_->getId() >> 4) & 0x3) * 50 + 100;
+    int red = (static_cast<unsigned>(vertex_->getId()) & 3u) * 50 + 100;
+    int green = ((static_cast<unsigned>(vertex_->getId()) >> 2u) & 3u) * 50 + 100;
+    int blue = ((static_cast<unsigned>(vertex_->getId()) >> 4u) & 3u) * 50 + 100;
 
     Platform::get()->fprintf(file, "\t<event\n");
     Platform::get()->fprintf(file, "\t\tstart=\"%" PRId64"\"\n", startTime_);

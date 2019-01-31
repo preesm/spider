@@ -52,9 +52,9 @@ public:
 
     inline const char *getName() const;
 
-    Stack(const char *name) : name_(name) {}
+    explicit Stack(const char *name) : name_(name) {}
 
-    virtual ~Stack() {}
+    virtual ~Stack() = default;
 
 private:
     const char *name_;

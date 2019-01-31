@@ -47,9 +47,7 @@ ListScheduler::ListScheduler() {
     list_ = nullptr;
 }
 
-ListScheduler::~ListScheduler() {
-
-}
+ListScheduler::~ListScheduler() = default;
 
 static int compareSchedLevel(SRDAGVertex *vertexA, SRDAGVertex *vertexB) {
     return vertexB->getSchedLvl() - vertexA->getSchedLvl();

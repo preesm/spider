@@ -72,9 +72,7 @@ SRDAGEdge::SRDAGEdge(SRDAGGraph *graph, int globalId) {
     alloc_ = -1;
 }
 
-SRDAGEdge::~SRDAGEdge() {
-
-}
+SRDAGEdge::~SRDAGEdge() = default;
 
 void SRDAGEdge::connectSrc(SRDAGVertex *src, int srcPortId) {
     if (src_ != nullptr) {

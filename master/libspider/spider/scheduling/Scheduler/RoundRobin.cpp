@@ -55,9 +55,7 @@ RoundRobin::RoundRobin() {
     list_ = nullptr;
 }
 
-RoundRobin::~RoundRobin() {
-
-}
+RoundRobin::~RoundRobin() = default;
 
 static int compareSchedLevel(SRDAGVertex *vertexA, SRDAGVertex *vertexB) {
     return vertexB->getSchedLvl() - vertexA->getSchedLvl();

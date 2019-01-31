@@ -46,7 +46,7 @@
 
 class LrtCommunicator : public Communicator {
 public:
-    virtual ~LrtCommunicator() {}
+    ~LrtCommunicator() override = default;
 
     virtual void *data_start_send(std::int32_t alloc) = 0;
 
@@ -67,7 +67,7 @@ public:
     virtual void unlockLrt(int /*jobIx*/) {};
 
 protected:
-    LrtCommunicator() {}
+    LrtCommunicator()= default;
 };
 
 #endif/*LRT_COMMUNICATOR_H*/

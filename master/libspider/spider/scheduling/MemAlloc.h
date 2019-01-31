@@ -69,12 +69,12 @@ public:
 
     inline void printMemAllocSizeFormatted() const;
 
-    virtual ~MemAlloc() {}
+    virtual ~MemAlloc() = default;
 
 protected:
     int memStart_;
     int memSize_;
-    int memReserved_;
+    int memReserved_{};
 };
 
 inline int MemAlloc::getMemAllocSize() const {

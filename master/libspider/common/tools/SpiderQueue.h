@@ -56,7 +56,7 @@ public:
      */
     SpiderQueue();
 
-    SpiderQueue(bool isCircular);
+    explicit SpiderQueue(bool isCircular);
 
     /**
      * @brief Destructor
@@ -108,7 +108,7 @@ public:
 private:
     std::vector<T> queue_;
     std::mutex queueMutex_;
-    sem_t queueCounter_;
+    sem_t queueCounter_{};
     std::uint8_t queueBufferSizeNBytes_;
     std::uint32_t queueIndex_;
     std::uint32_t queueSize_;

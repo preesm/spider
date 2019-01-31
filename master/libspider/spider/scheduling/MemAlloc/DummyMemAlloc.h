@@ -46,7 +46,7 @@ public:
             MemAlloc(start, size),
             currentMem_(start) {}
 
-    ~DummyMemAlloc() override {}
+    ~DummyMemAlloc() override = default;
 
     void reset() override;
 

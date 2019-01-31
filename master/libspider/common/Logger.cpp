@@ -39,6 +39,12 @@
 
 static bool loggersValue[kNLogger];
 
+static const char *loggersLitteral[kNLogger] = {
+        "JOB",
+        "TIME",
+        "GENERAL",
+};
+
 static std::mutex lock;
 
 void Logger::initializeLogger() {
@@ -65,6 +71,7 @@ void Logger::print(LoggerType type, LoggerLevel level, const char *fmt, ...) {
         std::lock_guard<std::mutex> locker(lock);
         va_list l;
         va_start(l, fmt);
+        fprintf(stderr, "%s-", loggersLitteral[type]);
         switch (level) {
             case LOG_INFO:
                 fprintf(stderr, "INFO: ");

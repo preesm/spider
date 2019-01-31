@@ -48,10 +48,6 @@ class LrtCommunicator : public Communicator {
 public:
     virtual ~LrtCommunicator() {}
 
-    virtual bool pop_data_notification(int lrtID, JobNotificationMessage *msg) = 0;
-
-    virtual void push_data_notification(int lrtID, JobNotificationMessage *msg) = 0;
-
     virtual void *data_start_send(std::int32_t alloc) = 0;
 
     virtual void data_end_send(Fifo *f) = 0;

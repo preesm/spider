@@ -42,7 +42,7 @@
 #include <tools/Rational.h>
 
 
-static int nullSpace(int *topo_matrix, int *brv, int nbEdges, int nbVertices) {
+static int nullSpace(Param *topo_matrix, int *brv, int nbEdges, int nbVertices) {
     auto *ratioMatrix = CREATE_MUL(TRANSFO_STACK, nbVertices * nbEdges, Rational);
     auto *ratioResult = CREATE_MUL(TRANSFO_STACK, nbVertices, Rational);
 
@@ -57,7 +57,7 @@ static int nullSpace(int *topo_matrix, int *brv, int nbEdges, int nbVertices) {
 
     /* Copy matrix into ratioMatrix */
     for (int i = 0; i < nbEdges * nbVertices; i++) {
-        ratioMatrix[i] = topo_matrix[i];
+        ratioMatrix[i] = Rational(topo_matrix[i]);
     }
 //
 //	printf("Topo Matrix: Rational\n");
@@ -113,11 +113,11 @@ static int nullSpace(int *topo_matrix, int *brv, int nbEdges, int nbVertices) {
     }
 
     for (int i = 0; i < nbVertices; i++) {
-        ratioResult[i] = 1;
+        ratioResult[i] = Rational(1);
     }
 
     for (int i = nbEdges - 1; i >= 0; i--) {
-        Rational val = 0;
+        Rational val(0);
 
         for (int k = i + 1; k < nbVertices; k++) {
             val = val + (ratioMatrix[i * nbVertices + k] * ratioResult[k]);

@@ -68,7 +68,7 @@ public:
         denominator = 1;
     }
 
-    inline Rational(std::int64_t i) {
+    inline explicit Rational(std::int64_t i) {
         nominator = i;
         denominator = 1;
     }
@@ -144,8 +144,16 @@ public:
         return nominator == b.nominator && denominator == b.denominator;
     }
 
+    inline bool operator==(const std::int64_t a) {
+        return (nominator == a && denominator == 1) || (denominator != 0 && (nominator / denominator) == a);
+    }
+
     inline bool operator!=(const Rational b) const {
         return nominator != b.nominator || denominator != b.denominator;
+    }
+
+    inline bool operator!=(const std::int64_t a) const {
+        return (*this) != Rational(a);
     }
 
     inline bool operator>(const Rational b) const {

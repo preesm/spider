@@ -42,7 +42,9 @@
 
 #include <cstdint>
 #include <spider.h>
+#include <platform.h>
 #include "monitor/StackMonitor.h"
+//#include "Logger.h"
 
 typedef enum {
     MSG_START_JOB = 1,
@@ -70,8 +72,8 @@ class Fifo {
 public:
     std::int32_t alloc;
     std::int32_t size;
-    std::int32_t blkLrtIx;
-    std::int32_t blkLrtJobIx;
+//    std::int32_t blkLrtIx;
+//    std::int32_t blkLrtJobIx;
 };
 
 class ClearTimeMessage {
@@ -125,10 +127,18 @@ class NotificationMessage {
 public:
     explicit NotificationMessage(std::uint16_t type = NotificationType::UNDEFINED_NOTIFICATION,
                                  std::uint16_t subType = NotificationType::UNDEFINED_NOTIFICATION,
-                                 std::int32_t index = -1) {
+                                 std::int32_t lrtID = -1, std::int32_t index = -1) {
         type_ = type;
         subType_ = subType;
         index_ = index;
+        lrtID_ = lrtID;
+    }
+
+    NotificationMessage(const NotificationMessage &old) {
+        type_ = old.type_;
+        subType_ = old.subType_;
+        index_ = old.index_;
+        lrtID_ = old.lrtID_;
     }
 
     inline std::uint16_t getType() {
@@ -143,33 +153,15 @@ public:
         return index_;
     }
 
-private:
-    std::uint16_t type_;
-    std::uint16_t subType_;
-    std::int32_t index_;
-};
-
-/**
- * @brief JOB synchronization notification message class
- */
-class JobNotificationMessage {
-public:
-    explicit JobNotificationMessage(std::int32_t lrtID = -1, std::int32_t jobStamp = -1) {
-        id_ = lrtID;
-        jobStamp_ = jobStamp;
-    }
-
-    inline std::int32_t getID() {
-        return id_;
-    }
-
-    inline std::int32_t getJobStamp() {
-        return jobStamp_;
+    inline std::int32_t getLRTID() {
+        return lrtID_;
     }
 
 private:
-    std::int32_t id_;
-    std::int32_t jobStamp_;
+    std::uint16_t type_;    // Main type of notification (LRT, TRACE, JOB)
+    std::uint16_t subType_; // SubType of notification
+    std::int32_t index_;    // Index of the message to fetch, may be used for direct value passing (see documentation of notification)
+    std::int32_t lrtID_;    // ID of the sender
 };
 
 /**
@@ -186,6 +178,8 @@ public:
     std::int32_t nEdgeOUT_ = 0;
     std::int32_t nParamIN_ = 0;
     std::int32_t nParamOUT_ = 0;
+    std::int32_t *jobs2Wait_ = nullptr;
+    std::int32_t *lrts2Notify_ = nullptr;
     Fifo *inFifos_ = nullptr;
     Fifo *outFifos_ = nullptr;
     Param *inParams_ = nullptr;
@@ -193,6 +187,8 @@ public:
     ~JobInfoMessage() {
         StackMonitor::free(ARCHI_STACK, inFifos_);
         StackMonitor::free(ARCHI_STACK, outFifos_);
+        StackMonitor::free(ARCHI_STACK, jobs2Wait_);
+        StackMonitor::free(ARCHI_STACK, lrts2Notify_);
         StackMonitor::free(ARCHI_STACK, inParams_);
     }
 };

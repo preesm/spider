@@ -41,7 +41,7 @@
 
 #include <platform.h>
 
-PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlMessageQueue<ScheduleJob *> *spider2LrtJobQueue,
+PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
                                                      ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
                                                      NotificationQueue<NotificationMessage> **notificationQueue,
                                                      ControlMessageQueue<TraceMessage *> *traceQueue) {
@@ -60,16 +60,11 @@ bool PThreadSpiderCommunicator::pop_notification(int lrtID, NotificationMessage 
 }
 
 std::int32_t PThreadSpiderCommunicator::push_job_message(JobInfoMessage **message) {
-//    return spider2LrtJobQueue_->push(message);
-    return 0;
-}
-
-std::int32_t PThreadSpiderCommunicator::push_job_message(ScheduleJob **message) {
     return spider2LrtJobQueue_->push(message);
 }
 
 void PThreadSpiderCommunicator::pop_job_message(JobInfoMessage **msg, std::int32_t id) {
-//    spider2LrtJobQueue_->pop(msg, id);
+    spider2LrtJobQueue_->pop(msg, id);
 }
 
 std::int32_t PThreadSpiderCommunicator::push_parameter_message(ParameterMessage **message) {

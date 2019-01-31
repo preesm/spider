@@ -51,7 +51,7 @@ public:
 
     void launchVertex(SRDAGVertex *vertex);
 
-    void sendJob(ScheduleJob **job);
+    void sendJob(ScheduleJob *job);
 
     void resolveParams(Archi *archi, SRDAGGraph *topDag);
 
@@ -68,6 +68,8 @@ public:
      * @param lrtID LRT to send the notification to (-1 to send to every LRT)
      */
     void sendDisableTrace(int lrtID);
+
+    void sendRepeatJobQueue(bool enable);
 
     /**
      * @brief Send a notification to all LRT to signal that they won't receive other jobs

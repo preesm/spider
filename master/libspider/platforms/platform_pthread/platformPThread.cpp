@@ -185,17 +185,12 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
 
     /** Create the different queues */
-    spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ScheduleJob *>);
+    spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<JobInfoMessage *>);
     lrt2SpiderParamQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ParameterMessage *>);
     lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue<NotificationMessage>*);
-    lrt2LRTJobNotificationQueue_ = CREATE_MUL(ARCHI_STACK, nLrt_, NotificationQueue<JobNotificationMessage>*);
 
     for (unsigned int i = 0; i < nLrt_ + 1; ++i) {
         lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
-    }
-
-    for (unsigned int i = 0; i < nLrt_; ++i) {
-        lrt2LRTJobNotificationQueue_[i] = CREATE(ARCHI_STACK, NotificationQueue<JobNotificationMessage>);
     }
 
 
@@ -224,14 +219,14 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 #else
     if (config.usePapify) {
         // Initializing Papify
-        PapifyEventLib *papifyEventLib = new PapifyEventLib();
+        auto *papifyEventLib = new PapifyEventLib();
 
         // Register Papify actor configuration
         if (config.usePapify) {
             std::map<lrtFct, PapifyConfig *>::iterator it;
             for (it = config.papifyJobInfo.begin(); it != config.papifyJobInfo.end(); ++it) {
                 PapifyConfig *papifyConfig = it->second;
-                PapifyAction *papifyAction = new PapifyAction(
+                auto *papifyAction = new PapifyAction(
                         /* componentName */   papifyConfig->peType_,
                         /* PEName */          papifyConfig->peID_,
                         /* actorName */       papifyConfig->actorName_,
@@ -260,7 +255,6 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
                     spider2LrtJobQueue_,
                     lrtNotificationQueues_[i + offsetPe],
-                    lrt2LRTJobNotificationQueue_,
                     dataQueues_);
 
             lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i + offsetPe);
@@ -333,7 +327,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             /* Nb PE */     nLrt_,
             /* Nb PE Type*/ config.platform.nPeType,
             /* Spider Pe */ mainPE,
-            /*MappingTime*/ this->mappingTime);
+            /*MappingTime*/ mappingTime);
 
     archi_->setPEType(mainPE, mainPEType);
     archi_->activatePE(mainPE);
@@ -363,7 +357,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 PlatformPThread::~PlatformPThread() {
     auto spiderCommunicator = getSpiderCommunicator();
     for (unsigned int i = 1; i < nLrt_; ++i) {
-        NotificationMessage message(LRT_NOTIFICATION, LRT_STOP);
+        NotificationMessage message(LRT_NOTIFICATION, LRT_STOP, getLrtIx());
         spiderCommunicator->push_notification(i, &message);
     }
 
@@ -404,15 +398,11 @@ PlatformPThread::~PlatformPThread() {
         lrtNotificationQueues_[i]->~NotificationQueue();
         StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
     }
-    for (unsigned int j = 0; j < nLrt_; ++j) {
-        lrt2LRTJobNotificationQueue_[j]->~NotificationQueue();
-        StackMonitor::free(ARCHI_STACK, lrt2LRTJobNotificationQueue_[j]);
-    }
+
     spider2LrtJobQueue_->~ControlMessageQueue();
     lrt2SpiderParamQueue_->~ControlMessageQueue();
     traceQueue_->~ControlMessageQueue();
     StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
-    StackMonitor::free(ARCHI_STACK, lrt2LRTJobNotificationQueue_);
     StackMonitor::free(ARCHI_STACK, spider2LrtJobQueue_);
     StackMonitor::free(ARCHI_STACK, lrt2SpiderParamQueue_);
     StackMonitor::free(ARCHI_STACK, traceQueue_);
@@ -475,7 +465,6 @@ void PlatformPThread::fprintf(FILE *id, const char *fmt, ...) {
 void PlatformPThread::fclose(FILE *id) {
     if (id != nullptr) {
         std::fclose(id);
-        id = nullptr;
     }
 }
 
@@ -506,7 +495,7 @@ void PlatformPThread::rstJobIxRecv() {
             if (finishedMessage.getType() == LRT_NOTIFICATION &&
                 finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
                 Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- received end signal from LRT: %d.\n", getLrtIx(),
-                              finishedMessage.getIndex());
+                              finishedMessage.getLRTID());
                 break;
             } else {
                 /** Save the notification for later **/
@@ -542,7 +531,7 @@ Time PlatformPThread::getTime() {
     }
 #endif // _WIN32
 
-    return val_steady;
+    return static_cast<Time>(val_steady);
 }
 
 Time PlatformPThread::mappingTime(int /*nActors*/, int /*nPe*/) {

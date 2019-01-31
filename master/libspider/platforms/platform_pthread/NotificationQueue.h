@@ -94,8 +94,4 @@ private:
 
 template
 class NotificationQueue<NotificationMessage>;
-
-template
-class NotificationQueue<JobNotificationMessage>;
-
 #endif //SPIDER_NOTIFICATIONQUEUE_H

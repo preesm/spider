@@ -63,6 +63,15 @@ Launcher *Launcher::get() {
     return &instance_;
 }
 
+void Launcher::sendRepeatJobQueue(bool enable) {
+    NotificationMessage message(LRT_NOTIFICATION,
+                                enable ? LRT_REPEAT_ITERATION_EN : LRT_REPEAT_ITERATION_DIS,
+                                Platform::get()->getLrtIx());
+    for (int i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
+        Platform::get()->getSpiderCommunicator()->push_notification(i, &message);
+    }
+}
+
 void Launcher::send_ResetLrtMsg(int) {
 //    auto msg = (Message *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(Message));
 //    msg->globalID_ = MSG_RESET_LRT;
@@ -118,20 +127,12 @@ void Launcher::sendJobInfoMessage(int lrtIx, SRDAGVertex *vertex) {
         SRDAGEdge *edge = vertex->getInEdge(i);
         inFifos[i].alloc = edge->getAlloc();
         inFifos[i].size = edge->getRate();
-        inFifos[i].blkLrtIx = edge->getSrc()->getSlave();
-        inFifos[i].blkLrtJobIx = edge->getSrc()->getSlaveJobIx();
     }
 
     for (int i = 0; i < vertex->getNConnectedOutEdge(); i++) {
         SRDAGEdge *edge = vertex->getOutEdge(i);
         outFifos[i].alloc = edge->getAlloc();
         outFifos[i].size = edge->getRate();
-        // TODO: only put the last job dependency
-        if (edge->getSnk()) {
-            outFifos[i].blkLrtIx = edge->getSnk()->getSlave();
-        } else {
-            outFifos[i].blkLrtIx = -1;
-        }
     }
 
     switch (vertex->getType()) {
@@ -185,23 +186,21 @@ void Launcher::sendJobInfoMessage(int lrtIx, SRDAGVertex *vertex) {
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     /** Push the job message **/
     auto jobID = spiderCommunicator->push_job_message(&msg);
-    NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, jobID);
+    NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, Platform::get()->getLrtIx(), jobID);
     /** Send notification **/
     spiderCommunicator->push_notification(lrtIx, &notificationMessage);
 }
 
 
-void Launcher::sendJob(ScheduleJob **job) {
-    /** 0. Update the jobs it needs to wait from other LRTs **/
-    (*job)->updateJobsToWait();
-
+void Launcher::sendJob(ScheduleJob *job) {
     /** 1. Push the job **/
-    auto *spiderCommunicator= Platform::get()->getSpiderCommunicator();
-    auto jobID = spiderCommunicator->push_job_message(job);
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    auto *job2Send = job->createJobMessage();
+    auto jobID = spiderCommunicator->push_job_message(&job2Send);
 
     /** 2. Send notification **/
-    NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, jobID);
-    spiderCommunicator->push_notification((*job)->getLRT(), &notificationMessage);
+    NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, Platform::get()->getLrtIx(), jobID);
+    spiderCommunicator->push_notification(job->getLRT(), &notificationMessage);
 }
 
 void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
@@ -242,20 +241,24 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
 }
 
 void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end) {
+    auto lrtID = Platform::get()->getLrtIx();
     // Push message
-    auto *traceMessage = CREATE(ARCHI_STACK, TraceMessage)(-1, type, Platform::get()->getLrtIx(), start, end);
+    auto *traceMessage = CREATE(ARCHI_STACK, TraceMessage)(-1, type, lrtID, start, end);
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     auto index = spiderCommunicator->push_trace_message(&traceMessage);
 
     // Push notification
-    auto notificationMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_SPIDER, index);
+    auto notificationMessage = NotificationMessage(TRACE_NOTIFICATION,
+                                                   TRACE_SPIDER,
+                                                   lrtID,
+                                                   index);
     spiderCommunicator->push_notification(Platform::get()->getNLrt(), &notificationMessage);
     nLaunched_++;
 }
 
 void Launcher::sendEnableTrace(int lrtID) {
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
-    auto enableTraceMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_ENABLE);
+    auto enableTraceMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_ENABLE, Platform::get()->getLrtIx());
     if (lrtID < 0) {
         for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
             spiderCommunicator->push_notification(i, &enableTraceMessage);
@@ -269,7 +272,7 @@ void Launcher::sendEnableTrace(int lrtID) {
 
 void Launcher::sendDisableTrace(int lrtID) {
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
-    auto enableTraceMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_DISABLE);
+    auto enableTraceMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_DISABLE, Platform::get()->getLrtIx());
     if (lrtID < 0) {
         for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
             spiderCommunicator->push_notification(i, &enableTraceMessage);
@@ -283,18 +286,18 @@ void Launcher::sendDisableTrace(int lrtID) {
 
 void Launcher::sendEndNotification(Schedule *schedule) {
     for (int pe = 0; pe < Spider::getArchi()->getNActivatedPE(); ++pe) {
-        NotificationMessage message(LRT_NOTIFICATION, LRT_END_ITERATION, schedule->getNJobs(pe) - 1);
+        NotificationMessage message(LRT_NOTIFICATION,
+                                    LRT_END_ITERATION,
+                                    Platform::get()->getLrtIx(),
+                                    schedule->getNJobs(pe) - 1);
         Platform::get()->getSpiderCommunicator()->push_notification(pe, &message);
     }
 }
 
 void Launcher::sendBroadCastNotification(bool delayBroadcoast) {
-    NotificationMessage broadcast;
-    if (delayBroadcoast) {
-        broadcast = NotificationMessage(JOB_NOTIFICATION, JOB_DELAY_BROADCAST_JOBSTAMP);
-    } else {
-        broadcast = NotificationMessage(JOB_NOTIFICATION, JOB_BROADCAST_JOBSTAMP);
-    }
+    NotificationMessage broadcast(JOB_NOTIFICATION,
+                                  delayBroadcoast ? JOB_DELAY_BROADCAST_JOBSTAMP : JOB_BROADCAST_JOBSTAMP,
+                                  Platform::get()->getLrtIx());
     for (int i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
         if (i == Platform::get()->getLrtIx()) {
             continue;

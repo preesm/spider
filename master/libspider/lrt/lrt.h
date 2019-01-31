@@ -132,7 +132,7 @@ private:
     bool freeze_;
     bool traceEnabled_;
     bool shouldBroadcast_;
-    std::vector<ScheduleJob *> jobQueue_;
+    std::vector<JobInfoMessage *> jobQueue_;
     std::uint32_t jobQueueIndex_;
     std::uint32_t jobQueueSize_;
     std::int32_t lastJobID_;
@@ -157,16 +157,14 @@ private:
     /**
      * @brief Send notification of current job stamp to an LRT
      * @param lrtID        LRT to which we send the notification.
-     * @param msg
-     * @param notifiedLRT  Array of already notified LRT
      */
-    void notifyLRTJobStamp(std::int32_t lrtID, JobNotificationMessage *msg, std::vector<bool> &notifiedLRT);
+    void notifyLRTJobStamp(std::int32_t lrtID);
 
     /**
      * @brief Run a scheduled job
      * @param job Job to run
      */
-    void runJob(ScheduleJob *job);
+    void runJob(JobInfoMessage *job);
 
     /**
      * @brief Fetch an LRT notification message

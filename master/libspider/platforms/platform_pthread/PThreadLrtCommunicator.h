@@ -69,9 +69,8 @@
 class PThreadLrtCommunicator : public LrtCommunicator {
 public:
     PThreadLrtCommunicator(
-            ControlMessageQueue<ScheduleJob *> *spider2LrtJobQueue,
+            ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
             NotificationQueue<NotificationMessage> *notificationQueue,
-            NotificationQueue<JobNotificationMessage> **lrt2LRTJobNotificationQueue,
             DataQueues *dataQueues
     );
 
@@ -85,14 +84,6 @@ public:
 
     void pop_job_message(JobInfoMessage **msg, std::int32_t id) override;
 
-    std::int32_t push_job_message(ScheduleJob **message) override;
-
-    void pop_job_message(ScheduleJob **msg, std::int32_t id) override;
-
-    bool pop_data_notification(int lrtID, JobNotificationMessage *msg) override;
-
-    void push_data_notification(int lrtID, JobNotificationMessage *msg) override;
-
     void *data_start_send(std::int32_t alloc) override;
 
     void data_end_send(Fifo *f) override;
@@ -100,9 +91,8 @@ public:
     void *data_recv(std::int32_t alloc) override;
 
 private:
-    ControlMessageQueue<ScheduleJob *> *spider2LrtJobQueue_;
+    ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     NotificationQueue<NotificationMessage> *notificationQueue_;
-    NotificationQueue<JobNotificationMessage> **lrt2LRTJobNotificationQueue_;
     DataQueues *dataQueues_;
 };
 

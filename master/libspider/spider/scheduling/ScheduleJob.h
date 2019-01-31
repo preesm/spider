@@ -41,6 +41,7 @@
 #define SPIDER_SCHEDULEJOB_H
 
 #include <graphs/SRDAG/SRDAGVertex.h>
+#include <Message.h>
 
 class ScheduleJob {
 public:
@@ -122,6 +123,8 @@ public:
     }
 
     void updateJobsToWait();
+
+    JobInfoMessage *createJobMessage();
 
     void print(FILE *file);
 

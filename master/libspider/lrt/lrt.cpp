@@ -146,6 +146,7 @@ LRT::~LRT() {
         }
     }
 #endif
+    StackMonitor::freeAll(LRT_STACK);
 }
 
 void LRT::sendTrace(int srdagIx, Time start, Time end) {
@@ -154,7 +155,7 @@ void LRT::sendTrace(int srdagIx, Time start, Time end) {
     auto index = spiderCommunicator_->push_trace_message(&traceMessage);
 
     // Push notification
-    auto notificationMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_LRT, index);
+    auto notificationMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_LRT, getIx(), index);
     spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &notificationMessage);
 }
 
@@ -167,20 +168,15 @@ bool LRT::compareLRTJobStamps(std::int32_t *jobsToWait) {
                       jobsToWait[getIx()]);
         return false;
     }
-    bool canRun = true;
     for (int i = 0; i < nLrt_; ++i) {
-        canRun &= jobsToWait[i] <= jobStamps_[i];
-    }
-    if (!canRun && Logger::isLoggerEnabled(LOG_JOB)) {
-        for (int i = 0; i < nLrt_; ++i) {
-            if (jobsToWait[i] >= 0 && jobsToWait[i] > jobStamps_[i]) {
-                Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- waiting for LRT: %d and Job: %d -- Current JobStamp: %d\n",
-                              getIx(), i,
-                              jobsToWait[i], jobStamps_[i]);
-            }
+        if (jobsToWait[i] >= 0 && jobsToWait[i] > jobStamps_[i]) {
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- waiting for LRT: %d and Job: %d -- Current JobStamp: %d\n",
+                          getIx(), i,
+                          jobsToWait[i], jobStamps_[i]);
+            return false;
         }
     }
-    return canRun;
+    return true;
 }
 
 void LRT::updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp) {
@@ -194,30 +190,17 @@ void LRT::updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp) {
                   jobStamp);
 }
 
-void LRT::notifyLRTJobStamp(std::int32_t lrtID, JobNotificationMessage *msg, std::vector<bool> &notifiedLRT) {
+void LRT::notifyLRTJobStamp(std::int32_t lrtID) {
     if (lrtID >= 0 &&
-        lrtID != getIx() &&
-        !notifiedLRT[lrtID]) {
-        NotificationMessage message(JOB_NOTIFICATION, JOB_UPDATE_JOBSTAMP);
+        lrtID != getIx()) {
+        Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- notifying LRT: %d -- sent jobStamp: %d\n", getIx(), lrtID, jobIx_);
+        NotificationMessage message(JOB_NOTIFICATION, JOB_UPDATE_JOBSTAMP, getIx(), jobIx_);
         spiderCommunicator_->push_notification(lrtID, &message);
-        lrtCommunicator_->push_data_notification(lrtID, msg);
-        Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- notifying LRT: %d -- sent jobStamp: %d\n", getIx(), lrtID,
-                      msg->getJobStamp());
-        notifiedLRT[lrtID] = true;
     }
 }
 
-void LRT::runJob(ScheduleJob *job) {
+void LRT::runJob(JobInfoMessage *job) {
     Time start;
-
-    // Waiting for JobStamps to be updated
-//    while (!compareLRTJobStamps(job->getJobs2Wait())) {
-//        JobNotificationMessage msg;
-//        if (lrtCommunicator_->pop_data_notification(getIx(), &msg)) {
-//            updateLRTJobStamp(msg.getID(), msg.getJobStamp());
-//        }
-//    }
-
 
 #ifdef VERBOSE_TIME
     time_waiting_prev_actor += Platform::get()->getTime() - start;
@@ -229,26 +212,22 @@ void LRT::runJob(ScheduleJob *job) {
 #endif
 
     // TODO: alloc data (see other platforms)
-    auto *jobVertex = job->getVertex();
-
-    auto **inFifosAlloc = CREATE_MUL(LRT_STACK, jobVertex->getNConnectedInEdge(), void*);
-    auto **outFifosAlloc = CREATE_MUL(LRT_STACK, jobVertex->getNConnectedOutEdge(), void*);
-    auto *outParams = CREATE_MUL(ARCHI_STACK, jobVertex->getNOutParam(), Param);
+    auto **inFifosAlloc = CREATE_MUL(LRT_STACK, job->nEdgeIN_, void*);
+    auto **outFifosAlloc = CREATE_MUL(LRT_STACK, job->nEdgeOUT_, void*);
+    auto *outParams = CREATE_MUL(ARCHI_STACK, job->nParamOUT_, Param);
 
 #ifdef VERBOSE_TIME
     time_alloc_data += Platform::get()->getTime() - start;
 #endif
 
 
-    for (int i = 0; i < jobVertex->getNConnectedInEdge(); i++) {
+    for (int i = 0; i < job->nEdgeIN_; i++) {
 #ifdef VERBOSE_TIME
         Time start = Platform::get()->getTime();
 #endif
-        auto *edge = jobVertex->getInEdge(i);
-
-        inFifosAlloc[i] = lrtCommunicator_->data_recv(edge->getAlloc()); // in com
-
-        if (edge->getRate() == 0) {
+        auto fifo = job->inFifos_[i];
+        inFifosAlloc[i] = lrtCommunicator_->data_recv(fifo.alloc); // in com
+        if (fifo.size == 0) {
             inFifosAlloc[i] = nullptr;
         }
 
@@ -258,15 +237,13 @@ void LRT::runJob(ScheduleJob *job) {
     }
 
 
-    for (int i = 0; i < jobVertex->getNConnectedOutEdge(); i++) {
+    for (int i = 0; i < job->nEdgeOUT_; i++) {
 #ifdef VERBOSE_TIME
         Time start = Platform::get()->getTime();
 #endif
-        auto *edge = jobVertex->getOutEdge(i);
-
-        outFifosAlloc[i] = lrtCommunicator_->data_start_send(edge->getAlloc()); // in com
-
-        if (edge->getRate() == 0) {
+        auto fifo = job->outFifos_[i];
+        outFifosAlloc[i] = lrtCommunicator_->data_start_send(fifo.alloc); // in com
+        if (fifo.size == 0) {
             outFifosAlloc[i] = nullptr;
         }
 
@@ -279,39 +256,37 @@ void LRT::runJob(ScheduleJob *job) {
     start = Platform::get()->getTime();
 
     // Get inParams
-    auto *inParams = getInParams(jobVertex);
-
-    if (jobVertex->getType() != SRDAG_NORMAL && jobVertex->getFctId() < 6) {
-        specialActors[jobVertex->getFctId()](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
-    } else if (jobVertex->getFctId() < nFct_) {
+    auto *inParams = job->inParams_;
+    auto fctID = job->fctID_;
+    if (job->specialActor_ && fctID < 6) {
+        specialActors[fctID](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
+    } else if (fctID < nFct_) {
         if (usePapify_) {
 #ifdef PAPI_AVAILABLE
             // TODO, find better way to do that
             try {
                 // We can monitor the events
                 PapifyAction *papifyAction = nullptr;
-                papifyAction = jobPapifyActions_.at(fcts_[jobVertex->getFctId()]);
+                papifyAction = jobPapifyActions_.at(fcts_[fctID]);
                 // Start monitoring
                 papifyAction->startMonitor();
                 // Do the monitored job
-                fcts_[jobVertex->getFctId()](inFifosAlloc, outFifosAlloc, inParams, outParams);
+                fcts_[fctID](inFifosAlloc, outFifosAlloc, inParams, outParams);
                 // Stop monitoring
                 papifyAction->stopMonitor();
                 // Writes the monitoring results
                 papifyAction->writeEvents();
             } catch (std::out_of_range &e) {
                 // This job does not have papify events associated with  it
-                fcts_[jobVertex->getFctId()](inFifosAlloc, outFifosAlloc, inParams, outParams);
+                fcts_[fctID](inFifosAlloc, outFifosAlloc, inParams, outParams);
             }
 #endif
         } else {
-            fcts_[jobVertex->getFctId()](inFifosAlloc, outFifosAlloc, inParams, outParams);
+            fcts_[fctID](inFifosAlloc, outFifosAlloc, inParams, outParams);
         }
     } else {
-        throwSpiderException("Invalid function id: %d -- Range=[0;%d[.\n", jobVertex->getFctId(), nFct_);
+        throwSpiderException("Invalid function id: %d -- Range=[0;%d[.\n", fctID, nFct_);
     }
-    // Free inParams
-    StackMonitor::free(LRT_STACK, inParams);
 
     Time end = Platform::get()->getTime();
 
@@ -320,38 +295,29 @@ void LRT::runJob(ScheduleJob *job) {
 #endif
 
     if (traceEnabled_) {
-        sendTrace(jobVertex->getId(), start, end);
+        sendTrace(job->srdagID_, start, end);
     }
+
+
+    // TODO: data_end_send for other platforms
 
     /** Updating jobIx_ and notifying other LRT (if needed) **/
     jobIx_++;
     jobStamps_[getIx()] = jobIx_;
-    JobNotificationMessage msg(getIx(), jobIx_);
-
-    std::vector<bool> notifiedLRT((size_t) nLrt_, false);
-
-    // TODO: data_end_send for other platforms
-
-    for (auto &jobSuc : job->getSuccessors()) {
+    for (int i = 0; i < nLrt_; ++i) {
 #ifdef VERBOSE_TIME
         Time start = Platform::get()->getTime();
 #endif
-
-        auto *jobs2Wait = jobSuc->getJobs2Wait();
-        if (jobs2Wait[getIx()] == jobIx_) {
-            notifyLRTJobStamp(jobSuc->getLRT(), &msg, notifiedLRT);
-        }
-
+        notifyLRTJobStamp(job->lrts2Notify_[i]);
 #ifdef VERBOSE_TIME
         time_waiting_output_comm += Platform::get()->getTime() - start;
 #endif
     }
 
 
-    if (jobVertex->getNOutParam()) {
+    if (job->nParamOUT_) {
         // TODO: change ARCHI_STACK to something not shared
-        auto *parameterMessage = CREATE(ARCHI_STACK, ParameterMessage)(jobVertex->getId(), jobVertex->getNOutParam(),
-                                                                       outParams);
+        auto *parameterMessage = CREATE(ARCHI_STACK, ParameterMessage)(job->srdagID_, job->nParamOUT_, outParams);
 #ifdef VERBOSE_TIME
         Time start = Platform::get()->getTime();
 #endif
@@ -367,7 +333,7 @@ void LRT::runJob(ScheduleJob *job) {
         start = Platform::get()->getTime();
 #endif
         /** Sending notification **/
-        NotificationMessage parameterNotification(JOB_NOTIFICATION, JOB_SENT_PARAM, index);
+        NotificationMessage parameterNotification(JOB_NOTIFICATION, JOB_SENT_PARAM, getIx(), index);
         spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &parameterNotification);
 
 #ifdef VERBOSE_TIME
@@ -382,7 +348,6 @@ void LRT::runJob(ScheduleJob *job) {
     /** Freeing local memory **/
     StackMonitor::free(LRT_STACK, inFifosAlloc);
     StackMonitor::free(LRT_STACK, outFifosAlloc);
-    StackMonitor::freeAll(LRT_STACK);
 }
 
 void LRT::broadcastJobStamp() {
@@ -390,16 +355,20 @@ void LRT::broadcastJobStamp() {
     if (jobIx_ < 0) {
         return;
     }
-    JobNotificationMessage msg(getIx(), jobIx_);
-    for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
+    NotificationMessage msg(JOB_NOTIFICATION, JOB_UPDATE_JOBSTAMP, getIx(), jobIx_);
+    for (int i = 0; i < nLrt_; ++i) {
         if (i == getIx()) {
             continue;
         }
-        lrtCommunicator_->push_data_notification(i, &msg);
+        spiderCommunicator_->push_notification(i, &msg);
     }
 }
 
 void LRT::clearJobQueue() {
+    for (auto &job: jobQueue_) {
+        job->~JobInfoMessage();
+        StackMonitor::free(ARCHI_STACK, job);
+    }
     jobQueue_.clear();
     jobQueueSize_ = 0;
     jobQueueIndex_ = 0;
@@ -431,7 +400,6 @@ void LRT::handleLRTNotification(NotificationMessage &message) {
             freeze_ = false;
             break;
         case LRT_STOP:
-            Logger::print(LOG_GENERAL, LOG_INFO, "LRT: %d -- received LRT_STOP.\n");
             run_ = false;
             break;
         default:
@@ -444,7 +412,7 @@ void LRT::handleJobNotification(NotificationMessage &message) {
     /** Get the ID of the job in the global queue */
     switch (message.getSubType()) {
         case JOB_ADD: {
-            ScheduleJob *job;
+            JobInfoMessage *job;
             // pop message from global queue
             lrtCommunicator_->pop_job_message(&job, message.getIndex());
             // push message in local queue (don't execute right now in case more important notification comes along
@@ -467,13 +435,14 @@ void LRT::handleJobNotification(NotificationMessage &message) {
             broadcastJobStamp();
             break;
         case JOB_UPDATE_JOBSTAMP: {
-            JobNotificationMessage msg;
-            if (lrtCommunicator_->pop_data_notification(getIx(), &msg)) {
-                updateLRTJobStamp(msg.getID(), msg.getJobStamp());
-            } else {
-                Logger::print(LOG_JOB, LOG_ERROR,
-                              "LRT: %d received JOB_UPDATE_JOBSTAMP notification but no job stamp found.", getIx());
-            }
+            updateLRTJobStamp(message.getLRTID(), message.getIndex());
+//            JobNotificationMessage msg;
+//            if (lrtCommunicator_->pop_data_notification(getIx(), &msg)) {
+//                updateLRTJobStamp(msg.getID(), msg.getJobStamp());
+//            } else {
+//                Logger::print(LOG_JOB, LOG_ERROR,
+//                              "LRT: %d received JOB_UPDATE_JOBSTAMP notification but no job stamp found.", getIx());
+//            }
         }
             break;
         default:
@@ -504,6 +473,9 @@ bool LRT::checkNotifications(bool shouldWait) {
         stopThreads = 1;
     }
 #endif
+    if (shouldWait) {
+        Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- waiting for notification.\n", getIx());
+    }
     NotificationMessage notificationMessage;
     if (lrtCommunicator_->pop_notification(&notificationMessage, shouldWait)) {
         switch (notificationMessage.getType()) {
@@ -564,7 +536,7 @@ void LRT::run(bool loop) {
             /** Pop the job **/
             auto *job = jobQueue_[jobQueueIndex_];
             /** Can Run the job ? **/
-            canRunJob = compareLRTJobStamps(job->getJobs2Wait());
+            canRunJob = compareLRTJobStamps(job->jobs2Wait_);
             if (canRunJob) {
                 jobQueueIndex_++;
                 Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- Running Job: %d\n", Platform::get()->getLrtIx(),
@@ -614,76 +586,6 @@ void LRT::run(bool loop) {
 
 void LRT::addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction) {
     this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
-}
-
-
-Param *LRT::getInParams(SRDAGVertex *vertex) {
-    int nParams = 0;
-    switch (vertex->getType()) {
-        case SRDAG_NORMAL:
-            nParams = vertex->getNInParam();
-            break;
-        case SRDAG_FORK:
-        case SRDAG_JOIN:
-            nParams = 2 + vertex->getNConnectedInEdge() + vertex->getNConnectedOutEdge();
-            break;
-        case SRDAG_ROUNDBUFFER:
-        case SRDAG_BROADCAST:
-            nParams = 2;
-            break;
-        case SRDAG_INIT:
-        case SRDAG_END:
-            nParams = 3;
-            break;
-    }
-    auto *inParams = CREATE_MUL(LRT_STACK, nParams, Param);
-    switch (vertex->getType()) {
-        case SRDAG_NORMAL:
-            for (int i = 0; i < nParams; i++) {
-                inParams[i] = vertex->getInParam(i);
-            }
-            break;
-        case SRDAG_FORK:
-            inParams[0] = vertex->getNConnectedInEdge();
-            inParams[1] = vertex->getNConnectedOutEdge();
-            inParams[2] = vertex->getInEdge(0)->getRate();
-            for (int i = 0; i < vertex->getNConnectedOutEdge(); i++) {
-                inParams[3 + i] = vertex->getOutEdge(i)->getRate();
-            }
-            break;
-        case SRDAG_JOIN:
-            inParams[0] = vertex->getNConnectedInEdge();
-            inParams[1] = vertex->getNConnectedOutEdge();
-            inParams[2] = vertex->getOutEdge(0)->getRate();
-            for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
-                inParams[3 + i] = vertex->getInEdge(i)->getRate();
-            }
-            break;
-        case SRDAG_ROUNDBUFFER:
-            inParams[0] = vertex->getInEdge(0)->getRate();
-            inParams[1] = vertex->getOutEdge(0)->getRate();
-            break;
-        case SRDAG_BROADCAST:
-            inParams[0] = vertex->getInEdge(0)->getRate();
-            inParams[1] = vertex->getNConnectedOutEdge();
-            break;
-        case SRDAG_INIT:
-            inParams[0] = vertex->getOutEdge(0)->getRate();
-            // Set persistence property
-            inParams[1] = vertex->getInParam(0);
-            // Set memory address
-            inParams[2] = vertex->getInParam(1);
-            break;
-        case SRDAG_END:
-            inParams[0] = vertex->getInEdge(0)->getRate();
-            // Set persistence property
-            inParams[1] = vertex->getInParam(0);
-            // Set memory address
-            inParams[2] = vertex->getInParam(1);
-            break;
-    }
-
-    return inParams;
 }
 
 

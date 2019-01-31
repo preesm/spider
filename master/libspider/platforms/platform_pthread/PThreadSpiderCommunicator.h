@@ -65,7 +65,7 @@
 class PThreadSpiderCommunicator : public SpiderCommunicator {
 public:
     PThreadSpiderCommunicator(
-            ControlMessageQueue<ScheduleJob *> *spider2LrtJobQueue,
+            ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
             ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
             NotificationQueue<NotificationMessage> **notificationQueue,
             ControlMessageQueue<TraceMessage *> *traceQueue);
@@ -78,8 +78,6 @@ public:
 
     std::int32_t push_job_message(JobInfoMessage **message) override;
 
-    std::int32_t push_job_message(ScheduleJob **message) override;
-
     void pop_job_message(JobInfoMessage **msg, std::int32_t id) override;
 
     std::int32_t push_parameter_message(ParameterMessage **message) override;
@@ -91,7 +89,7 @@ public:
     void pop_trace_message(TraceMessage **message, std::int32_t id) override;
 
 private:
-    ControlMessageQueue<ScheduleJob *> *spider2LrtJobQueue_;
+    ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
     ControlMessageQueue<TraceMessage *> *traceQueue_;
     NotificationQueue<NotificationMessage> **notificationQueue_;

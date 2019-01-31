@@ -66,9 +66,9 @@ Schedule::~Schedule() {
 
 void Schedule::clearJobs() {
     for (int i = 0; i < nPE_; ++i) {
-        for (auto &job:jobs_[i]) {
+        for (auto &job : jobs_[i]) {
             job->~ScheduleJob();
-            StackMonitor::free(TRANSFO_STACK, job);
+            StackMonitor::free(ARCHI_STACK, job);
         }
         jobs_[i].clear();
     }
@@ -117,6 +117,9 @@ void Schedule::addJob(ScheduleJob *job) {
             precJob->addSuccessor(job);
         }
     }
+
+    /** Update the jobs it needs to wait from other LRTs **/
+    job->updateJobsToWait();
 }
 
 void Schedule::print(const char *path) {
@@ -176,10 +179,7 @@ void Schedule::execute() {
     TimeMonitor::startMonitoring();
     for (int pe = 0; pe < nPE_; pe++) {
         for (auto &job : jobs_[pe]) {
-//            SRDAGVertex *vertex = job->getVertex();
-//            vertex->setState(SRDAG_EXEC);
-//            Launcher::get()->launchVertex(vertex);
-            Launcher::get()->sendJob(&job);
+            Launcher::get()->sendJob(job);
         }
     }
     Launcher::get()->sendEndNotification(this);

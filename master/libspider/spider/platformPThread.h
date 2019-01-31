@@ -195,11 +195,10 @@ private:
     Stack *stackArchi;
     Stack **stackLrt;
 
-    ControlMessageQueue<ScheduleJob *> *spider2LrtJobQueue_;
+    ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
     ControlMessageQueue<TraceMessage *> *traceQueue_;
     NotificationQueue<NotificationMessage> **lrtNotificationQueues_;
-    NotificationQueue<JobNotificationMessage> **lrt2LRTJobNotificationQueue_;
 
     DataQueues *dataQueues_;
 

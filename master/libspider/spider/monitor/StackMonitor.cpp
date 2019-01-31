@@ -39,6 +39,7 @@
 #include "StackMonitor.h"
 
 #include <platform.h>
+#include <Logger.h>
 
 
 void StackMonitor::initStack(SpiderStack stackId, StackConfig cfg) {
@@ -66,8 +67,19 @@ void *StackMonitor::alloc(SpiderStack stackId, int size) {
     return Platform::get()->getStack(stackId)->alloc(size);
 }
 
+//void *StackMonitor::alloc(SpiderStack stackId, int size, const char *function) {
+//    Logger::print(LOG_GENERAL, LOG_INFO, "[%s] alloc called by [%s]\n", Platform::get()->getStack(stackId)->getName(),
+//                  function);
+//    return Platform::get()->getStack(stackId)->alloc(size);
+//}
+
 void StackMonitor::free(SpiderStack stackId, void *ptr) {
     return Platform::get()->getStack(stackId)->free(ptr);
+}
+
+void StackMonitor::freeAll(SpiderStack stackId, const char *function) {
+    Logger::print(LOG_GENERAL, LOG_INFO, "freeAll called by [%s]\n", function);
+    return Platform::get()->getStack(stackId)->freeAll();
 }
 
 void StackMonitor::freeAll(SpiderStack stackId) {

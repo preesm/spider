@@ -43,7 +43,6 @@
 
 #include <spider.h>
 #include <monitor/StackMonitor.h>
-#include <Message.h>
 #include <SpiderException.h>
 
 class LRT;
@@ -52,7 +51,7 @@ class LrtCommunicator;
 
 class SpiderCommunicator;
 
-struct ClearTimeMsg;
+class ClearTimeMessage;
 
 class Platform {
 public:

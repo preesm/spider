@@ -81,7 +81,7 @@ bool NotificationQueue<T>::pop(T *data, bool blocking) {
     /** Locking mutex with guard (in case of exception) */
     std::lock_guard<std::mutex> lock(queueMutex_);
     /** Retrieving data */
-    (*data) = queue_.front();
+    (*data) = T(queue_.front());
     /** Removing the element from the queue */
     queue_.pop();
     queueSize_--;

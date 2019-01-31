@@ -46,14 +46,12 @@
 #include <platform.h>
 
 PThreadLrtCommunicator::PThreadLrtCommunicator(
-        ControlMessageQueue<ScheduleJob *> *spider2LrtJobQueue,
+        ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
         NotificationQueue<NotificationMessage> *notificationQueue,
-        NotificationQueue<JobNotificationMessage> **lrt2LRTJobNotificationQueue,
         DataQueues *dataQueues
 ) {
     spider2LrtJobQueue_ = spider2LrtJobQueue;
     notificationQueue_ = notificationQueue;
-    lrt2LRTJobNotificationQueue_ = lrt2LRTJobNotificationQueue;
     dataQueues_ = dataQueues;
 }
 
@@ -66,20 +64,10 @@ bool PThreadLrtCommunicator::pop_notification(NotificationMessage *msg, bool blo
 }
 
 std::int32_t PThreadLrtCommunicator::push_job_message(JobInfoMessage **message) {
-//    return spider2LrtJobQueue_->push(message);
-    return 0;
-}
-
-void PThreadLrtCommunicator::pop_job_message(JobInfoMessage **msg, std::int32_t id) {
-//    spider2LrtJobQueue_->pop(msg, id);
-}
-
-
-std::int32_t PThreadLrtCommunicator::push_job_message(ScheduleJob **message) {
     return spider2LrtJobQueue_->push(message);
 }
 
-void PThreadLrtCommunicator::pop_job_message(ScheduleJob **msg, int32_t id) {
+void PThreadLrtCommunicator::pop_job_message(JobInfoMessage **msg, std::int32_t id) {
     spider2LrtJobQueue_->pop(msg, id);
 }
 
@@ -94,23 +82,3 @@ void *PThreadLrtCommunicator::data_recv(std::int32_t alloc) {
 void *PThreadLrtCommunicator::data_start_send(std::int32_t alloc) {
     return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (alloc));
 }
-
-bool PThreadLrtCommunicator::pop_data_notification(int lrtID, JobNotificationMessage *msg) {
-    if (lrtID < 0 || lrtID >= Platform::get()->getNLrt()) {
-        throwSpiderException("bad LRT ID: %d", lrtID);
-    }
-    return lrt2LRTJobNotificationQueue_[lrtID]->pop(msg, true);
-}
-
-void PThreadLrtCommunicator::push_data_notification(int lrtID, JobNotificationMessage *msg) {
-    if (lrtID < 0 || lrtID >= Platform::get()->getNLrt()) {
-        throwSpiderException("bad LRT ID: %d", lrtID);
-    }
-    lrt2LRTJobNotificationQueue_[lrtID]->push(msg);
-}
-
-
-
-
-
-

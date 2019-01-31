@@ -67,7 +67,11 @@ namespace StackMonitor {
 
     void *alloc(SpiderStack id, int size);
 
+//    void *alloc(SpiderStack stackId, int size, const char *function);
+
     void free(SpiderStack id, void *ptr);
+
+    void freeAll(SpiderStack id, const char *function);
 
     void freeAll(SpiderStack id);
 

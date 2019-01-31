@@ -300,6 +300,7 @@ void jit_ms(
     TimeMonitor::startMonitoring();
     scheduler->schedule(topSrdag, memAlloc, schedule, archi);
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
+    schedule->execute();
 
     Platform::get()->getLrt()->runUntilNoMoreJobs();
 
@@ -389,6 +390,7 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
     schedule->execute();
 
     Platform::get()->getLrt()->runUntilNoMoreJobs();
+    StackMonitor::freeAll(TRANSFO_STACK);
 
     return schedule;
 }

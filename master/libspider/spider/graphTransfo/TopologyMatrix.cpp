@@ -150,12 +150,12 @@ static bool isBodyExecutable(PiSDFVertex *body, transfoJob *job) {
     /* Test if all In/Out is equal to 0 */
     for (int j = 0; notExec && j < body->getNInEdge(); j++) {
         PiSDFEdge *inEdge = body->getInEdge(j);
-        int cons = inEdge->resolveCons(job);
+        Param cons = inEdge->resolveCons(job);
         notExec = notExec && (cons == 0);
     }
     for (int j = 0; notExec && j < body->getNOutEdge(); j++) {
         PiSDFEdge *outEdge = body->getOutEdge(j);
-        int prod = outEdge->resolveProd(job);
+        Param prod = outEdge->resolveProd(job);
         notExec = notExec && (prod == 0);
     }
 
@@ -163,8 +163,8 @@ static bool isBodyExecutable(PiSDFVertex *body, transfoJob *job) {
 }
 
 static bool isEdgeValid(PiSDFEdge *edge, transfoJob *job) {
-    int prod = edge->resolveProd(job);
-    int cons = edge->resolveCons(job);
+    Param prod = edge->resolveProd(job);
+    Param cons = edge->resolveCons(job);
 
     if ((prod == 0 && cons != 0) || (cons == 0 && prod != 0)) {
         throwSpiderException("Bad Edge Prod/Cons, Prod: %d et Cons: %d.", prod, cons);
@@ -181,7 +181,7 @@ void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVert
                       int *brv) {
     PiSDFVertex *const *vertices = vertexSet.getArray() + nDoneVertices;
     auto *vertexIxs = CREATE_MUL(TRANSFO_STACK, nVertices, int);
-    PiSDFEdgeSet edgeSet(nEdges, TRANSFO_STACK);
+    PiSDFEdgeSet edgeSet(static_cast<int>(nEdges), TRANSFO_STACK);
     fillEdgeSet(edgeSet, vertices, nVertices);
 
     /* Compute nbVertices */
@@ -207,7 +207,7 @@ void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVert
         }
     }
 
-    auto *topo_matrix = CREATE_MUL(TRANSFO_STACK, nbEdges * nbVertices, int);
+    auto *topo_matrix = CREATE_MUL(TRANSFO_STACK, nbEdges * nbVertices, Param);
     memset(topo_matrix, 0, nbEdges * nbVertices * sizeof(int));
 
     /* Fill the topology matrix(nbEdges x nbVertices) */
@@ -215,15 +215,15 @@ void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVert
     for (int i = 0; i < nEdges; i++) {
         PiSDFEdge *edge = edgeSet.getArray()[i];
         if (isEdgeValid(edge, job)) {
-            int prod = edge->resolveProd(job);
-            int cons = edge->resolveCons(job);
+            Param prod = edge->resolveProd(job);
+            Param cons = edge->resolveCons(job);
 
             if (prod < 0 || cons < 0) {
                 char name[100];
                 edge->getProdExpr(name, 100);
-                fprintf(stderr, "Prod: %s = %d\n", name, prod);
+                fprintf(stderr, "Prod: %s = %li\n", name, prod);
                 edge->getConsExpr(name, 100);
-                fprintf(stderr, "Cons: %s = %d\n", name, cons);
+                fprintf(stderr, "Cons: %s = %li\n", name, cons);
                 throwSpiderException("Error Bad prod/cons resolved.");
             }
             long sourceIx = edge->getSrc()->getSetIx() - nDoneVertices;

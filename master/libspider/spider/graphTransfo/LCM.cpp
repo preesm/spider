@@ -56,8 +56,8 @@ static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, lon
         PiSDFEdge *edge = edgeSet.getArray()[i];
         PiSDFVertex *source = edge->getSrc();
         PiSDFVertex *sink = edge->getSnk();
-        int cons = edge->resolveCons(job);
-        int prod = edge->resolveProd(job);
+        Param cons = edge->resolveCons(job);
+        Param prod = edge->resolveProd(job);
         // Check if the edge is valid
         if ((prod == 0 && cons != 0) || (cons == 0 && prod != 0)) {
             throwSpiderException(
@@ -93,8 +93,8 @@ static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, lon
  * @param nVertices Number of vertices in the connected components;
  * @return Value of the LCM
  */
-static long computeLCMFactor(Rational *reps, long nVertices) {
-    long lcm = 1;
+static std::int64_t computeLCMFactor(Rational *reps, long nVertices) {
+    std::int64_t lcm = 1;
     for (long i = 0; i < nVertices; ++i) {
         lcm = Rational::compute_lcm(lcm, reps[i].getDenominator());
     }
@@ -110,7 +110,7 @@ static long computeLCMFactor(Rational *reps, long nVertices) {
  * @param nVertices  Number of vertices in the connected components;
  * @param brv        Array of BRV values to be filled;
  */
-static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, long lcm, long nVertices, int *brv) {
+static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, std::int64_t lcm, long nVertices, int *brv) {
     for (long i = 0; i < nVertices; ++i) {
         PiSDFVertex *vertex = vertices[i];
         // Ignore interfaces for now
@@ -121,9 +121,9 @@ static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, long 
             continue;
         }
         Rational &r = reps[i];
-        long nom = r.getNominator();
-        long denom = r.getDenominator();
-        brv[vertex->getTypeId()] = ((nom * lcm) / denom);
+        std::int64_t nom = r.getNominator();
+        std::int64_t denom = r.getDenominator();
+        brv[vertex->getTypeId()] = static_cast<int>((nom * lcm / denom));
     }
 }
 
@@ -135,7 +135,7 @@ static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, long 
  * @param edgeSet  Edge set of the connected components;
  * @param brv      BRV values;
  */
-static void checkConsistency(transfoJob *job, PiSDFEdgeSet &edgeSet, int *brv) {
+static void checkConsistency(transfoJob *job, PiSDFEdgeSet &edgeSet, const int *brv) {
     for (int i = 0; i < edgeSet.getN(); ++i) {
         PiSDFEdge *edge = edgeSet.getArray()[i];
         PiSDFVertex *source = edge->getSrc();
@@ -143,8 +143,8 @@ static void checkConsistency(transfoJob *job, PiSDFEdgeSet &edgeSet, int *brv) {
         if ((source->getType() == PISDF_TYPE_IF) || (sink->getType() == PISDF_TYPE_IF)) {
             continue;
         }
-        int prod = edge->resolveProd(job);
-        int cons = edge->resolveCons(job);
+        Param prod = edge->resolveProd(job);
+        Param cons = edge->resolveCons(job);
         if ((sink->getType() == PISDF_TYPE_CONFIG) && prod > cons) {
             throwSpiderException("Config actor [%s] does not consume all the tokens produce on its input port.",
                                  source->getName());
@@ -163,7 +163,7 @@ void
 lcmBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv) {
     // 0. Get vertices and edges set
     PiSDFVertex *const *vertices = vertexSet.getArray() + nDoneVertices;
-    PiSDFEdgeSet edgeSet(nEdges, TRANSFO_STACK);
+    PiSDFEdgeSet edgeSet(static_cast<int>(nEdges), TRANSFO_STACK);
     fillEdgeSet(edgeSet, vertices, nVertices);
     // 1. Initialize the reps map
     auto *reps = CREATE_MUL(TRANSFO_STACK, nVertices, Rational);
@@ -175,7 +175,7 @@ lcmBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long
     fillReps(job, edgeSet, reps, nDoneVertices);
 
     // 2. Compute lcm
-    long lcm = computeLCMFactor(reps, nVertices);
+    std::int64_t lcm = computeLCMFactor(reps, nVertices);
 
     // 3. Compute and set BRV values
     computeBRVValues(reps, vertices, lcm, nVertices, brv);

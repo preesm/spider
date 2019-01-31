@@ -40,7 +40,7 @@
 #include "graphs/PiSDF/PiSDFEdge.h"
 
 
-static void updateFromIF(transfoJob *job, PiSDFVertex *vertex, int *brv, long &scaleFactor) {
+static void updateFromIF(transfoJob *job, PiSDFVertex *vertex, const int *brv, long &scaleFactor) {
     PiSDFEdge *edge = vertex->getAllEdges()[0];
     PiSDFVertex *source = edge->getSrc();
     PiSDFVertex *sink = edge->getSnk();
@@ -68,7 +68,7 @@ static void updateFromIF(transfoJob *job, PiSDFVertex *vertex, int *brv, long &s
     }
 }
 
-static void updateFromCFG(transfoJob *job, PiSDFVertex *vertex, int *brv, long &scaleFactor) {
+static void updateFromCFG(transfoJob *job, PiSDFVertex *vertex, const int *brv, long &scaleFactor) {
     for (int i = 0; i < vertex->getNOutEdge(); ++i) {
         PiSDFEdge *edge = vertex->getOutEdge(i);
         PiSDFVertex *sink = edge->getSnk();
@@ -108,8 +108,8 @@ void updateBRV(transfoJob *job, long nVertices, int *brv, PiSDFVertex *const *ve
     }
 }
 
-void fillEdgeSet(PiSDFEdgeSet &edgeSet, PiSDFVertex *const *vertices, int nVertices) {
-    for (int v = 0; v < nVertices; ++v) {
+void fillEdgeSet(PiSDFEdgeSet &edgeSet, PiSDFVertex *const *vertices, long nVertices) {
+    for (long v = 0; v < nVertices; ++v) {
         // We only need to go though the output edges of every vertices
         for (int e = 0; e < vertices[v]->getNOutEdge(); ++e) {
             PiSDFEdge *edge = vertices[v]->getOutEdge(e);

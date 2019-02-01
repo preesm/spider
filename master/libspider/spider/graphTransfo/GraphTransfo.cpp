@@ -342,9 +342,10 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
 
         if (Spider::getVerbose()) {
             /* Display Param values */
-            Platform::get()->fprintf(stdout, "\nParam Values:\n");
+            fprintf(stderr, "\nINFO: Parameter values:\n");
             for (int i = 0; i < job->graph->getNParam(); i++) {
-                Platform::get()->fprintf(stdout, "%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
+                fprintf(stderr, "INFO: >> Name: %s -- Value: %" PRId64"\n", job->graph->getParam(i)->getName(),
+                        job->paramValues[i]);
             }
         }
 
@@ -352,9 +353,9 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
         computeBRV(job, brv);
         if (Spider::getVerbose()) {
             /* Display BRV values */
-            Platform::get()->fprintf(stdout, "\nBRV Values:\n");
+            fprintf(stderr, "\nINFO: BRV values:\n");
             for (int i = 0; i < job->graph->getNBody(); i++) {
-                Platform::get()->fprintf(stdout, "%s: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+                fprintf(stderr, "INFO: >> Vertex: %s -- RV: %d\n", job->graph->getBody(i)->getName(), brv[i]);
             }
         }
 
@@ -390,7 +391,5 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
     schedule->execute();
 
     Platform::get()->getLrt()->runUntilNoMoreJobs();
-    StackMonitor::freeAll(TRANSFO_STACK);
-
     return schedule;
 }

@@ -193,9 +193,6 @@ private:
 
     void run(bool loop);
 
-    Param *getInParams(SRDAGVertex *vertex);
-
-
     /**
      * @brief Clear the JOB queue
      */

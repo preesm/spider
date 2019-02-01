@@ -434,16 +434,8 @@ void LRT::handleJobNotification(NotificationMessage &message) {
         case JOB_BROADCAST_JOBSTAMP:
             broadcastJobStamp();
             break;
-        case JOB_UPDATE_JOBSTAMP: {
+        case JOB_UPDATE_JOBSTAMP:
             updateLRTJobStamp(message.getLRTID(), message.getIndex());
-//            JobNotificationMessage msg;
-//            if (lrtCommunicator_->pop_data_notification(getIx(), &msg)) {
-//                updateLRTJobStamp(msg.getID(), msg.getJobStamp());
-//            } else {
-//                Logger::print(LOG_JOB, LOG_ERROR,
-//                              "LRT: %d received JOB_UPDATE_JOBSTAMP notification but no job stamp found.", getIx());
-//            }
-        }
             break;
         default:
             throwSpiderException("Unhandled type of JOB notification: %u\n", message.getSubType());

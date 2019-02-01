@@ -72,9 +72,8 @@ static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
     } while ((vertexSet.getN() != currentSize) || (n != vertexSet.getN()));
 }
 
-void computeBRV(transfoJob *job, int *brv) {
+void computeBRV(PiSDFGraph *const graph, int *brv) {
     // Retrieve the graph
-    PiSDFGraph *const graph = job->graph;
     int nTotalVertices = graph->getNBody() + graph->getNInIf() + graph->getNOutIf();
     PiSDFVertexSet vertexSet(nTotalVertices, TRANSFO_STACK);
 
@@ -90,7 +89,7 @@ void computeBRV(transfoJob *job, int *brv) {
             // 1.1 Update the offset in the vertexSet
             long nVertices = vertexSet.getN() - nDoneVertices;
             // 2. Compute the BRV of current set
-            lcmBasedBRV(job, vertexSet, nDoneVertices, nVertices, nEdges, brv);
+            lcmBasedBRV(vertexSet, nDoneVertices, nVertices, nEdges, brv);
             // 3. Update the number of treated vertices
             nDoneVertices = vertexSet.getN();
         }

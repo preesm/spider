@@ -45,19 +45,18 @@
  * Fill an array of Rational relations between the different vertices of a given connected components based on their
  * production / consumption data rates.
  *
- * @param job     Pointer to the transfoJob
  * @param edgeSet Edge set
  * @param reps    Array of Rational to be filled
  * @param offset  Offset of the current connected components in the global set of vertices
  */
-static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, long offset) {
+static void fillReps(PiSDFEdgeSet &edgeSet, Rational *reps, long offset) {
     Rational n(1);
     for (int i = 0; i < edgeSet.getN(); ++i) {
         PiSDFEdge *edge = edgeSet.getArray()[i];
         PiSDFVertex *source = edge->getSrc();
         PiSDFVertex *sink = edge->getSnk();
-        Param cons = edge->resolveCons(job);
-        Param prod = edge->resolveProd(job);
+        Param cons = edge->resolveCons();
+        Param prod = edge->resolveProd();
         // Check if the edge is valid
         if ((prod == 0 && cons != 0) || (cons == 0 && prod != 0)) {
             throwSpiderException(
@@ -131,11 +130,10 @@ static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, std::
 /**
  * Check the consistency of the connected components graph.
  *
- * @param job      Pointer to the transfoJob;
  * @param edgeSet  Edge set of the connected components;
  * @param brv      BRV values;
  */
-static void checkConsistency(transfoJob *job, PiSDFEdgeSet &edgeSet, const int *brv) {
+static void checkConsistency(PiSDFEdgeSet &edgeSet, const int *brv) {
     for (int i = 0; i < edgeSet.getN(); ++i) {
         PiSDFEdge *edge = edgeSet.getArray()[i];
         PiSDFVertex *source = edge->getSrc();
@@ -143,8 +141,8 @@ static void checkConsistency(transfoJob *job, PiSDFEdgeSet &edgeSet, const int *
         if ((source->getType() == PISDF_TYPE_IF) || (sink->getType() == PISDF_TYPE_IF)) {
             continue;
         }
-        Param prod = edge->resolveProd(job);
-        Param cons = edge->resolveCons(job);
+        Param prod = edge->resolveProd();
+        Param cons = edge->resolveCons();
         if ((sink->getType() == PISDF_TYPE_CONFIG) && prod > cons) {
             throwSpiderException("Config actor [%s] does not consume all the tokens produce on its input port.",
                                  source->getName());
@@ -160,7 +158,7 @@ static void checkConsistency(transfoJob *job, PiSDFEdgeSet &edgeSet, const int *
 
 
 void
-lcmBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv) {
+lcmBasedBRV(PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv) {
     // 0. Get vertices and edges set
     PiSDFVertex *const *vertices = vertexSet.getArray() + nDoneVertices;
     PiSDFEdgeSet edgeSet(static_cast<int>(nEdges), TRANSFO_STACK);
@@ -172,7 +170,7 @@ lcmBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long
         reps[i] = Rational();
     }
 
-    fillReps(job, edgeSet, reps, nDoneVertices);
+    fillReps(edgeSet, reps, nDoneVertices);
 
     // 2. Compute lcm
     std::int64_t lcm = computeLCMFactor(reps, nVertices);
@@ -181,7 +179,7 @@ lcmBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long
     computeBRVValues(reps, vertices, lcm, nVertices, brv);
 
     // 4. Check consistency
-    checkConsistency(job, edgeSet, brv);
+    checkConsistency(edgeSet, brv);
 
     // 5. Free the memory
     StackMonitor::free(TRANSFO_STACK, reps);

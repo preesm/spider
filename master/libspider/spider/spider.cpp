@@ -136,11 +136,17 @@ void Spider::init(SpiderConfig &cfg) {
 //    Logger::enable(LOG_JOB);
 }
 
+extern int stopThreads;
+
 void Spider::iterate() {
     Platform::get()->rstTime();
     // Time measurement -- START
     Time start = Platform::get()->getTime();
     if (pisdf_->isGraphStatic()) {
+        pisdf_->getBody(0)->getSubGraph()->print("graph.dot");
+        computeRhoValues();
+        stopThreads = 1;
+        return;
         if (!srdag_) {
             /** On first iteration, the schedule is created **/
             srdag_ = new SRDAGGraph();

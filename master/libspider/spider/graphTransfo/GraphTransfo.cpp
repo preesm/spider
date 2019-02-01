@@ -41,6 +41,7 @@
 #include <graphTransfo/LinkVertices.h>
 #include <graphTransfo/AddVertices.h>
 #include <graphTransfo/ComputeBRV.h>
+#include <graphs/PiSDF/PiSDFEdge.h>
 #include <scheduling/Scheduler.h>
 #include <monitor/TimeMonitor.h>
 #include <scheduling/MemAlloc.h>
@@ -48,6 +49,7 @@
 #include <launcher/Launcher.h>
 #include <tools/Queue.h>
 #include <lrt.h>
+#include <cmath>
 
 #define SCHEDULE_SIZE 10000
 
@@ -164,7 +166,7 @@ void jit_ms(
                 }
 
                 auto *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
-                computeBRV(job, brv);
+                computeBRV(job->graph, brv);
                 if (Spider::getVerbose()) {
                     /* Display BRV values */
                     fprintf(stderr, "\nINFO: BRV values:\n");
@@ -243,7 +245,7 @@ void jit_ms(
 
             /* Compute BRV */
             auto *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
-            computeBRV(job, brv);
+            computeBRV(job->graph, brv);
             if (Spider::getVerbose()) {
                 /* Display BRV values */
                 fprintf(stderr, "\nINFO: BRV values:\n");
@@ -350,7 +352,7 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
         }
 
         auto *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
-        computeBRV(job, brv);
+        computeBRV(job->graph, brv);
         if (Spider::getVerbose()) {
             /* Display BRV values */
             fprintf(stderr, "\nINFO: BRV values:\n");
@@ -392,4 +394,131 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
 
     Platform::get()->getLrt()->runUntilNoMoreJobs();
     return schedule;
+}
+
+
+static int computeMinRVNeeded(PiSDFVertex *const vertex) {
+    int finalMinExec = 1;
+    for (int i = 0; i < vertex->getNOutEdge(); ++i) {
+        auto *edge = vertex->getOutEdge(i);
+        auto cons = edge->resolveCons();
+        auto prod = edge->resolveProd();
+        float alpha = 1.f;
+        if (cons > prod) {
+            alpha = static_cast<float>(cons) / static_cast<float>(prod);
+        }
+        int minExec = static_cast<int>(std::ceil(alpha));
+        finalMinExec = std::max(minExec, finalMinExec);
+    }
+    return finalMinExec;
+}
+
+void computeRhoValues() {
+    auto *graph = Spider::getGraph();
+    if (!graph->getBody(0)->isHierarchical()) {
+        throwSpiderException("Top graph should contain at least one actor.");
+    }
+    auto *root = graph->getBody(0)->getSubGraph();
+    auto *brv = CREATE_MUL(TRANSFO_STACK, root->getNBody(), std::int32_t);
+    computeBRV(root, brv);
+    fprintf(stderr, "\nINFO: BRV values:\n");
+    for (int i = 0; i < root->getNBody(); i++) {
+        fprintf(stderr, "INFO: >> Vertex: %s -- RV: %d\n", root->getBody(i)->getName(), brv[i]);
+    }
+
+    auto *rhoValues = CREATE_MUL(TRANSFO_STACK, root->getNBody(), std::int32_t);
+    /** 0. Initialize the rhoValue to 1 by default **/
+    for (int i = 0; i < root->getNBody(); ++i) {
+        rhoValues[i] = 1;
+    }
+
+    bool converged;
+    int iter = 0;
+    do {
+        converged = true;
+        /** Compute current value of rho for every actor **/
+        for (int i = 0; i < root->getNBody(); ++i) {
+            auto *vertex = root->getBody(i);
+            int precValue = rhoValues[i];
+            rhoValues[i] = computeMinRVNeeded(vertex);
+            converged &= (precValue == rhoValues[i]);
+        }
+        /** Ensure that we did at least two passes **/
+        converged &= (iter > 0);
+        /** Update iteration counter **/
+        iter++;
+    } while (!converged);
+
+    fprintf(stderr, "\nINFO: Rho values:\n");
+    for (int i = 0; i < root->getNBody(); i++) {
+        fprintf(stderr, "INFO: >> Vertex: %s -- Rho: %d\n", root->getBody(i)->getName(), rhoValues[i]);
+    }
+
+    /** Schedule and run **/
+    schedule(graph, rhoValues, brv);
+
+    StackMonitor::free(TRANSFO_STACK, brv);
+    StackMonitor::free(TRANSFO_STACK, rhoValues);
+}
+
+static inline void updateValues(PiSDFGraph *const graph, int *const rhoValues, int *const countVertex) {
+    for (int i = 0; i < graph->getNBody(); ++i) {
+        countVertex[i] = countVertex[i] - rhoValues[i];
+        rhoValues[i] = std::min(rhoValues[i], countVertex[i]);
+    }
+}
+
+static void mapVertex(PiSDFVertex *const vertex, Archi *const archi, Schedule *const schedule) {
+    int bestSlave = -1;
+    Time bestStartTime = 0;
+    Time minimumStartTime = 0; // TODO: set this n function of dependencies
+    for (int i = 0; i < archi->getNPE(); ++i) {
+        /** Skip disabled processing elements **/
+        if (!archi->isActivated(i)) {
+            continue;
+        }
+        /** Search for best candidate **/
+        if (vertex->canExecuteOn(i)) {
+            Time startTime = std::max(schedule->getReadyTime(i), minimumStartTime);
+            Time waitTime = startTime - schedule->getReadyTime(i);
+            Time execTime = vertex->getTimingOnPE(i);
+
+        }
+    }
+    if (bestSlave < 0) {
+        throwSpiderException("No slave found for vertex [%s].", vertex->getName());
+    }
+}
+
+void schedule(PiSDFGraph *graph, int *const rhoValues, int *const brv) {
+    auto *archi = Spider::getArchi();
+    auto *schedule = CREATE(TRANSFO_STACK, Schedule)(archi->getNPE(), SCHEDULE_SIZE);
+    auto *countVertex = CREATE_MUL(TRANSFO_STACK, graph->getNBody(), std::int32_t);
+    memcpy(countVertex, brv, graph->getNBody() * sizeof(std::int32_t));
+
+    bool done = false;
+    while (!done) {
+        done = true;
+        /** Schedule **/
+        for (int i = 0; i < graph->getNBody(); ++i) {
+            auto *vertex = graph->getBody(i);
+            /** Map the vertex **/
+
+            /** Updating value **/
+            countVertex[i] = countVertex[i] - rhoValues[i];
+            rhoValues[i] = std::min(rhoValues[i], countVertex[i]);
+            /** Test condition for ending **/
+            done &= (countVertex[i] == 0);
+        }
+//        /** Update rho value and count value of the vertices **/
+//        updateValues(graph, rhoValues, countVertex);
+    }
+
+    /** Execute and run the obtained schedule **/
+    schedule->execute();
+    Platform::get()->getLrt()->runUntilNoMoreJobs();
+
+    /** Free memory **/
+    StackMonitor::free(TRANSFO_STACK, schedule);
+    StackMonitor::free(TRANSFO_STACK, countVertex);
 }

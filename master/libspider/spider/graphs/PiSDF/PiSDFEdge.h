@@ -88,6 +88,10 @@ public:
 
     inline Param resolveCons(transfoJob *job) const;
 
+    inline Param resolveProd() const;
+
+    inline Param resolveCons() const;
+
     inline Param resolveDelay(transfoJob *job);
 
     inline void getProdExpr(char *out, int sizeOut);
@@ -191,6 +195,14 @@ inline Param PiSDFEdge::resolveProd(transfoJob *job) const {
 
 inline Param PiSDFEdge::resolveCons(transfoJob *job) const {
     return cons_->evaluate(snk_->getInParams(), job);
+}
+
+inline Param PiSDFEdge::resolveProd() const {
+    return prod_->evaluate();
+}
+
+inline Param PiSDFEdge::resolveCons() const {
+    return cons_->evaluate();
 }
 
 inline Param PiSDFEdge::resolveDelay(transfoJob *job) {

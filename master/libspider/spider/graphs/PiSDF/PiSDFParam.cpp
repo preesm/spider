@@ -82,7 +82,8 @@ PiSDFParam::PiSDFParam(
     setter_ = nullptr;
     value_ = -1;
     // 1. Creates the expression
-    expr_ = CREATE(PISDF_STACK, Expression)(expressionString_.c_str(), dependencies_.data(), dependencies.size());
+    expr_ = CREATE(PISDF_STACK, Expression)(expressionString_.c_str(), dependencies_.data(),
+                                            static_cast<int>(dependencies.size()));
     // If parameter is static, it can be resolved now
     if (type == PISDF_PARAM_STATIC) {
         // 2. Resolve expression

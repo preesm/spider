@@ -45,7 +45,6 @@
  * Compute the repetition vector of actors that belong to a given connected component,
  * using method of LCM.
  *
- * @param job             Pointer to the transformation job.
  * @param vertexSet       Global vertex set of the entire graph.
  * @param nDoneVertices   Offset of the current connected component inside the vertexSet.
  * @param nVertices       Number of vertices contained inside the connected component.
@@ -54,6 +53,6 @@
  *
  * @throw std::runtime_exception when graph is not consistent
  */
-void lcmBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv);
+void lcmBasedBRV(PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv);
 
 #endif //SPIDER_LCM_H

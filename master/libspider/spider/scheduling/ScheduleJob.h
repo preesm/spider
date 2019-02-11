@@ -47,6 +47,8 @@ class ScheduleJob {
 public:
     ScheduleJob(SRDAGVertex *vertex, int pe, int lrt);
 
+    ScheduleJob(PiSDFVertex *vertex, int pe, int lrt);
+
     ~ScheduleJob();
 
     /** Setters **/
@@ -133,6 +135,7 @@ private:
      * @brief Vertex associated to the job
      */
     SRDAGVertex *vertex_;
+    PiSDFVertex *piSDFVertex_;
     /**
      * @brief PE on which the job is executed
      */

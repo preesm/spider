@@ -322,7 +322,7 @@ inline bool PiSDFVertex::canExecuteOn(int pe) {
 
 inline Time PiSDFVertex::getTimingOnType(int peType, const Param *vertexParamValues, int nParam) {
     if (peType < 0 || peType >= nPeTypeMax_) {
-        throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_);
+        throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_ - 1);
     }
 
     if (timings_[peType] == nullptr) {
@@ -333,7 +333,7 @@ inline Time PiSDFVertex::getTimingOnType(int peType, const Param *vertexParamVal
 
 inline Time PiSDFVertex::getTimingOnPE(int peType) {
     if (peType < 0 || peType >= nPeTypeMax_) {
-        throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_);
+        throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_ - 1);
     }
     if (timings_[peType] == nullptr) {
         return 0;

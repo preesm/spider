@@ -102,19 +102,21 @@ void Schedule::addJob(ScheduleJob *job) {
     nJobs_++;
     readyTime_[pe] = std::max(readyTime_[pe], job->getEndTime());
     auto *vertex = job->getVertex();
-    vertex->setSlave(job->getPE());
-    vertex->setSlaveJobIx(nJobPerPE_[pe]++);
-    vertex->setStartTime(job->getStartTime());
-    vertex->setEndTime(job->getEndTime());
+    if (vertex) {
+        vertex->setSlave(job->getPE());
+        vertex->setSlaveJobIx(nJobPerPE_[pe]++);
+        vertex->setStartTime(job->getStartTime());
+        vertex->setEndTime(job->getEndTime());
 
-    // Update job predecessor info
-    for (int i = 0; i < vertex->getNConnectedInEdge(); ++i) {
-        auto *edge = vertex->getInEdge(i);
-        auto *inVertex = edge->getSrc();
-        auto *precJob = findJobFromVertex(inVertex);
-        if (precJob) {
-            job->addPredecessor(precJob);
-            precJob->addSuccessor(job);
+        // Update job predecessor info
+        for (int i = 0; i < vertex->getNConnectedInEdge(); ++i) {
+            auto *edge = vertex->getInEdge(i);
+            auto *inVertex = edge->getSrc();
+            auto *precJob = findJobFromVertex(inVertex);
+            if (precJob) {
+                job->addPredecessor(precJob);
+                precJob->addSuccessor(job);
+            }
         }
     }
 

@@ -143,14 +143,19 @@ void Spider::iterate() {
     // Time measurement -- START
     Time start = Platform::get()->getTime();
     if (pisdf_->isGraphStatic()) {
-        pisdf_->getBody(0)->getSubGraph()->print("graph.dot");
-        computeRhoValues();
-        stopThreads = 1;
-        return;
+//        pisdf_->getBody(0)->getSubGraph()->print("graph.dot");
+//        srdagLessScheduler();
+        // Time measurement -- END
+        Time end = Platform::get()->getTime();
+        fprintf(stderr, "srdagLessScheduler() -- Execution Time: %lf\n", (end - start) / 1000000.0);
+        start = end;
+//        return;
         if (!srdag_) {
             /** On first iteration, the schedule is created **/
             srdag_ = new SRDAGGraph();
             schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
+            end = Platform::get()->getTime();
+            fprintf(stderr, "static_scheduler() -- Execution Time: %lf\n", (end - start) / 1000000.0);
         } else {
             /** If a static schedule exist, we just play it **/
             schedule_->execute();
@@ -162,11 +167,9 @@ void Spider::iterate() {
         srdag_ = new SRDAGGraph();
         jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
     }
+    stopThreads = 1;
     /** Wait for LRTs to finish **/
     Platform::get()->rstJobIxRecv();
-    // Time measurement -- END
-    Time end = Platform::get()->getTime();
-//    fprintf(stderr, "Execution Time: %lf\n", (end - start) / 1000000.0);
 }
 
 

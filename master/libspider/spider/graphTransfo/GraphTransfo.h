@@ -72,7 +72,7 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
                            Scheduler *scheduler);
 
 
-void computeRhoValues();
+void srdagLessScheduler();
 
 void schedule(PiSDFGraph *graph, int *const rhoValue, int *const brv);
 

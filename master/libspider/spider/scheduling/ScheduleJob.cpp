@@ -42,6 +42,7 @@
 
 ScheduleJob::ScheduleJob(SRDAGVertex *vertex, int pe, int lrt) {
     vertex_ = vertex;
+    piSDFVertex_ = nullptr;
     pe_ = pe;
     lrt_ = lrt;
     previousJob_ = nullptr;
@@ -50,6 +51,24 @@ ScheduleJob::ScheduleJob(SRDAGVertex *vertex, int pe, int lrt) {
     endTime_ = (Time) -1;
     successors_.reserve((size_t) vertex->getNConnectedOutEdge());
     predecessors_.reserve((size_t) vertex->getNConnectedInEdge());
+    int nLrt = Platform::get()->getNLrt();
+    jobsToWait_ = CREATE_MUL(ARCHI_STACK, nLrt, std::int32_t);
+    for (int i = 0; i < nLrt; ++i) {
+        jobsToWait_[i] = -1;
+    }
+}
+
+ScheduleJob::ScheduleJob(PiSDFVertex *vertex, int pe, int lrt) {
+    vertex_ = nullptr;
+    piSDFVertex_ = vertex;
+    pe_ = pe;
+    lrt_ = lrt;
+    previousJob_ = nullptr;
+    nextJob_ = nullptr;
+    startTime_ = (Time) -1;
+    endTime_ = (Time) -1;
+    successors_.reserve((size_t) vertex->getNOutEdge());
+    predecessors_.reserve((size_t) vertex->getNInEdge());
     int nLrt = Platform::get()->getNLrt();
     jobsToWait_ = CREATE_MUL(ARCHI_STACK, nLrt, std::int32_t);
     for (int i = 0; i < nLrt; ++i) {
@@ -84,17 +103,19 @@ bool ScheduleJob::isAfterJob(ScheduleJob *job) {
 }
 
 void ScheduleJob::print(FILE *file) {
-    int red = (static_cast<unsigned>(vertex_->getId()) & 3u) * 50 + 100;
-    int green = ((static_cast<unsigned>(vertex_->getId()) >> 2u) & 3u) * 50 + 100;
-    int blue = ((static_cast<unsigned>(vertex_->getId()) >> 4u) & 3u) * 50 + 100;
+    auto vertexName = vertex_ ? vertex_->toString() : piSDFVertex_->getName();
+    auto vertexId = vertex_ ? vertex_->getId() : piSDFVertex_->getId();
+    int red = (static_cast<unsigned>(vertexId) & 3u) * 50 + 100;
+    int green = ((static_cast<unsigned>(vertexId) >> 2u) & 3u) * 50 + 100;
+    int blue = ((static_cast<unsigned>(vertexId) >> 4u) & 3u) * 50 + 100;
 
     Platform::get()->fprintf(file, "\t<event\n");
     Platform::get()->fprintf(file, "\t\tstart=\"%" PRId64"\"\n", startTime_);
     Platform::get()->fprintf(file, "\t\tend=\"%" PRId64"\"\n", endTime_);
-    Platform::get()->fprintf(file, "\t\ttitle=\"%s\"\n", vertex_->toString());
+    Platform::get()->fprintf(file, "\t\ttitle=\"%s\"\n", vertexName);
     Platform::get()->fprintf(file, "\t\tmapping=\"PE%d\"\n", pe_);
     Platform::get()->fprintf(file, "\t\tcolor=\"#%02x%02x%02x\"\n", red, green, blue);
-    Platform::get()->fprintf(file, "\t\t>%s.</event>\n", vertex_->toString());
+    Platform::get()->fprintf(file, "\t\t>%s.</event>\n", vertexName);
 }
 
 void ScheduleJob::updateJobsToWait() {
@@ -222,5 +243,7 @@ JobInfoMessage *ScheduleJob::createJobMessage() {
     }
     return jobInfoMessage;
 }
+
+
 
 

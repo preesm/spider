@@ -63,6 +63,7 @@
 #include <monitor/TimeMonitor.h>
 #include <launcher/Launcher.h>
 #include <Logger.h>
+#include <zconf.h>
 
 #include "platformPThread.h"
 
@@ -142,34 +143,50 @@ void Spider::iterate() {
     Platform::get()->rstTime();
     // Time measurement -- START
     Time start = Platform::get()->getTime();
-    if (pisdf_->isGraphStatic()) {
-//        pisdf_->getBody(0)->getSubGraph()->print("graph.dot");
-//        srdagLessScheduler();
-        // Time measurement -- END
-        Time end = Platform::get()->getTime();
-        fprintf(stderr, "srdagLessScheduler() -- Execution Time: %lf\n", (end - start) / 1000000.0);
-        start = end;
-//        return;
-        if (!srdag_) {
-            /** On first iteration, the schedule is created **/
-            srdag_ = new SRDAGGraph();
-            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
-            end = Platform::get()->getTime();
-            fprintf(stderr, "static_scheduler() -- Execution Time: %lf\n", (end - start) / 1000000.0);
-        } else {
-            /** If a static schedule exist, we just play it **/
-            schedule_->execute();
-        }
-    } else {
+    /** tmp **/
+    double avgTime = 0.;
+    double nIteration = 100;
+    for (int i = 0; i < nIteration; ++i) {
+        srdagLessScheduler();
+    }
+    Time end = Platform::get()->getTime();
+    avgTime = (end - start) / nIteration;
+    fprintf(stderr, "srdagLessScheduler() -- Execution Time: %lf ms.\n", avgTime / 1000000.0);
+    start = Platform::get()->getTime();
+    for (int i = 0; i < nIteration; ++i) {
         delete srdag_;
         StackMonitor::freeAll(SRDAG_STACK);
         memAlloc_->reset();
         srdag_ = new SRDAGGraph();
-        jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
+        schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
+        schedule_->~Schedule();
+        StackMonitor::free(TRANSFO_STACK, schedule_);
+        schedule_ = nullptr;
     }
+    end = Platform::get()->getTime();
+    avgTime = (end - start) / nIteration;
+    fprintf(stderr, "static_scheduler() -- Execution Time: %lf ms.\n", avgTime / 1000000.0);
     stopThreads = 1;
-    /** Wait for LRTs to finish **/
-    Platform::get()->rstJobIxRecv();
+
+
+//    if (pisdf_->isGraphStatic()) {
+//        if (!srdag_) {
+//            /** On first iteration, the schedule is created **/
+//            srdag_ = new SRDAGGraph();
+//            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
+//        } else {
+//            /** If a static schedule exist, we just play it **/
+//            schedule_->execute();
+//        }
+//    } else {
+//        delete srdag_;
+//        StackMonitor::freeAll(SRDAG_STACK);
+//        memAlloc_->reset();
+//        srdag_ = new SRDAGGraph();
+//        jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
+//    }
+//    /** Wait for LRTs to finish **/
+//    Platform::get()->rstJobIxRecv();
 }
 
 

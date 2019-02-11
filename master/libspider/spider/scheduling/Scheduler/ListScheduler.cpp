@@ -254,7 +254,7 @@ void ListScheduler::scheduleVertex(SRDAGVertex *vertex) {
     }
     //printf("=> choose pe %d\n", bestSlave);
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
-    auto *job = CREATE(ARCHI_STACK, ScheduleJob)(vertex, bestSlave, bestSlave);
+    auto *job = CREATE(TRANSFO_STACK, ScheduleJob)(vertex, bestSlave, bestSlave);
     job->setStartTime(bestStartTime);
     job->setEndTime(bestEndTime);
     schedule_->addJob(job);

@@ -68,7 +68,7 @@ void Schedule::clearJobs() {
     for (int i = 0; i < nPE_; ++i) {
         for (auto &job : jobs_[i]) {
             job->~ScheduleJob();
-            StackMonitor::free(ARCHI_STACK, job);
+            StackMonitor::free(TRANSFO_STACK, job);
         }
         jobs_[i].clear();
     }

@@ -44,6 +44,26 @@
 
 class PiSDFGraph;
 
+class ScheduleVertex;
+
+typedef struct VertexDependency {
+    ScheduleVertex *vertex_;
+    Param cons_;
+    Param prod_;
+    Param availableData_;
+} VertexDependency;
+
+class ScheduleVertex {
+public:
+    PiSDFVertex *vertex_;
+    VertexDependency *vertexDependenciesArray_;
+    Time *endTimeArray_;
+    std::int32_t nDependencies_;
+    std::int32_t vertexCount_;
+    std::int32_t vertexScheduledCount_;
+    std::int32_t vertexRhoValue_;
+};
+
 class SRDAGLessScheduler {
 public:
     SRDAGLessScheduler(PiSDFGraph *graph, const std::int32_t *brv);
@@ -56,6 +76,14 @@ public:
         return schedule_;
     }
 
+    inline void printSchedule(const char *path) {
+        if (schedule_) {
+            schedule_->print(path);
+        }
+    }
+
+    void printRhoValues();
+
 private:
     PiSDFGraph *graph_;
     Schedule *schedule_;
@@ -63,15 +91,11 @@ private:
     int nVertices_;
     SRDAGLessScheduler *parent_;
     std::vector<SRDAGLessScheduler *> children_;
-    std::int32_t *verticesCount_;
-    std::int32_t *verticesRhoValues_;
-    std::int32_t *verticesScheduledCount_;
-    std::vector<Time> *verticesEndTime_;
+    ScheduleVertex *scheduleVertexArray_;
 
-    void mapVertex(PiSDFVertex *const vertex);
+    void mapVertex(ScheduleVertex *scheduleVertex);
 
-    void printRhoValues();
-
+    void computeRhoValues();
 };
 
 #endif //SPIDER_SRDAGLESSSCHEDULER_H

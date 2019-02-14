@@ -48,7 +48,7 @@ public:
 
     ~DynStack() override;
 
-    void *alloc(int size) override;
+    void *alloc(int size, bool pageAligned) override;
 
     void free(void *var) override;
 

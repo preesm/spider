@@ -61,8 +61,10 @@ static inline int getAlignSize(int size) {
     return (int) std::ceil(((float) size) / minAlloc) * minAlloc;
 }
 
-void *StaticStack::alloc(int size) {
-    size = getAlignSize(size);
+void *StaticStack::alloc(int size, bool pageAligned) {
+    if (pageAligned) {
+        size = getAlignSize(size);
+    }
     void *res;
     if (used_ + size > size_) {
         throwSpiderException("Stack %s is full at %d, want at least %d.\n", getName(), size_, used_ + size);

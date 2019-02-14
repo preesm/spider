@@ -58,11 +58,13 @@ static inline int getAlignSize(int size) {
     return (int) std::ceil(size / minAlloc) * minAlloc;
 }
 
-void *DynStack::alloc(int size) {
+void *DynStack::alloc(int size, bool pageAligned) {
     std::lock_guard<std::mutex> lock(memoryMutex_);
     int alignedSize = size + sizeof(int);
 
-    alignedSize = getAlignSize(alignedSize);
+    if (pageAligned) {
+        alignedSize = getAlignSize(alignedSize);
+    }
     curUsedSize_ += alignedSize;
     maxSize_ = std::max(maxSize_, curUsedSize_);
     nb_++;

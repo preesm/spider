@@ -42,7 +42,7 @@
 
 class Stack {
 public:
-    virtual void *alloc(int size) = 0;
+    virtual void *alloc(int size, bool pageAligned) = 0;
 
     virtual void free(void *var) = 0;
 

@@ -91,6 +91,9 @@ SRDAGVertex::SRDAGVertex(
     schedLvl_ = -1;
     slave_ = -1;
     slaveJobIx_ = -1;
+
+    scheduleJob_ = CREATE_NA(TRANSFO_STACK, ScheduleJob)(1, Platform::get()->getNLrt());
+    scheduleJob_->setVertex(this);
 }
 
 SRDAGVertex::~SRDAGVertex() {
@@ -98,6 +101,8 @@ SRDAGVertex::~SRDAGVertex() {
     StackMonitor::free(SRDAG_STACK, outEdges_);
     StackMonitor::free(SRDAG_STACK, inParams_);
     StackMonitor::free(SRDAG_STACK, outParams_);
+    scheduleJob_->~ScheduleJob();
+    StackMonitor::free(TRANSFO_STACK, scheduleJob_);
 }
 
 void SRDAGVertex::toString(char *name, int sizeMax) const {

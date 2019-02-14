@@ -38,102 +38,61 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include <cinttypes>
+#include <graphs/SRDAG/SRDAGVertex.h>
 #include "ScheduleJob.h"
 
-ScheduleJob::ScheduleJob(SRDAGVertex *vertex, int pe, int lrt) {
-    vertex_ = vertex;
-    piSDFVertex_ = nullptr;
-    pe_ = pe;
-    lrt_ = lrt;
-    previousJob_ = nullptr;
-    nextJob_ = nullptr;
-    startTime_ = (Time) -1;
-    endTime_ = (Time) -1;
-    successors_.reserve((size_t) vertex->getNConnectedOutEdge());
-    predecessors_.reserve((size_t) vertex->getNConnectedInEdge());
-    int nLrt = Platform::get()->getNLrt();
-    jobsToWait_ = CREATE_MUL(ARCHI_STACK, nLrt, std::int32_t);
-    for (int i = 0; i < nLrt; ++i) {
-        jobsToWait_[i] = -1;
-    }
-}
-
-ScheduleJob::ScheduleJob(PiSDFVertex *vertex, int pe, int lrt) {
-    vertex_ = nullptr;
-    piSDFVertex_ = vertex;
-    pe_ = pe;
-    lrt_ = lrt;
-    previousJob_ = nullptr;
-    nextJob_ = nullptr;
-    startTime_ = (Time) -1;
-    endTime_ = (Time) -1;
-    successors_.reserve((size_t) vertex->getNOutEdge());
-    predecessors_.reserve((size_t) vertex->getNInEdge());
-    int nLrt = Platform::get()->getNLrt();
-    jobsToWait_ = CREATE_MUL(ARCHI_STACK, nLrt, std::int32_t);
-    for (int i = 0; i < nLrt; ++i) {
-        jobsToWait_[i] = -1;
+ScheduleJob::ScheduleJob(std::int32_t nInstances, std::int32_t nPEs) {
+    nInstances_ = nInstances;
+    nLaunchedInstance_ = 0;
+    nPEs_ = nPEs;
+    /** Creating matrices and vectors **/
+    mappingVector_ = CREATE_MUL_NA(TRANSFO_STACK, nInstances_, std::int32_t);
+    jobIDVector_ = CREATE_MUL_NA(TRANSFO_STACK, nInstances_, std::int32_t);
+    mappingStartTimeVector_ = CREATE_MUL_NA(TRANSFO_STACK, nInstances_, Time);
+    mappingEndTimeVector_ = CREATE_MUL_NA(TRANSFO_STACK, nInstances_, Time);
+    scheduleConstrainsMatrix_ = CREATE_MUL_NA(TRANSFO_STACK, nPEs_ * nInstances_, JobConstrain);
+    peDependenciesMatrix_ = CREATE_MUL_NA(TRANSFO_STACK, nPEs_ * nInstances_, bool);
+    /** Initializing **/
+    for (int i = 0; i < nInstances; ++i) {
+        mappingVector_[i] = -1;
+        mappingStartTimeVector_[i] = UINT64_MAX;
+        mappingEndTimeVector_[i] = UINT64_MAX;
+        for (int j = 0; j < nPEs_; ++j) {
+            peDependenciesMatrix_[i * nPEs_ + j] = false;
+            scheduleConstrainsMatrix_[i * nPEs_ + j] = {-1, -1};
+        }
     }
 }
 
 ScheduleJob::~ScheduleJob() {
-    vertex_ = nullptr;
-    previousJob_ = nullptr;
-    nextJob_ = nullptr;
-    successors_.clear();
-    predecessors_.clear();
-    if (jobsToWait_) {
-        StackMonitor::free(ARCHI_STACK, jobsToWait_);
-    }
+    StackMonitor::free(TRANSFO_STACK, mappingVector_);
+    StackMonitor::free(TRANSFO_STACK, jobIDVector_);
+    StackMonitor::free(TRANSFO_STACK, mappingStartTimeVector_);
+    StackMonitor::free(TRANSFO_STACK, mappingEndTimeVector_);
+    StackMonitor::free(TRANSFO_STACK, scheduleConstrainsMatrix_);
+    StackMonitor::free(TRANSFO_STACK, peDependenciesMatrix_);
 }
 
-bool ScheduleJob::isBeforeJob(ScheduleJob *job) {
-    auto *currentNextJob = nextJob_;
-    while (currentNextJob) {
-        if (currentNextJob == job) {
-            return true;
-        }
-        currentNextJob = currentNextJob->getNextJob();
-    }
-    return false;
-}
 
-bool ScheduleJob::isAfterJob(ScheduleJob *job) {
-    return job->isBeforeJob(this);
-}
+void ScheduleJob::print(FILE *file, int instance) {
+    auto vertexName = vertex_->toString();
+    auto vertexId = vertex_->getId() + instance;
 
-void ScheduleJob::print(FILE *file) {
-    auto vertexName = vertex_ ? vertex_->toString() : piSDFVertex_->getName();
-    auto vertexId = vertex_ ? vertex_->getId() : piSDFVertex_->getId();
     int red = (static_cast<unsigned>(vertexId) & 3u) * 50 + 100;
     int green = ((static_cast<unsigned>(vertexId) >> 2u) & 3u) * 50 + 100;
     int blue = ((static_cast<unsigned>(vertexId) >> 4u) & 3u) * 50 + 100;
-
     Platform::get()->fprintf(file, "\t<event\n");
-    Platform::get()->fprintf(file, "\t\tstart=\"%" PRId64"\"\n", startTime_);
-    Platform::get()->fprintf(file, "\t\tend=\"%" PRId64"\"\n", endTime_);
+    Platform::get()->fprintf(file, "\t\tstart=\"%" PRId64"\"\n", mappingStartTimeVector_[instance]);
+    Platform::get()->fprintf(file, "\t\tend=\"%" PRId64"\"\n", mappingEndTimeVector_[instance]);
     Platform::get()->fprintf(file, "\t\ttitle=\"%s\"\n", vertexName);
-    Platform::get()->fprintf(file, "\t\tmapping=\"PE%d\"\n", pe_);
+    Platform::get()->fprintf(file, "\t\tmapping=\"PE%d\"\n", mappingVector_[instance]);
     Platform::get()->fprintf(file, "\t\tcolor=\"#%02x%02x%02x\"\n", red, green, blue);
     Platform::get()->fprintf(file, "\t\t>%s.</event>\n", vertexName);
 }
 
-void ScheduleJob::updateJobsToWait() {
-    /** Reset job to wait for each LRT **/
-    for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
-        jobsToWait_[i] = -1;
-    }
-    /** Search for the minimal job dependencies required **/
-    for (auto &job : predecessors_) {
-        auto *vertex = job->getVertex();
-        int lrt = job->getLRT();
-        jobsToWait_[lrt] = std::max(jobsToWait_[lrt], vertex->getSlaveJobIx());
-    }
-}
-
 static inline void createParamINArray(JobInfoMessage *const job, std::int32_t nParamIN) {
     job->nParamIN_ = nParamIN;
-    job->inParams_ = CREATE_MUL(ARCHI_STACK, nParamIN, Param);
+    job->inParams_ = CREATE_MUL_NA(ARCHI_STACK, nParamIN, Param);
 }
 
 static inline void setParamINDelayProperties(JobInfoMessage *const job, SRDAGVertex *const vertex) {
@@ -163,8 +122,8 @@ static inline void setParamINJoin(JobInfoMessage *const job, SRDAGVertex *const 
     }
 }
 
-JobInfoMessage *ScheduleJob::createJobMessage() {
-    auto *jobInfoMessage = CREATE(ARCHI_STACK, JobInfoMessage);
+JobInfoMessage *ScheduleJob::createJobMessage(int instance) {
+    auto *jobInfoMessage = CREATE_NA(ARCHI_STACK, JobInfoMessage);
     /** Set basic properties **/
     jobInfoMessage->nEdgeIN_ = vertex_->getNConnectedInEdge();
     jobInfoMessage->nEdgeOUT_ = vertex_->getNConnectedOutEdge();
@@ -176,31 +135,30 @@ JobInfoMessage *ScheduleJob::createJobMessage() {
 
     /** Set jobs 2 wait and notify properties **/
     auto nPE = Spider::getArchi()->getNActivatedPE();
-    jobInfoMessage->lrts2Notify_ = CREATE_MUL(ARCHI_STACK, nPE, std::int32_t);
-    jobInfoMessage->jobs2Wait_ = CREATE_MUL(ARCHI_STACK, nPE, std::int32_t);
-    /** Just copy the value of the jobs to wait **/
-    memcpy(jobInfoMessage->jobs2Wait_, jobsToWait_, nPE * sizeof(std::int32_t));
-    /** Set value of the LRTs to notify **/
+    jobInfoMessage->lrts2Notify_ = CREATE_MUL_NA(ARCHI_STACK, nPE, bool);
+    jobInfoMessage->jobs2Wait_ = CREATE_MUL_NA(ARCHI_STACK, nPE, std::int32_t);
     for (int i = 0; i < nPE; ++i) {
-        jobInfoMessage->lrts2Notify_[i] = -1;
-    }
-    auto jobIx = vertex_->getSlaveJobIx();
-    for (auto &jobSuc : successors_) {
-        auto *jobs2Wait = jobSuc->getJobs2Wait();
-        auto lrt = jobSuc->getLRT();
-        if (jobs2Wait[lrt_] == jobIx) {
-            jobInfoMessage->lrts2Notify_[lrt] = lrt;
-        }
+        /** Set jobs to wait **/
+        auto &jobConstrain = scheduleConstrainsMatrix_[instance * nPEs_ + i];
+        jobInfoMessage->jobs2Wait_[i] = jobConstrain.jobId_;
+        /** Set value of the LRTs to notify **/
+        auto &peDependency = peDependenciesMatrix_[instance * nPEs_ + i];
+        jobInfoMessage->lrts2Notify_[i] = peDependency;
     }
 
     /** Creates FIFOs and Param vector **/
-    jobInfoMessage->inFifos_ = CREATE_MUL(ARCHI_STACK, jobInfoMessage->nEdgeIN_, Fifo);
-    jobInfoMessage->outFifos_ = CREATE_MUL(ARCHI_STACK, jobInfoMessage->nEdgeOUT_, Fifo);
+    jobInfoMessage->inFifos_ = CREATE_MUL_NA(ARCHI_STACK, jobInfoMessage->nEdgeIN_, Fifo);
+    jobInfoMessage->outFifos_ = CREATE_MUL_NA(ARCHI_STACK, jobInfoMessage->nEdgeOUT_, Fifo);
     /** Set IN FIFOs properties **/
     for (int i = 0; i < jobInfoMessage->nEdgeIN_; ++i) {
         auto *edge = vertex_->getInEdge(i);
         jobInfoMessage->inFifos_[i].alloc = edge->getAlloc();
         jobInfoMessage->inFifos_[i].size = edge->getRate();
+        /** Set Job 2 wait property **/
+        auto *srcVertex = edge->getSrc();
+        auto srcVertexLrt = srcVertex->getSlave();
+        auto srcVertexJobId = srcVertex->getSlaveJobIx();
+        jobInfoMessage->jobs2Wait_[srcVertexLrt] = std::max(jobInfoMessage->jobs2Wait_[srcVertexLrt], srcVertexJobId);
     }
     /** Set OUT FIFOs properties**/
     for (int i = 0; i < jobInfoMessage->nEdgeOUT_; ++i) {
@@ -243,6 +201,11 @@ JobInfoMessage *ScheduleJob::createJobMessage() {
     }
     return jobInfoMessage;
 }
+
+
+
+
+
 
 
 

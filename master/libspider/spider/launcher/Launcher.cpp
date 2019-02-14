@@ -195,12 +195,16 @@ void Launcher::sendJobInfoMessage(int lrtIx, SRDAGVertex *vertex) {
 void Launcher::sendJob(ScheduleJob *job) {
     /** 1. Push the job **/
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
-    auto *job2Send = job->createJobMessage();
+    auto instance = job->getNumberOfLaunchedInstances();
+    auto *job2Send = job->createJobMessage(instance);
     auto jobID = spiderCommunicator->push_job_message(&job2Send);
 
     /** 2. Send notification **/
     NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, Platform::get()->getLrtIx(), jobID);
-    spiderCommunicator->push_notification(job->getLRT(), &notificationMessage);
+    spiderCommunicator->push_notification(job->getMappedPE(instance), &notificationMessage);
+
+    /** 3 Update instance number **/
+    job->launchNextInstance();
 }
 
 void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {

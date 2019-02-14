@@ -190,12 +190,11 @@ void LRT::updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp) {
                   jobStamp);
 }
 
-void LRT::notifyLRTJobStamp(std::int32_t lrtID) {
-    if (lrtID >= 0 &&
-        lrtID != getIx()) {
-        Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- notifying LRT: %d -- sent jobStamp: %d\n", getIx(), lrtID, jobIx_);
+void LRT::notifyLRTJobStamp(int lrt, bool notify) {
+    if (notify) {
+        Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- notifying LRT: %d -- sent jobStamp: %d\n", getIx(), lrt, jobIx_);
         NotificationMessage message(JOB_NOTIFICATION, JOB_UPDATE_JOBSTAMP, getIx(), jobIx_);
-        spiderCommunicator_->push_notification(lrtID, &message);
+        spiderCommunicator_->push_notification(lrt, &message);
     }
 }
 
@@ -308,7 +307,7 @@ void LRT::runJob(JobInfoMessage *job) {
 #ifdef VERBOSE_TIME
         Time start = Platform::get()->getTime();
 #endif
-        notifyLRTJobStamp(job->lrts2Notify_[i]);
+        notifyLRTJobStamp(i, job->lrts2Notify_[i]);
 #ifdef VERBOSE_TIME
         time_waiting_output_comm += Platform::get()->getTime() - start;
 #endif

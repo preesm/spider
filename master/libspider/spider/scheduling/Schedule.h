@@ -60,9 +60,11 @@ public:
 
     inline Time getReadyTime(int pe) const;
 
-    void addJob(ScheduleJob *job);
+    void addJob(ScheduleJob *job, int instance);
 
-    inline std::vector<ScheduleJob *> &getPEJobs(int pe);
+    inline ScheduleJob *getJob(int id) {
+        return jobs_[id];
+    }
 
     void print(const char *path);
 
@@ -76,18 +78,14 @@ private:
     int nPE_{};
     int nJobMax_{};
     int nJobs_{};
-    std::vector<int> nJobPerPE_;
-    std::vector<Time> readyTime_;
-    std::vector<ScheduleJob *> *jobs_{};
-
-    ScheduleJob *findJobFromVertex(SRDAGVertex *vertex);
-
-    void clearJobs();
+    int *nJobPerPE_;
+    Time *readyTimeOfPEs_;
+    std::vector<ScheduleJob *> jobs_;
 };
 
 inline void Schedule::setAllMinReadyTime(Time time) {
     for (int i = 0; i < nPE_; i++) {
-        readyTime_[i] = std::max(time, readyTime_[i]);
+        readyTimeOfPEs_[i] = std::max(time, readyTimeOfPEs_[i]);
     }
 }
 
@@ -95,14 +93,14 @@ inline void Schedule::setReadyTime(int pe, Time time) {
     if (pe < 0 || pe >= nPE_) {
         throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
     }
-    readyTime_[pe] = time;
+    readyTimeOfPEs_[pe] = time;
 }
 
 inline Time Schedule::getReadyTime(int pe) const {
     if (pe < 0 || pe >= nPE_) {
         throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
     }
-    return readyTime_[pe];
+    return readyTimeOfPEs_[pe];
 }
 
 inline int Schedule::getNJobs(int pe) const {

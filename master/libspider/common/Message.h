@@ -179,7 +179,7 @@ public:
     std::int32_t nParamIN_ = 0;
     std::int32_t nParamOUT_ = 0;
     std::int32_t *jobs2Wait_ = nullptr;
-    std::int32_t *lrts2Notify_ = nullptr;
+    bool *lrts2Notify_ = nullptr;
     Fifo *inFifos_ = nullptr;
     Fifo *outFifos_ = nullptr;
     Param *inParams_ = nullptr;
@@ -202,7 +202,7 @@ public:
         vertexID_ = vertexID;
         nParam_ = nParam;
         if (!params) {
-            params_ = CREATE_MUL(ARCHI_STACK, nParam, Param);
+            params_ = CREATE_MUL_NA(ARCHI_STACK, nParam, Param);
         } else {
             params_ = params;
         }

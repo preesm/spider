@@ -43,8 +43,10 @@
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/SRDAG/SRDAGEdge.h>
+#include <scheduling/ScheduleJob.h>
 
 #include <platform.h>
+
 
 class SRDAGVertex : public SetElement {
 public:
@@ -155,6 +157,10 @@ public:
 
     void setSchedLvl(int schedLvl);
 
+    inline ScheduleJob *getScheduleJob() {
+        return scheduleJob_;
+    }
+
 protected:
     /** Connect Fcts */
     inline void connectInEdge(SRDAGEdge *edge, int ix);
@@ -190,6 +196,8 @@ private:
     int slaveJobIx_;
 
     int slave_;
+
+    ScheduleJob *scheduleJob_;
 };
 
 /** Inlines Fcts */

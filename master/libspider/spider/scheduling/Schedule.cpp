@@ -41,6 +41,7 @@
 #include <launcher/Launcher.h>
 #include <lrt.h>
 #include "Schedule.h"
+#include <graphs/SRDAG/SRDAGGraph.h>
 
 
 Schedule::Schedule(int nPE, int nJobMax) {
@@ -48,80 +49,37 @@ Schedule::Schedule(int nPE, int nJobMax) {
     nJobMax_ = nJobMax;
     nJobs_ = 0;
 
-    // Creates array of jobs
-    jobs_ = CREATE_MUL(TRANSFO_STACK, nPE_, std::vector<ScheduleJob *>);
-    nJobPerPE_.reserve((unsigned long) nPE_);
-    readyTime_.reserve((unsigned long) nPE_);
-    for (int i = 0; i < nPE_; ++i) {
-        jobs_[i].reserve((unsigned long) nJobMax_);
-        nJobPerPE_.push_back(0);
-        readyTime_.push_back(0);
-    }
+    jobs_.reserve((unsigned long) nJobMax);
+    nJobPerPE_ = CREATE_MUL(TRANSFO_STACK, nPE_, int);
+    memset(nJobPerPE_, 0, nPE_ * sizeof(int));
+    readyTimeOfPEs_ = CREATE_MUL(TRANSFO_STACK, nPE_, Time);
+    memset(readyTimeOfPEs_, 0, nPE_ * sizeof(Time));
 }
 
 Schedule::~Schedule() {
-    clearJobs();
-    StackMonitor::free(TRANSFO_STACK, jobs_);
+    jobs_.clear();
+    StackMonitor::free(TRANSFO_STACK, nJobPerPE_);
+    StackMonitor::free(TRANSFO_STACK, readyTimeOfPEs_);
 }
 
-void Schedule::clearJobs() {
-    for (int i = 0; i < nPE_; ++i) {
-        for (auto &job : jobs_[i]) {
-            job->~ScheduleJob();
-            StackMonitor::free(TRANSFO_STACK, job);
-        }
-        jobs_[i].clear();
-    }
-}
-
-ScheduleJob *Schedule::findJobFromVertex(SRDAGVertex *vertex) {
-    if (vertex) {
-        for (int i = 0; i < nPE_; ++i) {
-            for (auto &job: jobs_[i]) {
-                if (job->getVertex() == vertex) {
-                    return job;
-                }
-            }
-        }
-    }
-    return nullptr;
-}
-
-void Schedule::addJob(ScheduleJob *job) {
-    int pe = job->getPE();
-    if (pe < 0 || pe >= nPE_) {
-        throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
-    }
-    if ((int) jobs_[pe].size() >= nJobMax_) {
-        throwSpiderException("PE: %d -> nJobs: %d > nJobMax: %d.", nJobPerPE_[pe], nJobMax_);
-    }
-    if (!jobs_[pe].empty()) {
-        job->setPreviousJob(jobs_[pe].back());
-    }
-    jobs_[pe].push_back(job);
-    nJobs_++;
-    readyTime_[pe] = std::max(readyTime_[pe], job->getEndTime());
+void Schedule::addJob(ScheduleJob *job, int instance) {
+    jobs_.push_back(job);
+    int pe = job->getMappedPE(instance);
+    auto *jobConstrains = job->getScheduleConstrain(instance);
     auto *vertex = job->getVertex();
-    if (vertex) {
-        vertex->setSlave(job->getPE());
-        vertex->setSlaveJobIx(nJobPerPE_[pe]++);
-        vertex->setStartTime(job->getStartTime());
-        vertex->setEndTime(job->getEndTime());
-
-        // Update job predecessor info
-        for (int i = 0; i < vertex->getNConnectedInEdge(); ++i) {
-            auto *edge = vertex->getInEdge(i);
-            auto *inVertex = edge->getSrc();
-            auto *precJob = findJobFromVertex(inVertex);
-            if (precJob) {
-                job->addPredecessor(precJob);
-                precJob->addSuccessor(job);
-            }
+    for (int i = 0; i < nPE_; ++i) {
+        /** Set lrt dependency of previous job **/
+        auto *graph = vertex->getGraph();
+        auto vertexID = jobConstrains[i].vertexId_;
+        if (vertexID >= 0) {
+            auto *pVertex = graph->getVertex(vertexID);
+            auto *vertexScheduleJob = pVertex->getScheduleJob();
+            vertexScheduleJob->setInstancePEDependency(0, pe, true);
         }
     }
-
-    /** Update the jobs it needs to wait from other LRTs **/
-    job->updateJobsToWait();
+    job->setJobID(instance, nJobPerPE_[pe]++);
+    readyTimeOfPEs_[pe] = std::max(readyTimeOfPEs_[pe], job->getMappingEndTime(instance));
+    nJobs_++;
 }
 
 void Schedule::print(const char *path) {
@@ -131,10 +89,12 @@ void Schedule::print(const char *path) {
     Platform::get()->fprintf(file, "<data>\n");
 
     // Exporting for gantt display
-    for (int pe = 0; pe < nPE_; pe++) {
-        for (auto &job : jobs_[pe]) {
-            job->print(file);
-        }
+    for (int i = 0; i < nJobs_; ++i) {
+        jobs_[i]->resetLaunchInstances();
+    }
+    for (int i = 0; i < nJobs_; ++i) {
+        jobs_[i]->print(file, jobs_[i]->getNumberOfLaunchedInstances());
+        jobs_[i]->launchNextInstance();
     }
     Platform::get()->fprintf(file, "</data>\n");
 
@@ -143,56 +103,53 @@ void Schedule::print(const char *path) {
 
 bool Schedule::check() {
 
-    /* Check core concurrency */
-    for (int pe = 0; pe < nPE_; ++pe) {
-        auto &jobsOfPE = jobs_[pe];
-        auto *currentJob = jobsOfPE.front();
-        auto *nextJob = currentJob->getNextJob();
-        while (nextJob) {
-            if (currentJob->getEndTime() > nextJob->getStartTime()) {
-                auto *currentJobVertex = currentJob->getVertex();
-                auto *nextJobVertex = nextJob->getVertex();
-                throwSpiderException("Superposition of tasks [%s] and [%s] on PE [%d].", currentJobVertex->toString(),
-                                     nextJobVertex->toString(), pe);
-            }
-            currentJob = nextJob;
-            nextJob = currentJob->getNextJob();
-        }
-    }
-
-    /* Check Communications */
-    for (int pe = 0; pe < nPE_; ++pe) {
-        for (auto &job : jobs_[pe]) {
-            for (auto &precJob : job->getPredecessors()) {
-                auto *currentJobVertex = job->getVertex();
-                auto *precJobVertex = precJob->getVertex();
-                if (precJob->getEndTime() > job->getStartTime()) {
-                    throwSpiderException("Task [%s] (PE %d) depending on task [%s] (PE %d) overlaps in time.",
-                                         currentJobVertex->toString(),
-                                         job->getPE(), precJobVertex->toString(), precJob->getPE());
-                }
-            }
-        }
-    }
+//    /* Check core concurrency */
+//    for (int pe = 0; pe < nPE_; ++pe) {
+//        auto &jobsOfPE = jobs_[pe];
+//        auto *currentJob = jobsOfPE.front();
+//        auto *nextJob = currentJob->getNextJob();
+//        while (nextJob) {
+//            if (currentJob->getEndTime() > nextJob->getStartTime()) {
+//                auto *currentJobVertex = currentJob->getVertex();
+//                auto *nextJobVertex = nextJob->getVertex();
+//                throwSpiderException("Superposition of tasks [%s] and [%s] on PE [%d].", currentJobVertex->toString(),
+//                                     nextJobVertex->toString(), pe);
+//            }
+//            currentJob = nextJob;
+//            nextJob = currentJob->getNextJob();
+//        }
+//    }
+//
+//    /* Check Communications */
+//    for (int pe = 0; pe < nPE_; ++pe) {
+//        for (auto &job : jobs_[pe]) {
+//            for (auto &precJob : job->getPredecessors()) {
+//                auto *currentJobVertex = job->getVertex();
+//                auto *precJobVertex = precJob->getVertex();
+//                if (precJob->getEndTime() > job->getStartTime()) {
+//                    throwSpiderException("Task [%s] (PE %d) depending on task [%s] (PE %d) overlaps in time.",
+//                                         currentJobVertex->toString(),
+//                                         job->getPE(), precJobVertex->toString(), precJob->getPE());
+//                }
+//            }
+//        }
+//    }
     return true;
 }
 
 void Schedule::execute() {
     TimeMonitor::startMonitoring();
-    for (int pe = 0; pe < nPE_; pe++) {
-        for (auto &job : jobs_[pe]) {
-            Launcher::get()->sendJob(job);
-        }
+    for (int i = 0; i < nJobs_; ++i) {
+        jobs_[i]->resetLaunchInstances();
+    }
+    for (int i = 0; i < nJobs_; ++i) {
+        auto *job = jobs_[i];
+        Launcher::get()->sendJob(job);
     }
     Launcher::get()->sendEndNotification(this);
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
     Platform::get()->getLrt()->runUntilNoMoreJobs();
 }
 
-std::vector<ScheduleJob *> &Schedule::getPEJobs(int pe) {
-    if (pe < 0 || pe >= nPE_) {
-        throwSpiderException("Bad PE value. Value: %d -- Max: %d.", pe, nPE_);
-    }
-    return jobs_[pe];
-}
+
 

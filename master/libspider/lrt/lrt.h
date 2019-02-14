@@ -158,7 +158,7 @@ private:
      * @brief Send notification of current job stamp to an LRT
      * @param lrtID        LRT to which we send the notification.
      */
-    void notifyLRTJobStamp(std::int32_t lrtID);
+    void notifyLRTJobStamp(int lrtID, bool notify);
 
     /**
      * @brief Run a scheduled job

@@ -40,138 +40,144 @@
 #ifndef SPIDER_SCHEDULEJOB_H
 #define SPIDER_SCHEDULEJOB_H
 
-#include <graphs/SRDAG/SRDAGVertex.h>
 #include <Message.h>
+
+class SRDAGVertex;
+
+typedef struct JobConstrain {
+    std::int32_t vertexId_; // ID of the vertex we are constrained on
+    std::int32_t jobId_;    // Job ID we are constrained on
+} JobConstrain;
 
 class ScheduleJob {
 public:
-    ScheduleJob(SRDAGVertex *vertex, int pe, int lrt);
-
-    ScheduleJob(PiSDFVertex *vertex, int pe, int lrt);
+    ScheduleJob(std::int32_t nInstances, std::int32_t nPEs);
 
     ~ScheduleJob();
 
+    /** Methods **/
+    JobInfoMessage *createJobMessage(int instance);
+
+    void print(FILE *file, int instance);
+
+    inline void resetLaunchInstances() {
+        nLaunchedInstance_ = 0;
+    }
+
     /** Setters **/
-    inline void setPreviousJob(ScheduleJob *job) {
-        previousJob_ = job;
-        job->setNextJob(this);
+    inline void setVertex(SRDAGVertex *vertex) {
+        vertex_ = vertex;
     }
 
-    inline void setNextJob(ScheduleJob *job) {
-        nextJob_ = job;
-
+    inline void setScheduleConstrain(int instance, int pe, std::int32_t vertexId, std::int32_t jobId) {
+        scheduleConstrainsMatrix_[instance * nPEs_ + pe] = {vertexId, jobId};
     }
 
-    inline void setStartTime(Time start) {
-        startTime_ = start;
+    inline void setJobID(int instance, int jobID) {
+        jobIDVector_[instance] = jobID;
     }
 
-    inline void setEndTime(Time end) {
-        endTime_ = end;
+    inline void setMappedPE(int instance, int pe) {
+        mappingVector_[instance] = pe;
+    }
+
+    inline void setMappingStartTime(int instance, const Time *time) {
+        mappingStartTimeVector_[instance] = *time;
+    }
+
+    inline void setMappingEndTime(int instance, const Time *time) {
+        mappingEndTimeVector_[instance] = *time;
+    }
+
+    inline void setInstancePEDependency(int instance, int pe, bool shouldNotify) {
+        peDependenciesMatrix_[instance * nPEs_ + pe] = shouldNotify;
+    }
+
+    inline void launchNextInstance() {
+        nLaunchedInstance_++;
+        if (nLaunchedInstance_ > nInstances_) {
+            throwSpiderException("Launched more instances of a job than available.");
+        }
     }
 
     /** Getters **/
-    inline SRDAGVertex *getVertex() const {
+    inline SRDAGVertex *getVertex() {
         return vertex_;
     }
 
-    inline int getLRT() {
-        return lrt_;
+    inline std::int32_t getJobID(int instance) {
+        return jobIDVector_[instance];
     }
 
-    inline int getPE() {
-        return pe_;
+    inline std::int32_t getNumberOfInstances() {
+        return nInstances_;
     }
 
-    inline ScheduleJob *getPreviousJob() {
-        return previousJob_;
+    inline std::int32_t getNumberOfLaunchedInstances() {
+        return nLaunchedInstance_;
     }
 
-    inline ScheduleJob *getNextJob() {
-        return nextJob_;
+    inline JobConstrain *getScheduleConstrain(int instance) {
+        return &scheduleConstrainsMatrix_[instance * nPEs_];
     }
 
-    inline Time getStartTime() {
-        return startTime_;
+    inline std::int32_t getMappedPE(int instance) {
+        return mappingVector_[instance];
     }
 
-    inline Time getEndTime() {
-        return endTime_;
+    inline Time getMappingStartTime(int instance) {
+        return mappingStartTimeVector_[instance];
     }
 
-    inline std::vector<ScheduleJob *> &getSuccessors() {
-        return successors_;
+    inline Time getMappingEndTime(int instance) {
+        return mappingEndTimeVector_[instance];
     }
 
-    inline std::vector<ScheduleJob *> &getPredecessors() {
-        return predecessors_;
+    inline const bool *getInstanceDependencies(int instance) {
+        return &peDependenciesMatrix_[instance * nPEs_];
     }
-
-    inline std::int32_t *getJobs2Wait() const {
-        return jobsToWait_;
-    }
-
-    /** Methods **/
-    bool isBeforeJob(ScheduleJob *job);
-
-    bool isAfterJob(ScheduleJob *job);
-
-    inline void addSuccessor(ScheduleJob *job) {
-        successors_.push_back(job);
-    }
-
-    inline void addPredecessor(ScheduleJob *job) {
-        predecessors_.push_back(job);
-    }
-
-    void updateJobsToWait();
-
-    JobInfoMessage *createJobMessage();
-
-    void print(FILE *file);
 
 private:
     /**
-     * @brief Vertex associated to the job
+     * @brief Vertex to which the job is attached
      */
     SRDAGVertex *vertex_;
-    PiSDFVertex *piSDFVertex_;
     /**
-     * @brief PE on which the job is executed
+     * @brief Total number of instances
      */
-    int pe_;
+    std::int32_t nInstances_;
     /**
-     * @brief LRT handling the job
+     * @brief Number of launched instances.
      */
-    int lrt_;
+    std::int32_t nLaunchedInstance_;
     /**
-     * @brief Start time of the job
+     * @brief Number of PEs.
      */
-    Time startTime_;
+    std::int32_t nPEs_;
     /**
-     * @brief End time of the job
+     * @brief Vector of Mapped PE for each instance of the job. Size = 1 * nInstances_
      */
-    Time endTime_;
+    std::int32_t *mappingVector_;
     /**
-     * @brief Previous job on the same lrt
+     * @brief Job ID vector
      */
-    ScheduleJob *previousJob_;
+    std::int32_t *jobIDVector_;
     /**
-     * @brief Next job on the same lrt
+     * @brief Vector of starting time of each instances. Size = 1 * nInstances_
      */
-    ScheduleJob *nextJob_;
+    Time *mappingStartTimeVector_;
     /**
-     * @brief Job direct successor dependencies
+     * @brief Vector of end time of each instances. Size = 1 * nInstances_
      */
-    std::vector<ScheduleJob *> successors_;
+    Time *mappingEndTimeVector_;
     /**
-     * @brief Job direct predecessors dependencies
+     * @brief Constrains for scheduling each instance. Size = nPEs_ * nInstances_
      */
-    std::vector<ScheduleJob *> predecessors_;
+    JobConstrain *scheduleConstrainsMatrix_;
     /**
-     * @brief Indexes of jobs to wait
+     * @brief Dependencies to notify for each instance. Size = nPEs_ * nInstances_
      */
-    std::int32_t *jobsToWait_;
+    bool *peDependenciesMatrix_;
 };
 
 #endif //SPIDER_SCHEDULEJOB_H

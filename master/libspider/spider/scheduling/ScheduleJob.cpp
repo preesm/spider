@@ -61,6 +61,9 @@ ScheduleJob::ScheduleJob(std::int32_t nInstances, std::int32_t nPEs) {
             peDependenciesMatrix_[i * nPEs_ + j] = false;
         }
     }
+
+    vertex_ = nullptr;
+    vertexPiSDF_ = nullptr;
 }
 
 ScheduleJob::~ScheduleJob() {

@@ -55,14 +55,27 @@ SRDAGLessScheduler::SRDAGLessScheduler(PiSDFGraph *graph, const std::int32_t *br
     instanceAvlCountArray_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, std::int32_t);
     instanceSchCountArray_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, std::int32_t);
     memset(instanceSchCountArray_, 0, nVertices_ * sizeof(std::int32_t));
+    dependenciesArray_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, VertexDependency*);
+    for (int ix = 0; ix < nVertices_; ++ix) {
+        dependenciesArray_[ix] = nullptr;
+    }
 
     /** 1. Initialize properties **/
     // TODO: take into account self loop
-    for (int i = 0; i < nVertices_; ++i) {
-        auto *vertex = graph->getBody(i);
-        vertex->createScheduleJob(brv[i]);
-        rhoValueArray_[i] = 1;
-        instanceAvlCountArray_[i] = brv[i];
+    for (int ix = 0; ix < nVertices_; ++ix) {
+        auto *vertex = graph->getBody(ix);
+        vertex->createScheduleJob(brv[ix]);
+        rhoValueArray_[ix] = 1;
+        instanceAvlCountArray_[ix] = brv[ix];
+        if (vertex->getNInEdge() > 0) {
+            dependenciesArray_[ix] = CREATE_MUL_NA(TRANSFO_STACK, vertex->getNInEdge(), VertexDependency);
+            for (int i = 0; i < vertex->getNInEdge(); ++i) {
+                auto *edge = vertex->getInEdge(i);
+                dependenciesArray_[ix][i].vertex_ = edge->getSrc();
+                dependenciesArray_[ix][i].cons_ = edge->resolveCons();
+                dependenciesArray_[ix][i].prod_ = edge->resolveProd();
+            }
+        }
     }
     /** 2. Compute the Rho values **/
     computeRhoValues();
@@ -76,23 +89,30 @@ SRDAGLessScheduler::~SRDAGLessScheduler() {
     StackMonitor::free(TRANSFO_STACK, rhoValueArray_);
     StackMonitor::free(TRANSFO_STACK, instanceAvlCountArray_);
     StackMonitor::free(TRANSFO_STACK, instanceSchCountArray_);
+    for (int ix = 0; ix < graph_->getNBody(); ++ix) {
+        if ( dependenciesArray_[ix]) {
+            StackMonitor::free(TRANSFO_STACK, dependenciesArray_[ix]);
+        }
+    }
+    StackMonitor::free(TRANSFO_STACK, dependenciesArray_);
 }
 
 void SRDAGLessScheduler::computeRhoValues() {
     /** Compute current value of rho for every actor **/
     for (int v = 0; v < nVertices_; ++v) {
         auto *vertex = graph_->getBody(v);
+        auto *dependencies = dependenciesArray_[v];
         for (int i = 0; i < vertex->getNInEdge(); ++i) {
-            auto *edge = vertex->getInEdge(i);
-            auto cons = edge->resolveCons();
-            auto prod = edge->resolveProd();
+            auto cons = dependencies[i].cons_;
+            auto prod = dependencies[i].prod_;
+            auto *srcVertex = dependencies[i].vertex_;
             /** Compute raw rho value **/
             auto currentMinExec = static_cast<int32_t>(cons / prod + (cons % prod != 0));
             /** Take maximum between current rho value and raw value**/
 //        currentMinExec = std::max(currentMinExec, scheduleVertex->vertexRhoValue_);
 //        currentMinExec = std::min(currentMinExec, srcScheduleVertex->vertexCount_);
             /** Set the rho value of previous actor **/
-            int index = edge->getSrc()->getTypeId();
+            int index = srcVertex->getTypeId();
             rhoValueArray_[index] = std::max(rhoValueArray_[index], currentMinExec);
         }
     }
@@ -102,11 +122,11 @@ inline int SRDAGLessScheduler::updateAvailableData(PiSDFVertex *const vertex) {
     int index = vertex->getTypeId();
     Param numberSchedulable = std::min(rhoValueArray_[index], instanceAvlCountArray_[index]);
     bool dependenciesStatisfied = numberSchedulable > 0;
+    auto *dependencies = dependenciesArray_[vertex->getTypeId()];
     for (int i = 0; i < vertex->getNInEdge() && dependenciesStatisfied; ++i) {
-        auto *edge = vertex->getInEdge(i);
-        auto cons = edge->resolveCons();
-        auto prod = edge->resolveProd();
-        auto *srcVertex = edge->getSrc();
+        auto cons = dependencies[i].cons_;
+        auto prod = dependencies[i].prod_;
+        auto *srcVertex = dependencies[i].vertex_;
         auto availableData = prod * instanceSchCountArray_[srcVertex->getTypeId()] -
                              cons * instanceSchCountArray_[index];
         numberSchedulable = std::min(numberSchedulable, availableData / cons);
@@ -120,11 +140,11 @@ void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
     auto currentInstance = instanceSchCountArray_[vertex->getTypeId()];
     auto *jobConstrains = job->getScheduleConstrain(currentInstance);
 
+    auto *dependencies = dependenciesArray_[vertex->getTypeId()];
     for (int ix = 0; ix < vertex->getNInEdge(); ++ix) {
-        auto *edge = vertex->getInEdge(ix);
-        auto *srcVertex = edge->getSrc();
-        auto cons = edge->resolveCons();
-        auto prod = edge->resolveProd();
+        auto cons = dependencies[ix].cons_;
+        auto prod = dependencies[ix].prod_;
+        auto *srcVertex = dependencies[ix].vertex_;
         /** Computing the range of instances we depend on **/
         auto startIndex = static_cast<int>(instanceSchCountArray_[vertex->getTypeId()] * cons / prod);
         auto endIndex = startIndex + rhoValueArray_[srcVertex->getTypeId()];

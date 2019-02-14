@@ -45,8 +45,9 @@
 class SRDAGVertex;
 
 typedef struct JobConstrain {
-    std::int32_t vertexId_; // ID of the vertex we are constrained on
-    std::int32_t jobId_;    // Job ID we are constrained on
+    std::int32_t vertexId_ = -1;         // ID of the vertex we are constrained on
+    std::int32_t vertexInstance_ = -1;   // Instance of the vertex
+    std::int32_t jobId_ = -1;            // Job ID we are constrained on
 } JobConstrain;
 
 class ScheduleJob {
@@ -69,8 +70,16 @@ public:
         vertex_ = vertex;
     }
 
-    inline void setScheduleConstrain(int instance, int pe, std::int32_t vertexId, std::int32_t jobId) {
-        scheduleConstrainsMatrix_[instance * nPEs_ + pe] = {vertexId, jobId};
+    inline void setVertex(PiSDFVertex *vertex) {
+        vertexPiSDF_ = vertex;
+    }
+
+    inline void setScheduleConstrain(int instance, int pe, std::int32_t vertexId, std::int32_t jobId,
+                                     std::int32_t vertexInstance = 0) {
+//        scheduleConstrainsMatrix_[instance * nPEs_ + pe] = {vertexId, vertexInstance, jobId};
+        scheduleConstrainsMatrix_[instance * nPEs_ + pe].vertexId_ = vertexId;
+        scheduleConstrainsMatrix_[instance * nPEs_ + pe].vertexInstance_ = vertexInstance;
+        scheduleConstrainsMatrix_[instance * nPEs_ + pe].jobId_ = jobId;
     }
 
     inline void setJobID(int instance, int jobID) {
@@ -103,6 +112,10 @@ public:
     /** Getters **/
     inline SRDAGVertex *getVertex() {
         return vertex_;
+    }
+
+    inline PiSDFVertex *getPiSDFVertex() {
+        return vertexPiSDF_;
     }
 
     inline std::int32_t getJobID(int instance) {
@@ -142,6 +155,7 @@ private:
      * @brief Vertex to which the job is attached
      */
     SRDAGVertex *vertex_;
+    PiSDFVertex *vertexPiSDF_;
     /**
      * @brief Total number of instances
      */

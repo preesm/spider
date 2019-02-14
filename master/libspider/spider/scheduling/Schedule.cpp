@@ -42,6 +42,7 @@
 #include <lrt.h>
 #include "Schedule.h"
 #include <graphs/SRDAG/SRDAGGraph.h>
+#include <graphs/PiSDF/PiSDFGraph.h>
 
 
 Schedule::Schedule(int nPE, int nJobMax) {
@@ -66,17 +67,32 @@ void Schedule::addJob(ScheduleJob *job, int instance) {
     jobs_.push_back(job);
     int pe = job->getMappedPE(instance);
     auto *jobConstrains = job->getScheduleConstrain(instance);
-    auto *vertex = job->getVertex();
-    for (int i = 0; i < nPE_; ++i) {
-        /** Set lrt dependency of previous job **/
-        auto *graph = vertex->getGraph();
-        auto vertexID = jobConstrains[i].vertexId_;
-        if (vertexID >= 0) {
-            auto *pVertex = graph->getVertex(vertexID);
-            auto *vertexScheduleJob = pVertex->getScheduleJob();
-            vertexScheduleJob->setInstancePEDependency(0, pe, true);
+    if (job->getVertex() != nullptr) {
+        auto *graph = job->getVertex()->getGraph();
+        for (int i = 0; i < nPE_; ++i) {
+            /** Set lrt dependency of previous job **/
+            auto vertexID = jobConstrains[i].vertexId_;
+            auto vertexInstance = jobConstrains[i].vertexInstance_;
+            if (vertexID >= 0) {
+                auto *pVertex = graph->getVertex(vertexID);
+                auto *vertexScheduleJob = pVertex->getScheduleJob();
+                vertexScheduleJob->setInstancePEDependency(vertexInstance, pe, true);
+            }
+        }
+    } else {
+        auto *graph = job->getPiSDFVertex()->getGraph();
+        for (int i = 0; i < nPE_; ++i) {
+            /** Set lrt dependency of previous job **/
+            auto vertexID = jobConstrains[i].vertexId_;
+            auto vertexInstance = jobConstrains[i].vertexInstance_;
+            if (vertexID >= 0) {
+                auto *pVertex = graph->getBody(vertexID);
+                auto *vertexScheduleJob = pVertex->getScheduleJob();
+                vertexScheduleJob->setInstancePEDependency(vertexInstance, pe, true);
+            }
         }
     }
+
     job->setJobID(instance, nJobPerPE_[pe]++);
     readyTimeOfPEs_[pe] = std::max(readyTimeOfPEs_[pe], job->getMappingEndTime(instance));
     nJobs_++;

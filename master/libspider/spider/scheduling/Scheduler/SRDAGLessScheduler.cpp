@@ -48,31 +48,21 @@ SRDAGLessScheduler::SRDAGLessScheduler(PiSDFGraph *graph, const std::int32_t *br
     graph_ = graph;
     nVertices_ = graph->getNBody();
     archi_ = Spider::getArchi();
-    schedule_ = CREATE(TRANSFO_STACK, Schedule)(archi_->getNPE(), SCHEDULE_SIZE);
+    schedule_ = CREATE_NA(TRANSFO_STACK, Schedule)(archi_->getNPE(), SCHEDULE_SIZE);
 
     /** 0. Creates the array of ScheduleVertex **/
-    scheduleVertexArray_ = CREATE_MUL(TRANSFO_STACK, nVertices_, ScheduleVertex);
+    rhoValueArray_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, std::int32_t);
+    instanceAvlCountArray_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, std::int32_t);
+    instanceSchCountArray_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, std::int32_t);
+    memset(instanceSchCountArray_, 0, nVertices_ * sizeof(std::int32_t));
+
     /** 1. Initialize properties **/
+    // TODO: take into account self loop
     for (int i = 0; i < nVertices_; ++i) {
         auto *vertex = graph->getBody(i);
-        auto &scheduleVertex = scheduleVertexArray_[i];
-        scheduleVertex.vertex_ = vertex;            // Pointer to the original PiSDFVertex
-        scheduleVertex.vertexCount_ = brv[i];       // Number of instance to schedule
-        scheduleVertex.vertexRhoValue_ = 1;         // Default value of rho
-        scheduleVertex.vertexScheduledCount_ = 0;   // Number of scheduled instance of the vertex (default = 0)
-        scheduleVertex.nDependencies_ = vertex->getNInEdge(); // TODO: take into account self loop
-        scheduleVertex.vertexDependenciesArray_ = CREATE_MUL(TRANSFO_STACK, scheduleVertex.nDependencies_,
-                                                             VertexDependency);
-        for (int e = 0; e < vertex->getNInEdge(); ++e) {
-            auto *edge = vertex->getInEdge(e);
-            auto prod = edge->resolveProd();
-            auto cons = edge->resolveCons();
-            auto *srcVertex = edge->getSrc();
-            scheduleVertex.vertexDependenciesArray_[e].vertex_ = &scheduleVertexArray_[srcVertex->getTypeId()];
-            scheduleVertex.vertexDependenciesArray_[e].cons_ = cons;
-            scheduleVertex.vertexDependenciesArray_[e].prod_ = prod;
-        }
-        scheduleVertex.endTimeArray_ = CREATE_MUL(TRANSFO_STACK, scheduleVertex.vertexCount_, Time);
+        vertex->createScheduleJob(brv[i]);
+        rhoValueArray_[i] = 1;
+        instanceAvlCountArray_[i] = brv[i];
     }
     /** 2. Compute the Rho values **/
     computeRhoValues();
@@ -83,101 +73,79 @@ SRDAGLessScheduler::~SRDAGLessScheduler() {
         schedule_->~Schedule();
         StackMonitor::free(TRANSFO_STACK, schedule_);
     }
-    for (int i = 0; i < nVertices_; ++i) {
-        auto &scheduleVertex = scheduleVertexArray_[i];
-        scheduleVertex.vertex_ = nullptr;
-        StackMonitor::free(TRANSFO_STACK, scheduleVertex.vertexDependenciesArray_);
-        StackMonitor::free(TRANSFO_STACK, scheduleVertex.endTimeArray_);
-    }
-    StackMonitor::free(TRANSFO_STACK, scheduleVertexArray_);
+    StackMonitor::free(TRANSFO_STACK, rhoValueArray_);
+    StackMonitor::free(TRANSFO_STACK, instanceAvlCountArray_);
+    StackMonitor::free(TRANSFO_STACK, instanceSchCountArray_);
 }
-
-//static bool computeMinRVNeeded(ScheduleVertex *const scheduleVertex) {
-//    bool changedValue = true;
-//    for (int i = 0; i < scheduleVertex->nDependencies_; ++i) {
-//        auto &vertexDependency = scheduleVertex->vertexDependenciesArray_[i];
-//        auto cons = vertexDependency.cons_;
-//        auto prod = vertexDependency.prod_;
-//        /** Compute raw rho value **/
-//        auto currentMinExec = static_cast<int32_t>(cons / prod + (cons % prod != 0));
-//        auto *srcScheduleVertex = vertexDependency.vertex_;
-//        /** Take maximum between current rho value and raw value**/
-////        currentMinExec = std::max(currentMinExec, scheduleVertex->vertexRhoValue_);
-////        currentMinExec = std::min(currentMinExec, srcScheduleVertex->vertexCount_);
-//        /** Set the rho value of previous actor **/
-//        auto currentValue = srcScheduleVertex->vertexRhoValue_;
-//        srcScheduleVertex->vertexRhoValue_ = std::max(currentValue, currentMinExec);
-//        changedValue &= (srcScheduleVertex->vertexRhoValue_ == currentValue);
-//    }
-//    return changedValue;
-//}
 
 void SRDAGLessScheduler::computeRhoValues() {
     /** Compute current value of rho for every actor **/
     for (int v = 0; v < nVertices_; ++v) {
-        auto &scheduleVertex = scheduleVertexArray_[v];
-        for (int i = 0; i < scheduleVertex.nDependencies_; ++i) {
-            auto &vertexDependency = scheduleVertex.vertexDependenciesArray_[i];
-            auto cons = vertexDependency.cons_;
-            auto prod = vertexDependency.prod_;
+        auto *vertex = graph_->getBody(v);
+        for (int i = 0; i < vertex->getNInEdge(); ++i) {
+            auto *edge = vertex->getInEdge(i);
+            auto cons = edge->resolveCons();
+            auto prod = edge->resolveProd();
             /** Compute raw rho value **/
             auto currentMinExec = static_cast<int32_t>(cons / prod + (cons % prod != 0));
-            auto *srcScheduleVertex = vertexDependency.vertex_;
             /** Take maximum between current rho value and raw value**/
 //        currentMinExec = std::max(currentMinExec, scheduleVertex->vertexRhoValue_);
 //        currentMinExec = std::min(currentMinExec, srcScheduleVertex->vertexCount_);
             /** Set the rho value of previous actor **/
-            auto currentValue = srcScheduleVertex->vertexRhoValue_;
-            srcScheduleVertex->vertexRhoValue_ = std::max(currentValue, currentMinExec);
+            int index = edge->getSrc()->getTypeId();
+            rhoValueArray_[index] = std::max(rhoValueArray_[index], currentMinExec);
         }
     }
 }
 
-
-static inline bool
-isVertexSchedulable(ScheduleVertex *const scheduleVertex) {
-    bool dependenciesStatisfied = true;
-    for (int i = 0; i < scheduleVertex->nDependencies_ && dependenciesStatisfied; ++i) {
-        auto &vertexDependency = scheduleVertex->vertexDependenciesArray_[i];
-        auto cons = vertexDependency.cons_;
-        auto availableData = vertexDependency.availableData_ - cons * scheduleVertex->vertexScheduledCount_;
-        dependenciesStatisfied &= availableData >= cons;
-    }
-    return dependenciesStatisfied;
-}
-
-static inline int updateAvailableData(ScheduleVertex *const scheduleVertex) {
-    Param numberSchedulable = std::min(scheduleVertex->vertexRhoValue_, scheduleVertex->vertexCount_);
+inline int SRDAGLessScheduler::updateAvailableData(PiSDFVertex *const vertex) {
+    int index = vertex->getTypeId();
+    Param numberSchedulable = std::min(rhoValueArray_[index], instanceAvlCountArray_[index]);
     bool dependenciesStatisfied = numberSchedulable > 0;
-    for (int i = 0; i < scheduleVertex->nDependencies_ && dependenciesStatisfied; ++i) {
-        auto &vertexDependency = scheduleVertex->vertexDependenciesArray_[i];
-        auto cons = vertexDependency.cons_;
-        auto prod = vertexDependency.prod_;
-        auto *srcScheduleVertex = vertexDependency.vertex_;
-        auto availableData = prod * srcScheduleVertex->vertexScheduledCount_ -
-                             cons * scheduleVertex->vertexScheduledCount_;
+    for (int i = 0; i < vertex->getNInEdge() && dependenciesStatisfied; ++i) {
+        auto *edge = vertex->getInEdge(i);
+        auto cons = edge->resolveCons();
+        auto prod = edge->resolveProd();
+        auto *srcVertex = edge->getSrc();
+        auto availableData = prod * instanceSchCountArray_[srcVertex->getTypeId()] -
+                             cons * instanceSchCountArray_[index];
         numberSchedulable = std::min(numberSchedulable, availableData / cons);
     }
     return static_cast<int>(numberSchedulable);
 }
 
-void SRDAGLessScheduler::mapVertex(ScheduleVertex *const scheduleVertex) {
+void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
+    Time minimumStartTime = 0; // TODO: set this in function of other jobs dependencies
+    auto *job = vertex->getScheduleJob();
+    auto currentInstance = instanceSchCountArray_[vertex->getTypeId()];
+    auto *jobConstrains = job->getScheduleConstrain(currentInstance);
+
+    for (int ix = 0; ix < vertex->getNInEdge(); ++ix) {
+        auto *edge = vertex->getInEdge(ix);
+        auto *srcVertex = edge->getSrc();
+        auto cons = edge->resolveCons();
+        auto prod = edge->resolveProd();
+        /** Computing the range of instances we depend on **/
+        auto startIndex = static_cast<int>(instanceSchCountArray_[vertex->getTypeId()] * cons / prod);
+        auto endIndex = startIndex + rhoValueArray_[srcVertex->getTypeId()];
+        auto *srcJob = srcVertex->getScheduleJob();
+        for (int i = startIndex; i < endIndex; ++i) {
+            /** Compute the minimal start time **/
+            minimumStartTime = std::max(minimumStartTime, srcJob->getMappingEndTime(i));
+            /** Compute the minimal dependency we need **/
+            auto pe = srcJob->getMappedPE(i);
+            auto currentValue = jobConstrains[pe].jobId_;
+            auto srcInstanceJobID = srcJob->getJobID(i);
+            if (srcInstanceJobID > currentValue) {
+                job->setScheduleConstrain(currentInstance, pe, srcVertex->getTypeId(), srcInstanceJobID, i);
+            }
+        }
+    }
+
     int bestSlave = -1;
     Time bestStartTime = 0;
     Time bestEndTime = UINT64_MAX;
     Time bestWaitTime = 0;
-    Time minimumStartTime = 0; // TODO: set this in function of other jobs dependencies
-    for (int ix = 0; ix < scheduleVertex->nDependencies_; ++ix) {
-        auto &vertexDependency = scheduleVertex->vertexDependenciesArray_[ix];
-        auto *srcScheduleVertex = vertexDependency.vertex_;
-        auto startIndex = static_cast<int>(scheduleVertex->vertexScheduledCount_ * vertexDependency.cons_ /
-                                           vertexDependency.prod_);
-        auto endIndex = startIndex + srcScheduleVertex->vertexRhoValue_;
-        for (int i = startIndex; i < endIndex; ++i) {
-            minimumStartTime = std::max(minimumStartTime, srcScheduleVertex->endTimeArray_[i]);
-        }
-    }
-    auto *vertex = scheduleVertex->vertex_;
     for (int pe = 0; pe < archi_->getNPE(); ++pe) {
         /** Skip disabled processing elements **/
         if (!archi_->isActivated(pe)) {
@@ -202,11 +170,15 @@ void SRDAGLessScheduler::mapVertex(ScheduleVertex *const scheduleVertex) {
     if (bestSlave < 0) {
         throwSpiderException("No slave found for vertex [%s].", vertex->getName());
     }
-    auto *job = CREATE(TRANSFO_STACK, ScheduleJob)(vertex, bestSlave, bestSlave);
-    job->setStartTime(bestStartTime);
-    job->setEndTime(bestEndTime);
-    schedule_->addJob(job);
-    scheduleVertex->endTimeArray_[scheduleVertex->vertexScheduledCount_] = bestEndTime;
+    job->setMappedPE(currentInstance, bestSlave);
+    job->setMappingStartTime(currentInstance, &bestStartTime);
+    job->setMappingEndTime(currentInstance, &bestEndTime);
+    schedule_->addJob(job, currentInstance);
+//    auto *job = CREATE(TRANSFO_STACK, ScheduleJob)(vertex, bestSlave, bestSlave);
+//    job->setStartTime(bestStartTime);
+//    job->setEndTime(bestEndTime);
+//    schedule_->addJob(job);
+//    scheduleVertex->endTimeArray_[scheduleVertex->vertexScheduledCount_] = bestEndTime;
 }
 
 const Schedule *SRDAGLessScheduler::schedule() {
@@ -215,22 +187,17 @@ const Schedule *SRDAGLessScheduler::schedule() {
         done = true;
         /** Schedule **/
         for (int ix = 0; ix < nVertices_; ++ix) {
-            auto *scheduleVertex = &scheduleVertexArray_[ix];
-//            auto numberToSchedule = std::min(scheduleVertex->vertexRhoValue_, scheduleVertex->vertexCount_);
-            auto numberSchedulable = updateAvailableData(scheduleVertex);
+            auto *vertex = graph_->getBody(ix);
+            auto numberSchedulable = updateAvailableData(vertex);
             for (int i = 0; i < numberSchedulable; ++i) {
-//                /** Check if vertex can be scheduled **/
-//                if (!isVertexSchedulable(scheduleVertex)) {
-//                    break;
-//                }
                 /** Map the vertex **/
-                mapVertex(scheduleVertex);
+                mapVertex(vertex);
                 /** Updating values **/
-                scheduleVertex->vertexCount_--;
-                scheduleVertex->vertexScheduledCount_++;
+                instanceAvlCountArray_[ix]--;
+                instanceSchCountArray_[ix]++;
             }
             /** Test condition for ending **/
-            done &= (scheduleVertex->vertexCount_ == 0);
+            done &= (instanceAvlCountArray_[ix] == 0);
         }
     }
 
@@ -244,7 +211,7 @@ void SRDAGLessScheduler::printRhoValues() {
     fprintf(stderr, "\nINFO: Rho values:\n");
     for (int i = 0; i < nVertices_; i++) {
         fprintf(stderr, "INFO: >> Vertex: %s -- Rho: %d\n", graph_->getBody(i)->getName(),
-                scheduleVertexArray_[i].vertexRhoValue_);
+                rhoValueArray_[i]);
     }
 }
 

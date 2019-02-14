@@ -44,25 +44,6 @@
 
 class PiSDFGraph;
 
-class ScheduleVertex;
-
-typedef struct VertexDependency {
-    ScheduleVertex *vertex_;
-    Param cons_;
-    Param prod_;
-    Param availableData_;
-} VertexDependency;
-
-class ScheduleVertex {
-public:
-    PiSDFVertex *vertex_;
-    VertexDependency *vertexDependenciesArray_;
-    Time *endTimeArray_;
-    std::int32_t nDependencies_;
-    std::int32_t vertexCount_;
-    std::int32_t vertexScheduledCount_;
-    std::int32_t vertexRhoValue_;
-};
 
 class SRDAGLessScheduler {
 public:
@@ -91,9 +72,14 @@ private:
     int nVertices_;
     SRDAGLessScheduler *parent_;
     std::vector<SRDAGLessScheduler *> children_;
-    ScheduleVertex *scheduleVertexArray_;
 
-    void mapVertex(ScheduleVertex *scheduleVertex);
+    std::int32_t *rhoValueArray_;
+    std::int32_t *instanceAvlCountArray_;
+    std::int32_t *instanceSchCountArray_;
+
+    inline int updateAvailableData(PiSDFVertex *const vertex);
+
+    void mapVertex(PiSDFVertex *vertex);
 
     void computeRhoValues();
 };

@@ -59,7 +59,6 @@ ScheduleJob::ScheduleJob(std::int32_t nInstances, std::int32_t nPEs) {
         mappingEndTimeVector_[i] = UINT64_MAX;
         for (int j = 0; j < nPEs_; ++j) {
             peDependenciesMatrix_[i * nPEs_ + j] = false;
-            scheduleConstrainsMatrix_[i * nPEs_ + j] = {-1, -1};
         }
     }
 }
@@ -75,8 +74,8 @@ ScheduleJob::~ScheduleJob() {
 
 
 void ScheduleJob::print(FILE *file, int instance) {
-    auto vertexName = vertex_->toString();
-    auto vertexId = vertex_->getId() + instance;
+    auto vertexName = vertex_ ? vertex_->toString() : vertexPiSDF_->getName();
+    auto vertexId = vertex_ ? vertex_->getId() + instance : vertexPiSDF_->getId() + instance;
 
     int red = (static_cast<unsigned>(vertexId) & 3u) * 50 + 100;
     int green = ((static_cast<unsigned>(vertexId) >> 2u) & 3u) * 50 + 100;

@@ -45,6 +45,7 @@
 #include <parser/Expression.h>
 
 #include <cstring>
+#include <scheduling/ScheduleJob.h>
 
 class PiSDFVertex : public SetElement {
 public:
@@ -129,6 +130,19 @@ public:
 
     inline void isExecutableOnPE(int pe);
 
+    inline void createScheduleJob(int nInstance) {
+        if(scheduleJob_) {
+            scheduleJob_->~ScheduleJob();
+            StackMonitor::free(TRANSFO_STACK, scheduleJob_);
+        }
+        scheduleJob_ = CREATE_NA(TRANSFO_STACK, ScheduleJob)(nInstance, Platform::get()->getNLrt());
+        scheduleJob_->setVertex(this);
+    }
+
+    inline ScheduleJob *getScheduleJob() {
+        return scheduleJob_;
+    }
+
 private:
     static int globalId;
 
@@ -156,6 +170,8 @@ private:
     int nPeMax_, nPeTypeMax_;
     bool *constraints_;
     Expression **timings_;
+
+    ScheduleJob *scheduleJob_;
 };
 
 /** Inlines Fcts */

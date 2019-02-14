@@ -240,9 +240,19 @@ int RoundRobin::computeSchedLevel(SRDAGVertex *vertex) {
 void RoundRobin::scheduleVertex(SRDAGVertex *vertex) {
     Time minimumStartTime = 0;
 
+    auto *job = vertex->getScheduleJob();
+    auto *jobConstrains = job->getScheduleConstrain(0);
+
     for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
-        minimumStartTime = std::max(minimumStartTime,
-                                    vertex->getInEdge(i)->getSrc()->getEndTime());
+        auto *edge = vertex->getInEdge(i);
+        auto *srcVertex = edge->getSrc();
+        auto *srcJob = srcVertex->getScheduleJob();
+        auto pe = srcJob->getMappedPE(0);
+        auto currentValue = jobConstrains[pe].jobId_;
+        minimumStartTime = std::max(minimumStartTime, srcJob->getMappingEndTime(0));
+        if (srcJob->getJobID(0) > currentValue) {
+            job->setScheduleConstrain(0, pe, srcVertex->getId() - 1, srcJob->getJobID(0));
+        }
 //		if(vertex->getInEdge(i)->getSrc()->getSlave() == -1){
 //			throw "Try to start a vertex when previous one is not scheduled\n";
 //		}
@@ -293,17 +303,13 @@ void RoundRobin::scheduleVertex(SRDAGVertex *vertex) {
     }
 
 
-    if (bestSlave == -1) {
-        printf("No slave found to execute one instance of %s\n", vertex->getReference()->getName());
-    }
     //printf("=> choose pe %d\n", bestSlave);
 //		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
-    auto *job = CREATE(TRANSFO_STACK, ScheduleJob)(vertex, bestSlave, bestSlave);
-    job->setStartTime(bestStartTime);
-    job->setEndTime(bestEndTime);
-    schedule_->addJob(job);
-
-    //if (vertex->getType() == SRDAG_NORMAL) printf("%s scheduled on PE %d\n",vertex->getReference()->getName(),bestSlave);
-
-    vertex->setSlave(bestSlave);
+    if (bestSlave < 0) {
+        throwSpiderException("No slave found to execute one instance of vertex [%s].", vertex->toString());
+    }
+    job->setMappedPE(0, bestSlave);
+    job->setMappingStartTime(0, &bestStartTime);
+    job->setMappingEndTime(0, &bestEndTime);
+    schedule_->addJob(job, 0);
 }

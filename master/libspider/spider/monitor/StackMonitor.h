@@ -55,8 +55,11 @@ typedef enum {
 } SpiderStack;
 
 
-#define CREATE(stackId, type) new(StackMonitor::alloc(stackId, sizeof(type))) type
-#define CREATE_MUL(stackId, size, type) new(StackMonitor::alloc(stackId, (size)*sizeof(type))) type[size]
+#define CREATE(stackId, type) new(StackMonitor::alloc(stackId, sizeof(type), true)) type
+#define CREATE_MUL(stackId, size, type) new(StackMonitor::alloc(stackId, (size)*sizeof(type), true)) type[size]
+
+#define CREATE_NA(stackId, type) new(StackMonitor::alloc(stackId, sizeof(type), false)) type
+#define CREATE_MUL_NA(stackId, size, type) new(StackMonitor::alloc(stackId, (size)*sizeof(type), false)) type[size]
 
 namespace StackMonitor {
     void initStack(SpiderStack id, StackConfig cfg);
@@ -65,7 +68,7 @@ namespace StackMonitor {
 
     void cleanAllStack();
 
-    void *alloc(SpiderStack id, int size);
+    void *alloc(SpiderStack id, int size, bool pageAligned = true);
 
 //    void *alloc(SpiderStack stackId, int size, const char *function);
 

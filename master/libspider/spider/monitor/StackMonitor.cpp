@@ -63,8 +63,8 @@ void StackMonitor::cleanAllStack() {
     }
 }
 
-void *StackMonitor::alloc(SpiderStack stackId, int size) {
-    return Platform::get()->getStack(stackId)->alloc(size);
+void *StackMonitor::alloc(SpiderStack stackId, int size, bool pageAligned) {
+    return Platform::get()->getStack(stackId)->alloc(size, pageAligned);
 }
 
 //void *StackMonitor::alloc(SpiderStack stackId, int size, const char *function) {

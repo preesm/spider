@@ -233,7 +233,7 @@ inline PiSDFEdge *const *PiSDFVertex::getAllEdges() const {
 /** Connect Fcts */
 inline void PiSDFVertex::connectInEdge(int ix, PiSDFEdge *edge) {
     if (ix >= nInEdge_ || ix < 0)
-        throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nInEdge_);
+        throwSpiderException("Bad index. Vertex [%s] --> Value: %d -- Max: %d", name_, ix, nInEdge_);
     else if (inEdges_[ix] != nullptr)
         throwSpiderException("Vertex [%s] --> Trying to erase already connected input edge.", name_);
     else

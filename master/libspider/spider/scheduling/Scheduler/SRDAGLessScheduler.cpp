@@ -70,6 +70,11 @@ SRDAGLessScheduler::SRDAGLessScheduler(PiSDFGraph *graph, const std::int32_t *br
             dependenciesArray_[ix][i].vertex_ = edge->getSrc();
             dependenciesArray_[ix][i].cons_ = edge->resolveCons();
             dependenciesArray_[ix][i].prod_ = edge->resolveProd();
+            dependenciesArray_[ix][i].delay_ = edge->resolveDelay();
+            if (edge->getSrc() == vertex && dependenciesArray_[ix][i].delay_ == 0) {
+                throwSpiderException("Graph not schedulable. Vertex [%s] has a self loop with no delay.",
+                                     vertex->getName());
+            }
         }
     }
     /** 2. Compute the Rho values **/
@@ -120,7 +125,8 @@ inline int SRDAGLessScheduler::updateAvailableData(PiSDFVertex *const vertex) {
         auto cons = dependencies[i].cons_;
         auto prod = dependencies[i].prod_;
         auto *srcVertex = dependencies[i].vertex_;
-        auto availableData = prod * instanceSchCountArray_[srcVertex->getTypeId()] -
+        auto availableData = dependencies[i].delay_ +
+                             prod * instanceSchCountArray_[srcVertex->getTypeId()] -
                              cons * instanceSchCountArray_[index];
         numberSchedulable = std::min(numberSchedulable, availableData / cons);
     }
@@ -130,7 +136,8 @@ inline int SRDAGLessScheduler::updateAvailableData(PiSDFVertex *const vertex) {
 void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
     Time minimumStartTime = 0; // TODO: set this in function of other jobs dependencies
     auto *job = vertex->getScheduleJob();
-    auto currentInstance = instanceSchCountArray_[vertex->getTypeId()];
+    auto vertexSchCount = instanceSchCountArray_[vertex->getTypeId()];
+    auto currentInstance = vertexSchCount;
     auto *jobConstrains = job->getScheduleConstrain(currentInstance);
 
     auto *dependencies = dependenciesArray_[vertex->getTypeId()];
@@ -138,9 +145,15 @@ void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
         auto cons = dependencies[ix].cons_;
         auto prod = dependencies[ix].prod_;
         auto *srcVertex = dependencies[ix].vertex_;
+        auto srcVertexIndex = srcVertex->getTypeId();
         /** Computing the range of instances we depend on **/
-        auto startIndex = static_cast<int>(instanceSchCountArray_[vertex->getTypeId()] * cons / prod);
-        auto endIndex = startIndex + rhoValueArray_[srcVertex->getTypeId()];
+        auto totalCons = vertexSchCount * cons;
+        auto delay = dependencies[ix].delay_;
+        auto startIndex = static_cast<int>(totalCons / prod) - static_cast<int>(delay / cons);
+        auto endIndex = startIndex + rhoValueArray_[srcVertexIndex];
+        if (startIndex < 0) {
+            continue;
+        }
         auto *srcJob = srcVertex->getScheduleJob();
         for (int i = startIndex; i < endIndex; ++i) {
             /** Compute the minimal start time **/
@@ -150,7 +163,7 @@ void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
             auto currentValue = jobConstrains[pe].jobId_;
             auto srcInstanceJobID = srcJob->getJobID(i);
             if (srcInstanceJobID > currentValue) {
-                job->setScheduleConstrain(currentInstance, pe, srcVertex->getTypeId(), srcInstanceJobID, i);
+                job->setScheduleConstrain(currentInstance, pe, srcVertexIndex, srcInstanceJobID, i);
             }
         }
     }
@@ -198,10 +211,12 @@ const Schedule *SRDAGLessScheduler::schedule() {
     bool done = false;
     while (!done) {
         done = true;
+        bool scheduledAtLeastOne = false;
         /** Schedule **/
         for (int ix = 0; ix < nVertices_; ++ix) {
             auto *vertex = graph_->getBody(ix);
             auto numberSchedulable = updateAvailableData(vertex);
+            scheduledAtLeastOne = scheduledAtLeastOne | (numberSchedulable > 0);
             for (int i = 0; i < numberSchedulable; ++i) {
                 /** Map the vertex **/
                 mapVertex(vertex);
@@ -211,6 +226,9 @@ const Schedule *SRDAGLessScheduler::schedule() {
             }
             /** Test condition for ending **/
             done &= (instanceAvlCountArray_[ix] == 0);
+        }
+        if (!scheduledAtLeastOne) {
+            throwSpiderException("Failed to schedule at least one vertex.");
         }
     }
 

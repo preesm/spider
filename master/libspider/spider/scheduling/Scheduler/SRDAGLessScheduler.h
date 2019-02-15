@@ -49,6 +49,7 @@ typedef struct {
     PiSDFVertex *vertex_ = nullptr;
     Param cons_ = 0;
     Param prod_ = 0;
+    Param delay_ = 0;
 } VertexDependency;
 
 class SRDAGLessScheduler {

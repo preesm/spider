@@ -94,6 +94,8 @@ public:
 
     inline Param resolveDelay(transfoJob *job);
 
+    inline Param resolveDelay();
+
     inline void getProdExpr(char *out, int sizeOut);
 
     inline void getConsExpr(char *out, int sizeOut);
@@ -207,6 +209,10 @@ inline Param PiSDFEdge::resolveCons() const {
 
 inline Param PiSDFEdge::resolveDelay(transfoJob *job) {
     return delay_->evaluate(graph_->getParams(), job);
+}
+
+inline Param PiSDFEdge::resolveDelay() {
+    return delay_->evaluate();
 }
 
 /** TODO take care of prod_ cons_ delay_ != 0 */

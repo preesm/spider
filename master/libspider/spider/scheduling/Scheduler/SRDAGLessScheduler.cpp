@@ -56,9 +56,6 @@ SRDAGLessScheduler::SRDAGLessScheduler(PiSDFGraph *graph, const std::int32_t *br
     instanceSchCountArray_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, std::int32_t);
     memset(instanceSchCountArray_, 0, nVertices_ * sizeof(std::int32_t));
     dependenciesArray_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, VertexDependency*);
-    for (int ix = 0; ix < nVertices_; ++ix) {
-        dependenciesArray_[ix] = nullptr;
-    }
 
     /** 1. Initialize properties **/
     // TODO: take into account self loop
@@ -67,14 +64,12 @@ SRDAGLessScheduler::SRDAGLessScheduler(PiSDFGraph *graph, const std::int32_t *br
         vertex->createScheduleJob(brv[ix]);
         rhoValueArray_[ix] = 1;
         instanceAvlCountArray_[ix] = brv[ix];
-        if (vertex->getNInEdge() > 0) {
-            dependenciesArray_[ix] = CREATE_MUL_NA(TRANSFO_STACK, vertex->getNInEdge(), VertexDependency);
-            for (int i = 0; i < vertex->getNInEdge(); ++i) {
-                auto *edge = vertex->getInEdge(i);
-                dependenciesArray_[ix][i].vertex_ = edge->getSrc();
-                dependenciesArray_[ix][i].cons_ = edge->resolveCons();
-                dependenciesArray_[ix][i].prod_ = edge->resolveProd();
-            }
+        dependenciesArray_[ix] = CREATE_MUL_NA(TRANSFO_STACK, vertex->getNInEdge(), VertexDependency);
+        for (int i = 0; i < vertex->getNInEdge(); ++i) {
+            auto *edge = vertex->getInEdge(i);
+            dependenciesArray_[ix][i].vertex_ = edge->getSrc();
+            dependenciesArray_[ix][i].cons_ = edge->resolveCons();
+            dependenciesArray_[ix][i].prod_ = edge->resolveProd();
         }
     }
     /** 2. Compute the Rho values **/
@@ -90,9 +85,7 @@ SRDAGLessScheduler::~SRDAGLessScheduler() {
     StackMonitor::free(TRANSFO_STACK, instanceAvlCountArray_);
     StackMonitor::free(TRANSFO_STACK, instanceSchCountArray_);
     for (int ix = 0; ix < graph_->getNBody(); ++ix) {
-        if ( dependenciesArray_[ix]) {
-            StackMonitor::free(TRANSFO_STACK, dependenciesArray_[ix]);
-        }
+        StackMonitor::free(TRANSFO_STACK, dependenciesArray_[ix]);
     }
     StackMonitor::free(TRANSFO_STACK, dependenciesArray_);
 }

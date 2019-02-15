@@ -64,6 +64,9 @@ void StackMonitor::cleanAllStack() {
 }
 
 void *StackMonitor::alloc(SpiderStack stackId, int size, bool pageAligned) {
+    if (size <= 0) {
+        return nullptr;
+    }
     return Platform::get()->getStack(stackId)->alloc(size, pageAligned);
 }
 
@@ -74,6 +77,9 @@ void *StackMonitor::alloc(SpiderStack stackId, int size, bool pageAligned) {
 //}
 
 void StackMonitor::free(SpiderStack stackId, void *ptr) {
+    if (ptr == nullptr) {
+        return;
+    }
     return Platform::get()->getStack(stackId)->free(ptr);
 }
 

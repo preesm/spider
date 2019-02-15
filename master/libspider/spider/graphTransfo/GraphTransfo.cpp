@@ -209,7 +209,8 @@ void jit_ms(
             fprintf(stderr, "INFO: Launching config actors...\n");
         }
 
-        // Run
+        /** Run the schedule **/
+        schedule->execute();
         Platform::get()->getLrt()->runUntilNoMoreJobs();
 
         /* Resolve params must be done by itself */
@@ -230,9 +231,6 @@ void jit_ms(
             for (int paramIx = 0; paramIx < job->graph->getNParam(); paramIx++) {
                 PiSDFParam *param = job->graph->getParam(paramIx);
                 job->paramValues[paramIx] = param->getValue();
-//                if (param->getType() == PISDF_PARAM_DEPENDENT_DYNAMIC) {
-//                    job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
-//                }
             }
 
             if (Spider::getVerbose()) {
@@ -286,8 +284,6 @@ void jit_ms(
         }
 
         TimeMonitor::startMonitoring();
-
-//        printf("Finish one iter\n");
     } while (true);
 
     topSrdag->updateState();
@@ -303,14 +299,10 @@ void jit_ms(
     TimeMonitor::startMonitoring();
     scheduler->schedule(topSrdag, memAlloc, schedule, archi);
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
-    schedule->execute();
-
-    Platform::get()->getLrt()->runUntilNoMoreJobs();
-
-    schedule->print("schedule-ref.pgantt");
+    /** Run the schedule **/
+    schedule->executeAndRun();
     schedule->~Schedule();
     StackMonitor::free(TRANSFO_STACK, schedule);
-    StackMonitor::freeAll(TRANSFO_STACK);
 }
 
 Schedule *static_scheduler(SRDAGGraph *topSrdag,
@@ -392,10 +384,6 @@ Schedule *static_scheduler(SRDAGGraph *topSrdag,
     TimeMonitor::startMonitoring();
     scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchi());
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
-//    schedule->execute();
-
-//    Platform::get()->getLrt()->runUntilNoMoreJobs();
-    schedule->print("schedule-static.pgantt");
     return schedule;
 }
 

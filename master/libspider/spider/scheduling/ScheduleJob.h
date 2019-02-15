@@ -105,7 +105,7 @@ public:
     inline void launchNextInstance() {
         nLaunchedInstance_++;
         if (nLaunchedInstance_ > nInstances_) {
-            throwSpiderException("Launched more instances of a job than available.");
+            throwSpiderException("Launched more instances of a job than available. %d -- %d", nLaunchedInstance_, nInstances_);
         }
     }
 

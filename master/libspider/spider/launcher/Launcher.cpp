@@ -50,15 +50,6 @@ Launcher::Launcher() {
     nLaunched_ = 0;
 }
 
-void Launcher::launchVertex(SRDAGVertex *vertex) {
-    if (vertex->getState() == SRDAG_EXEC) {
-        int slave = vertex->getSlave();
-        sendJobInfoMessage(slave, vertex);
-        nLaunched_++;
-        vertex->setState(SRDAG_RUN);
-    }
-}
-
 Launcher *Launcher::get() {
     return &instance_;
 }
@@ -85,117 +76,14 @@ void Launcher::send_ClearTimeMsg(int) {
 //    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMessage));
 }
 
-void Launcher::sendJobInfoMessage(int lrtIx, SRDAGVertex *vertex) {
-    /** Retrieve Information for msg */
-    int nParams = 0;
-    switch (vertex->getType()) {
-        case SRDAG_NORMAL:
-            nParams = vertex->getNInParam();
-            break;
-        case SRDAG_FORK:
-        case SRDAG_JOIN:
-            nParams = 2 + vertex->getNConnectedInEdge() + vertex->getNConnectedOutEdge();
-            break;
-        case SRDAG_ROUNDBUFFER:
-        case SRDAG_BROADCAST:
-            nParams = 2;
-            break;
-        case SRDAG_INIT:
-        case SRDAG_END:
-            nParams = 3;
-            break;
-    }
-
-    auto *inFifos = CREATE_MUL(ARCHI_STACK, vertex->getNConnectedInEdge(), Fifo);
-    auto *outFifos = CREATE_MUL(ARCHI_STACK, vertex->getNConnectedOutEdge(), Fifo);
-    auto *inParams = CREATE_MUL(ARCHI_STACK, nParams, Param);
-
-    auto *msg = CREATE(ARCHI_STACK, JobInfoMessage);
-    msg->srdagID_ = vertex->getId();
-    msg->specialActor_ = vertex->getType() != SRDAG_NORMAL;
-    msg->fctID_ = vertex->getFctId();
-
-    msg->nEdgeIN_ = vertex->getNConnectedInEdge();
-    msg->nEdgeOUT_ = vertex->getNConnectedOutEdge();
-    msg->nParamIN_ = nParams;
-    msg->nParamOUT_ = vertex->getNOutParam();
-    msg->inFifos_ = inFifos;
-    msg->outFifos_ = outFifos;
-    msg->inParams_ = inParams;
-
-    for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
-        SRDAGEdge *edge = vertex->getInEdge(i);
-        inFifos[i].alloc = edge->getAlloc();
-        inFifos[i].size = edge->getRate();
-    }
-
-    for (int i = 0; i < vertex->getNConnectedOutEdge(); i++) {
-        SRDAGEdge *edge = vertex->getOutEdge(i);
-        outFifos[i].alloc = edge->getAlloc();
-        outFifos[i].size = edge->getRate();
-    }
-
-    switch (vertex->getType()) {
-        case SRDAG_NORMAL:
-            for (int i = 0; i < nParams; i++) {
-                inParams[i] = vertex->getInParam(i);
-            }
-            break;
-        case SRDAG_FORK:
-            inParams[0] = vertex->getNConnectedInEdge();
-            inParams[1] = vertex->getNConnectedOutEdge();
-            inParams[2] = vertex->getInEdge(0)->getRate();
-            for (int i = 0; i < vertex->getNConnectedOutEdge(); i++) {
-                inParams[3 + i] = vertex->getOutEdge(i)->getRate();
-            }
-            break;
-        case SRDAG_JOIN:
-            inParams[0] = vertex->getNConnectedInEdge();
-            inParams[1] = vertex->getNConnectedOutEdge();
-            inParams[2] = vertex->getOutEdge(0)->getRate();
-            for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
-                inParams[3 + i] = vertex->getInEdge(i)->getRate();
-            }
-            break;
-        case SRDAG_ROUNDBUFFER:
-            inParams[0] = vertex->getInEdge(0)->getRate();
-            inParams[1] = vertex->getOutEdge(0)->getRate();
-            break;
-        case SRDAG_BROADCAST:
-            inParams[0] = vertex->getInEdge(0)->getRate();
-            inParams[1] = vertex->getNConnectedOutEdge();
-            break;
-        case SRDAG_INIT:
-            inParams[0] = vertex->getOutEdge(0)->getRate();
-            // Set persistence property
-            inParams[1] = vertex->getInParam(0);
-            // Set memory address
-            inParams[2] = vertex->getInParam(1);
-            break;
-        case SRDAG_END:
-            inParams[0] = vertex->getInEdge(0)->getRate();
-            // Set persistence property
-            inParams[1] = vertex->getInParam(0);
-            // Set memory address
-            inParams[2] = vertex->getInParam(1);
-            break;
-    }
-
-    curNParam_ += vertex->getNOutParam();
-
-    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
-    /** Push the job message **/
-    auto jobID = spiderCommunicator->push_job_message(&msg);
-    NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, Platform::get()->getLrtIx(), jobID);
-    /** Send notification **/
-    spiderCommunicator->push_notification(lrtIx, &notificationMessage);
-}
-
 
 void Launcher::sendJob(ScheduleJob *job) {
     /** 1. Push the job **/
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     auto instance = job->getNumberOfLaunchedInstances();
+    if (instance == 1) {
+        fprintf(stderr, "INFO: coucou %s -- %d -- %d\n", job->getVertex()->toString(), instance, job->getNumberOfInstances());
+    }
     auto *job2Send = job->createJobMessage(instance);
     auto jobID = spiderCommunicator->push_job_message(&job2Send);
 
@@ -205,6 +93,10 @@ void Launcher::sendJob(ScheduleJob *job) {
 
     /** 3 Update instance number **/
     job->launchNextInstance();
+
+    /** 4. Update number of param to resolve **/
+    curNParam_ += job2Send->nParamOUT_;
+    nLaunched_++;
 }
 
 void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {

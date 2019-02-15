@@ -49,6 +49,7 @@ Schedule::Schedule(int nPE, int nJobMax) {
     nPE_ = nPE;
     nJobMax_ = nJobMax;
     nJobs_ = 0;
+    nSentJobs_ = 0;
 
     jobs_.reserve((unsigned long) nJobMax);
     nJobPerPE_ = CREATE_MUL(TRANSFO_STACK, nPE_, int);
@@ -155,15 +156,22 @@ bool Schedule::check() {
 
 void Schedule::execute() {
     TimeMonitor::startMonitoring();
-    for (int i = 0; i < nJobs_; ++i) {
-        jobs_[i]->resetLaunchInstances();
-    }
-    for (int i = 0; i < nJobs_; ++i) {
+    int startJob = nSentJobs_;
+    for (int i = startJob; i < nJobs_; ++i) {
         auto *job = jobs_[i];
-        Launcher::get()->sendJob(job);
+        auto *vertex = job->getVertex();
+        if (vertex->getState() == SRDAG_EXEC) {
+            Launcher::get()->sendJob(job);
+            vertex->setState(SRDAG_RUN);
+            nSentJobs_++;
+        }
     }
-    Launcher::get()->sendEndNotification(this);
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
+}
+
+void Schedule::executeAndRun() {
+    execute();
+    Launcher::get()->sendEndNotification(this);
     Platform::get()->getLrt()->runUntilNoMoreJobs();
 }
 

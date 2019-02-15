@@ -41,10 +41,11 @@
 
 #include <platform.h>
 #include <tools/Stack.h>
-#include <graphs/SRDAG/SRDAGVertex.h>
 
 #include <algorithm>
 #include "ScheduleJob.h"
+
+#include <graphs/SRDAG/SRDAGVertex.h>
 
 class Schedule {
 public:
@@ -66,11 +67,24 @@ public:
         return jobs_[id];
     }
 
+    inline void restartSchedule() {
+        nSentJobs_ = 0;
+        if (nJobs_) {
+            for (int i = 0; i < nJobs_; ++i) {
+                jobs_[i]->resetLaunchInstances();
+                auto *vertex = jobs_[i]->getVertex();
+                vertex->setState(SRDAG_EXEC);
+            }
+        }
+    }
+
     void print(const char *path);
 
     bool check();
 
     void execute();
+
+    void executeAndRun();
 
     inline int getNJobs(int pe) const;
 
@@ -78,6 +92,7 @@ private:
     int nPE_{};
     int nJobMax_{};
     int nJobs_{};
+    int nSentJobs_{};
     int *nJobPerPE_;
     Time *readyTimeOfPEs_;
     std::vector<ScheduleJob *> jobs_;

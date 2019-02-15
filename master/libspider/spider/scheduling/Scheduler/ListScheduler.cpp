@@ -103,10 +103,6 @@ void ListScheduler::scheduleOnlyConfig(
         this->scheduleVertex((*list_)[i]);
     }
 
-    for (int i = 0; i < list_->getNb(); i++) {
-        Launcher::get()->launchVertex((*list_)[i]);
-    }
-
     /** Send Broadcast notification **/
     Launcher::get()->sendBroadCastNotification(true);
 
@@ -142,22 +138,15 @@ void ListScheduler::schedule(
     }
 
     list_->sort(compareSchedLevel);
-//    schedule_->setAllMinReadyTime(Platform::get()->getTime());
-//    schedule_->setReadyTime(
-//            /* Spider Pe */     archi->getSpiderPeIx(),
-//            /* End of Mapping */Platform::get()->getTime() +
-//                                archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
+    schedule_->setAllMinReadyTime(Platform::get()->getTime());
+    schedule_->setReadyTime(
+            /* Spider Pe */     archi->getSpiderPeIx(),
+            /* End of Mapping */Platform::get()->getTime() +
+                                archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
 
     for (int i = 0; i < list_->getNb(); i++) {
         this->scheduleVertex((*list_)[i]);
     }
-
-//    for (int i = 0; i < list_->getNb(); i++) {
-//        Launcher::get()->launchVertex((*list_)[i]);
-//    }
-
-//    /** Send of iteration notification **/
-//    Launcher::get()->sendEndNotification(schedule_);
 
     list_->~List();
     StackMonitor::free(TRANSFO_STACK, list_);
@@ -202,7 +191,7 @@ void ListScheduler::scheduleVertex(SRDAGVertex *vertex) {
             auto currentValue = jobConstrains[pe].jobId_;
             minimumStartTime = std::max(minimumStartTime, srcJob->getMappingEndTime(0));
             if (srcJob->getJobID(0) > currentValue) {
-                job->setScheduleConstrain(0, pe, srcVertex->getId() - 1, srcJob->getJobID(0));
+                job->setScheduleConstrain(0, pe, srcVertex->getSetIx(), srcJob->getJobID(0));
             }
         }
     }

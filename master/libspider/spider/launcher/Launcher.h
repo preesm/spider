@@ -49,8 +49,6 @@ class Launcher {
 public:
     static Launcher *get();
 
-    void launchVertex(SRDAGVertex *vertex);
-
     void sendJob(ScheduleJob *job);
 
     void resolveParams(Archi *archi, SRDAGGraph *topDag);
@@ -96,8 +94,6 @@ private:
     static Launcher instance_;
 
     void send_ClearTimeMsg(int lrtIx);
-
-    void sendJobInfoMessage(int lrtIx, SRDAGVertex *vertex);
 
     void send_ResetLrtMsg(int lrtIx);
 

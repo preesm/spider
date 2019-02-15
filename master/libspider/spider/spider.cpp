@@ -141,52 +141,24 @@ extern int stopThreads;
 
 void Spider::iterate() {
     Platform::get()->rstTime();
-    // Time measurement -- START
-    Time start = Platform::get()->getTime();
-    /** tmp **/
-    double avgTime = 0.;
-    double nIteration = 100;
-    for (int i = 0; i < nIteration; ++i) {
-        srdagLessScheduler();
-    }
-    Time end = Platform::get()->getTime();
-    avgTime = (end - start) / nIteration;
-    fprintf(stderr, "srdagLessScheduler() -- Execution Time: %lf ms.\n", avgTime / 1000000.0);
-    start = Platform::get()->getTime();
-    for (int i = 0; i < nIteration; ++i) {
+    if (pisdf_->isGraphStatic()) {
+        if (!srdag_) {
+            /** On first iteration, the schedule is created **/
+            srdag_ = new SRDAGGraph();
+            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
+        }
+        /** Run the schedule **/
+        schedule_->executeAndRun();
+        schedule_->restartSchedule();
+    } else {
         delete srdag_;
         StackMonitor::freeAll(SRDAG_STACK);
         memAlloc_->reset();
         srdag_ = new SRDAGGraph();
-        schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
-        schedule_->~Schedule();
-        StackMonitor::free(TRANSFO_STACK, schedule_);
-        schedule_ = nullptr;
+        jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
     }
-    end = Platform::get()->getTime();
-    avgTime = (end - start) / nIteration;
-    fprintf(stderr, "static_scheduler() -- Execution Time: %lf ms.\n", avgTime / 1000000.0);
-    stopThreads = 1;
-
-
-//    if (pisdf_->isGraphStatic()) {
-//        if (!srdag_) {
-//            /** On first iteration, the schedule is created **/
-//            srdag_ = new SRDAGGraph();
-//            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
-//        } else {
-//            /** If a static schedule exist, we just play it **/
-//            schedule_->execute();
-//        }
-//    } else {
-//        delete srdag_;
-//        StackMonitor::freeAll(SRDAG_STACK);
-//        memAlloc_->reset();
-//        srdag_ = new SRDAGGraph();
-//        jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
-//    }
-//    /** Wait for LRTs to finish **/
-//    Platform::get()->rstJobIxRecv();
+    /** Wait for LRTs to finish **/
+    Platform::get()->rstJobIxRecv();
 }
 
 
@@ -256,7 +228,6 @@ void Spider::clean() {
     if (schedule_) {
         schedule_->~Schedule();
         StackMonitor::free(TRANSFO_STACK, schedule_);
-        StackMonitor::freeAll(TRANSFO_STACK);
     }
 
     delete srdag_;

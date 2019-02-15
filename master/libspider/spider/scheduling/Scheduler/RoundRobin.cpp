@@ -120,10 +120,6 @@ void RoundRobin::scheduleOnlyConfig(
     }
 //	printf("\n");
 
-    for (int i = 0; i < list_->getNb(); i++) {
-        Launcher::get()->launchVertex((*list_)[i]);
-    }
-
     /** Send Broadcast notification **/
     Launcher::get()->sendBroadCastNotification(true);
 
@@ -172,12 +168,7 @@ void RoundRobin::schedule(
 
     for (int i = 0; i < list_->getNb(); i++) {
         this->scheduleVertex((*list_)[i]);
-        Launcher::get()->launchVertex((*list_)[i]);
     }
-
-    /** Send of iteration notification **/
-    Launcher::get()->sendEndNotification(schedule_);
-
 
     list_->~List();
     StackMonitor::free(TRANSFO_STACK, list_);
@@ -251,11 +242,8 @@ void RoundRobin::scheduleVertex(SRDAGVertex *vertex) {
         auto currentValue = jobConstrains[pe].jobId_;
         minimumStartTime = std::max(minimumStartTime, srcJob->getMappingEndTime(0));
         if (srcJob->getJobID(0) > currentValue) {
-            job->setScheduleConstrain(0, pe, srcVertex->getId() - 1, srcJob->getJobID(0));
+            job->setScheduleConstrain(0, pe, srcVertex->getSetIx(), srcJob->getJobID(0));
         }
-//		if(vertex->getInEdge(i)->getSrc()->getSlave() == -1){
-//			throw "Try to start a vertex when previous one is not scheduled\n";
-//		}
     }
 
     if (vertex->getState() == SRDAG_RUN) {

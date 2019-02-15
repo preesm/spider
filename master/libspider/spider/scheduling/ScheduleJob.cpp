@@ -67,6 +67,8 @@ ScheduleJob::ScheduleJob(std::int32_t nInstances, std::int32_t nPEs) {
 }
 
 ScheduleJob::~ScheduleJob() {
+    vertex_ = nullptr;
+    vertexPiSDF_ = nullptr;
     StackMonitor::free(TRANSFO_STACK, mappingVector_);
     StackMonitor::free(TRANSFO_STACK, jobIDVector_);
     StackMonitor::free(TRANSFO_STACK, mappingStartTimeVector_);

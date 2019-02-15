@@ -84,6 +84,7 @@ PiSDFVertex::PiSDFVertex(
 
     timings_ = CREATE_MUL(PISDF_STACK, nPeTypeMax_, Expression*);
     memset(timings_, 0, nPeTypeMax_ * sizeof(Expression *));
+    scheduleJob_ = nullptr;
 }
 
 PiSDFVertex::~PiSDFVertex() {

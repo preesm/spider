@@ -120,7 +120,7 @@ public:
 
     inline Time getTimingOnType(int peType, const Param *vertexParamValues, int nParam);
 
-    inline Time getTimingOnPE(int peType);
+    inline Time getTimingOnPEType(int peType);
 
     inline const bool *getConstraints() const;
 
@@ -347,7 +347,7 @@ inline Time PiSDFVertex::getTimingOnType(int peType, const Param *vertexParamVal
     return (Time) timings_[peType]->evaluate(vertexParamValues, nParam);
 }
 
-inline Time PiSDFVertex::getTimingOnPE(int peType) {
+inline Time PiSDFVertex::getTimingOnPEType(int peType) {
     if (peType < 0 || peType >= nPeTypeMax_) {
         throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_ - 1);
     }

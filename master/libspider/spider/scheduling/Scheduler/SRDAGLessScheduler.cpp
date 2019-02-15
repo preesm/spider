@@ -133,13 +133,9 @@ inline int SRDAGLessScheduler::updateAvailableData(PiSDFVertex *const vertex) {
     return static_cast<int>(numberSchedulable);
 }
 
-void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
-    Time minimumStartTime = 0; // TODO: set this in function of other jobs dependencies
-    auto *job = vertex->getScheduleJob();
-    auto vertexSchCount = instanceSchCountArray_[vertex->getTypeId()];
-    auto currentInstance = vertexSchCount;
-    auto *jobConstrains = job->getScheduleConstrain(currentInstance);
-
+Time SRDAGLessScheduler::computeMinimumStartTime(const PiSDFVertex *vertex, Time minimumStartTime, ScheduleJob *job,
+                                                 int32_t vertexSchCount, int32_t currentInstance,
+                                                 const JobConstrain *jobConstrains) const {
     auto *dependencies = dependenciesArray_[vertex->getTypeId()];
     for (int ix = 0; ix < vertex->getNInEdge(); ++ix) {
         auto cons = dependencies[ix].cons_;
@@ -167,7 +163,18 @@ void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
             }
         }
     }
+    return minimumStartTime;
+}
 
+void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
+    Time minimumStartTime = 0; // TODO: set this in function of other jobs dependencies
+    auto *job = vertex->getScheduleJob();
+    auto vertexSchCount = instanceSchCountArray_[vertex->getTypeId()];
+    auto currentInstance = vertexSchCount;
+    auto *jobConstrains = job->getScheduleConstrain(currentInstance);
+
+    minimumStartTime = computeMinimumStartTime(vertex, minimumStartTime, job, vertexSchCount, currentInstance,
+                                               jobConstrains);
     int bestSlave = -1;
     Time bestStartTime = 0;
     Time bestEndTime = UINT64_MAX;
@@ -182,7 +189,7 @@ void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
             Time startTime = std::max(schedule_->getReadyTime(pe), minimumStartTime);
             Time waitTime = startTime - schedule_->getReadyTime(pe);
             auto peType = archi_->getPEType(pe);
-            Time execTime = vertex->getTimingOnPE(peType);
+            Time execTime = vertex->getTimingOnPEType(peType);
             // TODO: add communication time in the balance
             Time endTime = startTime + execTime;
             if ((endTime < bestEndTime) || (endTime == bestEndTime && waitTime < bestWaitTime)) {
@@ -200,12 +207,9 @@ void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
     job->setMappingStartTime(currentInstance, &bestStartTime);
     job->setMappingEndTime(currentInstance, &bestEndTime);
     schedule_->addJob(job, currentInstance);
-//    auto *job = CREATE(TRANSFO_STACK, ScheduleJob)(vertex, bestSlave, bestSlave);
-//    job->setStartTime(bestStartTime);
-//    job->setEndTime(bestEndTime);
-//    schedule_->addJob(job);
-//    scheduleVertex->endTimeArray_[scheduleVertex->vertexScheduledCount_] = bestEndTime;
 }
+
+
 
 const Schedule *SRDAGLessScheduler::schedule() {
     bool done = false;
@@ -231,10 +235,6 @@ const Schedule *SRDAGLessScheduler::schedule() {
             throwSpiderException("Failed to schedule at least one vertex.");
         }
     }
-
-    /** Execute and run the obtained schedule **/
-//    schedule->execute();
-//    Platform::get()->getLrt()->runUntilNoMoreJobs();
     return schedule_;
 }
 

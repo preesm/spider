@@ -35,64 +35,28 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef SPIDER_SRDAGLESSSCHEDULER_H
-#define SPIDER_SRDAGLESSSCHEDULER_H
+#ifndef SPIDER_SRDAGLESSLISTSCHEDULER_H
+#define SPIDER_SRDAGLESSLISTSCHEDULER_H
 
-#include <vector>
-#include <cstdint>
-#include <scheduling/Schedule.h>
+#include <tools/List.h>
+#include "SRDAGLessScheduler.h"
 
-class PiSDFGraph;
-
-
-typedef struct {
-    PiSDFVertex *vertex_ = nullptr;
-    Param cons_ = 0;
-    Param prod_ = 0;
-    Param delay_ = 0;
-} VertexDependency;
-
-class SRDAGLessScheduler {
+class SRDAGLessListScheduler : public SRDAGLessScheduler {
 public:
-    SRDAGLessScheduler(PiSDFGraph *graph, const std::int32_t *brv);
+    SRDAGLessListScheduler(PiSDFGraph *graph, const std::int32_t *brv);
 
-    ~SRDAGLessScheduler();
+    ~SRDAGLessListScheduler();
 
-    virtual const Schedule *schedule();
+    const Schedule *schedule() override;
 
-    inline const Schedule *getSchedule() {
-        return schedule_;
-    }
+private:
+    List<PiSDFVertex *> *list_;
 
-    inline void printSchedule(const char *path) {
-        if (schedule_) {
-            schedule_->print(path);
-        }
-    }
+    int **schedLvl_;
 
-    void printRhoValues();
+    std::int32_t computeScheduleLevel(PiSDFVertex *vertex);
 
-protected:
-    PiSDFGraph *graph_;
-    Schedule *schedule_;
-    Archi *archi_;
-    int nVertices_;
-    SRDAGLessScheduler *parent_;
-    std::vector<SRDAGLessScheduler *> children_;
-
-    std::int32_t *rhoValueArray_;
-    std::int32_t *instanceAvlCountArray_;
-    std::int32_t *instanceSchCountArray_;
-    VertexDependency **dependenciesArray_;
-
-    inline int updateAvailableData(PiSDFVertex *vertex);
-
-    void mapVertex(PiSDFVertex *vertex);
-
-    void computeRhoValues();
-
-    Time computeMinimumStartTime(const PiSDFVertex *vertex, Time minimumStartTime, ScheduleJob *job, int32_t vertexSchCount,
-                                 int32_t currentInstance, const JobConstrain *jobConstrains) const;
+    int compareScheduleLevels(PiSDFVertex *vertexA, PiSDFVertex *vertexB);
 };
 
-#endif //SPIDER_SRDAGLESSSCHEDULER_H
+#endif //SPIDER_SRDAGLESSLISTSCHEDULER_H

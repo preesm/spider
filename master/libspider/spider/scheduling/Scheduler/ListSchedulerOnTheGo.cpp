@@ -41,10 +41,6 @@
 #include <launcher/Launcher.h>
 
 ListSchedulerOnTheGo::ListSchedulerOnTheGo() {
-    if (Spider::getGraphOptim()) {
-        throwSpiderException("Graph optimizations not supported with this scheduler.");
-    }
-
     srdag_ = nullptr;
     schedule_ = nullptr;
     archi_ = nullptr;
@@ -52,125 +48,6 @@ ListSchedulerOnTheGo::ListSchedulerOnTheGo() {
 }
 
 ListSchedulerOnTheGo::~ListSchedulerOnTheGo() = default;
-
-static int compareSchedLevel(SRDAGVertex *vertexA, SRDAGVertex *vertexB) {
-    return vertexB->getSchedLvl() - vertexA->getSchedLvl();
-}
-
-void ListSchedulerOnTheGo::addPrevActors(SRDAGVertex *vertex, List<SRDAGVertex *> *list) {
-    for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
-        SRDAGVertex *prevVertex = vertex->getInEdge(i)->getSrc();
-        if (!list->isPresent(prevVertex) && prevVertex->getState() == SRDAG_EXEC) {
-            list->add(prevVertex);
-            computeSchedLevel(prevVertex);
-            addPrevActors(prevVertex, list);
-        }
-    }
-}
-
-void ListSchedulerOnTheGo::scheduleOnlyConfig(
-        SRDAGGraph *graph,
-        MemAlloc *memAlloc,
-        Schedule *schedule,
-        Archi *archi) {
-    srdag_ = graph;
-    schedule_ = schedule;
-    archi_ = archi;
-
-    list_ = CREATE(TRANSFO_STACK, List<SRDAGVertex *>)(TRANSFO_STACK, srdag_->getNExecVertex());
-
-//	Launcher::initTaskOrderingTime();
-
-
-    for (int i = 0; i < srdag_->getNVertex(); i++) {
-        SRDAGVertex *vertex = srdag_->getVertex(i);
-        if (vertex->getState() == SRDAG_EXEC && vertex->getNOutParam() > 0) {
-            list_->add(vertex);
-            vertex->setSchedLvl(-1);
-            addPrevActors(vertex, list_);
-        }
-    }
-
-    memAlloc->alloc(list_);
-
-    for (int i = 0; i < list_->getNb(); i++) {
-        computeSchedLevel((*list_)[i]);
-    }
-
-    list_->sort(compareSchedLevel);
-
-//	Launcher::endTaskOrderingTime();
-//	Launcher::initMappingTime();
-
-    schedule_->setAllMinReadyTime(Platform::get()->getTime());
-    schedule_->setReadyTime(
-            /* Spider Pe */        archi->getSpiderPeIx(),
-            /* End of Mapping */Platform::get()->getTime() +
-                                archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
-
-//	Launcher::setActorsNb(schedList.getNb());
-
-    for (int i = 0; i < list_->getNb(); i++) {
-//		printf("%d (%d), ", (*list_)[i]->getId(), (*list_)[i]->getSchedLvl());
-        this->scheduleVertex((*list_)[i]);
-    }
-//	printf("\n");
-
-    /** Send Broadcast notification **/
-    Launcher::get()->sendBroadCastNotification(true);
-
-    list_->~List();
-    StackMonitor::free(TRANSFO_STACK, list_);
-}
-
-void ListSchedulerOnTheGo::schedule(
-        SRDAGGraph *graph,
-        MemAlloc *memAlloc,
-        Schedule *schedule,
-        Archi *archi) {
-    srdag_ = graph;
-    schedule_ = schedule;
-    archi_ = archi;
-
-    list_ = CREATE(TRANSFO_STACK, List<SRDAGVertex *>)(TRANSFO_STACK, srdag_->getNExecVertex());
-
-    // Fill the list_ with SRDAGVertices
-    for (int i = 0; i < srdag_->getNVertex(); i++) {
-        SRDAGVertex *vertex = srdag_->getVertex(i);
-        if (vertex->getState() == SRDAG_EXEC) {
-            list_->add(vertex);
-            vertex->setSchedLvl(-1);
-        }
-    }
-
-    memAlloc->alloc(list_);
-
-    // determine scheduling level for SRDAGVertices
-    for (int i = 0; i < list_->getNb(); i++) {
-        computeSchedLevel((*list_)[i]);
-    }
-
-    // sort SRDAGVertices in list_ depending on their scheduling level
-    list_->sort(compareSchedLevel);
-
-//	for (int i=0; i<list_->getNb(); i++){
-//		printf("%d (%d), ", (*list_)[i]->getId(), (*list_)[i]->getSchedLvl());
-//	}
-//	printf("\n");
-
-    schedule_->setAllMinReadyTime(Platform::get()->getTime());
-    schedule_->setReadyTime(
-            /* Spider Pe */        archi->getSpiderPeIx(),
-            /* End of Mapping */Platform::get()->getTime() +
-                                archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
-
-    for (int i = 0; i < list_->getNb(); i++) {
-        this->scheduleVertex((*list_)[i]);
-    }
-
-    list_->~List();
-    StackMonitor::free(TRANSFO_STACK, list_);
-}
 
 #if 0
 int ListSchedulerOnTheGo::computeSchedLevel(SRDAGVertex* vertex){
@@ -200,52 +77,10 @@ int ListSchedulerOnTheGo::computeSchedLevel(SRDAGVertex* vertex){
     }
     return vertex->getSchedLvl();
 }
-#else
-
-int ListSchedulerOnTheGo::computeSchedLevel(SRDAGVertex *vertex) {
-    int lvl = 0;
-    if (vertex->getSchedLvl() == -1) {
-        for (int i = 0; i < vertex->getNConnectedOutEdge(); i++) {
-            SRDAGVertex *succ = vertex->getOutEdge(i)->getSnk();
-            if (succ && succ->getState() != SRDAG_NEXEC) {
-                auto minExecTime = (Time) -1;
-                for (int j = 0; j < archi_->getNPETypes(); j++) {
-
-                    Time execTime = succ->executionTimeOn(archi_->getPEType(j));
-                    if (execTime == 0) continue;
-                    minExecTime = std::min(minExecTime, execTime);
-                }
-                lvl = std::max(lvl, computeSchedLevel(succ) + (int) minExecTime);
-            }
-        }
-        vertex->setSchedLvl(lvl);
-        return lvl;
-    }
-    return vertex->getSchedLvl();
-}
-
 #endif
 
-void ListSchedulerOnTheGo::scheduleVertex(SRDAGVertex *vertex) {
-    Time minimumStartTime = 0;
-
-    auto *job = vertex->getScheduleJob();
-    auto *jobConstrains = job->getScheduleConstrain(0);
-
-    for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
-        auto *edge = vertex->getInEdge(i);
-        auto *srcVertex = edge->getSrc();
-        auto *srcJob = srcVertex->getScheduleJob();
-        auto pe = srcJob->getMappedPE(0);
-        auto currentValue = jobConstrains[pe].jobId_;
-        minimumStartTime = std::max(minimumStartTime, srcJob->getMappingEndTime(0));
-        if (srcJob->getJobID(0) > currentValue) {
-            job->setScheduleConstrain(0, pe, srcVertex->getSetIx(), srcJob->getJobID(0));
-        }
-//		if(vertex->getInEdge(i)->getSrc()->getSlave() == -1){
-//			throw "Try to start a vertex when previous one is not scheduled\n";
-//		}
-    }
+void ListSchedulerOnTheGo::mapVertex(SRDAGVertex *vertex) {
+    Time minimumStartTime = computeMinimumStartTime(vertex);
 
     if (vertex->getState() == SRDAG_RUN) {
         vertex->setStartTime(minimumStartTime);
@@ -315,13 +150,8 @@ void ListSchedulerOnTheGo::scheduleVertex(SRDAGVertex *vertex) {
         }
     }
 
-    //printf("=> choose pe %d\n", bestSlave);
-//		schedule->addCom(bestSlave, bestStartTime, bestStartTime+bestComInTime);
     if (bestSlave < 0) {
         throwSpiderException("No slave found to execute one instance of vertex [%s].", vertex->toString());
     }
-    job->setMappedPE(0, bestSlave);
-    job->setMappingStartTime(0, &bestStartTime);
-    job->setMappingEndTime(0, &bestEndTime);
-    schedule_->addJob(job, 0);
+    Scheduler::addJobToSchedule(schedule_, vertex, bestSlave, &bestStartTime, &bestEndTime);
 }

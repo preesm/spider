@@ -51,23 +51,8 @@ public:
 
     ~RoundRobinScattered() override;
 
-    void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi) override;
-
-    void scheduleOnlyConfig(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi) override;
-
 private:
-    SRDAGGraph *srdag_;
-    Schedule *schedule_;
-    Archi *archi_;
-
-    List<SRDAGVertex *> *list_;
-
-    int computeSchedLevel(SRDAGVertex *vertex);
-
-    void scheduleVertex(SRDAGVertex *vertex);
-
-    void addPrevActors(SRDAGVertex *vertex, List<SRDAGVertex *> *list);
-
+    void mapVertex(SRDAGVertex *vertex) override;
 };
 
 #endif/*ROUND_ROBIN_SCATTERED_H*/

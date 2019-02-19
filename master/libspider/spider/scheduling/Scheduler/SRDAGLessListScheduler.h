@@ -43,11 +43,11 @@
 
 class SRDAGLessListScheduler : public SRDAGLessScheduler {
 public:
-    SRDAGLessListScheduler(PiSDFGraph *graph, const std::int32_t *brv);
+    SRDAGLessListScheduler(PiSDFGraph *graph, const std::int32_t *brv, PiSDFSchedule *schedule);
 
-    ~SRDAGLessListScheduler();
+    ~SRDAGLessListScheduler() override;
 
-    const Schedule *schedule() override;
+    const PiSDFSchedule *schedule() override;
 
 private:
     List<PiSDFVertex *> *list_;
@@ -57,6 +57,12 @@ private:
     std::int32_t computeScheduleLevel(PiSDFVertex *vertex);
 
     int compareScheduleLevels(PiSDFVertex *vertexA, PiSDFVertex *vertexB);
+
+    void sort();
+
+    void myqsort(int p, int r);
+
+    int myqsort_part(int p, int r);
 };
 
 #endif //SPIDER_SRDAGLESSLISTSCHEDULER_H

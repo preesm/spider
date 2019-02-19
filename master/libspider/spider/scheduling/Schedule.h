@@ -53,49 +53,33 @@ public:
 
     Schedule(int nPE, int nJobMax);
 
-    ~Schedule();
+    virtual ~Schedule();
 
-    inline void setAllMinReadyTime(Time time);
+    virtual inline void setAllMinReadyTime(Time time);
 
-    inline void setReadyTime(int pe, Time time);
+    virtual inline void setReadyTime(int pe, Time time);
 
-    inline Time getReadyTime(int pe) const;
+    virtual inline Time getReadyTime(int pe) const;
 
-    void addJob(ScheduleJob *job, int instance);
+    virtual inline void restartSchedule() = 0;
 
-    inline ScheduleJob *getJob(int id) {
-        return jobs_[id];
-    }
+    virtual void print(const char *path) = 0;
 
-    inline void restartSchedule() {
-        nSentJobs_ = 0;
-        if (nJobs_) {
-            for (int i = 0; i < nJobs_; ++i) {
-                jobs_[i]->resetLaunchInstances();
-                auto *vertex = jobs_[i]->getVertex();
-                vertex->setState(SRDAG_EXEC);
-            }
-        }
-    }
+    virtual bool check() = 0;
 
-    void print(const char *path);
-
-    bool check();
-
-    void execute();
+    virtual void execute() = 0;
 
     void executeAndRun();
 
     inline int getNJobs(int pe) const;
 
-private:
+protected:
     int nPE_{};
     int nJobMax_{};
     int nJobs_{};
     int nSentJobs_{};
     int *nJobPerPE_;
     Time *readyTimeOfPEs_;
-    std::vector<ScheduleJob *> jobs_;
 };
 
 inline void Schedule::setAllMinReadyTime(Time time) {

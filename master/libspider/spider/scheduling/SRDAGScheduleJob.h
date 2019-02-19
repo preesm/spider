@@ -37,27 +37,26 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef SPIDER_SCHEDULEJOB_H
-#define SPIDER_SCHEDULEJOB_H
+#ifndef SPIDER_SRDAGSCHEDULEJOB_H
+#define SPIDER_SRDAGSCHEDULEJOB_H
 
 #include <Message.h>
 
-class PiSDFVertex;
+class SRDAGVertex;
 
-typedef struct JobConstrain {
-    PiSDFVertex *vertex_ = nullptr;      // ID of the vertex we are constrained on
-    std::int32_t vertexInstance_ = -1;   // Instance of the vertex
+typedef struct SRDAGJobConstrain {
+    std::int32_t vertexId_ = -1;         // ID of the vertex we are constrained on
     std::int32_t jobId_ = -1;            // Job ID we are constrained on
-} JobConstrain;
+} SRDAGJobConstrain;
 
-class ScheduleJob {
+class SRDAGScheduleJob {
 public:
-    ScheduleJob(std::int32_t nInstances, std::int32_t nPEs);
+    explicit SRDAGScheduleJob(std::int32_t nPEs);
 
-    ~ScheduleJob();
+    ~SRDAGScheduleJob();
 
     /** Methods **/
-    JobInfoMessage *createJobMessage(int instance);
+    JobInfoMessage *createJobMessage();
 
     void print(FILE *file, int instance);
 
@@ -66,36 +65,33 @@ public:
     }
 
     /** Setters **/
-
-    inline void setVertex(PiSDFVertex *vertex) {
+    inline void setVertex(SRDAGVertex *vertex) {
         vertex_ = vertex;
     }
 
-    inline void setScheduleConstrain(int instance, int pe, PiSDFVertex *vertex, std::int32_t jobId,
-                                     std::int32_t vertexInstance = 0) {
-        scheduleConstrainsMatrix_[instance * nPEs_ + pe].vertex_ = vertex;
-        scheduleConstrainsMatrix_[instance * nPEs_ + pe].vertexInstance_ = vertexInstance;
-        scheduleConstrainsMatrix_[instance * nPEs_ + pe].jobId_ = jobId;
+    inline void setScheduleConstrain(int pe, std::int32_t vertexId, std::int32_t jobId) {
+        scheduleConstrainsMatrix_[pe].vertexId_ = vertexId;
+        scheduleConstrainsMatrix_[pe].jobId_ = jobId;
     }
 
-    inline void setJobID(int instance, int jobID) {
-        jobIDVector_[instance] = jobID;
+    inline void setJobID(int jobID) {
+        jobID_ = jobID;
     }
 
-    inline void setMappedPE(int instance, int pe) {
-        mappingVector_[instance] = pe;
+    inline void setMappedPE(int pe) {
+        mappingPE_ = pe;
     }
 
-    inline void setMappingStartTime(int instance, const Time *time) {
-        mappingStartTimeVector_[instance] = *time;
+    inline void setMappingStartTime(const Time *time) {
+        mappingStartTime_ = *time;
     }
 
-    inline void setMappingEndTime(int instance, const Time *time) {
-        mappingEndTimeVector_[instance] = *time;
+    inline void setMappingEndTime(const Time *time) {
+        mappingEndTime_ = *time;
     }
 
-    inline void setInstancePEDependency(int instance, int pe, bool shouldNotify) {
-        peDependenciesMatrix_[instance * nPEs_ + pe] = shouldNotify;
+    inline void setInstancePEDependency(int pe, bool shouldNotify) {
+        peDependenciesMatrix_[pe] = shouldNotify;
     }
 
     inline void launchNextInstance() {
@@ -107,47 +103,47 @@ public:
     }
 
     /** Getters **/
-    inline PiSDFVertex *getVertex() {
+    inline SRDAGVertex *getVertex() {
         return vertex_;
     }
 
-    inline std::int32_t getJobID(int instance) {
-        return jobIDVector_[instance];
+    inline std::int32_t getJobID() {
+        return jobID_;
     }
 
     inline std::int32_t getNumberOfInstances() {
-        return nInstances_;
+        return 1;
     }
 
     inline std::int32_t getNumberOfLaunchedInstances() {
         return nLaunchedInstance_;
     }
 
-    inline JobConstrain *getScheduleConstrain(int instance) {
-        return &scheduleConstrainsMatrix_[instance * nPEs_];
+    inline SRDAGJobConstrain *getScheduleConstrain() {
+        return scheduleConstrainsMatrix_;
     }
 
-    inline std::int32_t getMappedPE(int instance) {
-        return mappingVector_[instance];
+    inline std::int32_t getMappedPE() {
+        return mappingPE_;
     }
 
-    inline Time getMappingStartTime(int instance) {
-        return mappingStartTimeVector_[instance];
+    inline Time getMappingStartTime() {
+        return mappingStartTime_;
     }
 
-    inline Time getMappingEndTime(int instance) {
-        return mappingEndTimeVector_[instance];
+    inline Time getMappingEndTime() {
+        return mappingEndTime_;
     }
 
-    inline const bool *getInstanceDependencies(int instance) {
-        return &peDependenciesMatrix_[instance * nPEs_];
+    inline const bool *getInstanceDependencies() {
+        return peDependenciesMatrix_;
     }
 
 private:
     /**
      * @brief Vertex to which the job is attached
      */
-    PiSDFVertex *vertex_;
+    SRDAGVertex *vertex_;
     /**
      * @brief Total number of instances
      */
@@ -163,23 +159,23 @@ private:
     /**
      * @brief Vector of Mapped PE for each instance of the job. Size = 1 * nInstances_
      */
-    std::int32_t *mappingVector_;
+    std::int32_t mappingPE_;
     /**
      * @brief Job ID vector
      */
-    std::int32_t *jobIDVector_;
+    std::int32_t jobID_;
     /**
      * @brief Vector of starting time of each instances. Size = 1 * nInstances_
      */
-    Time *mappingStartTimeVector_;
+    Time mappingStartTime_;
     /**
      * @brief Vector of end time of each instances. Size = 1 * nInstances_
      */
-    Time *mappingEndTimeVector_;
+    Time mappingEndTime_;
     /**
      * @brief Constrains for scheduling each instance. Size = nPEs_ * nInstances_
      */
-    JobConstrain *scheduleConstrainsMatrix_;
+    SRDAGJobConstrain *scheduleConstrainsMatrix_;
     /**
      * @brief Dependencies to notify for each instance. Size = nPEs_ * nInstances_
      */

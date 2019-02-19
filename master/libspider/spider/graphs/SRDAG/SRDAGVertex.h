@@ -43,7 +43,7 @@
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/SRDAG/SRDAGEdge.h>
-#include <scheduling/ScheduleJob.h>
+#include <scheduling/SRDAGScheduleJob.h>
 
 #include <platform.h>
 
@@ -157,7 +157,7 @@ public:
 
     void setSchedLvl(int schedLvl);
 
-    inline ScheduleJob *getScheduleJob() {
+    inline SRDAGScheduleJob *getScheduleJob() {
         return scheduleJob_;
     }
 
@@ -197,7 +197,7 @@ private:
 
     int slave_;
 
-    ScheduleJob *scheduleJob_;
+    SRDAGScheduleJob *scheduleJob_;
 };
 
 /** Inlines Fcts */

@@ -39,7 +39,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-#include "Schedule.h"
+#include "SRDAGSchedule.h"
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include <graphs/Archi/Archi.h>
 #include "MemAlloc.h"
@@ -51,9 +51,9 @@ public:
 
     virtual ~Scheduler() = default;
 
-    virtual void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi);
+    virtual void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi);
 
-    virtual void scheduleOnlyConfig(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi);
+    virtual void scheduleOnlyConfig(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi);
 
 protected:
     static inline int compareScheduleLevel(SRDAGVertex *vertexA, SRDAGVertex *vertexB);
@@ -64,12 +64,12 @@ protected:
 
     inline Time computeMinimumStartTime(SRDAGVertex *vertex);
 
-    inline void addJobToSchedule(Schedule *schedule, SRDAGVertex *vertex, int pe, Time *start, Time *end);
+    inline void addJobToSchedule(SRDAGSchedule *schedule, SRDAGVertex *vertex, int pe, Time *start, Time *end);
 
     virtual void mapVertex(SRDAGVertex *vertex) = 0;
 
     SRDAGGraph *srdag_;
-    Schedule *schedule_;
+    SRDAGSchedule *schedule_;
     Archi *archi_;
     List<SRDAGVertex *> *list_;
 };
@@ -86,18 +86,18 @@ inline int Scheduler::compareScheduleLevel(SRDAGVertex *vertexA, SRDAGVertex *ve
 inline Time Scheduler::computeMinimumStartTime(SRDAGVertex *vertex) {
         Time minimumStartTime = 0;
         auto *job = vertex->getScheduleJob();
-        auto *jobConstrains = job->getScheduleConstrain(0);
+        auto *jobConstrains = job->getScheduleConstrain();
 
         for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
                 auto *edge = vertex->getInEdge(i);
                 if (edge->getRate() != 0) {
                         auto *srcVertex = edge->getSrc();
                         auto *srcJob = srcVertex->getScheduleJob();
-                        auto pe = srcJob->getMappedPE(0);
+                        auto pe = srcJob->getMappedPE();
                         auto currentValue = jobConstrains[pe].jobId_;
-                        minimumStartTime = std::max(minimumStartTime, srcJob->getMappingEndTime(0));
-                        if (srcJob->getJobID(0) > currentValue) {
-                                job->setScheduleConstrain(0, pe, srcVertex->getSetIx(), srcJob->getJobID(0));
+                        minimumStartTime = std::max(minimumStartTime, srcJob->getMappingEndTime());
+                        if (srcJob->getJobID() > currentValue) {
+                                job->setScheduleConstrain(pe, srcVertex->getSetIx(), srcJob->getJobID());
                         }
                 }
         }
@@ -105,12 +105,12 @@ inline Time Scheduler::computeMinimumStartTime(SRDAGVertex *vertex) {
         return minimumStartTime;
 }
 
-inline void Scheduler::addJobToSchedule(Schedule *schedule, SRDAGVertex *vertex, int pe, Time *start, Time *end) {
+inline void Scheduler::addJobToSchedule(SRDAGSchedule *schedule, SRDAGVertex *vertex, int pe, Time *start, Time *end) {
         auto *job = vertex->getScheduleJob();
-        job->setMappedPE(0, pe);
-        job->setMappingStartTime(0, start);
-        job->setMappingEndTime(0, end);
-        schedule->addJob(job, 0);
+        job->setMappedPE(pe);
+        job->setMappingStartTime(start);
+        job->setMappingEndTime(end);
+        schedule->addJob(job);
 }
 
 #endif/*SCHEDULER_H*/

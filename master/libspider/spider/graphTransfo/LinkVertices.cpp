@@ -182,13 +182,13 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
 
 typedef struct SrcConnection {
     SRDAGVertex *src;
-    int prod;
+    Param prod;
     int portIx;
 } SrcConnection;
 
 typedef struct SnkConnection {
     SRDAGEdge *edge;
-    int cons;
+    Param cons;
 } SnkConnection;
 
 /**
@@ -408,8 +408,8 @@ void linkSRVertices(SRDAGGraph *topSrdag,
             nbSinkRepetitions = brv[edge->getSnk()->getTypeId()];
         }
 
-        int sourceProduction = edge->resolveProd(job);
-        int sinkConsumption = edge->resolveCons(job);
+        auto sourceProduction = edge->resolveProd(job);
+        auto sinkConsumption = edge->resolveCons(job);
 
         // Unused edge
         if (nbSourceRepetitions == 0 && nbSinkRepetitions == 0)

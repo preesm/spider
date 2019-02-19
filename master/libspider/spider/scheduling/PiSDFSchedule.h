@@ -4,7 +4,6 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
@@ -37,34 +36,62 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include <monitor/TimeMonitor.h>
-#include <launcher/Launcher.h>
-#include <lrt.h>
+#ifndef PISDFSCHEDULE_H
+#define PISDFSCHEDULE_H
+
+#include <platform.h>
+#include <tools/Stack.h>
+
+#include <algorithm>
+#include "ScheduleJob.h"
 #include "Schedule.h"
 
+class PiSDFSchedule : public Schedule {
+public:
+    PiSDFSchedule() = default;
 
-Schedule::Schedule(int nPE, int nJobMax) {
-    nPE_ = nPE;
-    nJobMax_ = nJobMax;
-    nJobs_ = 0;
-    nSentJobs_ = 0;
+    PiSDFSchedule(int nPE, int nJobMax);
 
-    nJobPerPE_ = CREATE_MUL(TRANSFO_STACK, nPE_, int);
-    memset(nJobPerPE_, 0, nPE_ * sizeof(int));
-    readyTimeOfPEs_ = CREATE_MUL(TRANSFO_STACK, nPE_, Time);
-    memset(readyTimeOfPEs_, 0, nPE_ * sizeof(Time));
-}
+    ~PiSDFSchedule() override;
 
-Schedule::~Schedule() {
-    StackMonitor::free(TRANSFO_STACK, nJobPerPE_);
-    StackMonitor::free(TRANSFO_STACK, readyTimeOfPEs_);
-}
+    inline void setAllMinReadyTime(Time time) override {
+        Schedule::setAllMinReadyTime(time);
+    }
 
-void Schedule::executeAndRun() {
-    execute();
-    Launcher::get()->sendEndNotification(this);
-    Platform::get()->getLrt()->runUntilNoMoreJobs();
-}
+    inline void setReadyTime(int pe, Time time) override {
+        Schedule::setReadyTime(pe, time);
+    }
 
+    inline Time getReadyTime(int pe) const override {
+        return Schedule::getReadyTime(pe);
+    }
 
+    void addJob(ScheduleJob *job, int instance);
 
+    inline ScheduleJob *getJob(int id) {
+        return jobs_[id];
+    }
+
+    inline void restartSchedule() override {
+        nSentJobs_ = 0;
+        if (nJobs_) {
+            for (int i = 0; i < nJobs_; ++i) {
+                jobs_[i]->resetLaunchInstances();
+            }
+        }
+    }
+
+    inline std::vector<ScheduleJob *> &getJobs() {
+        return jobs_;
+    }
+
+    void print(const char *path) override;
+
+    bool check() override;
+
+    void execute() override;
+
+private:
+    std::vector<ScheduleJob *> jobs_;
+};
+#endif/*SCHEDULE_H*/

@@ -46,9 +46,10 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 
 #include <spider.h>
-#include <scheduling/Schedule.h>
+#include <scheduling/SRDAGSchedule.h>
+#include <scheduling/PiSDFSchedule.h>
 
-#define MAX_IO_EDGES 300
+#define MAX_IO_EDGES 1000
 
 typedef struct transfoJob {
     PiSDFGraph *graph;
@@ -67,12 +68,12 @@ void jit_ms(
         MemAlloc *memAlloc,
         Scheduler *scheduler);
 
-Schedule *static_scheduler(SRDAGGraph *topSrdag,
+SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
                            MemAlloc *memAlloc,
-                           Scheduler *scheduler);
+                           Scheduler *scheduler, Time *end);
 
 
-void srdagLessScheduler();
+PiSDFSchedule *srdagLessScheduler(Time *end);
 
 void schedule(PiSDFGraph *graph, int *const rhoValue, int *const brv);
 

@@ -40,8 +40,8 @@
 #include <graphs/PiSDF/PiSDFEdge.h>
 #include <Logger.h>
 
-SRDAGLessListScheduler::SRDAGLessListScheduler(PiSDFGraph *graph, const std::int32_t *brv) : SRDAGLessScheduler(graph,
-                                                                                                                brv) {
+SRDAGLessListScheduler::SRDAGLessListScheduler(PiSDFGraph *graph, const std::int32_t *brv, PiSDFSchedule *schedule)
+        : SRDAGLessScheduler(graph, brv, schedule) {
     std::int32_t totalNVertices = 0;
     for (int i = 0; i < nVertices_; ++i) {
         totalNVertices += brv[i];
@@ -98,10 +98,43 @@ std::int32_t SRDAGLessListScheduler::computeScheduleLevel(PiSDFVertex *const ver
 }
 
 int SRDAGLessListScheduler::compareScheduleLevels(PiSDFVertex *vertexA, PiSDFVertex *vertexB) {
-    return 0;
+    return schedLvl_[vertexB->getTypeId()][0] - schedLvl_[vertexA->getTypeId()][0];
 }
 
-const Schedule *SRDAGLessListScheduler::schedule() {
+inline void SRDAGLessListScheduler::sort() {
+    myqsort(0, list_->getNb() - 1);
+}
+
+inline void SRDAGLessListScheduler::myqsort(int p, int r) {
+    int q;
+    if (p < r) {
+        q = myqsort_part(p, r);
+        myqsort(p, q);
+        myqsort(q + 1, r);
+    }
+}
+
+inline int SRDAGLessListScheduler::myqsort_part(int p, int r) {
+    auto *pivot = (*list_)[p];
+    int i = p - 1, j = r + 1;
+    PiSDFVertex *temp;
+    while (true) {
+        do
+            j--;
+        while (compareScheduleLevels((*list_)[j], pivot) > 0);
+        do
+            i++;
+        while (compareScheduleLevels((*list_)[i], pivot) < 0);
+        if (i < j) {
+            temp = (*list_)[i];
+            (*list_)[i] = (*list_)[j];
+            (*list_)[j] = temp;
+        } else
+            return j;
+    }
+}
+
+const PiSDFSchedule *SRDAGLessListScheduler::schedule() {
     /** Compute schedule level **/
     for (int i = 0; i < nVertices_; ++i) {
         computeScheduleLevel((*list_)[i]);
@@ -110,17 +143,18 @@ const Schedule *SRDAGLessListScheduler::schedule() {
 //    Logger::print(LOG_GENERAL, LOG_INFO, "Finished computing schedule levels.\n");
 
     /** Sort the list **/
-    for (int i = 0; i < list_->getNb() - 1; ++i) {
-        auto *vertexA = (*list_)[i];
-        auto *vertexB = (*list_)[i + 1];
-        auto lvlA = schedLvl_[vertexA->getTypeId()][0];
-        auto lvlB = schedLvl_[vertexB->getTypeId()][0];
-        if (lvlB > lvlA) {
-            (*list_)[i] = vertexB;
-            (*list_)[i + 1] = vertexA;
-            i = 0;
-        }
-    }
+//    for (int i = 0; i < list_->getNb() - 1; ++i) {
+//        auto *vertexA = (*list_)[i];
+//        auto *vertexB = (*list_)[i + 1];
+//        auto lvlA = schedLvl_[vertexA->getTypeId()][0];
+//        auto lvlB = schedLvl_[vertexB->getTypeId()][0];
+//        if (lvlB > lvlA) {
+//            (*list_)[i] = vertexB;
+//            (*list_)[i + 1] = vertexA;
+//            i = 0;
+//        }
+//    }
+    sort();
 
 //    Logger::print(LOG_GENERAL, LOG_INFO, "Finished sorting list.\n");
 

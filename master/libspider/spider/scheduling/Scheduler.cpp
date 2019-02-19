@@ -80,7 +80,7 @@ void Scheduler::addPrevActors(SRDAGVertex *vertex, List<SRDAGVertex *> *list) {
 void Scheduler::scheduleOnlyConfig(
         SRDAGGraph *graph,
         MemAlloc *memAlloc,
-        Schedule *schedule,
+        SRDAGSchedule *schedule,
         Archi *archi) {
     srdag_ = graph;
     schedule_ = schedule;
@@ -125,7 +125,7 @@ void Scheduler::scheduleOnlyConfig(
 }
 
 
-void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, Schedule *schedule, Archi *archi) {
+void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi) {
     srdag_ = graph;
     schedule_ = schedule;
     archi_ = archi;

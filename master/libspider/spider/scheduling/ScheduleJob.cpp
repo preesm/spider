@@ -63,12 +63,10 @@ ScheduleJob::ScheduleJob(std::int32_t nInstances, std::int32_t nPEs) {
     }
 
     vertex_ = nullptr;
-    vertexPiSDF_ = nullptr;
 }
 
 ScheduleJob::~ScheduleJob() {
     vertex_ = nullptr;
-    vertexPiSDF_ = nullptr;
     StackMonitor::free(TRANSFO_STACK, mappingVector_);
     StackMonitor::free(TRANSFO_STACK, jobIDVector_);
     StackMonitor::free(TRANSFO_STACK, mappingStartTimeVector_);
@@ -79,8 +77,8 @@ ScheduleJob::~ScheduleJob() {
 
 
 void ScheduleJob::print(FILE *file, int instance) {
-    auto vertexName = vertex_ ? vertex_->toString() : vertexPiSDF_->getName();
-    auto vertexId = vertex_ ? vertex_->getId() + instance : vertexPiSDF_->getId() + instance;
+    auto vertexName = vertex_->getName();
+    auto vertexId = vertex_->getId() + instance;
 
     int red = (static_cast<unsigned>(vertexId) & 3u) * 50 + 100;
     int green = ((static_cast<unsigned>(vertexId) >> 2u) & 3u) * 50 + 100;
@@ -128,81 +126,81 @@ static inline void setParamINJoin(JobInfoMessage *const job, SRDAGVertex *const 
 
 JobInfoMessage *ScheduleJob::createJobMessage(int instance) {
     auto *jobInfoMessage = CREATE_NA(ARCHI_STACK, JobInfoMessage);
-    /** Set basic properties **/
-    jobInfoMessage->nEdgeIN_ = vertex_->getNConnectedInEdge();
-    jobInfoMessage->nEdgeOUT_ = vertex_->getNConnectedOutEdge();
-    jobInfoMessage->nParamIN_ = vertex_->getNInParam();
-    jobInfoMessage->nParamOUT_ = vertex_->getNOutParam();
-    jobInfoMessage->srdagID_ = vertex_->getId();
-    jobInfoMessage->fctID_ = vertex_->getFctId();
-    jobInfoMessage->specialActor_ = vertex_->getType() != SRDAG_NORMAL;
-
-    /** Set jobs 2 wait and notify properties **/
-    auto nPE = Spider::getArchi()->getNActivatedPE();
-    jobInfoMessage->lrts2Notify_ = CREATE_MUL_NA(ARCHI_STACK, nPE, bool);
-    jobInfoMessage->jobs2Wait_ = CREATE_MUL_NA(ARCHI_STACK, nPE, std::int32_t);
-    for (int i = 0; i < nPE; ++i) {
-        /** Set jobs to wait **/
-        auto &jobConstrain = scheduleConstrainsMatrix_[instance * nPEs_ + i];
-        jobInfoMessage->jobs2Wait_[i] = jobConstrain.jobId_;
-        /** Set value of the LRTs to notify **/
-        auto &peDependency = peDependenciesMatrix_[instance * nPEs_ + i];
-        jobInfoMessage->lrts2Notify_[i] = peDependency;
-    }
-
-    /** Creates FIFOs and Param vector **/
-    jobInfoMessage->inFifos_ = CREATE_MUL_NA(ARCHI_STACK, jobInfoMessage->nEdgeIN_, Fifo);
-    jobInfoMessage->outFifos_ = CREATE_MUL_NA(ARCHI_STACK, jobInfoMessage->nEdgeOUT_, Fifo);
-    /** Set IN FIFOs properties **/
-    for (int i = 0; i < jobInfoMessage->nEdgeIN_; ++i) {
-        auto *edge = vertex_->getInEdge(i);
-        jobInfoMessage->inFifos_[i].alloc = edge->getAlloc();
-        jobInfoMessage->inFifos_[i].size = edge->getRate();
-        /** Set Job 2 wait property **/
-        auto *srcVertex = edge->getSrc();
-        auto srcVertexLrt = srcVertex->getSlave();
-        auto srcVertexJobId = srcVertex->getSlaveJobIx();
-        jobInfoMessage->jobs2Wait_[srcVertexLrt] = std::max(jobInfoMessage->jobs2Wait_[srcVertexLrt], srcVertexJobId);
-    }
-    /** Set OUT FIFOs properties**/
-    for (int i = 0; i < jobInfoMessage->nEdgeOUT_; ++i) {
-        auto *edge = vertex_->getOutEdge(i);
-        jobInfoMessage->outFifos_[i].alloc = edge->getAlloc();
-        jobInfoMessage->outFifos_[i].size = edge->getRate();
-    }
-    /** Set Param properties **/
-    switch (vertex_->getType()) {
-        case SRDAG_NORMAL:
-            createParamINArray(jobInfoMessage, vertex_->getNInParam());
-            memcpy(jobInfoMessage->inParams_, vertex_->getInParams(), jobInfoMessage->nParamIN_ * sizeof(Param));
-            break;
-        case SRDAG_FORK:
-            setParamINFork(jobInfoMessage, vertex_);
-            break;
-        case SRDAG_JOIN:
-            setParamINJoin(jobInfoMessage, vertex_);
-            break;
-        case SRDAG_ROUNDBUFFER:
-            createParamINArray(jobInfoMessage, 2);
-            jobInfoMessage->inParams_[0] = vertex_->getInEdge(0)->getRate();
-            jobInfoMessage->inParams_[1] = vertex_->getOutEdge(0)->getRate();
-            break;
-        case SRDAG_BROADCAST:
-            createParamINArray(jobInfoMessage, 2);
-            jobInfoMessage->inParams_[0] = vertex_->getInEdge(0)->getRate();
-            jobInfoMessage->inParams_[1] = vertex_->getNConnectedOutEdge();
-            break;
-        case SRDAG_INIT:
-            createParamINArray(jobInfoMessage, 3);
-            setParamINDelayProperties(jobInfoMessage, vertex_);
-            jobInfoMessage->inParams_[0] = vertex_->getOutEdge(0)->getRate();
-            break;
-        case SRDAG_END:
-            createParamINArray(jobInfoMessage, 3);
-            setParamINDelayProperties(jobInfoMessage, vertex_);
-            jobInfoMessage->inParams_[0] = vertex_->getInEdge(0)->getRate();
-            break;
-    }
+//    /** Set basic properties **/
+//    jobInfoMessage->nEdgeIN_ = vertex_->getNConnectedInEdge();
+//    jobInfoMessage->nEdgeOUT_ = vertex_->getNConnectedOutEdge();
+//    jobInfoMessage->nParamIN_ = vertex_->getNInParam();
+//    jobInfoMessage->nParamOUT_ = vertex_->getNOutParam();
+//    jobInfoMessage->srdagID_ = vertex_->getId();
+//    jobInfoMessage->fctID_ = vertex_->getFctId();
+//    jobInfoMessage->specialActor_ = vertex_->getType() != SRDAG_NORMAL;
+//
+//    /** Set jobs 2 wait and notify properties **/
+//    auto nPE = Spider::getArchi()->getNActivatedPE();
+//    jobInfoMessage->lrts2Notify_ = CREATE_MUL_NA(ARCHI_STACK, nPE, bool);
+//    jobInfoMessage->jobs2Wait_ = CREATE_MUL_NA(ARCHI_STACK, nPE, std::int32_t);
+//    for (int i = 0; i < nPE; ++i) {
+//        /** Set jobs to wait **/
+//        auto &jobConstrain = scheduleConstrainsMatrix_[instance * nPEs_ + i];
+//        jobInfoMessage->jobs2Wait_[i] = jobConstrain.jobId_;
+//        /** Set value of the LRTs to notify **/
+//        auto &peDependency = peDependenciesMatrix_[instance * nPEs_ + i];
+//        jobInfoMessage->lrts2Notify_[i] = peDependency;
+//    }
+//
+//    /** Creates FIFOs and Param vector **/
+//    jobInfoMessage->inFifos_ = CREATE_MUL_NA(ARCHI_STACK, jobInfoMessage->nEdgeIN_, Fifo);
+//    jobInfoMessage->outFifos_ = CREATE_MUL_NA(ARCHI_STACK, jobInfoMessage->nEdgeOUT_, Fifo);
+//    /** Set IN FIFOs properties **/
+//    for (int i = 0; i < jobInfoMessage->nEdgeIN_; ++i) {
+//        auto *edge = vertex_->getInEdge(i);
+//        jobInfoMessage->inFifos_[i].alloc = edge->getAlloc();
+//        jobInfoMessage->inFifos_[i].size = edge->getRate();
+//        /** Set Job 2 wait property **/
+//        auto *srcVertex = edge->getSrc();
+//        auto srcVertexLrt = srcVertex->getSlave();
+//        auto srcVertexJobId = srcVertex->getSlaveJobIx();
+//        jobInfoMessage->jobs2Wait_[srcVertexLrt] = std::max(jobInfoMessage->jobs2Wait_[srcVertexLrt], srcVertexJobId);
+//    }
+//    /** Set OUT FIFOs properties**/
+//    for (int i = 0; i < jobInfoMessage->nEdgeOUT_; ++i) {
+//        auto *edge = vertex_->getOutEdge(i);
+//        jobInfoMessage->outFifos_[i].alloc = edge->getAlloc();
+//        jobInfoMessage->outFifos_[i].size = edge->getRate();
+//    }
+//    /** Set Param properties **/
+//    switch (vertex_->getType()) {
+//        case SRDAG_NORMAL:
+//            createParamINArray(jobInfoMessage, vertex_->getNInParam());
+//            memcpy(jobInfoMessage->inParams_, vertex_->getInParams(), jobInfoMessage->nParamIN_ * sizeof(Param));
+//            break;
+//        case SRDAG_FORK:
+//            setParamINFork(jobInfoMessage, vertex_);
+//            break;
+//        case SRDAG_JOIN:
+//            setParamINJoin(jobInfoMessage, vertex_);
+//            break;
+//        case SRDAG_ROUNDBUFFER:
+//            createParamINArray(jobInfoMessage, 2);
+//            jobInfoMessage->inParams_[0] = vertex_->getInEdge(0)->getRate();
+//            jobInfoMessage->inParams_[1] = vertex_->getOutEdge(0)->getRate();
+//            break;
+//        case SRDAG_BROADCAST:
+//            createParamINArray(jobInfoMessage, 2);
+//            jobInfoMessage->inParams_[0] = vertex_->getInEdge(0)->getRate();
+//            jobInfoMessage->inParams_[1] = vertex_->getNConnectedOutEdge();
+//            break;
+//        case SRDAG_INIT:
+//            createParamINArray(jobInfoMessage, 3);
+//            setParamINDelayProperties(jobInfoMessage, vertex_);
+//            jobInfoMessage->inParams_[0] = vertex_->getOutEdge(0)->getRate();
+//            break;
+//        case SRDAG_END:
+//            createParamINArray(jobInfoMessage, 3);
+//            setParamINDelayProperties(jobInfoMessage, vertex_);
+//            jobInfoMessage->inParams_[0] = vertex_->getInEdge(0)->getRate();
+//            break;
+//    }
     return jobInfoMessage;
 }
 

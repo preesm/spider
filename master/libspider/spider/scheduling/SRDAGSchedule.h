@@ -4,7 +4,6 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
@@ -37,34 +36,65 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include <monitor/TimeMonitor.h>
-#include <launcher/Launcher.h>
-#include <lrt.h>
+#ifndef SRDAGSCHEDULE_H
+#define SRDAGSCHEDULE_H
+
+#include <platform.h>
+#include <tools/Stack.h>
+
+#include <algorithm>
+#include "SRDAGScheduleJob.h"
 #include "Schedule.h"
 
+class SRDAGSchedule : public Schedule {
+public:
+    SRDAGSchedule() = default;
 
-Schedule::Schedule(int nPE, int nJobMax) {
-    nPE_ = nPE;
-    nJobMax_ = nJobMax;
-    nJobs_ = 0;
-    nSentJobs_ = 0;
+    SRDAGSchedule(int nPE, int nJobMax);
 
-    nJobPerPE_ = CREATE_MUL(TRANSFO_STACK, nPE_, int);
-    memset(nJobPerPE_, 0, nPE_ * sizeof(int));
-    readyTimeOfPEs_ = CREATE_MUL(TRANSFO_STACK, nPE_, Time);
-    memset(readyTimeOfPEs_, 0, nPE_ * sizeof(Time));
-}
+    ~SRDAGSchedule() override;
 
-Schedule::~Schedule() {
-    StackMonitor::free(TRANSFO_STACK, nJobPerPE_);
-    StackMonitor::free(TRANSFO_STACK, readyTimeOfPEs_);
-}
+    void addJob(SRDAGScheduleJob *job);
 
-void Schedule::executeAndRun() {
-    execute();
-    Launcher::get()->sendEndNotification(this);
-    Platform::get()->getLrt()->runUntilNoMoreJobs();
-}
+    inline SRDAGScheduleJob *getJob(int id) {
+        return jobs_[id];
+    }
 
+    inline void restartSchedule() override {
+        nSentJobs_ = 0;
+        if (nJobs_) {
+            for (int i = 0; i < nJobs_; ++i) {
+                jobs_[i]->resetLaunchInstances();
+                auto *vertex = jobs_[i]->getVertex();
+                vertex->setState(SRDAG_EXEC);
+            }
+        }
+    }
 
+    inline std::vector<SRDAGScheduleJob *> &getJobs() {
+        return jobs_;
+    }
 
+    inline void setAllMinReadyTime(Time time) override {
+        Schedule::setAllMinReadyTime(time);
+    }
+
+    inline void setReadyTime(int pe, Time time) override {
+        Schedule::setReadyTime(pe, time);
+    }
+
+    inline Time getReadyTime(int pe) const override {
+        return Schedule::getReadyTime(pe);
+    }
+
+    void print(const char *path) override;
+
+    bool check() override;
+
+    void execute() override;
+
+private:
+    std::vector<SRDAGScheduleJob *> jobs_;
+};
+
+#endif/*SCHEDULE_H*/

@@ -75,20 +75,29 @@ public:
     void printRhoValues();
 
 protected:
+    /** Implementation variables **/
     PiSDFGraph *graph_;
     PiSDFSchedule *schedule_;
     std::int32_t nVertices_;
+    std::int32_t nChildren_;
+    std::int32_t firstChildIx_;
     SRDAGLessScheduler *parent_;
     SRDAGLessScheduler **children_;
+    std::vector<PiSDFVertex *> specialActorsAdded_;
 
+    /** Schedule IR variables  **/
     std::int32_t *rhoValueArray_;
     std::int32_t *instanceAvlCountArray_;
     std::int32_t *instanceSchCountArray_;
     VertexDependency **dependenciesArray_;
 
-    std::vector<PiSDFVertex *> specialActorsAdded_;
-
     void initiliazeVertexScheduleIR(PiSDFVertex *vertex, std::int32_t rv);
+
+    void initiliazeInterfacesIR(SRDAGLessScheduler *vertex);
+
+    void replaceInputIfWithBroadcast(const std::int32_t *brv);
+
+    void replaceOutputIfWithRoundbuffer(const std::int32_t *brv);
 
     int updateAvailableData(PiSDFVertex *vertex);
 

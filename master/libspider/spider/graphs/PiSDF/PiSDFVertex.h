@@ -306,6 +306,9 @@ inline int PiSDFVertex::getTypeId() const {
 }
 
 inline const char *PiSDFVertex::getName() const {
+    if (name_) {
+        return name_;
+    }
     switch (subType_) {
         case PISDF_SUBTYPE_INPUT_IF:
         case PISDF_SUBTYPE_OUTPUT_IF:

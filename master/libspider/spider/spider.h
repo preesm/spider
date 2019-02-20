@@ -244,6 +244,7 @@ namespace Spider {
 
     PiSDFVertex *addSpecialVertex(
             PiSDFGraph *graph,
+            const char *vertexName,
             PiSDFSubType subType,
             int nInEdge, int nOutEdge,
             int nInParam);

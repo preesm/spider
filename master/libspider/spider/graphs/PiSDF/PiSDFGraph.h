@@ -54,6 +54,11 @@ public:
             int nInEdge, int nOutEdge,
             int nInParam);
 
+    PiSDFVertex *addBodyVertex(
+            const char *vertexName, PiSDFSubType type,
+            int nInEdge, int nOutEdge,
+            int nInParam);
+
     PiSDFVertex *addSpecialVertex(
             PiSDFSubType subType,
             int nInEdge, int nOutEdge,

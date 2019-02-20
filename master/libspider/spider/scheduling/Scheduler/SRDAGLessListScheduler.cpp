@@ -144,17 +144,6 @@ const PiSDFSchedule *SRDAGLessListScheduler::schedule() {
 //    Logger::print(LOG_GENERAL, LOG_INFO, "Finished computing schedule levels.\n");
 
     /** Sort the list **/
-//    for (int i = 0; i < list_->getNb() - 1; ++i) {
-//        auto *vertexA = (*list_)[i];
-//        auto *vertexB = (*list_)[i + 1];
-//        auto lvlA = schedLvl_[vertexA->getTypeId()][0];
-//        auto lvlB = schedLvl_[vertexB->getTypeId()][0];
-//        if (lvlB > lvlA) {
-//            (*list_)[i] = vertexB;
-//            (*list_)[i + 1] = vertexA;
-//            i = 0;
-//        }
-//    }
     sort();
 
 //    Logger::print(LOG_GENERAL, LOG_INFO, "Finished sorting list.\n");
@@ -162,7 +151,7 @@ const PiSDFSchedule *SRDAGLessListScheduler::schedule() {
     /** Map the vertices **/
     for (int i = 0; i < list_->getNb(); i++) {
         auto *vertex = (*list_)[i];
-        SRDAGLessScheduler::mapVertex(vertex);
+        SRDAGLessScheduler::map(vertex);
         /** Update schedule count **/
         instanceSchCountArray_[vertex->getTypeId()]++;
     }

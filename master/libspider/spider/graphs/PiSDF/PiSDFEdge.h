@@ -66,6 +66,7 @@ public:
 
     inline int getDelayAlloc() const;
 
+
     /** Setters */
     inline void setDelay(const char *delay,
                          PiSDFVertex *setter,
@@ -78,7 +79,15 @@ public:
     /** Connections Fcts */
     void connectSrc(PiSDFVertex *src, int srcPortId, const char *prod);
 
+    void connectSrc(PiSDFVertex *src, int srcPortId, Expression *prod);
+
     void connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons);
+
+    void connectSnk(PiSDFVertex *snk, int snkPortId, Expression *cons);
+
+    inline void disconnectSnk();
+
+    inline void disconnectSrc();
 
     /** Add Param Fcts */
     inline void addInParam(int ix, PiSDFParam *param);
@@ -99,6 +108,10 @@ public:
     inline void getProdExpr(char *out, int sizeOut);
 
     inline void getConsExpr(char *out, int sizeOut);
+
+    inline Expression *getConsExpr();
+
+    inline Expression *getProdExpr();
 
     inline void getDelayExpr(char *out, int sizeOut);
 
@@ -133,6 +146,28 @@ private:
     bool isDelayPersistent_;
     int memDelayAlloc_;
 };
+
+inline void PiSDFEdge::disconnectSnk() {
+    if (snk_ == nullptr) {
+        throwSpiderException("Trying to disconnect sink to non connected edge.");
+    }
+    snk_ = nullptr;
+    snkPortIx_ = -1;
+    cons_->~Expression();
+    StackMonitor::free(PISDF_STACK, cons_);
+    cons_ = nullptr;
+}
+
+inline void PiSDFEdge::disconnectSrc() {
+    if (src_ == nullptr) {
+        throwSpiderException("Trying to disconnect sink to non connected edge.");
+    }
+    src_ = nullptr;
+    srcPortIx_ = -1;
+    prod_->~Expression();
+    StackMonitor::free(PISDF_STACK, prod_);
+    prod_ = nullptr;
+}
 
 inline int PiSDFEdge::getId() const {
     return id_;
@@ -225,6 +260,14 @@ inline void PiSDFEdge::getConsExpr(char *out, int sizeOut) {
     cons_->toString(snk_->getInParams(), snk_->getNInParam(), out, sizeOut);
 }
 
+Expression *PiSDFEdge::getConsExpr() {
+    return cons_;
+}
+
+Expression *PiSDFEdge::getProdExpr() {
+    return prod_;
+}
+
 inline void PiSDFEdge::getDelayExpr(char *out, int sizeOut) {
     delay_->toString(graph_->getParams(), graph_->getNParam(), out, sizeOut);
 }
@@ -244,5 +287,8 @@ inline PiSDFVertex *PiSDFEdge::getDelayVirtual() {
 inline bool PiSDFEdge::isDelayPersistent() {
     return isDelayPersistent_;
 }
+
+
+
 
 #endif/*PISDF_EDGE_H*/

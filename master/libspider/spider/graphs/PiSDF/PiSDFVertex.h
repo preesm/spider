@@ -88,6 +88,11 @@ public:
 
     inline void connectOutEdge(int ix, PiSDFEdge *edge);
 
+    /** Disconnect Fcts **/
+    inline void disconnectInEdge(int ix);
+
+    inline void disconnectOutEdge(int ix);
+
     /** Add Param Fcts */
     inline void addInParam(int ix, PiSDFParam *param);
 
@@ -247,6 +252,27 @@ inline void PiSDFVertex::connectOutEdge(int ix, PiSDFEdge *edge) {
         throwSpiderException("Vertex [%s] --> Trying to erase already connected output edge.", name_);
     else
         outEdges_[ix] = edge;
+}
+
+/** Disconnect Fcts **/
+inline void PiSDFVertex::disconnectInEdge(int ix) {
+    if (ix >= nInEdge_ || ix < 0) {
+        throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nInEdge_);
+    } else if (!inEdges_[ix]) {
+        throwSpiderException("Trying to disconnect NULL input edge.");
+    } else {
+        inEdges_[ix] = nullptr;
+    }
+}
+
+inline void PiSDFVertex::disconnectOutEdge(int ix) {
+    if (ix >= nOutEdge_ || ix < 0) {
+        throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nOutEdge_);
+    } else if (outEdges_[ix] == nullptr) {
+        throwSpiderException("Trying to disconnect NULL output edge.");
+    } else {
+        outEdges_[ix] = nullptr;
+    }
 }
 
 /** Add Param Fcts */

@@ -80,7 +80,8 @@ PiSDFVertex::PiSDFVertex(
     nPeTypeMax_ = Spider::getArchi()->getNPETypes();
 
     constraints_ = CREATE_MUL(PISDF_STACK, nPeMax_, bool);
-    memset(constraints_, false, nPeMax_ * sizeof(bool));
+
+    memset(constraints_, subType != PISDF_SUBTYPE_NORMAL, nPeMax_ * sizeof(bool));
 
     timings_ = CREATE_MUL(PISDF_STACK, nPeTypeMax_, Expression*);
     memset(timings_, 0, nPeTypeMax_ * sizeof(Expression *));

@@ -58,11 +58,9 @@ public:
             const PiSDFParam *const *params, int nParam,
             char *out, size_t outSizeMax);
 
-private:
-//    ParamSymbolTable symbolTable_;
-//    ParamExpression expression_;
-//    exprtk::parser<Param>  parser_;
+    inline const char *toString();
 
+private:
     typedef enum {
         OPERATOR,
         VALUE,
@@ -89,6 +87,7 @@ private:
         PiSDFParam *param;
     } Token;
 
+    std::string stringExpr_;
     Token *stack_;
     int nElt_;
 
@@ -99,5 +98,9 @@ private:
 
     int evaluateNTokens(const char *expr);
 };
+
+inline const char *Expression::toString() {
+    return stringExpr_.c_str();
+}
 
 #endif/*PARSER_EXPRESSION_H*/

@@ -70,6 +70,8 @@ static const char *operatorSign[5] = {
 Expression::Expression(
         const char *expr,
         const PiSDFParam *const *params, int nParam) {
+    stringExpr_ = std::string(expr);
+
     nElt_ = evaluateNTokens(expr);
     stack_ = CREATE_MUL(PISDF_STACK, nElt_, Token);
 

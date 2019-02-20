@@ -44,11 +44,12 @@
 
 class PiSDFGraph;
 
-typedef struct {
+typedef struct VertexDependency {
     PiSDFVertex *vertex_ = nullptr;
     Param cons_ = 0;
     Param prod_ = 0;
     Param delay_ = 0;
+    std::int32_t *nScheduled_ = nullptr;
     std::int32_t minNExec_ = 1;
 } VertexDependency;
 
@@ -61,7 +62,7 @@ public:
 
     virtual const PiSDFSchedule *schedule();
 
-    inline const PiSDFSchedule *getSchedule() {
+    inline PiSDFSchedule *getSchedule() {
         return schedule_;
     }
 
@@ -76,8 +77,7 @@ public:
 protected:
     PiSDFGraph *graph_;
     PiSDFSchedule *schedule_;
-    Archi *archi_;
-    int nVertices_;
+    std::int32_t nVertices_;
     SRDAGLessScheduler *parent_;
     SRDAGLessScheduler **children_;
 
@@ -86,15 +86,21 @@ protected:
     std::int32_t *instanceSchCountArray_;
     VertexDependency **dependenciesArray_;
 
-    inline int updateAvailableData(PiSDFVertex *vertex);
+    std::vector<PiSDFVertex *> specialActorsAdded_;
+
+    void initiliazeVertexScheduleIR(PiSDFVertex *vertex, std::int32_t rv);
+
+    int updateAvailableData(PiSDFVertex *vertex);
+
+    void scheduleSubgraph(PiSDFVertex *vertex);
 
     void mapVertex(PiSDFVertex *vertex);
 
+    void map(PiSDFVertex *vertex);
+
     void computeRhoValues();
 
-    Time
-    computeMinimumStartTime(const PiSDFVertex *vertex, Time minimumStartTime, ScheduleJob *job, int32_t vertexSchCount,
-                            int32_t currentInstance, const JobConstrain *jobConstrains) const;
+    Time computeMinimumStartTime(PiSDFVertex *vertex) const;
 };
 
 #endif //SPIDER_SRDAGLESSSCHEDULER_H

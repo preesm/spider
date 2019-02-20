@@ -71,15 +71,16 @@ SRDAGLessListScheduler::~SRDAGLessListScheduler() {
 
 std::int32_t SRDAGLessListScheduler::computeScheduleLevel(PiSDFVertex *const vertex) {
     int lvl = 0;
+    auto *archi = Spider::getArchi();
     if (schedLvl_[vertex->getTypeId()][0] == -1) {
         for (int i = 0; i < vertex->getNOutEdge(); i++) {
             auto *edge = vertex->getOutEdge(i);
             auto *successor = edge->getSnk();
             if (successor && successor != vertex) {
                 Time minExecTime = (unsigned int) -1;
-                for (int j = 0; j < archi_->getNPE(); j++) {
+                for (int j = 0; j < archi->getNPE(); j++) {
                     if (successor->canExecuteOn(j)) {
-                        Time execTime = successor->getTimingOnPEType(archi_->getPEType(j));
+                        Time execTime = successor->getTimingOnPEType(archi->getPEType(j));
                         if (execTime == 0) {
                             throwSpiderException("Vertex: %s -- NULL execution time.", successor->getName());
                         }

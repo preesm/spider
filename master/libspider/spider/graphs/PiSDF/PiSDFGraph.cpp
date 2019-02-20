@@ -43,9 +43,9 @@ PiSDFGraph::PiSDFGraph(
         int nInputIf, int nOutputIf,
         int nConfig, int nBody) :
 
-        edges_(nEdges, PISDF_STACK),
+        edges_(nEdges + nInputIf + nOutputIf, PISDF_STACK),
         params_(nParams, PISDF_STACK),
-        bodies_(nBody, PISDF_STACK),
+        bodies_(nBody + nInputIf + nOutputIf, PISDF_STACK),
         configs_(nConfig, PISDF_STACK),
         inputIfs_(nInputIf, PISDF_STACK),
         outputIfs_(nOutputIf, PISDF_STACK) {

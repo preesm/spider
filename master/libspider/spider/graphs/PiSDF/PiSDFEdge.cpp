@@ -94,6 +94,18 @@ void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, const char *prod) {
     prod_ = CREATE(PISDF_STACK, Expression)(prod, src->getInParams(), src->getNInParam());
 }
 
+void PiSDFEdge::connectSrc(PiSDFVertex *src, int srcPortId, Expression *prod) {
+    if (src_ != nullptr) {
+        throwSpiderException("Trying to connect to an already connected edge");
+    }
+    if (prod == nullptr) {
+        throwSpiderException("Trying to connect an edge with null expression.");
+    }
+    src_ = src;
+    srcPortIx_ = srcPortId;
+    prod_ = prod;
+}
+
 void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons) {
     if (snk_ != nullptr) {
         throwSpiderException("Trying to connect to an already connected edge");
@@ -108,3 +120,16 @@ void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons) {
     }
     cons_ = CREATE(PISDF_STACK, Expression)(cons, snk->getInParams(), snk->getNInParam());
 }
+
+void PiSDFEdge::connectSnk(PiSDFVertex *snk, int snkPortId, Expression *cons) {
+    if (snk_ != nullptr) {
+        throwSpiderException("Trying to connect to an already connected edge");
+    }
+    if (cons == nullptr) {
+        throwSpiderException("Trying to connect an edge with null expression.");
+    }
+    snk_ = snk;
+    snkPortIx_ = snkPortId;
+    cons_ = cons;
+}
+

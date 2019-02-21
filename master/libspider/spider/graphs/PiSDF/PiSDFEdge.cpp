@@ -58,6 +58,7 @@ PiSDFEdge::PiSDFEdge(PiSDFGraph *graph) {
     virtual_ = nullptr;
     isDelayPersistent_ = false;
     memDelayAlloc_ = 0;
+    alloc_ = 0;
 }
 
 PiSDFEdge::~PiSDFEdge() {

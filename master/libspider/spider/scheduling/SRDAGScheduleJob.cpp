@@ -146,11 +146,6 @@ JobInfoMessage *SRDAGScheduleJob::createJobMessage() {
         auto *edge = vertex_->getInEdge(i);
         jobInfoMessage->inFifos_[i].alloc = edge->getAlloc();
         jobInfoMessage->inFifos_[i].size = edge->getRate();
-        /** Set Job 2 wait property **/
-        auto *srcVertex = edge->getSrc();
-        auto srcVertexLrt = srcVertex->getSlave();
-        auto srcVertexJobId = srcVertex->getSlaveJobIx();
-        jobInfoMessage->jobs2Wait_[srcVertexLrt] = std::max(jobInfoMessage->jobs2Wait_[srcVertexLrt], srcVertexJobId);
     }
     /** Set OUT FIFOs properties**/
     for (int i = 0; i < jobInfoMessage->nEdgeOUT_; ++i) {

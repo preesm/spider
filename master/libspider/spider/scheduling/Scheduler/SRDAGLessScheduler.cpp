@@ -44,8 +44,9 @@
 #include <graphTransfo/ComputeBRV.h>
 #include <cinttypes>
 #include <tools/LinkedList.h>
+#include <scheduling/MemAlloc.h>
 
-#define SCHEDULE_SIZE 10000
+#define SCHEDULE_SIZE 20000
 
 void SRDAGLessScheduler::initiliazeVertexScheduleIR(PiSDFVertex *const vertex, std::int32_t rv) {
     auto vertexIx = vertex->getTypeId();
@@ -112,11 +113,12 @@ void SRDAGLessScheduler::initiliazeInterfacesIR(SRDAGLessScheduler *const schedu
     }
     /** Go through children **/
     auto *children = scheduler->children_;
-    for (int ix = 0; ix < scheduler->nChildren_; ++ix) {
-        if (children[ix]) {
+    for (int j = 0; j < scheduler->nChildren_; ++j) {
+        for (int ix = 0; ix < scheduler->nChildren_; ++ix) {
             initiliazeInterfacesIR(children[ix]);
         }
     }
+
     /** Compute rho values **/
     scheduler->computeRhoValues();
 }
@@ -252,7 +254,7 @@ SRDAGLessScheduler::SRDAGLessScheduler(PiSDFGraph *graph, const std::int32_t *br
     for (int ix = 0; ix < nChildren_; ++ix) {
         auto *vertex = graph_->getBody(ix + firstChildIx_);
         auto *subgraph = vertex->getSubGraph();
-        auto *childBRV = CREATE_MUL(TRANSFO_STACK, subgraph->getNBody(), std::int32_t);
+        auto *childBRV = CREATE_MUL_NA(TRANSFO_STACK, subgraph->getNBody(), std::int32_t);
         computeBRV(subgraph, childBRV);
         children_[ix] = CREATE_NA(TRANSFO_STACK, SRDAGLessScheduler)(subgraph, childBRV, schedule_, this);
         StackMonitor::free(TRANSFO_STACK, childBRV);
@@ -260,9 +262,13 @@ SRDAGLessScheduler::SRDAGLessScheduler(PiSDFGraph *graph, const std::int32_t *br
     }
     if (!parent_) {
         /** Update interface IR **/
-        for (int ix = 0; ix < nChildren_; ++ix) {
-            initiliazeInterfacesIR(children_[ix]);
-        }
+//        for (int j = 0; j < nChildren_; ++j) {
+            for (int ix = 0; ix < nChildren_; ++ix) {
+                if (children_[ix]) {
+                    initiliazeInterfacesIR(children_[ix]);
+                }
+            }
+//        }
         /** 4. Compute the Rho values **/
         computeRhoValues();
     }
@@ -334,7 +340,7 @@ void SRDAGLessScheduler::printRhoValues() {
     }
 }
 
-void SRDAGLessScheduler::scheduleSubgraph(PiSDFVertex *const vertex) {
+void SRDAGLessScheduler::scheduleSubgraph(PiSDFVertex *const vertex, MemAlloc *memAlloc) {
     auto vertexIx = vertex->getTypeId();
     auto instance = instanceSchCountArray_[vertexIx];
     auto *childScheduler = children_[vertexIx - firstChildIx_];
@@ -347,7 +353,7 @@ void SRDAGLessScheduler::scheduleSubgraph(PiSDFVertex *const vertex) {
         }
     }
     /** Do the scheduling of the subgraph **/
-    childScheduler->schedule();
+    childScheduler->schedule(memAlloc);
     std::string name = std::string(vertex->getName()) + std::string(".pgantt");
 }
 
@@ -424,9 +430,9 @@ void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
     schedule_->addJob(job, instance);
 }
 
-void SRDAGLessScheduler::map(PiSDFVertex *const vertex) {
+void SRDAGLessScheduler::map(PiSDFVertex *const vertex, MemAlloc *memAlloc) {
     if (vertex->isHierarchical()) {
-        scheduleSubgraph(vertex);
+        scheduleSubgraph(vertex, memAlloc);
     } else {
         mapVertex(vertex);
     }
@@ -450,7 +456,9 @@ int SRDAGLessScheduler::updateAvailableData(PiSDFVertex *const vertex) {
     return static_cast<int>(numberSchedulable);
 }
 
-const PiSDFSchedule *SRDAGLessScheduler::schedule() {
+const PiSDFSchedule *SRDAGLessScheduler::schedule(MemAlloc *memAlloc) {
+    /** Alloc memory **/
+    memAlloc->alloc(graph_);
     /** Initialize list **/
     LinkedList<PiSDFVertex *> list(TRANSFO_STACK, nVertices_);
     for (int ix = 0; ix < nVertices_; ++ix) {
@@ -464,11 +472,9 @@ const PiSDFSchedule *SRDAGLessScheduler::schedule() {
         auto *vertex = node->val_;
         auto vertexIx = vertex->getTypeId();
         auto numberSchedulable = updateAvailableData(vertex);
-        fprintf(stderr, "INFO: vertex[%s] -- %d / %d\n", vertex->getName(), numberSchedulable,
-                instanceAvlCountArray_[vertexIx]);
         for (int i = 0; i < numberSchedulable; ++i) {
             /** Map the vertex **/
-            map(vertex);
+            map(vertex, memAlloc);
             /** Updating values **/
             instanceAvlCountArray_[vertexIx]--;
             instanceSchCountArray_[vertexIx]++;

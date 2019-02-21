@@ -38,7 +38,8 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include <cinttypes>
-#include <graphs/SRDAG/SRDAGVertex.h>
+#include <graphs/PiSDF/PiSDFVertex.h>
+#include <graphs/PiSDF/PiSDFEdge.h>
 #include "ScheduleJob.h"
 
 ScheduleJob::ScheduleJob(std::int32_t nInstances, std::int32_t nPEs) {
@@ -97,78 +98,83 @@ static inline void createParamINArray(JobInfoMessage *const job, std::int32_t nP
     job->inParams_ = CREATE_MUL_NA(ARCHI_STACK, nParamIN, Param);
 }
 
-static inline void setParamINDelayProperties(JobInfoMessage *const job, SRDAGVertex *const vertex) {
-    // Set persistence property
-    job->inParams_[1] = vertex->getInParam(0);
-    // Set memory address
-    job->inParams_[2] = vertex->getInParam(1);
-}
-
-static inline void setParamINFork(JobInfoMessage *const job, SRDAGVertex *const vertex) {
-    createParamINArray(job, 2 + vertex->getNConnectedInEdge() + vertex->getNConnectedOutEdge());
-    job->inParams_[0] = vertex->getNConnectedInEdge();
-    job->inParams_[1] = vertex->getNConnectedOutEdge();
-    job->inParams_[2] = vertex->getInEdge(0)->getRate();
-    for (int i = 0; i < vertex->getNConnectedOutEdge(); i++) {
-        job->inParams_[3 + i] = vertex->getOutEdge(i)->getRate();
-    }
-}
-
-static inline void setParamINJoin(JobInfoMessage *const job, SRDAGVertex *const vertex) {
-    createParamINArray(job, 2 + vertex->getNConnectedInEdge() + vertex->getNConnectedOutEdge());
-    job->inParams_[0] = vertex->getNConnectedInEdge();
-    job->inParams_[1] = vertex->getNConnectedOutEdge();
-    job->inParams_[2] = vertex->getOutEdge(0)->getRate();
-    for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
-        job->inParams_[3 + i] = vertex->getInEdge(i)->getRate();
-    }
-}
+//static inline void setParamINDelayProperties(JobInfoMessage *const job, SRDAGVertex *const vertex) {
+//    // Set persistence property
+//    job->inParams_[1] = vertex->getInParam(0);
+//    // Set memory address
+//    job->inParams_[2] = vertex->getInParam(1);
+//}
+//
+//static inline void setParamINFork(JobInfoMessage *const job, SRDAGVertex *const vertex) {
+//    createParamINArray(job, 2 + vertex->getNConnectedInEdge() + vertex->getNConnectedOutEdge());
+//    job->inParams_[0] = vertex->getNConnectedInEdge();
+//    job->inParams_[1] = vertex->getNConnectedOutEdge();
+//    job->inParams_[2] = vertex->getInEdge(0)->getRate();
+//    for (int i = 0; i < vertex->getNConnectedOutEdge(); i++) {
+//        job->inParams_[3 + i] = vertex->getOutEdge(i)->getRate();
+//    }
+//}
+//
+//static inline void setParamINJoin(JobInfoMessage *const job, SRDAGVertex *const vertex) {
+//    createParamINArray(job, 2 + vertex->getNConnectedInEdge() + vertex->getNConnectedOutEdge());
+//    job->inParams_[0] = vertex->getNConnectedInEdge();
+//    job->inParams_[1] = vertex->getNConnectedOutEdge();
+//    job->inParams_[2] = vertex->getOutEdge(0)->getRate();
+//    for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
+//        job->inParams_[3 + i] = vertex->getInEdge(i)->getRate();
+//    }
+//}
 
 JobInfoMessage *ScheduleJob::createJobMessage(int instance) {
     auto *jobInfoMessage = CREATE_NA(ARCHI_STACK, JobInfoMessage);
-//    /** Set basic properties **/
-//    jobInfoMessage->nEdgeIN_ = vertex_->getNConnectedInEdge();
-//    jobInfoMessage->nEdgeOUT_ = vertex_->getNConnectedOutEdge();
-//    jobInfoMessage->nParamIN_ = vertex_->getNInParam();
-//    jobInfoMessage->nParamOUT_ = vertex_->getNOutParam();
-//    jobInfoMessage->srdagID_ = vertex_->getId();
-//    jobInfoMessage->fctID_ = vertex_->getFctId();
+    /** Set basic properties **/
+    jobInfoMessage->nEdgeIN_ = vertex_->getNInEdge();
+    jobInfoMessage->nEdgeOUT_ = vertex_->getNOutEdge();
+    jobInfoMessage->nParamIN_ = vertex_->getNInParam();
+    jobInfoMessage->nParamOUT_ = vertex_->getNOutParam();
+    jobInfoMessage->srdagID_ = vertex_->getId(); // TODO: add instance number
+    jobInfoMessage->fctID_ = vertex_->getFctId();
 //    jobInfoMessage->specialActor_ = vertex_->getType() != SRDAG_NORMAL;
 //
-//    /** Set jobs 2 wait and notify properties **/
-//    auto nPE = Spider::getArchi()->getNActivatedPE();
-//    jobInfoMessage->lrts2Notify_ = CREATE_MUL_NA(ARCHI_STACK, nPE, bool);
-//    jobInfoMessage->jobs2Wait_ = CREATE_MUL_NA(ARCHI_STACK, nPE, std::int32_t);
-//    for (int i = 0; i < nPE; ++i) {
-//        /** Set jobs to wait **/
-//        auto &jobConstrain = scheduleConstrainsMatrix_[instance * nPEs_ + i];
-//        jobInfoMessage->jobs2Wait_[i] = jobConstrain.jobId_;
-//        /** Set value of the LRTs to notify **/
-//        auto &peDependency = peDependenciesMatrix_[instance * nPEs_ + i];
-//        jobInfoMessage->lrts2Notify_[i] = peDependency;
-//    }
-//
-//    /** Creates FIFOs and Param vector **/
-//    jobInfoMessage->inFifos_ = CREATE_MUL_NA(ARCHI_STACK, jobInfoMessage->nEdgeIN_, Fifo);
-//    jobInfoMessage->outFifos_ = CREATE_MUL_NA(ARCHI_STACK, jobInfoMessage->nEdgeOUT_, Fifo);
-//    /** Set IN FIFOs properties **/
-//    for (int i = 0; i < jobInfoMessage->nEdgeIN_; ++i) {
-//        auto *edge = vertex_->getInEdge(i);
-//        jobInfoMessage->inFifos_[i].alloc = edge->getAlloc();
-//        jobInfoMessage->inFifos_[i].size = edge->getRate();
-//        /** Set Job 2 wait property **/
-//        auto *srcVertex = edge->getSrc();
-//        auto srcVertexLrt = srcVertex->getSlave();
-//        auto srcVertexJobId = srcVertex->getSlaveJobIx();
-//        jobInfoMessage->jobs2Wait_[srcVertexLrt] = std::max(jobInfoMessage->jobs2Wait_[srcVertexLrt], srcVertexJobId);
-//    }
-//    /** Set OUT FIFOs properties**/
-//    for (int i = 0; i < jobInfoMessage->nEdgeOUT_; ++i) {
-//        auto *edge = vertex_->getOutEdge(i);
-//        jobInfoMessage->outFifos_[i].alloc = edge->getAlloc();
-//        jobInfoMessage->outFifos_[i].size = edge->getRate();
-//    }
-//    /** Set Param properties **/
+    /** Set jobs 2 wait and notify properties **/
+    auto nPE = Spider::getArchi()->getNActivatedPE();
+    jobInfoMessage->lrts2Notify_ = CREATE_MUL_NA(ARCHI_STACK, nPE, bool);
+    jobInfoMessage->jobs2Wait_ = CREATE_MUL_NA(ARCHI_STACK, nPE, std::int32_t);
+    auto *constrains = getScheduleConstrain(instance);
+    auto *dependencies = getInstanceDependencies(instance);
+    for (int i = 0; i < nPE; ++i) {
+        /** Set jobs to wait **/
+        auto &jobConstrain = constrains[i];
+        jobInfoMessage->jobs2Wait_[i] = jobConstrain.jobId_;
+        /** Set value of the LRTs to notify **/
+        auto &peDependency = dependencies[i];
+        jobInfoMessage->lrts2Notify_[i] = peDependency;
+    }
+
+    /** Creates FIFOs and Param vector **/
+    jobInfoMessage->inFifos_ = CREATE_MUL_NA(ARCHI_STACK, jobInfoMessage->nEdgeIN_, Fifo);
+    jobInfoMessage->outFifos_ = CREATE_MUL_NA(ARCHI_STACK, jobInfoMessage->nEdgeOUT_, Fifo);
+    /** Set IN FIFOs properties **/
+    for (int i = 0; i < jobInfoMessage->nEdgeIN_; ++i) {
+        auto *edge = vertex_->getInEdge(i);
+        jobInfoMessage->inFifos_[i].alloc = static_cast<int32_t>(edge->getAlloc() + edge->resolveCons() * instance);
+        jobInfoMessage->inFifos_[i].size = static_cast<int32_t>(edge->resolveCons());
+//        fprintf(stderr, "INFO: Vertex [%s] -- instance [%d] -- edge IN [%d] -- alloc [%d]\n", vertex_->getName(), instance,
+//                i, jobInfoMessage->inFifos_[i].alloc);
+    }
+    /** Set OUT FIFOs properties**/
+    for (int i = 0; i < jobInfoMessage->nEdgeOUT_; ++i) {
+        auto *edge = vertex_->getOutEdge(i);
+        jobInfoMessage->outFifos_[i].alloc = static_cast<int32_t>(edge->getAlloc() + edge->resolveProd() * instance);
+        jobInfoMessage->outFifos_[i].size = static_cast<int32_t>(edge->resolveProd());
+//        fprintf(stderr, "INFO: Vertex [%s] -- instance [%d] -- edge OUT [%d] -- alloc [%d]\n", vertex_->getName(), instance,
+//                i, jobInfoMessage->outFifos_[i].alloc);
+    }
+    /** Set Param properties **/
+    createParamINArray(jobInfoMessage, vertex_->getNInParam());
+    for (int i = 0; i < vertex_->getNInParam(); ++i) {
+        jobInfoMessage->inParams_[i] = vertex_->getInParamValue(i);
+    }
 //    switch (vertex_->getType()) {
 //        case SRDAG_NORMAL:
 //            createParamINArray(jobInfoMessage, vertex_->getNInParam());

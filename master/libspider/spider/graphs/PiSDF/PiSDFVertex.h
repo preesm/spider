@@ -66,6 +66,8 @@ public:
 
     inline const PiSDFParam *getInParam(int ix) const;
 
+    inline Param getInParamValue(int ix) const;
+
     inline const PiSDFParam *getOutParam(int ix) const;
 
     inline const PiSDFParam *const *getInParams() const;
@@ -136,7 +138,7 @@ public:
     inline void isExecutableOnPE(int pe);
 
     inline void createScheduleJob(int nInstance) {
-        if(scheduleJob_) {
+        if (scheduleJob_) {
             scheduleJob_->~ScheduleJob();
             StackMonitor::free(TRANSFO_STACK, scheduleJob_);
         }
@@ -192,6 +194,13 @@ inline int PiSDFVertex::getNOutParam() const {
 inline const PiSDFParam *PiSDFVertex::getInParam(int ix) const {
     if (ix < nInParam_ && ix >= 0) {
         return inParams_[ix];
+    }
+    throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nInParam_);
+}
+
+inline Param PiSDFVertex::getInParamValue(int ix) const {
+    if (ix < nInParam_ && ix >= 0) {
+        return inParams_[ix]->getValue();
     }
     throwSpiderException("Bad index. Value: %d -- Max: %d", ix, nInParam_);
 }

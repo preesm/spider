@@ -60,7 +60,7 @@ public:
 
     virtual ~SRDAGLessScheduler();
 
-    virtual const PiSDFSchedule *schedule();
+    virtual const PiSDFSchedule *schedule(MemAlloc *memAlloc);
 
     inline PiSDFSchedule *getSchedule() {
         return schedule_;
@@ -101,11 +101,11 @@ protected:
 
     int updateAvailableData(PiSDFVertex *vertex);
 
-    void scheduleSubgraph(PiSDFVertex *vertex);
+    void scheduleSubgraph(PiSDFVertex *vertex, MemAlloc *memAlloc);
 
     void mapVertex(PiSDFVertex *vertex);
 
-    void map(PiSDFVertex *vertex);
+    void map(PiSDFVertex *vertex, MemAlloc *memAlloc);
 
     void computeRhoValues();
 

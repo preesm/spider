@@ -64,6 +64,7 @@
 #include <launcher/Launcher.h>
 #include <Logger.h>
 #include <zconf.h>
+#include <scheduling/MemAlloc/DummyPiSDFMemAlloc.h>
 
 #include "platformPThread.h"
 
@@ -87,7 +88,7 @@ static MemAlloc *memAlloc_ = nullptr;
 static Scheduler *scheduler_ = nullptr;
 //static PlatformMPPA* platform_;
 static PlatformPThread *platform_ = nullptr;
-static SRDAGSchedule *schedule_ = nullptr;
+static PiSDFSchedule *schedule_ = nullptr;
 
 static bool verbose_;
 static bool useGraphOptim_;
@@ -142,23 +143,26 @@ extern int stopThreads;
 void Spider::iterate() {
     Platform::get()->rstTime();
 //    stopThreads = 1;
-//
+
 //    auto start = Platform::get()->getTime();
 //    Time end = 0;
 //    Time endTransfo = 0;
-//    auto nIteration = 100;
+//    auto nIteration = 1;
 //    double averageTransfo = 0.f;
 //    double averageSchedule = 0.f;
 //    double averageTotal = 0.f;
 //    for (int i = 0; i < nIteration; ++i) {
+//        memAlloc_->reset();
 //        start = Platform::get()->getTime();
-//        auto *schedule = srdagLessScheduler(&endTransfo);
+//        auto *schedule = srdagLessScheduler(memAlloc_, &endTransfo);
+//        schedule->executeAndRun();
 //        schedule->~PiSDFSchedule();
 //        StackMonitor::free(TRANSFO_STACK, schedule);
 //        end = Platform::get()->getTime();
 //        averageTransfo += (endTransfo - start);
 //        averageSchedule += (end - endTransfo);
 //        averageTotal = averageTransfo + averageSchedule;
+//        Platform::get()->rstJobIxRecv();
 //    }
 //    averageTransfo /= static_cast<double >(nIteration);
 //    averageSchedule /= static_cast<double >(nIteration);
@@ -194,7 +198,8 @@ void Spider::iterate() {
         if (!srdag_) {
             /** On first iteration, the schedule is created **/
             srdag_ = new SRDAGGraph();
-            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_, nullptr);
+//            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_, nullptr);
+            schedule_ = srdagLessScheduler(memAlloc_, nullptr);
         }
         /** Run the schedule **/
         schedule_->executeAndRun();
@@ -274,7 +279,7 @@ void Spider::initReservedMemory() {
 
 void Spider::clean() {
     if (schedule_) {
-        schedule_->~SRDAGSchedule();
+        schedule_->~PiSDFSchedule();
         StackMonitor::free(TRANSFO_STACK, schedule_);
     }
     delete srdag_;
@@ -346,7 +351,7 @@ void Spider::setMemAllocType(MemAllocType type, int start, int size) {
     delete memAlloc_;
     switch (type) {
         case MEMALLOC_DUMMY:
-            memAlloc_ = new DummyMemAlloc(start, size);
+            memAlloc_ = new DummyPiSDFMemAlloc(start, size);
             break;
         case MEMALLOC_SPECIAL_ACTOR:
             memAlloc_ = new SpecialActorMemAlloc(start, size);
@@ -526,7 +531,7 @@ static void writeGanttForVertex(TraceMessage *message, FILE *ganttFile, FILE *la
             auto *pisdfVertexRef = vertex->getReference();
             // Update execution time of the PiSDF actor
             auto timingOnPe = std::to_string(execTime);
-            pisdfVertexRef->setTimingOnType(archi_->getPEType(vertex->getSlave()), timingOnPe.c_str());
+            pisdfVertexRef->setTimingOnType(lrtType, timingOnPe.c_str());
             // Update global stats
             for (i = 0; i < stat->nPiSDFActor; i++) {
                 if (stat->actors[i] == pisdfVertexRef) {
@@ -718,10 +723,12 @@ void Spider::addSubGraph(PiSDFVertex *hierVertex, PiSDFGraph *subgraph) {
 
 PiSDFVertex *Spider::addSpecialVertex(
         PiSDFGraph *graph,
+        const char * vertexName,
         PiSDFSubType subType,
         int nInEdge, int nOutEdge,
         int nInParam) {
-    return graph->addSpecialVertex(
+    return graph->addBodyVertex(
+            vertexName,
             subType,
             nInEdge,
             nOutEdge,

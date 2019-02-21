@@ -5,7 +5,6 @@
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -36,72 +35,32 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef MEM_ALLOC_H
-#define MEM_ALLOC_H
+#ifndef SPIDER_DUMMYPISDFMEMALLOC_H
+#define SPIDER_DUMMYPISDFMEMALLOC_H
 
-#include <platform.h>
-#include <tools/List.h>
-#include <tools/Stack.h>
-#include <graphs/SRDAG/SRDAGVertex.h>
+#include <scheduling/MemAlloc.h>
 
-#include <algorithm>
-#include <spider.h>
-
-class PiSDFGraph;
-
-class MemAlloc {
+class DummyPiSDFMemAlloc : public MemAlloc {
 public:
-    virtual void reset() = 0;
+    DummyPiSDFMemAlloc(int start, int size) :
+            MemAlloc(start, size),
+            currentMem_(start) {}
 
-    virtual void alloc(List<SRDAGVertex *> *) {};
+    ~DummyPiSDFMemAlloc() override = default;
 
-    virtual void alloc(PiSDFGraph *) {};
+    void reset() override;
 
-    virtual int getReservedAlloc(int size) = 0;
+    void alloc(PiSDFGraph *graph) override;
 
-    virtual int getMemUsed() = 0;
+    int getReservedAlloc(int size) override;
 
-    MemAlloc(int start, int size) : memStart_(start), memSize_(size), memReserved_(0) {}
-
-    MemAlloc(int start, int size, int reservedSize) : memStart_(start), memSize_(size) {
-        setReservedSize(reservedSize);
-    }
-
-    inline void setReservedSize(int reservedSize);
-
-    inline int getMemAllocSize() const;
-
-    inline void printMemAllocSizeFormatted() const;
-
-    virtual ~MemAlloc() = default;
+    int getMemUsed() override;
 
 protected:
-    int memStart_;
-    int memSize_;
-    int memReserved_{};
+    int currentMem_;
+
+    void allocEdge(PiSDFEdge *edge);
+
 };
 
-inline int MemAlloc::getMemAllocSize() const {
-    return memSize_;
-}
-
-inline void MemAlloc::printMemAllocSizeFormatted() const {
-    const char *units[4] = {"B", "KB", "MB", "GB"};
-
-    float normalizedSize = memSize_;
-    int unitIndex = 0;
-    while (normalizedSize >= 1024 && unitIndex < 3) {
-        normalizedSize /= 1024.;
-        unitIndex++;
-    }
-    fprintf(stderr, "%5.1f %s", normalizedSize, units[unitIndex]);
-}
-
-inline void MemAlloc::setReservedSize(int reservedSize) {
-    if (reservedSize > memSize_) {
-        throwSpiderException("Reserved memory (%d) > memory size (%d).", reservedSize, memSize_);
-    }
-    memReserved_ = reservedSize;
-}
-
-#endif/*MEM_ALLOC_H*/
+#endif //SPIDER_DUMMYPISDFMEMALLOC_H

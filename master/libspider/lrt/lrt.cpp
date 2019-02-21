@@ -191,7 +191,7 @@ void LRT::updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp) {
 }
 
 void LRT::notifyLRTJobStamp(int lrt, bool notify) {
-    if (notify) {
+    if (lrt != getIx() && notify) {
         Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- notifying LRT: %d -- sent jobStamp: %d\n", getIx(), lrt, jobIx_);
         NotificationMessage message(JOB_NOTIFICATION, JOB_UPDATE_JOBSTAMP, getIx(), jobIx_);
         spiderCommunicator_->push_notification(lrt, &message);

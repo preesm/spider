@@ -47,7 +47,7 @@ public:
 
     ~SRDAGLessListScheduler() override;
 
-    const PiSDFSchedule *schedule() override;
+    const PiSDFSchedule *schedule(MemAlloc *memAlloc) override;
 
 private:
     List<PiSDFVertex *> *list_;

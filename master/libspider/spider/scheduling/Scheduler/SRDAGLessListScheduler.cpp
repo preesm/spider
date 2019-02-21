@@ -135,7 +135,7 @@ inline int SRDAGLessListScheduler::myqsort_part(int p, int r) {
     }
 }
 
-const PiSDFSchedule *SRDAGLessListScheduler::schedule() {
+const PiSDFSchedule *SRDAGLessListScheduler::schedule(MemAlloc *memAlloc) {
     /** Compute schedule level **/
     for (int i = 0; i < nVertices_; ++i) {
         computeScheduleLevel((*list_)[i]);
@@ -151,7 +151,7 @@ const PiSDFSchedule *SRDAGLessListScheduler::schedule() {
     /** Map the vertices **/
     for (int i = 0; i < list_->getNb(); i++) {
         auto *vertex = (*list_)[i];
-        SRDAGLessScheduler::map(vertex);
+        SRDAGLessScheduler::map(vertex, memAlloc);
         /** Update schedule count **/
         instanceSchCountArray_[vertex->getTypeId()]++;
     }

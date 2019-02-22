@@ -565,7 +565,6 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                     bool perfectBr = sinkConsumption * nbSinkRepetitions % sourceProduction == 0;
                     int nBr = sinkConsumption * nbSinkRepetitions / sourceProduction;
                     if (!perfectBr) nBr++;
-
                     nbSourceRepetitions = nBr;
                     sinkNeedEnd = !perfectBr;
 //					lastCons = sourceProduction - sinkConsumption*nbSinkRepetitions;
@@ -668,7 +667,8 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                         // 2. Add end vertex
                         snkConnections[nbSinkRepetitions].edge = topSrdag->addEdge();
                         snkConnections[nbSinkRepetitions].edge->connectSnk(topSrdag->addEnd(), 0);
-                        snkConnections[nbSinkRepetitions].cons = sourceProduction - sinkConsumption * nbSinkRepetitions;
+                        snkConnections[nbSinkRepetitions].cons =
+                                nbSourceRepetitions * sourceProduction - sinkConsumption * nbSinkRepetitions;
                         nbSinkRepetitions++;
                     } else {
                         snkConnections = CREATE_MUL(TRANSFO_STACK, nbSinkRepetitions, SnkConnection);
@@ -731,7 +731,6 @@ void linkSRVertices(SRDAGGraph *topSrdag,
             /*
              * Adding explode/implode vertices if required.
              */
-
             if (rest < curSourceToken
                 && (srcConnections[sourceIndex].src->getId() != forkIx)) {
                 // Adding an explode vertex.

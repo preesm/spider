@@ -56,6 +56,6 @@
  * @throw std::runtime_exception when graph is not consistent
  */
 void
-topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv);
+topologyBasedBRV(PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv);
 
 #endif

@@ -45,36 +45,17 @@
 static int nullSpace(Param *topo_matrix, int *brv, int nbEdges, int nbVertices) {
     auto *ratioMatrix = CREATE_MUL(TRANSFO_STACK, nbVertices * nbEdges, Rational);
     auto *ratioResult = CREATE_MUL(TRANSFO_STACK, nbVertices, Rational);
-
-//	printf("Topo Matrix:\n");
-//	for(int i=0; i<nbEdges; i++){
-//		for(int j=0; j<nbVertices; j++){
-//			printf("%d : ", topo_matrix[i*nbVertices+j]);
-//		}
-////		printf("\033[2D");
-//		printf("\n");
-//	}
-
     /* Copy matrix into ratioMatrix */
     for (int i = 0; i < nbEdges * nbVertices; i++) {
         ratioMatrix[i] = Rational(topo_matrix[i]);
     }
-//
-//	printf("Topo Matrix: Rational\n");
-//	for(int i=0; i<nbEdges; i++){
-//		for(int j=0; j<nbVertices; j++){
-//			printf("%d,%d : ", ratioMatrix[i*nbVertices+j].getNominator(), ratioMatrix[i*nbVertices+j].getDenominator());
-//		}
-////		printf("\033[2D");
-//		printf("\n");
-//	}
 
     for (int i = 0; i < nbEdges; i++) {
-        Rational pivotMax = ratioMatrix[i * nbVertices + i].getAbs();
+        Rational pivotMax(ratioMatrix[i * nbVertices + i].abs());
         int maxIndex = i;
 
         for (int t = i + 1; t < nbEdges; t++) {
-            Rational newPivot = ratioMatrix[t * nbVertices + i].getAbs();
+            Rational newPivot(ratioMatrix[t * nbVertices + i].abs());
             if (newPivot > pivotMax) {
                 maxIndex = t;
                 pivotMax = newPivot;
@@ -83,11 +64,10 @@ static int nullSpace(Param *topo_matrix, int *brv, int nbEdges, int nbVertices) 
 
         if (pivotMax != 0 && maxIndex != i) {
             /* Switch Rows */
-            Rational tmp;
             for (int t = 0; t < nbVertices; t++) {
-                tmp = ratioMatrix[maxIndex * nbVertices + t];
-                ratioMatrix[maxIndex * nbVertices + t] = ratioMatrix[i * nbVertices + t];
-                ratioMatrix[i * nbVertices + t] = tmp;
+                Rational tmp(ratioMatrix[maxIndex * nbVertices + t]);
+                ratioMatrix[maxIndex * nbVertices + t] = Rational(ratioMatrix[i * nbVertices + t]);
+                ratioMatrix[i * nbVertices + t] = Rational(tmp);
             }
         } else if (maxIndex == i && (pivotMax != 0)) {
             /* Do nothing */
@@ -97,7 +77,7 @@ static int nullSpace(Param *topo_matrix, int *brv, int nbEdges, int nbVertices) 
 
         Rational odlPivot = ratioMatrix[i * nbVertices + i];
         for (int t = i; t < nbVertices; t++) {
-            ratioMatrix[i * nbVertices + t] = ratioMatrix[i * nbVertices + t] / odlPivot;
+            ratioMatrix[i * nbVertices + t] /= odlPivot;
         }
 
         for (int j = i + 1; j < nbEdges; j++) {
@@ -117,16 +97,16 @@ static int nullSpace(Param *topo_matrix, int *brv, int nbEdges, int nbVertices) 
     }
 
     for (int i = nbEdges - 1; i >= 0; i--) {
-        Rational val(0);
+        Rational val = Rational();
 
         for (int k = i + 1; k < nbVertices; k++) {
-            val = val + (ratioMatrix[i * nbVertices + k] * ratioResult[k]);
+            val += (ratioMatrix[i * nbVertices + k] * ratioResult[k]);
         }
         if (val != 0) {
             if (ratioMatrix[i * nbVertices + i] == 0) {
                 throwSpiderException("Diagonal element of topology matrix [%d][%d] is null.", i, i);
             }
-            ratioResult[i] = val.getAbs() / ratioMatrix[i * nbVertices + i];
+            ratioResult[i] = val.abs() / ratioMatrix[i * nbVertices + i];
         }
     }
 
@@ -135,7 +115,7 @@ static int nullSpace(Param *topo_matrix, int *brv, int nbEdges, int nbVertices) 
         lcm = Rational::compute_lcm(lcm, ratioResult[i].getDenominator());
     }
     for (int i = 0; i < nbVertices; i++) {
-        brv[i] = (int) Rational::abs(ratioResult[i].getNominator() * lcm / ratioResult[i].getDenominator());
+        brv[i] = Rational(ratioResult[i] * lcm).abs().toInt32();
     }
 
     StackMonitor::free(TRANSFO_STACK, ratioMatrix);
@@ -144,27 +124,27 @@ static int nullSpace(Param *topo_matrix, int *brv, int nbEdges, int nbVertices) 
     return 0;
 }
 
-static bool isBodyExecutable(PiSDFVertex *body, transfoJob *job) {
+static bool isBodyExecutable(PiSDFVertex *body) {
     bool notExec = true;
 
     /* Test if all In/Out is equal to 0 */
     for (int j = 0; notExec && j < body->getNInEdge(); j++) {
         PiSDFEdge *inEdge = body->getInEdge(j);
-        Param cons = inEdge->resolveCons(job);
+        Param cons = inEdge->resolveCons();
         notExec = notExec && (cons == 0);
     }
     for (int j = 0; notExec && j < body->getNOutEdge(); j++) {
         PiSDFEdge *outEdge = body->getOutEdge(j);
-        Param prod = outEdge->resolveProd(job);
+        Param prod = outEdge->resolveProd();
         notExec = notExec && (prod == 0);
     }
 
     return !notExec;
 }
 
-static bool isEdgeValid(PiSDFEdge *edge, transfoJob *job) {
-    Param prod = edge->resolveProd(job);
-    Param cons = edge->resolveCons(job);
+static bool isEdgeValid(PiSDFEdge *edge) {
+    Param prod = edge->resolveProd();
+    Param cons = edge->resolveCons();
 
     if ((prod == 0 && cons != 0) || (cons == 0 && prod != 0)) {
         throwSpiderException("Bad Edge Prod/Cons, Prod: %d et Cons: %d.", prod, cons);
@@ -172,12 +152,12 @@ static bool isEdgeValid(PiSDFEdge *edge, transfoJob *job) {
 
 
     return edge->getSrc() != edge->getSnk()
-           && edge->getSrc()->getType() == PISDF_TYPE_BODY && isBodyExecutable(edge->getSrc(), job)
-           && edge->getSnk()->getType() == PISDF_TYPE_BODY && isBodyExecutable(edge->getSnk(), job);
+           && edge->getSrc()->getType() == PISDF_TYPE_BODY && isBodyExecutable(edge->getSrc())
+           && edge->getSnk()->getType() == PISDF_TYPE_BODY && isBodyExecutable(edge->getSnk());
 }
 
 
-void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges,
+void topologyBasedBRV(PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges,
                       int *brv) {
     PiSDFVertex *const *vertices = vertexSet.getArray() + nDoneVertices;
     auto *vertexIxs = CREATE_MUL(TRANSFO_STACK, nVertices, int);
@@ -190,7 +170,7 @@ void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVert
         PiSDFVertex *body = vertices[i];
         if (body->getType() == PISDF_TYPE_BODY) {
             long ix = body->getSetIx() - nDoneVertices;
-            if (isBodyExecutable(body, job)) {
+            if (isBodyExecutable(body)) {
                 vertexIxs[ix] = nbVertices++;
             } else {
                 vertexIxs[ix] = -1;
@@ -202,7 +182,7 @@ void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVert
     int nbEdges = 0;
     for (int i = 0; i < nEdges; i++) {
         PiSDFEdge *edge = edgeSet.getArray()[i];
-        if (isEdgeValid(edge, job)) {
+        if (isEdgeValid(edge)) {
             nbEdges++;
         }
     }
@@ -214,9 +194,9 @@ void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVert
     nbEdges = 0; // todo do better with the nbEdges var
     for (int i = 0; i < nEdges; i++) {
         PiSDFEdge *edge = edgeSet.getArray()[i];
-        if (isEdgeValid(edge, job)) {
-            Param prod = edge->resolveProd(job);
-            Param cons = edge->resolveCons(job);
+        if (isEdgeValid(edge)) {
+            Param prod = edge->resolveProd();
+            Param cons = edge->resolveCons();
 
             if (prod < 0 || cons < 0) {
                 char name[100];
@@ -233,14 +213,6 @@ void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVert
             nbEdges++;
         }
     }
-
-//    printf("topoMatrix:\n");
-//    for (int i = 0; i < nbEdges; i++) {
-//        for (int j = 0; j < nbVertices; j++) {
-//            printf("%4d ", topo_matrix[i * nbVertices + j]);
-//        }
-//        printf("\n");
-//    }
 
     auto *smallBrv = CREATE_MUL(TRANSFO_STACK, nbVertices, int);
 
@@ -308,7 +280,7 @@ void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVert
 //    }
 
     // Update RV based on interfaces and config actors
-    updateBRV(job, nVertices, brv, vertices);
+    updateBRV(nVertices, brv, vertices);
 
     StackMonitor::free(TRANSFO_STACK, topo_matrix);
     StackMonitor::free(TRANSFO_STACK, vertexIxs);
@@ -316,10 +288,4 @@ void topologyBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVert
     while (edgeSet.getN() > 0) {
         edgeSet.del(edgeSet[0]);
     }
-
-//    printf("brv:\n");
-//    for (int i = 0; i < nbVertices; i++) {
-//        fprintf(stderr, "%4d ", brv[i]);
-//    }
-//    printf("\n");
 }

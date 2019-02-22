@@ -48,7 +48,7 @@
  * @param brv       BRV values;
  * @param vertices  Vertices;
  */
-void updateBRV(transfoJob *job, long nVertices, int *brv, PiSDFVertex *const *vertices);
+void updateBRV(long nVertices, int *brv, PiSDFVertex *const *vertices);
 
 /**
  * Build a set of unique edges inside a given connected components.

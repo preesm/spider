@@ -50,13 +50,12 @@
  * @param offset  Offset of the current connected components in the global set of vertices
  */
 static void fillReps(PiSDFEdgeSet &edgeSet, Rational *reps, long offset) {
-    Rational n(1);
     for (int i = 0; i < edgeSet.getN(); ++i) {
-        PiSDFEdge *edge = edgeSet.getArray()[i];
-        PiSDFVertex *source = edge->getSrc();
-        PiSDFVertex *sink = edge->getSnk();
-        Param cons = edge->resolveCons();
-        Param prod = edge->resolveProd();
+        auto *edge = edgeSet.getArray()[i];
+        auto *source = edge->getSrc();
+        auto *sink = edge->getSnk();
+        auto prod = edge->resolveProd();
+        auto cons = edge->resolveCons();
         // Check if the edge is valid
         if ((prod == 0 && cons != 0) || (cons == 0 && prod != 0)) {
             throwSpiderException(
@@ -64,22 +63,26 @@ static void fillReps(PiSDFEdgeSet &edgeSet, Rational *reps, long offset) {
                     source->getName(), prod, sink->getName(), cons);
         }
         long sinkIx = sink->getSetIx() - offset;
-        Rational &fa = reps[sinkIx];
+        auto &sinkRational = reps[sinkIx];
         long sourceIx = source->getSetIx() - offset;
-        Rational &sa = reps[sourceIx];
-        if (fa.getNominator() == 0 && cons != 0) {
-            if (sa.getNominator() != 0) {
-                n = reps[sourceIx];
-            }
-            Rational tmp(prod, cons);
-            reps[sinkIx] = n * tmp;
+        auto &sourceRational = reps[sourceIx];
+        if (sink->getType() == PISDF_TYPE_IF) {
+            sinkRational = Rational(1);
         }
-        if (sa.getNominator() == 0 && prod != 0) {
-            if (fa.getNominator() != 0) {
-                n = reps[sinkIx];
+        if (source->getType() == PISDF_TYPE_IF) {
+            sourceRational = Rational(1);
+        }
+        if (sinkRational.getNominator() == 0 && cons != 0) {
+            sinkRational = Rational(prod, cons);
+            if (sourceRational.getNominator() != 0) {
+                sinkRational *= sourceRational;
             }
-            Rational tmp(cons, prod);
-            reps[sourceIx] = n * tmp;
+        }
+        if (sourceRational.getNominator() == 0 && prod != 0) {
+            sourceRational = Rational(cons, prod);
+            if (sinkRational.getNominator() != 0) {
+                sourceRational *= sinkRational;
+            }
         }
     }
 }
@@ -119,10 +122,7 @@ static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, std::
             brv[vertex->getTypeId()] = 1;
             continue;
         }
-        Rational &r = reps[i];
-        std::int64_t nom = r.getNominator();
-        std::int64_t denom = r.getDenominator();
-        brv[vertex->getTypeId()] = static_cast<int>((nom * lcm / denom));
+        brv[vertex->getTypeId()] = Rational(reps[i] * lcm).toInt32();
     }
 }
 
@@ -135,14 +135,14 @@ static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, std::
  */
 static void checkConsistency(PiSDFEdgeSet &edgeSet, const int *brv) {
     for (int i = 0; i < edgeSet.getN(); ++i) {
-        PiSDFEdge *edge = edgeSet.getArray()[i];
-        PiSDFVertex *source = edge->getSrc();
-        PiSDFVertex *sink = edge->getSnk();
+        auto *edge = edgeSet.getArray()[i];
+        auto *source = edge->getSrc();
+        auto *sink = edge->getSnk();
         if ((source->getType() == PISDF_TYPE_IF) || (sink->getType() == PISDF_TYPE_IF)) {
             continue;
         }
-        Param prod = edge->resolveProd();
-        Param cons = edge->resolveCons();
+        auto prod = edge->resolveProd();
+        auto cons = edge->resolveCons();
         if ((sink->getType() == PISDF_TYPE_CONFIG) && prod > cons) {
             throwSpiderException("Config actor [%s] does not consume all the tokens produce on its input port.",
                                  source->getName());
@@ -177,6 +177,9 @@ lcmBasedBRV(PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long 
 
     // 3. Compute and set BRV values
     computeBRVValues(reps, vertices, lcm, nVertices, brv);
+
+    // 3.1 Update RV with interfaces
+    updateBRV(nVertices, brv, vertices);
 
     // 4. Check consistency
     checkConsistency(edgeSet, brv);

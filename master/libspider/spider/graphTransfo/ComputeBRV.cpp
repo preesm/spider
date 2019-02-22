@@ -37,35 +37,45 @@
 #include <graphs/PiSDF/PiSDFEdge.h>
 #include <graphTransfo/ComputeBRV.h>
 #include <graphTransfo/LCM.h>
+#include "TopologyMatrix.h"
 
+static inline std::int32_t getVertexIx(PiSDFVertex *const vertex) {
+    std::int32_t offsetInputIF = ((vertex->getType() == PISDF_TYPE_IF) * vertex->getGraph()->getNBody());
+    std::int32_t offsetOutputIF = ((vertex->getSubType() == PISDF_SUBTYPE_OUTPUT_IF) * vertex->getGraph()->getNInIf());
+    return vertex->getTypeId() + offsetInputIF + offsetOutputIF;
+}
 
-static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
+static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet, PiSDFVertex **keyVertexSet) {
     int currentSize = 0;
     int n = vertexSet.getN() - 1;
     do {
         currentSize = vertexSet.getN();
-        PiSDFVertex *current = vertexSet.getArray()[n];
+        auto *current = vertexSet.getArray()[n];
         // 0. Do the output edges
         for (int i = 0; i < current->getNOutEdge(); ++i) {
-            PiSDFEdge *edge = current->getOutEdge(i);
+            auto *edge = current->getOutEdge(i);
             if (!edge) {
                 throwSpiderException("Vertex [%s] has NULL edge", current->getName());
             }
-            PiSDFVertex *targetVertex = edge->getSnk();
-            if (!vertexSet.contains(targetVertex)) {
-                vertexSet.add(targetVertex);
+            auto *vertex = edge->getSnk();
+            auto vertexIx = getVertexIx(vertex);
+            if (!keyVertexSet[vertexIx]) {
+                vertexSet.add(vertex);
+                keyVertexSet[vertexIx] = vertex;
             }
             sizeEdgeSet++;
         }
         // 1. Do the input edges
         for (int i = 0; i < current->getNInEdge(); ++i) {
-            PiSDFEdge *edge = current->getInEdge(i);
+            auto *edge = current->getInEdge(i);
             if (!edge) {
                 throwSpiderException("Vertex [%s] has NULL edge", current->getName());
             }
-            PiSDFVertex *sourceVertex = edge->getSrc();
-            if (!vertexSet.contains(sourceVertex)) {
-                vertexSet.add(sourceVertex);
+            auto *vertex = edge->getSrc();
+            auto vertexIx = getVertexIx(vertex);
+            if (!keyVertexSet[vertexIx]) {
+                vertexSet.add(vertex);
+                keyVertexSet[vertexIx] = vertex;
             }
         }
         n++;
@@ -76,16 +86,22 @@ void computeBRV(PiSDFGraph *const graph, int *brv) {
     // Retrieve the graph
     int nTotalVertices = graph->getNBody() + graph->getNInIf() + graph->getNOutIf();
     PiSDFVertexSet vertexSet(nTotalVertices, TRANSFO_STACK);
+    auto **keyVertexSet = CREATE_MUL_NA(TRANSFO_STACK, nTotalVertices, PiSDFVertex*);
+    for (int ix = 0; ix < nTotalVertices; ++ix) {
+        keyVertexSet[ix] = nullptr;
+    }
 
     // 0. First we need to get all different connected components
     long nDoneVertices = 0;
     for (int i = 0; i < graph->getNBody(); i++) {
         PiSDFVertex *vertex = graph->getBody(i);
-        if (!vertexSet.contains(vertex)) {
+        auto vertexIx = getVertexIx(vertex);
+        if (!keyVertexSet[vertexIx]) {
             long nEdges = 0;
             vertexSet.add(vertex);
+            keyVertexSet[vertexIx] = vertex;
             // 1. Fill up the vertexSet
-            fillVertexSet(vertexSet, nEdges);
+            fillVertexSet(vertexSet, nEdges, keyVertexSet);
             // 1.1 Update the offset in the vertexSet
             long nVertices = vertexSet.getN() - nDoneVertices;
             // 2. Compute the BRV of current set
@@ -97,6 +113,7 @@ void computeBRV(PiSDFGraph *const graph, int *brv) {
     while (vertexSet.getN() > 0) {
         vertexSet.del(vertexSet[0]);
     }
+    StackMonitor::free(TRANSFO_STACK, keyVertexSet);
 }
 
 

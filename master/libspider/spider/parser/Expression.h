@@ -84,12 +84,15 @@ private:
         OpType opType;
         int value;
         int paramIx;
-        PiSDFParam *param;
+        PiSDFParam *param = nullptr;
     } Token;
 
     std::string stringExpr_;
     Token *stack_;
     int nElt_;
+    bool isStatic_;
+    bool firstEval_;
+    Param value_;
 
     bool getNextToken(
             Token *token,
@@ -97,6 +100,7 @@ private:
             const PiSDFParam *const *params, int nParam);
 
     int evaluateNTokens(const char *expr);
+
 };
 
 inline const char *Expression::toString() {

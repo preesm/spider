@@ -71,6 +71,7 @@ Expression::Expression(
         const char *expr,
         const PiSDFParam *const *params, int nParam) {
     stringExpr_ = std::string(expr);
+    isStatic_ = true;
 
     nElt_ = evaluateNTokens(expr);
     stack_ = CREATE_MUL(PISDF_STACK, nElt_, Token);
@@ -88,6 +89,9 @@ Expression::Expression(
             case VALUE:
             case PARAMETER:
                 output[ixOutput++] = t;
+                if (t.param && t.param->getType() == PISDF_PARAM_DYNAMIC) {
+                    isStatic_ = false;
+                }
                 break;
             case OPERATOR:
                 while (ixStack > 0
@@ -121,6 +125,11 @@ Expression::Expression(
         output[ixOutput++] = stack[ixStack];
     }
     nElt_ = ixOutput;
+    if (isStatic_) {
+        firstEval_ = true;
+        value_ = evaluate();
+        firstEval_ = false;
+    }
 }
 
 Expression::~Expression() {
@@ -210,6 +219,9 @@ Param Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, 
 }
 
 Param Expression::evaluate() const {
+    if (isStatic_ && !firstEval_) {
+        return value_;
+    }
     float stack[MAX_NVAR_ELEMENTS];
     float *stackPtr = stack;
     const Token *inputPtr = stack_;
@@ -289,6 +301,10 @@ Param Expression::evaluate() const {
         }
         inputPtr++;
     }
+//    if (isStatic_) {
+//        value_ = static_cast<Param>(stack[0]);
+//    }
+//    fprintf(stderr, "INFO: value %lu\n", static_cast<Param>(stack[0]));
     return static_cast<Param>(stack[0]);
 }
 
@@ -546,7 +562,7 @@ bool Expression::getNextToken(
                 if (nb == strlen(params[i]->getName())
                     && strncmp(params[i]->getName(), name, nb) == 0) {
                     token->paramIx = i/*params[i]->getLocalID()*/;
-                    token->param = (PiSDFParam*) params[i];
+                    token->param = (PiSDFParam *) params[i];
                     return true;
                 }
             }

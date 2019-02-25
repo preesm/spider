@@ -206,11 +206,12 @@ bool Rational::operator>(const Rational &b) const {
 }
 
 bool Rational::operator<(const Rational &b) const {
-    return !(*this > b) && !(*this == b);
+    auto diff = *this - b;
+    return diff.n_ < 0;
 }
 
 bool Rational::operator>=(const Rational &b) const {
-    return (*this > b) || (*this == b);
+    return !(*this < b);
 }
 
 bool Rational::operator<=(const Rational &b) const {

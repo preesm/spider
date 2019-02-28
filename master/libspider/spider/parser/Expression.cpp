@@ -126,9 +126,9 @@ Expression::Expression(
     }
     nElt_ = ixOutput;
     if (isStatic_) {
-        firstEval_ = true;
+        isStatic_ = false;
         value_ = evaluate();
-        firstEval_ = false;
+        isStatic_ = true;
     }
 }
 
@@ -219,7 +219,7 @@ Param Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, 
 }
 
 Param Expression::evaluate() const {
-    if (isStatic_ && !firstEval_) {
+    if (isStatic_) {
         return value_;
     }
     float stack[MAX_NVAR_ELEMENTS];

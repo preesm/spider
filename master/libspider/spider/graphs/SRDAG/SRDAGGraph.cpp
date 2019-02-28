@@ -39,8 +39,8 @@
 #include <graphs/SRDAG/SRDAGEdge.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
 
-#define MAX_VERTEX (10000)
-#define MAX_EDGE (10000)
+#define MAX_VERTEX (20000)
+#define MAX_EDGE (20000)
 
 static const char *stateStrings[3] = {
         "NOT_EXEC",

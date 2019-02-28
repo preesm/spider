@@ -53,7 +53,7 @@
 #include <scheduling/Scheduler/SRDAGLessScheduler.h>
 #include <scheduling/Scheduler/SRDAGLessListScheduler.h>
 
-#define SCHEDULE_SIZE 10000
+#define SCHEDULE_SIZE 20000
 
 static void initJob(transfoJob *job, SRDAGVertex *nextHierVx) {
     memset(job, 0, sizeof(transfoJob));
@@ -321,7 +321,6 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
     topSrdag->addVertex(root, 0, 0);
     topSrdag->updateState();
 
-
     // Check nb of config //
 
     /* Look for hierrachical actor in topDag */
@@ -389,12 +388,12 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
     TimeMonitor::startMonitoring();
     scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchi());
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
-//    schedule->print("./schedule-static.pgantt");
+    // schedule->print("./schedule-static.pgantt");
     return schedule;
 }
 
 
-PiSDFSchedule *srdagLessScheduler(Time *end) {
+PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end) {
     auto *graph = Spider::getGraph();
     if (!graph->getBody(0)->isHierarchical()) {
         throwSpiderException("Top graph should contain at least one actor.");
@@ -403,14 +402,15 @@ PiSDFSchedule *srdagLessScheduler(Time *end) {
     auto *brv = CREATE_MUL(TRANSFO_STACK, root->getNBody(), std::int32_t);
     computeBRV(root, brv);
     auto schedule = CREATE_NA(TRANSFO_STACK, PiSDFSchedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
-
-//    auto scheduler = SRDAGLessListScheduler(root, brv);
-//    (*end) = Platform::get()->getTime();
-//    scheduler.schedule();
-//    scheduler.printSchedule("./schedule-new-list.pgantt");
-    auto schedulerNew = SRDAGLessScheduler(root, brv, schedule);
+    auto scheduler = SRDAGLessListScheduler(root, brv, schedule);
     (*end) = Platform::get()->getTime();
-    schedulerNew.schedule();
+    scheduler.schedule(memAlloc);
+    scheduler.printSchedule("./schedule-new-list.pgantt");
+//    auto schedulerNew = SRDAGLessScheduler(root, brv, schedule);
+//    if (end) {
+//        (*end) = Platform::get()->getTime();
+//    }
+//    schedulerNew.schedule(memAlloc);
 //    schedulerNew.printSchedule("./schedule-new.pgantt");
     StackMonitor::free(TRANSFO_STACK, brv);
     return schedule;

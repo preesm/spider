@@ -36,6 +36,8 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include <Logger.h>
+#include <cstdarg>
+#include <mutex>
 
 static bool loggersValue[kNLogger];
 

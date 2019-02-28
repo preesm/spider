@@ -56,10 +56,12 @@ ScheduleJob::ScheduleJob(std::int32_t nInstances, std::int32_t nPEs) {
     /** Initializing **/
     for (int i = 0; i < nInstances; ++i) {
         mappingVector_[i] = -1;
+        jobIDVector_[i] = 0;
         mappingStartTimeVector_[i] = UINT64_MAX;
         mappingEndTimeVector_[i] = UINT64_MAX;
         for (int j = 0; j < nPEs_; ++j) {
             peDependenciesMatrix_[i * nPEs_ + j] = false;
+            scheduleConstrainsMatrix_[i * nPEs_ + j] = JobConstrain();
         }
     }
 
@@ -159,16 +161,12 @@ JobInfoMessage *ScheduleJob::createJobMessage(int instance) {
         auto *edge = vertex_->getInEdge(i);
         jobInfoMessage->inFifos_[i].alloc = static_cast<int32_t>(edge->getAlloc() + edge->resolveCons() * instance);
         jobInfoMessage->inFifos_[i].size = static_cast<int32_t>(edge->resolveCons());
-//        fprintf(stderr, "INFO: Vertex [%s] -- instance [%d] -- edge IN [%d] -- alloc [%d]\n", vertex_->getName(), instance,
-//                i, jobInfoMessage->inFifos_[i].alloc);
     }
     /** Set OUT FIFOs properties**/
     for (int i = 0; i < jobInfoMessage->nEdgeOUT_; ++i) {
         auto *edge = vertex_->getOutEdge(i);
         jobInfoMessage->outFifos_[i].alloc = static_cast<int32_t>(edge->getAlloc() + edge->resolveProd() * instance);
         jobInfoMessage->outFifos_[i].size = static_cast<int32_t>(edge->resolveProd());
-//        fprintf(stderr, "INFO: Vertex [%s] -- instance [%d] -- edge OUT [%d] -- alloc [%d]\n", vertex_->getName(), instance,
-//                i, jobInfoMessage->outFifos_[i].alloc);
     }
     /** Set Param properties **/
     createParamINArray(jobInfoMessage, vertex_->getNInParam());
@@ -209,6 +207,8 @@ JobInfoMessage *ScheduleJob::createJobMessage(int instance) {
 //    }
     return jobInfoMessage;
 }
+
+
 
 
 

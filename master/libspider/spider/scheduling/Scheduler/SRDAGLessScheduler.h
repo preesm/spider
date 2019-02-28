@@ -50,7 +50,6 @@ typedef struct VertexDependency {
     Param prod_ = 0;
     Param delay_ = 0;
     std::int32_t *nScheduled_ = nullptr;
-    std::int32_t minNExec_ = 1;
 } VertexDependency;
 
 class SRDAGLessScheduler {
@@ -99,7 +98,7 @@ protected:
 
     void replaceOutputIfWithRoundbuffer(const std::int32_t *brv);
 
-    int updateAvailableData(PiSDFVertex *vertex);
+    bool isSchedulable(PiSDFVertex *vertex, std::int32_t nInstances);
 
     void scheduleSubgraph(PiSDFVertex *vertex, MemAlloc *memAlloc);
 

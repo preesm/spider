@@ -39,6 +39,7 @@
 #define STACK_H
 
 #include <new>
+#include <platform.h>
 
 class Stack {
 public:
@@ -58,10 +59,19 @@ public:
 
 private:
     const char *name_;
+
+protected:
+    inline static std::int32_t getAlignedSize(std::int32_t size);
 };
 
 inline const char *Stack::getName() const {
     return name_;
+}
+
+std::int32_t Stack::getAlignedSize(std::int32_t size) {
+    auto pageSize = Platform::get()->getMinAllocSize();
+    auto nPages = size / pageSize + (size % pageSize != 0); // ceil(size / pageSize)
+    return static_cast<int32_t>(nPages * pageSize);
 }
 
 #endif // STACKINTERFACE_H

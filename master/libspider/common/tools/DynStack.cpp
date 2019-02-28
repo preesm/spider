@@ -53,17 +53,12 @@ DynStack::~DynStack() {
     printStat();
 }
 
-static inline int getAlignSize(int size) {
-    float minAlloc = Platform::get()->getMinAllocSize();
-    return (int) std::ceil(size / minAlloc) * minAlloc;
-}
-
 void *DynStack::alloc(int size, bool pageAligned) {
     std::lock_guard<std::mutex> lock(memoryMutex_);
     int alignedSize = size + sizeof(std::int64_t);
 
     if (pageAligned) {
-        alignedSize = getAlignSize(alignedSize);
+        alignedSize = Stack::getAlignedSize(alignedSize);
     }
     curUsedSize_ += alignedSize;
     maxSize_ = std::max(maxSize_, curUsedSize_);
@@ -96,9 +91,6 @@ void DynStack::free(void *var) {
 
     maxSize_ = std::max(maxSize_, curUsedSize_);
     curUsedSize_ -= size;
-//	if(size == 0){
-//		printf("Error %s free'd already free'd memory\n", getName());
-//	}
     operator delete(address);
     nb_--;
 }

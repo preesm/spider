@@ -142,49 +142,47 @@ extern int stopThreads;
 
 void Spider::iterate() {
     Platform::get()->rstTime();
-//    stopThreads = 1;
+    stopThreads = 1;
 
-//    auto start = Platform::get()->getTime();
-//    Time end = 0;
-//    Time endTransfo = 0;
-//    auto nIteration = 1;
-//    double averageTransfo = 0.f;
-//    double averageSchedule = 0.f;
-//    double averageTotal = 0.f;
-//    for (int i = 0; i < nIteration; ++i) {
-//        memAlloc_->reset();
-//        start = Platform::get()->getTime();
-//        auto *schedule = srdagLessScheduler(memAlloc_, &endTransfo);
-//        schedule->executeAndRun();
-//        schedule->~PiSDFSchedule();
-//        StackMonitor::free(TRANSFO_STACK, schedule);
-//        end = Platform::get()->getTime();
-//        averageTransfo += (endTransfo - start);
-//        averageSchedule += (end - endTransfo);
-//        averageTotal = averageTransfo + averageSchedule;
-//        Platform::get()->rstJobIxRecv();
-//    }
-//    averageTransfo /= static_cast<double >(nIteration);
-//    averageSchedule /= static_cast<double >(nIteration);
-//    averageTotal /= static_cast<double >(nIteration);
-//    Logger::print(LOG_GENERAL, LOG_INFO, "srdagLessScheduler:\n");
-//    Logger::print(LOG_GENERAL, LOG_INFO, "          => Transformation: %lf ms.\n", averageTransfo / 1000000.);
-//    Logger::print(LOG_GENERAL, LOG_INFO, "          => Scheduling:     %lf ms.\n", averageSchedule / 1000000.);
-//    Logger::print(LOG_GENERAL, LOG_INFO, "          => Total:          %lf ms.\n", averageTotal / 1000000.);
+    auto start = Platform::get()->getTime();
+    Time end = 0;
+    Time endTransfo = 0;
+    auto nIteration = 1000;
+    double averageTransfo = 0.f;
+    double averageSchedule = 0.f;
+    double averageTotal = 0.f;
+    for (int i = 0; i < nIteration; ++i) {
+        start = Platform::get()->getTime();
+        auto *schedule = srdagLessScheduler(memAlloc_, &endTransfo);
+        schedule->~PiSDFSchedule();
+        StackMonitor::free(TRANSFO_STACK, schedule);
+        end = Platform::get()->getTime();
+        averageTransfo += (endTransfo - start);
+        averageSchedule += (end - endTransfo);
+        averageTotal = averageTransfo + averageSchedule;
+    }
+    averageTransfo /= static_cast<double >(nIteration);
+    averageSchedule /= static_cast<double >(nIteration);
+    averageTotal /= static_cast<double >(nIteration);
+    Logger::print(LOG_GENERAL, LOG_INFO, "srdagLessScheduler:\n");
+    Logger::print(LOG_GENERAL, LOG_INFO, "          => Transformation: %lf ms.\n", averageTransfo / 1000000.);
+    Logger::print(LOG_GENERAL, LOG_INFO, "          => Scheduling:     %lf ms.\n", averageSchedule / 1000000.);
+    Logger::print(LOG_GENERAL, LOG_INFO, "          => Total:          %lf ms.\n", averageTotal / 1000000.);
 //    for (int i = 0; i < nIteration; ++i) {
 //        start = Platform::get()->getTime();
 //        delete srdag_;
 //        StackMonitor::freeAll(SRDAG_STACK);
 //        memAlloc_->reset();
 //        srdag_ = new SRDAGGraph();
-//        schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_, &endTransfo);
-//        schedule_->~SRDAGSchedule();
-//        StackMonitor::free(TRANSFO_STACK, schedule_);
+//        auto *schedule = static_scheduler(srdag_, memAlloc_, scheduler_, &endTransfo);
+//        schedule->~SRDAGSchedule();
+//        StackMonitor::free(TRANSFO_STACK, schedule);
 //        schedule_ = nullptr;
 //        end = Platform::get()->getTime();
 //        averageTransfo += (endTransfo - start);
 //        averageSchedule += (end - endTransfo);
 //        averageTotal = averageTransfo + averageSchedule;
+//        srdag_->print("graph.dot");
 //    }
 //    averageTransfo /= static_cast<double >(nIteration);
 //    averageSchedule /= static_cast<double >(nIteration);
@@ -194,25 +192,25 @@ void Spider::iterate() {
 //    Logger::print(LOG_GENERAL, LOG_INFO, "          => Scheduling:     %lf ms.\n", averageSchedule / 1000000.);
 //    Logger::print(LOG_GENERAL, LOG_INFO, "          => Total:          %lf ms.\n", averageTotal / 1000000.);
 
-    if (pisdf_->isGraphStatic()) {
-        if (!srdag_) {
-            /** On first iteration, the schedule is created **/
-            srdag_ = new SRDAGGraph();
-//            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_, nullptr);
-            schedule_ = srdagLessScheduler(memAlloc_, nullptr);
-        }
-        /** Run the schedule **/
-        schedule_->executeAndRun();
-        schedule_->restartSchedule();
-    } else {
-        delete srdag_;
-        StackMonitor::freeAll(SRDAG_STACK);
-        memAlloc_->reset();
-        srdag_ = new SRDAGGraph();
-        jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
-    }
-    /** Wait for LRTs to finish **/
-    Platform::get()->rstJobIxRecv();
+//    if (pisdf_->isGraphStatic()) {
+//        if (!srdag_) {
+//            /** On first iteration, the schedule is created **/
+//            srdag_ = new SRDAGGraph();
+////            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_, nullptr);
+//            schedule_ = srdagLessScheduler(memAlloc_, nullptr);
+//        }
+//        /** Run the schedule **/
+//        schedule_->executeAndRun();
+//        schedule_->restartSchedule();
+//    } else {
+//        delete srdag_;
+//        StackMonitor::freeAll(SRDAG_STACK);
+//        memAlloc_->reset();
+//        srdag_ = new SRDAGGraph();
+//        jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
+//    }
+//    /** Wait for LRTs to finish **/
+//    Platform::get()->rstJobIxRecv();
 }
 
 
@@ -229,7 +227,7 @@ static int getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) 
     // Compute the total memory allocation needed for delays in current graph
     for (int i = 0; i < graph->getNEdge(); i++) {
         PiSDFEdge *edge = graph->getEdge(i);
-        auto nbDelays = edge->resolveDelay(job);
+        auto nbDelays = edge->resolveDelay();
         if (nbDelays > 0 && edge->isDelayPersistent()) {
             // Compute memory offset
             int memAllocAddr = memAlloc_->getMemUsed();
@@ -723,7 +721,7 @@ void Spider::addSubGraph(PiSDFVertex *hierVertex, PiSDFGraph *subgraph) {
 
 PiSDFVertex *Spider::addSpecialVertex(
         PiSDFGraph *graph,
-        const char * vertexName,
+        const char *vertexName,
         PiSDFSubType subType,
         int nInEdge, int nOutEdge,
         int nInParam) {

@@ -55,6 +55,9 @@ PiSDFSchedule::~PiSDFSchedule() {
 void PiSDFSchedule::addJob(ScheduleJob *job, int instance) {
     jobs_.push_back(job);
     int pe = job->getMappedPE(instance);
+    if (pe < 0 || pe >= nPE_) {
+        throwSpiderException("Bad pe value: %d", pe);
+    }
     auto *jobConstrains = job->getScheduleConstrain(instance);
     for (int i = 0; i < nPE_; ++i) {
         /** Set lrt dependency of previous job **/

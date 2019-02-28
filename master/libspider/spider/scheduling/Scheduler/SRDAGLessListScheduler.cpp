@@ -40,7 +40,7 @@
 #include <graphs/PiSDF/PiSDFEdge.h>
 #include <Logger.h>
 
-SRDAGLessListScheduler::SRDAGLessListScheduler(PiSDFGraph *graph, const std::int32_t *brv, PiSDFSchedule *schedule)
+SRDAGLessListScheduler::SRDAGLessListScheduler(PiSDFGraph *graph, std::int32_t *brv, PiSDFSchedule *schedule)
         : SRDAGLessScheduler(graph, brv, schedule) {
     std::int32_t totalNVertices = 0;
     for (int i = 0; i < nVertices_; ++i) {
@@ -69,6 +69,20 @@ SRDAGLessListScheduler::~SRDAGLessListScheduler() {
     StackMonitor::free(TRANSFO_STACK, schedLvl_);
 }
 
+static Time computeMinExecTime(PiSDFVertex *const vertex, Archi *const archi) {
+    Time minExecTime = UINT64_MAX;
+    for (int j = 0; j < archi->getNPE(); j++) {
+        if (vertex->canExecuteOn(j)) {
+            Time execTime = vertex->getTimingOnPEType(archi->getPEType(j));
+            if (execTime == 0) {
+                throwSpiderException("Vertex: %s -- NULL execution time.", vertex->getName());
+            }
+            minExecTime = std::min(minExecTime, execTime);
+        }
+    }
+    return minExecTime;
+}
+
 std::int32_t SRDAGLessListScheduler::computeScheduleLevel(PiSDFVertex *const vertex) {
     int lvl = 0;
     auto *archi = Spider::getArchi();
@@ -77,17 +91,7 @@ std::int32_t SRDAGLessListScheduler::computeScheduleLevel(PiSDFVertex *const ver
             auto *edge = vertex->getOutEdge(i);
             auto *successor = edge->getSnk();
             if (successor && successor != vertex) {
-                Time minExecTime = (unsigned int) -1;
-                for (int j = 0; j < archi->getNPE(); j++) {
-                    if (successor->canExecuteOn(j)) {
-                        Time execTime = successor->getTimingOnPEType(archi->getPEType(j));
-                        if (execTime == 0) {
-                            throwSpiderException("Vertex: %s -- NULL execution time.", successor->getName());
-                        }
-                        minExecTime = std::min(minExecTime, execTime);
-                    }
-                }
-                lvl = std::max(lvl, computeScheduleLevel(successor) + (int) minExecTime);
+                lvl = std::max(lvl, computeScheduleLevel(successor) + (int) computeMinExecTime(successor, archi));
             }
         }
         for (int i = 0; i < instanceAvlCountArray_[vertex->getTypeId()]; ++i) {
@@ -95,6 +99,21 @@ std::int32_t SRDAGLessListScheduler::computeScheduleLevel(PiSDFVertex *const ver
         }
         return lvl;
     }
+//    auto vertexIx = vertex->getTypeId();
+//    for (std::int32_t ix = 0; ix < instanceAvlCountArray_[vertex->getTypeId()]; ++ix) {
+//        lvl = schedLvl_[vertexIx][ix] + (int) computeMinExecTime(vertex, archi);
+//        for (int i = 0; i < vertex->getNInEdge(); i++) {
+//            auto *edge = vertex->getInEdge(i);
+//            auto *source = edge->getSrc();
+//            auto cons = edge->resolveCons();
+//            auto prod = edge->resolveProd();
+//            auto deltaStart = (cons * ix) / prod;
+//            auto deltaEnd = (cons * (ix + 1) - 1) / prod;
+//            for (auto j = deltaStart; j <= deltaEnd; ++j) {
+//                schedLvl_[source->getTypeId()][j] = std::max(schedLvl_[source->getTypeId()][j], lvl);
+//            }
+//        }
+//    }
     return schedLvl_[vertex->getTypeId()][0];
 }
 

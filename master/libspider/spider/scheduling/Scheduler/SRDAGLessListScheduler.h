@@ -43,7 +43,7 @@
 
 class SRDAGLessListScheduler : public SRDAGLessScheduler {
 public:
-    SRDAGLessListScheduler(PiSDFGraph *graph, const std::int32_t *brv, PiSDFSchedule *schedule);
+    SRDAGLessListScheduler(PiSDFGraph *graph, std::int32_t *brv, PiSDFSchedule *schedule);
 
     ~SRDAGLessListScheduler() override;
 

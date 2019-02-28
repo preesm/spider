@@ -38,8 +38,6 @@
 #ifndef SPIDER_LOGGER_H
 #define SPIDER_LOGGER_H
 
-#include <platform.h>
-
 const int kNLogger = 3;
 
 typedef enum {

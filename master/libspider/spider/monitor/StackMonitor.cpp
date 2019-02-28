@@ -37,6 +37,9 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include "StackMonitor.h"
+#include <tools/Stack.h>
+#include <tools/DynStack.h>
+#include <tools/StaticStack.h>
 
 #include <platform.h>
 #include <Logger.h>
@@ -74,7 +77,8 @@ void StackMonitor::free(SpiderStack stackId, void *ptr) {
     if (ptr == nullptr) {
         return;
     }
-    return Platform::get()->getStack(stackId)->free(ptr);
+    Platform::get()->getStack(stackId)->free(ptr);
+//    ptr = nullptr;
 }
 
 void StackMonitor::freeAll(SpiderStack stackId, const char *function) {

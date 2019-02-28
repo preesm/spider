@@ -45,9 +45,18 @@
 class PiSDFVertex;
 
 typedef struct JobConstrain {
-    PiSDFVertex *vertex_ = nullptr;      // ID of the vertex we are constrained on
-    std::int32_t vertexInstance_ = -1;   // Instance of the vertex
-    std::int32_t jobId_ = -1;            // Job ID we are constrained on
+    PiSDFVertex *vertex_;           // ID of the vertex we are constrained on
+    std::int32_t vertexInstance_;   // Instance of the vertex
+    std::int32_t jobId_;            // Job ID we are constrained on
+
+    ~JobConstrain() {
+        vertex_ = nullptr;
+    }
+
+    JobConstrain() : vertex_{nullptr},
+                     vertexInstance_{-1},
+                     jobId_{-1} {
+    }
 } JobConstrain;
 
 class ScheduleJob {
@@ -73,28 +82,34 @@ public:
 
     inline void setScheduleConstrain(int instance, int pe, PiSDFVertex *vertex, std::int32_t jobId,
                                      std::int32_t vertexInstance = 0) {
+        checkInstance(instance);
         scheduleConstrainsMatrix_[instance * nPEs_ + pe].vertex_ = vertex;
         scheduleConstrainsMatrix_[instance * nPEs_ + pe].vertexInstance_ = vertexInstance;
         scheduleConstrainsMatrix_[instance * nPEs_ + pe].jobId_ = jobId;
     }
 
     inline void setJobID(int instance, int jobID) {
+        checkInstance(instance);
         jobIDVector_[instance] = jobID;
     }
 
     inline void setMappedPE(int instance, int pe) {
+        checkInstance(instance);
         mappingVector_[instance] = pe;
     }
 
     inline void setMappingStartTime(int instance, const Time *time) {
+        checkInstance(instance);
         mappingStartTimeVector_[instance] = *time;
     }
 
     inline void setMappingEndTime(int instance, const Time *time) {
+        checkInstance(instance);
         mappingEndTimeVector_[instance] = *time;
     }
 
     inline void setInstancePEDependency(int instance, int pe, bool shouldNotify) {
+        checkInstance(instance);
         peDependenciesMatrix_[instance * nPEs_ + pe] = shouldNotify;
     }
 
@@ -112,6 +127,7 @@ public:
     }
 
     inline std::int32_t getJobID(int instance) {
+        checkInstance(instance);
         return jobIDVector_[instance];
     }
 
@@ -124,22 +140,27 @@ public:
     }
 
     inline JobConstrain *getScheduleConstrain(int instance) {
+        checkInstance(instance);
         return &scheduleConstrainsMatrix_[instance * nPEs_];
     }
 
     inline std::int32_t getMappedPE(int instance) {
+        checkInstance(instance);
         return mappingVector_[instance];
     }
 
     inline Time getMappingStartTime(int instance) {
+        checkInstance(instance);
         return mappingStartTimeVector_[instance];
     }
 
     inline Time getMappingEndTime(int instance) {
+        checkInstance(instance);
         return mappingEndTimeVector_[instance];
     }
 
     inline const bool *getInstanceDependencies(int instance) {
+        checkInstance(instance);
         return &peDependenciesMatrix_[instance * nPEs_];
     }
 
@@ -184,6 +205,14 @@ private:
      * @brief Dependencies to notify for each instance. Size = nPEs_ * nInstances_
      */
     bool *peDependenciesMatrix_;
+
+    inline void checkInstance(std::int32_t &instance) const;
 };
+
+void ScheduleJob::checkInstance(std::int32_t &instance) const {
+    if (instance < 0 || instance >= nInstances_) {
+        throwSpiderException("Bad instance value: %d", instance);
+    }
+}
 
 #endif //SPIDER_SCHEDULEJOB_H

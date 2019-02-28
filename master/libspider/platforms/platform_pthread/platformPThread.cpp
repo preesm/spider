@@ -204,7 +204,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     traceQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<TraceMessage *>);
     /** Threads structure */
     thread_lrt_ = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, pthread_t);
-    lrtInfoArray_ = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, LRTInfo);
+    lrtInfoArray_ = CREATE_MUL(ARCHI_STACK, nLrt_, LRTInfo);
 
     /** Initialize SpiderCommunicator */
     spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
@@ -254,8 +254,9 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     int offsetPe = 0;
     for (int pe = 0; pe < config.platform.nPeType; ++pe) {
         for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
-
-
+            if (i + offsetPe >= nLrt_) {
+                break;
+            }
             lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
                     spider2LrtJobQueue_,
                     lrtNotificationQueues_[i + offsetPe],

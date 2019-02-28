@@ -56,14 +56,9 @@ StaticStack::~StaticStack() {
     printStat();
 }
 
-static inline int getAlignSize(int size) {
-    auto minAlloc = (float) Platform::get()->getMinAllocSize();
-    return (int) std::ceil(((float) size) / minAlloc) * minAlloc;
-}
-
 void *StaticStack::alloc(int size, bool pageAligned) {
     if (pageAligned) {
-        size = getAlignSize(size);
+        size = Stack::getAlignedSize(size);
     }
     void *res;
     if (used_ + size > size_) {
@@ -75,7 +70,7 @@ void *StaticStack::alloc(int size, bool pageAligned) {
     return res;
 }
 
-void StaticStack::free(void */*var*/) {
+void StaticStack::free(void *) {
 }
 
 void StaticStack::freeAll() {

@@ -91,7 +91,6 @@ private:
     Token *stack_;
     int nElt_;
     bool isStatic_;
-    bool firstEval_;
     Param value_;
 
     bool getNextToken(

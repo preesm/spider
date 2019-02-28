@@ -42,8 +42,8 @@
 #include <stdexcept>
 
 #include <spider.h>
-#include <monitor/StackMonitor.h>
 #include <SpiderException.h>
+#include <monitor/StackMonitor.h>
 
 class LRT;
 
@@ -52,6 +52,8 @@ class LrtCommunicator;
 class SpiderCommunicator;
 
 class ClearTimeMessage;
+
+class Stack;
 
 class Platform {
 public:

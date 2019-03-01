@@ -41,9 +41,6 @@
 #define STACKMONITOR_H
 
 #include <spider.h>
-#include <tools/Stack.h>
-#include <tools/DynStack.h>
-#include <tools/StaticStack.h>
 
 typedef enum {
     PISDF_STACK,

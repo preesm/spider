@@ -172,7 +172,7 @@ public:
 
 private:
     inline int getThreadNumber() {
-        for (unsigned int i = 0; i < nLrt_; i++) {
+        for (auto i = 0; i < nLrt_; i++) {
             if (pthread_equal(lrtThreadsArray[i], pthread_self()) != 0)
                 return i;
         }
@@ -185,7 +185,7 @@ private:
 
     void createAndLaunchThreads();
 
-    unsigned int nLrt_;
+    std::int32_t nLrt_;
     pthread_t *lrtThreadsArray;
 
     /** Stack pointers */

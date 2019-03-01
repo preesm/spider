@@ -70,8 +70,6 @@ namespace StackMonitor {
 
     void *alloc(SpiderStack id, int size, bool pageAligned = true);
 
-//    void *alloc(SpiderStack stackId, int size, const char *function);
-
     void free(SpiderStack id, void *ptr);
 
     void freeAll(SpiderStack id, const char *function);

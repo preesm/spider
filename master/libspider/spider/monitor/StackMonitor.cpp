@@ -70,12 +70,6 @@ void *StackMonitor::alloc(SpiderStack stackId, int size, bool pageAligned) {
     return Platform::get()->getStack(stackId)->alloc(size, pageAligned);
 }
 
-//void *StackMonitor::alloc(SpiderStack stackId, int size, const char *function) {
-//    Logger::print(LOG_GENERAL, LOG_INFO, "[%s] alloc called by [%s]\n", Platform::get()->getStack(stackId)->getName(),
-//                  function);
-//    return Platform::get()->getStack(stackId)->alloc(size);
-//}
-
 void StackMonitor::free(SpiderStack stackId, void *ptr) {
     if (ptr == nullptr) {
         return;

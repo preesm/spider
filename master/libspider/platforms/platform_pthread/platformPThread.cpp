@@ -161,7 +161,7 @@ void PlatformPThread::createAndLaunchThreads() {
 #endif
 
     /** Starting the threads */
-    for (unsigned int i = 1; i < nLrt_; i++) {
+    for (auto i = 1; i < nLrt_; i++) {
         pthread_create(&thread_lrt_[i - 1], nullptr, &lrtPthreadRunner, &lrtInfoArray_[i]);
     }
 }
@@ -173,7 +173,11 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     }
     platform_ = this;
 
-    nLrt_ = (unsigned int) config.platform.nLrt;
+    nLrt_ = config.platform.nLrt;
+    if (nLrt_ < 0) {
+        throwSpiderException("Invalid number of Lrt: %d\n", nLrt_);
+    }
+
     /** Init of the different stacks **/
     initStacks(config);
 
@@ -187,9 +191,9 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     /** Create the different queues */
     spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<JobInfoMessage *>);
     lrt2SpiderParamQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ParameterMessage *>);
-    lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue<NotificationMessage>*);
+    lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_, NotificationQueue<NotificationMessage>*);
 
-    for (unsigned int i = 0; i < nLrt_ + 1; ++i) {
+    for (auto i = 0; i < nLrt_; ++i) {
         lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
     }
 
@@ -356,7 +360,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
 PlatformPThread::~PlatformPThread() {
     auto spiderCommunicator = getSpiderCommunicator();
-    for (unsigned int i = 1; i < nLrt_; ++i) {
+    for (auto i = 1; i < nLrt_; ++i) {
         NotificationMessage message(LRT_NOTIFICATION, LRT_STOP, getLrtIx());
         spiderCommunicator->push_notification(i, &message);
     }
@@ -366,7 +370,7 @@ PlatformPThread::~PlatformPThread() {
 
 
     //wait for each thread to free its lrt and archi stacks and to reach its end
-    for (unsigned int i = 1; i < nLrt_; i++) {
+    for (auto i = 1; i < nLrt_; i++) {
         pthread_join(lrtThreadsArray[i], nullptr);
     }
 
@@ -379,7 +383,7 @@ PlatformPThread::~PlatformPThread() {
     }
 #endif
 
-    for (unsigned int i = 0; i < nLrt_; i++) {
+    for (auto i = 0; i < nLrt_; i++) {
         lrt_[i]->~LRT();
         StackMonitor::free(ARCHI_STACK, lrt_[i]);
         StackMonitor::free(ARCHI_STACK, lrtCom_[i]);
@@ -394,7 +398,7 @@ PlatformPThread::~PlatformPThread() {
     StackMonitor::free(ARCHI_STACK, lrtInfoArray_);
 
     /** Freeing queues **/
-    for (unsigned int i = 0; i < nLrt_ + 1; ++i) {
+    for (auto i = 0; i < nLrt_; ++i) {
         lrtNotificationQueues_[i]->~NotificationQueue();
         StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
     }

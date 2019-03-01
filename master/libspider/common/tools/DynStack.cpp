@@ -60,7 +60,7 @@ static inline int getAlignSize(int size) {
 
 void *DynStack::alloc(int size, bool pageAligned) {
     std::lock_guard<std::mutex> lock(memoryMutex_);
-    int alignedSize = size + sizeof(int);
+    int alignedSize = size + sizeof(std::int64_t);
 
     if (pageAligned) {
         alignedSize = getAlignSize(alignedSize);
@@ -73,7 +73,7 @@ void *DynStack::alloc(int size, bool pageAligned) {
     if (!address) {
         throwSpiderException("failed to allocate %d bytes", alignedSize);
     }
-    auto *sizeAddress = (int *) address;
+    auto *sizeAddress = (std::int64_t *) address;
     auto *dataAddress = (void *) (sizeAddress + 1);
     *sizeAddress = alignedSize;
 
@@ -91,8 +91,8 @@ void DynStack::freeAll() {
 void DynStack::free(void *var) {
     std::lock_guard<std::mutex> lock(memoryMutex_);
     void *dataAddress = var;
-    auto *address = (void *) (((int *) dataAddress) - 1);
-    int size = *((int *) address);
+    auto *address = (void *) (((std::int64_t *) dataAddress) - 1);
+    std::int64_t size = *((std::int64_t *) address);
 
     maxSize_ = std::max(maxSize_, curUsedSize_);
     curUsedSize_ -= size;

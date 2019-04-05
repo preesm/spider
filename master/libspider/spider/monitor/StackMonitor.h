@@ -52,8 +52,8 @@ typedef enum {
 } SpiderStack;
 
 
-#define CREATE(stackId, type) new(StackMonitor::alloc(stackId, sizeof(type), true)) type
-#define CREATE_MUL(stackId, size, type) new(StackMonitor::alloc(stackId, (size)*sizeof(type), true)) type[size]
+#define CREATE(stackId, type) new(StackMonitor::alloc(stackId, sizeof(type), false)) type
+#define CREATE_MUL(stackId, size, type) new(StackMonitor::alloc(stackId, (size)*sizeof(type), false)) type[size]
 
 #define CREATE_NA(stackId, type) new(StackMonitor::alloc(stackId, sizeof(type), false)) type
 #define CREATE_MUL_NA(stackId, size, type) new(StackMonitor::alloc(stackId, (size)*sizeof(type), false)) type[size]

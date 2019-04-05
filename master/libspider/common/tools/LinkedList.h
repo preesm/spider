@@ -58,19 +58,51 @@ public:
 
     T &operator[](int ix);
 
-    int getSize();
+    /**
+     * @brief Return first node of the list. Current is unchanged.
+     * @return first node of the list
+     */
+    inline Node *first() const;
+
+    /**
+     * @brief Return last node of the list. Current is unchanged.
+     * @return last node of the list
+     */
+    inline Node *last() const;
+
+    /**
+     * @brief Return current node of the list
+     * @return current node of the list
+     */
+    inline Node *current() const;
+
+    /**
+     * @brief Set on next node of the list and return it
+     * @return  next element of the list
+     */
+    inline Node *next();
+
+    /**
+     * @brief Set on previous node of the list and return it
+     * @return  previous element of the list
+     */
+    inline Node *previous();
+
+    /**
+     * @brief set current as first
+     */
+    void setOnFirst();
+
+    /**
+     * @brief set current as last
+     */
+    void setOnLast();
+
+    inline std::int32_t size() const;
 
     void add(T e);
 
     void addLast(T e);
-
-    Node *getCurrent();
-
-    Node *next();
-
-    void setOnFirst();
-
-    void setOnLast();
 
     T &del(Node *n);
 
@@ -122,7 +154,44 @@ inline T &LinkedList<T>::operator[](int ix) {
 }
 
 template<class T>
-inline int LinkedList<T>::getSize() {
+inline typename LinkedList<T>::Node *LinkedList<T>::first() const {
+    return head_;
+}
+
+template<class T>
+inline typename LinkedList<T>::Node *LinkedList<T>::last() const {
+    return tail_;
+}
+
+template<class T>
+inline typename LinkedList<T>::Node *LinkedList<T>::current() const {
+    return current_;
+}
+
+template<class T>
+inline typename LinkedList<T>::Node *LinkedList<T>::next() {
+    current_ = current_->next_;
+    return current_;
+}
+
+template<class T>
+inline typename LinkedList<T>::Node *LinkedList<T>::previous() {
+    current_ = current_->prev_;
+    return current_;
+}
+
+template<class T>
+inline void LinkedList<T>::setOnFirst() {
+    current_ = head_;
+}
+
+template<class T>
+inline void LinkedList<T>::setOnLast() {
+    current_ = tail_;
+}
+
+template<class T>
+inline std::int32_t LinkedList<T>::size() const {
     return size_;
 }
 
@@ -178,12 +247,6 @@ inline bool LinkedList<T>::contains(T item) {
 }
 
 template<class T>
-inline typename LinkedList<T>::Node *LinkedList<T>::next() {
-    current_ = current_->next_;
-    return current_;
-}
-
-template<class T>
 inline T &LinkedList<T>::del(LinkedList::Node *n) {
     if (n) {
         size_--;
@@ -213,21 +276,6 @@ inline T &LinkedList<T>::del(LinkedList::Node *n) {
     } else {
         throwSpiderException("Trying to remove nullptr node.");
     }
-}
-
-template<class T>
-inline void LinkedList<T>::setOnFirst() {
-    current_ = head_;
-}
-
-template<class T>
-inline void LinkedList<T>::setOnLast() {
-    current_ = tail_;
-}
-
-template<class T>
-inline typename LinkedList<T>::Node *LinkedList<T>::getCurrent() {
-    return current_;
 }
 
 

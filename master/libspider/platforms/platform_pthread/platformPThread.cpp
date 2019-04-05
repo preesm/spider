@@ -79,7 +79,6 @@ static auto origin_steady = std::chrono::steady_clock::now();
 
 static SharedMemArchi *archi_;
 
-
 pthread_barrier_t pthreadLRTBarrier;
 
 void printfSpider();
@@ -191,9 +190,9 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     /** Create the different queues */
     spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<JobInfoMessage *>);
     lrt2SpiderParamQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ParameterMessage *>);
-    lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_, NotificationQueue<NotificationMessage>*);
+    lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue<NotificationMessage>*);
 
-    for (auto i = 0; i < nLrt_; ++i) {
+    for (auto i = 0; i < nLrt_ + 1; ++i) {
         lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
     }
 
@@ -399,7 +398,7 @@ PlatformPThread::~PlatformPThread() {
     StackMonitor::free(ARCHI_STACK, lrtInfoArray_);
 
     /** Freeing queues **/
-    for (auto i = 0; i < nLrt_; ++i) {
+    for (auto i = 0; i < nLrt_ + 1; ++i) {
         lrtNotificationQueues_[i]->~NotificationQueue();
         StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
     }

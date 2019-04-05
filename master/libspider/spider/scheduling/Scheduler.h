@@ -62,7 +62,7 @@ protected:
 
     void addPrevActors(SRDAGVertex *vertex, List<SRDAGVertex *> *list);
 
-    inline Time computeMinimumStartTime(SRDAGVertex *vertex);
+    virtual inline Time computeMinimumStartTime(SRDAGVertex *vertex);
 
     inline void addJobToSchedule(SRDAGSchedule *schedule, SRDAGVertex *vertex, int pe, Time *start, Time *end);
 

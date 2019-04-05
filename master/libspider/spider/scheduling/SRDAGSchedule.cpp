@@ -88,6 +88,9 @@ void SRDAGSchedule::print(const char *path) {
     Platform::get()->fprintf(file, "</data>\n");
 
     Platform::get()->fclose(file);
+    for (int i = 0; i < nJobs_; ++i) {
+        jobs_[i]->resetLaunchInstances();
+    }
 }
 
 bool SRDAGSchedule::check() {

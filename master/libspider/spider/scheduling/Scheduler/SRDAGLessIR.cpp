@@ -4,7 +4,8 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
+ * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
@@ -36,45 +37,6 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef GRAPH_TRANSFO_H
-#define GRAPH_TRANSFO_H
-
-#include <graphs/PiSDF/PiSDFGraph.h>
-
-#include <graphs/SRDAG/SRDAGGraph.h>
-#include <graphs/SRDAG/SRDAGEdge.h>
-#include <graphs/SRDAG/SRDAGVertex.h>
-
-#include <spider.h>
-#include <scheduling/SRDAGSchedule.h>
-#include <scheduling/PiSDFSchedule.h>
-
-#define MAX_IO_EDGES 30000
-
-typedef struct transfoJob {
-    PiSDFGraph *graph;
-    int graphIter;
-    Param *paramValues;
-    SRDAGEdge **inputIfs;
-    SRDAGEdge **outputIfs;
-    SRDAGVertex **configs;
-    SRDAGVertex ***bodies;
-} transfoJob;
-
-void jit_ms(
-        PiSDFGraph *topPisdf,
-        Archi *archi,
-        SRDAGGraph *topSrdag,
-        MemAlloc *memAlloc,
-        Scheduler *scheduler);
-
-SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
-                                MemAlloc *memAlloc,
-                                Scheduler *scheduler, Time *end);
+#include "SRDAGLessIR.h"
 
 
-PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end);
-
-void schedule(PiSDFGraph *graph, int *const rhoValue, int *const brv);
-
-#endif/*GRAPH_TRANSFO_H*/

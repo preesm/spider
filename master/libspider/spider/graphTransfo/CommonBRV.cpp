@@ -60,10 +60,10 @@ static void updateFromIF(PiSDFVertex *vertex, const int *brv, long &scaleFactor)
         return;
     }
     if (tmp != 0 && tmp < cmp) {
-        long scaleScaleFactor = cmp / tmp;
-        if ((scaleScaleFactor * tmp) < cmp) {
-            scaleScaleFactor++;
-        }
+        long scaleScaleFactor = cmp / tmp + (cmp % tmp != 0); // ceil(cmp / tmp)
+//        if ((scaleScaleFactor * tmp) < cmp) {
+//            scaleScaleFactor++;
+//        }
         scaleFactor *= scaleScaleFactor;
     }
 }

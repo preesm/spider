@@ -52,6 +52,7 @@
 #include <cmath>
 #include <scheduling/Scheduler/SRDAGLessScheduler.h>
 #include <scheduling/Scheduler/SRDAGLessListScheduler.h>
+#include <zconf.h>
 
 #define SCHEDULE_SIZE 20000
 
@@ -324,7 +325,7 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
     // Check nb of config //
 
     /* Look for hierrachical actor in topDag */
-    TimeMonitor::startMonitoring();
+//    TimeMonitor::startMonitoring();
 
     SRDAGVertex *nextHierVx = getNextHierVx(topSrdag);
 
@@ -354,7 +355,6 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
                 fprintf(stderr, "INFO: >> Vertex: %s -- RV: %d\n", job->graph->getBody(i)->getName(), brv[i]);
             }
         }
-
         addSRVertices(topSrdag, job, brv);
 
         linkSRVertices(topSrdag, job, brv);
@@ -367,15 +367,14 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
         /* Find next hierarchical vertex */
         topSrdag->updateState();
         nextHierVx = getNextHierVx(topSrdag);
-
     } while (nextHierVx);
 
-    TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
+//    TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
     if (Spider::getGraphOptim()) {
-        TimeMonitor::startMonitoring();
+//        TimeMonitor::startMonitoring();
         optims(topSrdag);
-        TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
+//        TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
     }
 
     topSrdag->updateState();
@@ -385,10 +384,10 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
     }
 
     /* Schedule and launch execution */
-    TimeMonitor::startMonitoring();
+//    TimeMonitor::startMonitoring();
     scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchi());
-    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
-    // schedule->print("./schedule-static.pgantt");
+//    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
+//    schedule->print("./schedule-static.pgantt");
     return schedule;
 }
 
@@ -402,15 +401,15 @@ PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end) {
     auto *brv = CREATE_MUL(TRANSFO_STACK, root->getNBody(), std::int32_t);
     computeBRV(root, brv);
     auto schedule = CREATE_NA(TRANSFO_STACK, PiSDFSchedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
-    auto scheduler = SRDAGLessListScheduler(root, brv, schedule);
-    (*end) = Platform::get()->getTime();
-    scheduler.schedule(memAlloc);
-    scheduler.printSchedule("./schedule-new-list.pgantt");
-//    auto schedulerNew = SRDAGLessScheduler(root, brv, schedule);
-//    if (end) {
-//        (*end) = Platform::get()->getTime();
-//    }
-//    schedulerNew.schedule(memAlloc);
+//    auto scheduler = SRDAGLessListScheduler(root, brv, schedule);
+//    (*end) = Platform::get()->getTime();
+//    scheduler.schedule(memAlloc);
+//    scheduler.printSchedule("./schedule-new-list.pgantt");
+    auto schedulerNew = SRDAGLessScheduler(root, brv, schedule);
+    if (end) {
+        (*end) = Platform::get()->getTime();
+    }
+    schedulerNew.schedule(memAlloc);
 //    schedulerNew.printSchedule("./schedule-new.pgantt");
     StackMonitor::free(TRANSFO_STACK, brv);
     return schedule;

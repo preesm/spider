@@ -41,6 +41,7 @@
 #include <vector>
 #include <cstdint>
 #include <scheduling/PiSDFSchedule.h>
+#include "SRDAGLessIR.h"
 
 class PiSDFGraph;
 

@@ -55,12 +55,11 @@ typedef struct VertexDependency {
 
 class SRDAGLessScheduler {
 public:
-    SRDAGLessScheduler(PiSDFGraph *graph, const std::int32_t *brv, PiSDFSchedule *schedule,
-                       SRDAGLessScheduler *parent = nullptr);
+    SRDAGLessScheduler(PiSDFGraph *graph, PiSDFSchedule *schedule, SRDAGLessScheduler *parent = nullptr);
 
     virtual ~SRDAGLessScheduler();
 
-    virtual const PiSDFSchedule *schedule(MemAlloc *memAlloc);
+    virtual const PiSDFSchedule *schedule(PiSDFGraph *graph, MemAlloc *memAlloc);
 
     inline PiSDFSchedule *getSchedule() {
         return schedule_;
@@ -93,9 +92,11 @@ protected:
 
     void initiliazeVertexScheduleIR(PiSDFVertex *vertex, std::int32_t rv);
 
+    void initIR(PiSDFGraph *const graph);
+
     void initiliazeInterfacesIR(SRDAGLessScheduler *vertex);
 
-    void replaceInputIfWithBroadcast(const std::int32_t *brv);
+    void replaceInputIfWithBroadcast(PiSDFGraph *graph);
 
     void replaceOutputIfWithRoundbuffer(const std::int32_t *brv);
 

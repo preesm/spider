@@ -73,6 +73,8 @@ public:
 
     inline int getNJobs(int pe) const;
 
+    inline Time computeMaxLatency() const;
+
 protected:
     int nPE_{};
     int nJobMax_{};
@@ -108,5 +110,15 @@ inline int Schedule::getNJobs(int pe) const {
     }
     return nJobPerPE_[pe];
 }
+
+
+Time Schedule::computeMaxLatency() const {
+    Time maxLatency = 0;
+    for (std::int32_t i = 0; i < nPE_; ++i) {
+        maxLatency = std::max(maxLatency, readyTimeOfPEs_[i]);
+    }
+    return maxLatency;
+}
+
 
 #endif/*SCHEDULE_H*/

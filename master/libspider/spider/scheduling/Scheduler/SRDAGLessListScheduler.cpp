@@ -40,24 +40,24 @@
 #include <graphs/PiSDF/PiSDFEdge.h>
 #include <Logger.h>
 
-SRDAGLessListScheduler::SRDAGLessListScheduler(PiSDFGraph *graph, std::int32_t *brv, PiSDFSchedule *schedule)
-        : SRDAGLessScheduler(graph, brv, schedule) {
-    std::int32_t totalNVertices = 0;
-    for (int i = 0; i < nVertices_; ++i) {
-        totalNVertices += brv[i];
-    }
-
-    list_ = CREATE(TRANSFO_STACK, List<PiSDFVertex *>)(TRANSFO_STACK, totalNVertices);
-
-    schedLvl_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, int*);
-    /** Init schedule level **/
-    for (int i = 0; i < nVertices_; ++i) {
-        schedLvl_[i] = CREATE_MUL_NA(TRANSFO_STACK, brv[i], int);
-        for (int j = 0; j < brv[i]; ++j) {
-            schedLvl_[i][j] = -1;
-            list_->add(graph_->getBody(i));
-        }
-    }
+SRDAGLessListScheduler::SRDAGLessListScheduler(PiSDFGraph *graph, PiSDFSchedule *schedule) : SRDAGLessScheduler(graph,
+                                                                                                                schedule) {
+//    std::int32_t totalNVertices = 0;
+//    for (int i = 0; i < nVertices_; ++i) {
+//        totalNVertices += brv[i];
+//    }
+//
+//    list_ = CREATE(TRANSFO_STACK, List<PiSDFVertex *>)(TRANSFO_STACK, totalNVertices);
+//
+//    schedLvl_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, int*);
+//    /** Init schedule level **/
+//    for (int i = 0; i < nVertices_; ++i) {
+//        schedLvl_[i] = CREATE_MUL_NA(TRANSFO_STACK, brv[i], int);
+//        for (int j = 0; j < brv[i]; ++j) {
+//            schedLvl_[i][j] = -1;
+//            list_->add(graph_->getBody(i));
+//        }
+//    }
 }
 
 SRDAGLessListScheduler::~SRDAGLessListScheduler() {
@@ -154,7 +154,7 @@ inline int SRDAGLessListScheduler::myqsort_part(int p, int r) {
     }
 }
 
-const PiSDFSchedule *SRDAGLessListScheduler::schedule(MemAlloc *memAlloc) {
+const PiSDFSchedule *SRDAGLessListScheduler::schedule(PiSDFGraph *const graph, MemAlloc *memAlloc) {
     /** Compute schedule level **/
     for (int i = 0; i < nVertices_; ++i) {
         computeScheduleLevel((*list_)[i]);

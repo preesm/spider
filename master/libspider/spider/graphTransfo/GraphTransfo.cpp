@@ -387,7 +387,7 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
 //    TimeMonitor::startMonitoring();
     scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchi());
 //    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
-//    schedule->print("./schedule-static.pgantt");
+//    schedule->print("./schedule-ref.pgantt");
     return schedule;
 }
 
@@ -398,19 +398,14 @@ PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end) {
         throwSpiderException("Top graph should contain at least one actor.");
     }
     auto *root = graph->getBody(0)->getSubGraph();
-    auto *brv = CREATE_MUL(TRANSFO_STACK, root->getNBody(), std::int32_t);
-    computeBRV(root, brv);
+    computeHierarchicalBRV(root);
     auto schedule = CREATE_NA(TRANSFO_STACK, PiSDFSchedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
 //    auto scheduler = SRDAGLessListScheduler(root, brv, schedule);
-//    (*end) = Platform::get()->getTime();
-//    scheduler.schedule(memAlloc);
-//    scheduler.printSchedule("./schedule-new-list.pgantt");
-    auto schedulerNew = SRDAGLessScheduler(root, brv, schedule);
+    auto scheduler = SRDAGLessScheduler(root, schedule);
     if (end) {
         (*end) = Platform::get()->getTime();
     }
-    schedulerNew.schedule(memAlloc);
-//    schedulerNew.printSchedule("./schedule-new.pgantt");
-    StackMonitor::free(TRANSFO_STACK, brv);
+    scheduler.schedule(root, memAlloc);
+//    scheduler.printSchedule("./schedule-non-relaxed.pgantt");
     return schedule;
 }

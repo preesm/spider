@@ -70,7 +70,7 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
 //                                   prod, cons);
                         }
                     }
-                    job->bodies[bodyIx][j] = topSrdag->addBroadcast(MAX_IO_EDGES);
+                    job->bodies[bodyIx][j] = topSrdag->addBroadcast(MAX_IO_EDGES, pi_vertex);
                 }
                 break;
             case PISDF_SUBTYPE_ROUNDBUFFER:

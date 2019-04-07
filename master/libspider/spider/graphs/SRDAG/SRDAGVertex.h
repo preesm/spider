@@ -503,6 +503,7 @@ inline Time SRDAGVertex::executionTimeOn(int peType) const {
         case SRDAG_NORMAL:
             return reference_->getTimingOnType(peType, inParams_, nInParam_);
         case SRDAG_BROADCAST:
+            return 100;
         case SRDAG_JOIN:
         case SRDAG_FORK:
         case SRDAG_ROUNDBUFFER:

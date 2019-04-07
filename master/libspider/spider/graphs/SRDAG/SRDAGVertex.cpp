@@ -143,7 +143,13 @@ const char *SRDAGVertex::toString() {
         case SRDAG_ROUNDBUFFER:
             return "RB";
         case SRDAG_BROADCAST:
-            return "BR";
+            if (reference_) {
+                return reference_->getName();
+            }
+            {
+                auto name = std::string("BR-") + std::string(inEdges_[0]->getSrc()->toString());
+                return name.c_str();
+            }
         case SRDAG_INIT:
             return "Init";
         case SRDAG_END:

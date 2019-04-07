@@ -43,11 +43,11 @@
 
 class SRDAGLessListScheduler : public SRDAGLessScheduler {
 public:
-    SRDAGLessListScheduler(PiSDFGraph *graph, std::int32_t *brv, PiSDFSchedule *schedule);
+    SRDAGLessListScheduler(PiSDFGraph *graph, PiSDFSchedule *schedule);
 
     ~SRDAGLessListScheduler() override;
 
-    const PiSDFSchedule *schedule(MemAlloc *memAlloc) override;
+    const PiSDFSchedule *schedule(PiSDFGraph *graph, MemAlloc *memAlloc) override;
 
 private:
     List<PiSDFVertex *> *list_;

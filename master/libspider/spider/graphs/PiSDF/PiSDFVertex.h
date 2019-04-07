@@ -119,8 +119,20 @@ public:
 
     inline bool isHierarchical() const;
 
+    inline std::int32_t getBRVValue() const {
+        return brvValue_;
+    }
+
     /** General setter */
     inline void setSubGraph(PiSDFGraph *subGraph);
+
+    inline void setBRVValue(std::int32_t value) {
+        brvValue_ = value;
+    }
+
+    inline void setId(std::int32_t id) {
+        id_ = id;
+    }
 
     /** Constraints/timings */
     inline bool canExecuteOn(int pe);
@@ -179,6 +191,8 @@ private:
     Expression **timings_;
 
     ScheduleJob *scheduleJob_;
+
+    std::int32_t brvValue_;
 };
 
 /** Inlines Fcts */

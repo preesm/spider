@@ -90,6 +90,8 @@ public:
 
     static inline std::int32_t fastCeilIntDiv(std::int32_t num, std::int32_t denom);
 
+    static inline std::int32_t fastFloorIntDiv(std::int32_t num, std::int32_t denom);
+
 private:
 
 };
@@ -101,7 +103,8 @@ std::int32_t SRDAGLessIR::computeFirstDependencyIx(PiSDFVertex *vertex,
     auto cons = edge->resolveCons();
     auto prod = edge->resolveProd();
     auto delay = edge->resolveDelay();
-    return static_cast<int32_t>((cons * vertexInstance - delay) / prod);
+    //return static_cast<int32_t>((cons * vertexInstance - delay) / prod);
+    return fastFloorIntDiv(cons * vertexInstance - delay, prod);
 }
 
 std::int32_t
@@ -109,7 +112,8 @@ SRDAGLessIR::computeFirstDependencyIx(const std::int32_t &cons,
                                       const std::int32_t &prod,
                                       const std::int32_t &delay,
                                       std::int32_t vertexInstance) {
-    return static_cast<int32_t>((cons * vertexInstance - delay) / prod);
+    //return static_cast<int32_t>((cons * vertexInstance - delay) / prod);
+    return fastFloorIntDiv(cons * vertexInstance - delay, prod);
 }
 
 
@@ -125,7 +129,8 @@ std::int32_t SRDAGLessIR::computeLastDependencyIx(PiSDFVertex *vertex,
     if (rho > 1) {
         return static_cast<int32_t>((cons * (vertexInstance + std::min(rho, rv - vertexInstance)) - delay - 1) / prod);
     }
-    return static_cast<int32_t>((cons * (vertexInstance + 1) - delay - 1) / prod);
+    //return static_cast<int32_t>((cons * (vertexInstance + 1) - delay - 1) / prod);
+    return fastFloorIntDiv(cons * (vertexInstance + 1) - delay - 1, prod);
 }
 
 std::int32_t
@@ -138,7 +143,8 @@ SRDAGLessIR::computeLastDependencyIx(const std::int32_t &cons,
     if (rho > 1) {
         return static_cast<int32_t>((cons * (vertexInstance + std::min(rho, rv - vertexInstance)) - delay - 1) / prod);
     }
-    return static_cast<int32_t>((cons * (vertexInstance + 1) - delay - 1) / prod);
+    //return static_cast<int32_t>((cons * (vertexInstance + 1) - delay - 1) / prod);
+    return fastFloorIntDiv(cons * (vertexInstance + 1) - delay - 1, prod);
 }
 
 PiSDFVertex *SRDAGLessIR::getProducer(PiSDFVertex *vertex, std::int32_t edgeIx, std::int32_t /*vertexInstance*/) {
@@ -216,6 +222,12 @@ SRDAGLessIR::computeLastDependencyIxRelaxed(PiSDFVertex *vertex,
 
 inline std::int32_t SRDAGLessIR::fastCeilIntDiv(std::int32_t num, std::int32_t denom) {
     return static_cast<int32_t >(num / denom + (num % denom != 0));
+}
+
+std::int32_t SRDAGLessIR::fastFloorIntDiv(std::int32_t num, std::int32_t denom) {
+    std::int32_t d = num / denom;
+    std::int32_t r = num % denom;  /* optimizes into single division. */
+    return r ? (d - ((num < 0) ^ (denom < 0))) : d;
 }
 
 

@@ -140,7 +140,7 @@ void Spider::init(SpiderConfig &cfg) {
 
 extern int stopThreads;
 
-std::int32_t computeTotalNBodies(PiSDFGraph *g) {
+static std::int32_t computeTotalNBodies(PiSDFGraph *g) {
     std::int32_t nBodies = g->getNBody();
     for (auto i = 0; i < g->getNBody(); ++i) {
         if (g->getBody(i)->isHierarchical()) {
@@ -186,27 +186,28 @@ void Spider::iterate() {
     Time start = 0;
     Time end = 0;
     Time endTransfo = 0;
-    auto nIteration = 100;
+    auto nIteration = 1000;
     double averageTransfo = 0.f;
     double averageSchedule = 0.f;
     double averageTotal = 0.f;
-//    for (int i = 0; i < nIteration; ++i) {
-//        start = Platform::get()->getTime();
-//        auto *schedule = srdagLessScheduler(memAlloc_, &endTransfo);
-//        schedule->~PiSDFSchedule();
-//        StackMonitor::free(TRANSFO_STACK, schedule);
-//        end = Platform::get()->getTime();
-//        averageTransfo += (endTransfo - start);
-//        averageSchedule += (end - endTransfo);
-//        averageTotal = averageTransfo + averageSchedule;
-//    }
-//    averageTransfo /= static_cast<double >(nIteration);
-//    averageSchedule /= static_cast<double >(nIteration);
-//    averageTotal /= static_cast<double >(nIteration);
-//    Logger::print(LOG_GENERAL, LOG_INFO, "srdagLessScheduler:\n");
-//    Logger::print(LOG_GENERAL, LOG_INFO, "          => Transformation: %lf ms.\n", averageTransfo / 1000000.);
-//    Logger::print(LOG_GENERAL, LOG_INFO, "          => Scheduling:     %lf ms.\n", averageSchedule / 1000000.);
-//    Logger::print(LOG_GENERAL, LOG_INFO, "          => Total:          %lf ms.\n", averageTotal / 1000000.);
+    for (int i = 0; i < nIteration; ++i) {
+        start = Platform::get()->getTime();
+        auto *schedule = srdagLessScheduler(memAlloc_, &endTransfo);
+      //  fprintf(stderr, "INFO: Max latency: %" PRIu64"\n", schedule->computeMaxLatency());
+        schedule->~PiSDFSchedule();
+        StackMonitor::free(TRANSFO_STACK, schedule);
+        end = Platform::get()->getTime();
+        averageTransfo += (endTransfo - start);
+        averageSchedule += (end - endTransfo);
+        averageTotal = averageTransfo + averageSchedule;
+    }
+    averageTransfo /= static_cast<double >(nIteration);
+    averageSchedule /= static_cast<double >(nIteration);
+    averageTotal /= static_cast<double >(nIteration);
+    Logger::print(LOG_GENERAL, LOG_INFO, "srdagLessScheduler:\n");
+    Logger::print(LOG_GENERAL, LOG_INFO, "          => Transformation: %lf ms.\n", averageTransfo / 1000000.);
+    Logger::print(LOG_GENERAL, LOG_INFO, "          => Scheduling:     %lf ms.\n", averageSchedule / 1000000.);
+    Logger::print(LOG_GENERAL, LOG_INFO, "          => Total:          %lf ms.\n", averageTotal / 1000000.);
     for (int i = 0; i < nIteration; ++i) {
         start = Platform::get()->getTime();
         delete srdag_;
@@ -214,6 +215,7 @@ void Spider::iterate() {
         srdag_ = new SRDAGGraph();
         memAlloc_->reset();
         auto *schedule = static_scheduler(srdag_, memAlloc_, scheduler_, &endTransfo);
+      //  fprintf(stderr, "INFO: Max latency: %" PRIu64"\n", schedule->computeMaxLatency());
         schedule->~SRDAGSchedule();
         StackMonitor::free(TRANSFO_STACK, schedule);
         end = Platform::get()->getTime();

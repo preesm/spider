@@ -94,7 +94,7 @@ void computeBRV(PiSDFGraph *const graph, int *brv) {
     // 0. First we need to get all different connected components
     long nDoneVertices = 0;
     for (int i = 0; i < graph->getNBody(); i++) {
-        PiSDFVertex *vertex = graph->getBody(i);
+        auto *vertex = graph->getBody(i);
         auto vertexIx = getVertexIx(vertex);
         if (!keyVertexSet[vertexIx]) {
             long nEdges = 0;
@@ -109,11 +109,33 @@ void computeBRV(PiSDFGraph *const graph, int *brv) {
             // 3. Update the number of treated vertices
             nDoneVertices = vertexSet.getN();
         }
+        vertex->setBRVValue(brv[i]);
+    }
+    for (std::int32_t i = 0; i < graph->getNInIf(); ++i) {
+        auto *vertex = graph->getInputIf(i);
+        vertex->setBRVValue(1);
+    }
+    for (std::int32_t i = 0; i < graph->getNOutIf(); ++i) {
+        auto *vertex = graph->getOutputIf(i);
+        vertex->setBRVValue(1);
     }
     while (vertexSet.getN() > 0) {
         vertexSet.del(vertexSet[0]);
     }
     StackMonitor::free(TRANSFO_STACK, keyVertexSet);
+}
+
+
+void computeHierarchicalBRV(PiSDFGraph *const graph) {
+    auto *brv = CREATE_MUL(TRANSFO_STACK, graph->getNBody(), std::int32_t);
+    computeBRV(graph, brv);
+    StackMonitor::free(TRANSFO_STACK, brv);
+    for (std::int32_t i = 0; i < graph->getNBody(); ++i) {
+        auto *vertex = graph->getBody(i);
+        if (vertex->isHierarchical()){
+            computeHierarchicalBRV(vertex->getSubGraph());
+        }
+    }
 }
 
 

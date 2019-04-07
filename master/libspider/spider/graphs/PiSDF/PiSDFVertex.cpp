@@ -50,7 +50,9 @@ PiSDFVertex::PiSDFVertex(
         int nInEdge, int nOutEdge,
         int nInParam, int nOutParam) {
 
-    id_ = globalId++;
+    if (type == PISDF_TYPE_BODY) {
+        id_ = globalId++;
+    }
     typeId_ = typeId;
     fctId_ = fctId;
     type_ = type;

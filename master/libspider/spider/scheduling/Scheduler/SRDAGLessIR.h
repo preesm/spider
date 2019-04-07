@@ -72,6 +72,13 @@ public:
                                                        std::int32_t rho = 1,
                                                        std::int32_t rv = 1);
 
+    static inline void computeDependenciesIxFromInputIF(PiSDFVertex *vertex,
+                                                        std::int32_t edgeIx,
+                                                        const std::int32_t *instancesArray,
+                                                        PiSDFVertex **producer,
+                                                        std::int32_t *deltaStart,
+                                                        std::int32_t *deltaEnd);
+
     static inline std::int32_t computeFirstDependencyIxRelaxed(PiSDFVertex *vertex,
                                                                std::int32_t edgeIx,
                                                                std::int32_t vertexInstance,
@@ -147,9 +154,44 @@ SRDAGLessIR::computeLastDependencyIx(const std::int32_t &cons,
     return fastFloorIntDiv(cons * (vertexInstance + 1) - delay - 1, prod);
 }
 
-PiSDFVertex *SRDAGLessIR::getProducer(PiSDFVertex *vertex, std::int32_t edgeIx, std::int32_t /*vertexInstance*/) {
+inline PiSDFVertex *
+SRDAGLessIR::getProducer(PiSDFVertex *vertex, std::int32_t edgeIx, std::int32_t /*vertexInstance*/) {
+    /** TODO: hand case of dynamic param **/
+    return vertex->getInEdge(edgeIx)->getSrc();
+}
+
+void SRDAGLessIR::computeDependenciesIxFromInputIF(PiSDFVertex *vertex,
+                                                   std::int32_t edgeIx,
+                                                   const std::int32_t *instancesArray,
+                                                   PiSDFVertex **producer,
+                                                   std::int32_t *deltaStart,
+                                                   std::int32_t *deltaEnd) {
+    auto vertexIx = vertex->getId() - 1;
+    auto vertexInstance = instancesArray[vertexIx];
     auto *edge = vertex->getInEdge(edgeIx);
-    return edge->getSrc();
+    auto cons = edge->resolveCons();
+    auto delay = edge->resolveDelay();
+    if ((vertexInstance * cons) < delay) {
+        *deltaStart = -1;
+        return;
+    }
+    /** Let's forward direct inheritence of dependencies **/
+    auto *parentVertex = vertex->getGraph()->getParentVertex();
+    auto parentInstance = instancesArray[parentVertex->getId() - 1];
+    auto *inputIf = edge->getSrc();
+    auto inputIfIx = inputIf->getTypeId();
+    auto *originalSrc = getProducer(parentVertex, inputIfIx, 1);
+    if (originalSrc->getType() == PISDF_TYPE_IF) {
+        computeDependenciesIxFromInputIF(parentVertex, inputIfIx, instancesArray, producer, deltaStart, deltaEnd);
+        return;
+    }
+    /** We have reached top level of dependency **/
+    (*producer) = originalSrc;
+    auto finalCons = parentVertex->getInEdge(inputIfIx)->resolveCons();
+    auto finalProd = parentVertex->getInEdge(inputIfIx)->resolveProd();
+    auto finalDelay = parentVertex->getInEdge(inputIfIx)->resolveDelay();
+    (*deltaStart) = computeFirstDependencyIx(finalCons, finalProd, finalDelay, parentInstance);
+    (*deltaEnd) = computeLastDependencyIx(finalCons, finalProd, finalDelay, parentInstance);
 }
 
 std::int32_t
@@ -169,10 +211,15 @@ SRDAGLessIR::computeFirstDependencyIxRelaxed(PiSDFVertex *vertex,
     auto nextProd = 0;
     /** k * c_j - d_j only need to be computed once **/
     auto consumedTokens = vertexInstance * cons - delay;
-    for (int i = 0; i < level; ++i) {
+    auto *srcVertex = edge->getSrc();
+    while (srcVertex->isHierarchical()) {
+        auto *subGraph = srcVertex->getSubGraph();
+        auto *outputIf = subGraph->getOutputIf(edge->getSrcPortIx());
+        edge = outputIf->getInEdge(0);
+        srcVertex = edge->getSrc();
         /** Fetching P_n and q_{p_n} **/
-        nextProd = 0;
-        currentRep = 0;
+        nextProd = edge->resolveProd();
+        currentRep = srcVertex->getBRVValue();
         /** Computing (\delta^{0, n - 1}_{j, k} + 1) * P_{n - 1} **/
         auto shiftDep = (currentDep + 1) * currentProd;
         /** Computing \delta^{0, n}_{j, k} **/
@@ -180,6 +227,8 @@ SRDAGLessIR::computeFirstDependencyIxRelaxed(PiSDFVertex *vertex,
                      fastCeilIntDiv(shiftDep - consumedTokens - tokenOffsetK, nextProd);
         /** Updating K^{0}_{n} **/
         tokenOffsetK = currentRep * nextProd - shiftDep - tokenOffsetK;
+        /** Updating P_{n - 1} **/
+        currentProd = nextProd;
     }
     /** Return  \delta^{0, level - 1}_{j, k} **/
     return currentDep;
@@ -204,10 +253,15 @@ SRDAGLessIR::computeLastDependencyIxRelaxed(PiSDFVertex *vertex,
     auto nextProd = 0;
     /** (k + 1) * c_j -  d_j - 1 only need to be computed once **/
     auto consumedTokens = (vertexInstance + 1) * cons - 1 - delay;
-    for (int i = 0; i < level; ++i) {
+    auto *srcVertex = edge->getSrc();
+    while (srcVertex->isHierarchical()) {
+        auto *subGraph = srcVertex->getSubGraph();
+        auto *outputIf = subGraph->getOutputIf(edge->getSrcPortIx());
+        edge = outputIf->getInEdge(0);
+        srcVertex = edge->getSrc();
         /** Fetching P_n and q_{p_n} **/
-        nextProd = 0;
-        currentRep = 0;
+        nextProd = edge->resolveProd();
+        currentRep = srcVertex->getBRVValue();
         /** Computing (\delta^{1, n - 1}_{j, k} + 1) * P_{n - 1} **/
         auto shiftDep = (currentDep + 1) * currentProd;
         /** Computing \delta^{1, n}_{j, k} **/
@@ -215,6 +269,8 @@ SRDAGLessIR::computeLastDependencyIxRelaxed(PiSDFVertex *vertex,
                      fastCeilIntDiv(shiftDep - consumedTokens - tokenOffsetK, nextProd);
         /** Updating K^{1}_{n} **/
         tokenOffsetK = currentRep * nextProd - shiftDep - tokenOffsetK;
+        /** Updating P_{n - 1} **/
+        currentProd = nextProd;
     }
     /** Return  \delta^{1, level - 1}_{j, k} **/
     return currentDep;

@@ -121,6 +121,8 @@ void SRDAGLessScheduler::replaceInputIfWithBroadcast(PiSDFGraph *const graph) {
             broadcast->setBRVValue(1);
             broadcast->createScheduleJob(1);
             broadcast->setId(nVertices_ + 1);
+            broadcast->isExecutableOnPE(Spider::getArchi()->getSpiderPeIx());
+            broadcast->setTimingOnType(Spider::getArchi()->getSpiderPeIx(), "100");
             specialActorsAdded_.push_back(broadcast);
             snkVertex->disconnectInEdge(edgeSnkIx);
             edge->disconnectSnk();
@@ -266,47 +268,30 @@ void SRDAGLessScheduler::printRhoValues() {
     }
 }
 
-void SRDAGLessScheduler::scheduleSubgraph(PiSDFVertex *const vertex, MemAlloc *memAlloc) {
-//    auto vertexIx = getVertexIx(vertex);
-//    auto instance = instanceSchCountArray_[vertexIx];
-//    auto *childScheduler = children_[vertexIx - firstChildIx_];
-//    /** Reset availcount value of subgraph vertices **/
-//    if (instance > 0) {
-//        for (int ix = 0; ix < childScheduler->nVertices_; ++ix) {
-//            auto &currentAvlValue = childScheduler->instanceAvlCountArray_[ix];
-//            auto &currentSchValue = childScheduler->instanceSchCountArray_[ix];
-//            currentAvlValue = currentSchValue / instance;
-//        }
-//    }
-//    /** Do the scheduling of the subgraph **/
-//    childScheduler->schedule(memAlloc);
-//    std::string name = std::string(vertex->getName()) + std::string(".pgantt");
-}
-
 Time SRDAGLessScheduler::computeMinimumStartTime(PiSDFVertex *const vertex) const {
     Time minimumStartTime = 0;
     auto *job = vertex->getScheduleJob();
     auto instance = instanceSchCountArray_[getVertexIx(vertex)];
     auto *jobConstrains = job->getScheduleConstrain(instance);
     for (int ix = 0; ix < vertex->getNInEdge(); ++ix) {
-        auto deltaStart = SRDAGLessIR::computeFirstDependencyIx(vertex, ix, instance);
-        if (deltaStart < 0) {
-            /*!< Case of init */
-            continue;
-        }
+        std::int32_t deltaStart = 0;
         std::int32_t deltaEnd = 0;
         auto *vertexInSrc = SRDAGLessIR::getProducer(vertex, ix, instance);
         if (vertexInSrc->getType() == PISDF_TYPE_IF) {
-            auto *parentVertex = vertex->getGraph()->getParentVertex();
-            auto parentInstance = instanceSchCountArray_[getVertexIx(parentVertex)];
-            deltaStart = SRDAGLessIR::computeFirstDependencyIx(parentVertex, vertexInSrc->getTypeId(), parentInstance);
+            SRDAGLessIR::computeDependenciesIxFromInputIF(vertex, ix, instanceSchCountArray_,
+                                                          &vertexInSrc,
+                                                          &deltaStart,
+                                                          &deltaEnd);
             if (deltaStart < 0) {
                 /*!< Case of init */
                 continue;
             }
-            deltaEnd = SRDAGLessIR::computeLastDependencyIx(parentVertex, vertexInSrc->getTypeId(), parentInstance);
-            vertexInSrc = SRDAGLessIR::getProducer(parentVertex, vertexInSrc->getTypeId(), parentInstance);
         } else {
+            deltaStart = SRDAGLessIR::computeFirstDependencyIx(vertex, ix, instance);
+            if (deltaStart < 0) {
+                /*!< Case of init */
+                continue;
+            }
             deltaEnd = SRDAGLessIR::computeLastDependencyIx(vertex, ix, instance);
         }
         auto *vertexInSrcJob = vertexInSrc->getScheduleJob();
@@ -404,22 +389,14 @@ bool SRDAGLessScheduler::isSchedulable(PiSDFVertex *const vertex, std::int32_t /
     auto instance = instanceSchCountArray_[vertexIx];
 //    auto *vertexDependencies = dependenciesArray_[vertexIx];
     bool canRun = true;
-    auto *parentVertex = vertex->getGraph()->getParentVertex();
     for (int32_t ix = 0; ix < vertex->getNInEdge() && canRun; ++ix) {
         auto *vertexInSrc = SRDAGLessIR::getProducer(vertex, ix, instance);
         std::int32_t deltaIx = 0;
         if (vertexInSrc->getType() == PISDF_TYPE_IF) {
-//            auto *parentVertex = vertex->getGraph()->getParentVertex();
-//            auto parentInstance = instanceSchCountArray_[getVertexIx(parentVertex)];
-//            deltaIx = SRDAGLessIR::computeLastDependencyIx(parentVertex, vertexInSrc->getTypeId(), parentInstance);
             continue;
         } else {
             deltaIx = SRDAGLessIR::computeLastDependencyIx(vertex, ix, instance);
         }
-        //deltaIx = SRDAGLessIR::computeLastDependencyIx(vertex, ix, instance);
-//        fprintf(stderr, "INFO: Vertex[%s] -- Instance[%d]\n", vertex->getName(), instance);
-//        fprintf(stderr, "INFO:   ==> src[%s] -- nScheduled[%d] -- dependency[%d]\n", vertexInSrc->getName(),
-//                instanceSchCountArray_[getVertexIx(vertexInSrc)], deltaIx);
         canRun &= (instanceSchCountArray_[getVertexIx(vertexInSrc)] % (vertexInSrc->getBRVValue() + 1) > deltaIx);
     }
     return canRun;
@@ -461,6 +438,7 @@ const PiSDFSchedule *SRDAGLessScheduler::schedule(PiSDFGraph *const graph, MemAl
             map(vertex, memAlloc);
         }
         if (!instanceAvlCountArray_[vertexIx]) {
+            //  fprintf(stderr, "INFO: removing vertex[%s]\n", vertex->getName());
             /** Remove node as we finished using it **/
             list.del(node);
             node = list.current();

@@ -91,19 +91,19 @@ SRDAGLessListScheduler::~SRDAGLessListScheduler() {
 //    StackMonitor::free(TRANSFO_STACK, schedLvl_);
 }
 
-static Time computeMinExecTime(PiSDFVertex *const vertex, Archi *const archi) {
-    Time minExecTime = UINT64_MAX;
-    for (int j = 0; j < archi->getNPE(); j++) {
-        if (vertex->canExecuteOn(j)) {
-            Time execTime = vertex->getTimingOnPEType(archi->getPEType(j));
-            if (execTime == 0) {
-                throwSpiderException("Vertex: %s -- NULL execution time.", vertex->getName());
-            }
-            minExecTime = std::min(minExecTime, execTime);
-        }
-    }
-    return minExecTime;
-}
+//static Time computeMinExecTime(PiSDFVertex *const vertex, Archi *const archi) {
+//    Time minExecTime = UINT64_MAX;
+//    for (int j = 0; j < archi->getNPE(); j++) {
+//        if (vertex->canExecuteOn(j)) {
+//            Time execTime = vertex->getTimingOnPEType(archi->getPEType(j));
+//            if (execTime == 0) {
+//                throwSpiderException("Vertex: %s -- NULL execution time.", vertex->getName());
+//            }
+//            minExecTime = std::min(minExecTime, execTime);
+//        }
+//    }
+//    return minExecTime;
+//}
 
 std::int32_t SRDAGLessListScheduler::computeScheduleLevel(ListSchdVertex *const listSchdVertex) {
 //    int lvl = 0;
@@ -184,7 +184,7 @@ inline int SRDAGLessListScheduler::myqsort_part(int p, int r) {
     }
 }
 
-const PiSDFSchedule *SRDAGLessListScheduler::schedule(PiSDFGraph *const graph, MemAlloc *memAlloc) {
+const PiSDFSchedule *SRDAGLessListScheduler::schedule(PiSDFGraph *const /*graph*/, MemAlloc *memAlloc) {
     /** Compute schedule level **/
     for (int i = 0; i < nVertices_; ++i) {
         computeScheduleLevel((*list_)[i]);

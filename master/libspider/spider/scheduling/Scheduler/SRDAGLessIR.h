@@ -198,7 +198,7 @@ std::int32_t
 SRDAGLessIR::computeFirstDependencyIxRelaxed(PiSDFVertex *vertex,
                                              std::int32_t edgeIx,
                                              std::int32_t vertexInstance,
-                                             int32_t level) {
+                                             int32_t /*level*/) {
     auto *edge = vertex->getInEdge(edgeIx);
     auto cons = edge->resolveCons();
     auto prod = edge->resolveProd();
@@ -238,7 +238,7 @@ std::int32_t
 SRDAGLessIR::computeLastDependencyIxRelaxed(PiSDFVertex *vertex,
                                             std::int32_t edgeIx,
                                             std::int32_t vertexInstance,
-                                            std::int32_t level,
+                                            std::int32_t /*level*/,
                                             int32_t rho,
                                             int32_t rv) {
     auto *edge = vertex->getInEdge(edgeIx);

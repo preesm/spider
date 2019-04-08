@@ -48,9 +48,6 @@
 
 #define SCHEDULE_SIZE 20000
 
-static inline std::int32_t getVertexIx(const PiSDFVertex *const vertex) {
-    return vertex->getId() - 1;
-}
 
 void SRDAGLessScheduler::initiliazeVertexScheduleIR(PiSDFVertex *const vertex, std::int32_t rv) {
     auto vertexIx = getVertexIx(vertex);
@@ -59,47 +56,47 @@ void SRDAGLessScheduler::initiliazeVertexScheduleIR(PiSDFVertex *const vertex, s
     instanceAvlCountArray_[vertexIx] = rv;
 }
 
-void SRDAGLessScheduler::initiliazeInterfacesIR(SRDAGLessScheduler *const scheduler) {
-    auto *parent = scheduler->parent_;
-    auto *graph = scheduler->graph_;
-    auto *graphDependencies = parent->dependenciesArray_[graph->getParentVertex()->getTypeId()];
-    /** Input If **/
-    for (int ix = 0; ix < graph->getNInIf(); ++ix) {
-        auto *inputIf = graph->getInputIf(ix);
-        auto *edge = inputIf->getOutEdge(0);
-        auto *sink = edge->getSnk();
-        auto *snkDependency = &scheduler->dependenciesArray_[sink->getTypeId()][edge->getSnkPortIx()];
-        snkDependency->vertex_ = graphDependencies[ix].vertex_;
-        snkDependency->cons_ = edge->resolveCons();
-        snkDependency->prod_ = graphDependencies[ix].prod_;
-        snkDependency->delay_ = graphDependencies[ix].delay_ + edge->resolveDelay();
-        snkDependency->nScheduled_ = graphDependencies[ix].nScheduled_;
-    }
-    /** Output If **/
-    for (int ix = 0; ix < graph->getNOutIf(); ++ix) {
-        auto *edge = graph->getParentVertex()->getOutEdge(ix);
-        auto *sink = edge->getSnk();
-        auto *snkDependency = &parent->dependenciesArray_[sink->getTypeId()][edge->getSnkPortIx()];
-        auto *outputIf = graph->getOutputIf(ix);
-        auto *edgeIf = outputIf->getInEdge(0);
-        auto *vertexSrcIf = edgeIf->getSrc();
-        auto vertexSrcIfIx = vertexSrcIf->getTypeId();
-        snkDependency->vertex_ = vertexSrcIf;
-        snkDependency->cons_ = snkDependency->cons_;
-        snkDependency->prod_ = edgeIf->resolveProd();
-        snkDependency->delay_ = snkDependency->delay_ + edgeIf->resolveDelay();
-        snkDependency->nScheduled_ = &scheduler->instanceSchCountArray_[vertexSrcIfIx];
-    }
-    /** Go through children **/
-    auto *children = scheduler->children_;
-    for (int j = 0; j < scheduler->nChildren_; ++j) {
-        for (int ix = 0; ix < scheduler->nChildren_; ++ix) {
-            initiliazeInterfacesIR(children[ix]);
-        }
-    }
-
-    /** Compute rho values **/
-    scheduler->computeRhoValues();
+void SRDAGLessScheduler::initiliazeInterfacesIR(SRDAGLessScheduler *const /*scheduler*/) {
+//    auto *parent = scheduler->parent_;
+//    auto *graph = scheduler->graph_;
+//    auto *graphDependencies = parent->dependenciesArray_[graph->getParentVertex()->getTypeId()];
+//    /** Input If **/
+//    for (int ix = 0; ix < graph->getNInIf(); ++ix) {
+//        auto *inputIf = graph->getInputIf(ix);
+//        auto *edge = inputIf->getOutEdge(0);
+//        auto *sink = edge->getSnk();
+//        auto *snkDependency = &scheduler->dependenciesArray_[sink->getTypeId()][edge->getSnkPortIx()];
+//        snkDependency->vertex_ = graphDependencies[ix].vertex_;
+//        snkDependency->cons_ = edge->resolveCons();
+//        snkDependency->prod_ = graphDependencies[ix].prod_;
+//        snkDependency->delay_ = graphDependencies[ix].delay_ + edge->resolveDelay();
+//        snkDependency->nScheduled_ = graphDependencies[ix].nScheduled_;
+//    }
+//    /** Output If **/
+//    for (int ix = 0; ix < graph->getNOutIf(); ++ix) {
+//        auto *edge = graph->getParentVertex()->getOutEdge(ix);
+//        auto *sink = edge->getSnk();
+//        auto *snkDependency = &parent->dependenciesArray_[sink->getTypeId()][edge->getSnkPortIx()];
+//        auto *outputIf = graph->getOutputIf(ix);
+//        auto *edgeIf = outputIf->getInEdge(0);
+//        auto *vertexSrcIf = edgeIf->getSrc();
+//        auto vertexSrcIfIx = vertexSrcIf->getTypeId();
+//        snkDependency->vertex_ = vertexSrcIf;
+//        snkDependency->cons_ = snkDependency->cons_;
+//        snkDependency->prod_ = edgeIf->resolveProd();
+//        snkDependency->delay_ = snkDependency->delay_ + edgeIf->resolveDelay();
+//        snkDependency->nScheduled_ = &scheduler->instanceSchCountArray_[vertexSrcIfIx];
+//    }
+//    /** Go through children **/
+//    auto *children = scheduler->children_;
+//    for (int j = 0; j < scheduler->nChildren_; ++j) {
+//        for (int ix = 0; ix < scheduler->nChildren_; ++ix) {
+//            initiliazeInterfacesIR(children[ix]);
+//        }
+//    }
+//
+//    /** Compute rho values **/
+//    scheduler->computeRhoValues();
 }
 
 void SRDAGLessScheduler::replaceInputIfWithBroadcast(PiSDFGraph *const graph) {
@@ -181,13 +178,10 @@ void SRDAGLessScheduler::initIR(PiSDFGraph *const graph) {
     }
 }
 
-SRDAGLessScheduler::SRDAGLessScheduler(PiSDFGraph *graph, PiSDFSchedule *schedule, SRDAGLessScheduler *parent) {
+SRDAGLessScheduler::SRDAGLessScheduler(PiSDFGraph *graph, PiSDFSchedule *schedule) {
     graph_ = graph;
     //nVertices_ = graph->getNBody();
     schedule_ = schedule;
-    parent_ = parent;
-    nChildren_ = 0;
-    firstChildIx_ = -1;
 
     nVertices_ = computeTotalNBodies(graph);
 
@@ -208,11 +202,6 @@ SRDAGLessScheduler::SRDAGLessScheduler(PiSDFGraph *graph, PiSDFSchedule *schedul
 }
 
 SRDAGLessScheduler::~SRDAGLessScheduler() {
-    for (int ix = 0; ix < nChildren_; ++ix) {
-        auto &child = children_[ix];
-        child->~SRDAGLessScheduler();
-        StackMonitor::free(TRANSFO_STACK, child);
-    }
     for (auto &v : specialActorsAdded_) {
         removeBroadcast(v);
     }
@@ -220,8 +209,6 @@ SRDAGLessScheduler::~SRDAGLessScheduler() {
     StackMonitor::free(TRANSFO_STACK, rhoValueArray_);
     StackMonitor::free(TRANSFO_STACK, instanceAvlCountArray_);
     StackMonitor::free(TRANSFO_STACK, instanceSchCountArray_);
-//    StackMonitor::free(TRANSFO_STACK, dependenciesArray_);
-//    StackMonitor::free(TRANSFO_STACK, children_);
 }
 
 void SRDAGLessScheduler::computeRhoValues() {
@@ -268,7 +255,7 @@ void SRDAGLessScheduler::printRhoValues() {
     }
 }
 
-Time SRDAGLessScheduler::computeMinimumStartTime(PiSDFVertex *const vertex) const {
+Time SRDAGLessScheduler::computeMinimumStartTime(PiSDFVertex *const vertex) {
     Time minimumStartTime = 0;
     auto *job = vertex->getScheduleJob();
     auto instance = instanceSchCountArray_[getVertexIx(vertex)];
@@ -424,7 +411,6 @@ const PiSDFSchedule *SRDAGLessScheduler::schedule(PiSDFGraph *const graph, MemAl
     /** Iterate on the list **/
     list.setOnFirst();
     auto *node = list.current();
-    LinkedList<std::int32_t> instanceList(TRANSFO_STACK, nVertices_);
     while (node) {
         auto *vertex = node->val_;
         auto vertexIx = getVertexIx(vertex);

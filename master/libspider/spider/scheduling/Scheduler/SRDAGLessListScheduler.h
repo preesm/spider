@@ -50,19 +50,27 @@ public:
     const PiSDFSchedule *schedule(PiSDFGraph *graph, MemAlloc *memAlloc) override;
 
 private:
-    List<PiSDFVertex *> *list_;
+    typedef struct ListSchdVertex {
+        std::int32_t schedLvl_;
+        PiSDFVertex *vertex_;
+        std::int32_t instance_;
+    } ListSchdVertex;
 
-    int **schedLvl_;
+    List<ListSchdVertex *> *list_;
 
-    std::int32_t computeScheduleLevel(PiSDFVertex *vertex);
+    int totalNVertices_;
 
-    int compareScheduleLevels(PiSDFVertex *vertexA, PiSDFVertex *vertexB);
+    std::int32_t computeScheduleLevel(ListSchdVertex *listSchdVertex);
+
+    int compareScheduleLevels(ListSchdVertex *vertexA, ListSchdVertex *vertexB);
 
     void sort();
 
     void myqsort(int p, int r);
 
     int myqsort_part(int p, int r);
+
+    void initListOfVertex(PiSDFGraph *graph);
 };
 
 #endif //SPIDER_SRDAGLESSLISTSCHEDULER_H

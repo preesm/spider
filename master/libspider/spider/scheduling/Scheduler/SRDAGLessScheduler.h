@@ -55,7 +55,7 @@ typedef struct VertexDependency {
 
 class SRDAGLessScheduler {
 public:
-    SRDAGLessScheduler(PiSDFGraph *graph, PiSDFSchedule *schedule, SRDAGLessScheduler *parent = nullptr);
+    SRDAGLessScheduler(PiSDFGraph *graph, PiSDFSchedule *schedule);
 
     virtual ~SRDAGLessScheduler();
 
@@ -78,10 +78,6 @@ protected:
     PiSDFGraph *graph_;
     PiSDFSchedule *schedule_;
     std::int32_t nVertices_;
-    std::int32_t nChildren_;
-    std::int32_t firstChildIx_;
-    SRDAGLessScheduler *parent_;
-    SRDAGLessScheduler **children_;
     std::vector<PiSDFVertex *> specialActorsAdded_;
 
     /** Schedule IR variables  **/
@@ -110,7 +106,13 @@ protected:
 
     void computeRhoValues();
 
-    Time computeMinimumStartTime(PiSDFVertex *vertex) const;
+    Time computeMinimumStartTime(PiSDFVertex *vertex);
+
+    std::int32_t getVertexIx(PiSDFVertex *const vertex);
 };
+
+inline std::int32_t SRDAGLessScheduler::getVertexIx(PiSDFVertex *const vertex) {
+    return vertex->getId() - 1;
+}
 
 #endif //SPIDER_SRDAGLESSSCHEDULER_H

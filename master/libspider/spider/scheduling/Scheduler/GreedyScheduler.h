@@ -4,7 +4,8 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
+ * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
@@ -36,45 +37,26 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef GRAPH_TRANSFO_H
-#define GRAPH_TRANSFO_H
+#ifndef SPIDER_GREEDYSCHEDULER_H
+#define SPIDER_GREEDYSCHEDULER_H
 
-#include <graphs/PiSDF/PiSDFGraph.h>
-
-#include <graphs/SRDAG/SRDAGGraph.h>
-#include <graphs/SRDAG/SRDAGEdge.h>
+#include "../Scheduler.h"
 #include <graphs/SRDAG/SRDAGVertex.h>
+#include <tools/List.h>
+#include <platform.h>
 
-#include <spider.h>
-#include <scheduling/SRDAGSchedule.h>
-#include <scheduling/PiSDFSchedule.h>
+class GreedyScheduler : public Scheduler {
+public:
+    GreedyScheduler();
 
-#define MAX_IO_EDGES 4000
+    ~GreedyScheduler() override;
 
-typedef struct transfoJob {
-    PiSDFGraph *graph;
-    int graphIter;
-    Param *paramValues;
-    SRDAGEdge **inputIfs;
-    SRDAGEdge **outputIfs;
-    SRDAGVertex **configs;
-    SRDAGVertex ***bodies;
-} transfoJob;
+    void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi) override;
 
-void jit_ms(
-        PiSDFGraph *topPisdf,
-        Archi *archi,
-        SRDAGGraph *topSrdag,
-        MemAlloc *memAlloc,
-        Scheduler *scheduler);
+private:
+    bool isSchedulable(SRDAGVertex *vertex);
 
-SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
-                                MemAlloc *memAlloc,
-                                Scheduler *scheduler, Time *end);
+    void mapVertex(SRDAGVertex *vertex) override;
+};
 
-
-PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end);
-
-void schedule(PiSDFGraph *graph, int *const rhoValue, int *const brv);
-
-#endif/*GRAPH_TRANSFO_H*/
+#endif //SPIDER_GREEDYSCHEDULER_H

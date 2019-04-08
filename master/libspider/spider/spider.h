@@ -85,6 +85,7 @@ typedef enum {
 } MemAllocType;
 
 typedef enum {
+    SCHEDULER_GREEDY,
     SCHEDULER_LIST,
     SCHEDULER_LIST_ON_THE_GO,
     SCHEDULER_ROUND_ROBIN,

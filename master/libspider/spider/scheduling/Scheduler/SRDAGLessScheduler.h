@@ -61,6 +61,8 @@ public:
 
     virtual const PiSDFSchedule *schedule(PiSDFGraph *graph, MemAlloc *memAlloc);
 
+    virtual const PiSDFSchedule *scheduleRelaxed(PiSDFGraph *const graph, MemAlloc *memAlloc);
+
     inline PiSDFSchedule *getSchedule() {
         return schedule_;
     }
@@ -88,17 +90,11 @@ protected:
 
     void initiliazeVertexScheduleIR(PiSDFVertex *vertex, std::int32_t rv);
 
-    void initIR(PiSDFGraph *const graph);
-
-    void initiliazeInterfacesIR(SRDAGLessScheduler *vertex);
+    void initIR(PiSDFGraph *const graph, std::int32_t coeffRV);
 
     void replaceInputIfWithBroadcast(PiSDFGraph *graph);
 
-    void replaceOutputIfWithRoundbuffer(const std::int32_t *brv);
-
     bool isSchedulable(PiSDFVertex *vertex, std::int32_t nInstances);
-
-    void scheduleSubgraph(PiSDFVertex *vertex, MemAlloc *memAlloc);
 
     void mapVertex(PiSDFVertex *vertex);
 
@@ -108,7 +104,23 @@ protected:
 
     Time computeMinimumStartTime(PiSDFVertex *vertex);
 
-    std::int32_t getVertexIx(PiSDFVertex *const vertex);
+    std::int32_t getVertexIx(PiSDFVertex *vertex);
+
+    bool isSchedulableRelaxed(PiSDFVertex *vertex);
+
+    void mapVertexRelaxed(PiSDFVertex *vertex);
+
+    Time computeMinimumStartTimeRelaxed(PiSDFVertex *vertex);
+
+    void iterativeGetMinTime(PiSDFVertex *vertex,
+                             PiSDFVertex *srcVertex,
+                             PiSDFEdge *edge,
+                             Time &minTime,
+                             std::int32_t currentStart,
+                             std::int32_t currentLast,
+                             std::vector<std::int32_t> &firstDeps,
+                             std::vector<std::int32_t> &lastDeps,
+                             size_t level);
 };
 
 inline std::int32_t SRDAGLessScheduler::getVertexIx(PiSDFVertex *const vertex) {

@@ -72,7 +72,7 @@ public:
                                                        std::int32_t rv = 1);
 
     static void computeDependenciesIxFromInputIF(PiSDFVertex *vertex,
-                                                 std::int32_t edgeIx,
+                                                 std::int32_t *edgeIx,
                                                  const std::int32_t *instancesArray,
                                                  PiSDFVertex **producer,
                                                  std::int32_t *deltaStart,
@@ -102,7 +102,7 @@ public:
                                                        std::int32_t rho = 1,
                                                        std::int32_t rv = 1);
 
-    static void computeDependenciesIx(PiSDFVertex *vertex,
+    static PiSDFEdge *computeDependenciesIx(PiSDFVertex *vertex,
                                       std::int32_t edgeIx,
                                       const std::int32_t *instancesArray,
                                       PiSDFVertex **producer,

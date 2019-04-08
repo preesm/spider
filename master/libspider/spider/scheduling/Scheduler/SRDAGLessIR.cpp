@@ -40,12 +40,12 @@
 #include "SRDAGLessIR.h"
 
 void SRDAGLessIR::computeDependenciesIxFromInputIF(PiSDFVertex *vertex,
-                                                   std::int32_t edgeIx,
+                                                   std::int32_t *edgeIx,
                                                    const std::int32_t *instancesArray,
                                                    PiSDFVertex **producer,
                                                    std::int32_t *deltaStart,
                                                    std::int32_t *deltaEnd) {
-    auto *edge = vertex->getInEdge(edgeIx);
+    auto *edge = vertex->getInEdge(*edgeIx);
     Param cons = 0;
     Param delay = 0;
     std::int32_t vertexIx = vertex->getId() - 1;
@@ -58,10 +58,7 @@ void SRDAGLessIR::computeDependenciesIxFromInputIF(PiSDFVertex *vertex,
         delay = edge->resolveDelay();
         /** We hit a delay **/
         if ((vertexInstance * cons) < delay) {
-            if (deltaStart) {
-                (*deltaStart) = -1;
-            }
-            return;
+            break;
         }
         /** Let's forward direct inheritence of dependencies **/
         vertex = vertex->getGraph()->getParentVertex();
@@ -73,6 +70,7 @@ void SRDAGLessIR::computeDependenciesIxFromInputIF(PiSDFVertex *vertex,
         vertexInstance = instancesArray[vertexIx];
     }
     /** We have reached top level of dependency **/
+    (*edgeIx) = edge->getSrcPortIx();
     if (deltaStart) {
         // (*deltaStart) = computeFirstDependencyIxRelaxed(edge, vertexInstance, producer);
         (*deltaStart) = computeFirstDependencyIx(vertex, inputIfIx, vertexInstance);
@@ -252,12 +250,12 @@ std::int32_t SRDAGLessIR::computeLastDependencyIxRelaxed(PiSDFEdge *edge,
     return currentDep;
 }
 
-void SRDAGLessIR::computeDependenciesIx(PiSDFVertex *vertex,
-                                        std::int32_t edgeIx,
-                                        const std::int32_t *instancesArray,
-                                        PiSDFVertex **producer,
-                                        std::vector<std::int32_t> &indexesStart,
-                                        std::vector<std::int32_t> &indexesLast) {
+PiSDFEdge *SRDAGLessIR::computeDependenciesIx(PiSDFVertex *vertex,
+                                              std::int32_t edgeIx,
+                                              const std::int32_t *instancesArray,
+                                              PiSDFVertex **producer,
+                                              std::vector<std::int32_t> &indexesStart,
+                                              std::vector<std::int32_t> &indexesLast) {
     auto *edge = vertex->getInEdge(edgeIx);
     Param cons = 0;
     Param delay = 0;
@@ -272,7 +270,7 @@ void SRDAGLessIR::computeDependenciesIx(PiSDFVertex *vertex,
         /** We hit a delay **/
         if ((vertexInstance * cons) < delay) {
             indexesStart.push_back(-1);
-            return;
+            return edge;
         }
         /** Let's forward direct inheritence of dependencies **/
         vertex = vertex->getGraph()->getParentVertex();
@@ -295,6 +293,7 @@ void SRDAGLessIR::computeDependenciesIx(PiSDFVertex *vertex,
                                                 vertexInstance,
                                                 producer,
                                                 indexesLast);
+    return edge;
 
 }
 

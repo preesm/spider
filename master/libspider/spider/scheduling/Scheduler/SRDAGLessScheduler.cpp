@@ -217,7 +217,8 @@ Time SRDAGLessScheduler::computeMinimumStartTime(PiSDFVertex *const vertex) {
         std::int32_t deltaEnd = 0;
         auto *vertexInSrc = SRDAGLessIR::getProducer(vertex, ix, instance);
         if (vertexInSrc->getType() == PISDF_TYPE_IF) {
-            SRDAGLessIR::computeDependenciesIxFromInputIF(vertex, ix, instanceSchCountArray_,
+            auto edgeIx = ix;
+            SRDAGLessIR::computeDependenciesIxFromInputIF(vertex, &edgeIx, instanceSchCountArray_,
                                                           &vertexInSrc,
                                                           &deltaStart,
                                                           &deltaEnd);
@@ -457,12 +458,12 @@ Time SRDAGLessScheduler::computeMinimumStartTimeRelaxed(PiSDFVertex *vertex) {
         auto *edge = vertex->getInEdge(ix);
         auto *vertexInSrc = edge->getSrc();
         if (vertexInSrc->getType() == PISDF_TYPE_IF) {
-            SRDAGLessIR::computeDependenciesIx(vertex,
-                                               ix,
-                                               instanceSchCountArray_,
-                                               &vertexInSrc,
-                                               firstDependencies,
-                                               lastDependencies);
+            edge = SRDAGLessIR::computeDependenciesIx(vertex,
+                                                      ix,
+                                                      instanceSchCountArray_,
+                                                      &vertexInSrc,
+                                                      firstDependencies,
+                                                      lastDependencies);
         } else {
             SRDAGLessIR::computeFirstDependencyIxRelaxed(edge,
                                                          vertexInstance,
@@ -540,28 +541,46 @@ bool SRDAGLessScheduler::isSchedulableRelaxed(PiSDFVertex *const vertex) {
     bool canRun = true;
     for (int32_t ix = 0; ix < vertex->getNInEdge() && canRun; ++ix) {
         auto *vertexInSrc = SRDAGLessIR::getProducer(vertex, ix, vertexInstance);
-        std::vector<std::int32_t > lastDeps;
+        std::vector<std::int32_t> firstDeps;
+        std::vector<std::int32_t> lastDeps;
         std::int32_t deltaIx = 0;
-        if (vertexInSrc->getType() == PISDF_TYPE_IF) {
-            SRDAGLessIR::computeDependenciesIxFromInputIF(vertex,
-                                                          ix,
-                                                          instanceSchCountArray_,
-                                                          &vertexInSrc,
-                                                          nullptr,
-                                                          &deltaIx);
-//            SRDAGLessIR::computeLastDependencyIxRelaxed(edge,
-//                                                        vertexInstance,
+        SRDAGLessIR::computeDependenciesIx(vertex,
+                                           ix,
+                                           instanceSchCountArray_,
+                                           &vertexInSrc,
+                                           firstDeps,
+                                           lastDeps);
+//        if (vertexInSrc->getType() == PISDF_TYPE_IF) {
+//            auto finalEdgeIx = ix;
+//            SRDAGLessIR::computeDependenciesIxFromInputIF(vertex,
+//                                                          &finalEdgeIx,
+//                                                          instanceSchCountArray_,
+//                                                          &vertexInSrc,
+//                                                          nullptr,
+//                                                          &deltaIx);
+//            SRDAGLessIR::computeLastDependencyIxRelaxed(vertexInSrc->getOutEdge(finalEdgeIx),
+//                                                        deltaIx,
 //                                                        &vertexInSrc,
 //                                                        lastDeps);
-//            for (auto &dep : lastDeps) {
-//
-//            }
-            fprintf(stderr, "INFO: From IN-IF Vertex[%s] -- Producer[%s]\n", vertex->getName(), vertexInSrc->getName());
-        } else {
-            deltaIx = SRDAGLessIR::computeLastDependencyIxRelaxed(vertex->getInEdge(ix), vertexInstance, &vertexInSrc);
-            fprintf(stderr, "INFO: GENERAL    Vertex[%s] -- Producer[%s]\n", vertex->getName(), vertexInSrc->getName());
+//            fprintf(stderr, "INFO: From IN-IF Vertex[%s] -- Producer[%s]\n", vertex->getName(), vertexInSrc->getName());
+//        } else {
+//            SRDAGLessIR::computeLastDependencyIxRelaxed(vertex->getInEdge(ix), vertexInstance, &vertexInSrc, lastDeps);
+//            fprintf(stderr, "INFO: GENERAL    Vertex[%s] -- Producer[%s]\n", vertex->getName(), vertexInSrc->getName());
+//        }
+        deltaIx = lastDeps.back();
+        auto *parentVertex = vertexInSrc->getGraph()->getParentVertex();
+        auto *currentVertex = vertexInSrc;
+        std::int32_t globalRV = vertexInSrc->getBRVValue();
+        for (std::int32_t i = lastDeps.size() - 2; i > 0; --i) {
+            deltaIx += (currentVertex->getBRVValue() * lastDeps[i]);
+            globalRV *= currentVertex->getBRVValue();
+            currentVertex = parentVertex;
+            parentVertex = currentVertex->getGraph()->getParentVertex();
         }
-        canRun &= (instanceSchCountArray_[getVertexIx(vertexInSrc)] % (vertexInSrc->getBRVValue() + 1) > deltaIx);
+        if (lastDeps.size() > 1) {
+            deltaIx += (globalRV * lastDeps[0]);
+        }
+        canRun &= (instanceSchCountArray_[getVertexIx(vertexInSrc)] > deltaIx);
     }
     return canRun;
 }
@@ -581,6 +600,9 @@ const PiSDFSchedule *SRDAGLessScheduler::scheduleRelaxed(PiSDFGraph *const graph
         for (int i = 0; i < numberSchedulable; ++i) {
             /** Map the vertex **/
             mapVertexRelaxed(vertex);
+            /** Updating values **/
+            instanceAvlCountArray_[vertexIx]--;
+            instanceSchCountArray_[vertexIx]++;
         }
         if (!instanceAvlCountArray_[vertexIx]) {
             /** Remove node as we finished using it **/

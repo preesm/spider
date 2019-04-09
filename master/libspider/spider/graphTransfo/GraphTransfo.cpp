@@ -400,12 +400,12 @@ PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end) {
     auto *root = graph->getBody(0)->getSubGraph();
     computeHierarchicalBRV(root);
     auto schedule = CREATE_NA(TRANSFO_STACK, PiSDFSchedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
-//    auto scheduler = SRDAGLessListScheduler(root, brv, schedule);
+//    auto scheduler = SRDAGLessListScheduler(root, schedule);
     auto scheduler = SRDAGLessScheduler(root, schedule);
     if (end) {
         (*end) = Platform::get()->getTime();
     }
-    scheduler.schedule(root, memAlloc);
-//    scheduler.printSchedule("./schedule-non-relaxed.pgantt");
+    scheduler.scheduleRelaxed(root, memAlloc);
+//    scheduler.printSchedule("./schedule-relaxed.pgantt");
     return schedule;
 }

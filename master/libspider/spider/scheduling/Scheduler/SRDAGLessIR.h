@@ -102,13 +102,6 @@ public:
                                                        std::int32_t rho = 1,
                                                        std::int32_t rv = 1);
 
-    static PiSDFEdge *computeDependenciesIx(PiSDFVertex *vertex,
-                                      std::int32_t edgeIx,
-                                      const std::int32_t *instancesArray,
-                                      PiSDFVertex **producer,
-                                      std::vector<std::int32_t> &indexesStart,
-                                      std::vector<std::int32_t> &indexesLast);
-
     static void computeFirstDependencyIxRelaxed(PiSDFEdge *edge,
                                                 std::int32_t vertexInstance,
                                                 PiSDFVertex **producer,
@@ -126,6 +119,40 @@ public:
     static inline PiSDFVertex *getProducer(PiSDFVertex *vertex,
                                            std::int32_t edgeIx,
                                            std::int32_t vertexInstance);
+
+    /**
+     * @brief Get the real producer of an actor on a given edge
+     * @remark This function does not handle case where outputIF is connected to inputIF
+     * @param vertex Actor
+     * @param edgeIx Input edge
+     * @return real producer (may be located in another subgraph)
+     */
+    static inline PiSDFVertex *getProducerRelaxed(PiSDFVertex *vertex, std::int32_t edgeIx, bool goDown = false);
+
+    static inline PiSDFVertex *getTopParentVertex(PiSDFVertex *vertex,
+                                                  std::int32_t edgeIx,
+                                                  std::int32_t vertGlobInst,
+                                                  std::int32_t *topVertGlobInst,
+                                                  std::int32_t *topEdgeIx);
+
+    static inline bool checkForInitIfInputIF(PiSDFVertex *vertex, std::int32_t edgeIx, std::int32_t vertGlobInst);
+
+    static PiSDFEdge *computeDependenciesIxRelaxed(PiSDFVertex *vertex,
+                                                   std::int32_t edgeIx,
+                                                   std::int32_t vertexGlobInst,
+                                                   PiSDFVertex **producer,
+                                                   std::int32_t *firstDep,
+                                                   std::int32_t *lastDep);
+
+    static std::int32_t computeFirstDependencyIxRelaxed(PiSDFVertex *vertex,
+                                                        std::int32_t edgeIx,
+                                                        std::int32_t vertexGlobInst,
+                                                        PiSDFVertex **producer);
+
+    static std::int32_t computeLastDependencyIxRelaxed(PiSDFVertex *vertex,
+                                                       std::int32_t edgeIx,
+                                                       std::int32_t vertexGlobInst,
+                                                       PiSDFVertex **producer);
 
     static inline std::int32_t fastCeilIntDiv(std::int32_t num, std::int32_t denom);
 
@@ -191,6 +218,78 @@ std::int32_t SRDAGLessIR::fastFloorIntDiv(std::int32_t num, std::int32_t denom) 
     std::int32_t d = num / denom;
     std::int32_t r = num % denom;  /* optimizes into single division. */
     return r ? (d - ((num < 0) ^ (denom < 0))) : d;
+}
+
+inline PiSDFVertex *SRDAGLessIR::getProducerRelaxed(PiSDFVertex *vertex, std::int32_t edgeIx, bool goDown) {
+    auto *edge = vertex->getInEdge(edgeIx);
+    auto *srcVertex = edge->getSrc();
+    /** First if needed we go though all input **/
+    while (srcVertex->getType() == PISDF_TYPE_IF) {
+        /** Get parent vertex **/
+        vertex = vertex->getGraph()->getParentVertex();
+        edge = vertex->getInEdge(srcVertex->getTypeId());
+        srcVertex = edge->getSrc();
+    }
+    /** Secondly we down hierarchy if needed **/
+    while (goDown && srcVertex->isHierarchical()) {
+        /** Get child vertex **/
+        vertex = srcVertex->getSubGraph()->getOutputIf(edge->getSrcPortIx());
+        edge = vertex->getInEdge(0);
+        srcVertex = edge->getSrc();
+    }
+    return srcVertex;
+}
+
+PiSDFVertex *SRDAGLessIR::getTopParentVertex(PiSDFVertex *vertex,
+                                             std::int32_t edgeIx,
+                                             std::int32_t vertGlobInst,
+                                             std::int32_t *topVertGlobInst,
+                                             std::int32_t *topEdgeIx) {
+    auto *edge = vertex->getInEdge(edgeIx);
+    auto *srcVertex = edge->getSrc();
+    auto globInst = vertGlobInst;
+    /** First if needed we go though all input **/
+    while (srcVertex->getType() == PISDF_TYPE_IF) {
+        globInst = globInst / vertex->getBRVValue();
+        /** Get parent vertex **/
+        vertex = vertex->getGraph()->getParentVertex();
+        edge = vertex->getInEdge(srcVertex->getTypeId());
+        srcVertex = edge->getSrc();
+    }
+    if (topVertGlobInst) {
+        (*topVertGlobInst) = globInst;
+    }
+    if (topEdgeIx) {
+        (*topEdgeIx) = edge->getSnkPortIx();
+    }
+    return vertex;
+}
+
+bool SRDAGLessIR::checkForInitIfInputIF(PiSDFVertex *vertex, std::int32_t edgeIx, std::int32_t vertGlobInst) {
+    auto *edge = vertex->getInEdge(edgeIx);
+    auto *srcVertex = edge->getSrc();
+    if (srcVertex->getType() != PISDF_TYPE_IF) {
+        return false;
+    }
+    auto globInst = vertGlobInst;
+    auto locInst = vertGlobInst % vertex->getBRVValue();
+    auto cons = edge->resolveCons();
+    auto delay = edge->resolveDelay();
+    while (srcVertex->getType() == PISDF_TYPE_IF) {
+        if ((locInst * cons) > delay) {
+            return true;
+        }
+        globInst = globInst / vertex->getBRVValue();
+        /** Get parent vertex **/
+        vertex = vertex->getGraph()->getParentVertex();
+        /** Update value **/
+        locInst = globInst % vertex->getBRVValue();
+        edge = vertex->getInEdge(srcVertex->getTypeId());
+        cons = edge->resolveCons();
+        delay = edge->resolveDelay();
+        srcVertex = edge->getSrc();
+    }
+    return false;
 }
 
 

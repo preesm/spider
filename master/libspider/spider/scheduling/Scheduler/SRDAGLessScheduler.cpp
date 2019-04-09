@@ -45,6 +45,7 @@
 #include <cinttypes>
 #include <tools/LinkedList.h>
 #include <scheduling/MemAlloc.h>
+#include <graphs/VirtualPiSDF/VirtualPiSDF.h>
 
 #define SCHEDULE_SIZE 20000
 
@@ -75,7 +76,7 @@ void SRDAGLessScheduler::replaceInputIfWithBroadcast(PiSDFGraph *const graph) {
             broadcast->createScheduleJob(1);
             broadcast->setId(nVertices_ + 1);
             broadcast->isExecutableOnPE(Spider::getArchi()->getSpiderPeIx());
-            broadcast->setTimingOnType(Spider::getArchi()->getSpiderPeIx(), "100");
+            broadcast->setTimingOnType(Spider::getArchi()->getSpiderPeIx(), "1");
             specialActorsAdded_.push_back(broadcast);
             snkVertex->disconnectInEdge(edgeSnkIx);
             edge->disconnectSnk();
@@ -382,114 +383,70 @@ static inline void buildRelaxedList(PiSDFGraph *graph, LinkedList<PiSDFVertex *>
     }
 }
 
-void SRDAGLessScheduler::iterativeGetMinTime(PiSDFVertex *vertex,
-                                             PiSDFVertex *srcVertex,
-                                             PiSDFEdge *edge,
-                                             Time &minTime,
-                                             std::int32_t currentStart,
-                                             std::int32_t currentLast,
-                                             std::vector<std::int32_t> &firstDeps,
-                                             std::vector<std::int32_t> &lastDeps,
-                                             size_t level) {
-    if (level == firstDeps.size()) {
-        /** Last level **/
-        auto *job = vertex->getScheduleJob();
-        auto vertexInstance = instanceSchCountArray_[getVertexIx(vertex)];
-        auto *jobConstrains = job->getScheduleConstrain(vertexInstance);
-        auto *srcVertexJob = srcVertex->getScheduleJob();
-        for (int i = currentStart; i < currentLast; ++i) {
-            /** Compute the minimal start time **/
-            minTime = std::max(minTime, srcVertexJob->getMappingEndTime(i));
-            /** Compute the minimal dependency we need **/
-            auto pe = srcVertexJob->getMappedPE(i);
-            auto currentValue = jobConstrains[pe].jobId_;
-            auto srcInstanceJobID = srcVertexJob->getJobID(i);
-            if (srcInstanceJobID > currentValue) {
-                job->setScheduleConstrain(vertexInstance, pe, srcVertex, srcInstanceJobID, i);
-            }
-        }
-    } else {
-        auto *ifSrcVertex = edge->getSrc();
-        auto *nextEdge = ifSrcVertex->getSubGraph()->getOutputIf(edge->getSrcPortIx())->getInEdge(0);
-        /** First **/
-        std::int32_t nextLast = ifSrcVertex->getBRVValue() - 1;
-        iterativeGetMinTime(vertex,
-                            srcVertex,
-                            nextEdge,
-                            minTime,
-                            firstDeps[level],
-                            nextLast,
-                            firstDeps,
-                            lastDeps,
-                            level + 1);
-        /** Between **/
-        std::int32_t nextFirst = ifSrcVertex->getBRVValue() - SRDAGLessIR::fastCeilIntDiv(edge->resolveCons(),
-                                                                                          edge->resolveProd());
-        for (int i = currentStart + 1; i < currentLast - 1; ++i) {
-            iterativeGetMinTime(vertex,
-                                srcVertex,
-                                nextEdge,
-                                minTime,
-                                nextFirst,
-                                nextLast,
-                                firstDeps,
-                                lastDeps,
-                                level + 1);
-        }
-        /** Last **/
-        iterativeGetMinTime(vertex,
-                            srcVertex,
-                            nextEdge,
-                            minTime,
-                            nextFirst,
-                            lastDeps[level],
-                            firstDeps,
-                            lastDeps,
-                            level + 1);
-    }
-}
-
 Time SRDAGLessScheduler::computeMinimumStartTimeRelaxed(PiSDFVertex *vertex) {
     Time minimumStartTime = 0;
-    auto vertexInstance = instanceSchCountArray_[getVertexIx(vertex)];
+    auto vertexGlobInst = instanceSchCountArray_[getVertexIx(vertex)];
+    auto topVertexGlobInst = vertexGlobInst;
     for (int ix = 0; ix < vertex->getNInEdge(); ++ix) {
-        std::vector<std::int32_t> firstDependencies;
-        std::vector<std::int32_t> lastDependencies;
-        auto *edge = vertex->getInEdge(ix);
-        auto *vertexInSrc = edge->getSrc();
-        if (vertexInSrc->getType() == PISDF_TYPE_IF) {
-            edge = SRDAGLessIR::computeDependenciesIx(vertex,
-                                                      ix,
-                                                      instanceSchCountArray_,
-                                                      &vertexInSrc,
-                                                      firstDependencies,
-                                                      lastDependencies);
-        } else {
-            SRDAGLessIR::computeFirstDependencyIxRelaxed(edge,
-                                                         vertexInstance,
-                                                         &vertexInSrc,
-                                                         firstDependencies);
-            SRDAGLessIR::computeLastDependencyIxRelaxed(edge,
-                                                        vertexInstance,
-                                                        &vertexInSrc,
-                                                        lastDependencies);
+        if (SRDAGLessIR::checkForInitIfInputIF(vertex, ix, vertexGlobInst)) {
+            continue;
         }
-        if (firstDependencies[0] < 0) {
+        auto topEdgeIx = ix;
+        auto *topVertex = SRDAGLessIR::getTopParentVertex(vertex, ix, vertexGlobInst, &topVertexGlobInst, &topEdgeIx);
+        PiSDFVertex *srcVertex = nullptr;
+        std::int32_t firstDep = 0;
+        std::int32_t lastDep = 0;
+        auto *edge = SRDAGLessIR::computeDependenciesIxRelaxed(topVertex,
+                                                               topEdgeIx,
+                                                               topVertexGlobInst,
+                                                               &srcVertex,
+                                                               &firstDep,
+                                                               &lastDep);
+        if (firstDep < 0) {
             /*!< Case of init */
             continue;
         }
-        if (firstDependencies.size() != lastDependencies.size()) {
-            throwSpiderException("Dependencies interval boundaries should be of the same size.");
+        /** Compute minimumStartTime **/
+        if (topVertex != vertex && srcVertex != topVertex->getInEdge(topEdgeIx)->getSrc()) {
+            auto srcBRV = srcVertex->getBRVValue();
+            auto lowerBound = srcBRV - SRDAGLessIR::fastCeilIntDiv(edge->resolveCons(),
+                                                                   edge->resolveProd());
+            auto upperBound = srcBRV - 1;
+            auto *job = vertex->getScheduleJob();
+            auto vertexInstance = instanceSchCountArray_[getVertexIx(vertex)];
+            auto *jobConstrains = job->getScheduleConstrain(vertexInstance);
+            auto *srcVertexJob = srcVertex->getScheduleJob();
+            for (int i = firstDep; i <= lastDep; ++i) {
+                /** Compute the minimal start time **/
+                minimumStartTime = std::max(minimumStartTime, srcVertexJob->getMappingEndTime(i));
+                /** Compute the minimal dependency we need **/
+                auto pe = srcVertexJob->getMappedPE(i);
+                auto currentValue = jobConstrains[pe].jobId_;
+                auto srcInstanceJobID = srcVertexJob->getJobID(i);
+                if (srcInstanceJobID > currentValue) {
+                    job->setScheduleConstrain(vertexInstance, pe, srcVertex, srcInstanceJobID, i);
+                }
+                if (i % srcBRV == upperBound) {
+                    i += (lowerBound);
+                }
+            }
+        } else {
+            auto *job = vertex->getScheduleJob();
+            auto vertexInstance = instanceSchCountArray_[getVertexIx(vertex)];
+            auto *jobConstrains = job->getScheduleConstrain(vertexInstance);
+            auto *srcVertexJob = srcVertex->getScheduleJob();
+            for (int i = firstDep; i <= lastDep; ++i) {
+                /** Compute the minimal start time **/
+                minimumStartTime = std::max(minimumStartTime, srcVertexJob->getMappingEndTime(i));
+                /** Compute the minimal dependency we need **/
+                auto pe = srcVertexJob->getMappedPE(i);
+                auto currentValue = jobConstrains[pe].jobId_;
+                auto srcInstanceJobID = srcVertexJob->getJobID(i);
+                if (srcInstanceJobID > currentValue) {
+                    job->setScheduleConstrain(vertexInstance, pe, srcVertex, srcInstanceJobID, i);
+                }
+            }
         }
-        iterativeGetMinTime(vertex,
-                            vertexInSrc,
-                            edge,
-                            minimumStartTime,
-                            firstDependencies[0],
-                            lastDependencies[0],
-                            firstDependencies,
-                            lastDependencies,
-                            1);
     }
     return minimumStartTime;
 }
@@ -537,50 +494,18 @@ void SRDAGLessScheduler::mapVertexRelaxed(PiSDFVertex *vertex) {
 
 bool SRDAGLessScheduler::isSchedulableRelaxed(PiSDFVertex *const vertex) {
     auto vertexIx = getVertexIx(vertex);
-    auto vertexInstance = instanceSchCountArray_[vertexIx];
+    auto vertexGlobInst = instanceSchCountArray_[vertexIx];
+    auto topVertexGlobInst = vertexGlobInst;
     bool canRun = true;
     for (int32_t ix = 0; ix < vertex->getNInEdge() && canRun; ++ix) {
-        auto *vertexInSrc = SRDAGLessIR::getProducer(vertex, ix, vertexInstance);
-        std::vector<std::int32_t> firstDeps;
-        std::vector<std::int32_t> lastDeps;
-        std::int32_t deltaIx = 0;
-        SRDAGLessIR::computeDependenciesIx(vertex,
-                                           ix,
-                                           instanceSchCountArray_,
-                                           &vertexInSrc,
-                                           firstDeps,
-                                           lastDeps);
-//        if (vertexInSrc->getType() == PISDF_TYPE_IF) {
-//            auto finalEdgeIx = ix;
-//            SRDAGLessIR::computeDependenciesIxFromInputIF(vertex,
-//                                                          &finalEdgeIx,
-//                                                          instanceSchCountArray_,
-//                                                          &vertexInSrc,
-//                                                          nullptr,
-//                                                          &deltaIx);
-//            SRDAGLessIR::computeLastDependencyIxRelaxed(vertexInSrc->getOutEdge(finalEdgeIx),
-//                                                        deltaIx,
-//                                                        &vertexInSrc,
-//                                                        lastDeps);
-//            fprintf(stderr, "INFO: From IN-IF Vertex[%s] -- Producer[%s]\n", vertex->getName(), vertexInSrc->getName());
-//        } else {
-//            SRDAGLessIR::computeLastDependencyIxRelaxed(vertex->getInEdge(ix), vertexInstance, &vertexInSrc, lastDeps);
-//            fprintf(stderr, "INFO: GENERAL    Vertex[%s] -- Producer[%s]\n", vertex->getName(), vertexInSrc->getName());
-//        }
-        deltaIx = lastDeps.back();
-        auto *parentVertex = vertexInSrc->getGraph()->getParentVertex();
-        auto *currentVertex = vertexInSrc;
-        std::int32_t globalRV = vertexInSrc->getBRVValue();
-        for (std::int32_t i = lastDeps.size() - 2; i > 0; --i) {
-            deltaIx += (currentVertex->getBRVValue() * lastDeps[i]);
-            globalRV *= currentVertex->getBRVValue();
-            currentVertex = parentVertex;
-            parentVertex = currentVertex->getGraph()->getParentVertex();
-        }
-        if (lastDeps.size() > 1) {
-            deltaIx += (globalRV * lastDeps[0]);
-        }
-        canRun &= (instanceSchCountArray_[getVertexIx(vertexInSrc)] > deltaIx);
+        auto topEdgeIx = ix;
+        auto *topVertex = SRDAGLessIR::getTopParentVertex(vertex, ix, vertexGlobInst, &topVertexGlobInst, &topEdgeIx);
+        PiSDFVertex *srcVertex = nullptr;
+        std::int32_t deltaIx = SRDAGLessIR::computeLastDependencyIxRelaxed(topVertex,
+                                                                           topEdgeIx,
+                                                                           topVertexGlobInst,
+                                                                           &srcVertex);
+        canRun &= (instanceSchCountArray_[getVertexIx(srcVertex)] > deltaIx);
     }
     return canRun;
 }

@@ -503,14 +503,16 @@ inline Time SRDAGVertex::executionTimeOn(int peType) const {
         case SRDAG_NORMAL:
             return reference_->getTimingOnType(peType, inParams_, nInParam_);
         case SRDAG_BROADCAST:
-//            return 100;
         case SRDAG_JOIN:
         case SRDAG_FORK:
         case SRDAG_ROUNDBUFFER:
         case SRDAG_INIT:
         case SRDAG_END:
             // TODO: update execution time based on model and measure values
-            return 1;
+//            if (reference_) {
+//                return 50;
+//            }
+            return 50;
         default:
             throwSpiderException("Unhandled case.");
     }

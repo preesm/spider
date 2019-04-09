@@ -75,8 +75,8 @@ void SRDAGLessScheduler::replaceInputIfWithBroadcast(PiSDFGraph *const graph) {
             broadcast->setBRVValue(1);
             broadcast->createScheduleJob(1);
             broadcast->setId(nVertices_ + 1);
-            broadcast->isExecutableOnPE(Spider::getArchi()->getSpiderPeIx());
-            broadcast->setTimingOnType(Spider::getArchi()->getSpiderPeIx(), "1");
+            broadcast->isExecutableOnAllPE();
+            //broadcast->setTimingOnType(Spider::getArchi()->getSpiderPeIx(), "50");
             specialActorsAdded_.push_back(broadcast);
             snkVertex->disconnectInEdge(edgeSnkIx);
             edge->disconnectSnk();

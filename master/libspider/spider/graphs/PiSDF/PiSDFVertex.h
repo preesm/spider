@@ -394,7 +394,7 @@ inline Time PiSDFVertex::getTimingOnType(int peType, const Param *vertexParamVal
     }
 
     if (timings_[peType] == nullptr) {
-        return 0;
+        return subType_ == PISDF_SUBTYPE_NORMAL ? 0 : 50;
     }
     return (Time) timings_[peType]->evaluate(vertexParamValues, nParam);
 }
@@ -404,7 +404,7 @@ inline Time PiSDFVertex::getTimingOnPEType(int peType) {
         throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_ - 1);
     }
     if (timings_[peType] == nullptr) {
-        return 0;
+        return subType_ == PISDF_SUBTYPE_NORMAL ? 0 : 50;
     }
     return (Time) timings_[peType]->evaluate();
 }

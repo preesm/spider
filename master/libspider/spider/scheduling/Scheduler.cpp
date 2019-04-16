@@ -141,19 +141,19 @@ void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *s
         }
     }
 
-    //memAlloc->alloc(list_);
+    memAlloc->alloc(list_);
 
     for (int i = 0; i < list_->getNb(); i++) {
         computeScheduleLevel((*list_)[i]);
     }
 
     list_->sort(Scheduler::compareScheduleLevel);
-//
-//    schedule_->setAllMinReadyTime(Platform::get()->getTime());
-//    schedule_->setReadyTime(
-//            /* Spider Pe */        archi->getSpiderPeIx(),
-//            /* End of Mapping */Platform::get()->getTime() +
-//                                archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
+
+    schedule_->setAllMinReadyTime(Platform::get()->getTime());
+    schedule_->setReadyTime(
+            /* Spider Pe */        archi->getSpiderPeIx(),
+            /* End of Mapping */Platform::get()->getTime() +
+                                archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
 
     for (int i = 0; i < list_->getNb(); i++) {
         this->mapVertex((*list_)[i]);

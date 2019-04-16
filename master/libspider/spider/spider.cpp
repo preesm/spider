@@ -184,7 +184,6 @@ std::int32_t getNLevels(PiSDFGraph *g, std::int32_t currentDepth) {
 
 void Spider::iterate() {
     Platform::get()->rstTime();
-    stopThreads = 1;
     if (pisdf_->isGraphStatic()) {
         if (!srdag_) {
             /* On first iteration, the schedule is created */

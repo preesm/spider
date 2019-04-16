@@ -114,14 +114,27 @@ void GreedyScheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSched
     srdag_ = graph;
     schedule_ = schedule;
     archi_ = archi;
-    /** Initialize list **/
+    /* Initialize list */
     LinkedList<SRDAGVertex *> list(TRANSFO_STACK, graph->getNVertex());
     for (int ix = 0; ix < graph->getNVertex(); ++ix) {
         auto *vertex = graph->getVertex(ix);
         list.add(vertex);
     }
-    /** Iterate on the list **/
+
+    /* Pre-schedule memalloc */
+    memAlloc->alloc(&list);
+
+    /* Set time (maybe not that useful ?) */
+    schedule_->setAllMinReadyTime(Platform::get()->getTime());
+    schedule_->setReadyTime(
+            /* Spider Pe */        archi->getSpiderPeIx(),
+            /* End of Mapping */Platform::get()->getTime() +
+                                archi->getMappingTimeFct()(list.size(), archi_->getNPE()));
+
+
+    /* Iterate on the list */
     list.setOnFirst();
+
     auto *node = list.current();
     while (node) {
         auto *vertex = node->val_;

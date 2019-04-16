@@ -52,6 +52,9 @@ static inline int getAlignSize(int size) {
 
 
 void DummyMemAlloc::allocEdge(SRDAGEdge *edge) {
+    if (edge->getAlloc() >= 0) {
+        return;
+    }
     int size = edge->getRate();
     if (size <= 0) {
         /** Sync only edge */
@@ -72,11 +75,24 @@ void DummyMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
         SRDAGVertex *vertex = listOfVertices->operator[](i);
         if (vertex->getState() == SRDAG_EXEC) {
             for (int j = 0; j < vertex->getNConnectedOutEdge(); j++) {
-                if (vertex->getOutEdge(j)->getAlloc() == -1)
-                    allocEdge(vertex->getOutEdge(j));
+                allocEdge(vertex->getOutEdge(j));
             }
         }
     }
+}
+
+void DummyMemAlloc::alloc(LinkedList<SRDAGVertex *> *listOfVertices) {
+    listOfVertices->setOnFirst();
+    auto *node = listOfVertices->current();
+    do {
+        auto *vertex = node->val_;
+        if (vertex->getState() == SRDAG_EXEC) {
+            for (int i = 0; i < vertex->getNConnectedOutEdge(); ++i) {
+                allocEdge(vertex->getOutEdge(i));
+            }
+        }
+        node = listOfVertices->next();
+    } while (node != listOfVertices->first());
 }
 
 int DummyMemAlloc::getReservedAlloc(int size) {
@@ -92,3 +108,5 @@ int DummyMemAlloc::getReservedAlloc(int size) {
 int DummyMemAlloc::getMemUsed() {
     return currentMem_ - memStart_;
 }
+
+

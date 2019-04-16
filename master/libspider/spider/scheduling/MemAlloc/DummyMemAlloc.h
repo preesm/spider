@@ -52,6 +52,8 @@ public:
 
     void alloc(List<SRDAGVertex *> *listOfVertices) override;
 
+    void alloc(LinkedList<SRDAGVertex *> *listOfVertices) override;
+
     int getReservedAlloc(int size) override;
 
     int getMemUsed() override;

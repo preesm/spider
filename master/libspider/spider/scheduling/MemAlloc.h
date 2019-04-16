@@ -40,6 +40,7 @@
 #define MEM_ALLOC_H
 
 #include <platform.h>
+#include <tools/LinkedList.h>
 #include <tools/List.h>
 #include <tools/Stack.h>
 #include <graphs/SRDAG/SRDAGVertex.h>
@@ -54,6 +55,8 @@ public:
     virtual void reset() = 0;
 
     virtual void alloc(List<SRDAGVertex *> *) {};
+
+    virtual void alloc(LinkedList<SRDAGVertex *> *) {};
 
     virtual void alloc(PiSDFGraph *) {};
 

@@ -397,13 +397,11 @@ PlatformPThread::~PlatformPThread() {
 
     StackMonitor::free(ARCHI_STACK, archi_);
     StackMonitor::free(ARCHI_STACK, thread_lrt_);
-    StackMonitor::free(ARCHI_STACK, arg_lrt_);
+    StackMonitor::free(ARCHI_STACK, lrtInfoArray_);
 
     for (int i = 0; i < nLrt_; i++) {
-        spider2LrtQueues_[i]->~ControlQueue();
-        lrt2SpiderQueues_[i]->~ControlQueue();
-        StackMonitor::free(ARCHI_STACK, spider2LrtQueues_[i]);
-        StackMonitor::free(ARCHI_STACK, lrt2SpiderQueues_[i]);
+        lrtNotificationQueues_[i]->~NotificationQueue();
+        StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
     }
 
     spider2LrtJobQueue_->~ControlMessageQueue();

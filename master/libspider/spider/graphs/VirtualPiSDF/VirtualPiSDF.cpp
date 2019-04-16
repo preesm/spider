@@ -53,17 +53,20 @@ static inline std::int32_t computeTotalExpandedNVertices(PiSDFGraph *graph) {
     return totalNVertices;
 }
 
+static int currentN = 0;
+
 void VirtualPiSDFGraph::initVertexSet(PiSDFGraph *graph, std::int32_t *pi2VirtMap) {
     for (int i = 0; i < graph->getNBody(); ++i) {
         auto *vertex = graph->getBody(i);
         for (int j = 0; j < vertex->getBRVValue(); ++j) {
-            auto *virtVertex = CREATE_NA(TRANSFO_STACK, VirtualPiSDFVertex);
+            auto *virtVertex = &vertexSet_[currentN++];
             virtVertex->vertex_ = vertex;
             virtVertex->instance_ = j;
-            vertexSet_.add(virtVertex);
+            // vertexSet_.add(virtVertex);
         }
         /** Mapping index of PiSDFVertex to the one of the virtual vertex **/
-        pi2VirtMap_[vertex->getId() - 1] = vertexSet_[(vertexSet_.getN() - 1) - vertex->getBRVValue()]->getSetIx();
+        //pi2VirtMap_[vertex->getId() - 1] = vertexSet_[(vertexSet_.getN()) - vertex->getBRVValue()]->getSetIx();
+        pi2VirtMap_[vertex->getId() - 1] = currentN - vertex->getBRVValue();
         if (vertex->isHierarchical()) {
             initVertexSet(vertex->getSubGraph(), pi2VirtMap);
         }
@@ -80,18 +83,20 @@ static std::int32_t computeTotalNBodies(PiSDFGraph *g) {
     return nBodies;
 }
 
-VirtualPiSDFGraph::VirtualPiSDFGraph(PiSDFGraph *graph) : vertexSet_(computeTotalExpandedNVertices(graph),
-                                                                     TRANSFO_STACK) {
+VirtualPiSDFGraph::VirtualPiSDFGraph(PiSDFGraph *graph) {
     originalGraph_ = graph;
     pi2VirtMap_ = CREATE_MUL_NA(TRANSFO_STACK, computeTotalNBodies(originalGraph_), std::int32_t);
+    vertexSet_ = CREATE_MUL_NA(TRANSFO_STACK, computeTotalExpandedNVertices(originalGraph_), VirtualPiSDFVertex);
     /** Initialize vertex Set **/
+    currentN = 0;
     initVertexSet(originalGraph_, pi2VirtMap_);
 }
 
 VirtualPiSDFGraph::~VirtualPiSDFGraph() {
-    while (vertexSet_.getN() > 0) {
-        delVertex(vertexSet_[0]);
-    }
+//    while (vertexSet_.getN() > 0) {
+//        delVertex(vertexSet_[0]);
+//    }
+    StackMonitor::free(TRANSFO_STACK, vertexSet_);
     StackMonitor::free(TRANSFO_STACK, pi2VirtMap_);
 }
 

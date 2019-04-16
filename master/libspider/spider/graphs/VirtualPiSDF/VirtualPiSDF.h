@@ -46,7 +46,7 @@
 
 class VirtualPiSDFGraph {
 public:
-    typedef struct VirtualPiSDFVertex : public SetElement {
+    typedef struct VirtualPiSDFVertex {
         PiSDFVertex *vertex_ = nullptr;
         std::int32_t instance_ = -1;
     } VirtualPiSDFVertex;
@@ -70,7 +70,7 @@ public:
 
 private:
     PiSDFGraph *originalGraph_;
-    Set<VirtualPiSDFVertex *> vertexSet_;
+    VirtualPiSDFVertex *vertexSet_;
     std::int32_t *pi2VirtMap_;
 
     void initVertexSet(PiSDFGraph *graph, std::int32_t *pi2VirtMap);
@@ -79,14 +79,15 @@ private:
 };
 
 inline std::int32_t VirtualPiSDFGraph::getNVertex() const {
-    return vertexSet_.getN();
+    //return vertexSet_.getN();
+    return 0;
 }
 
 inline VirtualPiSDFGraph::VirtualPiSDFVertex *VirtualPiSDFGraph::getVertex(std::int32_t ix) {
-    if (ix < 0 || ix >= vertexSet_.getN()) {
-        throwSpiderException("Bad index value: %d -- max: %d", ix, vertexSet_.getN());
-    }
-    return vertexSet_[ix];
+//    if (ix < 0 || ix >= vertexSet_.getN()) {
+//        throwSpiderException("Bad index value: %d -- max: %d", ix, vertexSet_.getN());
+//    }
+    return &vertexSet_[ix];
 }
 
 inline std::int32_t VirtualPiSDFGraph::getNEdgesIN(VirtualPiSDFGraph::VirtualPiSDFVertex *vertex) {
@@ -98,9 +99,9 @@ inline std::int32_t VirtualPiSDFGraph::getNEdgesOUT(VirtualPiSDFGraph::VirtualPi
 }
 
 inline void VirtualPiSDFGraph::delVertex(VirtualPiSDFGraph::VirtualPiSDFVertex *vertex) {
-    vertex->vertex_ = nullptr;
-    StackMonitor::free(TRANSFO_STACK, vertex);
-    vertexSet_.del(vertex);
+//    vertex->vertex_ = nullptr;
+//    StackMonitor::free(TRANSFO_STACK, vertex);
+//    vertexSet_.del(vertex);
 }
 
 inline VirtualPiSDFGraph::VirtualPiSDFVertex *
@@ -108,7 +109,7 @@ VirtualPiSDFGraph::getFirstSource(VirtualPiSDFGraph::VirtualPiSDFVertex *vertex,
     auto *pisdfVertex = vertex->vertex_;
     auto firstInstance = SRDAGLessIR::computeFirstDependencyIx(pisdfVertex, edgeIx, vertex->instance_);
     auto virtIndex = pi2VirtMap_[pisdfVertex->getId() - 1] + firstInstance;
-    return vertexSet_[virtIndex];
+    return &vertexSet_[virtIndex];
 }
 
 inline VirtualPiSDFGraph::VirtualPiSDFVertex *
@@ -116,7 +117,7 @@ VirtualPiSDFGraph::getLastSource(VirtualPiSDFGraph::VirtualPiSDFVertex *vertex, 
     auto *pisdfVertex = vertex->vertex_;
     auto lastInstance = SRDAGLessIR::computeLastDependencyIx(pisdfVertex, edgeIx, vertex->instance_);
     auto virtIndex = pi2VirtMap_[pisdfVertex->getId() - 1] + lastInstance;
-    return vertexSet_[virtIndex];
+    return &vertexSet_[virtIndex];
 }
 
 #endif //SPIDER_VIRTUALPISDF_H

@@ -4,9 +4,7 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -37,68 +35,32 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef PILE_H
-#define PILE_H
+#ifndef SPIDER_DUMMYPISDFMEMALLOC_H
+#define SPIDER_DUMMYPISDFMEMALLOC_H
 
-#include <stdio.h>
-#include <cstdlib>
-#include <stdexcept>
+#include <scheduling/MemAlloc.h>
 
-#include "Stack.h"
-
-template<typename TYPE>
-class Pile {
+class DummyPiSDFMemAlloc : public MemAlloc {
 public:
-    Pile() {
-        stack_ = 0;
-        first_ = 0;
-    }
+    DummyPiSDFMemAlloc(int start, int size) :
+            MemAlloc(start, size),
+            currentMem_(start) {}
 
-    Pile(Stack *stack) {
-        stack_ = stack;
-        first_ = 0;
-    }
+    ~DummyPiSDFMemAlloc() override = default;
 
-    inline bool isEmpty() const;
+    void reset() override;
 
-    inline void push(TYPE value);
+    void alloc(PiSDFGraph *graph) override;
 
-    inline TYPE pop();
+    int getReservedAlloc(int size) override;
 
+    int getMemUsed() override;
 
-private:
-    struct PileItem {
-        TYPE cur;
-        struct PileItem *next;
-    };
+protected:
+    int currentMem_;
 
-    Stack *stack_;
-    struct PileItem *first_;
+    void allocEdge(PiSDFEdge *edge);
+
 };
 
-
-template<typename TYPE>
-inline bool Pile<TYPE>::isEmpty() const {
-    return first_ == 0;
-}
-
-template<typename TYPE>
-inline void Pile<TYPE>::push(TYPE value) {
-    struct PileItem *newItem = CREATE(stack_,
-    struct QueueItem);
-    newItem->cur = value;
-    newItem->next = first_;
-    first_ = newItem;
-}
-
-template<typename TYPE>
-inline TYPE Pile<TYPE>::pop() {
-    if (first_ == 0)
-        throw std::runtime_error("Try to pop an empty Pile\n");
-
-    TYPE val = first_->cur;
-    first_ = first_->next;
-    return val;
-}
-
-#endif/*PILE_H*/
+#endif //SPIDER_DUMMYPISDFMEMALLOC_H

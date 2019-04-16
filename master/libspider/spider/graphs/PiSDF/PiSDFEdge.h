@@ -49,9 +49,9 @@
 class PiSDFEdge : public SetElement {
 public:
     /** Constructors */
-    PiSDFEdge(PiSDFGraph *graph);
+    explicit PiSDFEdge(PiSDFGraph *graph);
 
-    ~PiSDFEdge();
+    ~PiSDFEdge() override;
 
     /** Getters */
     inline int getId() const;
@@ -64,7 +64,9 @@ public:
 
     inline int getSnkPortIx() const;
 
-    inline int getDelayAlloc() const;
+    inline std::int32_t getDelayAlloc() const;
+
+    inline std::int32_t getAlloc() const;
 
     /** Setters */
     inline void setDelay(const char *delay,
@@ -73,26 +75,46 @@ public:
                          PiSDFVertex *delayActor,
                          bool isDelayPersistent);
 
-    inline void setMemoryDelayAlloc(int memDelayAlloc);
+    inline void setMemoryDelayAlloc(std::int32_t memDelayAlloc);
+
+    inline void setMemoryAlloc(std::int32_t memoryAlloc);
 
     /** Connections Fcts */
     void connectSrc(PiSDFVertex *src, int srcPortId, const char *prod);
 
+    void connectSrc(PiSDFVertex *src, int srcPortId, Expression *prod);
+
     void connectSnk(PiSDFVertex *snk, int snkPortId, const char *cons);
+
+    void connectSnk(PiSDFVertex *snk, int snkPortId, Expression *cons);
+
+    inline void disconnectSnk();
+
+    inline void disconnectSrc();
 
     /** Add Param Fcts */
     inline void addInParam(int ix, PiSDFParam *param);
 
     /** Compute Fcts */
-    inline int resolveProd(transfoJob *job) const;
+    inline Param resolveProd(transfoJob *job) const;
 
-    inline int resolveCons(transfoJob *job) const;
+    inline Param resolveCons(transfoJob *job) const;
 
-    inline int resolveDelay(transfoJob *job);
+    inline Param resolveProd() const;
+
+    inline Param resolveCons() const;
+
+    inline Param resolveDelay(transfoJob *job);
+
+    inline Param resolveDelay();
 
     inline void getProdExpr(char *out, int sizeOut);
 
     inline void getConsExpr(char *out, int sizeOut);
+
+    inline Expression *getConsExpr();
+
+    inline Expression *getProdExpr();
 
     inline void getDelayExpr(char *out, int sizeOut);
 
@@ -125,8 +147,31 @@ private:
     PiSDFVertex *getter_;
     PiSDFVertex *virtual_;
     bool isDelayPersistent_;
-    int memDelayAlloc_;
+    std::int32_t memDelayAlloc_;
+    std::int32_t alloc_;
 };
+
+inline void PiSDFEdge::disconnectSnk() {
+    if (snk_ == nullptr) {
+        throwSpiderException("Trying to disconnect sink to non connected edge.");
+    }
+    snk_ = nullptr;
+    snkPortIx_ = -1;
+    cons_->~Expression();
+    StackMonitor::free(PISDF_STACK, cons_);
+    cons_ = nullptr;
+}
+
+inline void PiSDFEdge::disconnectSrc() {
+    if (src_ == nullptr) {
+        throwSpiderException("Trying to disconnect sink to non connected edge.");
+    }
+    src_ = nullptr;
+    srcPortIx_ = -1;
+    prod_->~Expression();
+    StackMonitor::free(PISDF_STACK, prod_);
+    prod_ = nullptr;
+}
 
 inline int PiSDFEdge::getId() const {
     return id_;
@@ -148,8 +193,12 @@ inline int PiSDFEdge::getSnkPortIx() const {
     return snkPortIx_;
 }
 
-inline int PiSDFEdge::getDelayAlloc() const {
+inline std::int32_t PiSDFEdge::getDelayAlloc() const {
     return memDelayAlloc_;
+}
+
+inline std::int32_t PiSDFEdge::getAlloc() const {
+    return alloc_;
 }
 
 inline void PiSDFEdge::setDelay(const char *delay,
@@ -157,15 +206,15 @@ inline void PiSDFEdge::setDelay(const char *delay,
                                 PiSDFVertex *getter,
                                 PiSDFVertex *delayActor,
                                 bool isDelayPersistent) {
-    if (delay_ != 0) {
+    if (delay_ != nullptr) {
         delay_->~Expression();
         StackMonitor::free(PISDF_STACK, delay_);
-        delay_ = 0;
+        delay_ = nullptr;
     }
     delay_ = CREATE(PISDF_STACK, Expression)(delay, graph_->getParams(), graph_->getNParam());
 
     if ((setter || getter) && !delayActor) {
-        throw std::runtime_error("delay can not have setter nor getter without special delay actor vertex.");
+        throwSpiderException("Delay can not have setter nor getter without special delay actor vertex.");
     }
 
     if (setter) {
@@ -181,20 +230,36 @@ inline void PiSDFEdge::setDelay(const char *delay,
     isDelayPersistent_ = isDelayPersistent;
 }
 
-inline void PiSDFEdge::setMemoryDelayAlloc(int memDelayAlloc) {
+inline void PiSDFEdge::setMemoryDelayAlloc(std::int32_t memDelayAlloc) {
     memDelayAlloc_ = memDelayAlloc;
 }
 
-inline int PiSDFEdge::resolveProd(transfoJob *job) const {
+inline void PiSDFEdge::setMemoryAlloc(std::int32_t memoryAlloc) {
+    alloc_ = memoryAlloc;
+}
+
+inline Param PiSDFEdge::resolveProd(transfoJob *job) const {
     return prod_->evaluate(src_->getInParams(), job);
 }
 
-inline int PiSDFEdge::resolveCons(transfoJob *job) const {
+inline Param PiSDFEdge::resolveCons(transfoJob *job) const {
     return cons_->evaluate(snk_->getInParams(), job);
 }
 
-inline int PiSDFEdge::resolveDelay(transfoJob *job) {
+inline Param PiSDFEdge::resolveProd() const {
+    return prod_->evaluate();
+}
+
+inline Param PiSDFEdge::resolveCons() const {
+    return cons_->evaluate();
+}
+
+inline Param PiSDFEdge::resolveDelay(transfoJob *job) {
     return delay_->evaluate(graph_->getParams(), job);
+}
+
+inline Param PiSDFEdge::resolveDelay() {
+    return delay_->evaluate();
 }
 
 /** TODO take care of prod_ cons_ delay_ != 0 */
@@ -205,6 +270,14 @@ inline void PiSDFEdge::getProdExpr(char *out, int sizeOut) {
 
 inline void PiSDFEdge::getConsExpr(char *out, int sizeOut) {
     cons_->toString(snk_->getInParams(), snk_->getNInParam(), out, sizeOut);
+}
+
+Expression *PiSDFEdge::getConsExpr() {
+    return cons_;
+}
+
+Expression *PiSDFEdge::getProdExpr() {
+    return prod_;
 }
 
 inline void PiSDFEdge::getDelayExpr(char *out, int sizeOut) {
@@ -226,5 +299,6 @@ inline PiSDFVertex *PiSDFEdge::getDelayVirtual() {
 inline bool PiSDFEdge::isDelayPersistent() {
     return isDelayPersistent_;
 }
+
 
 #endif/*PISDF_EDGE_H*/

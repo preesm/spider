@@ -39,7 +39,6 @@
 #include <graphs/PiSDF/PiSDFEdge.h>
 
 #include <cmath>
-#include <algorithm>
 
 typedef enum {
     VERTEX, EDGE
@@ -64,7 +63,7 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
         PiSDFVertex *pi_ca = sr_ca->getReference();
 
         for (int inEdgeIx = 0; inEdgeIx < pi_ca->getNInEdge(); inEdgeIx++) {
-            if (sr_ca->getInEdge(inEdgeIx) != 0) {
+            if (sr_ca->getInEdge(inEdgeIx) != nullptr) {
                 /* Edge already present, do nothing */
             } else {
                 PiSDFEdge *pi_edge = pi_ca->getInEdge(inEdgeIx);
@@ -74,8 +73,9 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
 
                 switch (pi_src->getType()) {
                     case PISDF_TYPE_IF: {
-                        if (pi_src->getSubType() != PISDF_SUBTYPE_INPUT_IF)
-                            throw std::runtime_error("Error in graph transfo, Output IF connected to Config input\n");
+                        if (pi_src->getSubType() != PISDF_SUBTYPE_INPUT_IF) {
+                            throwSpiderException("Output interface connected to ConfigActor input port.");
+                        }
 
                         SRDAGEdge *srcEdge = job->inputIfs[pi_src->getTypeId()];
                         if (srcEdge->getRate() == cons) {
@@ -96,26 +96,29 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
                         SRDAGVertex *sr_src = job->configs[pi_src->getTypeId()];
                         SRDAGEdge *sr_edge = sr_src->getOutEdge(pi_edge->getSrcPortIx());
 
-                        if (sr_edge == 0) {
+                        if (sr_edge == nullptr) {
                             sr_edge = topSrdag->addEdge();
                             sr_edge->connectSrc(sr_src, pi_edge->getSrcPortIx());
                             sr_edge->setRate(prod);
                         }
 
                         sr_edge->connectSnk(sr_ca, inEdgeIx);
-                        if (prod != cons)
-                            throw std::runtime_error(
-                                    "Error in graph transfo, cons/prod between Configs doesn't match\n");
+                        if (prod != cons) {
+                            throwSpiderException("Prod/Cons between ConfigActors [%s] and [%s] mismatch.",
+                                                 pi_src->getName(), pi_ca->getName());
+                        }
                         break;
                     }
                     default:
-                        throw std::runtime_error("Error in graph transfo, Normal vertex precede config one\n");
+                        throwSpiderException(
+                                "Normal vertex [%s] can not be connected to ConfigActor [%s] input port(s).",
+                                pi_src->getName(), pi_ca->getName());
                 }
             }
         }
 
         for (int outEdgeIx = 0; outEdgeIx < pi_ca->getNOutEdge(); outEdgeIx++) {
-            if (sr_ca->getOutEdge(outEdgeIx) != 0) {
+            if (sr_ca->getOutEdge(outEdgeIx) != nullptr) {
                 /* Edge already present, do nothing */
             } else {
                 PiSDFEdge *pi_edge = pi_ca->getOutEdge(outEdgeIx);
@@ -125,8 +128,9 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
 
                 switch (pi_snk->getType()) {
                     case PISDF_TYPE_IF: {
-                        if (pi_snk->getSubType() != PISDF_SUBTYPE_OUTPUT_IF)
-                            throw std::runtime_error("Error in graph transfo, Input IF connected to Config output\n");
+                        if (pi_snk->getSubType() != PISDF_SUBTYPE_OUTPUT_IF) {
+                            throwSpiderException("Input interface connected to ConfigActor output port.");
+                        }
 
                         SRDAGEdge *snkEdge = job->outputIfs[pi_snk->getTypeId()];
                         if (snkEdge->getRate() == prod) {
@@ -147,7 +151,7 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
                         SRDAGVertex *sr_snk = job->configs[pi_snk->getTypeId()];
                         SRDAGEdge *sr_edge = sr_snk->getInEdge(pi_edge->getSnkPortIx());
 
-                        if (sr_edge == 0) {
+                        if (sr_edge == nullptr) {
                             sr_edge = topSrdag->addEdge();
                             sr_edge->connectSnk(sr_snk, pi_edge->getSnkPortIx());
                             sr_edge->setRate(cons);
@@ -155,9 +159,10 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
 
                         sr_edge->connectSrc(sr_ca, outEdgeIx);
 
-                        if (cons == prod)
-                            throw std::runtime_error(
-                                    "Error in graph transfo, cons/prod between configs doesn't match\n");
+                        if (cons != prod) {
+                            throwSpiderException("Prod/Cons between ConfigActors [%s] and [%s] mismatch.",
+                                                 pi_ca->getName(), pi_snk->getName());
+                        }
                         break;
                     }
                     case PISDF_TYPE_BODY: {
@@ -167,7 +172,7 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
                         break;
                     }
                     default:
-                        throw std::runtime_error("Error in graph transfo, Unhandled case\n");
+                        throwSpiderException("Unhandled case.");
                 }
             }
         }
@@ -177,13 +182,13 @@ void linkCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
 
 typedef struct SrcConnection {
     SRDAGVertex *src;
-    int prod;
+    Param prod;
     int portIx;
 } SrcConnection;
 
 typedef struct SnkConnection {
     SRDAGEdge *edge;
-    int cons;
+    Param cons;
 } SnkConnection;
 
 /**
@@ -231,14 +236,14 @@ static void linkSRDelaySetterVertices(SRDAGGraph *topSrdag,
     PiSDFVertex *delayVirtual = edge->getDelayVirtual();
     // Check consistency through the value of the BRV of the virtual actor
     if (brv[delayVirtual->getTypeId()] > 1) {
-        throw std::runtime_error("Delay virtual actor should have brv value of 1.");
+        throwSpiderException("Delay [%s] -- RV(%d) > 1.", delayVirtual->getName(), brv[delayVirtual->getTypeId()]);
     }
     // If the setter is an interface, we should just retrieve the connection
     if (delaySetter->getType() == PISDF_TYPE_IF) {
         SRDAGEdge *setterEdge = job->inputIfs[delaySetter->getTypeId()];
         if (setterEdge->getRate() == nbDelays) {
             srcConnections[0].src = setterEdge->getSrc();
-            if (srcConnections[0].src == 0) {
+            if (srcConnections[0].src == nullptr) {
                 srcConnections[0].src = topSrdag->addRoundBuffer();
                 job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcConnections[0].src, 0);
                 srcConnections[0].portIx = 0;
@@ -246,7 +251,8 @@ static void linkSRDelaySetterVertices(SRDAGGraph *topSrdag,
                 srcConnections[0].portIx = setterEdge->getSrcPortIx();
             }
         } else {
-            throw std::runtime_error("Interface setter for a delay must have same rate.");
+            throwSpiderException("Setter [%d] of delay [%s] does not have proper rate.", delaySetter->getName(),
+                                 delayVirtual->getName());
         }
     } else {
         int nbSetterRepetitions = brv[delaySetter->getTypeId()];
@@ -320,7 +326,7 @@ static void linkSRDelayGetterVertices(SRDAGGraph *topSrdag,
     PiSDFVertex *delayVirtual = edge->getDelayVirtual();
     // Check consistency through the value of the BRV of the virtual actor
     if (brv[delayVirtual->getTypeId()] > 1) {
-        throw std::runtime_error("Delay virtual actor should have brv value of 1.");
+        throwSpiderException("Delay [%s] -- RV(%d) > 1.", delayVirtual->getName(), brv[delayVirtual->getTypeId()]);
     }
     // If the setter is an interface, we should just retrieve the connection
     if (delayGetter->getType() == PISDF_TYPE_IF) {
@@ -329,7 +335,8 @@ static void linkSRDelayGetterVertices(SRDAGGraph *topSrdag,
             snkConnections[0].edge = getterEdge;
             snkConnections[0].cons = nbDelays;
         } else {
-            throw std::runtime_error("Interface getter for a delay must have same rate.");
+            throwSpiderException("Getter [%d] of delay [%s] does not have proper rate.", delayGetter->getName(),
+                                 delayVirtual->getName());
         }
     } else {
         int nbGetterRepetitions = brv[delayGetter->getTypeId()];
@@ -401,60 +408,61 @@ void linkSRVertices(SRDAGGraph *topSrdag,
             nbSinkRepetitions = brv[edge->getSnk()->getTypeId()];
         }
 
-        int sourceProduction = edge->resolveProd(job);
-        int sinkConsumption = edge->resolveCons(job);
+        auto sourceProduction = edge->resolveProd(job);
+        auto sinkConsumption = edge->resolveCons(job);
 
         // Unused edge
         if (nbSourceRepetitions == 0 && nbSinkRepetitions == 0)
             continue;
 
-        if (nbSourceRepetitions == 0) {
-            if (sinkConsumption != 0) {
-                throw std::runtime_error("An actor wait tokens from a not executed one");
-            } else {
-                if (edge->getSnk()->getSubType() == PISDF_SUBTYPE_JOIN) {
-                    continue;
-                } else {
-                    /* Create an empty edge */
-                    for (int snkRep = 0; snkRep < nbSinkRepetitions; snkRep++) {
-                        SRDAGVertex *snk = job->bodies[edge->getSnk()->getTypeId()][snkRep];
-                        int portIx = edge->getSnkPortIx();
-                        SRDAGEdge *emptyEdge = topSrdag->addEdge();
-                        emptyEdge->setRate(0);
-                        emptyEdge->connectSnk(snk, portIx);
-                    }
-                    continue;
-                }
-            }
-        }
-        if (nbSinkRepetitions == 0) {
-            if (sourceProduction != 0) {
-                for (int srcRep = 0; srcRep < nbSourceRepetitions; srcRep++) {
-                    SRDAGVertex *src = job->bodies[edge->getSnk()->getTypeId()][srcRep];
-                    int portIx = edge->getSrcPortIx();
-                    SRDAGVertex *end = topSrdag->addEnd();
-                    SRDAGEdge *edge = topSrdag->addEdge();
-                    edge->setRate(sourceProduction);
-                    edge->connectSrc(src, portIx);
-                    edge->connectSnk(end, 0);
-                }
-            } else {
-                if (edge->getSrc()->getSubType() == PISDF_SUBTYPE_FORK
-                    || edge->getSrc()->getSubType() == PISDF_SUBTYPE_BROADCAST) {
-                    continue;
-                } else {
-                    /* Create an empty edge */
-                    for (int srcRep = 0; srcRep < nbSourceRepetitions; srcRep++) {
-                        SRDAGVertex *src = job->bodies[edge->getSnk()->getTypeId()][srcRep];
-                        int portIx = edge->getSrcPortIx();
-                        SRDAGEdge *emptyEdge = topSrdag->addEdge();
-                        emptyEdge->setRate(0);
-                        emptyEdge->connectSrc(src, portIx);
-                    }
-                    continue;
-                }
-            }
-        }
+//        if (nbSourceRepetitions == 0) {
+//            if (sinkConsumption != 0) {
+//                throwSpiderException("Actor [%s] consumes tokens from non executed actor [%s].",
+//                                     edge->getSnk()->getName(), edge->getSrc()->getName());
+//            } else {
+//                if (edge->getSnk()->getSubType() == PISDF_SUBTYPE_JOIN) {
+//                    continue;
+//                } else {
+//                    /* Create an empty edge */
+//                    for (int snkRep = 0; snkRep < nbSinkRepetitions; snkRep++) {
+//                        SRDAGVertex *snk = job->bodies[edge->getSnk()->getTypeId()][snkRep];
+//                        int portIx = edge->getSnkPortIx();
+//                        SRDAGEdge *emptyEdge = topSrdag->addEdge();
+//                        emptyEdge->setRate(0);
+//                        emptyEdge->connectSnk(snk, portIx);
+//                    }
+//                    continue;
+//                }
+//            }
+//        }
+//        if (nbSinkRepetitions == 0) {
+//            if (sourceProduction != 0) {
+//                for (int srcRep = 0; srcRep < nbSourceRepetitions; srcRep++) {
+//                    SRDAGVertex *src = job->bodies[edge->getSnk()->getTypeId()][srcRep];
+//                    int portIx = edge->getSrcPortIx();
+//                    SRDAGVertex *end = topSrdag->addEnd();
+//                    SRDAGEdge *edge = topSrdag->addEdge();
+//                    edge->setRate(sourceProduction);
+//                    edge->connectSrc(src, portIx);
+//                    edge->connectSnk(end, 0);
+//                }
+//            } else {
+//                if (edge->getSrc()->getSubType() == PISDF_SUBTYPE_FORK
+//                    || edge->getSrc()->getSubType() == PISDF_SUBTYPE_BROADCAST) {
+//                    continue;
+//                } else {
+//                    /* Create an empty edge */
+//                    for (int srcRep = 0; srcRep < nbSourceRepetitions; srcRep++) {
+//                        SRDAGVertex *src = job->bodies[edge->getSnk()->getTypeId()][srcRep];
+//                        int portIx = edge->getSrcPortIx();
+//                        SRDAGEdge *emptyEdge = topSrdag->addEdge();
+//                        emptyEdge->setRate(0);
+//                        emptyEdge->connectSrc(src, portIx);
+//                    }
+//                    continue;
+//                }
+//            }
+//        }
 
         if (sourceProduction == 0 && sinkConsumption == 0) {
             /* Put Empty Src Port */
@@ -480,8 +488,8 @@ void linkSRVertices(SRDAGGraph *topSrdag,
         int sinkIndex = 0;
         int curSourceToken;
         int curSinkToken;
-        SRDAGVertex* persistentInit = NULL;
-        SRDAGVertex* persistentEnd = NULL;
+        SRDAGVertex *persistentInit = nullptr;
+        SRDAGVertex *persistentEnd = nullptr;
 
         SrcConnection *srcConnections = nullptr;
         SnkConnection *snkConnections = nullptr;
@@ -544,7 +552,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                     // No need of Broadcast
                     srcConnections = CREATE_MUL(TRANSFO_STACK, 1, SrcConnection);
                     srcConnections[0].src = job->inputIfs[edge->getSrc()->getTypeId()]->getSrc();
-                    if (srcConnections[0].src == 0) {
+                    if (srcConnections[0].src == nullptr) {
                         srcConnections[0].src = topSrdag->addRoundBuffer();
                         job->inputIfs[edge->getSrc()->getTypeId()]->connectSnk(srcConnections[0].src, 0);
                         srcConnections[0].portIx = 0;
@@ -557,7 +565,6 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                     bool perfectBr = sinkConsumption * nbSinkRepetitions % sourceProduction == 0;
                     int nBr = sinkConsumption * nbSinkRepetitions / sourceProduction;
                     if (!perfectBr) nBr++;
-
                     nbSourceRepetitions = nBr;
                     sinkNeedEnd = !perfectBr;
 //					lastCons = sourceProduction - sinkConsumption*nbSinkRepetitions;
@@ -588,7 +595,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                     // 1. Deal with the delay initialization
                     if (edge->getDelaySetter()) {
                         if (edge->isDelayPersistent()) {
-                            throw std::runtime_error("Persistent delay can not have setter actor.");
+                            throwSpiderException("Delay with persistence can not have setter actor.");
                         }
                         // Add setter vertex instances
                         linkSRDelaySetterVertices(topSrdag,        /* Top graph */
@@ -621,7 +628,8 @@ void linkSRVertices(SRDAGGraph *topSrdag,
 
         switch (edge->getSnk()->getType()) {
             case PISDF_TYPE_CONFIG:
-                throw std::runtime_error("Sink is a config actor, should not be possible !");
+                throwSpiderException("Actor [%s] can not be connected to sink ConfigActor [%s].",
+                                     edge->getSrc()->getName(), edge->getSnk()->getName());
             case PISDF_TYPE_IF:
                 if (sinkConsumption * 1 == sourceProduction * nbSourceRepetitions) {
                     // No need of specific thing
@@ -659,7 +667,8 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                         // 2. Add end vertex
                         snkConnections[nbSinkRepetitions].edge = topSrdag->addEdge();
                         snkConnections[nbSinkRepetitions].edge->connectSnk(topSrdag->addEnd(), 0);
-                        snkConnections[nbSinkRepetitions].cons = sourceProduction - sinkConsumption * nbSinkRepetitions;
+                        snkConnections[nbSinkRepetitions].cons =
+                                nbSourceRepetitions * sourceProduction - sinkConsumption * nbSinkRepetitions;
                         nbSinkRepetitions++;
                     } else {
                         snkConnections = CREATE_MUL(TRANSFO_STACK, nbSinkRepetitions, SnkConnection);
@@ -684,7 +693,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
                     // 2. Deal with the delay end
                     if (edge->getDelayGetter()) {
                         if (edge->isDelayPersistent()) {
-                            throw std::runtime_error("Persistent delay can not have getter actor.");
+                            throwSpiderException("Delay with persistence can not have getter actor.");
                         }
                         // Add getter vertex instances
                         linkSRDelayGetterVertices(topSrdag,                            /* Top graph */
@@ -722,14 +731,13 @@ void linkSRVertices(SRDAGGraph *topSrdag,
             /*
              * Adding explode/implode vertices if required.
              */
-
             if (rest < curSourceToken
                 && (srcConnections[sourceIndex].src->getId() != forkIx)) {
                 // Adding an explode vertex.
                 SRDAGVertex *fork_vertex = topSrdag->addFork(MAX_IO_EDGES);
                 forkIx = fork_vertex->getId();
 
-                if (srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx) != 0)
+                if (srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx) != nullptr)
                     srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx)->connectSnk(
                             fork_vertex, 0);
                 else
@@ -772,7 +780,8 @@ void linkSRVertices(SRDAGGraph *topSrdag,
 
             //Creating the new edge between normal vertices or between a normal and an explode/implode one.
             SRDAGEdge *srcEdge;
-            if ((srcEdge = srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx)) != 0) {
+            if ((srcEdge = srcConnections[sourceIndex].src->getOutEdge(srcConnections[sourceIndex].portIx)) !=
+                nullptr) {
                 snkConnections[sinkIndex].edge->setAlloc(srcEdge->getAlloc());
                 snkConnections[sinkIndex].edge->setRate(srcEdge->getRate());
 
@@ -806,7 +815,7 @@ void linkSRVertices(SRDAGGraph *topSrdag,
             }
         }
 
-        if(persistentInit && persistentEnd){
+        if (persistentInit && persistentEnd) {
             topSrdag->addEdge(persistentInit, 1, persistentEnd, 1, 0);
         }
 

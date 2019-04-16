@@ -50,7 +50,9 @@ PiSDFVertex::PiSDFVertex(
         int nInEdge, int nOutEdge,
         int nInParam, int nOutParam) {
 
-    id_ = globalId++;
+    if (type == PISDF_TYPE_BODY) {
+        id_ = globalId++;
+    }
     typeId_ = typeId;
     fctId_ = fctId;
     type_ = type;
@@ -80,10 +82,12 @@ PiSDFVertex::PiSDFVertex(
     nPeTypeMax_ = Spider::getArchi()->getNPETypes();
 
     constraints_ = CREATE_MUL(PISDF_STACK, nPeMax_, bool);
-    memset(constraints_, false, nPeMax_ * sizeof(bool));
+
+    memset(constraints_, subType != PISDF_SUBTYPE_NORMAL, nPeMax_ * sizeof(bool));
 
     timings_ = CREATE_MUL(PISDF_STACK, nPeTypeMax_, Expression*);
     memset(timings_, 0, nPeTypeMax_ * sizeof(Expression *));
+    scheduleJob_ = nullptr;
 }
 
 PiSDFVertex::~PiSDFVertex() {
@@ -98,8 +102,12 @@ PiSDFVertex::~PiSDFVertex() {
         if (timings_[i]) {
             timings_[i]->~Expression();
             StackMonitor::free(PISDF_STACK, timings_[i]);
-            timings_[i] = 0;
+            timings_[i] = nullptr;
         }
     }
     StackMonitor::free(PISDF_STACK, timings_);
+    if (scheduleJob_) {
+        scheduleJob_->~ScheduleJob();
+        StackMonitor::free(TRANSFO_STACK, scheduleJob_);
+    }
 }

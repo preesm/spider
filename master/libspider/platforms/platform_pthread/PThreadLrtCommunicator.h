@@ -60,54 +60,40 @@
 
 #include <Message.h>
 #include <tools/Stack.h>
-#include <queue>
+#include <cstdint>
 
-#include "ControlQueue.h"
-#include "TraceQueue.h"
 #include "DataQueues.h"
+#include "ControlMessageQueue.h"
+#include "NotificationQueue.h"
 
 class PThreadLrtCommunicator : public LrtCommunicator {
 public:
     PThreadLrtCommunicator(
-            ControlQueue *spider2LrtQueue,
-            ControlQueue *lrt2SpiderQueue,
-            DataQueues *dataQueues,
-            TraceQueue *traceQueue
+            ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
+            NotificationQueue<NotificationMessage> *notificationQueue,
+            DataQueues *dataQueues
     );
 
-    ~PThreadLrtCommunicator();
+    ~PThreadLrtCommunicator() override = default;
 
-    void *ctrl_start_send(int size);
+    void push_notification(NotificationMessage *msg) override;
 
-    void ctrl_end_send(int size);
+    bool pop_notification(NotificationMessage *msg, bool blocking) override;
 
-    int ctrl_start_recv(void **data);
+    std::int32_t push_job_message(JobInfoMessage **message) override;
 
-    void ctrl_start_recv_block(void **data);
+    void pop_job_message(JobInfoMessage **msg, std::int32_t id) override;
 
-    void ctrl_end_recv();
+    void *data_start_send(std::int32_t alloc) override;
 
-    void *trace_start_send(int size);
+    void data_end_send(Fifo *f) override;
 
-    void trace_end_send(int size);
-
-    void *data_start_send(Fifo *f);
-
-    void data_end_send(Fifo *f);
-
-    void *data_recv(Fifo *f);
-
-    void setLrtJobIx(int lrtIx, int jobIx);
-
-    void waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int jobIx);
-
+    void *data_recv(std::int32_t alloc) override;
 
 private:
-
-    ControlQueue *spider2LrtQueue_;
-    ControlQueue *lrt2SpiderQueue_;
+    ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
+    NotificationQueue<NotificationMessage> *notificationQueue_;
     DataQueues *dataQueues_;
-    TraceQueue *traceQueue_;
 };
 
 #endif/*PTHREAD_LRT_COMMUNICATOR_H*/

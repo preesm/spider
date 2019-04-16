@@ -35,9 +35,8 @@
 #ifndef SPIDER_TRACEQUEUE_H
 #define SPIDER_TRACEQUEUE_H
 
-#include <queue>
-#include <mutex>
-#include <semaphore.h>
+#include <cstdint>
+#include <tools/SpiderQueue.h>
 
 /**
  * Thread safe mono directional queue with only one reader but multiple writers (nLrt + Spider).
@@ -49,7 +48,7 @@ public:
      * @param msgSizeMax largest possible message size.
      * @param nLrt Number of Lrts.
      */
-    TraceQueue(int msgSizeMax, int nLrt);
+    TraceQueue(std::uint64_t msgSizeMax, int nLrt);
 
     /**
      * Destructor.
@@ -62,14 +61,14 @@ public:
      * @param size Size needed by the message.
      * @return Ptr to data were to write the message.
      */
-    void *push_start(int lrtIx, int size);
+    void *push_start(int lrtIx, std::uint64_t size);
 
     /**
      * Actually send the message prepared in @push_start.
      * @param lrtIx Index of the sending LRT (nLrt is espected for Spider)
      * @param size Size needed by the message.
      */
-    void push_end(int lrtIx, int size);
+    void push_end(int lrtIx, std::uint64_t size);
 
     /**
      * Receive a message from the queue.
@@ -77,7 +76,7 @@ public:
      * @param blocking True if the @pop_start should wait for a message if none is available.
      * @return 0 if no message have been received, size of the message otherwise.
      */
-    int pop_start(void **data, bool blocking);
+    std::uint64_t pop_start(void **data, bool blocking);
 
     /**
      * Free the data to allow the reception of a new message.
@@ -86,18 +85,16 @@ public:
     void pop_end();
 
 private:
-    std::queue<unsigned char> queue_;
-    std::mutex queue_mutex_;
-    sem_t queue_sem_;
+    SpiderQueue<std::uint8_t> spiderQueue_;
 
-    int msgSizeMax_;
+    std::uint64_t msgSizeMax_;
     int nLrt_;
 
     void **msgBufferSend_;
-    int *curMsgSizeSend_;
+    std::uint64_t *curMsgSizeSend_;
 
     void *msgBufferRecv_;
-    int curMsgSizeRecv_;
+    std::uint64_t curMsgSizeRecv_;
 
 };
 

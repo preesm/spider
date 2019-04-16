@@ -36,10 +36,8 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include "specialActors.h"
-
-#include <cstring>
 #include <graphs/PiSDF/PiSDFCommon.h>
+#include <specialActors/specialActors.h>
 
 void saInit(void */*inputFIFOs*/[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
 #if VERBOSE

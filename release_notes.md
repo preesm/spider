@@ -7,10 +7,13 @@ Spider Changelog
 ### New Feature
 * Complete Refacto of PThread Platform: all communications are now blocking, threads will not take 100% CPU for synchronization.
 * SRDAG output shows persistent delay inormation
+* Static graphs are now only scheduled on first iteration.
 
 ### Changes
 * Enhance Special Actor Memory allocation allowing reduced footprint.
 * Improved details of error messages;
+* Move some platform specific types (unsigned long, long, char, etc.) to standard types.
+* Changed parameters implementation, reducing number of expression evaluation and making more explicit dependencies between parameters.
 
 ### Bug fix
 * Fix Graph transformation for actors with repetition is equal to 0.

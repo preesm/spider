@@ -54,9 +54,8 @@ public:
             int nInEdge, int nOutEdge,
             int nInParam);
 
-    PiSDFVertex *addHierVertex(
-            const char *vertexName,
-            PiSDFGraph *graph,
+    PiSDFVertex *addBodyVertex(
+            const char *vertexName, PiSDFSubType type,
             int nInEdge, int nOutEdge,
             int nInParam);
 
@@ -79,17 +78,7 @@ public:
             const char *name,
             int nInParam);
 
-    PiSDFParam *addStaticParam(const char *name, const char *expr);
-
-    PiSDFParam *addStaticParam(const char *name, int value);
-
-    PiSDFParam *addHeritedParam(const char *name, int parentId);
-
-    PiSDFParam *addDynamicParam(const char *name);
-
-    PiSDFParam *addStaticDependentParam(const char *name, const char *expr);
-
-    PiSDFParam *addDynamicDependentParam(const char *name, const char *expr);
+    inline void addPiSDFParam(PiSDFParam *param);
 
     /** Element getters */
     inline PiSDFEdge *getEdge(int ix);
@@ -121,8 +110,20 @@ public:
     /** General getters */
     inline PiSDFVertex *getParentVertex();
 
+    /**
+     * @brief Get graph static property
+     * @return true if the graph is static, false else
+     */
+    inline bool isGraphStatic();
+
     /** General setters */
     inline void setParentVertex(PiSDFVertex *parent);
+
+    /**
+     * @brief Set the graph static property
+     * @param isStatic true if the graph is static, false else
+     */
+    inline void setGraphStaticProperty(bool isStatic);
 
     /** Print Fct */
     void print(const char *path);
@@ -131,7 +132,8 @@ public:
     PiSDFEdge *connect(
             PiSDFVertex *source, int sourcePortId, const char *production,
             PiSDFVertex *sink, int sinkPortId, const char *consumption,
-            const char *delay, PiSDFVertex *setter = 0, PiSDFVertex *getter = 0, PiSDFVertex *delayActor = 0,
+            const char *delay, PiSDFVertex *setter = nullptr, PiSDFVertex *getter = nullptr,
+            PiSDFVertex *delayActor = nullptr,
             bool isDelayPersistent = false);
 
     void delVertex(PiSDFVertex *vertex);
@@ -151,6 +153,8 @@ private:
     PiSDFVertexSet outputIfs_;
 
     PiSDFEdge *addEdge();
+
+    bool isStatic_;
 };
 
 /** Inline Fcts */
@@ -185,27 +189,27 @@ inline const PiSDFParam *const *PiSDFGraph::getParams() const {
 }
 
 inline int PiSDFGraph::getNParam() const {
-    return params_.getN();
+    return params_.size();
 }
 
 inline int PiSDFGraph::getNEdge() const {
-    return edges_.getN();
+    return edges_.size();
 }
 
 inline int PiSDFGraph::getNInIf() const {
-    return inputIfs_.getN();
+    return inputIfs_.size();
 }
 
 inline int PiSDFGraph::getNOutIf() const {
-    return outputIfs_.getN();
+    return outputIfs_.size();
 }
 
 inline int PiSDFGraph::getNConfig() const {
-    return configs_.getN();
+    return configs_.size();
 }
 
 inline int PiSDFGraph::getNBody() const {
-    return bodies_.getN();
+    return bodies_.size();
 }
 
 /** General getters */
@@ -215,6 +219,19 @@ inline PiSDFVertex *PiSDFGraph::getParentVertex() {
 
 inline void PiSDFGraph::setParentVertex(PiSDFVertex *parent) {
     parent_ = parent;
+}
+
+inline void PiSDFGraph::addPiSDFParam(PiSDFParam *param) {
+    params_.add(param);
+}
+
+inline bool PiSDFGraph::isGraphStatic() {
+    return isStatic_;
+}
+
+/** General setter **/
+inline void PiSDFGraph::setGraphStaticProperty(bool isStatic) {
+    isStatic_ = isStatic;
 }
 
 #endif/*PISDF_GRAPH_H*/

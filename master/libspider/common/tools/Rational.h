@@ -34,147 +34,241 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-/*
- * Rational.h
- *
- *  Created on: Apr 10, 2014
- *      Author: jheulot
- */
-
 #ifndef RATIONAL_H_
 #define RATIONAL_H_
 
-#include <stdexcept>
+#include <cstdint>
 
 class Rational {
 private:
-    long long nominator;
-    long long denominator;
+    std::int64_t n_;
+    std::int64_t d_;
 
-    inline void reduce() {
-        long gcd = compute_gcd(this->nominator, this->denominator);
-        nominator /= gcd;
-        denominator /= gcd;
-        if (denominator < 0) {
-            nominator = -nominator;
-            denominator = -denominator;
-        }
-    }
+    inline void reduce();
 
 public:
-    inline Rational() {
-        nominator = 0;
-        denominator = 1;
-    }
+    inline explicit Rational(std::int64_t n = 0, std::int64_t d = 1);
 
-    inline Rational(long i) {
-        nominator = i;
-        denominator = 1;
-    }
+    inline Rational(const Rational &r);
 
-    inline Rational(long nom, long den) {
-        nominator = nom;
-        denominator = den;
-    }
+    inline Rational &operator+=(const Rational &b);
 
-    static inline long compute_gcd(long a, long b) {
-        long t;
-        while (b != 0) {
-            t = b;
-            b = a % b;
-            a = t;
-        }
-        return a;
-    }
+    inline Rational &operator-=(const Rational &b);
 
-    static inline long compute_lcm(long a, long b) {
-        return labs(a * b) / compute_gcd(a, b);
-    }
+    inline Rational &operator*=(const Rational &b);
 
-    inline Rational operator+(const Rational b) const {
-        Rational res;
-        long lcm = compute_lcm(this->denominator, b.denominator);
-        res.denominator = lcm;
-        res.nominator = lcm * this->nominator / this->denominator
-                        + lcm * b.nominator / b.denominator;
-        res.reduce();
-        return res;
-    }
+    inline Rational &operator/=(const Rational &b);
 
-    inline Rational operator-(const Rational b) const {
-        Rational res;
-        long lcm = compute_lcm(this->denominator, b.denominator);
-        res.denominator = lcm;
-        res.nominator = this->nominator * lcm / this->denominator
-                        - b.nominator * lcm / b.denominator;
-        res.reduce();
-        return res;
-    }
+    inline Rational operator+(const Rational &b) const;
 
-    inline Rational operator*(const Rational b) const {
-        Rational res;
-        res.nominator = this->nominator * b.nominator;
-        res.denominator = this->denominator * b.denominator;
-        res.reduce();
-        return res;
-    }
+    inline Rational operator-(const Rational &b) const;
 
-    inline Rational operator/(const Rational b) const {
-        Rational res;
-        res.nominator = this->nominator * b.denominator;
-        res.denominator = this->denominator * b.nominator;
-        res.reduce();
-        return res;
-    }
+    inline Rational operator*(const Rational &b) const;
 
-    inline bool operator==(const Rational b) const {
-        return nominator == b.nominator && denominator == b.denominator;
-    }
+    inline Rational operator/(const Rational &b) const;
 
-    inline bool operator!=(const Rational b) const {
-        return nominator != b.nominator || denominator != b.denominator;
-    }
+    inline Rational operator+(const std::int64_t &b) const;
 
-    inline bool operator>(const Rational b) const {
-        long lcm = compute_lcm(denominator, b.denominator);
-        return nominator * (denominator / lcm) > b.nominator * (b.denominator / lcm);
-    }
+    inline Rational operator-(const std::int64_t &b) const;
 
-    inline bool operator<(const Rational b) const {
-        long lcm = compute_lcm(denominator, b.denominator);
-        return nominator * (denominator / lcm) < b.nominator * (b.denominator / lcm);
-    }
+    inline Rational operator*(const std::int64_t &b) const;
 
-    inline bool operator>=(const Rational b) const {
-        long lcm = compute_lcm(denominator, b.denominator);
-        return nominator * (denominator / lcm) >= b.nominator * (b.denominator / lcm);
-    }
+    inline Rational operator/(const std::int64_t &b) const;
 
-    inline bool operator<=(const Rational b) const {
-        long lcm = compute_lcm(denominator, b.denominator);
-        return nominator * (denominator / lcm) <= b.nominator * (b.denominator / lcm);
-    }
+    inline bool operator==(const Rational &b) const;
 
-    inline Rational getAbs() const {
-        Rational res;
-        res.nominator = labs(nominator);
-        res.denominator = labs(denominator);
-        return res;
-    }
+    inline bool operator==(const std::int64_t &a) const;
 
-    inline long toInt() const {
-        if (denominator == 1)
-            return nominator;
-        throw std::runtime_error("Error conv Rational to int without denominator = 1\n");
-    }
+    inline bool operator!=(const Rational &b) const;
 
-    inline long getDenominator() const {
-        return denominator;
-    }
+    inline bool operator!=(const std::int64_t &a) const;
 
-    inline long getNominator() const {
-        return nominator;
-    }
+    inline bool operator>(const Rational &b) const;
+
+    inline bool operator<(const Rational &b) const;
+
+    inline bool operator>=(const Rational &b) const;
+
+    inline bool operator<=(const Rational &b) const;
+
+    inline Rational abs() const;
+
+    inline std::int64_t toInt64() const;
+
+    inline std::int32_t toInt32() const;
+
+    inline double toDouble() const;
+
+    inline std::int64_t getDenominator() const;
+
+    inline std::int64_t getNominator() const;
+
+    static inline std::int64_t gcd(std::int64_t a, std::int64_t b);
+
+    static inline std::int64_t abs(std::int64_t x);
+
+    static inline std::int64_t compute_lcm(std::int64_t a, std::int64_t b);
 };
+
+Rational::Rational(int64_t n, int64_t d) : n_{n}, d_{d} {
+    if (d_ == 0) {
+        throwSpiderException("Fraction with zero denominator not allowed.");
+    }
+    reduce();
+}
+
+Rational::Rational(const Rational &r) : Rational{r.n_, r.d_} {
+
+}
+
+Rational &Rational::operator+=(const Rational &b) {
+    n_ = (n_ * b.d_) + (b.n_ * d_);
+    d_ *= b.d_;
+    reduce();
+    return *this;
+}
+
+Rational &Rational::operator-=(const Rational &b) {
+    n_ = (n_ * b.d_) - (b.n_ * d_);
+    d_ *= b.d_;
+    reduce();
+    return *this;
+}
+
+Rational &Rational::operator*=(const Rational &b) {
+    n_ *= b.n_;
+    d_ *= b.d_;
+    reduce();
+    return *this;
+}
+
+Rational &Rational::operator/=(const Rational &b) {
+    if (b.n_ == 0) {
+        throwSpiderException("Fraction with zero denominator not allowed.");
+    }
+    n_ *= b.d_;
+    d_ *= b.n_;
+    reduce();
+    return *this;
+}
+
+Rational Rational::operator+(const Rational &b) const {
+    return Rational{*this} += b;
+}
+
+Rational Rational::operator-(const Rational &b) const {
+    return Rational{*this} -= b;
+}
+
+Rational Rational::operator*(const Rational &b) const {
+    return Rational{*this} *= b;
+}
+
+Rational Rational::operator/(const Rational &b) const {
+    return Rational{*this} /= b;
+}
+
+Rational Rational::operator+(const std::int64_t &b) const {
+    return *this + Rational{b};
+}
+
+Rational Rational::operator-(const std::int64_t &b) const {
+    return *this - Rational{b};
+}
+
+Rational Rational::operator*(const std::int64_t &b) const {
+    return *this * Rational{b};
+}
+
+Rational Rational::operator/(const std::int64_t &b) const {
+    return *this / Rational{b};
+}
+
+bool Rational::operator==(const Rational &b) const {
+    return n_ == b.n_ && d_ == b.d_;
+}
+
+bool Rational::operator==(const std::int64_t &a) const {
+    return (n_ / d_) == a;
+}
+
+bool Rational::operator!=(const Rational &b) const {
+    return !(*this == b);
+}
+
+bool Rational::operator!=(const std::int64_t &a) const {
+    return !(*this == a);
+}
+
+bool Rational::operator>(const Rational &b) const {
+    auto diff = *this - b;
+    return diff.n_ > 0;
+}
+
+bool Rational::operator<(const Rational &b) const {
+    auto diff = *this - b;
+    return diff.n_ < 0;
+}
+
+bool Rational::operator>=(const Rational &b) const {
+    return !(*this < b);
+}
+
+bool Rational::operator<=(const Rational &b) const {
+    return !(*this > b);
+}
+
+std::int64_t Rational::toInt64() const {
+    return static_cast<std::int64_t >(n_ / d_);
+}
+
+std::int32_t Rational::toInt32() const {
+    return static_cast<std::int32_t >(n_ / d_);
+}
+
+double Rational::toDouble() const {
+    return static_cast<double >(n_) / static_cast<double >(d_);
+}
+
+Rational Rational::abs() const {
+    return Rational{abs((*this).n_), abs((*this).d_)};
+}
+
+std::int64_t Rational::abs(std::int64_t x) {
+    return x < 0 ? -x : x;
+}
+
+std::int64_t Rational::getDenominator() const {
+    return d_;
+}
+
+std::int64_t Rational::getNominator() const {
+    return n_;
+}
+
+void Rational::reduce() {
+    auto gcd = Rational::gcd(n_, d_);
+    n_ /= gcd;
+    d_ /= gcd;
+    if (d_ < 0) {
+        n_ = -n_;
+        d_ = -d_;
+    }
+}
+
+std::int64_t Rational::gcd(std::int64_t a, std::int64_t b) {
+    std::int64_t t;
+    while (b != 0) {
+        t = b;
+        b = a % b;
+        a = t;
+    }
+    return a;
+}
+
+std::int64_t Rational::compute_lcm(std::int64_t a, std::int64_t b) {
+    return abs(a * b) / gcd(a, b);
+}
+
 
 #endif /* RATIONAL_H_ */

@@ -40,7 +40,11 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#include <cstdint>
 #include <spider.h>
+#include <platform.h>
+#include "monitor/StackMonitor.h"
+//#include "Logger.h"
 
 typedef enum {
     MSG_START_JOB = 1,
@@ -51,10 +55,6 @@ typedef enum {
     MSG_STOP_LRT = 6
 } CtrlMsgType;
 
-typedef enum {
-    TRACE_JOB = 1,
-    TRACE_SPIDER = 2
-} TraceMsgType;
 
 typedef enum {
     TRACE_SPIDER_GRAPH = 1,
@@ -67,77 +67,214 @@ typedef enum {
     TRACE_SPIDER_TMP3
 } TraceSpiderType;
 
-typedef struct {
-    unsigned long msgIx;
-//	unsigned char msgIx:2;
-//	unsigned char reserved:6;
-} UndefinedMsg;
 
-typedef struct {
-//	unsigned char msgIx:2;
-//	unsigned long  srdagIx:29;
-//	unsigned char  specialActor:1;
-//	unsigned short fctIx:16;
-//	unsigned char nbInEdge:8;
-//	unsigned char nbOutEdge:8;
-//	unsigned char nbInParam:8;
-//	unsigned char nbOutParam:8;
-    unsigned long msgIx;
-    unsigned long srdagIx;
-    unsigned long specialActor;
-    unsigned long fctIx;
-    unsigned long traceEnabled;
-    unsigned long nbInEdge;
-    unsigned long nbOutEdge;
-    unsigned long nbInParam;
-    unsigned long nbOutParam;
-} StartJobMsg;
+class Fifo {
+public:
+    std::int32_t alloc;
+    std::int32_t size;
+//    std::int32_t blkLrtIx;
+//    std::int32_t blkLrtJobIx;
+};
 
-typedef struct {
-    unsigned long msgIx;
-    unsigned long spiderTask;
-    unsigned long srdagIx;
-    unsigned long lrtIx;
-    Time start;
-    Time end;
-} TraceMsg;
+class ClearTimeMessage {
+public:
+    std::uint32_t id_;
+    struct timespec timespec_;
+};
 
-typedef struct {
-    unsigned long alloc:32;
-    unsigned long size:32;
-    unsigned long blkLrtIx:32;
-    unsigned long blkLrtJobIx:32;
-} Fifo;
 
-typedef struct {
-    unsigned long msgIx;
-    unsigned long srdagIx;
-//	unsigned char msgIx:2;
-//	unsigned long srdagIx:30;
-} ParamValueMsg;
+typedef enum {
+    LRT_NOTIFICATION,         // Signal that notification is about LRT state
+    TRACE_NOTIFICATION,       // Signal that notification is about TRACE system
+    JOB_NOTIFICATION,         // Signal that notification is about JOB information
+    UNDEFINED_NOTIFICATION    // Signal that notification is undefined
+} NotificationType;
 
-typedef struct ClearTimeMsg {
-    unsigned long msgIx;
-//	unsigned char msgIx:2;
-//	unsigned char reserved:6;
-} ClearTimeMsg;
+typedef enum {
+    LRT_END_ITERATION,        // Cross-check signal sent after last JOB (if JOB_LAST_ID was not received)
+    LRT_REPEAT_ITERATION_EN,  // Signal LRT to repeat its complete iteration (indefinitely)
+    LRT_REPEAT_ITERATION_DIS, // Signal LRT to stop repeating iteration
+    LRT_FINISHED_ITERATION,   // Signal that given LRT has finished its iteration
+    LRT_RST_ITERATION,        // Signal LRT to restart current iteration
+    LRT_STOP,                 // Signal LRT to stop
+    LRT_PAUSE,                // Signal LRT to freeze
+    LRT_RESUME,               // Signal LRT to un-freeze
+} LRTNotificationType;
 
-typedef struct {
-    unsigned long msgIx;
-//	unsigned char msgIx:2;
-//	unsigned char reserved:6;
-} ResetLrtMsg;
+typedef enum {
+    TRACE_ENABLE,    // Signal LRT to enable its trace
+    TRACE_DISABLE,   // Signal LRT to disable its trace
+    TRACE_RST,       // Signal LRT to reset its trace
+    TRACE_SENT,      // Signal that a trace has been sent
+    TRACE_LRT,
+    TRACE_SPIDER
+} TraceNotificationType;
 
-typedef struct {
-    unsigned long msgIx;
-//	unsigned char msgIx:2;
-//	unsigned char reserved:6;
-} EndIterMsg;
+typedef enum {
+    JOB_ADD,                        // Signal LRT that a job is available in shared queue
+    JOB_LAST_ID,                    // Signal LRT what is the last job ID
+    JOB_CLEAR_QUEUE,                // Signal LRT to clear its job queue (if LRT_REPEAT_ITERATION_EN, signal is ignored)
+    JOB_SENT_PARAM,                 // Signal that LRT sent a ParameterMessage
+    JOB_BROADCAST_JOBSTAMP,         // Signal LRT to broadcast its job stamp to everybody
+    JOB_DELAY_BROADCAST_JOBSTAMP,   // Signal LRT to broadcast its job stamp to everybody after last job has been done
+    JOB_UPDATE_JOBSTAMP,            // Signal LRT that an update of job stamp is pending
+} JobNotificationType;
 
-typedef struct {
-    unsigned long msgIx;
-//	unsigned char msgIx:2;
-//	unsigned char reserved:6;
-} StopLrtMsg;
+/**
+ * @brief Generic notification message class
+ */
+class NotificationMessage {
+public:
+    explicit NotificationMessage(std::uint16_t type = NotificationType::UNDEFINED_NOTIFICATION,
+                                 std::uint16_t subType = NotificationType::UNDEFINED_NOTIFICATION,
+                                 std::int32_t lrtID = -1, std::int32_t index = -1) {
+        type_ = type;
+        subType_ = subType;
+        index_ = index;
+        lrtID_ = lrtID;
+    }
+
+    NotificationMessage(const NotificationMessage &old) {
+        type_ = old.type_;
+        subType_ = old.subType_;
+        index_ = old.index_;
+        lrtID_ = old.lrtID_;
+    }
+
+    inline std::uint16_t getType() {
+        return type_;
+    }
+
+    inline std::uint16_t getSubType() {
+        return subType_;
+    }
+
+    inline std::int32_t getIndex() {
+        return index_;
+    }
+
+    inline std::int32_t getLRTID() {
+        return lrtID_;
+    }
+
+private:
+    std::uint16_t type_;    // Main type of notification (LRT, TRACE, JOB)
+    std::uint16_t subType_; // SubType of notification
+    std::int32_t index_;    // Index of the message to fetch, may be used for direct value passing (see documentation of notification)
+    std::int32_t lrtID_;    // ID of the sender
+};
+
+/**
+ * @brief Information message about JOB to run
+ */
+class JobInfoMessage {
+public:
+    JobInfoMessage() = default;
+
+    bool specialActor_ = false;
+    std::int32_t srdagID_ = 0;
+    std::int32_t fctID_ = 0;
+    std::int32_t nEdgeIN_ = 0;
+    std::int32_t nEdgeOUT_ = 0;
+    std::int32_t nParamIN_ = 0;
+    std::int32_t nParamOUT_ = 0;
+    std::int32_t *jobs2Wait_ = nullptr;
+    bool *lrts2Notify_ = nullptr;
+    Fifo *inFifos_ = nullptr;
+    Fifo *outFifos_ = nullptr;
+    Param *inParams_ = nullptr;
+
+    ~JobInfoMessage() {
+        StackMonitor::free(ARCHI_STACK, inFifos_);
+        StackMonitor::free(ARCHI_STACK, outFifos_);
+        StackMonitor::free(ARCHI_STACK, jobs2Wait_);
+        StackMonitor::free(ARCHI_STACK, lrts2Notify_);
+        StackMonitor::free(ARCHI_STACK, inParams_);
+    }
+};
+
+/**
+ * @brief message containing generated parameters
+ */
+class ParameterMessage {
+public:
+    explicit ParameterMessage(std::int32_t vertexID, std::int32_t nParam, Param *params = nullptr) {
+        vertexID_ = vertexID;
+        nParam_ = nParam;
+        if (!params) {
+            params_ = CREATE_MUL_NA(ARCHI_STACK, nParam, Param);
+        } else {
+            params_ = params;
+        }
+    }
+
+    ~ParameterMessage() {
+        StackMonitor::free(ARCHI_STACK, params_);
+    }
+
+    inline std::int32_t getVertexID() {
+        return vertexID_;
+    }
+
+    inline std::int32_t getNParam() {
+        return nParam_;
+    }
+
+    inline Param *getParams() {
+        return params_;
+    }
+
+private:
+    std::int32_t vertexID_;
+    std::int32_t nParam_;
+    Param *params_;
+};
+
+/**
+ * @brief message containing TRACE information
+ */
+class TraceMessage {
+public:
+
+    explicit TraceMessage(std::int32_t vertexID = -1, std::int32_t spiderTask = -1, std::int32_t lrtID = -1,
+                          Time start = 0, Time end = 0) {
+        vertexID_ = vertexID;
+        spiderTask_ = spiderTask;
+        lrtID_ = lrtID;
+        startTime_ = start;
+        endTime_ = end;
+    }
+
+    inline std::int32_t getLRTID() {
+        return lrtID_;
+    }
+
+    inline Time getStartTime() {
+        return startTime_;
+    }
+
+    inline Time getEndTime() {
+        return endTime_;
+    }
+
+    inline Time getEllapsedTime() {
+        return endTime_ - startTime_;
+    }
+
+    inline std::int32_t getVertexID() {
+        return vertexID_;
+    }
+
+    inline std::int32_t getSpiderTask() {
+        return spiderTask_;
+    }
+
+private:
+    std::int32_t vertexID_;
+    std::int32_t spiderTask_;
+    std::int32_t lrtID_;
+    Time startTime_;
+    Time endTime_;
+};
 
 #endif/*MESSAGE_H*/

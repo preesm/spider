@@ -35,13 +35,24 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
+
+#include <pthread.h>
 #include <chrono>
+#include <cinttypes>
+#include <cstring>
+#include <cstdio>
+
+#include <platformPThread.h>
+#include <graphs/Archi/SharedMemArchi.h>
+#include <tools/Rational.h>
+#include <lrt.h>
 
 #ifdef _WIN32
 #include <windows.h>
 #else
 
 #include <unistd.h>
+#include <Logger.h>
 
 #endif // _WIN32
 
@@ -53,25 +64,9 @@
 #endif
 #endif
 
-#include <pthread.h>
+#define PLATFORM_FPRINTF_BUFFERSIZE 2000
 
-
-#include <cstring>
-#include <cstdio>
-
-#include <platformPThread.h>
-
-#include <stdarg.h>
-
-#include <graphs/Archi/SharedMemArchi.h>
-
-#include <lrt.h>
-#include <PThreadSpiderCommunicator.h>
-#include <spider.h>
-
-#define PLATFORM_FPRINTF_BUFFERSIZE 200
-
-#define MAX_MSG_SIZE 10*1024
+#define MAX_MSG_SIZE (10*1024)
 
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
@@ -80,13 +75,13 @@ static void *dataMem;
 
 static std::chrono::time_point<std::chrono::steady_clock> start_steady;
 
-static std::chrono::time_point<std::chrono::steady_clock> origin_steady = std::chrono::steady_clock::now();
+static auto origin_steady = std::chrono::steady_clock::now();
 
 static SharedMemArchi *archi_;
 
-pthread_barrier_t pthread_barrier_init_and_end_thread;
+pthread_barrier_t pthreadLRTBarrier;
 
-void printfSpider(void);
+void printfSpider();
 
 static void setAffinity(int cpuId) {
 #ifdef WIN32
@@ -105,66 +100,136 @@ static void setAffinity(int cpuId) {
 }
 
 
+void *lrtPthreadRunner(void *args) {
+    auto lrtInfo = (LRTInfo *) (args);
+    /** Registering LRT */
+    pthread_t self = pthread_self();
+    lrtInfo->platform->registerLRT(lrtInfo->lrtID, self);
+
+    /** Waiting for every threads to register itself */
+    pthread_barrier_wait(lrtInfo->pthreadBarrier);
+
+    /** Initialize the LRT specific stack */
+    StackMonitor::initStack(LRT_STACK, lrtInfo->lrtStack);
+
+    /** Set core affinity (if supported by the OS) */
+    setAffinity(lrtInfo->coreAffinity);
+
+    /** Set the function table */
+    lrtInfo->lrt->setFctTbl(lrtInfo->fcts, lrtInfo->nFcts);
+
+    /** Set communicators **/
+    lrtInfo->lrt->setCommunicators();
+
+#ifdef PAPI_AVAILABLE
+    /** Enable PAPIFY if needed to */
+    if (lrtInfo->usePapify) {
+        auto papifyJobInfo = lrtInfo->platform->getPapifyInfo();
+        lrtInfo->lrt->setUsePapify();
+        for (auto &mapEntry : papifyJobInfo) {
+            lrtInfo->lrt->addPapifyJobInfo(mapEntry.first, new PapifyAction(*mapEntry.second, lrtInfo->lrtID));
+        }
+    }
+#endif
+    /** Wait for all LRTs to be created */
+    pthread_barrier_wait(lrtInfo->pthreadBarrier);
+    /** Run LRT */
+    lrtInfo->lrt->runInfinitly();
+    /** Cleaning LRT specific stacks */
+    StackMonitor::freeAll(LRT_STACK);
+    StackMonitor::clean(LRT_STACK);
+    /** Wait for all LRTs to finish */
+    pthread_barrier_wait(lrtInfo->pthreadBarrier);
+    /** Exit thread */
+    pthread_exit(EXIT_SUCCESS);
+}
+
+void PlatformPThread::createAndLaunchThreads() {
+#ifdef __USE_GNU
+    /** Blocking SIGINT signals ot handle it properly **/
+    sigset_t childMask;
+    if ((sigemptyset(&childMask) == -1) || (sigaddset(&childMask, SIGINT) == -1)) {
+        throwSpiderException("Failed to initialize signal mask.");
+    }
+    if (pthread_sigmask(SIG_BLOCK, &childMask, nullptr) == -1) {
+        throwSpiderException("Failed to block SIGINT signal.");
+    }
+#else
+    Logger::print(LOG_GENERAL, LOG_WARNING,
+                  "Windows environment detected, console interruption will not be catched properly.\n");
+#endif
+
+    /** Starting the threads */
+    for (auto i = 1; i < nLrt_; i++) {
+        pthread_create(&thread_lrt_[i - 1], nullptr, &lrtPthreadRunner, &lrtInfoArray_[i]);
+    }
+}
+
+
 PlatformPThread::PlatformPThread(SpiderConfig &config) {
-    if (platform_) { throw std::runtime_error("Try to create 2 platforms"); }
+    if (platform_) {
+        throwSpiderException("Cannot create new platform, a platform already exist.");
+    }
     platform_ = this;
 
-    //printfSpider();
-
     nLrt_ = config.platform.nLrt;
+    if (nLrt_ < 0) {
+        throwSpiderException("Invalid number of Lrt: %d\n", nLrt_);
+    }
 
-    stackPisdf = 0;
-    stackSrdag = 0;
-    stackTransfo = 0;
-    stackArchi = 0;
-
-    //Global stacks initialisation
-    StackMonitor::initStack(PISDF_STACK, config.pisdfStack);
-    StackMonitor::initStack(SRDAG_STACK, config.srdagStack);
-    StackMonitor::initStack(TRANSFO_STACK, config.transfoStack);
-    StackMonitor::initStack(ARCHI_STACK, config.archiStack);
+    /** Init of the different stacks **/
+    initStacks(config);
 
     stackLrt = CREATE_MUL(ARCHI_STACK, nLrt_, Stack*);
 
     lrt_ = CREATE_MUL(ARCHI_STACK, nLrt_, LRT*);
     lrtCom_ = CREATE_MUL(ARCHI_STACK, nLrt_, LrtCommunicator*);
-    thread_ID_tab_ = CREATE_MUL(ARCHI_STACK, nLrt_, pthread_t);
+    lrtThreadsArray = CREATE_MUL(ARCHI_STACK, nLrt_, pthread_t);
 
 
-    //allocation des fifos
-    spider2LrtQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_, ControlQueue*);
-    lrt2SpiderQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_, ControlQueue*);
+    /** Create the different queues */
+    spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<JobInfoMessage *>);
+    lrt2SpiderParamQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ParameterMessage *>);
+    lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue<NotificationMessage>*);
 
-    for (int i = 0; i < nLrt_; i++) {
-        spider2LrtQueues_[i] = CREATE(ARCHI_STACK, ControlQueue)(MAX_MSG_SIZE);
-        lrt2SpiderQueues_[i] = CREATE(ARCHI_STACK, ControlQueue)(MAX_MSG_SIZE);
+    for (auto i = 0; i < nLrt_ + 1; ++i) {
+        lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
     }
 
-    dataQueues_ = CREATE(ARCHI_STACK, DataQueues)(nLrt_);
-    traceQueue_ = CREATE(ARCHI_STACK, TraceQueue)(MAX_MSG_SIZE, nLrt_);
 
-    //declaration des threads et structures de passage de paramètre
+    /** FIFOs allocation */
+    dataQueues_ = CREATE(ARCHI_STACK, DataQueues)(nLrt_);
+    /** TraceQueue allocation */
+    traceQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<TraceMessage *>);
+    /** Threads structure */
     thread_lrt_ = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, pthread_t);
-    arg_lrt_ = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, Arg_lrt);
+    lrtInfoArray_ = CREATE_MUL(ARCHI_STACK, nLrt_, LRTInfo);
+
+    /** Initialize SpiderCommunicator */
+    spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
+            spider2LrtJobQueue_,
+            lrt2SpiderParamQueue_,
+            lrtNotificationQueues_,
+            traceQueue_);
 
     // TODO use "usePapify" only for monitored LRTs / HW PEs
 #ifndef PAPI_AVAILABLE
-    // If PAPI is not available on the current platform, force disable it
+    // If PAPI is not available on the current platform_, force disable it
     if (config.usePapify) {
-        printf("WARNING: Spider was not compiled on a platform with PAPI, thus the monitoring is disabled.\n");
+        printf("WARNING: Spider was not compiled on a platform_ with PAPI, thus the monitoring is disabled.\n");
     }
     config.usePapify = false;
 #else
     if (config.usePapify) {
         // Initializing Papify
-        PapifyEventLib *papifyEventLib = new PapifyEventLib();
+        auto *papifyEventLib = new PapifyEventLib();
 
         // Register Papify actor configuration
         if (config.usePapify) {
             std::map<lrtFct, PapifyConfig *>::iterator it;
             for (it = config.papifyJobInfo.begin(); it != config.papifyJobInfo.end(); ++it) {
                 PapifyConfig *papifyConfig = it->second;
-                PapifyAction *papifyAction = new PapifyAction(
+                auto *papifyAction = new PapifyAction(
                         /* componentName */   papifyConfig->peType_,
                         /* PEName */          papifyConfig->peID_,
                         /* actorName */       papifyConfig->actorName_,
@@ -177,49 +242,54 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     }
 #endif
 
-    //TODO have shMem a multiple of getMinAllocSize
-    dataMem = malloc(config.platform.shMemSize);
+    // Find LCM of share memory size and minAllocSize
+    std::int64_t minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize,
+                                                                PlatformPThread::getMinAllocSize());
+    fprintf(stderr, "INFO: Page aligned shared memory size: %" PRId64"\n", minAlignedSharedMemory);
+    dataMem = operator new((size_t) minAlignedSharedMemory);
 
-    // Filling up parameters for each threads
+    /** Filling up parameters for each threads */
+    pthread_barrier_init(&pthreadLRTBarrier, nullptr, nLrt_);
     int offsetPe = 0;
     for (int pe = 0; pe < config.platform.nPeType; ++pe) {
         for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
-            
-		    lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
-		            spider2LrtQueues_[i + offsetPe],
-		            lrt2SpiderQueues_[i + offsetPe],
-		            dataQueues_,
-		            traceQueue_);
-		    lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i + offsetPe);
+            if (i + offsetPe >= nLrt_) {
+                break;
+            }
+            lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
+                    spider2LrtJobQueue_,
+                    lrtNotificationQueues_[i + offsetPe],
+                    dataQueues_);
 
-		    arg_lrt_[i + offsetPe].lrtCom = lrtCom_[i + offsetPe];
-		    arg_lrt_[i + offsetPe].lrt = lrt_[i + offsetPe];
-		    arg_lrt_[i + offsetPe].shMemSize = config.platform.shMemSize;
-		    arg_lrt_[i + offsetPe].fcts = config.platform.fcts;
-		    arg_lrt_[i + offsetPe].nLrtFcts = config.platform.nLrtFcts;
-		    arg_lrt_[i + offsetPe].index = i + offsetPe;
-		    arg_lrt_[i + offsetPe].nLrt = nLrt_;
-		    arg_lrt_[i + offsetPe].instance = this;
-            arg_lrt_[i + offsetPe].coreAffinity = config.platform.coreAffinities[pe][i];
-		    arg_lrt_[i + offsetPe].lrtStack.name = config.lrtStack.name;
-		    arg_lrt_[i + offsetPe].lrtStack.type = config.lrtStack.type;
-		    arg_lrt_[i + offsetPe].lrtStack.start = (void *) ((char *) config.lrtStack.start + (i + offsetPe) * config.lrtStack.size / nLrt_);
-		    arg_lrt_[i + offsetPe].lrtStack.size = config.lrtStack.size / nLrt_;
-		    arg_lrt_[i + offsetPe].usePapify = config.usePapify;
-		}
-		offsetPe += config.platform.pesPerPeType[pe];
+            lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i + offsetPe);
+
+            lrtInfoArray_[i + offsetPe].lrt = lrt_[i + offsetPe];
+            lrtInfoArray_[i + offsetPe].fcts = config.platform.fcts;
+            lrtInfoArray_[i + offsetPe].nFcts = config.platform.nLrtFcts;
+            lrtInfoArray_[i + offsetPe].lrtID = i + offsetPe;
+            lrtInfoArray_[i + offsetPe].platform = this;
+            lrtInfoArray_[i + offsetPe].coreAffinity = config.platform.coreAffinities[pe][i];
+            lrtInfoArray_[i + offsetPe].pthreadBarrier = &pthreadLRTBarrier;
+            /** Stack related information */
+            lrtInfoArray_[i + offsetPe].lrtStack.name = config.lrtStack.name;
+            lrtInfoArray_[i + offsetPe].lrtStack.type = config.lrtStack.type;
+            lrtInfoArray_[i + offsetPe].lrtStack.start = (void *) ((char *) config.lrtStack.start +
+                                                                   (i + offsetPe) * config.lrtStack.size / nLrt_);
+            lrtInfoArray_[i + offsetPe].lrtStack.size = config.lrtStack.size / nLrt_;
+            /** Papify related information */
+            lrtInfoArray_[i + offsetPe].usePapify = config.usePapify;
+        }
+        offsetPe += config.platform.pesPerPeType[pe];
     }
 
-    thread_ID_tab_[0] = pthread_self();
-    pthread_barrier_init(&pthread_barrier_init_and_end_thread, NULL, nLrt_);
+    lrtThreadsArray[0] = pthread_self();
 
-    //Lancement des threads
-    for (int i = 1; i < nLrt_; i++) {
-        pthread_create(&thread_lrt_[i - 1], NULL, &lrtPThread_helper, &arg_lrt_[i]);
-    }
+    /** Starting threads **/
+    createAndLaunchThreads();
 
-    //waiting for every threads to register itself in thread_ID_tab_
-    pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
+
+    //waiting for every threads to register itself in lrtThreadsArray
+    pthread_barrier_wait(&pthreadLRTBarrier);
 
     //Declaration des stacks spécific au thread
     StackConfig lrtStackConfig;
@@ -230,13 +300,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     StackMonitor::initStack(LRT_STACK, lrtStackConfig);
 
     /** Initialize shared memory */
-    memset(dataMem, 0, config.platform.shMemSize);
-
-    /** Initialize LRT and Communicators */
-    spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
-            spider2LrtQueues_,
-            lrt2SpiderQueues_,
-            traceQueue_);
+    memset(dataMem, 0, (size_t) minAlignedSharedMemory);
 
     // Check papify profiles
 #ifdef PAPI_AVAILABLE
@@ -250,27 +314,30 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 #endif
 
     // Wait for all LRTs to be ready to start
-    pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
+    pthread_barrier_wait(&pthreadLRTBarrier);
 
 
     setAffinity(0);
     lrt_[0]->setFctTbl(config.platform.fcts, config.platform.nLrtFcts);
+
+    /** Set Communicators of master **/
+    lrt_[0]->setCommunicators();
 
 
     /** Create Archi */
     int mainPE = 0;
     int mainPEType = 0;
     archi_ = CREATE(ARCHI_STACK, SharedMemArchi)(
-            /* Nb PE */        nLrt_,
+            /* Nb PE */     nLrt_,
             /* Nb PE Type*/ config.platform.nPeType,
             /* Spider Pe */ mainPE,
-            /*MappingTime*/ this->mappingTime);
+            /*MappingTime*/ mappingTime);
 
     archi_->setPEType(mainPE, mainPEType);
     archi_->activatePE(mainPE);
 
     char name[40];
-    sprintf(name, "TID %ld (Spider)", thread_ID_tab_[0]);
+    sprintf(name, "TID %ld (Spider)", lrtThreadsArray[0]);
     archi_->setName(mainPE, name);
     offsetPe = 0;
     for (int pe = 0; pe < config.platform.nPeType; ++pe) {
@@ -280,7 +347,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
             if (pe == mainPEType && (i + offsetPe) == mainPE) {
                 continue;
             }
-            sprintf(name, "TID %ld (LRT %d)", thread_ID_tab_[i + offsetPe], i + offsetPe);
+            sprintf(name, "TID %ld (LRT %d)", lrtThreadsArray[i + offsetPe], i + offsetPe);
             archi_->setPEType(i + offsetPe, pe);
             archi_->setName(i + offsetPe, name);
             archi_->activatePE(i + offsetPe);
@@ -294,25 +361,23 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 }
 
 PlatformPThread::~PlatformPThread() {
-    for (int lrt = 1; lrt < archi_->getNPE(); lrt++) {
-        int size = sizeof(StopLrtMsg);
-        StopLrtMsg *msg = (StopLrtMsg *) getSpiderCommunicator()->ctrl_start_send(lrt, size);
-
-        msg->msgIx = MSG_STOP_LRT;
-
-        getSpiderCommunicator()->ctrl_end_send(lrt, size);
+    auto spiderCommunicator = getSpiderCommunicator();
+    for (auto i = 1; i < nLrt_; ++i) {
+        NotificationMessage message(LRT_NOTIFICATION, LRT_STOP, getLrtIx());
+        spiderCommunicator->push_notification(i, &message);
     }
 
     //wait for every LRT to end
-    pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
+    pthread_barrier_wait(&pthreadLRTBarrier);
 
 
     //wait for each thread to free its lrt and archi stacks and to reach its end
-    for (int i = 1; i < nLrt_; i++)
-        pthread_join(thread_ID_tab_[i], NULL);
+    for (auto i = 1; i < nLrt_; i++) {
+        pthread_join(lrtThreadsArray[i], nullptr);
+    }
 
 #ifdef PAPI_AVAILABLE
-    // Free Papify information
+    /** Free Papify information */
     if (!papifyJobInfo.empty()) {
         std::map<lrtFct, PapifyAction *>::iterator it;
         // Delete the event lib manager
@@ -320,13 +385,11 @@ PlatformPThread::~PlatformPThread() {
     }
 #endif
 
-    for (int i = 0; i < nLrt_; i++) {
+    for (auto i = 0; i < nLrt_; i++) {
         lrt_[i]->~LRT();
-        ((PThreadLrtCommunicator *) lrtCom_[i])->~PThreadLrtCommunicator();
         StackMonitor::free(ARCHI_STACK, lrt_[i]);
         StackMonitor::free(ARCHI_STACK, lrtCom_[i]);
     }
-    ((PThreadSpiderCommunicator *) spiderCom_)->~PThreadSpiderCommunicator();
     StackMonitor::free(ARCHI_STACK, spiderCom_);
 
 
@@ -342,13 +405,18 @@ PlatformPThread::~PlatformPThread() {
         StackMonitor::free(ARCHI_STACK, spider2LrtQueues_[i]);
         StackMonitor::free(ARCHI_STACK, lrt2SpiderQueues_[i]);
     }
-    dataQueues_->~DataQueues();
-    traceQueue_->~TraceQueue();
 
-    StackMonitor::free(ARCHI_STACK, spider2LrtQueues_);
-    StackMonitor::free(ARCHI_STACK, lrt2SpiderQueues_);
-    StackMonitor::free(ARCHI_STACK, dataQueues_);
+    spider2LrtJobQueue_->~ControlMessageQueue();
+    lrt2SpiderParamQueue_->~ControlMessageQueue();
+    traceQueue_->~ControlMessageQueue();
+    StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
+    StackMonitor::free(ARCHI_STACK, spider2LrtJobQueue_);
+    StackMonitor::free(ARCHI_STACK, lrt2SpiderParamQueue_);
     StackMonitor::free(ARCHI_STACK, traceQueue_);
+
+
+    dataQueues_->~DataQueues();
+    StackMonitor::free(ARCHI_STACK, dataQueues_);
 
 
     //Desallocation des tableaux dynamiques
@@ -359,7 +427,7 @@ PlatformPThread::~PlatformPThread() {
     StackMonitor::clean(LRT_STACK);
     StackMonitor::free(ARCHI_STACK, stackLrt);
 
-    StackMonitor::free(ARCHI_STACK, thread_ID_tab_);
+    StackMonitor::free(ARCHI_STACK, lrtThreadsArray);
 
     StackMonitor::freeAll(ARCHI_STACK);
     StackMonitor::freeAll(TRANSFO_STACK);
@@ -373,14 +441,13 @@ PlatformPThread::~PlatformPThread() {
     StackMonitor::clean(PISDF_STACK);
 
     //Destroying synchronisation barrier
-    pthread_barrier_destroy(&pthread_barrier_init_and_end_thread);
+    pthread_barrier_destroy(&pthreadLRTBarrier);
 
-    free(dataMem);
+    operator delete(dataMem);
 }
 
 /** File Handling */
 FILE *PlatformPThread::fopen(const char *name) {
-
     return std::fopen(name, "w+");
 }
 
@@ -402,85 +469,54 @@ void PlatformPThread::fprintf(FILE *id, const char *fmt, ...) {
 }
 
 void PlatformPThread::fclose(FILE *id) {
-    if (id != NULL) {
+    if (id != nullptr) {
         std::fclose(id);
-        id = NULL;
     }
 }
 
 void *PlatformPThread::virt_to_phy(void *address) {
-    return (void *) ((long) dataMem + (long) address);
+    return (void *) ((intptr_t) dataMem + (intptr_t) address);
 }
 
 int PlatformPThread::getCacheLineSize() {
     return 0;
 }
 
-int PlatformPThread::getMinAllocSize() {
+long PlatformPThread::getMinAllocSize() {
 #ifdef _WIN32
     //workaround because Windows
     return 4096;
 #else
-    return getpagesize();
+    return sysconf(_SC_PAGESIZE);
 #endif
 }
 
-
-void PlatformPThread::rstJobIx() {
-    //Sending a msg to all slave LRTs, end of graph iteration
-    for (int i = 1; i < nLrt_; i++) {
-        EndIterMsg *msg = (EndIterMsg *) getSpiderCommunicator()->ctrl_start_send(i, sizeof(EndIterMsg));
-        msg->msgIx = MSG_END_ITER;
-        getSpiderCommunicator()->ctrl_end_send(i, sizeof(EndIterMsg));
-    }
-
-    //Waiting for slave LRTs to finish their job queue
-    for (int i = 1; i < nLrt_; i++) {
-        void *msg = NULL;
-
-        do {
-            getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
-            if(((UndefinedMsg *) msg)->msgIx == MSG_END_ITER)
+void PlatformPThread::rstJobIxRecv() {
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    NotificationMessage finishedMessage;
+    /** Wait for LRTs to finish their jobs **/
+    for (int i = 0; i < archi_->getNActivatedPE() - 1; ++i) {
+        while (true) {
+            spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, true);
+            if (finishedMessage.getType() == LRT_NOTIFICATION &&
+                finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
+                Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- received end signal from LRT: %d.\n", getLrtIx(),
+                              finishedMessage.getLRTID());
                 break;
-            else
-                getSpiderCommunicator()->ctrl_end_recv(i);
-        } while (1);
-        getSpiderCommunicator()->ctrl_end_recv(i);
-    }
-
-    //Sending a msg to all slave LRTs, reset jobIx counter
-    for (int i = 1; i < nLrt_; i++) {
-        ResetLrtMsg *msg = (ResetLrtMsg *) getSpiderCommunicator()->ctrl_start_send(i, sizeof(ResetLrtMsg));
-        msg->msgIx = MSG_RESET_LRT;
-        getSpiderCommunicator()->ctrl_end_send(i, sizeof(ResetLrtMsg));
-    }
-
-    //reseting master LRT jobIx counter
-    Platform::get()->getLrt()->setJobIx(-1);
-
-    //reseting jobTab
-    for(int i=0; i<nLrt_; i++){
-        lrtCom_[0]->setLrtJobIx(i,-1);
-    }
-
-    //Waiting for slave LRTs to reset their jobIx counter
-    for (int i = 1; i < nLrt_; i++) {
-        void *msg = NULL;
-        do {
-            getSpiderCommunicator()->ctrl_start_recv_block(i, &msg);
-            if(((UndefinedMsg *) msg)->msgIx == MSG_RESET_LRT)
-                break;
-            else
-                getSpiderCommunicator()->ctrl_end_recv(i);
-        } while (1);
-        getSpiderCommunicator()->ctrl_end_recv(i);
+            } else {
+                /** Save the notification for later **/
+                spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
+            }
+        }
     }
 }
 
+void PlatformPThread::rstJobIx() {
+}
+
 /** Time Handling */
-void PlatformPThread::rstTime(struct ClearTimeMsg *msg) {
-    struct timespec *ts = (struct timespec *) (msg + 1);
-    start = *ts;
+void PlatformPThread::rstTime(ClearTimeMessage *msg) {
+    start = msg->timespec_;
 }
 
 void PlatformPThread::rstTime() {
@@ -488,18 +524,6 @@ void PlatformPThread::rstTime() {
 
     start.tv_sec = (start_steady - origin_steady).count() / 1000000000;
     start.tv_nsec = (start_steady - origin_steady).count() - (start_steady - origin_steady).count() / 1000000000;
-
-
-    for (int lrt = 1; lrt < archi_->getNPE(); lrt++) {
-        int size = sizeof(ClearTimeMsg) + sizeof(struct timespec);
-        ClearTimeMsg *msg = (ClearTimeMsg *) getSpiderCommunicator()->ctrl_start_send(lrt, size);
-        struct timespec *ts = (struct timespec *) (msg + 1);
-
-        msg->msgIx = MSG_CLEAR_TIME;
-        *ts = start;
-
-        getSpiderCommunicator()->ctrl_end_send(lrt, size);
-    }
 }
 
 Time PlatformPThread::getTime() {
@@ -513,100 +537,23 @@ Time PlatformPThread::getTime() {
     }
 #endif // _WIN32
 
-    return val_steady;
+    return static_cast<Time>(val_steady);
 }
 
 Time PlatformPThread::mappingTime(int nActors, int /*nPe*/) {
     return (Time) 1 * nActors;
 }
 
+void PlatformPThread::initStacks(SpiderConfig &config) {
+    stackPisdf = nullptr;
+    stackSrdag = nullptr;
+    stackTransfo = nullptr;
+    stackArchi = nullptr;
 
-void PlatformPThread::lrtPThread(Arg_lrt *argument_lrt) {
-
-    int index = argument_lrt->index;
-
-    //registering itself in thread_ID_tab_
-    thread_ID_tab_[index] = pthread_self();
-
-    //waiting for every threads to register itself in thread_ID_tab_
-    pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
-
-    //Declaration des stacks spécific au thread
-    StackMonitor::initStack(LRT_STACK, argument_lrt->lrtStack);
-
-    setAffinity(argument_lrt->coreAffinity);
-
-    lrt_[index]->setFctTbl(argument_lrt->fcts, argument_lrt->nLrtFcts);
-
-#ifdef PAPI_AVAILABLE
-    // Enable papify if need to
-    if (argument_lrt->usePapify) {
-        lrt_[index]->setUsePapify();
-        std::map<lrtFct, PapifyAction *>::iterator it;
-        for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
-            lrt_[index]->addPapifyJobInfo(it->first, new PapifyAction(*it->second, index));
-        }
-    }
-#endif
-
-    // Wait for all LRTs to be created
-    pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
-
-    /** launch LRT */
-    lrt_[index]->runInfinitly();
-
-    //cleaning thread specific stacks
-    StackMonitor::freeAll(LRT_STACK);
-    StackMonitor::clean(LRT_STACK);
-
-    //wait for every LRT to end
-    pthread_barrier_wait(&pthread_barrier_init_and_end_thread);
-
-
-    pthread_exit(EXIT_SUCCESS);
+    /** Global stacks initialisation */
+    StackMonitor::initStack(PISDF_STACK, config.pisdfStack);
+    StackMonitor::initStack(SRDAG_STACK, config.srdagStack);
+    StackMonitor::initStack(TRANSFO_STACK, config.transfoStack);
+    StackMonitor::initStack(ARCHI_STACK, config.archiStack);
 }
-
-void *lrtPThread_helper(void *voidArgs) {
-    Arg_lrt *args = (Arg_lrt *) voidArgs;
-    args->instance->lrtPThread(args);
-    return 0;
-}
-
-
-void printfSpider() {
-
-    printf("\n");
-    printf("  .;;;;;;;                                              ;;;;;;;.  \n");
-    printf(" ;;;;;;;;;                                              ;;;;;;;;; \n");
-    printf(";;;;;;;;;;                                              ;;;;;;;;;;\n");
-    printf(";;;;;             ;8.                        :@.             ;;;;;\n");
-    printf(";;;;;               ,@8                   .@@                ;;;;;\n");
-    printf(";;;;;                 L@8                @@:                 ;;;;;\n");
-    printf(";;;;;                  .@@;            C@@                   ;;;;;\n");
-    printf(";;;;;                    @@0          @@@                    ;;;;;\n");
-    printf(";;;;;                    .@@0        @@@                     ;;;;;\n");
-    printf(";;;;;                     L@@1      8@@:                     ;;;;;\n");
-    printf(";;;;;                      @@@      @@@                      ;;;;;\n");
-    printf(";;;;;     :L@@@@@@@@t      f@@      @@,      C@@@@@@@8t,     ;;;;;\n");
-    printf(";;;;;            :0@@@@@G   @@     .@@   8@@@@@C.            ;;;;;\n");
-    printf(";;;;;                 ;@@@1 @@     :@8 G@@@.                 ;;;;;\n");
-    printf(";;;;;                   L@@f8@@@@@@8@t8@@:                   ;;;;;\n");
-    printf(";;;;;                     @@i@@@@@@@8G@8                     ;;;;;\n");
-    printf(";;;;;      t@@@@@@@@@@@@G. L@@@@@@@@@@; ,8@@@@@@@@@@@@;      ;;;;;\n");
-    printf(";;;;;                  C@@@@L@@@@@@@C8@@@@t                  ;;;;;\n");
-    printf(";;;;;                       :,@@@@@0:,                       ;;;;;\n");
-    printf(";;;;;                      t@@@@@@@@@@:                      ;;;;;\n");
-    printf(";;;;;                   .@@@8@@@@@@@@@@@C                    ;;;;;\n");
-    printf(";;;;;                  1@@@ @@@0ii0@@f.@@@.                  ;;;;;\n");
-    printf(";;;;;                 C@@C  @@,@8G@,@f  @@@;                 ;;;;;\n");
-    printf(";;;;;                i@@1   ;@8.  ,8@    0@@                 ;;;;;\n");
-    printf(";;;;;                @@:     ;@@@@@@.     C@8                ;;;;;\n");
-    printf(";;;;;               i@.         ,,         1@                ;;;;;\n");
-    printf(";;;;;               0                        @               ;;;;;\n");
-    printf(";;;;;;;;;;                                              ;;;;;;;;;;\n");
-    printf(" ;;;;;;;;;                                              ;;;;;;;;; \n");
-    printf("  .;;;;;;;                                              ;;;;;;;.  \n");
-    printf("\n");
-}
-
 

@@ -34,74 +34,107 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include "ComputeBRV.h"
-#include "TopologyMatrix.h"
-#include "LCM.h"
-
 #include <graphs/PiSDF/PiSDFEdge.h>
+#include <graphTransfo/ComputeBRV.h>
+#include <graphTransfo/LCM.h>
+#include "TopologyMatrix.h"
 
-#include <cmath>
-#include <algorithm>
+static inline std::int32_t getVertexIx(PiSDFVertex *const vertex) {
+    std::int32_t offsetInputIF = ((vertex->getType() == PISDF_TYPE_IF) * vertex->getGraph()->getNBody());
+    std::int32_t offsetOutputIF = ((vertex->getSubType() == PISDF_SUBTYPE_OUTPUT_IF) * vertex->getGraph()->getNInIf());
+    return vertex->getTypeId() + offsetInputIF + offsetOutputIF;
+}
 
-
-static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet) {
+static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet, PiSDFVertex **keyVertexSet) {
     int currentSize = 0;
-    int n = vertexSet.getN() - 1;
+    int n = vertexSet.size() - 1;
     do {
-        currentSize = vertexSet.getN();
-        PiSDFVertex *current = vertexSet.getArray()[n];
+        currentSize = vertexSet.size();
+        auto *current = vertexSet.getArray()[n];
         // 0. Do the output edges
         for (int i = 0; i < current->getNOutEdge(); ++i) {
-            PiSDFEdge *edge = current->getOutEdge(i);
+            auto *edge = current->getOutEdge(i);
             if (!edge) {
-                throw std::runtime_error("Null edge detected on vertex [" + std::string(current->getName()) + "].");
+                throwSpiderException("Vertex [%s] has NULL edge", current->getName());
             }
-            PiSDFVertex *targetVertex = edge->getSnk();
-            if (!vertexSet.contains(targetVertex)) {
-                vertexSet.add(targetVertex);
+            auto *vertex = edge->getSnk();
+            auto vertexIx = getVertexIx(vertex);
+            if (!keyVertexSet[vertexIx]) {
+                vertexSet.add(vertex);
+                keyVertexSet[vertexIx] = vertex;
             }
             sizeEdgeSet++;
         }
         // 1. Do the input edges
         for (int i = 0; i < current->getNInEdge(); ++i) {
-            PiSDFEdge *edge = current->getInEdge(i);
+            auto *edge = current->getInEdge(i);
             if (!edge) {
-                throw std::runtime_error("Null edge detected on vertex [" + std::string(current->getName()) + "].");
+                throwSpiderException("Vertex [%s] has NULL edge", current->getName());
             }
-            PiSDFVertex *sourceVertex = edge->getSrc();
-            if (!vertexSet.contains(sourceVertex)) {
-                vertexSet.add(sourceVertex);
+            auto *vertex = edge->getSrc();
+            auto vertexIx = getVertexIx(vertex);
+            if (!keyVertexSet[vertexIx]) {
+                vertexSet.add(vertex);
+                keyVertexSet[vertexIx] = vertex;
             }
         }
         n++;
-    } while ((vertexSet.getN() != currentSize) || (n != vertexSet.getN()));
+    } while ((vertexSet.size() != currentSize) || (n != vertexSet.size()));
 }
 
-void computeBRV(transfoJob *job, int *brv) {
+void computeBRV(PiSDFGraph *const graph, int *brv) {
     // Retrieve the graph
-    PiSDFGraph *const graph = job->graph;
     int nTotalVertices = graph->getNBody() + graph->getNInIf() + graph->getNOutIf();
     PiSDFVertexSet vertexSet(nTotalVertices, TRANSFO_STACK);
+    auto **keyVertexSet = CREATE_MUL_NA(TRANSFO_STACK, nTotalVertices, PiSDFVertex*);
+    for (int ix = 0; ix < nTotalVertices; ++ix) {
+        keyVertexSet[ix] = nullptr;
+    }
 
     // 0. First we need to get all different connected components
     long nDoneVertices = 0;
     for (int i = 0; i < graph->getNBody(); i++) {
-        PiSDFVertex *vertex = graph->getBody(i);
-        if (!vertexSet.contains(vertex)) {
+        auto *vertex = graph->getBody(i);
+        auto vertexIx = getVertexIx(vertex);
+        if (!keyVertexSet[vertexIx]) {
             long nEdges = 0;
             vertexSet.add(vertex);
+            keyVertexSet[vertexIx] = vertex;
             // 1. Fill up the vertexSet
-            fillVertexSet(vertexSet, nEdges);
+            fillVertexSet(vertexSet, nEdges, keyVertexSet);
             // 1.1 Update the offset in the vertexSet
-            long nVertices = vertexSet.getN() - nDoneVertices;
+            long nVertices = vertexSet.size() - nDoneVertices;
             // 2. Compute the BRV of current set
-            lcmBasedBRV(job, vertexSet, nDoneVertices, nVertices, nEdges, brv);
+            lcmBasedBRV(vertexSet, nDoneVertices, nVertices, nEdges, brv);
             // 3. Update the number of treated vertices
-            nDoneVertices = vertexSet.getN();
+            nDoneVertices = vertexSet.size();
         }
+        vertex->setBRVValue(brv[i]);
     }
-    while (vertexSet.getN() > 0) {
+    for (std::int32_t i = 0; i < graph->getNInIf(); ++i) {
+        auto *vertex = graph->getInputIf(i);
+        vertex->setBRVValue(1);
+    }
+    for (std::int32_t i = 0; i < graph->getNOutIf(); ++i) {
+        auto *vertex = graph->getOutputIf(i);
+        vertex->setBRVValue(1);
+    }
+    while (vertexSet.size() > 0) {
         vertexSet.del(vertexSet[0]);
+    }
+    StackMonitor::free(TRANSFO_STACK, keyVertexSet);
+}
+
+
+void computeHierarchicalBRV(PiSDFGraph *const graph) {
+    auto *brv = CREATE_MUL(TRANSFO_STACK, graph->getNBody(), std::int32_t);
+    computeBRV(graph, brv);
+    StackMonitor::free(TRANSFO_STACK, brv);
+    for (std::int32_t i = 0; i < graph->getNBody(); ++i) {
+        auto *vertex = graph->getBody(i);
+        if (vertex->isHierarchical()){
+            computeHierarchicalBRV(vertex->getSubGraph());
+        }
     }
 }
 

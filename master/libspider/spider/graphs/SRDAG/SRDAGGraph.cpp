@@ -39,10 +39,8 @@
 #include <graphs/SRDAG/SRDAGEdge.h>
 #include <graphs/SRDAG/SRDAGGraph.h>
 
-#include <algorithm>
-
-#define MAX_VERTEX (10000)
-#define MAX_EDGE (10000)
+#define MAX_VERTEX (20000)
+#define MAX_EDGE (20000)
 
 static const char *stateStrings[3] = {
         "NOT_EXEC",
@@ -58,16 +56,16 @@ SRDAGGraph::SRDAGGraph() :
 }
 
 SRDAGGraph::~SRDAGGraph() {
-    while (edges_.getN()) {
+    while (edges_.size()) {
         delEdge(edges_[0]);
     }
-    while (vertices_.getN()) {
+    while (vertices_.size()) {
         delVertex(vertices_[0]);
     }
 }
 
 SRDAGVertex *SRDAGGraph::addVertex(PiSDFVertex *reference, int refId, int iterId) {
-    SRDAGVertex *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
+    auto *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
             idVertex_++,
             SRDAG_NORMAL, this,
             reference, refId, iterId,
@@ -80,7 +78,7 @@ SRDAGVertex *SRDAGGraph::addVertex(PiSDFVertex *reference, int refId, int iterId
 }
 
 SRDAGVertex *SRDAGGraph::addBroadcast(int nOutput, PiSDFVertex *reference) {
-    SRDAGVertex *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
+    auto *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
             idVertex_++,
             SRDAG_BROADCAST, this,
             reference /*Ref*/, 0, 0,
@@ -93,10 +91,10 @@ SRDAGVertex *SRDAGGraph::addBroadcast(int nOutput, PiSDFVertex *reference) {
 }
 
 SRDAGVertex *SRDAGGraph::addFork(int nOutput) {
-    SRDAGVertex *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
+    auto *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
             idVertex_++,
             SRDAG_FORK, this,
-            0 /*Ref*/, 0, 0,
+            nullptr /*Ref*/, 0, 0,
             1 /*nInEdge*/,
             nOutput /*nOutEdge*/,
             0 /*nInParam*/,
@@ -106,10 +104,10 @@ SRDAGVertex *SRDAGGraph::addFork(int nOutput) {
 }
 
 SRDAGVertex *SRDAGGraph::addJoin(int nInput) {
-    SRDAGVertex *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
+    auto *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
             idVertex_++,
             SRDAG_JOIN, this,
-            0 /*Ref*/, 0, 0,
+            nullptr /*Ref*/, 0, 0,
             nInput /*nInEdge*/,
             1 /*nOutEdge*/,
             0 /*nInParam*/,
@@ -119,10 +117,10 @@ SRDAGVertex *SRDAGGraph::addJoin(int nInput) {
 }
 
 SRDAGVertex *SRDAGGraph::addInit() {
-    SRDAGVertex *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
+    auto *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
             idVertex_++,
             SRDAG_INIT, this,
-            0 /*Ref*/, 0, 0,
+            nullptr /*Ref*/, 0, 0,
             0 /*nInEdge*/,
             2 /*nOutEdge*/,
             2 /*nInParam: 0 -> isDelayPersistent, 1 -> memory address of the fifo (if any)*/,
@@ -132,10 +130,10 @@ SRDAGVertex *SRDAGGraph::addInit() {
 }
 
 SRDAGVertex *SRDAGGraph::addEnd() {
-    SRDAGVertex *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
+    auto *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
             idVertex_++,
             SRDAG_END, this,
-            0 /*Ref*/, 0, 0,
+            nullptr /*Ref*/, 0, 0,
             2 /*nInEdge*/,
             0 /*nOutEdge*/,
             2 /*nInParam: 0 -> isDelayPersistent, 1 -> memory address of the fifo (if any)*/,
@@ -145,10 +143,10 @@ SRDAGVertex *SRDAGGraph::addEnd() {
 }
 
 SRDAGVertex *SRDAGGraph::addRoundBuffer() {
-    SRDAGVertex *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
+    auto *vertex = CREATE(SRDAG_STACK, SRDAGVertex)(
             idVertex_++,
             SRDAG_ROUNDBUFFER, this,
-            0 /*Ref*/, 0, 0,
+            nullptr /*Ref*/, 0, 0,
             1 /*nInEdge*/,
             1 /*nOutEdge*/,
             0 /*nInParam*/,
@@ -158,7 +156,7 @@ SRDAGVertex *SRDAGGraph::addRoundBuffer() {
 }
 
 SRDAGEdge *SRDAGGraph::addEdge() {
-    SRDAGEdge *edge = CREATE(SRDAG_STACK, SRDAGEdge)(this, idEdge_++);
+    auto *edge = CREATE(SRDAG_STACK, SRDAGEdge)(this, idEdge_++);
     edges_.add(edge);
     return edge;
 }
@@ -167,7 +165,7 @@ SRDAGEdge *SRDAGGraph::addEdge(
         SRDAGVertex *src, int srcPortIx,
         SRDAGVertex *snk, int snkPortIx,
         int rate) {
-    SRDAGEdge *edge = CREATE(SRDAG_STACK, SRDAGEdge)(this, idEdge_++);
+    auto *edge = CREATE(SRDAG_STACK, SRDAGEdge)(this, idEdge_++);
     edges_.add(edge);
 
     edge->connectSrc(src, srcPortIx);
@@ -180,14 +178,14 @@ SRDAGEdge *SRDAGGraph::addEdge(
 void SRDAGGraph::delVertex(SRDAGVertex *vertex) {
     int i = 0;
     while (vertex->getNConnectedInEdge() > 0) {
-        if (vertex->getInEdge(i) != 0)
+        if (vertex->getInEdge(i) != nullptr)
             vertex->getInEdge(i)->disconnectSnk();
         i++;
     }
 
     i = 0;
     while (vertex->getNConnectedOutEdge() > 0) {
-        if (vertex->getOutEdge(i) != 0)
+        if (vertex->getOutEdge(i) != nullptr)
             vertex->getOutEdge(i)->disconnectSrc();
         i++;
     }
@@ -198,10 +196,10 @@ void SRDAGGraph::delVertex(SRDAGVertex *vertex) {
 }
 
 void SRDAGGraph::delEdge(SRDAGEdge *edge) {
-    if (edge->getSrc() != 0) {
+    if (edge->getSrc() != nullptr) {
         edge->disconnectSrc();
     }
-    if (edge->getSnk() != 0) {
+    if (edge->getSnk() != nullptr) {
         edge->disconnectSnk();
     }
     edges_.del(edge);
@@ -211,7 +209,7 @@ void SRDAGGraph::delEdge(SRDAGEdge *edge) {
 
 int SRDAGGraph::getNExecVertex() {
     int n = 0;
-    for (int i = 0; i < vertices_.getN(); i++) {
+    for (int i = 0; i < vertices_.size(); i++) {
         if (vertices_[i]->getState() == SRDAG_EXEC)
             n++;
     }
@@ -219,7 +217,7 @@ int SRDAGGraph::getNExecVertex() {
 }
 
 void SRDAGGraph::updateState() {
-    for (int i = 0; i < vertices_.getN(); i++) {
+    for (int i = 0; i < vertices_.size(); i++) {
         vertices_[i]->updateState();
     }
 }
@@ -232,7 +230,7 @@ void SRDAGGraph::print(const char *path) {
 
     int maxId = -1;
     FILE *file = Platform::get()->fopen(path);
-    if (file == NULL) {
+    if (file == nullptr) {
         printf("cannot open %s\n", path);
         return;
     }
@@ -245,20 +243,20 @@ void SRDAGGraph::print(const char *path) {
 
     // Drawing vertices.
     Platform::get()->fprintf(file, "\t# Vertices\n");
-    for (int i = 0; i < vertices_.getN(); i++) {
+    for (int i = 0; i < vertices_.size(); i++) {
         char name[100];
         SRDAGVertex *vertex = vertices_[i];
         vertex->toString(name, 100);
-        if(vertex->getType() == SRDAG_INIT || vertex->getType() == SRDAG_END){
+        if (vertex->getType() == SRDAG_INIT || vertex->getType() == SRDAG_END) {
             Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)\n%s\n%s %#x",
                                      vertex->getId(),
                                      vertex->getId(),
                                      name,
                                      vertex->getFctId(),
                                      stateStrings[vertex->getState()],
-                                     vertex->getInParam(0) == 0 ? "Discard":"Persistent",
+                                     vertex->getInParam(0) == 0 ? "Discard" : "Persistent",
                                      vertex->getInParam(1)
-                                     );
+            );
         } else {
             Platform::get()->fprintf(file, "\t%d [shape=ellipse,label=\"%d\\n%s (%d)\n%s",
                                      vertex->getId(),
@@ -289,7 +287,7 @@ void SRDAGGraph::print(const char *path) {
 
     // Drawing edges.
     Platform::get()->fprintf(file, "\t# Edges\n");
-    for (int i = 0; i < edges_.getN(); i++) {
+    for (int i = 0; i < edges_.size(); i++) {
         SRDAGEdge *edge = edges_[i];
         int snkIx, srcIx;
 
@@ -339,7 +337,7 @@ bool SRDAGGraph::check() {
     bool result = true;
 
     /* Check vertices */
-    for (int i = 0; i < vertices_.getN(); i++) {
+    for (int i = 0; i < vertices_.size(); i++) {
         SRDAGVertex *vertex = vertices_[i];
         int j;
 
@@ -347,9 +345,9 @@ bool SRDAGGraph::check() {
         for (j = 0; j < vertex->getNConnectedInEdge(); j++) {
             const SRDAGEdge *edge = vertex->getInEdge(j);
             if (vertex->getType() == SRDAG_JOIN
-                && edge == NULL) {
+                && edge == nullptr) {
                 printf("Warning V%d Input%d: not connected\n", vertex->getId(), j);
-            } else if (edge == NULL) {
+            } else if (edge == nullptr) {
                 printf("Error V%d Input%d: not connected\n", vertex->getId(), j);
                 result = false;
             } else if (edge->getSnk() != vertex) {
@@ -362,9 +360,9 @@ bool SRDAGGraph::check() {
         for (j = 0; j < vertex->getNConnectedOutEdge(); j++) {
             const SRDAGEdge *edge = vertex->getOutEdge(j);
             if (vertex->getType() == SRDAG_FORK
-                && edge == NULL) {
+                && edge == nullptr) {
                 printf("Warning V%d Output%d: not connected\n", vertex->getId(), j);
-            } else if (edge == NULL) {
+            } else if (edge == nullptr) {
                 printf("Error V%d Output%d: not connected\n", vertex->getId(), j);
                 result = false;
             } else if (edge->getSrc() != vertex) {

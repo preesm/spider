@@ -43,7 +43,7 @@ class SetElement {
 public:
     SetElement() : set_ix_(-1) {}
 
-    virtual ~SetElement() {}
+    virtual ~SetElement() = default;
 
     void setSetIx(int ix) { set_ix_ = ix; }
 

@@ -37,16 +37,15 @@
  */
 
 #include "CommonBRV.h"
-#include "GraphTransfo.h"
 #include "graphs/PiSDF/PiSDFEdge.h"
 
 
-static void updateFromIF(transfoJob *job, PiSDFVertex *vertex, int *brv, long &scaleFactor) {
+static void updateFromIF(PiSDFVertex *vertex, const int *brv, long &scaleFactor) {
     PiSDFEdge *edge = vertex->getAllEdges()[0];
     PiSDFVertex *source = edge->getSrc();
     PiSDFVertex *sink = edge->getSnk();
-    int prod = edge->resolveProd(job);
-    int cons = edge->resolveCons(job);
+    auto prod = edge->resolveProd();
+    auto cons = edge->resolveCons();
     long tmp = 0;
     long cmp = 0;
     if (vertex->getSubType() == PISDF_SUBTYPE_INPUT_IF && sink->getType() == PISDF_TYPE_BODY) {
@@ -61,20 +60,20 @@ static void updateFromIF(transfoJob *job, PiSDFVertex *vertex, int *brv, long &s
         return;
     }
     if (tmp != 0 && tmp < cmp) {
-        long scaleScaleFactor = cmp / tmp;
-        if ((scaleScaleFactor * tmp) < cmp) {
-            scaleScaleFactor++;
-        }
+        long scaleScaleFactor = cmp / tmp + (cmp % tmp != 0); // ceil(cmp / tmp)
+//        if ((scaleScaleFactor * tmp) < cmp) {
+//            scaleScaleFactor++;
+//        }
         scaleFactor *= scaleScaleFactor;
     }
 }
 
-static void updateFromCFG(transfoJob *job, PiSDFVertex *vertex, int *brv, long &scaleFactor) {
+static void updateFromCFG(PiSDFVertex *vertex, const int *brv, long &scaleFactor) {
     for (int i = 0; i < vertex->getNOutEdge(); ++i) {
         PiSDFEdge *edge = vertex->getOutEdge(i);
         PiSDFVertex *sink = edge->getSnk();
-        int prod = edge->resolveProd(job);
-        int cons = edge->resolveCons(job);
+        auto prod = edge->resolveProd();
+        auto cons = edge->resolveCons();
         if (sink->getType() == PISDF_TYPE_BODY) {
             int sinkRV = brv[sink->getTypeId()];
             long tmp = cons * sinkRV * scaleFactor;
@@ -89,19 +88,21 @@ static void updateFromCFG(transfoJob *job, PiSDFVertex *vertex, int *brv, long &
     }
 }
 
-void updateBRV(transfoJob *job, long nVertices, int *brv, PiSDFVertex *const *vertices) {
+void updateBRV(long nVertices, int *brv, PiSDFVertex *const *vertices) {
     long scaleFactor = 1;
     // 5.1 Get scale factor
     for (long i = 0; i < nVertices; ++i) {
         PiSDFVertex *vertex = vertices[i];
         if (vertex->getType() == PISDF_TYPE_IF) {
-            updateFromIF(job, vertex, brv, scaleFactor);
+            updateFromIF(vertex, brv, scaleFactor);
         } else if (vertex->getType() == PISDF_TYPE_CONFIG) {
-            updateFromCFG(job, vertex, brv, scaleFactor);
+            updateFromCFG(vertex, brv, scaleFactor);
         }
     }
     // 5.2 Apply scale factor
     if (scaleFactor != 1) {
+        auto *graph = vertices[0]->getGraph();
+        nVertices = nVertices - graph->getNInIf() - graph->getNOutIf();
         for (long i = 0; i < nVertices; ++i) {
             PiSDFVertex *vertex = vertices[i];
             brv[vertex->getTypeId()] *= scaleFactor;
@@ -109,11 +110,11 @@ void updateBRV(transfoJob *job, long nVertices, int *brv, PiSDFVertex *const *ve
     }
 }
 
-void fillEdgeSet(PiSDFEdgeSet &edgeSet, PiSDFVertex *const *vertices, int nVertices) {
-    for (int v = 0; v < nVertices; ++v) {
+void fillEdgeSet(PiSDFEdgeSet &edgeSet, PiSDFVertex *const *vertices, long nVertices) {
+    for (long v = 0; v < nVertices; ++v) {
         // We only need to go though the output edges of every vertices
         for (int e = 0; e < vertices[v]->getNOutEdge(); ++e) {
-            PiSDFEdge *edge = vertices[v]->getOutEdge(e);
+            auto *edge = vertices[v]->getOutEdge(e);
             edgeSet.add(edge);
         }
     }

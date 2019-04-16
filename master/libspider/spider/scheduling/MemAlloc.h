@@ -47,11 +47,15 @@
 #include <algorithm>
 #include <spider.h>
 
+class PiSDFGraph;
+
 class MemAlloc {
 public:
     virtual void reset() = 0;
 
-    virtual void alloc(List<SRDAGVertex *> *listOfVertices) = 0;
+    virtual void alloc(List<SRDAGVertex *> *) {};
+
+    virtual void alloc(PiSDFGraph *) {};
 
     virtual int getReservedAlloc(int size) = 0;
 
@@ -69,12 +73,12 @@ public:
 
     inline void printMemAllocSizeFormatted() const;
 
-    virtual ~MemAlloc() {}
+    virtual ~MemAlloc() = default;
 
 protected:
     int memStart_;
     int memSize_;
-    int memReserved_;
+    int memReserved_{};
 };
 
 inline int MemAlloc::getMemAllocSize() const {
@@ -82,11 +86,11 @@ inline int MemAlloc::getMemAllocSize() const {
 }
 
 inline void MemAlloc::printMemAllocSizeFormatted() const {
-    const char* units[4] = { "B", "KB", "MB", "GB"};
+    const char *units[4] = {"B", "KB", "MB", "GB"};
 
     float normalizedSize = memSize_;
     int unitIndex = 0;
-    while(normalizedSize >= 1024 && unitIndex < 3) {
+    while (normalizedSize >= 1024 && unitIndex < 3) {
         normalizedSize /= 1024.;
         unitIndex++;
     }
@@ -95,7 +99,7 @@ inline void MemAlloc::printMemAllocSizeFormatted() const {
 
 inline void MemAlloc::setReservedSize(int reservedSize) {
     if (reservedSize > memSize_) {
-        throw std::runtime_error("Memory allocation for reserved memory superior to total allocated memory.");
+        throwSpiderException("Reserved memory (%d) > memory size (%d).", reservedSize, memSize_);
     }
     memReserved_ = reservedSize;
 }

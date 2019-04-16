@@ -46,21 +46,23 @@ void DummyMemAlloc::reset() {
 
 static inline int getAlignSize(int size) {
     //return std::ceil(size/1.0/getpagesize())*getpagesize();
-    float minAlloc = (float) Platform::get()->getMinAllocSize();
+    auto minAlloc = (float) Platform::get()->getMinAllocSize();
     return (int) std::ceil(((float) size) / minAlloc) * minAlloc;
 }
 
 
 void DummyMemAlloc::allocEdge(SRDAGEdge *edge) {
     int size = edge->getRate();
-    if(size <= 0){
+    if (size <= 0) {
         /** Sync only edge */
         edge->setAlloc(-1);
         return;
     }
     size = getAlignSize(size);
-    if (currentMem_ + size > memStart_ + memSize_)
-        throw std::runtime_error("Not Enough Shared Memory\n");
+    if (currentMem_ + size > memStart_ + memSize_) {
+        throwSpiderException("Not Enough Shared Memory. Want: %d -- Available: %d.", currentMem_ + size,
+                             memStart_ + memSize_);
+    }
     edge->setAlloc(currentMem_);
     currentMem_ += size;
 }
@@ -80,7 +82,8 @@ void DummyMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
 int DummyMemAlloc::getReservedAlloc(int size) {
     int alignedSize = getAlignSize(size);
     if (currentMem_ + alignedSize > memStart_ + memSize_) {
-        throw std::runtime_error("Not Enough Shared Memory\n");
+        throwSpiderException("Not Enough Shared Memory. Want: %d -- Available: %d.", currentMem_ + size,
+                             memStart_ + memSize_);
     }
     currentMem_ += alignedSize;
     return alignedSize;

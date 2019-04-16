@@ -38,16 +38,13 @@
  */
 #include "specialActors.h"
 
-#include <string.h>
-#include <algorithm>
-
 void saRoundbuffer(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
 #if VERBOSE
     fprintf(stderr, "INFO: Entering Roundbuffer...\n");
 #endif
 
-    int nbTknIn = (int) inParams[0];
-    int nbTknOut = (int) inParams[1];
+    auto nbTknIn = (int) inParams[0];
+    auto nbTknOut = (int) inParams[1];
 
     if (nbTknIn == nbTknOut) {
         memcpy(outputFIFOs[0], inputFIFOs[0], (size_t) nbTknIn);

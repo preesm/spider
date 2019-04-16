@@ -2160,7 +2160,7 @@ This indicates that another process is trying to use the same
 temporary object file, and libtool could not work around it because
 your compiler does not support \`-c' and \`-o' together.  If you
 repeat this compilation, it may succeed, by chance, but you had better
-avoid parallel builds (make -j) in this platform, or get a better
+avoid parallel builds (make -j) in this platform_, or get a better
 compiler."
 
 	$opt_dry_run || $RM $removelist
@@ -2214,7 +2214,7 @@ This indicates that another process is trying to use the same
 temporary object file, and libtool could not work around it because
 your compiler does not support \`-c' and \`-o' together.  If you
 repeat this compilation, it may succeed, by chance, but you had better
-avoid parallel builds (make -j) in this platform, or get a better
+avoid parallel builds (make -j) in this platform_, or get a better
 compiler."
 
 	$opt_dry_run || $RM $removelist
@@ -2263,7 +2263,7 @@ This indicates that another process is trying to use the same
 temporary object file, and libtool could not work around it because
 your compiler does not support \`-c' and \`-o' together.  If you
 repeat this compilation, it may succeed, by chance, but you had better
-avoid parallel builds (make -j) in this platform, or get a better
+avoid parallel builds (make -j) in this platform_, or get a better
 compiler."
 
 	$opt_dry_run || $RM $removelist
@@ -3600,11 +3600,11 @@ func_cygming_dll_for_implib ()
 # func_cygming_dll_for_implib_fallback_core SECTION_NAME LIBNAMEs
 #
 # The is the core of a fallback implementation of a
-# platform-specific function to extract the name of the
+# platform_-specific function to extract the name of the
 # DLL associated with the specified import library LIBNAME.
 #
 # SECTION_NAME is either .idata$6 or .idata$7, depending
-# on the platform and compiler that created the implib.
+# on the platform_ and compiler that created the implib.
 #
 # Echos the name of the DLL associated with the
 # specified import library.
@@ -7930,7 +7930,7 @@ EOF
 	  *[!\	\ ]*)
 	    echo
 	    if test "X$deplibs_check_method" = "Xnone"; then
-	      echo "*** Warning: inter-library dependencies are not supported in this platform."
+	      echo "*** Warning: inter-library dependencies are not supported in this platform_."
 	    else
 	      echo "*** Warning: inter-library dependencies are not known to be supported."
 	    fi
@@ -7982,7 +7982,7 @@ EOF
 	    if test "$allow_undefined" = no; then
 	      echo
 	      echo "*** Since this library must not contain undefined symbols,"
-	      echo "*** because either the platform does not support them or"
+	      echo "*** because either the platform_ does not support them or"
 	      echo "*** it was explicitly requested with -no-undefined,"
 	      echo "*** libtool will only create a static version of it."
 	      if test "$build_old_libs" = no; then
@@ -8973,7 +8973,7 @@ EOF
 	link_command="$compile_var$compile_command$compile_rpath"
 	relink_command="$finalize_var$finalize_command$finalize_rpath"
 
-	func_warning "this platform does not like uninstalled shared libraries"
+	func_warning "this platform_ does not like uninstalled shared libraries"
 	func_warning "\`$output' will be relinked during installation"
       else
 	if test "$fast_install" != no; then
@@ -9637,10 +9637,10 @@ exit $exit_status
 # in which we disable both kinds of libraries.  Given conflicting
 # choices, we go for a static library, that is the most portable,
 # since we can't tell whether shared libraries were disabled because
-# the user asked for that or because the platform doesn't support
+# the user asked for that or because the platform_ doesn't support
 # them.  This is particularly important on AIX, because we don't
 # support having both static and shared libraries enabled at the same
-# time on that platform, so we default to a shared-only configuration.
+# time on that platform_, so we default to a shared-only configuration.
 # If a disable-shared tag is given, we'll fallback to a static-only
 # configuration.  But we'll never go from static-only to shared-only.
 

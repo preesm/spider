@@ -58,7 +58,7 @@ SRDAGVertex::SRDAGVertex(
         int nInParam, int nOutParam) {
 
 
-    //id_ = globalId++;
+    //globalID_ = globalId++;
     id_ = globalId;
 
     type_ = type;
@@ -80,17 +80,20 @@ SRDAGVertex::SRDAGVertex(
     nCurOutEdge_ = 0;
 
     nInParam_ = nInParam;
-    inParams_ = CREATE_MUL(SRDAG_STACK, nInParam_, int);
-    memset(inParams_, 0, nInParam * sizeof(int));
+    inParams_ = CREATE_MUL(SRDAG_STACK, nInParam_, Param);
+    memset(inParams_, 0, nInParam * sizeof(Param));
 
     nOutParam_ = nOutParam;
-    outParams_ = CREATE_MUL(SRDAG_STACK, nOutParam_, int*);
-    memset(outParams_, 0, nOutParam * sizeof(int **));
+    outParams_ = CREATE_MUL(SRDAG_STACK, nOutParam_, Param*);
+    memset(outParams_, 0, nOutParam * sizeof(Param **));
 
-    start_ = end_ = -1;
+    start_ = end_ = UINT64_MAX;
     schedLvl_ = -1;
     slave_ = -1;
     slaveJobIx_ = -1;
+
+    scheduleJob_ = CREATE_NA(TRANSFO_STACK, SRDAGScheduleJob)(Platform::get()->getNLrt());
+    scheduleJob_->setVertex(this);
 }
 
 SRDAGVertex::~SRDAGVertex() {
@@ -98,6 +101,8 @@ SRDAGVertex::~SRDAGVertex() {
     StackMonitor::free(SRDAG_STACK, outEdges_);
     StackMonitor::free(SRDAG_STACK, inParams_);
     StackMonitor::free(SRDAG_STACK, outParams_);
+    scheduleJob_->~SRDAGScheduleJob();
+    StackMonitor::free(TRANSFO_STACK, scheduleJob_);
 }
 
 void SRDAGVertex::toString(char *name, int sizeMax) const {
@@ -127,11 +132,42 @@ void SRDAGVertex::toString(char *name, int sizeMax) const {
     }
 }
 
+const char *SRDAGVertex::toString() {
+    switch (type_) {
+        case SRDAG_NORMAL:
+            return reference_->getName();
+        case SRDAG_FORK:
+            return "Fork";
+        case SRDAG_JOIN:
+            return "Join";
+        case SRDAG_ROUNDBUFFER:
+            return "RB";
+        case SRDAG_BROADCAST:
+            return "BR";
+            if (reference_) {
+                return reference_->getName();
+            }
+            {
+                auto name = std::string("BR-") + std::string(inEdges_[0]->getSrc()->toString());
+                return name.c_str();
+            }
+        case SRDAG_INIT:
+            return "Init";
+        case SRDAG_END:
+            return "End";
+        default:
+            return "unknown";
+    }
+}
+
 void SRDAGVertex::updateState() {
     if (state_ == SRDAG_NEXEC) {
         /* Check Input Edges */
         for (int i = 0; i < getNConnectedInEdge(); i++) {
             SRDAGEdge *edge = getInEdge(i);
+            if (!edge) {
+                continue;
+            }
             SRDAGVertex *predecessor = getInEdge(i)->getSrc();
 
             /* Case when you don't wait any token from predecessor (Null Edge) */

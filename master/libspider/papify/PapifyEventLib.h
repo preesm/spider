@@ -153,7 +153,7 @@ public:
     }
 
     inline void stopEventSetRunning(long long PEId) {
-        int retVal = PAPI_stop(PEEventSetRunningID_[PEId], NULL);
+        int retVal = PAPI_stop(PEEventSetRunningID_[PEId], nullptr);
         if (retVal != PAPI_OK) {
             throwError(__FILE__, __LINE__, retVal);
         }

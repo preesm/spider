@@ -48,7 +48,7 @@
  * @param brv       BRV values;
  * @param vertices  Vertices;
  */
-void updateBRV(transfoJob *job, long nVertices, int *brv, PiSDFVertex *const *vertices);
+void updateBRV(long nVertices, int *brv, PiSDFVertex *const *vertices);
 
 /**
  * Build a set of unique edges inside a given connected components.
@@ -57,6 +57,6 @@ void updateBRV(transfoJob *job, long nVertices, int *brv, PiSDFVertex *const *ve
  * @param vertices  The vertices of the connected components.
  * @param nVertices The number of vertices inside the connected components.
  */
-void fillEdgeSet(PiSDFEdgeSet &edgeSet, PiSDFVertex *const *vertices, int nVertices);
+void fillEdgeSet(PiSDFEdgeSet &edgeSet, PiSDFVertex *const *vertices, long nVertices);
 
 #endif //SPIDER_COMMONBRV_H

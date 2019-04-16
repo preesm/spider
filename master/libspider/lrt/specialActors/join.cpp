@@ -38,23 +38,21 @@
  */
 #include "specialActors.h"
 
-#include <string.h>
-
 void saJoin(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
 #if VERBOSE
     fprintf(stderr, "INFO: Entering Join...\n");
 #endif
 
-    int nbFifoIn = (int) inParams[0];
-    int nbFifoOut = (int) inParams[1];
-    int nbTknOut = (int) inParams[2];
+    auto nbFifoIn = (int) inParams[0];
+    auto nbFifoOut = (int) inParams[1];
+    auto nbTknOut = (int) inParams[2];
     int index = 0;
 
     // 0. Check the number of output FIFOs
     if (nbFifoOut == 1) {
         /* Join */
         for (int i = 0; i < nbFifoIn; i++) {
-            int nbTknIn = (int) inParams[i + 3];
+            auto nbTknIn = (int) inParams[i + 3];
 
             if (nbTknIn && ((char *) outputFIFOs[0]) + index != inputFIFOs[i]) {
                 memcpy(((char *) outputFIFOs[0]) + index, inputFIFOs[i], (size_t) nbTknIn);
@@ -63,14 +61,12 @@ void saJoin(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*o
         }
 
     } else {
-        throw std::runtime_error(
-                "ERROR: Join should have exactly one output FIFO --> nOutputFIFOs: " + std::to_string(nbFifoOut));
+        throwSpiderException("Join should have exactly one output FIFO --> nOutputFIFOs: %d.", nbFifoOut);
     }
 
     // 1. Check that Sum(nbTknIn) == nbTknOut
     if (index != nbTknOut) {
-        throw std::runtime_error("ERROR: Join has remaining tokens. nTokensIN: " + std::to_string(index) +
-                                 std::string(" | nTokensOUT: ") + std::to_string(nbTknOut));
+        throwSpiderException("Join has remaining tokens --> nTokensIN: %d | nTokensOUT: %d.", index, nbTknOut);
     }
 
 #if VERBOSE

@@ -40,54 +40,75 @@
 #include <graphs/PiSDF/PiSDFGraph.h>
 #include <graphs/PiSDF/PiSDFParam.h>
 #include <parser/Expression.h>
+#include "PiSDFParam.h"
+
 
 /** Static Var def */
-int PiSDFParam::globalIx = 0;
+static std::int32_t globalID = 0;
 
 PiSDFParam::PiSDFParam(
         const char *name,
-        int typeIx,
-        PiSDFGraph *graph,
+        const char *expr,
         PiSDFParamType type,
-        const char *expr) {
-    id_ = globalIx++;
-    typeIx_ = typeIx;
-    name_ = name;
+        PiSDFGraph *graph,
+        std::int32_t localID) {
+    name_ = name ? std::string(name) : std::string();
+    expressionString_ = expr ? std::string(expr) : std::string();
+    globalID_ = globalID++;
+    localID_ = localID;
     graph_ = graph;
     type_ = type;
+    inheritedParam_ = nullptr;
+    setter_ = nullptr;
+    expr_ = nullptr;
     value_ = -1;
-    parentId_ = -1;
-    setter_ = 0;
-    portIx_ = -1;
+}
 
-    switch (type) {
-        case PISDF_PARAM_DEPENDENT_STATIC:
-        case PISDF_PARAM_DEPENDENT_DYNAMIC:
-            expr_ = CREATE(PISDF_STACK, Expression)(
-                    expr,
-                    graph->getParams(),
-                    graph->getNParam());
-            break;
-        case PISDF_PARAM_STATIC:
-        case PISDF_PARAM_HERITED:
-        case PISDF_PARAM_DYNAMIC:
-        default:
-            expr_ = 0;
-            break;
+
+PiSDFParam::PiSDFParam(
+        const char *name,
+        const char *expr,
+        PiSDFParamType type,
+        PiSDFGraph *graph,
+        std::int32_t localID,
+        std::initializer_list<PiSDFParam *> dependencies) : dependencies_(dependencies) {
+    name_ = name ? std::string(name) : std::string();
+    expressionString_ = expr ? std::string(expr) : std::string();
+    globalID_ = globalID++;
+    localID_ = localID;
+    graph_ = graph;
+    type_ = type;
+    inheritedParam_ = nullptr;
+    setter_ = nullptr;
+    value_ = -1;
+    // 1. Creates the expression
+    expr_ = CREATE(PISDF_STACK, Expression)(expressionString_.c_str(), dependencies_.data(),
+                                            static_cast<int>(dependencies.size()));
+    // If parameter is static, it can be resolved now
+    if (type == PISDF_PARAM_STATIC) {
+        // 2. Resolve expression
+        value_ = expr_->evaluate();
+        // 3. Clear dependencies, we won't need them anymore
+        dependencies_.clear();
+        // 4. Delete the expression, we won't need it anymore
+        expr_->~Expression();
+        StackMonitor::free(PISDF_STACK, expr_);
+        expr_ = nullptr;
     }
 }
 
-PiSDFParam::~PiSDFParam() {
-    switch (this->type_) {
-        case PISDF_PARAM_DEPENDENT_STATIC:
-        case PISDF_PARAM_DEPENDENT_DYNAMIC:
-            expr_->~Expression();
-            StackMonitor::free(PISDF_STACK, expr_);
-            break;
-        case PISDF_PARAM_STATIC:
-        case PISDF_PARAM_HERITED:
-        case PISDF_PARAM_DYNAMIC:
-        default:
-            break;
+
+Param PiSDFParam::evaluateExpression() {
+    if (expr_) {
+        return expr_->evaluate();
     }
+    return value_;
+}
+
+PiSDFParam::~PiSDFParam() {
+    if (expr_) {
+        expr_->~Expression();
+        StackMonitor::free(PISDF_STACK, expr_);
+    }
+    dependencies_.clear();
 }

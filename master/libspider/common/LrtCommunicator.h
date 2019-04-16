@@ -40,31 +40,19 @@
 #ifndef LRT_COMMUNICATOR_H
 #define LRT_COMMUNICATOR_H
 
+#include <cstdint>
+#include "Communicator.h"
 #include "Message.h"
 
-class LrtCommunicator {
+class LrtCommunicator : public Communicator {
 public:
-    virtual ~LrtCommunicator() {}
+    ~LrtCommunicator() override = default;
 
-    virtual void *ctrl_start_send(int size) = 0;
-
-    virtual void ctrl_end_send(int size) = 0;
-
-    virtual int ctrl_start_recv(void **data) = 0;
-
-    virtual void ctrl_start_recv_block(void **data) = 0;
-
-    virtual void ctrl_end_recv() = 0;
-
-    virtual void *trace_start_send(int size) = 0;
-
-    virtual void trace_end_send(int size) = 0;
-
-    virtual void *data_start_send(Fifo *f) = 0;
+    virtual void *data_start_send(std::int32_t alloc) = 0;
 
     virtual void data_end_send(Fifo *f) = 0;
 
-    virtual void *data_recv(Fifo *f) = 0;
+    virtual void *data_recv(std::int32_t alloc) = 0;
 
     virtual void allocateDataBuffer(int /*nbInput*/, Fifo */*fIn*/, int /*nbOutput*/, Fifo */*fOut*/) {};
 
@@ -78,9 +66,8 @@ public:
 
     virtual void unlockLrt(int /*jobIx*/) {};
 
-
 protected:
-    LrtCommunicator() {}
+    LrtCommunicator()= default;
 };
 
 #endif/*LRT_COMMUNICATOR_H*/

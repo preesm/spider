@@ -1,7 +1,12 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2017) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
  *
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2016)
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
+ * Clément Guy <clement.guy@insa-rennes.fr> (2014)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
+ * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -32,71 +37,34 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef SPIDER_CONTROLQUEUE_H
-#define SPIDER_CONTROLQUEUE_H
 
+#ifndef SPIDER_COMMUNICATOR_H
+#define SPIDER_COMMUNICATOR_H
 
-#include <mutex>
-#include <queue>
-#include <semaphore.h>
+#include <cstdint>
+#include "Message.h"
 
-/**
- * Thread safe mono directional queue with only one reader and one writer.
- */
-class ControlQueue {
+class ScheduleJob;
 
+class Communicator {
 public:
-    /**
-     * Constructor.
-     * @param msgSizeMax largest possible message size.
-     */
-    ControlQueue(int msgSizeMax);
+    virtual ~Communicator() = default;
 
-    /**
-     * Destructor.
-     */
-    virtual ~ControlQueue();
+    virtual void push_notification(NotificationMessage *msg) = 0;
 
-    /**
-     * Prepare a message to be send.
-     * @param size Size needed by the message.
-     * @return Ptr to data were to write the message.
-     */
-    void *push_start(int size);
+    virtual bool pop_notification(NotificationMessage *msg, bool blocking) = 0;
 
-    /**
-     * Actually send the message prepared in @push_start.
-     * @param size Size needed by the message.
-     */
-    void push_end(int size);
+    virtual std::int32_t push_job_message(JobInfoMessage **message) = 0;
 
-    /**
-     * Receive a message from the queue.
-     * @param data Ptr to the message will be store in this argument.
-     * @param blocking True if the @pop_start should wait for a message if none is available.
-     * @return 0 if no message have been received, size of the message otherwise.
-     */
-    int pop_start(void **data, bool blocking);
+    virtual void pop_job_message(JobInfoMessage **msg, std::int32_t id) = 0;
 
-    /**
-     * Free the data to allow the reception of a new message.
-     * data from @pop_start should not be used after this call.
-     */
-    void pop_end();
+//    virtual void *trace_start_send(int size) = 0;
+//
+//    virtual void trace_end_send(int size) = 0;
 
-private:
-    std::queue<unsigned char> queue_;
-    std::mutex queue_mutex_;
-    sem_t queue_sem_;
 
-    int msgSizeMax_;
-
-    void *msgBufferSend_;
-    int curMsgSizeSend_;
-
-    void *msgBufferRecv_;
-    int curMsgSizeRecv_;
+protected:
+    Communicator() = default;
 };
 
-
-#endif //SPIDER_CONTROLQUEUE_H
+#endif //SPIDER_COMMUNICATOR_H

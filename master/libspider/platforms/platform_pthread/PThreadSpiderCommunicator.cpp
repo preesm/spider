@@ -41,53 +41,45 @@
 
 #include <platform.h>
 
-PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlQueue **spider2LrtQueues,
-                                                     ControlQueue **lrt2SpiderQueues,
-                                                     TraceQueue *traceQueue) {
-    spider2LrtQueues_ = spider2LrtQueues;
-    lrt2SpiderQueues_ = lrt2SpiderQueues;
+PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
+                                                     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
+                                                     NotificationQueue<NotificationMessage> **notificationQueue,
+                                                     ControlMessageQueue<TraceMessage *> *traceQueue) {
+    spider2LrtJobQueue_ = spider2LrtJobQueue;
+    lrt2SpiderParamQueue_ = lrt2SpiderParamQueue;
+    notificationQueue_ = notificationQueue;
     traceQueue_ = traceQueue;
 }
 
-PThreadSpiderCommunicator::~PThreadSpiderCommunicator() {
+void PThreadSpiderCommunicator::push_notification(int lrtID, NotificationMessage *msg) {
+    notificationQueue_[lrtID]->push(msg);
 }
 
-void *PThreadSpiderCommunicator::ctrl_start_send(int lrtIx, int size) {
-    return spider2LrtQueues_[lrtIx]->push_start(size);
+bool PThreadSpiderCommunicator::pop_notification(int lrtID, NotificationMessage *msg, bool blocking) {
+    return notificationQueue_[lrtID]->pop(msg, blocking);
 }
 
-void PThreadSpiderCommunicator::ctrl_end_send(int lrtIx, int size) {
-    return spider2LrtQueues_[lrtIx]->push_end(size);
+std::int32_t PThreadSpiderCommunicator::push_job_message(JobInfoMessage **message) {
+    return spider2LrtJobQueue_->push(message);
 }
 
-int PThreadSpiderCommunicator::ctrl_start_recv(int lrtIx, void **data) {
-    return lrt2SpiderQueues_[lrtIx]->pop_start(data, false);
+void PThreadSpiderCommunicator::pop_job_message(JobInfoMessage **msg, std::int32_t id) {
+    spider2LrtJobQueue_->pop(msg, id);
 }
 
-void PThreadSpiderCommunicator::ctrl_start_recv_block(int lrtIx, void **data) {
-    lrt2SpiderQueues_[lrtIx]->pop_start(data, true);
+std::int32_t PThreadSpiderCommunicator::push_parameter_message(ParameterMessage **message) {
+    return lrt2SpiderParamQueue_->push(message);
 }
 
-void PThreadSpiderCommunicator::ctrl_end_recv(int lrtIx) {
-    return lrt2SpiderQueues_[lrtIx]->pop_end();
+void PThreadSpiderCommunicator::pop_parameter_message(ParameterMessage **msg, std::int32_t id) {
+    lrt2SpiderParamQueue_->pop(msg, id);
 }
 
-void *PThreadSpiderCommunicator::trace_start_send(int size) {
-    return traceQueue_->push_start(Platform::get()->getNLrt(), size);
+
+std::int32_t PThreadSpiderCommunicator::push_trace_message(TraceMessage **message) {
+    return traceQueue_->push(message);
 }
 
-void PThreadSpiderCommunicator::trace_end_send(int size) {
-    return traceQueue_->push_end(Platform::get()->getNLrt(), size);
-}
-
-int PThreadSpiderCommunicator::trace_start_recv(void **data) {
-    return traceQueue_->pop_start(data, false);
-}
-
-void PThreadSpiderCommunicator::trace_start_recv_block(void **data) {
-    traceQueue_->pop_start(data, true);
-}
-
-void PThreadSpiderCommunicator::trace_end_recv() {
-    return traceQueue_->pop_end();
+void PThreadSpiderCommunicator::pop_trace_message(TraceMessage **message, std::int32_t id) {
+    traceQueue_->pop(message, id);
 }

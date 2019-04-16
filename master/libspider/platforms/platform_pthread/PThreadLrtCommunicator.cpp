@@ -46,66 +46,39 @@
 #include <platform.h>
 
 PThreadLrtCommunicator::PThreadLrtCommunicator(
-        ControlQueue *spider2LrtQueue,
-        ControlQueue *lrt2SpiderQueue,
-        DataQueues *dataQueues,
-        TraceQueue *traceQueue
+        ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
+        NotificationQueue<NotificationMessage> *notificationQueue,
+        DataQueues *dataQueues
 ) {
-    spider2LrtQueue_ = spider2LrtQueue;
-    lrt2SpiderQueue_ = lrt2SpiderQueue;
+    spider2LrtJobQueue_ = spider2LrtJobQueue;
+    notificationQueue_ = notificationQueue;
     dataQueues_ = dataQueues;
-    traceQueue_ = traceQueue;
 }
 
-PThreadLrtCommunicator::~PThreadLrtCommunicator() {
+void PThreadLrtCommunicator::push_notification(NotificationMessage *msg) {
+    notificationQueue_->push(msg);
 }
 
-void *PThreadLrtCommunicator::ctrl_start_send(int size) {
-    return lrt2SpiderQueue_->push_start(size);
+bool PThreadLrtCommunicator::pop_notification(NotificationMessage *msg, bool blocking) {
+    return notificationQueue_->pop(msg, blocking);
 }
 
-void PThreadLrtCommunicator::ctrl_end_send(int size) {
-    return lrt2SpiderQueue_->push_end(size);
+std::int32_t PThreadLrtCommunicator::push_job_message(JobInfoMessage **message) {
+    return spider2LrtJobQueue_->push(message);
 }
 
-int PThreadLrtCommunicator::ctrl_start_recv(void **data) {
-    return spider2LrtQueue_->pop_start(data, false);
-}
-
-void PThreadLrtCommunicator::ctrl_start_recv_block(void **data) {
-    spider2LrtQueue_->pop_start(data, true);
-}
-
-void PThreadLrtCommunicator::ctrl_end_recv() {
-    return spider2LrtQueue_->pop_end();
-}
-
-void *PThreadLrtCommunicator::trace_start_send(int size) {
-    return traceQueue_->push_start(Platform::get()->getLrtIx(), size);
-}
-
-void PThreadLrtCommunicator::trace_end_send(int size) {
-    return traceQueue_->push_end(Platform::get()->getLrtIx(), size);
+void PThreadLrtCommunicator::pop_job_message(JobInfoMessage **msg, std::int32_t id) {
+    spider2LrtJobQueue_->pop(msg, id);
 }
 
 void PThreadLrtCommunicator::data_end_send(Fifo */*f*/) {
     // Nothing to do
 }
 
-void *PThreadLrtCommunicator::data_recv(Fifo *f) {
-    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (f->alloc));
+void *PThreadLrtCommunicator::data_recv(std::int32_t alloc) {
+    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (alloc));
 }
 
-void *PThreadLrtCommunicator::data_start_send(Fifo *f) {
-    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (f->alloc));
-}
-
-void PThreadLrtCommunicator::setLrtJobIx(int lrtIx, int jobIx) {
-    dataQueues_->updateLrtJobStamp(lrtIx, jobIx);
-}
-
-void PThreadLrtCommunicator::waitForLrtUnlock(int nbDependency, int *blkLrtIx, int *blkLrtJobIx, int /*jobIx*/) {
-    for (int i = 0; i < nbDependency; i++) {
-        dataQueues_->waitOnJobStamp(Platform::get()->getLrtIx(), blkLrtIx[i], blkLrtJobIx[i], true);
-    }
+void *PThreadLrtCommunicator::data_start_send(std::int32_t alloc) {
+    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (alloc));
 }

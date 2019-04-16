@@ -40,21 +40,13 @@
 #ifndef PLATFORM_PTHREAD_H
 #define PLATFORM_PTHREAD_H
 
-#include "platform.h"
-#include <signal.h>
-
-#include "TraceQueue.h"
-#include "ControlQueue.h"
-
-#ifdef PAPI_AVAILABLE
-
-#include "../papify/PapifyAction.h"
-
-#endif
-
 // semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
 // making compilation error with the IDE's own declaration of said types
 #include <semaphore.h>
+#include <pthread.h>
+#include <csignal>
+#include <queue>
+#include <map>
 
 #ifdef _MSC_VER
 #ifdef int64_t
@@ -66,95 +58,162 @@
 #endif
 #endif
 
-#include <queue>
-#include <pthread.h>
+#include <platform.h>
+
+#ifdef PAPI_AVAILABLE
+#include "../papify/PapifyAction.h"
+#endif
+
+#include <PThreadSpiderCommunicator.h>
 #include <PThreadLrtCommunicator.h>
+#include <ControlMessageQueue.h>
+#include <NotificationQueue.h>
+#include <SpiderException.h>
 
-#include <map>
-
-struct Arg_lrt;
 
 class PlatformPThread : public Platform {
 public:
-    /** File Handling */
-    virtual FILE *fopen(const char *name);
-
-    virtual void fprintf(FILE *id, const char *fmt, ...);
-
-    virtual void fclose(FILE *id);
-
-    /** Shared Memory Handling */
-    virtual void *virt_to_phy(void *address);
-
-    virtual int getMinAllocSize();
-
-    virtual int getCacheLineSize();
-
-    /** Time Handling */
-    virtual void rstTime();
-
-    virtual void rstTime(struct ClearTimeMsg *msg);
-
-    virtual Time getTime();
-
-    virtual void rstJobIx();
-
-    /** Platform getter/setter */
-    inline LRT *getLrt();
-
-    inline int getLrtIx();
-
-    inline int getNLrt();
-
-    inline LrtCommunicator *getLrtCommunicator();
-
-    inline SpiderCommunicator *getSpiderCommunicator();
-
-    inline void setStack(SpiderStack id, Stack *stack);
-
-    inline Stack *getStack(SpiderStack id);
-
-    inline int getThreadNumber();
-
-    /* Fonction de thread */
-    void lrtPThread(Arg_lrt *argument_lrt);
-
+    /**
+     * @brief Constructor
+     * @param config Reference to the config
+     */
     explicit PlatformPThread(SpiderConfig &config);
 
-    virtual ~PlatformPThread();
+    /**
+     * @brief Destructor
+     */
+    ~PlatformPThread() override;
 
+    /** File Handling */
+    FILE *fopen(const char *name) override;
+
+    void fprintf(FILE *id, const char *fmt, ...) override;
+
+    void fclose(FILE *id) override;
+
+    /** Shared Memory Handling */
+    void *virt_to_phy(void *address) override;
+
+    long getMinAllocSize() override;
+
+    int getCacheLineSize() override;
+
+    /** Time Handling */
+    void rstTime() override;
+
+    void rstTime(ClearTimeMessage *msg) override;
+
+    Time getTime() override;
+
+    void rstJobIx() override;
+
+    void rstJobIxRecv() override;
+
+    /** Platform getter/setter */
+    /**
+     * @brief Get current LRT
+     * @return Pointer to current LRT class
+     */
+    inline LRT *getLrt() override {
+        return lrt_[getThreadNumber()];
+    }
+
+    /**
+     * @brief Get current LRT ID
+     * @return ID of current LRT
+     */
+    inline int getLrtIx() override {
+        return getThreadNumber();
+    }
+
+    /**
+     * @brief Get number of LRT
+     * @return Number of LRT
+     */
+    inline int getNLrt() override {
+        return nLrt_;
+    }
+
+    /**
+     * @brief Get current LRT communicator
+     * @return LRT current communicator
+     */
+    inline LrtCommunicator *getLrtCommunicator() override {
+        return lrtCom_[getThreadNumber()];
+    }
+
+    /**
+     * @brief Get Spider communicator
+     * @return spider communicator
+     */
+    inline SpiderCommunicator *getSpiderCommunicator() override {
+        if (spiderCom_) {
+            return spiderCom_;
+        } else {
+            throwSpiderException("SpiderCommunicator uninitialized.\n");
+        }
+    }
+
+    inline void setStack(SpiderStack id, Stack *stack) override;
+
+    inline Stack *getStack(SpiderStack id) override;
+
+    inline void registerLRT(int lrtID, pthread_t &thread) {
+        lrtThreadsArray[lrtID] = thread;
+    }
+
+#ifdef PAPI_AVAILABLE
+
+    inline std::map<lrtFct, PapifyAction *> &getPapifyInfo() {
+        return papifyJobInfo;
+    }
+
+#endif
 
 private:
+    inline int getThreadNumber() {
+        for (auto i = 0; i < nLrt_; i++) {
+            if (pthread_equal(lrtThreadsArray[i], pthread_self()) != 0)
+                return i;
+        }
+        throwSpiderException("Thread ID not found: %lu.", pthread_self());
+    }
+
     static Time mappingTime(int nActors, int nPe);
 
-    int nLrt_;
-    pthread_t *thread_ID_tab_;
+    void initStacks(SpiderConfig &config);
 
-    //Pointeurs vers les stacks
+    void createAndLaunchThreads();
+
+    std::int32_t nLrt_;
+    pthread_t *lrtThreadsArray;
+
+    /** Stack pointers */
     Stack *stackPisdf;
     Stack *stackSrdag;
     Stack *stackTransfo;
     Stack *stackArchi;
     Stack **stackLrt;
 
-    ControlQueue **spider2LrtQueues_;
-    ControlQueue **lrt2SpiderQueues_;
+    ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
+    ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
+    ControlMessageQueue<TraceMessage *> *traceQueue_;
+    NotificationQueue<NotificationMessage> **lrtNotificationQueues_;
+
     DataQueues *dataQueues_;
-    TraceQueue *traceQueue_;
 
     LRT **lrt_;
     LrtCommunicator **lrtCom_;
     SpiderCommunicator *spiderCom_;
 
     pthread_t *thread_lrt_;
-    Arg_lrt *arg_lrt_;
-
 #ifdef PAPI_AVAILABLE
     // Papify information
     std::map<lrtFct, PapifyAction *> papifyJobInfo;
 #endif
-};
 
+   struct LRTInfo *lrtInfoArray_;
+};
 
 inline void PlatformPThread::setStack(SpiderStack id, Stack *stack) {
     switch (id) {
@@ -174,7 +233,7 @@ inline void PlatformPThread::setStack(SpiderStack id, Stack *stack) {
             stackLrt[getThreadNumber()] = stack;
             break;
         default :
-            throw std::runtime_error("Error in stack index\n");
+            throwSpiderException("Invalid stack index: %d.", id);
     }
 }
 
@@ -191,59 +250,25 @@ inline Stack *PlatformPThread::getStack(SpiderStack id) {
         case LRT_STACK :
             return stackLrt[getThreadNumber()];
         default :
-            throw std::runtime_error("Error in stack index\n");
+            throwSpiderException("Invalid stack index: %d.", id);
     }
 }
 
-inline int PlatformPThread::getThreadNumber() {
-    for (int i = 0; i < nLrt_; i++) {
-        if (pthread_equal(thread_ID_tab_[i], pthread_self()) != 0)
-            return i;
-    }
-    throw std::runtime_error("Error undefined ID\n");
-}
 
-inline LRT *PlatformPThread::getLrt() {
-    return lrt_[getThreadNumber()];
-}
-
-inline int PlatformPThread::getLrtIx() {
-    return getThreadNumber();
-}
-
-inline int PlatformPThread::getNLrt() {
-    return nLrt_;
-}
-
-inline LrtCommunicator *PlatformPThread::getLrtCommunicator() {
-    return lrtCom_[getThreadNumber()];
-}
-
-inline SpiderCommunicator *PlatformPThread::getSpiderCommunicator() {
-    if (spiderCom_)
-        return spiderCom_;
-    else
-        throw std::runtime_error("Error undefined spider communicator\n");
-}
-
-
-// Structure de passage d'argument dans le thread
-typedef struct Arg_lrt {
-    PlatformPThread *instance;
-    LrtCommunicator *lrtCom;
+/**
+ * @brief Stucture for the initialization of a pthread LRT
+ */
+typedef struct LRTInfo {
     LRT *lrt;
-    int shMemSize;
     lrtFct *fcts;
-    int nLrtFcts;
-    int index;
-    int nLrt;
-    StackConfig lrtStack;
-    bool usePapify;
+    int lrtID;
+    int nFcts;
     int coreAffinity;
-} Arg_lrt;
-
-// Fonction wrapper pour lancer un thread sur une méthode d'objet
-void *lrtPThread_helper(void *voidArgs);
+    bool usePapify;
+    StackConfig lrtStack;
+    PlatformPThread *platform;
+    pthread_barrier_t *pthreadBarrier;
+} LRTInfo;
 
 
 #endif/*PLATFORM_PTHREADS_H*/

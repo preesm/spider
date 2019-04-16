@@ -44,7 +44,6 @@
 #include <Message.h>
 #include <SpiderCommunicator.h>
 #include <tools/Stack.h>
-#include <sys/types.h>
 
 // semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
 // making compilation error with the IDE's own declaration of said types
@@ -60,41 +59,40 @@
 #endif
 #endif
 
-#include <ControlQueue.h>
-#include <TraceQueue.h>
+#include "ControlMessageQueue.h"
+#include "NotificationQueue.h"
 
 class PThreadSpiderCommunicator : public SpiderCommunicator {
 public:
-    PThreadSpiderCommunicator(ControlQueue **spider2LrtQueues,
-                              ControlQueue **lrt2SpiderQueues,
-                              TraceQueue *traceQueue);
+    PThreadSpiderCommunicator(
+            ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
+            ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
+            NotificationQueue<NotificationMessage> **notificationQueue,
+            ControlMessageQueue<TraceMessage *> *traceQueue);
 
-    ~PThreadSpiderCommunicator();
+    ~PThreadSpiderCommunicator() override = default;
 
-    void *ctrl_start_send(int lrtIx, int size);
+    void push_notification(int lrtID, NotificationMessage *msg) override;
 
-    void ctrl_end_send(int lrtIx, int size);
+    bool pop_notification(int lrtID, NotificationMessage *msg, bool blocking) override;
 
-    int ctrl_start_recv(int lrtIx, void **data);
+    std::int32_t push_job_message(JobInfoMessage **message) override;
 
-    void ctrl_start_recv_block(int lrtIx, void **data);
+    void pop_job_message(JobInfoMessage **msg, std::int32_t id) override;
 
-    void ctrl_end_recv(int lrtIx);
+    std::int32_t push_parameter_message(ParameterMessage **message) override;
 
-    void *trace_start_send(int size);
+    void pop_parameter_message(ParameterMessage **msg, std::int32_t id) override;
 
-    void trace_end_send(int size);
+    std::int32_t push_trace_message(TraceMessage **message) override;
 
-    int trace_start_recv(void **data);
-
-    void trace_start_recv_block(void **data);
-
-    void trace_end_recv();
+    void pop_trace_message(TraceMessage **message, std::int32_t id) override;
 
 private:
-    ControlQueue **spider2LrtQueues_;
-    ControlQueue **lrt2SpiderQueues_;
-    TraceQueue *traceQueue_;
+    ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
+    ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
+    ControlMessageQueue<TraceMessage *> *traceQueue_;
+    NotificationQueue<NotificationMessage> **notificationQueue_;
 };
 
 #endif/*PTHREADS_SPIDER_COMMUNICATOR_H*/

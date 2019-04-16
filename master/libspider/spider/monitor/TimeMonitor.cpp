@@ -35,12 +35,6 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-/*
- * TimeMonitor.cpp
- *
- *  Created on: Dec 1, 2015
- *      Author: jheulot, hmiomandre
- */
 
 #include "TimeMonitor.h"
 #include <platform.h>
@@ -66,14 +60,18 @@ const char *TimeMonitor::getTaskName(TraceSpiderType type) {
 }
 
 void TimeMonitor::startMonitoring() {
-    if (start != 0)
-        throw std::runtime_error("Try to monitor 2 different things in the same time");
+    if (start != 0) {
+        throwSpiderException("Can not monitor 2 timed events at the same time.");
+    }
     start = Platform::get()->getTime();
 }
 
 void TimeMonitor::endMonitoring(TraceSpiderType type) {
-    if (start == 0)
-        throw std::runtime_error("End monitor with no starting point");
-    if (Spider::getTraceEnabled() == true) Launcher::get()->sendTraceSpider(type, start, Platform::get()->getTime());
+    if (start == 0) {
+        throwSpiderException("Calling endMonitoring without starting point.");
+    }
+    if (Spider::getTraceEnabled()) {
+        Launcher::get()->sendTraceSpider(type, start, Platform::get()->getTime());
+    }
     start = 0;
 }

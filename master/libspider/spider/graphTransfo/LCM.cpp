@@ -35,55 +35,54 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include "tools/Rational.h"
-#include "graphs/PiSDF/PiSDFEdge.h"
-#include "LCM.h"
-#include "CommonBRV.h"
+#include <graphs/PiSDF/PiSDFEdge.h>
+#include <graphTransfo/CommonBRV.h>
+#include <graphTransfo/LCM.h>
+#include <tools/Rational.h>
 
 
 /**
  * Fill an array of Rational relations between the different vertices of a given connected components based on their
  * production / consumption data rates.
  *
- * @param job     Pointer to the transfoJob
  * @param edgeSet Edge set
  * @param reps    Array of Rational to be filled
  * @param offset  Offset of the current connected components in the global set of vertices
  */
-static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, long offset) {
-    Rational n(1);
-    for (int i = 0; i < edgeSet.getN(); ++i) {
-        PiSDFEdge *edge = edgeSet.getArray()[i];
-        PiSDFVertex *source = edge->getSrc();
-        PiSDFVertex *sink = edge->getSnk();
-        int cons = edge->resolveCons(job);
-        int prod = edge->resolveProd(job);
+static void fillReps(PiSDFEdgeSet &edgeSet, Rational *reps, long offset) {
+    for (int i = 0; i < edgeSet.size(); ++i) {
+        auto *edge = edgeSet.getArray()[i];
+        auto *source = edge->getSrc();
+        auto *sink = edge->getSnk();
+        auto prod = edge->resolveProd();
+        auto cons = edge->resolveCons();
         // Check if the edge is valid
         if ((prod == 0 && cons != 0) || (cons == 0 && prod != 0)) {
-            std::string errorMsg =
-                    std::string("ERROR: Non valid edge prod / cons. From source [") + std::string(source->getName()) +
-                    std::string("] with prod = [" + std::to_string(prod) + std::string("] to sink [") +
-                                std::string(sink->getName()) + std::string("] with cons = [") + std::to_string(cons) +
-                                std::string("]."));
-            throw std::runtime_error(errorMsg);
+            throwSpiderException(
+                    "Non valid edge prod / cons. From source [%s] with prod = [%d] to sink [%s] with cons = [%d]",
+                    source->getName(), prod, sink->getName(), cons);
         }
         long sinkIx = sink->getSetIx() - offset;
-        Rational &fa = reps[sinkIx];
+        auto &sinkRational = reps[sinkIx];
         long sourceIx = source->getSetIx() - offset;
-        Rational &sa = reps[sourceIx];
-        if (fa.getNominator() == 0 && cons != 0) {
-            if (sa.getNominator() != 0) {
-                n = reps[sourceIx];
-            }
-            Rational tmp(prod, cons);
-            reps[sinkIx] = n * tmp;
+        auto &sourceRational = reps[sourceIx];
+        if (sink->getType() == PISDF_TYPE_IF) {
+            sinkRational = Rational(1);
         }
-        if (sa.getNominator() == 0 && prod != 0) {
-            if (fa.getNominator() != 0) {
-                n = reps[sinkIx];
+        if (source->getType() == PISDF_TYPE_IF) {
+            sourceRational = Rational(1);
+        }
+        if (sinkRational.getNominator() == 0 && cons != 0) {
+            sinkRational = Rational(prod, cons);
+            if (sourceRational.getNominator() != 0) {
+                sinkRational *= sourceRational;
             }
-            Rational tmp(cons, prod);
-            reps[sourceIx] = n * tmp;
+        }
+        if (sourceRational.getNominator() == 0 && prod != 0) {
+            sourceRational = Rational(cons, prod);
+            if (sinkRational.getNominator() != 0) {
+                sourceRational *= sinkRational;
+            }
         }
     }
 }
@@ -96,8 +95,8 @@ static void fillReps(transfoJob *job, PiSDFEdgeSet &edgeSet, Rational *reps, lon
  * @param nVertices Number of vertices in the connected components;
  * @return Value of the LCM
  */
-static long computeLCMFactor(Rational *reps, long nVertices) {
-    long lcm = 1;
+static std::int64_t computeLCMFactor(Rational *reps, long nVertices) {
+    std::int64_t lcm = 1;
     for (long i = 0; i < nVertices; ++i) {
         lcm = Rational::compute_lcm(lcm, reps[i].getDenominator());
     }
@@ -113,7 +112,7 @@ static long computeLCMFactor(Rational *reps, long nVertices) {
  * @param nVertices  Number of vertices in the connected components;
  * @param brv        Array of BRV values to be filled;
  */
-static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, long lcm, long nVertices, int *brv) {
+static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, std::int64_t lcm, long nVertices, int *brv) {
     for (long i = 0; i < nVertices; ++i) {
         PiSDFVertex *vertex = vertices[i];
         // Ignore interfaces for now
@@ -123,10 +122,7 @@ static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, long 
             brv[vertex->getTypeId()] = 1;
             continue;
         }
-        Rational &r = reps[i];
-        long nom = r.getNominator();
-        long denom = r.getDenominator();
-        brv[vertex->getTypeId()] = ((nom * lcm) / denom);
+        brv[vertex->getTypeId()] = Rational(reps[i] * lcm).toInt32();
     }
 }
 
@@ -134,63 +130,63 @@ static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, long 
 /**
  * Check the consistency of the connected components graph.
  *
- * @param job      Pointer to the transfoJob;
  * @param edgeSet  Edge set of the connected components;
  * @param brv      BRV values;
  */
-static void checkConsistency(transfoJob *job, PiSDFEdgeSet &edgeSet, int *brv) {
-    for (int i = 0; i < edgeSet.getN(); ++i) {
-        PiSDFEdge *edge = edgeSet.getArray()[i];
-        PiSDFVertex *source = edge->getSrc();
-        PiSDFVertex *sink = edge->getSnk();
+static void checkConsistency(PiSDFEdgeSet &edgeSet, const int *brv) {
+    for (int i = 0; i < edgeSet.size(); ++i) {
+        auto *edge = edgeSet.getArray()[i];
+        auto *source = edge->getSrc();
+        auto *sink = edge->getSnk();
         if ((source->getType() == PISDF_TYPE_IF) || (sink->getType() == PISDF_TYPE_IF)) {
             continue;
         }
-        int prod = edge->resolveProd(job);
-        int cons = edge->resolveCons(job);
+        auto prod = edge->resolveProd();
+        auto cons = edge->resolveCons();
         if ((sink->getType() == PISDF_TYPE_CONFIG) && prod > cons) {
-            throw std::runtime_error(std::string("ERROR: config actor [") + std::string(source->getName()) +
-                                     std::string("] does not consume all the tokens produce on its input data port."));
+            throwSpiderException("Config actor [%s] does not consume all the tokens produce on its input port.",
+                                 source->getName());
         }
         int sourceRV = brv[source->getTypeId()];
         int sinkRV = brv[sink->getTypeId()];
         if ((prod * sourceRV) != (cons * sinkRV)) {
-            throw std::runtime_error("Graph is not consistent: edge from [" + std::string(source->getName()) + "] "
-                                                                                                               "with production [" +
-                                     std::to_string(prod * sourceRV) + "] != [" + std::to_string(cons * sinkRV) +
-                                     "].");
+            throwSpiderException("Edge [%s] -> [%s]. prod(%d) * sourceRV(%d) != cons(%d) * sinkRV(%d).",
+                                 source->getName(), sink->getName(), prod, sourceRV, cons, sinkRV);
         }
     }
 }
 
 
 void
-lcmBasedBRV(transfoJob *job, PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv) {
+lcmBasedBRV(PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long nEdges, int *brv) {
     // 0. Get vertices and edges set
     PiSDFVertex *const *vertices = vertexSet.getArray() + nDoneVertices;
-    PiSDFEdgeSet edgeSet(nEdges, TRANSFO_STACK);
+    PiSDFEdgeSet edgeSet(static_cast<int>(nEdges), TRANSFO_STACK);
     fillEdgeSet(edgeSet, vertices, nVertices);
     // 1. Initialize the reps map
-    Rational *reps = CREATE_MUL(TRANSFO_STACK, nVertices, Rational);
+    auto *reps = CREATE_MUL(TRANSFO_STACK, nVertices, Rational);
     for (long i = 0; i < nVertices; ++i) {
         // Init a rational with num: 0, den: 1
         reps[i] = Rational();
     }
 
-    fillReps(job, edgeSet, reps, nDoneVertices);
+    fillReps(edgeSet, reps, nDoneVertices);
 
     // 2. Compute lcm
-    long lcm = computeLCMFactor(reps, nVertices);
+    std::int64_t lcm = computeLCMFactor(reps, nVertices);
 
     // 3. Compute and set BRV values
     computeBRVValues(reps, vertices, lcm, nVertices, brv);
 
+    // 3.1 Update RV with interfaces
+    updateBRV(nVertices, brv, vertices);
+
     // 4. Check consistency
-    checkConsistency(job, edgeSet, brv);
+    checkConsistency(edgeSet, brv);
 
     // 5. Free the memory
     StackMonitor::free(TRANSFO_STACK, reps);
-    while (edgeSet.getN() > 0) {
+    while (edgeSet.size() > 0) {
         edgeSet.del(edgeSet[0]);
     }
 }

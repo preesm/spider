@@ -71,8 +71,8 @@ BipartiteGraph::~BipartiteGraph() {
 }
 
 bool BipartiteGraph::hasPerfectMatch() {
-    int *matching = CREATE_MUL(stackId_, nVerticesG1_, int);
-    bool *visited = CREATE_MUL(stackId_, nVerticesG1_, bool);
+    auto *matching = CREATE_MUL(stackId_, nVerticesG1_, int);
+    auto *visited = CREATE_MUL(stackId_, nVerticesG1_, bool);
 
     memset(matching, -1, nVerticesG1_ * sizeof(int));
 
@@ -104,7 +104,7 @@ bool BipartiteGraph::findPath(BipartiteGraph *graph, int u1, int *matching, bool
 
 void BipartiteGraph::compareGraphs(SRDAGGraph *g1, SRDAGGraph *g2, SpiderStack stackId, const char *testName) {
 
-    BipartiteGraph *bipartite = CREATE(stackId, BipartiteGraph)(g1, g2, stackId);
+    auto *bipartite = CREATE(stackId, BipartiteGraph)(g1, g2, stackId);
 
     printf("%s : ", testName);
     if (g1->getNVertex() == g2->getNVertex()
@@ -130,7 +130,7 @@ void BipartiteGraph::compareGraphs(SRDAGGraph *g1, SRDAGGraph *g2, SpiderStack s
 
 void BipartiteGraph::print(const char *path, SRDAGGraph *g1, SRDAGGraph *g2) {
     FILE *file = Platform::get()->fopen(path);
-    if (file == NULL) {
+    if (file == nullptr) {
         printf("cannot open %s\n", path);
         return;
     }

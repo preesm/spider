@@ -325,7 +325,7 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
     // Check nb of config //
 
     /* Look for hierrachical actor in topDag */
-//    TimeMonitor::startMonitoring();
+    TimeMonitor::startMonitoring();
 
     SRDAGVertex *nextHierVx = getNextHierVx(topSrdag);
 
@@ -369,12 +369,12 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
         nextHierVx = getNextHierVx(topSrdag);
     } while (nextHierVx);
 
-//    TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
+    TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
 
     if (Spider::getGraphOptim()) {
-//        TimeMonitor::startMonitoring();
+        TimeMonitor::startMonitoring();
         optims(topSrdag);
-//        TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
+        TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
     }
 
     topSrdag->updateState();
@@ -384,10 +384,9 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
     }
 
     /* Schedule and launch execution */
-//    TimeMonitor::startMonitoring();
+    TimeMonitor::startMonitoring();
     scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchi());
-//    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
-//    schedule->print("./schedule-ref.pgantt");
+    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
     return schedule;
 }
 
@@ -400,12 +399,10 @@ PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end) {
     auto *root = graph->getBody(0)->getSubGraph();
     computeHierarchicalBRV(root);
     auto schedule = CREATE_NA(TRANSFO_STACK, PiSDFSchedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
-//    auto scheduler = SRDAGLessListScheduler(root, schedule);
     auto scheduler = SRDAGLessScheduler(root, schedule);
     if (end) {
         (*end) = Platform::get()->getTime();
     }
-    scheduler.scheduleRelaxed(root, memAlloc);
-//    scheduler.printSchedule("./schedule-relaxed.pgantt");
+    scheduler.schedule(root, memAlloc);
     return schedule;
 }

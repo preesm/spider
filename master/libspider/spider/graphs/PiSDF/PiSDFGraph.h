@@ -189,27 +189,27 @@ inline const PiSDFParam *const *PiSDFGraph::getParams() const {
 }
 
 inline int PiSDFGraph::getNParam() const {
-    return params_.getN();
+    return params_.size();
 }
 
 inline int PiSDFGraph::getNEdge() const {
-    return edges_.getN();
+    return edges_.size();
 }
 
 inline int PiSDFGraph::getNInIf() const {
-    return inputIfs_.getN();
+    return inputIfs_.size();
 }
 
 inline int PiSDFGraph::getNOutIf() const {
-    return outputIfs_.getN();
+    return outputIfs_.size();
 }
 
 inline int PiSDFGraph::getNConfig() const {
-    return configs_.getN();
+    return configs_.size();
 }
 
 inline int PiSDFGraph::getNBody() const {
-    return bodies_.getN();
+    return bodies_.size();
 }
 
 /** General getters */

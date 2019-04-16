@@ -56,10 +56,10 @@ SRDAGGraph::SRDAGGraph() :
 }
 
 SRDAGGraph::~SRDAGGraph() {
-    while (edges_.getN()) {
+    while (edges_.size()) {
         delEdge(edges_[0]);
     }
-    while (vertices_.getN()) {
+    while (vertices_.size()) {
         delVertex(vertices_[0]);
     }
 }
@@ -209,7 +209,7 @@ void SRDAGGraph::delEdge(SRDAGEdge *edge) {
 
 int SRDAGGraph::getNExecVertex() {
     int n = 0;
-    for (int i = 0; i < vertices_.getN(); i++) {
+    for (int i = 0; i < vertices_.size(); i++) {
         if (vertices_[i]->getState() == SRDAG_EXEC)
             n++;
     }
@@ -217,7 +217,7 @@ int SRDAGGraph::getNExecVertex() {
 }
 
 void SRDAGGraph::updateState() {
-    for (int i = 0; i < vertices_.getN(); i++) {
+    for (int i = 0; i < vertices_.size(); i++) {
         vertices_[i]->updateState();
     }
 }
@@ -243,7 +243,7 @@ void SRDAGGraph::print(const char *path) {
 
     // Drawing vertices.
     Platform::get()->fprintf(file, "\t# Vertices\n");
-    for (int i = 0; i < vertices_.getN(); i++) {
+    for (int i = 0; i < vertices_.size(); i++) {
         char name[100];
         SRDAGVertex *vertex = vertices_[i];
         vertex->toString(name, 100);
@@ -287,7 +287,7 @@ void SRDAGGraph::print(const char *path) {
 
     // Drawing edges.
     Platform::get()->fprintf(file, "\t# Edges\n");
-    for (int i = 0; i < edges_.getN(); i++) {
+    for (int i = 0; i < edges_.size(); i++) {
         SRDAGEdge *edge = edges_[i];
         int snkIx, srcIx;
 
@@ -337,7 +337,7 @@ bool SRDAGGraph::check() {
     bool result = true;
 
     /* Check vertices */
-    for (int i = 0; i < vertices_.getN(); i++) {
+    for (int i = 0; i < vertices_.size(); i++) {
         SRDAGVertex *vertex = vertices_[i];
         int j;
 

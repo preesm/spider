@@ -83,39 +83,6 @@ public:
                                                         std::int32_t vertexInstance,
                                                         std::int32_t level = -1);
 
-    static std::int32_t computeLastDependencyIxRelaxed(PiSDFVertex *vertex,
-                                                       std::int32_t edgeIx,
-                                                       std::int32_t vertexInstance,
-                                                       std::int32_t level = -1,
-                                                       std::int32_t rho = 1,
-                                                       std::int32_t rv = 1);
-
-    static std::int32_t computeFirstDependencyIxRelaxed(PiSDFEdge *edge,
-                                                        std::int32_t vertexInstance,
-                                                        PiSDFVertex **producer,
-                                                        std::int32_t level = -1);
-
-    static std::int32_t computeLastDependencyIxRelaxed(PiSDFEdge *edge,
-                                                       std::int32_t vertexInstance,
-                                                       PiSDFVertex **producer,
-                                                       int32_t level = 1,
-                                                       std::int32_t rho = 1,
-                                                       std::int32_t rv = 1);
-
-    static void computeFirstDependencyIxRelaxed(PiSDFEdge *edge,
-                                                std::int32_t vertexInstance,
-                                                PiSDFVertex **producer,
-                                                std::vector<std::int32_t> &indexes,
-                                                int32_t level = 1);
-
-    static void computeLastDependencyIxRelaxed(PiSDFEdge *edge,
-                                               std::int32_t vertexInstance,
-                                               PiSDFVertex **producer,
-                                               std::vector<std::int32_t> &indexes,
-                                               int32_t level = 1,
-                                               int32_t rho = -1,
-                                               int32_t rv = -1);
-
     static inline PiSDFVertex *getProducer(PiSDFVertex *vertex,
                                            std::int32_t edgeIx,
                                            std::int32_t vertexInstance);

@@ -54,22 +54,22 @@ PiSDFGraph::PiSDFGraph(
 }
 
 PiSDFGraph::~PiSDFGraph() {
-    while (edges_.getN() > 0)
+    while (edges_.size() > 0)
         delEdge(edges_[0]);
-    while (bodies_.getN() > 0) {
+    while (bodies_.size() > 0) {
         if (bodies_[0]->isHierarchical()) {
             bodies_[0]->getSubGraph()->~PiSDFGraph();
             StackMonitor::free(PISDF_STACK, bodies_[0]->getSubGraph());
         }
         delVertex(bodies_[0]);
     }
-    while (configs_.getN() > 0)
+    while (configs_.size() > 0)
         delVertex(configs_[0]);
-    while (inputIfs_.getN() > 0)
+    while (inputIfs_.size() > 0)
         delVertex(inputIfs_[0]);
-    while (outputIfs_.getN() > 0)
+    while (outputIfs_.size() > 0)
         delVertex(outputIfs_[0]);
-    while (params_.getN() > 0)
+    while (params_.size() > 0)
         delParam(params_[0]);
 }
 
@@ -79,7 +79,7 @@ PiSDFVertex *PiSDFGraph::addBodyVertex(
         int nInParam) {
     auto *body = CREATE(PISDF_STACK, PiSDFVertex)(
             vertexName, fctId,
-            bodies_.getN(),
+            bodies_.size(),
             PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
             this, nullptr,
             nInEdge, nOutEdge,
@@ -94,7 +94,7 @@ PiSDFVertex *PiSDFGraph::addBodyVertex(
         int nInParam) {
     auto *body = CREATE(PISDF_STACK, PiSDFVertex)(
             vertexName, -1,
-            bodies_.getN(),
+            bodies_.size(),
             PISDF_TYPE_BODY, type,
             this, nullptr,
             nInEdge, nOutEdge,
@@ -109,7 +109,7 @@ PiSDFVertex *PiSDFGraph::addSpecialVertex(
         int nInParam) {
     auto *body = CREATE(PISDF_STACK, PiSDFVertex)(
             nullptr, -1,
-            bodies_.getN(),
+            bodies_.size(),
             PISDF_TYPE_BODY, type,
             this, nullptr,
             nInEdge, nOutEdge,
@@ -125,7 +125,7 @@ PiSDFVertex *PiSDFGraph::addConfigVertex(
         int nInParam, int nOutParam) {
     auto *config = CREATE(PISDF_STACK, PiSDFVertex)(
             vertexName, fctId,
-            configs_.getN(),
+            configs_.size(),
             PISDF_TYPE_CONFIG, subType,
             this, nullptr,
             nInEdge, nOutEdge,
@@ -140,7 +140,7 @@ PiSDFVertex *PiSDFGraph::addInputIf(
         int nInParam) {
     auto *inIf = CREATE(PISDF_STACK, PiSDFVertex)(
             name, -1,
-            inputIfs_.getN(),
+            inputIfs_.size(),
             PISDF_TYPE_IF, PISDF_SUBTYPE_INPUT_IF,
             this, nullptr,
             0, 1,
@@ -154,7 +154,7 @@ PiSDFVertex *PiSDFGraph::addOutputIf(
         int nInParam) {
     auto *outIf = CREATE(PISDF_STACK, PiSDFVertex)(
             name, -1,
-            outputIfs_.getN(),
+            outputIfs_.size(),
             PISDF_TYPE_IF, PISDF_SUBTYPE_OUTPUT_IF,
             this, nullptr,
             1, 0,
@@ -234,7 +234,7 @@ void PiSDFGraph::print(const char *path) {
 
     // Drawing parameters.
     Platform::get()->fprintf(file, "\t# Parameters\n");
-    for (int i = 0; i < params_.getN(); i++) {
+    for (int i = 0; i < params_.size(); i++) {
         PiSDFParam *param = params_[i];
         Platform::get()->fprintf(file, "\t%s [label=\"%s\" shape=house];\n",
                                  param->getName(),
@@ -243,7 +243,7 @@ void PiSDFGraph::print(const char *path) {
 
     // Drawing Config PiSDF vertices.
     Platform::get()->fprintf(file, "\n\t# Configs\n");
-    for (int i = 0; i < configs_.getN(); i++) {
+    for (int i = 0; i < configs_.size(); i++) {
         PiSDFVertex *config = configs_[i];
         Platform::get()->fprintf(file, "\t%d [shape=doubleoctagon,label=\"%s\"];\n",
                                  config->getId(),
@@ -267,7 +267,7 @@ void PiSDFGraph::print(const char *path) {
 
     // Drawing Body PiSDF vertices.
     Platform::get()->fprintf(file, "\t# Body Vertices\n");
-    for (int i = 0; i < bodies_.getN(); i++) {
+    for (int i = 0; i < bodies_.size(); i++) {
         PiSDFVertex *body = bodies_[i];
         if (body->isHierarchical()) {
             char name[100];
@@ -290,7 +290,7 @@ void PiSDFGraph::print(const char *path) {
 
     // Drawing Input vertices.
     Platform::get()->fprintf(file, "\t# Input Ifs\n");
-    for (int i = 0; i < inputIfs_.getN(); i++) {
+    for (int i = 0; i < inputIfs_.size(); i++) {
         PiSDFVertex *inIf = inputIfs_[i];
         Platform::get()->fprintf(file, "\t%d [shape=cds,label=\"%s\"];\n",
                                  inIf->getId(),
@@ -307,7 +307,7 @@ void PiSDFGraph::print(const char *path) {
 
     // Drawing Output vertices.
     Platform::get()->fprintf(file, "\t# Output Ifs\n");
-    for (int i = 0; i < outputIfs_.getN(); i++) {
+    for (int i = 0; i < outputIfs_.size(); i++) {
         PiSDFVertex *outIf = outputIfs_[i];
         Platform::get()->fprintf(file, "\t%d [shape=cds,label=\"%s\"];\n",
                                  outIf->getId(),
@@ -324,7 +324,7 @@ void PiSDFGraph::print(const char *path) {
 
     // Drawing edges.
     Platform::get()->fprintf(file, "\t# Edges\n");
-    for (int i = 0; i < edges_.getN(); i++) {
+    for (int i = 0; i < edges_.size(); i++) {
         PiSDFEdge *edge = edges_[i];
         char prodExpr[100];
         char consExpr[100];

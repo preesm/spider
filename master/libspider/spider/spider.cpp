@@ -151,6 +151,16 @@ static std::int32_t computeTotalNBodies(PiSDFGraph *g) {
     return nBodies;
 }
 
+static std::int32_t computeTotalNEdges(PiSDFGraph *g) {
+    std::int32_t nEdges = g->getNEdge();
+    for (auto i = 0; i < g->getNBody(); ++i) {
+        if (g->getBody(i)->isHierarchical()) {
+            nEdges += computeTotalNEdges(g->getBody(i)->getSubGraph());
+        }
+    }
+    return nEdges;
+}
+
 std::int32_t computeNHierarchicals(PiSDFGraph *g) {
     std::int32_t nBodies = 0;
     for (auto i = 0; i < g->getNBody(); ++i) {
@@ -175,81 +185,24 @@ std::int32_t getNLevels(PiSDFGraph *g, std::int32_t currentDepth) {
 void Spider::iterate() {
     Platform::get()->rstTime();
     stopThreads = 1;
-
-//    srdag_ = new SRDAGGraph();
-//    static_scheduler(srdag_, memAlloc_, scheduler_, nullptr);
-//    fprintf(stderr, "INFO: Number of PiSDF actors:  %d\n", computeTotalNBodies(pisdf_->getBody(0)->getSubGraph()));
-//    fprintf(stderr, "INFO: Number of Hiera actors:  %d\n", computeNHierarchicals(pisdf_->getBody(0)->getSubGraph()));
-//    fprintf(stderr, "INFO: Levels of hierarchy:     %d\n", getNLevels(pisdf_->getBody(0)->getSubGraph(), 0));
-//    fprintf(stderr, "INFO: Number of SR-DAG actors: %d\n", srdag_->getNVertex());
-//    fprintf(stderr, "INFO: Number of SR-DAG edges:  %d\n", srdag_->getNEdge());
-//    return;
-    Time start = 0;
-    Time end = 0;
-    Time endTransfo = 0;
-    auto nIteration = 100;
-    double averageTransfo = 0.f;
-    double averageSchedule = 0.f;
-    double averageTotal = 0.f;
-    for (int i = 0; i < nIteration; ++i) {
-        start = Platform::get()->getTime();
-        auto *schedule = srdagLessScheduler(memAlloc_, &endTransfo);
-       // fprintf(stderr, "INFO: Max latency: %" PRIu64"\n", schedule->computeMaxLatency());
-        schedule->~PiSDFSchedule();
-        StackMonitor::free(TRANSFO_STACK, schedule);
-        end = Platform::get()->getTime();
-        averageTransfo += (endTransfo - start);
-        averageSchedule += (end - endTransfo);
-        averageTotal = averageTransfo + averageSchedule;
-    }
-    averageTransfo /= static_cast<double >(nIteration);
-    averageSchedule /= static_cast<double >(nIteration);
-    averageTotal /= static_cast<double >(nIteration);
-    Logger::print(LOG_GENERAL, LOG_INFO, "srdagLessScheduler:\n");
-    Logger::print(LOG_GENERAL, LOG_INFO, "          => Transformation: %lf ms.\n", averageTransfo / 1000000.);
-    Logger::print(LOG_GENERAL, LOG_INFO, "          => Scheduling:     %lf ms.\n", averageSchedule / 1000000.);
-    Logger::print(LOG_GENERAL, LOG_INFO, "          => Total:          %lf ms.\n", averageTotal / 1000000.);
-    for (int i = 0; i < nIteration; ++i) {
-        start = Platform::get()->getTime();
+    if (pisdf_->isGraphStatic()) {
+        if (!srdag_) {
+            /* On first iteration, the schedule is created */
+            srdag_ = new SRDAGGraph();
+            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_, nullptr);
+        }
+        /* Run the schedule */
+        schedule_->executeAndRun();
+        schedule_->restartSchedule();
+    } else {
         delete srdag_;
         StackMonitor::freeAll(SRDAG_STACK);
-        srdag_ = new SRDAGGraph();
         memAlloc_->reset();
-        auto *schedule = static_scheduler(srdag_, memAlloc_, scheduler_, &endTransfo);
-        //fprintf(stderr, "INFO: Max latency: %" PRIu64"\n", schedule->computeMaxLatency());
-        schedule->~SRDAGSchedule();
-        StackMonitor::free(TRANSFO_STACK, schedule);
-        end = Platform::get()->getTime();
-        averageTransfo += (endTransfo - start);
-        averageSchedule += (end - endTransfo);
+        srdag_ = new SRDAGGraph();
+        jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
     }
-    averageTotal = averageTransfo + averageSchedule;
-    averageTransfo /= static_cast<double >(nIteration);
-    averageSchedule /= static_cast<double >(nIteration);
-    averageTotal /= static_cast<double >(nIteration);
-    Logger::print(LOG_GENERAL, LOG_INFO, "static_scheduler: \n");
-    Logger::print(LOG_GENERAL, LOG_INFO, "          => Transformation: %lf ms.\n", averageTransfo / 1000000.);
-    Logger::print(LOG_GENERAL, LOG_INFO, "          => Scheduling:     %lf ms.\n", averageSchedule / 1000000.);
-    Logger::print(LOG_GENERAL, LOG_INFO, "          => Total:          %lf ms.\n", averageTotal / 1000000.);
-
-//    if (pisdf_->isGraphStatic()) {
-//        if (!srdag_) {
-//            /** On first iteration, the schedule is created **/
-//            srdag_ = new SRDAGGraph();
-//            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_, nullptr);
-//        }
-//        /** Run the schedule **/
-//        schedule_->executeAndRun();
-//        schedule_->restartSchedule();
-//    } else {
-//        delete srdag_;
-//        StackMonitor::freeAll(SRDAG_STACK);
-//        memAlloc_->reset();
-//        srdag_ = new SRDAGGraph();
-//        jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
-//    }
-//    /** Wait for LRTs to finish **/
-//    Platform::get()->rstJobIxRecv();
+    /** Wait for LRTs to finish **/
+    Platform::get()->rstJobIxRecv();
 }
 
 

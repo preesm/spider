@@ -71,7 +71,9 @@ public:
 
     inline TYPE operator[](int ix);
 
-    inline int getN() const;
+    inline int size() const;
+
+    inline int sizeMax() const;
 
     inline TYPE const *getArray() const;
 
@@ -85,8 +87,13 @@ private:
 };
 
 template<typename TYPE>
-inline int Set<TYPE>::getN() const {
+inline int Set<TYPE>::size() const {
     return nb;
+}
+
+template<typename TYPE>
+inline int Set<TYPE>::sizeMax() const {
+    return nbMax;
 }
 
 template<typename TYPE>

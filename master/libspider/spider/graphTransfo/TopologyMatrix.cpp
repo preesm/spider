@@ -285,7 +285,7 @@ void topologyBasedBRV(PiSDFVertexSet &vertexSet, long nDoneVertices, long nVerti
     StackMonitor::free(TRANSFO_STACK, topo_matrix);
     StackMonitor::free(TRANSFO_STACK, vertexIxs);
     StackMonitor::free(TRANSFO_STACK, smallBrv);
-    while (edgeSet.getN() > 0) {
+    while (edgeSet.size() > 0) {
         edgeSet.del(edgeSet[0]);
     }
 }

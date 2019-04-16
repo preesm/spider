@@ -52,7 +52,7 @@
 void SRDAGLessScheduler::initiliazeVertexScheduleIR(PiSDFVertex *const vertex, std::int32_t rv) {
     auto vertexIx = getVertexIx(vertex);
     vertex->createScheduleJob(rv);
-    rhoValueArray_[vertexIx] = 1;
+//    rhoValueArray_[vertexIx] = 1;
     instanceAvlCountArray_[vertexIx] = rv;
 }
 
@@ -143,7 +143,7 @@ SRDAGLessScheduler::SRDAGLessScheduler(PiSDFGraph *graph, PiSDFSchedule *schedul
     replaceInputIfWithBroadcast(graph);
 
     /** 1. Creates the array of ScheduleVertex **/
-    rhoValueArray_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, std::int32_t);
+//    rhoValueArray_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, std::int32_t);
     instanceAvlCountArray_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, std::int32_t);
     instanceSchCountArray_ = CREATE_MUL_NA(TRANSFO_STACK, nVertices_, std::int32_t);
     memset(instanceSchCountArray_, 0, nVertices_ * sizeof(std::int32_t));
@@ -159,7 +159,7 @@ SRDAGLessScheduler::~SRDAGLessScheduler() {
         removeBroadcast(v);
     }
     schedule_ = nullptr;
-    StackMonitor::free(TRANSFO_STACK, rhoValueArray_);
+//    StackMonitor::free(TRANSFO_STACK, rhoValueArray_);
     StackMonitor::free(TRANSFO_STACK, instanceAvlCountArray_);
     StackMonitor::free(TRANSFO_STACK, instanceSchCountArray_);
 }
@@ -490,7 +490,6 @@ void SRDAGLessScheduler::mapVertexRelaxed(PiSDFVertex *vertex) {
     schedule_->addJob(job, instance);
 
 }
-
 
 bool SRDAGLessScheduler::isSchedulableRelaxed(PiSDFVertex *const vertex) {
     auto vertexIx = getVertexIx(vertex);

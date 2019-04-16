@@ -47,9 +47,9 @@ static inline std::int32_t getVertexIx(PiSDFVertex *const vertex) {
 
 static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet, PiSDFVertex **keyVertexSet) {
     int currentSize = 0;
-    int n = vertexSet.getN() - 1;
+    int n = vertexSet.size() - 1;
     do {
-        currentSize = vertexSet.getN();
+        currentSize = vertexSet.size();
         auto *current = vertexSet.getArray()[n];
         // 0. Do the output edges
         for (int i = 0; i < current->getNOutEdge(); ++i) {
@@ -79,7 +79,7 @@ static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet, PiSDFVer
             }
         }
         n++;
-    } while ((vertexSet.getN() != currentSize) || (n != vertexSet.getN()));
+    } while ((vertexSet.size() != currentSize) || (n != vertexSet.size()));
 }
 
 void computeBRV(PiSDFGraph *const graph, int *brv) {
@@ -103,11 +103,11 @@ void computeBRV(PiSDFGraph *const graph, int *brv) {
             // 1. Fill up the vertexSet
             fillVertexSet(vertexSet, nEdges, keyVertexSet);
             // 1.1 Update the offset in the vertexSet
-            long nVertices = vertexSet.getN() - nDoneVertices;
+            long nVertices = vertexSet.size() - nDoneVertices;
             // 2. Compute the BRV of current set
             lcmBasedBRV(vertexSet, nDoneVertices, nVertices, nEdges, brv);
             // 3. Update the number of treated vertices
-            nDoneVertices = vertexSet.getN();
+            nDoneVertices = vertexSet.size();
         }
         vertex->setBRVValue(brv[i]);
     }
@@ -119,7 +119,7 @@ void computeBRV(PiSDFGraph *const graph, int *brv) {
         auto *vertex = graph->getOutputIf(i);
         vertex->setBRVValue(1);
     }
-    while (vertexSet.getN() > 0) {
+    while (vertexSet.size() > 0) {
         vertexSet.del(vertexSet[0]);
     }
     StackMonitor::free(TRANSFO_STACK, keyVertexSet);

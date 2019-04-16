@@ -50,7 +50,7 @@
  * @param offset  Offset of the current connected components in the global set of vertices
  */
 static void fillReps(PiSDFEdgeSet &edgeSet, Rational *reps, long offset) {
-    for (int i = 0; i < edgeSet.getN(); ++i) {
+    for (int i = 0; i < edgeSet.size(); ++i) {
         auto *edge = edgeSet.getArray()[i];
         auto *source = edge->getSrc();
         auto *sink = edge->getSnk();
@@ -134,7 +134,7 @@ static void computeBRVValues(Rational *reps, PiSDFVertex *const *vertices, std::
  * @param brv      BRV values;
  */
 static void checkConsistency(PiSDFEdgeSet &edgeSet, const int *brv) {
-    for (int i = 0; i < edgeSet.getN(); ++i) {
+    for (int i = 0; i < edgeSet.size(); ++i) {
         auto *edge = edgeSet.getArray()[i];
         auto *source = edge->getSrc();
         auto *sink = edge->getSnk();
@@ -186,7 +186,7 @@ lcmBasedBRV(PiSDFVertexSet &vertexSet, long nDoneVertices, long nVertices, long 
 
     // 5. Free the memory
     StackMonitor::free(TRANSFO_STACK, reps);
-    while (edgeSet.getN() > 0) {
+    while (edgeSet.size() > 0) {
         edgeSet.del(edgeSet[0]);
     }
 }

@@ -111,16 +111,6 @@ protected:
     void mapVertexRelaxed(PiSDFVertex *vertex);
 
     Time computeMinimumStartTimeRelaxed(PiSDFVertex *vertex);
-
-    void iterativeGetMinTime(PiSDFVertex *vertex,
-                             PiSDFVertex *srcVertex,
-                             PiSDFEdge *edge,
-                             Time &minTime,
-                             std::int32_t currentStart,
-                             std::int32_t currentLast,
-                             std::vector<std::int32_t> &firstDeps,
-                             std::vector<std::int32_t> &lastDeps,
-                             size_t level);
 };
 
 inline std::int32_t SRDAGLessScheduler::getVertexIx(PiSDFVertex *const vertex) {

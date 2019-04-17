@@ -116,7 +116,7 @@ private:
 
     SpiderPEType spiderPEType_ = SpiderPEType::LRT_PE;
     SpiderHWType spiderHWType_ = SpiderHWType::PHYS_PE;
-    std::uint32_t spiderID_ = 0;
+    std::uint32_t spiderID_ = 0; /*! Spider id (used internally by spider) */
     bool enabled_ = true;
 };
 

@@ -41,7 +41,24 @@
 #include "spiderArchiAPI.h"
 #include "graphs/Archi/ArchiPE.h"
 #include "graphs/Archi/Archi.h"
+#include "spider.h"
 
+
+/* === General Archi API === */
+
+Archi *Spider::createArchi(SpiderArchiConfig &config) {
+    auto *archi = CREATE_NA(ARCHI_STACK, Archi)(
+            /* == nPE == */         config.nPE,
+            /* == nPEType == */     config.nPEType,
+            /* == nMemoryUnit == */ config.nMemoryUnit);
+    Spider::setArchi(archi);
+    return archi;
+}
+
+
+void Spider::setSpiderGRTVirtualID(Archi *archi, std::uint32_t id) {
+    archi->setSpiderGRTID(id);
+}
 
 /* === PE related API === */
 
@@ -106,3 +123,6 @@ void Spider::setMemoryUnitReceiveRoutine(MemoryUnit *memoryUnit, receiveRoutine 
 void Spider::setMemoryUnitSendRoutine(MemoryUnit *memoryUnit, sendRoutine routine) {
     memoryUnit->setSendRoutine(routine);
 }
+
+
+

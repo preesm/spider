@@ -40,6 +40,7 @@
 
 #include "spiderArchiAPI.h"
 #include "graphs/Archi/ArchiPE.h"
+#include "graphs/Archi/Archi.h"
 
 
 /* === PE related API === */
@@ -50,7 +51,11 @@ PE *Spider::createPE(std::uint32_t hwType,
                      std::string name,
                      SpiderPEType spiderPEType,
                      SpiderHWType spiderHWType) {
-    return new PE(hwType, hwID, virtID, std::move(name), spiderPEType, spiderHWType);
+    auto *pe = CREATE_NA(ARCHI_STACK, PE)(hwType, hwID, virtID, std::move(name), spiderPEType, spiderHWType);
+    auto *archi = Spider::getArchi();
+    archi->addPE(pe);
+    archi->activatePE(pe);
+    return pe;
 }
 
 void Spider::setPESpiderPETYpe(PE *pe, SpiderPEType type) {
@@ -80,7 +85,10 @@ void Spider::enablePE(PE *pe) {
 /* === MemoryUnit related API === */
 
 MemoryUnit *Spider::createMemoryUnit(char *base, std::uint64_t size) {
-    return new MemoryUnit(base, size);
+    auto *memoryUnit = CREATE_NA(ARCHI_STACK, MemoryUnit)(base, size);
+    auto *archi = Spider::getArchi();
+    archi->addMemoryUnit(memoryUnit);
+    return memoryUnit;
 }
 
 void Spider::setMemoryUnitAllocateRoutine(MemoryUnit *memoryUnit, allocateRoutine routine) {

@@ -4,8 +4,9 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
+ * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
+ * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -36,61 +37,46 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef PLATFORM_K2_ARM_H
-#define PLATFORM_K2_ARM_H
+#ifndef ARCHI_H
+#define ARCHI_H
 
 #include <platform.h>
-#include <tools/Stack.h>
-#include <graphs/Archi/ArchiOld.h>
-#include <graphs/Archi/SharedMemArchi.h>
-#include <lrt.h>
 
-typedef enum {
-    USE_MSMC = 1,
-    USE_DDR = 0
-} SharedMemMode;
+using MappingTimeFct = Time (*)(int, int);
 
-class PlatformK2Arm : public Platform {
+class ArchiOld {
+protected:
+    ArchiOld() = default;
+
+    virtual ~ArchiOld() = default;
+
 public:
-    /** File Handling */
-    virtual int fopen(const char *name);
 
-    virtual void fprintf(int id, const char *fmt, ...);
+    virtual int getNPE() const = 0;
 
-    virtual void fclose(int id);
+    virtual int getNActivatedPE() const = 0;
 
-    /** Shared Memory Handling */
-    virtual void *virt_to_phy(void *address);
+    virtual const char *getPEName(int ix) const = 0;
 
-    virtual int getMinAllocSize();
+    virtual int getNPETypes() const = 0;
 
-    virtual int getCacheLineSize();
+    virtual int getPEType(int ix) const = 0;
 
-    /** Time Handling */
-    virtual void rstTime();
+    virtual void deactivatePE(int pe) = 0;
 
-    virtual void rstTime(ClearTimeMsg *msg);
+    virtual void activatePE(int pe) = 0;
 
-    virtual Time getTime();
+    virtual bool isActivated(int pe) const = 0;
 
-    /** Platform Core Handling **/
-    virtual void idleLrt(int i);
+    virtual Time getTimeSend(int src, int dest, int size) const = 0;
 
-    virtual void wakeLrt(int i);
+    virtual Time getTimeRecv(int src, int dest, int size) const = 0;
 
-    virtual void idle();
+    virtual int getSpiderPeIx() const = 0;
 
-    SharedMemArchi *getArchi();
+    virtual MappingTimeFct getMappingTimeFct() const = 0;
 
-    PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMemSize, Stack *stack, lrtFct *fcts, int nLrtFcts);
-
-    virtual ~PlatformK2Arm();
-
-private:
-    Stack *stack_;
-    SharedMemArchi *archi_;
-
-    static Time mappingTime(int nActors);
+    virtual int getNPEforType(int type) = 0;
 };
 
-#endif/*PLATFORM_K2_ARM_H*/
+#endif/*ARCHI_H*/

@@ -104,8 +104,6 @@ private:
     sendRoutine sendRoutine_;
 };
 
-std::uint32_t MemoryUnit::globalID = 0;
-
 
 inline std::uint64_t defaultAllocateRoutine(std::uint64_t size, std::uint64_t used, std::uint64_t maxSize) {
     if (used + size > maxSize) {
@@ -134,18 +132,6 @@ inline void defaultSendRoutine(MemoryUnit * /* localMemoryUnit */, std::uint64_t
 }
 
 /* === MemoryUnit === */
-
-MemoryUnit::MemoryUnit(char *base, std::uint64_t size) : base_{base},
-                                                         size_{size} {
-    if (!base) {
-        throwSpiderException("Base address of a MemoryUnit can not be nullptr.");
-    }
-    id_ = MemoryUnit::globalID++;
-    allocateRoutine_ = defaultAllocateRoutine;
-    deallocateRoutine_ = defaultDeallocateRoutine;
-    receiveRoutine_ = defaultReceiveRoutine;
-    sendRoutine_ = defaultSendRoutine;
-}
 
 char *MemoryUnit::virtToPhy(std::uint64_t virt) const {
     return base_ + virt;

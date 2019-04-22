@@ -66,6 +66,7 @@
 #include <zconf.h>
 #include <scheduling/MemAlloc/DummyPiSDFMemAlloc.h>
 #include <scheduling/Scheduler/GreedyScheduler.h>
+#include <graphs/Archi/Archi.h>
 
 #include "platformPThread.h"
 
@@ -81,6 +82,7 @@
 #define CHIP_FREQ (1)
 #endif
 
+static ArchiOld *archiOld_ = nullptr;
 static Archi *archi_ = nullptr;
 static PiSDFGraph *pisdf_ = nullptr;
 static SRDAGGraph *srdag_ = nullptr;
@@ -198,7 +200,7 @@ void Spider::iterate() {
         StackMonitor::freeAll(SRDAG_STACK);
         memAlloc_->reset();
         srdag_ = new SRDAGGraph();
-        jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
+        jit_ms(pisdf_, archiOld_, srdag_, memAlloc_, scheduler_);
     }
     /** Wait for LRTs to finish **/
     Platform::get()->rstJobIxRecv();
@@ -311,8 +313,8 @@ bool Spider::getTraceEnabled() {
     return traceEnabled_;
 }
 
-void Spider::setArchi(Archi *archi) {
-    archi_ = archi;
+void Spider::setArchi(ArchiOld *archi) {
+    archiOld_ = archi;
 }
 
 void Spider::setGraph(PiSDFGraph *graph) {
@@ -330,6 +332,10 @@ void Spider::setGraph(PiSDFGraph *graph) {
 
 PiSDFGraph *Spider::getGraph() {
     return pisdf_;
+}
+
+ArchiOld *Spider::getArchiOld() {
+    return archiOld_;
 }
 
 Archi *Spider::getArchi() {
@@ -385,7 +391,7 @@ void Spider::printActorsStat(ExecutionStat *stat) {
     Platform::get()->fprintf(stdout, "\t%15s:\n", "Actors");
     for (int j = 0; j < stat->nPiSDFActor; j++) {
         Platform::get()->fprintf(stdout, "\t%15s:", stat->actors[j]->getName());
-        for (int k = 0; k < archi_->getNPETypes(); k++) {
+        for (int k = 0; k < archiOld_->getNPETypes(); k++) {
             if (stat->actorIterations[j][k]) {
                 Platform::get()->fprintf(stdout, "\t%lld (x%lld)",
                                          stat->actorTimes[j][k] / stat->actorIterations[j][k],
@@ -434,7 +440,7 @@ static char *regenerateColor(int refInd) {
     return color;
 }
 
-static void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Archi *archi, SRDAGVertex *vertex,
+static void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, ArchiOld *archi, SRDAGVertex *vertex,
                                    Time start, Time end, int lrtIx, float latexScaling) {
     static char name[200];
     static int i = 0;
@@ -505,7 +511,7 @@ static void writeGanttForVertex(TraceMessage *message, FILE *ganttFile, FILE *la
     printGantt_SRDAGVertex(
             ganttFile,
             latexFile,
-            archi_,
+            archiOld_,
             vertex,
             startTimeScaled - baseTime,
             endTimeScaled - baseTime,
@@ -520,7 +526,7 @@ static void writeGanttForVertex(TraceMessage *message, FILE *ganttFile, FILE *la
     switch (vertex->getType()) {
         case SRDAG_NORMAL: {
             int i;
-            int lrtType = archi_->getPEType(message->getLRTID());
+            int lrtType = archiOld_->getPEType(message->getLRTID());
             auto *pisdfVertexRef = vertex->getReference();
             // Update execution time of the PiSDF actor
             auto timingOnPe = std::to_string(execTime);
@@ -583,7 +589,7 @@ static void writeGanttForSpiderTasks(TraceMessage *message, FILE *ganttFile, FIL
     Platform::get()->fprintf(ganttFile, "\t\tend=\"%" PRIu64"\"\n", endTimeScaled);
     Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n",
                              TimeMonitor::getTaskName((TraceSpiderType) message->getSpiderTask()));
-    Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi_->getPEName(message->getLRTID()));
+    Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archiOld_->getPEName(message->getLRTID()));
     Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", regenerateColor(i++));
     Platform::get()->fprintf(ganttFile, "\t\t>Step_%d.</event>\n", message->getSpiderTask());
 
@@ -608,7 +614,7 @@ static void writeGanttForSpiderTasks(TraceMessage *message, FILE *ganttFile, FIL
     auto latexScaling = 1000.f;
     Platform::get()->fprintf(latexFile, "%f,", startTimeScaled / latexScaling); /* Start */
     Platform::get()->fprintf(latexFile, "%f,", endTimeScaled / latexScaling); /* Duration */
-    Platform::get()->fprintf(latexFile, "%d,", archi_->getSpiderPeIx()); /* Core index */
+    Platform::get()->fprintf(latexFile, "%d,", archiOld_->getSpiderPeIx()); /* Core index */
     Platform::get()->fprintf(latexFile, "colorSched\n", 15); /* Color */
 }
 
@@ -794,8 +800,8 @@ void Spider::isExecutableOnPE(PiSDFVertex *vertex, int pe) {
 }
 
 void Spider::isExecutableOnPEType(PiSDFVertex *vertex, int peType) {
-    for (int pe = 0; pe < archi_->getNPE(); pe++) {
-        if (archi_->getPEType(pe) == peType) vertex->isExecutableOnPE(pe);
+    for (int pe = 0; pe < archiOld_->getNPE(); pe++) {
+        if (archiOld_->getPEType(pe) == peType) vertex->isExecutableOnPE(pe);
     }
 }
 

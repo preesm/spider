@@ -110,7 +110,7 @@ bool GreedyScheduler::isSchedulable(SRDAGVertex *vertex) {
     return canRun;
 }
 
-void GreedyScheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi) {
+void GreedyScheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, ArchiOld *archi) {
     srdag_ = graph;
     schedule_ = schedule;
     archi_ = archi;

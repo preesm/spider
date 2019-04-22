@@ -42,6 +42,8 @@
 #include <vector>
 #include <cstdint>
 
+class ArchiOld;
+
 class Archi;
 
 class PiSDFVertex;
@@ -207,7 +209,7 @@ namespace Spider {
 
     bool getTraceEnabled();
 
-    void setArchi(Archi *archi);
+    void setArchi(ArchiOld *archi);
 
     void setGraph(PiSDFGraph *pisdf);
 
@@ -225,6 +227,8 @@ namespace Spider {
     void printActorsStat(ExecutionStat *stat);
 
     PiSDFGraph *getGraph();
+
+    ArchiOld *getArchiOld();
 
     Archi *getArchi();
 

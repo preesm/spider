@@ -81,7 +81,7 @@ void Scheduler::scheduleOnlyConfig(
         SRDAGGraph *graph,
         MemAlloc *memAlloc,
         SRDAGSchedule *schedule,
-        Archi *archi) {
+        ArchiOld *archi) {
     srdag_ = graph;
     schedule_ = schedule;
     archi_ = archi;
@@ -125,7 +125,7 @@ void Scheduler::scheduleOnlyConfig(
 }
 
 
-void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi) {
+void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, ArchiOld *archi) {
     srdag_ = graph;
     schedule_ = schedule;
     archi_ = archi;

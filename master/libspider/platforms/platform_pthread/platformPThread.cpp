@@ -43,7 +43,7 @@
 #include <cstdio>
 
 #include <platformPThread.h>
-#include <graphs/Archi/SharedMemArchi.h>
+#include <graphs/Archi/Archi.h>
 #include <tools/Rational.h>
 #include <lrt.h>
 #include <Logger.h>
@@ -77,7 +77,7 @@ static std::chrono::time_point<std::chrono::steady_clock> start_steady;
 
 static auto origin_steady = std::chrono::steady_clock::now();
 
-static SharedMemArchi *archi_;
+//static Archi *archi_;
 
 pthread_barrier_t pthreadLRTBarrier;
 
@@ -350,37 +350,37 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
 
     /** Create Archi */
-    int mainPE = 0;
-    int mainPEType = 0;
-    archi_ = CREATE(ARCHI_STACK, SharedMemArchi)(
-            /* Nb PE */     nLrt_,
-            /* Nb PE Type*/ config.platform.nPeType,
-            /* Spider Pe */ mainPE,
-            /*MappingTime*/ mappingTime);
+//    int mainPE = 0;
+//    int mainPEType = 0;
+//    archi_ = CREATE(ARCHI_STACK, SharedMemArchi)(
+//            /* Nb PE */     nLrt_,
+//            /* Nb PE Type*/ config.platform.nPeType,
+//            /* Spider Pe */ mainPE,
+//            /*MappingTime*/ mappingTime);
+//
+//    archi_->setPEType(mainPE, mainPEType);
+//    archi_->activatePE(mainPE);
+//
+//    char name[40];
+//    sprintf(name, "TID %ld (Spider)", lrtThreadsArray[0]);
+//    archi_->setName(mainPE, name);
+//    offsetPe = 0;
+//    for (int pe = 0; pe < config.platform.nPeType; ++pe) {
+//        archi_->setPETypeRecvSpeed(pe, 1, 10);
+//        archi_->setPETypeSendSpeed(pe, 1, 10);
+//        for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
+//            if (pe == mainPEType && (i + offsetPe) == mainPE) {
+//                continue;
+//            }
+//            sprintf(name, "TID %ld (LRT %d)", lrtThreadsArray[i + offsetPe], i + offsetPe);
+//            archi_->setPEType(i + offsetPe, pe);
+//            archi_->setName(i + offsetPe, name);
+//            archi_->activatePE(i + offsetPe);
+//        }
+//        offsetPe += config.platform.pesPerPeType[pe];
+//    }
 
-    archi_->setPEType(mainPE, mainPEType);
-    archi_->activatePE(mainPE);
-
-    char name[40];
-    sprintf(name, "TID %ld (Spider)", lrtThreadsArray[0]);
-    archi_->setName(mainPE, name);
-    offsetPe = 0;
-    for (int pe = 0; pe < config.platform.nPeType; ++pe) {
-        archi_->setPETypeRecvSpeed(pe, 1, 10);
-        archi_->setPETypeSendSpeed(pe, 1, 10);
-        for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
-            if (pe == mainPEType && (i + offsetPe) == mainPE) {
-                continue;
-            }
-            sprintf(name, "TID %ld (LRT %d)", lrtThreadsArray[i + offsetPe], i + offsetPe);
-            archi_->setPEType(i + offsetPe, pe);
-            archi_->setName(i + offsetPe, name);
-            archi_->activatePE(i + offsetPe);
-        }
-        offsetPe += config.platform.pesPerPeType[pe];
-    }
-
-    Spider::setArchi(archi_);
+//    Spider::setArchi(archi_);
 
     this->rstTime();
 }
@@ -418,9 +418,9 @@ PlatformPThread::~PlatformPThread() {
     StackMonitor::free(ARCHI_STACK, spiderCom_);
 
 
-    archi_->~SharedMemArchi();
+//    archi_->~SharedMemArchi();
 
-    StackMonitor::free(ARCHI_STACK, archi_);
+//    StackMonitor::free(ARCHI_STACK, archi_);
     StackMonitor::free(ARCHI_STACK, thread_lrt_);
     StackMonitor::free(ARCHI_STACK, lrtInfoArray_);
 
@@ -518,7 +518,8 @@ void PlatformPThread::rstJobIxRecv() {
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     NotificationMessage finishedMessage;
     /** Wait for LRTs to finish their jobs **/
-    for (int i = 0; i < archi_->getNActivatedPE() - 1; ++i) {
+    auto *archi = Spider::getArchi();
+    for (std::uint32_t i = 0; i < archi->getNActivatedPE() - 1; ++i) {
         while (true) {
             spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, true);
             if (finishedMessage.getType() == LRT_NOTIFICATION &&

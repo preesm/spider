@@ -209,7 +209,7 @@ namespace Spider {
 
     bool getTraceEnabled();
 
-    void setArchi(ArchiOld *archi);
+    void setArchi(Archi *archi);
 
     void setGraph(PiSDFGraph *pisdf);
 

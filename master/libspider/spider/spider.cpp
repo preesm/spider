@@ -120,6 +120,7 @@ static bool isGraphStatic(PiSDFGraph *const graph) {
     return isStatic;
 }
 
+
 void Spider::init(SpiderConfig &cfg) {
     Logger::initializeLogger();
 
@@ -273,6 +274,12 @@ void Spider::clean() {
         schedule_->~SRDAGSchedule();
         StackMonitor::free(TRANSFO_STACK, schedule_);
     }
+
+    if (archi_) {
+        archi_->~Archi();
+        StackMonitor::free(ARCHI_STACK, archi_);
+    }
+
     delete srdag_;
     delete memAlloc_;
     delete scheduler_;
@@ -312,8 +319,8 @@ bool Spider::getTraceEnabled() {
     return traceEnabled_;
 }
 
-void Spider::setArchi(ArchiOld *archi) {
-    archiOld_ = archi;
+void Spider::setArchi(Archi *archi) {
+    archi_ = archi;
 }
 
 void Spider::setGraph(PiSDFGraph *graph) {

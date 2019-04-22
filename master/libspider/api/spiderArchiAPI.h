@@ -45,6 +45,8 @@
 
 /* === Forward declarations === */
 
+class Archi;
+
 class PE;
 
 class MemoryUnit;
@@ -62,6 +64,14 @@ enum class SpiderHWType {
     VIRT_PE,  /*! PE is instantiated in Spider but fully managed by an LRT (SpiderPEType::PE_ONLY) */
 };
 
+/* === Structures === */
+
+typedef struct SpiderArchiConfig {
+    std::uint32_t nPE;
+    std::uint32_t nPEType;
+    std::uint32_t nMemoryUnit;
+} SpiderArchiConfig;
+
 
 /* === Routines definitions === */
 
@@ -76,6 +86,13 @@ using sendRoutine = void (*)(MemoryUnit *, std::uint64_t, MemoryUnit *, std::uin
 /* === API methods === */
 
 namespace Spider {
+
+    /* === General Archi API === */
+
+    Archi *createArchi(SpiderArchiConfig &config);
+
+    void setSpiderGRTVirtualID(Archi *archi, std::uint32_t id);
+
     /* === PE related API === */
 
     PE *createPE(std::uint32_t hwType,

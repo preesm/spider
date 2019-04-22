@@ -43,6 +43,8 @@
 #include "ArchiMemUnit.h"
 #include "ArchiPE.h"
 
+using ScheduleTimeRoutine = Time (*)(int, int);
+
 class Archi {
 public:
 
@@ -52,47 +54,137 @@ public:
 
     /* === Methods === */
 
+    /**
+     * @brief Add a PE to the architecture (does not change @refitem nPE_).
+     * @param pe Pointer to the PE to add.
+     */
     inline void addPE(PE *pe);
 
+    /**
+     * @brief Add a MemoryUnit to the architecture (does not change @refitem nMemoryUnit_).
+     * @param memoryUnit Pointer to the MemoryUnit to add.
+     */
     inline void addMemoryUnit(MemoryUnit *memoryUnit);
 
+    /**
+     * @brief Activate a PE.
+     * @param pe Pointer to the PE to be activate.
+     */
     inline void activatePE(PE *pe) const;
 
+    /**
+     * @brief Deactivate a PE.
+     * @param pe Pointer to the PE to be deactivated.
+     */
     inline void deactivatePE(PE *pe) const;
 
     /* === Setters === */
 
+    /**
+     * @brief Set the ID of the GRT PE.
+     * @remark The method convert the virtual id to spider id for internal use.
+     * @param id Virtual ID of the GRT PE (i.e S-LAM user ID)
+     */
+    inline void setSpiderGRTID(std::uint32_t id);
+
     /* === Getters === */
 
+    /**
+     * @brief Get the total number of PE (activated + deactivated).
+     * @return total number of PE
+     */
     inline std::uint32_t getNPE() const;
 
+    /**
+     * @brief Get the total number of LRT (not necessarly equals to @refitem getNPE()).
+     * @return number of LRT
+     */
     inline std::uint32_t getNLRT() const;
 
+    /**
+     * @brief Get the number of memory unit of the architecture.
+     * @return
+     */
     inline std::uint32_t getNMemoryUnit() const;
 
+    /**
+     * @brief Get the number of different PE type (hardware types).
+     * @return number of PE types.
+     */
     inline std::uint32_t getNPEType() const;
 
+    /**
+     * @brief Get the number of currently activated PEs (inferior or equal to @refitem nPE_).
+     * @return number of activated PEs.
+     */
     inline std::uint32_t getNActivatedPE() const;
 
+    /**
+     * @brief Retrieve a PE from its Spider ID (fastest method).
+     * @remark No boundaries check is perform for the id.
+     * @param id Spider id of the PE to retrieve.
+     * @return PE corresponding to the spider id.
+     */
     inline PE *getPEFromSpiderID(std::uint32_t id) const;
 
+    /**
+     * @brief Retrieve a PE from its virtual ID.
+     * @param id  Virtual ID of the PE (i.e S-LAM user id).
+     * @return PE corresponding to the virtual id
+     * @throws out of bound exception if virtual id does not exist
+     */
     inline PE *getPEFromVirtualID(std::uint32_t id) const;
 
+    /**
+     * @brief Retrieve a PE from its hardware ID.
+     * @remark This method may not be reliable in heterogeneous architecture with multiple hardware core 0 for instance.
+     * @param id  Hardware ID of the PE (i.e S-LAM user id).
+     * @return PE corresponding to the hardware id
+     * @throws out of bound exception if hardware id does not exist
+     */
     inline PE *getPEFromHardwareID(std::uint32_t id) const;
 
+    /**
+     * @brief Retrieve first PE matching with given name.
+     * @param name  Name of the PE to find.
+     * @return first PE with name matching given name, nullptr else.
+     */
     inline PE *getPEFromName(const std::string &name) const;
 
+    /**
+     * @brief Retrieve PE array containing all PEs.
+     * @remark PE array is indexed by spider id, not virtual id.
+     * @return PE array.
+     */
     inline PE **getPEArray() const;
 
+    /**
+     * @brief Retrieve a MemoryUnit from its id.
+     * @remark MemoryUnit ids are generated in order of creation.
+     * @param id ID of the memory unit to retrieve.
+     * @return MemoryUnit of corresponding id.
+     */
     inline MemoryUnit *getMemoryUnit(std::uint32_t id) const;
 
+    /**
+     * @brief Get spider GRT spider id.
+     * @remark The id returned by this method is NOT the same as the one passed in @refitem setSpiderGRTID.
+     *         It corresponds to the translated virtual -> spider id.
+     * @return spider id of the GRT.
+     */
+    inline std::uint32_t getSpiderGRTID() const;
+
 private:
+
+    /* === Members === */
 
     std::uint32_t nPE_ = 0;
     std::uint32_t nLRT_ = 0;
     std::uint32_t nMemUnit_ = 0;
     std::uint32_t nPEType_ = 0;
     mutable std::uint32_t nActivatedPE_ = 0;
+    ScheduleTimeRoutine scheduleTimeRoutine_;
+    std::uint32_t spiderGRTID_ = 0;
 
     /* === Maps between ID === */
 
@@ -138,6 +230,10 @@ void Archi::activatePE(PE *const pe) const {
 void Archi::deactivatePE(PE *const pe) const {
     pe->disable();
     nActivatedPE_--;
+}
+
+void Archi::setSpiderGRTID(std::uint32_t id) {
+    spiderGRTID_ = virt2SpiderMap_[id];
 }
 
 std::uint32_t Archi::getNPE() const {
@@ -191,6 +287,10 @@ PE **Archi::getPEArray() const {
 
 MemoryUnit *Archi::getMemoryUnit(std::uint32_t id) const {
     return memoryUnitArray_[id];
+}
+
+std::uint32_t Archi::getSpiderGRTID() const {
+    return spiderGRTID_;
 }
 
 #endif //SPIDER_ARCHI_H

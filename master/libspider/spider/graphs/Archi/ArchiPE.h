@@ -42,22 +42,11 @@
 
 #include <cstdint>
 #include <string>
-
-enum class SpiderPEType {
-    LRT_ONLY, /*! PE is used as an LRT and does not perform any computation */
-    PE_ONLY,  /*! PE is used for computation only and does not perform any job management */
-    LRT_PE,   /*! PE is used as an LRT and can be used for computation */
-};
-
-enum class SpiderHWType {
-    PHYS_PE,  /*! PE is instantiated in Spider and run on a core (SpiderPEType::LRT_*) */
-    VIRT_PE,  /*! PE is instantiated in Spider but fully managed by an LRT (SpiderPEType::PE_ONLY) */
-};
-
+#include "ArchiMemUnit.h"
+#include "spiderArchiAPI.h"
 
 class PE {
 public:
-
     PE(std::uint32_t hwType,
        std::uint32_t hwID,
        std::uint32_t virtID,
@@ -67,7 +56,7 @@ public:
 
     ~PE() = default;
 
-    /* Setter */
+    /* === Setters === */
 
     inline void setHardwareType(std::uint32_t type);
 
@@ -75,7 +64,9 @@ public:
 
     inline void setVirtualID(std::uint32_t id);
 
-    inline void setName(std::string &name);
+    inline void setName(std::string name);
+
+    inline void setMemoryUnit(MemoryUnit *memoryUnit);
 
     inline void setSpiderPEType(SpiderPEType type);
 
@@ -85,7 +76,7 @@ public:
 
     inline void enable();
 
-    /* Getters */
+    /* === Getters === */
 
     inline std::uint32_t getHardwareType() const;
 
@@ -94,6 +85,8 @@ public:
     inline std::uint32_t getVirtualID() const;
 
     inline std::string getName() const;
+
+    inline MemoryUnit *getMemoryUnit() const;
 
     inline SpiderPEType getSpiderPEType() const;
 
@@ -105,14 +98,16 @@ public:
 
 private:
     static std::uint32_t globalID;
-    /* Core properties */
+
+    /* === Core properties === */
 
     std::uint32_t hwType_ = 0;  /*! S-LAM user hardware type */
     std::uint32_t hwID_ = 0;    /*! Hardware on which PE runs (core id) */
     std::uint32_t virtID_ = 0;  /*! S-LAM user id */
     std::string name_;          /*! S-LAM user name of the PE */
+    MemoryUnit *memoryUnit_;    /*! Memory unit attached to this PE */
 
-    /* Spider properties */
+    /* === Spider properties === */
 
     SpiderPEType spiderPEType_ = SpiderPEType::LRT_PE;
     SpiderHWType spiderHWType_ = SpiderHWType::PHYS_PE;
@@ -150,8 +145,12 @@ void PE::setVirtualID(std::uint32_t id) {
     virtID_ = id;
 }
 
-void PE::setName(std::string &name) {
-    name_ = std::string(name);
+void PE::setName(std::string name) {
+    name_ = std::move(name);
+}
+
+void PE::setMemoryUnit(MemoryUnit *memoryUnit) {
+    memoryUnit_ = memoryUnit;
 }
 
 void PE::setSpiderPEType(SpiderPEType type) {
@@ -186,6 +185,10 @@ std::string PE::getName() const {
     return name_;
 }
 
+MemoryUnit *PE::getMemoryUnit() const {
+    return memoryUnit_;
+}
+
 SpiderPEType PE::getSpiderPEType() const {
     return spiderPEType_;
 }
@@ -201,5 +204,6 @@ std::uint32_t PE::getSpiderID() const {
 bool PE::isEnabled() const {
     return enabled_;
 }
+
 
 #endif //SPIDER_ARCHIPE_H

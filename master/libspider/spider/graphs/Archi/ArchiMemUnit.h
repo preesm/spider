@@ -42,7 +42,69 @@
 
 #include <cstdint>
 #include <cinttypes>
-#include <Message.h>
+#include "Message.h"
+#include "spiderArchiAPI.h"
+
+class MemoryUnit {
+public:
+
+    MemoryUnit(char *base, std::uint64_t size);
+
+    ~MemoryUnit() = default;
+
+    /* === Methods === */
+
+    inline char *virtToPhy(std::uint64_t virt) const;
+
+    inline std::uint64_t allocateMemory(std::uint64_t size);
+
+    inline void deallocateMemory() const;
+
+    inline char *receiveMemory(std::uint64_t localVirtAddr, MemoryUnit *distMemoryUnit, std::uint64_t distVirtAddr);
+
+    inline void sendMemory(std::uint64_t localVirtAddr, MemoryUnit *distMemoryUnit, std::uint64_t distVirtAddr);
+
+    inline void resetMemoryUsage();
+
+    /* === Setters === */
+
+    inline void setAllocateRoutine(allocateRoutine routine);
+
+    inline void setDeallocateRoutine(deallocateRoutine routine);
+
+    inline void setReceiveRoutine(receiveRoutine routine);
+
+    inline void setSendRoutine(sendRoutine routine);
+
+    /* === Getters === */
+
+    inline std::uint64_t size() const;
+
+    inline std::uint64_t used() const;
+
+    inline std::uint64_t available() const;
+
+    inline std::uint32_t getID() const;
+
+private:
+    static std::uint32_t globalID;
+
+    /* === Core properties === */
+
+    char *base_ = nullptr;
+    std::uint64_t size_ = 0;
+    std::uint64_t used_ = 0;
+    std::uint32_t id_ = 0;
+
+    /* === Routines === */
+
+    allocateRoutine allocateRoutine_;
+    deallocateRoutine deallocateRoutine_;
+    receiveRoutine receiveRoutine_;
+    sendRoutine sendRoutine_;
+};
+
+std::uint32_t MemoryUnit::globalID = 0;
 
 
 inline std::uint64_t defaultAllocateRoutine(std::uint64_t size, std::uint64_t used, std::uint64_t maxSize) {
@@ -61,73 +123,6 @@ inline void defaultDeallocateRoutine() {
     /* Do nothing */
 }
 
-class MemoryUnit {
-public:
-    /* Routines definitions */
-
-    using allocateRoutine = std::uint64_t (*)(std::uint64_t, std::uint64_t, std::uint64_t);
-    using deallocateRoutine = void (*)();
-    using receiveRoutine = char *(*)(MemoryUnit *, std::uint64_t, MemoryUnit *, std::uint64_t);
-    using sendRoutine = void (*)(MemoryUnit *, std::uint64_t, MemoryUnit *, std::uint64_t);
-
-    MemoryUnit(char *base, std::uint64_t size);
-
-    ~MemoryUnit() = default;
-
-    /* Methods */
-
-    inline char *virtToPhy(std::uint64_t virt) const;
-
-    inline std::uint64_t allocateMemory(std::uint64_t size);
-
-    inline void deallocateMemory() const;
-
-    inline char *receiveMemory(std::uint64_t localVirtAddr, MemoryUnit *distMemoryUnit, std::uint64_t distVirtAddr);
-
-    inline void sendMemory(std::uint64_t localVirtAddr, MemoryUnit *distMemoryUnit, std::uint64_t distVirtAddr);
-
-    inline void resetMemoryUsage();
-
-    /* Setters */
-
-    inline void setAllocateRoutine(allocateRoutine routine);
-
-    inline void setDeallocateRoutine(deallocateRoutine routine);
-
-    inline void setReceiveRoutine(receiveRoutine routine);
-
-    inline void setSendRoutine(sendRoutine routine);
-
-    /* Getters */
-
-    inline std::uint64_t size() const;
-
-    inline std::uint64_t used() const;
-
-    inline std::uint64_t available() const;
-
-    inline std::uint32_t getID() const;
-
-private:
-    static std::uint32_t globalID;
-
-    /* Core properties */
-
-    char *base_ = nullptr;
-    std::uint64_t size_ = 0;
-    std::uint64_t used_ = 0;
-    std::uint32_t id_ = 0;
-
-    /* Routines */
-
-    allocateRoutine allocateRoutine_ = defaultAllocateRoutine;
-    deallocateRoutine deallocateRoutine_ = defaultDeallocateRoutine;
-    receiveRoutine receiveRoutine_;
-    sendRoutine sendRoutine_;
-};
-
-std::uint32_t MemoryUnit::globalID = 0;
-
 inline char *defaultReceiveRoutine(MemoryUnit *localMemoryUnit, std::uint64_t localVirtAddr,
                                    MemoryUnit * /* distMemoryUnit */, std::uint64_t /* distVirtAddr */) {
     return localMemoryUnit->virtToPhy(localVirtAddr);
@@ -138,12 +133,16 @@ inline void defaultSendRoutine(MemoryUnit * /* localMemoryUnit */, std::uint64_t
     /* Do nothing */
 }
 
+/* === MemoryUnit === */
+
 MemoryUnit::MemoryUnit(char *base, std::uint64_t size) : base_{base},
                                                          size_{size} {
     if (!base) {
         throwSpiderException("Base address of a MemoryUnit can not be nullptr.");
     }
     id_ = MemoryUnit::globalID++;
+    allocateRoutine_ = defaultAllocateRoutine;
+    deallocateRoutine_ = defaultDeallocateRoutine;
     receiveRoutine_ = defaultReceiveRoutine;
     sendRoutine_ = defaultSendRoutine;
 }

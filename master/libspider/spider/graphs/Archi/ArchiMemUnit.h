@@ -41,17 +41,62 @@
 #define SPIDER_ARCHIMEMUNIT_H
 
 #include <cstdint>
+#include <cinttypes>
+#include <Message.h>
+
+
+inline std::uint64_t defaultAllocateRoutine(std::uint64_t size, std::uint64_t used, std::uint64_t maxSize) {
+    if (used + size > maxSize) {
+        throwSpiderException("Not Enough Memory. Want: %"
+                                     PRIu64
+                                     " -- Available: %"
+                                     PRIu64
+                                     "", size, maxSize - used);
+    }
+    used += size;
+    return used;
+}
+
+inline void defaultDeallocateRoutine() {
+    /* Do nothing */
+}
 
 class MemoryUnit {
 public:
+    /* Routines definitions */
+
+    using allocateRoutine = std::uint64_t (*)(std::uint64_t, std::uint64_t, std::uint64_t);
+    using deallocateRoutine = void (*)();
+    using receiveRoutine = char *(*)(MemoryUnit *, std::uint64_t, MemoryUnit *, std::uint64_t);
+    using sendRoutine = void (*)(MemoryUnit *, std::uint64_t, MemoryUnit *, std::uint64_t);
+
     MemoryUnit(char *base, std::uint64_t size);
 
     ~MemoryUnit() = default;
 
     /* Methods */
+
     inline char *virtToPhy(std::uint64_t virt) const;
 
+    inline std::uint64_t allocateMemory(std::uint64_t size);
+
+    inline void deallocateMemory() const;
+
+    inline char *receiveMemory(std::uint64_t localVirtAddr, MemoryUnit *distMemoryUnit, std::uint64_t distVirtAddr);
+
+    inline void sendMemory(std::uint64_t localVirtAddr, MemoryUnit *distMemoryUnit, std::uint64_t distVirtAddr);
+
+    inline void resetMemoryUsage();
+
     /* Setters */
+
+    inline void setAllocateRoutine(allocateRoutine routine);
+
+    inline void setDeallocateRoutine(deallocateRoutine routine);
+
+    inline void setReceiveRoutine(receiveRoutine routine);
+
+    inline void setSendRoutine(sendRoutine routine);
 
     /* Getters */
 
@@ -65,21 +110,84 @@ public:
 
 private:
     static std::uint32_t globalID;
+
+    /* Core properties */
+
     char *base_ = nullptr;
     std::uint64_t size_ = 0;
     std::uint64_t used_ = 0;
     std::uint32_t id_ = 0;
+
+    /* Routines */
+
+    allocateRoutine allocateRoutine_ = defaultAllocateRoutine;
+    deallocateRoutine deallocateRoutine_ = defaultDeallocateRoutine;
+    receiveRoutine receiveRoutine_;
+    sendRoutine sendRoutine_;
 };
 
 std::uint32_t MemoryUnit::globalID = 0;
 
+inline char *defaultReceiveRoutine(MemoryUnit *localMemoryUnit, std::uint64_t localVirtAddr,
+                                   MemoryUnit * /* distMemoryUnit */, std::uint64_t /* distVirtAddr */) {
+    return localMemoryUnit->virtToPhy(localVirtAddr);
+}
+
+inline void defaultSendRoutine(MemoryUnit * /* localMemoryUnit */, std::uint64_t /* localVirtAddr */,
+                               MemoryUnit * /* distMemoryUnit */, std::uint64_t  /* distVirtAddr */) {
+    /* Do nothing */
+}
+
 MemoryUnit::MemoryUnit(char *base, std::uint64_t size) : base_{base},
                                                          size_{size} {
+    if (!base) {
+        throwSpiderException("Base address of a MemoryUnit can not be nullptr.");
+    }
     id_ = MemoryUnit::globalID++;
+    receiveRoutine_ = defaultReceiveRoutine;
+    sendRoutine_ = defaultSendRoutine;
 }
 
 char *MemoryUnit::virtToPhy(std::uint64_t virt) const {
-    return (char *) ((std::uint64_t *) (base_) + virt);
+    return base_ + virt;
+}
+
+std::uint64_t MemoryUnit::allocateMemory(std::uint64_t size) {
+    auto currentAddress = used_;
+    used_ = allocateRoutine_(size, used_, size_);
+    return currentAddress;
+}
+
+void MemoryUnit::deallocateMemory() const {
+    deallocateRoutine_();
+}
+
+char *MemoryUnit::receiveMemory(std::uint64_t localVirtAddr, MemoryUnit *distMemoryUnit, std::uint64_t distVirtAddr) {
+    return receiveRoutine_(this, localVirtAddr, distMemoryUnit, distVirtAddr);
+}
+
+void MemoryUnit::sendMemory(std::uint64_t localVirtAddr, MemoryUnit *distMemoryUnit, std::uint64_t distVirtAddr) {
+    sendRoutine_(this, localVirtAddr, distMemoryUnit, distVirtAddr);
+}
+
+void MemoryUnit::setAllocateRoutine(allocateRoutine routine) {
+    allocateRoutine_ = routine;
+}
+
+void MemoryUnit::setDeallocateRoutine(deallocateRoutine routine) {
+    deallocateRoutine_ = routine;
+}
+
+void MemoryUnit::setReceiveRoutine(receiveRoutine routine) {
+    receiveRoutine_ = routine;
+}
+
+void MemoryUnit::setSendRoutine(sendRoutine routine) {
+    sendRoutine_ = routine;
+}
+
+void MemoryUnit::resetMemoryUsage() {
+    used_ = 0;
 }
 
 std::uint64_t MemoryUnit::size() const {
@@ -89,7 +197,6 @@ std::uint64_t MemoryUnit::size() const {
 std::uint64_t MemoryUnit::used() const {
     return used_;
 }
-
 
 std::uint64_t MemoryUnit::available() const {
     return size_ - used_;

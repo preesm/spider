@@ -142,7 +142,7 @@ void SpecialActorMemAlloc::allocBroadcast(SRDAGVertex *br) {
 // TODO For more perfs, try to not execute optimized special actors
 void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
     /** Look for Fork **/
-    for (int i = 0; i < listOfVertices->getNb(); i++) {
+    for (int i = 0; i < listOfVertices->size(); i++) {
         SRDAGVertex *fork = listOfVertices->operator[](i);
         if (fork->getState() == SRDAG_EXEC
             && fork->getType() == SRDAG_FORK)
@@ -150,7 +150,7 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
     }
 
     /** Look for Join **/
-    for (int i = 0; i < listOfVertices->getNb(); i++) {
+    for (int i = 0; i < listOfVertices->size(); i++) {
         SRDAGVertex *join = listOfVertices->operator[](i);
         if (join->getState() == SRDAG_EXEC
             && join->getType() == SRDAG_JOIN)
@@ -158,7 +158,7 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
     }
 
     /** Look for Broadcast **/
-    for (int i = 0; i < listOfVertices->getNb(); i++) {
+    for (int i = 0; i < listOfVertices->size(); i++) {
         SRDAGVertex *br = listOfVertices->operator[](i);
         if (br->getState() == SRDAG_EXEC
             && br->getType() == SRDAG_BROADCAST) {
@@ -166,7 +166,7 @@ void SpecialActorMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
         }
     }
 
-    for (int i = 0; i < listOfVertices->getNb(); i++) {
+    for (int i = 0; i < listOfVertices->size(); i++) {
         SRDAGVertex *vertex = listOfVertices->operator[](i);
         if (vertex->getState() == SRDAG_EXEC) {
             for (int j = 0; j < vertex->getNConnectedOutEdge(); j++) {

@@ -61,7 +61,7 @@ project(Spider)
 # Set to 1 to activate debug compilation (0 for release)
 
 if (NOT ${CMAKE_GENERATOR} MATCHES "Visual Studio.*")
-    set(DEBUG 0)
+    set(DEBUG 1)
 
     if (${DEBUG})
         MESSAGE("Generate Debug project")
@@ -152,6 +152,7 @@ include_directories(
         #${THREADS_PTHREADS_INCLUDE_DIR}
         ${PAPI_INCLUDE_DIRS}
         ${PTHREADDIR}/include
+        ./libspider/api
         ./libspider/common
         ./libspider/lrt
         ./libspider/platforms/platform_pthread
@@ -161,6 +162,7 @@ include_directories(
 file(
         GLOB_RECURSE
         source_files
+        ./libspider/api/*.cpp
         ./libspider/common/*.cpp
         ./libspider/common/tools/*.cpp
         ./libspider/lrt/*.cpp
@@ -183,6 +185,7 @@ file(
 file(
         GLOB_RECURSE
         header_files
+        ./libspider/api/*.h
         ./libspider/common/*.h
         ./libspider/common/tools/*.h
         ./libspider/lrt/*.h

@@ -99,7 +99,7 @@ void Scheduler::scheduleOnlyConfig(
 
     memAlloc->alloc(list_);
 
-    for (int i = 0; i < list_->getNb(); i++) {
+    for (int i = 0; i < list_->size(); i++) {
         computeScheduleLevel((*list_)[i]);
     }
 
@@ -109,10 +109,10 @@ void Scheduler::scheduleOnlyConfig(
     schedule_->setReadyTime(
             /* Spider Pe */      archi->getSpiderPeIx(),
             /* End of Mapping */ Platform::get()->getTime() +
-                                 archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
+                                 archi->getMappingTimeFct()(list_->size(), archi_->getNPE()));
 
 
-    for (int i = 0; i < list_->getNb(); i++) {
+    for (int i = 0; i < list_->size(); i++) {
         this->mapVertex((*list_)[i]);
     }
 
@@ -143,7 +143,7 @@ void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *s
 
     memAlloc->alloc(list_);
 
-    for (int i = 0; i < list_->getNb(); i++) {
+    for (int i = 0; i < list_->size(); i++) {
         computeScheduleLevel((*list_)[i]);
     }
 
@@ -153,9 +153,9 @@ void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *s
     schedule_->setReadyTime(
             /* Spider Pe */        archi->getSpiderPeIx(),
             /* End of Mapping */Platform::get()->getTime() +
-                                archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
+                                archi->getMappingTimeFct()(list_->size(), archi_->getNPE()));
 
-    for (int i = 0; i < list_->getNb(); i++) {
+    for (int i = 0; i < list_->size(); i++) {
         this->mapVertex((*list_)[i]);
     }
 

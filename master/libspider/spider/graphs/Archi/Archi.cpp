@@ -4,7 +4,8 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
+ * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
@@ -36,61 +37,45 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef PLATFORM_K2_ARM_H
-#define PLATFORM_K2_ARM_H
 
-#include <platform.h>
-#include <tools/Stack.h>
-#include <graphs/Archi/ArchiOld.h>
-#include <graphs/Archi/SharedMemArchi.h>
-#include <lrt.h>
+#include "Archi.h"
 
-typedef enum {
-    USE_MSMC = 1,
-    USE_DDR = 0
-} SharedMemMode;
+Archi::Archi(std::uint32_t nPE, std::uint32_t nPEType, std::uint32_t nMemoryUnit) : nPE_{nPE},
+                                                                                    nMemUnit_{nMemoryUnit},
+                                                                                    nPEType_{nPEType} {
+    /* === Init peArray_ === */
 
-class PlatformK2Arm : public Platform {
-public:
-    /** File Handling */
-    virtual int fopen(const char *name);
+    peArray_ = CREATE_MUL_NA(ARCHI_STACK, nPE, PE *);
+    for (std::uint32_t i = 0; i < nPE_; ++i) {
+        peArray_[i] = nullptr;
+    }
 
-    virtual void fprintf(int id, const char *fmt, ...);
+    /* === Init memoryUnitArray_ === */
 
-    virtual void fclose(int id);
+    memoryUnitArray_ = CREATE_MUL_NA(ARCHI_STACK, nMemoryUnit, MemoryUnit *);
+    for (std::uint32_t i = 0; i < nMemUnit_; ++i) {
+        memoryUnitArray_[i] = nullptr;
+    }
+}
 
-    /** Shared Memory Handling */
-    virtual void *virt_to_phy(void *address);
+Archi::~Archi() {
+    /* === Freeing resources of PE === */
 
-    virtual int getMinAllocSize();
+    for (std::uint32_t i = 0; i < nPE_; ++i) {
+        auto *pe = peArray_[i];
+        pe->~PE();
+        StackMonitor::free(ARCHI_STACK, pe);
+        peArray_[i] = nullptr;
+    }
+    StackMonitor::free(ARCHI_STACK, peArray_);
 
-    virtual int getCacheLineSize();
+    /* === Freeing resources of MemoryUnit === */
 
-    /** Time Handling */
-    virtual void rstTime();
-
-    virtual void rstTime(ClearTimeMsg *msg);
-
-    virtual Time getTime();
-
-    /** Platform Core Handling **/
-    virtual void idleLrt(int i);
-
-    virtual void wakeLrt(int i);
-
-    virtual void idle();
-
-    SharedMemArchi *getArchi();
-
-    PlatformK2Arm(int nArm, int nDsp, SharedMemMode useMsmc, int shMemSize, Stack *stack, lrtFct *fcts, int nLrtFcts);
-
-    virtual ~PlatformK2Arm();
-
-private:
-    Stack *stack_;
-    SharedMemArchi *archi_;
-
-    static Time mappingTime(int nActors);
-};
-
-#endif/*PLATFORM_K2_ARM_H*/
+    for (std::uint32_t i = 0; i < nMemUnit_; ++i) {
+        auto *memoryUnit = memoryUnitArray_[i];
+        memoryUnit->~MemoryUnit();
+        StackMonitor::free(ARCHI_STACK, memoryUnit);
+        memoryUnitArray_[i] = nullptr;
+    }
+    StackMonitor::free(ARCHI_STACK, memoryUnitArray_);
+}

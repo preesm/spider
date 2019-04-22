@@ -96,16 +96,18 @@ public:
 
     inline bool isEnabled() const;
 
+    inline bool isLRT() const;
+
 private:
     static std::uint32_t globalID;
 
     /* === Core properties === */
 
-    std::uint32_t hwType_ = 0;  /*! S-LAM user hardware type */
-    std::uint32_t hwID_ = 0;    /*! Hardware on which PE runs (core id) */
-    std::uint32_t virtID_ = 0;  /*! S-LAM user id */
-    std::string name_;          /*! S-LAM user name of the PE */
-    MemoryUnit *memoryUnit_;    /*! Memory unit attached to this PE */
+    std::uint32_t hwType_ = 0;         /*! S-LAM user hardware type */
+    std::uint32_t hwID_ = 0;           /*! Hardware on which PE runs (core id) */
+    std::uint32_t virtID_ = 0;         /*! S-LAM user id */
+    std::string name_;                 /*! S-LAM user name of the PE */
+    MemoryUnit *memoryUnit_ = nullptr; /*! Memory unit attached to this PE */
 
     /* === Spider properties === */
 
@@ -114,24 +116,6 @@ private:
     std::uint32_t spiderID_ = 0; /*! Spider id (used internally by spider) */
     bool enabled_ = true;
 };
-
-std::uint32_t PE::globalID = 0;
-
-
-PE::PE(std::uint32_t hwType,
-       std::uint32_t hwID,
-       std::uint32_t virtID,
-       std::string name,
-       SpiderPEType spiderPEType,
-       SpiderHWType spiderHWType) : hwType_{hwType},
-                                    hwID_{hwID},
-                                    virtID_{virtID},
-                                    name_{std::move(name)},
-                                    spiderPEType_{spiderPEType},
-                                    spiderHWType_{spiderHWType} {
-    spiderID_ = PE::globalID++;
-}
-
 
 void PE::setHardwareType(std::uint32_t type) {
     hwType_ = type;
@@ -203,6 +187,10 @@ std::uint32_t PE::getSpiderID() const {
 
 bool PE::isEnabled() const {
     return enabled_;
+}
+
+bool PE::isLRT() const {
+    return spiderPEType_ != SpiderPEType::PE_ONLY;
 }
 
 

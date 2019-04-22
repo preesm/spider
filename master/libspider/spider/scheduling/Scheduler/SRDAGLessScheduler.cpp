@@ -258,7 +258,7 @@ void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
     Time bestStartTime = 0;
     Time bestEndTime = UINT64_MAX;
     Time bestWaitTime = 0;
-    auto *archi = Spider::getArchi();
+    auto *archi = Spider::getArchiOld();
     for (int pe = 0; pe < archi->getNPE(); ++pe) {
         /** Skip disabled processing elements **/
         if (!archi->isActivated(pe)) {
@@ -458,7 +458,7 @@ void SRDAGLessScheduler::mapVertexRelaxed(PiSDFVertex *vertex) {
     Time bestStartTime = 0;
     Time bestEndTime = UINT64_MAX;
     Time bestWaitTime = 0;
-    auto *archi = Spider::getArchi();
+    auto *archi = Spider::getArchiOld();
     for (int pe = 0; pe < archi->getNPE(); ++pe) {
         /** Skip disabled processing elements **/
         if (!archi->isActivated(pe)) {

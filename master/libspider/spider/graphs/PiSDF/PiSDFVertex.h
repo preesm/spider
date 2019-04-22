@@ -41,7 +41,7 @@
 #include <tools/SetElement.h>
 
 #include <graphs/PiSDF/PiSDFCommon.h>
-#include <graphs/Archi/Archi.h>
+#include <graphs/Archi/ArchiOld.h>
 #include <parser/Expression.h>
 
 #include <cstring>

@@ -63,7 +63,7 @@ typedef struct transfoJob {
 
 void jit_ms(
         PiSDFGraph *topPisdf,
-        Archi *archi,
+        ArchiOld *archi,
         SRDAGGraph *topSrdag,
         MemAlloc *memAlloc,
         Scheduler *scheduler);

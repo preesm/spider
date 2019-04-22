@@ -41,7 +41,7 @@
 
 #include "SRDAGSchedule.h"
 #include <graphs/SRDAG/SRDAGVertex.h>
-#include <graphs/Archi/Archi.h>
+#include <graphs/Archi/ArchiOld.h>
 #include "MemAlloc.h"
 #include <spider.h>
 
@@ -51,9 +51,9 @@ public:
 
     virtual ~Scheduler() = default;
 
-    virtual void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi);
+    virtual void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, ArchiOld *archi);
 
-    virtual void scheduleOnlyConfig(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi);
+    virtual void scheduleOnlyConfig(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, ArchiOld *archi);
 
 protected:
     static inline int compareScheduleLevel(SRDAGVertex *vertexA, SRDAGVertex *vertexB);
@@ -70,7 +70,7 @@ protected:
 
     SRDAGGraph *srdag_;
     SRDAGSchedule *schedule_;
-    Archi *archi_;
+    ArchiOld *archi_;
     List<SRDAGVertex *> *list_;
 };
 

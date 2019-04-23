@@ -43,22 +43,14 @@
 #include <cstdint>
 #include "spiderArchiAPI.h"
 
-class ArchiOld;
 
 class Archi;
-
 class PiSDFVertex;
-
 class PiSDFParam;
-
 class PiSDFGraph;
-
 class PiSDFEdge;
-
 class SRDAGGraph;
-
 class MemAlloc;
-
 class Scheduler;
 
 
@@ -229,8 +221,6 @@ namespace Spider {
 
     PiSDFGraph *getGraph();
 
-    ArchiOld *getArchiOld();
-
     Archi *getArchi();
 
     /* PiSDF Graph Generation */
@@ -316,7 +306,7 @@ namespace Spider {
 
     void isExecutableOnPE(PiSDFVertex *vertex, int pe);
 
-    void isExecutableOnPEType(PiSDFVertex *vertex, int peType);
+    void isExecutableOnPEType(PiSDFVertex *vertex, std::uint32_t peType);
 
     void cleanPiSDF();
 };

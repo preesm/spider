@@ -47,7 +47,7 @@ int Scheduler::computeScheduleLevel(SRDAGVertex *vertex) {
             SRDAGVertex *succ = vertex->getOutEdge(i)->getSnk();
             if (succ && succ->getState() != SRDAG_NEXEC) {
                 Time minExecTime = (unsigned int) -1;
-                for (int j = 0; j < archi_->getNPE(); j++) {
+                for (std::uint32_t j = 0; j < archi_->getNPE(); j++) {
                     if (succ->isExecutableOn(j)) {
                         Time execTime = succ->executionTimeOn(archi_->getPEFromSpiderID(j)->getHardwareType());
                         if (execTime == 0) {

@@ -122,7 +122,7 @@ public:
      * @brief Get current LRT ID
      * @return ID of current LRT
      */
-    inline int getLrtIx() override {
+    inline std::uint32_t getLrtIx() override {
         return getThreadNumber();
     }
 
@@ -172,8 +172,8 @@ public:
 #endif
 
 private:
-    inline int getThreadNumber() {
-        for (auto i = 0; i < nLrt_; i++) {
+    inline std::uint32_t getThreadNumber() {
+        for (std::uint32_t i = 0; i < nLrt_; i++) {
             if (pthread_equal(lrtThreadsArray[i], pthread_self()) != 0)
                 return i;
         }
@@ -186,7 +186,7 @@ private:
 
     void createAndLaunchThreads();
 
-    std::int32_t nLrt_;
+    std::uint32_t nLrt_;
     pthread_t *lrtThreadsArray;
 
     /** Stack pointers */

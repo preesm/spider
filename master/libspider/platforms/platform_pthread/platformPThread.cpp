@@ -172,7 +172,7 @@ void PlatformPThread::createAndLaunchThreads() {
 #endif
 
     /** Starting the threads */
-    for (auto i = 1; i < nLrt_; i++) {
+    for (std::uint32_t i = 1; i < nLrt_; i++) {
         pthread_create(&thread_lrt_[i - 1], nullptr, &lrtPthreadRunner, &lrtInfoArray_[i]);
     }
 }
@@ -185,8 +185,9 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     platform_ = this;
 
     nLrt_ = config.platform.nLrt;
-    if (nLrt_ < 0) {
-        throwSpiderException("Invalid number of Lrt: %d\n", nLrt_);
+
+    if (nLrt_ == 0) {
+        throwSpiderException("Spider require at least 1 LRT.");
     }
 
     /** Init of the different stacks **/
@@ -204,7 +205,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     lrt2SpiderParamQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ParameterMessage *>);
     lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue<NotificationMessage>*);
 
-    for (auto i = 0; i < nLrt_ + 1; ++i) {
+    for (std::uint32_t i = 0; i < nLrt_ + 1; ++i) {
         lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
     }
 
@@ -270,7 +271,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     int offsetPe = 0;
     for (int pe = 0; pe < config.platform.nPeType; ++pe) {
         for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
-            if (i + offsetPe >= nLrt_) {
+            if ((std::uint32_t) (i + offsetPe) >= nLrt_) {
                 break;
             }
             lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
@@ -387,7 +388,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
 PlatformPThread::~PlatformPThread() {
     auto spiderCommunicator = getSpiderCommunicator();
-    for (auto i = 1; i < nLrt_; ++i) {
+    for (std::uint32_t i = 1; i < nLrt_; ++i) {
         NotificationMessage message(LRT_NOTIFICATION, LRT_STOP, getLrtIx());
         spiderCommunicator->push_notification(i, &message);
     }
@@ -397,7 +398,7 @@ PlatformPThread::~PlatformPThread() {
 
 
     //wait for each thread to free its lrt and archi stacks and to reach its end
-    for (auto i = 1; i < nLrt_; i++) {
+    for (std::uint32_t i = 1; i < nLrt_; i++) {
         pthread_join(lrtThreadsArray[i], nullptr);
     }
 
@@ -410,7 +411,7 @@ PlatformPThread::~PlatformPThread() {
     }
 #endif
 
-    for (auto i = 0; i < nLrt_; i++) {
+    for (std::uint32_t i = 0; i < nLrt_; i++) {
         lrt_[i]->~LRT();
         StackMonitor::free(ARCHI_STACK, lrt_[i]);
         StackMonitor::free(ARCHI_STACK, lrtCom_[i]);
@@ -424,7 +425,7 @@ PlatformPThread::~PlatformPThread() {
     StackMonitor::free(ARCHI_STACK, thread_lrt_);
     StackMonitor::free(ARCHI_STACK, lrtInfoArray_);
 
-    for (int i = 0; i < nLrt_; i++) {
+    for (std::uint32_t i = 0; i < nLrt_; i++) {
         lrtNotificationQueues_[i]->~NotificationQueue();
         StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
     }

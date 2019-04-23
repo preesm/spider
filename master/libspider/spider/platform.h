@@ -95,7 +95,7 @@ public:
      * @brief Get current LRT ID
      * @return ID of current LRT
      */
-    virtual int getLrtIx() = 0;
+    virtual std::uint32_t getLrtIx() = 0;
 
     /**
      * @brief Get number of LRT

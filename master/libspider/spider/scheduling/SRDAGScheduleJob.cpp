@@ -129,7 +129,7 @@ JobInfoMessage *SRDAGScheduleJob::createJobMessage() {
     auto nPE = Spider::getArchi()->getNActivatedPE();
     jobInfoMessage->lrts2Notify_ = CREATE_MUL_NA(ARCHI_STACK, nPE, bool);
     jobInfoMessage->jobs2Wait_ = CREATE_MUL_NA(ARCHI_STACK, nPE, std::int32_t);
-    for (int i = 0; i < nPE; ++i) {
+    for (std::uint32_t i = 0; i < nPE; ++i) {
         /** Set jobs to wait **/
         auto &jobConstrain = scheduleConstrainsMatrix_[i];
         jobInfoMessage->jobs2Wait_[i] = jobConstrain.jobId_;

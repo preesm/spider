@@ -109,7 +109,7 @@ void ListSchedulerOnTheGo::mapVertex(SRDAGVertex *vertex) {
 
 
     // Getting a slave for the vertex.
-    for (int peIx = 0; peIx < archi_->getNPE(); peIx++) {
+    for (std::uint32_t peIx = 0; peIx < archi_->getNPE(); peIx++) {
         auto *pe = archi_->getPEFromSpiderID(peIx);
         int slaveType = pe->getHardwareType();
 

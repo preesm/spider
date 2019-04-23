@@ -258,17 +258,17 @@ void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
     Time bestStartTime = 0;
     Time bestEndTime = UINT64_MAX;
     Time bestWaitTime = 0;
-    auto *archi = Spider::getArchiOld();
+    auto *archi = Spider::getArchi();
     for (int pe = 0; pe < archi->getNPE(); ++pe) {
         /** Skip disabled processing elements **/
-        if (!archi->isActivated(pe)) {
+        if (!archi->getPEFromSpiderID(pe)->isEnabled()) {
             continue;
         }
         /** Search for best candidate **/
         if (vertex->canExecuteOn(pe)) {
             Time startTime = std::max(schedule_->getReadyTime(pe), minimumStartTime);
             Time waitTime = startTime - schedule_->getReadyTime(pe);
-            auto peType = archi->getPEType(pe);
+            auto peType = archi->getPEFromSpiderID(pe)->getHardwareType();
             Time execTime = vertex->getTimingOnPEType(peType);
             // TODO: add communication time in the balance
             Time endTime = startTime + execTime;
@@ -458,17 +458,17 @@ void SRDAGLessScheduler::mapVertexRelaxed(PiSDFVertex *vertex) {
     Time bestStartTime = 0;
     Time bestEndTime = UINT64_MAX;
     Time bestWaitTime = 0;
-    auto *archi = Spider::getArchiOld();
+    auto *archi = Spider::getArchi();
     for (int pe = 0; pe < archi->getNPE(); ++pe) {
         /** Skip disabled processing elements **/
-        if (!archi->isActivated(pe)) {
+        if (!archi->getPEFromSpiderID(pe)->isEnabled()) {
             continue;
         }
         /** Search for best candidate **/
         if (vertex->canExecuteOn(pe)) {
             Time startTime = std::max(schedule_->getReadyTime(pe), minimumStartTime);
             Time waitTime = startTime - schedule_->getReadyTime(pe);
-            auto peType = archi->getPEType(pe);
+            auto peType = archi->getPEFromSpiderID(pe)->getHardwareType();
             Time execTime = vertex->getTimingOnPEType(peType);
             // TODO: add communication time in the balance
             Time endTime = startTime + execTime;

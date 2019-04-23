@@ -41,6 +41,7 @@
 #include <map>
 #include <vector>
 #include <cstdint>
+#include "spiderArchiAPI.h"
 
 class ArchiOld;
 

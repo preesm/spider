@@ -200,7 +200,7 @@ void Spider::iterate() {
         StackMonitor::freeAll(SRDAG_STACK);
         memAlloc_->reset();
         srdag_ = new SRDAGGraph();
-        jit_ms(pisdf_, archiOld_, srdag_, memAlloc_, scheduler_);
+        jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
     }
     /** Wait for LRTs to finish **/
     Platform::get()->rstJobIxRecv();

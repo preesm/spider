@@ -58,7 +58,7 @@ void Launcher::sendRepeatJobQueue(bool enable) {
     NotificationMessage message(LRT_NOTIFICATION,
                                 enable ? LRT_REPEAT_ITERATION_EN : LRT_REPEAT_ITERATION_DIS,
                                 Platform::get()->getLrtIx());
-    for (int i = 0; i < Spider::getArchiOld()->getNActivatedPE(); ++i) {
+    for (std::uint32_t i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
         Platform::get()->getSpiderCommunicator()->push_notification(i, &message);
     }
 }
@@ -114,7 +114,7 @@ void Launcher::sendJob(SRDAGScheduleJob *job) {
     nLaunched_++;
 }
 
-void Launcher::resolveParams(ArchiOld */*archi*/, SRDAGGraph *topDag) {
+void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
     while (curNParam_) {
         NotificationMessage message;
         if (Platform::get()->getSpiderCommunicator()->pop_notification(Platform::get()->getNLrt(), &message, true)) {
@@ -196,7 +196,7 @@ void Launcher::sendDisableTrace(int lrtID) {
 }
 
 void Launcher::sendEndNotification(Schedule *schedule) {
-    for (int pe = 0; pe < Spider::getArchiOld()->getNActivatedPE(); ++pe) {
+    for (std::uint32_t pe = 0; pe < Spider::getArchi()->getNActivatedPE(); ++pe) {
         NotificationMessage message(LRT_NOTIFICATION,
                                     LRT_END_ITERATION,
                                     Platform::get()->getLrtIx(),
@@ -209,7 +209,7 @@ void Launcher::sendBroadCastNotification(bool delayBroadcoast) {
     NotificationMessage broadcast(JOB_NOTIFICATION,
                                   delayBroadcoast ? JOB_DELAY_BROADCAST_JOBSTAMP : JOB_BROADCAST_JOBSTAMP,
                                   Platform::get()->getLrtIx());
-    for (int i = 0; i < Spider::getArchiOld()->getNActivatedPE(); ++i) {
+    for (std::uint32_t i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
         if (i == Platform::get()->getLrtIx()) {
             continue;
         }

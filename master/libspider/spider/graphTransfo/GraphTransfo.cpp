@@ -110,7 +110,7 @@ static SRDAGVertex *getNextHierVx(SRDAGGraph *topDag) {
 
 void jit_ms(
         PiSDFGraph *topPisdf,
-        ArchiOld *archi,
+        Archi *archi,
         SRDAGGraph *topSrdag,
         MemAlloc *memAlloc,
         Scheduler *scheduler) {
@@ -311,7 +311,7 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
                                 Scheduler *scheduler, Time *end) {
     PiSDFGraph *topGraph = Spider::getGraph();
 
-    auto *schedule = CREATE(TRANSFO_STACK, SRDAGSchedule)(Spider::getArchiOld()->getNPE(), SCHEDULE_SIZE);
+    auto *schedule = CREATE(TRANSFO_STACK, SRDAGSchedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
 
     /* Add initial top actor */
     PiSDFVertex *root = topGraph->getBody(0);
@@ -384,7 +384,7 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
 
     /* Schedule and launch execution */
     TimeMonitor::startMonitoring();
-    scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchiOld());
+    scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchi());
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
     return schedule;
 }
@@ -397,7 +397,7 @@ PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end) {
     }
     auto *root = graph->getBody(0)->getSubGraph();
     computeHierarchicalBRV(root);
-    auto schedule = CREATE_NA(TRANSFO_STACK, PiSDFSchedule)(Spider::getArchiOld()->getNPE(), SCHEDULE_SIZE);
+    auto schedule = CREATE_NA(TRANSFO_STACK, PiSDFSchedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
     auto scheduler = SRDAGLessScheduler(root, schedule);
     if (end) {
         (*end) = Platform::get()->getTime();

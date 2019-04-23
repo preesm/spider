@@ -61,6 +61,8 @@ Archi::Archi(std::uint32_t nPE, std::uint32_t nPEType, std::uint32_t nMemoryUnit
         memoryUnitArray_[i] = nullptr;
     }
 
+    /* === Set the scheduleTimeRoutine === */
+
     scheduleTimeRoutine_ = defaultScheduleRoutine;
 }
 

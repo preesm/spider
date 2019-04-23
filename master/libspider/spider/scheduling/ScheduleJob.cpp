@@ -144,7 +144,7 @@ JobInfoMessage *ScheduleJob::createJobMessage(int instance) {
     jobInfoMessage->jobs2Wait_ = CREATE_MUL_NA(ARCHI_STACK, nPE, std::int32_t);
     auto *constrains = getScheduleConstrain(instance);
     auto *dependencies = getInstanceDependencies(instance);
-    for (int i = 0; i < nPE; ++i) {
+    for (std::uint32_t i = 0; i < nPE; ++i) {
         /** Set jobs to wait **/
         auto &jobConstrain = constrains[i];
         jobInfoMessage->jobs2Wait_[i] = jobConstrain.jobId_;

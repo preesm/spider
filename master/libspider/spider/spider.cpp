@@ -82,7 +82,6 @@
 #define CHIP_FREQ (1)
 #endif
 
-static ArchiOld *archiOld_ = nullptr;
 static Archi *archi_ = nullptr;
 static PiSDFGraph *pisdf_ = nullptr;
 static SRDAGGraph *srdag_ = nullptr;
@@ -341,10 +340,6 @@ PiSDFGraph *Spider::getGraph() {
     return pisdf_;
 }
 
-ArchiOld *Spider::getArchiOld() {
-    return archiOld_;
-}
-
 Archi *Spider::getArchi() {
     return archi_;
 }
@@ -398,7 +393,7 @@ void Spider::printActorsStat(ExecutionStat *stat) {
     Platform::get()->fprintf(stdout, "\t%15s:\n", "Actors");
     for (int j = 0; j < stat->nPiSDFActor; j++) {
         Platform::get()->fprintf(stdout, "\t%15s:", stat->actors[j]->getName());
-        for (int k = 0; k < archiOld_->getNPETypes(); k++) {
+        for (std::uint32_t k = 0; k < archi_->getNPEType(); k++) {
             if (stat->actorIterations[j][k]) {
                 Platform::get()->fprintf(stdout, "\t%lld (x%lld)",
                                          stat->actorTimes[j][k] / stat->actorIterations[j][k],
@@ -447,7 +442,7 @@ static char *regenerateColor(int refInd) {
     return color;
 }
 
-static void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, ArchiOld *archi, SRDAGVertex *vertex,
+static void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Archi *archi, SRDAGVertex *vertex,
                                    Time start, Time end, int lrtIx, float latexScaling) {
     static char name[200];
     static int i = 0;
@@ -467,7 +462,7 @@ static void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, ArchiOld *a
             start,
             end,
             name, vertex->getIterId(), vertex->getRefId(),
-            archi->getPEName(lrtIx),
+            archi->getPEFromSpiderID(lrtIx)->getName().c_str(),
             regenerateColor(i++),
             lrtIx);
 
@@ -518,7 +513,7 @@ static void writeGanttForVertex(TraceMessage *message, FILE *ganttFile, FILE *la
     printGantt_SRDAGVertex(
             ganttFile,
             latexFile,
-            archiOld_,
+            archi_,
             vertex,
             startTimeScaled - baseTime,
             endTimeScaled - baseTime,
@@ -533,7 +528,7 @@ static void writeGanttForVertex(TraceMessage *message, FILE *ganttFile, FILE *la
     switch (vertex->getType()) {
         case SRDAG_NORMAL: {
             int i;
-            int lrtType = archiOld_->getPEType(message->getLRTID());
+            auto lrtType = archi_->getPEFromSpiderID(message->getLRTID())->getHardwareType();
             auto *pisdfVertexRef = vertex->getReference();
             // Update execution time of the PiSDF actor
             auto timingOnPe = std::to_string(execTime);
@@ -596,7 +591,8 @@ static void writeGanttForSpiderTasks(TraceMessage *message, FILE *ganttFile, FIL
     Platform::get()->fprintf(ganttFile, "\t\tend=\"%" PRIu64"\"\n", endTimeScaled);
     Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n",
                              TimeMonitor::getTaskName((TraceSpiderType) message->getSpiderTask()));
-    Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archiOld_->getPEName(message->getLRTID()));
+    Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n",
+                             archi_->getPEFromSpiderID(message->getLRTID())->getName().c_str());
     Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", regenerateColor(i++));
     Platform::get()->fprintf(ganttFile, "\t\t>Step_%d.</event>\n", message->getSpiderTask());
 
@@ -621,7 +617,7 @@ static void writeGanttForSpiderTasks(TraceMessage *message, FILE *ganttFile, FIL
     auto latexScaling = 1000.f;
     Platform::get()->fprintf(latexFile, "%f,", startTimeScaled / latexScaling); /* Start */
     Platform::get()->fprintf(latexFile, "%f,", endTimeScaled / latexScaling); /* Duration */
-    Platform::get()->fprintf(latexFile, "%d,", archiOld_->getSpiderPeIx()); /* Core index */
+    Platform::get()->fprintf(latexFile, "%" PRIu32",", archi_->getSpiderGRTID()); /* Core index */
     Platform::get()->fprintf(latexFile, "colorSched\n", 15); /* Color */
 }
 
@@ -806,9 +802,9 @@ void Spider::isExecutableOnPE(PiSDFVertex *vertex, int pe) {
     vertex->isExecutableOnPE(pe);
 }
 
-void Spider::isExecutableOnPEType(PiSDFVertex *vertex, int peType) {
-    for (int pe = 0; pe < archiOld_->getNPE(); pe++) {
-        if (archiOld_->getPEType(pe) == peType) vertex->isExecutableOnPE(pe);
+void Spider::isExecutableOnPEType(PiSDFVertex *vertex, std::uint32_t peType) {
+    for (std::uint32_t pe = 0; pe < archi_->getNPE(); pe++) {
+        if (archi_->getPEFromSpiderID(pe)->getHardwareType() == peType) vertex->isExecutableOnPE(pe);
     }
 }
 

@@ -49,7 +49,7 @@ int Scheduler::computeScheduleLevel(SRDAGVertex *vertex) {
                 Time minExecTime = (unsigned int) -1;
                 for (int j = 0; j < archi_->getNPE(); j++) {
                     if (succ->isExecutableOn(j)) {
-                        Time execTime = succ->executionTimeOn(archi_->getPEType(j));
+                        Time execTime = succ->executionTimeOn(archi_->getPEFromSpiderID(j)->getHardwareType());
                         if (execTime == 0) {
                             throwSpiderException("Vertex: %s -- NULL execution time.", succ->toString());
                         }
@@ -81,7 +81,7 @@ void Scheduler::scheduleOnlyConfig(
         SRDAGGraph *graph,
         MemAlloc *memAlloc,
         SRDAGSchedule *schedule,
-        ArchiOld *archi) {
+        Archi *archi) {
     srdag_ = graph;
     schedule_ = schedule;
     archi_ = archi;
@@ -107,9 +107,9 @@ void Scheduler::scheduleOnlyConfig(
 
     schedule_->setAllMinReadyTime(Platform::get()->getTime());
     schedule_->setReadyTime(
-            /* Spider Pe */      archi->getSpiderPeIx(),
+            /* Spider Pe */      archi->getSpiderGRTID(),
             /* End of Mapping */ Platform::get()->getTime() +
-                                 archi->getMappingTimeFct()(list_->size(), archi_->getNPE()));
+                                 archi->getScheduleTimeRoutine()(list_->size(), archi_->getNPE()));
 
 
     for (int i = 0; i < list_->size(); i++) {
@@ -125,7 +125,7 @@ void Scheduler::scheduleOnlyConfig(
 }
 
 
-void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, ArchiOld *archi) {
+void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi) {
     srdag_ = graph;
     schedule_ = schedule;
     archi_ = archi;
@@ -151,9 +151,9 @@ void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *s
 
     schedule_->setAllMinReadyTime(Platform::get()->getTime());
     schedule_->setReadyTime(
-            /* Spider Pe */        archi->getSpiderPeIx(),
+            /* Spider Pe */        archi->getSpiderGRTID(),
             /* End of Mapping */Platform::get()->getTime() +
-                                archi->getMappingTimeFct()(list_->size(), archi_->getNPE()));
+                                archi->getScheduleTimeRoutine()(list_->size(), archi_->getNPE()));
 
     for (int i = 0; i < list_->size(); i++) {
         this->mapVertex((*list_)[i]);

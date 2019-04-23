@@ -72,16 +72,26 @@ typedef struct SpiderArchiConfig {
     std::uint32_t nMemoryUnit;
 } SpiderArchiConfig;
 
-
 /* === Routines definitions === */
 
-using allocateRoutine = std::uint64_t (*)(std::uint64_t, std::uint64_t, std::uint64_t);
+using allocateRoutine = std::uint64_t (*)(
+        /* == Size to allocate == */        std::uint64_t,
+        /* == Current memory used == */     std::uint64_t,
+        /* == Max size of the MemUnit == */ std::uint64_t);
 using deallocateRoutine = void (*)();
-using receiveRoutine = char *(*)(MemoryUnit *, std::uint64_t, MemoryUnit *, std::uint64_t);
-using sendRoutine = void (*)(MemoryUnit *, std::uint64_t, MemoryUnit *, std::uint64_t);
-
-
-
+using receiveRoutine = char *(*)(
+        /* == localMemoryUnit == */ MemoryUnit *,
+        /* == localVirtAddr == */   std::uint64_t,
+        /* == distMemoryUnit == */  MemoryUnit *,
+        /* == distVirtAddr == */    std::uint64_t);
+using sendRoutine = void (*)(
+        /* == localMemoryUnit == */ MemoryUnit *,
+        /* == localVirtAddr == */   std::uint64_t,
+        /* == distMemoryUnit == */  MemoryUnit *,
+        /* == distVirtAddr == */    std::uint64_t);
+using ScheduleTimeRoutine = std::uint64_t (*)(
+        /* == Number of Actors == */ std::int32_t,
+        /* == Number of PEs == */    std::int32_t);
 
 /* === API methods === */
 

@@ -126,7 +126,7 @@ JobInfoMessage *SRDAGScheduleJob::createJobMessage() {
     jobInfoMessage->specialActor_ = vertex_->getType() != SRDAG_NORMAL;
 
     /** Set jobs 2 wait and notify properties **/
-    auto nPE = Spider::getArchiOld()->getNActivatedPE();
+    auto nPE = Spider::getArchi()->getNActivatedPE();
     jobInfoMessage->lrts2Notify_ = CREATE_MUL_NA(ARCHI_STACK, nPE, bool);
     jobInfoMessage->jobs2Wait_ = CREATE_MUL_NA(ARCHI_STACK, nPE, std::int32_t);
     for (int i = 0; i < nPE; ++i) {

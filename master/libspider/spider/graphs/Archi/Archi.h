@@ -43,7 +43,6 @@
 #include "ArchiMemUnit.h"
 #include "ArchiPE.h"
 
-using ScheduleTimeRoutine = Time (*)(int, int);
 
 class Archi {
 public:
@@ -174,6 +173,12 @@ public:
      */
     inline std::uint32_t getSpiderGRTID() const;
 
+    /**
+     * @brief Return the routine that computes the predicted time needed for scheduling.
+     * @return ScheduleTimeRoutine function.
+     */
+    inline ScheduleTimeRoutine getScheduleTimeRoutine() const;
+
 private:
 
     /* === Members === */
@@ -291,6 +296,10 @@ MemoryUnit *Archi::getMemoryUnit(std::uint32_t id) const {
 
 std::uint32_t Archi::getSpiderGRTID() const {
     return spiderGRTID_;
+}
+
+ScheduleTimeRoutine Archi::getScheduleTimeRoutine() const {
+    return scheduleTimeRoutine_;
 }
 
 #endif //SPIDER_ARCHI_H

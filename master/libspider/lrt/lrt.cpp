@@ -41,6 +41,7 @@
 #include <Logger.h>
 #include <specialActors/specialActors.h>
 #include "lrt.h"
+#include <graphs/Archi/Archi.h>
 
 #ifdef __USE_GNU
 
@@ -219,13 +220,15 @@ void LRT::runJob(JobInfoMessage *job) {
     time_alloc_data += Platform::get()->getTime() - start;
 #endif
 
+    auto *peJob = Spider::getArchi()->getPEFromSpiderID(ix_);
 
     for (int i = 0; i < job->nEdgeIN_; i++) {
 #ifdef VERBOSE_TIME
         Time start = Platform::get()->getTime();
 #endif
         auto fifo = job->inFifos_[i];
-        inFifosAlloc[i] = lrtCommunicator_->data_recv(fifo.alloc); // in com
+//        inFifosAlloc[i] = lrtCommunicator_->data_recv(fifo.alloc); // in com
+        inFifosAlloc[i] = peJob->getMemoryUnit()->receiveMemory(fifo.alloc, nullptr, fifo.alloc);
         if (fifo.size == 0) {
             inFifosAlloc[i] = nullptr;
         }
@@ -241,7 +244,8 @@ void LRT::runJob(JobInfoMessage *job) {
         Time start = Platform::get()->getTime();
 #endif
         auto fifo = job->outFifos_[i];
-        outFifosAlloc[i] = lrtCommunicator_->data_start_send(fifo.alloc); // in com
+//        outFifosAlloc[i] = lrtCommunicator_->data_start_send(fifo.alloc); // in com
+        outFifosAlloc[i] = peJob->getMemoryUnit()->virtToPhy(fifo.alloc);
         if (fifo.size == 0) {
             outFifosAlloc[i] = nullptr;
         }
@@ -299,6 +303,10 @@ void LRT::runJob(JobInfoMessage *job) {
 
 
     // TODO: data_end_send for other platforms
+    for (int i = 0; i < job->nEdgeOUT_; i++) {
+        auto fifo = job->outFifos_[i];
+        peJob->getMemoryUnit()->sendMemory(fifo.alloc, nullptr, fifo.alloc);
+    }
 
     /** Updating jobIx_ and notifying other LRT (if needed) **/
     jobIx_++;

@@ -71,7 +71,7 @@
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
 
-static void *dataMem;
+//static void *dataMem;
 
 static std::chrono::time_point<std::chrono::steady_clock> start_steady;
 
@@ -242,11 +242,11 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     }
 #endif
 
-    // Find LCM of share memory size and minAllocSize
-    std::int64_t minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize,
-                                                                PlatformPThread::getMinAllocSize());
-    fprintf(stderr, "INFO: Page aligned shared memory size: %" PRId64"\n", minAlignedSharedMemory);
-    dataMem = operator new((size_t) minAlignedSharedMemory);
+//     Find LCM of share memory size and minAllocSize
+//    std::int64_t minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize,
+//                                                                PlatformPThread::getMinAllocSize());
+//    fprintf(stderr, "INFO: Page aligned shared memory size: %" PRId64"\n", minAlignedSharedMemory);
+//    dataMem = operator new((size_t) minAlignedSharedMemory);
 
     /** Filling up parameters for each threads */
     pthread_barrier_init(&pthreadLRTBarrier, nullptr, nLrt_);
@@ -299,8 +299,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     lrtStackConfig.size = config.lrtStack.size / nLrt_;
     StackMonitor::initStack(LRT_STACK, lrtStackConfig);
 
-    /** Initialize shared memory */
-    memset(dataMem, 0, (size_t) minAlignedSharedMemory);
+//    /** Initialize shared memory */
+//    memset(dataMem, 0, (size_t) minAlignedSharedMemory);
 
     // Check papify profiles
 #ifdef PAPI_AVAILABLE
@@ -441,7 +441,7 @@ PlatformPThread::~PlatformPThread() {
     //Destroying synchronisation barrier
     pthread_barrier_destroy(&pthreadLRTBarrier);
 
-    operator delete(dataMem);
+//    operator delete(dataMem);
 }
 
 /** File Handling */
@@ -472,8 +472,9 @@ void PlatformPThread::fclose(FILE *id) {
     }
 }
 
-void *PlatformPThread::virt_to_phy(void *address) {
-    return (void *) ((intptr_t) dataMem + (intptr_t) address);
+void *PlatformPThread::virt_to_phy(void * /* address */) {
+//    return (void *) ((intptr_t) dataMem + (intptr_t) address);
+    return nullptr;
 }
 
 int PlatformPThread::getCacheLineSize() {

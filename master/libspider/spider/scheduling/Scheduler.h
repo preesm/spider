@@ -51,9 +51,9 @@ public:
 
     virtual ~Scheduler() = default;
 
-    virtual void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, ArchiOld *archi);
+    virtual void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi);
 
-    virtual void scheduleOnlyConfig(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, ArchiOld *archi);
+    virtual void scheduleOnlyConfig(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi);
 
 protected:
     static inline int compareScheduleLevel(SRDAGVertex *vertexA, SRDAGVertex *vertexB);
@@ -70,7 +70,7 @@ protected:
 
     SRDAGGraph *srdag_;
     SRDAGSchedule *schedule_;
-    ArchiOld *archi_;
+    Archi *archi_;
     List<SRDAGVertex *> *list_;
 };
 

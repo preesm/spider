@@ -40,6 +40,10 @@
 
 #include "Archi.h"
 
+Time defaultScheduleRoutine(std::int32_t nActor, std::int32_t /*nPE*/) {
+    return (Time) 1 * nActor;
+}
+
 Archi::Archi(std::uint32_t nPE, std::uint32_t nPEType, std::uint32_t nMemoryUnit) : nPE_{nPE},
                                                                                     nMemUnit_{nMemoryUnit},
                                                                                     nPEType_{nPEType} {
@@ -56,6 +60,8 @@ Archi::Archi(std::uint32_t nPE, std::uint32_t nPEType, std::uint32_t nMemoryUnit
     for (std::uint32_t i = 0; i < nMemUnit_; ++i) {
         memoryUnitArray_[i] = nullptr;
     }
+
+    scheduleTimeRoutine_ = defaultScheduleRoutine;
 }
 
 Archi::~Archi() {

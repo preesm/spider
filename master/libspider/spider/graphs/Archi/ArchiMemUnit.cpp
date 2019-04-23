@@ -44,6 +44,34 @@
 
 std::uint32_t MemoryUnit::globalID = 0;
 
+/* === Default routines === */
+
+inline std::uint64_t defaultAllocateRoutine(std::uint64_t size, std::uint64_t used, std::uint64_t maxSize) {
+    if (used + size > maxSize) {
+        throwSpiderException("Not Enough Memory. Want: %"
+                                     PRIu64
+                                     " -- Available: %"
+                                     PRIu64
+                                     "", size, maxSize - used);
+    }
+    used += size;
+    return used;
+}
+
+inline void defaultDeallocateRoutine() {
+    /* Do nothing */
+}
+
+inline char *defaultReceiveRoutine(MemoryUnit *localMemoryUnit, std::uint64_t localVirtAddr,
+                                   MemoryUnit * /* distMemoryUnit */, std::uint64_t /* distVirtAddr */) {
+    return localMemoryUnit->virtToPhy(localVirtAddr);
+}
+
+inline void defaultSendRoutine(MemoryUnit * /* localMemoryUnit */, std::uint64_t /* localVirtAddr */,
+                               MemoryUnit * /* distMemoryUnit */, std::uint64_t  /* distVirtAddr */) {
+    /* Do nothing */
+}
+
 MemoryUnit::MemoryUnit(char *base, std::uint64_t size) : base_{base},
                                                          size_{size} {
     if (!base) {

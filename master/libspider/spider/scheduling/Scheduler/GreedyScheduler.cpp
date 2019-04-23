@@ -67,20 +67,21 @@ void GreedyScheduler::mapVertex(SRDAGVertex *vertex) {
     auto bestEndTime = (Time) -1; // Very high value.
 
     // Getting a slave for the vertex.
-    for (int pe = 0; pe < archi_->getNPE(); pe++) {
-        int slaveType = archi_->getPEType(pe);
+    for (int peIx = 0; peIx < archi_->getNPE(); peIx++) {
+        auto *pe = archi_->getPEFromSpiderID(peIx);
+        int slaveType = pe->getHardwareType();
 
-        if (!archi_->isActivated(pe)) continue;
+        if (!pe->isEnabled()) continue;
 
         // checking the constraints
-        if (vertex->isExecutableOn(pe)) {
-            Time startTime = std::max(schedule_->getReadyTime(pe), minimumStartTime);
-            Time waitTime = startTime - schedule_->getReadyTime(pe);
+        if (vertex->isExecutableOn(peIx)) {
+            Time startTime = std::max(schedule_->getReadyTime(peIx), minimumStartTime);
+            Time waitTime = startTime - schedule_->getReadyTime(peIx);
             Time execTime = vertex->executionTimeOn(slaveType);
             Time comInTime = 0, comOutTime = 0;// TODO: take into account com time
             Time endTime = startTime + execTime + comInTime + comOutTime;
             if (endTime < bestEndTime || (endTime == bestEndTime && waitTime < bestWaitTime)) {
-                bestSlave = pe;
+                bestSlave = peIx;
                 bestEndTime = endTime;
                 bestStartTime = startTime;
                 bestWaitTime = waitTime;
@@ -110,7 +111,7 @@ bool GreedyScheduler::isSchedulable(SRDAGVertex *vertex) {
     return canRun;
 }
 
-void GreedyScheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, ArchiOld *archi) {
+void GreedyScheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi) {
     srdag_ = graph;
     schedule_ = schedule;
     archi_ = archi;
@@ -127,9 +128,9 @@ void GreedyScheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSched
     /* Set time (maybe not that useful ?) */
     schedule_->setAllMinReadyTime(Platform::get()->getTime());
     schedule_->setReadyTime(
-            /* Spider Pe */        archi->getSpiderPeIx(),
+            /* Spider Pe */     archi->getSpiderGRTID(),
             /* End of Mapping */Platform::get()->getTime() +
-                                archi->getMappingTimeFct()(list.size(), archi_->getNPE()));
+                                archi->getScheduleTimeRoutine()(list.size(), archi_->getNPE()));
 
 
     /* Iterate on the list */

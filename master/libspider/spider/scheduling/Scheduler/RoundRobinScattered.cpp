@@ -115,8 +115,8 @@ void RoundRobinScattered::mapVertex(SRDAGVertex *vertex) {
 
     int pe;
 
-    int npe_io = archi_->getNPEforType(0);
-    int npe_cc = archi_->getNPEforType(1);
+    int npe_io = 5;//archi_->getNPEforType(0);
+    int npe_cc = 16;//archi_->getNPEforType(1);
 
 
     //try to map on type 1 PE
@@ -130,7 +130,7 @@ void RoundRobinScattered::mapVertex(SRDAGVertex *vertex) {
             break;
         }
 
-        if (!archi_->isActivated(pe % npe_cc + npe_io)) {
+        if (!archi_->getPEFromSpiderID(pe % npe_cc + npe_io)->isEnabled()) {
             continue;
         }
 
@@ -149,7 +149,7 @@ void RoundRobinScattered::mapVertex(SRDAGVertex *vertex) {
 
     while (bestSlave == -1) {
 
-        if (!archi_->isActivated(pe_io % npe_io)) {
+        if (!archi_->getPEFromSpiderID(pe_io % npe_io)->isEnabled()) {
             continue;
         }
 
@@ -162,7 +162,7 @@ void RoundRobinScattered::mapVertex(SRDAGVertex *vertex) {
     }
 
     bestStartTime = std::max(schedule_->getReadyTime(bestSlave), minimumStartTime);
-    bestEndTime = bestStartTime + vertex->executionTimeOn(archi_->getPEType(bestSlave));
+    bestEndTime = bestStartTime + vertex->executionTimeOn(archi_->getPEFromSpiderID(bestSlave)->getHardwareType());
 
     if (bestSlave < 0) {
         throwSpiderException("No slave found to execute one instance of vertex [%s].", vertex->toString());

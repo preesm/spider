@@ -51,7 +51,7 @@ public:
 
     ~GreedyScheduler() override;
 
-    void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, ArchiOld *archi) override;
+    void schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *schedule, Archi *archi) override;
 
 private:
     bool isSchedulable(SRDAGVertex *vertex);

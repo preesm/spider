@@ -109,19 +109,20 @@ void ListSchedulerOnTheGo::mapVertex(SRDAGVertex *vertex) {
 
 
     // Getting a slave for the vertex.
-    for (int pe = 0; pe < archi_->getNPE(); pe++) {
-        int slaveType = archi_->getPEType(pe);
+    for (int peIx = 0; peIx < archi_->getNPE(); peIx++) {
+        auto *pe = archi_->getPEFromSpiderID(peIx);
+        int slaveType = pe->getHardwareType();
 
-        if (!archi_->isActivated(pe)) continue;
+        if (!pe->isEnabled()) continue;
 
         // Patch to avoid sending special actors to clusters
         if ((vertex->getType() != SRDAG_NORMAL) && (slaveType == 1)) continue;
 
 
         // checking the constraints
-        if (vertex->isExecutableOn(pe) && vertexAllocSize < Platform::get()->getMaxActorAllocSize(pe)) {
-            Time startTime = std::max(schedule_->getReadyTime(pe), minimumStartTime);
-            Time waitTime = startTime - schedule_->getReadyTime(pe);
+        if (vertex->isExecutableOn(peIx) && vertexAllocSize < Platform::get()->getMaxActorAllocSize(peIx)) {
+            Time startTime = std::max(schedule_->getReadyTime(peIx), minimumStartTime);
+            Time waitTime = startTime - schedule_->getReadyTime(peIx);
             Time execTime = vertex->executionTimeOn(slaveType);
             Time comInTime = 0, comOutTime = 0;
             /** TODO compute communication time */
@@ -142,7 +143,7 @@ void ListSchedulerOnTheGo::mapVertex(SRDAGVertex *vertex) {
             //printf("Actor %d, Pe %d/%d: minimu_start %ld, ready time %ld, start time %ld, exec time %ld, endTime %ld\n", vertex->getId(), pe, archi_->getNPE(), minimumStartTime, schedule_->getReadyTime(pe), startTime + comInTime, execTime, endTime);
             if (endTime < bestEndTime || (endTime == bestEndTime && waitTime < bestWaitTime)) {
 
-                bestSlave = pe;
+                bestSlave = peIx;
                 bestEndTime = endTime;
                 bestStartTime = startTime;
                 bestWaitTime = waitTime;

@@ -104,33 +104,6 @@ private:
     sendRoutine sendRoutine_;
 };
 
-
-inline std::uint64_t defaultAllocateRoutine(std::uint64_t size, std::uint64_t used, std::uint64_t maxSize) {
-    if (used + size > maxSize) {
-        throwSpiderException("Not Enough Memory. Want: %"
-                                     PRIu64
-                                     " -- Available: %"
-                                     PRIu64
-                                     "", size, maxSize - used);
-    }
-    used += size;
-    return used;
-}
-
-inline void defaultDeallocateRoutine() {
-    /* Do nothing */
-}
-
-inline char *defaultReceiveRoutine(MemoryUnit *localMemoryUnit, std::uint64_t localVirtAddr,
-                                   MemoryUnit * /* distMemoryUnit */, std::uint64_t /* distVirtAddr */) {
-    return localMemoryUnit->virtToPhy(localVirtAddr);
-}
-
-inline void defaultSendRoutine(MemoryUnit * /* localMemoryUnit */, std::uint64_t /* localVirtAddr */,
-                               MemoryUnit * /* distMemoryUnit */, std::uint64_t  /* distVirtAddr */) {
-    /* Do nothing */
-}
-
 /* === MemoryUnit === */
 
 char *MemoryUnit::virtToPhy(std::uint64_t virt) const {

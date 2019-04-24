@@ -113,6 +113,13 @@ public:
     inline std::uint32_t getNPEType() const;
 
     /**
+     * @brief Retrieve the number of PE(s) for a given HardwareType (@refitem PE::getHardwareType()).
+     * @param HWType Hardware type.
+     * @return number of PE of HardwareType HWType
+     */
+    inline std::uint32_t getNPEForHWType(std::uint32_t HWType) const;
+
+    /**
      * @brief Get the number of currently activated PEs (inferior or equal to @refitem nPE_).
      * @return number of activated PEs.
      */
@@ -200,6 +207,7 @@ private:
 
     PE **peArray_ = nullptr;
     MemoryUnit **memoryUnitArray_ = nullptr;
+    std::uint32_t *nPEsPerPETypeArray_ = nullptr;
 };
 
 void Archi::addPE(PE *pe) {
@@ -214,6 +222,7 @@ void Archi::addPE(PE *pe) {
     virt2SpiderMap_[pe->getVirtualID()] = pe->getSpiderID();
     hw2SpiderMap_[pe->getHardwareID()] = pe->getSpiderID();
     nLRT_ += pe->isLRT();
+    nPEsPerPETypeArray_[pe->getHardwareType()]++;
 }
 
 void Archi::addMemoryUnit(MemoryUnit *memoryUnit) {
@@ -255,6 +264,10 @@ std::uint32_t Archi::getNMemoryUnit() const {
 
 std::uint32_t Archi::getNPEType() const {
     return nPEType_;
+}
+
+std::uint32_t Archi::getNPEForHWType(std::uint32_t HWType) const {
+    return nPEsPerPETypeArray_[HWType];
 }
 
 std::uint32_t Archi::getNActivatedPE() const {
@@ -301,5 +314,7 @@ std::uint32_t Archi::getSpiderGRTID() const {
 ScheduleTimeRoutine Archi::getScheduleTimeRoutine() const {
     return scheduleTimeRoutine_;
 }
+
+
 
 #endif //SPIDER_ARCHI_H

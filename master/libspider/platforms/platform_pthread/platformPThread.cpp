@@ -166,8 +166,9 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
         throwSpiderException("Cannot create new platform, a platform already exist.");
     }
     platform_ = this;
+    auto *archi = Spider::getArchi();
 
-    nLrt_ = config.platform.nLrt;
+    nLrt_ = archi->getNPE();
 
     if (nLrt_ == 0) {
         throwSpiderException("Spider require at least 1 LRT.");
@@ -240,36 +241,29 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
 
     /** Filling up parameters for each threads */
     pthread_barrier_init(&pthreadLRTBarrier, nullptr, nLrt_);
-    int offsetPe = 0;
-    for (int pe = 0; pe < config.platform.nPeType; ++pe) {
-        for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
-            if ((std::uint32_t) (i + offsetPe) >= nLrt_) {
-                break;
-            }
-            lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
-                    spider2LrtJobQueue_,
-                    lrtNotificationQueues_[i + offsetPe],
-                    dataQueues_);
+    for (std::uint32_t i = 0; i < archi->getNPE(); i++) {
+        lrtCom_[i] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
+                spider2LrtJobQueue_,
+                lrtNotificationQueues_[i],
+                dataQueues_);
 
-            lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i + offsetPe);
+        lrt_[i] = CREATE(ARCHI_STACK, LRT)(i);
 
-            lrtInfoArray_[i + offsetPe].lrt = lrt_[i + offsetPe];
-            lrtInfoArray_[i + offsetPe].fcts = config.platform.fcts;
-            lrtInfoArray_[i + offsetPe].nFcts = config.platform.nLrtFcts;
-            lrtInfoArray_[i + offsetPe].lrtID = i + offsetPe;
-            lrtInfoArray_[i + offsetPe].platform = this;
-            lrtInfoArray_[i + offsetPe].coreAffinity = config.platform.coreAffinities[pe][i];
-            lrtInfoArray_[i + offsetPe].pthreadBarrier = &pthreadLRTBarrier;
-            /** Stack related information */
-            lrtInfoArray_[i + offsetPe].lrtStack.name = stackConfig.lrtStack.name;
-            lrtInfoArray_[i + offsetPe].lrtStack.type = stackConfig.lrtStack.type;
-            lrtInfoArray_[i + offsetPe].lrtStack.start = (void *) ((char *) stackConfig.lrtStack.start +
-                                                                   (i + offsetPe) * stackConfig.lrtStack.size / nLrt_);
-            lrtInfoArray_[i + offsetPe].lrtStack.size = stackConfig.lrtStack.size / nLrt_;
-            /** Papify related information */
-            lrtInfoArray_[i + offsetPe].usePapify = config.usePapify;
-        }
-        offsetPe += config.platform.pesPerPeType[pe];
+        lrtInfoArray_[i].lrt = lrt_[i];
+        lrtInfoArray_[i].fcts = config.fcts;
+        lrtInfoArray_[i].nFcts = config.nLrtFcts;
+        lrtInfoArray_[i].lrtID = i;
+        lrtInfoArray_[i].platform = this;
+        lrtInfoArray_[i].coreAffinity = archi->getPEFromSpiderID(i)->getHardwareID();
+        lrtInfoArray_[i].pthreadBarrier = &pthreadLRTBarrier;
+        /** Stack related information */
+        lrtInfoArray_[i].lrtStack.name = stackConfig.lrtStack.name;
+        lrtInfoArray_[i].lrtStack.type = stackConfig.lrtStack.type;
+        lrtInfoArray_[i].lrtStack.start = (void *) ((char *) stackConfig.lrtStack.start +
+                                                    (i) * stackConfig.lrtStack.size / nLrt_);
+        lrtInfoArray_[i].lrtStack.size = stackConfig.lrtStack.size / nLrt_;
+        /** Papify related information */
+        lrtInfoArray_[i].usePapify = config.usePapify;
     }
 
     lrtThreadsArray[0] = pthread_self();
@@ -305,7 +299,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
 
 
     setAffinity(0);
-    lrt_[0]->setFctTbl(config.platform.fcts, config.platform.nLrtFcts);
+    lrt_[0]->setFctTbl(config.fcts, config.nLrtFcts);
 
     /** Set Communicators of master **/
     lrt_[0]->setCommunicators();

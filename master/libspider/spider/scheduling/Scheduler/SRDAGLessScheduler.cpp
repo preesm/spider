@@ -84,7 +84,7 @@ void SRDAGLessScheduler::replaceInputIfWithBroadcast(PiSDFGraph *const graph) {
             broadcast->connectInEdge(0, edge);
             graph->connect(broadcast, 0, std::to_string(totalCons).c_str(),
                            snkVertex, edgeSnkIx, edge->getConsExpr()->toString(),
-                           "0", nullptr, nullptr, nullptr, false);
+                           "0", nullptr, nullptr, false);
             nVertices_++;
         }
     }

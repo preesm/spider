@@ -343,6 +343,8 @@ inline const char *PiSDFVertex::getName() const {
             return "Fork";
         case PISDF_SUBTYPE_JOIN:
             return "Join";
+        case PISDF_SUBTYPE_INIT:
+            return "Init";
         case PISDF_SUBTYPE_END:
             return "End";
         case PISDF_SUBTYPE_DELAY:

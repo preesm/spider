@@ -51,7 +51,7 @@ class PE;
 
 class MemoryUnit;
 
-/* === Type declaration(s) === */
+/* === Type(s) === */
 
 using Time = std::uint64_t;
 
@@ -68,7 +68,7 @@ enum class SpiderHWType {
     VIRT_PE,  /*! PE is instantiated in Spider but fully managed by an LRT (SpiderPEType::PE_ONLY) */
 };
 
-/* === Structures === */
+/* === Structure(s) === */
 
 typedef struct SpiderArchiConfig {
     std::uint32_t nPE;
@@ -76,7 +76,7 @@ typedef struct SpiderArchiConfig {
     std::uint32_t nMemoryUnit;
 } SpiderArchiConfig;
 
-/* === Routines definitions === */
+/* === Routine(s) === */
 
 using allocateRoutine = std::uint64_t (*)(
         /* == Size to allocate == */        std::uint64_t,

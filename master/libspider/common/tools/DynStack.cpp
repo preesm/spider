@@ -105,11 +105,9 @@ void DynStack::printStat() {
         normalizedSize /= 1024.;
         unitIndex++;
     }
-    Logger::print(LOG_GENERAL, LOG_INFO, "[%s] usage: \t%5.1f %s", getName(), normalizedSize, units[unitIndex]);
+    Logger::print(LOG_GENERAL, LOG_INFO, "[%s]\t usage: %5.1f %s\n", getName(), normalizedSize, units[unitIndex]);
 
     if (nb_) {
-        Logger::print(LOG_GENERAL, LOG_WARNING, "[%s]: \t%lld B still in use", getName(), curUsedSize_);
+        Logger::print(LOG_GENERAL, LOG_WARNING, "[%s]: \t%lld B still in use\n", getName(), curUsedSize_);
     }
-
-    printf("\n");
 }

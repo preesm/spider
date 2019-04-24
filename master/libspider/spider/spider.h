@@ -132,7 +132,9 @@ typedef struct SpiderConfig {
 
     std::map<lrtFct, std::map<const char *, PapifyConfig*>> papifyJobInfo;
 
-    PlatformConfig platform;
+//    PlatformConfig platform;
+    lrtFct *fcts;
+    int nLrtFcts;
 } SpiderConfig;
 
 typedef struct {

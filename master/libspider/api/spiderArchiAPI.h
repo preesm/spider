@@ -99,12 +99,32 @@ namespace Spider {
 
     /* === General Archi API === */
 
+    /**
+     * @brief Create a new Archi in spider (only one is permitted).
+     * @param config  Architecture configuration (see @refitem SpiderArchiConfig).
+     * @return Pointer to newly created Archi, associated memory is handled by spider.
+     */
     Archi *createArchi(SpiderArchiConfig &config);
 
+    /**
+     * @brief Set the Global Run-Time (GRT) id.
+     * @param archi  Pointer to the architecture.
+     * @param id     S-LAM user defined id of the GRT PE.
+     */
     void setSpiderGRTVirtualID(Archi *archi, std::uint32_t id);
 
     /* === PE related API === */
 
+    /**
+     * @brief Create a new Processing Element (PE).
+     * @param hwType        S-LAM user defined hardware type.
+     * @param hwID          Physical hardware id of the PE (mainly used for thread affinity).
+     * @param virtID        S-LAM used defined PE id.
+     * @param name          Name of the PE.
+     * @param spiderPEType  Spider PE type.
+     * @param spiderHWType  Spider hardware type.
+     * @return Pointer to newly created PE, associated memory is handled by spider.
+     */
     PE *createPE(std::uint32_t hwType,
                  std::uint32_t hwID,
                  std::uint32_t virtID,
@@ -112,28 +132,82 @@ namespace Spider {
                  SpiderPEType spiderPEType = SpiderPEType::LRT_PE,
                  SpiderHWType spiderHWType = SpiderHWType::PHYS_PE);
 
+    /**
+     * @brief Set the SpiderPEType of a given PE.
+     * @param pe    Pointer to the PE.
+     * @param type  SpiderPEType to set.
+     */
     void setPESpiderPETYpe(PE *pe, SpiderPEType type);
 
+    /**
+     * @brief Set the SpiderHWType of a given PE.
+     * @param pe    Pointer to the PE.
+     * @param type  SpiderHWType to set.
+     */
     void setPESpiderHWTYpe(PE *pe, SpiderHWType type);
 
+    /**
+     * @brief Set the name of a given PE.
+     * @param pe    Pointer to the PE.
+     * @param name  Name of the PE to set.
+     */
     void setPEName(PE *pe, std::string name);
 
+    /**
+     * @brief Set the MemoryUnit attached to a given PE.
+     * @param pe          Pointer to the PE.
+     * @param memoryUnit  SpiderPEType to set.
+     */
     void setPEMemoryUnit(PE *pe, MemoryUnit *memoryUnit);
 
+    /**
+     * @brief Disable a given PE.
+     * @param pe  Pointer to the PE.
+     */
     void disablePE(PE *pe);
 
+    /**
+     * @brief Enable a given PE (default).
+     * @param pe  Pointer to the PE.
+     */
     void enablePE(PE *pe);
 
     /* === MemoryUnit related API === */
 
+    /**
+     * @brief Create a new MemoryUnit.
+     * @param base  Base address of the MemoryUnit.
+     * @param size  Size of the MemoryUnit.
+     * @return Pointer to newly created MemoryUnit, associated memory is handled by spider.
+     */
     MemoryUnit *createMemoryUnit(char *base, std::uint64_t size);
 
+    /**
+     * @brief Set the allocation routine for a given MemoryUnit.
+     * @param memoryUnit  Pointer to the MemoryUnit.
+     * @param routine     Allocation routine to set.
+     */
     void setMemoryUnitAllocateRoutine(MemoryUnit *memoryUnit, allocateRoutine routine);
 
+    /**
+     * @brief Set the deallocation routine for a given MemoryUnit.
+     * @param memoryUnit  Pointer to the MemoryUnit.
+     * @param routine     Deallocation routine to set.
+     */
     void setMemoryUnitDeallocateRoutine(MemoryUnit *memoryUnit, deallocateRoutine routine);
 
+    /**
+     * @brief Set the receive memory routine for a given MemoryUnit.
+     * @param memoryUnit  Pointer to the MemoryUnit.
+     * @param routine     Receive memory routine to set.
+     */
     void setMemoryUnitReceiveRoutine(MemoryUnit *memoryUnit, receiveRoutine routine);
 
+    /**
+     * @brief Set the send memory routine for a given MemoryUnit.
+     * @param memoryUnit  Pointer to the MemoryUnit.
+     * @param routine     Send memory routine to set.
+     */
     void setMemoryUnitSendRoutine(MemoryUnit *memoryUnit, sendRoutine routine);
 }
 

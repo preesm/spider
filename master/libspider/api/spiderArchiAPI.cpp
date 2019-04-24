@@ -47,6 +47,9 @@
 /* === General Archi API === */
 
 Archi *Spider::createArchi(SpiderArchiConfig &config) {
+    if (Spider::getArchi()) {
+        throwSpiderException("Only one Archi is permitted per Spider instance.");
+    }
     auto *archi = CREATE_NA(ARCHI_STACK, Archi)(
             /* == nPE == */         config.nPE,
             /* == nPEType == */     config.nPEType,

@@ -44,18 +44,20 @@
 #include <spider-api/user/archi.h>
 #include <spider-api/user/graph.h>
 
-/* === Forward declarations === */
+#define MAX_STATS_VERTICES 1000
+#define MAX_STATS_PE_TYPES 3
+
+/* === Forward declaration === */
 
 class MemAlloc;
 class Scheduler;
 
-#define MAX_STATS_VERTICES 1000
-#define MAX_STATS_PE_TYPES 3
+/* === Type(s) === */
 
 using Time = std::uint64_t;
 using Param = std::int64_t;
 
-using lrtFct = void (*)(void **, void **, Param *, Param *);
+/* === Enumeration(s) === */
 
 typedef enum {
     MEMALLOC_DUMMY,
@@ -70,20 +72,33 @@ typedef enum {
     SCHEDULER_ROUND_ROBIN_SCATTERED
 } SchedulerType;
 
-typedef enum {
-    STACK_STATIC,
-    STACK_DYNAMIC
-} StackType;
+enum class StackType : std::uint8_t {
+    STATIC,  /*!< Static stack, size is fixed on init */
+    DYNAMIC  /*!< Dynamic stack, size is limited by hardware available resources */
+};
 
-typedef struct {
+/* === Routine(s) === */
+
+using lrtFct = void (*)(void **, void **, Param *, Param *);
+
+/* === Structure(s) === */
+
+typedef struct StackInfo {
     StackType type;
     const char *name;
-
     void *start;
-    int size;
-} StackConfig;
+    std::uint32_t size;
+} StackInfo;
 
-typedef struct {
+typedef struct SpiderStackConfig {
+    StackInfo archiStack;
+    StackInfo pisdfStack;
+    StackInfo srdagStack;
+    StackInfo transfoStack;
+    StackInfo lrtStack;
+} SpiderStackConfig;
+
+typedef struct PlatformConfig {
     int nLrt;
     int shMemSize;
     lrtFct *fcts;
@@ -103,18 +118,12 @@ typedef struct {
     int eventSetID_;
 } PapifyConfig;
 
-typedef struct {
+typedef struct SpiderConfig {
     MemAllocType memAllocType;
     int memAllocStart;
     int memAllocSize;
 
     SchedulerType schedulerType;
-
-    StackConfig archiStack;
-    StackConfig pisdfStack;
-    StackConfig srdagStack;
-    StackConfig transfoStack;
-    StackConfig lrtStack;
 
     bool useGraphOptim;
     bool verbose;
@@ -159,7 +168,9 @@ typedef struct {
 } ExecutionStat;
 
 namespace Spider {
-    void init(SpiderConfig &cfg);
+    void initStacks(SpiderStackConfig &cfg);
+
+    void init(SpiderConfig &cfg, SpiderStackConfig &stackConfig);
 
     void initReservedMemory();
 

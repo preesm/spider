@@ -59,7 +59,7 @@ typedef enum {
 #define CREATE_MUL_NA(stackId, size, type) new(StackMonitor::alloc(stackId, (size)*sizeof(type), false)) type[size]
 
 namespace StackMonitor {
-    void initStack(SpiderStack id, StackConfig cfg);
+    void initStack(SpiderStack id, StackInfo cfg);
 
     void clean(SpiderStack id);
 

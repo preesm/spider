@@ -120,8 +120,14 @@ static bool isGraphStatic(PiSDFGraph *const graph) {
     return isStatic;
 }
 
+void Spider::initStacks(SpiderStackConfig &cfg) {
+    StackMonitor::initStack(ARCHI_STACK, cfg.archiStack);
+    StackMonitor::initStack(PISDF_STACK, cfg.pisdfStack);
+    StackMonitor::initStack(SRDAG_STACK, cfg.srdagStack);
+    StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
+}
 
-void Spider::init(SpiderConfig &cfg) {
+void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     Logger::initializeLogger();
 
     setGraphOptim(cfg.useGraphOptim);
@@ -133,55 +139,12 @@ void Spider::init(SpiderConfig &cfg) {
     setTraceEnabled(cfg.traceEnabled);
 
     //TODO: add a switch between the different platform
-    platform_ = new PlatformPThread(cfg);
+    platform_ = new PlatformPThread(cfg, stackConfig);
 
     if (traceEnabled_) {
         Launcher::get()->sendEnableTrace(-1);
     }
 //    Logger::enable(LOG_JOB);
-}
-
-extern int stopThreads;
-
-static std::int32_t computeTotalNBodies(PiSDFGraph *g) {
-    std::int32_t nBodies = g->getNBody();
-    for (auto i = 0; i < g->getNBody(); ++i) {
-        if (g->getBody(i)->isHierarchical()) {
-            nBodies += computeTotalNBodies(g->getBody(i)->getSubGraph());
-        }
-    }
-    return nBodies;
-}
-
-static std::int32_t computeTotalNEdges(PiSDFGraph *g) {
-    std::int32_t nEdges = g->getNEdge();
-    for (auto i = 0; i < g->getNBody(); ++i) {
-        if (g->getBody(i)->isHierarchical()) {
-            nEdges += computeTotalNEdges(g->getBody(i)->getSubGraph());
-        }
-    }
-    return nEdges;
-}
-
-std::int32_t computeNHierarchicals(PiSDFGraph *g) {
-    std::int32_t nBodies = 0;
-    for (auto i = 0; i < g->getNBody(); ++i) {
-        if (g->getBody(i)->isHierarchical()) {
-            nBodies += 1;
-            nBodies += computeNHierarchicals(g->getBody(i)->getSubGraph());
-        }
-    }
-    return nBodies;
-}
-
-std::int32_t getNLevels(PiSDFGraph *g, std::int32_t currentDepth) {
-    std::int32_t nLevels = currentDepth;
-    for (auto i = 0; i < g->getNBody(); ++i) {
-        if (g->getBody(i)->isHierarchical()) {
-            nLevels = std::max(nLevels, getNLevels(g->getBody(i)->getSubGraph(), currentDepth + 1));
-        }
-    }
-    return nLevels;
 }
 
 void Spider::iterate() {
@@ -290,6 +253,20 @@ void Spider::clean() {
     delete memAlloc_;
     delete scheduler_;
     delete platform_;
+
+    /* === Checking stacks state === */
+
+    StackMonitor::freeAll(ARCHI_STACK);
+    StackMonitor::freeAll(TRANSFO_STACK);
+    StackMonitor::freeAll(SRDAG_STACK);
+    StackMonitor::freeAll(PISDF_STACK);
+
+    /* === Cleaning the Stacks === */
+
+    StackMonitor::clean(ARCHI_STACK);
+    StackMonitor::clean(TRANSFO_STACK);
+    StackMonitor::clean(SRDAG_STACK);
+    StackMonitor::clean(PISDF_STACK);
 }
 
 

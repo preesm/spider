@@ -48,6 +48,7 @@
 #include <scheduling/ScheduleJob.h>
 
 #ifdef PAPI_AVAILABLE
+
 #include "../papify/PapifyAction.h"
 
 #endif
@@ -82,6 +83,12 @@ public:
 
     inline int getJobIx() const;
 
+    inline void initStack(StackInfo info);
+
+    inline Stack *&getStack();
+
+    inline void cleanStack() const;
+
     inline void setUsePapify();
 
     inline void setCommunicators();
@@ -103,9 +110,7 @@ private:
     bool usePapify_;
     int jobIx_;
     int jobIxTotal_;
-
-    int tabBlkLrtIx[NB_MAX_ACTOR];
-    int tabBlkLrtJobIx[NB_MAX_ACTOR];
+    Stack *lrtStack_;
 
 #ifdef PAPI_AVAILABLE
     std::map<lrtFct, PapifyAction *> jobPapifyActions_;
@@ -225,6 +230,19 @@ inline void LRT::rstJobIx() {
 
 inline void LRT::setUsePapify() {
     usePapify_ = true;
+}
+
+void LRT::initStack(StackInfo info) {
+    StackMonitor::initStack(LRT_STACK, info);
+}
+
+Stack *&LRT::getStack() {
+    return lrtStack_;
+}
+
+void LRT::cleanStack() const {
+    StackMonitor::freeAll(LRT_STACK);
+    StackMonitor::clean(LRT_STACK);
 }
 
 inline void LRT::setCommunicators() {

@@ -147,7 +147,6 @@ LRT::~LRT() {
         }
     }
 #endif
-    StackMonitor::freeAll(LRT_STACK);
 }
 
 void LRT::sendTrace(int srdagIx, Time start, Time end) {
@@ -586,6 +585,8 @@ void LRT::run(bool loop) {
 void LRT::addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction) {
     this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
 }
+
+
 
 
 #endif

@@ -42,11 +42,8 @@
 #include <tools/Set.h>
 
 class PiSDFEdge;
-
 class PiSDFParam;
-
 class PiSDFGraph;
-
 class PiSDFVertex;
 
 typedef enum PiSDFParamType {
@@ -56,8 +53,23 @@ typedef enum PiSDFParamType {
 } PiSDFParamType;
 
 typedef enum PiSDFType {
-    PISDF_TYPE_BODY, PISDF_TYPE_CONFIG, PISDF_TYPE_IF
+    PISDF_TYPE_BODY,
+    PISDF_TYPE_CONFIG,
+    PISDF_TYPE_IF
 } PiSDFType;
+
+typedef enum PiSDFSubType {
+    PISDF_SUBTYPE_NORMAL,
+    PISDF_SUBTYPE_BROADCAST,
+    PISDF_SUBTYPE_ROUNDBUFFER,
+    PISDF_SUBTYPE_FORK,
+    PISDF_SUBTYPE_JOIN,
+    PISDF_SUBTYPE_INIT,
+    PISDF_SUBTYPE_END,
+    PISDF_SUBTYPE_DELAY,
+    PISDF_SUBTYPE_INPUT_IF,
+    PISDF_SUBTYPE_OUTPUT_IF
+} PiSDFSubType;
 
 typedef enum PiSDFDelayType {
     PISDF_DELAY_PERSISTENT = 1,

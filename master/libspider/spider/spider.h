@@ -41,30 +41,13 @@
 #include <map>
 #include <vector>
 #include <cstdint>
-#include "spiderArchiAPI.h"
+#include <spider-api/user/archi.h>
+#include <spider-api/user/graph.h>
 
+/* === Forward declarations === */
 
-class Archi;
-class PiSDFVertex;
-class PiSDFParam;
-class PiSDFGraph;
-class PiSDFEdge;
-class SRDAGGraph;
 class MemAlloc;
 class Scheduler;
-
-
-typedef enum PiSDFSubType {
-    PISDF_SUBTYPE_NORMAL,
-    PISDF_SUBTYPE_BROADCAST,
-    PISDF_SUBTYPE_ROUNDBUFFER,
-    PISDF_SUBTYPE_FORK,
-    PISDF_SUBTYPE_JOIN,
-    PISDF_SUBTYPE_END,
-    PISDF_SUBTYPE_DELAY,
-    PISDF_SUBTYPE_INPUT_IF,
-    PISDF_SUBTYPE_OUTPUT_IF
-} PiSDFSubType;
 
 #define MAX_STATS_VERTICES 1000
 #define MAX_STATS_PE_TYPES 3
@@ -222,93 +205,6 @@ namespace Spider {
     PiSDFGraph *getGraph();
 
     Archi *getArchi();
-
-    /* PiSDF Graph Generation */
-    PiSDFGraph *createGraph(
-            int nEdges,
-            int nParams,
-            int nInIfs,
-            int nOutIfs,
-            int nConfigs,
-            int nBodies);
-
-    PiSDFVertex *addBodyVertex(
-            PiSDFGraph *graph,
-            const char *vertexName, int fctId,
-            int nInEdge, int nOutEdge,
-            int nInParam);
-
-    PiSDFVertex *addSpecialVertex(
-            PiSDFGraph *graph,
-            const char *vertexName,
-            PiSDFSubType subType,
-            int nInEdge, int nOutEdge,
-            int nInParam);
-
-    PiSDFVertex *addConfigVertex(
-            PiSDFGraph *graph,
-            const char *vertexName, int fctId,
-            PiSDFSubType subType,
-            int nInEdge, int nOutEdge,
-            int nInParam, int nOutParam);
-
-    PiSDFVertex *addInputIf(
-            PiSDFGraph *graph,
-            const char *name,
-            int nInParam);
-
-    PiSDFVertex *addOutputIf(
-            PiSDFGraph *graph,
-            const char *name,
-            int nInParam);
-
-    void addSubGraph(PiSDFVertex *hierVertex, PiSDFGraph *subgraph);
-
-    PiSDFParam *addStaticParam(PiSDFGraph *graph,
-                               const char *name,
-                               Param value);
-
-    PiSDFParam *addStaticDependentParam(PiSDFGraph *graph,
-                                        const char *name,
-                                        const char *expr,
-                                        std::initializer_list<PiSDFParam *> dependencies);
-
-    PiSDFParam *addInheritedParam(PiSDFGraph *graph,
-                                  const char *name,
-                                  int parentId);
-
-    PiSDFParam *addDynamicParam(PiSDFGraph *graph,
-                                const char *name);
-
-    PiSDFParam *addDynamicDependentParam(PiSDFGraph *graph,
-                                         const char *name,
-                                         const char *expr,
-                                         std::initializer_list<PiSDFParam *> dependencies);
-
-
-    PiSDFEdge *connect(
-            PiSDFGraph *graph,
-            PiSDFVertex *source, int sourcePortId, const char *production,
-            PiSDFVertex *sink, int sinkPortId, const char *consumption,
-            const char *delay,
-            PiSDFVertex *setter = nullptr,
-            PiSDFVertex *getter = nullptr,
-            PiSDFVertex *delayActor = nullptr,
-            bool isDelayPersistent = false);
-
-    void addInParam(PiSDFVertex *vertex, int ix, PiSDFParam *param);
-
-    void addOutParam(PiSDFVertex *vertex, int ix, PiSDFParam *param);
-
-    void setTimingOnType(PiSDFVertex *vertex, int peType, const char *timing);
-
-    void isExecutableOnAllPE(PiSDFVertex *vertex);
-
-    void isExecutableOnPE(PiSDFVertex *vertex, int pe);
-
-    void isExecutableOnPEType(PiSDFVertex *vertex, std::uint32_t peType);
-
-    void cleanPiSDF();
-};
+}
 
 #endif//SPIDER_H

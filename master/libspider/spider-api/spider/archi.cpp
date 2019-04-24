@@ -38,10 +38,10 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-#include "spiderArchiAPI.h"
-#include "graphs/Archi/ArchiPE.h"
-#include "graphs/Archi/Archi.h"
-#include "spider.h"
+#include <spider-api/user/archi.h>
+#include <graphs/Archi/ArchiPE.h>
+#include <graphs/Archi/Archi.h>
+#include <spider.h>
 
 
 /* === General Archi API === */

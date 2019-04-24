@@ -42,8 +42,8 @@
 
 #include <cstdint>
 #include <string>
+#include <spider-api/user/archi.h>
 #include "ArchiMemUnit.h"
-#include "spiderArchiAPI.h"
 
 class PE {
 public:

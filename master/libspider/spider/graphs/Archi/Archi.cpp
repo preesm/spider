@@ -50,15 +50,21 @@ Archi::Archi(std::uint32_t nPE, std::uint32_t nPEType, std::uint32_t nMemoryUnit
     /* === Init peArray_ === */
 
     peArray_ = CREATE_MUL_NA(ARCHI_STACK, nPE, PE *);
-    for (std::uint32_t i = 0; i < nPE_; ++i) {
+    for (std::uint32_t i = 0; i < nPE; ++i) {
         peArray_[i] = nullptr;
     }
 
     /* === Init memoryUnitArray_ === */
 
     memoryUnitArray_ = CREATE_MUL_NA(ARCHI_STACK, nMemoryUnit, MemoryUnit *);
-    for (std::uint32_t i = 0; i < nMemUnit_; ++i) {
+    for (std::uint32_t i = 0; i < nMemoryUnit; ++i) {
         memoryUnitArray_[i] = nullptr;
+    }
+
+    /* === Init nPEsPerPETypeArray_ === */
+    nPEsPerPETypeArray_ = CREATE_MUL_NA(ARCHI_STACK, nPEType, std::uint32_t);
+    for (std::uint32_t i = 0; i < nPEType; ++i) {
+        nPEsPerPETypeArray_[i] = 0;
     }
 
     /* === Set the scheduleTimeRoutine === */
@@ -67,7 +73,7 @@ Archi::Archi(std::uint32_t nPE, std::uint32_t nPEType, std::uint32_t nMemoryUnit
 }
 
 Archi::~Archi() {
-    /* === Freeing resources of PE === */
+    /* === Freeing resources of peArray_ === */
 
     for (std::uint32_t i = 0; i < nPE_; ++i) {
         auto *pe = peArray_[i];
@@ -77,7 +83,7 @@ Archi::~Archi() {
     }
     StackMonitor::free(ARCHI_STACK, peArray_);
 
-    /* === Freeing resources of MemoryUnit === */
+    /* === Freeing resources of memoryUnitArray_ === */
 
     for (std::uint32_t i = 0; i < nMemUnit_; ++i) {
         auto *memoryUnit = memoryUnitArray_[i];
@@ -86,4 +92,7 @@ Archi::~Archi() {
         memoryUnitArray_[i] = nullptr;
     }
     StackMonitor::free(ARCHI_STACK, memoryUnitArray_);
+
+    /* === Freeing nPEsPerPETypeArray_ === */
+    StackMonitor::free(ARCHI_STACK, nPEsPerPETypeArray_);
 }

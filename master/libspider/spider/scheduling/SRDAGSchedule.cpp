@@ -130,7 +130,6 @@ bool SRDAGSchedule::check() {
 }
 
 void SRDAGSchedule::execute() {
-    TimeMonitor::startMonitoring();
     int startJob = nSentJobs_;
     for (int i = startJob; i < nJobs_; ++i) {
         auto *job = jobs_[i];
@@ -141,5 +140,4 @@ void SRDAGSchedule::execute() {
             nSentJobs_++;
         }
     }
-    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 }

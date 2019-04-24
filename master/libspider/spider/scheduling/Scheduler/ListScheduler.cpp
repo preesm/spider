@@ -71,7 +71,7 @@ void ListScheduler::mapVertex(SRDAGVertex *vertex) {
         if (!pe->isEnabled()) continue;
 
         // checking the constraints
-        if (vertex->isExecutableOn(peIx)) {
+        if (vertex->isExecutableOn(pe->getVirtualID())) {
             Time startTime = std::max(schedule_->getReadyTime(peIx), minimumStartTime);
             Time waitTime = startTime - schedule_->getReadyTime(peIx);
             Time execTime = vertex->executionTimeOn(slaveType);

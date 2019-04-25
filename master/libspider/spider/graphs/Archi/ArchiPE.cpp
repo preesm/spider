@@ -38,12 +38,19 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-
+#include "Archi.h"
 #include "ArchiPE.h"
+
 
 /* === Init of globalID static member === */
 
 std::uint32_t PE::globalID = 0;
+
+/* === Default routines === */
+
+std::uint64_t defaultZeroCommunicationCost(std::uint64_t) {
+    return 0;
+}
 
 PE::PE(std::uint32_t hwType,
        std::uint32_t hwID,
@@ -57,4 +64,22 @@ PE::PE(std::uint32_t hwType,
                                     spiderPEType_{spiderPEType},
                                     spiderHWType_{spiderHWType} {
     spiderID_ = PE::globalID++;
+
+    /* === Initializing read / send CommunicationCostRoutine to default values === */
+
+    auto nPE = Spider::getArchi()->getNPE();
+    readCostRoutineArray_ = CREATE_MUL_NA(ARCHI_STACK, nPE, CommunicationCostRoutine);
+    sendCostRoutineArray_ = CREATE_MUL_NA(ARCHI_STACK, nPE, CommunicationCostRoutine);
+    if (!readCostRoutineArray_ || !sendCostRoutineArray_) {
+        throwSpiderException("Failed to allocate cost routine arrays");
+    }
+    for (std::uint32_t i = 0; i < nPE; ++i) {
+        readCostRoutineArray_[i] = defaultZeroCommunicationCost;
+        sendCostRoutineArray_[i] = defaultZeroCommunicationCost;
+    }
+}
+
+PE::~PE() {
+    StackMonitor::free(ARCHI_STACK, readCostRoutineArray_);
+    StackMonitor::free(ARCHI_STACK, sendCostRoutineArray_);
 }

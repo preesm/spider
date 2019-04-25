@@ -449,18 +449,18 @@ void PlatformPThread::rstJobIxRecv() {
     NotificationMessage finishedMessage;
     /** Wait for LRTs to finish their jobs **/
     auto *archi = Spider::getArchi();
-    for (std::uint32_t i = 0; i < archi->getNActivatedPE() - 1; ++i) {
-        while (true) {
-            spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, true);
-            if (finishedMessage.getType() == LRT_NOTIFICATION &&
-                finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
-                Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- received end signal from LRT: %d.\n", getLrtIx(),
-                              finishedMessage.getLRTID());
-                break;
-            } else {
-                /** Save the notification for later **/
-                spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
-            }
+    auto nPEToWait = archi->getNActivatedPE() - 1;
+    std::uint32_t nFinishedPE = 0;
+    while (nFinishedPE < nPEToWait) {
+        spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, true);
+        if (finishedMessage.getType() == LRT_NOTIFICATION &&
+            finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- received end signal from LRT: %d.\n", getLrtIx(),
+                          finishedMessage.getLRTID());
+            nFinishedPE++;
+        } else {
+            /** Save the notification for later **/
+            spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
         }
     }
 }

@@ -79,23 +79,31 @@ typedef struct SpiderArchiConfig {
 /* === Routine(s) === */
 
 using allocateRoutine = std::uint64_t (*)(
-        /* == Size to allocate == */        std::uint64_t,
-        /* == Current memory used == */     std::uint64_t,
-        /* == Max size of the MemUnit == */ std::uint64_t);
+        /* = Size to allocate        = */ std::uint64_t,
+        /* = Current memory used     = */ std::uint64_t,
+        /* = Max size of the MemUnit = */ std::uint64_t
+);
 using deallocateRoutine = void (*)();
 using receiveRoutine = char *(*)(
-        /* == localMemoryUnit == */ MemoryUnit *,
-        /* == localVirtAddr == */   std::uint64_t,
-        /* == distMemoryUnit == */  MemoryUnit *,
-        /* == distVirtAddr == */    std::uint64_t);
+        /* = localMemoryUnit = */ MemoryUnit *,
+        /* = localVirtAddr   = */ std::uint64_t,
+        /* = distMemoryUnit  = */ MemoryUnit *,
+        /* = distVirtAddr    = */ std::uint64_t
+);
 using sendRoutine = void (*)(
-        /* == localMemoryUnit == */ MemoryUnit *,
-        /* == localVirtAddr == */   std::uint64_t,
-        /* == distMemoryUnit == */  MemoryUnit *,
-        /* == distVirtAddr == */    std::uint64_t);
+        /* = localMemoryUnit = */ MemoryUnit *,
+        /* = localVirtAddr   = */ std::uint64_t,
+        /* = distMemoryUnit  = */ MemoryUnit *,
+        /* = distVirtAddr    = */ std::uint64_t
+);
 using ScheduleTimeRoutine = Time (*)(
-        /* == Number of Actors == */ std::int32_t,
-        /* == Number of PEs == */    std::int32_t);
+        /* = Number of Actors = */ std::int32_t,
+        /* = Number of PEs    = */ std::int32_t
+);
+
+using CommunicationCostRoutine = std::uint64_t (*)(
+        /* = Number of bytes  = */ std::uint64_t
+);
 
 /* === API methods === */
 
@@ -175,6 +183,48 @@ namespace Spider {
      * @param pe  Pointer to the PE.
      */
     void enablePE(PE *pe);
+
+    /**
+     * @brief Set the read cost routine for reading from peB to peA.
+     * @remark This method does not affect read / send routines of peB.
+     * @param peA      First PE.
+     * @param peB      Second PE.
+     * @param routine  Routine to set.
+     */
+    void setReadCostRoutine(PE *peA, PE *peB, CommunicationCostRoutine routine);
+
+    /**
+     * @brief Set the send cost routine for sending from peA to peB.
+     * @remark This method does not affect read / send routines of peB.
+     * @param peA      First PE.
+     * @param peB      Second PE.
+     * @param routine  Routine to set.
+     */
+    void setSendCostRoutine(PE *peA, PE *peB, CommunicationCostRoutine routine);
+
+    /**
+     * @brief Disable 2 ways read / send between two PEs.
+     *        This method set an infinite cost for reading and sending from and to both PEs.
+     * @param peA  First PE.
+     * @param peB  Second PE.
+     */
+    void disableCommunicationsBetweenPEs(PE *peA, PE *peB);
+
+    /**
+     * @brief Disable one way read / send communication between two PEs.
+     *        This method set an infinite cost for reading from peB to peA and for sending from peB to peA.
+     * @param peA  First PE.
+     * @param peB  Second PE.
+     */
+    void disableReadSendBetweenPEs(PE *peA, PE *peB);
+
+    /**
+     * @brief Disable one way read / send communication between two PEs.
+     *        This method set an infinite cost for sending from peA to peB and for reading from peA to peB.
+     * @param peA  First PE.
+     * @param peB  Second PE.
+     */
+    void disableSendReadBetweenPEs(PE *peA, PE *peB);
 
     /* === MemoryUnit related API === */
 

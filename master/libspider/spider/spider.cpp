@@ -143,7 +143,7 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     if (traceEnabled_) {
         Launcher::get()->sendEnableTrace(-1);
     }
-    Logger::enable(LOG_JOB);
+//    Logger::enable(LOG_JOB);
 }
 
 void Spider::iterate() {

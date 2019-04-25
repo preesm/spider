@@ -54,7 +54,7 @@ SRDAGSchedule::~SRDAGSchedule() {
 
 void SRDAGSchedule::addJob(SRDAGScheduleJob *job) {
     jobs_.push_back(job);
-    int pe = job->getMappedPE();
+    auto pe = job->getMappedPE();
     auto *jobConstrains = job->getScheduleConstrain();
     auto *graph = job->getVertex()->getGraph();
     for (int i = 0; i < nPE_; ++i) {

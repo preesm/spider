@@ -51,7 +51,7 @@ typedef struct SRDAGJobConstrain {
 
 class SRDAGScheduleJob {
 public:
-    explicit SRDAGScheduleJob(std::int32_t nPEs);
+    explicit SRDAGScheduleJob();
 
     ~SRDAGScheduleJob();
 

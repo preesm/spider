@@ -54,7 +54,7 @@ public:
        SpiderPEType spiderPEType = SpiderPEType::LRT_PE,
        SpiderHWType spiderHWType = SpiderHWType::PHYS_PE);
 
-    ~PE() = default;
+    ~PE();
 
     /* === Setters === */
 
@@ -75,6 +75,10 @@ public:
     inline void disable();
 
     inline void enable();
+
+    inline void setReadCostRoutine(std::uint32_t distPESpiderID, CommunicationCostRoutine routine);
+
+    inline void setSendCostRoutine(std::uint32_t distPESpiderID, CommunicationCostRoutine routine);
 
     /* === Getters === */
 
@@ -98,6 +102,10 @@ public:
 
     inline bool isLRT() const;
 
+    inline CommunicationCostRoutine getReadCostRoutine(std::uint32_t distPESpiderID) const;
+
+    inline CommunicationCostRoutine getSendCostRoutine(std::uint32_t distPESpiderID) const;
+
 private:
     static std::uint32_t globalID;
 
@@ -114,7 +122,12 @@ private:
     SpiderPEType spiderPEType_ = SpiderPEType::LRT_PE;
     SpiderHWType spiderHWType_ = SpiderHWType::PHYS_PE;
     std::uint32_t spiderID_ = 0; /*! Spider id (used internally by spider) */
-    bool enabled_ = true;
+    bool enabled_ = false;
+
+    /* === read / send CommunicationCostRoutines === */
+
+    CommunicationCostRoutine *readCostRoutineArray_;
+    CommunicationCostRoutine *sendCostRoutineArray_;
 };
 
 void PE::setHardwareType(std::uint32_t type) {
@@ -151,6 +164,14 @@ void PE::disable() {
 
 void PE::enable() {
     enabled_ = true;
+}
+
+void PE::setReadCostRoutine(std::uint32_t distPESpiderID, CommunicationCostRoutine routine) {
+    readCostRoutineArray_[distPESpiderID] = routine;
+}
+
+void PE::setSendCostRoutine(std::uint32_t distPESpiderID, CommunicationCostRoutine routine) {
+    sendCostRoutineArray_[distPESpiderID] = routine;
 }
 
 std::uint32_t PE::getHardwareType() const {
@@ -191,6 +212,14 @@ bool PE::isEnabled() const {
 
 bool PE::isLRT() const {
     return spiderPEType_ != SpiderPEType::PE_ONLY;
+}
+
+CommunicationCostRoutine PE::getReadCostRoutine(std::uint32_t distPESpiderID) const {
+    return readCostRoutineArray_[distPESpiderID];
+}
+
+CommunicationCostRoutine PE::getSendCostRoutine(std::uint32_t distPESpiderID) const {
+    return sendCostRoutineArray_[distPESpiderID];
 }
 
 

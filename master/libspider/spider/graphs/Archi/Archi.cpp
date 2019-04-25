@@ -94,5 +94,19 @@ Archi::~Archi() {
     StackMonitor::free(ARCHI_STACK, memoryUnitArray_);
 
     /* === Freeing nPEsPerPETypeArray_ === */
+
     StackMonitor::free(ARCHI_STACK, nPEsPerPETypeArray_);
+}
+
+PE *Archi::getPEFromName(const std::string &name) const {
+    bool found = false;
+    PE *foundPE = nullptr;
+    for (std::uint32_t i = 0; i < nPE_ && !found; ++i) {
+        foundPE = peArray_[i];
+        found |= (name == foundPE->getName());
+    }
+    if (found) {
+        return foundPE;
+    }
+    return nullptr;
 }

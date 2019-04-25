@@ -155,7 +155,7 @@ public:
      * @param name  Name of the PE to find.
      * @return first PE with name matching given name, nullptr else.
      */
-    inline PE *getPEFromName(const std::string &name) const;
+    PE *getPEFromName(const std::string &name) const;
 
     /**
      * @brief Retrieve PE array containing all PEs.
@@ -237,11 +237,20 @@ void Archi::addMemoryUnit(MemoryUnit *memoryUnit) {
 }
 
 void Archi::activatePE(PE *const pe) const {
+    if (pe->isEnabled()) {
+        return;
+    }
     pe->enable();
     nActivatedPE_++;
 }
 
 void Archi::deactivatePE(PE *const pe) const {
+    if (pe->getSpiderID() == spiderGRTID_) {
+        throwSpiderException("Can not disable GRT PE.");
+    }
+    if (!pe->isEnabled()) {
+        return;
+    }
     pe->disable();
     nActivatedPE_--;
 }
@@ -286,18 +295,6 @@ PE *Archi::getPEFromHardwareID(std::uint32_t id) const {
     return getPEFromSpiderID(hw2SpiderMap_.at(id));
 }
 
-PE *Archi::getPEFromName(const std::string &name) const {
-    bool found = false;
-    PE *foundPE = nullptr;
-    for (std::uint32_t i = 0; i < nPE_ && !found; ++i) {
-        foundPE = peArray_[i];
-        found |= (name == foundPE->getName());
-    }
-    if (found) {
-        return foundPE;
-    }
-    return nullptr;
-}
 
 PE **Archi::getPEArray() const {
     return peArray_;

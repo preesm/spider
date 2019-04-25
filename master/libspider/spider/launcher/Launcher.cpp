@@ -196,7 +196,7 @@ void Launcher::sendDisableTrace(int lrtID) {
 }
 
 void Launcher::sendEndNotification(Schedule *schedule) {
-    for (std::uint32_t pe = 0; pe < Spider::getArchi()->getNActivatedPE(); ++pe) {
+    for (std::uint32_t pe = 0; pe < Spider::getArchi()->getNPE(); ++pe) {
         NotificationMessage message(LRT_NOTIFICATION,
                                     LRT_END_ITERATION,
                                     Platform::get()->getLrtIx(),

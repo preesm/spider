@@ -143,7 +143,7 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     if (traceEnabled_) {
         Launcher::get()->sendEnableTrace(-1);
     }
-//    Logger::enable(LOG_JOB);
+    Logger::enable(LOG_JOB);
 }
 
 void Spider::iterate() {
@@ -152,7 +152,7 @@ void Spider::iterate() {
         if (!srdag_) {
             /* On first iteration, the schedule is created */
             srdag_ = new SRDAGGraph();
-            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_, nullptr);
+            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
         }
         /* Run the schedule */
         schedule_->executeAndRun();

@@ -98,16 +98,6 @@ typedef struct SpiderStackConfig {
     StackInfo lrtStack;
 } SpiderStackConfig;
 
-typedef struct PlatformConfig {
-    int nLrt;
-    int shMemSize;
-    lrtFct *fcts;
-    int nLrtFcts;
-    int **coreAffinities;
-    int *pesPerPeType;
-    int nPeType;
-} PlatformConfig;
-
 typedef struct {
     const char *peType_;
     const char *peID_;
@@ -132,7 +122,6 @@ typedef struct SpiderConfig {
 
     std::map<lrtFct, std::map<const char *, PapifyConfig*>> papifyJobInfo;
 
-//    PlatformConfig platform;
     lrtFct *fcts;
     int nLrtFcts;
 } SpiderConfig;

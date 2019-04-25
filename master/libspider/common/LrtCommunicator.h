@@ -48,12 +48,6 @@ class LrtCommunicator : public Communicator {
 public:
     ~LrtCommunicator() override = default;
 
-    virtual void *data_start_send(std::int32_t alloc) = 0;
-
-    virtual void data_end_send(Fifo *f) = 0;
-
-    virtual void *data_recv(std::int32_t alloc) = 0;
-
     virtual void allocateDataBuffer(int /*nbInput*/, Fifo */*fIn*/, int /*nbOutput*/, Fifo */*fOut*/) {};
 
     virtual void freeDataBuffer(int /*nbInput*/, int /*nbOutput*/) {};

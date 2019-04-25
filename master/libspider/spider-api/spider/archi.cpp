@@ -108,12 +108,74 @@ void Spider::enablePE(PE *pe) {
     Spider::getArchi()->activatePE(pe);
 }
 
-void Spider::setReadCostRoutine(PE *peA, PE *peB, CommunicationCostRoutine routine) {
+void Spider::setReadCostRoutinePEToPE(PE *peA, PE *peB, CommunicationCostRoutine routine) {
     peA->setReadCostRoutine(peB->getSpiderID(), routine);
 }
 
-void Spider::setSendCostRoutine(PE *peA, PE *peB, CommunicationCostRoutine routine) {
+void Spider::setSendCostRoutinePEToPE(PE *peA, PE *peB, CommunicationCostRoutine routine) {
     peA->setSendCostRoutine(peB->getSpiderID(), routine);
+}
+
+void Spider::setReadCostRoutineType(std::uint32_t type, CommunicationCostRoutine routine) {
+    auto *archi = Spider::getArchi();
+    for (std::uint32_t i = 0; i < archi->getNPE(); ++i) {
+        auto *pe = archi->getPEFromSpiderID(i);
+        if (pe->getHardwareType() == type) {
+            for (std::uint32_t j = i + 1; j < archi->getNPE(); ++j) {
+                auto *peDist = archi->getPEFromSpiderID(j);
+                if (peDist->getHardwareType() == type) {
+                    peDist->setReadCostRoutine(i, routine);
+                    pe->setReadCostRoutine(j, routine);
+                }
+            }
+        }
+    }
+}
+
+void Spider::setSendCostRoutineType(std::uint32_t type, CommunicationCostRoutine routine) {
+    auto *archi = Spider::getArchi();
+    for (std::uint32_t i = 0; i < archi->getNPE(); ++i) {
+        auto *pe = archi->getPEFromSpiderID(i);
+        if (pe->getHardwareType() == type) {
+            for (std::uint32_t j = i + 1; j < archi->getNPE(); ++j) {
+                auto *peDist = archi->getPEFromSpiderID(j);
+                if (peDist->getHardwareType() == type) {
+                    peDist->setSendCostRoutine(i, routine);
+                    pe->setSendCostRoutine(j, routine);
+                }
+            }
+        }
+    }
+}
+
+void Spider::setReadCostRoutineTypeToType(std::uint32_t typeA, std::uint32_t typeB, CommunicationCostRoutine routine) {
+    auto *archi = Spider::getArchi();
+    for (std::uint32_t i = 0; i < archi->getNPE(); ++i) {
+        auto *pe = archi->getPEFromSpiderID(i);
+        if (pe->getHardwareType() == typeA) {
+            for (std::uint32_t j = i + 1; j < archi->getNPE(); ++j) {
+                auto *peDist = archi->getPEFromSpiderID(j);
+                if (peDist->getHardwareType() == typeB) {
+                    pe->setReadCostRoutine(j, routine);
+                }
+            }
+        }
+    }
+}
+
+void Spider::setSendCostRoutineTypeToType(std::uint32_t typeA, std::uint32_t typeB, CommunicationCostRoutine routine) {
+    auto *archi = Spider::getArchi();
+    for (std::uint32_t i = 0; i < archi->getNPE(); ++i) {
+        auto *pe = archi->getPEFromSpiderID(i);
+        if (pe->getHardwareType() == typeA) {
+            for (std::uint32_t j = i + 1; j < archi->getNPE(); ++j) {
+                auto *peDist = archi->getPEFromSpiderID(j);
+                if (peDist->getHardwareType() == typeB) {
+                    pe->setSendCostRoutine(j, routine);
+                }
+            }
+        }
+    }
 }
 
 void Spider::disableCommunicationsBetweenPEs(PE *peA, PE *peB) {
@@ -163,6 +225,8 @@ void Spider::setMemoryUnitReceiveRoutine(MemoryUnit *memoryUnit, receiveRoutine 
 void Spider::setMemoryUnitSendRoutine(MemoryUnit *memoryUnit, sendRoutine routine) {
     memoryUnit->setSendRoutine(routine);
 }
+
+
 
 
 

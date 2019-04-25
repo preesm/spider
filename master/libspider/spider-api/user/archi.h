@@ -191,7 +191,7 @@ namespace Spider {
      * @param peB      Second PE.
      * @param routine  Routine to set.
      */
-    void setReadCostRoutine(PE *peA, PE *peB, CommunicationCostRoutine routine);
+    void setReadCostRoutinePEToPE(PE *peA, PE *peB, CommunicationCostRoutine routine);
 
     /**
      * @brief Set the send cost routine for sending from peA to peB.
@@ -200,7 +200,37 @@ namespace Spider {
      * @param peB      Second PE.
      * @param routine  Routine to set.
      */
-    void setSendCostRoutine(PE *peA, PE *peB, CommunicationCostRoutine routine);
+    void setSendCostRoutinePEToPE(PE *peA, PE *peB, CommunicationCostRoutine routine);
+
+    /**
+     * @brief Set the read cost routine between all PEs of a same type.
+     * @param type    Hardware type.
+     * @param routine Routine to set.
+     */
+    void setReadCostRoutineType(std::uint32_t type, CommunicationCostRoutine routine);
+
+    /**
+     * @brief Set the read cost routine between all PEs of a same type.
+     * @param type    Hardware type.
+     * @param routine Routine to set.
+     */
+    void setSendCostRoutineType(std::uint32_t type, CommunicationCostRoutine routine);
+
+    /**
+     * @brief Set the read cost routine from all PEs of type B to all PE o type A.
+     * @param typeA    First hardware type.
+     * @param typeB    Second hardware type.
+     * @param routine Routine to set.
+     */
+    void setReadCostRoutineTypeToType(std::uint32_t typeA, std::uint32_t typeB, CommunicationCostRoutine routine);
+
+    /**
+     * @brief Set the read cost routine from all PEs of type B to all PE o type A.
+     * @param typeA    First hardware type.
+     * @param typeB    Second hardware type.
+     * @param routine Routine to set.
+     */
+    void setSendCostRoutineTypeToType(std::uint32_t typeA, std::uint32_t typeB, CommunicationCostRoutine routine);
 
     /**
      * @brief Disable 2 ways read / send between two PEs.

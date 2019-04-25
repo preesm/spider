@@ -163,4 +163,26 @@ void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *s
     StackMonitor::free(TRANSFO_STACK, list_);
 }
 
+Time Scheduler::computeMinimumStartTime(SRDAGVertex *vertex) {
+    Time minimumStartTime = 0;
+    auto *job = vertex->getScheduleJob();
+    auto *jobConstrains = job->getScheduleConstrain();
+
+    for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
+        auto *edge = vertex->getInEdge(i);
+        if (edge->getRate() != 0) {
+            auto *srcVertex = edge->getSrc();
+            auto *srcJob = srcVertex->getScheduleJob();
+            auto pe = srcJob->getMappedPE();
+            auto currentValue = jobConstrains[pe].jobId_;
+            minimumStartTime = std::max(minimumStartTime, srcJob->getMappingEndTime());
+            if (srcJob->getJobID() > currentValue) {
+                job->setScheduleConstrain(pe, srcVertex->getSetIx(), srcJob->getJobID());
+            }
+        }
+    }
+
+    return minimumStartTime;
+}
+
 

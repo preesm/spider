@@ -43,6 +43,12 @@
 #include <graphs/Archi/Archi.h>
 #include <spider.h>
 
+/* === Default routines === */
+
+std::uint64_t defaultInfiniteCommunicationCost(std::uint64_t) {
+    return UINT64_MAX;
+}
+
 
 /* === General Archi API === */
 
@@ -95,11 +101,42 @@ void Spider::setPEMemoryUnit(PE *pe, MemoryUnit *memoryUnit) {
 }
 
 void Spider::disablePE(PE *pe) {
-    pe->disable();
+    Spider::getArchi()->deactivatePE(pe);
 }
 
 void Spider::enablePE(PE *pe) {
-    pe->enable();
+    Spider::getArchi()->activatePE(pe);
+}
+
+void Spider::setReadCostRoutine(PE *peA, PE *peB, CommunicationCostRoutine routine) {
+    peA->setReadCostRoutine(peB->getSpiderID(), routine);
+}
+
+void Spider::setSendCostRoutine(PE *peA, PE *peB, CommunicationCostRoutine routine) {
+    peA->setSendCostRoutine(peB->getSpiderID(), routine);
+}
+
+void Spider::disableCommunicationsBetweenPEs(PE *peA, PE *peB) {
+    /* == Set routines of peA == */
+    peA->setReadCostRoutine(peB->getSpiderID(), defaultInfiniteCommunicationCost);
+    peA->setSendCostRoutine(peB->getSpiderID(), defaultInfiniteCommunicationCost);
+    /* == Set routines of peB == */
+    peB->setReadCostRoutine(peA->getSpiderID(), defaultInfiniteCommunicationCost);
+    peB->setSendCostRoutine(peA->getSpiderID(), defaultInfiniteCommunicationCost);
+}
+
+void Spider::disableReadSendBetweenPEs(PE *peA, PE *peB) {
+    /* == Set routines of peA == */
+    peA->setReadCostRoutine(peB->getSpiderID(), defaultInfiniteCommunicationCost);
+    /* == Set routines of peB == */
+    peB->setSendCostRoutine(peA->getSpiderID(), defaultInfiniteCommunicationCost);
+}
+
+void Spider::disableSendReadBetweenPEs(PE *peA, PE *peB) {
+    /* == Set routines of peA == */
+    peA->setSendCostRoutine(peB->getSpiderID(), defaultInfiniteCommunicationCost);
+    /* == Set routines of peB == */
+    peB->setReadCostRoutine(peA->getSpiderID(), defaultInfiniteCommunicationCost);
 }
 
 /* === MemoryUnit related API === */

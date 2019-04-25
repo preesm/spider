@@ -42,7 +42,7 @@
 #include <cstring>
 #include <cstdio>
 
-#include <platformPThread.h>
+#include <platformMPPA.h>
 #include <graphs/Archi/Archi.h>
 #include <tools/Rational.h>
 #include <lrt.h>
@@ -139,7 +139,7 @@ static void *lrtPthreadRunner(void *args) {
     pthread_exit(EXIT_SUCCESS);
 }
 
-void PlatformPThread::createAndLaunchThreads() {
+void PlatformMPPA::createAndLaunchThreads() {
 #ifdef __USE_GNU
     /** Blocking SIGINT signals ot handle it properly **/
     sigset_t childMask;
@@ -165,7 +165,7 @@ void PlatformPThread::createAndLaunchThreads() {
 }
 
 
-PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackConfig) {
+PlatformMPPA::PlatformMPPA(SpiderConfig &config, SpiderStackConfig &stackConfig) {
     if (platform_) {
         throwSpiderException("Cannot create new platform, a platform already exist.");
     }
@@ -202,7 +202,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
     lrtInfoArray_ = CREATE_MUL(ARCHI_STACK, nLrt_, LRTInfo);
 
     /** Initialize SpiderCommunicator */
-    spiderCom_ = CREATE(ARCHI_STACK, PThreadSpiderCommunicator)(
+    spiderCom_ = CREATE(ARCHI_STACK, MPPASpiderCommunicator)(
             spider2LrtJobQueue_,
             lrt2SpiderParamQueue_,
             lrtNotificationQueues_,
@@ -241,7 +241,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
     /** Filling up parameters for each threads */
     pthread_barrier_init(&pthreadLRTBarrier, nullptr, nLrt_);
     for (std::uint32_t i = 0; i < archi->getNPE(); i++) {
-        lrtCom_[i] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
+        lrtCom_[i] = CREATE(ARCHI_STACK, MPPALrtCommunicator)(
                 spider2LrtJobQueue_,
                 lrtNotificationQueues_[i],
                 dataQueues_);
@@ -300,7 +300,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
     this->rstTime();
 }
 
-PlatformPThread::~PlatformPThread() {
+PlatformMPPA::~PlatformMPPA() {
     auto spiderCommunicator = getSpiderCommunicator();
     auto *archi = Spider::getArchi();
     for (std::uint32_t i = 0; i < nLrt_; ++i) {
@@ -370,11 +370,11 @@ PlatformPThread::~PlatformPThread() {
 }
 
 /** File Handling */
-FILE *PlatformPThread::fopen(const char *name) {
+FILE *PlatformMPPA::fopen(const char *name) {
     return std::fopen(name, "w+");
 }
 
-void PlatformPThread::fprintf(FILE *id, const char *fmt, ...) {
+void PlatformMPPA::fprintf(FILE *id, const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
 
@@ -391,17 +391,17 @@ void PlatformPThread::fprintf(FILE *id, const char *fmt, ...) {
     for (int i = 0; i < n; i++) fputc(buffer[i], id);
 }
 
-void PlatformPThread::fclose(FILE *id) {
+void PlatformMPPA::fclose(FILE *id) {
     if (id != nullptr) {
         std::fclose(id);
     }
 }
 
-int PlatformPThread::getCacheLineSize() {
+int PlatformMPPA::getCacheLineSize() {
     return 0;
 }
 
-long PlatformPThread::getMinAllocSize() {
+long PlatformMPPA::getMinAllocSize() {
 #ifdef _WIN32
     //workaround because Windows
     return 4096;
@@ -410,7 +410,7 @@ long PlatformPThread::getMinAllocSize() {
 #endif
 }
 
-void PlatformPThread::rstJobIxRecv() {
+void PlatformMPPA::rstJobIxRecv() {
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     NotificationMessage finishedMessage;
     /** Wait for LRTs to finish their jobs **/
@@ -431,22 +431,22 @@ void PlatformPThread::rstJobIxRecv() {
     }
 }
 
-void PlatformPThread::rstJobIx() {
+void PlatformMPPA::rstJobIx() {
 }
 
 /** Time Handling */
-void PlatformPThread::rstTime(ClearTimeMessage *msg) {
+void PlatformMPPA::rstTime(ClearTimeMessage *msg) {
     start = msg->timespec_;
 }
 
-void PlatformPThread::rstTime() {
+void PlatformMPPA::rstTime() {
     start_steady = std::chrono::steady_clock::now();
 
     start.tv_sec = (start_steady - origin_steady).count() / 1000000000;
     start.tv_nsec = (start_steady - origin_steady).count() - (start_steady - origin_steady).count() / 1000000000;
 }
 
-Time PlatformPThread::getTime() {
+Time PlatformMPPA::getTime() {
     std::chrono::time_point<std::chrono::steady_clock> ts_steady = std::chrono::steady_clock::now();
     long long val_steady = (ts_steady - start_steady).count();
 

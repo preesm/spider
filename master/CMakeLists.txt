@@ -156,6 +156,7 @@ include_directories(
         ./libspider/common
         ./libspider/lrt
         ./libspider/platforms/platform_pthread
+        ./libspider/platforms/platform_mppa
         ./libspider/spider
 )
 
@@ -168,6 +169,7 @@ file(
         ./libspider/lrt/*.cpp
         ./libspider/lrt/specialActors/*.cpp
         ./libspider/platforms/platform_pthread/*.cpp
+        ./libspider/platforms/platform_mppa/*.cpp
         ./libspider/spider/*.cpp
         ./libspider/spider/graphs/Archi/*.cpp
         ./libspider/spider/graphs/Bipartite/*.cpp
@@ -191,8 +193,10 @@ file(
         ./libspider/lrt/*.h
         ./libspider/lrt/specialActors/*.h
         ./libspider/platforms/platform_pthread/*.h
+        ./libspider/platforms/platform_mppa/*.h
         ./libspider/spider/platform.h
         ./libspider/spider/platformPThread.h
+        ./libspider/spider/platformMPPA.h
         ./libspider/spider/spider.h
         ./libspider/spider/graphs/Archi/*.h
         ./libspider/spider/graphs/Bipartite/*.h

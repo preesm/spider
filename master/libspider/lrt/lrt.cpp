@@ -40,7 +40,6 @@
 #include <lrt.h>
 #include <Logger.h>
 #include <specialActors/specialActors.h>
-#include "lrt.h"
 #include <graphs/Archi/Archi.h>
 
 #ifdef __USE_GNU
@@ -581,12 +580,7 @@ void LRT::run(bool loop) {
 
 
 #ifdef PAPI_AVAILABLE
-
 void LRT::addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction) {
     this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
 }
-
-
-
-
 #endif

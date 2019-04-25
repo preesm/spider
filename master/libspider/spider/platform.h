@@ -53,8 +53,6 @@ class SpiderCommunicator;
 
 class ClearTimeMessage;
 
-class Stack;
-
 class Platform {
 public:
     /** File Handling */
@@ -65,8 +63,6 @@ public:
     virtual void fclose(FILE *id) = 0;
 
     /** Memory Handling */
-    virtual void *virt_to_phy(void *address) = 0;
-
     virtual long getMinAllocSize() = 0;
 
     virtual int getCacheLineSize() = 0;
@@ -114,10 +110,6 @@ public:
      * @return spider communicator
      */
     virtual SpiderCommunicator *getSpiderCommunicator() = 0;
-
-    virtual void setStack(SpiderStack id, Stack *stack) = 0;
-
-    virtual Stack *getStack(SpiderStack id) = 0;
 
     virtual inline int getMaxActorAllocSize(int pe);
 

@@ -94,8 +94,6 @@ public:
     void fclose(FILE *id) override;
 
     /** Shared Memory Handling */
-    void *virt_to_phy(void *address) override;
-
     long getMinAllocSize() override;
 
     int getCacheLineSize() override;
@@ -156,10 +154,6 @@ public:
         }
     }
 
-    inline void setStack(SpiderStack, Stack *) override {};
-
-    inline Stack *getStack(SpiderStack) override { return nullptr; };
-
     inline void registerLRT(int lrtID, pthread_t &thread) {
         lrtThreadsArray[lrtID] = thread;
     }
@@ -180,10 +174,6 @@ private:
         }
         throwSpiderException("Thread ID not found: %lu.", pthread_self());
     }
-
-    static Time mappingTime(int nActors, int nPe);
-
-    void initStacks(SpiderConfig &config);
 
     void createAndLaunchThreads();
 
@@ -209,47 +199,6 @@ private:
 
     struct LRTInfo *lrtInfoArray_;
 };
-
-//inline void PlatformPThread::setStack(SpiderStack id, Stack *stack) {
-//    switch (id) {
-//        case PISDF_STACK :
-//            stackPisdf = stack;
-//            break;
-//        case SRDAG_STACK :
-//            stackSrdag = stack;
-//            break;
-//        case TRANSFO_STACK :
-//            stackTransfo = stack;
-//            break;
-//        case ARCHI_STACK :
-//            stackArchi = stack;
-//            break;
-//        case LRT_STACK :
-//            stackLrt[getThreadNumber()] = stack;
-//            break;
-//        default :
-//            throwSpiderException("Invalid stack index: %d.", id);
-//    }
-//}
-
-//inline Stack *PlatformPThread::getStack(SpiderStack id) {
-//    return nullptr;
-//    switch (id) {
-//        case PISDF_STACK :
-//            return stackPisdf;
-//        case SRDAG_STACK :
-//            return stackSrdag;
-//        case TRANSFO_STACK :
-//            return stackTransfo;
-//        case ARCHI_STACK :
-//            return stackArchi;
-//        case LRT_STACK :
-//            return stackLrt[getThreadNumber()];
-//        default :
-//            throwSpiderException("Invalid stack index: %d.", id);
-//    }
-//}
-
 
 /**
  * @brief Stucture for the initialization of a pthread LRT

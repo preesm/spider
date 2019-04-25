@@ -84,12 +84,6 @@ public:
 
     void pop_job_message(JobInfoMessage **msg, std::int32_t id) override;
 
-    void *data_start_send(std::int32_t alloc) override;
-
-    void data_end_send(Fifo *f) override;
-
-    void *data_recv(std::int32_t alloc) override;
-
 private:
     ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     NotificationQueue<NotificationMessage> *notificationQueue_;

@@ -178,11 +178,6 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
         throwSpiderException("Spider require at least 1 LRT.");
     }
 
-    /** Init of the different stacks **/
-    initStacks(config);
-
-//    stackLrt = CREATE_MUL(ARCHI_STACK, nLrt_, Stack*);
-
     lrt_ = CREATE_MUL(ARCHI_STACK, nLrt_, LRT*);
     lrtCom_ = CREATE_MUL(ARCHI_STACK, nLrt_, LrtCommunicator*);
     lrtThreadsArray = CREATE_MUL(ARCHI_STACK, nLrt_, pthread_t);
@@ -402,10 +397,6 @@ void PlatformPThread::fclose(FILE *id) {
     }
 }
 
-void *PlatformPThread::virt_to_phy(void * /* address */) {
-    return nullptr;
-}
-
 int PlatformPThread::getCacheLineSize() {
     return 0;
 }
@@ -468,21 +459,3 @@ Time PlatformPThread::getTime() {
 
     return static_cast<Time>(val_steady);
 }
-
-Time PlatformPThread::mappingTime(int nActors, int /*nPe*/) {
-    return (Time) 1 * nActors;
-}
-
-void PlatformPThread::initStacks(SpiderConfig &) {
-//    stackPisdf = nullptr;
-//    stackSrdag = nullptr;
-//    stackTransfo = nullptr;
-//    stackArchi = nullptr;
-//
-//    /** Global stacks initialisation */
-//    StackMonitor::initStack(PISDF_STACK, config.pisdfStack);
-//    StackMonitor::initStack(SRDAG_STACK, config.srdagStack);
-//    StackMonitor::initStack(TRANSFO_STACK, config.transfoStack);
-//    StackMonitor::initStack(ARCHI_STACK, config.archiStack);
-}
-

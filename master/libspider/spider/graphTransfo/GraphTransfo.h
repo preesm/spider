@@ -70,10 +70,9 @@ void jit_ms(
 
 SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
                                 MemAlloc *memAlloc,
-                                Scheduler *scheduler, Time *end);
+                                Scheduler *scheduler);
 
-
-PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end);
+PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc);
 
 void schedule(PiSDFGraph *graph, int *const rhoValue, int *const brv);
 

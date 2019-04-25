@@ -309,7 +309,7 @@ void jit_ms(
 
 SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
                                 MemAlloc *memAlloc,
-                                Scheduler *scheduler, Time *end) {
+                                Scheduler *scheduler) {
     PiSDFGraph *topGraph = Spider::getGraph();
 
     auto *schedule = CREATE(TRANSFO_STACK, SRDAGSchedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
@@ -379,10 +379,6 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
 
     topSrdag->updateState();
 
-    if (end) {
-        (*end) = Platform::get()->getTime();
-    }
-
     /* Schedule and launch execution */
     TimeMonitor::startMonitoring();
     scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchi());
@@ -391,7 +387,7 @@ SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
 }
 
 
-PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end) {
+PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc) {
     auto *graph = Spider::getGraph();
     if (!graph->getBody(0)->isHierarchical()) {
         throwSpiderException("Top graph should contain at least one actor.");
@@ -400,9 +396,6 @@ PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end) {
     computeHierarchicalBRV(root);
     auto schedule = CREATE_NA(TRANSFO_STACK, PiSDFSchedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
     auto scheduler = SRDAGLessScheduler(root, schedule);
-    if (end) {
-        (*end) = Platform::get()->getTime();
-    }
     scheduler.schedule(root, memAlloc);
     return schedule;
 }

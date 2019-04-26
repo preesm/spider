@@ -184,6 +184,7 @@ private:
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
     ControlMessageQueue<TraceMessage *> *traceQueue_;
     NotificationQueue<NotificationMessage> **lrtNotificationQueues_;
+    NotificationQueue<NotificationMessage> *grtNotificationQueue_;
 
     DataQueues *dataQueues_;
 

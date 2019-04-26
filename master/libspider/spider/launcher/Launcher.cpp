@@ -43,15 +43,10 @@
 #include "Launcher.h"
 
 
-Launcher Launcher::instance_;
-
-Launcher::Launcher() {
-    curNParam_ = 0;
-    nLaunched_ = 0;
-}
-
 Launcher *Launcher::get() {
-    return &instance_;
+    /* == As of C++11 this is guaranteed to be unique even in multithreaded environment == */
+    static Launcher instance;
+    return &instance;
 }
 
 void Launcher::sendRepeatJobQueue(bool enable) {
@@ -59,7 +54,7 @@ void Launcher::sendRepeatJobQueue(bool enable) {
                                 enable ? LRT_REPEAT_ITERATION_EN : LRT_REPEAT_ITERATION_DIS,
                                 Platform::get()->getLrtIx());
     for (std::uint32_t i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
-        Platform::get()->getSpiderCommunicator()->push_notification(i, &message);
+        Platform::get()->getSpiderCommunicator()->pushLRTNotification(i, &message);
     }
 }
 
@@ -86,7 +81,7 @@ void Launcher::sendJob(ScheduleJob *job) {
 
     /** 2. Send notification **/
     NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, Platform::get()->getLrtIx(), jobID);
-    spiderCommunicator->push_notification(job->getMappedPE(instance), &notificationMessage);
+    spiderCommunicator->pushLRTNotification(job->getMappedPE(instance), &notificationMessage);
 
     /** 3 Update instance number **/
     job->launchNextInstance();
@@ -104,7 +99,7 @@ void Launcher::sendJob(SRDAGScheduleJob *job) {
 
     /** 2. Send notification **/
     NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, Platform::get()->getLrtIx(), jobID);
-    spiderCommunicator->push_notification(job->getMappedPE(), &notificationMessage);
+    spiderCommunicator->pushLRTNotification(job->getMappedPE(), &notificationMessage);
 
     /** 3 Update instance number **/
     job->launchNextInstance();
@@ -117,10 +112,11 @@ void Launcher::sendJob(SRDAGScheduleJob *job) {
 void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
     while (curNParam_) {
         NotificationMessage message;
-        if (Platform::get()->getSpiderCommunicator()->pop_notification(Platform::get()->getNLrt(), &message, true)) {
+        auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+        if (spiderCommunicator->popGRTNotification(&message, true)) {
             if (message.getType() == JOB_NOTIFICATION && message.getSubType() == JOB_SENT_PARAM) {
                 ParameterMessage *parameterMessage;
-                Platform::get()->getSpiderCommunicator()->pop_parameter_message(&parameterMessage, message.getIndex());
+                spiderCommunicator->pop_parameter_message(&parameterMessage, message.getIndex());
                 SRDAGVertex *vertex = topDag->getVertexFromIx(parameterMessage->getVertexID());
                 auto *referenceVertex = vertex->getReference();
                 if (vertex->getNOutParam() != parameterMessage->getNParam()) {
@@ -145,7 +141,7 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
                 StackMonitor::free(ARCHI_STACK, parameterMessage);
             } else {
                 /** Push back the message in the queue, it will be treated later **/
-                Platform::get()->getSpiderCommunicator()->push_notification(Platform::get()->getNLrt(), &message);
+                spiderCommunicator->pushGRTNotification(&message);
             }
         }
     }
@@ -163,33 +159,33 @@ void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end) {
                                                    TRACE_SPIDER,
                                                    lrtID,
                                                    index);
-    spiderCommunicator->push_notification(Platform::get()->getNLrt(), &notificationMessage);
+    spiderCommunicator->pushGRTNotification(&notificationMessage);
     nLaunched_++;
 }
 
-void Launcher::sendEnableTrace(int lrtID) {
+void Launcher::sendEnableTrace(std::int32_t lrtID) {
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     auto enableTraceMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_ENABLE, Platform::get()->getLrtIx());
     if (lrtID < 0) {
-        for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
-            spiderCommunicator->push_notification(i, &enableTraceMessage);
+        for (std::uint32_t i = 0; i < Spider::getArchi()->getNPE(); ++i) {
+            spiderCommunicator->pushLRTNotification(i, &enableTraceMessage);
         }
-    } else if (lrtID < Platform::get()->getNLrt()) {
-        spiderCommunicator->push_notification(lrtID, &enableTraceMessage);
+    } else if (static_cast<std::uint32_t>(lrtID) < Spider::getArchi()->getNPE()) {
+        spiderCommunicator->pushLRTNotification(lrtID, &enableTraceMessage);
     } else {
         throwSpiderException("Bad LRT id: %d", lrtID);
     }
 }
 
-void Launcher::sendDisableTrace(int lrtID) {
+void Launcher::sendDisableTrace(std::int32_t lrtID) {
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     auto enableTraceMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_DISABLE, Platform::get()->getLrtIx());
     if (lrtID < 0) {
-        for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
-            spiderCommunicator->push_notification(i, &enableTraceMessage);
+        for (std::uint32_t i = 0; i < Spider::getArchi()->getNPE(); ++i) {
+            spiderCommunicator->pushLRTNotification(i, &enableTraceMessage);
         }
-    } else if (lrtID < Platform::get()->getNLrt()) {
-        spiderCommunicator->push_notification(lrtID, &enableTraceMessage);
+    } else if (static_cast<std::uint32_t>(lrtID) < Spider::getArchi()->getNPE()) {
+        spiderCommunicator->pushLRTNotification(lrtID, &enableTraceMessage);
     } else {
         throwSpiderException("Bad LRT id: %d", lrtID);
     }
@@ -201,7 +197,7 @@ void Launcher::sendEndNotification(Schedule *schedule) {
                                     LRT_END_ITERATION,
                                     Platform::get()->getLrtIx(),
                                     schedule->getNJobs(pe) - 1);
-        Platform::get()->getSpiderCommunicator()->push_notification(pe, &message);
+        Platform::get()->getSpiderCommunicator()->pushLRTNotification(pe, &message);
     }
 }
 
@@ -213,7 +209,7 @@ void Launcher::sendBroadCastNotification(bool delayBroadcoast) {
         if (i == Platform::get()->getLrtIx()) {
             continue;
         }
-        Platform::get()->getSpiderCommunicator()->push_notification(i, &broadcast);
+        Platform::get()->getSpiderCommunicator()->pushLRTNotification(i, &broadcast);
     }
 }
 

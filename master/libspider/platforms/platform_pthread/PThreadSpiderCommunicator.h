@@ -67,14 +67,19 @@ public:
     PThreadSpiderCommunicator(
             ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
             ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
-            NotificationQueue<NotificationMessage> **notificationQueue,
+            NotificationQueue<NotificationMessage> **lrtNotificationQueues,
+            NotificationQueue<NotificationMessage> *grtNotificationQueue,
             ControlMessageQueue<TraceMessage *> *traceQueue);
 
     ~PThreadSpiderCommunicator() override = default;
 
-    void push_notification(int lrtID, NotificationMessage *msg) override;
+    void pushLRTNotification(std::uint32_t lrtID, NotificationMessage *msg) override;
 
-    bool pop_notification(int lrtID, NotificationMessage *msg, bool blocking) override;
+    bool popLRTNotification(std::uint32_t lrtID, NotificationMessage *msg, bool blocking) override;
+
+    void pushGRTNotification(NotificationMessage *msg) override;
+
+    bool popGRTNotification(NotificationMessage *msg, bool blocking) override;
 
     std::int32_t push_job_message(JobInfoMessage **message) override;
 
@@ -89,10 +94,11 @@ public:
     void pop_trace_message(TraceMessage **message, std::int32_t id) override;
 
 private:
-    ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
-    ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
-    ControlMessageQueue<TraceMessage *> *traceQueue_;
-    NotificationQueue<NotificationMessage> **notificationQueue_;
+    ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_ = nullptr;
+    ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_ = nullptr;
+    ControlMessageQueue<TraceMessage *> *traceQueue_ = nullptr;
+    NotificationQueue<NotificationMessage> **lrtNotificationQueues_ = nullptr;
+    NotificationQueue<NotificationMessage> *grtNotificationQueue_ = nullptr;
 };
 
 #endif/*PTHREADS_SPIDER_COMMUNICATOR_H*/

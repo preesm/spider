@@ -72,8 +72,6 @@ class Fifo {
 public:
     std::int32_t alloc;
     std::int32_t size;
-//    std::int32_t blkLrtIx;
-//    std::int32_t blkLrtJobIx;
 };
 
 class ClearTimeMessage {

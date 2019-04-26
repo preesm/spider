@@ -40,23 +40,34 @@
 #include "PThreadSpiderCommunicator.h"
 
 #include <platform.h>
+#include <graphs/Archi/Archi.h>
 
 PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
                                                      ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
-                                                     NotificationQueue<NotificationMessage> **notificationQueue,
+                                                     NotificationQueue<NotificationMessage> **lrtNotificationQueues,
+                                                     NotificationQueue<NotificationMessage> *grtNotificationQueue,
                                                      ControlMessageQueue<TraceMessage *> *traceQueue) {
     spider2LrtJobQueue_ = spider2LrtJobQueue;
     lrt2SpiderParamQueue_ = lrt2SpiderParamQueue;
-    notificationQueue_ = notificationQueue;
+    lrtNotificationQueues_ = lrtNotificationQueues;
+    grtNotificationQueue_ = grtNotificationQueue;
     traceQueue_ = traceQueue;
 }
 
-void PThreadSpiderCommunicator::push_notification(int lrtID, NotificationMessage *msg) {
-    notificationQueue_[lrtID]->push(msg);
+void PThreadSpiderCommunicator::pushLRTNotification(std::uint32_t lrtID, NotificationMessage *msg) {
+    lrtNotificationQueues_[lrtID]->push(msg);
 }
 
-bool PThreadSpiderCommunicator::pop_notification(int lrtID, NotificationMessage *msg, bool blocking) {
-    return notificationQueue_[lrtID]->pop(msg, blocking);
+bool PThreadSpiderCommunicator::popLRTNotification(std::uint32_t lrtID, NotificationMessage *msg, bool blocking) {
+    return lrtNotificationQueues_[lrtID]->pop(msg, blocking);
+}
+
+void PThreadSpiderCommunicator::pushGRTNotification(NotificationMessage *msg) {
+    grtNotificationQueue_->push(msg);
+}
+
+bool PThreadSpiderCommunicator::popGRTNotification(NotificationMessage *msg, bool blocking) {
+    return grtNotificationQueue_->pop(msg, blocking);
 }
 
 std::int32_t PThreadSpiderCommunicator::push_job_message(JobInfoMessage **message) {

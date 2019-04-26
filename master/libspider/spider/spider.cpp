@@ -96,6 +96,7 @@ static bool verbose_;
 static bool useGraphOptim_;
 static bool useActorPrecedence_;
 static bool traceEnabled_;
+static bool standAloneMode = false;
 
 static bool containsDynamicParam(PiSDFGraph *const graph) {
     for (int i = 0; i < graph->getNParam(); ++i) {
@@ -122,21 +123,21 @@ static bool isGraphStatic(PiSDFGraph *const graph) {
 
 void Spider::initStacks(SpiderStackConfig &cfg) {
     StackMonitor::initStack(ARCHI_STACK, cfg.archiStack);
-    StackMonitor::initStack(PISDF_STACK, cfg.pisdfStack);
-    StackMonitor::initStack(SRDAG_STACK, cfg.srdagStack);
-    StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
+    if (!standAloneMode) {
+        StackMonitor::initStack(PISDF_STACK, cfg.pisdfStack);
+        StackMonitor::initStack(SRDAG_STACK, cfg.srdagStack);
+        StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
+    }
 }
 
 void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     Logger::initializeLogger();
 
-    setGraphOptim(cfg.useGraphOptim);
-
-    setMemAllocType(cfg.memAllocType, cfg.memAllocStart, cfg.memAllocSize);
-    setSchedulerType(cfg.schedulerType);
-
     setVerbose(cfg.verbose);
     setTraceEnabled(cfg.traceEnabled);
+    setMemAllocType(cfg.memAllocType, cfg.memAllocStart, cfg.memAllocSize);
+    setSchedulerType(cfg.schedulerType);
+    setGraphOptim(cfg.useGraphOptim);
 
     //TODO: add a switch between the different platform
     platform_ = new PlatformPThread(cfg, stackConfig);
@@ -148,6 +149,11 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
 }
 
 void Spider::iterate() {
+    /* === Just a check in case standAloneMode would be used as GRT === */
+    if (standAloneMode) {
+        Logger::print(LOG_GENERAL, LOG_ERROR, "StandAlone spider runtime should not call iterate method.\n");
+        return;
+    }
     Platform::get()->rstTime();
     if (pisdf_->isGraphStatic()) {
         if (!srdag_) {
@@ -168,7 +174,6 @@ void Spider::iterate() {
     /** Wait for LRTs to finish **/
     Platform::get()->rstJobIxRecv();
 }
-
 
 static int getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) {
     auto *job = CREATE(TRANSFO_STACK, transfoJob);
@@ -268,7 +273,6 @@ void Spider::clean() {
     StackMonitor::clean(SRDAG_STACK);
     StackMonitor::clean(PISDF_STACK);
 }
-
 
 void Spider::setGraphOptim(bool useGraphOptim) {
     useGraphOptim_ = useGraphOptim;
@@ -642,11 +646,11 @@ void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionS
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     while (n) {
         NotificationMessage message;
-        spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &message, true);
+        spiderCommunicator->popGRTNotification(&message, true);
         if (message.getType() != TRACE_NOTIFICATION) {
             // Push back notification for later
             // We should not have any other kind of notification here though
-            spiderCommunicator->push_notification(Platform::get()->getNLrt(), &message);
+            spiderCommunicator->pushGRTNotification(&message);
         } else {
             TraceMessage *msg;
             spiderCommunicator->pop_trace_message(&msg, message.getIndex());

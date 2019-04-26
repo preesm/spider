@@ -172,23 +172,23 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
     platform_ = this;
     auto *archi = Spider::getArchi();
 
-    nLrt_ = archi->getNPE();
+    nLrt_ = archi->getNLRT();
 
     if (nLrt_ == 0) {
-        throwSpiderException("Spider require at least 1 LRT.");
+        throwSpiderException("Spider requires at least 1 LRT.");
     }
 
     lrt_ = CREATE_MUL(ARCHI_STACK, nLrt_, LRT*);
     lrtCom_ = CREATE_MUL(ARCHI_STACK, nLrt_, LrtCommunicator*);
     lrtThreadsArray = CREATE_MUL(ARCHI_STACK, nLrt_, pthread_t);
 
-
     /** Create the different queues */
     spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<JobInfoMessage *>);
     lrt2SpiderParamQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ParameterMessage *>);
-    lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue<NotificationMessage>*);
+    lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_, NotificationQueue<NotificationMessage>*);
+    grtNotificationQueue_ = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
 
-    for (std::uint32_t i = 0; i < nLrt_ + 1; ++i) {
+    for (std::uint32_t i = 0; i < nLrt_; ++i) {
         lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
     }
 
@@ -206,6 +206,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
             spider2LrtJobQueue_,
             lrt2SpiderParamQueue_,
             lrtNotificationQueues_,
+            grtNotificationQueue_,
             traceQueue_);
 
     // TODO use "usePapify" only for monitored LRTs / HW PEs
@@ -304,10 +305,8 @@ PlatformPThread::~PlatformPThread() {
     auto spiderCommunicator = getSpiderCommunicator();
     auto *archi = Spider::getArchi();
     for (std::uint32_t i = 0; i < nLrt_; ++i) {
-        if (i != archi->getSpiderGRTID()) {
-            NotificationMessage message(LRT_NOTIFICATION, LRT_STOP, getLrtIx());
-            spiderCommunicator->push_notification(i, &message);
-        }
+        NotificationMessage message(LRT_NOTIFICATION, LRT_STOP, getLrtIx());
+        spiderCommunicator->pushLRTNotification(i, &message);
     }
 
     //wait for every LRT to end
@@ -341,15 +340,17 @@ PlatformPThread::~PlatformPThread() {
     StackMonitor::free(ARCHI_STACK, thread_lrt_);
     StackMonitor::free(ARCHI_STACK, lrtInfoArray_);
 
-    for (std::uint32_t i = 0; i <= nLrt_; i++) {
+    for (std::uint32_t i = 0; i < nLrt_; i++) {
         lrtNotificationQueues_[i]->~NotificationQueue();
         StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
     }
 
+    grtNotificationQueue_->~NotificationQueue();
     spider2LrtJobQueue_->~ControlMessageQueue();
     lrt2SpiderParamQueue_->~ControlMessageQueue();
     traceQueue_->~ControlMessageQueue();
     StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
+    StackMonitor::free(ARCHI_STACK, grtNotificationQueue_);
     StackMonitor::free(ARCHI_STACK, spider2LrtJobQueue_);
     StackMonitor::free(ARCHI_STACK, lrt2SpiderParamQueue_);
     StackMonitor::free(ARCHI_STACK, traceQueue_);
@@ -418,7 +419,7 @@ void PlatformPThread::rstJobIxRecv() {
     auto nPEToWait = archi->getNActivatedPE() - 1;
     std::uint32_t nFinishedPE = 0;
     while (nFinishedPE < nPEToWait) {
-        spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, true);
+        spiderCommunicator->popGRTNotification(&finishedMessage, true);
         if (finishedMessage.getType() == LRT_NOTIFICATION &&
             finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
             Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- received end signal from LRT: %d.\n", getLrtIx(),
@@ -426,7 +427,7 @@ void PlatformPThread::rstJobIxRecv() {
             nFinishedPE++;
         } else {
             /** Save the notification for later **/
-            spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
+            spiderCommunicator->pushGRTNotification(&finishedMessage);
         }
     }
 }

@@ -83,7 +83,7 @@ LRT::LRT(int ix) {
     lastJobID_ = -1;
     jobQueueIndex_ = 0;
     jobQueueSize_ = 0;
-    nLrt_ = Platform::get()->getNLrt();
+    nLrt_ = Spider::getArchi()->getNLRT();
     for (int i = 0; i < nLrt_; ++i) {
         jobStamps_.push_back(-1);
     }
@@ -155,7 +155,7 @@ void LRT::sendTrace(int srdagIx, Time start, Time end) {
 
     // Push notification
     auto notificationMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_LRT, getIx(), index);
-    spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &notificationMessage);
+    spiderCommunicator_->pushGRTNotification(&notificationMessage);
 }
 
 bool LRT::compareLRTJobStamps(std::int32_t *jobsToWait) {
@@ -193,7 +193,7 @@ void LRT::notifyLRTJobStamp(int lrt, bool notify) {
     if (lrt != getIx() && notify) {
         Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- notifying LRT: %d -- sent jobStamp: %d\n", getIx(), lrt, jobIx_);
         NotificationMessage message(JOB_NOTIFICATION, JOB_UPDATE_JOBSTAMP, getIx(), jobIx_);
-        spiderCommunicator_->push_notification(lrt, &message);
+        spiderCommunicator_->pushLRTNotification(lrt, &message);
     }
 }
 
@@ -339,7 +339,7 @@ void LRT::runJob(JobInfoMessage *job) {
 #endif
         /** Sending notification **/
         NotificationMessage parameterNotification(JOB_NOTIFICATION, JOB_SENT_PARAM, getIx(), index);
-        spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &parameterNotification);
+        spiderCommunicator_->pushGRTNotification(&parameterNotification);
 
 #ifdef VERBOSE_TIME
         time_waiting_output_comm += Platform::get()->getTime() - start;
@@ -365,7 +365,7 @@ void LRT::broadcastJobStamp() {
         if (i == getIx()) {
             continue;
         }
-        spiderCommunicator_->push_notification(i, &msg);
+        spiderCommunicator_->pushLRTNotification(i, &msg);
     }
 }
 
@@ -549,7 +549,7 @@ void LRT::run(bool loop) {
             if (loop) {
                 /** Send finished iteration message **/
                 NotificationMessage finishedMessage(LRT_NOTIFICATION, LRT_FINISHED_ITERATION, getIx());
-                spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &finishedMessage);
+                spiderCommunicator_->pushGRTNotification(&finishedMessage);
             }
             /** Reset local jobStamps **/
             jobStamps_.assign(jobStamps_.size(), -1);
@@ -580,7 +580,9 @@ void LRT::run(bool loop) {
 
 
 #ifdef PAPI_AVAILABLE
+
 void LRT::addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction) {
     this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
 }
+
 #endif

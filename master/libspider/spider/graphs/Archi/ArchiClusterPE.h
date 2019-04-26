@@ -4,7 +4,8 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
+ * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
@@ -36,47 +37,7 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef SPIDER_SPIDER_COMMUNICATOR_H
-#define SPIDER_SPIDER_COMMUNICATOR_H
+#ifndef SPIDER_ARCHICLUSTERPE_H
+#define SPIDER_ARCHICLUSTERPE_H
 
-#include "Message.h"
-#include "Communicator.h"
-#include <cstdint>
-
-class SpiderCommunicator : public Communicator {
-public:
-    ~SpiderCommunicator() override = default;
-
-    virtual void pushLRTNotification(std::uint32_t lrtID, NotificationMessage *msg) = 0;
-
-    virtual bool popLRTNotification(std::uint32_t lrtID, NotificationMessage *msg, bool blocking) = 0;
-
-    virtual void pushGRTNotification(NotificationMessage *msg) = 0;
-
-    virtual bool popGRTNotification(NotificationMessage *msg, bool blocking) = 0;
-
-    virtual std::int32_t push_parameter_message(ParameterMessage **msg) = 0;
-
-    virtual void pop_parameter_message(ParameterMessage **msg, std::int32_t id) = 0;
-
-    virtual std::int32_t push_trace_message(TraceMessage **message) = 0;
-
-    virtual void pop_trace_message(TraceMessage **message, std::int32_t id) = 0;
-
-//    virtual int trace_start_recv(void **data) = 0;
-//
-//    virtual void trace_start_recv_block(void **data) = 0;
-//
-//    virtual void trace_end_recv() = 0;
-
-private:
-    // Since we are redefining these methods to use with an LRT ID in addition we prevent the use of these methods
-    void push_notification(NotificationMessage *) override {};
-
-    bool pop_notification(NotificationMessage *, bool) override { return false; };
-
-protected:
-    SpiderCommunicator() = default;
-};
-
-#endif/*SPIDER_COMMUNICATOR_H*/
+#endif //SPIDER_ARCHICLUSTERPE_H

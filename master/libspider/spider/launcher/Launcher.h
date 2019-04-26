@@ -61,13 +61,13 @@ public:
      * @brief Send a notification to all (or given) LRT to enable TRACE
      * @param lrtID LRT to send the notification to (-1 to send to every LRT)
      */
-    void sendEnableTrace(int lrtID);
+    void sendEnableTrace(std::int32_t lrtID);
 
     /**
      * @brief Send a notification to all (or given) LRT to disable TRACE
      * @param lrtID LRT to send the notification to (-1 to send to every LRT)
      */
-    void sendDisableTrace(int lrtID);
+    void sendDisableTrace(std::int32_t lrtID);
 
     void sendRepeatJobQueue(bool enable);
 
@@ -88,12 +88,11 @@ public:
     void rstNLaunched();
 
 protected:
-    Launcher();
+    Launcher() = default;
 
 private:
-    int nLaunched_;
-    int curNParam_;
-    static Launcher instance_;
+    std::int32_t nLaunched_ = 0;
+    std::int32_t curNParam_ = 0;
 
     void send_ClearTimeMsg(int lrtIx);
 

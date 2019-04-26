@@ -183,10 +183,25 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
     lrtThreadsArray = CREATE_MUL(ARCHI_STACK, nLrt_, pthread_t);
 
     /** Create the different queues */
-    spider2LrtJobQueue_ = CREATE(NOTIF_STACK, ControlMessageQueue<JobInfoMessage *>);
-    lrt2SpiderParamQueue_ = CREATE(NOTIF_STACK, ControlMessageQueue<ParameterMessage *>);
-    lrtNotificationQueues_ = CREATE_MUL(NOTIF_STACK, nLrt_, NotificationQueue<NotificationMessage>*);
-    grtNotificationQueue_ = CREATE(NOTIF_STACK, NotificationQueue<NotificationMessage>);
+    if (!Spider::isStandAlone()) {
+        /* == We are in main GRT == */
+        spider2LrtJobQueue_ = CREATE(NOTIF_STACK, ControlMessageQueue<JobInfoMessage *>);
+        lrt2SpiderParamQueue_ = CREATE(NOTIF_STACK, ControlMessageQueue<ParameterMessage *>);
+        lrtNotificationQueues_ = CREATE_MUL(NOTIF_STACK, Spider::getArchi()->getNPE(),
+                                            NotificationQueue<NotificationMessage>*);
+        grtNotificationQueue_ = CREATE(NOTIF_STACK, NotificationQueue<NotificationMessage>);
+    } else {
+        /* == We are in distant compiled LRT == */
+        // TODO: retrieve proper notif_stack adress space
+//        auto *firstLRT = Spider::getArchi()->getFirstLRT();
+//        auto *memoryLRT = firstLRT->getMemoryUnit();
+//        spider2LrtJobQueue_ = CREATE(NOTIF_STACK, ControlMessageQueue<JobInfoMessage *>);
+//        lrt2SpiderParamQueue_ = CREATE(NOTIF_STACK, ControlMessageQueue<ParameterMessage *>);
+//        lrtNotificationQueues_ = CREATE_MUL(NOTIF_STACK, Spider::getArchi()->getNPE(),
+//                                            NotificationQueue<NotificationMessage>*);
+//        grtNotificationQueue_ = CREATE(NOTIF_STACK, NotificationQueue<NotificationMessage>);
+    }
+
 
     for (std::uint32_t i = 0; i < nLrt_; ++i) {
         lrtNotificationQueues_[i] = CREATE(NOTIF_STACK, NotificationQueue<NotificationMessage>);

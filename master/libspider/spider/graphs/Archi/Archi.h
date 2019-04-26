@@ -165,6 +165,12 @@ public:
     inline PE **getPEArray() const;
 
     /**
+     * @brief Return first LRT of current Archi.
+     * @return first PE that is an LRT.
+     */
+    inline PE *getFirstLRT() const;
+
+    /**
      * @brief Retrieve a MemoryUnit from its id.
      * @remark MemoryUnit ids are generated in order of creation.
      * @param id ID of the memory unit to retrieve.
@@ -303,6 +309,15 @@ PE **Archi::getPEArray() const {
     return peArray_;
 }
 
+PE *Archi::getFirstLRT() const {
+    for (std::uint32_t i = 0; i < nPE_; ++i) {
+        if (peArray_[i]->isLRT()) {
+            return peArray_[i];
+        }
+    }
+    throwSpiderException("There should be at least 1 LRT.");
+}
+
 MemoryUnit *Archi::getMemoryUnit(std::uint32_t id) const {
     return memoryUnitArray_[id];
 }
@@ -314,7 +329,6 @@ std::uint32_t Archi::getSpiderGRTID() const {
 ScheduleTimeRoutine Archi::getScheduleTimeRoutine() const {
     return scheduleTimeRoutine_;
 }
-
 
 
 #endif //SPIDER_ARCHI_H

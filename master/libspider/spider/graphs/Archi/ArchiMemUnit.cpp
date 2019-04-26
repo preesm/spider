@@ -82,4 +82,5 @@ MemoryUnit::MemoryUnit(char *base, std::uint64_t size) : base_{base},
     deallocateRoutine_ = defaultDeallocateRoutine;
     receiveRoutine_ = defaultReceiveRoutine;
     sendRoutine_ = defaultSendRoutine;
+    constSize_ = size;
 }

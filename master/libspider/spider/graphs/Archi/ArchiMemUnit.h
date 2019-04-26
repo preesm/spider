@@ -76,6 +76,8 @@ public:
 
     inline void setSendRoutine(sendRoutine routine);
 
+    inline void setConstrainedSize(std::uint64_t size);
+
     /* === Getters === */
 
     inline std::uint64_t size() const;
@@ -86,6 +88,8 @@ public:
 
     inline std::uint32_t getID() const;
 
+    inline std::uint64_t constrainedSize() const;
+
 private:
     static std::uint32_t globalID;
 
@@ -95,6 +99,7 @@ private:
     std::uint64_t size_ = 0;
     std::uint64_t used_ = 0;
     std::uint32_t id_ = 0;
+    std::uint64_t constSize_ = 0;
 
     /* === Routines === */
 
@@ -144,6 +149,13 @@ void MemoryUnit::setSendRoutine(sendRoutine routine) {
     sendRoutine_ = routine;
 }
 
+void MemoryUnit::setConstrainedSize(std::uint64_t size) {
+    if (size > size_) {
+        throwSpiderException("Constrained size of memory unit should be <= to max size.");
+    }
+    constSize_ = size;
+}
+
 void MemoryUnit::resetMemoryUsage() {
     used_ = 0;
 }
@@ -162,6 +174,10 @@ std::uint64_t MemoryUnit::available() const {
 
 std::uint32_t MemoryUnit::getID() const {
     return id_;
+}
+
+std::uint64_t MemoryUnit::constrainedSize() const {
+    return constSize_;
 }
 
 

@@ -121,13 +121,15 @@ static bool isGraphStatic(PiSDFGraph *const graph) {
     return isStatic;
 }
 
+void Spider::setStandAloneMode() {
+    standAloneMode = true;
+}
+
 void Spider::initStacks(SpiderStackConfig &cfg) {
     StackMonitor::initStack(ARCHI_STACK, cfg.archiStack);
-    if (!standAloneMode) {
-        StackMonitor::initStack(PISDF_STACK, cfg.pisdfStack);
-        StackMonitor::initStack(SRDAG_STACK, cfg.srdagStack);
-        StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
-    }
+    StackMonitor::initStack(PISDF_STACK, cfg.pisdfStack);
+    StackMonitor::initStack(SRDAG_STACK, cfg.srdagStack);
+    StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
 }
 
 void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {

@@ -161,6 +161,8 @@ typedef struct {
 namespace Spider {
     void setStandAloneMode();
 
+    bool isStandAlone();
+
     void initStacks(SpiderStackConfig &cfg);
 
     void init(SpiderConfig &cfg, SpiderStackConfig &stackConfig);

@@ -125,6 +125,10 @@ void Spider::setStandAloneMode() {
     standAloneMode = true;
 }
 
+bool Spider::isStandAlone() {
+    return standAloneMode;
+}
+
 void Spider::initStacks(SpiderStackConfig &cfg) {
     StackMonitor::initStack(ARCHI_STACK, cfg.archiStack);
     StackMonitor::initStack(PISDF_STACK, cfg.pisdfStack);

@@ -92,10 +92,10 @@ static Scheduler *scheduler_ = nullptr;
 static PlatformPThread *platform_ = nullptr;
 static SRDAGSchedule *schedule_ = nullptr;
 
-static bool verbose_;
-static bool useGraphOptim_;
-static bool useActorPrecedence_;
-static bool traceEnabled_;
+static bool verbose_ = false;
+static bool useGraphOptim_ = false;
+static bool useActorPrecedence_ = false;
+static bool traceEnabled_ = false;
 static bool standAloneMode = false;
 
 static bool containsDynamicParam(PiSDFGraph *const graph) {
@@ -133,6 +133,7 @@ void Spider::initStacks(SpiderStackConfig &cfg) {
     StackMonitor::initStack(ARCHI_STACK, cfg.archiStack);
     StackMonitor::initStack(PISDF_STACK, cfg.pisdfStack);
     StackMonitor::initStack(SRDAG_STACK, cfg.srdagStack);
+    StackMonitor::initStack(NOTIF_STACK, cfg.notifStack);
     StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
 }
 
@@ -271,6 +272,7 @@ void Spider::clean() {
     StackMonitor::freeAll(TRANSFO_STACK);
     StackMonitor::freeAll(SRDAG_STACK);
     StackMonitor::freeAll(PISDF_STACK);
+    StackMonitor::freeAll(NOTIF_STACK);
 
     /* === Cleaning the Stacks === */
 
@@ -278,6 +280,7 @@ void Spider::clean() {
     StackMonitor::clean(TRANSFO_STACK);
     StackMonitor::clean(SRDAG_STACK);
     StackMonitor::clean(PISDF_STACK);
+    StackMonitor::clean(NOTIF_STACK);
 }
 
 void Spider::setGraphOptim(bool useGraphOptim) {

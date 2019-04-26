@@ -183,13 +183,13 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
     lrtThreadsArray = CREATE_MUL(ARCHI_STACK, nLrt_, pthread_t);
 
     /** Create the different queues */
-    spider2LrtJobQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<JobInfoMessage *>);
-    lrt2SpiderParamQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ParameterMessage *>);
-    lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_, NotificationQueue<NotificationMessage>*);
-    grtNotificationQueue_ = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
+    spider2LrtJobQueue_ = CREATE(NOTIF_STACK, ControlMessageQueue<JobInfoMessage *>);
+    lrt2SpiderParamQueue_ = CREATE(NOTIF_STACK, ControlMessageQueue<ParameterMessage *>);
+    lrtNotificationQueues_ = CREATE_MUL(NOTIF_STACK, nLrt_, NotificationQueue<NotificationMessage>*);
+    grtNotificationQueue_ = CREATE(NOTIF_STACK, NotificationQueue<NotificationMessage>);
 
     for (std::uint32_t i = 0; i < nLrt_; ++i) {
-        lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
+        lrtNotificationQueues_[i] = CREATE(NOTIF_STACK, NotificationQueue<NotificationMessage>);
     }
 
 
@@ -342,17 +342,17 @@ PlatformPThread::~PlatformPThread() {
 
     for (std::uint32_t i = 0; i < nLrt_; i++) {
         lrtNotificationQueues_[i]->~NotificationQueue();
-        StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
+        StackMonitor::free(NOTIF_STACK, lrtNotificationQueues_[i]);
     }
 
     grtNotificationQueue_->~NotificationQueue();
     spider2LrtJobQueue_->~ControlMessageQueue();
     lrt2SpiderParamQueue_->~ControlMessageQueue();
     traceQueue_->~ControlMessageQueue();
-    StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
-    StackMonitor::free(ARCHI_STACK, grtNotificationQueue_);
-    StackMonitor::free(ARCHI_STACK, spider2LrtJobQueue_);
-    StackMonitor::free(ARCHI_STACK, lrt2SpiderParamQueue_);
+    StackMonitor::free(NOTIF_STACK, lrtNotificationQueues_);
+    StackMonitor::free(NOTIF_STACK, grtNotificationQueue_);
+    StackMonitor::free(NOTIF_STACK, spider2LrtJobQueue_);
+    StackMonitor::free(NOTIF_STACK, lrt2SpiderParamQueue_);
     StackMonitor::free(ARCHI_STACK, traceQueue_);
 
 

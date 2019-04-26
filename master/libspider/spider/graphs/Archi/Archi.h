@@ -257,6 +257,9 @@ void Archi::deactivatePE(PE *const pe) const {
 
 void Archi::setSpiderGRTID(std::uint32_t id) {
     spiderGRTID_ = virt2SpiderMap_[id];
+    if (!peArray_[spiderGRTID_]->isLRT() || !peArray_[spiderGRTID_]->isEnabled()) {
+        throwSpiderException("Spider GRT need to be an LRT and enabled.");
+    }
 }
 
 std::uint32_t Archi::getNPE() const {

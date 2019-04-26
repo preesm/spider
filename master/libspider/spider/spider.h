@@ -95,6 +95,7 @@ typedef struct SpiderStackConfig {
     StackInfo pisdfStack;
     StackInfo srdagStack;
     StackInfo transfoStack;
+    StackInfo notifStack;
     StackInfo lrtStack;
 } SpiderStackConfig;
 

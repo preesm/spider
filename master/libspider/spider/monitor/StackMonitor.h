@@ -46,6 +46,7 @@ typedef enum {
     PISDF_STACK,
     SRDAG_STACK,
     ARCHI_STACK,
+    NOTIF_STACK,
     TRANSFO_STACK,
     LRT_STACK,
     STACK_COUNT

@@ -49,6 +49,7 @@ static Stack *stackPisdf = nullptr;
 static Stack *stackSrdag = nullptr;
 static Stack *stackTransfo = nullptr;
 static Stack *stackArchi = nullptr;
+static Stack *stackNotif = nullptr;
 
 static Stack *&getStack(SpiderStack id) {
     switch (id) {
@@ -60,6 +61,8 @@ static Stack *&getStack(SpiderStack id) {
             return stackTransfo;
         case ARCHI_STACK :
             return stackArchi;
+        case NOTIF_STACK :
+            return stackNotif;
         case LRT_STACK:
             return Platform::get()->getLrt()->getStack();
         default :

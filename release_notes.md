@@ -1,6 +1,7 @@
 Spider Changelog
 ================
 
+* Update travis file: now testing cross compilation
 ## Release version 1.2.1
 *2018.10.01*
 

@@ -29,6 +29,7 @@ Spider Changelog
 * Overall clean up of the code base with clang tidy rules.
 * Overall clean up of exception messages inside entire code base.
 * Overall clean up of dead code and code smells.
+* Update travis file: now testing cross compilation
 
 ### Bug fix
 * Fix Graph transformation for actors with repetition is equal to 0.

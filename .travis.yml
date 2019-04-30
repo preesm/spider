@@ -4,77 +4,93 @@
 language: cpp
 
 script:
-  - (mkdir master/bin && cd master/bin && cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON ..)
-  - (cd master/bin && make)
+  - ./releng/build_and_test.sh $CROSS
 
 matrix:
   include:
     - os: linux
+      name: "GCC 4.9"
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
             - george-edison55-precise-backports
           packages:
-            - g++-4.9
             - cmake-data
             - cmake
+            - unzip
+            - zip
+            - g++-4.9
+            
       env:
          - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
 
     - os: linux
+      name: "GCC 5"
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
             - george-edison55-precise-backports
           packages:
-            - g++-5
             - cmake-data
             - cmake
+            - unzip
+            - zip
+            - g++-5
       env:
          - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
 
     - os: linux
+      name: "GCC 6"
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
             - george-edison55-precise-backports
           packages:
-            - g++-6
             - cmake-data
             - cmake
+            - unzip
+            - zip
+            - g++-6
       env:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 
     - os: linux
+      name: "GCC 7"
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
             - george-edison55-precise-backports
           packages:
-            - g++-7
             - cmake-data
             - cmake
+            - unzip
+            - zip
+            - g++-7
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
     - os: linux
+      name: "GCC 8"
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
             - george-edison55-precise-backports
           packages:
-            - g++-8
             - cmake-data
             - cmake
+            - unzip
+            - zip
+            - g++-8
       env:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
 
     - os: linux
+      name: "Clang 3.6"
       addons:
         apt:
           sources:
@@ -82,13 +98,16 @@ matrix:
             - llvm-toolchain-precise-3.6
             - george-edison55-precise-backports
           packages:
-            - clang-3.6
             - cmake-data
             - cmake
+            - unzip
+            - zip
+            - clang-3.6
       env:
         - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
 
     - os: linux
+      name: "Clang 3.7"
       addons:
         apt:
           sources:
@@ -96,13 +115,16 @@ matrix:
             - llvm-toolchain-precise-3.7
             - george-edison55-precise-backports
           packages:
-            - clang-3.7
             - cmake-data
             - cmake
+            - unzip
+            - zip
+            - clang-3.7
       env:
         - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
 
     - os: linux
+      name: "Clang 3.8"
       addons:
         apt:
           sources:
@@ -110,53 +132,83 @@ matrix:
             - llvm-toolchain-precise-3.8
             - george-edison55-precise-backports
           packages:
-            - clang-3.8
             - cmake-data
             - cmake
+            - unzip
+            - zip
+            - clang-3.8
       env:
         - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
 
     - os: linux
+      name: "Clang 3.9"
       addons:
         apt:
           sources:
             - llvm-toolchain-trusty-3.9
             - george-edison55-precise-backports
           packages:
-            - clang-3.9
             - cmake-data
             - cmake
+            - unzip
+            - zip
+            - clang-3.9
       env:
         - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
 
     - os: linux
+      name: "Clang 4.0"
       addons:
         apt:
           sources:
             - llvm-toolchain-trusty-4.0
             - george-edison55-precise-backports
           packages:
-            - clang-4.0
             - cmake-data
             - cmake
+            - unzip
+            - zip
+            - clang-4.0
       env:
         - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
 
     - os: linux
+      name: "Clang 5.0"
       addons:
         apt:
           sources:
             - llvm-toolchain-trusty-5.0
             - george-edison55-precise-backports
           packages:
-            - clang-5.0
             - cmake-data
             - cmake
+            - unzip
+            - zip
+            - clang-5.0
       env:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
 
+    - os: linux
+      name: "Cross Compilation Test"
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+            - george-edison55-precise-backports
+          packages:
+            - cmake-data
+            - cmake
+            - unzip
+            - zip
+            - gcc-multilib
+            - g++-multilib 
+            - mingw-w64
+      env:
+        - MATRIX_EVAL="CROSS=--cross"
+
 before_install:
     - eval "${MATRIX_EVAL}"
+
 
 notifications:
   email:

@@ -41,31 +41,34 @@ rm -rf "${TMPDIR}"
 
 rm -rf "${LINUX64_BUILD_DIR}"
 mkdir -p "${LINUX64_BUILD_DIR}"
-(cd "${LINUX64_BUILD_DIR}" && cmake .. -D64BITS=true -DSKIP_PAPI=true && make -j8)
+(cd "${LINUX64_BUILD_DIR}" && cmake .. -D64BITS=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make -j8)
 
-rm -rf "${LINUX32_BUILD_DIR}"
-mkdir -p "${LINUX32_BUILD_DIR}"
-(cd "${LINUX32_BUILD_DIR}" && cmake .. -D32BITS=true -DSKIP_PAPI=true && make -j8)
+if  [ $# == 1 ] && [ "$1" == "--cross" ]; then
+  rm -rf "${LINUX32_BUILD_DIR}"
+  mkdir -p "${LINUX32_BUILD_DIR}"
+  (cd "${LINUX32_BUILD_DIR}" && cmake .. -D32BITS=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make -j8)
 
-rm -rf "${WIN32_BUILD_DIR}"
-mkdir -p "${WIN32_BUILD_DIR}"
-(cd "${WIN32_BUILD_DIR}" && cmake .. -DCROSS_COMPILE_MINGW=true -DSKIP_PAPI=true && make -j8)
+  rm -rf "${WIN32_BUILD_DIR}"
+  mkdir -p "${WIN32_BUILD_DIR}"
+  (cd "${WIN32_BUILD_DIR}" && cmake .. -DCROSS_COMPILE_MINGW=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make -j8)
 
-RLSDIR=$(mktemp -d)
-VERSION=$(cat "${DIR}"/VERSION)
-SPIDERDIR="${RLSDIR}"/spider-${VERSION}
+  RLSDIR=$(mktemp -d)
+  VERSION=$(cat "${DIR}"/VERSION)
+  SPIDERDIR="${RLSDIR}"/spider-${VERSION}
 
-mkdir -p "${SPIDERDIR}"/linux32
-mkdir -p "${SPIDERDIR}"/linux64
-mkdir -p "${SPIDERDIR}"/win32
-mkdir -p "${SPIDERDIR}"/include
+  mkdir -p "${SPIDERDIR}"/linux32
+  mkdir -p "${SPIDERDIR}"/linux64
+  mkdir -p "${SPIDERDIR}"/win32
+  mkdir -p "${SPIDERDIR}"/include
 
-cp "${LINUX32_BUILD_DIR}"/libSpider.so "${SPIDERDIR}"/linux32/
-cp "${LINUX64_BUILD_DIR}"/libSpider.so "${SPIDERDIR}"/linux64/
-cp "${WIN32_BUILD_DIR}"/libSpider.dll.a "${SPIDERDIR}"/win32/
-cp "${WIN32_BUILD_DIR}"/Release/libSpider.dll "${SPIDERDIR}"/win32/
-cp "${DIR}"/master/libspider/spider/spider.h "${SPIDERDIR}"/include/
+  cp "${LINUX32_BUILD_DIR}"/libSpider.so "${SPIDERDIR}"/linux32/
+  cp "${LINUX64_BUILD_DIR}"/libSpider.so "${SPIDERDIR}"/linux64/
+  cp "${WIN32_BUILD_DIR}"/libSpider.dll.a "${SPIDERDIR}"/win32/
+  cp "${WIN32_BUILD_DIR}"/Release/libSpider.dll "${SPIDERDIR}"/win32/
+  cp "${DIR}"/master/libspider/spider/spider.h "${SPIDERDIR}"/include/
 
-(cd "${RLSDIR}" && zip -r spider-${VERSION}.zip spider-${VERSION}/)
-mv "${RLSDIR}"/spider-${VERSION}.zip "${DIR}"/
-rm -rf "${RLSDIR}"
+  (cd "${RLSDIR}" && zip -r spider-${VERSION}.zip spider-${VERSION}/)
+  mv "${RLSDIR}"/spider-${VERSION}.zip "${DIR}"/
+  rm -rf "${RLSDIR}"
+
+fi

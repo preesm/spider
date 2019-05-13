@@ -37,8 +37,8 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef SPIDER_SCHEDULEJOB_H
-#define SPIDER_SCHEDULEJOB_H
+#ifndef SPIDER_PISDFSCHEDULEJOB_H
+#define SPIDER_PISDFSCHEDULEJOB_H
 
 #include <Message.h>
 
@@ -59,11 +59,11 @@ typedef struct JobConstrain {
     }
 } JobConstrain;
 
-class ScheduleJob {
+class PiSDFScheduleJob {
 public:
-    ScheduleJob(std::int32_t nInstances, std::int32_t nPEs);
+    PiSDFScheduleJob(std::int32_t nInstances, std::int32_t nPEs);
 
-    ~ScheduleJob();
+    ~PiSDFScheduleJob();
 
     /** Methods **/
     JobInfoMessage *createJobMessage(int instance);
@@ -209,10 +209,10 @@ private:
     inline void checkInstance(std::int32_t &instance) const;
 };
 
-void ScheduleJob::checkInstance(std::int32_t &instance) const {
+void PiSDFScheduleJob::checkInstance(std::int32_t &instance) const {
     if (instance < 0 || instance >= nInstances_) {
         throwSpiderException("Bad instance value: %d", instance);
     }
 }
 
-#endif //SPIDER_SCHEDULEJOB_H
+#endif //SPIDER_PISDFSCHEDULEJOB_H

@@ -40,9 +40,9 @@
 #include <cinttypes>
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <graphs/PiSDF/PiSDFEdge.h>
-#include "ScheduleJob.h"
+#include "PiSDFScheduleJob.h"
 
-ScheduleJob::ScheduleJob(std::int32_t nInstances, std::int32_t nPEs) {
+PiSDFScheduleJob::PiSDFScheduleJob(std::int32_t nInstances, std::int32_t nPEs) {
     nInstances_ = nInstances;
     nLaunchedInstance_ = 0;
     nPEs_ = nPEs;
@@ -68,7 +68,7 @@ ScheduleJob::ScheduleJob(std::int32_t nInstances, std::int32_t nPEs) {
     vertex_ = nullptr;
 }
 
-ScheduleJob::~ScheduleJob() {
+PiSDFScheduleJob::~PiSDFScheduleJob() {
     vertex_ = nullptr;
     StackMonitor::free(TRANSFO_STACK, mappingVector_);
     StackMonitor::free(TRANSFO_STACK, jobIDVector_);
@@ -79,7 +79,7 @@ ScheduleJob::~ScheduleJob() {
 }
 
 
-void ScheduleJob::print(FILE *file, int instance) {
+void PiSDFScheduleJob::print(FILE *file, int instance) {
     auto vertexName = vertex_->getName();
     auto vertexId = vertex_->getId() + instance;
 
@@ -127,7 +127,7 @@ static inline void createParamINArray(JobInfoMessage *const job, std::int32_t nP
 //    }
 //}
 
-JobInfoMessage *ScheduleJob::createJobMessage(int instance) {
+JobInfoMessage *PiSDFScheduleJob::createJobMessage(int instance) {
     auto *jobInfoMessage = CREATE_NA(ARCHI_STACK, JobInfoMessage);
     /** Set basic properties **/
     jobInfoMessage->nEdgeIN_ = vertex_->getNInEdge();

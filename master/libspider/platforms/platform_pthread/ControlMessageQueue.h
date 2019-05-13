@@ -45,8 +45,16 @@
 #include <cstdint>
 #include <queue>
 #include <Message.h>
+
+#if defined _WIN32 && !defined _MSC_VER
+#include <mingw-std-threads/include/mingw.mutex.h>
+#else
+
 #include <mutex>
-#include <scheduling/ScheduleJob.h>
+
+#endif
+
+#include <scheduling/PiSDFScheduleJob.h>
 
 /**
  * @brief Thread safe Message Queue using std::vector for message storage and std::queue for index management;

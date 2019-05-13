@@ -52,7 +52,7 @@ PiSDFSchedule::~PiSDFSchedule() {
     jobs_.clear();
 }
 
-void PiSDFSchedule::addJob(ScheduleJob *job, int instance) {
+void PiSDFSchedule::addJob(PiSDFScheduleJob *job, int instance) {
     jobs_.push_back(job);
     int pe = job->getMappedPE(instance);
     if (pe < 0 || pe >= nPE_) {

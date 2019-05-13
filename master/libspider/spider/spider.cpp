@@ -63,7 +63,6 @@
 #include <monitor/TimeMonitor.h>
 #include <launcher/Launcher.h>
 #include <Logger.h>
-#include <zconf.h>
 #include <scheduling/MemAlloc/DummyPiSDFMemAlloc.h>
 #include <scheduling/Scheduler/GreedyScheduler.h>
 

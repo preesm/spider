@@ -182,4 +182,4 @@ private:
     bool *peDependenciesMatrix_;
 };
 
-#endif //SPIDER_SCHEDULEJOB_H
+#endif //SPIDER_PISDFSCHEDULEJOB_H

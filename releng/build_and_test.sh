@@ -17,6 +17,7 @@ TMPDIR=$(mktemp -d)
 #  Copy sched.h to /lib_spider/lib/pthread-2.10.0/include
 #  Copy semaphore.h to /lib_spider/lib/pthread-2.10.0/include
 
+# PThread for Windows
 
 rm -rf "${DIR}"/master/lib/pthread-2.10
 mkdir -p "${DIR}"/master/lib/pthread-2.10/lib
@@ -35,7 +36,13 @@ cp "${TMPDIR}"/pthread-2.10.0/lib/*.a "${DIR}"/master/lib/pthread-2.10/dll
 
 cp "${TMPDIR}"/pthread-2.10.0/include/*.h "${DIR}"/master/lib/pthread-2.10/include
 
+# STD::Thread for Windows
 
+rm -rf "${DIR}"/master/lib/mingw-std-threads
+mkdir -p "${DIR}"/master/lib/mingw-std-threads/include
+wget -O "${TMPDIR}"/mingw-std-threads.zip https://github.com/meganz/mingw-std-threads/archive/master.zip
+(cd "${TMPDIR}" && unzip mingw-std-threads.zip)
+cp "${TMPDIR}"/mingw-std-threads-master/*.h "${DIR}"/master/lib/mingw-std-threads/include
 
 rm -rf "${TMPDIR}"
 

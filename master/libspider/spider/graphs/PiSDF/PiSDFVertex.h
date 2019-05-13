@@ -45,7 +45,7 @@
 #include <parser/Expression.h>
 
 #include <cstring>
-#include <scheduling/ScheduleJob.h>
+#include <scheduling/PiSDFScheduleJob.h>
 
 class PiSDFVertex : public SetElement {
 public:
@@ -149,16 +149,16 @@ public:
 
     inline void isExecutableOnPE(int pe);
 
-    inline void createScheduleJob(int nInstance) {
+    void createScheduleJob(int nInstance) {
         if (scheduleJob_) {
-            scheduleJob_->~ScheduleJob();
+            scheduleJob_->~PiSDFScheduleJob();
             StackMonitor::free(TRANSFO_STACK, scheduleJob_);
         }
-        scheduleJob_ = CREATE_NA(TRANSFO_STACK, ScheduleJob)(nInstance, Platform::get()->getNLrt());
+        scheduleJob_ = CREATE_NA(TRANSFO_STACK, PiSDFScheduleJob)(nInstance, Platform::get()->getNLrt());
         scheduleJob_->setVertex(this);
     }
 
-    inline ScheduleJob *getScheduleJob() {
+    inline PiSDFScheduleJob *getScheduleJob() {
         return scheduleJob_;
     }
 
@@ -190,7 +190,7 @@ private:
     bool *constraints_;
     Expression **timings_;
 
-    ScheduleJob *scheduleJob_;
+    PiSDFScheduleJob *scheduleJob_;
 
     std::int32_t brvValue_;
 };

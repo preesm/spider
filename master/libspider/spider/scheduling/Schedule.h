@@ -43,7 +43,7 @@
 #include <tools/Stack.h>
 
 #include <algorithm>
-#include "ScheduleJob.h"
+#include "PiSDFScheduleJob.h"
 
 #include <graphs/SRDAG/SRDAGVertex.h>
 

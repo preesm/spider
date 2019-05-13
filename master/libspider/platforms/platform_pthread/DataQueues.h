@@ -35,7 +35,11 @@
 #ifndef SPIDER_DATAQUEUES_H
 #define SPIDER_DATAQUEUES_H
 
+#if defined _WIN32 && !defined _MSC_VER
+#include <mingw-std-threads/include/mingw.mutex.h>
+#else
 #include <mutex>
+#endif
 #include <semaphore.h>
 
 /**

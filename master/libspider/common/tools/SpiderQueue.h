@@ -37,7 +37,11 @@
 #define SPIDER_SPIDERQUEUE_H
 
 #include <queue>
+#if defined _WIN32 && !defined _MSC_VER
+#include <mingw-std-threads/include/mingw.mutex.h>
+#else
 #include <mutex>
+#endif
 #include <semaphore.h>
 #include <monitor/StackMonitor.h>
 #include <SpiderException.h>

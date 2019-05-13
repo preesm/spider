@@ -46,13 +46,13 @@
 #include <graphs/Archi/SharedMemArchi.h>
 #include <tools/Rational.h>
 #include <lrt.h>
+#include <Logger.h>
 
 #ifdef _WIN32
 #include <windows.h>
 #else
 
 #include <unistd.h>
-#include <Logger.h>
 
 #endif // _WIN32
 
@@ -514,7 +514,8 @@ void PlatformPThread::rstJobIx() {
 
 /** Time Handling */
 void PlatformPThread::rstTime(ClearTimeMessage *msg) {
-    start = msg->timespec_;
+    struct timespec tmp =  msg->timespec_;
+    start = tmp;
 }
 
 void PlatformPThread::rstTime() {

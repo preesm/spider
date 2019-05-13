@@ -59,7 +59,7 @@ public:
         va_list args;
         va_start(args, msg);
 #ifdef _WIN32
-        int n = _vsnprintf(buffer, PLATFORM_FPRINTF_BUFFERSIZE, msg, args);
+        int n = _vsnprintf(exceptionMessage_, SPIDER_EXCEPTION_BUFFER_SIZE, msg, args);
 #else
         int n = vsnprintf(exceptionMessage_, SPIDER_EXCEPTION_BUFFER_SIZE, msg, args);
 #endif

@@ -40,7 +40,11 @@
 #define DYN_STACK_H
 
 #include <tools/Stack.h>
+#if defined _WIN32 && !defined _MSC_VER
+#include <mingw-std-threads/include/mingw.mutex.h>
+#else
 #include <mutex>
+#endif
 
 class DynStack : public Stack {
 public:

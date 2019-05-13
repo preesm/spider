@@ -77,7 +77,7 @@ void Launcher::send_ClearTimeMsg(int) {
 }
 
 
-void Launcher::sendJob(ScheduleJob *job) {
+void Launcher::sendJob(PiSDFScheduleJob *job) {
     /** 1. Push the job **/
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     auto instance = job->getNumberOfLaunchedInstances();

@@ -107,7 +107,7 @@ PiSDFVertex::~PiSDFVertex() {
     }
     StackMonitor::free(PISDF_STACK, timings_);
     if (scheduleJob_) {
-        scheduleJob_->~ScheduleJob();
+        scheduleJob_->~PiSDFScheduleJob();
         StackMonitor::free(TRANSFO_STACK, scheduleJob_);
     }
 }

@@ -43,7 +43,7 @@
 #include <tools/Stack.h>
 
 #include <algorithm>
-#include "ScheduleJob.h"
+#include "PiSDFScheduleJob.h"
 #include "Schedule.h"
 
 class PiSDFSchedule : public Schedule {
@@ -66,9 +66,9 @@ public:
         return Schedule::getReadyTime(pe);
     }
 
-    void addJob(ScheduleJob *job, int instance);
+    void addJob(PiSDFScheduleJob *job, int instance);
 
-    inline ScheduleJob *getJob(int id) {
+    inline PiSDFScheduleJob *getJob(int id) {
         return jobs_[id];
     }
 
@@ -81,7 +81,7 @@ public:
         }
     }
 
-    inline std::vector<ScheduleJob *> &getJobs() {
+    inline std::vector<PiSDFScheduleJob *> &getJobs() {
         return jobs_;
     }
 
@@ -92,6 +92,6 @@ public:
     void execute() override;
 
 private:
-    std::vector<ScheduleJob *> jobs_;
+    std::vector<PiSDFScheduleJob *> jobs_;
 };
 #endif/*SCHEDULE_H*/

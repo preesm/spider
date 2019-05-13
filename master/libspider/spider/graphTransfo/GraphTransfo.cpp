@@ -52,7 +52,6 @@
 #include <cmath>
 #include <scheduling/Scheduler/SRDAGLessScheduler.h>
 #include <scheduling/Scheduler/SRDAGLessListScheduler.h>
-#include <zconf.h>
 
 #define SCHEDULE_SIZE 20000
 

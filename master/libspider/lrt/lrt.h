@@ -45,7 +45,7 @@
 #include <platform.h>
 #include <SpiderCommunicator.h>
 #include <LrtCommunicator.h>
-#include <scheduling/ScheduleJob.h>
+#include <scheduling/PiSDFScheduleJob.h>
 
 #ifdef PAPI_AVAILABLE
 #include "../papify/PapifyAction.h"

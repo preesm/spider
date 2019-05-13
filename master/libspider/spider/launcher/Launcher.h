@@ -49,7 +49,7 @@ class Launcher {
 public:
     static Launcher *get();
 
-    void sendJob(ScheduleJob *job);
+    void sendJob(PiSDFScheduleJob *job);
 
     void sendJob(SRDAGScheduleJob *job);
 

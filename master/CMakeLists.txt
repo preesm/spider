@@ -106,6 +106,7 @@ if (NOT THREADS_FOUND)
 endif ()
 
 
+set(STDTHREADDIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/)
 if (WIN32)
     file(GLOB
             PTHREADS_DLL
@@ -152,6 +153,7 @@ include_directories(
         #${THREADS_PTHREADS_INCLUDE_DIR}
         ${PAPI_INCLUDE_DIRS}
         ${PTHREADDIR}/include
+        ${STDTHREADDIR}
         ./libspider/common
         ./libspider/lrt
         ./libspider/platforms/platform_pthread

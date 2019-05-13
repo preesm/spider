@@ -44,7 +44,7 @@
 #include <cstdint>
 #include "Message.h"
 
-class ScheduleJob;
+class PiSDFScheduleJob;
 
 class Communicator {
 public:

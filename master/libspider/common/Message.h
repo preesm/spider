@@ -44,7 +44,11 @@
 #include <spider.h>
 #include <platform.h>
 #include "monitor/StackMonitor.h"
-//#include "Logger.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#include <time.h>
+#endif
 
 typedef enum {
     MSG_START_JOB = 1,

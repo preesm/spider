@@ -37,7 +37,11 @@
  */
 #include <Logger.h>
 #include <cstdarg>
+#if defined _WIN32 && !defined _MSC_VER
+#include <mingw-std-threads/include/mingw.mutex.h>
+#else
 #include <mutex>
+#endif
 
 static bool loggersValue[kNLogger];
 

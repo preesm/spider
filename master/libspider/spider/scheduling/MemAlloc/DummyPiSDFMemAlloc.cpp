@@ -40,6 +40,7 @@
 #include <graphs/PiSDF/PiSDFGraph.h>
 #include <graphs/PiSDF/PiSDFVertex.h>
 #include <graphs/PiSDF/PiSDFEdge.h>
+#include <scheduling/PiSDFScheduleJob.h>
 
 static inline int getAlignSize(Param size) {
     //return std::ceil(size/1.0/getpagesize())*getpagesize();

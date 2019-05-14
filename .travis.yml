@@ -114,10 +114,6 @@ matrix:
       name: "Clang 3.6"
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
-            - george-edison55-precise-backports
           packages:
             - cmake-data
             - cmake
@@ -126,15 +122,11 @@ matrix:
             - clang-3.6
       env:
         - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
-
+        
     - os: linux
       name: "Clang 3.7"
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
-            - george-edison55-precise-backports
           packages:
             - cmake-data
             - cmake
@@ -143,15 +135,11 @@ matrix:
             - clang-3.7
       env:
         - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
-
+        
     - os: linux
       name: "Clang 3.8"
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
-            - george-edison55-precise-backports
           packages:
             - cmake-data
             - cmake
@@ -165,9 +153,6 @@ matrix:
       name: "Clang 3.9"
       addons:
         apt:
-          sources:
-            - llvm-toolchain-trusty-3.9
-            - george-edison55-precise-backports
           packages:
             - cmake-data
             - cmake
@@ -181,9 +166,6 @@ matrix:
       name: "Clang 4.0"
       addons:
         apt:
-          sources:
-            - llvm-toolchain-trusty-4.0
-            - george-edison55-precise-backports
           packages:
             - cmake-data
             - cmake
@@ -197,9 +179,6 @@ matrix:
       name: "Clang 5.0"
       addons:
         apt:
-          sources:
-            - llvm-toolchain-trusty-5.0
-            - george-edison55-precise-backports
           packages:
             - cmake-data
             - cmake

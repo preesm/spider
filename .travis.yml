@@ -1,6 +1,7 @@
 #######################
 # General Configuration
 #######################
+dist: xenial
 language: cpp
 
 script:
@@ -8,6 +9,26 @@ script:
 
 matrix:
   include:
+    - os: linux
+      name: "Cross Compilation Test"
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - george-edison55-precise-backports
+          packages:
+            - cmake-data
+            - cmake
+            - unzip
+            - zip
+            - gcc-7-multilib
+            - g++-7-multilib 
+            - linux-libc-dev:i386
+            - linux-libc-dev
+            - mingw-w64
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CROSS=--cross"
+        
     - os: linux
       name: "GCC 4.9"
       addons:
@@ -188,23 +209,6 @@ matrix:
       env:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
 
-    - os: linux
-      name: "Cross Compilation Test"
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-5.0
-            - george-edison55-precise-backports
-          packages:
-            - cmake-data
-            - cmake
-            - unzip
-            - zip
-            - gcc-multilib
-            - g++-multilib 
-            - mingw-w64
-      env:
-        - MATRIX_EVAL="CROSS=--cross"
 
 before_install:
     - eval "${MATRIX_EVAL}"
@@ -213,10 +217,10 @@ before_install:
 notifications:
   email:
     on_success: change
-    on_failure: always
+    on_failure: change
   slack:
     on_success: change
-    on_failure: always
+    on_failure: change
     rooms:
       - vaader-ietr:iLrCNf4jussBcDgnl8EvN2j5#spider
 

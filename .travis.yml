@@ -187,6 +187,19 @@ matrix:
             - clang-5.0
       env:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+        
+    - os: linux
+      name: "Clang 6.0"
+      addons:
+        apt:
+          packages:
+            - cmake-data
+            - cmake
+            - unzip
+            - zip
+            - clang-6.0
+      env:
+        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
 
 
 before_install:

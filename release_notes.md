@@ -6,9 +6,12 @@ Spider Changelog
 
 ### New Feature
 * Papify now supports heterogeneity in SPiDER;
+* High-level API for designing architecture in Spider;
 
 ### Changes
 * update app folder with dac fft and common cmake modules;
+* Moved graph creation API to specific file;
+* Complete change of the architecture model of Spider allowing for more flexibility;
 
 ### Bug fix
 

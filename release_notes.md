@@ -1,8 +1,8 @@
 Spider Changelog
 ================
 
-## Release version X.Y.Z
-*XXXX.XX.XX*
+## Release version 1.3.0
+*2019.05.15*
 
 ### New Feature
 * Complete Refacto of PThread Platform: all communications are now passively blocking, threads will not take 100% CPU for synchronization.

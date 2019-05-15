@@ -48,16 +48,16 @@ rm -rf "${TMPDIR}"
 
 rm -rf "${LINUX64_BUILD_DIR}"
 mkdir -p "${LINUX64_BUILD_DIR}"
-(cd "${LINUX64_BUILD_DIR}" && cmake .. -D64BITS=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make -j8)
+(cd "${LINUX64_BUILD_DIR}" && cmake .. -D64BITS=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make)
 
 if  [ $# == 1 ] && [ "$1" == "--cross" ]; then
   rm -rf "${LINUX32_BUILD_DIR}"
   mkdir -p "${LINUX32_BUILD_DIR}"
-  (cd "${LINUX32_BUILD_DIR}" && cmake .. -D32BITS=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make -j8)
+  (cd "${LINUX32_BUILD_DIR}" && cmake .. -D32BITS=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make)
 
   rm -rf "${WIN32_BUILD_DIR}"
   mkdir -p "${WIN32_BUILD_DIR}"
-  (cd "${WIN32_BUILD_DIR}" && cmake .. -DCROSS_COMPILE_MINGW=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make -j8)
+  (cd "${WIN32_BUILD_DIR}" && cmake .. -DCROSS_COMPILE_MINGW=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make)
 
   RLSDIR=$(mktemp -d)
   VERSION=$(cat "${DIR}"/VERSION)

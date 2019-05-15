@@ -35,23 +35,25 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include "GraphTransfo.h"
-#include "LinkVertices.h"
-#include "AddVertices.h"
-#include "ComputeBRV.h"
-#include "Optims.h"
+#include <cinttypes>
 
-#include <tools/Queue.h>
-
-#include <scheduling/MemAlloc.h>
+#include <graphTransfo/GraphTransfo.h>
+#include <graphTransfo/LinkVertices.h>
+#include <graphTransfo/AddVertices.h>
+#include <graphTransfo/ComputeBRV.h>
+#include <graphs/PiSDF/PiSDFEdge.h>
 #include <scheduling/Scheduler.h>
-
 #include <monitor/TimeMonitor.h>
-#include <lrt.h>
-
+#include <scheduling/MemAlloc.h>
+#include <graphTransfo/Optims.h>
 #include <launcher/Launcher.h>
+#include <tools/Queue.h>
+#include <lrt.h>
+#include <cmath>
+#include <scheduling/Scheduler/SRDAGLessScheduler.h>
+#include <scheduling/Scheduler/SRDAGLessListScheduler.h>
 
-#define SCHEDULE_SIZE 10000
+#define SCHEDULE_SIZE 20000
 
 static void initJob(transfoJob *job, SRDAGVertex *nextHierVx) {
     memset(job, 0, sizeof(transfoJob));
@@ -59,26 +61,13 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx) {
     job->graphIter = nextHierVx->getRefId();
 
     /* Add Static and Herited parameter values */
-    job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), int);
+    job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), Param);
     for (int paramIx = 0; paramIx < job->graph->getNParam(); paramIx++) {
         PiSDFParam *param = job->graph->getParam(paramIx);
-        switch (param->getType()) {
-            case PISDF_PARAM_STATIC:
-                job->paramValues[paramIx] = param->getStaticValue();
-                break;
-            case PISDF_PARAM_HERITED:
-                job->paramValues[paramIx] = nextHierVx->getInParam(param->getParentId());
-                break;
-            case PISDF_PARAM_DYNAMIC:
-                // Do nothing, cannot be evaluated yet
-                job->paramValues[paramIx] = -1;
-                break;
-            case PISDF_PARAM_DEPENDENT_STATIC:
-                job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
-                break;
-            case PISDF_PARAM_DEPENDENT_DYNAMIC:
-                job->paramValues[paramIx] = -1;
-                break;
+        if (param->isDynamic()) {
+            job->paramValues[paramIx] = -1;
+        } else {
+            job->paramValues[paramIx] = param->getValue();
         }
     }
 
@@ -92,12 +81,12 @@ static void initJob(transfoJob *job, SRDAGVertex *nextHierVx) {
 }
 
 static void freeJob(transfoJob *job) {
-    if (job->configs != 0)
+    if (job->configs != nullptr)
         StackMonitor::free(TRANSFO_STACK, job->configs);
 
-    if (job->bodies != 0) {
+    if (job->bodies != nullptr) {
         for (int i = 0; i < job->graph->getNBody(); i++) {
-            if (job->bodies[i] != 0) {
+            if (job->bodies[i] != nullptr) {
                 StackMonitor::free(TRANSFO_STACK, job->bodies[i]);
             }
         }
@@ -116,7 +105,7 @@ static SRDAGVertex *getNextHierVx(SRDAGGraph *topDag) {
             return vertex;
         }
     }
-    return 0;
+    return nullptr;
 }
 
 void jit_ms(
@@ -128,7 +117,7 @@ void jit_ms(
 
     /* Initialize topDag */
 
-    Schedule *schedule = CREATE(TRANSFO_STACK, Schedule)(archi->getNPE(), SCHEDULE_SIZE);
+    auto *schedule = CREATE(TRANSFO_STACK, SRDAGSchedule)(archi->getNPE(), SCHEDULE_SIZE);
 
     /* Add initial top actor */
     PiSDFVertex *root = topPisdf->getBody(0);
@@ -154,7 +143,7 @@ void jit_ms(
 
         do {
             /* Fill the transfoJob data */
-            transfoJob *job = CREATE(TRANSFO_STACK, transfoJob);
+            auto *job = CREATE(TRANSFO_STACK, transfoJob);
             initJob(job, nextHierVx);
 
             /* Remove Hierachical vertex */
@@ -171,20 +160,20 @@ void jit_ms(
             } else {
                 if (Spider::getVerbose()) {
                     /* Display Param values */
-                    printf("\nParam Values:\n");
+                    fprintf(stderr, "\nINFO: Parameter values:\n");
                     for (int i = 0; i < job->graph->getNParam(); i++) {
-                        printf("%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
+                        fprintf(stderr, "INFO: >> Name: %s -- Value: %" PRId64"\n", job->graph->getParam(i)->getName(),
+                                job->paramValues[i]);
                     }
                 }
 
-                int *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
-                computeBRV(topSrdag, job, brv);
-
+                auto *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
+                computeBRV(job->graph, brv);
                 if (Spider::getVerbose()) {
                     /* Display BRV values */
-                    printf("\nBRV Values:\n");
+                    fprintf(stderr, "\nINFO: BRV values:\n");
                     for (int i = 0; i < job->graph->getNBody(); i++) {
-                        printf("%s: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+                        fprintf(stderr, "INFO: >> Vertex: %s -- RV: %d\n", job->graph->getBody(i)->getName(), brv[i]);
                     }
                 }
 
@@ -217,10 +206,20 @@ void jit_ms(
         scheduler->scheduleOnlyConfig(topSrdag, memAlloc, schedule, archi);
         TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 
+        if (Spider::getVerbose()) {
+            fprintf(stderr, "INFO: Launching config actors...\n");
+        }
+
+        /** Run the schedule **/
+        schedule->execute();
         Platform::get()->getLrt()->runUntilNoMoreJobs();
 
         /* Resolve params must be done by itself */
         Launcher::get()->resolveParams(archi, topSrdag);
+
+        if (Spider::getVerbose()) {
+            fprintf(stderr, "INFO: Resolved parameters.\n");
+        }
 
         TimeMonitor::startMonitoring();
 
@@ -232,28 +231,26 @@ void jit_ms(
             /* Recompute Dependent Dynamic Params */
             for (int paramIx = 0; paramIx < job->graph->getNParam(); paramIx++) {
                 PiSDFParam *param = job->graph->getParam(paramIx);
-                if (param->getType() == PISDF_PARAM_DEPENDENT_DYNAMIC) {
-                    job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
-                }
+                job->paramValues[paramIx] = param->getValue();
             }
 
             if (Spider::getVerbose()) {
                 /* Display Param values */
-                printf("\nParam Values:\n");
+                fprintf(stderr, "\nINFO: Parameter values:\n");
                 for (int i = 0; i < job->graph->getNParam(); i++) {
-                    printf("%s: %d\n", job->graph->getParam(i)->getName(), job->paramValues[i]);
+                    fprintf(stderr, "INFO: >> Name: %s -- Value: %" PRId64"\n", job->graph->getParam(i)->getName(),
+                            job->paramValues[i]);
                 }
             }
 
             /* Compute BRV */
-            int *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
-            computeBRV(topSrdag, job, brv);
-
+            auto *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
+            computeBRV(job->graph, brv);
             if (Spider::getVerbose()) {
                 /* Display BRV values */
-                printf("\nBRV Values:\n");
+                fprintf(stderr, "\nINFO: BRV values:\n");
                 for (int i = 0; i < job->graph->getNBody(); i++) {
-                    printf("%s: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+                    fprintf(stderr, "INFO: >> Vertex: %s -- RV: %d\n", job->graph->getBody(i)->getName(), brv[i]);
                 }
             }
 
@@ -272,6 +269,10 @@ void jit_ms(
             TimeMonitor::startMonitoring();
         }
 
+        if (Spider::getVerbose()) {
+            fprintf(stderr, "INFO: Finished resolving everything.\n");
+        }
+
         // TODO
         topSrdag->updateState();
 
@@ -284,9 +285,7 @@ void jit_ms(
         }
 
         TimeMonitor::startMonitoring();
-
-//        printf("Finish one iter\n");
-    } while (1);
+    } while (true);
 
     topSrdag->updateState();
     TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
@@ -301,10 +300,108 @@ void jit_ms(
     TimeMonitor::startMonitoring();
     scheduler->schedule(topSrdag, memAlloc, schedule, archi);
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
-
-    Platform::get()->getLrt()->runUntilNoMoreJobs();
-
-    schedule->~Schedule();
+    /** Run the schedule **/
+    schedule->executeAndRun();
+    schedule->~SRDAGSchedule();
     StackMonitor::free(TRANSFO_STACK, schedule);
-    StackMonitor::freeAll(TRANSFO_STACK);
+}
+
+SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
+                                MemAlloc *memAlloc,
+                                Scheduler *scheduler, Time *end) {
+    PiSDFGraph *topGraph = Spider::getGraph();
+
+    auto *schedule = CREATE(TRANSFO_STACK, SRDAGSchedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
+
+    /* Add initial top actor */
+    PiSDFVertex *root = topGraph->getBody(0);
+    if (!root->isHierarchical()) {
+        throwSpiderException("Top graph is empty!");
+    }
+    topSrdag->addVertex(root, 0, 0);
+    topSrdag->updateState();
+
+    // Check nb of config //
+
+    /* Look for hierrachical actor in topDag */
+    TimeMonitor::startMonitoring();
+
+    SRDAGVertex *nextHierVx = getNextHierVx(topSrdag);
+
+    do {
+        /* Fill the transfoJob data */
+        auto *job = CREATE(TRANSFO_STACK, transfoJob);
+        initJob(job, nextHierVx);
+
+        /* Remove Hierachical vertex */
+        topSrdag->delVertex(nextHierVx);
+
+        if (Spider::getVerbose()) {
+            /* Display Param values */
+            fprintf(stderr, "\nINFO: Parameter values:\n");
+            for (int i = 0; i < job->graph->getNParam(); i++) {
+                fprintf(stderr, "INFO: >> Name: %s -- Value: %" PRId64"\n", job->graph->getParam(i)->getName(),
+                        job->paramValues[i]);
+            }
+        }
+
+        auto *brv = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
+        computeBRV(job->graph, brv);
+        if (Spider::getVerbose()) {
+            /* Display BRV values */
+            fprintf(stderr, "\nINFO: BRV values:\n");
+            for (int i = 0; i < job->graph->getNBody(); i++) {
+                fprintf(stderr, "INFO: >> Vertex: %s -- RV: %d\n", job->graph->getBody(i)->getName(), brv[i]);
+            }
+        }
+        addSRVertices(topSrdag, job, brv);
+
+        linkSRVertices(topSrdag, job, brv);
+
+        freeJob(job);
+
+        StackMonitor::free(TRANSFO_STACK, brv);
+        StackMonitor::free(TRANSFO_STACK, job);
+
+        /* Find next hierarchical vertex */
+        topSrdag->updateState();
+        nextHierVx = getNextHierVx(topSrdag);
+    } while (nextHierVx);
+
+    TimeMonitor::endMonitoring(TRACE_SPIDER_GRAPH);
+
+    if (Spider::getGraphOptim()) {
+        TimeMonitor::startMonitoring();
+        optims(topSrdag);
+        TimeMonitor::endMonitoring(TRACE_SPIDER_OPTIM);
+    }
+
+    topSrdag->updateState();
+
+    if (end) {
+        (*end) = Platform::get()->getTime();
+    }
+
+    /* Schedule and launch execution */
+    TimeMonitor::startMonitoring();
+    scheduler->schedule(topSrdag, memAlloc, schedule, Spider::getArchi());
+    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
+    return schedule;
+}
+
+
+PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end) {
+    auto *graph = Spider::getGraph();
+    if (!graph->getBody(0)->isHierarchical()) {
+        throwSpiderException("Top graph should contain at least one actor.");
+    }
+    auto *root = graph->getBody(0)->getSubGraph();
+    computeHierarchicalBRV(root);
+    auto schedule = CREATE_NA(TRANSFO_STACK, PiSDFSchedule)(Spider::getArchi()->getNPE(), SCHEDULE_SIZE);
+    auto scheduler = SRDAGLessScheduler(root, schedule);
+    if (end) {
+        (*end) = Platform::get()->getTime();
+    }
+    scheduler.schedule(root, memAlloc);
+    return schedule;
 }

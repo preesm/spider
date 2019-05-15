@@ -34,172 +34,110 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include "ComputeBRV.h"
-#include "topologyMatrix.h"
-
 #include <graphs/PiSDF/PiSDFEdge.h>
+#include <graphTransfo/ComputeBRV.h>
+#include <graphTransfo/LCM.h>
+#include "TopologyMatrix.h"
 
-#include <cmath>
-#include <algorithm>
-
-static bool isBodyExecutable(PiSDFVertex *body, transfoJob *job) {
-    bool notExec = true;
-
-    /* Test if all In/Out is equal to 0 */
-    for (int j = 0; notExec && j < body->getNInEdge(); j++) {
-        PiSDFEdge *inEdge = body->getInEdge(j);
-        int cons = inEdge->resolveCons(job);
-        notExec = notExec && (cons == 0);
-    }
-    for (int j = 0; notExec && j < body->getNOutEdge(); j++) {
-        PiSDFEdge *outEdge = body->getOutEdge(j);
-        int prod = outEdge->resolveProd(job);
-        notExec = notExec && (prod == 0);
-    }
-
-    return !notExec;
+static inline std::int32_t getVertexIx(PiSDFVertex *const vertex) {
+    std::int32_t offsetInputIF = ((vertex->getType() == PISDF_TYPE_IF) * vertex->getGraph()->getNBody());
+    std::int32_t offsetOutputIF = ((vertex->getSubType() == PISDF_SUBTYPE_OUTPUT_IF) * vertex->getGraph()->getNInIf());
+    return vertex->getTypeId() + offsetInputIF + offsetOutputIF;
 }
 
-static bool isEdgeValid(PiSDFEdge *edge, transfoJob *job) {
-    int prod = edge->resolveProd(job);
-    int cons = edge->resolveCons(job);
-
-    if ((prod == 0 && cons != 0) || (cons == 0 && prod != 0))
-        throw std::runtime_error("Bad Edge Prod/Cons, One is =0 et other is !=0\n");
-
-    if (edge->getSrc() != edge->getSnk()
-        && edge->getSrc()->getType() == PISDF_TYPE_BODY && isBodyExecutable(edge->getSrc(), job)
-        && edge->getSnk()->getType() == PISDF_TYPE_BODY && isBodyExecutable(edge->getSnk(), job)
-            )
-        return true;
-
-    return false;
-}
-
-void computeBRV(SRDAGGraph */*topSrdag*/, transfoJob *job, int *brv) {
-    int *vertexIxs = CREATE_MUL(TRANSFO_STACK, job->graph->getNBody(), int);
-
-    /* Compute nbVertices */
-    int nbVertices = 0;
-    for (int i = 0; i < job->graph->getNBody(); i++) {
-        PiSDFVertex *body = job->graph->getBody(i);
-        if (isBodyExecutable(body, job)) {
-            vertexIxs[body->getTypeId()] = nbVertices++;
-        } else
-            vertexIxs[body->getTypeId()] = -1;
-    }
-
-    /* Compute nbEdges */
-    int nbEdges = 0;
-    for (int i = 0; i < job->graph->getNEdge(); i++) {
-        PiSDFEdge *edge = job->graph->getEdge(i);
-        if (isEdgeValid(edge, job)) {
-            nbEdges++;
-        }
-    }
-
-    int *topo_matrix = CREATE_MUL(TRANSFO_STACK, nbEdges * nbVertices, int);
-    memset(topo_matrix, 0, nbEdges * nbVertices * sizeof(int));
-
-    /* Fill the topology matrix(nbEdges x nbVertices) */
-    nbEdges = 0; // todo do better with the nbEdges var
-    for (int i = 0; i < job->graph->getNEdge(); i++) {
-        PiSDFEdge *edge = job->graph->getEdge(i);
-        if (isEdgeValid(edge, job)) {
-            int prod = edge->resolveProd(job);
-            int cons = edge->resolveCons(job);
-
-            if (prod < 0 || cons < 0) {
-                char name[100];
-                edge->getProdExpr(name, 100);
-                printf("Prod : %s = %d\n", name, prod);
-                edge->getConsExpr(name, 100);
-                printf("Cons : %s = %d\n", name, cons);
-                throw std::runtime_error("Error Bad prod/cons resolved\n");
+static void fillVertexSet(PiSDFVertexSet &vertexSet, long &sizeEdgeSet, PiSDFVertex **keyVertexSet) {
+    int currentSize = 0;
+    int n = vertexSet.size() - 1;
+    do {
+        currentSize = vertexSet.size();
+        auto *current = vertexSet.getArray()[n];
+        // 0. Do the output edges
+        for (int i = 0; i < current->getNOutEdge(); ++i) {
+            auto *edge = current->getOutEdge(i);
+            if (!edge) {
+                throwSpiderException("Vertex [%s] has NULL edge", current->getName());
             }
-
-            topo_matrix[nbEdges * nbVertices + vertexIxs[edge->getSrc()->getTypeId()]] = prod;
-            topo_matrix[nbEdges * nbVertices + vertexIxs[edge->getSnk()->getTypeId()]] = -cons;
-            nbEdges++;
+            auto *vertex = edge->getSnk();
+            auto vertexIx = getVertexIx(vertex);
+            if (!keyVertexSet[vertexIx]) {
+                vertexSet.add(vertex);
+                keyVertexSet[vertexIx] = vertex;
+            }
+            sizeEdgeSet++;
         }
-    }
-
-//	printf("topoMatrix:\n");
-//	for(int i=0; i<nbEdges; i++){
-//		for(int j=0; j<nbVertices; j++){
-//			printf("%4d ", topo_matrix[i*nbVertices+j]);
-//		}
-//		printf("\n");
-//	}
-
-    int *smallBrv = CREATE_MUL(TRANSFO_STACK, nbVertices, int);
-
-    /* Compute nullSpace */
-    nullSpace(topo_matrix, smallBrv, nbEdges, nbVertices);
-
-    /* Convert Small Brv to Complete One */
-    for (int i = 0; i < job->graph->getNBody(); i++) {
-        if (vertexIxs[i] == -1)
-            brv[i] = 0;
-        else
-            brv[i] = smallBrv[vertexIxs[i]];
-    }
-
-    /* Updating the productions of the round buffer vertices. */
-    int coef = 1;
-
-    /* Looking on interfaces */
-    for (int i = 0; i < job->graph->getNInIf(); i++) {
-        PiSDFVertex *inIf = job->graph->getInputIf(i);
-        PiSDFEdge *edge = inIf->getOutEdge(0);
-        /* Only if IF<->Body edge */
-        if (edge->getSnk()->getType() == PISDF_TYPE_BODY) {
-            float prod = edge->resolveProd(job);
-            float cons = edge->resolveCons(job);
-            float nbRepet = brv[edge->getSnk()->getTypeId()];
-            if (nbRepet != 0)
-                coef = std::max(coef, (int) std::ceil(prod / (cons * nbRepet)));
-        }
-    }
-    for (int i = 0; i < job->graph->getNOutIf(); i++) {
-        PiSDFVertex *outIf = job->graph->getOutputIf(i);
-        PiSDFEdge *edge = outIf->getInEdge(0);
-        /* Only if Body<->IF edge */
-        if (edge->getSrc()->getType() == PISDF_TYPE_BODY) {
-            float prod = edge->resolveProd(job);
-            float cons = edge->resolveCons(job);
-            float nbRepet = brv[edge->getSrc()->getTypeId()];
-            if (nbRepet != 0)
-                coef = std::max(coef, (int) std::ceil(cons / (prod * nbRepet)));
-        }
-    }
-    /* Looking on implicit RB between Config and Body */
-    for (int i = 0; i < job->graph->getNConfig(); i++) {
-        PiSDFVertex *config = job->graph->getConfig(i);
-        for (int i = 0; i < config->getNOutEdge(); i++) {
-            PiSDFEdge *edge = config->getOutEdge(i);
-            /* Only if Config<->Body edge */
-            if (edge->getSnk()->getType() == PISDF_TYPE_BODY) {
-                float prod = edge->resolveProd(job);
-                float cons = edge->resolveCons(job);
-                float nbRepet = brv[edge->getSnk()->getTypeId()];
-                if (nbRepet != 0)
-                    coef = std::max(coef, (int) std::ceil(prod / (cons * nbRepet)));
+        // 1. Do the input edges
+        for (int i = 0; i < current->getNInEdge(); ++i) {
+            auto *edge = current->getInEdge(i);
+            if (!edge) {
+                throwSpiderException("Vertex [%s] has NULL edge", current->getName());
+            }
+            auto *vertex = edge->getSrc();
+            auto vertexIx = getVertexIx(vertex);
+            if (!keyVertexSet[vertexIx]) {
+                vertexSet.add(vertex);
+                keyVertexSet[vertexIx] = vertex;
             }
         }
-    }
-
-    for (int i = 0; i < nbVertices; i++) {
-        brv[i] *= coef;
-    }
-
-    StackMonitor::free(TRANSFO_STACK, topo_matrix);
-    StackMonitor::free(TRANSFO_STACK, vertexIxs);
-    StackMonitor::free(TRANSFO_STACK, smallBrv);
-
-//	printf("brv:\n");
-//	for(int i=0; i<nbVertices; i++){
-//		printf("%4d ", brv[i]);
-//	}
-//	printf("\n");
+        n++;
+    } while ((vertexSet.size() != currentSize) || (n != vertexSet.size()));
 }
+
+void computeBRV(PiSDFGraph *const graph, int *brv) {
+    // Retrieve the graph
+    int nTotalVertices = graph->getNBody() + graph->getNInIf() + graph->getNOutIf();
+    PiSDFVertexSet vertexSet(nTotalVertices, TRANSFO_STACK);
+    auto **keyVertexSet = CREATE_MUL_NA(TRANSFO_STACK, nTotalVertices, PiSDFVertex*);
+    for (int ix = 0; ix < nTotalVertices; ++ix) {
+        keyVertexSet[ix] = nullptr;
+    }
+
+    // 0. First we need to get all different connected components
+    long nDoneVertices = 0;
+    for (int i = 0; i < graph->getNBody(); i++) {
+        auto *vertex = graph->getBody(i);
+        auto vertexIx = getVertexIx(vertex);
+        if (!keyVertexSet[vertexIx]) {
+            long nEdges = 0;
+            vertexSet.add(vertex);
+            keyVertexSet[vertexIx] = vertex;
+            // 1. Fill up the vertexSet
+            fillVertexSet(vertexSet, nEdges, keyVertexSet);
+            // 1.1 Update the offset in the vertexSet
+            long nVertices = vertexSet.size() - nDoneVertices;
+            // 2. Compute the BRV of current set
+            lcmBasedBRV(vertexSet, nDoneVertices, nVertices, nEdges, brv);
+            // 3. Update the number of treated vertices
+            nDoneVertices = vertexSet.size();
+        }
+        vertex->setBRVValue(brv[i]);
+    }
+    for (std::int32_t i = 0; i < graph->getNInIf(); ++i) {
+        auto *vertex = graph->getInputIf(i);
+        vertex->setBRVValue(1);
+    }
+    for (std::int32_t i = 0; i < graph->getNOutIf(); ++i) {
+        auto *vertex = graph->getOutputIf(i);
+        vertex->setBRVValue(1);
+    }
+    while (vertexSet.size() > 0) {
+        vertexSet.del(vertexSet[0]);
+    }
+    StackMonitor::free(TRANSFO_STACK, keyVertexSet);
+}
+
+
+void computeHierarchicalBRV(PiSDFGraph *const graph) {
+    auto *brv = CREATE_MUL(TRANSFO_STACK, graph->getNBody(), std::int32_t);
+    computeBRV(graph, brv);
+    StackMonitor::free(TRANSFO_STACK, brv);
+    for (std::int32_t i = 0; i < graph->getNBody(); ++i) {
+        auto *vertex = graph->getBody(i);
+        if (vertex->isHierarchical()){
+            computeHierarchicalBRV(vertex->getSubGraph());
+        }
+    }
+}
+
+
+
+

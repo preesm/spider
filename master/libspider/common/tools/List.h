@@ -41,6 +41,7 @@
 
 #include <monitor/StackMonitor.h>
 #include <stdexcept>
+#include <SpiderException.h>
 
 template<class T>
 class List {
@@ -49,7 +50,7 @@ public:
 
     ~List();
 
-    T &operator[](int n);
+    T &operator[](int ix);
 
     int getNb();
 
@@ -76,21 +77,23 @@ inline List<T>::List(SpiderStack stackId, int size) {
     nb = 0;
     nbMax = size;
     if (size == 0)
-        array = 0;
+        array = nullptr;
     else
         array = CREATE_MUL(stackId_, size, T);
 }
 
 template<class T>
 inline List<T>::~List() {
-    if (array != 0)
+    if (array != nullptr)
         StackMonitor::free(stackId_, array);
 }
 
+
 template<class T>
 inline T &List<T>::operator[](int ix) {
-    if (ix < 0 || ix >= nb)
-        throw std::runtime_error("List: Accesing unitialized element\n");
+    if (ix < 0 || ix >= nb) {
+        throwSpiderException("Accesing unitialized element. Ix = %d -- Size = %d", ix, nb);
+    }
     return array[ix];
 }
 
@@ -101,8 +104,9 @@ inline int List<T>::getNb() {
 
 template<class T>
 inline void List<T>::add(T e) {
-    if (nb >= nbMax)
-        throw std::runtime_error("List: Full !\n");
+    if (nb >= nbMax) {
+        throwSpiderException("Can not add element, list is full.");
+    }
     array[nb] = e;
     nb++;
 }
@@ -127,7 +131,7 @@ inline int List<T>::myqsort_part(int p, int r, int (*comp)(T, T)) {
     T pivot = array[p];
     int i = p - 1, j = r + 1;
     T temp;
-    while (1) {
+    while (true) {
         do
             j--;
         while (comp(array[j], pivot) > 0);

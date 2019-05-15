@@ -73,7 +73,7 @@ typedef enum SRDAGState {
 } SRDAGState;
 
 /** Set types */
-typedef Set<SRDAGEdge *> SRDAGEdgeSet;
-typedef Set<SRDAGVertex *> SRDAGVertexSet;
+using SRDAGEdgeSet = Set<SRDAGEdge *>;
+using SRDAGVertexSet = Set<SRDAGVertex *>;
 
 #endif/*SRDAG_COMMON_H*/

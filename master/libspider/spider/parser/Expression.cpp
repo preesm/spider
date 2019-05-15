@@ -1,3 +1,7 @@
+#include <cmath>
+
+#include <cmath>
+
 /**
  * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2018) :
  *
@@ -35,34 +39,40 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include <parser/Expression.h>
+#include <cmath>
 #include <graphTransfo/GraphTransfo.h>
+#include <parser/Expression.h>
+#include "Expression.h"
 
-#include <math.h>
 
 #define MAX_NVAR_ELEMENTS 100
 #define REVERSE_POLISH_STACK_MAX_ELEMENTS 100
 #define EXPR_LEN_MAX 1000
 
-static int precedence[5] = {
+static int precedence[7] = {
         2, //OP_ADD
         2, //OP_SUB
         3, //OP_MUL
         3, //OP_DIV
-        4  //OP_POW
+        4, //OP_POW
+        4, //OP_FLOOR
+        4  //OP_CEIL
 };
 
 static const char *operatorSign[5] = {
         "+", //OP_ADD
         "-", //OP_SUB
         "*", //OP_MUL
-        "/" //OP_DIV,
+        "/", //OP_DIV,
         "^" //OP_POW
 };
 
 Expression::Expression(
         const char *expr,
         const PiSDFParam *const *params, int nParam) {
+    stringExpr_ = std::string(expr);
+    isStatic_ = true;
+
     nElt_ = evaluateNTokens(expr);
     stack_ = CREATE_MUL(PISDF_STACK, nElt_, Token);
 
@@ -79,6 +89,9 @@ Expression::Expression(
             case VALUE:
             case PARAMETER:
                 output[ixOutput++] = t;
+                if (t.param && t.param->getType() == PISDF_PARAM_DYNAMIC) {
+                    isStatic_ = false;
+                }
                 break;
             case OPERATOR:
                 while (ixStack > 0
@@ -98,10 +111,12 @@ Expression::Expression(
                     output[ixOutput++] = stack[ixStack];
                 }
                 if (ixStack == 0) {
-                    throw std::runtime_error("Parsing error: missing left parenthesis\n");
+                    throwSpiderException("Missing left parenthesis.");
                 }
                 ixStack--;
                 break;
+            default:
+                throwSpiderException("Error while parsing expression.");
         }
     }
 
@@ -110,15 +125,20 @@ Expression::Expression(
         output[ixOutput++] = stack[ixStack];
     }
     nElt_ = ixOutput;
+    if (isStatic_) {
+        isStatic_ = false;
+        value_ = evaluate();
+        isStatic_ = true;
+    }
 }
 
 Expression::~Expression() {
     StackMonitor::free(PISDF_STACK, stack_);
 }
 
-int Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, bool *ok) const {
-    int stack[MAX_NVAR_ELEMENTS];
-    int *stackPtr = stack;
+Param Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, bool *ok) const {
+    float stack[MAX_NVAR_ELEMENTS];
+    float *stackPtr = stack;
     const Token *inputPtr = stack_;
 
     while (stack_ + nElt_ > inputPtr) {
@@ -129,42 +149,54 @@ int Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, bo
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) += *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case SUB:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) -= *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case MUL:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) *= *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case DIV:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) /= *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case POW:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
-                            *(stackPtr - 1) = pow((double) *(stackPtr - 1), *stackPtr);
+                            *(stackPtr - 1) = static_cast<float>(pow((double) *(stackPtr - 1), *stackPtr));
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case FLOOR:
-                        if (stackPtr - stack >= 2) {
-                            stackPtr--;
-                            *(stackPtr - 1) = floor(*stackPtr);
+                        if (stackPtr - stack >= 1) {
+                            *(stackPtr - 1) = std::floor(*(stackPtr - 1));
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case CEIL:
-                        if (stackPtr - stack >= 2) {
-                            stackPtr--;
-                            *(stackPtr - 1) = ceil(*stackPtr);
+                        if (stackPtr - stack >= 1) {
+                            *(stackPtr - 1) = std::ceil(*(stackPtr - 1));
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                 }
@@ -174,21 +206,24 @@ int Expression::evaluate(const PiSDFParam *const *paramList, transfoJob *job, bo
                 stackPtr++;
                 break;
             case PARAMETER:
-                *stackPtr = job->paramValues[paramList[inputPtr->paramIx]->getTypeIx()];
+                *stackPtr = job->paramValues[paramList[inputPtr->paramIx]->getLocalID()];
                 stackPtr++;
                 break;
             default:
-                throw std::runtime_error("Error: Parenthesis in evaluated var\n");
+                throwSpiderException("Parenthesis in evaluated var.");
         }
         inputPtr++;
     }
     if (ok) *ok = true;
-    return stack[0];
+    return (Param) stack[0];
 }
 
-int Expression::evaluate(const int *vertexParamValues, int nParam) const {
-    int stack[MAX_NVAR_ELEMENTS];
-    int *stackPtr = stack;
+Param Expression::evaluate() const {
+    if (isStatic_) {
+        return value_;
+    }
+    float stack[MAX_NVAR_ELEMENTS];
+    float *stackPtr = stack;
     const Token *inputPtr = stack_;
 
     while (stack_ + nElt_ > inputPtr) {
@@ -199,42 +234,54 @@ int Expression::evaluate(const int *vertexParamValues, int nParam) const {
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) += *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case SUB:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) -= *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case MUL:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) *= *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case DIV:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
                             *(stackPtr - 1) /= *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case POW:
                         if (stackPtr - stack >= 2) {
                             stackPtr--;
-                            *(stackPtr - 1) = pow((double) *(stackPtr - 1), *stackPtr);
+                            *(stackPtr - 1) = static_cast<float>(pow((double) *(stackPtr - 1), *stackPtr));
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case FLOOR:
-                        if (stackPtr - stack >= 2) {
-                            stackPtr--;
-                            *(stackPtr - 1) = floor(*stackPtr);
+                        if (stackPtr - stack >= 1) {
+                            *(stackPtr - 1) = std::floor(*(stackPtr - 1));
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                     case CEIL:
-                        if (stackPtr - stack >= 2) {
-                            stackPtr--;
-                            *(stackPtr - 1) = ceil(*stackPtr);
+                        if (stackPtr - stack >= 1) {
+                            *(stackPtr - 1) = std::ceil(*(stackPtr - 1));
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
                         }
                         break;
                 }
@@ -244,24 +291,112 @@ int Expression::evaluate(const int *vertexParamValues, int nParam) const {
                 stackPtr++;
                 break;
             case PARAMETER:
-                if (inputPtr->paramIx < 0 || inputPtr->paramIx >= nParam)
-                    throw std::runtime_error("Invalid parameter id in expression");
+                *stackPtr = inputPtr->param->getValue();
+                if (*stackPtr == -1)
+                    return -1; // Not resolved TODO handle better not resolved dependent params
+                stackPtr++;
+                break;
+            default:
+                throwSpiderException("Parenthesis in evaluated var.");
+        }
+        inputPtr++;
+    }
+//    if (isStatic_) {
+//        value_ = static_cast<Param>(stack[0]);
+//    }
+//    fprintf(stderr, "INFO: value %lu\n", static_cast<Param>(stack[0]));
+    return static_cast<Param>(stack[0]);
+}
+
+Param Expression::evaluate(const Param *vertexParamValues, int nParam) const {
+    float stack[MAX_NVAR_ELEMENTS];
+    float *stackPtr = stack;
+    const Token *inputPtr = stack_;
+
+    while (stack_ + nElt_ > inputPtr) {
+        switch (inputPtr->type) {
+            case OPERATOR:
+                switch (inputPtr->opType) {
+                    case ADD:
+                        if (stackPtr - stack >= 2) {
+                            stackPtr--;
+                            *(stackPtr - 1) += *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                    case SUB:
+                        if (stackPtr - stack >= 2) {
+                            stackPtr--;
+                            *(stackPtr - 1) -= *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                    case MUL:
+                        if (stackPtr - stack >= 2) {
+                            stackPtr--;
+                            *(stackPtr - 1) *= *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                    case DIV:
+                        if (stackPtr - stack >= 2) {
+                            stackPtr--;
+                            *(stackPtr - 1) /= *stackPtr;
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                    case POW:
+                        if (stackPtr - stack >= 2) {
+                            stackPtr--;
+                            *(stackPtr - 1) = static_cast<float>(pow((double) *(stackPtr - 1), *stackPtr));
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                    case FLOOR:
+                        if (stackPtr - stack >= 1) {
+                            *(stackPtr - 1) = std::floor(*(stackPtr - 1));
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                    case CEIL:
+                        if (stackPtr - stack >= 1) {
+                            *(stackPtr - 1) = std::ceil(*(stackPtr - 1));
+                        } else {
+                            throwSpiderException("Invalid operator in expression.");
+                        }
+                        break;
+                }
+                break;
+            case VALUE:
+                *stackPtr = inputPtr->value;
+                stackPtr++;
+                break;
+            case PARAMETER:
+                if (inputPtr->paramIx < 0 || inputPtr->paramIx >= nParam) {
+                    throwSpiderException("Invalid parameter id.");
+                }
                 *stackPtr = vertexParamValues[inputPtr->paramIx];
                 if (*stackPtr == -1)
                     return -1; // Not resolved TODO handle better not resolved dependent params
                 stackPtr++;
                 break;
             default:
-                throw std::runtime_error("Error: Parenthesis in evaluated var\n");
+                throwSpiderException("Parenthesis in evaluated var.");
         }
         inputPtr++;
     }
-    return stack[0];
+    return static_cast<Param>(stack[0]);
 }
 
 void Expression::toString(
         const PiSDFParam *const *params, int nParam,
-        char *out, int outSizeMax) {
+        char *out, size_t outSizeMax) {
     static char outputStack[REVERSE_POLISH_STACK_MAX_ELEMENTS + 1][EXPR_LEN_MAX];
     int outputStackSize = 0;
 //	Token* varStackPtr = stack_;
@@ -284,13 +419,14 @@ void Expression::toString(
                 snprintf(outputStack[outputStackSize++], EXPR_LEN_MAX, "%d", stack_[i].value);
                 break;
             case PARAMETER:
-                if (stack_[i].paramIx < 0 || stack_[i].paramIx >= nParam)
-                    throw std::runtime_error("Invalid parameter id in expression");
+                if (stack_[i].paramIx < 0 || stack_[i].paramIx >= nParam) {
+                    throwSpiderException("Invalid parameter id.");
+                }
                 // Push parameter name to output stack
                 snprintf(outputStack[outputStackSize++], EXPR_LEN_MAX, "%s", params[stack_[i].paramIx]->getName());
                 break;
             default:
-                throw std::runtime_error("Error: Parenthesis in evaluated var\n");
+                throwSpiderException("Parenthesis in evaluated var.");
         }
     }
     strncpy(out, outputStack[0], outSizeMax);
@@ -299,7 +435,7 @@ void Expression::toString(
 int Expression::evaluateNTokens(const char *expr) {
     const char **ptr = &expr;
     int i = 0;
-    while (getNextToken(0, ptr, 0, 0)) {
+    while (getNextToken(nullptr, ptr, nullptr, 0)) {
         i++;
     }
     return i;
@@ -320,7 +456,7 @@ bool Expression::getNextToken(
 
     // check for minus
     if (**ptr == '-') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = OPERATOR;
             token->opType = SUB;
         }
@@ -330,7 +466,7 @@ bool Expression::getNextToken(
 
     // check for plus
     if (**ptr == '+') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = OPERATOR;
             token->opType = ADD;
         }
@@ -340,7 +476,7 @@ bool Expression::getNextToken(
 
     // check for mult
     if (**ptr == '*') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = OPERATOR;
             token->opType = MUL;
         }
@@ -350,7 +486,7 @@ bool Expression::getNextToken(
 
     // check for power
     if (**ptr == '^') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = OPERATOR;
             token->opType = POW;
         }
@@ -360,7 +496,7 @@ bool Expression::getNextToken(
 
     // check for div
     if (**ptr == '/') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = OPERATOR;
             token->opType = DIV;
         }
@@ -370,14 +506,14 @@ bool Expression::getNextToken(
 
     // check for parentheses
     if (**ptr == '(') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = LEFT_PAR;
         }
         (*ptr)++;
         return true;
     }
     if (**ptr == ')') {
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = RIGHT_PAR;
         }
         (*ptr)++;
@@ -392,7 +528,7 @@ bool Expression::getNextToken(
             value += **ptr - '0';
             (*ptr)++;
         }
-        if (token != 0) {
+        if (token != nullptr) {
             token->type = VALUE;
             token->value = value;
         }
@@ -408,7 +544,7 @@ bool Expression::getNextToken(
             (*ptr)++;
         }
 
-        if (token != 0) {
+        if (token != nullptr) {
             // Check if it is an OPERATOR
             const char *operatorStrings[2] = {"floor", "ceil"};
             OpType operatorTypes[2] = {FLOOR, CEIL};
@@ -416,6 +552,7 @@ bool Expression::getNextToken(
                 if (nb == strlen(operatorStrings[i]) &&
                     strncasecmp(operatorStrings[i], name, nb) == 0) {
                     token->opType = operatorTypes[i];
+                    token->type = OPERATOR;
                     return true;
                 }
             }
@@ -424,14 +561,18 @@ bool Expression::getNextToken(
                 token->type = PARAMETER;
                 if (nb == strlen(params[i]->getName())
                     && strncmp(params[i]->getName(), name, nb) == 0) {
-                    token->paramIx = i/*params[i]->getTypeIx()*/;
+                    token->paramIx = i/*params[i]->getLocalID()*/;
+                    token->param = (PiSDFParam *) params[i];
                     return true;
                 }
             }
-            std::string error = std::string("Failed to parse expression: ") + std::string(name);
-            throw std::runtime_error(error.c_str());
-        } else return true;
+            throwSpiderException("Failed to parse expression: %s.", name);
+        } else {
+            return true;
+        }
     }
-    throw std::runtime_error("Failed parsing.\n");
+    throwSpiderException("Failed parsing..");
 }
+
+
 

@@ -44,7 +44,6 @@
 #include <Message.h>
 #include <SpiderCommunicator.h>
 #include <tools/Stack.h>
-#include <sys/types.h>
 
 // semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
 // making compilation error with the IDE's own declaration of said types
@@ -60,52 +59,40 @@
 #endif
 #endif
 
-#include <queue>
+#include "ControlMessageQueue.h"
+#include "NotificationQueue.h"
 
 class PThreadSpiderCommunicator : public SpiderCommunicator {
 public:
-    PThreadSpiderCommunicator(int msgSizeMax, int nLrt,
-                              sem_t *mutexTrace, sem_t *mutexFifoSpidertoLRT, sem_t *mutexFifoLRTtoSpider,
-                              sem_t *semFifoSpidertoLRT,
-                              std::queue<unsigned char> *fTraceWr, std::queue<unsigned char> *fTraceRd);
+    PThreadSpiderCommunicator(
+            ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
+            ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
+            NotificationQueue<NotificationMessage> **notificationQueue,
+            ControlMessageQueue<TraceMessage *> *traceQueue);
 
-    ~PThreadSpiderCommunicator();
+    ~PThreadSpiderCommunicator() override = default;
 
-    void setLrtCom(int lrtIx, std::queue<unsigned char> *fIn, std::queue<unsigned char> *fOut);
+    void push_notification(int lrtID, NotificationMessage *msg) override;
 
-    void *ctrl_start_send(int lrtIx, int size);
+    bool pop_notification(int lrtID, NotificationMessage *msg, bool blocking) override;
 
-    void ctrl_end_send(int lrtIx, int size);
+    std::int32_t push_job_message(JobInfoMessage **message) override;
 
-    int ctrl_start_recv(int lrtIx, void **data);
+    void pop_job_message(JobInfoMessage **msg, std::int32_t id) override;
 
-    void ctrl_end_recv(int lrtIx);
+    std::int32_t push_parameter_message(ParameterMessage **message) override;
 
-    void *trace_start_send(int size);
+    void pop_parameter_message(ParameterMessage **msg, std::int32_t id) override;
 
-    void trace_end_send(int size);
+    std::int32_t push_trace_message(TraceMessage **message) override;
 
-    int trace_start_recv(void **data);
-
-    void trace_end_recv();
+    void pop_trace_message(TraceMessage **message, std::int32_t id) override;
 
 private:
-    std::queue<unsigned char> **fIn_;
-    std::queue<unsigned char> **fOut_;
-    std::queue<unsigned char> *fTraceRd_;
-    std::queue<unsigned char> *fTraceWr_;
-
-    sem_t *mutexTrace_;
-    sem_t *mutexFifoSpidertoLRT_;
-    sem_t *mutexFifoLRTtoSpider_;
-    sem_t *semFifoSpidertoLRT_;
-
-    int msgSizeMax_;
-
-    void *msgBufferRecv_;
-    int curMsgSizeRecv_;
-    void *msgBufferSend_;
-    int curMsgSizeSend_;
+    ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
+    ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
+    ControlMessageQueue<TraceMessage *> *traceQueue_;
+    NotificationQueue<NotificationMessage> **notificationQueue_;
 };
 
 #endif/*PTHREADS_SPIDER_COMMUNICATOR_H*/

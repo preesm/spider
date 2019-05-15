@@ -43,32 +43,33 @@ PiSDFGraph::PiSDFGraph(
         int nInputIf, int nOutputIf,
         int nConfig, int nBody) :
 
-        edges_(nEdges, PISDF_STACK),
+        edges_(nEdges + nInputIf + nOutputIf, PISDF_STACK),
         params_(nParams, PISDF_STACK),
-        bodies_(nBody, PISDF_STACK),
+        bodies_(nBody + nInputIf + nOutputIf, PISDF_STACK),
         configs_(nConfig, PISDF_STACK),
         inputIfs_(nInputIf, PISDF_STACK),
         outputIfs_(nOutputIf, PISDF_STACK) {
-    parent_ = 0;
+    parent_ = nullptr;
+    isStatic_ = false;
 }
 
 PiSDFGraph::~PiSDFGraph() {
-    while (edges_.getN() > 0)
+    while (edges_.size() > 0)
         delEdge(edges_[0]);
-    while (bodies_.getN() > 0) {
+    while (bodies_.size() > 0) {
         if (bodies_[0]->isHierarchical()) {
             bodies_[0]->getSubGraph()->~PiSDFGraph();
             StackMonitor::free(PISDF_STACK, bodies_[0]->getSubGraph());
         }
         delVertex(bodies_[0]);
     }
-    while (configs_.getN() > 0)
+    while (configs_.size() > 0)
         delVertex(configs_[0]);
-    while (inputIfs_.getN() > 0)
+    while (inputIfs_.size() > 0)
         delVertex(inputIfs_[0]);
-    while (outputIfs_.getN() > 0)
+    while (outputIfs_.size() > 0)
         delVertex(outputIfs_[0]);
-    while (params_.getN() > 0)
+    while (params_.size() > 0)
         delParam(params_[0]);
 }
 
@@ -76,31 +77,28 @@ PiSDFVertex *PiSDFGraph::addBodyVertex(
         const char *vertexName, int fctId,
         int nInEdge, int nOutEdge,
         int nInParam) {
-    PiSDFVertex *body = CREATE(PISDF_STACK, PiSDFVertex)(
+    auto *body = CREATE(PISDF_STACK, PiSDFVertex)(
             vertexName, fctId,
-            bodies_.getN(),
+            bodies_.size(),
             PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
-            this, 0,
+            this, nullptr,
             nInEdge, nOutEdge,
             nInParam, 0);
     bodies_.add(body);
     return body;
 }
 
-PiSDFVertex *PiSDFGraph::addHierVertex(
-        const char *vertexName,
-        PiSDFGraph *graph,
+PiSDFVertex *PiSDFGraph::addBodyVertex(
+        const char *vertexName, PiSDFSubType type,
         int nInEdge, int nOutEdge,
         int nInParam) {
-    PiSDFVertex *body = CREATE(PISDF_STACK, PiSDFVertex)(
+    auto *body = CREATE(PISDF_STACK, PiSDFVertex)(
             vertexName, -1,
-            bodies_.getN(),
-            PISDF_TYPE_BODY, PISDF_SUBTYPE_NORMAL,
-            this, 0,
+            bodies_.size(),
+            PISDF_TYPE_BODY, type,
+            this, nullptr,
             nInEdge, nOutEdge,
             nInParam, 0);
-    body->setSubGraph(graph);
-    graph->setParentVertex(body);
     bodies_.add(body);
     return body;
 }
@@ -109,11 +107,11 @@ PiSDFVertex *PiSDFGraph::addSpecialVertex(
         PiSDFSubType type,
         int nInEdge, int nOutEdge,
         int nInParam) {
-    PiSDFVertex *body = CREATE(PISDF_STACK, PiSDFVertex)(
-            0, -1,
-            bodies_.getN(),
+    auto *body = CREATE(PISDF_STACK, PiSDFVertex)(
+            nullptr, -1,
+            bodies_.size(),
             PISDF_TYPE_BODY, type,
-            this, 0,
+            this, nullptr,
             nInEdge, nOutEdge,
             nInParam, 0);
     bodies_.add(body);
@@ -125,11 +123,11 @@ PiSDFVertex *PiSDFGraph::addConfigVertex(
         PiSDFSubType subType,
         int nInEdge, int nOutEdge,
         int nInParam, int nOutParam) {
-    PiSDFVertex *config = CREATE(PISDF_STACK, PiSDFVertex)(
+    auto *config = CREATE(PISDF_STACK, PiSDFVertex)(
             vertexName, fctId,
-            configs_.getN(),
+            configs_.size(),
             PISDF_TYPE_CONFIG, subType,
-            this, 0,
+            this, nullptr,
             nInEdge, nOutEdge,
             nInParam, nOutParam);
     configs_.add(config);
@@ -140,11 +138,11 @@ PiSDFVertex *PiSDFGraph::addConfigVertex(
 PiSDFVertex *PiSDFGraph::addInputIf(
         const char *name,
         int nInParam) {
-    PiSDFVertex *inIf = CREATE(PISDF_STACK, PiSDFVertex)(
+    auto *inIf = CREATE(PISDF_STACK, PiSDFVertex)(
             name, -1,
-            inputIfs_.getN(),
+            inputIfs_.size(),
             PISDF_TYPE_IF, PISDF_SUBTYPE_INPUT_IF,
-            this, 0,
+            this, nullptr,
             0, 1,
             nInParam, 0);
     inputIfs_.add(inIf);
@@ -154,84 +152,19 @@ PiSDFVertex *PiSDFGraph::addInputIf(
 PiSDFVertex *PiSDFGraph::addOutputIf(
         const char *name,
         int nInParam) {
-    PiSDFVertex *outIf = CREATE(PISDF_STACK, PiSDFVertex)(
+    auto *outIf = CREATE(PISDF_STACK, PiSDFVertex)(
             name, -1,
-            outputIfs_.getN(),
+            outputIfs_.size(),
             PISDF_TYPE_IF, PISDF_SUBTYPE_OUTPUT_IF,
-            this, 0,
+            this, nullptr,
             1, 0,
             nInParam, 0);
     outputIfs_.add(outIf);
     return outIf;
 }
 
-
-PiSDFParam *PiSDFGraph::addStaticParam(const char *name, const char *expr) {
-    PiSDFParam *param = CREATE(PISDF_STACK, PiSDFParam)(
-            name, params_.getN(),
-            this, PISDF_PARAM_STATIC,
-            NULL);
-    try {
-        param->setValue(std::stoi(expr));
-    } catch (std::exception &e) {
-        printf("%s\n", e.what());
-        throw std::runtime_error("addStaticParam: failed to convert to int");
-    }
-    params_.add(param);
-    return param;
-}
-
-PiSDFParam *PiSDFGraph::addStaticParam(const char *name, int value) {
-    PiSDFParam *param = CREATE(PISDF_STACK, PiSDFParam)(
-            name, params_.getN(),
-            this, PISDF_PARAM_STATIC,
-            NULL);
-    param->setValue(value);
-    params_.add(param);
-    return param;
-}
-
-PiSDFParam *PiSDFGraph::addHeritedParam(const char *name, int parentId) {
-    PiSDFParam *param = CREATE(PISDF_STACK, PiSDFParam)(
-            name, params_.getN(),
-            this, PISDF_PARAM_HERITED,
-            NULL);
-    param->setParentId(parentId);
-    params_.add(param);
-    return param;
-}
-
-PiSDFParam *PiSDFGraph::addDynamicParam(const char *name) {
-    PiSDFParam *param = CREATE(PISDF_STACK, PiSDFParam)(
-            name, params_.getN(),
-            this, PISDF_PARAM_DYNAMIC,
-            NULL);
-    params_.add(param);
-    return param;
-}
-
-PiSDFParam *PiSDFGraph::addDynamicDependentParam(const char *name, const char *expr) {
-    PiSDFParam *param = CREATE(PISDF_STACK, PiSDFParam)(
-            name, params_.getN(),
-            this, PISDF_PARAM_DEPENDENT_DYNAMIC,
-            expr);
-
-    params_.add(param);
-    return param;
-}
-
-PiSDFParam *PiSDFGraph::addStaticDependentParam(const char *name, const char *expr) {
-    PiSDFParam *param = CREATE(PISDF_STACK, PiSDFParam)(
-            name, params_.getN(),
-            this, PISDF_PARAM_DEPENDENT_STATIC,
-            expr);
-
-    params_.add(param);
-    return param;
-}
-
 PiSDFEdge *PiSDFGraph::addEdge() {
-    PiSDFEdge *edge = CREATE(PISDF_STACK, PiSDFEdge)(this);
+    auto *edge = CREATE(PISDF_STACK, PiSDFEdge)(this);
     edges_.add(edge);
     return edge;
 }
@@ -288,9 +221,8 @@ void PiSDFGraph::delEdge(PiSDFEdge *edge) {
 /** Print Fct */
 void PiSDFGraph::print(const char *path) {
     FILE *file = Platform::get()->fopen(path);
-    if (file == NULL) {
-        printf("cannot open %s\n", path);
-        return;
+    if (file == nullptr) {
+        throwSpiderException("failed to open file: %s", path);
     }
 
     // Writing header
@@ -302,7 +234,7 @@ void PiSDFGraph::print(const char *path) {
 
     // Drawing parameters.
     Platform::get()->fprintf(file, "\t# Parameters\n");
-    for (int i = 0; i < params_.getN(); i++) {
+    for (int i = 0; i < params_.size(); i++) {
         PiSDFParam *param = params_[i];
         Platform::get()->fprintf(file, "\t%s [label=\"%s\" shape=house];\n",
                                  param->getName(),
@@ -311,7 +243,7 @@ void PiSDFGraph::print(const char *path) {
 
     // Drawing Config PiSDF vertices.
     Platform::get()->fprintf(file, "\n\t# Configs\n");
-    for (int i = 0; i < configs_.getN(); i++) {
+    for (int i = 0; i < configs_.size(); i++) {
         PiSDFVertex *config = configs_[i];
         Platform::get()->fprintf(file, "\t%d [shape=doubleoctagon,label=\"%s\"];\n",
                                  config->getId(),
@@ -335,7 +267,7 @@ void PiSDFGraph::print(const char *path) {
 
     // Drawing Body PiSDF vertices.
     Platform::get()->fprintf(file, "\t# Body Vertices\n");
-    for (int i = 0; i < bodies_.getN(); i++) {
+    for (int i = 0; i < bodies_.size(); i++) {
         PiSDFVertex *body = bodies_[i];
         if (body->isHierarchical()) {
             char name[100];
@@ -358,7 +290,7 @@ void PiSDFGraph::print(const char *path) {
 
     // Drawing Input vertices.
     Platform::get()->fprintf(file, "\t# Input Ifs\n");
-    for (int i = 0; i < inputIfs_.getN(); i++) {
+    for (int i = 0; i < inputIfs_.size(); i++) {
         PiSDFVertex *inIf = inputIfs_[i];
         Platform::get()->fprintf(file, "\t%d [shape=cds,label=\"%s\"];\n",
                                  inIf->getId(),
@@ -375,7 +307,7 @@ void PiSDFGraph::print(const char *path) {
 
     // Drawing Output vertices.
     Platform::get()->fprintf(file, "\t# Output Ifs\n");
-    for (int i = 0; i < outputIfs_.getN(); i++) {
+    for (int i = 0; i < outputIfs_.size(); i++) {
         PiSDFVertex *outIf = outputIfs_[i];
         Platform::get()->fprintf(file, "\t%d [shape=cds,label=\"%s\"];\n",
                                  outIf->getId(),
@@ -392,7 +324,7 @@ void PiSDFGraph::print(const char *path) {
 
     // Drawing edges.
     Platform::get()->fprintf(file, "\t# Edges\n");
-    for (int i = 0; i < edges_.getN(); i++) {
+    for (int i = 0; i < edges_.size(); i++) {
         PiSDFEdge *edge = edges_[i];
         char prodExpr[100];
         char consExpr[100];

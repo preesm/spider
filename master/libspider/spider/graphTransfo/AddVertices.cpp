@@ -51,9 +51,8 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
             case PISDF_SUBTYPE_NORMAL:
                 for (int j = 0; j < brv[bodyIx]; j++) {
                     job->bodies[bodyIx][j] = topSrdag->addVertex(pi_vertex, j, job->graphIter);
-
                     for (int i = 0; i < pi_vertex->getNInParam(); i++) {
-                        job->bodies[bodyIx][j]->addInParam(i, job->paramValues[pi_vertex->getInParam(i)->getTypeIx()]);
+                        job->bodies[bodyIx][j]->addInParam(i, job->paramValues[pi_vertex->getInParam(i)->getLocalID()]);
                     }
                 }
                 break;
@@ -67,11 +66,11 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
                             char prodExpr[100], consExpr[100];
                             pi_vertex->getInEdge(0)->getConsExpr(consExpr, 100);
                             pi_vertex->getOutEdge(tmp)->getProdExpr(prodExpr, 100);
-                            printf("Warning: Broadcast have different production/consumption: prod: %d != cons (%d) \n",
-                                   prod, cons);
+//                            printf("Warning: Broadcast have different production/consumption: prod: %d != cons (%d) \n",
+//                                   prod, cons);
                         }
                     }
-                    job->bodies[bodyIx][j] = topSrdag->addBroadcast(MAX_IO_EDGES);
+                    job->bodies[bodyIx][j] = topSrdag->addBroadcast(MAX_IO_EDGES, pi_vertex);
                 }
                 break;
             case PISDF_SUBTYPE_ROUNDBUFFER:
@@ -95,7 +94,7 @@ void addSRVertices(SRDAGGraph *topSrdag, transfoJob *job, int *brv) {
                 }
                 break;
             default:
-                throw std::runtime_error("Unexpected Interface vertex in AddVertices\n");
+                throwSpiderException("Unexpected vertex type.");
         }
     }
 }
@@ -111,10 +110,10 @@ void addCAVertices(SRDAGGraph *topSrdag, transfoJob *job) {
             job->configs[configIx] = topSrdag->addVertex(config, 0, job->graphIter);
 
             for (int i = 0; i < config->getNInParam(); i++) {
-                job->configs[configIx]->addInParam(i, job->paramValues[config->getInParam(i)->getTypeIx()]);
+                job->configs[configIx]->addInParam(i, job->paramValues[config->getInParam(i)->getLocalID()]);
             }
             for (int i = 0; i < config->getNOutParam(); i++) {
-                job->configs[configIx]->addOutParam(i, &(job->paramValues[config->getOutParam(i)->getTypeIx()]));
+                job->configs[configIx]->addOutParam(i, &(job->paramValues[config->getOutParam(i)->getLocalID()]));
             }
         }
     }

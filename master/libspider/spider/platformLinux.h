@@ -116,22 +116,25 @@ private:
 inline LRT *PlatformLinux::getLrt() {
     if (lrt_)
         return lrt_;
-    else
-        throw std::runtime_error("Error undefined LRT\n");
+    else {
+        throwSpiderException("Undefined LRT.");
+    }
 }
 
 inline LrtCommunicator *PlatformLinux::getLrtCommunicator() {
     if (lrtCom_)
         return lrtCom_;
-    else
-        throw std::runtime_error("Error undefined LRT Communicator\n");
+    else {
+        throwSpiderException("Undefined LRT Communicator.");
+    }
 }
 
 inline SpiderCommunicator *PlatformLinux::getSpiderCommunicator() {
     if (spiderCom_)
         return spiderCom_;
-    else
-        throw std::runtime_error("Error undefined Spider Communicator\n");
+    else {
+        throwSpiderException("Undefined Spider Communicator.");
+    }
 }
 
 inline void PlatformLinux::setStack(SpiderStack id, Stack *stack) {

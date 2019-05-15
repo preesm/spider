@@ -38,10 +38,12 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#include "spider.h"
-#include <monitor/StackMonitor.h>
-#include <stdio.h>
+#include <cstdio>
 #include <stdexcept>
+
+#include <spider.h>
+#include <SpiderException.h>
+#include <monitor/StackMonitor.h>
 
 class LRT;
 
@@ -49,7 +51,9 @@ class LrtCommunicator;
 
 class SpiderCommunicator;
 
-struct ClearTimeMsg;
+class ClearTimeMessage;
+
+class Stack;
 
 class Platform {
 public:
@@ -63,12 +67,12 @@ public:
     /** Memory Handling */
     virtual void *virt_to_phy(void *address) = 0;
 
-    virtual int getMinAllocSize() = 0;
+    virtual long getMinAllocSize() = 0;
 
     virtual int getCacheLineSize() = 0;
 
     /** Time Handling */
-    virtual void rstTime(struct ClearTimeMsg *msg) = 0;
+    virtual void rstTime(ClearTimeMessage *msg) = 0;
 
     virtual void rstTime() = 0;
 
@@ -76,20 +80,44 @@ public:
 
     virtual void rstJobIx() = 0;
 
+    virtual void rstJobIxRecv() = 0;
+
     /** Platform getter/setter */
     static inline Platform *get();
 
+    /**
+     * @brief Get current LRT
+     * @return Pointer to current LRT class
+     */
     virtual LRT *getLrt() = 0;
 
+    /**
+     * @brief Get current LRT ID
+     * @return ID of current LRT
+     */
+    virtual int getLrtIx() = 0;
+
+    /**
+     * @brief Get number of LRT
+     * @return Number of LRT
+     */
+    virtual int getNLrt() = 0;
+
+    /**
+     * @brief Get current LRT communicator
+     * @return LRT current communicator
+     */
     virtual LrtCommunicator *getLrtCommunicator() = 0;
 
+    /**
+     * @brief Get Spider communicator
+     * @return spider communicator
+     */
     virtual SpiderCommunicator *getSpiderCommunicator() = 0;
 
     virtual void setStack(SpiderStack id, Stack *stack) = 0;
 
     virtual Stack *getStack(SpiderStack id) = 0;
-
-    virtual Stack *getStack(int id) = 0;
 
     virtual inline int getMaxActorAllocSize(int pe);
 
@@ -104,8 +132,9 @@ protected:
 inline Platform *Platform::get() {
     if (platform_)
         return platform_;
-    else
-        throw std::runtime_error("Error undefined platform\n");
+    else {
+        throwSpiderException("Undefined platform.");
+    }
 }
 
 // If unimplemented in child

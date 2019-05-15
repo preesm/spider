@@ -45,10 +45,16 @@ public:
     SpecialActorMemAlloc(int start, int size) :
             DummyMemAlloc(start, size) {}
 
-    ~SpecialActorMemAlloc() {}
+    ~SpecialActorMemAlloc() override = default;
 
-    virtual void alloc(List<SRDAGVertex *> *listOfVertices);
+    void alloc(List<SRDAGVertex *> *listOfVertices) override;
 
+private:
+    void allocFork(SRDAGVertex *fork);
+
+    void allocJoin(SRDAGVertex *join);
+
+    void allocBroadcast(SRDAGVertex *br);
 
 };
 

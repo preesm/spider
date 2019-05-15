@@ -38,29 +38,30 @@
  */
 #include "specialActors.h"
 
-#include <string.h>
-#include <algorithm>
-
 void saRoundbuffer(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
-    int nbTknIn = inParams[0];
-    int nbTknOut = inParams[1];
-
 #if VERBOSE
-    printf("Roundbuffer\n");
+    fprintf(stderr, "INFO: Entering Roundbuffer...\n");
 #endif
 
+    auto nbTknIn = (int) inParams[0];
+    auto nbTknOut = (int) inParams[1];
+
     if (nbTknIn == nbTknOut) {
-        memcpy(outputFIFOs[0], inputFIFOs[0], nbTknIn);
+        memcpy(outputFIFOs[0], inputFIFOs[0], (size_t) nbTknIn);
     } else if (nbTknIn < nbTknOut) {
         int offset = 0;
         while (nbTknOut) {
             int rest = std::min(nbTknIn, nbTknOut);
-            memcpy(((char *) outputFIFOs[0]) + offset, inputFIFOs[0], rest);
+            memcpy(((char *) outputFIFOs[0]) + offset, inputFIFOs[0], (size_t) rest);
             nbTknOut -= rest;
             offset += rest;
         }
     } else {
-        memcpy(outputFIFOs[0], ((char *) inputFIFOs[0]) + nbTknIn - nbTknOut, nbTknOut);
+        memcpy(outputFIFOs[0], ((char *) inputFIFOs[0]) + nbTknIn - nbTknOut, (size_t) nbTknOut);
     }
+
+#if VERBOSE
+    fprintf(stderr, "INFO: Exiting Roundbuffer...\n");
+#endif
 }
 

@@ -53,8 +53,6 @@ typedef enum PiSDFParamType {
     PISDF_PARAM_STATIC,
     PISDF_PARAM_HERITED,
     PISDF_PARAM_DYNAMIC,
-    PISDF_PARAM_DEPENDENT_DYNAMIC,
-    PISDF_PARAM_DEPENDENT_STATIC
 } PiSDFParamType;
 
 typedef enum PiSDFType {
@@ -67,8 +65,8 @@ typedef enum PiSDFDelayType {
 } PiSDFDelayType;
 
 /** Set types */
-typedef Set<PiSDFEdge *> PiSDFEdgeSet;
-typedef Set<PiSDFParam *> PiSDFParamSet;
-typedef Set<PiSDFVertex *> PiSDFVertexSet;
+using PiSDFEdgeSet = Set<PiSDFEdge *>;
+using PiSDFParamSet = Set<PiSDFParam *>;
+using PiSDFVertexSet = Set<PiSDFVertex *>;
 
 #endif/*PISDF_COMMON_H*/

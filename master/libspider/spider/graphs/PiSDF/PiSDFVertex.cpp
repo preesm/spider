@@ -50,7 +50,9 @@ PiSDFVertex::PiSDFVertex(
         int nInEdge, int nOutEdge,
         int nInParam, int nOutParam) {
 
-    id_ = globalId++;
+    if (type == PISDF_TYPE_BODY) {
+        id_ = globalId++;
+    }
     typeId_ = typeId;
     fctId_ = fctId;
     type_ = type;
@@ -61,12 +63,12 @@ PiSDFVertex::PiSDFVertex(
     subGraph_ = subGraph;
 
     nInEdge_ = nInEdge;
-    inEdges_ = CREATE_MUL(PISDF_STACK, nInEdge_, PiSDFEdge*);
-    memset(inEdges_, 0, nInEdge_ * sizeof(PiSDFEdge *));
-
     nOutEdge_ = nOutEdge;
-    outEdges_ = CREATE_MUL(PISDF_STACK, nOutEdge_, PiSDFEdge*);
-    memset(outEdges_, 0, nOutEdge_ * sizeof(PiSDFEdge *));
+    nEdge_ = nInEdge_ + nOutEdge_;
+    allEdges_ = CREATE_MUL(PISDF_STACK, nEdge_, PiSDFEdge *);
+    memset(allEdges_, 0, nEdge_ * sizeof(PiSDFEdge *));
+    inEdges_ = allEdges_;
+    outEdges_ = allEdges_ + nInEdge_;
 
     nInParam_ = nInParam;
     inParams_ = CREATE_MUL(PISDF_STACK, nInParam, PiSDFParam*);
@@ -80,15 +82,18 @@ PiSDFVertex::PiSDFVertex(
     nPeTypeMax_ = Spider::getArchi()->getNPETypes();
 
     constraints_ = CREATE_MUL(PISDF_STACK, nPeMax_, bool);
-    memset(constraints_, false, nPeMax_ * sizeof(bool));
+
+    memset(constraints_, subType != PISDF_SUBTYPE_NORMAL, nPeMax_ * sizeof(bool));
 
     timings_ = CREATE_MUL(PISDF_STACK, nPeTypeMax_, Expression*);
     memset(timings_, 0, nPeTypeMax_ * sizeof(Expression *));
+    scheduleJob_ = nullptr;
 }
 
 PiSDFVertex::~PiSDFVertex() {
-    StackMonitor::free(PISDF_STACK, inEdges_);
-    StackMonitor::free(PISDF_STACK, outEdges_);
+    inEdges_ = nullptr;
+    outEdges_ = nullptr;
+    StackMonitor::free(PISDF_STACK, allEdges_);
     StackMonitor::free(PISDF_STACK, inParams_);
     StackMonitor::free(PISDF_STACK, outParams_);
     StackMonitor::free(PISDF_STACK, constraints_);
@@ -97,8 +102,12 @@ PiSDFVertex::~PiSDFVertex() {
         if (timings_[i]) {
             timings_[i]->~Expression();
             StackMonitor::free(PISDF_STACK, timings_[i]);
-            timings_[i] = 0;
+            timings_[i] = nullptr;
         }
     }
     StackMonitor::free(PISDF_STACK, timings_);
+    if (scheduleJob_) {
+        scheduleJob_->~PiSDFScheduleJob();
+        StackMonitor::free(TRANSFO_STACK, scheduleJob_);
+    }
 }

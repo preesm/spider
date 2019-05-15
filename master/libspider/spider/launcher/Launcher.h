@@ -42,18 +42,46 @@
 
 #include <graphs/SRDAG/SRDAGCommon.h>
 #include <graphs/Archi/Archi.h>
-
+#include <scheduling/Schedule.h>
 #include <Message.h>
 
 class Launcher {
 public:
     static Launcher *get();
 
-    void launchVertex(SRDAGVertex *vertex);
+    void sendJob(PiSDFScheduleJob *job);
+
+    void sendJob(SRDAGScheduleJob *job);
 
     void resolveParams(Archi *archi, SRDAGGraph *topDag);
 
     void sendTraceSpider(TraceSpiderType type, Time start, Time end);
+
+    /**
+     * @brief Send a notification to all (or given) LRT to enable TRACE
+     * @param lrtID LRT to send the notification to (-1 to send to every LRT)
+     */
+    void sendEnableTrace(int lrtID);
+
+    /**
+     * @brief Send a notification to all (or given) LRT to disable TRACE
+     * @param lrtID LRT to send the notification to (-1 to send to every LRT)
+     */
+    void sendDisableTrace(int lrtID);
+
+    void sendRepeatJobQueue(bool enable);
+
+    /**
+     * @brief Send a notification to all LRT to signal that they won't receive other jobs
+     *
+     * @param schedule Schedule containing information for last job of each PE
+     */
+    void sendEndNotification(Schedule *schedule);
+
+    /**
+     * @brief Send a notification to all LRT to broadcast their job stamp to other LRT
+     */
+    void sendBroadCastNotification(bool delayBroadcoast);
 
     int getNLaunched();
 
@@ -68,10 +96,6 @@ private:
     static Launcher instance_;
 
     void send_ClearTimeMsg(int lrtIx);
-
-    void send_StartJobMsg(int lrtIx, SRDAGVertex *vertex);
-
-    void send_EndIterMsg(int lrtIx);
 
     void send_ResetLrtMsg(int lrtIx);
 

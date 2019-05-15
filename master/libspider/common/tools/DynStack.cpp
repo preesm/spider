@@ -37,11 +37,11 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include <tools/DynStack.h>
-#include <platform.h>
-
-#include <algorithm>
 #include <cmath>
+#include <tools/DynStack.h>
+#include <SpiderException.h>
+#include <platform.h>
+#include <Logger.h>
 
 DynStack::DynStack(const char *name) : Stack(name) {
     curUsedSize_ = 0;
@@ -53,63 +53,63 @@ DynStack::~DynStack() {
     printStat();
 }
 
-static inline int getAlignSize(int size) {
-    float minAlloc = Platform::get()->getMinAllocSize();
-    return (int) std::ceil(size / minAlloc) * minAlloc;
-}
+void *DynStack::alloc(int size, bool pageAligned) {
+    std::lock_guard<std::mutex> lock(memoryMutex_);
+    int alignedSize = size + sizeof(std::int64_t);
 
-void *DynStack::alloc(int size) {
-    size += sizeof(int);
-
-    size = getAlignSize(size);
-    curUsedSize_ += size;
+    if (pageAligned) {
+        alignedSize = Stack::getAlignedSize(alignedSize);
+    }
+    curUsedSize_ += alignedSize;
     maxSize_ = std::max(maxSize_, curUsedSize_);
     nb_++;
 
-    void *address = malloc(size);
-    if (address == 0)
-        throw std::runtime_error("MemAlloc failed");
-    int *sizeAddress = (int *) address;
-    void *dataAddress = (void *) (sizeAddress + 1);
-    *sizeAddress = size;
+    void *address = operator new((size_t) alignedSize);
+    if (!address) {
+        throwSpiderException("failed to allocate %d bytes", alignedSize);
+    }
+    auto *sizeAddress = (std::int64_t *) address;
+    auto *dataAddress = (void *) (sizeAddress + 1);
+    *sizeAddress = alignedSize;
 
     return dataAddress;
 }
 
 void DynStack::freeAll() {
     if (nb_ != 0) {
-        printf("DynStack Warning (%s): FreeAll called with %d allocated item\n", getName(), nb_);
+        Logger::print(LOG_GENERAL, LOG_WARNING, "DynStack [%s], FreeAll called with %d remaining allocated item(s).\n",
+                      getName(),
+                      nb_);
     }
 }
 
 void DynStack::free(void *var) {
+    std::lock_guard<std::mutex> lock(memoryMutex_);
     void *dataAddress = var;
-    void *address = (void *) (((int *) dataAddress) - 1);
-    int size = *((int *) address);
+    auto *address = (void *) (((std::int64_t *) dataAddress) - 1);
+    std::int64_t size = *((std::int64_t *) address);
 
     maxSize_ = std::max(maxSize_, curUsedSize_);
     curUsedSize_ -= size;
-//	if(size == 0){
-//		printf("Error %s free'd already free'd memory\n", getName());
-//	}
-    std::free(address);
+    operator delete(address);
     nb_--;
 }
 
 void DynStack::printStat() {
-    printf("%s: ", getName());
 
-    if (maxSize_ < 1024)
-        printf("\t%5.1f B", maxSize_ / 1.);
-    else if (maxSize_ < 1024 * 1024)
-        printf("\t%5.1f KB", maxSize_ / 1024.);
-    else if (maxSize_ < 1024 * 1024 * 1024)
-        printf("\t%5.1f MB", maxSize_ / 1024. / 1024.);
-    else
-        printf("\t%5.1f GB", maxSize_ / 1024. / 1024. / 1024.);
+    const char *units[4] = {"B", "KB", "MB", "GB"};
 
-    if (nb_)
-        printf(", \t%d still in use", nb_);
+    float normalizedSize = maxSize_;
+    int unitIndex = 0;
+    while (normalizedSize >= 1024 && unitIndex < 3) {
+        normalizedSize /= 1024.;
+        unitIndex++;
+    }
+    Logger::print(LOG_GENERAL, LOG_INFO, "[%s] usage: \t%5.1f %s", getName(), normalizedSize, units[unitIndex]);
+
+    if (nb_) {
+        Logger::print(LOG_GENERAL, LOG_WARNING, "[%s]: \t%lld B still in use", getName(), curUsedSize_);
+    }
 
     printf("\n");
 }

@@ -42,6 +42,7 @@
 #include <monitor/StackMonitor.h>
 #include <tools/SetElement.h>
 #include <stdexcept>
+#include <SpiderException.h>
 
 template<typename TYPE>
 class Set {
@@ -50,7 +51,7 @@ public:
         if (nbmax > 0) {
             array = CREATE_MUL(stackId, nbmax, TYPE);
         } else {
-            array = 0;
+            array = nullptr;
         }
         nb = 0;
         nbMax = nbmax;
@@ -66,9 +67,13 @@ public:
 
     inline void del(TYPE value);
 
+    inline bool contains(TYPE value);
+
     inline TYPE operator[](int ix);
 
-    inline int getN() const;
+    inline int size() const;
+
+    inline int sizeMax() const;
 
     inline TYPE const *getArray() const;
 
@@ -82,17 +87,32 @@ private:
 };
 
 template<typename TYPE>
-inline int Set<TYPE>::getN() const {
+inline int Set<TYPE>::size() const {
     return nb;
 }
 
 template<typename TYPE>
-inline void Set<TYPE>::add(TYPE value) {
-    if (nb >= nbMax)
-        throw std::runtime_error("Not enough space in Set\n");
+inline int Set<TYPE>::sizeMax() const {
+    return nbMax;
+}
 
+template<typename TYPE>
+inline void Set<TYPE>::add(TYPE value) {
+    if (nb >= nbMax) {
+        throwSpiderException("Can not add element to set. Requested: %d -- Max: %d", nb + 1, nbMax);
+    }
     ((SetElement *) value)->setSetIx(nb);
     array[nb++] = value;
+}
+
+template<typename TYPE>
+inline bool Set<TYPE>::contains(TYPE value) {
+    for (int i = 0; i < nb; ++i) {
+        if (array[i] == value) {
+            return true;
+        }
+    }
+    return false;
 }
 
 template<typename TYPE>
@@ -104,10 +124,11 @@ inline void Set<TYPE>::del(TYPE value) {
 
 template<typename TYPE>
 inline TYPE Set<TYPE>::operator[](int ix) {
-    if (ix < 0 || ix >= nb)
-        throw std::runtime_error("Set: operator[] get bad ix");
-    else
+    if (ix < 0 || ix >= nb) {
+        throwSpiderException("operator[] got bad index: %d -- Set size: %d", ix, nb);
+    } else {
         return array[ix];
+    }
 }
 
 template<typename TYPE>

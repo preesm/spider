@@ -37,31 +37,34 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
+#include <cinttypes>
 #include "spider.h"
 
 #include <graphs/PiSDF/PiSDFCommon.h>
 #include <graphs/SRDAG/SRDAGCommon.h>
+#include <graphs/SRDAG/SRDAGGraph.h>
 #include <graphs/PiSDF/PiSDFGraph.h>
 #include <graphs/PiSDF/PiSDFEdge.h>
-#include <graphs/SRDAG/SRDAGGraph.h>
 
-#include <scheduling/MemAlloc.h>
-#include <scheduling/MemAlloc/DummyMemAlloc.h>
 #include <scheduling/MemAlloc/SpecialActorMemAlloc.h>
+#include <scheduling/MemAlloc/DummyMemAlloc.h>
 #include <scheduling/Scheduler.h>
+#include <scheduling/MemAlloc.h>
 
-#include <scheduling/Scheduler/ListScheduler.h>
 #include <scheduling/Scheduler/ListSchedulerOnTheGo.h>
-#include <scheduling/Scheduler/RoundRobin.h>
 #include <scheduling/Scheduler/RoundRobinScattered.h>
+#include <scheduling/Scheduler/ListScheduler.h>
+#include <scheduling/Scheduler/RoundRobin.h>
 
 #include <graphTransfo/GraphTransfo.h>
 
-#include <monitor/TimeMonitor.h>
-
 #include <SpiderCommunicator.h>
 
+#include <monitor/TimeMonitor.h>
 #include <launcher/Launcher.h>
+#include <Logger.h>
+#include <scheduling/MemAlloc/DummyPiSDFMemAlloc.h>
+#include <scheduling/Scheduler/GreedyScheduler.h>
 
 #include "platformPThread.h"
 
@@ -77,65 +80,144 @@
 #define CHIP_FREQ (1)
 #endif
 
-static Archi *archi_;
-static PiSDFGraph *pisdf_;
-static SRDAGGraph *srdag_;
+static Archi *archi_ = nullptr;
+static PiSDFGraph *pisdf_ = nullptr;
+static SRDAGGraph *srdag_ = nullptr;
 
-static MemAlloc *memAlloc_;
-static Scheduler *scheduler_;
-//static PlatformMPPA* platform;
-static PlatformPThread *platform;
+static MemAlloc *memAlloc_ = nullptr;
+static Scheduler *scheduler_ = nullptr;
+//static PlatformMPPA* platform_;
+static PlatformPThread *platform_ = nullptr;
+static SRDAGSchedule *schedule_ = nullptr;
 
 static bool verbose_;
 static bool useGraphOptim_;
 static bool useActorPrecedence_;
 static bool traceEnabled_;
 
+static bool containsDynamicParam(PiSDFGraph *const graph) {
+    for (int i = 0; i < graph->getNParam(); ++i) {
+        auto *param = graph->getParam(i);
+        if (param->isDynamic()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool isGraphStatic(PiSDFGraph *const graph) {
+    bool isStatic = !containsDynamicParam(graph);
+    for (int j = 0; j < graph->getNBody(); ++j) {
+        PiSDFVertex *vertex = graph->getBody(j);
+        if (vertex->isHierarchical()) {
+            auto *subGraph = vertex->getSubGraph();
+            subGraph->setGraphStaticProperty(isGraphStatic(subGraph));
+            isStatic &= subGraph->isGraphStatic();
+        }
+    }
+    return isStatic;
+}
+
 void Spider::init(SpiderConfig &cfg) {
+    Logger::initializeLogger();
 
     setGraphOptim(cfg.useGraphOptim);
 
-    setMemAllocType(cfg.memAllocType, (long) cfg.memAllocStart, cfg.memAllocSize);
+    setMemAllocType(cfg.memAllocType, cfg.memAllocStart, cfg.memAllocSize);
     setSchedulerType(cfg.schedulerType);
 
     setVerbose(cfg.verbose);
     setTraceEnabled(cfg.traceEnabled);
 
-    platform = new PlatformPThread(cfg);
+    //TODO: add a switch between the different platform
+    platform_ = new PlatformPThread(cfg);
+
+    if (traceEnabled_) {
+        Launcher::get()->sendEnableTrace(-1);
+    }
+//    Logger::enable(LOG_JOB);
+}
+
+extern int stopThreads;
+
+static std::int32_t computeTotalNBodies(PiSDFGraph *g) {
+    std::int32_t nBodies = g->getNBody();
+    for (auto i = 0; i < g->getNBody(); ++i) {
+        if (g->getBody(i)->isHierarchical()) {
+            nBodies += computeTotalNBodies(g->getBody(i)->getSubGraph());
+        }
+    }
+    return nBodies;
+}
+
+static std::int32_t computeTotalNEdges(PiSDFGraph *g) {
+    std::int32_t nEdges = g->getNEdge();
+    for (auto i = 0; i < g->getNBody(); ++i) {
+        if (g->getBody(i)->isHierarchical()) {
+            nEdges += computeTotalNEdges(g->getBody(i)->getSubGraph());
+        }
+    }
+    return nEdges;
+}
+
+std::int32_t computeNHierarchicals(PiSDFGraph *g) {
+    std::int32_t nBodies = 0;
+    for (auto i = 0; i < g->getNBody(); ++i) {
+        if (g->getBody(i)->isHierarchical()) {
+            nBodies += 1;
+            nBodies += computeNHierarchicals(g->getBody(i)->getSubGraph());
+        }
+    }
+    return nBodies;
+}
+
+std::int32_t getNLevels(PiSDFGraph *g, std::int32_t currentDepth) {
+    std::int32_t nLevels = currentDepth;
+    for (auto i = 0; i < g->getNBody(); ++i) {
+        if (g->getBody(i)->isHierarchical()) {
+            nLevels = std::max(nLevels, getNLevels(g->getBody(i)->getSubGraph(), currentDepth + 1));
+        }
+    }
+    return nLevels;
+}
+
+void Spider::iterate() {
+    Platform::get()->rstTime();
+    if (pisdf_->isGraphStatic()) {
+        if (!srdag_) {
+            /* On first iteration, the schedule is created */
+            srdag_ = new SRDAGGraph();
+            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_, nullptr);
+        }
+        /* Run the schedule */
+        schedule_->executeAndRun();
+        schedule_->restartSchedule();
+    } else {
+        delete srdag_;
+        StackMonitor::freeAll(SRDAG_STACK);
+        memAlloc_->reset();
+        srdag_ = new SRDAGGraph();
+        jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
+    }
+    /** Wait for LRTs to finish **/
+    Platform::get()->rstJobIxRecv();
 }
 
 
-int static getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) {
-    transfoJob *job = CREATE(TRANSFO_STACK, transfoJob);
+static int getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) {
+    auto *job = CREATE(TRANSFO_STACK, transfoJob);
     memset(job, 0, sizeof(transfoJob));
     job->graph = graph;
-    job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), int);
+    job->paramValues = CREATE_MUL(TRANSFO_STACK, job->graph->getNParam(), Param);
     for (int paramIx = 0; paramIx < job->graph->getNParam(); paramIx++) {
         PiSDFParam *param = job->graph->getParam(paramIx);
-        switch (param->getType()) {
-            case PISDF_PARAM_STATIC:
-                job->paramValues[paramIx] = param->getStaticValue();
-                break;
-            case PISDF_PARAM_HERITED:
-                job->paramValues[paramIx] = graph->getParentVertex()->getInParam(param->getParentId())->getValue();
-                break;
-            case PISDF_PARAM_DYNAMIC:
-                // Do nothing, cannot be evaluated yet
-                job->paramValues[paramIx] = -1;
-                break;
-            case PISDF_PARAM_DEPENDENT_STATIC:
-                job->paramValues[paramIx] = param->getExpression()->evaluate(job->graph->getParams(), job);
-                break;
-            case PISDF_PARAM_DEPENDENT_DYNAMIC:
-                job->paramValues[paramIx] = -1;
-                break;
-        }
+        job->paramValues[paramIx] = param->getValue();
     }
     int memReserved = currentMemReserved;
     // Compute the total memory allocation needed for delays in current graph
     for (int i = 0; i < graph->getNEdge(); i++) {
         PiSDFEdge *edge = graph->getEdge(i);
-        int nbDelays = edge->resolveDelay(job);
+        auto nbDelays = edge->resolveDelay();
         if (nbDelays > 0 && edge->isDelayPersistent()) {
             // Compute memory offset
             int memAllocAddr = memAlloc_->getMemUsed();
@@ -164,54 +246,37 @@ void Spider::initReservedMemory() {
     int memReserved = memAlloc_->getReservedAlloc(1);
     // Recursively go through the hierarchy
     memReserved += getReservedMemoryForGraph(graph, 0);
-    printf("INFO: Reserved ");
+    fprintf(stderr, "INFO: Reserved ");
     if (memReserved < 1024) {
-        printf("%5.1f B / %s of the shared memory ", memReserved * 1., memAlloc_->getMemAllocSizeFormatted());
+        fprintf(stderr, "%5.1f B", memReserved * 1.);
     } else if (memReserved < 1024 * 1024) {
-        printf("%5.1f KB / %s of the shared memory ", memReserved / 1024., memAlloc_->getMemAllocSizeFormatted());
+        fprintf(stderr, "%5.1f KB", memReserved / 1024.);
     } else if (memReserved < 1024 * 1024 * 1024) {
-        printf("%5.1f MB / %s of the shared memory ", memReserved / (1024. * 1024.),
-               memAlloc_->getMemAllocSizeFormatted());
+        fprintf(stderr, "%5.1f MB", memReserved / (1024. * 1024.));
     } else {
-        printf("%5.1f GB / %s of the shared memory ", memReserved / (1024. * 1024. * 1024.),
-               memAlloc_->getMemAllocSizeFormatted());
+        fprintf(stderr, "%5.1f GB", memReserved / (1024. * 1024. * 1024.));
     }
-    printf("for delays.\n");
+    fprintf(stderr, "(%#x) / ", memReserved);
+    memAlloc_->printMemAllocSizeFormatted();
+    fprintf(stderr, " of the shared memory\n");
+    fprintf(stderr, "for delays.\n");
 
     memAlloc_->setReservedSize(memReserved);
     memAlloc_->reset();
 }
 
 void Spider::clean() {
-
-    if (srdag_ != 0)
-        delete srdag_;
-    if (memAlloc_ != 0)
-        delete memAlloc_;
-    if (scheduler_ != 0)
-        delete scheduler_;
-
-    if (platform != 0)
-        delete platform;
-
-    //StackMonitor::cleanAllStack();
-}
-
-void Spider::iterate() {
-    Platform::get()->rstTime();
-    /** Set all slave jobIx to 0 */
-
+    if (schedule_) {
+//        schedule_->~PiSDFSchedule();
+        schedule_->~SRDAGSchedule();
+        StackMonitor::free(TRANSFO_STACK, schedule_);
+    }
     delete srdag_;
-    StackMonitor::freeAll(SRDAG_STACK);
-    memAlloc_->reset();
-    srdag_ = new SRDAGGraph();
-
-
-    jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
-
-    //Mise à zéro compteur job
-    Platform::get()->rstJobIx();
+    delete memAlloc_;
+    delete scheduler_;
+    delete platform_;
 }
+
 
 void Spider::setGraphOptim(bool useGraphOptim) {
     useGraphOptim_ = useGraphOptim;
@@ -251,6 +316,15 @@ void Spider::setArchi(Archi *archi) {
 
 void Spider::setGraph(PiSDFGraph *graph) {
     pisdf_ = graph;
+
+    // Detect the static property of the graph
+    pisdf_->setGraphStaticProperty(isGraphStatic(pisdf_->getBody(0)->getSubGraph()));
+
+    if (pisdf_->isGraphStatic()) {
+        Platform::get()->fprintf(stderr, "Graph [%s] is static.\n", pisdf_->getBody(0)->getName());
+    } else {
+        Platform::get()->fprintf(stderr, "Graph [%s] is not fully static.\n", pisdf_->getBody(0)->getName());
+    }
 }
 
 PiSDFGraph *Spider::getGraph() {
@@ -262,9 +336,8 @@ Archi *Spider::getArchi() {
 }
 
 void Spider::setMemAllocType(MemAllocType type, int start, int size) {
-    if (memAlloc_ != 0) {
-        delete memAlloc_;
-    }
+    /** If a memAlloc_ already existed, we delete it**/
+    delete memAlloc_;
     switch (type) {
         case MEMALLOC_DUMMY:
             memAlloc_ = new DummyMemAlloc(start, size);
@@ -272,24 +345,28 @@ void Spider::setMemAllocType(MemAllocType type, int start, int size) {
         case MEMALLOC_SPECIAL_ACTOR:
             memAlloc_ = new SpecialActorMemAlloc(start, size);
             break;
+        default:
+            throwSpiderException("Unsupported type of Memory Allocation.\n");
     }
 }
 
 void Spider::setSchedulerType(SchedulerType type) {
-    if (scheduler_ != 0) {
-        delete scheduler_;
-    }
+    /** If a scheduler_ already existed, we delete it**/
+    delete scheduler_;
     switch (type) {
         case SCHEDULER_LIST:
             scheduler_ = new ListScheduler();
             break;
+        case SCHEDULER_GREEDY:
+            scheduler_ = new GreedyScheduler();
+            break;
         case SCHEDULER_LIST_ON_THE_GO:
             scheduler_ = new ListSchedulerOnTheGo();
             break;
-        case ROUND_ROBIN:
+        case SCHEDULER_ROUND_ROBIN:
             scheduler_ = new RoundRobin();
             break;
-        case ROUND_ROBIN_SCATTERED:
+        case SCHEDULER_ROUND_ROBIN_SCATTERED:
             scheduler_ = new RoundRobinScattered();
             break;
     }
@@ -300,21 +377,23 @@ void Spider::printSRDAG(const char *srdagPath) {
 }
 
 void Spider::printPiSDF(const char *pisdfPath) {
-    return pisdf_->print(pisdfPath);
+    pisdf_->getBody(0)->getSubGraph()->print(pisdfPath);
 }
 
 void Spider::printActorsStat(ExecutionStat *stat) {
-    printf("\t%15s:\n", "Actors");
+    Platform::get()->fprintf(stdout, "\t%15s:\n", "Actors");
     for (int j = 0; j < stat->nPiSDFActor; j++) {
-        printf("\t%15s:", stat->actors[j]->getName());
-        for (int k = 0; k < archi_->getNPETypes(); k++)
-            if (stat->actorIterations[j][k])
-                printf("\t%lld (x%lld)",
-                       stat->actorTimes[j][k] / stat->actorIterations[j][k],
-                       stat->actorIterations[j][k]);
-            else
-                printf("\t%d (x%d)", 0, 0);
-        printf("\n");
+        Platform::get()->fprintf(stdout, "\t%15s:", stat->actors[j]->getName());
+        for (int k = 0; k < archi_->getNPETypes(); k++) {
+            if (stat->actorIterations[j][k]) {
+                Platform::get()->fprintf(stdout, "\t%lld (x%lld)",
+                                         stat->actorTimes[j][k] / stat->actorIterations[j][k],
+                                         stat->actorIterations[j][k]);
+            } else {
+                Platform::get()->fprintf(stdout, "\t%d (x%d)", 0, 0);
+            }
+        }
+        Platform::get()->fprintf(stdout, "\n");
     }
 }
 
@@ -354,19 +433,19 @@ static char *regenerateColor(int refInd) {
     return color;
 }
 
-static inline void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Archi *archi, SRDAGVertex *vertex,
-                                          Time start, Time end, int lrtIx, float latexScaling) {
+static void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Archi *archi, SRDAGVertex *vertex,
+                                   Time start, Time end, int lrtIx, float latexScaling) {
     static char name[200];
     static int i = 0;
     vertex->toString(name, 100);
 
-    char *temp_str = (char *) malloc(300 * sizeof(char));
+    auto *temp_str = (char *) malloc(300 * sizeof(char));
 
 
     sprintf(temp_str,
             "\t<event\n"
-            "\t\tstart=\"%llu\"\n"
-            "\t\tend=\"%llu\"\n"
+            "\t\tstart=\"%" PRIu64"\"\n"
+            "\t\tend=\"%" PRIu64"\"\n"
             "\t\ttitle=\"%s_%d_%d\"\n"
             "\t\tmapping=\"%s\"\n"
             "\t\tcolor=\"%s\"\n"
@@ -408,20 +487,147 @@ static inline void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Arch
     free(temp_str);
 }
 
+static void writeGanttForVertex(TraceMessage *message, FILE *ganttFile, FILE *latexFile, ExecutionStat *stat) {
+    SRDAGVertex *vertex = srdag_->getVertexFromIx(message->getVertexID());
+
+    auto startTimeScaled = message->getStartTime() / CHIP_FREQ;
+    auto endTimeScaled = message->getEndTime() / CHIP_FREQ;
+
+    auto execTime = message->getEllapsedTime() / CHIP_FREQ;
+
+    Time baseTime = 0;
+    // if(strcmp(vertex->getReference()->getName(),"src") == 0){
+    // 	baseTime = traceMsg->start;
+    // }
+
+
+    printGantt_SRDAGVertex(
+            ganttFile,
+            latexFile,
+            archi_,
+            vertex,
+            startTimeScaled - baseTime,
+            endTimeScaled - baseTime,
+            message->getLRTID(),
+            1000.f);
+
+
+    /* Update Stats */
+    stat->globalEndTime = std::max(endTimeScaled - baseTime, stat->globalEndTime);
+    stat->nExecSRDAGActor++;
+
+    switch (vertex->getType()) {
+        case SRDAG_NORMAL: {
+            int i;
+            int lrtType = archi_->getPEType(message->getLRTID());
+            auto *pisdfVertexRef = vertex->getReference();
+            // Update execution time of the PiSDF actor
+            auto timingOnPe = std::to_string(execTime);
+            pisdfVertexRef->setTimingOnType(lrtType, timingOnPe.c_str());
+            // Update global stats
+            for (i = 0; i < stat->nPiSDFActor; i++) {
+                if (stat->actors[i] == pisdfVertexRef) {
+                    stat->actorTimes[i][lrtType] += execTime;
+                    stat->actorIterations[i][lrtType]++;
+
+                    stat->actorFisrt[i] = std::min(stat->actorFisrt[i], startTimeScaled);
+                    stat->actorLast[i] = std::max(stat->actorLast[i], endTimeScaled);
+                    break;
+                }
+            }
+            if (i == stat->nPiSDFActor) {
+                stat->actors[stat->nPiSDFActor] = vertex->getReference();
+
+                memset(stat->actorTimes[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES * sizeof(Time));
+                memset(stat->actorIterations[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES * sizeof(Time));
+
+                stat->actorTimes[stat->nPiSDFActor][lrtType] += execTime;
+                stat->actorIterations[i][lrtType]++;
+                stat->nPiSDFActor++;
+
+                stat->actorFisrt[i] = startTimeScaled;
+                stat->actorLast[i] = endTimeScaled;
+            }
+            break;
+        }
+        case SRDAG_BROADCAST:
+            stat->brTime += execTime;
+            break;
+        case SRDAG_FORK:
+            stat->forkTime += execTime;
+            break;
+        case SRDAG_JOIN:
+            stat->joinTime += execTime;
+            break;
+        case SRDAG_ROUNDBUFFER:
+            stat->rbTime += execTime;
+            break;
+        case SRDAG_INIT:
+        case SRDAG_END:
+            break;
+    }
+}
+
+static void writeGanttForSpiderTasks(TraceMessage *message, FILE *ganttFile, FILE *latexFile, ExecutionStat *stat) {
+    int i = 0;
+
+    /** Scale the different values of measured time to chip time **/
+    Time startTimeScaled = message->getStartTime() / CHIP_FREQ;
+    Time endTimeScaled = message->getEndTime() / CHIP_FREQ;
+    Time ellapsedTimeScaled = message->getEllapsedTime() / CHIP_FREQ;
+
+    /* Gantt File */
+    Platform::get()->fprintf(ganttFile, "\t<event\n");
+    Platform::get()->fprintf(ganttFile, "\t\tstart=\"%" PRIu64"\"\n", startTimeScaled);
+    Platform::get()->fprintf(ganttFile, "\t\tend=\"%" PRIu64"\"\n", endTimeScaled);
+    Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n",
+                             TimeMonitor::getTaskName((TraceSpiderType) message->getSpiderTask()));
+    Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi_->getPEName(message->getLRTID()));
+    Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", regenerateColor(i++));
+    Platform::get()->fprintf(ganttFile, "\t\t>Step_%d.</event>\n", message->getSpiderTask());
+
+    stat->schedTime = std::max(endTimeScaled, stat->schedTime);
+
+    switch (message->getSpiderTask()) {
+        case TRACE_SPIDER_GRAPH:
+            stat->graphTime += ellapsedTimeScaled;
+            break;
+        case TRACE_SPIDER_SCHED:
+            stat->mappingTime += ellapsedTimeScaled;
+            break;
+        case TRACE_SPIDER_OPTIM:
+            stat->optimTime += ellapsedTimeScaled;
+            break;
+        case TRACE_SPIDER_ALLOC:
+        default:
+            throwSpiderException("Unhandle type of SpiderTrace: %d.", message->getSpiderTask());
+    }
+
+    /* Latex File */
+    auto latexScaling = 1000.f;
+    Platform::get()->fprintf(latexFile, "%f,", startTimeScaled / latexScaling); /* Start */
+    Platform::get()->fprintf(latexFile, "%f,", endTimeScaled / latexScaling); /* Duration */
+    Platform::get()->fprintf(latexFile, "%d,", archi_->getSpiderPeIx()); /* Core index */
+    Platform::get()->fprintf(latexFile, "colorSched\n", 15); /* Color */
+}
+
 void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionStat *stat) {
     FILE *ganttFile = Platform::get()->fopen(ganttPath);
-    if (ganttFile == nullptr) throw std::runtime_error("Error opening ganttFile");
+    if (ganttFile == nullptr) {
+        throwSpiderException("Failed to open ganttFile.");
+    }
 
     FILE *latexFile = Platform::get()->fopen(latexPath);
-    if (latexFile == nullptr) throw std::runtime_error("Error opening latexFile");
-
-    float latexScaling = 1000;
+    if (latexFile == nullptr) {
+        throwSpiderException("Failed to open latexFile.");
+    }
 
     // Writing header
     Platform::get()->fprintf(ganttFile, "<data>\n");
     Platform::get()->fprintf(latexFile, "start,end,core,color\n");
 
     // Popping data from Trace queue.
+    // TODO: change execution stat to proper class
     stat->mappingTime = 0;
     stat->graphTime = 0;
     stat->optimTime = 0;
@@ -439,134 +645,28 @@ void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionS
 
     stat->memoryUsed = memAlloc_->getMemUsed();
 
-    TraceMsg *traceMsg;
     int n = Launcher::get()->getNLaunched();
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     while (n) {
-        if (Platform::get()->getSpiderCommunicator()->trace_start_recv((void **) &traceMsg)) {
-            switch (traceMsg->msgIx) {
-                case TRACE_JOB: {
-                    SRDAGVertex *vertex = srdag_->getVertexFromIx(traceMsg->srdagIx);
-
-                    traceMsg->start /= CHIP_FREQ;
-                    traceMsg->end /= CHIP_FREQ;
-
-                    Time execTime = traceMsg->end - traceMsg->start;
-
-                    static Time baseTime = 0;
-                    // if(strcmp(vertex->getReference()->getName(),"src") == 0){
-                    // 	baseTime = traceMsg->start;
-                    // }
-
-
-                    printGantt_SRDAGVertex(
-                            ganttFile,
-                            latexFile,
-                            archi_,
-                            vertex,
-                            traceMsg->start - baseTime,
-                            traceMsg->end - baseTime,
-                            traceMsg->lrtIx,
-                            latexScaling);
-
-                    /* Update Stats */
-                    stat->globalEndTime = std::max(traceMsg->end - baseTime, stat->globalEndTime);
-                    stat->nExecSRDAGActor++;
-
-                    switch (vertex->getType()) {
-                        case SRDAG_NORMAL: {
-                            int i;
-                            int lrtType = archi_->getPEType(traceMsg->lrtIx);
-                            for (i = 0; i < stat->nPiSDFActor; i++) {
-                                if (stat->actors[i] == vertex->getReference()) {
-                                    stat->actorTimes[i][lrtType] += execTime;
-                                    stat->actorIterations[i][lrtType]++;
-
-                                    stat->actorFisrt[i] = std::min(stat->actorFisrt[i], traceMsg->start);
-                                    stat->actorLast[i] = std::max(stat->actorLast[i], traceMsg->end);
-                                    break;
-                                }
-                            }
-                            if (i == stat->nPiSDFActor) {
-                                stat->actors[stat->nPiSDFActor] = vertex->getReference();
-
-                                memset(stat->actorTimes[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES * sizeof(Time));
-                                memset(stat->actorIterations[stat->nPiSDFActor], 0, MAX_STATS_PE_TYPES * sizeof(Time));
-
-                                stat->actorTimes[stat->nPiSDFActor][lrtType] += execTime;
-                                stat->actorIterations[i][lrtType]++;
-                                stat->nPiSDFActor++;
-
-                                stat->actorFisrt[i] = traceMsg->start;
-                                stat->actorLast[i] = traceMsg->end;
-                            }
-                            break;
-                        }
-                        case SRDAG_BROADCAST:
-                            stat->brTime += execTime;
-                            break;
-                        case SRDAG_FORK:
-                            stat->forkTime += execTime;
-                            break;
-                        case SRDAG_JOIN:
-                            stat->joinTime += execTime;
-                            break;
-                        case SRDAG_ROUNDBUFFER:
-                            stat->rbTime += execTime;
-                            break;
-                        case SRDAG_INIT:
-                        case SRDAG_END:
-                            break;
-                    }
-
-                    break;
-                }
-                case TRACE_SPIDER: {
-
-                    static int i = 0;
-
-                    traceMsg->start /= CHIP_FREQ;
-                    traceMsg->end /= CHIP_FREQ;
-
-                    /* Gantt File */
-                    Platform::get()->fprintf(ganttFile, "\t<event\n");
-                    Platform::get()->fprintf(ganttFile, "\t\tstart=\"%llu\"\n", traceMsg->start);
-                    Platform::get()->fprintf(ganttFile, "\t\tend=\"%llu\"\n", traceMsg->end);
-                    Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n",
-                                             TimeMonitor::getTaskName((TraceSpiderType) traceMsg->spiderTask));
-                    Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi_->getPEName(traceMsg->lrtIx));
-                    Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", regenerateColor(i++));
-                    Platform::get()->fprintf(ganttFile, "\t\t>Step_%lu.</event>\n", traceMsg->spiderTask);
-
-                    stat->schedTime = std::max(traceMsg->end, stat->schedTime);
-
-                    switch (traceMsg->spiderTask) {
-                        case TRACE_SPIDER_GRAPH:
-                            stat->graphTime += traceMsg->end - traceMsg->start;
-                            break;
-                        case TRACE_SPIDER_ALLOC:
-                            throw std::runtime_error("Unhandle trace");
-                        case TRACE_SPIDER_SCHED:
-                            stat->mappingTime += traceMsg->end - traceMsg->start;
-                            break;
-                        case TRACE_SPIDER_OPTIM:
-                            stat->optimTime += traceMsg->end - traceMsg->start;
-                            break;
-                    }
-
-                    /* Latex File */
-                    Platform::get()->fprintf(latexFile, "%f,", traceMsg->start / latexScaling); /* Start */
-                    Platform::get()->fprintf(latexFile, "%f,", traceMsg->end / latexScaling); /* Duration */
-                    Platform::get()->fprintf(latexFile, "%d,", 0); /* Core index */
-                    Platform::get()->fprintf(latexFile, "colorSched\n", 15); /* Color */
-                    break;
-                }
-                default:
-                    printf("msgIx %lu\n", traceMsg->msgIx);
-                    throw std::runtime_error("Unhandled trace msg");
+        NotificationMessage message;
+        spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &message, true);
+        if (message.getType() != TRACE_NOTIFICATION) {
+            // Push back notification for later
+            // We should not have any other kind of notification here though
+            spiderCommunicator->push_notification(Platform::get()->getNLrt(), &message);
+        } else {
+            TraceMessage *msg;
+            spiderCommunicator->pop_trace_message(&msg, message.getIndex());
+            if (message.getSubType() == TRACE_LRT) {
+                writeGanttForVertex(msg, ganttFile, latexFile, stat);
+            } else if (message.getSubType() == TRACE_SPIDER) {
+                writeGanttForSpiderTasks(msg, ganttFile, latexFile, stat);
+            } else {
+                throwSpiderException("Unhandled type of Trace: %d", message.getSubType());
             }
-            Platform::get()->getSpiderCommunicator()->trace_end_recv();
-            n--;
+            StackMonitor::free(ARCHI_STACK, msg);
         }
+        n--;
     }
     Launcher::get()->rstNLaunched();
 
@@ -607,26 +707,20 @@ PiSDFVertex *Spider::addBodyVertex(
             nInParam);
 }
 
-PiSDFVertex *Spider::addHierVertex(
-        PiSDFGraph *graph,
-        const char *vertexName,
-        PiSDFGraph *subgraph,
-        int nInEdge, int nOutEdge,
-        int nInParam) {
-    return graph->addHierVertex(
-            vertexName,
-            subgraph,
-            nInEdge,
-            nOutEdge,
-            nInParam);
+void Spider::addSubGraph(PiSDFVertex *hierVertex, PiSDFGraph *subgraph) {
+    hierVertex->setSubGraph(subgraph);
+    subgraph->setParentVertex(hierVertex);
 }
+
 
 PiSDFVertex *Spider::addSpecialVertex(
         PiSDFGraph *graph,
+        const char *vertexName,
         PiSDFSubType subType,
         int nInEdge, int nOutEdge,
         int nInParam) {
-    return graph->addSpecialVertex(
+    return graph->addBodyVertex(
+            vertexName,
             subType,
             nInEdge,
             nOutEdge,
@@ -667,53 +761,6 @@ PiSDFVertex *Spider::addOutputIf(
             nInParam);
 }
 
-PiSDFParam *Spider::addStaticParam(
-        PiSDFGraph *graph,
-        const char *name,
-        const char *expr) {
-    return graph->addStaticParam(
-            name,
-            expr);
-}
-
-PiSDFParam *Spider::addStaticParam(
-        PiSDFGraph *graph,
-        const char *name,
-        Param value) {
-    return graph->addStaticParam(
-            name,
-            value);
-}
-
-PiSDFParam *Spider::addHeritedParam(
-        PiSDFGraph *graph,
-        const char *name,
-        int parentId) {
-    return graph->addHeritedParam(
-            name,
-            parentId);
-}
-
-PiSDFParam *Spider::addDynamicParam(
-        PiSDFGraph *graph,
-        const char *name) {
-    return graph->addDynamicParam(name);
-}
-
-PiSDFParam *Spider::addStaticDependentParam(
-        PiSDFGraph *graph,
-        const char *name,
-        const char *expr) {
-    return graph->addStaticDependentParam(name, expr);
-}
-
-PiSDFParam *Spider::addDynamicDependentParam(
-        PiSDFGraph *graph,
-        const char *name,
-        const char *expr) {
-    return graph->addDynamicDependentParam(name, expr);
-}
-
 PiSDFEdge *Spider::connect(
         PiSDFGraph *graph,
         PiSDFVertex *source, int sourcePortId, const char *production,
@@ -752,11 +799,63 @@ void Spider::isExecutableOnPEType(PiSDFVertex *vertex, int peType) {
 }
 
 void Spider::cleanPiSDF() {
-    PiSDFGraph *graph = pisdf_;
-    if (graph != 0) {
-        graph->~PiSDFGraph();
-        StackMonitor::free(PISDF_STACK, graph);
+    if (pisdf_) {
+        pisdf_->~PiSDFGraph();
+        StackMonitor::free(PISDF_STACK, pisdf_);
         StackMonitor::freeAll(PISDF_STACK);
     }
+}
+
+PiSDFParam *Spider::addStaticParam(PiSDFGraph *graph,
+                                   const char *name,
+                                   Param value) {
+    auto *param = CREATE(PISDF_STACK, PiSDFParam)(name, std::to_string(value).c_str(), PISDF_PARAM_STATIC, graph,
+                                                  graph->getNParam());
+    param->setValue(value);
+    graph->addPiSDFParam(param);
+    return param;
+}
+
+
+PiSDFParam *Spider::addInheritedParam(PiSDFGraph *graph,
+                                      const char *name,
+                                      int parentId) {
+    auto *parentVertex = graph->getParentVertex();
+    auto *heritedParam = (PiSDFParam *) parentVertex->getInParam(parentId);
+    auto *param = CREATE(PISDF_STACK, PiSDFParam)(name, "", PISDF_PARAM_HERITED, graph, graph->getNParam());
+    param->setInheritedParameter(heritedParam);
+    graph->addPiSDFParam(param);
+    return param;
+}
+
+PiSDFParam *Spider::addDynamicParam(PiSDFGraph *graph,
+                                    const char *name) {
+    auto *param = CREATE(PISDF_STACK, PiSDFParam)(name, "", PISDF_PARAM_DYNAMIC, graph, graph->getNParam());
+    graph->addPiSDFParam(param);
+    return param;
+}
+
+static inline PiSDFParam *addDependentParam(PiSDFGraph *graph,
+                                            const char *name,
+                                            const char *expr,
+                                            std::initializer_list<PiSDFParam *> dependencies,
+                                            PiSDFParamType type) {
+    auto *param = CREATE(PISDF_STACK, PiSDFParam)(name, expr, type, graph, graph->getNParam(), dependencies);
+    graph->addPiSDFParam(param);
+    return param;
+}
+
+PiSDFParam *Spider::addStaticDependentParam(PiSDFGraph *graph,
+                                            const char *name,
+                                            const char *expr,
+                                            std::initializer_list<PiSDFParam *> dependencies) {
+    return addDependentParam(graph, name, expr, dependencies, PISDF_PARAM_STATIC);
+}
+
+PiSDFParam *Spider::addDynamicDependentParam(PiSDFGraph *graph,
+                                             const char *name,
+                                             const char *expr,
+                                             std::initializer_list<PiSDFParam *> dependencies) {
+    return addDependentParam(graph, name, expr, dependencies, PISDF_PARAM_DYNAMIC);
 }
 

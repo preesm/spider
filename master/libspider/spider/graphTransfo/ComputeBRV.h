@@ -43,4 +43,8 @@
 
 void computeBRV(SRDAGGraph *topDag, transfoJob *job, int *brv);
 
+void computeBRV(PiSDFGraph *graph, int *brv);
+
+void computeHierarchicalBRV(PiSDFGraph *graph);
+
 #endif//COMPUTE_BRV

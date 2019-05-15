@@ -50,6 +50,7 @@ Thumbs.db
 bin/
 build_*/
 pthread-[0-9].*/
+mingw-std-threads/
 target/
 generated/
 xtend-gen/

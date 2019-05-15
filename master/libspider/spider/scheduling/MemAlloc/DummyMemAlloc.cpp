@@ -38,7 +38,6 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include "DummyMemAlloc.h"
-
 #include <cmath>
 
 void DummyMemAlloc::reset() {
@@ -47,16 +46,26 @@ void DummyMemAlloc::reset() {
 
 static inline int getAlignSize(int size) {
     //return std::ceil(size/1.0/getpagesize())*getpagesize();
-    float minAlloc = (float) Platform::get()->getMinAllocSize();
+    auto minAlloc = (float) Platform::get()->getMinAllocSize();
     return (int) std::ceil(((float) size) / minAlloc) * minAlloc;
 }
 
 
 void DummyMemAlloc::allocEdge(SRDAGEdge *edge) {
+    if (edge->getAlloc() >= 0) {
+        return;
+    }
     int size = edge->getRate();
+    if (size <= 0) {
+        /** Sync only edge */
+        edge->setAlloc(-1);
+        return;
+    }
     size = getAlignSize(size);
-    if (currentMem_ + size > memStart_ + memSize_)
-        throw std::runtime_error("Not Enough Shared Memory\n");
+    if (currentMem_ + size > memStart_ + memSize_) {
+        throwSpiderException("Not Enough Shared Memory. Want: %d -- Available: %d.", currentMem_ + size,
+                             memStart_ + memSize_);
+    }
     edge->setAlloc(currentMem_);
     currentMem_ += size;
 }
@@ -72,10 +81,25 @@ void DummyMemAlloc::alloc(List<SRDAGVertex *> *listOfVertices) {
     }
 }
 
+void DummyMemAlloc::alloc(LinkedList<SRDAGVertex *> *listOfVertices) {
+    listOfVertices->setOnFirst();
+    auto *node = listOfVertices->current();
+    do {
+        auto *vertex = node->val_;
+        if (vertex->getState() == SRDAG_EXEC) {
+            for (int i = 0; i < vertex->getNConnectedOutEdge(); ++i) {
+                allocEdge(vertex->getOutEdge(i));
+            }
+        }
+        node = listOfVertices->next();
+    } while (node != listOfVertices->first());
+}
+
 int DummyMemAlloc::getReservedAlloc(int size) {
     int alignedSize = getAlignSize(size);
     if (currentMem_ + alignedSize > memStart_ + memSize_) {
-        throw std::runtime_error("Not Enough Shared Memory\n");
+        throwSpiderException("Not Enough Shared Memory. Want: %d -- Available: %d.", currentMem_ + size,
+                             memStart_ + memSize_);
     }
     currentMem_ += alignedSize;
     return alignedSize;
@@ -84,3 +108,5 @@ int DummyMemAlloc::getReservedAlloc(int size) {
 int DummyMemAlloc::getMemUsed() {
     return currentMem_ - memStart_;
 }
+
+

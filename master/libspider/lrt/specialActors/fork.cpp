@@ -38,37 +38,37 @@
  */
 #include "specialActors.h"
 
-#include <string.h>
-
 void saFork(void *inputFIFOs[], void *outputFIFOs[], Param inParams[], Param /*outParams*/[]) {
-    int nbFifoIn, nbFifoOut, nbTknIn, i, index;
-
 #if VERBOSE
-    printf("Fork\n");
+    fprintf(stderr, "INFO: Entering Fork...\n");
 #endif
 
-    nbFifoIn = inParams[0];
-    nbFifoOut = inParams[1];
-    nbTknIn = inParams[2];
+    auto nbFifoIn = (int) inParams[0];
+    auto nbFifoOut = (int) inParams[1];
+    auto nbTknIn = (int) inParams[2];
+    int index = 0;
 
-    index = 0;
+    // 0. Check the number of input FIFOs
     if (nbFifoIn == 1) {
         /* Fork */
-        for (i = 0; i < nbFifoOut; i++) {
-            int nbTknOut = inParams[i + 3];
-
+        for (int i = 0; i < nbFifoOut; i++) {
+            auto nbTknOut = (int) inParams[i + 3];
             if (nbTknOut && outputFIFOs[i] != ((char *) inputFIFOs[0]) + index) {
-                memcpy(outputFIFOs[i], ((char *) inputFIFOs[0]) + index, nbTknOut);
+                memcpy(outputFIFOs[i], ((char *) inputFIFOs[0]) + index, (size_t) nbTknOut);
             }
-
             index += nbTknOut;
         }
     } else {
-        throw std::runtime_error("Error in Fork\n");
+        throwSpiderException("Fork should have exactly one input FIFO --> nInputFIFOs: %d.", nbFifoIn);
     }
 
+    // 1. Check that nbTknIn == Sum(nbTknOut)
     if (index != nbTknIn) {
-        throw std::runtime_error("Fork error: Remaining tokens.\n");
+        throwSpiderException("Fork has remaining tokens --> nTokensIN: %d | nTokensOUT: %d.", nbTknIn, index);
     }
+
+#if VERBOSE
+    fprintf(stderr, "INFO: Exiting Fork...\n");
+#endif
 }
 

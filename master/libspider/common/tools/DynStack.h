@@ -40,25 +40,32 @@
 #define DYN_STACK_H
 
 #include <tools/Stack.h>
+#if defined _WIN32 && !defined _MSC_VER
+#include <mingw-std-threads/include/mingw.mutex.h>
+#else
+#include <mutex>
+#endif
 
 class DynStack : public Stack {
 public:
-    DynStack(const char *name);
+    explicit DynStack(const char *name);
 
-    virtual ~DynStack();
+    ~DynStack() override;
 
-    virtual void *alloc(int size);
+    void *alloc(int size, bool pageAligned) override;
 
-    virtual void free(void *var);
+    void free(void *var) override;
 
-    virtual void freeAll();
+    void freeAll() override;
 
-    virtual void printStat();
+    void printStat() override;
 
 private:
     long long curUsedSize_;
     long long maxSize_;
     int nb_;
+
+    std::mutex memoryMutex_;
 };
 
 #endif//STATIC_STACK_H

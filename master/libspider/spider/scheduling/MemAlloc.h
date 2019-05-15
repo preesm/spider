@@ -40,6 +40,7 @@
 #define MEM_ALLOC_H
 
 #include <platform.h>
+#include <tools/LinkedList.h>
 #include <tools/List.h>
 #include <tools/Stack.h>
 #include <graphs/SRDAG/SRDAGVertex.h>
@@ -47,11 +48,17 @@
 #include <algorithm>
 #include <spider.h>
 
+class PiSDFGraph;
+
 class MemAlloc {
 public:
     virtual void reset() = 0;
 
-    virtual void alloc(List<SRDAGVertex *> *listOfVertices) = 0;
+    virtual void alloc(List<SRDAGVertex *> *) {};
+
+    virtual void alloc(LinkedList<SRDAGVertex *> *) {};
+
+    virtual void alloc(PiSDFGraph *) {};
 
     virtual int getReservedAlloc(int size) = 0;
 
@@ -67,38 +74,35 @@ public:
 
     inline int getMemAllocSize() const;
 
-    inline const char *getMemAllocSizeFormatted() const;
+    inline void printMemAllocSizeFormatted() const;
 
-    virtual ~MemAlloc() {}
+    virtual ~MemAlloc() = default;
 
 protected:
     int memStart_;
     int memSize_;
-    int memReserved_;
+    int memReserved_{};
 };
 
 inline int MemAlloc::getMemAllocSize() const {
     return memSize_;
 }
 
-inline const char *MemAlloc::getMemAllocSizeFormatted() const {
-    char memAllocSizeFormatted[10] = {0};
-    if (memSize_ < 1024) {
-        sprintf(memAllocSizeFormatted, "%5.1f B", memSize_ / 1.);
-    } else if (memSize_ < 1024 * 1024) {
-        sprintf(memAllocSizeFormatted, "%5.1f KB", memSize_ / 1024.);
-    } else if (memSize_ < 1024 * 1024 * 1024) {
-        sprintf(memAllocSizeFormatted, "%5.1f MB", memSize_ / (1024. * 1024.));
-    } else {
-        sprintf(memAllocSizeFormatted, "%5.1f GB", memSize_ / (1024. * 1024. * 1024.));
+inline void MemAlloc::printMemAllocSizeFormatted() const {
+    const char *units[4] = {"B", "KB", "MB", "GB"};
+
+    float normalizedSize = memSize_;
+    int unitIndex = 0;
+    while (normalizedSize >= 1024 && unitIndex < 3) {
+        normalizedSize /= 1024.;
+        unitIndex++;
     }
-    std::string retValue(memAllocSizeFormatted);
-    return retValue.c_str();
+    fprintf(stderr, "%5.1f %s", normalizedSize, units[unitIndex]);
 }
 
 inline void MemAlloc::setReservedSize(int reservedSize) {
     if (reservedSize > memSize_) {
-        throw std::runtime_error("Memory allocation for reserved memory superior to total allocated memory.");
+        throwSpiderException("Reserved memory (%d) > memory size (%d).", reservedSize, memSize_);
     }
     memReserved_ = reservedSize;
 }

@@ -35,14 +35,13 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#include "Launcher.h"
-#include <SpiderCommunicator.h>
-
+#include <cinttypes>
 #include <graphs/SRDAG/SRDAGGraph.h>
+#include <SpiderCommunicator.h>
+#include <launcher/Launcher.h>
+#include <Logger.h>
+#include "Launcher.h"
 
-#include <algorithm>
-
-#include <lrt.h>
 
 Launcher Launcher::instance_;
 
@@ -51,201 +50,171 @@ Launcher::Launcher() {
     nLaunched_ = 0;
 }
 
-void Launcher::launchVertex(SRDAGVertex *vertex) {
-    if (vertex->getState() == SRDAG_EXEC) {
-        int slave = vertex->getSlave();
-        send_StartJobMsg(slave, vertex);
-        nLaunched_++;
-        vertex->setState(SRDAG_RUN);
-    }
-}
-
 Launcher *Launcher::get() {
     return &instance_;
 }
 
-void Launcher::send_ResetLrtMsg(int lrtIx) {
-    ResetLrtMsg *msg = (ResetLrtMsg *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx,
-                                                                                                 sizeof(ResetLrtMsg));
-    msg->msgIx = MSG_RESET_LRT;
-    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ResetLrtMsg));
-}
-
-void Launcher::send_EndIterMsg(int lrtIx) {
-    EndIterMsg *msg = (EndIterMsg *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx,
-                                                                                               sizeof(EndIterMsg));
-    msg->msgIx = MSG_END_ITER;
-    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(EndIterMsg));
-}
-
-void Launcher::send_ClearTimeMsg(int lrtIx) {
-    ClearTimeMsg *msg = (ClearTimeMsg *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx,
-                                                                                                   sizeof(ClearTimeMsg));
-    msg->msgIx = MSG_CLEAR_TIME;
-    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMsg));
-}
-
-void Launcher::send_StartJobMsg(int lrtIx, SRDAGVertex *vertex) {
-    /** retreive Infos for msg */
-    int nParams = 0;
-    switch (vertex->getType()) {
-        case SRDAG_NORMAL:
-            nParams = vertex->getNInParam();
-            break;
-        case SRDAG_FORK:
-        case SRDAG_JOIN:
-            nParams = 2 + vertex->getNConnectedInEdge() + vertex->getNConnectedOutEdge();
-            break;
-        case SRDAG_ROUNDBUFFER:
-        case SRDAG_BROADCAST:
-            nParams = 2;
-            break;
-        case SRDAG_INIT:
-        case SRDAG_END:
-            nParams = 3;
-            break;
+void Launcher::sendRepeatJobQueue(bool enable) {
+    NotificationMessage message(LRT_NOTIFICATION,
+                                enable ? LRT_REPEAT_ITERATION_EN : LRT_REPEAT_ITERATION_DIS,
+                                Platform::get()->getLrtIx());
+    for (int i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
+        Platform::get()->getSpiderCommunicator()->push_notification(i, &message);
     }
+}
 
-    int size = 1 * sizeof(StartJobMsg)
-               + vertex->getNConnectedInEdge() * sizeof(Fifo)
-               + vertex->getNConnectedOutEdge() * sizeof(Fifo)
-               + nParams * sizeof(Param);
-    long msgAdd = (long) Platform::get()->getSpiderCommunicator()->ctrl_start_send(
-            lrtIx,
-            size
-    );
+void Launcher::send_ResetLrtMsg(int) {
+//    auto msg = (Message *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx, sizeof(Message));
+//    msg->globalID_ = MSG_RESET_LRT;
+//    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(Message));
+}
 
-    StartJobMsg *msg = (StartJobMsg *) msgAdd;
-    Fifo *inFifos = (Fifo *) ((char *) msgAdd + 1 * sizeof(StartJobMsg));
-    Fifo *outFifos = (Fifo *) ((char *) inFifos + vertex->getNConnectedInEdge() * sizeof(Fifo));
-    Param *inParams = (Param *) ((char *) outFifos + vertex->getNConnectedOutEdge() * sizeof(Fifo));
+void Launcher::send_ClearTimeMsg(int) {
+//    auto msg = (ClearTimeMessage *) Platform::get()->getSpiderCommunicator()->ctrl_start_send(lrtIx,
+//                                                                                              sizeof(ClearTimeMessage));
+//    msg->globalID_ = MSG_CLEAR_TIME;
+//    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, sizeof(ClearTimeMessage));
+}
 
-    msg->msgIx = MSG_START_JOB;
-    msg->srdagIx = vertex->getId();
-    msg->specialActor = vertex->getType() != SRDAG_NORMAL;
-    msg->fctIx = vertex->getFctId();
-    msg->traceEnabled = Spider::getTraceEnabled();
 
-    msg->nbInEdge = vertex->getNConnectedInEdge();
-    msg->nbOutEdge = vertex->getNConnectedOutEdge();
-    msg->nbInParam = nParams;
-    msg->nbOutParam = vertex->getNOutParam();
+void Launcher::sendJob(PiSDFScheduleJob *job) {
+    /** 1. Push the job **/
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    auto instance = job->getNumberOfLaunchedInstances();
+    auto *job2Send = job->createJobMessage(instance);
+    auto jobID = spiderCommunicator->push_job_message(&job2Send);
 
-    for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
-        SRDAGEdge *edge = vertex->getInEdge(i);
-        if (edge->getRate() != 0) {
-            inFifos[i].alloc = edge->getAlloc();
-            inFifos[i].size = edge->getRate();
-            inFifos[i].blkLrtIx = edge->getSrc()->getSlave();
-            inFifos[i].blkLrtJobIx = edge->getSrc()->getSlaveJobIx();
-        } else {
-            inFifos[i].alloc = 0;
-            inFifos[i].size = 0;
-            inFifos[i].blkLrtIx = 0;
-            inFifos[i].blkLrtJobIx = 0;
+    /** 2. Send notification **/
+    NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, Platform::get()->getLrtIx(), jobID);
+    spiderCommunicator->push_notification(job->getMappedPE(instance), &notificationMessage);
+
+    /** 3 Update instance number **/
+    job->launchNextInstance();
+
+    /** 4. Update number of param to resolve **/
+    curNParam_ += job2Send->nParamOUT_;
+    nLaunched_++;
+}
+
+void Launcher::sendJob(SRDAGScheduleJob *job) {
+    /** 1. Push the job **/
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    auto *job2Send = job->createJobMessage();
+    auto jobID = spiderCommunicator->push_job_message(&job2Send);
+
+    /** 2. Send notification **/
+    NotificationMessage notificationMessage(JOB_NOTIFICATION, JOB_ADD, Platform::get()->getLrtIx(), jobID);
+    spiderCommunicator->push_notification(job->getMappedPE(), &notificationMessage);
+
+    /** 3 Update instance number **/
+    job->launchNextInstance();
+
+    /** 4. Update number of param to resolve **/
+    curNParam_ += job2Send->nParamOUT_;
+    nLaunched_++;
+}
+
+void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
+    while (curNParam_) {
+        NotificationMessage message;
+        if (Platform::get()->getSpiderCommunicator()->pop_notification(Platform::get()->getNLrt(), &message, true)) {
+            if (message.getType() == JOB_NOTIFICATION && message.getSubType() == JOB_SENT_PARAM) {
+                ParameterMessage *parameterMessage;
+                Platform::get()->getSpiderCommunicator()->pop_parameter_message(&parameterMessage, message.getIndex());
+                SRDAGVertex *vertex = topDag->getVertexFromIx(parameterMessage->getVertexID());
+                auto *referenceVertex = vertex->getReference();
+                if (vertex->getNOutParam() != parameterMessage->getNParam()) {
+                    throwSpiderException("Expected %d parameters -- got %d", vertex->getNOutParam(),
+                                         parameterMessage->getParams());
+                }
+                auto *receivedParams = parameterMessage->getParams();
+                for (int i = 0; i < vertex->getNOutParam(); ++i) {
+                    auto *param = vertex->getOutParam(i);
+                    (*param) = receivedParams[i];
+                    auto *referenceParameter = (PiSDFParam *) referenceVertex->getOutParam(i);
+                    referenceParameter->setValue((*param));
+                    if (Spider::getVerbose()) {
+                        auto *parameterName = vertex->getReference()->getOutParam(i)->getName();
+                        Logger::print(LOG_GENERAL, LOG_INFO, "Received Parameter: %s -- Value: %" PRId64"\n",
+                                      parameterName,
+                                      receivedParams[i]);
+                    }
+                }
+                curNParam_ -= vertex->getNOutParam();
+                parameterMessage->~ParameterMessage();
+                StackMonitor::free(ARCHI_STACK, parameterMessage);
+            } else {
+                /** Push back the message in the queue, it will be treated later **/
+                Platform::get()->getSpiderCommunicator()->push_notification(Platform::get()->getNLrt(), &message);
+            }
         }
-    }
-
-    for (int i = 0; i < vertex->getNConnectedOutEdge(); i++) {
-        SRDAGEdge *edge = vertex->getOutEdge(i);
-        if (edge->getRate() != 0) {
-            outFifos[i].alloc = edge->getAlloc();
-            outFifos[i].size = edge->getRate();
-        } else {
-            inFifos[i].alloc = 0;
-            inFifos[i].size = 0;
-            inFifos[i].blkLrtIx = 0;
-            inFifos[i].blkLrtJobIx = 0;
-        }
-    }
-
-    switch (vertex->getType()) {
-        case SRDAG_NORMAL:
-            for (int i = 0; i < nParams; i++) {
-                inParams[i] = vertex->getInParam(i);
-            }
-//		memcpy(inParams, vertex->getInParams(), nParams*sizeof(Param));
-            break;
-        case SRDAG_FORK:
-            inParams[0] = vertex->getNConnectedInEdge();
-            inParams[1] = vertex->getNConnectedOutEdge();
-            inParams[2] = vertex->getInEdge(0)->getRate();
-            for (int i = 0; i < vertex->getNConnectedOutEdge(); i++) {
-                inParams[3 + i] = vertex->getOutEdge(i)->getRate();
-            }
-            break;
-        case SRDAG_JOIN:
-            inParams[0] = vertex->getNConnectedInEdge();
-            inParams[1] = vertex->getNConnectedOutEdge();
-            inParams[2] = vertex->getOutEdge(0)->getRate();
-            for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
-                inParams[3 + i] = vertex->getInEdge(i)->getRate();
-            }
-            break;
-        case SRDAG_ROUNDBUFFER:
-            inParams[0] = vertex->getInEdge(0)->getRate();
-            inParams[1] = vertex->getOutEdge(0)->getRate();
-            break;
-        case SRDAG_BROADCAST:
-            inParams[0] = vertex->getInEdge(0)->getRate();
-            inParams[1] = vertex->getNConnectedOutEdge();
-            break;
-        case SRDAG_INIT:
-            inParams[0] = vertex->getOutEdge(0)->getRate();
-            // Set persistence property
-            inParams[1] = vertex->getInParam(0);
-            // Set memory address
-            inParams[2] = vertex->getInParam(1);
-
-            break;
-        case SRDAG_END:
-            inParams[0] = vertex->getInEdge(0)->getRate();
-            // Set persistence property
-            inParams[1] = vertex->getInParam(0);
-            // Set memory address
-            inParams[2] = vertex->getInParam(1);
-            break;
-    }
-
-    curNParam_ += vertex->getNOutParam();
-
-    Platform::get()->getSpiderCommunicator()->ctrl_end_send(lrtIx, size);
-}
-
-void Launcher::resolveParams(Archi *archi, SRDAGGraph *topDag) {
-    int slave = 0;
-    while (curNParam_ != 0) {
-        ParamValueMsg *msg;
-        if (Platform::get()->getSpiderCommunicator()->ctrl_start_recv(slave, (void **) (&msg))) {
-            if (msg->msgIx != MSG_PARAM_VALUE)
-                throw std::runtime_error("Unexpected Msg received\n");
-            SRDAGVertex *cfgVertex = topDag->getVertexFromIx(msg->srdagIx);
-            Param *params = (Param *) (msg + 1);
-            for (int j = 0; j < cfgVertex->getNOutParam(); j++) {
-                int *param = cfgVertex->getOutParam(j);
-                *param = params[j];
-                if (Spider::getVerbose())
-                    printf("Recv param %s = %d\n", cfgVertex->getReference()->getOutParam(j)->getName(), *param);
-            }
-            curNParam_ -= cfgVertex->getNOutParam();
-            Platform::get()->getSpiderCommunicator()->ctrl_end_recv(slave);
-        }
-        slave = (slave + 1) % archi->getNPE();
     }
 }
 
 void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end) {
-    TraceMsg *msgTrace = (TraceMsg *) Platform::get()->getSpiderCommunicator()->trace_start_send(sizeof(TraceMsg));
+    auto lrtID = Platform::get()->getLrtIx();
+    // Push message
+    auto *traceMessage = CREATE(ARCHI_STACK, TraceMessage)(-1, type, lrtID, start, end);
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    auto index = spiderCommunicator->push_trace_message(&traceMessage);
 
-    msgTrace->msgIx = TRACE_SPIDER;
-    msgTrace->spiderTask = type;
-    msgTrace->srdagIx = -1;
-    msgTrace->start = start;
-    msgTrace->end = end;
-    msgTrace->lrtIx = Platform::get()->getLrt()->getIx();
-
-    Platform::get()->getSpiderCommunicator()->trace_end_send(sizeof(TraceMsgType));
+    // Push notification
+    auto notificationMessage = NotificationMessage(TRACE_NOTIFICATION,
+                                                   TRACE_SPIDER,
+                                                   lrtID,
+                                                   index);
+    spiderCommunicator->push_notification(Platform::get()->getNLrt(), &notificationMessage);
     nLaunched_++;
+}
+
+void Launcher::sendEnableTrace(int lrtID) {
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    auto enableTraceMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_ENABLE, Platform::get()->getLrtIx());
+    if (lrtID < 0) {
+        for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
+            spiderCommunicator->push_notification(i, &enableTraceMessage);
+        }
+    } else if (lrtID < Platform::get()->getNLrt()) {
+        spiderCommunicator->push_notification(lrtID, &enableTraceMessage);
+    } else {
+        throwSpiderException("Bad LRT id: %d", lrtID);
+    }
+}
+
+void Launcher::sendDisableTrace(int lrtID) {
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    auto enableTraceMessage = NotificationMessage(TRACE_NOTIFICATION, TRACE_DISABLE, Platform::get()->getLrtIx());
+    if (lrtID < 0) {
+        for (int i = 0; i < Platform::get()->getNLrt(); ++i) {
+            spiderCommunicator->push_notification(i, &enableTraceMessage);
+        }
+    } else if (lrtID < Platform::get()->getNLrt()) {
+        spiderCommunicator->push_notification(lrtID, &enableTraceMessage);
+    } else {
+        throwSpiderException("Bad LRT id: %d", lrtID);
+    }
+}
+
+void Launcher::sendEndNotification(Schedule *schedule) {
+    for (int pe = 0; pe < Spider::getArchi()->getNActivatedPE(); ++pe) {
+        NotificationMessage message(LRT_NOTIFICATION,
+                                    LRT_END_ITERATION,
+                                    Platform::get()->getLrtIx(),
+                                    schedule->getNJobs(pe) - 1);
+        Platform::get()->getSpiderCommunicator()->push_notification(pe, &message);
+    }
+}
+
+void Launcher::sendBroadCastNotification(bool delayBroadcoast) {
+    NotificationMessage broadcast(JOB_NOTIFICATION,
+                                  delayBroadcoast ? JOB_DELAY_BROADCAST_JOBSTAMP : JOB_BROADCAST_JOBSTAMP,
+                                  Platform::get()->getLrtIx());
+    for (int i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
+        if (i == Platform::get()->getLrtIx()) {
+            continue;
+        }
+        Platform::get()->getSpiderCommunicator()->push_notification(i, &broadcast);
+    }
 }
 
 int Launcher::getNLaunched() {
@@ -255,3 +224,6 @@ int Launcher::getNLaunched() {
 void Launcher::rstNLaunched() {
     nLaunched_ = 0;
 }
+
+
+

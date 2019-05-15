@@ -37,8 +37,12 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 #include "StackMonitor.h"
+#include <tools/Stack.h>
+#include <tools/DynStack.h>
+#include <tools/StaticStack.h>
 
 #include <platform.h>
+#include <Logger.h>
 
 
 void StackMonitor::initStack(SpiderStack stackId, StackConfig cfg) {
@@ -58,16 +62,28 @@ void StackMonitor::clean(SpiderStack id) {
 
 void StackMonitor::cleanAllStack() {
     for (int i = 0; i < STACK_COUNT; i++) {
-        delete Platform::get()->getStack(i);
+        delete Platform::get()->getStack((SpiderStack) i);
     }
 }
 
-void *StackMonitor::alloc(SpiderStack stackId, int size) {
-    return Platform::get()->getStack(stackId)->alloc(size);
+void *StackMonitor::alloc(SpiderStack stackId, int size, bool pageAligned) {
+    if (size <= 0) {
+        return nullptr;
+    }
+    return Platform::get()->getStack(stackId)->alloc(size, pageAligned);
 }
 
 void StackMonitor::free(SpiderStack stackId, void *ptr) {
-    return Platform::get()->getStack(stackId)->free(ptr);
+    if (ptr == nullptr) {
+        return;
+    }
+    Platform::get()->getStack(stackId)->free(ptr);
+//    ptr = nullptr;
+}
+
+void StackMonitor::freeAll(SpiderStack stackId, const char *function) {
+    Logger::print(LOG_GENERAL, LOG_INFO, "freeAll called by [%s]\n", function);
+    return Platform::get()->getStack(stackId)->freeAll();
 }
 
 void StackMonitor::freeAll(SpiderStack stackId) {

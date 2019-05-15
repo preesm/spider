@@ -50,116 +50,155 @@ public:
     /** Constructor */
     PiSDFParam(
             const char *name,
-            int typeIx,
-            PiSDFGraph *graph,
+            const char *expr,
             PiSDFParamType type,
-            const char *expr);
+            PiSDFGraph *graph,
+            std::int32_t localID);
 
-    ~PiSDFParam();
+    PiSDFParam(
+            const char *name,
+            const char *expr,
+            PiSDFParamType type,
+            PiSDFGraph *graph,
+            std::int32_t localID,
+            std::initializer_list<PiSDFParam *> dependencies);
+
+    ~PiSDFParam() override;
 
     /** Getters */
-    inline int getIx() const;
+    inline int getGlobalID() const;
 
-    inline int getTypeIx() const;
+    inline int getLocalID() const;
 
     inline const char *getName() const;
 
     inline PiSDFParamType getType() const;
 
-    inline int getStaticValue() const;
+    inline Param getValue();
 
-    inline int getParentId() const;
-
-    inline Expression *getExpression();
-
-    inline int getValue() const;
+    inline bool isDynamic();
 
     /** Setters */
-    inline void setValue(int value);
+    inline void setValue(Param value);
 
-    inline void setParentId(int parentId);
+    inline void setInheritedParameter(PiSDFParam *inheritedParameter);
 
     inline void setSetter(PiSDFVertex *setter, int portIx);
 
-    inline void setExpression(Expression *expr);
-
 private:
-    static int globalIx;
+    /**
+     * @brief Global ID of the parameter within the application.
+     */
+    std::int32_t globalID_;
 
-    int id_;
-    int typeIx_;
-    const char *name_;
+    /**
+     * @brief Local ID of the parameter within its containing graph.
+     */
+    std::int32_t localID_;
+
+    /**
+     * @brief Name of the parameter within its containing graph.
+     */
+    std::string name_;
+
+    /**
+     * @brief Literal expression of the parameter.
+     */
+    std::string expressionString_;
+
+    /**
+     * @brief Real value of the parameter;
+     */
+    Param value_;
+
+    /**
+     * @brief Containing graph of the parameter.
+     */
     PiSDFGraph *graph_;
+
+    /**
+     * @brief Parameter Type (STATIC, DYNAMIC, HERITED).
+     */
     PiSDFParamType type_;
 
-    // STATIC
-    int value_;
+    /**
+    * @brief Pointer to original parameter if parameter if of type HERITED.
+    */
+    PiSDFParam *inheritedParam_;
 
-    // HERITED
-    int parentId_;
-
-    // DYNAMIC
+    /**
+     * @brief Vertex setting the parameter's value if it is of type DYNAMIC.
+     */
     PiSDFVertex *setter_;
-    int portIx_;
 
-    // DEPENDENT
+    /**
+     * @brief Vector of parameter dependencies (in the case of a dynamic dependent parameter)
+     */
+    std::vector<PiSDFParam *> dependencies_;
+
+    /**
+     * @brief Expression of the parameter (needed for dynamic dependent parameter)
+     */
     Expression *expr_;
+
+    /**
+     * @brief Evaluate the expression of the parameter (if any)
+     * @return evaluated expression, current value if parameter has no expression
+     */
+    Param evaluateExpression();
+
+    int portIx_;
 };
 
 /** Inline Fcts */
 /** Getters */
-inline int PiSDFParam::getIx() const {
-    return id_;
+inline int PiSDFParam::getGlobalID() const {
+    return globalID_;
 }
 
-inline int PiSDFParam::getTypeIx() const {
-    return typeIx_;
+inline int PiSDFParam::getLocalID() const {
+    return localID_;
 }
 
 inline const char *PiSDFParam::getName() const {
-    return name_;
+    return name_.c_str();
 }
 
 inline PiSDFParamType PiSDFParam::getType() const {
     return type_;
 }
 
-inline int PiSDFParam::getStaticValue() const {
-    if (type_ != PISDF_PARAM_STATIC)
-        throw std::runtime_error("Error: Not Static param used as Static param\n");
+inline Param PiSDFParam::getValue() {
+    if (inheritedParam_) {
+        value_ = inheritedParam_->getValue();
+    } else if (!dependencies_.empty()) {
+        value_ = evaluateExpression();
+    }
     return value_;
-}
-
-inline int PiSDFParam::getParentId() const {
-    if (type_ != PISDF_PARAM_HERITED)
-        throw std::runtime_error("Error: Not Herited param used as Herited param\n");
-    return parentId_;
-}
-
-inline int PiSDFParam::getValue() const {
-    return value_;
-}
-
-inline Expression *PiSDFParam::getExpression() {
-    return expr_;
 }
 
 /** Setters */
-inline void PiSDFParam::setValue(int value) {
+inline void PiSDFParam::setValue(Param value) {
     value_ = value;
 }
 
-inline void PiSDFParam::setParentId(int parentId) {
-    parentId_ = parentId;
-}
-
 inline void PiSDFParam::setSetter(PiSDFVertex *setter, int portIx) {
+    if (!dependencies_.empty()) {
+        throwSpiderException(
+                "Dynamic parameter [%s] with configure actor can not have dependencies to other parameters.",
+                name_.c_str());
+    }
     setter_ = setter;
     portIx_ = portIx;
 }
 
-inline void PiSDFParam::setExpression(Expression *expr) {
-    expr_ = expr;
+inline void PiSDFParam::setInheritedParameter(PiSDFParam *inheritedParameter) {
+    inheritedParam_ = inheritedParameter;
 }
+
+inline bool PiSDFParam::isDynamic() {
+    return type_ == PISDF_PARAM_DYNAMIC;
+}
+
 
 #endif/*PISDF_PARAM_H*/

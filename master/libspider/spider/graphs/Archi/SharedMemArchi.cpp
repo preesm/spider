@@ -60,8 +60,9 @@ SharedMemArchi::SharedMemArchi(int nPE, int nPEType, int spiderPe, MappingTimeFc
 
 
 SharedMemArchi::~SharedMemArchi() {
-    for (int i = 0; i < nPE_; i++)
+    for (int i = 0; i < nPE_; i++) {
         StackMonitor::free(ARCHI_STACK, peName_[i]);
+    }
 
     /** Free allocated arrays **/
     StackMonitor::free(ARCHI_STACK, peType_);
@@ -77,14 +78,13 @@ SharedMemArchi::~SharedMemArchi() {
     /** Reset values **/
     nPE_ = 0;
     nPEType_ = 0;
-    peType_ = 0;
-    peName_ = 0;
-    peTypeASend_ = 0;
-    peTypeBSend_ = 0;
-    peTypeARecv_ = 0;
-    peTypeBRecv_ = 0;
-
-    nPEperType_ = 0;
+    peType_ = nullptr;
+    peName_ = nullptr;
+    peTypeASend_ = nullptr;
+    peTypeBSend_ = nullptr;
+    peTypeARecv_ = nullptr;
+    peTypeBRecv_ = nullptr;
+    nPEperType_ = nullptr;
 }
 
 

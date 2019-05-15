@@ -17,6 +17,7 @@ TMPDIR=$(mktemp -d)
 #  Copy sched.h to /lib_spider/lib/pthread-2.10.0/include
 #  Copy semaphore.h to /lib_spider/lib/pthread-2.10.0/include
 
+# PThread for Windows
 
 rm -rf "${DIR}"/master/lib/pthread-2.10
 mkdir -p "${DIR}"/master/lib/pthread-2.10/lib
@@ -35,22 +36,28 @@ cp "${TMPDIR}"/pthread-2.10.0/lib/*.a "${DIR}"/master/lib/pthread-2.10/dll
 
 cp "${TMPDIR}"/pthread-2.10.0/include/*.h "${DIR}"/master/lib/pthread-2.10/include
 
+# STD::Thread for Windows
 
+rm -rf "${DIR}"/master/lib/mingw-std-threads
+mkdir -p "${DIR}"/master/lib/mingw-std-threads/include
+wget -O "${TMPDIR}"/mingw-std-threads.zip https://github.com/meganz/mingw-std-threads/archive/master.zip
+(cd "${TMPDIR}" && unzip mingw-std-threads.zip)
+cp "${TMPDIR}"/mingw-std-threads-master/*.h "${DIR}"/master/lib/mingw-std-threads/include
 
 rm -rf "${TMPDIR}"
 
 rm -rf "${LINUX64_BUILD_DIR}"
 mkdir -p "${LINUX64_BUILD_DIR}"
-(cd "${LINUX64_BUILD_DIR}" && cmake .. -D64BITS=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make -j8)
+(cd "${LINUX64_BUILD_DIR}" && cmake .. -D64BITS=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make)
 
 if  [ $# == 1 ] && [ "$1" == "--cross" ]; then
   rm -rf "${LINUX32_BUILD_DIR}"
   mkdir -p "${LINUX32_BUILD_DIR}"
-  (cd "${LINUX32_BUILD_DIR}" && cmake .. -D32BITS=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make -j8)
+  (cd "${LINUX32_BUILD_DIR}" && cmake .. -D32BITS=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make)
 
   rm -rf "${WIN32_BUILD_DIR}"
   mkdir -p "${WIN32_BUILD_DIR}"
-  (cd "${WIN32_BUILD_DIR}" && cmake .. -DCROSS_COMPILE_MINGW=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make -j8)
+  (cd "${WIN32_BUILD_DIR}" && cmake .. -DCROSS_COMPILE_MINGW=true -DSKIP_PAPI=true -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON && make)
 
   RLSDIR=$(mktemp -d)
   VERSION=$(cat "${DIR}"/VERSION)

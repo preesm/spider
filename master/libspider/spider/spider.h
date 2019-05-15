@@ -40,6 +40,7 @@
 
 #include <map>
 #include <vector>
+#include <cstdint>
 
 class Archi;
 
@@ -73,14 +74,10 @@ typedef enum PiSDFSubType {
 #define MAX_STATS_VERTICES 1000
 #define MAX_STATS_PE_TYPES 3
 
-typedef unsigned long long Time;
-typedef long Param;
+using Time = std::uint64_t;
+using Param = std::int64_t;
 
-typedef void (*lrtFct)(
-        void *inputFIFOs[],
-        void *outputFIFOs[],
-        Param inParams[],
-        Param outParams[]);
+using lrtFct = void (*)(void **, void **, Param *, Param *);
 
 typedef enum {
     MEMALLOC_DUMMY,
@@ -88,10 +85,11 @@ typedef enum {
 } MemAllocType;
 
 typedef enum {
+    SCHEDULER_GREEDY,
     SCHEDULER_LIST,
     SCHEDULER_LIST_ON_THE_GO,
-    ROUND_ROBIN,
-    ROUND_ROBIN_SCATTERED
+    SCHEDULER_ROUND_ROBIN,
+    SCHEDULER_ROUND_ROBIN_SCATTERED
 } SchedulerType;
 
 typedef enum {
@@ -129,7 +127,7 @@ typedef struct {
 
 typedef struct {
     MemAllocType memAllocType;
-    void *memAllocStart;
+    int memAllocStart;
     int memAllocSize;
 
     SchedulerType schedulerType;
@@ -245,15 +243,9 @@ namespace Spider {
             int nInEdge, int nOutEdge,
             int nInParam);
 
-    PiSDFVertex *addHierVertex(
-            PiSDFGraph *graph,
-            const char *vertexName,
-            PiSDFGraph *subgraph,
-            int nInEdge, int nOutEdge,
-            int nInParam);
-
     PiSDFVertex *addSpecialVertex(
             PiSDFGraph *graph,
+            const char *vertexName,
             PiSDFSubType subType,
             int nInEdge, int nOutEdge,
             int nInParam);
@@ -275,43 +267,38 @@ namespace Spider {
             const char *name,
             int nInParam);
 
-    PiSDFParam *addStaticParam(
-            PiSDFGraph *graph,
-            const char *name,
-            const char *expr);
+    void addSubGraph(PiSDFVertex *hierVertex, PiSDFGraph *subgraph);
 
-    PiSDFParam *addStaticParam(
-            PiSDFGraph *graph,
-            const char *name,
-            Param value);
+    PiSDFParam *addStaticParam(PiSDFGraph *graph,
+                               const char *name,
+                               Param value);
 
-    PiSDFParam *addHeritedParam(
-            PiSDFGraph *graph,
-            const char *name,
-            int parentId);
+    PiSDFParam *addStaticDependentParam(PiSDFGraph *graph,
+                                        const char *name,
+                                        const char *expr,
+                                        std::initializer_list<PiSDFParam *> dependencies);
 
-    PiSDFParam *addDynamicParam(
-            PiSDFGraph *graph,
-            const char *name);
+    PiSDFParam *addInheritedParam(PiSDFGraph *graph,
+                                  const char *name,
+                                  int parentId);
 
-    PiSDFParam *addStaticDependentParam(
-            PiSDFGraph *graph,
-            const char *name,
-            const char *expr);
+    PiSDFParam *addDynamicParam(PiSDFGraph *graph,
+                                const char *name);
 
-    PiSDFParam *addDynamicDependentParam(
-            PiSDFGraph *graph,
-            const char *name,
-            const char *expr);
+    PiSDFParam *addDynamicDependentParam(PiSDFGraph *graph,
+                                         const char *name,
+                                         const char *expr,
+                                         std::initializer_list<PiSDFParam *> dependencies);
+
 
     PiSDFEdge *connect(
             PiSDFGraph *graph,
             PiSDFVertex *source, int sourcePortId, const char *production,
             PiSDFVertex *sink, int sinkPortId, const char *consumption,
             const char *delay,
-            PiSDFVertex *setter = 0,
-            PiSDFVertex *getter = 0,
-            PiSDFVertex *delayActor = 0,
+            PiSDFVertex *setter = nullptr,
+            PiSDFVertex *getter = nullptr,
+            PiSDFVertex *delayActor = nullptr,
             bool isDelayPersistent = false);
 
     void addInParam(PiSDFVertex *vertex, int ix, PiSDFParam *param);

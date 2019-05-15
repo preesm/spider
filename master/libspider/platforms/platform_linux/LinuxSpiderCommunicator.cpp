@@ -78,28 +78,28 @@ void LinuxSpiderCommunicator::setLrtCom(int lrtIx, int fIn, int fOut) {
     fOut_[lrtIx] = fOut;
 }
 
-void *LinuxSpiderCommunicator::ctrl_start_send(int lrtIx, int size) {
+void *LinuxSpiderCommunicator::ctrl_start_send(int lrtIx, std::uint64_t size) {
     if (curMsgSizeSend_)
         throw std::runtime_error("LrtCommunicator: Try to send a msg when previous one is not sent");
     curMsgSizeSend_ = size;
     return msgBufferSend_;
 }
 
-void LinuxSpiderCommunicator::ctrl_end_send(int lrtIx, int size) {
-    unsigned long s = curMsgSizeSend_;
+void LinuxSpiderCommunicator::ctrl_end_send(int lrtIx, std::uint64_t size) {
+    std::uint64_t s = curMsgSizeSend_;
     ssize_t l;
-    l = write(fOut_[lrtIx], &s, sizeof(unsigned long));
+    l = write(fOut_[lrtIx], &s, sizeof(std::uint64_t));
     l = write(fOut_[lrtIx], msgBufferSend_, curMsgSizeSend_);
     curMsgSizeSend_ = 0;
 }
 
-int LinuxSpiderCommunicator::ctrl_start_recv(int lrtIx, void **data) {
-    unsigned long size;
-    int nb = read(fIn_[lrtIx], &size, sizeof(unsigned long));
+std::uint64_t LinuxSpiderCommunicator::ctrl_start_recv(int lrtIx, void **data) {
+    std::uint64_t size;
+    int nb = read(fIn_[lrtIx], &size, sizeof(std::uint64_t));
 
     if (nb < 0) return 0;
 
-    if (size > (unsigned long) msgSizeMax_)
+    if (size > (std::uint64_t) msgSizeMax_)
         throw std::runtime_error("Msg too big\n");
 
     curMsgSizeRecv_ = size;

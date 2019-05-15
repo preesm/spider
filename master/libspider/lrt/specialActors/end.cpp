@@ -41,6 +41,10 @@
 #include "specialActors.h"
 
 void saEnd(void *inputFIFOs[], void */*outputFIFO*/[], Param inParams[], Param /*outParams*/[]) {
+#if VERBOSE
+    fprintf(stderr, "INFO: Entering End...\n");
+#endif
+
     bool isPersistent = inParams[1] == PISDF_DELAY_PERSISTENT;
     if (isPersistent) {
         Param nbTokens = inParams[0];
@@ -49,8 +53,9 @@ void saEnd(void *inputFIFOs[], void */*outputFIFO*/[], Param inParams[], Param /
             std::memcpy(fifoAddr, inputFIFOs[0], nbTokens);
         }
     }
+
 #if VERBOSE
-    printf("End\n");
+    fprintf(stderr, "INFO: Exiting End...\n");
 #endif
 }
 

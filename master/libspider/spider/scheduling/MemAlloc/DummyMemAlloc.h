@@ -46,15 +46,17 @@ public:
             MemAlloc(start, size),
             currentMem_(start) {}
 
-    ~DummyMemAlloc() {}
+    ~DummyMemAlloc() override = default;
 
-    virtual void reset();
+    void reset() override;
 
-    virtual void alloc(List<SRDAGVertex *> *listOfVertices);
+    void alloc(List<SRDAGVertex *> *listOfVertices) override;
 
-    virtual int getReservedAlloc(int size);
+    void alloc(LinkedList<SRDAGVertex *> *listOfVertices) override;
 
-    virtual int getMemUsed();
+    int getReservedAlloc(int size) override;
+
+    int getMemUsed() override;
 
 protected:
     int currentMem_;

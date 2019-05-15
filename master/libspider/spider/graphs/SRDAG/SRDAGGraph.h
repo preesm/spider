@@ -52,7 +52,7 @@ public:
 
     SRDAGVertex *addVertex(PiSDFVertex *reference, int refId, int iterId);
 
-    SRDAGVertex *addBroadcast(int nOutput, PiSDFVertex *reference = 0);
+    SRDAGVertex *addBroadcast(int nOutput, PiSDFVertex *reference = nullptr);
 
     SRDAGVertex *addFork(int nOutput);
 
@@ -116,20 +116,20 @@ inline SRDAGVertex *SRDAGGraph::getVertex(int ix) {
 }
 
 inline SRDAGVertex *SRDAGGraph::getVertexFromIx(int ix) {
-    for (int i = 0; i < vertices_.getN(); i++) {
+    for (int i = 0; i < vertices_.size(); i++) {
         if (vertices_[i]->getId() == ix)
             return vertices_[i];
     }
-    throw std::runtime_error("Vertex not found\n");
+    throwSpiderException("Vertex not found.");
 }
 
 /** Size getters */
 inline int SRDAGGraph::getNEdge() const {
-    return edges_.getN();
+    return edges_.size();
 }
 
 inline int SRDAGGraph::getNVertex() const {
-    return vertices_.getN();
+    return vertices_.size();
 }
 
 #endif/*SRDAG_GRAPH_H*/

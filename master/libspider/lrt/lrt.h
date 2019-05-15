@@ -40,33 +40,39 @@
 #ifndef LRT_H
 #define LRT_H
 
+#include <map>
 #include <tools/Stack.h>
 #include <platform.h>
+#include <SpiderCommunicator.h>
+#include <LrtCommunicator.h>
+#include <scheduling/PiSDFScheduleJob.h>
 
 #ifdef PAPI_AVAILABLE
-#include <map>
 #include "../papify/PapifyAction.h"
+
 #endif
 
 #define NB_MAX_ACTOR (200)
 
-typedef void (*lrtFct)(
-        void *inputFIFOs[],
-        void *outputFIFOs[],
-        Param inParams[],
-        Param outParams[]);
+using lrtFct = void (*)(void **, void **, Param *, Param *);
 
 class LRT {
 public:
-    LRT(int ix);
+    explicit LRT(int ix);
 
     virtual ~LRT();
 
-    void setFctTbl(const lrtFct fct[], int nFct);
+    void runUntilNoMoreJobs() {
+        run_ = true;
+        run(false);
+    };
 
-    void runUntilNoMoreJobs();
+    void runInfinitly() {
+        run_ = true;
+        run(true);
+    };
 
-    void runInfinitly();
+    inline void setFctTbl(const lrtFct fct[], int nFct);
 
     inline void setJobIx(int jobIx);
 
@@ -78,8 +84,12 @@ public:
 
     inline void setUsePapify();
 
+    inline void setCommunicators();
+
 #ifdef PAPI_AVAILABLE
+
     void addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction);
+
 #endif
 
 protected:
@@ -96,8 +106,6 @@ private:
 
     int tabBlkLrtIx[NB_MAX_ACTOR];
     int tabBlkLrtJobIx[NB_MAX_ACTOR];
-
-    void runReceivedJob(void *msg);
 
 #ifdef PAPI_AVAILABLE
     std::map<lrtFct, PapifyAction *> jobPapifyActions_;
@@ -118,7 +126,86 @@ private:
 
     int nb_iter;
 #endif
+
+    int nLrt_;
+    bool repeatJobQueue_;
+    bool freeze_;
+    bool traceEnabled_;
+    bool shouldBroadcast_;
+    std::vector<JobInfoMessage *> jobQueue_;
+    std::uint32_t jobQueueIndex_;
+    std::uint32_t jobQueueSize_;
+    std::int32_t lastJobID_;
+    SpiderCommunicator *spiderCommunicator_;
+    LrtCommunicator *lrtCommunicator_;
+    std::vector<std::int32_t> jobStamps_;
+
+    /**
+     * @brief Compare local job stamps of all LRT with given array.
+     * @param jobsToWait Array of job stamps to compare.
+     * @return true if all local values are superior or equal to jobsToWait, false else.
+     */
+    bool compareLRTJobStamps(std::int32_t *jobsToWait);
+
+    /**
+     * @brief Update local value of an LRT job stamp.
+     * @param lrtID     ID of the LRT to update value of.
+     * @param jobStamp  New local job stamp of LRT[lrtID].
+     */
+    void updateLRTJobStamp(std::int32_t lrtID, std::int32_t jobStamp);
+
+    /**
+     * @brief Send notification of current job stamp to an LRT
+     * @param lrtID        LRT to which we send the notification.
+     */
+    void notifyLRTJobStamp(int lrtID, bool notify);
+
+    /**
+     * @brief Run a scheduled job
+     * @param job Job to run
+     */
+    void runJob(JobInfoMessage *job);
+
+    /**
+     * @brief Fetch an LRT notification message
+     * @param message message to fetch
+     */
+    void handleLRTNotification(NotificationMessage &message);
+
+    /**
+     * @brief Fetch a JOB notification message
+     * @param message message to fetch
+     */
+    void handleJobNotification(NotificationMessage &message);
+
+    /**
+     * @brief Fetch a TRACE notification message
+     * @param message message to fetch
+     */
+    void handleTraceNotification(NotificationMessage &message);
+
+    /**
+     * @brief Check for received notifications and treat them if any.
+     * @param shouldWait Flag to wait for notification if none are available.
+     * @return
+     */
+    bool checkNotifications(bool shouldWait);
+
+    void run(bool loop);
+
+    /**
+     * @brief Clear the JOB queue
+     */
+    void clearJobQueue();
+
+
+    void broadcastJobStamp();
 };
+
+inline void LRT::setFctTbl(const lrtFct fct[], int nFct) {
+    fcts_ = fct;
+    nFct_ = nFct;
+}
 
 inline int LRT::getIx() const {
     return ix_;
@@ -133,11 +220,16 @@ inline void LRT::setJobIx(int jobIx) {
 }
 
 inline void LRT::rstJobIx() {
-    jobIx_ = 0;
+    jobIx_ = -1;
 }
 
 inline void LRT::setUsePapify() {
     usePapify_ = true;
+}
+
+inline void LRT::setCommunicators() {
+    lrtCommunicator_ = Platform::get()->getLrtCommunicator();
+    spiderCommunicator_ = Platform::get()->getSpiderCommunicator();
 }
 
 #endif/*LRT_H*/

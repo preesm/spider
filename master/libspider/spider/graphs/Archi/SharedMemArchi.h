@@ -48,29 +48,31 @@ class SharedMemArchi : public Archi {
 public:
     SharedMemArchi(int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct);
 
-    virtual ~SharedMemArchi();
+    ~SharedMemArchi() override;
 
-    virtual int getNPE() const;
+    int getNPE() const override;
 
-    virtual inline const char *getPEName(int ix) const;
+    int getNActivatedPE() const override;
 
-    virtual inline int getNPETypes() const;
+    inline const char *getPEName(int ix) const override;
 
-    virtual inline int getPEType(int ix) const;
+    inline int getNPETypes() const override;
 
-    virtual inline void desactivatePE(int pe);
+    inline int getPEType(int ix) const override;
 
-    virtual inline void activatePE(int pe);
+    inline void deactivatePE(int pe) override;
 
-    virtual inline bool isActivated(int pe) const;
+    inline void activatePE(int pe) override;
 
-    virtual inline Time getTimeSend(int src, int dest, int size) const;
+    inline bool isActivated(int pe) const override;
 
-    virtual inline Time getTimeRecv(int src, int dest, int size) const;
+    inline Time getTimeSend(int src, int dest, int size) const override;
 
-    virtual inline int getSpiderPeIx() const;
+    inline Time getTimeRecv(int src, int dest, int size) const override;
 
-    virtual inline MappingTimeFct getMappingTimeFct() const;
+    inline int getSpiderPeIx() const override;
+
+    inline MappingTimeFct getMappingTimeFct() const override;
 
     inline void setPETypeSendSpeed(int type, float a, float b);
 
@@ -80,7 +82,7 @@ public:
 
     inline void setPEType(int pe, int type);
 
-    virtual inline int getNPEforType(int type);
+    inline int getNPEforType(int type) override;
 
 private:
     int nPE_;
@@ -106,6 +108,14 @@ inline int SharedMemArchi::getNPETypes() const {
     return nPEType_;
 }
 
+inline int SharedMemArchi::getNActivatedPE() const {
+    int nActivated = 0;
+    for (int i = 0; i < nPE_; ++i) {
+        nActivated += peActive_[i];
+    }
+    return nActivated;
+}
+
 inline int SharedMemArchi::getPEType(int ix) const {
     return peType_[ix];
 }
@@ -129,29 +139,23 @@ inline void SharedMemArchi::setPETypeRecvSpeed(int type, float a, float b) {
 }
 
 inline void SharedMemArchi::setName(int pe, const char *name) {
-    int size = strlen(name) + 1;
-    char *newName = CREATE_MUL(ARCHI_STACK, size, char);
-    peName_[pe] = newName;
-    strcpy(newName, name);
+    auto size = strlen(name) + 1;
+    peName_[pe] = CREATE_MUL(ARCHI_STACK, size, char);
+    strcpy(peName_[pe], name);
 }
 
 inline void SharedMemArchi::setPEType(int pe, int type) {
     peType_[pe] = type;
-
     nPEperType_[type]++;
 }
 
 
-inline void SharedMemArchi::desactivatePE(int pe) {
-    if (peActive_[pe]) {
-        peActive_[pe] = false;
-    }
+inline void SharedMemArchi::deactivatePE(int pe) {
+    peActive_[pe] = false;
 }
 
 inline void SharedMemArchi::activatePE(int pe) {
-    if (!peActive_[pe]) {
-        peActive_[pe] = true;
-    }
+    peActive_[pe] = true;
 }
 
 inline bool SharedMemArchi::isActivated(int pe) const {

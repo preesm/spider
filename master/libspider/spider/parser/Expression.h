@@ -38,6 +38,7 @@
 #define PARSER_EXPRESSION_H
 
 #include <graphs/PiSDF/PiSDFParam.h>
+//#include "spider.h"
 
 struct transfoJob;
 
@@ -47,13 +48,17 @@ public:
 
     virtual ~Expression();
 
-    int evaluate(const PiSDFParam *const *paramList, transfoJob *job, bool *ok = 0) const;
+    Param evaluate(const PiSDFParam *const *paramList, transfoJob *job, bool *ok = nullptr) const;
 
-    int evaluate(const int *vertexParamValues, int nParam) const;
+    Param evaluate(const Param *vertexParamValues, int nParam) const;
+
+    Param evaluate() const;
 
     void toString(
             const PiSDFParam *const *params, int nParam,
-            char *out, int outSizeMax);
+            char *out, size_t outSizeMax);
+
+    inline const char *toString();
 
 private:
     typedef enum {
@@ -79,10 +84,14 @@ private:
         OpType opType;
         int value;
         int paramIx;
+        PiSDFParam *param = nullptr;
     } Token;
 
+    std::string stringExpr_;
     Token *stack_;
     int nElt_;
+    bool isStatic_;
+    Param value_;
 
     bool getNextToken(
             Token *token,
@@ -90,6 +99,11 @@ private:
             const PiSDFParam *const *params, int nParam);
 
     int evaluateNTokens(const char *expr);
+
 };
+
+inline const char *Expression::toString() {
+    return stringExpr_.c_str();
+}
 
 #endif/*PARSER_EXPRESSION_H*/

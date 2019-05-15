@@ -37,6 +37,10 @@
 #ifndef ACTORS_H
 #define ACTORS_H
 
+#include <spider.h>
+
+void initActors();
+
 void cfg(Param size, Param* Nc, Param* Nr, Param* n1, Param* n2);
 
 void src(Param size, float *out);

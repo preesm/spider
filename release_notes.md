@@ -7,6 +7,7 @@ Spider Changelog
 ### New Feature
 
 ### Changes
+* update app folder with dac fft and common cmake modules;
 
 ### Bug fix
 

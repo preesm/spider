@@ -34,8 +34,6 @@
  * knowledge of the CeCILL-C license and that you accept its terms.         *
  ****************************************************************************/
 
-#include <platform.h>
-
 #include "actors.h"
 #include "data_sp.h"
 
@@ -138,8 +136,8 @@ float snr(float* sig, float* ref, int n){
 	rms_sig  = sqrt(rms_sig/n);
 	rms_diff = sqrt(rms_diff/n);
 
-//	printf("RMS Signal : %f\n", rms(sig, n));
-//	printf("RMS Noise : %f\n", rms(diff, n));
+	printf("RMS Signal : %f\n", rms_sig);
+	printf("RMS Noise : %f\n", rms_diff);
 
 	return 20*log(rms_sig/rms_diff);
 }
@@ -217,7 +215,7 @@ void fft(Param size, Param n, float* in, float* out){
 		w = gen_twi256;
 		break;
 	default:
-		printf("Error no twiddles computed for %d\n", size);
+		printf("Error no twiddles computed for %ld\n", size);
 		return;
 	}
 

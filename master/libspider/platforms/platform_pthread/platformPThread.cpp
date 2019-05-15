@@ -124,10 +124,22 @@ void *lrtPthreadRunner(void *args) {
 #ifdef PAPI_AVAILABLE
     /** Enable PAPIFY if needed to */
     if (lrtInfo->usePapify) {
-        auto papifyJobInfo = lrtInfo->platform->getPapifyInfo();
+        /*auto papifyJobInfo = lrtInfo->platform->getPapifyInfo();
         lrtInfo->lrt->setUsePapify();
         for (auto &mapEntry : papifyJobInfo) {
             lrtInfo->lrt->addPapifyJobInfo(mapEntry.first, new PapifyAction(*mapEntry.second, lrtInfo->lrtID));
+        }*/
+        auto papifyJobInfo = lrtInfo->platform->getPapifyInfo();
+        lrtInfo->lrt->setUsePapify();
+        std::map<lrtFct, std::map<const char *, PapifyAction *>>::iterator it;
+        std::map<const char *, PapifyAction*>::iterator itInner;
+        for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
+            for (itInner = it->second.begin(); itInner != it->second.end(); ++itInner) {
+                std::string lrtName = std::string("LRT_") + std::to_string(lrtInfo->lrtID);
+                if(!strcmp(lrtName.c_str(), itInner->first)){
+                    lrtInfo->lrt->addPapifyJobInfo(it->first, new PapifyAction(*itInner->second, itInner->first));
+                }
+            }
         }
     }
 #endif
@@ -226,17 +238,22 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
         // Register Papify actor configuration
         if (config.usePapify) {
-            std::map<lrtFct, PapifyConfig *>::iterator it;
+            std::map<lrtFct, std::map<const char *, PapifyConfig*>>::iterator it;
+            std::map<const char *, PapifyConfig*>::iterator itInner;
             for (it = config.papifyJobInfo.begin(); it != config.papifyJobInfo.end(); ++it) {
-                PapifyConfig *papifyConfig = it->second;
-                auto *papifyAction = new PapifyAction(
-                        /* componentName */   papifyConfig->peType_,
-                        /* PEName */          papifyConfig->peID_,
-                        /* actorName */       papifyConfig->actorName_,
-                        /* num_events */      papifyConfig->eventSize_,
-                        /* all_events_name */ papifyConfig->monitoredEvents_,
-                        /* eventSet_Id */     papifyConfig->eventSetID_, papifyConfig->isTiming_, papifyEventLib);
-                papifyJobInfo.insert(std::make_pair(it->first, papifyAction));
+                for (itInner = it->second.begin(); itInner != it->second.end(); ++itInner) {
+                    PapifyConfig *papifyConfig = itInner->second;
+                    PapifyAction *papifyAction = new PapifyAction(
+                            /* componentName */   papifyConfig->peType_,
+                            /* PEName */          papifyConfig->peID_,
+                            /* actorName */       papifyConfig->actorName_,
+                            /* num_events */      papifyConfig->eventSize_,
+                            /* all_events_name */ papifyConfig->monitoredEvents_,
+                            /* eventSet_Id */     papifyConfig->eventSetID_, papifyConfig->isTiming_, papifyEventLib);
+                    papifyActorInfo.insert(std::make_pair(itInner->first, papifyAction));
+                }
+                papifyJobInfo.insert(std::make_pair(it->first, papifyActorInfo));
+                papifyActorInfo.clear();
             }
         }
     }
@@ -306,11 +323,19 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 #ifdef PAPI_AVAILABLE
     if (config.usePapify) {
         lrt_[0]->setUsePapify();
-        std::map<lrtFct, PapifyAction *>::iterator it;
+        std::map<lrtFct, std::map<const char*, PapifyAction *>>::iterator it;
+        std::map<const char *, PapifyAction*>::iterator itInner;
+        const char * lrtName = std::string("LRT_0").c_str();
         for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
-            lrt_[0]->addPapifyJobInfo(it->first, it->second);
+            for (itInner = it->second.begin(); itInner != it->second.end(); ++itInner) {
+                if(!strcmp(lrtName, itInner->first)){
+                    lrt_[0]->addPapifyJobInfo(it->first, new PapifyAction(*itInner->second, itInner->first));
+                }
+            }
         }
     }
+
+
 #endif
 
     // Wait for all LRTs to be ready to start
@@ -379,9 +404,9 @@ PlatformPThread::~PlatformPThread() {
 #ifdef PAPI_AVAILABLE
     /** Free Papify information */
     if (!papifyJobInfo.empty()) {
-        std::map<lrtFct, PapifyAction *>::iterator it;
+        // std::map<lrtFct, std::map<const char *, PapifyAction *>>::iterator it;
         // Delete the event lib manager
-        delete papifyJobInfo.begin()->second->getPapifyEventLib();
+        delete papifyJobInfo.begin()->second.begin()->second->getPapifyEventLib();
     }
 #endif
 

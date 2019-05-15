@@ -117,7 +117,7 @@ typedef struct {
 
 typedef struct {
     const char *peType_;
-    long long peID_;
+    const char *peID_;
     const char *actorName_;
     int eventSize_;
     std::vector<const char *> monitoredEvents_;
@@ -143,7 +143,7 @@ typedef struct {
     bool traceEnabled;
     bool usePapify;
 
-    std::map<lrtFct, PapifyConfig *> papifyJobInfo;
+    std::map<lrtFct, std::map<const char *, PapifyConfig*>> papifyJobInfo;
 
     PlatformConfig platform;
 } SpiderConfig;

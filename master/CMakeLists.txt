@@ -154,7 +154,7 @@ include_directories(
         ${PAPI_INCLUDE_DIRS}
         ${PTHREADDIR}/include
         ${STDTHREADDIR}
-        .:libspider/
+        ./libspider/
         ./libspider/common
         ./libspider/lrt
         ./libspider/platforms/platform_pthread

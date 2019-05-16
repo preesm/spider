@@ -70,15 +70,3 @@ std::int32_t PThreadLrtCommunicator::push_job_message(JobInfoMessage **message) 
 void PThreadLrtCommunicator::pop_job_message(JobInfoMessage **msg, std::int32_t id) {
     spider2LrtJobQueue_->pop(msg, id);
 }
-
-void PThreadLrtCommunicator::data_end_send(Fifo */*f*/) {
-    // Nothing to do
-}
-
-void *PThreadLrtCommunicator::data_recv(std::int32_t alloc) {
-    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (alloc));
-}
-
-void *PThreadLrtCommunicator::data_start_send(std::int32_t alloc) {
-    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (alloc));
-}

@@ -79,7 +79,7 @@ PiSDFVertex::PiSDFVertex(
     memset(outParams_, 0, nOutParam * sizeof(PiSDFParam *));
 
     nPeMax_ = Spider::getArchi()->getNPE();
-    nPeTypeMax_ = Spider::getArchi()->getNPETypes();
+    nPeTypeMax_ = Spider::getArchi()->getNPEType();
 
     constraints_ = CREATE_MUL(PISDF_STACK, nPeMax_, bool);
 

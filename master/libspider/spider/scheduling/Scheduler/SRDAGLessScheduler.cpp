@@ -84,7 +84,7 @@ void SRDAGLessScheduler::replaceInputIfWithBroadcast(PiSDFGraph *const graph) {
             broadcast->connectInEdge(0, edge);
             graph->connect(broadcast, 0, std::to_string(totalCons).c_str(),
                            snkVertex, edgeSnkIx, edge->getConsExpr()->toString(),
-                           "0", nullptr, nullptr, nullptr, false);
+                           "0", nullptr, nullptr, false);
             nVertices_++;
         }
     }
@@ -259,16 +259,16 @@ void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
     Time bestEndTime = UINT64_MAX;
     Time bestWaitTime = 0;
     auto *archi = Spider::getArchi();
-    for (int pe = 0; pe < archi->getNPE(); ++pe) {
+    for (std::uint32_t pe = 0; pe < archi->getNPE(); ++pe) {
         /** Skip disabled processing elements **/
-        if (!archi->isActivated(pe)) {
+        if (!archi->getPEFromSpiderID(pe)->isEnabled()) {
             continue;
         }
         /** Search for best candidate **/
         if (vertex->canExecuteOn(pe)) {
             Time startTime = std::max(schedule_->getReadyTime(pe), minimumStartTime);
             Time waitTime = startTime - schedule_->getReadyTime(pe);
-            auto peType = archi->getPEType(pe);
+            auto peType = archi->getPEFromSpiderID(pe)->getHardwareType();
             Time execTime = vertex->getTimingOnPEType(peType);
             // TODO: add communication time in the balance
             Time endTime = startTime + execTime;
@@ -459,16 +459,16 @@ void SRDAGLessScheduler::mapVertexRelaxed(PiSDFVertex *vertex) {
     Time bestEndTime = UINT64_MAX;
     Time bestWaitTime = 0;
     auto *archi = Spider::getArchi();
-    for (int pe = 0; pe < archi->getNPE(); ++pe) {
+    for (std::uint32_t pe = 0; pe < archi->getNPE(); ++pe) {
         /** Skip disabled processing elements **/
-        if (!archi->isActivated(pe)) {
+        if (!archi->getPEFromSpiderID(pe)->isEnabled()) {
             continue;
         }
         /** Search for best candidate **/
         if (vertex->canExecuteOn(pe)) {
             Time startTime = std::max(schedule_->getReadyTime(pe), minimumStartTime);
             Time waitTime = startTime - schedule_->getReadyTime(pe);
-            auto peType = archi->getPEType(pe);
+            auto peType = archi->getPEFromSpiderID(pe)->getHardwareType();
             Time execTime = vertex->getTimingOnPEType(peType);
             // TODO: add communication time in the balance
             Time endTime = startTime + execTime;

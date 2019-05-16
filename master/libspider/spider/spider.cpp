@@ -65,6 +65,7 @@
 #include <Logger.h>
 #include <scheduling/MemAlloc/DummyPiSDFMemAlloc.h>
 #include <scheduling/Scheduler/GreedyScheduler.h>
+#include <graphs/Archi/Archi.h>
 
 #include "platformPThread.h"
 
@@ -118,7 +119,14 @@ static bool isGraphStatic(PiSDFGraph *const graph) {
     return isStatic;
 }
 
-void Spider::init(SpiderConfig &cfg) {
+void Spider::initStacks(SpiderStackConfig &cfg) {
+    StackMonitor::initStack(ARCHI_STACK, cfg.archiStack);
+    StackMonitor::initStack(PISDF_STACK, cfg.pisdfStack);
+    StackMonitor::initStack(SRDAG_STACK, cfg.srdagStack);
+    StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
+}
+
+void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     Logger::initializeLogger();
 
     setGraphOptim(cfg.useGraphOptim);
@@ -130,55 +138,12 @@ void Spider::init(SpiderConfig &cfg) {
     setTraceEnabled(cfg.traceEnabled);
 
     //TODO: add a switch between the different platform
-    platform_ = new PlatformPThread(cfg);
+    platform_ = new PlatformPThread(cfg, stackConfig);
 
     if (traceEnabled_) {
         Launcher::get()->sendEnableTrace(-1);
     }
 //    Logger::enable(LOG_JOB);
-}
-
-extern int stopThreads;
-
-static std::int32_t computeTotalNBodies(PiSDFGraph *g) {
-    std::int32_t nBodies = g->getNBody();
-    for (auto i = 0; i < g->getNBody(); ++i) {
-        if (g->getBody(i)->isHierarchical()) {
-            nBodies += computeTotalNBodies(g->getBody(i)->getSubGraph());
-        }
-    }
-    return nBodies;
-}
-
-static std::int32_t computeTotalNEdges(PiSDFGraph *g) {
-    std::int32_t nEdges = g->getNEdge();
-    for (auto i = 0; i < g->getNBody(); ++i) {
-        if (g->getBody(i)->isHierarchical()) {
-            nEdges += computeTotalNEdges(g->getBody(i)->getSubGraph());
-        }
-    }
-    return nEdges;
-}
-
-std::int32_t computeNHierarchicals(PiSDFGraph *g) {
-    std::int32_t nBodies = 0;
-    for (auto i = 0; i < g->getNBody(); ++i) {
-        if (g->getBody(i)->isHierarchical()) {
-            nBodies += 1;
-            nBodies += computeNHierarchicals(g->getBody(i)->getSubGraph());
-        }
-    }
-    return nBodies;
-}
-
-std::int32_t getNLevels(PiSDFGraph *g, std::int32_t currentDepth) {
-    std::int32_t nLevels = currentDepth;
-    for (auto i = 0; i < g->getNBody(); ++i) {
-        if (g->getBody(i)->isHierarchical()) {
-            nLevels = std::max(nLevels, getNLevels(g->getBody(i)->getSubGraph(), currentDepth + 1));
-        }
-    }
-    return nLevels;
 }
 
 void Spider::iterate() {
@@ -187,7 +152,7 @@ void Spider::iterate() {
         if (!srdag_) {
             /* On first iteration, the schedule is created */
             srdag_ = new SRDAGGraph();
-            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_, nullptr);
+            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
         }
         /* Run the schedule */
         schedule_->executeAndRun();
@@ -271,10 +236,36 @@ void Spider::clean() {
         schedule_->~SRDAGSchedule();
         StackMonitor::free(TRANSFO_STACK, schedule_);
     }
+
+    if (archi_) {
+        archi_->~Archi();
+        StackMonitor::free(ARCHI_STACK, archi_);
+    }
+
+    if (pisdf_) {
+        pisdf_->~PiSDFGraph();
+        StackMonitor::free(PISDF_STACK, pisdf_);
+        StackMonitor::freeAll(PISDF_STACK);
+    }
+
     delete srdag_;
     delete memAlloc_;
     delete scheduler_;
     delete platform_;
+
+    /* === Checking stacks state === */
+
+    StackMonitor::freeAll(ARCHI_STACK);
+    StackMonitor::freeAll(TRANSFO_STACK);
+    StackMonitor::freeAll(SRDAG_STACK);
+    StackMonitor::freeAll(PISDF_STACK);
+
+    /* === Cleaning the Stacks === */
+
+    StackMonitor::clean(ARCHI_STACK);
+    StackMonitor::clean(TRANSFO_STACK);
+    StackMonitor::clean(SRDAG_STACK);
+    StackMonitor::clean(PISDF_STACK);
 }
 
 
@@ -384,7 +375,7 @@ void Spider::printActorsStat(ExecutionStat *stat) {
     Platform::get()->fprintf(stdout, "\t%15s:\n", "Actors");
     for (int j = 0; j < stat->nPiSDFActor; j++) {
         Platform::get()->fprintf(stdout, "\t%15s:", stat->actors[j]->getName());
-        for (int k = 0; k < archi_->getNPETypes(); k++) {
+        for (std::uint32_t k = 0; k < archi_->getNPEType(); k++) {
             if (stat->actorIterations[j][k]) {
                 Platform::get()->fprintf(stdout, "\t%lld (x%lld)",
                                          stat->actorTimes[j][k] / stat->actorIterations[j][k],
@@ -453,7 +444,7 @@ static void printGantt_SRDAGVertex(FILE *ganttFile, FILE *latexFile, Archi *arch
             start,
             end,
             name, vertex->getIterId(), vertex->getRefId(),
-            archi->getPEName(lrtIx),
+            archi->getPEFromSpiderID(lrtIx)->getName().c_str(),
             regenerateColor(i++),
             lrtIx);
 
@@ -519,7 +510,7 @@ static void writeGanttForVertex(TraceMessage *message, FILE *ganttFile, FILE *la
     switch (vertex->getType()) {
         case SRDAG_NORMAL: {
             int i;
-            int lrtType = archi_->getPEType(message->getLRTID());
+            auto lrtType = archi_->getPEFromSpiderID(message->getLRTID())->getHardwareType();
             auto *pisdfVertexRef = vertex->getReference();
             // Update execution time of the PiSDF actor
             auto timingOnPe = std::to_string(execTime);
@@ -582,7 +573,8 @@ static void writeGanttForSpiderTasks(TraceMessage *message, FILE *ganttFile, FIL
     Platform::get()->fprintf(ganttFile, "\t\tend=\"%" PRIu64"\"\n", endTimeScaled);
     Platform::get()->fprintf(ganttFile, "\t\ttitle=\"%s\"\n",
                              TimeMonitor::getTaskName((TraceSpiderType) message->getSpiderTask()));
-    Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n", archi_->getPEName(message->getLRTID()));
+    Platform::get()->fprintf(ganttFile, "\t\tmapping=\"%s\"\n",
+                             archi_->getPEFromSpiderID(message->getLRTID())->getName().c_str());
     Platform::get()->fprintf(ganttFile, "\t\tcolor=\"%s\"\n", regenerateColor(i++));
     Platform::get()->fprintf(ganttFile, "\t\t>Step_%d.</event>\n", message->getSpiderTask());
 
@@ -607,7 +599,7 @@ static void writeGanttForSpiderTasks(TraceMessage *message, FILE *ganttFile, FIL
     auto latexScaling = 1000.f;
     Platform::get()->fprintf(latexFile, "%f,", startTimeScaled / latexScaling); /* Start */
     Platform::get()->fprintf(latexFile, "%f,", endTimeScaled / latexScaling); /* Duration */
-    Platform::get()->fprintf(latexFile, "%d,", archi_->getSpiderPeIx()); /* Core index */
+    Platform::get()->fprintf(latexFile, "%" PRIu32",", archi_->getSpiderGRTID()); /* Core index */
     Platform::get()->fprintf(latexFile, "colorSched\n", 15); /* Color */
 }
 
@@ -677,185 +669,3 @@ void Spider::printGantt(const char *ganttPath, const char *latexPath, ExecutionS
 
     stat->execTime = stat->globalEndTime - stat->schedTime;
 }
-
-PiSDFGraph *Spider::createGraph(
-        int nEdges,
-        int nParams,
-        int nInIfs,
-        int nOutIfs,
-        int nConfigs,
-        int nBodies) {
-    return CREATE(PISDF_STACK, PiSDFGraph)(
-            /*Edges*/    nEdges,
-            /*Params*/   nParams,
-            /*InputIf*/  nInIfs,
-            /*OutputIf*/ nOutIfs,
-            /*Config*/   nConfigs,
-            /*Body*/     nBodies);
-}
-
-PiSDFVertex *Spider::addBodyVertex(
-        PiSDFGraph *graph,
-        const char *vertexName, int fctId,
-        int nInEdge, int nOutEdge,
-        int nInParam) {
-    return graph->addBodyVertex(
-            vertexName,
-            fctId,
-            nInEdge,
-            nOutEdge,
-            nInParam);
-}
-
-void Spider::addSubGraph(PiSDFVertex *hierVertex, PiSDFGraph *subgraph) {
-    hierVertex->setSubGraph(subgraph);
-    subgraph->setParentVertex(hierVertex);
-}
-
-
-PiSDFVertex *Spider::addSpecialVertex(
-        PiSDFGraph *graph,
-        const char *vertexName,
-        PiSDFSubType subType,
-        int nInEdge, int nOutEdge,
-        int nInParam) {
-    return graph->addBodyVertex(
-            vertexName,
-            subType,
-            nInEdge,
-            nOutEdge,
-            nInParam);
-}
-
-PiSDFVertex *Spider::addConfigVertex(
-        PiSDFGraph *graph,
-        const char *vertexName, int fctId,
-        PiSDFSubType subType,
-        int nInEdge, int nOutEdge,
-        int nInParam, int nOutParam) {
-    return graph->addConfigVertex(
-            vertexName,
-            fctId,
-            subType,
-            nInEdge,
-            nOutEdge,
-            nInParam,
-            nOutParam);
-}
-
-PiSDFVertex *Spider::addInputIf(
-        PiSDFGraph *graph,
-        const char *name,
-        int nInParam) {
-    return graph->addInputIf(
-            name,
-            nInParam);
-}
-
-PiSDFVertex *Spider::addOutputIf(
-        PiSDFGraph *graph,
-        const char *name,
-        int nInParam) {
-    return graph->addOutputIf(
-            name,
-            nInParam);
-}
-
-PiSDFEdge *Spider::connect(
-        PiSDFGraph *graph,
-        PiSDFVertex *source, int sourcePortId, const char *production,
-        PiSDFVertex *sink, int sinkPortId, const char *consumption,
-        const char *delay, PiSDFVertex *setter, PiSDFVertex *getter, PiSDFVertex *delayActor, bool isDelayPersistent) {
-    return graph->connect(
-            source, sourcePortId, production,
-            sink, sinkPortId, consumption,
-            delay, setter, getter, delayActor, isDelayPersistent);
-}
-
-void Spider::addInParam(PiSDFVertex *vertex, int ix, PiSDFParam *param) {
-    vertex->addInParam(ix, param);
-}
-
-void Spider::addOutParam(PiSDFVertex *vertex, int ix, PiSDFParam *param) {
-    vertex->addOutParam(ix, param);
-}
-
-void Spider::setTimingOnType(PiSDFVertex *vertex, int peType, const char *timing) {
-    vertex->setTimingOnType(peType, timing);
-}
-
-void Spider::isExecutableOnAllPE(PiSDFVertex *vertex) {
-    vertex->isExecutableOnAllPE();
-}
-
-void Spider::isExecutableOnPE(PiSDFVertex *vertex, int pe) {
-    vertex->isExecutableOnPE(pe);
-}
-
-void Spider::isExecutableOnPEType(PiSDFVertex *vertex, int peType) {
-    for (int pe = 0; pe < archi_->getNPE(); pe++) {
-        if (archi_->getPEType(pe) == peType) vertex->isExecutableOnPE(pe);
-    }
-}
-
-void Spider::cleanPiSDF() {
-    if (pisdf_) {
-        pisdf_->~PiSDFGraph();
-        StackMonitor::free(PISDF_STACK, pisdf_);
-        StackMonitor::freeAll(PISDF_STACK);
-    }
-}
-
-PiSDFParam *Spider::addStaticParam(PiSDFGraph *graph,
-                                   const char *name,
-                                   Param value) {
-    auto *param = CREATE(PISDF_STACK, PiSDFParam)(name, std::to_string(value).c_str(), PISDF_PARAM_STATIC, graph,
-                                                  graph->getNParam());
-    param->setValue(value);
-    graph->addPiSDFParam(param);
-    return param;
-}
-
-
-PiSDFParam *Spider::addInheritedParam(PiSDFGraph *graph,
-                                      const char *name,
-                                      int parentId) {
-    auto *parentVertex = graph->getParentVertex();
-    auto *heritedParam = (PiSDFParam *) parentVertex->getInParam(parentId);
-    auto *param = CREATE(PISDF_STACK, PiSDFParam)(name, "", PISDF_PARAM_HERITED, graph, graph->getNParam());
-    param->setInheritedParameter(heritedParam);
-    graph->addPiSDFParam(param);
-    return param;
-}
-
-PiSDFParam *Spider::addDynamicParam(PiSDFGraph *graph,
-                                    const char *name) {
-    auto *param = CREATE(PISDF_STACK, PiSDFParam)(name, "", PISDF_PARAM_DYNAMIC, graph, graph->getNParam());
-    graph->addPiSDFParam(param);
-    return param;
-}
-
-static inline PiSDFParam *addDependentParam(PiSDFGraph *graph,
-                                            const char *name,
-                                            const char *expr,
-                                            std::initializer_list<PiSDFParam *> dependencies,
-                                            PiSDFParamType type) {
-    auto *param = CREATE(PISDF_STACK, PiSDFParam)(name, expr, type, graph, graph->getNParam(), dependencies);
-    graph->addPiSDFParam(param);
-    return param;
-}
-
-PiSDFParam *Spider::addStaticDependentParam(PiSDFGraph *graph,
-                                            const char *name,
-                                            const char *expr,
-                                            std::initializer_list<PiSDFParam *> dependencies) {
-    return addDependentParam(graph, name, expr, dependencies, PISDF_PARAM_STATIC);
-}
-
-PiSDFParam *Spider::addDynamicDependentParam(PiSDFGraph *graph,
-                                             const char *name,
-                                             const char *expr,
-                                             std::initializer_list<PiSDFParam *> dependencies) {
-    return addDependentParam(graph, name, expr, dependencies, PISDF_PARAM_DYNAMIC);
-}
-

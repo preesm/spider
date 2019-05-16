@@ -6,7 +6,7 @@
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
+ * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -37,46 +37,281 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef ARCHI_H
-#define ARCHI_H
+#ifndef SPIDER_ARCHI_H
+#define SPIDER_ARCHI_H
 
-#include <platform.h>
+#include "ArchiMemUnit.h"
+#include "ArchiPE.h"
 
-using MappingTimeFct = Time (*)(int, int);
 
 class Archi {
-protected:
-    Archi() = default;
-
-    virtual ~Archi() = default;
-
 public:
 
-    virtual int getNPE() const = 0;
+    Archi(std::uint32_t nPE, std::uint32_t nPEType, std::uint32_t nMemoryUnit);
 
-    virtual int getNActivatedPE() const = 0;
+    ~Archi();
 
-    virtual const char *getPEName(int ix) const = 0;
+    /* === Methods === */
 
-    virtual int getNPETypes() const = 0;
+    /**
+     * @brief Add a PE to the architecture (does not change @refitem nPE_).
+     * @param pe Pointer to the PE to add.
+     */
+    inline void addPE(PE *pe);
 
-    virtual int getPEType(int ix) const = 0;
+    /**
+     * @brief Add a MemoryUnit to the architecture (does not change @refitem nMemoryUnit_).
+     * @param memoryUnit Pointer to the MemoryUnit to add.
+     */
+    inline void addMemoryUnit(MemoryUnit *memoryUnit);
 
-    virtual void deactivatePE(int pe) = 0;
+    /**
+     * @brief Activate a PE.
+     * @param pe Pointer to the PE to be activate.
+     */
+    inline void activatePE(PE *pe) const;
 
-    virtual void activatePE(int pe) = 0;
+    /**
+     * @brief Deactivate a PE.
+     * @param pe Pointer to the PE to be deactivated.
+     */
+    inline void deactivatePE(PE *pe) const;
 
-    virtual bool isActivated(int pe) const = 0;
+    /* === Setters === */
 
-    virtual Time getTimeSend(int src, int dest, int size) const = 0;
+    /**
+     * @brief Set the ID of the GRT PE.
+     * @remark The method convert the virtual id to spider id for internal use.
+     * @param id Virtual ID of the GRT PE (i.e S-LAM user ID)
+     */
+    inline void setSpiderGRTID(std::uint32_t id);
 
-    virtual Time getTimeRecv(int src, int dest, int size) const = 0;
+    /* === Getters === */
 
-    virtual int getSpiderPeIx() const = 0;
+    /**
+     * @brief Get the total number of PE (activated + deactivated).
+     * @return total number of PE
+     */
+    inline std::uint32_t getNPE() const;
 
-    virtual MappingTimeFct getMappingTimeFct() const = 0;
+    /**
+     * @brief Get the total number of LRT (not necessarly equals to @refitem getNPE()).
+     * @return number of LRT
+     */
+    inline std::uint32_t getNLRT() const;
 
-    virtual int getNPEforType(int type) = 0;
+    /**
+     * @brief Get the number of memory unit of the architecture.
+     * @return
+     */
+    inline std::uint32_t getNMemoryUnit() const;
+
+    /**
+     * @brief Get the number of different PE type (hardware types).
+     * @return number of PE types.
+     */
+    inline std::uint32_t getNPEType() const;
+
+    /**
+     * @brief Retrieve the number of PE(s) for a given HardwareType (@refitem PE::getHardwareType()).
+     * @param HWType Hardware type.
+     * @return number of PE of HardwareType HWType
+     */
+    inline std::uint32_t getNPEForHWType(std::uint32_t HWType) const;
+
+    /**
+     * @brief Get the number of currently activated PEs (inferior or equal to @refitem nPE_).
+     * @return number of activated PEs.
+     */
+    inline std::uint32_t getNActivatedPE() const;
+
+    /**
+     * @brief Retrieve a PE from its Spider ID (fastest method).
+     * @remark No boundaries check is perform for the id.
+     * @param id Spider id of the PE to retrieve.
+     * @return PE corresponding to the spider id.
+     */
+    inline PE *getPEFromSpiderID(std::uint32_t id) const;
+
+    /**
+     * @brief Retrieve a PE from its virtual ID.
+     * @param id  Virtual ID of the PE (i.e S-LAM user id).
+     * @return PE corresponding to the virtual id
+     * @throws out of bound exception if virtual id does not exist
+     */
+    inline PE *getPEFromVirtualID(std::uint32_t id) const;
+
+    /**
+     * @brief Retrieve a PE from its hardware ID.
+     * @remark This method may not be reliable in heterogeneous architecture with multiple hardware core 0 for instance.
+     * @param id  Hardware ID of the PE (i.e S-LAM user id).
+     * @return PE corresponding to the hardware id
+     * @throws out of bound exception if hardware id does not exist
+     */
+    inline PE *getPEFromHardwareID(std::uint32_t id) const;
+
+    /**
+     * @brief Retrieve first PE matching with given name.
+     * @param name  Name of the PE to find.
+     * @return first PE with name matching given name, nullptr else.
+     */
+    PE *getPEFromName(const std::string &name) const;
+
+    /**
+     * @brief Retrieve PE array containing all PEs.
+     * @remark PE array is indexed by spider id, not virtual id.
+     * @return PE array.
+     */
+    inline PE **getPEArray() const;
+
+    /**
+     * @brief Retrieve a MemoryUnit from its id.
+     * @remark MemoryUnit ids are generated in order of creation.
+     * @param id ID of the memory unit to retrieve.
+     * @return MemoryUnit of corresponding id.
+     */
+    inline MemoryUnit *getMemoryUnit(std::uint32_t id) const;
+
+    /**
+     * @brief Get spider GRT spider id.
+     * @remark The id returned by this method is NOT the same as the one passed in @refitem setSpiderGRTID.
+     *         It corresponds to the translated virtual -> spider id.
+     * @return spider id of the GRT.
+     */
+    inline std::uint32_t getSpiderGRTID() const;
+
+    /**
+     * @brief Return the routine that computes the predicted time needed for scheduling.
+     * @return ScheduleTimeRoutine function.
+     */
+    inline ScheduleTimeRoutine getScheduleTimeRoutine() const;
+
+private:
+
+    /* === Members === */
+
+    std::uint32_t nPE_ = 0;
+    std::uint32_t nLRT_ = 0;
+    std::uint32_t nMemUnit_ = 0;
+    std::uint32_t nPEType_ = 0;
+    mutable std::uint32_t nActivatedPE_ = 0;
+    ScheduleTimeRoutine scheduleTimeRoutine_;
+    std::uint32_t spiderGRTID_ = 0;
+
+    /* === Maps between ID === */
+
+    std::map<std::uint32_t, std::uint32_t> virt2SpiderMap_;
+    std::map<std::uint32_t, std::uint32_t> hw2SpiderMap_;
+
+    /* === Containers === */
+
+    PE **peArray_ = nullptr;
+    MemoryUnit **memoryUnitArray_ = nullptr;
+    std::uint32_t *nPEsPerPETypeArray_ = nullptr;
 };
 
-#endif/*ARCHI_H*/
+void Archi::addPE(PE *pe) {
+    if (pe->getSpiderID() > nPE_) {
+        throwSpiderException("Index out of bound. PE: %"
+                                     PRIu32
+                                     " -- Max: %"
+                                     PRIu32
+                                     ".", pe->getSpiderID(), nPE_);
+    }
+    peArray_[pe->getSpiderID()] = pe;
+    virt2SpiderMap_[pe->getVirtualID()] = pe->getSpiderID();
+    hw2SpiderMap_[pe->getHardwareID()] = pe->getSpiderID();
+    nLRT_ += pe->isLRT();
+    nPEsPerPETypeArray_[pe->getHardwareType()]++;
+}
+
+void Archi::addMemoryUnit(MemoryUnit *memoryUnit) {
+    if (memoryUnit->getID() > nMemUnit_) {
+        throwSpiderException("Index out of bound. PE: %"
+                                     PRIu32
+                                     " -- Max: %"
+                                     PRIu32
+                                     ".", memoryUnit->getID(), nMemUnit_);
+    }
+    memoryUnitArray_[memoryUnit->getID()] = memoryUnit;
+}
+
+void Archi::activatePE(PE *const pe) const {
+    if (pe->isEnabled()) {
+        return;
+    }
+    pe->enable();
+    nActivatedPE_++;
+}
+
+void Archi::deactivatePE(PE *const pe) const {
+    if (pe->getSpiderID() == spiderGRTID_) {
+        throwSpiderException("Can not disable GRT PE.");
+    }
+    if (!pe->isEnabled()) {
+        return;
+    }
+    pe->disable();
+    nActivatedPE_--;
+}
+
+void Archi::setSpiderGRTID(std::uint32_t id) {
+    spiderGRTID_ = virt2SpiderMap_[id];
+}
+
+std::uint32_t Archi::getNPE() const {
+    return nPE_;
+}
+
+std::uint32_t Archi::getNLRT() const {
+    return nLRT_;
+}
+
+std::uint32_t Archi::getNMemoryUnit() const {
+    return nMemUnit_;
+}
+
+std::uint32_t Archi::getNPEType() const {
+    return nPEType_;
+}
+
+std::uint32_t Archi::getNPEForHWType(std::uint32_t HWType) const {
+    return nPEsPerPETypeArray_[HWType];
+}
+
+std::uint32_t Archi::getNActivatedPE() const {
+    return nActivatedPE_;
+}
+
+PE *Archi::getPEFromSpiderID(std::uint32_t id) const {
+    return peArray_[id];
+}
+
+PE *Archi::getPEFromVirtualID(std::uint32_t id) const {
+    return getPEFromSpiderID(virt2SpiderMap_.at(id));
+}
+
+PE *Archi::getPEFromHardwareID(std::uint32_t id) const {
+    return getPEFromSpiderID(hw2SpiderMap_.at(id));
+}
+
+
+PE **Archi::getPEArray() const {
+    return peArray_;
+}
+
+MemoryUnit *Archi::getMemoryUnit(std::uint32_t id) const {
+    return memoryUnitArray_[id];
+}
+
+std::uint32_t Archi::getSpiderGRTID() const {
+    return spiderGRTID_;
+}
+
+ScheduleTimeRoutine Archi::getScheduleTimeRoutine() const {
+    return scheduleTimeRoutine_;
+}
+
+
+
+#endif //SPIDER_ARCHI_H

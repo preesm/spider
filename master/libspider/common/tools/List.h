@@ -52,7 +52,7 @@ public:
 
     T &operator[](int ix);
 
-    int getNb();
+    int size();
 
     void add(T e);
 
@@ -98,7 +98,7 @@ inline T &List<T>::operator[](int ix) {
 }
 
 template<class T>
-inline int List<T>::getNb() {
+inline int List<T>::size() {
     return nb;
 }
 

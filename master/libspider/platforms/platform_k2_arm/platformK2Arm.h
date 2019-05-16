@@ -41,7 +41,7 @@
 
 #include <platform.h>
 #include <tools/Stack.h>
-#include <graphs/Archi/Archi.h>
+#include <graphs/Archi/ArchiOld.h>
 #include <graphs/Archi/SharedMemArchi.h>
 #include <lrt.h>
 

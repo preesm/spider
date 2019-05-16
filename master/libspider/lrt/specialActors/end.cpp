@@ -39,6 +39,7 @@
 #include <cstring>
 #include <graphs/PiSDF/PiSDFCommon.h>
 #include "specialActors.h"
+#include <graphs/Archi/Archi.h>
 
 void saEnd(void *inputFIFOs[], void */*outputFIFO*/[], Param inParams[], Param /*outParams*/[]) {
 #if VERBOSE
@@ -47,8 +48,10 @@ void saEnd(void *inputFIFOs[], void */*outputFIFO*/[], Param inParams[], Param /
 
     bool isPersistent = inParams[1] == PISDF_DELAY_PERSISTENT;
     if (isPersistent) {
+        auto *spidePE = Spider::getArchi()->getPEFromSpiderID(Spider::getArchi()->getSpiderGRTID());
         Param nbTokens = inParams[0];
-        void *fifoAddr = Platform::get()->virt_to_phy((void *) (intptr_t) (inParams[2]));
+//        void *fifoAddr = Platform::get()->virt_to_phy((void *) (intptr_t) (inParams[2]));
+        auto *fifoAddr = (void *) spidePE->getMemoryUnit()->virtToPhy(inParams[2]);
         if (fifoAddr && fifoAddr != inputFIFOs[0]) {
             std::memcpy(fifoAddr, inputFIFOs[0], nbTokens);
         }

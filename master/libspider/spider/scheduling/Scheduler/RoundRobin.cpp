@@ -106,28 +106,28 @@ void RoundRobin::mapVertex(SRDAGVertex *vertex) {
     //if (vertex->getType() == SRDAG_NORMAL) printf("%s requires %d bytes\n",vertex->getReference()->getName(),vertexAllocSize);
 
 
-    static int pe = 0;
+    static int peIx = 0;
     int npe = archi_->getNPE();
 
     while (bestSlave == -1) {
-        pe++;
+        peIx++;
 
         if (vertex->getType() != SRDAG_NORMAL) {
             bestSlave = 0;
             break;
         }
 
-        if (!archi_->isActivated(pe % npe)) {
+        if (!archi_->getPEFromSpiderID(peIx % npe)->isEnabled()) {
             continue;
         }
 
-        if (vertex->isExecutableOn(pe % npe) && vertexAllocSize < Platform::get()->getMaxActorAllocSize(pe % npe)) {
-            bestSlave = pe % npe;
+        if (vertex->isExecutableOn(peIx % npe) && vertexAllocSize < Platform::get()->getMaxActorAllocSize(peIx % npe)) {
+            bestSlave = peIx % npe;
         }
     }
 
     bestStartTime = std::max(schedule_->getReadyTime(bestSlave), minimumStartTime);
-    bestEndTime = bestStartTime + vertex->executionTimeOn(archi_->getPEType(bestSlave));
+    bestEndTime = bestStartTime + vertex->executionTimeOn(archi_->getPEFromSpiderID(bestSlave)->getHardwareType());
 
     if (bestSlave < 0) {
         throwSpiderException("No slave found to execute one instance of vertex [%s].", vertex->toString());

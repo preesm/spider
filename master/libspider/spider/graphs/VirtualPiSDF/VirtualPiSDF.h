@@ -98,7 +98,7 @@ inline std::int32_t VirtualPiSDFGraph::getNEdgesOUT(VirtualPiSDFGraph::VirtualPi
     return vertex->vertex_->getNOutEdge();
 }
 
-inline void VirtualPiSDFGraph::delVertex(VirtualPiSDFGraph::VirtualPiSDFVertex *vertex) {
+inline void VirtualPiSDFGraph::delVertex(VirtualPiSDFGraph::VirtualPiSDFVertex */*vertex*/) {
 //    vertex->vertex_ = nullptr;
 //    StackMonitor::free(TRANSFO_STACK, vertex);
 //    vertexSet_.del(vertex);

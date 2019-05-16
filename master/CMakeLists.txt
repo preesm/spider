@@ -154,6 +154,7 @@ include_directories(
         ${PAPI_INCLUDE_DIRS}
         ${PTHREADDIR}/include
         ${STDTHREADDIR}
+        ./libspider/
         ./libspider/common
         ./libspider/lrt
         ./libspider/platforms/platform_pthread
@@ -163,6 +164,7 @@ include_directories(
 file(
         GLOB_RECURSE
         source_files
+        libspider/spider-api/spider/*.cpp
         ./libspider/common/*.cpp
         ./libspider/common/tools/*.cpp
         ./libspider/lrt/*.cpp
@@ -185,6 +187,7 @@ file(
 file(
         GLOB_RECURSE
         header_files
+        libspider/spider-api/user/*.h
         ./libspider/common/*.h
         ./libspider/common/tools/*.h
         ./libspider/lrt/*.h

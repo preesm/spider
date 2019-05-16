@@ -41,10 +41,10 @@
 #include <graphs/SRDAG/SRDAGVertex.h>
 #include "SRDAGScheduleJob.h"
 
-SRDAGScheduleJob::SRDAGScheduleJob(std::int32_t nPEs) {
+SRDAGScheduleJob::SRDAGScheduleJob() {
     nInstances_ = 1;
     nLaunchedInstance_ = 0;
-    nPEs_ = nPEs;
+    nPEs_ = Spider::getArchi()->getNPE();
     /** Initializing **/
     mappingPE_ = -1;
     jobID_ = -1;
@@ -54,6 +54,8 @@ SRDAGScheduleJob::SRDAGScheduleJob(std::int32_t nPEs) {
     peDependenciesMatrix_ = CREATE_MUL_NA(TRANSFO_STACK, nPEs_, bool);
     for (int j = 0; j < nPEs_; ++j) {
         peDependenciesMatrix_[j] = false;
+        scheduleConstrainsMatrix_[j].vertexId_ = -1;
+        scheduleConstrainsMatrix_[j].jobId_ = -1;
     }
 
     vertex_ = nullptr;
@@ -126,10 +128,9 @@ JobInfoMessage *SRDAGScheduleJob::createJobMessage() {
     jobInfoMessage->specialActor_ = vertex_->getType() != SRDAG_NORMAL;
 
     /** Set jobs 2 wait and notify properties **/
-    auto nPE = Spider::getArchi()->getNActivatedPE();
-    jobInfoMessage->lrts2Notify_ = CREATE_MUL_NA(ARCHI_STACK, nPE, bool);
-    jobInfoMessage->jobs2Wait_ = CREATE_MUL_NA(ARCHI_STACK, nPE, std::int32_t);
-    for (int i = 0; i < nPE; ++i) {
+    jobInfoMessage->lrts2Notify_ = CREATE_MUL_NA(ARCHI_STACK, nPEs_, bool);
+    jobInfoMessage->jobs2Wait_ = CREATE_MUL_NA(ARCHI_STACK, nPEs_, std::int32_t);
+    for (std::int32_t i = 0; i < nPEs_; ++i) {
         /** Set jobs to wait **/
         auto &jobConstrain = scheduleConstrainsMatrix_[i];
         jobInfoMessage->jobs2Wait_[i] = jobConstrain.jobId_;

@@ -4,7 +4,8 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
+ * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
@@ -36,49 +37,74 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef PISDF_COMMON_H
-#define PISDF_COMMON_H
+#ifndef SPIDER_ARCHIDATACHANNEL_H
+#define SPIDER_ARCHIDATACHANNEL_H
 
-#include <tools/Set.h>
 
-class PiSDFEdge;
-class PiSDFParam;
-class PiSDFGraph;
-class PiSDFVertex;
+#include <cstdint>
 
-typedef enum PiSDFParamType {
-    PISDF_PARAM_STATIC,
-    PISDF_PARAM_HERITED,
-    PISDF_PARAM_DYNAMIC,
-} PiSDFParamType;
+using writeRoutineType = bool (*)(void *);
+using readRoutineType = bool (*)(void *);
 
-typedef enum PiSDFType {
-    PISDF_TYPE_BODY,
-    PISDF_TYPE_CONFIG,
-    PISDF_TYPE_IF
-} PiSDFType;
+enum class ChannelRWType {
+    READ_ONLY,  /*! Owner can read only on this channel */
+    WRITE_ONLY, /*! Owner can write only on this channel */
+    READ_WRITE, /*! Owner can read and write on this channel */
+};
 
-typedef enum PiSDFSubType {
-    PISDF_SUBTYPE_NORMAL,
-    PISDF_SUBTYPE_BROADCAST,
-    PISDF_SUBTYPE_ROUNDBUFFER,
-    PISDF_SUBTYPE_FORK,
-    PISDF_SUBTYPE_JOIN,
-    PISDF_SUBTYPE_INIT,
-    PISDF_SUBTYPE_END,
-    PISDF_SUBTYPE_DELAY,
-    PISDF_SUBTYPE_INPUT_IF,
-    PISDF_SUBTYPE_OUTPUT_IF
-} PiSDFSubType;
+inline bool defaultWriteFn(void *) {
+    return true;
+}
 
-typedef enum PiSDFDelayType {
-    PISDF_DELAY_PERSISTENT = 1,
-    PISDF_DELAY_NONPERSISTENT = 0
-} PiSDFDelayType;
+inline bool defaultReadFn(void *) {
+    return true;
+}
 
-/** Set types */
-using PiSDFEdgeSet = Set<PiSDFEdge *>;
-using PiSDFParamSet = Set<PiSDFParam *>;
-using PiSDFVertexSet = Set<PiSDFVertex *>;
+class DataChannel {
+public:
+    DataChannel(ChannelRWType rwType = ChannelRWType::READ_WRITE,
+                writeRoutineType writeFn = defaultWriteFn,
+                readRoutineType readFn = defaultReadFn);
 
-#endif/*PISDF_COMMON_H*/
+    inline bool write(void *data) const;
+
+    inline bool read(void *data) const;
+
+    /* Setters */
+
+    inline void setWriteRoutine(writeRoutineType writeFn);
+
+    inline void setReadRoutine(readRoutineType readFn);
+
+private:
+    /* Type of the channel */
+    ChannelRWType rwType_ = ChannelRWType::READ_WRITE;
+
+    /* Communication routines */
+
+    writeRoutineType writeFn_; /*! User specified write routine on this channel */
+    readRoutineType readFn_;   /*! User specified read routine on this channel */
+
+    /* Owner / user */
+
+    std::uint32_t owner_; /*! Spider id of the owner of the channel */
+    std::uint32_t user_;  /*! Spider id of the user of the channel */
+};
+
+bool DataChannel::write(void *data) const {
+    return writeFn_(data);
+}
+
+bool DataChannel::read(void *data) const {
+    return readFn_(data);
+}
+
+void DataChannel::setWriteRoutine(writeRoutineType writeFn) {
+    writeFn_ = writeFn;
+}
+
+void DataChannel::setReadRoutine(readRoutineType readFn) {
+    readFn_ = readFn;
+}
+
+#endif //SPIDER_ARCHIDATACHANNEL_H

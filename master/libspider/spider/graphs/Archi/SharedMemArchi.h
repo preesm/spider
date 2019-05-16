@@ -40,11 +40,11 @@
 #ifndef SHARED_MEM_ARCH_H
 #define SHARED_MEM_ARCH_H
 
-#include "Archi.h"
+#include "ArchiOld.h"
 #include <monitor/StackMonitor.h>
 #include <cstring>
 
-class SharedMemArchi : public Archi {
+class SharedMemArchi : public ArchiOld {
 public:
     SharedMemArchi(int nPE, int nPEType, int spiderPe, MappingTimeFct mapFct);
 

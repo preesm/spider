@@ -92,7 +92,7 @@ SRDAGVertex::SRDAGVertex(
     slave_ = -1;
     slaveJobIx_ = -1;
 
-    scheduleJob_ = CREATE_NA(TRANSFO_STACK, SRDAGScheduleJob)(Platform::get()->getNLrt());
+    scheduleJob_ = CREATE_NA(TRANSFO_STACK, SRDAGScheduleJob)();
     scheduleJob_->setVertex(this);
 }
 

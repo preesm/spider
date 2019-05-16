@@ -47,9 +47,9 @@ int Scheduler::computeScheduleLevel(SRDAGVertex *vertex) {
             SRDAGVertex *succ = vertex->getOutEdge(i)->getSnk();
             if (succ && succ->getState() != SRDAG_NEXEC) {
                 Time minExecTime = (unsigned int) -1;
-                for (int j = 0; j < archi_->getNPE(); j++) {
+                for (std::uint32_t j = 0; j < archi_->getNPE(); j++) {
                     if (succ->isExecutableOn(j)) {
-                        Time execTime = succ->executionTimeOn(archi_->getPEType(j));
+                        Time execTime = succ->executionTimeOn(archi_->getPEFromSpiderID(j)->getHardwareType());
                         if (execTime == 0) {
                             throwSpiderException("Vertex: %s -- NULL execution time.", succ->toString());
                         }
@@ -99,7 +99,7 @@ void Scheduler::scheduleOnlyConfig(
 
     memAlloc->alloc(list_);
 
-    for (int i = 0; i < list_->getNb(); i++) {
+    for (int i = 0; i < list_->size(); i++) {
         computeScheduleLevel((*list_)[i]);
     }
 
@@ -107,12 +107,12 @@ void Scheduler::scheduleOnlyConfig(
 
     schedule_->setAllMinReadyTime(Platform::get()->getTime());
     schedule_->setReadyTime(
-            /* Spider Pe */      archi->getSpiderPeIx(),
+            /* Spider Pe */      archi->getSpiderGRTID(),
             /* End of Mapping */ Platform::get()->getTime() +
-                                 archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
+                                 archi->getScheduleTimeRoutine()(list_->size(), archi_->getNPE()));
 
 
-    for (int i = 0; i < list_->getNb(); i++) {
+    for (int i = 0; i < list_->size(); i++) {
         this->mapVertex((*list_)[i]);
     }
 
@@ -143,7 +143,7 @@ void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *s
 
     memAlloc->alloc(list_);
 
-    for (int i = 0; i < list_->getNb(); i++) {
+    for (int i = 0; i < list_->size(); i++) {
         computeScheduleLevel((*list_)[i]);
     }
 
@@ -151,16 +151,38 @@ void Scheduler::schedule(SRDAGGraph *graph, MemAlloc *memAlloc, SRDAGSchedule *s
 
     schedule_->setAllMinReadyTime(Platform::get()->getTime());
     schedule_->setReadyTime(
-            /* Spider Pe */        archi->getSpiderPeIx(),
+            /* Spider Pe */        archi->getSpiderGRTID(),
             /* End of Mapping */Platform::get()->getTime() +
-                                archi->getMappingTimeFct()(list_->getNb(), archi_->getNPE()));
+                                archi->getScheduleTimeRoutine()(list_->size(), archi_->getNPE()));
 
-    for (int i = 0; i < list_->getNb(); i++) {
+    for (int i = 0; i < list_->size(); i++) {
         this->mapVertex((*list_)[i]);
     }
 
     list_->~List();
     StackMonitor::free(TRANSFO_STACK, list_);
+}
+
+Time Scheduler::computeMinimumStartTime(SRDAGVertex *vertex) {
+    Time minimumStartTime = 0;
+    auto *job = vertex->getScheduleJob();
+    auto *jobConstrains = job->getScheduleConstrain();
+
+    for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
+        auto *edge = vertex->getInEdge(i);
+        if (edge->getRate() != 0) {
+            auto *srcVertex = edge->getSrc();
+            auto *srcJob = srcVertex->getScheduleJob();
+            auto pe = srcJob->getMappedPE();
+            auto currentValue = jobConstrains[pe].jobId_;
+            minimumStartTime = std::max(minimumStartTime, srcJob->getMappingEndTime());
+            if (srcJob->getJobID() > currentValue) {
+                job->setScheduleConstrain(pe, srcVertex->getSetIx(), srcJob->getJobID());
+            }
+        }
+    }
+
+    return minimumStartTime;
 }
 
 

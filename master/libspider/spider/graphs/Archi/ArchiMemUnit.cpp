@@ -4,7 +4,8 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
+ * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
@@ -36,49 +37,49 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef PISDF_COMMON_H
-#define PISDF_COMMON_H
 
-#include <tools/Set.h>
+#include "ArchiMemUnit.h"
 
-class PiSDFEdge;
-class PiSDFParam;
-class PiSDFGraph;
-class PiSDFVertex;
+/* === Init of globalID static member === */
 
-typedef enum PiSDFParamType {
-    PISDF_PARAM_STATIC,
-    PISDF_PARAM_HERITED,
-    PISDF_PARAM_DYNAMIC,
-} PiSDFParamType;
+std::uint32_t MemoryUnit::globalID = 0;
 
-typedef enum PiSDFType {
-    PISDF_TYPE_BODY,
-    PISDF_TYPE_CONFIG,
-    PISDF_TYPE_IF
-} PiSDFType;
+/* === Default routines === */
 
-typedef enum PiSDFSubType {
-    PISDF_SUBTYPE_NORMAL,
-    PISDF_SUBTYPE_BROADCAST,
-    PISDF_SUBTYPE_ROUNDBUFFER,
-    PISDF_SUBTYPE_FORK,
-    PISDF_SUBTYPE_JOIN,
-    PISDF_SUBTYPE_INIT,
-    PISDF_SUBTYPE_END,
-    PISDF_SUBTYPE_DELAY,
-    PISDF_SUBTYPE_INPUT_IF,
-    PISDF_SUBTYPE_OUTPUT_IF
-} PiSDFSubType;
+inline std::uint64_t defaultAllocateRoutine(std::uint64_t size, std::uint64_t used, std::uint64_t maxSize) {
+    if (used + size > maxSize) {
+        throwSpiderException("Not Enough Memory. Want: %"
+                                     PRIu64
+                                     " -- Available: %"
+                                     PRIu64
+                                     "", size, maxSize - used);
+    }
+    used += size;
+    return used;
+}
 
-typedef enum PiSDFDelayType {
-    PISDF_DELAY_PERSISTENT = 1,
-    PISDF_DELAY_NONPERSISTENT = 0
-} PiSDFDelayType;
+inline void defaultDeallocateRoutine() {
+    /* Do nothing */
+}
 
-/** Set types */
-using PiSDFEdgeSet = Set<PiSDFEdge *>;
-using PiSDFParamSet = Set<PiSDFParam *>;
-using PiSDFVertexSet = Set<PiSDFVertex *>;
+inline char *defaultReceiveRoutine(MemoryUnit *localMemoryUnit, std::uint64_t localVirtAddr,
+                                   MemoryUnit * /* distMemoryUnit */, std::uint64_t /* distVirtAddr */) {
+    return localMemoryUnit->virtToPhy(localVirtAddr);
+}
 
-#endif/*PISDF_COMMON_H*/
+inline void defaultSendRoutine(MemoryUnit * /* localMemoryUnit */, std::uint64_t /* localVirtAddr */,
+                               MemoryUnit * /* distMemoryUnit */, std::uint64_t  /* distVirtAddr */) {
+    /* Do nothing */
+}
+
+MemoryUnit::MemoryUnit(char *base, std::uint64_t size) : base_{base},
+                                                         size_{size} {
+    if (!base) {
+        throwSpiderException("Base address of a MemoryUnit can not be nullptr.");
+    }
+    id_ = MemoryUnit::globalID++;
+    allocateRoutine_ = defaultAllocateRoutine;
+    deallocateRoutine_ = defaultDeallocateRoutine;
+    receiveRoutine_ = defaultReceiveRoutine;
+    sendRoutine_ = defaultSendRoutine;
+}

@@ -4,7 +4,8 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
+ * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
@@ -36,49 +37,49 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef PISDF_COMMON_H
-#define PISDF_COMMON_H
 
-#include <tools/Set.h>
+#include "Archi.h"
+#include "ArchiPE.h"
 
-class PiSDFEdge;
-class PiSDFParam;
-class PiSDFGraph;
-class PiSDFVertex;
 
-typedef enum PiSDFParamType {
-    PISDF_PARAM_STATIC,
-    PISDF_PARAM_HERITED,
-    PISDF_PARAM_DYNAMIC,
-} PiSDFParamType;
+/* === Init of globalID static member === */
 
-typedef enum PiSDFType {
-    PISDF_TYPE_BODY,
-    PISDF_TYPE_CONFIG,
-    PISDF_TYPE_IF
-} PiSDFType;
+std::uint32_t PE::globalID = 0;
 
-typedef enum PiSDFSubType {
-    PISDF_SUBTYPE_NORMAL,
-    PISDF_SUBTYPE_BROADCAST,
-    PISDF_SUBTYPE_ROUNDBUFFER,
-    PISDF_SUBTYPE_FORK,
-    PISDF_SUBTYPE_JOIN,
-    PISDF_SUBTYPE_INIT,
-    PISDF_SUBTYPE_END,
-    PISDF_SUBTYPE_DELAY,
-    PISDF_SUBTYPE_INPUT_IF,
-    PISDF_SUBTYPE_OUTPUT_IF
-} PiSDFSubType;
+/* === Default routines === */
 
-typedef enum PiSDFDelayType {
-    PISDF_DELAY_PERSISTENT = 1,
-    PISDF_DELAY_NONPERSISTENT = 0
-} PiSDFDelayType;
+std::uint64_t defaultZeroCommunicationCost(std::uint64_t) {
+    return 0;
+}
 
-/** Set types */
-using PiSDFEdgeSet = Set<PiSDFEdge *>;
-using PiSDFParamSet = Set<PiSDFParam *>;
-using PiSDFVertexSet = Set<PiSDFVertex *>;
+PE::PE(std::uint32_t hwType,
+       std::uint32_t hwID,
+       std::uint32_t virtID,
+       std::string name,
+       SpiderPEType spiderPEType,
+       SpiderHWType spiderHWType) : hwType_{hwType},
+                                    hwID_{hwID},
+                                    virtID_{virtID},
+                                    name_{std::move(name)},
+                                    spiderPEType_{spiderPEType},
+                                    spiderHWType_{spiderHWType} {
+    spiderID_ = PE::globalID++;
 
-#endif/*PISDF_COMMON_H*/
+    /* === Initializing read / send CommunicationCostRoutine to default values === */
+
+    auto nPE = Spider::getArchi()->getNPE();
+    readCostRoutineArray_ = CREATE_MUL_NA(ARCHI_STACK, nPE, CommunicationCostRoutine);
+    sendCostRoutineArray_ = CREATE_MUL_NA(ARCHI_STACK, nPE, CommunicationCostRoutine);
+    if (!readCostRoutineArray_ || !sendCostRoutineArray_) {
+        throwSpiderException("Failed to allocate cost routine arrays");
+    }
+    for (std::uint32_t i = 0; i < nPE; ++i) {
+        readCostRoutineArray_[i] = defaultZeroCommunicationCost;
+        sendCostRoutineArray_[i] = defaultZeroCommunicationCost;
+    }
+}
+
+PE::~PE() {
+    StackMonitor::free(ARCHI_STACK, readCostRoutineArray_);
+    StackMonitor::free(ARCHI_STACK, sendCostRoutineArray_);
+}

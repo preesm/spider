@@ -4,8 +4,9 @@
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
+ * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
+ * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -36,49 +37,46 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef PISDF_COMMON_H
-#define PISDF_COMMON_H
+#ifndef ARCHI_H
+#define ARCHI_H
 
-#include <tools/Set.h>
+#include <platform.h>
 
-class PiSDFEdge;
-class PiSDFParam;
-class PiSDFGraph;
-class PiSDFVertex;
+using MappingTimeFct = Time (*)(int, int);
 
-typedef enum PiSDFParamType {
-    PISDF_PARAM_STATIC,
-    PISDF_PARAM_HERITED,
-    PISDF_PARAM_DYNAMIC,
-} PiSDFParamType;
+class ArchiOld {
+protected:
+    ArchiOld() = default;
 
-typedef enum PiSDFType {
-    PISDF_TYPE_BODY,
-    PISDF_TYPE_CONFIG,
-    PISDF_TYPE_IF
-} PiSDFType;
+    virtual ~ArchiOld() = default;
 
-typedef enum PiSDFSubType {
-    PISDF_SUBTYPE_NORMAL,
-    PISDF_SUBTYPE_BROADCAST,
-    PISDF_SUBTYPE_ROUNDBUFFER,
-    PISDF_SUBTYPE_FORK,
-    PISDF_SUBTYPE_JOIN,
-    PISDF_SUBTYPE_INIT,
-    PISDF_SUBTYPE_END,
-    PISDF_SUBTYPE_DELAY,
-    PISDF_SUBTYPE_INPUT_IF,
-    PISDF_SUBTYPE_OUTPUT_IF
-} PiSDFSubType;
+public:
 
-typedef enum PiSDFDelayType {
-    PISDF_DELAY_PERSISTENT = 1,
-    PISDF_DELAY_NONPERSISTENT = 0
-} PiSDFDelayType;
+    virtual int getNPE() const = 0;
 
-/** Set types */
-using PiSDFEdgeSet = Set<PiSDFEdge *>;
-using PiSDFParamSet = Set<PiSDFParam *>;
-using PiSDFVertexSet = Set<PiSDFVertex *>;
+    virtual int getNActivatedPE() const = 0;
 
-#endif/*PISDF_COMMON_H*/
+    virtual const char *getPEName(int ix) const = 0;
+
+    virtual int getNPETypes() const = 0;
+
+    virtual int getPEType(int ix) const = 0;
+
+    virtual void deactivatePE(int pe) = 0;
+
+    virtual void activatePE(int pe) = 0;
+
+    virtual bool isActivated(int pe) const = 0;
+
+    virtual Time getTimeSend(int src, int dest, int size) const = 0;
+
+    virtual Time getTimeRecv(int src, int dest, int size) const = 0;
+
+    virtual int getSpiderPeIx() const = 0;
+
+    virtual MappingTimeFct getMappingTimeFct() const = 0;
+
+    virtual int getNPEforType(int type) = 0;
+};
+
+#endif/*ARCHI_H*/

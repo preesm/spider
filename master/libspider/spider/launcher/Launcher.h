@@ -41,7 +41,7 @@
 #define LAUNCHER_H
 
 #include <graphs/SRDAG/SRDAGCommon.h>
-#include <graphs/Archi/Archi.h>
+#include <graphs/Archi/ArchiOld.h>
 #include <scheduling/Schedule.h>
 #include <Message.h>
 

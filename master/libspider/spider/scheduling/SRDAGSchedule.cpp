@@ -54,7 +54,7 @@ SRDAGSchedule::~SRDAGSchedule() {
 
 void SRDAGSchedule::addJob(SRDAGScheduleJob *job) {
     jobs_.push_back(job);
-    int pe = job->getMappedPE();
+    auto pe = job->getMappedPE();
     auto *jobConstrains = job->getScheduleConstrain();
     auto *graph = job->getVertex()->getGraph();
     for (int i = 0; i < nPE_; ++i) {
@@ -130,7 +130,6 @@ bool SRDAGSchedule::check() {
 }
 
 void SRDAGSchedule::execute() {
-    TimeMonitor::startMonitoring();
     int startJob = nSentJobs_;
     for (int i = startJob; i < nJobs_; ++i) {
         auto *job = jobs_[i];
@@ -141,5 +140,4 @@ void SRDAGSchedule::execute() {
             nSentJobs_++;
         }
     }
-    TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
 }

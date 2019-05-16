@@ -42,7 +42,7 @@ PapifyAction::~PapifyAction() {
     }
 }
 
-PapifyAction::PapifyAction(PapifyAction &papifyAction, long long PEId) {
+PapifyAction::PapifyAction(PapifyAction &papifyAction, const char *PEId) {
     PEId_ = PEId;
     PEType_ = papifyAction.PEType_;
     actorName_ = papifyAction.actorName_;
@@ -82,7 +82,7 @@ PapifyAction::PapifyAction(PapifyAction &papifyAction, long long PEId) {
 
 
 PapifyAction::PapifyAction(const char *PEType,
-                           long long PEId,
+                           const char *PEId,
                            const char *actorName,
                            int numberOfEvents,
                            std::vector<const char *> &moniteredEventSet,
@@ -168,9 +168,8 @@ void PapifyAction::stopMonitor() {
 
 void PapifyAction::writeEvents() {
     if (!outputFile_) {
-        std::string fileName = std::string("papify-output/") +
-                               std::string("LRT_") +
-                               std::to_string(PEId_) +
+        std::string fileName = std::string("papify-output/papify_output_") +
+                               PEId_ +
                                std::string("__") +
                                actorName_ +
                                std::string(".csv");
@@ -194,7 +193,7 @@ void PapifyAction::writeEvents() {
 
 void PapifyAction::writeEvents(FILE *file) {
     if (file) {
-        fprintf(outputFile_, "%lld,%s,%lld,%lld", PEId_, actorName_, timeStart, timeStop);
+        fprintf(outputFile_, "%s,%s,%lld,%lld", PEId_, actorName_, timeStart, timeStop);
         for (int i = 0; i < numberOfEvents_; ++i) {
             fprintf(outputFile_, ",%lld", counterValues_[i]);
         }

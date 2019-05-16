@@ -164,7 +164,8 @@ public:
 
 #ifdef PAPI_AVAILABLE
 
-    inline std::map<lrtFct, PapifyAction *> &getPapifyInfo() {
+    //inline std::map<lrtFct, PapifyAction *> &getPapifyInfo() {
+    inline std::map<lrtFct, std::map<const char *, PapifyAction*>> &getPapifyInfo() {
         return papifyJobInfo;
     }
 
@@ -209,7 +210,8 @@ private:
     pthread_t *thread_lrt_;
 #ifdef PAPI_AVAILABLE
     // Papify information
-    std::map<lrtFct, PapifyAction *> papifyJobInfo;
+    std::map<lrtFct, std::map<const char *, PapifyAction*>> papifyJobInfo;
+    std::map<const char *, PapifyAction*> papifyActorInfo;
 #endif
 
    struct LRTInfo *lrtInfoArray_;

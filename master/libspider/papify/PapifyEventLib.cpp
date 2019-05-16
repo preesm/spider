@@ -125,7 +125,7 @@ int PapifyEventLib::PAPIEventSetInit(int numberOfEvents,
                                      std::vector<const char *> &moniteredEventSet,
                                      int eventSetID,
                                      const char *PEType,
-                                     long long PEId,
+                                     const char *PEId,
                                      std::vector<int> &PAPIEventCodeSet) {
     // 1. Retrieve the PAPI event codes
     for (int i = 0; i < numberOfEvents; ++i) {
@@ -147,7 +147,7 @@ int PapifyEventLib::PAPIEventSetInit(int numberOfEvents,
 
 int PapifyEventLib::registerNewThread(int numberOfEvents,
                                       const char *PEType,
-                                      long long PEId,
+                                      const char *PEId,
                                       int eventSetID,
                                       std::vector<int> &PAPIEventCodeSet) {
     // 1. Register thread

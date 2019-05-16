@@ -5,6 +5,7 @@ Spider Changelog
 *XXXX.XX.XX*
 
 ### New Feature
+* Papify now supports heterogeneity in SPiDER;
 
 ### Changes
 * update app folder with dac fft and common cmake modules;

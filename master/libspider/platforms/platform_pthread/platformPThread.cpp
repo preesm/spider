@@ -36,7 +36,6 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-#include <pthread.h>
 #include <chrono>
 #include <cinttypes>
 #include <cstring>

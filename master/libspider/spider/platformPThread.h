@@ -44,6 +44,11 @@
 // making compilation error with the IDE's own declaration of said types
 #include <semaphore.h>
 #include <pthread.h>
+
+#ifdef __APPLE__
+#include "mac_barrier.h"
+#endif
+
 #include <csignal>
 #include <queue>
 #include <map>

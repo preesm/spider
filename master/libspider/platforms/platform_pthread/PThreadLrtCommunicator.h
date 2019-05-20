@@ -62,6 +62,8 @@
 #include <tools/Stack.h>
 #include <cstdint>
 
+#include <platform.h>
+
 #include "DataQueues.h"
 #include "ControlMessageQueue.h"
 #include "NotificationQueue.h"

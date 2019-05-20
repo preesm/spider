@@ -12,6 +12,7 @@ Spider Changelog
 * update app folder with dac fft and common cmake modules;
 * Moved graph creation API to specific file;
 * Complete change of the architecture model of Spider allowing for more flexibility;
+* Make the code compile on MacOS
 
 ### Bug fix
 

@@ -149,6 +149,7 @@ void *lrtPthreadRunner(void *args) {
     pthread_barrier_wait(lrtInfo->pthreadBarrier);
     /** Exit thread */
     pthread_exit(EXIT_SUCCESS);
+    return NULL;
 }
 
 void PlatformPThread::createAndLaunchThreads() {

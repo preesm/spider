@@ -583,8 +583,8 @@ static bool reduceJoinFork(SRDAGGraph *topDag) {
                 topDag->delVertex(join);
 
                 SRDAGVertex *sinks[MAX_IO_EDGES];
-                int sinkCons[MAX_IO_EDGES];
-                int sinkPortIx[MAX_IO_EDGES];
+                int sinkCons[MAX_IO_EDGES] = { 0 };
+                int sinkPortIx[MAX_IO_EDGES] = { 0 };
                 int nbSinkRepetitions = fork->getNConnectedOutEdge();
                 bool sinkImplode[MAX_IO_EDGES];
                 for (int k = 0; k < nbSinkRepetitions; k++) {

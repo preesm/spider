@@ -87,3 +87,16 @@ std::int32_t ControlMessageQueue<T>::push(T *message) {
     std::int32_t jobID = (std::int32_t) msgQueue_.size() - 1;
     return jobID;
 }
+
+
+/**
+ * @brief Defining templates here due to some linker issues.
+ */
+template
+class ControlMessageQueue<JobInfoMessage *>;
+
+template
+class ControlMessageQueue<ParameterMessage *>;
+
+template
+class ControlMessageQueue<TraceMessage *>;

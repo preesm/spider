@@ -100,7 +100,4 @@ private:
     sem_t queueCounter_;
 };
 
-template
-class NotificationQueue<NotificationMessage>;
-
 #endif //SPIDER_NOTIFICATIONQUEUE_H

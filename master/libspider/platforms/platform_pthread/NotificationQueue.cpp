@@ -97,3 +97,8 @@ void NotificationQueue<T>::clear() {
     }
     queueSize_ = 0;
 }
+
+
+
+template
+class NotificationQueue<NotificationMessage>;

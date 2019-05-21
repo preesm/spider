@@ -43,7 +43,7 @@
 template<typename T>
 NotificationQueue<T>::NotificationQueue() {
     queueSize_ = 0;
-    sem_init(&queueCounter_, 0, 0);
+    spider_sem_init(&queueCounter_, 0);
 }
 
 template<typename T>
@@ -51,7 +51,7 @@ NotificationQueue<T>::~NotificationQueue() {
     while (!queue_.empty()) {
         queue_.pop();
     }
-    sem_destroy(&queueCounter_);
+    spider_sem_destroy(&queueCounter_);
 }
 
 template<typename T>
@@ -66,15 +66,15 @@ void NotificationQueue<T>::push(T *data) {
     }
 
     /** Posting queue semaphore to signal item is added inside */
-    sem_post(&queueCounter_);
+    spider_sem_post(&queueCounter_);
 }
 
 template<typename T>
 bool NotificationQueue<T>::pop(T *data, bool blocking) {
     /** Wait until an item is pushed in the queue */
     if (blocking) {
-        sem_wait(&queueCounter_);
-    } else if (sem_trywait(&queueCounter_)) {
+        spider_sem_wait(&queueCounter_);
+    } else if (spider_sem_trywait(&queueCounter_)) {
         /** If queue is empty return */
         return false;
     }
@@ -97,3 +97,8 @@ void NotificationQueue<T>::clear() {
     }
     queueSize_ = 0;
 }
+
+
+
+template
+class NotificationQueue<NotificationMessage>;

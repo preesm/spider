@@ -117,16 +117,5 @@ private:
     std::mutex msgQueueMutex_;
 };
 
-/**
- * @brief Defining templates here due to some linker issues.
- */
-template
-class ControlMessageQueue<JobInfoMessage *>;
-
-template
-class ControlMessageQueue<ParameterMessage *>;
-
-template
-class ControlMessageQueue<TraceMessage *>;
 
 #endif //SPIDER_CONTROLMESSAGEQUEUE_H

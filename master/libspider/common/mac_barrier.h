@@ -1,10 +1,10 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2017) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2018) :
  *
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2016)
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  *
- * Spider is a dataflow based runtime used to execute dynamic PiSDF
- * applications. The Preesm tool may be used to design PiSDF applications.
+ * This software is a computer program whose purpose is to help prototyping
+ * parallel applications using dataflow formalism.
  *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
@@ -32,59 +32,57 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef SPIDER_DATAQUEUES_H
-#define SPIDER_DATAQUEUES_H
+#ifndef _PREESM_MAC_BARRIER_H
+#define _PREESM_MAC_BARRIER_H
 
-#if defined _WIN32 && !defined _MSC_VER
-#include <mingw-std-threads/include/mingw.mutex.h>
-#else
-#include <mutex>
+#include <pthread.h>
+
+#ifdef __APPLE__
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include "SpiderSemaphore.h"
+#if !defined(PTHREAD_BARRIER_SERIAL_THREAD)
+# define PTHREAD_BARRIER_SERIAL_THREAD	(1)
+#endif
 
-/**
- * Handles LRT synchronisation for data communications.
- */
-class DataQueues {
+#if !defined(PTHREAD_PROCESS_PRIVATE)
+# define PTHREAD_PROCESS_PRIVATE	(42)
+#endif
+#if !defined(PTHREAD_PROCESS_SHARED)
+# define PTHREAD_PROCESS_SHARED		(43)
+#endif
 
-public:
+typedef int pthread_barrierattr_t;
 
-    /**
-     * Constructor.
-     * @param nLrt Number of Lrt in the platform.
-     */
-    explicit DataQueues(int nLrt);
+typedef struct {
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
+	unsigned int limit;
+	unsigned int count;
+	unsigned int phase;
+} pthread_barrier_t;
 
-    /**
-     * Destructor.
-     */
-    ~DataQueues();
+int pthread_barrierattr_init(pthread_barrierattr_t *attr);
+int pthread_barrierattr_destroy(pthread_barrierattr_t *attr);
 
-    /**
-     * Update the job stamp of a lrt.
-     * @param lrtIx Lrt index.
-     * @param jobStamp New job stamp value.
-     */
-    void updateLrtJobStamp(int lrtIx, int jobStamp);
+int pthread_barrierattr_getpshared(const pthread_barrierattr_t * __restrict__ attr,
+				   int * __restrict__ pshared);
+int pthread_barrierattr_setpshared(pthread_barrierattr_t *attr,
+				   int pshared);
 
-    /**
-     * Wait a lrt to be at a specific job stamp.
-     * @param lrtIx Demanding lrt index.
-     * @param waitingLrtIx Target lrt index.
-     * @param jobStamp Job stamp to wait.
-     * @param blocking True if the call is blocking.
-     * @return 0 if lrt is at the specific job stamp, 1 otherwise.
-     */
-    int waitOnJobStamp(int lrtIx, int waitingLrtIx, int jobStamp, bool blocking);
+int pthread_barrier_init(pthread_barrier_t * __restrict__ barrier,
+			 const pthread_barrierattr_t * __restrict__ attr,
+			 unsigned int count);
+int pthread_barrier_destroy(pthread_barrier_t *barrier);
 
-private:
+int pthread_barrier_wait(pthread_barrier_t *barrier);
 
-    int nLrt_;
-    spider_sem *waitingSems_;
-    int **jobStamps_;
-    std::mutex *jobStampMutex_;
-};
+#ifdef __cplusplus
+}
+#endif
 
+#endif /* __APPLE__ */
 
-#endif //SPIDER_DATAQUEUES_H
+#endif /* PTHREAD_BARRIER_H */

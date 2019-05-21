@@ -12,6 +12,8 @@ Spider Changelog
 * update app folder with dac fft and common cmake modules;
 * Moved graph creation API to specific file;
 * Complete change of the architecture model of Spider allowing for more flexibility;
+* Make the code compile and run on MacOS
+  * Use unsafe dispatch as semaphore implementation, see https://github.com/adrienverge/openfortivpn/issues/105
 
 ### Bug fix
 

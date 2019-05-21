@@ -41,26 +41,16 @@
 #ifndef PTHREAD_LRT_COMMUNICATOR_H
 #define PTHREAD_LRT_COMMUNICATOR_H
 
-#include <LrtCommunicator.h>
+#include "LrtCommunicator.h"
 #include <sys/types.h>
 
-// semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
-// making compilation error with the IDE's own declaration of said types
-#include <semaphore.h>
+#include "SpiderSemaphore.h"
 
-#ifdef _MSC_VER
-#ifdef int64_t
-#undef int64_t
-#endif
-
-#ifdef uint64_t
-#undef uint64_t
-#endif
-#endif
-
-#include <Message.h>
-#include <tools/Stack.h>
+#include "Message.h"
+#include "tools/Stack.h"
 #include <cstdint>
+
+#include "platform.h"
 
 #include "DataQueues.h"
 #include "ControlMessageQueue.h"

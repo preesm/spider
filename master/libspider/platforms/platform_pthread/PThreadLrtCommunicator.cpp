@@ -39,12 +39,6 @@
  */
 #include "PThreadLrtCommunicator.h"
 
-#ifndef _WIN32
-
-#endif
-
-#include <platform.h>
-
 PThreadLrtCommunicator::PThreadLrtCommunicator(
         ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
         NotificationQueue<NotificationMessage> *notificationQueue,

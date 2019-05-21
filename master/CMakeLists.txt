@@ -212,10 +212,11 @@ file(
 
 add_library(Spider SHARED ${source_files} ${header_files} ${papify_sources})
 target_link_libraries(Spider ${CMAKE_THREAD_LIBS_INIT} ${PAPI_LIBRARIES})
-set(CMAKE_CXX_FLAGS "-fpermissive")
 
-if (NOT MINGW AND NOT ${CMAKE_GENERATOR} MATCHES "Visual Studio.*")
-    set(CMAKE_CXX_FLAGS "-fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
+
+if (NOT MINGW AND NOT ${CMAKE_GENERATOR} MATCHES "Visual Studio.*" AND NOT APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
     if (${32BITS})
         set_target_properties(Spider PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
     else ()

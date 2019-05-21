@@ -51,8 +51,8 @@
 
 #endif
 
-#include <semaphore.h>
-#include <Message.h>
+#include "SpiderSemaphore.h"
+#include "Message.h"
 
 /**
  * @brief Thread safe and passive implementation of std::queue (using semaphore to wake waiting thread on queue)
@@ -97,10 +97,7 @@ private:
     std::uint64_t queueSize_;
     std::queue<T> queue_;
     std::mutex queueMutex_;
-    sem_t queueCounter_;
+    spider_sem queueCounter_;
 };
-
-template
-class NotificationQueue<NotificationMessage>;
 
 #endif //SPIDER_NOTIFICATIONQUEUE_H

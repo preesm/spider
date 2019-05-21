@@ -36,7 +36,6 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-#include <pthread.h>
 #include <chrono>
 #include <cinttypes>
 #include <cstring>
@@ -83,6 +82,9 @@ static void setAffinity(int cpuId) {
 #ifdef WIN32
     fprintf(stdout, "CPU affinity is not supported on Windows platforms. Ignoring argument %d.\n", cpuId);
 #else
+#ifdef __APPLE__
+    printf("WARNING: Affinity is not supported on MacOS. Argument %d ignored.\n", cpuId);
+#else
     cpu_set_t mask;
     int status;
 
@@ -92,6 +94,7 @@ static void setAffinity(int cpuId) {
     if (status != 0) {
         perror("sched_setaffinity");
     }
+#endif
 #endif
 }
 

@@ -1,12 +1,8 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2018 - 2019) :
  *
- * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2019)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -37,7 +33,6 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
 #include "NotificationQueue.h"
 
 template<typename T>

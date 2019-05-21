@@ -1,8 +1,8 @@
 Spider Changelog
 ================
 
-## Release version X.Y.Z
-*XXXX.XX.XX*
+## Release version 1.4.0
+*2019.05.21*
 
 ### New Feature
 * Papify now supports heterogeneity in SPiDER;

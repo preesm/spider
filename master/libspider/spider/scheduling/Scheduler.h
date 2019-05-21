@@ -1,11 +1,11 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
+ * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -41,7 +41,7 @@
 
 #include "SRDAGSchedule.h"
 #include <graphs/SRDAG/SRDAGVertex.h>
-#include <graphs/Archi/Archi.h>
+#include <graphs/Archi/ArchiOld.h>
 #include "MemAlloc.h"
 #include <spider.h>
 
@@ -62,7 +62,7 @@ protected:
 
     void addPrevActors(SRDAGVertex *vertex, List<SRDAGVertex *> *list);
 
-    virtual inline Time computeMinimumStartTime(SRDAGVertex *vertex);
+    virtual Time computeMinimumStartTime(SRDAGVertex *vertex);
 
     inline void addJobToSchedule(SRDAGSchedule *schedule, SRDAGVertex *vertex, int pe, Time *start, Time *end);
 
@@ -81,28 +81,6 @@ inline int Scheduler::compareScheduleLevel(SRDAGVertex *vertexA, SRDAGVertex *ve
                 return vertexA->getRefId() - vertexB->getRefId();
         }
         return vertexB->getSchedLvl() - vertexA->getSchedLvl();
-}
-
-inline Time Scheduler::computeMinimumStartTime(SRDAGVertex *vertex) {
-        Time minimumStartTime = 0;
-        auto *job = vertex->getScheduleJob();
-        auto *jobConstrains = job->getScheduleConstrain();
-
-        for (int i = 0; i < vertex->getNConnectedInEdge(); i++) {
-                auto *edge = vertex->getInEdge(i);
-                if (edge->getRate() != 0) {
-                        auto *srcVertex = edge->getSrc();
-                        auto *srcJob = srcVertex->getScheduleJob();
-                        auto pe = srcJob->getMappedPE();
-                        auto currentValue = jobConstrains[pe].jobId_;
-                        minimumStartTime = std::max(minimumStartTime, srcJob->getMappingEndTime());
-                        if (srcJob->getJobID() > currentValue) {
-                                job->setScheduleConstrain(pe, srcVertex->getSetIx(), srcJob->getJobID());
-                        }
-                }
-        }
-
-        return minimumStartTime;
 }
 
 inline void Scheduler::addJobToSchedule(SRDAGSchedule *schedule, SRDAGVertex *vertex, int pe, Time *start, Time *end) {

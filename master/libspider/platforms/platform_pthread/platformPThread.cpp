@@ -1,8 +1,9 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2017 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2017 - 2019) :
  *
- * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018 - 2019)
+ * Daniel Madroñal <daniel.madronal@upm.es> (2019)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2018)
  *
@@ -35,15 +36,13 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
-#include <pthread.h>
 #include <chrono>
 #include <cinttypes>
 #include <cstring>
 #include <cstdio>
 
 #include <platformPThread.h>
-#include <graphs/Archi/SharedMemArchi.h>
+#include <graphs/Archi/Archi.h>
 #include <tools/Rational.h>
 #include <lrt.h>
 #include <Logger.h>
@@ -71,13 +70,9 @@
 static char buffer[PLATFORM_FPRINTF_BUFFERSIZE];
 static struct timespec start;
 
-static void *dataMem;
-
 static std::chrono::time_point<std::chrono::steady_clock> start_steady;
 
 static auto origin_steady = std::chrono::steady_clock::now();
-
-static SharedMemArchi *archi_;
 
 pthread_barrier_t pthreadLRTBarrier;
 
@@ -86,6 +81,9 @@ void printfSpider();
 static void setAffinity(int cpuId) {
 #ifdef WIN32
     fprintf(stdout, "CPU affinity is not supported on Windows platforms. Ignoring argument %d.\n", cpuId);
+#else
+#ifdef __APPLE__
+    printf("WARNING: Affinity is not supported on MacOS. Argument %d ignored.\n", cpuId);
 #else
     cpu_set_t mask;
     int status;
@@ -96,6 +94,7 @@ static void setAffinity(int cpuId) {
     if (status != 0) {
         perror("sched_setaffinity");
     }
+#endif
 #endif
 }
 
@@ -110,7 +109,7 @@ void *lrtPthreadRunner(void *args) {
     pthread_barrier_wait(lrtInfo->pthreadBarrier);
 
     /** Initialize the LRT specific stack */
-    StackMonitor::initStack(LRT_STACK, lrtInfo->lrtStack);
+    lrtInfo->lrt->initStack(lrtInfo->lrtStack);
 
     /** Set core affinity (if supported by the OS) */
     setAffinity(lrtInfo->coreAffinity);
@@ -124,10 +123,22 @@ void *lrtPthreadRunner(void *args) {
 #ifdef PAPI_AVAILABLE
     /** Enable PAPIFY if needed to */
     if (lrtInfo->usePapify) {
-        auto papifyJobInfo = lrtInfo->platform->getPapifyInfo();
+        /*auto papifyJobInfo = lrtInfo->platform->getPapifyInfo();
         lrtInfo->lrt->setUsePapify();
         for (auto &mapEntry : papifyJobInfo) {
             lrtInfo->lrt->addPapifyJobInfo(mapEntry.first, new PapifyAction(*mapEntry.second, lrtInfo->lrtID));
+        }*/
+        auto papifyJobInfo = lrtInfo->platform->getPapifyInfo();
+        lrtInfo->lrt->setUsePapify();
+        std::map<lrtFct, std::map<const char *, PapifyAction *>>::iterator it;
+        std::map<const char *, PapifyAction*>::iterator itInner;
+        for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
+            for (itInner = it->second.begin(); itInner != it->second.end(); ++itInner) {
+                std::string lrtName = std::string("LRT_") + std::to_string(lrtInfo->lrtID);
+                if(!strcmp(lrtName.c_str(), itInner->first)){
+                    lrtInfo->lrt->addPapifyJobInfo(it->first, new PapifyAction(*itInner->second, itInner->first));
+                }
+            }
         }
     }
 #endif
@@ -135,13 +146,13 @@ void *lrtPthreadRunner(void *args) {
     pthread_barrier_wait(lrtInfo->pthreadBarrier);
     /** Run LRT */
     lrtInfo->lrt->runInfinitly();
-    /** Cleaning LRT specific stacks */
-    StackMonitor::freeAll(LRT_STACK);
-    StackMonitor::clean(LRT_STACK);
+    /** Cleaning LRT specific stack */
+    lrtInfo->lrt->cleanStack();
     /** Wait for all LRTs to finish */
     pthread_barrier_wait(lrtInfo->pthreadBarrier);
     /** Exit thread */
     pthread_exit(EXIT_SUCCESS);
+    return NULL;
 }
 
 void PlatformPThread::createAndLaunchThreads() {
@@ -160,27 +171,28 @@ void PlatformPThread::createAndLaunchThreads() {
 #endif
 
     /** Starting the threads */
-    for (auto i = 1; i < nLrt_; i++) {
-        pthread_create(&thread_lrt_[i - 1], nullptr, &lrtPthreadRunner, &lrtInfoArray_[i]);
+    auto *archi = Spider::getArchi();
+    auto nSpawn = 0;
+    for (std::uint32_t i = 0; i < nLrt_; ++i) {
+        if (i != archi->getSpiderGRTID()) {
+            pthread_create(&thread_lrt_[nSpawn++], nullptr, &lrtPthreadRunner, &lrtInfoArray_[i]);
+        }
     }
 }
 
 
-PlatformPThread::PlatformPThread(SpiderConfig &config) {
+PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackConfig) {
     if (platform_) {
         throwSpiderException("Cannot create new platform, a platform already exist.");
     }
     platform_ = this;
+    auto *archi = Spider::getArchi();
 
-    nLrt_ = config.platform.nLrt;
-    if (nLrt_ < 0) {
-        throwSpiderException("Invalid number of Lrt: %d\n", nLrt_);
+    nLrt_ = archi->getNPE();
+
+    if (nLrt_ == 0) {
+        throwSpiderException("Spider require at least 1 LRT.");
     }
-
-    /** Init of the different stacks **/
-    initStacks(config);
-
-    stackLrt = CREATE_MUL(ARCHI_STACK, nLrt_, Stack*);
 
     lrt_ = CREATE_MUL(ARCHI_STACK, nLrt_, LRT*);
     lrtCom_ = CREATE_MUL(ARCHI_STACK, nLrt_, LrtCommunicator*);
@@ -192,7 +204,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
     lrt2SpiderParamQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<ParameterMessage *>);
     lrtNotificationQueues_ = CREATE_MUL(ARCHI_STACK, nLrt_ + 1, NotificationQueue<NotificationMessage>*);
 
-    for (auto i = 0; i < nLrt_ + 1; ++i) {
+    for (std::uint32_t i = 0; i < nLrt_ + 1; ++i) {
         lrtNotificationQueues_[i] = CREATE(ARCHI_STACK, NotificationQueue<NotificationMessage>);
     }
 
@@ -226,180 +238,139 @@ PlatformPThread::PlatformPThread(SpiderConfig &config) {
 
         // Register Papify actor configuration
         if (config.usePapify) {
-            std::map<lrtFct, PapifyConfig *>::iterator it;
+            std::map<lrtFct, std::map<const char *, PapifyConfig*>>::iterator it;
+            std::map<const char *, PapifyConfig*>::iterator itInner;
             for (it = config.papifyJobInfo.begin(); it != config.papifyJobInfo.end(); ++it) {
-                PapifyConfig *papifyConfig = it->second;
-                auto *papifyAction = new PapifyAction(
-                        /* componentName */   papifyConfig->peType_,
-                        /* PEName */          papifyConfig->peID_,
-                        /* actorName */       papifyConfig->actorName_,
-                        /* num_events */      papifyConfig->eventSize_,
-                        /* all_events_name */ papifyConfig->monitoredEvents_,
-                        /* eventSet_Id */     papifyConfig->eventSetID_, papifyConfig->isTiming_, papifyEventLib);
-                papifyJobInfo.insert(std::make_pair(it->first, papifyAction));
+                for (itInner = it->second.begin(); itInner != it->second.end(); ++itInner) {
+                    PapifyConfig *papifyConfig = itInner->second;
+                    PapifyAction *papifyAction = new PapifyAction(
+                            /* componentName */   papifyConfig->peType_,
+                            /* PEName */          papifyConfig->peID_,
+                            /* actorName */       papifyConfig->actorName_,
+                            /* num_events */      papifyConfig->eventSize_,
+                            /* all_events_name */ papifyConfig->monitoredEvents_,
+                            /* eventSet_Id */     papifyConfig->eventSetID_, papifyConfig->isTiming_, papifyEventLib);
+                    papifyActorInfo.insert(std::make_pair(itInner->first, papifyAction));
+                }
+                papifyJobInfo.insert(std::make_pair(it->first, papifyActorInfo));
+                papifyActorInfo.clear();
             }
         }
     }
 #endif
 
-    // Find LCM of share memory size and minAllocSize
-    std::int64_t minAlignedSharedMemory = Rational::compute_lcm(config.platform.shMemSize,
-                                                                PlatformPThread::getMinAllocSize());
-    fprintf(stderr, "INFO: Page aligned shared memory size: %" PRId64"\n", minAlignedSharedMemory);
-    dataMem = operator new((size_t) minAlignedSharedMemory);
-
     /** Filling up parameters for each threads */
     pthread_barrier_init(&pthreadLRTBarrier, nullptr, nLrt_);
-    int offsetPe = 0;
-    for (int pe = 0; pe < config.platform.nPeType; ++pe) {
-        for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
-            if (i + offsetPe >= nLrt_) {
-                break;
-            }
-            lrtCom_[i + offsetPe] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
-                    spider2LrtJobQueue_,
-                    lrtNotificationQueues_[i + offsetPe],
-                    dataQueues_);
+    for (std::uint32_t i = 0; i < archi->getNPE(); i++) {
+        lrtCom_[i] = CREATE(ARCHI_STACK, PThreadLrtCommunicator)(
+                spider2LrtJobQueue_,
+                lrtNotificationQueues_[i],
+                dataQueues_);
 
-            lrt_[i + offsetPe] = CREATE(ARCHI_STACK, LRT)(i + offsetPe);
+        lrt_[i] = CREATE(ARCHI_STACK, LRT)(i);
 
-            lrtInfoArray_[i + offsetPe].lrt = lrt_[i + offsetPe];
-            lrtInfoArray_[i + offsetPe].fcts = config.platform.fcts;
-            lrtInfoArray_[i + offsetPe].nFcts = config.platform.nLrtFcts;
-            lrtInfoArray_[i + offsetPe].lrtID = i + offsetPe;
-            lrtInfoArray_[i + offsetPe].platform = this;
-            lrtInfoArray_[i + offsetPe].coreAffinity = config.platform.coreAffinities[pe][i];
-            lrtInfoArray_[i + offsetPe].pthreadBarrier = &pthreadLRTBarrier;
-            /** Stack related information */
-            lrtInfoArray_[i + offsetPe].lrtStack.name = config.lrtStack.name;
-            lrtInfoArray_[i + offsetPe].lrtStack.type = config.lrtStack.type;
-            lrtInfoArray_[i + offsetPe].lrtStack.start = (void *) ((char *) config.lrtStack.start +
-                                                                   (i + offsetPe) * config.lrtStack.size / nLrt_);
-            lrtInfoArray_[i + offsetPe].lrtStack.size = config.lrtStack.size / nLrt_;
-            /** Papify related information */
-            lrtInfoArray_[i + offsetPe].usePapify = config.usePapify;
-        }
-        offsetPe += config.platform.pesPerPeType[pe];
+        lrtInfoArray_[i].lrt = lrt_[i];
+        lrtInfoArray_[i].fcts = config.fcts;
+        lrtInfoArray_[i].nFcts = config.nLrtFcts;
+        lrtInfoArray_[i].lrtID = i;
+        lrtInfoArray_[i].platform = this;
+        lrtInfoArray_[i].coreAffinity = archi->getPEFromSpiderID(i)->getHardwareID();
+        lrtInfoArray_[i].pthreadBarrier = &pthreadLRTBarrier;
+        /** Stack related information */
+        lrtInfoArray_[i].lrtStack.name = stackConfig.lrtStack.name;
+        lrtInfoArray_[i].lrtStack.type = stackConfig.lrtStack.type;
+        lrtInfoArray_[i].lrtStack.start = (void *) ((char *) stackConfig.lrtStack.start +
+                                                    (i) * stackConfig.lrtStack.size / nLrt_);
+        lrtInfoArray_[i].lrtStack.size = stackConfig.lrtStack.size / nLrt_;
+        /** Papify related information */
+        lrtInfoArray_[i].usePapify = config.usePapify;
     }
-
-    lrtThreadsArray[0] = pthread_self();
+    auto spiderGRTID = archi->getSpiderGRTID();
+    lrtThreadsArray[spiderGRTID] = pthread_self();
 
     /** Starting threads **/
     createAndLaunchThreads();
 
-
     //waiting for every threads to register itself in lrtThreadsArray
     pthread_barrier_wait(&pthreadLRTBarrier);
 
-    //Declaration des stacks spécific au thread
-    StackConfig lrtStackConfig;
-    lrtStackConfig.name = config.lrtStack.name;
-    lrtStackConfig.type = config.lrtStack.type;
-    lrtStackConfig.start = config.lrtStack.start;
-    lrtStackConfig.size = config.lrtStack.size / nLrt_;
-    StackMonitor::initStack(LRT_STACK, lrtStackConfig);
-
-    /** Initialize shared memory */
-    memset(dataMem, 0, (size_t) minAlignedSharedMemory);
+    /* == Init GRT Stack == */
+    StackMonitor::initStack(LRT_STACK, lrtInfoArray_[spiderGRTID].lrtStack);
 
     // Check papify profiles
 #ifdef PAPI_AVAILABLE
     if (config.usePapify) {
-        lrt_[0]->setUsePapify();
-        std::map<lrtFct, PapifyAction *>::iterator it;
+        lrt_[spiderGRTID]->setUsePapify();
+        std::map<lrtFct, std::map<const char*, PapifyAction *>>::iterator it;
+        std::map<const char *, PapifyAction*>::iterator itInner;
+        const char * lrtName = std::string("LRT_0").c_str();
         for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
-            lrt_[0]->addPapifyJobInfo(it->first, it->second);
+            for (itInner = it->second.begin(); itInner != it->second.end(); ++itInner) {
+                if(!strcmp(lrtName, itInner->first)){
+                    lrt_[0]->addPapifyJobInfo(it->first, new PapifyAction(*itInner->second, itInner->first));
+                }
+            }
         }
     }
+
+
 #endif
 
     // Wait for all LRTs to be ready to start
     pthread_barrier_wait(&pthreadLRTBarrier);
 
 
-    setAffinity(0);
-    lrt_[0]->setFctTbl(config.platform.fcts, config.platform.nLrtFcts);
+    setAffinity(spiderGRTID);
+    lrt_[spiderGRTID]->setFctTbl(config.fcts, config.nLrtFcts);
 
     /** Set Communicators of master **/
-    lrt_[0]->setCommunicators();
-
-
-    /** Create Archi */
-    int mainPE = 0;
-    int mainPEType = 0;
-    archi_ = CREATE(ARCHI_STACK, SharedMemArchi)(
-            /* Nb PE */     nLrt_,
-            /* Nb PE Type*/ config.platform.nPeType,
-            /* Spider Pe */ mainPE,
-            /*MappingTime*/ mappingTime);
-
-    archi_->setPEType(mainPE, mainPEType);
-    archi_->activatePE(mainPE);
-
-    char name[40];
-    sprintf(name, "TID %ld (Spider)", lrtThreadsArray[0]);
-    archi_->setName(mainPE, name);
-    offsetPe = 0;
-    for (int pe = 0; pe < config.platform.nPeType; ++pe) {
-        archi_->setPETypeRecvSpeed(pe, 1, 10);
-        archi_->setPETypeSendSpeed(pe, 1, 10);
-        for (int i = 0; i < config.platform.pesPerPeType[pe]; i++) {
-            if (pe == mainPEType && (i + offsetPe) == mainPE) {
-                continue;
-            }
-            sprintf(name, "TID %ld (LRT %d)", lrtThreadsArray[i + offsetPe], i + offsetPe);
-            archi_->setPEType(i + offsetPe, pe);
-            archi_->setName(i + offsetPe, name);
-            archi_->activatePE(i + offsetPe);
-        }
-        offsetPe += config.platform.pesPerPeType[pe];
-    }
-
-    Spider::setArchi(archi_);
+    lrt_[spiderGRTID]->setCommunicators();
 
     this->rstTime();
 }
 
 PlatformPThread::~PlatformPThread() {
     auto spiderCommunicator = getSpiderCommunicator();
-    for (auto i = 1; i < nLrt_; ++i) {
-        NotificationMessage message(LRT_NOTIFICATION, LRT_STOP, getLrtIx());
-        spiderCommunicator->push_notification(i, &message);
+    auto *archi = Spider::getArchi();
+    for (std::uint32_t i = 0; i < nLrt_; ++i) {
+        if (i != archi->getSpiderGRTID()) {
+            NotificationMessage message(LRT_NOTIFICATION, LRT_STOP, getLrtIx());
+            spiderCommunicator->push_notification(i, &message);
+        }
     }
 
     //wait for every LRT to end
     pthread_barrier_wait(&pthreadLRTBarrier);
 
-
     //wait for each thread to free its lrt and archi stacks and to reach its end
-    for (auto i = 1; i < nLrt_; i++) {
-        pthread_join(lrtThreadsArray[i], nullptr);
+    for (std::uint32_t i = 0; i < nLrt_; i++) {
+        if (i != archi->getSpiderGRTID()) {
+            pthread_join(lrtThreadsArray[i], nullptr);
+        }
     }
+    /* == Free LRT stack of GRT == */
+    StackMonitor::freeAll(LRT_STACK);
+    StackMonitor::clean(LRT_STACK);
 
 #ifdef PAPI_AVAILABLE
     /** Free Papify information */
     if (!papifyJobInfo.empty()) {
-        std::map<lrtFct, PapifyAction *>::iterator it;
+        // std::map<lrtFct, std::map<const char *, PapifyAction *>>::iterator it;
         // Delete the event lib manager
-        delete papifyJobInfo.begin()->second->getPapifyEventLib();
+        delete papifyJobInfo.begin()->second.begin()->second->getPapifyEventLib();
     }
 #endif
 
-    for (auto i = 0; i < nLrt_; i++) {
+    for (std::uint32_t i = 0; i < nLrt_; i++) {
         lrt_[i]->~LRT();
         StackMonitor::free(ARCHI_STACK, lrt_[i]);
         StackMonitor::free(ARCHI_STACK, lrtCom_[i]);
     }
     StackMonitor::free(ARCHI_STACK, spiderCom_);
-
-
-    archi_->~SharedMemArchi();
-
-    StackMonitor::free(ARCHI_STACK, archi_);
     StackMonitor::free(ARCHI_STACK, thread_lrt_);
     StackMonitor::free(ARCHI_STACK, lrtInfoArray_);
 
-    for (int i = 0; i < nLrt_; i++) {
+    for (std::uint32_t i = 0; i <= nLrt_; i++) {
         lrtNotificationQueues_[i]->~NotificationQueue();
         StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_[i]);
     }
@@ -421,27 +392,10 @@ PlatformPThread::~PlatformPThread() {
     StackMonitor::free(ARCHI_STACK, lrt_);
     StackMonitor::free(ARCHI_STACK, lrtCom_);
 
-    StackMonitor::freeAll(LRT_STACK);
-    StackMonitor::clean(LRT_STACK);
-    StackMonitor::free(ARCHI_STACK, stackLrt);
-
     StackMonitor::free(ARCHI_STACK, lrtThreadsArray);
-
-    StackMonitor::freeAll(ARCHI_STACK);
-    StackMonitor::freeAll(TRANSFO_STACK);
-    StackMonitor::freeAll(SRDAG_STACK);
-    StackMonitor::freeAll(PISDF_STACK);
-
-    //WARNING : Thread specific stacks have to be cleaned BEFORE exiting threads
-    StackMonitor::clean(ARCHI_STACK);
-    StackMonitor::clean(TRANSFO_STACK);
-    StackMonitor::clean(SRDAG_STACK);
-    StackMonitor::clean(PISDF_STACK);
 
     //Destroying synchronisation barrier
     pthread_barrier_destroy(&pthreadLRTBarrier);
-
-    operator delete(dataMem);
 }
 
 /** File Handling */
@@ -472,10 +426,6 @@ void PlatformPThread::fclose(FILE *id) {
     }
 }
 
-void *PlatformPThread::virt_to_phy(void *address) {
-    return (void *) ((intptr_t) dataMem + (intptr_t) address);
-}
-
 int PlatformPThread::getCacheLineSize() {
     return 0;
 }
@@ -493,18 +443,19 @@ void PlatformPThread::rstJobIxRecv() {
     auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
     NotificationMessage finishedMessage;
     /** Wait for LRTs to finish their jobs **/
-    for (int i = 0; i < archi_->getNActivatedPE() - 1; ++i) {
-        while (true) {
-            spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, true);
-            if (finishedMessage.getType() == LRT_NOTIFICATION &&
-                finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
-                Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- received end signal from LRT: %d.\n", getLrtIx(),
-                              finishedMessage.getLRTID());
-                break;
-            } else {
-                /** Save the notification for later **/
-                spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
-            }
+    auto *archi = Spider::getArchi();
+    auto nPEToWait = archi->getNActivatedPE() - 1;
+    std::uint32_t nFinishedPE = 0;
+    while (nFinishedPE < nPEToWait) {
+        spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &finishedMessage, true);
+        if (finishedMessage.getType() == LRT_NOTIFICATION &&
+            finishedMessage.getSubType() == LRT_FINISHED_ITERATION) {
+            Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- received end signal from LRT: %d.\n", getLrtIx(),
+                          finishedMessage.getLRTID());
+            nFinishedPE++;
+        } else {
+            /** Save the notification for later **/
+            spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
         }
     }
 }
@@ -538,21 +489,3 @@ Time PlatformPThread::getTime() {
 
     return static_cast<Time>(val_steady);
 }
-
-Time PlatformPThread::mappingTime(int nActors, int /*nPe*/) {
-    return (Time) 1 * nActors;
-}
-
-void PlatformPThread::initStacks(SpiderConfig &config) {
-    stackPisdf = nullptr;
-    stackSrdag = nullptr;
-    stackTransfo = nullptr;
-    stackArchi = nullptr;
-
-    /** Global stacks initialisation */
-    StackMonitor::initStack(PISDF_STACK, config.pisdfStack);
-    StackMonitor::initStack(SRDAG_STACK, config.srdagStack);
-    StackMonitor::initStack(TRANSFO_STACK, config.transfoStack);
-    StackMonitor::initStack(ARCHI_STACK, config.archiStack);
-}
-

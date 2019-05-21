@@ -1,10 +1,7 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2019) :
  *
- * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2019)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -152,7 +149,7 @@ int SRDAGLessListScheduler::compareScheduleLevels(ListSchdVertex *vertexA, ListS
 }
 
 inline void SRDAGLessListScheduler::sort() {
-    myqsort(0, list_->getNb() - 1);
+    myqsort(0, list_->size() - 1);
 }
 
 inline void SRDAGLessListScheduler::myqsort(int p, int r) {
@@ -198,7 +195,7 @@ const PiSDFSchedule *SRDAGLessListScheduler::schedule(PiSDFGraph *const /*graph*
 //    Logger::print(LOG_GENERAL, LOG_INFO, "Finished sorting list.\n");
 
     /** Map the vertices **/
-    for (int i = 0; i < list_->getNb(); i++) {
+    for (int i = 0; i < list_->size(); i++) {
         auto *listSchdVertex = (*list_)[i];
         SRDAGLessScheduler::map(listSchdVertex->vertex_, memAlloc);
         /** Update schedule count **/

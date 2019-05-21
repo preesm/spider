@@ -1,8 +1,8 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2018)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
@@ -38,7 +38,7 @@
 #define PISDF_GRAPH_H
 
 #include <graphs/PiSDF/PiSDFCommon.h>
-#include <graphs/Archi/Archi.h>
+#include <graphs/Archi/ArchiOld.h>
 
 class PiSDFGraph {
 public:
@@ -129,11 +129,19 @@ public:
     void print(const char *path);
 
     /** Connect Fct */
+
+    PiSDFEdge *addEdge();
+
     PiSDFEdge *connect(
-            PiSDFVertex *source, int sourcePortId, const char *production,
-            PiSDFVertex *sink, int sinkPortId, const char *consumption,
-            const char *delay, PiSDFVertex *setter = nullptr, PiSDFVertex *getter = nullptr,
-            PiSDFVertex *delayActor = nullptr,
+            PiSDFVertex *source,
+            int sourcePortId,
+            const char *production,
+            PiSDFVertex *sink,
+            int sinkPortId,
+            const char *consumption,
+            const char *delay,
+            PiSDFVertex *setter = nullptr,
+            PiSDFVertex *getter = nullptr,
             bool isDelayPersistent = false);
 
     void delVertex(PiSDFVertex *vertex);
@@ -152,7 +160,6 @@ private:
     PiSDFVertexSet inputIfs_;
     PiSDFVertexSet outputIfs_;
 
-    PiSDFEdge *addEdge();
 
     bool isStatic_;
 };

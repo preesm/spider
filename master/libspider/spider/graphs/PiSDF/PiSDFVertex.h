@@ -1,8 +1,8 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2016)
  *
@@ -343,6 +343,8 @@ inline const char *PiSDFVertex::getName() const {
             return "Fork";
         case PISDF_SUBTYPE_JOIN:
             return "Join";
+        case PISDF_SUBTYPE_INIT:
+            return "Init";
         case PISDF_SUBTYPE_END:
             return "End";
         case PISDF_SUBTYPE_DELAY:

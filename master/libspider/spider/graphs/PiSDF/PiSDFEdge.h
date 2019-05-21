@@ -1,9 +1,9 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2015)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
  *
@@ -72,7 +72,6 @@ public:
     inline void setDelay(const char *delay,
                          PiSDFVertex *setter,
                          PiSDFVertex *getter,
-                         PiSDFVertex *delayActor,
                          bool isDelayPersistent);
 
     inline void setMemoryDelayAlloc(std::int32_t memDelayAlloc);
@@ -142,7 +141,7 @@ private:
     Expression *cons_;
 
     /* Parameterized Delays */
-    Expression *delay_;
+    Expression *delayExpression_;
     PiSDFVertex *setter_;
     PiSDFVertex *getter_;
     PiSDFVertex *virtual_;
@@ -204,28 +203,21 @@ inline std::int32_t PiSDFEdge::getAlloc() const {
 inline void PiSDFEdge::setDelay(const char *delay,
                                 PiSDFVertex *setter,
                                 PiSDFVertex *getter,
-                                PiSDFVertex *delayActor,
                                 bool isDelayPersistent) {
-    if (delay_ != nullptr) {
-        delay_->~Expression();
-        StackMonitor::free(PISDF_STACK, delay_);
-        delay_ = nullptr;
+    if (delayExpression_) {
+        delayExpression_->~Expression();
+        StackMonitor::free(PISDF_STACK, delayExpression_);
+        delayExpression_ = nullptr;
     }
-    delay_ = CREATE(PISDF_STACK, Expression)(delay, graph_->getParams(), graph_->getNParam());
-
-    if ((setter || getter) && !delayActor) {
-        throwSpiderException("Delay can not have setter nor getter without special delay actor vertex.");
-    }
-
-    if (setter) {
-        setter_ = setter;
-        virtual_ = delayActor;
-        //setter->connectOutEdge(0, this);
-    }
-    if (getter) {
-        getter_ = getter;
-        virtual_ = delayActor;
-        //getter->connectInEdge(0, this);
+    delayExpression_ = CREATE(PISDF_STACK, Expression)(delay, graph_->getParams(), graph_->getNParam());
+    setter_ = setter;
+    getter_ = getter;
+    if (setter || getter) {
+        virtual_ = graph_->addBodyVertex("delay",
+                                         PISDF_SUBTYPE_DELAY,
+                                         1,
+                                         1,
+                                         0);
     }
     isDelayPersistent_ = isDelayPersistent;
 }
@@ -255,11 +247,11 @@ inline Param PiSDFEdge::resolveCons() const {
 }
 
 inline Param PiSDFEdge::resolveDelay(transfoJob *job) {
-    return delay_->evaluate(graph_->getParams(), job);
+    return delayExpression_->evaluate(graph_->getParams(), job);
 }
 
 inline Param PiSDFEdge::resolveDelay() {
-    return delay_->evaluate();
+    return delayExpression_->evaluate();
 }
 
 /** TODO take care of prod_ cons_ delay_ != 0 */
@@ -281,7 +273,7 @@ Expression *PiSDFEdge::getProdExpr() {
 }
 
 inline void PiSDFEdge::getDelayExpr(char *out, int sizeOut) {
-    delay_->toString(graph_->getParams(), graph_->getNParam(), out, sizeOut);
+    delayExpression_->toString(graph_->getParams(), graph_->getNParam(), out, sizeOut);
 }
 
 inline PiSDFVertex *PiSDFEdge::getDelaySetter() {

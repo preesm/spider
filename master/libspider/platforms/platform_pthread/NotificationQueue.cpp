@@ -1,12 +1,8 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2018 - 2019) :
  *
- * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2019)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -37,13 +33,12 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
 #include "NotificationQueue.h"
 
 template<typename T>
 NotificationQueue<T>::NotificationQueue() {
     queueSize_ = 0;
-    sem_init(&queueCounter_, 0, 0);
+    spider_sem_init(&queueCounter_, 0);
 }
 
 template<typename T>
@@ -51,7 +46,7 @@ NotificationQueue<T>::~NotificationQueue() {
     while (!queue_.empty()) {
         queue_.pop();
     }
-    sem_destroy(&queueCounter_);
+    spider_sem_destroy(&queueCounter_);
 }
 
 template<typename T>
@@ -66,15 +61,15 @@ void NotificationQueue<T>::push(T *data) {
     }
 
     /** Posting queue semaphore to signal item is added inside */
-    sem_post(&queueCounter_);
+    spider_sem_post(&queueCounter_);
 }
 
 template<typename T>
 bool NotificationQueue<T>::pop(T *data, bool blocking) {
     /** Wait until an item is pushed in the queue */
     if (blocking) {
-        sem_wait(&queueCounter_);
-    } else if (sem_trywait(&queueCounter_)) {
+        spider_sem_wait(&queueCounter_);
+    } else if (spider_sem_trywait(&queueCounter_)) {
         /** If queue is empty return */
         return false;
     }
@@ -97,3 +92,8 @@ void NotificationQueue<T>::clear() {
     }
     queueSize_ = 0;
 }
+
+
+
+template
+class NotificationQueue<NotificationMessage>;

@@ -1,9 +1,9 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
@@ -144,7 +144,7 @@ JobInfoMessage *PiSDFScheduleJob::createJobMessage(int instance) {
     jobInfoMessage->jobs2Wait_ = CREATE_MUL_NA(ARCHI_STACK, nPE, std::int32_t);
     auto *constrains = getScheduleConstrain(instance);
     auto *dependencies = getInstanceDependencies(instance);
-    for (int i = 0; i < nPE; ++i) {
+    for (std::uint32_t i = 0; i < nPE; ++i) {
         /** Set jobs to wait **/
         auto &jobConstrain = constrains[i];
         jobInfoMessage->jobs2Wait_[i] = jobConstrain.jobId_;

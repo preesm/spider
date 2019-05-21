@@ -1,8 +1,8 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2018)
  *
@@ -53,8 +53,6 @@ class SpiderCommunicator;
 
 class ClearTimeMessage;
 
-class Stack;
-
 class Platform {
 public:
     /** File Handling */
@@ -65,8 +63,6 @@ public:
     virtual void fclose(FILE *id) = 0;
 
     /** Memory Handling */
-    virtual void *virt_to_phy(void *address) = 0;
-
     virtual long getMinAllocSize() = 0;
 
     virtual int getCacheLineSize() = 0;
@@ -95,7 +91,7 @@ public:
      * @brief Get current LRT ID
      * @return ID of current LRT
      */
-    virtual int getLrtIx() = 0;
+    virtual std::uint32_t getLrtIx() = 0;
 
     /**
      * @brief Get number of LRT
@@ -114,10 +110,6 @@ public:
      * @return spider communicator
      */
     virtual SpiderCommunicator *getSpiderCommunicator() = 0;
-
-    virtual void setStack(SpiderStack id, Stack *stack) = 0;
-
-    virtual Stack *getStack(SpiderStack id) = 0;
 
     virtual inline int getMaxActorAllocSize(int pe);
 

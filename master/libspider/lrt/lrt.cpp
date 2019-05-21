@@ -1,9 +1,9 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2018)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
@@ -40,7 +40,7 @@
 #include <lrt.h>
 #include <Logger.h>
 #include <specialActors/specialActors.h>
-#include "lrt.h"
+#include <graphs/Archi/Archi.h>
 
 #ifdef __USE_GNU
 
@@ -146,7 +146,6 @@ LRT::~LRT() {
         }
     }
 #endif
-    StackMonitor::freeAll(LRT_STACK);
 }
 
 void LRT::sendTrace(int srdagIx, Time start, Time end) {
@@ -219,13 +218,15 @@ void LRT::runJob(JobInfoMessage *job) {
     time_alloc_data += Platform::get()->getTime() - start;
 #endif
 
+    auto *peJob = Spider::getArchi()->getPEFromSpiderID(ix_);
 
     for (int i = 0; i < job->nEdgeIN_; i++) {
 #ifdef VERBOSE_TIME
         Time start = Platform::get()->getTime();
 #endif
         auto fifo = job->inFifos_[i];
-        inFifosAlloc[i] = lrtCommunicator_->data_recv(fifo.alloc); // in com
+//        inFifosAlloc[i] = lrtCommunicator_->data_recv(fifo.alloc); // in com
+        inFifosAlloc[i] = peJob->getMemoryUnit()->receiveMemory(fifo.alloc, nullptr, fifo.alloc);
         if (fifo.size == 0) {
             inFifosAlloc[i] = nullptr;
         }
@@ -241,7 +242,8 @@ void LRT::runJob(JobInfoMessage *job) {
         Time start = Platform::get()->getTime();
 #endif
         auto fifo = job->outFifos_[i];
-        outFifosAlloc[i] = lrtCommunicator_->data_start_send(fifo.alloc); // in com
+//        outFifosAlloc[i] = lrtCommunicator_->data_start_send(fifo.alloc); // in com
+        outFifosAlloc[i] = peJob->getMemoryUnit()->virtToPhy(fifo.alloc);
         if (fifo.size == 0) {
             outFifosAlloc[i] = nullptr;
         }
@@ -299,6 +301,10 @@ void LRT::runJob(JobInfoMessage *job) {
 
 
     // TODO: data_end_send for other platforms
+    for (int i = 0; i < job->nEdgeOUT_; i++) {
+        auto fifo = job->outFifos_[i];
+        peJob->getMemoryUnit()->sendMemory(fifo.alloc, nullptr, fifo.alloc);
+    }
 
     /** Updating jobIx_ and notifying other LRT (if needed) **/
     jobIx_++;
@@ -574,10 +580,7 @@ void LRT::run(bool loop) {
 
 
 #ifdef PAPI_AVAILABLE
-
 void LRT::addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction) {
     this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
 }
-
-
 #endif

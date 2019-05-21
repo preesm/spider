@@ -1,9 +1,9 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
- * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018 - 2019)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
@@ -39,12 +39,6 @@
  */
 #include "PThreadLrtCommunicator.h"
 
-#ifndef _WIN32
-
-#endif
-
-#include <platform.h>
-
 PThreadLrtCommunicator::PThreadLrtCommunicator(
         ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
         NotificationQueue<NotificationMessage> *notificationQueue,
@@ -69,16 +63,4 @@ std::int32_t PThreadLrtCommunicator::push_job_message(JobInfoMessage **message) 
 
 void PThreadLrtCommunicator::pop_job_message(JobInfoMessage **msg, std::int32_t id) {
     spider2LrtJobQueue_->pop(msg, id);
-}
-
-void PThreadLrtCommunicator::data_end_send(Fifo */*f*/) {
-    // Nothing to do
-}
-
-void *PThreadLrtCommunicator::data_recv(std::int32_t alloc) {
-    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (alloc));
-}
-
-void *PThreadLrtCommunicator::data_start_send(std::int32_t alloc) {
-    return (void *) Platform::get()->virt_to_phy((void *) (intptr_t) (alloc));
 }

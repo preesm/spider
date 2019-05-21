@@ -1,7 +1,7 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
- * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018 - 2019)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
@@ -37,7 +37,6 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
 #include "ControlMessageQueue.h"
 
 
@@ -87,3 +86,16 @@ std::int32_t ControlMessageQueue<T>::push(T *message) {
     std::int32_t jobID = (std::int32_t) msgQueue_.size() - 1;
     return jobID;
 }
+
+
+/**
+ * @brief Defining templates here due to some linker issues.
+ */
+template
+class ControlMessageQueue<JobInfoMessage *>;
+
+template
+class ControlMessageQueue<ParameterMessage *>;
+
+template
+class ControlMessageQueue<TraceMessage *>;

@@ -1,7 +1,9 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2017) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2018 - 2019) :
  *
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2016)
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2019)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2018)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -32,9 +34,8 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
 #include "DataQueues.h"
-#include <monitor/StackMonitor.h>
+#include "monitor/StackMonitor.h"
 
 DataQueues::DataQueues(int nLrt) {
     nLrt_ = nLrt;
@@ -45,9 +46,9 @@ DataQueues::DataQueues(int nLrt) {
         for (int j = 0; j < nLrt_; j++)
             jobStamps_[i][j] = -1;
     }
-    waitingSems_ = CREATE_MUL(ARCHI_STACK, nLrt_, sem_t);
+    waitingSems_ = CREATE_MUL(ARCHI_STACK, nLrt_, spider_sem);
     for (int i = 0; i < nLrt_; i++) {
-        sem_init(&waitingSems_[i], 0, 0);
+        spider_sem_init(&waitingSems_[i], 0);
     }
 }
 
@@ -76,7 +77,7 @@ void DataQueues::updateLrtJobStamp(int lrtIx, int jobStamp) {
             jobStamps_[lrtIx][i] = -1;
 
             /** Unlock the lrt */
-            sem_post(&waitingSems_[i]);
+            spider_sem_post(&waitingSems_[i]);
         }
     }
 
@@ -101,7 +102,7 @@ int DataQueues::waitOnJobStamp(int lrtIx, int waitingLrtIx, int jobStamp, bool b
             jobStampMutex_[waitingLrtIx].unlock();
 
             /** Wait on semaphore to be unlocked */
-            sem_wait(&waitingSems_[lrtIx]);
+            spider_sem_wait(&waitingSems_[lrtIx]);
             return 0;
         }
     }

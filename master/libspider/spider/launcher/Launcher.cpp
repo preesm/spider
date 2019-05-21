@@ -1,8 +1,8 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2018)
  *
@@ -58,7 +58,7 @@ void Launcher::sendRepeatJobQueue(bool enable) {
     NotificationMessage message(LRT_NOTIFICATION,
                                 enable ? LRT_REPEAT_ITERATION_EN : LRT_REPEAT_ITERATION_DIS,
                                 Platform::get()->getLrtIx());
-    for (int i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
+    for (std::uint32_t i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
         Platform::get()->getSpiderCommunicator()->push_notification(i, &message);
     }
 }
@@ -196,7 +196,7 @@ void Launcher::sendDisableTrace(int lrtID) {
 }
 
 void Launcher::sendEndNotification(Schedule *schedule) {
-    for (int pe = 0; pe < Spider::getArchi()->getNActivatedPE(); ++pe) {
+    for (std::uint32_t pe = 0; pe < Spider::getArchi()->getNPE(); ++pe) {
         NotificationMessage message(LRT_NOTIFICATION,
                                     LRT_END_ITERATION,
                                     Platform::get()->getLrtIx(),
@@ -209,7 +209,7 @@ void Launcher::sendBroadCastNotification(bool delayBroadcoast) {
     NotificationMessage broadcast(JOB_NOTIFICATION,
                                   delayBroadcoast ? JOB_DELAY_BROADCAST_JOBSTAMP : JOB_BROADCAST_JOBSTAMP,
                                   Platform::get()->getLrtIx());
-    for (int i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
+    for (std::uint32_t i = 0; i < Spider::getArchi()->getNActivatedPE(); ++i) {
         if (i == Platform::get()->getLrtIx()) {
             continue;
         }

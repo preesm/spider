@@ -1,8 +1,9 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2018 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Daniel Madroñal <daniel.madronal@upm.es> (2019)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -85,7 +86,7 @@ public:
                          std::vector<const char *> &moniteredEventSet,
                          int eventSetID,
                          const char *PEType,
-                         long long PEId,
+                         const char *PEId,
                          std::vector<int> &PAPIEventCodeSet);
 
     /**
@@ -103,7 +104,7 @@ public:
      */
     int registerNewThread(int numberOfEvents,
                           const char *PEType,
-                          long long PEId,
+                          const char *PEId,
                           int eventSetID,
                           std::vector<int> &PAPIEventCodeSet);
 
@@ -112,7 +113,7 @@ public:
      *
      * @param PEId PE id
      */
-    inline void registerProcessingElement(long long PEId) {
+    inline void registerProcessingElement(const char *PEId) {
         try {
             PEEventSets_.at(PEId);
         } catch (std::out_of_range &e) {
@@ -137,7 +138,7 @@ public:
      *
      * @return true if already launched, false else
      */
-    inline bool isEventSetRunning(long long PEId, int PAPIEventSetID_) {
+    inline bool isEventSetRunning(const char *PEId, int PAPIEventSetID_) {
         return isSomeEventSetRunning(PEId) && PEEventSetRunningID_[PEId] == PAPIEventSetID_;
     }
 
@@ -148,11 +149,11 @@ public:
      * @param index Index to be filled with the eventSet ID currently running
      * @return true if an event set is running, false else
      */
-    inline bool isSomeEventSetRunning(long long PEId) {
+    inline bool isSomeEventSetRunning(const char *PEId) {
         return PEEventSetRunning_[PEId];
     }
 
-    inline void stopEventSetRunning(long long PEId) {
+    inline void stopEventSetRunning(const char *PEId) {
         int retVal = PAPI_stop(PEEventSetRunningID_[PEId], nullptr);
         if (retVal != PAPI_OK) {
             throwError(__FILE__, __LINE__, retVal);
@@ -167,7 +168,7 @@ public:
      *
      * @return true if already exists, false else
      */
-    inline bool doesEventSetExists(long long PEId, int eventSetID) {
+    inline bool doesEventSetExists(const char *PEId, int eventSetID) {
         if (eventSetID < 0) {
             throwError(__FILE__, __LINE__, "unvalid event set value");
         }
@@ -181,7 +182,7 @@ public:
      *
      * @param PAPIEventSetID The PAPI event set id
      */
-    inline void startEventSet(long long PEId, int PAPIEventSetID) {
+    inline void startEventSet(const char *PEId, int PAPIEventSetID) {
         int retVal = PAPI_start(PAPIEventSetID);
         if (retVal != PAPI_OK) {
             throwError(__FILE__, __LINE__, retVal);
@@ -196,7 +197,7 @@ public:
      * @param eventSetID the user event set ID
      * @return the corresponding PAPI event set id
      */
-    inline int getPAPIEventSetID(long long PEId, int eventSetID) {
+    inline int getPAPIEventSetID(const char *PEId, int eventSetID) {
         return PEEventSets_[PEId][eventSetID];
     }
 
@@ -217,9 +218,9 @@ public:
 
 private:
     pthread_mutex_t *configLock_;
-    std::map<long long, std::vector<int> > PEEventSets_;
-    std::map<long long, bool> PEEventSetRunning_;
-    std::map<long long, int> PEEventSetRunningID_;
+    std::map<const char *, std::vector<int> > PEEventSets_;
+    std::map<const char *, bool> PEEventSetRunning_;
+    std::map<const char *, int> PEEventSetRunningID_;
     long long zeroTime_;
 };
 

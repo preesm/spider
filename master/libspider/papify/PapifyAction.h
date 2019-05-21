@@ -1,8 +1,9 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2018 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Daniel Madroñal <daniel.madronal@upm.es> (2019)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -61,7 +62,7 @@ public:
      * @param monitorTime       Precise if papify should also monitor time for this actor
      */
     PapifyAction(const char *PEType,
-                 long long PEId,
+                 const char *PEId,
                  const char *actorName,
                  int numberOfEvents,
                  std::vector<const char *> &moniteredEventSet,
@@ -75,7 +76,7 @@ public:
      * @param papifyAction  Original PapifyAction
      * @param PEId          The PE id
      */
-    PapifyAction(PapifyAction &papifyAction, long long PEId);
+    PapifyAction(PapifyAction &papifyAction, const char *PEId);
 
     ~PapifyAction();
 
@@ -113,7 +114,7 @@ public:
     }
 
 private:
-    long long PEId_;
+    const char *PEId_;
     const char *PEType_;
     const char *actorName_;
 

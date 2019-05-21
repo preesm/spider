@@ -1,8 +1,8 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2018)
  *
@@ -49,6 +49,13 @@ ListScheduler::ListScheduler() {
 
 ListScheduler::~ListScheduler() = default;
 
+static inline std::uint64_t saturateAddu64(std::uint64_t a, std::uint64_t b) {
+    if (b > (UINT64_MAX - a)) {
+        return UINT64_MAX;
+    }
+    return a + b;
+}
+
 void ListScheduler::mapVertex(SRDAGVertex *vertex) {
     Time minimumStartTime = computeMinimumStartTime(vertex);
 
@@ -58,29 +65,46 @@ void ListScheduler::mapVertex(SRDAGVertex *vertex) {
         return;
     }
 
-    int bestSlave = -1;
+    std::int32_t bestSlave = -1;
     Time bestStartTime = 0;
-    Time bestWaitTime = 0;
-    auto bestEndTime = (Time) -1; // Very high value.
+    Time bestEndTime = UINT64_MAX; // Very high value.
+    std::uint64_t bestScheduleCost = UINT64_MAX;
 
     // Getting a slave for the vertex.
-    for (int pe = 0; pe < archi_->getNPE(); pe++) {
-        int slaveType = archi_->getPEType(pe);
+    for (std::uint32_t peIx = 0; peIx < archi_->getNPE(); peIx++) {
+        auto *pe = archi_->getPEFromSpiderID(peIx);
+        int slaveType = pe->getHardwareType();
+        if (!pe->isEnabled()) {
+            continue;
+        }
 
-        if (!archi_->isActivated(pe)) continue;
+        /* == Computing scheduling constraints and cost == */
+        if (vertex->isExecutableOn(pe->getVirtualID())) {
 
-        // checking the constraints
-        if (vertex->isExecutableOn(pe)) {
-            Time startTime = std::max(schedule_->getReadyTime(pe), minimumStartTime);
-            Time waitTime = startTime - schedule_->getReadyTime(pe);
+            /* === Retrieving information needed for scheduling cost === */
+
+            Time startTime = std::max(schedule_->getReadyTime(peIx), minimumStartTime);
+            Time waitTime = startTime - schedule_->getReadyTime(peIx);
             Time execTime = vertex->executionTimeOn(slaveType);
-            Time comInTime = 0, comOutTime = 0;// TODO: take into account com time
-            Time endTime = startTime + execTime + comInTime + comOutTime;
-            if (endTime < bestEndTime || (endTime == bestEndTime && waitTime < bestWaitTime)) {
-                bestSlave = pe;
+            Time endTime = startTime + execTime;
+            std::uint64_t readComCost = 0;
+            for (std::int32_t i = 0; i < vertex->getNConnectedInEdge(); ++i) {
+                auto *edge = vertex->getInEdge(i);
+                auto *srcVertex = edge->getSrc();
+                auto *distPE = archi_->getPEFromSpiderID(srcVertex->getScheduleJob()->getMappedPE());
+                auto sendCost = distPE->getSendCostRoutine(pe->getSpiderID())(edge->getRate());
+                auto readCost = pe->getReadCostRoutine(distPE->getSpiderID())(edge->getRate());
+                readComCost = saturateAddu64(readComCost, saturateAddu64(sendCost, readCost));
+            }
+
+            /* === Computing total scheduling cost on this PE === */
+
+            std::uint64_t scheduleCost = saturateAddu64(endTime + waitTime, readComCost);
+            if (scheduleCost < bestScheduleCost) {
+                bestSlave = peIx;
                 bestEndTime = endTime;
                 bestStartTime = startTime;
-                bestWaitTime = waitTime;
+                bestScheduleCost = scheduleCost;
             }
         }
     }

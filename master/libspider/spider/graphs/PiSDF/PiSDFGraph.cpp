@@ -1,8 +1,8 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2016)
  *
@@ -175,12 +175,11 @@ PiSDFEdge *PiSDFGraph::connect(
         const char *delay,
         PiSDFVertex *setter,
         PiSDFVertex *getter,
-        PiSDFVertex *delayActor,
         bool isDelayPersistent) {
     PiSDFEdge *edge = this->addEdge();
     edge->connectSrc(src, srcPortId, prod);
     edge->connectSnk(snk, snkPortId, cons);
-    edge->setDelay(delay, setter, getter, delayActor, isDelayPersistent);
+    edge->setDelay(delay, setter, getter, isDelayPersistent);
     src->connectOutEdge(srcPortId, edge);
     snk->connectInEdge(snkPortId, edge);
     return edge;

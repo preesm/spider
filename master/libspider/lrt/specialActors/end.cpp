@@ -1,11 +1,11 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
+ * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -39,6 +39,7 @@
 #include <cstring>
 #include <graphs/PiSDF/PiSDFCommon.h>
 #include "specialActors.h"
+#include <graphs/Archi/Archi.h>
 
 void saEnd(void *inputFIFOs[], void */*outputFIFO*/[], Param inParams[], Param /*outParams*/[]) {
 #if VERBOSE
@@ -47,8 +48,10 @@ void saEnd(void *inputFIFOs[], void */*outputFIFO*/[], Param inParams[], Param /
 
     bool isPersistent = inParams[1] == PISDF_DELAY_PERSISTENT;
     if (isPersistent) {
+        auto *spidePE = Spider::getArchi()->getPEFromSpiderID(Spider::getArchi()->getSpiderGRTID());
         Param nbTokens = inParams[0];
-        void *fifoAddr = Platform::get()->virt_to_phy((void *) (intptr_t) (inParams[2]));
+//        void *fifoAddr = Platform::get()->virt_to_phy((void *) (intptr_t) (inParams[2]));
+        auto *fifoAddr = (void *) spidePE->getMemoryUnit()->virtToPhy(inParams[2]);
         if (fifoAddr && fifoAddr != inputFIFOs[0]) {
             std::memcpy(fifoAddr, inputFIFOs[0], nbTokens);
         }

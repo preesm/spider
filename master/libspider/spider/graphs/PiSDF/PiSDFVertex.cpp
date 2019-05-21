@@ -1,9 +1,9 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
  *
@@ -79,7 +79,7 @@ PiSDFVertex::PiSDFVertex(
     memset(outParams_, 0, nOutParam * sizeof(PiSDFParam *));
 
     nPeMax_ = Spider::getArchi()->getNPE();
-    nPeTypeMax_ = Spider::getArchi()->getNPETypes();
+    nPeTypeMax_ = Spider::getArchi()->getNPEType();
 
     constraints_ = CREATE_MUL(PISDF_STACK, nPeMax_, bool);
 

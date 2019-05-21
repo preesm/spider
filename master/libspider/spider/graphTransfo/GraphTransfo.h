@@ -1,9 +1,9 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
  *
@@ -70,10 +70,9 @@ void jit_ms(
 
 SRDAGSchedule *static_scheduler(SRDAGGraph *topSrdag,
                                 MemAlloc *memAlloc,
-                                Scheduler *scheduler, Time *end);
+                                Scheduler *scheduler);
 
-
-PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc, Time *end);
+PiSDFSchedule *srdagLessScheduler(MemAlloc *memAlloc);
 
 void schedule(PiSDFGraph *graph, int *const rhoValue, int *const brv);
 

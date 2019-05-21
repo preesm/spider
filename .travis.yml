@@ -9,6 +9,12 @@ script:
 
 matrix:
   include:
+    - os: osx
+      name: "Mac OS Test (Clang)"
+      osx_image: xcode10.2
+      env:
+        - MATRIX_EVAL="CC=gcc && CXX=g++"
+
     - os: linux
       name: "Cross Compilation Test"
       addons:

@@ -1,11 +1,11 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2015)
+ * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -41,28 +41,52 @@
 #include <tools/DynStack.h>
 #include <tools/StaticStack.h>
 
-#include <platform.h>
 #include <Logger.h>
+#include <platform.h>
+#include <lrt.h>
 
+static Stack *stackPisdf = nullptr;
+static Stack *stackSrdag = nullptr;
+static Stack *stackTransfo = nullptr;
+static Stack *stackArchi = nullptr;
 
-void StackMonitor::initStack(SpiderStack stackId, StackConfig cfg) {
+static Stack *&getStack(SpiderStack id) {
+    switch (id) {
+        case PISDF_STACK :
+            return stackPisdf;
+        case SRDAG_STACK :
+            return stackSrdag;
+        case TRANSFO_STACK :
+            return stackTransfo;
+        case ARCHI_STACK :
+            return stackArchi;
+        case LRT_STACK:
+            return Platform::get()->getLrt()->getStack();
+        default :
+            throwSpiderException("Invalid stack index: %d.", id);
+    }
+}
+
+void StackMonitor::initStack(SpiderStack stackId, StackInfo cfg) {
     switch (cfg.type) {
-        case STACK_DYNAMIC:
-            Platform::get()->setStack(stackId, new DynStack(cfg.name));
+        case StackType::DYNAMIC:
+            getStack(stackId) = new DynStack(cfg.name);
             break;
-        case STACK_STATIC:
-            Platform::get()->setStack(stackId, new StaticStack(cfg.name, cfg.start, cfg.size));
+        case StackType::STATIC:
+            getStack(stackId) = new StaticStack(cfg.name, cfg.start, cfg.size);
             break;
+        default:
+            throwSpiderException("unhandled stack type");
     }
 }
 
 void StackMonitor::clean(SpiderStack id) {
-    delete Platform::get()->getStack(id);
+    delete getStack(id);
 }
 
 void StackMonitor::cleanAllStack() {
     for (int i = 0; i < STACK_COUNT; i++) {
-        delete Platform::get()->getStack((SpiderStack) i);
+        delete getStack((SpiderStack) i);
     }
 }
 
@@ -70,24 +94,23 @@ void *StackMonitor::alloc(SpiderStack stackId, int size, bool pageAligned) {
     if (size <= 0) {
         return nullptr;
     }
-    return Platform::get()->getStack(stackId)->alloc(size, pageAligned);
+    return getStack(stackId)->alloc(size, pageAligned);
 }
 
 void StackMonitor::free(SpiderStack stackId, void *ptr) {
     if (ptr == nullptr) {
         return;
     }
-    Platform::get()->getStack(stackId)->free(ptr);
-//    ptr = nullptr;
+    getStack(stackId)->free(ptr);
 }
 
 void StackMonitor::freeAll(SpiderStack stackId, const char *function) {
     Logger::print(LOG_GENERAL, LOG_INFO, "freeAll called by [%s]\n", function);
-    return Platform::get()->getStack(stackId)->freeAll();
+    getStack(stackId)->freeAll();
 }
 
 void StackMonitor::freeAll(SpiderStack stackId) {
-    return Platform::get()->getStack(stackId)->freeAll();
+    getStack(stackId)->freeAll();
 }
 
 void StackMonitor::printStackStats() {

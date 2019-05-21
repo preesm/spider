@@ -1,9 +1,9 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2016)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
  *
@@ -51,7 +51,7 @@ PiSDFEdge::PiSDFEdge(PiSDFGraph *graph) {
     snk_ = nullptr;
     snkPortIx_ = -1;
 
-    prod_ = cons_ = delay_ = nullptr;
+    prod_ = cons_ = delayExpression_ = nullptr;
     setter_ = nullptr;
     getter_ = nullptr;
     getter_ = nullptr;
@@ -62,10 +62,10 @@ PiSDFEdge::PiSDFEdge(PiSDFGraph *graph) {
 }
 
 PiSDFEdge::~PiSDFEdge() {
-    if (delay_ != nullptr) {
-        delay_->~Expression();
-        StackMonitor::free(PISDF_STACK, delay_);
-        delay_ = nullptr;
+    if (delayExpression_ != nullptr) {
+        delayExpression_->~Expression();
+        StackMonitor::free(PISDF_STACK, delayExpression_);
+        delayExpression_ = nullptr;
     }
     if (prod_ != nullptr) {
         prod_->~Expression();

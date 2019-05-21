@@ -1,12 +1,12 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
+ * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -105,11 +105,9 @@ void DynStack::printStat() {
         normalizedSize /= 1024.;
         unitIndex++;
     }
-    Logger::print(LOG_GENERAL, LOG_INFO, "[%s] usage: \t%5.1f %s", getName(), normalizedSize, units[unitIndex]);
+    Logger::print(LOG_GENERAL, LOG_INFO, "[%s]\t usage: %5.1f %s\n", getName(), normalizedSize, units[unitIndex]);
 
     if (nb_) {
-        Logger::print(LOG_GENERAL, LOG_WARNING, "[%s]: \t%lld B still in use", getName(), curUsedSize_);
+        Logger::print(LOG_GENERAL, LOG_WARNING, "[%s]: \t%lld B still in use\n", getName(), curUsedSize_);
     }
-
-    printf("\n");
 }

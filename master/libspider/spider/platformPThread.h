@@ -1,12 +1,13 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
- * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018 - 2019)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Daniel Madroñal <daniel.madronal@upm.es> (2019)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
+ * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -40,35 +41,31 @@
 #ifndef PLATFORM_PTHREAD_H
 #define PLATFORM_PTHREAD_H
 
-// semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
-// making compilation error with the IDE's own declaration of said types
-#include <semaphore.h>
+#include "SpiderSemaphore.h"
+
 #include <pthread.h>
+
+#ifdef __APPLE__
+#include "mac_barrier.h"
+#endif
+
 #include <csignal>
 #include <queue>
 #include <map>
 
-#ifdef _MSC_VER
-#ifdef int64_t
-#undef int64_t
-#endif
-
-#ifdef uint64_t
-#undef uint64_t
-#endif
-#endif
-
-#include <platform.h>
+#include "platform.h"
 
 #ifdef PAPI_AVAILABLE
+
 #include "../papify/PapifyAction.h"
+
 #endif
 
-#include <PThreadSpiderCommunicator.h>
-#include <PThreadLrtCommunicator.h>
-#include <ControlMessageQueue.h>
-#include <NotificationQueue.h>
-#include <SpiderException.h>
+#include "PThreadSpiderCommunicator.h"
+#include "PThreadLrtCommunicator.h"
+#include "ControlMessageQueue.h"
+#include "NotificationQueue.h"
+#include "SpiderException.h"
 
 
 class PlatformPThread : public Platform {
@@ -77,7 +74,7 @@ public:
      * @brief Constructor
      * @param config Reference to the config
      */
-    explicit PlatformPThread(SpiderConfig &config);
+    PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackConfig);
 
     /**
      * @brief Destructor
@@ -92,8 +89,6 @@ public:
     void fclose(FILE *id) override;
 
     /** Shared Memory Handling */
-    void *virt_to_phy(void *address) override;
-
     long getMinAllocSize() override;
 
     int getCacheLineSize() override;
@@ -122,7 +117,7 @@ public:
      * @brief Get current LRT ID
      * @return ID of current LRT
      */
-    inline int getLrtIx() override {
+    inline std::uint32_t getLrtIx() override {
         return getThreadNumber();
     }
 
@@ -154,46 +149,32 @@ public:
         }
     }
 
-    inline void setStack(SpiderStack id, Stack *stack) override;
-
-    inline Stack *getStack(SpiderStack id) override;
-
     inline void registerLRT(int lrtID, pthread_t &thread) {
         lrtThreadsArray[lrtID] = thread;
     }
 
 #ifdef PAPI_AVAILABLE
 
-    inline std::map<lrtFct, PapifyAction *> &getPapifyInfo() {
+    //inline std::map<lrtFct, PapifyAction *> &getPapifyInfo() {
+    inline std::map<lrtFct, std::map<const char *, PapifyAction*>> &getPapifyInfo() {
         return papifyJobInfo;
     }
 
 #endif
 
 private:
-    inline int getThreadNumber() {
-        for (auto i = 0; i < nLrt_; i++) {
+    inline std::uint32_t getThreadNumber() {
+        for (std::uint32_t i = 0; i < nLrt_; i++) {
             if (pthread_equal(lrtThreadsArray[i], pthread_self()) != 0)
                 return i;
         }
         throwSpiderException("Thread ID not found: %lu.", pthread_self());
     }
 
-    static Time mappingTime(int nActors, int nPe);
-
-    void initStacks(SpiderConfig &config);
-
     void createAndLaunchThreads();
 
-    std::int32_t nLrt_;
+    std::uint32_t nLrt_;
     pthread_t *lrtThreadsArray;
-
-    /** Stack pointers */
-    Stack *stackPisdf;
-    Stack *stackSrdag;
-    Stack *stackTransfo;
-    Stack *stackArchi;
-    Stack **stackLrt;
 
     ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
@@ -209,51 +190,12 @@ private:
     pthread_t *thread_lrt_;
 #ifdef PAPI_AVAILABLE
     // Papify information
-    std::map<lrtFct, PapifyAction *> papifyJobInfo;
+    std::map<lrtFct, std::map<const char *, PapifyAction*>> papifyJobInfo;
+    std::map<const char *, PapifyAction*> papifyActorInfo;
 #endif
 
-   struct LRTInfo *lrtInfoArray_;
+    struct LRTInfo *lrtInfoArray_;
 };
-
-inline void PlatformPThread::setStack(SpiderStack id, Stack *stack) {
-    switch (id) {
-        case PISDF_STACK :
-            stackPisdf = stack;
-            break;
-        case SRDAG_STACK :
-            stackSrdag = stack;
-            break;
-        case TRANSFO_STACK :
-            stackTransfo = stack;
-            break;
-        case ARCHI_STACK :
-            stackArchi = stack;
-            break;
-        case LRT_STACK :
-            stackLrt[getThreadNumber()] = stack;
-            break;
-        default :
-            throwSpiderException("Invalid stack index: %d.", id);
-    }
-}
-
-inline Stack *PlatformPThread::getStack(SpiderStack id) {
-    switch (id) {
-        case PISDF_STACK :
-            return stackPisdf;
-        case SRDAG_STACK :
-            return stackSrdag;
-        case TRANSFO_STACK :
-            return stackTransfo;
-        case ARCHI_STACK :
-            return stackArchi;
-        case LRT_STACK :
-            return stackLrt[getThreadNumber()];
-        default :
-            throwSpiderException("Invalid stack index: %d.", id);
-    }
-}
-
 
 /**
  * @brief Stucture for the initialization of a pthread LRT
@@ -265,7 +207,7 @@ typedef struct LRTInfo {
     int nFcts;
     int coreAffinity;
     bool usePapify;
-    StackConfig lrtStack;
+    StackInfo lrtStack;
     PlatformPThread *platform;
     pthread_barrier_t *pthreadBarrier;
 } LRTInfo;

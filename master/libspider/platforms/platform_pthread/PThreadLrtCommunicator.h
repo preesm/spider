@@ -1,13 +1,13 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
- * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018 - 2019)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
  * Karol Desnos <karol.desnos@insa-rennes.fr> (2017)
- * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013 - 2014)
+ * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -41,26 +41,16 @@
 #ifndef PTHREAD_LRT_COMMUNICATOR_H
 #define PTHREAD_LRT_COMMUNICATOR_H
 
-#include <LrtCommunicator.h>
+#include "LrtCommunicator.h"
 #include <sys/types.h>
 
-// semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
-// making compilation error with the IDE's own declaration of said types
-#include <semaphore.h>
+#include "SpiderSemaphore.h"
 
-#ifdef _MSC_VER
-#ifdef int64_t
-#undef int64_t
-#endif
-
-#ifdef uint64_t
-#undef uint64_t
-#endif
-#endif
-
-#include <Message.h>
-#include <tools/Stack.h>
+#include "Message.h"
+#include "tools/Stack.h"
 #include <cstdint>
+
+#include "platform.h"
 
 #include "DataQueues.h"
 #include "ControlMessageQueue.h"
@@ -83,12 +73,6 @@ public:
     std::int32_t push_job_message(JobInfoMessage **message) override;
 
     void pop_job_message(JobInfoMessage **msg, std::int32_t id) override;
-
-    void *data_start_send(std::int32_t alloc) override;
-
-    void data_end_send(Fifo *f) override;
-
-    void *data_recv(std::int32_t alloc) override;
 
 private:
     ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;

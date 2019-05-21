@@ -1,6 +1,23 @@
 Spider Changelog
 ================
 
+## Release version 1.4.0
+*2019.05.21*
+
+### New Feature
+* Papify now supports heterogeneity in SPiDER;
+* High-level API for designing architecture in Spider;
+
+### Changes
+* update app folder with dac fft and common cmake modules;
+* Moved graph creation API to specific file;
+* Complete change of the architecture model of Spider allowing for more flexibility;
+* Make the code compile and run on MacOS
+  * Use unsafe dispatch as semaphore implementation, see https://github.com/adrienverge/openfortivpn/issues/105
+
+### Bug fix
+
+
 ## Release version 1.3.0
 *2019.05.15*
 

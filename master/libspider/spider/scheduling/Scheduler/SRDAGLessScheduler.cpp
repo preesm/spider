@@ -1,10 +1,7 @@
 /**
- * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2018) :
+ * Copyright or © or Copr. IETR/INSA - Rennes (2019) :
  *
- * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
- * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
- * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2018)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2019)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.
@@ -35,7 +32,6 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
 #include "SRDAGLessScheduler.h"
 #include <graphs/PiSDF/PiSDFEdge.h>
 #include <graphs/PiSDF/PiSDFVertex.h>
@@ -84,7 +80,7 @@ void SRDAGLessScheduler::replaceInputIfWithBroadcast(PiSDFGraph *const graph) {
             broadcast->connectInEdge(0, edge);
             graph->connect(broadcast, 0, std::to_string(totalCons).c_str(),
                            snkVertex, edgeSnkIx, edge->getConsExpr()->toString(),
-                           "0", nullptr, nullptr, nullptr, false);
+                           "0", nullptr, nullptr, false);
             nVertices_++;
         }
     }
@@ -259,16 +255,16 @@ void SRDAGLessScheduler::mapVertex(PiSDFVertex *const vertex) {
     Time bestEndTime = UINT64_MAX;
     Time bestWaitTime = 0;
     auto *archi = Spider::getArchi();
-    for (int pe = 0; pe < archi->getNPE(); ++pe) {
+    for (std::uint32_t pe = 0; pe < archi->getNPE(); ++pe) {
         /** Skip disabled processing elements **/
-        if (!archi->isActivated(pe)) {
+        if (!archi->getPEFromSpiderID(pe)->isEnabled()) {
             continue;
         }
         /** Search for best candidate **/
         if (vertex->canExecuteOn(pe)) {
             Time startTime = std::max(schedule_->getReadyTime(pe), minimumStartTime);
             Time waitTime = startTime - schedule_->getReadyTime(pe);
-            auto peType = archi->getPEType(pe);
+            auto peType = archi->getPEFromSpiderID(pe)->getHardwareType();
             Time execTime = vertex->getTimingOnPEType(peType);
             // TODO: add communication time in the balance
             Time endTime = startTime + execTime;
@@ -459,16 +455,16 @@ void SRDAGLessScheduler::mapVertexRelaxed(PiSDFVertex *vertex) {
     Time bestEndTime = UINT64_MAX;
     Time bestWaitTime = 0;
     auto *archi = Spider::getArchi();
-    for (int pe = 0; pe < archi->getNPE(); ++pe) {
+    for (std::uint32_t pe = 0; pe < archi->getNPE(); ++pe) {
         /** Skip disabled processing elements **/
-        if (!archi->isActivated(pe)) {
+        if (!archi->getPEFromSpiderID(pe)->isEnabled()) {
             continue;
         }
         /** Search for best candidate **/
         if (vertex->canExecuteOn(pe)) {
             Time startTime = std::max(schedule_->getReadyTime(pe), minimumStartTime);
             Time waitTime = startTime - schedule_->getReadyTime(pe);
-            auto peType = archi->getPEType(pe);
+            auto peType = archi->getPEFromSpiderID(pe)->getHardwareType();
             Time execTime = vertex->getTimingOnPEType(peType);
             // TODO: add communication time in the balance
             Time endTime = startTime + execTime;

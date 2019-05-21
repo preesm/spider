@@ -40,7 +40,8 @@
 #else
 #include <mutex>
 #endif
-#include <semaphore.h>
+
+#include "SpiderSemaphore.h"
 
 /**
  * Handles LRT synchronisation for data communications.
@@ -80,7 +81,7 @@ public:
 private:
 
     int nLrt_;
-    sem_t *waitingSems_;
+    spider_sem *waitingSems_;
     int **jobStamps_;
     std::mutex *jobStampMutex_;
 };

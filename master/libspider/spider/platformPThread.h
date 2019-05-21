@@ -40,9 +40,8 @@
 #ifndef PLATFORM_PTHREAD_H
 #define PLATFORM_PTHREAD_H
 
-// semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
-// making compilation error with the IDE's own declaration of said types
-#include <semaphore.h>
+#include "SpiderSemaphore.h"
+
 #include <pthread.h>
 
 #ifdef __APPLE__
@@ -53,17 +52,7 @@
 #include <queue>
 #include <map>
 
-#ifdef _MSC_VER
-#ifdef int64_t
-#undef int64_t
-#endif
-
-#ifdef uint64_t
-#undef uint64_t
-#endif
-#endif
-
-#include <platform.h>
+#include "platform.h"
 
 #ifdef PAPI_AVAILABLE
 
@@ -71,11 +60,11 @@
 
 #endif
 
-#include <PThreadSpiderCommunicator.h>
-#include <PThreadLrtCommunicator.h>
-#include <ControlMessageQueue.h>
-#include <NotificationQueue.h>
-#include <SpiderException.h>
+#include "PThreadSpiderCommunicator.h"
+#include "PThreadLrtCommunicator.h"
+#include "ControlMessageQueue.h"
+#include "NotificationQueue.h"
+#include "SpiderException.h"
 
 
 class PlatformPThread : public Platform {

@@ -34,7 +34,7 @@
  */
 
 #include "DataQueues.h"
-#include <monitor/StackMonitor.h>
+#include "monitor/StackMonitor.h"
 
 DataQueues::DataQueues(int nLrt) {
     nLrt_ = nLrt;
@@ -45,9 +45,9 @@ DataQueues::DataQueues(int nLrt) {
         for (int j = 0; j < nLrt_; j++)
             jobStamps_[i][j] = -1;
     }
-    waitingSems_ = CREATE_MUL(ARCHI_STACK, nLrt_, sem_t);
+    waitingSems_ = CREATE_MUL(ARCHI_STACK, nLrt_, spider_sem);
     for (int i = 0; i < nLrt_; i++) {
-        sem_init(&waitingSems_[i], 0, 0);
+        spider_sem_init(&waitingSems_[i], 0);
     }
 }
 
@@ -76,7 +76,7 @@ void DataQueues::updateLrtJobStamp(int lrtIx, int jobStamp) {
             jobStamps_[lrtIx][i] = -1;
 
             /** Unlock the lrt */
-            sem_post(&waitingSems_[i]);
+            spider_sem_post(&waitingSems_[i]);
         }
     }
 
@@ -101,7 +101,7 @@ int DataQueues::waitOnJobStamp(int lrtIx, int waitingLrtIx, int jobStamp, bool b
             jobStampMutex_[waitingLrtIx].unlock();
 
             /** Wait on semaphore to be unlocked */
-            sem_wait(&waitingSems_[lrtIx]);
+            spider_sem_wait(&waitingSems_[lrtIx]);
             return 0;
         }
     }

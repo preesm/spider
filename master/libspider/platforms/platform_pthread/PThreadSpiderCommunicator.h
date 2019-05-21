@@ -41,23 +41,11 @@
 #ifndef PTHREAD_SPIDER_COMMUNICATOR_H
 #define PTHREAD_SPIDER_COMMUNICATOR_H
 
-#include <Message.h>
-#include <SpiderCommunicator.h>
-#include <tools/Stack.h>
+#include "Message.h"
+#include "SpiderCommunicator.h"
+#include "tools/Stack.h"
 
-// semaphore.h includes _ptw32.h that redefines types int64_t and uint64_t on Visual Studio,
-// making compilation error with the IDE's own declaration of said types
-#include <semaphore.h>
-
-#ifdef _MSC_VER
-#ifdef int64_t
-#undef int64_t
-#endif
-
-#ifdef uint64_t
-#undef uint64_t
-#endif
-#endif
+#include "SpiderSemaphore.h"
 
 #include "ControlMessageQueue.h"
 #include "NotificationQueue.h"

@@ -42,9 +42,11 @@
 #else
 #include <mutex>
 #endif
-#include <semaphore.h>
-#include <monitor/StackMonitor.h>
-#include <SpiderException.h>
+
+#include "SpiderSemaphore.h"
+#include "monitor/StackMonitor.h"
+#include "SpiderException.h"
+
 #include <cinttypes>
 
 /**
@@ -112,7 +114,7 @@ public:
 private:
     std::vector<T> queue_;
     std::mutex queueMutex_;
-    sem_t queueCounter_{};
+    spider_sem queueCounter_{};
     std::uint8_t queueBufferSizeNBytes_;
     std::uint32_t queueIndex_;
     std::uint32_t queueSize_;
@@ -128,7 +130,7 @@ SpiderQueue<T>::SpiderQueue() : queueIndex_(0), queueSize_(0), isCircular_(false
         throwSpiderException("Byte size of SpiderQueue item should be <= sizeof(std::uint64_t).");
     }
     queueBufferSizeNBytes_ = sizeof(std::uint64_t) / sizeof(T);
-    sem_init(&queueCounter_, 0, 0);
+    spider_sem_init(&queueCounter_, 0);
 }
 
 template<typename T>
@@ -139,12 +141,12 @@ SpiderQueue<T>::SpiderQueue(bool isCircular) : queueIndex_(0), queueSize_(0), is
         throwSpiderException("Byte size of SpiderQueue item should be <= sizeof(std::uint64_t).");
     }
     queueBufferSizeNBytes_ = sizeof(std::uint64_t) / sizeof(T);
-    sem_init(&queueCounter_, 0, 0);
+    spider_sem_init(&queueCounter_, 0);
 }
 
 template<typename T>
 SpiderQueue<T>::~SpiderQueue() {
-    sem_destroy(&queueCounter_);
+    spider_sem_destroy(&queueCounter_);
 }
 
 template<typename T>
@@ -161,7 +163,7 @@ void SpiderQueue<T>::push(T &value) {
         queueSize_++;
     }
     /** Posting queue semaphore to signal item is added inside */
-    sem_post(&queueCounter_);
+    spider_sem_post(&queueCounter_);
 }
 
 template<typename T>
@@ -191,7 +193,7 @@ void SpiderQueue<T>::push(std::uint64_t &bufferSize, void *buffer) {
     }
 
     /** Posting queue semaphore to signal item is added inside */
-    sem_post(&queueCounter_);
+    spider_sem_post(&queueCounter_);
 }
 
 template<typename T>
@@ -211,8 +213,8 @@ template<typename T>
 std::uint64_t SpiderQueue<T>::pop(void **data, bool blocking, std::uint64_t &maxSize) {
     /** Wait until a item is pushed in the queue */
     if (blocking) {
-        sem_wait(&queueCounter_);
-    } else if (sem_trywait(&queueCounter_)) {
+        spider_sem_wait(&queueCounter_);
+    } else if (spider_sem_trywait(&queueCounter_)) {
         /** If queue is empty return */
         return 0;
     }
@@ -263,8 +265,8 @@ template<typename T>
 void SpiderQueue<T>::pop(T *data, bool blocking) {
     /** Wait until a item is pushed in the queue */
     if (blocking) {
-        sem_wait(&queueCounter_);
-    } else if (sem_trywait(&queueCounter_)) {
+        spider_sem_wait(&queueCounter_);
+    } else if (spider_sem_trywait(&queueCounter_)) {
         /** If queue is empty return */
         return;
     }
@@ -288,7 +290,7 @@ void SpiderQueue<T>::clear() {
         queueSize_ = 0;
     } else {
         for (std::uint32_t i = 0; i < queueSize_; ++i) {
-            sem_post(&queueCounter_);
+            spider_sem_post(&queueCounter_);
         }
     }
 }

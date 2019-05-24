@@ -64,7 +64,7 @@ static lrtFct specialActors[6] = {
         &saEnd
 };
 
-extern int stopThreads;
+extern int preesmStopThreads;
 
 LRT::LRT(int ix) {
     /* TODO add some heapMemory */
@@ -467,7 +467,7 @@ bool LRT::checkNotifications(bool shouldWait) {
     sigset_t waiting_mask;
     sigpending(&waiting_mask);
     if (sigismember(&waiting_mask, SIGINT)) {
-        stopThreads = 1;
+        preesmStopThreads = 1;
     }
 #endif
     if (shouldWait) {

@@ -20,7 +20,7 @@
 
 #define SH_MEM_SIZE 0x01000000
 
-int stopThreads;
+int preesmStopThreads;
 
 void usage(){
 	printf("Usage: \n");

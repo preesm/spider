@@ -9,6 +9,7 @@ Spider Changelog
 ### Changes
 
 ### Bug fix
+* Fix # : rename stopThread with preesmStopThread in LRT;
 
 
 ## Release version 1.4.0

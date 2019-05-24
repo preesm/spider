@@ -1,6 +1,17 @@
 Spider Changelog
 ================
 
+## Release version 1.4.1
+*2019.05.24*
+
+### New Feature
+
+### Changes
+
+### Bug fix
+* Fix # : rename stopThread with preesmStopThread in LRT;
+
+
 ## Release version 1.4.0
 *2019.05.21*
 

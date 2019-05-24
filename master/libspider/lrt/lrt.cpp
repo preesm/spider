@@ -1,7 +1,7 @@
 /**
  * Copyright or © or Copr. IETR/INSA - Rennes (2013 - 2019) :
  *
- * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018)
+ * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018 - 2019)
  * Clément Guy <clement.guy@insa-rennes.fr> (2014)
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
@@ -64,7 +64,7 @@ static lrtFct specialActors[6] = {
         &saEnd
 };
 
-extern int stopThreads;
+extern int preesmStopThreads;
 
 LRT::LRT(int ix) {
     /* TODO add some heapMemory */
@@ -467,7 +467,7 @@ bool LRT::checkNotifications(bool shouldWait) {
     sigset_t waiting_mask;
     sigpending(&waiting_mask);
     if (sigismember(&waiting_mask, SIGINT)) {
-        stopThreads = 1;
+        preesmStopThreads = 1;
     }
 #endif
     if (shouldWait) {

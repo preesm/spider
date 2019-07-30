@@ -91,6 +91,10 @@ public:
 
     inline void setUsePapify();
 
+    inline void setPapifyDump();
+
+    inline void setPapifyFeedback();
+
     inline void setCommunicators();
 
 #ifdef PAPI_AVAILABLE
@@ -108,6 +112,8 @@ private:
     const lrtFct *fcts_;
     bool run_;
     bool usePapify_;
+    bool dumpPapifyInfo_;
+    bool feedbackPapifyInfo_;
     int jobIx_;
     int jobIxTotal_;
     Stack *lrtStack_;
@@ -230,6 +236,14 @@ inline void LRT::rstJobIx() {
 
 inline void LRT::setUsePapify() {
     usePapify_ = true;
+}
+
+inline void LRT::setPapifyDump() {
+    dumpPapifyInfo_ = true;
+}
+
+inline void LRT::setPapifyFeedback() {
+    feedbackPapifyInfo_ = true;
 }
 
 void LRT::initStack(StackInfo info) {

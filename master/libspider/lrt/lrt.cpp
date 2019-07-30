@@ -75,6 +75,8 @@ LRT::LRT(int ix) {
     jobIxTotal_ = 0;
     run_ = false;
     usePapify_ = false;
+    dumpPapifyInfo_ = false;
+    feedbackPapifyInfo_ = false;
 
     traceEnabled_ = false;
     repeatJobQueue_ = false;
@@ -276,7 +278,9 @@ void LRT::runJob(JobInfoMessage *job) {
                 // Stop monitoring
                 papifyAction->stopMonitor();
                 // Writes the monitoring results
-                papifyAction->writeEvents();
+                if (dumpPapifyInfo_) {
+                    papifyAction->writeEvents();
+                }
             } catch (std::out_of_range &e) {
                 // This job does not have papify events associated with  it
                 fcts_[fctID](inFifosAlloc, outFifosAlloc, inParams, outParams);

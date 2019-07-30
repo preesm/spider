@@ -130,6 +130,12 @@ void *lrtPthreadRunner(void *args) {
         }*/
         auto papifyJobInfo = lrtInfo->platform->getPapifyInfo();
         lrtInfo->lrt->setUsePapify();
+        if(lrtInfo->dumpPapifyInfo){
+            lrtInfo->lrt->setPapifyDump();
+        }
+        if(lrtInfo->feedbackPapifyInfo){
+            lrtInfo->lrt->setPapifyFeedback();
+        }
         std::map<lrtFct, std::map<const char *, PapifyAction *>>::iterator it;
         std::map<const char *, PapifyAction*>::iterator itInner;
         for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
@@ -231,6 +237,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
         printf("WARNING: Spider was not compiled on a platform_ with PAPI, thus the monitoring is disabled.\n");
     }
     config.usePapify = false;
+    config.dumpPapifyInfo = false;
+    config.feedbackPapifyInfo = false;
 #else
     if (config.usePapify) {
         // Initializing Papify
@@ -284,6 +292,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
         lrtInfoArray_[i].lrtStack.size = stackConfig.lrtStack.size / nLrt_;
         /** Papify related information */
         lrtInfoArray_[i].usePapify = config.usePapify;
+        lrtInfoArray_[i].dumpPapifyInfo = config.dumpPapifyInfo;
+        lrtInfoArray_[i].feedbackPapifyInfo = config.feedbackPapifyInfo;
     }
     auto spiderGRTID = archi->getSpiderGRTID();
     lrtThreadsArray[spiderGRTID] = pthread_self();

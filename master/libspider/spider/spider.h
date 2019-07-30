@@ -120,6 +120,8 @@ typedef struct SpiderConfig {
     bool verbose;
     bool traceEnabled;
     bool usePapify;
+    bool dumpPapifyInfo;
+    bool feedbackPapifyInfo;
 
     std::map<lrtFct, std::map<const char *, PapifyConfig*>> papifyJobInfo;
 

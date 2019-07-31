@@ -106,7 +106,9 @@ public:
 protected:
     void sendTrace(int srdagIx, Time start, Time end);
 
+#ifdef PAPI_AVAILABLE
     void sendPapifyTrace(int srdagIx, PapifyAction *papifyAction);
+#endif
 
 private:
     int ix_;

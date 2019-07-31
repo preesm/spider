@@ -150,6 +150,7 @@ LRT::~LRT() {
 #endif
 }
 
+#ifdef PAPI_AVAILABLE
 void LRT::sendPapifyTrace(int srdagIx, PapifyAction *papifyAction) {
     // Push message
     auto *papifyMessage = CREATE(ARCHI_STACK, PapifyMessage)(srdagIx, -1, getIx(), papifyAction->getTimeStart(), papifyAction->getTimeStop());
@@ -159,6 +160,7 @@ void LRT::sendPapifyTrace(int srdagIx, PapifyAction *papifyAction) {
     auto notificationMessage = NotificationMessage(PAPIFY_NOTIFICATION, PAPIFY_TIMING, getIx(), index);
     spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &notificationMessage);
 }
+#endif
 
 void LRT::sendTrace(int srdagIx, Time start, Time end) {
     // Push message

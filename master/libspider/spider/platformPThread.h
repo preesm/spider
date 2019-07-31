@@ -104,6 +104,8 @@ public:
 
     void rstJobIxRecv() override;
 
+    void processPapifyFeedback() override;
+
     /** Platform getter/setter */
     /**
      * @brief Get current LRT
@@ -179,6 +181,7 @@ private:
     ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
     ControlMessageQueue<TraceMessage *> *traceQueue_;
+    ControlMessageQueue<PapifyMessage *> *papifyQueue_;
     NotificationQueue<NotificationMessage> **lrtNotificationQueues_;
 
     DataQueues *dataQueues_;

@@ -219,6 +219,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
     dataQueues_ = CREATE(ARCHI_STACK, DataQueues)(nLrt_);
     /** TraceQueue allocation */
     traceQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<TraceMessage *>);
+    /** PapifyQueue allocation */
+    papifyQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<PapifyMessage *>);
     /** Threads structure */
     thread_lrt_ = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, pthread_t);
     lrtInfoArray_ = CREATE_MUL(ARCHI_STACK, nLrt_, LRTInfo);
@@ -228,7 +230,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
             spider2LrtJobQueue_,
             lrt2SpiderParamQueue_,
             lrtNotificationQueues_,
-            traceQueue_);
+            traceQueue_,
+            papifyQueue_);
 
     // TODO use "usePapify" only for monitored LRTs / HW PEs
 #ifndef PAPI_AVAILABLE
@@ -311,6 +314,12 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
 #ifdef PAPI_AVAILABLE
     if (config.usePapify) {
         lrt_[spiderGRTID]->setUsePapify();
+        if(config.dumpPapifyInfo){
+            lrt_[spiderGRTID]->setPapifyDump();
+        }
+        if(config.feedbackPapifyInfo){
+            lrt_[spiderGRTID]->setPapifyFeedback();
+        }
         std::map<lrtFct, std::map<const char*, PapifyAction *>>::iterator it;
         std::map<const char *, PapifyAction*>::iterator itInner;
         const char * lrtName = std::string("LRT_0").c_str();
@@ -388,10 +397,12 @@ PlatformPThread::~PlatformPThread() {
     spider2LrtJobQueue_->~ControlMessageQueue();
     lrt2SpiderParamQueue_->~ControlMessageQueue();
     traceQueue_->~ControlMessageQueue();
+    papifyQueue_->~ControlMessageQueue();
     StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
     StackMonitor::free(ARCHI_STACK, spider2LrtJobQueue_);
     StackMonitor::free(ARCHI_STACK, lrt2SpiderParamQueue_);
     StackMonitor::free(ARCHI_STACK, traceQueue_);
+    StackMonitor::free(ARCHI_STACK, papifyQueue_);
 
 
     dataQueues_->~DataQueues();
@@ -466,6 +477,31 @@ void PlatformPThread::rstJobIxRecv() {
         } else {
             /** Save the notification for later **/
             spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
+        }
+    }
+}
+
+void PlatformPThread::processPapifyFeedback() {
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    NotificationMessage notificationMessage;
+    /** Wait for LRTs to finish their jobs **/
+    auto *archi = Spider::getArchi();
+    auto nPEToWait = archi->getNActivatedPE();
+    std::uint32_t nFinishedPE = 0;
+    while (nFinishedPE < nPEToWait) {
+        spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &notificationMessage, true);
+        if (notificationMessage.getType() == PAPIFY_NOTIFICATION &&
+            notificationMessage.getSubType() == PAPIFY_TIMING) {
+            PapifyMessage *papifyMessage;
+            spiderCommunicator->pop_papify_message(&papifyMessage, notificationMessage.getIndex());
+            StackMonitor::free(ARCHI_STACK, papifyMessage);
+        } else {
+            /** Save the notification for later **/
+            spiderCommunicator->push_notification(Platform::get()->getNLrt(), &notificationMessage);
+            nFinishedPE++;
+            /*if(nFinishedPE == nPEToWait){
+                break;
+            }*/
         }
     }
 }

@@ -2,7 +2,7 @@
  * Copyright or © or Copr. IETR/INSA - Rennes (2014 - 2019) :
  *
  * Antoine Morvan <antoine.morvan@insa-rennes.fr> (2018 - 2019)
- * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
+ * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2018)
  *
@@ -35,105 +35,71 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-#ifndef PLATFORM_H
-#define PLATFORM_H
+#ifndef SPIDER_PAPIFYQUEUE_H
+#define SPIDER_PAPIFYQUEUE_H
 
-#include <cstdio>
-#include <stdexcept>
+#include <cstdint>
+#include <tools/SpiderQueue.h>
 
-#include <spider.h>
-#include <SpiderException.h>
-#include <monitor/StackMonitor.h>
-
-class LRT;
-
-class LrtCommunicator;
-
-class SpiderCommunicator;
-
-class ClearTimeMessage;
-
-class Platform {
+/**
+ * Thread safe mono directional queue with only one reader but multiple writers (nLrt + Spider).
+ */
+class PapifyQueue {
 public:
-    /** File Handling */
-    virtual FILE *fopen(const char *name) = 0;
-
-    virtual void fprintf(FILE *id, const char *fmt, ...) = 0;
-
-    virtual void fclose(FILE *id) = 0;
-
-    /** Memory Handling */
-    virtual long getMinAllocSize() = 0;
-
-    virtual int getCacheLineSize() = 0;
-
-    /** Time Handling */
-    virtual void rstTime(ClearTimeMessage *msg) = 0;
-
-    virtual void rstTime() = 0;
-
-    virtual Time getTime() = 0;
-
-    virtual void rstJobIx() = 0;
-
-    virtual void rstJobIxRecv() = 0;
-
-    virtual void processPapifyFeedback() = 0;
-
-    /** Platform getter/setter */
-    static inline Platform *get();
+    /**
+     * Constructor.
+     * @param msgSizeMax largest possible message size.
+     * @param nLrt Number of Lrts.
+     */
+    PapifyQueue(std::uint64_t msgSizeMax, int nLrt);
 
     /**
-     * @brief Get current LRT
-     * @return Pointer to current LRT class
+     * Destructor.
      */
-    virtual LRT *getLrt() = 0;
+    virtual ~PapifyQueue();
 
     /**
-     * @brief Get current LRT ID
-     * @return ID of current LRT
+     * Prepare a message to be send.
+     * @param lrtIx Index of the sending LRT (nLrt is espected for Spider)
+     * @param size Size needed by the message.
+     * @return Ptr to data were to write the message.
      */
-    virtual std::uint32_t getLrtIx() = 0;
+    void *push_start(int lrtIx, std::uint64_t size);
 
     /**
-     * @brief Get number of LRT
-     * @return Number of LRT
+     * Actually send the message prepared in @push_start.
+     * @param lrtIx Index of the sending LRT (nLrt is espected for Spider)
+     * @param size Size needed by the message.
      */
-    virtual int getNLrt() = 0;
+    void push_end(int lrtIx, std::uint64_t size);
 
     /**
-     * @brief Get current LRT communicator
-     * @return LRT current communicator
+     * Receive a message from the queue.
+     * @param data Ptr to the message will be store in this argument.
+     * @param blocking True if the @pop_start should wait for a message if none is available.
+     * @return 0 if no message have been received, size of the message otherwise.
      */
-    virtual LrtCommunicator *getLrtCommunicator() = 0;
+    std::uint64_t pop_start(void **data, bool blocking);
 
     /**
-     * @brief Get Spider communicator
-     * @return spider communicator
+     * Free the data to allow the reception of a new message.
+     * data from @pop_start should not be used after this call.
      */
-    virtual SpiderCommunicator *getSpiderCommunicator() = 0;
+    void pop_end();
 
-    virtual inline int getMaxActorAllocSize(int pe);
+private:
+    SpiderQueue<std::uint8_t> spiderQueue_;
 
-protected:
-    Platform();
+    std::uint64_t msgSizeMax_;
+    int nLrt_;
 
-    virtual ~Platform();
+    void **msgBufferSend_;
+    std::uint64_t *curMsgSizeSend_;
 
-    static Platform *platform_;
+    void *msgBufferRecv_;
+    std::uint64_t curMsgSizeRecv_;
+
 };
 
-inline Platform *Platform::get() {
-    if (platform_)
-        return platform_;
-    else {
-        throwSpiderException("Undefined platform.");
-    }
-}
 
-// If unimplemented in child
-inline int Platform::getMaxActorAllocSize(int /*pe*/) {
-    return 1024 * 1024 * 1024;
-}
-
-#endif/*PLATFORM_H*/
+#endif //SPIDER_PAPIFYQUEUE_H

@@ -106,6 +106,8 @@ public:
 protected:
     void sendTrace(int srdagIx, Time start, Time end);
 
+    void sendPapifyTrace(int srdagIx, PapifyAction *papifyAction);
+
 private:
     int ix_;
     int nFct_;
@@ -194,6 +196,12 @@ private:
      * @param message message to fetch
      */
     void handleTraceNotification(NotificationMessage &message);
+
+    /**
+     * @brief Fetch a PAPIFY notification message
+     * @param message message to fetch
+     */
+    void handlePapifyNotification(NotificationMessage &message);
 
     /**
      * @brief Check for received notifications and treat them if any.

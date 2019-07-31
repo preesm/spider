@@ -59,6 +59,10 @@ public:
 
     virtual void pop_trace_message(TraceMessage **message, std::int32_t id) = 0;
 
+    virtual std::int32_t push_papify_message(PapifyMessage **message) = 0;
+
+    virtual void pop_papify_message(PapifyMessage **message, std::int32_t id) = 0;
+
 //    virtual int trace_start_recv(void **data) = 0;
 //
 //    virtual void trace_start_recv_block(void **data) = 0;

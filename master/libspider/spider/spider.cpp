@@ -95,6 +95,7 @@ static bool verbose_;
 static bool useGraphOptim_;
 static bool useActorPrecedence_;
 static bool traceEnabled_;
+static bool papifyFeedbackEnabled_;
 
 static bool containsDynamicParam(PiSDFGraph *const graph) {
     for (int i = 0; i < graph->getNParam(); ++i) {
@@ -140,6 +141,8 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     //TODO: add a switch between the different platform
     platform_ = new PlatformPThread(cfg, stackConfig);
 
+    setPapifyFeedbackEnabled(cfg.feedbackPapifyInfo);
+
     if (traceEnabled_) {
         Launcher::get()->sendEnableTrace(-1);
     }
@@ -163,6 +166,10 @@ void Spider::iterate() {
         memAlloc_->reset();
         srdag_ = new SRDAGGraph();
         jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
+    }
+    /** Process PAPIFY feedback **/
+    if(papifyFeedbackEnabled_){
+        Platform::get()->processPapifyFeedback();
     }
     /** Wait for LRTs to finish **/
     Platform::get()->rstJobIxRecv();
@@ -283,6 +290,10 @@ void Spider::setActorPrecedence(bool useActorPrecedence) {
 
 void Spider::setTraceEnabled(bool traceEnabled) {
     traceEnabled_ = traceEnabled;
+}
+
+void Spider::setPapifyFeedbackEnabled(bool papifyFeedbackEnabled) {
+    papifyFeedbackEnabled_ = papifyFeedbackEnabled;
 }
 
 bool Spider::getVerbose() {

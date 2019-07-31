@@ -44,11 +44,13 @@
 PThreadSpiderCommunicator::PThreadSpiderCommunicator(ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
                                                      ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
                                                      NotificationQueue<NotificationMessage> **notificationQueue,
-                                                     ControlMessageQueue<TraceMessage *> *traceQueue) {
+                                                     ControlMessageQueue<TraceMessage *> *traceQueue,
+                                                     ControlMessageQueue<PapifyMessage *> *papifyQueue) {
     spider2LrtJobQueue_ = spider2LrtJobQueue;
     lrt2SpiderParamQueue_ = lrt2SpiderParamQueue;
     notificationQueue_ = notificationQueue;
     traceQueue_ = traceQueue;
+    papifyQueue_ = papifyQueue;
 }
 
 void PThreadSpiderCommunicator::push_notification(int lrtID, NotificationMessage *msg) {
@@ -82,4 +84,13 @@ std::int32_t PThreadSpiderCommunicator::push_trace_message(TraceMessage **messag
 
 void PThreadSpiderCommunicator::pop_trace_message(TraceMessage **message, std::int32_t id) {
     traceQueue_->pop(message, id);
+}
+
+
+std::int32_t PThreadSpiderCommunicator::push_papify_message(PapifyMessage **message) {
+    return papifyQueue_->push(message);
+}
+
+void PThreadSpiderCommunicator::pop_papify_message(PapifyMessage **message, std::int32_t id) {
+    papifyQueue_->pop(message, id);
 }

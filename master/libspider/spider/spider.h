@@ -182,6 +182,8 @@ namespace Spider {
 
     void setTraceEnabled(bool traceEnabled);
 
+    void setPapifyFeedbackEnabled(bool papifyFeedbackEnabled);
+
     bool getVerbose();
 
     bool getGraphOptim();

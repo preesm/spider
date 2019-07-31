@@ -150,6 +150,16 @@ LRT::~LRT() {
 #endif
 }
 
+void LRT::sendPapifyTrace(int srdagIx, PapifyAction *papifyAction) {
+    // Push message
+    auto *papifyMessage = CREATE(ARCHI_STACK, PapifyMessage)(srdagIx, -1, getIx(), papifyAction->getTimeStart(), papifyAction->getTimeStop());
+    auto index = spiderCommunicator_->push_papify_message(&papifyMessage);
+
+    // Push notification
+    auto notificationMessage = NotificationMessage(PAPIFY_NOTIFICATION, PAPIFY_TIMING, getIx(), index);
+    spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &notificationMessage);
+}
+
 void LRT::sendTrace(int srdagIx, Time start, Time end) {
     // Push message
     auto *traceMessage = CREATE(ARCHI_STACK, TraceMessage)(srdagIx, -1, getIx(), start, end);
@@ -280,6 +290,9 @@ void LRT::runJob(JobInfoMessage *job) {
                 // Writes the monitoring results
                 if (dumpPapifyInfo_) {
                     papifyAction->writeEvents();
+                }
+                if(feedbackPapifyInfo_){
+                    sendPapifyTrace(job->srdagID_, papifyAction);
                 }
             } catch (std::out_of_range &e) {
                 // This job does not have papify events associated with  it

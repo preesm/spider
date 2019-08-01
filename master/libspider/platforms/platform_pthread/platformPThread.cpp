@@ -494,14 +494,12 @@ void PlatformPThread::processPapifyFeedback() {
             notificationMessage.getSubType() == PAPIFY_TIMING) {
             PapifyMessage *papifyMessage;
             spiderCommunicator->pop_papify_message(&papifyMessage, notificationMessage.getIndex());
+            papifyMessage->~PapifyMessage();
             StackMonitor::free(ARCHI_STACK, papifyMessage);
         } else {
             /** Save the notification for later **/
             spiderCommunicator->push_notification(Platform::get()->getNLrt(), &notificationMessage);
             nFinishedPE++;
-            /*if(nFinishedPE == nPEToWait){
-                break;
-            }*/
         }
     }
 }

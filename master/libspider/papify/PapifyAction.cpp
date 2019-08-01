@@ -208,3 +208,9 @@ long long PapifyAction::getTimeStart(){
 long long PapifyAction::getTimeStop(){
     return timeStop;
 }
+int PapifyAction::getNumEvents(){
+    return numberOfEvents_;
+}
+long long* PapifyAction::getEvents(){
+    return counterValues_.data();
+}

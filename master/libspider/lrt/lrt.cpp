@@ -153,7 +153,8 @@ LRT::~LRT() {
 #ifdef PAPI_AVAILABLE
 void LRT::sendPapifyTrace(int srdagIx, PapifyAction *papifyAction) {
     // Push message
-    auto *papifyMessage = CREATE(ARCHI_STACK, PapifyMessage)(srdagIx, -1, getIx(), papifyAction->getTimeStart(), papifyAction->getTimeStop());
+    auto *papifyMessage = CREATE(ARCHI_STACK, PapifyMessage)(srdagIx, -1, getIx(), papifyAction->getTimeStart(), papifyAction->getTimeStop(), 
+        papifyAction->getNumEvents(), papifyAction->getEvents());
     auto index = spiderCommunicator_->push_papify_message(&papifyMessage);
 
     // Push notification

@@ -293,12 +293,25 @@ class PapifyMessage {
 public:
 
     explicit PapifyMessage(std::int32_t vertexID = -1, std::int32_t spiderTask = -1, std::int32_t lrtID = -1,
-                          long long start = 0, long long end = 0) {
+                          long long start = 0, long long end = 0, int numEvents = 0, long long* events = nullptr) {
         vertexID_ = vertexID;
         spiderTask_ = spiderTask;
         lrtID_ = lrtID;
         startTime_ = start;
         endTime_ = end;
+        numEvents_ = numEvents;
+        if (numEvents_ > 0) {
+            events_ = CREATE_MUL(ARCHI_STACK, numEvents, long long);
+            for(int i = 0; i < numEvents_; i++){
+                events_[i] = events[i];
+            }
+        } 
+    }
+
+    ~PapifyMessage() {
+        if(numEvents_ > 0){
+            StackMonitor::free(ARCHI_STACK, events_);
+        }
     }
 
     inline std::int32_t getLRTID() {
@@ -317,6 +330,14 @@ public:
         return endTime_ - startTime_;
     }
 
+    inline int getNumEvents() {
+        return numEvents_;
+    }
+
+    inline long long *getEvents() {
+        return events_;
+    }
+
     inline std::int32_t getVertexID() {
         return vertexID_;
     }
@@ -331,6 +352,8 @@ private:
     std::int32_t lrtID_;
     long long startTime_;
     long long endTime_;
+    int numEvents_;
+    long long* events_;
 };
 
 #endif/*MESSAGE_H*/

@@ -169,7 +169,7 @@ void Spider::iterate() {
     }
     /** Process PAPIFY feedback **/
     if(papifyFeedbackEnabled_){
-        Platform::get()->processPapifyFeedback();
+        Platform::get()->processPapifyFeedback(srdag_);
     }
     /** Wait for LRTs to finish **/
     Platform::get()->rstJobIxRecv();

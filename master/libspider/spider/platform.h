@@ -78,7 +78,7 @@ public:
 
     virtual void rstJobIxRecv() = 0;
 
-    virtual void processPapifyFeedback() = 0;
+    virtual void processPapifyFeedback(SRDAGGraph *srDagGraph) = 0;
 
     /** Platform getter/setter */
     static inline Platform *get();

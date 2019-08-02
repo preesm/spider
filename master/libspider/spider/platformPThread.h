@@ -104,7 +104,7 @@ public:
 
     void rstJobIxRecv() override;
 
-    void processPapifyFeedback() override;
+    void processPapifyFeedback(SRDAGGraph *srDagGraph) override;
 
     /** Platform getter/setter */
     /**

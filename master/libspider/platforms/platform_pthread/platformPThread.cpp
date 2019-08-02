@@ -503,7 +503,6 @@ void PlatformPThread::processPapifyFeedback(SRDAGGraph *srDagGraph) {
             SRDAGVertex* dagVertexId = srDagGraph->getVertexFromIx(srDagIndex);
             PiSDFVertex* pisdfVertex = dagVertexId->getReference();
             int vertexId = pisdfVertex->getTypeId();
-            printf("originalVertexId = %d --- vertexId = %d --- peType = %d --- executionTime = %s\n", srDagIndex, vertexId, peType, executionTime.c_str());
             pisdfVertex->setTimingOnType(peType, executionTime.c_str());
             papifyMessage->~PapifyMessage();
             StackMonitor::free(ARCHI_STACK, papifyMessage);

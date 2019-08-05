@@ -5,6 +5,10 @@ Spider Changelog
 *XXXX.XX.XX*
 
 ### New Feature
+* PAPIFY now has different modes:
+  * papify=dump: dump PAPIFY info into csv files;
+  * papify=feedback: PAPIFY (timing) feedback is retrieved by GRT and timings are updated;
+  * papify=both: both modes active at the same time;
 
 ### Changes
 

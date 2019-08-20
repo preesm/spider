@@ -388,7 +388,7 @@ inline void PiSDFVertex::setSubGraph(PiSDFGraph *subGraph) {
     subGraph_ = subGraph;
 }
 
-/** Constraints/timings */
+/** Constraints/timings/energies */
 inline bool PiSDFVertex::canExecuteOn(int pe) {
     if (pe < 0 || pe >= nPeMax_)
         throwSpiderException("Bad PE index. Value: %d -- Max: %d", pe, nPeMax_);
@@ -420,9 +420,6 @@ inline double PiSDFVertex::getEnergyOnPEType(int peType) {
     if (peType < 0 || peType >= nPeTypeMax_) {
         throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_ - 1);
     }
-    /*if (energies_[peType] == nullptr) {
-        return subType_ == PISDF_SUBTYPE_NORMAL ? 0 : 50;
-    }*/
     return energies_[peType];
 }
 
@@ -447,22 +444,7 @@ inline void PiSDFVertex::setEnergyOnType(int peType, double energy) {
     if (peType < 0 || peType >= nPeTypeMax_) {
         throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_);
     }
-    printf("Energy = %f\n", energy);
-    printf("What?\n");
-    /*if (energies_[peType] != nullptr) {
-        printf("AEnergy = %s\n", energy);
-        energies_[peType]->~Expression();
-        printf("BEnergy = %s\n", energy);
-        StackMonitor::free(PISDF_STACK, energies_[peType]);
-        printf("CEnergy = %s\n", energy);
-        energies_[peType] = nullptr;
-        printf("DEnergy = %s\n", energy);
-    }*/
-    printf("1Energy = %f\n", energy);
     energies_[peType] = energy;
-
-    printf("2Energy = %f\n", energy);
-    printf("Energy = %f\n", energies_[peType]);
 }
 
 inline void PiSDFVertex::isExecutableOnAllPE() {

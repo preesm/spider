@@ -64,6 +64,8 @@ public:
 
     inline void setMemoryUnit(MemoryUnit *memoryUnit);
 
+    inline void setPower(double pePower);
+
     inline void setSpiderPEType(SpiderPEType type);
 
     inline void setSpiderHardwareType(SpiderHWType type);
@@ -87,6 +89,8 @@ public:
     inline std::string getName() const;
 
     inline MemoryUnit *getMemoryUnit() const;
+
+    inline double getPower() const;
 
     inline SpiderPEType getSpiderPEType() const;
 
@@ -112,6 +116,7 @@ private:
     std::uint32_t virtID_ = 0;         /*! S-LAM user id */
     std::string name_;                 /*! S-LAM user name of the PE */
     MemoryUnit *memoryUnit_ = nullptr; /*! Memory unit attached to this PE */
+    double pePower_ = 0.0;             /*! Power increment when turning on this PE */
 
     /* === Spider properties === */
 
@@ -144,6 +149,10 @@ void PE::setName(std::string name) {
 
 void PE::setMemoryUnit(MemoryUnit *memoryUnit) {
     memoryUnit_ = memoryUnit;
+}
+
+void PE::setPower(double pePower) {
+    pePower_ = pePower;
 }
 
 void PE::setSpiderPEType(SpiderPEType type) {
@@ -188,6 +197,10 @@ std::string PE::getName() const {
 
 MemoryUnit *PE::getMemoryUnit() const {
     return memoryUnit_;
+}
+
+double PE::getPower() const {
+    return pePower_;
 }
 
 SpiderPEType PE::getSpiderPEType() const {

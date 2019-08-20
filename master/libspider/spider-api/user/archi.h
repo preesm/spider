@@ -169,6 +169,13 @@ namespace Spider {
     void setPEMemoryUnit(PE *pe, MemoryUnit *memoryUnit);
 
     /**
+     * @brief Set the power for a giver PE.
+     * @param pe          Pointer to the PE.
+     * @param pePower     The power when this PE is turned on.
+     */
+    void setPEPower(PE *pe, double pePower);
+
+    /**
      * @brief Disable a given PE.
      * @param pe  Pointer to the PE.
      */

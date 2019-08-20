@@ -103,6 +103,10 @@ void Spider::setPEMemoryUnit(PE *pe, MemoryUnit *memoryUnit) {
     pe->setMemoryUnit(memoryUnit);
 }
 
+void Spider::setPEPower(PE *pe, double pePower) {
+    pe->setPower(pePower);
+}
+
 void Spider::disablePE(PE *pe) {
     Spider::getArchi()->deactivatePE(pe);
 }

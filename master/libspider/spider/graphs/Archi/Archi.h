@@ -186,6 +186,17 @@ public:
      */
     inline ScheduleTimeRoutine getScheduleTimeRoutine() const;
 
+    /**
+     * @brief Set the base power of the used archi.
+     * @param basePower     Base power of the architecture.
+     */
+    inline void setBasePower(double basePower);
+    /**
+     * @brief Get the base power of the used archi.
+     * @return Base power of the architecture.
+     */
+    inline double getBasePower() const;
+
 private:
 
     /* === Members === */
@@ -208,6 +219,10 @@ private:
     PE **peArray_ = nullptr;
     MemoryUnit **memoryUnitArray_ = nullptr;
     std::uint32_t *nPEsPerPETypeArray_ = nullptr;
+
+    /* === Power === */
+
+    double basePower_ = 0.0;
 };
 
 void Archi::addPE(PE *pe) {
@@ -310,6 +325,14 @@ std::uint32_t Archi::getSpiderGRTID() const {
 
 ScheduleTimeRoutine Archi::getScheduleTimeRoutine() const {
     return scheduleTimeRoutine_;
+}
+
+void Archi::setBasePower(double basePower) {
+    basePower_ = basePower;
+}
+
+double Archi::getBasePower() const {
+    return basePower_;
 }
 
 

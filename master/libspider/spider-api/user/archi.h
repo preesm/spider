@@ -289,6 +289,12 @@ namespace Spider {
      * @param routine     Send memory routine to set.
      */
     void setMemoryUnitSendRoutine(MemoryUnit *memoryUnit, sendRoutine routine);
+
+    /**
+     * @brief Set the base power of the used archi.
+     * @param basePower     Base power of the architecture.
+     */
+    void setBasePower(double basePower);
 }
 
 #endif //SPIDER_ARCHI_API_H

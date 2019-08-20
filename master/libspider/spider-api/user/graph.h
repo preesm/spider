@@ -183,6 +183,8 @@ namespace Spider {
 
     void setTimingOnType(PiSDFVertex *vertex, std::int32_t peType, const char *timing);
 
+    void setEnergyOnType(PiSDFVertex *vertex, std::int32_t peType, double energy);
+
     void isExecutableOnAllPE(PiSDFVertex *vertex);
 
     void isExecutableOnPE(PiSDFVertex *vertex, std::int32_t pe);

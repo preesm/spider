@@ -141,9 +141,13 @@ public:
 
     inline Time getTimingOnPEType(int peType);
 
+    inline double getEnergyOnPEType(int peType);
+
     inline const bool *getConstraints() const;
 
     inline void setTimingOnType(int peType, const char *timing);
+
+    inline void setEnergyOnType(int peType, double energy);
 
     inline void isExecutableOnAllPE();
 
@@ -189,6 +193,7 @@ private:
     int nPeMax_, nPeTypeMax_;
     bool *constraints_;
     Expression **timings_;
+    double *energies_;
 
     PiSDFScheduleJob *scheduleJob_;
 
@@ -411,6 +416,16 @@ inline Time PiSDFVertex::getTimingOnPEType(int peType) {
     return (Time) timings_[peType]->evaluate();
 }
 
+inline double PiSDFVertex::getEnergyOnPEType(int peType) {
+    if (peType < 0 || peType >= nPeTypeMax_) {
+        throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_ - 1);
+    }
+    /*if (energies_[peType] == nullptr) {
+        return subType_ == PISDF_SUBTYPE_NORMAL ? 0 : 50;
+    }*/
+    return energies_[peType];
+}
+
 inline const bool *PiSDFVertex::getConstraints() const {
     return constraints_;
 }
@@ -426,6 +441,28 @@ inline void PiSDFVertex::setTimingOnType(int peType, const char *timing) {
         timings_[peType] = nullptr;
     }
     timings_[peType] = CREATE(PISDF_STACK, Expression)(timing, this->getInParams(), this->getNInParam());
+}
+
+inline void PiSDFVertex::setEnergyOnType(int peType, double energy) {
+    if (peType < 0 || peType >= nPeTypeMax_) {
+        throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_);
+    }
+    printf("Energy = %f\n", energy);
+    printf("What?\n");
+    /*if (energies_[peType] != nullptr) {
+        printf("AEnergy = %s\n", energy);
+        energies_[peType]->~Expression();
+        printf("BEnergy = %s\n", energy);
+        StackMonitor::free(PISDF_STACK, energies_[peType]);
+        printf("CEnergy = %s\n", energy);
+        energies_[peType] = nullptr;
+        printf("DEnergy = %s\n", energy);
+    }*/
+    printf("1Energy = %f\n", energy);
+    energies_[peType] = energy;
+
+    printf("2Energy = %f\n", energy);
+    printf("Energy = %f\n", energies_[peType]);
 }
 
 inline void PiSDFVertex::isExecutableOnAllPE() {

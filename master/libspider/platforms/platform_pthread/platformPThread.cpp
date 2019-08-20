@@ -268,6 +268,12 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
                 papifyJobInfo.insert(std::make_pair(it->first, papifyActorInfo));
                 papifyActorInfo.clear();
             }
+            if(config.feedbackPapifyInfo){
+                std::map<lrtFct, std::map<const char *, std::map<int, double>>>::iterator it;
+                for (it = config.energyModelsInfo.begin(); it != config.energyModelsInfo.end(); ++it) {
+                    energyModelsInfo.insert(std::make_pair(it->first, it->second));
+                }
+            }
         }
     }
 #endif

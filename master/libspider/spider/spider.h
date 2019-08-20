@@ -124,6 +124,7 @@ typedef struct SpiderConfig {
     bool feedbackPapifyInfo;
 
     std::map<lrtFct, std::map<const char *, PapifyConfig*>> papifyJobInfo;
+    std::map<lrtFct, std::map<const char *, std::map<int, double>>> energyModelsInfo;
 
     lrtFct *fcts;
     int nLrtFcts;

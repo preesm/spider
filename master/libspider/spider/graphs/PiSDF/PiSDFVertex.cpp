@@ -87,6 +87,10 @@ PiSDFVertex::PiSDFVertex(
 
     timings_ = CREATE_MUL(PISDF_STACK, nPeTypeMax_, Expression*);
     memset(timings_, 0, nPeTypeMax_ * sizeof(Expression *));
+
+    energies_ = CREATE_MUL(PISDF_STACK, nPeMax_, double);
+    memset(energies_, 0.0, nPeMax_ * sizeof(double));
+
     scheduleJob_ = nullptr;
 }
 
@@ -97,6 +101,7 @@ PiSDFVertex::~PiSDFVertex() {
     StackMonitor::free(PISDF_STACK, inParams_);
     StackMonitor::free(PISDF_STACK, outParams_);
     StackMonitor::free(PISDF_STACK, constraints_);
+    StackMonitor::free(PISDF_STACK, energies_);
 
     for (int i = 0; i < nPeTypeMax_; i++) {
         if (timings_[i]) {

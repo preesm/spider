@@ -201,3 +201,16 @@ void PapifyAction::writeEvents(FILE *file) {
         fprintf(outputFile_, "\n");
     }
 }
+
+long long PapifyAction::getTimeStart(){
+    return timeStart;
+}
+long long PapifyAction::getTimeStop(){
+    return timeStop;
+}
+int PapifyAction::getNumEvents(){
+    return numberOfEvents_;
+}
+long long* PapifyAction::getEvents(){
+    return counterValues_.data();
+}

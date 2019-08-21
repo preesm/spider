@@ -104,6 +104,8 @@ public:
 
     void rstJobIxRecv() override;
 
+    void processPapifyFeedback(SRDAGGraph *srDagGraph) override;
+
     /** Platform getter/setter */
     /**
      * @brief Get current LRT
@@ -160,6 +162,10 @@ public:
         return papifyJobInfo;
     }
 
+    inline std::map<lrtFct, std::map<const char *, std::map<int, double>>> &getEnergyModelsInfo() {
+        return energyModelsInfo;
+    }
+
 #endif
 
 private:
@@ -179,6 +185,7 @@ private:
     ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
     ControlMessageQueue<TraceMessage *> *traceQueue_;
+    ControlMessageQueue<PapifyMessage *> *papifyQueue_;
     NotificationQueue<NotificationMessage> **lrtNotificationQueues_;
 
     DataQueues *dataQueues_;
@@ -192,6 +199,8 @@ private:
     // Papify information
     std::map<lrtFct, std::map<const char *, PapifyAction*>> papifyJobInfo;
     std::map<const char *, PapifyAction*> papifyActorInfo;
+    // Energy information based on PAPIFY
+    std::map<lrtFct, std::map<const char *, std::map<int, double>>> energyModelsInfo;
 #endif
 
     struct LRTInfo *lrtInfoArray_;
@@ -207,6 +216,8 @@ typedef struct LRTInfo {
     int nFcts;
     int coreAffinity;
     bool usePapify;
+    bool dumpPapifyInfo;
+    bool feedbackPapifyInfo;
     StackInfo lrtStack;
     PlatformPThread *platform;
     pthread_barrier_t *pthreadBarrier;

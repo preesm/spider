@@ -91,16 +91,26 @@ public:
 
     inline void setUsePapify();
 
+    inline void setPapifyDump();
+
+    inline void setPapifyFeedback();
+
     inline void setCommunicators();
 
 #ifdef PAPI_AVAILABLE
 
     void addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction);
 
+    void addEnergyModelJobInfo(lrtFct const &fct, std::map<int, double> energyModelColumnValue);
+
 #endif
 
 protected:
     void sendTrace(int srdagIx, Time start, Time end);
+
+#ifdef PAPI_AVAILABLE
+    void sendPapifyTrace(int srdagIx, PapifyAction *papifyAction, std::map<int, double> energyModelColumnValue);
+#endif
 
 private:
     int ix_;
@@ -108,12 +118,15 @@ private:
     const lrtFct *fcts_;
     bool run_;
     bool usePapify_;
+    bool dumpPapifyInfo_;
+    bool feedbackPapifyInfo_;
     int jobIx_;
     int jobIxTotal_;
     Stack *lrtStack_;
 
 #ifdef PAPI_AVAILABLE
     std::map<lrtFct, PapifyAction *> jobPapifyActions_;
+    std::map<lrtFct, std::map<int, double>> jobEnergyModels_;
 #endif
 #ifdef VERBOSE_TIME
     Time time_waiting_job;
@@ -190,6 +203,12 @@ private:
     void handleTraceNotification(NotificationMessage &message);
 
     /**
+     * @brief Fetch a PAPIFY notification message
+     * @param message message to fetch
+     */
+    void handlePapifyNotification(NotificationMessage &message);
+
+    /**
      * @brief Check for received notifications and treat them if any.
      * @param shouldWait Flag to wait for notification if none are available.
      * @return
@@ -230,6 +249,14 @@ inline void LRT::rstJobIx() {
 
 inline void LRT::setUsePapify() {
     usePapify_ = true;
+}
+
+inline void LRT::setPapifyDump() {
+    dumpPapifyInfo_ = true;
+}
+
+inline void LRT::setPapifyFeedback() {
+    feedbackPapifyInfo_ = true;
 }
 
 void LRT::initStack(StackInfo info) {

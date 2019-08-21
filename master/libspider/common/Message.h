@@ -91,6 +91,7 @@ typedef enum {
     LRT_NOTIFICATION,         // Signal that notification is about LRT state
     TRACE_NOTIFICATION,       // Signal that notification is about TRACE system
     JOB_NOTIFICATION,         // Signal that notification is about JOB information
+    PAPIFY_NOTIFICATION,      // Signal that notification is about PAPIFY information
     UNDEFINED_NOTIFICATION    // Signal that notification is undefined
 } NotificationType;
 
@@ -123,6 +124,10 @@ typedef enum {
     JOB_DELAY_BROADCAST_JOBSTAMP,   // Signal LRT to broadcast its job stamp to everybody after last job has been done
     JOB_UPDATE_JOBSTAMP,            // Signal LRT that an update of job stamp is pending
 } JobNotificationType;
+
+typedef enum {
+    PAPIFY_TIMING               // Signal GRT that PAPIFY timing info from an actor execution is available
+} PapifyNotificationType;
 
 /**
  * @brief Generic notification message class
@@ -162,7 +167,7 @@ public:
     }
 
 private:
-    std::uint16_t type_;    // Main type of notification (LRT, TRACE, JOB)
+    std::uint16_t type_;    // Main type of notification (LRT, TRACE, JOB, PAPIFY)
     std::uint16_t subType_; // SubType of notification
     std::int32_t index_;    // Index of the message to fetch, may be used for direct value passing (see documentation of notification)
     std::int32_t lrtID_;    // ID of the sender
@@ -279,6 +284,82 @@ private:
     std::int32_t lrtID_;
     Time startTime_;
     Time endTime_;
+};
+
+/**
+ * @brief message containing PAPIFY information
+ */
+class PapifyMessage {
+public:
+
+    explicit PapifyMessage(std::int32_t vertexID = -1, std::int32_t spiderTask = -1, std::int32_t lrtID = -1,
+                          long long start = 0, long long end = 0, int numEvents = 0, long long* events = nullptr, double energy = 0.0) {
+        vertexID_ = vertexID;
+        spiderTask_ = spiderTask;
+        lrtID_ = lrtID;
+        startTime_ = start;
+        endTime_ = end;
+        numEvents_ = numEvents;
+        if (numEvents_ > 0) {
+            events_ = CREATE_MUL(ARCHI_STACK, numEvents, long long);
+            for(int i = 0; i < numEvents_; i++){
+                events_[i] = events[i];
+            }
+        } 
+        energy_ = energy;
+    }
+
+    ~PapifyMessage() {
+        if(numEvents_ > 0){
+            StackMonitor::free(ARCHI_STACK, events_);
+        }
+    }
+
+    inline std::int32_t getLRTID() {
+        return lrtID_;
+    }
+
+    inline long long getStartTime() {
+        return startTime_;
+    }
+
+    inline long long getEndTime() {
+        return endTime_;
+    }
+
+    inline long long getElapsedTime() {
+        return endTime_ - startTime_;
+    }
+
+    inline int getNumEvents() {
+        return numEvents_;
+    }
+
+    inline long long *getEvents() {
+        return events_;
+    }
+
+    inline std::int32_t getVertexID() {
+        return vertexID_;
+    }
+
+    inline std::int32_t getSpiderTask() {
+        return spiderTask_;
+    }
+
+    inline double getEnergy() {
+        return energy_;
+    }
+
+private:
+    std::int32_t vertexID_;
+    std::int32_t spiderTask_;
+    std::int32_t lrtID_;
+    long long startTime_;
+    long long endTime_;
+    int numEvents_;
+    long long* events_;
+    double energy_;
 };
 
 #endif/*MESSAGE_H*/

@@ -169,6 +169,13 @@ namespace Spider {
     void setPEMemoryUnit(PE *pe, MemoryUnit *memoryUnit);
 
     /**
+     * @brief Set the power for a giver PE.
+     * @param pe          Pointer to the PE.
+     * @param pePower     The power when this PE is turned on.
+     */
+    void setPEPower(PE *pe, double pePower);
+
+    /**
      * @brief Disable a given PE.
      * @param pe  Pointer to the PE.
      */
@@ -289,6 +296,12 @@ namespace Spider {
      * @param routine     Send memory routine to set.
      */
     void setMemoryUnitSendRoutine(MemoryUnit *memoryUnit, sendRoutine routine);
+
+    /**
+     * @brief Set the base power of the used archi.
+     * @param basePower     Base power of the architecture.
+     */
+    void setBasePower(double basePower);
 }
 
 #endif //SPIDER_ARCHI_API_H

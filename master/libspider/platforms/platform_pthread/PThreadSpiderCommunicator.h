@@ -56,7 +56,8 @@ public:
             ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue,
             ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue,
             NotificationQueue<NotificationMessage> **notificationQueue,
-            ControlMessageQueue<TraceMessage *> *traceQueue);
+            ControlMessageQueue<TraceMessage *> *traceQueue,
+            ControlMessageQueue<PapifyMessage *> *papifyQueue);
 
     ~PThreadSpiderCommunicator() override = default;
 
@@ -76,10 +77,15 @@ public:
 
     void pop_trace_message(TraceMessage **message, std::int32_t id) override;
 
+    std::int32_t push_papify_message(PapifyMessage **message) override;
+
+    void pop_papify_message(PapifyMessage **message, std::int32_t id) override;
+
 private:
     ControlMessageQueue<JobInfoMessage *> *spider2LrtJobQueue_;
     ControlMessageQueue<ParameterMessage *> *lrt2SpiderParamQueue_;
     ControlMessageQueue<TraceMessage *> *traceQueue_;
+    ControlMessageQueue<PapifyMessage *> *papifyQueue_;
     NotificationQueue<NotificationMessage> **notificationQueue_;
 };
 

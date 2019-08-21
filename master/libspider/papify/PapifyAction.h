@@ -99,6 +99,31 @@ public:
      */
     void writeEvents();
 
+    /**
+     * @brief Get start time
+     *
+     */
+    long long getTimeStart();
+
+
+    /**
+     * @brief Get stop time
+     *
+     */
+    long long getTimeStop();
+
+    /**
+     * @brief Get number of events
+     *
+     */
+    int getNumEvents();
+
+    /**
+     * @brief Get PAPI events
+     *
+     */
+    long long* getEvents();
+
 
     /**
      * @brief Write the events values

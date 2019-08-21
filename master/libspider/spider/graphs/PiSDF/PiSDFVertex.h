@@ -141,9 +141,13 @@ public:
 
     inline Time getTimingOnPEType(int peType);
 
+    inline double getEnergyOnPEType(int peType);
+
     inline const bool *getConstraints() const;
 
     inline void setTimingOnType(int peType, const char *timing);
+
+    inline void setEnergyOnType(int peType, double energy);
 
     inline void isExecutableOnAllPE();
 
@@ -189,6 +193,7 @@ private:
     int nPeMax_, nPeTypeMax_;
     bool *constraints_;
     Expression **timings_;
+    double *energies_;
 
     PiSDFScheduleJob *scheduleJob_;
 
@@ -383,7 +388,7 @@ inline void PiSDFVertex::setSubGraph(PiSDFGraph *subGraph) {
     subGraph_ = subGraph;
 }
 
-/** Constraints/timings */
+/** Constraints/timings/energies */
 inline bool PiSDFVertex::canExecuteOn(int pe) {
     if (pe < 0 || pe >= nPeMax_)
         throwSpiderException("Bad PE index. Value: %d -- Max: %d", pe, nPeMax_);
@@ -411,6 +416,13 @@ inline Time PiSDFVertex::getTimingOnPEType(int peType) {
     return (Time) timings_[peType]->evaluate();
 }
 
+inline double PiSDFVertex::getEnergyOnPEType(int peType) {
+    if (peType < 0 || peType >= nPeTypeMax_) {
+        throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_ - 1);
+    }
+    return energies_[peType];
+}
+
 inline const bool *PiSDFVertex::getConstraints() const {
     return constraints_;
 }
@@ -426,6 +438,13 @@ inline void PiSDFVertex::setTimingOnType(int peType, const char *timing) {
         timings_[peType] = nullptr;
     }
     timings_[peType] = CREATE(PISDF_STACK, Expression)(timing, this->getInParams(), this->getNInParam());
+}
+
+inline void PiSDFVertex::setEnergyOnType(int peType, double energy) {
+    if (peType < 0 || peType >= nPeTypeMax_) {
+        throwSpiderException("Bad PEType index. Value: %d -- Max: %d", peType, nPeTypeMax_);
+    }
+    energies_[peType] = energy;
 }
 
 inline void PiSDFVertex::isExecutableOnAllPE() {

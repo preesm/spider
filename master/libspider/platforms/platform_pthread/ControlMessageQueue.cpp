@@ -99,3 +99,6 @@ class ControlMessageQueue<ParameterMessage *>;
 
 template
 class ControlMessageQueue<TraceMessage *>;
+
+template
+class ControlMessageQueue<PapifyMessage *>;

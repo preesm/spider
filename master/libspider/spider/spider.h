@@ -120,8 +120,11 @@ typedef struct SpiderConfig {
     bool verbose;
     bool traceEnabled;
     bool usePapify;
+    bool dumpPapifyInfo;
+    bool feedbackPapifyInfo;
 
     std::map<lrtFct, std::map<const char *, PapifyConfig*>> papifyJobInfo;
+    std::map<lrtFct, std::map<const char *, std::map<int, double>>> energyModelsInfo;
 
     lrtFct *fcts;
     int nLrtFcts;
@@ -179,6 +182,8 @@ namespace Spider {
     void setActorPrecedence(bool useActorPrecedence);
 
     void setTraceEnabled(bool traceEnabled);
+
+    void setPapifyFeedbackEnabled(bool papifyFeedbackEnabled);
 
     bool getVerbose();
 

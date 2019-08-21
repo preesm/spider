@@ -68,6 +68,10 @@ void Spider::setSpiderGRTVirtualID(Archi *archi, std::uint32_t id) {
     archi->setSpiderGRTID(id);
 }
 
+void Spider::setBasePower(double basePower) {
+    Spider::getArchi()->setBasePower(basePower);
+}
+
 /* === PE related API === */
 
 PE *Spider::createPE(std::uint32_t hwType,
@@ -97,6 +101,10 @@ void Spider::setPEName(PE *pe, std::string name) {
 
 void Spider::setPEMemoryUnit(PE *pe, MemoryUnit *memoryUnit) {
     pe->setMemoryUnit(memoryUnit);
+}
+
+void Spider::setPEPower(PE *pe, double pePower) {
+    pe->setPower(pePower);
 }
 
 void Spider::disablePE(PE *pe) {

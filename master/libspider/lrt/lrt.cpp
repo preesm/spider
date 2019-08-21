@@ -75,6 +75,8 @@ LRT::LRT(int ix) {
     jobIxTotal_ = 0;
     run_ = false;
     usePapify_ = false;
+    dumpPapifyInfo_ = false;
+    feedbackPapifyInfo_ = false;
 
     traceEnabled_ = false;
     repeatJobQueue_ = false;
@@ -147,6 +149,27 @@ LRT::~LRT() {
     }
 #endif
 }
+
+#ifdef PAPI_AVAILABLE
+void LRT::sendPapifyTrace(int srdagIx, PapifyAction *papifyAction, std::map<int, double> energyModelColumnValue) {
+    // Push message
+    double energyValue = 0.0;
+    if(!energyModelColumnValue.empty()) {
+        long long* papifyEvents = papifyAction->getEvents();
+        std::map<int, double>::iterator it;     
+        for (it = energyModelColumnValue.begin(); it != energyModelColumnValue.end(); ++it) {
+            energyValue = energyValue + (it->second * papifyEvents[it->first]);
+        }   
+    }
+    auto *papifyMessage = CREATE(ARCHI_STACK, PapifyMessage)(srdagIx, -1, getIx(), papifyAction->getTimeStart(), papifyAction->getTimeStop(), 
+        papifyAction->getNumEvents(), papifyAction->getEvents(), energyValue);
+    auto index = spiderCommunicator_->push_papify_message(&papifyMessage);
+
+    // Push notification
+    auto notificationMessage = NotificationMessage(PAPIFY_NOTIFICATION, PAPIFY_TIMING, getIx(), index);
+    spiderCommunicator_->push_notification(Platform::get()->getNLrt(), &notificationMessage);
+}
+#endif
 
 void LRT::sendTrace(int srdagIx, Time start, Time end) {
     // Push message
@@ -276,7 +299,18 @@ void LRT::runJob(JobInfoMessage *job) {
                 // Stop monitoring
                 papifyAction->stopMonitor();
                 // Writes the monitoring results
-                papifyAction->writeEvents();
+                if (dumpPapifyInfo_) {
+                    papifyAction->writeEvents();
+                }
+                if(feedbackPapifyInfo_) {
+                    auto it = jobEnergyModels_.find(fcts_[fctID]);
+                    if (it != jobEnergyModels_.end()) {
+                        sendPapifyTrace(job->srdagID_, papifyAction, jobEnergyModels_.at(fcts_[fctID]));
+                    }else{
+                        std::map<int, double> emptyMap;
+                        sendPapifyTrace(job->srdagID_, papifyAction, emptyMap);
+                    }
+                }
             } catch (std::out_of_range &e) {
                 // This job does not have papify events associated with  it
                 fcts_[fctID](inFifosAlloc, outFifosAlloc, inParams, outParams);
@@ -582,5 +616,8 @@ void LRT::run(bool loop) {
 #ifdef PAPI_AVAILABLE
 void LRT::addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction) {
     this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
+}
+void LRT::addEnergyModelJobInfo(lrtFct const &fct, std::map<int, double> energyModelColumnValue) {
+    this->jobEnergyModels_.insert(std::make_pair(fct, energyModelColumnValue));
 }
 #endif

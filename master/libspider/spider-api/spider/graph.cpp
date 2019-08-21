@@ -279,6 +279,10 @@ void Spider::setTimingOnType(PiSDFVertex *vertex, std::int32_t peType, const cha
     vertex->setTimingOnType(peType, timing);
 }
 
+void Spider::setEnergyOnType(PiSDFVertex *vertex, std::int32_t peType, double energy) {
+    vertex->setEnergyOnType(peType, energy);
+}
+
 void Spider::isExecutableOnAllPE(PiSDFVertex *vertex) {
     vertex->isExecutableOnAllPE();
 }

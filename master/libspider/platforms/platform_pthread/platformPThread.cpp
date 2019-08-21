@@ -47,6 +47,8 @@
 #include <lrt.h>
 #include <Logger.h>
 
+#include <graphs/SRDAG/SRDAGGraph.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -129,7 +131,24 @@ void *lrtPthreadRunner(void *args) {
             lrtInfo->lrt->addPapifyJobInfo(mapEntry.first, new PapifyAction(*mapEntry.second, lrtInfo->lrtID));
         }*/
         auto papifyJobInfo = lrtInfo->platform->getPapifyInfo();
+        auto energyModelsInfo = lrtInfo->platform->getEnergyModelsInfo();
         lrtInfo->lrt->setUsePapify();
+        if(lrtInfo->dumpPapifyInfo){
+            lrtInfo->lrt->setPapifyDump();
+        }
+        if(lrtInfo->feedbackPapifyInfo){
+            lrtInfo->lrt->setPapifyFeedback();
+            std::map<lrtFct, std::map<const char *, std::map<int, double>>>::iterator it;
+            std::map<const char *, std::map<int, double>>::iterator itInner;
+            for (it = energyModelsInfo.begin(); it != energyModelsInfo.end(); ++it) {
+                for (itInner = it->second.begin(); itInner != it->second.end(); ++itInner) {
+                    std::string lrtName = std::string("LRT_") + std::to_string(lrtInfo->lrtID);
+                    if(!strcmp(lrtName.c_str(), itInner->first)){
+                        lrtInfo->lrt->addEnergyModelJobInfo(it->first, itInner->second);
+                    }
+                }
+            }
+        }
         std::map<lrtFct, std::map<const char *, PapifyAction *>>::iterator it;
         std::map<const char *, PapifyAction*>::iterator itInner;
         for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
@@ -213,6 +232,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
     dataQueues_ = CREATE(ARCHI_STACK, DataQueues)(nLrt_);
     /** TraceQueue allocation */
     traceQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<TraceMessage *>);
+    /** PapifyQueue allocation */
+    papifyQueue_ = CREATE(ARCHI_STACK, ControlMessageQueue<PapifyMessage *>);
     /** Threads structure */
     thread_lrt_ = CREATE_MUL(ARCHI_STACK, nLrt_ - 1, pthread_t);
     lrtInfoArray_ = CREATE_MUL(ARCHI_STACK, nLrt_, LRTInfo);
@@ -222,7 +243,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
             spider2LrtJobQueue_,
             lrt2SpiderParamQueue_,
             lrtNotificationQueues_,
-            traceQueue_);
+            traceQueue_,
+            papifyQueue_);
 
     // TODO use "usePapify" only for monitored LRTs / HW PEs
 #ifndef PAPI_AVAILABLE
@@ -231,6 +253,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
         printf("WARNING: Spider was not compiled on a platform_ with PAPI, thus the monitoring is disabled.\n");
     }
     config.usePapify = false;
+    config.dumpPapifyInfo = false;
+    config.feedbackPapifyInfo = false;
 #else
     if (config.usePapify) {
         // Initializing Papify
@@ -254,6 +278,13 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
                 }
                 papifyJobInfo.insert(std::make_pair(it->first, papifyActorInfo));
                 papifyActorInfo.clear();
+            }
+            if(config.feedbackPapifyInfo){
+                // Copy map in the local variable
+                std::map<lrtFct, std::map<const char *, std::map<int, double>>>::iterator it;
+                for (it = config.energyModelsInfo.begin(); it != config.energyModelsInfo.end(); ++it) {
+                    energyModelsInfo.insert(std::make_pair(it->first, it->second));
+                }
             }
         }
     }
@@ -284,6 +315,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
         lrtInfoArray_[i].lrtStack.size = stackConfig.lrtStack.size / nLrt_;
         /** Papify related information */
         lrtInfoArray_[i].usePapify = config.usePapify;
+        lrtInfoArray_[i].dumpPapifyInfo = config.dumpPapifyInfo;
+        lrtInfoArray_[i].feedbackPapifyInfo = config.feedbackPapifyInfo;
     }
     auto spiderGRTID = archi->getSpiderGRTID();
     lrtThreadsArray[spiderGRTID] = pthread_self();
@@ -301,13 +334,29 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
 #ifdef PAPI_AVAILABLE
     if (config.usePapify) {
         lrt_[spiderGRTID]->setUsePapify();
+        if(config.dumpPapifyInfo){
+            lrt_[spiderGRTID]->setPapifyDump();
+        }
+        if(config.feedbackPapifyInfo){
+            lrt_[spiderGRTID]->setPapifyFeedback();
+            std::map<lrtFct, std::map<const char *, std::map<int, double>>>::iterator it;
+            std::map<const char *, std::map<int, double>>::iterator itInner;
+            const char * lrtName = std::string("LRT_0").c_str();
+            for (it = energyModelsInfo.begin(); it != energyModelsInfo.end(); ++it) {
+                for (itInner = it->second.begin(); itInner != it->second.end(); ++itInner) {
+                    if(!strcmp(lrtName, itInner->first)){
+                        lrt_[spiderGRTID]->addEnergyModelJobInfo(it->first, itInner->second);
+                    }
+                }
+            }
+        }
         std::map<lrtFct, std::map<const char*, PapifyAction *>>::iterator it;
         std::map<const char *, PapifyAction*>::iterator itInner;
         const char * lrtName = std::string("LRT_0").c_str();
         for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
             for (itInner = it->second.begin(); itInner != it->second.end(); ++itInner) {
                 if(!strcmp(lrtName, itInner->first)){
-                    lrt_[0]->addPapifyJobInfo(it->first, new PapifyAction(*itInner->second, itInner->first));
+                    lrt_[spiderGRTID]->addPapifyJobInfo(it->first, new PapifyAction(*itInner->second, itInner->first));
                 }
             }
         }
@@ -378,10 +427,12 @@ PlatformPThread::~PlatformPThread() {
     spider2LrtJobQueue_->~ControlMessageQueue();
     lrt2SpiderParamQueue_->~ControlMessageQueue();
     traceQueue_->~ControlMessageQueue();
+    papifyQueue_->~ControlMessageQueue();
     StackMonitor::free(ARCHI_STACK, lrtNotificationQueues_);
     StackMonitor::free(ARCHI_STACK, spider2LrtJobQueue_);
     StackMonitor::free(ARCHI_STACK, lrt2SpiderParamQueue_);
     StackMonitor::free(ARCHI_STACK, traceQueue_);
+    StackMonitor::free(ARCHI_STACK, papifyQueue_);
 
 
     dataQueues_->~DataQueues();
@@ -456,6 +507,43 @@ void PlatformPThread::rstJobIxRecv() {
         } else {
             /** Save the notification for later **/
             spiderCommunicator->push_notification(Platform::get()->getNLrt(), &finishedMessage);
+        }
+    }
+}
+
+void PlatformPThread::processPapifyFeedback(SRDAGGraph *srDagGraph) {
+    auto *spiderCommunicator = Platform::get()->getSpiderCommunicator();
+    NotificationMessage notificationMessage;
+    /** Wait for LRTs to finish their jobs **/
+    auto *archi = Spider::getArchi();
+    auto nPEToWait = archi->getNActivatedPE();
+    std::uint32_t nFinishedPE = 0;
+    while (nFinishedPE < nPEToWait) {
+        spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &notificationMessage, true);
+        if (notificationMessage.getType() == PAPIFY_NOTIFICATION &&
+            notificationMessage.getSubType() == PAPIFY_TIMING) {
+            PapifyMessage *papifyMessage;
+            spiderCommunicator->pop_papify_message(&papifyMessage, notificationMessage.getIndex());
+            /* == Updating timing on corresponding PEs == */
+            auto peType = archi->getPEFromSpiderID(papifyMessage->getLRTID())->getHardwareType();
+            int srDagIndex = papifyMessage->getVertexID();
+            SRDAGVertex* dagVertexId = srDagGraph->getVertexFromIx(srDagIndex);
+            PiSDFVertex* pisdfVertex = dagVertexId->getReference();
+            long long timingActor = papifyMessage->getElapsedTime();
+            if(timingActor != 0){
+                std::string executionTime = std::to_string(papifyMessage->getElapsedTime());
+                pisdfVertex->setTimingOnType(peType, executionTime.c_str());
+            }
+            double energyActor = papifyMessage->getEnergy();
+            if(energyActor != 0.0){
+                pisdfVertex->setEnergyOnType(peType, energyActor);
+            }
+            papifyMessage->~PapifyMessage();
+            StackMonitor::free(ARCHI_STACK, papifyMessage);
+        } else {
+            /** Save the notification for later **/
+            spiderCommunicator->push_notification(Platform::get()->getNLrt(), &notificationMessage);
+            nFinishedPE++;
         }
     }
 }

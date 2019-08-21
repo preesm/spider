@@ -101,6 +101,8 @@ public:
 
     void addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction);
 
+    void addEnergyModelJobInfo(lrtFct const &fct, std::map<int, double> energyModelColumnValue);
+
 #endif
 
 protected:
@@ -124,6 +126,7 @@ private:
 
 #ifdef PAPI_AVAILABLE
     std::map<lrtFct, PapifyAction *> jobPapifyActions_;
+    std::map<lrtFct, std::map<int, double>> jobEnergyModels_;
 #endif
 #ifdef VERBOSE_TIME
     Time time_waiting_job;

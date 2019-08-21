@@ -294,8 +294,12 @@ void LRT::runJob(JobInfoMessage *job) {
                 if (dumpPapifyInfo_) {
                     papifyAction->writeEvents();
                 }
-                if(feedbackPapifyInfo_){
+                if(feedbackPapifyInfo_) {
                     sendPapifyTrace(job->srdagID_, papifyAction);
+                    /*auto it = jobEnergyModels_.find(fcts_[fctID]);
+                    if (it != jobEnergyModels_.end()) {
+                        printf("I have found a model for %d in lrt %d\n", fctID, ix_);
+                    }*/
                 }
             } catch (std::out_of_range &e) {
                 // This job does not have papify events associated with  it
@@ -602,5 +606,8 @@ void LRT::run(bool loop) {
 #ifdef PAPI_AVAILABLE
 void LRT::addPapifyJobInfo(lrtFct const &fct, PapifyAction *papifyAction) {
     this->jobPapifyActions_.insert(std::make_pair(fct, papifyAction));
+}
+void LRT::addEnergyModelJobInfo(lrtFct const &fct, std::map<int, double> energyModelColumnValue) {
+    this->jobEnergyModels_.insert(std::make_pair(fct, energyModelColumnValue));
 }
 #endif

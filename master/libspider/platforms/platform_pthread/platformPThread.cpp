@@ -131,12 +131,23 @@ void *lrtPthreadRunner(void *args) {
             lrtInfo->lrt->addPapifyJobInfo(mapEntry.first, new PapifyAction(*mapEntry.second, lrtInfo->lrtID));
         }*/
         auto papifyJobInfo = lrtInfo->platform->getPapifyInfo();
+        auto energyModelsInfo = lrtInfo->platform->getEnergyModelsInfo();
         lrtInfo->lrt->setUsePapify();
         if(lrtInfo->dumpPapifyInfo){
             lrtInfo->lrt->setPapifyDump();
         }
         if(lrtInfo->feedbackPapifyInfo){
             lrtInfo->lrt->setPapifyFeedback();
+            std::map<lrtFct, std::map<const char *, std::map<int, double>>>::iterator it;
+            std::map<const char *, std::map<int, double>>::iterator itInner;
+            for (it = energyModelsInfo.begin(); it != energyModelsInfo.end(); ++it) {
+                for (itInner = it->second.begin(); itInner != it->second.end(); ++itInner) {
+                    std::string lrtName = std::string("LRT_") + std::to_string(lrtInfo->lrtID);
+                    if(!strcmp(lrtName.c_str(), itInner->first)){
+                        lrtInfo->lrt->addEnergyModelJobInfo(it->first, itInner->second);
+                    }
+                }
+            }
         }
         std::map<lrtFct, std::map<const char *, PapifyAction *>>::iterator it;
         std::map<const char *, PapifyAction*>::iterator itInner;
@@ -269,6 +280,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
                 papifyActorInfo.clear();
             }
             if(config.feedbackPapifyInfo){
+                // Copy map in the local variable
                 std::map<lrtFct, std::map<const char *, std::map<int, double>>>::iterator it;
                 for (it = config.energyModelsInfo.begin(); it != config.energyModelsInfo.end(); ++it) {
                     energyModelsInfo.insert(std::make_pair(it->first, it->second));
@@ -327,6 +339,16 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
         }
         if(config.feedbackPapifyInfo){
             lrt_[spiderGRTID]->setPapifyFeedback();
+            std::map<lrtFct, std::map<const char *, std::map<int, double>>>::iterator it;
+            std::map<const char *, std::map<int, double>>::iterator itInner;
+            const char * lrtName = std::string("LRT_0").c_str();
+            for (it = energyModelsInfo.begin(); it != energyModelsInfo.end(); ++it) {
+                for (itInner = it->second.begin(); itInner != it->second.end(); ++itInner) {
+                    if(!strcmp(lrtName, itInner->first)){
+                        lrt_[spiderGRTID]->addEnergyModelJobInfo(it->first, itInner->second);
+                    }
+                }
+            }
         }
         std::map<lrtFct, std::map<const char*, PapifyAction *>>::iterator it;
         std::map<const char *, PapifyAction*>::iterator itInner;
@@ -334,7 +356,7 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
         for (it = papifyJobInfo.begin(); it != papifyJobInfo.end(); ++it) {
             for (itInner = it->second.begin(); itInner != it->second.end(); ++itInner) {
                 if(!strcmp(lrtName, itInner->first)){
-                    lrt_[0]->addPapifyJobInfo(it->first, new PapifyAction(*itInner->second, itInner->first));
+                    lrt_[spiderGRTID]->addPapifyJobInfo(it->first, new PapifyAction(*itInner->second, itInner->first));
                 }
             }
         }

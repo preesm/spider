@@ -293,7 +293,7 @@ class PapifyMessage {
 public:
 
     explicit PapifyMessage(std::int32_t vertexID = -1, std::int32_t spiderTask = -1, std::int32_t lrtID = -1,
-                          long long start = 0, long long end = 0, int numEvents = 0, long long* events = nullptr) {
+                          long long start = 0, long long end = 0, int numEvents = 0, long long* events = nullptr, double energy = 0.0) {
         vertexID_ = vertexID;
         spiderTask_ = spiderTask;
         lrtID_ = lrtID;
@@ -306,6 +306,7 @@ public:
                 events_[i] = events[i];
             }
         } 
+        energy_ = energy;
     }
 
     ~PapifyMessage() {
@@ -346,6 +347,10 @@ public:
         return spiderTask_;
     }
 
+    inline double getEnergy() {
+        return energy_;
+    }
+
 private:
     std::int32_t vertexID_;
     std::int32_t spiderTask_;
@@ -354,6 +359,7 @@ private:
     long long endTime_;
     int numEvents_;
     long long* events_;
+    double energy_;
 };
 
 #endif/*MESSAGE_H*/

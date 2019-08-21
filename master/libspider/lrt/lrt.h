@@ -109,7 +109,7 @@ protected:
     void sendTrace(int srdagIx, Time start, Time end);
 
 #ifdef PAPI_AVAILABLE
-    void sendPapifyTrace(int srdagIx, PapifyAction *papifyAction);
+    void sendPapifyTrace(int srdagIx, PapifyAction *papifyAction, std::map<int, double> energyModelColumnValue);
 #endif
 
 private:

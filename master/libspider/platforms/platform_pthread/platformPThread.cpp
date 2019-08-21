@@ -526,11 +526,18 @@ void PlatformPThread::processPapifyFeedback(SRDAGGraph *srDagGraph) {
             spiderCommunicator->pop_papify_message(&papifyMessage, notificationMessage.getIndex());
             /* == Updating timing on corresponding PEs == */
             auto peType = archi->getPEFromSpiderID(papifyMessage->getLRTID())->getHardwareType();
-            std::string executionTime = std::to_string(papifyMessage->getElapsedTime());
             int srDagIndex = papifyMessage->getVertexID();
             SRDAGVertex* dagVertexId = srDagGraph->getVertexFromIx(srDagIndex);
             PiSDFVertex* pisdfVertex = dagVertexId->getReference();
-            pisdfVertex->setTimingOnType(peType, executionTime.c_str());
+            long long timingActor = papifyMessage->getElapsedTime();
+            if(timingActor != 0){
+                std::string executionTime = std::to_string(papifyMessage->getElapsedTime());
+                pisdfVertex->setTimingOnType(peType, executionTime.c_str());
+            }
+            double energyActor = papifyMessage->getEnergy();
+            if(energyActor != 0.0){
+                pisdfVertex->setEnergyOnType(peType, energyActor);
+            }
             papifyMessage->~PapifyMessage();
             StackMonitor::free(ARCHI_STACK, papifyMessage);
         } else {

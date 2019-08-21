@@ -9,6 +9,11 @@ Spider Changelog
   * papify=dump: dump PAPIFY info into csv files;
   * papify=feedback: PAPIFY (timing) feedback is retrieved by GRT and timings are updated;
   * papify=both: both modes active at the same time;
+* SPiDER now includes information about energy consumed by an actor executed on a specific PE;
+* SPiDER now includes information about energy consumption models associated to actors executed on PEs;
+* PAPIFY in SPiDER with feedback mode active:
+  * energy feedback is also supported. Energy consumption models based on PAPIFY events are considered when updating the energy consumption;
+  * energy consumption of one actor being executed on a specific PE type is updated if possible;
 
 ### Changes
 

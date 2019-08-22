@@ -5,7 +5,7 @@ Spider (Synchronous Parameterized and Interfaced Dataflow Embedded Runtime) is a
 
 ## Documentation
 
-Documentation is available online at http://preesm.sourceforge.net/website/ (Tutorial 9 on reconfigurable application).
+Documentation is available online at http://preesm.org/website/ (Tutorial 9 on reconfigurable application).
 
 ## Install
 

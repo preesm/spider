@@ -218,6 +218,7 @@ typedef struct LRTInfo {
     bool usePapify;
     bool dumpPapifyInfo;
     bool feedbackPapifyInfo;
+    bool useApollo;
     StackInfo lrtStack;
     PlatformPThread *platform;
     pthread_barrier_t *pthreadBarrier;

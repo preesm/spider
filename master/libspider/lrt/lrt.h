@@ -48,6 +48,12 @@
 #include <LrtCommunicator.h>
 #include <scheduling/PiSDFScheduleJob.h>
 
+#ifdef APOLLO_AVAILABLE
+
+#include <apolloAPI.h>
+
+#endif
+
 #ifdef PAPI_AVAILABLE
 
 #include "../papify/PapifyAction.h"
@@ -96,6 +102,8 @@ public:
 
     inline void setPapifyFeedback();
 
+    inline void setUseApollo();
+
     inline void setCommunicators();
 
 #ifdef PAPI_AVAILABLE
@@ -121,6 +129,7 @@ private:
     bool usePapify_;
     bool dumpPapifyInfo_;
     bool feedbackPapifyInfo_;
+    bool useApollo_;
     int jobIx_;
     int jobIxTotal_;
     Stack *lrtStack_;
@@ -258,6 +267,10 @@ inline void LRT::setPapifyDump() {
 
 inline void LRT::setPapifyFeedback() {
     feedbackPapifyInfo_ = true;
+}
+
+inline void LRT::setUseApollo() {
+    useApollo_ = true;
 }
 
 void LRT::initStack(StackInfo info) {

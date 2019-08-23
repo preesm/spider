@@ -97,6 +97,7 @@ static bool useGraphOptim_;
 static bool useActorPrecedence_;
 static bool traceEnabled_;
 static bool papifyFeedbackEnabled_;
+static bool apolloEnabled_;
 
 static bool containsDynamicParam(PiSDFGraph *const graph) {
     for (int i = 0; i < graph->getNParam(); ++i) {
@@ -138,6 +139,7 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
 
     setVerbose(cfg.verbose);
     setTraceEnabled(cfg.traceEnabled);
+    setApolloEnabled(cfg.apolloEnabled);
 
     //TODO: add a switch between the different platform
     platform_ = new PlatformPThread(cfg, stackConfig);
@@ -147,6 +149,13 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     if (traceEnabled_) {
         Launcher::get()->sendEnableTrace(-1);
     }
+    #ifdef APOLLO_AVAILABLE
+        if (apolloEnabled_) {
+            initApolloForDataflow();
+        }else{
+            disableApollo();
+        }
+    #endif
 //    Logger::enable(LOG_JOB);
 }
 
@@ -297,6 +306,10 @@ void Spider::setPapifyFeedbackEnabled(bool papifyFeedbackEnabled) {
     papifyFeedbackEnabled_ = papifyFeedbackEnabled;
 }
 
+void Spider::setApolloEnabled(bool apolloEnabled) {
+    apolloEnabled_ = apolloEnabled;
+}
+
 bool Spider::getVerbose() {
     return verbose_;
 }
@@ -311,6 +324,10 @@ bool Spider::getActorPrecedence() {
 
 bool Spider::getTraceEnabled() {
     return traceEnabled_;
+}
+
+bool Spider::getApolloEnabled() {
+    return apolloEnabled_;
 }
 
 void Spider::setArchi(Archi *archi) {

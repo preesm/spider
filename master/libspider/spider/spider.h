@@ -45,8 +45,6 @@
 #include <spider-api/user/archi.h>
 #include <spider-api/user/graph.h>
 
-#define APOLLO_AVAILABLE
-
 #ifdef APOLLO_AVAILABLE
 
 #include <apolloAPI.h>

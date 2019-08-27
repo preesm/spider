@@ -144,6 +144,29 @@ else ()
     set(PAPI_INCLUDE_DIRS "")
 endif ()
 
+# *******************************************
+# *********** APOLLO LIBRARY ****************
+# *******************************************
+
+set(USEAPOLLO 1)
+
+if(${USEAPOLLO})
+	#MESSAGE("Looking for APOLLO libraries")
+	find_library(apollo_LIBRARY LLVMApollo)
+	find_library(apolloRuntime_LIBRARY apolloRuntime)
+	#MESSAGE(${apollo_LIBRARY})
+	#MESSAGE(${apolloRuntime_LIBRARY})
+	if(apollo_LIBRARY AND apolloRuntime_LIBRARY)
+		MESSAGE("")
+		MESSAGE("WARNING: Using APOLLO compiler")
+		MESSAGE("If you do not wish to use APOLLO, please deactivate USEAPOLLO in CMakeLists.txt")
+		MESSAGE("")
+		add_definitions(-DAPOLLO_AVAILABLE)
+	else()
+		set(USEAPOLLO 0)
+	endif()
+	
+endif()
 
 # *******************************************
 # *************  spider.dll/a  **************

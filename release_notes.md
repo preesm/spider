@@ -1,8 +1,8 @@
 Spider Changelog
 ================
 
-## Release version X.Y.Z
-*XXXX.XX.XX*
+## Release version 1.5.0
+*2019.08.28*
 
 ### New Feature
 * PAPIFY now has different modes:

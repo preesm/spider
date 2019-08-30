@@ -147,26 +147,22 @@ endif ()
 # *******************************************
 # *********** APOLLO LIBRARY ****************
 # *******************************************
+#set(SKIP_APOLLO 1)
+if (${SKIP_APOLLO})
+    MESSAGE("Skipping APOLLO")
+else ()
+    find_package(APOLLO)
+endif ()
 
-set(USEAPOLLO 1)
-
-if(${USEAPOLLO})
-	#MESSAGE("Looking for APOLLO libraries")
-	find_library(apollo_LIBRARY LLVMApollo)
-	find_library(apolloRuntime_LIBRARY apolloRuntime)
-	#MESSAGE(${apollo_LIBRARY})
-	#MESSAGE(${apolloRuntime_LIBRARY})
-	if(apollo_LIBRARY AND apolloRuntime_LIBRARY)
-		MESSAGE("")
-		MESSAGE("WARNING: Using APOLLO compiler")
-		MESSAGE("If you do not wish to use APOLLO, please deactivate USEAPOLLO in CMakeLists.txt")
-		MESSAGE("")
-		add_definitions(-DAPOLLO_AVAILABLE)
-	else()
-		set(USEAPOLLO 0)
-	endif()
-	
+if(APOLLO_FOUND)
+	add_definitions(-DAPOLLO_AVAILABLE)
+else()
+	MESSAGE("WARNING: Couldn't find APOLLO libraries")
+	set(APOLLO_LIBRARIES "")
+	set(APOLLO_INCLUDE_DIRS "")
 endif()
+	
+
 
 # *******************************************
 # *************  spider.dll/a  **************
@@ -175,6 +171,7 @@ endif()
 include_directories(
         #${THREADS_PTHREADS_INCLUDE_DIR}
         ${PAPI_INCLUDE_DIRS}
+	${APOLLO_INCLUDE_DIRS}
         ${PTHREADDIR}/include
         ${STDTHREADDIR}
         ./libspider/
@@ -234,7 +231,7 @@ file(
 
 
 add_library(Spider SHARED ${source_files} ${header_files} ${papify_sources})
-target_link_libraries(Spider ${CMAKE_THREAD_LIBS_INIT} ${PAPI_LIBRARIES})
+target_link_libraries(Spider ${CMAKE_THREAD_LIBS_INIT} ${PAPI_LIBRARIES} ${APOLLO_LIBRARIES})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 

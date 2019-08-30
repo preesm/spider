@@ -129,6 +129,7 @@ typedef struct SpiderConfig {
     bool dumpPapifyInfo;
     bool feedbackPapifyInfo;
     bool apolloEnabled;
+    bool apolloCompiled;
 
     std::map<lrtFct, std::map<const char *, PapifyConfig*>> papifyJobInfo;
     std::map<lrtFct, std::map<const char *, std::map<int, double>>> energyModelsInfo;
@@ -194,6 +195,8 @@ namespace Spider {
 
     void setApolloEnabled(bool apolloEnabled);
 
+    void setApolloCompiled(bool apollloCompiled);
+
     bool getVerbose();
 
     bool getGraphOptim();
@@ -203,6 +206,8 @@ namespace Spider {
     bool getTraceEnabled();
 
     bool getApolloEnabled();
+
+    bool getApolloCompiled();
 
     void setArchi(Archi *archi);
 

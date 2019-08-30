@@ -298,10 +298,14 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
 #endif
 
 #ifndef APOLLO_AVAILABLE
-    if (config.apolloEnabled) {
+    if(config.apolloCompiled){
+        printf("WARNING: Spider was not compiled on a platform_ with APOLLO.\n");
+        printf("Please, recompile Spider with APOLLO or disable APOLLO in the CMakeLists.txt of the application.\n");
+        exit(0);
+    }else if (config.apolloEnabled) {
         printf("WARNING: Spider was not compiled using Apollo optimizations, thus it is disabled.\n");
+        config.apolloEnabled = false;
     }
-    config.apolloEnabled = false;
 #endif
 
     /** Filling up parameters for each threads */

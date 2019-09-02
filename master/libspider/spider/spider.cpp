@@ -101,6 +101,11 @@ static bool papifyFeedbackEnabled_;
 static bool apolloEnabled_;
 static bool apolloCompiled_;
 
+// energy awareness info
+static bool energyAwareness_;
+static bool performanceObjective_;
+static bool performanceTolerance_;
+
 static bool containsDynamicParam(PiSDFGraph *const graph) {
     for (int i = 0; i < graph->getNParam(); ++i) {
         auto *param = graph->getParam(i);
@@ -148,6 +153,12 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     platform_ = new PlatformPThread(cfg, stackConfig);
 
     setPapifyFeedbackEnabled(cfg.feedbackPapifyInfo);
+
+    setEnergyAwareness(cfg.energyAwareness);
+    if(energyAwareness_){
+        setPerformanceObjective(cfg.performanceObjective);
+        setPerformanceTolerance(cfg.performanceTolerance);
+    }
 
     if (traceEnabled_) {
         Launcher::get()->sendEnableTrace(-1);
@@ -307,6 +318,18 @@ void Spider::setTraceEnabled(bool traceEnabled) {
 
 void Spider::setPapifyFeedbackEnabled(bool papifyFeedbackEnabled) {
     papifyFeedbackEnabled_ = papifyFeedbackEnabled;
+}
+
+void Spider::setEnergyAwareness(bool energyAwareness) {
+    energyAwareness_ = energyAwareness;
+}
+
+void Spider::setPerformanceObjective(double performanceObjective) {
+    performanceObjective_ = performanceObjective;
+}
+
+void Spider::setPerformanceTolerance(double performanceTolerance) {
+    performanceTolerance_ = performanceTolerance;
 }
 
 void Spider::setApolloEnabled(bool apolloEnabled) {

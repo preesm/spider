@@ -5,7 +5,8 @@ Spider Changelog
 *XXXX.XX.XX*
 
 ### New Feature
-
+* SPiDER now supports Apollo optimizations
+  * Apollo can be skipped with SKIP_APOLLO in CMakeLists.txt
 ### Changes
 
 ### Bug fix

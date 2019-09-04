@@ -161,6 +161,13 @@ void *lrtPthreadRunner(void *args) {
         }
     }
 #endif
+
+#ifdef APOLLO_AVAILABLE
+    /** Enable APOLLO if needed to */
+    if (lrtInfo->useApollo) {
+        lrtInfo->lrt->setUseApollo();
+    }
+#endif
     /** Wait for all LRTs to be created */
     pthread_barrier_wait(lrtInfo->pthreadBarrier);
     /** Run LRT */
@@ -290,6 +297,17 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
     }
 #endif
 
+#ifndef APOLLO_AVAILABLE
+    if(config.apolloCompiled){
+        printf("WARNING: Spider was not compiled on a platform_ with APOLLO.\n");
+        printf("Please, recompile Spider with APOLLO or disable APOLLO in the CMakeLists.txt of the application.\n");
+        exit(0);
+    }else if (config.apolloEnabled) {
+        printf("WARNING: Spider was not compiled using Apollo optimizations, thus it is disabled.\n");
+        config.apolloEnabled = false;
+    }
+#endif
+
     /** Filling up parameters for each threads */
     pthread_barrier_init(&pthreadLRTBarrier, nullptr, nLrt_);
     for (std::uint32_t i = 0; i < archi->getNPE(); i++) {
@@ -317,6 +335,8 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
         lrtInfoArray_[i].usePapify = config.usePapify;
         lrtInfoArray_[i].dumpPapifyInfo = config.dumpPapifyInfo;
         lrtInfoArray_[i].feedbackPapifyInfo = config.feedbackPapifyInfo;
+        /**Apollo related information */
+        lrtInfoArray_[i].useApollo = config.apolloEnabled;
     }
     auto spiderGRTID = archi->getSpiderGRTID();
     lrtThreadsArray[spiderGRTID] = pthread_self();
@@ -363,6 +383,12 @@ PlatformPThread::PlatformPThread(SpiderConfig &config, SpiderStackConfig &stackC
     }
 
 
+#endif
+
+#ifdef APOLLO_AVAILABLE
+    if (config.apolloEnabled) {
+        lrt_[spiderGRTID]->setUseApollo();
+    }
 #endif
 
     // Wait for all LRTs to be ready to start

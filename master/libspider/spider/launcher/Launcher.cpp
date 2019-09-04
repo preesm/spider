@@ -42,6 +42,12 @@
 #include <Logger.h>
 #include "Launcher.h"
 
+#ifdef APOLLO_AVAILABLE
+
+#include <apolloAPI.h>
+
+#endif
+
 
 Launcher Launcher::instance_;
 
@@ -115,6 +121,11 @@ void Launcher::sendJob(SRDAGScheduleJob *job) {
 }
 
 void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
+    #ifdef APOLLO_AVAILABLE
+        Param *parameters = CREATE_MUL(TRANSFO_STACK, curNParam_, Param);
+        int counter = 0;
+    #endif
+        
     while (curNParam_) {
         NotificationMessage message;
         if (Platform::get()->getSpiderCommunicator()->pop_notification(Platform::get()->getNLrt(), &message, true)) {
@@ -133,6 +144,12 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
                     (*param) = receivedParams[i];
                     auto *referenceParameter = (PiSDFParam *) referenceVertex->getOutParam(i);
                     referenceParameter->setValue((*param));
+                    #ifdef APOLLO_AVAILABLE
+                        if (Spider::getApolloEnabled()) {
+                            parameters[i] = *param;
+                            counter++;
+                        }
+                    #endif
                     if (Spider::getVerbose()) {
                         auto *parameterName = vertex->getReference()->getOutParam(i)->getName();
                         Logger::print(LOG_GENERAL, LOG_INFO, "Received Parameter: %s -- Value: %" PRId64"\n",
@@ -149,6 +166,12 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
             }
         }
     }
+    #ifdef APOLLO_AVAILABLE
+        if (Spider::getApolloEnabled()) {
+            apolloAddDynamicParams(parameters, counter);
+        }
+        StackMonitor::free(TRANSFO_STACK, parameters);
+    #endif
 }
 
 void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end) {

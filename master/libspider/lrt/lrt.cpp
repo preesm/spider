@@ -78,6 +78,7 @@ LRT::LRT(int ix) {
     usePapify_ = false;
     dumpPapifyInfo_ = false;
     feedbackPapifyInfo_ = false;
+    useApollo_ = false;
 
     traceEnabled_ = false;
     repeatJobQueue_ = false;
@@ -286,6 +287,11 @@ void LRT::runJob(JobInfoMessage *job) {
     if (job->specialActor_ && fctID < 6) {
         specialActors[fctID](inFifosAlloc, outFifosAlloc, inParams, outParams); // compute
     } else if (fctID < nFct_) {
+        #ifdef APOLLO_AVAILABLE
+            if(useApollo_){
+                apolloAddJobIdx(job->srdagID_, pthread_self());
+            }
+        #endif
         if (usePapify_) {
 #ifdef PAPI_AVAILABLE
             // TODO, find better way to do that

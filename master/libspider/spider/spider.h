@@ -45,6 +45,12 @@
 #include <spider-api/user/archi.h>
 #include <spider-api/user/graph.h>
 
+#ifdef APOLLO_AVAILABLE
+
+#include <apolloAPI.h>
+
+#endif
+
 #define MAX_STATS_VERTICES 1000
 #define MAX_STATS_PE_TYPES 3
 
@@ -122,6 +128,8 @@ typedef struct SpiderConfig {
     bool usePapify;
     bool dumpPapifyInfo;
     bool feedbackPapifyInfo;
+    bool apolloEnabled;
+    bool apolloCompiled;
 
     std::map<lrtFct, std::map<const char *, PapifyConfig*>> papifyJobInfo;
     std::map<lrtFct, std::map<const char *, std::map<int, double>>> energyModelsInfo;
@@ -185,6 +193,10 @@ namespace Spider {
 
     void setPapifyFeedbackEnabled(bool papifyFeedbackEnabled);
 
+    void setApolloEnabled(bool apolloEnabled);
+
+    void setApolloCompiled(bool apollloCompiled);
+
     bool getVerbose();
 
     bool getGraphOptim();
@@ -192,6 +204,10 @@ namespace Spider {
     bool getActorPrecedence();
 
     bool getTraceEnabled();
+
+    bool getApolloEnabled();
+
+    bool getApolloCompiled();
 
     void setArchi(Archi *archi);
 

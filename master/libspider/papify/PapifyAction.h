@@ -165,6 +165,7 @@ private:
 
     // The file for writing the results
     FILE *outputFile_;
+    bool withApollo_;
 };
 
 #endif // PAPIFY_ACTION_H

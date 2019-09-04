@@ -37,8 +37,10 @@
 #include <string>
 #include "PapifyAction.h"
 
+#include <spider.h>
+
 PapifyAction::~PapifyAction() {
-    if (outputFile_) {
+    if (outputFile_ && !withApollo_) {
         fclose(outputFile_);
     }
 }
@@ -79,6 +81,7 @@ PapifyAction::PapifyAction(PapifyAction &papifyAction, const char *PEId) {
     papifyEventLib_->configUnlock();
 
     outputFile_ = nullptr;
+    withApollo_ = Spider::getApolloCompiled();
 }
 
 
@@ -125,6 +128,7 @@ PapifyAction::PapifyAction(const char *PEType,
     papifyEventLib->configUnlock();
 
     outputFile_ = nullptr;
+    withApollo_ = Spider::getApolloCompiled();
 }
 
 void PapifyAction::startMonitor() {
@@ -188,8 +192,21 @@ void PapifyAction::writeEvents() {
             fprintf(outputFile_, ",%s", eventName);
         }
         fprintf(outputFile_, "\n");
+    }else if(withApollo_){
+        std::string fileName = std::string("papify-output/papify_output_") +
+                               PEId_ +
+                               std::string("__") +
+                               actorName_ +
+                               std::string(".csv");
+        outputFile_ = fopen(fileName.c_str(), "a");
+        if (!outputFile_) {
+            PapifyEventLib::throwError(__FILE__, __LINE__, "failed to open output file");
+        }
     }
     writeEvents(outputFile_);
+    if(withApollo_){
+        fclose(outputFile_);
+    }
 }
 
 void PapifyAction::writeEvents(FILE *file) {

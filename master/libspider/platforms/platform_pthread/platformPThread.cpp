@@ -542,9 +542,14 @@ void PlatformPThread::processPapifyFeedback(SRDAGGraph *srDagGraph) {
     NotificationMessage notificationMessage;
     /** Wait for LRTs to finish their jobs **/
     auto *archi = Spider::getArchi();
-    auto nPEToWait = archi->getNActivatedPE();
-    std::uint32_t nFinishedPE = 0;
-    while (nFinishedPE < nPEToWait) {
+    std::uint32_t execActors = 0;
+    for(int i = 0; i < srDagGraph->getNVertex(); i++){
+        if(srDagGraph->getVertex(i)->getType() == SRDAG_NORMAL){
+            execActors = execActors + 1;
+        }
+    }
+    std::uint32_t countedJobs = 0;
+    while (countedJobs < execActors) {
         spiderCommunicator->pop_notification(Platform::get()->getNLrt(), &notificationMessage, true);
         if (notificationMessage.getType() == PAPIFY_NOTIFICATION &&
             notificationMessage.getSubType() == PAPIFY_TIMING) {
@@ -566,10 +571,10 @@ void PlatformPThread::processPapifyFeedback(SRDAGGraph *srDagGraph) {
             }
             papifyMessage->~PapifyMessage();
             StackMonitor::free(ARCHI_STACK, papifyMessage);
+            countedJobs++;
         } else {
             /** Save the notification for later **/
             spiderCommunicator->push_notification(Platform::get()->getNLrt(), &notificationMessage);
-            nFinishedPE++;
         }
     }
 }

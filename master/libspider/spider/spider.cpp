@@ -200,21 +200,23 @@ void Spider::iterate() {
 
     /** Compute energy **/
     if(energyAwareness_){
-        printf("Computing energy for this iteration\n");
-        double energyTotal = 0.0;
-        // Fill the list_ with SRDAGVertices in scheduling order
-        for (int i = 0; i < srdag_->getNVertex(); i++) {
-            SRDAGVertex *vertex = srdag_->getVertex(i);
-            if(vertex->getType() == SRDAG_NORMAL){
-                int peType = vertex->getScheduleJob()->getMappedPE();
-                int pe = archi_->getPEFromSpiderID(peType)->getHardwareType();
-                auto piVertex = vertex->getReference();
-                double energy = piVertex->getEnergyOnPEType(pe);
-                energyTotal = energyTotal + energy;      
-            }
-        }
-        printf("Energy consumption of this iteration = %f\n", energyTotal);
+        double energyConsumed = computeEnergy(srdag_);
     }
+}
+
+double Spider::computeEnergy(SRDAGGraph *srdag){
+    double energyTotal = 0.0;
+    for (int i = 0; i < srdag->getNVertex(); i++) {
+        SRDAGVertex *vertex = srdag->getVertex(i);
+        if(vertex->getType() == SRDAG_NORMAL){
+            int peType = vertex->getScheduleJob()->getMappedPE();
+            int pe = archi_->getPEFromSpiderID(peType)->getHardwareType();
+            auto piVertex = vertex->getReference();
+            double energy = piVertex->getEnergyOnPEType(pe);
+            energyTotal = energyTotal + energy;      
+        }
+    }
+    return energyTotal;    
 }
 
 

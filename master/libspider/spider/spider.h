@@ -239,6 +239,8 @@ namespace Spider {
     PiSDFGraph *getGraph();
 
     Archi *getArchi();
+
+    double computeEnergy(SRDAGGraph *srdag);
 }
 
 #endif//SPIDER_H

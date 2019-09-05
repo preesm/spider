@@ -105,6 +105,11 @@ static bool apolloCompiled_;
 static bool energyAwareness_;
 static bool performanceObjective_;
 static bool performanceTolerance_;
+static Time startingExecutionTime_;
+static Time endingExecutionTime_;
+
+static std::map<std::uint32_t, std::vector<std::uint32_t>> peIdPerPeType_; 
+static int pesBeingDisabled_;
 
 static bool containsDynamicParam(PiSDFGraph *const graph) {
     for (int i = 0; i < graph->getNParam(); ++i) {
@@ -158,6 +163,8 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     if(energyAwareness_){
         setPerformanceObjective(cfg.performanceObjective);
         setPerformanceTolerance(cfg.performanceTolerance);
+        Spider::setUpEnergyAwareness();
+        pesBeingDisabled_ = 0;
     }
 
     if (traceEnabled_) {
@@ -175,6 +182,28 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
 
 void Spider::iterate() {
     Platform::get()->rstTime();
+    printf("A\n");
+    pesBeingDisabled_ = pesBeingDisabled_ + 1;
+    if(pesBeingDisabled_ == 4){
+        pesBeingDisabled_ = 0;
+    }
+    int pesAlreadyDisbled = 0;
+    printf("B\n");
+    for(auto it = peIdPerPeType_.begin(); it != peIdPerPeType_.end(); it++){
+        for(auto itInner = it->second.begin(); itInner != it->second.end(); itInner++){
+            archi_->getPEFromSpiderID(*itInner)->enable();
+        }
+    }
+    for(auto it = peIdPerPeType_.begin(); it != peIdPerPeType_.end(); it++){
+        for(auto itInner = it->second.begin(); itInner != it->second.end(); itInner++){
+            if(pesAlreadyDisbled == pesBeingDisabled_){
+                break;
+            }
+            archi_->getPEFromSpiderID(*itInner)->disable();
+            pesAlreadyDisbled = pesAlreadyDisbled + 1;
+        }
+    }
+    printf("C\n");
     if (pisdf_->isGraphStatic()) {
         if (!srdag_) {
             /* On first iteration, the schedule is created */
@@ -182,7 +211,9 @@ void Spider::iterate() {
             schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
         }
         /* Run the schedule */
+        Spider::setStartingTime();
         schedule_->executeAndRun();
+        Spider::setEndTime();
         schedule_->restartSchedule();
     } else {
         delete srdag_;
@@ -191,34 +222,80 @@ void Spider::iterate() {
         srdag_ = new SRDAGGraph();
         jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
     }
+    printf("D\n");
     /** Process PAPIFY feedback **/
     if(papifyFeedbackEnabled_){
         Platform::get()->processPapifyFeedback(srdag_);
     }
+    printf("E\n");
     /** Wait for LRTs to finish **/
     Platform::get()->rstJobIxRecv();
 
+    printf("F\n");
     /** Compute energy **/
     if(energyAwareness_){
-        double energyConsumed = computeEnergy(srdag_);
+        double energyConsumed = computeEnergy(srdag_, archi_);
     }
+    printf("G\n");
 }
 
-double Spider::computeEnergy(SRDAGGraph *srdag){
-    double energyTotal = 0.0;
+void Spider::setStartingTime() {
+    startingExecutionTime_ = Platform::get()->getTime();
+}
+
+void Spider::setEndTime() {
+    endingExecutionTime_ = Platform::get()->getTime();
+}
+
+unsigned long Spider::getExecutionTime() {
+    return (endingExecutionTime_ - startingExecutionTime_) / CHIP_FREQ;
+}
+
+double Spider::computeEnergy(SRDAGGraph *srdag, Archi *archi) {
+    double energyIter = 0.0;
     for (int i = 0; i < srdag->getNVertex(); i++) {
         SRDAGVertex *vertex = srdag->getVertex(i);
-        if(vertex->getType() == SRDAG_NORMAL){
+        if (vertex->getType() == SRDAG_NORMAL) {
             int peType = vertex->getScheduleJob()->getMappedPE();
             int pe = archi_->getPEFromSpiderID(peType)->getHardwareType();
             auto piVertex = vertex->getReference();
             double energy = piVertex->getEnergyOnPEType(pe);
-            energyTotal = energyTotal + energy;      
+            energyIter = energyIter + energy;      
         }
     }
-    return energyTotal;    
+    unsigned long execTime = Spider::getExecutionTime();
+    // execution time is given in ns
+    double fpsEstimation = (1000.0 * 1000.0 * 1000.0) / (double) execTime;
+    // we asume that energy for each actor is given in uJ
+    double energyApp = (energyIter / (1000.0 * 1000.0))  * fpsEstimation;
+    // as power is provided in W and we want energy per second, values are equivalent
+    double energyPlatform = archi_->getBasePower();
+    for (unsigned int i = 0; i < archi->getNPE(); i++) {
+        auto pe = archi->getPEFromSpiderID(i);
+        if (pe->isEnabled()) {
+            energyPlatform = energyPlatform + pe->getPower();            
+        }
+    }
+    return energyApp + energyPlatform;    
 }
 
+void Spider::setUpEnergyAwareness() {
+    auto spiderId = archi_->getSpiderGRTID();
+    for (unsigned int i = 0; i < archi_->getNPE(); i++) {
+        auto pe = archi_->getPEFromSpiderID(i);
+        if (i != spiderId) {
+            auto peType = pe->getHardwareType();
+            auto it = peIdPerPeType_.find(peType);
+            if (it != peIdPerPeType_.end()) {
+                it->second.push_back(i);
+            } else {
+                std::vector<unsigned int> peIdSet;
+                peIdSet.push_back(i);
+                peIdPerPeType_.insert(std::make_pair(peType, peIdSet));
+            }          
+        }
+    }
+}
 
 static int getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) {
     auto *job = CREATE(TRANSFO_STACK, transfoJob);

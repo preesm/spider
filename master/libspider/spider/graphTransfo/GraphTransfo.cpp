@@ -301,7 +301,9 @@ void jit_ms(
     scheduler->schedule(topSrdag, memAlloc, schedule, archi);
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
     /** Run the schedule **/
+    Spider::setStartingTime();
     schedule->executeAndRun();
+    Spider::setEndTime();
     schedule->~SRDAGSchedule();
     StackMonitor::free(TRANSFO_STACK, schedule);
 }

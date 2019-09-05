@@ -7,10 +7,12 @@ Spider Changelog
 ### New Feature
 * SPiDER now supports Apollo optimizations
   * Apollo can be skipped with SKIP_APOLLO in CMakeLists.txt
+
 ### Changes
+* Papify feedback now stops analyzing data depending on the number of actors being executed
 
 ### Bug fix
-
+* Fixed bug where papify feedback analysis got stuck (only GRT is enabled)
 
 ## Release version 1.5.0
 *2019.08.28*

@@ -7,6 +7,7 @@
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2013 - 2018)
+ * rlazcano <raquel.lazcano@upm.es> (2019)
  * Yaset Oliva <yaset.oliva@insa-rennes.fr> (2013)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF

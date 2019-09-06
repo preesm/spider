@@ -6,6 +6,7 @@
  * Florian Arrestier <florian.arrestier@insa-rennes.fr> (2018 - 2019)
  * Hugo Miomandre <hugo.miomandre@insa-rennes.fr> (2017)
  * Julien Heulot <julien.heulot@insa-rennes.fr> (2014 - 2018)
+ * rlazcano <raquel.lazcano@upm.es> (2019)
  *
  * Spider is a dataflow based runtime used to execute dynamic PiSDF
  * applications. The Preesm tool may be used to design PiSDF applications.

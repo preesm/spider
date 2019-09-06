@@ -70,6 +70,8 @@
 #include <graphs/Archi/Archi.h>
 
 #include "platformPThread.h"
+#include <limits>
+#include <math.h>
 
 // #ifndef __k1__
 // #include <HAL/hal/hal_ext.h>
@@ -103,13 +105,20 @@ static bool apolloCompiled_;
 
 // energy awareness info
 static bool energyAwareness_;
-static bool performanceObjective_;
-static bool performanceTolerance_;
+static double performanceObjective_;
+static double performanceTolerance_;
 static Time startingExecutionTime_;
 static Time endingExecutionTime_;
 
 static std::map<std::uint32_t, std::vector<std::uint32_t>> peIdPerPeType_; 
-static int pesBeingDisabled_;
+static std::uint32_t pesBeingDisabled_;
+static std::uint32_t pesBestConfig_;
+static double bestEnergy_;
+static double bestObjective_;
+
+static bool energyAlreadyOptimized_;
+static std::map<std::uint32_t, std::uint32_t> upperLimit_; 
+static std::map<std::uint32_t, std::uint32_t> lowerLimit_; 
 
 static bool containsDynamicParam(PiSDFGraph *const graph) {
     for (int i = 0; i < graph->getNParam(); ++i) {
@@ -141,9 +150,10 @@ void Spider::initStacks(SpiderStackConfig &cfg) {
     StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
 }
 
+static int counter;
 void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     Logger::initializeLogger();
-
+    counter = 0;
     setGraphOptim(cfg.useGraphOptim);
 
     setMemAllocType(cfg.memAllocType, cfg.memAllocStart, cfg.memAllocSize);
@@ -165,6 +175,10 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
         setPerformanceTolerance(cfg.performanceTolerance);
         Spider::setUpEnergyAwareness();
         pesBeingDisabled_ = 0;
+        pesBestConfig_ = -1;
+        energyAlreadyOptimized_ = false;
+        bestEnergy_ = std::numeric_limits<double>::max();
+        bestObjective_ = std::numeric_limits<double>::max();
     }
 
     if (traceEnabled_) {
@@ -182,16 +196,10 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
 
 void Spider::iterate() {
     Platform::get()->rstTime();
-    printf("A\n");
-    pesBeingDisabled_ = pesBeingDisabled_ + 1;
-    if(pesBeingDisabled_ == 4){
-        pesBeingDisabled_ = 0;
-    }
-    int pesAlreadyDisbled = 0;
-    printf("B\n");
+    std::uint32_t pesAlreadyDisbled = 0;
     for(auto it = peIdPerPeType_.begin(); it != peIdPerPeType_.end(); it++){
         for(auto itInner = it->second.begin(); itInner != it->second.end(); itInner++){
-            archi_->getPEFromSpiderID(*itInner)->enable();
+            archi_->activatePE(archi_->getPEFromSpiderID(*itInner));
         }
     }
     for(auto it = peIdPerPeType_.begin(); it != peIdPerPeType_.end(); it++){
@@ -199,11 +207,11 @@ void Spider::iterate() {
             if(pesAlreadyDisbled == pesBeingDisabled_){
                 break;
             }
-            archi_->getPEFromSpiderID(*itInner)->disable();
+            archi_->deactivatePE(archi_->getPEFromSpiderID(*itInner));
             pesAlreadyDisbled = pesAlreadyDisbled + 1;
         }
     }
-    printf("C\n");
+
     if (pisdf_->isGraphStatic()) {
         if (!srdag_) {
             /* On first iteration, the schedule is created */
@@ -222,21 +230,29 @@ void Spider::iterate() {
         srdag_ = new SRDAGGraph();
         jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
     }
-    printf("D\n");
     /** Process PAPIFY feedback **/
     if(papifyFeedbackEnabled_){
         Platform::get()->processPapifyFeedback(srdag_);
     }
-    printf("E\n");
+
     /** Wait for LRTs to finish **/
     Platform::get()->rstJobIxRecv();
 
-    printf("F\n");
     /** Compute energy **/
     if(energyAwareness_){
-        double energyConsumed = computeEnergy(srdag_, archi_);
+        double fpsEstimation = computeFps();
+        double energyConsumed = computeEnergy(srdag_, archi_, fpsEstimation);
+
+        checkExecutionPerformance(fpsEstimation, energyConsumed);
+
+        if(!generateNextEnergyConfiguration()){
+            energyAlreadyOptimized_ = true;
+            pesBeingDisabled_ = pesBestConfig_;
+        }
+
+        printf("FPS %f and energy consumed = %f\n", fpsEstimation, energyConsumed);
+        printf("Best FPS %f and best energy consumed = %f\n", bestObjective_, bestEnergy_);
     }
-    printf("G\n");
 }
 
 void Spider::setStartingTime() {
@@ -251,7 +267,7 @@ unsigned long Spider::getExecutionTime() {
     return (endingExecutionTime_ - startingExecutionTime_) / CHIP_FREQ;
 }
 
-double Spider::computeEnergy(SRDAGGraph *srdag, Archi *archi) {
+double Spider::computeEnergy(SRDAGGraph *srdag, Archi *archi, double fpsEstimation) {
     double energyIter = 0.0;
     for (int i = 0; i < srdag->getNVertex(); i++) {
         SRDAGVertex *vertex = srdag->getVertex(i);
@@ -263,9 +279,6 @@ double Spider::computeEnergy(SRDAGGraph *srdag, Archi *archi) {
             energyIter = energyIter + energy;      
         }
     }
-    unsigned long execTime = Spider::getExecutionTime();
-    // execution time is given in ns
-    double fpsEstimation = (1000.0 * 1000.0 * 1000.0) / (double) execTime;
     // we asume that energy for each actor is given in uJ
     double energyApp = (energyIter / (1000.0 * 1000.0))  * fpsEstimation;
     // as power is provided in W and we want energy per second, values are equivalent
@@ -279,9 +292,15 @@ double Spider::computeEnergy(SRDAGGraph *srdag, Archi *archi) {
     return energyApp + energyPlatform;    
 }
 
+double Spider::computeFps() {
+    unsigned long execTime = Spider::getExecutionTime();
+    // execution time is given in ns
+    return (1000.0 * 1000.0 * 1000.0) / (double) execTime;
+}
+
 void Spider::setUpEnergyAwareness() {
     auto spiderId = archi_->getSpiderGRTID();
-    for (unsigned int i = 0; i < archi_->getNPE(); i++) {
+    for (std::uint32_t i = 0; i < archi_->getNPE(); i++) {
         auto pe = archi_->getPEFromSpiderID(i);
         if (i != spiderId) {
             auto peType = pe->getHardwareType();
@@ -289,12 +308,44 @@ void Spider::setUpEnergyAwareness() {
             if (it != peIdPerPeType_.end()) {
                 it->second.push_back(i);
             } else {
-                std::vector<unsigned int> peIdSet;
+                std::vector<std::uint32_t> peIdSet;
                 peIdSet.push_back(i);
                 peIdPerPeType_.insert(std::make_pair(peType, peIdSet));
             }          
         }
     }
+    for (auto it = peIdPerPeType_.begin(); it != peIdPerPeType_.end(); it++) {
+        upperLimit_.insert(std::make_pair(it->first, it->second.size()));
+        lowerLimit_.insert(std::make_pair(it->first, 0));
+    }
+
+}
+
+void Spider::checkExecutionPerformance(double fpsEstimation, double energyConsumed) {
+    double maxObjective = performanceObjective_ + performanceObjective_ * performanceTolerance_ / 100;
+    double minObjective = performanceObjective_ - performanceObjective_ * performanceTolerance_ / 100;
+    if (fpsEstimation <= maxObjective && fpsEstimation >= minObjective) {
+        if (bestEnergy_ > energyConsumed) {
+            bestEnergy_ = energyConsumed;
+            bestObjective_ = fpsEstimation;
+            pesBestConfig_ = pesBeingDisabled_;
+        } 
+    }else if (fabs(performanceObjective_ - fpsEstimation) < fabs(performanceObjective_ - bestObjective_)) {
+        bestObjective_ = fpsEstimation;
+        pesBestConfig_ = pesBeingDisabled_;
+    }
+}
+
+bool Spider::generateNextEnergyConfiguration() {
+    if(counter < 50){
+        pesBeingDisabled_ = pesBeingDisabled_ + 1;
+        if(pesBeingDisabled_ == 4){
+            pesBeingDisabled_ = 0;
+        }
+        counter++;
+        return true;
+    }
+    return false;
 }
 
 static int getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) {

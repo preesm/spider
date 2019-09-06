@@ -240,7 +240,9 @@ namespace Spider {
 
     Archi *getArchi();
 
-    double computeEnergy(SRDAGGraph *srdag, Archi *archi);
+    double computeEnergy(SRDAGGraph *srdag, Archi *archi, double fpsEstimation);
+
+    double computeFps();
 
     void setStartingTime();
 
@@ -249,6 +251,10 @@ namespace Spider {
     unsigned long getExecutionTime();
 
     void setUpEnergyAwareness();
+
+    void checkExecutionPerformance(double fpsEstimation, double energyConsumed);
+
+    bool generateNextEnergyConfiguration();
 }
 
 #endif//SPIDER_H

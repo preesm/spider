@@ -1,8 +1,8 @@
 Spider Changelog
 ================
 
-## Release version X.Y.Z
-*XXXX.XX.XX*
+## Release version 1.6.0
+*2019.09.06*
 
 ### New Feature
 * SPiDER now supports Apollo optimizations

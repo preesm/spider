@@ -106,7 +106,6 @@ static bool apolloCompiled_;
 // energy awareness info
 static bool energyAwareness_;
 static double performanceObjective_;
-static double performanceTolerance_;
 static Time startingExecutionTime_;
 static Time endingExecutionTime_;
 
@@ -172,7 +171,6 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     setEnergyAwareness(cfg.energyAwareness);
     if(energyAwareness_){
         setPerformanceObjective(cfg.performanceObjective);
-        setPerformanceTolerance(cfg.performanceTolerance);
         Spider::setUpEnergyAwareness();
         pesBeingDisabled_ = 0;
         pesBestConfig_ = -1;
@@ -322,15 +320,13 @@ void Spider::setUpEnergyAwareness() {
 }
 
 void Spider::checkExecutionPerformance(double fpsEstimation, double energyConsumed) {
-    double maxObjective = performanceObjective_ + performanceObjective_ * performanceTolerance_ / 100;
-    double minObjective = performanceObjective_ - performanceObjective_ * performanceTolerance_ / 100;
-    if (fpsEstimation <= maxObjective && fpsEstimation >= minObjective) {
+    if (fpsEstimation >= performanceObjective_) {
         if (bestEnergy_ > energyConsumed) {
             bestEnergy_ = energyConsumed;
             bestObjective_ = fpsEstimation;
             pesBestConfig_ = pesBeingDisabled_;
         } 
-    }else if (fabs(performanceObjective_ - fpsEstimation) < fabs(performanceObjective_ - bestObjective_)) {
+    }else if (fpsEstimation > bestObjective_ && bestEnergy_ == std::numeric_limits<double>::max()) {
         bestObjective_ = fpsEstimation;
         pesBestConfig_ = pesBeingDisabled_;
     }
@@ -474,10 +470,6 @@ void Spider::setEnergyAwareness(bool energyAwareness) {
 
 void Spider::setPerformanceObjective(double performanceObjective) {
     performanceObjective_ = performanceObjective;
-}
-
-void Spider::setPerformanceTolerance(double performanceTolerance) {
-    performanceTolerance_ = performanceTolerance;
 }
 
 void Spider::setApolloEnabled(bool apolloEnabled) {

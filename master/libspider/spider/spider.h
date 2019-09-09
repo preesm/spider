@@ -136,7 +136,6 @@ typedef struct SpiderConfig {
     std::map<lrtFct, std::map<const char *, std::map<int, double>>> energyModelsInfo;
     bool energyAwareness;
     double performanceObjective;
-    double performanceTolerance;
 
     lrtFct *fcts;
     int nLrtFcts;
@@ -200,8 +199,6 @@ namespace Spider {
     void setEnergyAwareness(bool energyAwareness);
 
     void setPerformanceObjective(double performanceObjective);
-
-    void setPerformanceTolerance(double performanceTolerance);
 
     void setApolloEnabled(bool apolloEnabled);
 

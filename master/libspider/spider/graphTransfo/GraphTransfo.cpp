@@ -221,6 +221,10 @@ void jit_ms(
             fprintf(stderr, "INFO: Resolved parameters.\n");
         }
 
+        if(Spider::getEnergyAwareness()){
+            Spider::energyAwarenessApplyConfig();            
+        }
+
         TimeMonitor::startMonitoring();
 
         while (!jobQueue.isEmpty()) {

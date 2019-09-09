@@ -110,12 +110,22 @@ static Time startingExecutionTime_;
 static Time endingExecutionTime_;
 
 static std::map<std::uint32_t, std::vector<std::uint32_t>> peIdPerPeType_; 
-static std::uint32_t pesBeingDisabled_;
-static std::uint32_t pesBestConfig_;
+static std::map<std::uint32_t, std::uint32_t> pesBeingDisabled_; 
+
+static std::map<const char*, Param> dynamicParameters_;
+static std::uint32_t numDynamicParameters_;
+static std::vector<std::map<std::uint32_t, std::uint32_t>> configsAlreadyUsed_; 
+static std::map<std::uint32_t, std::uint32_t> pesBestConfig_; 
 static double bestEnergy_;
 static double bestObjective_;
-
 static bool energyAlreadyOptimized_;
+
+static std::map<std::map<const char*, Param>, std::vector<std::map<std::uint32_t, std::uint32_t>>> configsAlreadyUsedBackup_; 
+static std::map<std::map<const char*, Param>, std::map<std::uint32_t, std::uint32_t>> pesBestConfigBackup_; 
+static std::map<std::map<const char*, Param>, double> bestEnergyBackup_; 
+static std::map<std::map<const char*, Param>, double> bestObjectiveBackup_; 
+static std::map<std::map<const char*, Param>, bool> energyAlreadyOptimizedBackup_; 
+
 static std::map<std::uint32_t, std::uint32_t> upperLimit_; 
 static std::map<std::uint32_t, std::uint32_t> lowerLimit_; 
 
@@ -123,6 +133,7 @@ static bool containsDynamicParam(PiSDFGraph *const graph) {
     for (int i = 0; i < graph->getNParam(); ++i) {
         auto *param = graph->getParam(i);
         if (param->isDynamic()) {
+            numDynamicParameters_ = numDynamicParameters_ + 1;
             return true;
         }
     }
@@ -172,11 +183,10 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     if(energyAwareness_){
         setPerformanceObjective(cfg.performanceObjective);
         Spider::setUpEnergyAwareness();
-        pesBeingDisabled_ = 0;
-        pesBestConfig_ = -1;
         energyAlreadyOptimized_ = false;
         bestEnergy_ = std::numeric_limits<double>::max();
-        bestObjective_ = std::numeric_limits<double>::max();
+        bestObjective_ = 0.0;
+        numDynamicParameters_ = 0;
     }
 
     if (traceEnabled_) {
@@ -194,27 +204,30 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
 
 void Spider::iterate() {
     Platform::get()->rstTime();
-    std::uint32_t pesAlreadyDisbled = 0;
-    for(auto it = peIdPerPeType_.begin(); it != peIdPerPeType_.end(); it++){
-        for(auto itInner = it->second.begin(); itInner != it->second.end(); itInner++){
-            archi_->activatePE(archi_->getPEFromSpiderID(*itInner));
-        }
-    }
-    for(auto it = peIdPerPeType_.begin(); it != peIdPerPeType_.end(); it++){
-        for(auto itInner = it->second.begin(); itInner != it->second.end(); itInner++){
-            if(pesAlreadyDisbled == pesBeingDisabled_){
-                break;
-            }
-            archi_->deactivatePE(archi_->getPEFromSpiderID(*itInner));
-            pesAlreadyDisbled = pesAlreadyDisbled + 1;
-        }
-    }
 
+    // The behavior when using energy awareness is slightly different
     if (pisdf_->isGraphStatic()) {
-        if (!srdag_) {
-            /* On first iteration, the schedule is created */
-            srdag_ = new SRDAGGraph();
-            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
+        if(energyAwareness_){
+            if(energyAlreadyOptimized_){
+                if(!srdag_){
+                    energyAwarenessApplyConfig();
+                    /* On final iteration, the schedule is created */
+                    srdag_ = new SRDAGGraph();
+                    schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
+                }
+            } else {
+                delete srdag_;
+                StackMonitor::freeAll(SRDAG_STACK);
+                memAlloc_->reset();
+                srdag_ = new SRDAGGraph();
+                schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
+            }
+        }else{
+            if (!srdag_) {
+                /* On first iteration, the schedule is created */
+                srdag_ = new SRDAGGraph();
+                schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
+            }
         }
         /* Run the schedule */
         Spider::setStartingTime();
@@ -228,6 +241,7 @@ void Spider::iterate() {
         srdag_ = new SRDAGGraph();
         jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
     }
+    
     /** Process PAPIFY feedback **/
     if(papifyFeedbackEnabled_){
         Platform::get()->processPapifyFeedback(srdag_);
@@ -238,18 +252,8 @@ void Spider::iterate() {
 
     /** Compute energy **/
     if(energyAwareness_){
-        double fpsEstimation = computeFps();
-        double energyConsumed = computeEnergy(srdag_, archi_, fpsEstimation);
-
-        checkExecutionPerformance(fpsEstimation, energyConsumed);
-
-        if(!generateNextEnergyConfiguration()){
-            energyAlreadyOptimized_ = true;
-            pesBeingDisabled_ = pesBestConfig_;
-        }
-
-        printf("FPS %f and energy consumed = %f\n", fpsEstimation, energyConsumed);
-        printf("Best FPS %f and best energy consumed = %f\n", bestObjective_, bestEnergy_);
+        energyAwarenessAnalyzeExecution();
+        energyAwarenessPrepareNextExecution();
     }
 }
 
@@ -267,13 +271,14 @@ unsigned long Spider::getExecutionTime() {
 
 double Spider::computeEnergy(SRDAGGraph *srdag, Archi *archi, double fpsEstimation) {
     double energyIter = 0.0;
+    std::vector<std::uint32_t> pesUsed;
     for (int i = 0; i < srdag->getNVertex(); i++) {
         SRDAGVertex *vertex = srdag->getVertex(i);
         if (vertex->getType() == SRDAG_NORMAL) {
-            int peType = vertex->getScheduleJob()->getMappedPE();
-            int pe = archi_->getPEFromSpiderID(peType)->getHardwareType();
+            int peUsed = vertex->getScheduleJob()->getMappedPE();
+            int peType = archi_->getPEFromSpiderID(peUsed)->getHardwareType();
             auto piVertex = vertex->getReference();
-            double energy = piVertex->getEnergyOnPEType(pe);
+            double energy = piVertex->getEnergyOnPEType(peType);
             energyIter = energyIter + energy;      
         }
     }
@@ -315,8 +320,9 @@ void Spider::setUpEnergyAwareness() {
     for (auto it = peIdPerPeType_.begin(); it != peIdPerPeType_.end(); it++) {
         upperLimit_.insert(std::make_pair(it->first, it->second.size()));
         lowerLimit_.insert(std::make_pair(it->first, 0));
+        pesBeingDisabled_.insert(std::make_pair(it->first, 0));
+        pesBestConfig_.insert(std::make_pair(it->first, 0));
     }
-
 }
 
 void Spider::checkExecutionPerformance(double fpsEstimation, double energyConsumed) {
@@ -324,24 +330,146 @@ void Spider::checkExecutionPerformance(double fpsEstimation, double energyConsum
         if (bestEnergy_ > energyConsumed) {
             bestEnergy_ = energyConsumed;
             bestObjective_ = fpsEstimation;
-            pesBestConfig_ = pesBeingDisabled_;
+            for (auto it = pesBeingDisabled_.begin(); it != pesBeingDisabled_.end(); it++) {
+                pesBestConfig_[it->first] = it->second;
+            }
         } 
     }else if (fpsEstimation > bestObjective_ && bestEnergy_ == std::numeric_limits<double>::max()) {
         bestObjective_ = fpsEstimation;
-        pesBestConfig_ = pesBeingDisabled_;
+        for (auto it = pesBeingDisabled_.begin(); it != pesBeingDisabled_.end(); it++) {
+            pesBestConfig_[it->first] = it->second;
+        }
     }
 }
 
 bool Spider::generateNextEnergyConfiguration() {
-    if(counter < 50){
-        pesBeingDisabled_ = pesBeingDisabled_ + 1;
-        if(pesBeingDisabled_ == 4){
-            pesBeingDisabled_ = 0;
-        }
-        counter++;
+    for (auto it = pesBeingDisabled_.begin(); it != pesBeingDisabled_.end(); it++) {
+        pesBeingDisabled_[it->first] = pesBeingDisabled_[it->first] + 1;    
+        if(pesBeingDisabled_[it->first] == peIdPerPeType_[it->first].size() + 1){
+            pesBeingDisabled_[it->first] = 0;
+        }else{
+            auto it = std::find(configsAlreadyUsed_.begin(), configsAlreadyUsed_.end(), pesBeingDisabled_);
+            if (it == configsAlreadyUsed_.end()) {
+                return true;
+            } else {
+                return false;        
+            } 
+        }    
+    }
+    auto it = std::find(configsAlreadyUsed_.begin(), configsAlreadyUsed_.end(), pesBeingDisabled_);
+    if (it == configsAlreadyUsed_.end()) {
         return true;
     }
     return false;
+}
+
+void Spider::energyAwarenessApplyConfig(){
+    auto it = std::find(configsAlreadyUsed_.begin(), configsAlreadyUsed_.end(), pesBeingDisabled_);
+    if (it == configsAlreadyUsed_.end()) {
+        //printf("Adding config\n");
+        configsAlreadyUsed_.push_back(pesBeingDisabled_);
+    }
+    /*printf("Running config: ");
+
+    for (auto it = pesBeingDisabled_.begin(); it != pesBeingDisabled_.end(); it++) {
+        printf(" %d has %d --- ", it->first, it->second);
+    }
+    printf("\n");*/
+    std::map<std::uint32_t, std::uint32_t> pesAlreadyDisbled;
+    for (auto it = pesBeingDisabled_.begin(); it != pesBeingDisabled_.end(); it++) {
+        pesAlreadyDisbled.insert(std::make_pair(it->first, 0));
+    }
+    for(auto it = peIdPerPeType_.begin(); it != peIdPerPeType_.end(); it++){
+        for(auto itInner = it->second.begin(); itInner != it->second.end(); itInner++){
+            archi_->activatePE(archi_->getPEFromSpiderID(*itInner));
+        }
+    }
+    for(auto it = peIdPerPeType_.begin(); it != peIdPerPeType_.end(); it++){
+        for(auto itInner = it->second.begin(); itInner != it->second.end(); itInner++){
+            if(pesAlreadyDisbled[it->first] == pesBeingDisabled_[it->first]){
+                break;
+            }
+            archi_->deactivatePE(archi_->getPEFromSpiderID(*itInner));
+            pesAlreadyDisbled[it->first] = pesAlreadyDisbled[it->first] + 1;
+        }
+    }
+}
+
+void Spider::energyAwarenessAnalyzeExecution(){
+    double fpsEstimation = computeFps();
+    double energyConsumed = computeEnergy(srdag_, archi_, fpsEstimation);
+
+    checkExecutionPerformance(fpsEstimation, energyConsumed);
+    printf("Best FPS %f and best energy consumed = %f ---> ", bestObjective_, bestEnergy_);
+    printf("Best config: ");
+
+    for (auto it = pesBestConfig_.begin(); it != pesBestConfig_.end(); it++) {
+        printf(" %d has %d --- ", it->first, it->second);
+    }
+    printf("\n");
+}
+
+void Spider::energyAwarenessPrepareNextExecution(){
+    if(!generateNextEnergyConfiguration()){
+        energyAlreadyOptimized_ = true;
+        pesBeingDisabled_ = pesBestConfig_;
+        for (auto it = pesBestConfig_.begin(); it != pesBestConfig_.end(); it++) {
+            pesBeingDisabled_[it->first] = it->second;
+        }
+    }
+}
+
+bool Spider::getEnergyAwareness() {
+    return energyAwareness_;
+}
+
+void Spider::recoverEnergyAwarenessOrDefault() {
+    // All the energy-awareness related variables are stored at the same time
+    // So we only check one and we consider that everything is properly done
+    auto itCheckerEnergyAlreadyOptimized = energyAlreadyOptimizedBackup_.find(dynamicParameters_);
+    if(itCheckerEnergyAlreadyOptimized != energyAlreadyOptimizedBackup_.end()){
+        energyAlreadyOptimized_ = energyAlreadyOptimizedBackup_[dynamicParameters_];
+        pesBestConfig_ = pesBestConfigBackup_[dynamicParameters_];
+        bestEnergy_ = bestEnergyBackup_[dynamicParameters_];
+        bestObjective_ = bestObjectiveBackup_[dynamicParameters_];
+        configsAlreadyUsed_ = configsAlreadyUsedBackup_[dynamicParameters_];
+    }else{
+        energyAlreadyOptimized_ = false;        
+        for (auto it = pesBeingDisabled_.begin(); it != pesBeingDisabled_.end(); it++) {
+            pesBestConfig_[it->first] = it->second;
+        }
+        bestEnergy_ = std::numeric_limits<double>::max();
+        bestObjective_ = 0.0;
+        configsAlreadyUsed_.clear();
+    }
+}
+
+void Spider::setNewDynamicParamsEnergyAwareness(std::map<const char*, Param> dynamicParamsMap) {
+    //Store current best ones
+    configsAlreadyUsedBackup_[dynamicParameters_] = configsAlreadyUsed_; 
+    pesBestConfigBackup_[dynamicParameters_] = pesBestConfig_; 
+    bestEnergyBackup_[dynamicParameters_] = bestEnergy_; 
+    bestObjectiveBackup_[dynamicParameters_] = bestObjective_; 
+    energyAlreadyOptimizedBackup_[dynamicParameters_] = energyAlreadyOptimized_;
+
+    //Check the need to update the config
+    bool dirtyEnergyConfig = false;
+    for (auto it = dynamicParamsMap.begin(); it != dynamicParamsMap.end(); it++) {
+        auto itChecker = dynamicParameters_.find(it->first);
+        if(itChecker == dynamicParameters_.end()){
+            dynamicParameters_.insert(std::make_pair(it->first, it->second));
+            dirtyEnergyConfig = true;
+        } else {
+            if(dynamicParameters_[it->first] != it->second){
+                dirtyEnergyConfig = true;
+                dynamicParameters_[it->first] = it->second;
+            }
+        }        
+    }
+    //Update config if needed
+    if(dirtyEnergyConfig){
+        recoverEnergyAwarenessOrDefault();
+    }
 }
 
 static int getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) {

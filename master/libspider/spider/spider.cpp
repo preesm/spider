@@ -119,6 +119,7 @@ static std::map<std::uint32_t, std::uint32_t> pesBestConfig_;
 static double bestEnergy_;
 static double bestObjective_;
 static bool energyAlreadyOptimized_;
+static bool solutionShown_;
 
 static std::map<std::map<const char*, Param>, std::vector<std::map<std::uint32_t, std::uint32_t>>> configsAlreadyUsedBackup_; 
 static std::map<std::map<const char*, Param>, std::map<std::uint32_t, std::uint32_t>> pesBestConfigBackup_; 
@@ -184,6 +185,7 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
         setPerformanceObjective(cfg.performanceObjective);
         Spider::setUpEnergyAwareness();
         energyAlreadyOptimized_ = false;
+        solutionShown_ = false;
         bestEnergy_ = std::numeric_limits<double>::max();
         bestObjective_ = 0.0;
         numDynamicParameters_ = 0;
@@ -366,15 +368,8 @@ bool Spider::generateNextEnergyConfiguration() {
 void Spider::energyAwarenessApplyConfig(){
     auto it = std::find(configsAlreadyUsed_.begin(), configsAlreadyUsed_.end(), pesBeingDisabled_);
     if (it == configsAlreadyUsed_.end()) {
-        //printf("Adding config\n");
         configsAlreadyUsed_.push_back(pesBeingDisabled_);
     }
-    /*printf("Running config: ");
-
-    for (auto it = pesBeingDisabled_.begin(); it != pesBeingDisabled_.end(); it++) {
-        printf(" %d has %d --- ", it->first, it->second);
-    }
-    printf("\n");*/
     std::map<std::uint32_t, std::uint32_t> pesAlreadyDisbled;
     for (auto it = pesBeingDisabled_.begin(); it != pesBeingDisabled_.end(); it++) {
         pesAlreadyDisbled.insert(std::make_pair(it->first, 0));
@@ -400,13 +395,6 @@ void Spider::energyAwarenessAnalyzeExecution(){
     double energyConsumed = computeEnergy(srdag_, archi_, fpsEstimation);
 
     checkExecutionPerformance(fpsEstimation, energyConsumed);
-    printf("Best FPS %f and best energy consumed = %f ---> ", bestObjective_, bestEnergy_);
-    printf("Best config: ");
-
-    for (auto it = pesBestConfig_.begin(); it != pesBestConfig_.end(); it++) {
-        printf(" %d has %d --- ", it->first, it->second);
-    }
-    printf("\n");
 }
 
 void Spider::energyAwarenessPrepareNextExecution(){
@@ -415,6 +403,25 @@ void Spider::energyAwarenessPrepareNextExecution(){
         pesBeingDisabled_ = pesBestConfig_;
         for (auto it = pesBestConfig_.begin(); it != pesBestConfig_.end(); it++) {
             pesBeingDisabled_[it->first] = it->second;
+        }
+        if(!solutionShown_){
+            solutionShown_ = true;
+            std::uint32_t totalCoresUsed = 0;
+            for (auto it = pesBestConfig_.begin(); it != pesBestConfig_.end(); it++) {
+                totalCoresUsed = totalCoresUsed + peIdPerPeType_[it->first].size() - it->second;
+            }
+            if(bestEnergy_ == std::numeric_limits<double>::max()){
+                printf("Best FPS %f. Objective not reachable", bestObjective_);    
+                printf("Closer one reached using %d cores", (totalCoresUsed + 1)); // We include here the GRT
+            }else{
+                printf("Best FPS %f and best energy consumed = %f ---> ", bestObjective_, bestEnergy_);   
+                printf("Reached using %d cores", (totalCoresUsed + 1)); // We include here the GRT             
+            }
+            printf("\n");
+            for (auto it = pesBestConfig_.begin(); it != pesBestConfig_.end(); it++) {
+                printf("Removing %d of %d of type %d\n", it->second, peIdPerPeType_[it->first].size(), it->first);
+                printf("That is, we are using %d cores of type %d\n", peIdPerPeType_[it->first].size() - it->second, it->first);
+            }
         }
     }
 }
@@ -442,6 +449,7 @@ void Spider::recoverEnergyAwarenessOrDefault() {
         bestObjective_ = 0.0;
         configsAlreadyUsed_.clear();
     }
+    solutionShown_ = false;
 }
 
 void Spider::setNewDynamicParamsEnergyAwareness(std::map<const char*, Param> dynamicParamsMap) {

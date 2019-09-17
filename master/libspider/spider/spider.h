@@ -266,6 +266,8 @@ namespace Spider {
     void recoverEnergyAwarenessOrDefault();
 
     void setNewDynamicParamsEnergyAwareness(std::map<const char*, Param> dynamicParamsMap);
+
+    bool generateNextFineGrainEnergyConfiguration();
 }
 
 #endif//SPIDER_H

@@ -350,6 +350,10 @@ void Spider::checkExecutionPerformance(double fpsEstimation, double energyConsum
 }
 
 bool Spider::generateNextEnergyConfiguration() {
+    return generateNextFineGrainEnergyConfiguration();
+}
+
+bool Spider::generateNextFineGrainEnergyConfiguration(){
     bool alreadyUsingTheMaximum = true;
     for (auto it = pesBeingDisabled_.begin(); it != pesBeingDisabled_.end(); it++) {
         if(aboveBelowObjective_){ // As we are modifying the number of disabled PEs, we have to increase the disable PEs when we are above the number

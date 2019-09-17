@@ -43,6 +43,8 @@
 #include <Logger.h>
 #include "Launcher.h"
 
+#include "energyAwareness/energyAwareness.h"
+
 #ifdef APOLLO_AVAILABLE
 
 #include <apolloAPI.h>
@@ -178,7 +180,7 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
         StackMonitor::free(TRANSFO_STACK, parameters);
     #endif
     if(Spider::getEnergyAwareness()){
-        Spider::setNewDynamicParamsEnergyAwareness(dynamicParamsMap);
+        EnergyAwareness::setNewDynamicParams(dynamicParamsMap);
     }
 }
 

@@ -237,37 +237,9 @@ namespace Spider {
 
     Archi *getArchi();
 
-    // Energy-awareness functions
-
     bool getEnergyAwareness();
 
-    double computeEnergy(SRDAGGraph *srdag, Archi *archi, double fpsEstimation);
-
-    double computeFps();
-
-    void setStartingTime();
-
-    void setEndTime();
-
-    unsigned long getExecutionTime();
-
-    void setUpEnergyAwareness();
-
-    void checkExecutionPerformance(double fpsEstimation, double energyConsumed);
-
-    bool generateNextEnergyConfiguration();
-
-    void energyAwarenessApplyConfig();
-
-    void energyAwarenessAnalyzeExecution();
-
-    void energyAwarenessPrepareNextExecution();
-
-    void recoverEnergyAwarenessOrDefault();
-
-    void setNewDynamicParamsEnergyAwareness(std::map<const char*, Param> dynamicParamsMap);
-
-    bool generateNextFineGrainEnergyConfiguration();
+    double getPerformanceObjective();
 }
 
 #endif//SPIDER_H

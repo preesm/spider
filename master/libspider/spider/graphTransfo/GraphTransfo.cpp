@@ -53,6 +53,8 @@
 #include <scheduling/Scheduler/SRDAGLessScheduler.h>
 #include <scheduling/Scheduler/SRDAGLessListScheduler.h>
 
+#include "energyAwareness/energyAwareness.h"
+
 #define SCHEDULE_SIZE 20000
 
 static void initJob(transfoJob *job, SRDAGVertex *nextHierVx) {
@@ -221,6 +223,10 @@ void jit_ms(
             fprintf(stderr, "INFO: Resolved parameters.\n");
         }
 
+        if(Spider::getEnergyAwareness()){
+            EnergyAwareness::applyConfig(archi);            
+        }
+
         TimeMonitor::startMonitoring();
 
         while (!jobQueue.isEmpty()) {
@@ -301,7 +307,9 @@ void jit_ms(
     scheduler->schedule(topSrdag, memAlloc, schedule, archi);
     TimeMonitor::endMonitoring(TRACE_SPIDER_SCHED);
     /** Run the schedule **/
+    EnergyAwareness::setStartingTime();
     schedule->executeAndRun();
+    EnergyAwareness::setEndTime();
     schedule->~SRDAGSchedule();
     StackMonitor::free(TRANSFO_STACK, schedule);
 }

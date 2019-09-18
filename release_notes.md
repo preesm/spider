@@ -5,6 +5,10 @@ Spider Changelog
 *XXXX.XX.XX*
 
 ### New Feature
+* Energy awareness (energy-awareness parameter) now can be activated in SPiDER
+  * It will test a different number of PEs in each iteration
+  * It will keep the PE config reaching the objective with the lowest (estimated) energy consumption
+  * In the case of static apps, the searching will be done with the dynamic structure and, after the selection, everything will follow the standard flow. This avoids memory leakages
 
 ### Changes
 

@@ -70,6 +70,11 @@
 #include <graphs/Archi/Archi.h>
 
 #include "platformPThread.h"
+#include <limits>
+#include <math.h>
+
+// energyAwareness
+#include <energyAwareness/energyAwareness.h>
 
 // #ifndef __k1__
 // #include <HAL/hal/hal_ext.h>
@@ -101,6 +106,12 @@ static bool papifyFeedbackEnabled_;
 static bool apolloEnabled_;
 static bool apolloCompiled_;
 
+// energy awareness info
+static bool energyAwareness_;
+static double performanceObjective_;
+static bool alreadyAppliedBestConfig_;
+static bool computeNextConfig_;
+
 static bool containsDynamicParam(PiSDFGraph *const graph) {
     for (int i = 0; i < graph->getNParam(); ++i) {
         auto *param = graph->getParam(i);
@@ -131,9 +142,10 @@ void Spider::initStacks(SpiderStackConfig &cfg) {
     StackMonitor::initStack(TRANSFO_STACK, cfg.transfoStack);
 }
 
+static int counter;
 void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     Logger::initializeLogger();
-
+    counter = 0;
     setGraphOptim(cfg.useGraphOptim);
 
     setMemAllocType(cfg.memAllocType, cfg.memAllocStart, cfg.memAllocSize);
@@ -148,6 +160,14 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
     platform_ = new PlatformPThread(cfg, stackConfig);
 
     setPapifyFeedbackEnabled(cfg.feedbackPapifyInfo);
+
+    setEnergyAwareness(cfg.energyAwareness);
+    if(energyAwareness_){
+        setPerformanceObjective(cfg.performanceObjective);
+        EnergyAwareness::setUp(archi_);
+        alreadyAppliedBestConfig_ = false;
+        computeNextConfig_ = true;
+    }
 
     if (traceEnabled_) {
         Launcher::get()->sendEnableTrace(-1);
@@ -164,15 +184,50 @@ void Spider::init(SpiderConfig &cfg, SpiderStackConfig &stackConfig) {
 
 void Spider::iterate() {
     Platform::get()->rstTime();
+
+    // The behavior when using energy awareness is slightly different
     if (pisdf_->isGraphStatic()) {
-        if (!srdag_) {
-            /* On first iteration, the schedule is created */
-            srdag_ = new SRDAGGraph();
-            schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
-        }
-        /* Run the schedule */
-        schedule_->executeAndRun();
-        schedule_->restartSchedule();
+        if(energyAwareness_){
+            if(!EnergyAwareness::getEnergyAlreadyOptimized()){
+                delete srdag_;
+                StackMonitor::freeAll(SRDAG_STACK);
+                memAlloc_->reset();
+                srdag_ = new SRDAGGraph();
+                jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
+            } else if (!alreadyAppliedBestConfig_) {
+                delete srdag_;
+                StackMonitor::freeAll(SRDAG_STACK);
+                memAlloc_->reset();
+                /* On final iteration, the schedule is created */
+                EnergyAwareness::applyConfig(archi_);
+                srdag_ = new SRDAGGraph();
+                schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
+                alreadyAppliedBestConfig_ = true;
+                /* Run the schedule */
+                EnergyAwareness::setStartingTime();
+                schedule_->executeAndRun();
+                EnergyAwareness::setEndTime();
+                schedule_->restartSchedule();
+                computeNextConfig_ = false;
+            }else{
+                EnergyAwareness::setStartingTime();
+                schedule_->executeAndRun();
+                EnergyAwareness::setEndTime();
+                schedule_->restartSchedule();
+                computeNextConfig_ = false;
+            }
+        }else{
+            if (!srdag_) {
+                /* On first iteration, the schedule is created */
+                srdag_ = new SRDAGGraph();
+                schedule_ = static_scheduler(srdag_, memAlloc_, scheduler_);
+            }
+            /* Run the schedule */
+            EnergyAwareness::setStartingTime();
+            schedule_->executeAndRun();
+            EnergyAwareness::setEndTime();
+            schedule_->restartSchedule();
+            }
     } else {
         delete srdag_;
         StackMonitor::freeAll(SRDAG_STACK);
@@ -180,14 +235,29 @@ void Spider::iterate() {
         srdag_ = new SRDAGGraph();
         jit_ms(pisdf_, archi_, srdag_, memAlloc_, scheduler_);
     }
+    
     /** Process PAPIFY feedback **/
     if(papifyFeedbackEnabled_){
         Platform::get()->processPapifyFeedback(srdag_);
     }
+
     /** Wait for LRTs to finish **/
     Platform::get()->rstJobIxRecv();
+
+    /** Compute energy **/
+    if(energyAwareness_ && computeNextConfig_){
+        EnergyAwareness::analyzeExecution(srdag_, archi_);
+        EnergyAwareness::prepareNextExecution();
+    }
 }
 
+bool Spider::getEnergyAwareness() {
+    return energyAwareness_;
+}
+
+double Spider::getPerformanceObjective() {
+    return performanceObjective_;
+}
 
 static int getReservedMemoryForGraph(PiSDFGraph *graph, int currentMemReserved) {
     auto *job = CREATE(TRANSFO_STACK, transfoJob);
@@ -307,6 +377,14 @@ void Spider::setTraceEnabled(bool traceEnabled) {
 
 void Spider::setPapifyFeedbackEnabled(bool papifyFeedbackEnabled) {
     papifyFeedbackEnabled_ = papifyFeedbackEnabled;
+}
+
+void Spider::setEnergyAwareness(bool energyAwareness) {
+    energyAwareness_ = energyAwareness;
+}
+
+void Spider::setPerformanceObjective(double performanceObjective) {
+    performanceObjective_ = performanceObjective;
 }
 
 void Spider::setApolloEnabled(bool apolloEnabled) {

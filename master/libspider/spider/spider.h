@@ -134,6 +134,8 @@ typedef struct SpiderConfig {
 
     std::map<lrtFct, std::map<const char *, PapifyConfig*>> papifyJobInfo;
     std::map<lrtFct, std::map<const char *, std::map<int, double>>> energyModelsInfo;
+    bool energyAwareness;
+    double performanceObjective;
 
     lrtFct *fcts;
     int nLrtFcts;
@@ -194,6 +196,10 @@ namespace Spider {
 
     void setPapifyFeedbackEnabled(bool papifyFeedbackEnabled);
 
+    void setEnergyAwareness(bool energyAwareness);
+
+    void setPerformanceObjective(double performanceObjective);
+
     void setApolloEnabled(bool apolloEnabled);
 
     void setApolloCompiled(bool apollloCompiled);
@@ -230,6 +236,10 @@ namespace Spider {
     PiSDFGraph *getGraph();
 
     Archi *getArchi();
+
+    bool getEnergyAwareness();
+
+    double getPerformanceObjective();
 }
 
 #endif//SPIDER_H

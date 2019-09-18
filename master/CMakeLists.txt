@@ -202,6 +202,7 @@ file(
         ./libspider/spider/scheduling/*.cpp
         ./libspider/spider/scheduling/MemAlloc/*.cpp
         ./libspider/spider/scheduling/Scheduler/*.cpp
+        ./libspider/spider/energyAwareness/*.cpp
 )
 
 file(
@@ -227,6 +228,7 @@ file(
         ./libspider/spider/scheduling/*.h
         ./libspider/spider/scheduling/MemAlloc/*.h
         ./libspider/spider/scheduling/Scheduler/*.h
+        ./libspider/spider/energyAwareness/*.h
 )
 
 

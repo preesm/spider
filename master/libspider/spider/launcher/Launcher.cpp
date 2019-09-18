@@ -43,6 +43,8 @@
 #include <Logger.h>
 #include "Launcher.h"
 
+#include "energyAwareness/energyAwareness.h"
+
 #ifdef APOLLO_AVAILABLE
 
 #include <apolloAPI.h>
@@ -126,6 +128,7 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
         Param *parameters = CREATE_MUL(TRANSFO_STACK, curNParam_, Param);
         int counter = 0;
     #endif
+    std::map<const char*, Param> dynamicParamsMap;
         
     while (curNParam_) {
         NotificationMessage message;
@@ -151,6 +154,9 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
                             counter++;
                         }
                     #endif
+                    if(Spider::getEnergyAwareness()){
+                        dynamicParamsMap.insert(std::make_pair(referenceParameter->getName(), referenceParameter->getValue()));
+                    }
                     if (Spider::getVerbose()) {
                         auto *parameterName = vertex->getReference()->getOutParam(i)->getName();
                         Logger::print(LOG_GENERAL, LOG_INFO, "Received Parameter: %s -- Value: %" PRId64"\n",
@@ -173,6 +179,9 @@ void Launcher::resolveParams(Archi */*archi*/, SRDAGGraph *topDag) {
         }
         StackMonitor::free(TRANSFO_STACK, parameters);
     #endif
+    if(Spider::getEnergyAwareness()){
+        EnergyAwareness::setNewDynamicParams(dynamicParamsMap);
+    }
 }
 
 void Launcher::sendTraceSpider(TraceSpiderType type, Time start, Time end) {

@@ -72,6 +72,9 @@ static bool solutionShown_;
 static bool aboveBelowObjective_; // 1 current config is above objective -- 0 current config is below objective
 static std::uint32_t timesObjectiveMissed_; // Fail safe when not reaching the objective
 static bool forcedUpdate_; // True when the performance of the best config does not reach the objective 10 times in a row
+static bool coarseFineGrainSearching_; // True when we are performing coarse-grain searching; false if it is fine grain
+static std::map<std::uint32_t, std::uint32_t> upperPENumber_; 
+static std::map<std::uint32_t, std::uint32_t> lowerPENumber_; 
 
 static std::map<std::map<const char*, Param>, std::vector<std::map<std::uint32_t, std::uint32_t>>> configsAlreadyUsedBackup_; 
 static std::map<std::map<const char*, Param>, std::map<std::uint32_t, std::uint32_t>> pesBestConfigBackup_; 
@@ -80,6 +83,9 @@ static std::map<std::map<const char*, Param>, double> bestEnergyBackup_;
 static std::map<std::map<const char*, Param>, double> bestObjectiveBackup_; 
 static std::map<std::map<const char*, Param>, bool> energyAlreadyOptimizedBackup_; 
 static std::map<std::map<const char*, Param>, bool> aboveBelowObjectiveBackup_; 
+static std::map<std::map<const char*, Param>, bool> coarseFineGrainSearchingBackup_; 
+static std::map<std::map<const char*, Param>, std::map<std::uint32_t, std::uint32_t>> upperPENumberBackup_; 
+static std::map<std::map<const char*, Param>, std::map<std::uint32_t, std::uint32_t>> lowerPENumberBackup_; 
 
 void EnergyAwareness::setStartingTime() {
     startingExecutionTime_ = Platform::get()->getTime();
@@ -144,6 +150,8 @@ void EnergyAwareness::setUp(Archi *archi) {
     for (auto it = peIdPerPeType_.begin(); it != peIdPerPeType_.end(); it++) {
         pesBeingDisabled_.insert(std::make_pair(it->first, 0));
         pesBestConfig_.insert(std::make_pair(it->first, 0));
+        upperPENumber_.insert(std::make_pair(it->first, (std::uint32_t)it->second.size()));
+        lowerPENumber_.insert(std::make_pair(it->first, 0));
     }
     energyAlreadyOptimized_ = false;
     solutionShown_ = false;
@@ -151,6 +159,7 @@ void EnergyAwareness::setUp(Archi *archi) {
     bestObjective_ = 0.0;
     timesObjectiveMissed_ = 0;
     forcedUpdate_ = false;
+    coarseFineGrainSearching_ = true;
 }
 
 void EnergyAwareness::checkExecutionPerformance(double fpsEstimation, double energyConsumed) {
@@ -174,7 +183,30 @@ void EnergyAwareness::checkExecutionPerformance(double fpsEstimation, double ene
 }
 
 bool EnergyAwareness::generateNextConfiguration() {
-    return generateNextFineGrainConfiguration();
+    if(coarseFineGrainSearching_){
+        return generateNextCoarseGrainConfiguration();
+    }else{
+        return generateNextFineGrainConfiguration();
+    }
+}
+
+bool EnergyAwareness::generateNextCoarseGrainConfiguration(){
+    for (auto it = pesBeingDisabled_.begin(); it != pesBeingDisabled_.end(); it++) {
+        if(aboveBelowObjective_){ // As we are modifying the number of disabled PEs, we have to increase the disable PEs when we are above the number
+            lowerPENumber_[it->first] = pesBeingDisabled_[it->first];
+            pesBeingDisabled_[it->first] = ceil((pesBeingDisabled_[it->first] + upperPENumber_[it->first]) / 2.0);
+        } else {
+            upperPENumber_[it->first] = pesBeingDisabled_[it->first];
+            pesBeingDisabled_[it->first] = floor((pesBeingDisabled_[it->first] + lowerPENumber_[it->first]) / 2.0); 
+        }
+    }
+    auto it = std::find(configsAlreadyUsed_.begin(), configsAlreadyUsed_.end(), pesBeingDisabled_);
+    if (it == configsAlreadyUsed_.end()) {
+        return true;
+    } else {
+        coarseFineGrainSearching_ = false;
+        return false;        
+    }
 }
 
 bool EnergyAwareness::generateNextFineGrainConfiguration(){
@@ -281,12 +313,15 @@ void EnergyAwareness::recoverConfigOrDefault() {
     auto itCheckerEnergyAlreadyOptimized = energyAlreadyOptimizedBackup_.find(dynamicParameters_);
     if(itCheckerEnergyAlreadyOptimized != energyAlreadyOptimizedBackup_.end()){
         energyAlreadyOptimized_ = energyAlreadyOptimizedBackup_[dynamicParameters_];
+        coarseFineGrainSearching_ = coarseFineGrainSearchingBackup_[dynamicParameters_];
         aboveBelowObjective_ = aboveBelowObjectiveBackup_[dynamicParameters_];
         pesBestConfig_ = pesBestConfigBackup_[dynamicParameters_];
         pesBeingDisabled_ = pesBeingDisabledBackup_[dynamicParameters_]; 
         bestEnergy_ = bestEnergyBackup_[dynamicParameters_];
         bestObjective_ = bestObjectiveBackup_[dynamicParameters_];
         configsAlreadyUsed_ = configsAlreadyUsedBackup_[dynamicParameters_];
+        upperPENumber_ = upperPENumberBackup_[dynamicParameters_];
+        lowerPENumber_ = lowerPENumberBackup_[dynamicParameters_];
     }else{
         energyAlreadyOptimized_ = false;        
         for (auto it = pesBeingDisabled_.begin(); it != pesBeingDisabled_.end(); it++) {
@@ -295,6 +330,7 @@ void EnergyAwareness::recoverConfigOrDefault() {
         bestEnergy_ = std::numeric_limits<double>::max();
         bestObjective_ = 0.0;
         configsAlreadyUsed_.clear();
+        coarseFineGrainSearching_ = true;
     }
     solutionShown_ = false;
 }
@@ -306,8 +342,11 @@ void EnergyAwareness::setNewDynamicParams(std::map<const char*, Param> dynamicPa
     pesBeingDisabledBackup_[dynamicParameters_] = pesBeingDisabled_; 
     bestEnergyBackup_[dynamicParameters_] = bestEnergy_; 
     bestObjectiveBackup_[dynamicParameters_] = bestObjective_; 
+    coarseFineGrainSearchingBackup_[dynamicParameters_] = coarseFineGrainSearching_;
     energyAlreadyOptimizedBackup_[dynamicParameters_] = energyAlreadyOptimized_;
     aboveBelowObjectiveBackup_[dynamicParameters_] = aboveBelowObjective_;
+    upperPENumberBackup_[dynamicParameters_] = upperPENumber_;
+    lowerPENumberBackup_[dynamicParameters_] = lowerPENumber_;
 
     //Check the need to update the config
     bool dirtyEnergyConfig = false;

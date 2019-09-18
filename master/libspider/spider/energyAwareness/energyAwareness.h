@@ -84,6 +84,8 @@ namespace EnergyAwareness {
 
     bool generateNextFineGrainConfiguration();
 
+    bool generateNextCoarseGrainConfiguration();
+
     bool getEnergyAlreadyOptimized();
 }
 

@@ -45,13 +45,16 @@
 #include <cstdarg>
 #include <cstring>
 
-
-
 // Size of 50 minimum is required for the error message associated
 #define SPIDER_EXCEPTION_BUFFER_SIZE 300
 
+#if !defined __k1__
 #define throwHelper(msg, ...)\
     throw SpiderException("SpiderException: %s::%s: " msg, __FILENAME__, __func__, __VA_ARGS__)
+#else
+#define throwHelper(msg, ...)\
+    throw SpiderException("SpiderException: %s::%s: " msg, __FILE__, __func__, __VA_ARGS__)
+#endif
 #define throwSpiderException(...) throwHelper(__VA_ARGS__, '\0')
 
 class SpiderException : public std::exception {
@@ -59,16 +62,18 @@ public:
     explicit SpiderException(const char *msg, ...) : exceptionMessage_{} {
         va_list args;
         va_start(args, msg);
-#ifdef _WIN32
-        int n = _vsnprintf(exceptionMessage_, SPIDER_EXCEPTION_BUFFER_SIZE, msg, args);
-#else
-        int n = vsnprintf(exceptionMessage_, SPIDER_EXCEPTION_BUFFER_SIZE, msg, args);
-#endif
+#if !defined __k1__
+    #ifdef _WIN32
+            int n = _vsnprintf(exceptionMessage_, SPIDER_EXCEPTION_BUFFER_SIZE, msg, args);
+    #else
+            int n = vsnprintf(exceptionMessage_, SPIDER_EXCEPTION_BUFFER_SIZE, msg, args);
+    #endif
         if (n > SPIDER_EXCEPTION_BUFFER_SIZE) {
             fprintf(stderr, "SpiderException: ERROR: exception message too big.\n");
             fprintf(stderr, "Partially recovered exception: ");
             fflush(stderr);
         }
+#endif
     }
 
     const char *what() const noexcept override {

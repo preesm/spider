@@ -42,6 +42,7 @@
 
 #include <spider.h>
 
+
 typedef enum {
     PISDF_STACK,
     SRDAG_STACK,

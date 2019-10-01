@@ -47,7 +47,9 @@
 #include <platform.h>
 #include <SpiderCommunicator.h>
 #include <LrtCommunicator.h>
+#if !defined __k1__
 #include <scheduling/PiSDFScheduleJob.h>
+#endif
 
 #ifdef APOLLO_AVAILABLE
 

@@ -253,10 +253,9 @@ void LRT::runJob(JobInfoMessage *job) {
     //std::cout << "[LEO HW JOB] the HardwareType " << peJob->getHardwareType() << " called " << peJob->getName() << std::endl;
     std::string keyWord = "Slot";
     if (std::string::npos == peJob->getName().find(keyWord)) {
-        std::cout << "[LEO] " << job_counter++ << " CPU " << std::endl;
+        fprintf(stderr, "INFO ARTICo3: >> CPU Job %u \n",job_counter++);
     } else {
-        std::cout << "[LEO] " << job_counter++ << " ARTICo3 " << std::endl;
-        //std::cout << "[LEO HW JOB] the HardwareType " << peJob->getHardwareType() << " called " << peJob->getName() << std::endl;
+        fprintf(stderr, "INFO ARTICo3: >> ARTICo3 Job %u \n",job_counter++);
     }
 
     for (int i = 0; i < job->nEdgeIN_; i++) {

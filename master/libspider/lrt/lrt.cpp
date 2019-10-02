@@ -47,6 +47,8 @@
 #ifdef __USE_GNU
 
 #include <csignal>
+#include <iostream>
+#include <string>
 
 #endif
 
@@ -223,6 +225,8 @@ void LRT::notifyLRTJobStamp(int lrt, bool notify) {
     }
 }
 
+unsigned int job_counter = 0;
+
 void LRT::runJob(JobInfoMessage *job) {
     Time start;
 
@@ -245,6 +249,15 @@ void LRT::runJob(JobInfoMessage *job) {
 #endif
 
     auto *peJob = Spider::getArchi()->getPEFromSpiderID(ix_);
+
+    //std::cout << "[LEO HW JOB] the HardwareType " << peJob->getHardwareType() << " called " << peJob->getName() << std::endl;
+    std::string keyWord = "Slot";
+    if (std::string::npos == peJob->getName().find(keyWord)) {
+        std::cout << "[LEO] " << job_counter++ << " CPU " << std::endl;
+    } else {
+        std::cout << "[LEO] " << job_counter++ << " ARTICo3 " << std::endl;
+        //std::cout << "[LEO HW JOB] the HardwareType " << peJob->getHardwareType() << " called " << peJob->getName() << std::endl;
+    }
 
     for (int i = 0; i < job->nEdgeIN_; i++) {
 #ifdef VERBOSE_TIME

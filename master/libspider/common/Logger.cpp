@@ -42,6 +42,7 @@
 #include <mingw-std-threads/include/mingw.mutex.h>
 #else
 #include <mutex>
+#include <cstdio>
 #endif
 
 static bool loggersValue[kNLogger];

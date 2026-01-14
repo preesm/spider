@@ -85,6 +85,7 @@ LRT::LRT(int ix) {
     repeatJobQueue_ = false;
     freeze_ = false;
     shouldBroadcast_ = false;
+    endIterReceived_ = false;
     lastJobID_ = -1;
     jobQueueIndex_ = 0;
     jobQueueSize_ = 0;
@@ -420,6 +421,7 @@ void LRT::clearJobQueue() {
     jobQueueSize_ = 0;
     jobQueueIndex_ = 0;
     lastJobID_ = -1;
+    endIterReceived_ = false;
     jobIx_ = -1;
     Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- cleared jobQueue_.\n", Platform::get()->getLrtIx());
 }
@@ -428,6 +430,7 @@ void LRT::handleLRTNotification(NotificationMessage &message) {
     switch (message.getSubType()) {
         case LRT_END_ITERATION:
             lastJobID_ = message.getIndex();
+            endIterReceived_ = true;
             Logger::print(LOG_JOB, LOG_INFO, "LRT: %d -- lastJobID: %d\n", getIx(), lastJobID_);
             break;
         case LRT_RST_ITERATION:
@@ -586,7 +589,7 @@ void LRT::run(bool loop) {
             }
         }
         /** 2. Check if end of iteration of end of current jobs **/
-        bool doneWithIteration = lastJobID_ >= 0 && jobIx_ == lastJobID_;
+        bool doneWithIteration = endIterReceived_ && jobIx_ == lastJobID_;
         if (doneWithIteration) {
             if (loop) {
                 /** Send finished iteration message **/

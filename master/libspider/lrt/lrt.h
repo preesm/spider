@@ -127,6 +127,7 @@ private:
     int nFct_;
     const lrtFct *fcts_;
     bool run_;
+    bool endIterReceived_;
     bool usePapify_;
     bool dumpPapifyInfo_;
     bool feedbackPapifyInfo_;
